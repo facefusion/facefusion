@@ -1,0 +1,39 @@
+name: ci
+
+on: [ push, pull_request ]
+
+jobs:
+ lint:
+  runs-on: ubuntu-latest
+  steps:
+  - name: Checkout
+    uses: actions/checkout@v2
+  - name: Set up Python 3.10
+    uses: actions/setup-python@v2
+    with:
+     python-version: '3.10'
+  - run: pip install flake8
+  - run: pip install mypy
+  - run: flake8 run.py facefusion
+  - run: mypy run.py facefusion
+ test:
+  strategy:
+   matrix:
+    os: [macos-latest, ubuntu-latest, windows-latest]
+  runs-on: ${{ matrix.os }}
+  steps:
+  - name: Checkout
+    uses: actions/checkout@v2
+  - name: Set up ffmpeg
+    uses: FedericoCarboni/setup-ffmpeg@v2
+  - name: Set up Python 3.10
+    uses: actions/setup-python@v2
+    with:
+     python-version: '3.10'
+  - run: pip install -r requirements-ci.txt
+  - run: curl --create-dirs --output .assets/examples/source.jpg https://huggingface.co/facefusion/examples/resolve/main/source.jpg
+  - run: curl --create-dirs --output .assets/examples/target-240.mp4 https://huggingface.co/facefusion/examples/resolve/main/target-240.mp4
+  - run: python run.py --source .assets/examples/source.jpg --target .assets/examples/target-240.mp4 --output .assets/examples
+    if: matrix.os != 'windows-latest'
+  - run: python run.py --source .assets\examples\source.jpg --target .assets\examples\target-240.mp4 --output .assets\examples
+    if: matrix.os == 'windows-latest'
