@@ -3,7 +3,7 @@ FaceFusion
 
 > Next generation face swapper and enhancer.
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=main)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=master)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
 
 
 Preview
