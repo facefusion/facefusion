@@ -16,8 +16,8 @@ from tqdm import tqdm
 import facefusion.globals
 from facefusion import wording
 
-TEMP_DIRECTORY = tempfile.mkdtemp(prefix = 'facefusion')
-TEMP_VIDEO_FILE = 'temp.mp4'
+TEMP_DIRECTORY_PATH = os.path.join(tempfile.gettempdir(), 'facefusion')
+TEMP_OUTPUT_NAME = 'temp.mp4'
 
 # monkey patch ssl
 if platform.system().lower() == 'darwin':
@@ -99,13 +99,12 @@ def get_temp_frame_paths(target_path : str) -> List[str]:
 
 def get_temp_directory_path(target_path : str) -> str:
 	target_name, _ = os.path.splitext(os.path.basename(target_path))
-	target_directory_path = os.path.dirname(target_path)
-	return os.path.join(target_directory_path, TEMP_DIRECTORY, target_name)
+	return os.path.join(TEMP_DIRECTORY_PATH, target_name)
 
 
 def get_temp_output_path(target_path : str) -> str:
 	temp_directory_path = get_temp_directory_path(target_path)
-	return os.path.join(temp_directory_path, TEMP_VIDEO_FILE)
+	return os.path.join(temp_directory_path, TEMP_OUTPUT_NAME)
 
 
 def normalize_output_path(source_path : str, target_path : str, output_path : str) -> Optional[str]:

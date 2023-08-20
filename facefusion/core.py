@@ -190,7 +190,7 @@ def process_video() -> None:
 		else:
 			update_status(wording.get('restoring_audio_issues'))
 		restore_audio(facefusion.globals.target_path, facefusion.globals.output_path)
-	# clean temp
+	# clear temp
 	update_status(wording.get('clearing_temp'))
 	clear_temp(facefusion.globals.target_path)
 	# validate video
