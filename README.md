@@ -76,4 +76,4 @@ Users of this software are expected to use this software responsibly while abidi
 Documentation
 -------------
 
-Read the [documenation](https://docs.facefusion.io) for a deep dive.
+Read the [documentation](https://docs.facefusion.io) for a deep dive.
