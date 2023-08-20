@@ -5,6 +5,7 @@ import platform
 import shutil
 import ssl
 import subprocess
+import tempfile
 import urllib
 from pathlib import Path
 from typing import List, Optional
@@ -15,7 +16,7 @@ from tqdm import tqdm
 import facefusion.globals
 from facefusion import wording
 
-TEMP_DIRECTORY = '.temp'
+TEMP_DIRECTORY = tempfile.mkdtemp(prefix = 'facefusion')
 TEMP_VIDEO_FILE = 'temp.mp4'
 
 # monkey patch ssl
