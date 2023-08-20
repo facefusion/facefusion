@@ -20,7 +20,7 @@ import facefusion.globals
 from facefusion import wording, metadata
 from facefusion.predictor import predict_image, predict_video
 from facefusion.processors.frame.core import get_frame_processors_modules
-from facefusion.utilities import is_image, is_video, detect_fps, create_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clean_temp, normalize_output_path, list_module_names, decode_execution_providers, encode_execution_providers
+from facefusion.utilities import is_image, is_video, detect_fps, create_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, normalize_output_path, list_module_names, decode_execution_providers, encode_execution_providers
 
 warnings.filterwarnings('ignore', category = FutureWarning, module = 'insightface')
 warnings.filterwarnings('ignore', category = UserWarning, module = 'torchvision')
@@ -191,8 +191,8 @@ def process_video() -> None:
 			update_status(wording.get('restoring_audio_issues'))
 		restore_audio(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clean temp
-	update_status(wording.get('cleaning_temp'))
-	clean_temp(facefusion.globals.target_path)
+	update_status(wording.get('clearing_temp'))
+	clear_temp(facefusion.globals.target_path)
 	# validate video
 	if is_video(facefusion.globals.target_path):
 		update_status(wording.get('processing_video_succeed'))
@@ -230,5 +230,5 @@ def run() -> None:
 
 def destroy() -> None:
 	if facefusion.globals.target_path:
-		clean_temp(facefusion.globals.target_path)
+		clear_temp(facefusion.globals.target_path)
 	sys.exit()

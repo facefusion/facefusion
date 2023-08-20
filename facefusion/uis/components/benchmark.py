@@ -9,17 +9,19 @@ from facefusion import wording
 from facefusion.capturer import get_video_frame_total
 from facefusion.core import conditional_process
 from facefusion.uis.typing import Update
-from facefusion.utilities import normalize_output_path
+from facefusion.utilities import normalize_output_path, clear_temp
 
 BENCHMARK_RESULT_DATAFRAME : Optional[gradio.Dataframe] = None
 BENCHMARK_CYCLES_SLIDER : Optional[gradio.Button] = None
 BENCHMARK_START_BUTTON : Optional[gradio.Button] = None
+BENCHMARK_CLEAR_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
 	global BENCHMARK_RESULT_DATAFRAME
 	global BENCHMARK_CYCLES_SLIDER
 	global BENCHMARK_START_BUTTON
+	global BENCHMARK_CLEAR_BUTTON
 
 	with gradio.Box():
 		BENCHMARK_RESULT_DATAFRAME = gradio.Dataframe(
@@ -27,7 +29,7 @@ def render() -> None:
 			headers =
 			[
 				'target_path',
-				'cycles',
+				'benchmark_cycles',
 				'average_run',
 				'fastest_run',
 				'slowest_run',
@@ -52,11 +54,14 @@ def render() -> None:
 		value = 3,
 		maximum = 10
 	)
-	BENCHMARK_START_BUTTON = gradio.Button(wording.get('start_button_label'))
+	with gradio.Row():
+		BENCHMARK_START_BUTTON = gradio.Button(wording.get('start_button_label'))
+		BENCHMARK_CLEAR_BUTTON = gradio.Button(wording.get('clear_button_label'))
 
 
 def listen() -> None:
 	BENCHMARK_START_BUTTON.click(update, inputs = BENCHMARK_CYCLES_SLIDER, outputs = BENCHMARK_RESULT_DATAFRAME)
+	BENCHMARK_CLEAR_BUTTON.click(clear, outputs = BENCHMARK_RESULT_DATAFRAME)
 
 
 def update(benchmark_cycles : int) -> Update:
@@ -74,10 +79,10 @@ def update(benchmark_cycles : int) -> Update:
 	return gradio.update(value = value)
 
 
-def benchmark(target_path : str, cycles : int) -> List[Any]:
+def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	process_times = []
 	total_fps = 0.0
-	for i in range(cycles + 1):
+	for i in range(benchmark_cycles + 1):
 		facefusion.globals.target_path = target_path
 		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, tempfile.gettempdir())
 		video_frame_total = get_video_frame_total(facefusion.globals.target_path)
@@ -89,16 +94,22 @@ def benchmark(target_path : str, cycles : int) -> List[Any]:
 		if i > 0:
 			process_times.append(process_time)
 			total_fps += fps
-	average_process_time = round(statistics.mean(process_times), 2)
-	fastest_process_time = round(min(process_times), 2)
-	slowest_process_time = round(max(process_times), 2)
-	average_fps = round(total_fps / cycles, 2)
+	average_run = round(statistics.mean(process_times), 2)
+	fastest_run = round(min(process_times), 2)
+	slowest_run = round(max(process_times), 2)
+	relative_fps = round(total_fps / benchmark_cycles, 2)
 	return\
 	[
 		facefusion.globals.target_path,
-		cycles,
-		average_process_time,
-		fastest_process_time,
-		slowest_process_time,
-		average_fps
+		benchmark_cycles,
+		average_run,
+		fastest_run,
+		slowest_run,
+		relative_fps
 	]
+
+
+def clear() -> Update:
+	if facefusion.globals.target_path:
+		clear_temp(facefusion.globals.target_path)
+	return gradio.update(value = None)

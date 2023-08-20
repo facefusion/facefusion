@@ -129,7 +129,7 @@ def move_temp(target_path : str, output_path : str) -> None:
 		shutil.move(temp_output_path, output_path)
 
 
-def clean_temp(target_path : str) -> None:
+def clear_temp(target_path : str) -> None:
 	temp_directory_path = get_temp_directory_path(target_path)
 	parent_directory_path = os.path.dirname(temp_directory_path)
 	if not facefusion.globals.keep_temp and os.path.isdir(temp_directory_path):

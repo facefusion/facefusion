@@ -5,7 +5,7 @@ import facefusion.globals
 from facefusion import wording
 from facefusion.core import conditional_process
 from facefusion.uis.typing import Update
-from facefusion.utilities import is_image, is_video, normalize_output_path
+from facefusion.utilities import is_image, is_video, normalize_output_path, clear_temp
 
 OUTPUT_START_BUTTON : Optional[gradio.Button] = None
 OUTPUT_CLEAR_BUTTON : Optional[gradio.Button] = None
@@ -50,4 +50,6 @@ def update() -> Tuple[Update, Update]:
 
 
 def clear() -> Tuple[Update, Update]:
+	if facefusion.globals.target_path:
+		clear_temp(facefusion.globals.target_path)
 	return gradio.update(value = None), gradio.update(value = None)
