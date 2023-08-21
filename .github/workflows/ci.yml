@@ -31,11 +31,11 @@ jobs:
     with:
      python-version: '3.10'
   - run: pip install -r requirements-ci.txt
-  - run: curl --create-dirs --output .assets/examples/source.jpg https://huggingface.co/facefusion/examples/resolve/main/source.jpg
-  - run: curl --create-dirs --output .assets/examples/target-240p.mp4 https://huggingface.co/facefusion/examples/resolve/main/target-240p.mp4
-  - run: python run.py --source .assets/examples/source.jpg --target .assets/examples/target-240p.mp4 --output .assets/examples --trim-frame-end 24
+  - run: curl --create-dirs --output .assets/examples/source.jpg https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg
+  - run: curl --create-dirs --output .assets/examples/target-240p.mp4 https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4
+  - run: python run.py --source .assets/examples/source.jpg --target .assets/examples/target-240p.mp4 --output .assets/examples --trim-frame-end 30
     if: matrix.os != 'windows-latest'
-  - run: python run.py --source .assets\examples\source.jpg --target .assets\examples\target-240p.mp4 --output .assets\examples --trim-frame-end 24
+  - run: python run.py --source .assets\examples\source.jpg --target .assets\examples\target-240p.mp4 --output .assets\examples --trim-frame-end 30
     if: matrix.os == 'windows-latest'
   - run: ffprobe -show_format -show_streams .assets/examples/source-target-240p.mp4
     if: matrix.os != 'windows-latest'
