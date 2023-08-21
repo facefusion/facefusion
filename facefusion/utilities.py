@@ -84,12 +84,12 @@ def restore_audio(target_path : str, output_path : str) -> None:
 	if trim_frame_start is None and trim_frame_end is None:
 		commands.extend([ '-c:a', 'copy' ])
 	else:
-		if trim_frame_start > 0:
+		if trim_frame_start is not None:
 			start_time = trim_frame_start / fps
 			commands.extend([ '-ss', str(start_time) ])
 		else:
 			commands.extend([ '-ss', '0' ])
-		if trim_frame_end > 0:
+		if trim_frame_end is not None:
 			end_time = trim_frame_end / fps
 			commands.extend([ '-to', str(end_time) ])
 		commands.extend([ '-c:a', 'aac' ])
