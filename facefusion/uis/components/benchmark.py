@@ -36,7 +36,7 @@ def render() -> None:
 				'relative_fps'
 			],
 			col_count = (6, 'fixed'),
-			row_count = (6, 'fixed'),
+			row_count = (7, 'fixed'),
 			datatype =
 			[
 				'str',
