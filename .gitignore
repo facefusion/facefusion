@@ -1,3 +1,5 @@
 .idea
 .assets
 .temp
+__pycache__/
+.vscode

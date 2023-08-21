@@ -34,7 +34,7 @@ def parse_args() -> None:
 	program.add_argument('-o', '--output', help = wording.get('output_help'), dest = 'output_path')
 	program.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(list_module_names('facefusion/processors/frame/modules'))), dest = 'frame_processors', default = ['face_swapper'], nargs='+')
 	program.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), dest = 'ui_layouts', default = ['default'], nargs='+')
-	program.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action='store_true')
+	program.add_argument('--fps-cap', help = wording.get('fps_cap_help'), dest = 'fps_cap', action='store_true')
 	program.add_argument('--keep-temp', help = wording.get('keep_temp_help'), dest = 'keep_temp', action='store_true')
 	program.add_argument('--skip-audio', help = wording.get('skip_audio_help'), dest = 'skip_audio', action='store_true')
 	program.add_argument('--face-recognition', help = wording.get('face_recognition_help'), dest = 'face_recognition', default = 'reference', choices = facefusion.choices.face_recognition)
@@ -64,7 +64,7 @@ def parse_args() -> None:
 	facefusion.globals.headless = facefusion.globals.source_path is not None and facefusion.globals.target_path is not None and facefusion.globals.output_path is not None
 	facefusion.globals.frame_processors = args.frame_processors
 	facefusion.globals.ui_layouts = args.ui_layouts
-	facefusion.globals.keep_fps = args.keep_fps
+	facefusion.globals.fps_cap = args.fps_cap
 	facefusion.globals.keep_temp = args.keep_temp
 	facefusion.globals.skip_audio = args.skip_audio
 	facefusion.globals.face_recognition = args.face_recognition
@@ -153,13 +153,11 @@ def process_video() -> None:
 	update_status(wording.get('creating_temp'))
 	create_temp(facefusion.globals.target_path)
 	# extract frames
-	if facefusion.globals.keep_fps:
-		fps = detect_fps(facefusion.globals.target_path)
-		update_status(wording.get('extracting_frames_fps').format(fps = fps))
-		extract_frames(facefusion.globals.target_path, fps)
-	else:
-		update_status(wording.get('extracting_frames_fps').format(fps = 30))
-		extract_frames(facefusion.globals.target_path)
+	fps = detect_fps(facefusion.globals.target_path)
+	if facefusion.globals.fps_cap and fps > 30:
+		fps = 30
+	update_status(wording.get('extracting_frames_fps').format(fps = fps))
+	extract_frames(facefusion.globals.target_path, fps)
 	# process frame
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
 	if temp_frame_paths:
@@ -171,25 +169,17 @@ def process_video() -> None:
 		update_status(wording.get('temp_frames_not_found'))
 		return
 	# create video
-	if facefusion.globals.keep_fps:
-		fps = detect_fps(facefusion.globals.target_path)
-		update_status(wording.get('creating_video_fps').format(fps = fps))
-		if not create_video(facefusion.globals.target_path, fps):
-			update_status(wording.get('creating_video_failed'))
-	else:
-		update_status(wording.get('creating_video_fps').format(fps = 30))
-		if not create_video(facefusion.globals.target_path):
-			update_status(wording.get('creating_video_failed'))
+	update_status(wording.get('creating_video_fps').format(fps = fps))
+	if not create_video(facefusion.globals.target_path, fps):
+		update_status(wording.get('creating_video_failed'))
+
 	# handle audio
 	if facefusion.globals.skip_audio:
 		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 		update_status(wording.get('skipping_audio'))
 	else:
-		if facefusion.globals.keep_fps:
-			update_status(wording.get('restoring_audio'))
-		else:
-			update_status(wording.get('restoring_audio_issues'))
-		restore_audio(facefusion.globals.target_path, facefusion.globals.output_path)
+		update_status(wording.get('restoring_audio'))
+		restore_audio(facefusion.globals.target_path, facefusion.globals.output_path, fps)
 	# clear temp
 	update_status(wording.get('clearing_temp'))
 	clear_temp(facefusion.globals.target_path)

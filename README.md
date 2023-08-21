@@ -37,7 +37,7 @@ python run.py [options]
 -o OUTPUT_PATH, --output OUTPUT_PATH                                                             specify the output file or directory
 --frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                       choose from the available frame processors (choices: face_enhancer, face_swapper, frame_enhancer, ...)
 --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                         choose from the available ui layouts (choices: benchmark, default, ...)
---keep-fps                                                                                       preserve the frames per second (fps) of the target
+--fps-cap                                                                                        cap the frames per second (fps) of the target to 30
 --keep-temp                                                                                      retain temporary frames after processing
 --skip-audio                                                                                     omit audio from the target
 --face-recognition {reference,many}                                                              specify the method for face recognition

@@ -51,11 +51,11 @@ def extract_frames(target_path : str, fps : float = 30) -> bool:
 	trim_frame_end = facefusion.globals.trim_frame_end
 	commands = [ '-hwaccel', 'auto', '-i', target_path, '-q:v', str(temp_frame_quality), '-pix_fmt', 'rgb24' ]
 	if trim_frame_start is not None and trim_frame_end is not None:
-		commands.extend(['-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(fps)])
+		commands.extend(['-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(fps) + ',setpts=(PTS-STARTPTS)'])
 	elif trim_frame_start is not None:
-		commands.extend(['-vf', 'trim=start_frame=' + str(trim_frame_start) + ',fps=' + str(fps)])
+		commands.extend(['-vf', 'trim=start_frame=' + str(trim_frame_start) + ',fps=' + str(fps) + ',setpts=(PTS-STARTPTS)'])
 	elif trim_frame_end is not None:
-		commands.extend(['-vf', 'trim=end_frame=' + str(trim_frame_end) + ',fps=' + str(fps)])
+		commands.extend(['-vf', 'trim=end_frame=' + str(trim_frame_end) + ',fps=' + str(fps) + ',setpts=(PTS-STARTPTS)'])
 	else:
 		commands.extend(['-vf', 'fps=' + str(fps)])
 	commands.extend([os.path.join(temp_directory_path, '%04d.' + facefusion.globals.temp_frame_format)])
@@ -75,18 +75,37 @@ def create_video(target_path : str, fps : float = 30) -> bool:
 	return run_ffmpeg(commands)
 
 
-def restore_audio(target_path : str, output_path : str) -> None:
+def restore_audio(target_path : str, output_path : str, fps: int) -> None:
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
 	temp_output_path = get_temp_output_path(target_path)
-	commands = [ '-hwaccel', 'auto', '-i', temp_output_path, '-i', target_path ]
-	if trim_frame_start is not None and trim_frame_end is not None:
-		commands.extend([ '-filter:v', 'select=between(n,' + str(trim_frame_start) + ',' + str(trim_frame_end) + ')' ])
-	elif trim_frame_start is not None:
-		commands.extend([ '-filter:v', 'select=gt(n,' + str(trim_frame_start) + ')' ])
-	elif trim_frame_end is not None:
-		commands.extend([ '-filter:v', 'select=lt(n,' + str(trim_frame_end) + ')' ])
-	commands.extend([ '-c:a', 'copy', '-map', '0:v:0', '-map', '1:a:0', '-y', output_path ])
+
+	# Create temp audio file extracted from target video
+	temp_target_audio_path = os.path.join(os.path.dirname(target_path), Path(target_path).stem + '.mp3')
+	commands = ['-hwaccel', 'auto', '-i', target_path, '-vn', '-y', temp_target_audio_path ]
+	done = run_ffmpeg(commands)
+	if not done:
+		move_temp(target_path, output_path)
+		return
+
+	# Trim audio file
+	temp_target_audio_trimmed_path = temp_target_audio_path.replace('.mp3', '_trimmed.mp3')
+	if trim_frame_start is None:
+		trim_frame_start = 0
+	start_time_ms = round(trim_frame_start/fps, 3) * 1000
+	commands = ['-hwaccel', 'auto', '-ss', str(start_time_ms) + 'ms' ]
+	if trim_frame_end is not None:
+		end_time_ms = round(trim_frame_end/fps, 3) * 1000
+		commands.extend([ '-to', str(end_time_ms) + 'ms'])
+	commands.extend(['-i', temp_target_audio_path, '-vn', '-c', 'copy', '-y', temp_target_audio_trimmed_path])
+	print(commands)
+	done = run_ffmpeg(commands)
+	if not done:
+		move_temp(target_path, output_path)
+		return
+
+	# Add audio to temp output
+	commands = ['-hwaccel', 'auto', '-i', temp_output_path, '-i', temp_target_audio_trimmed_path, '-c:v', 'copy', '-map', '0:v', '-map', '1:a', '-y', output_path ]
 	done = run_ffmpeg(commands)
 	if not done:
 		move_temp(target_path, output_path)
