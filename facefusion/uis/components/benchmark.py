@@ -36,7 +36,7 @@ def render() -> None:
 				'relative_fps'
 			],
 			col_count = (6, 'fixed'),
-			row_count = (6, 'fixed'),
+			row_count = (7, 'fixed'),
 			datatype =
 			[
 				'str',
@@ -72,6 +72,7 @@ def update(benchmark_cycles : int) -> Update:
 		'.assets/examples/target-360p.mp4',
 		'.assets/examples/target-540p.mp4',
 		'.assets/examples/target-720p.mp4',
+		'.assets/examples/target-1080p.mp4',
 		'.assets/examples/target-1440p.mp4',
 		'.assets/examples/target-2160p.mp4'
 	]

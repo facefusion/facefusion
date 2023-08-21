@@ -39,7 +39,7 @@ def clear_frame_processor() -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	conditional_download(download_directory_path, ['https://huggingface.co/facefusion/models/resolve/main/GFPGANv1.4.pth'])
+	conditional_download(download_directory_path, ['https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.4.pth'])
 	return True
 
 
