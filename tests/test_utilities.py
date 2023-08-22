@@ -46,7 +46,7 @@ def test_extract_frames() -> None:
 		temp_directory_path = get_temp_directory_path(target_path)
 		create_temp(target_path)
 
-		assert extract_frames(target_path, 30) is True
+		assert extract_frames(target_path, 30.0) is True
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == 324
 
 		clear_temp(target_path)
@@ -64,7 +64,7 @@ def test_extract_frames_with_trim_start() -> None:
 		temp_directory_path = get_temp_directory_path(target_path)
 		create_temp(target_path)
 
-		assert extract_frames(target_path, 30) is True
+		assert extract_frames(target_path, 30.0) is True
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == frame_total
 
 		clear_temp(target_path)
@@ -83,7 +83,7 @@ def test_extract_frames_with_trim_start_and_trim_end() -> None:
 		temp_directory_path = get_temp_directory_path(target_path)
 		create_temp(target_path)
 
-		assert extract_frames(target_path, 30) is True
+		assert extract_frames(target_path, 30.0) is True
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == frame_total
 
 		clear_temp(target_path)
@@ -101,7 +101,7 @@ def test_extract_frames_with_trim_end() -> None:
 		temp_directory_path = get_temp_directory_path(target_path)
 		create_temp(target_path)
 
-		assert extract_frames(target_path, 30) is True
+		assert extract_frames(target_path, 30.0) is True
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == frame_total
 
 		clear_temp(target_path)

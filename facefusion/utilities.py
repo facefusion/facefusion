@@ -44,7 +44,7 @@ def detect_fps(target_path : str) -> Optional[float]:
 		return None
 
 
-def extract_frames(target_path : str, fps : float = 30) -> bool:
+def extract_frames(target_path : str, fps : float) -> bool:
 	temp_directory_path = get_temp_directory_path(target_path)
 	temp_frame_quality = round(31 - (facefusion.globals.temp_frame_quality * 0.31))
 	trim_frame_start = facefusion.globals.trim_frame_start
@@ -62,7 +62,7 @@ def extract_frames(target_path : str, fps : float = 30) -> bool:
 	return run_ffmpeg(commands)
 
 
-def create_video(target_path : str, fps : float = 30) -> bool:
+def create_video(target_path : str, fps : float) -> bool:
 	temp_output_path = get_temp_output_path(target_path)
 	temp_directory_path = get_temp_directory_path(target_path)
 	output_video_quality = round(51 - (facefusion.globals.output_video_quality * 0.5))

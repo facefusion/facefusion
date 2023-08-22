@@ -150,16 +150,12 @@ def process_image() -> None:
 def process_video() -> None:
 	if predict_video(facefusion.globals.target_path):
 		return
+	fps = detect_fps(facefusion.globals.target_path) if facefusion.globals.keep_fps else 25.0
 	update_status(wording.get('creating_temp'))
 	create_temp(facefusion.globals.target_path)
 	# extract frames
-	if facefusion.globals.keep_fps:
-		fps = detect_fps(facefusion.globals.target_path)
-		update_status(wording.get('extracting_frames_fps').format(fps = fps))
-		extract_frames(facefusion.globals.target_path, fps)
-	else:
-		update_status(wording.get('extracting_frames_fps').format(fps = 30))
-		extract_frames(facefusion.globals.target_path)
+	update_status(wording.get('extracting_frames_fps').format(fps = fps))
+	extract_frames(facefusion.globals.target_path, fps)
 	# process frame
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
 	if temp_frame_paths:
@@ -171,15 +167,9 @@ def process_video() -> None:
 		update_status(wording.get('temp_frames_not_found'))
 		return
 	# create video
-	if facefusion.globals.keep_fps:
-		fps = detect_fps(facefusion.globals.target_path)
-		update_status(wording.get('creating_video_fps').format(fps = fps))
-		if not create_video(facefusion.globals.target_path, fps):
-			update_status(wording.get('creating_video_failed'))
-	else:
-		update_status(wording.get('creating_video_fps').format(fps = 30))
-		if not create_video(facefusion.globals.target_path):
-			update_status(wording.get('creating_video_failed'))
+	update_status(wording.get('creating_video_fps').format(fps = fps))
+	if not create_video(facefusion.globals.target_path, fps):
+		update_status(wording.get('creating_video_failed'))
 	# handle audio
 	if facefusion.globals.skip_audio:
 		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
