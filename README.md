@@ -60,7 +60,7 @@ python run.py [options]
 -v, --version                                                                                    show program's version number and exit
 ```
 
-Using the `-s/--source`, `-t/--target` and `-o/--output` argument will run the program in headless mode.
+Using the `-s/--source`, `-t/--target` and `-o/--output` arguments will run the program in headless mode.
 
 
 Disclaimer

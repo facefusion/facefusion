@@ -1,13 +1,8 @@
-name = 'FaceFusion'
-version = '1.0.0-beta'
-website = 'https://facefusion.io'
-
-
 METADATA =\
 {
 	'name': 'FaceFusion',
 	'description': 'Next generation face swapper and enhancer',
-	'version': '1.0.0-beta',
+	'version': '1.0.0',
 	'license': 'MIT',
 	'author': 'Henry Ruhs',
 	'url': 'https://facefusion.io'
