@@ -21,21 +21,20 @@ def render() -> None:
 	with gradio.Box():
 		trim_frame_start_slider_args : Dict[str, Any] = {
 			'label': wording.get('trim_frame_start_slider_label'),
-			'value': facefusion.globals.trim_frame_start,
 			'step': 1,
 			'visible': False
 		}
 		trim_frame_end_slider_args : Dict[str, Any] = {
 			'label': wording.get('trim_frame_end_slider_label'),
-			'value': facefusion.globals.trim_frame_end,
 			'step': 1,
 			'visible': False
 		}
 		if is_video(facefusion.globals.target_path):
 			video_frame_total = get_video_frame_total(facefusion.globals.target_path)
+			trim_frame_start_slider_args['value'] = facefusion.globals.trim_frame_start or 0
 			trim_frame_start_slider_args['maximum'] = video_frame_total
 			trim_frame_start_slider_args['visible'] = True
-			trim_frame_end_slider_args['value'] = video_frame_total
+			trim_frame_end_slider_args['value'] = facefusion.globals.trim_frame_end or video_frame_total
 			trim_frame_end_slider_args['maximum'] = video_frame_total
 			trim_frame_end_slider_args['visible'] = True
 		with gradio.Row():

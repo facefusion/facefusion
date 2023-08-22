@@ -71,11 +71,11 @@ def test_extract_frames_with_trim_start() -> None:
 
 
 def test_extract_frames_with_trim_start_and_trim_end() -> None:
-	facefusion.globals.trim_frame_start = 224
-	facefusion.globals.trim_frame_end = 324
+	facefusion.globals.trim_frame_start = 124
+	facefusion.globals.trim_frame_end = 224
 	data_provider =\
 	[
-		('.assets/examples/target-240p-25fps.mp4', 55),
+		('.assets/examples/target-240p-25fps.mp4', 120),
 		('.assets/examples/target-240p-30fps.mp4', 100),
 		('.assets/examples/target-240p-60fps.mp4', 50)
 	]
