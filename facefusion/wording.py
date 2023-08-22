@@ -36,7 +36,6 @@ WORDING =\
 	'creating_video_failed': 'Creating video failed',
 	'skipping_audio': 'Skipping audio',
 	'restoring_audio': 'Restoring audio',
-	'restoring_audio_issues': 'Restoring audio might cause issues as fps are not kept',
 	'clearing_temp': 'Clearing temporary resources',
 	'processing_image_succeed': 'Processing to image succeed',
 	'processing_image_failed': 'Processing to image failed',

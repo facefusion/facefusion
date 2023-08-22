@@ -170,15 +170,13 @@ def process_video() -> None:
 	update_status(wording.get('creating_video_fps').format(fps = fps))
 	if not create_video(facefusion.globals.target_path, fps):
 		update_status(wording.get('creating_video_failed'))
+		return
 	# handle audio
 	if facefusion.globals.skip_audio:
-		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 		update_status(wording.get('skipping_audio'))
+		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
-		if facefusion.globals.keep_fps:
-			update_status(wording.get('restoring_audio'))
-		else:
-			update_status(wording.get('restoring_audio_issues'))
+		update_status(wording.get('restoring_audio'))
 		restore_audio(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clear temp
 	update_status(wording.get('clearing_temp'))
