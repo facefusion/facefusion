@@ -6,6 +6,9 @@ source_path : Optional[str] = None
 target_path : Optional[str] = None
 output_path : Optional[str] = None
 headless : Optional[bool] = None
+gradio_port : Optional[int] = None
+gradio_share : Optional[bool] = None
+gradio_listen : Optional[str] = None
 frame_processors : List[str] = []
 ui_layouts : List[str] = []
 keep_fps : Optional[bool] = None
@@ -28,6 +31,4 @@ max_memory : Optional[int] = None
 execution_providers : List[str] = []
 execution_thread_count : Optional[int] = None
 execution_queue_count : Optional[int] = None
-gradio_port : Optional[int] = None
-gradio_share : Optional[bool] = None
-gradio_listen : Optional[str] = None
+
