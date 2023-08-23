@@ -9,16 +9,22 @@ from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAg
 FACE_ANALYSER = None
 THREAD_LOCK = threading.Lock()
 
+class FaceAnalyserSingleton:
+    _instance = None
+
+    def __new__(cls):
+        with THREAD_LOCK:
+            if cls._instance is None:
+                cls._instance = super(FaceAnalyserSingleton, cls).__new__(cls)
+                cls._instance.init_face_analyser()
+        return cls._instance
+
+    def init_face_analyser(self):
+        self.face_analyser = insightface.app.FaceAnalysis(name='buffalo_l', providers=facefusion.globals.execution_providers)
+        self.face_analyser.prepare(ctx_id=0)
 
 def get_face_analyser() -> Any:
-	global FACE_ANALYSER
-
-	with THREAD_LOCK:
-		if FACE_ANALYSER is None:
-			FACE_ANALYSER = insightface.app.FaceAnalysis(name = 'buffalo_l', providers = facefusion.globals.execution_providers)
-			FACE_ANALYSER.prepare(ctx_id = 0)
-	return FACE_ANALYSER
-
+    return FaceAnalyserSingleton().face_analyser
 
 def clear_face_analyser() -> Any:
 	global FACE_ANALYSER
@@ -61,46 +67,37 @@ def find_similar_faces(frame : Frame, reference_face : Face, face_distance : flo
 					similar_faces.append(face)
 	return similar_faces
 
+def sort_by_direction(faces: List[Face], direction: FaceAnalyserDirection) -> List[Face]:
+    sorting_functions = {
+        'left-right': lambda face: face['bbox'][0],
+        'right-left': lambda face: -face['bbox'][0],
+        'top-bottom': lambda face: face['bbox'][1],
+        'bottom-top': lambda face: -face['bbox'][1],
+        'small-large': lambda face: (face['bbox'][2] - face['bbox'][0]) * (face['bbox'][3] - face['bbox'][1]),
+        'large-small': lambda face: -(face['bbox'][2] - face['bbox'][0]) * (face['bbox'][3] - face['bbox'][1])
+    }
+    
+    if direction in sorting_functions:
+        return sorted(faces, key=sorting_functions[direction])
+    return faces
 
-def sort_by_direction(faces : List[Face], direction : FaceAnalyserDirection) -> List[Face]:
-	if direction == 'left-right':
-		return sorted(faces, key = lambda face: face['bbox'][0])
-	if direction == 'right-left':
-		return sorted(faces, key = lambda face: face['bbox'][0], reverse = True)
-	if direction == 'top-bottom':
-		return sorted(faces, key = lambda face: face['bbox'][1])
-	if direction == 'bottom-top':
-		return sorted(faces, key = lambda face: face['bbox'][1], reverse = True)
-	if direction == 'small-large':
-		return sorted(faces, key = lambda face: (face['bbox'][2] - face['bbox'][0]) * (face['bbox'][3] - face['bbox'][1]))
-	if direction == 'large-small':
-		return sorted(faces, key = lambda face: (face['bbox'][2] - face['bbox'][0]) * (face['bbox'][3] - face['bbox'][1]), reverse = True)
-	return faces
+def filter_by_age(faces: List[Face], age: FaceAnalyserAge) -> List[Face]:
+    age_ranges = {
+        'child': (0, 13),
+        'teen': (13, 19),
+        'adult': (19, 60),
+        'senior': (60, float('inf'))
+    }
+    min_age, max_age = age_ranges[age]
+    return [face for face in faces if min_age <= face['age'] < max_age]
 
-
-def filter_by_age(faces : List[Face], age : FaceAnalyserAge) -> List[Face]:
-	filter_faces = []
-	for face in faces:
-		if face['age'] < 13 and age == 'child':
-			filter_faces.append(face)
-		elif face['age'] < 19 and age == 'teen':
-			filter_faces.append(face)
-		elif face['age'] < 60 and age == 'adult':
-			filter_faces.append(face)
-		elif face['age'] > 59 and age == 'senior':
-			filter_faces.append(face)
-	return filter_faces
-
-
-def filter_by_gender(faces : List[Face], gender : FaceAnalyserGender) -> List[Face]:
-	filter_faces = []
-	for face in faces:
-		if face['gender'] == 1 and gender == 'male':
-			filter_faces.append(face)
-		if face['gender'] == 0 and gender == 'female':
-			filter_faces.append(face)
-	return filter_faces
-
+def filter_by_gender(faces: List[Face], gender: FaceAnalyserGender) -> List[Face]:
+    gender_mapping = {
+        'male': 1,
+        'female': 0
+    }
+    target_gender = gender_mapping[gender]
+    return [face for face in faces if face['gender'] == target_gender]
 
 def get_faces_total(frame : Frame) -> int:
 	return len(get_many_faces(frame))
