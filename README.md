@@ -35,6 +35,10 @@ python run.py [options]
 -s SOURCE_PATH, --source SOURCE_PATH                                                             select a source image
 -t TARGET_PATH, --target TARGET_PATH                                                             select a target image or video
 -o OUTPUT_PATH, --output OUTPUT_PATH                                                             specify the output file or directory
+--share                                                                                          set whether to share on Gradio
+--port                                                                                           set the listen port
+--listen                                                                                         set the listen interface
+--headless                                                                                       starts in headless mode; prompts user for source/target/output
 --frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                       choose from the available frame processors (choices: face_enhancer, face_swapper, frame_enhancer, ...)
 --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                         choose from the available ui layouts (choices: benchmark, default, ...)
 --keep-fps                                                                                       preserve the frames per second (fps) of the target
@@ -58,9 +62,6 @@ python run.py [options]
 --execution-thread-count EXECUTION_THREAD_COUNT                                                  specify the number of execution threads
 --execution-queue-count EXECUTION_QUEUE_COUNT                                                    specify the number of execution queries
 -v, --version                                                                                    show program's version number and exit
---share                                                                                          set whether to share on Gradio
---port                                                                                           set the listen port
---listen                                                                                         set the listen interface
 ```
 
 Using the `-s/--source`, `-t/--target` and `-o/--output` arguments will run the program in headless mode.
