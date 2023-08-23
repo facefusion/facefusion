@@ -25,8 +25,10 @@ def launch() -> None:
 			ui_layout_module.pre_check()
 			ui_layout_module.render()
 			ui_layout_module.listen()
-	ui.launch(show_api = False)
-
+	if facefusion.globals.gradio_share is not None:
+		ui.launch(show_api = False, server_name=facefusion.globals.gradio_listen, server_port=facefusion.globals.gradio_port, share=facefusion.globals.gradio_share)
+	else:
+		ui.launch(show_api = False)
 
 def load_ui_layout_module(ui_layout : str) -> Any:
 	try:
