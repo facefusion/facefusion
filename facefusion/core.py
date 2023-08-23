@@ -35,7 +35,7 @@ def parse_args() -> None:
 	program.add_argument("--port", help = wording.get('gradio_port_help'), dest = 'gradio_port', type = int, default = None)
 	program.add_argument("--share", help = wording.get('gradio_share_help'), dest = 'gradio_share', action = 'store_true')
 	program.add_argument("--listen", help = wording.get('gradio_listen_help'), dest = 'gradio_listen', type = str, default = None, metavar = "IP", nargs = "?", const = "0.0.0.0")
-	program.add_argument('--headless', help = wording.get('headless_help'), dest = 'headless', action = 'store_true')
+	program.add_argument('--headless', help = wording.get('headless_help'), dest = 'headless', action = 'store_true', default = None)
 	program.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(list_module_names('facefusion/processors/frame/modules'))), dest = 'frame_processors', default = ['face_swapper'], nargs = '+')
 	program.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), dest = 'ui_layouts', default = ['default'], nargs='+')
 	program.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action = 'store_true')
