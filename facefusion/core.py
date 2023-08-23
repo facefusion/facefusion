@@ -55,6 +55,10 @@ def parse_args() -> None:
 	program.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = suggest_execution_thread_count_default())
 	program.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), dest = 'execution_queue_count', type = int, default = 1)
 	program.add_argument('-v', '--version', action='version', version = metadata.get('name') + ' ' + metadata.get('version'))
+	program.add_argument("--port", help = wording.get('gradio_port_help'), dest = 'gradio_port', type=int, default=None)
+	program.add_argument("--share", help = wording.get('gradio_share_help'), dest = 'gradio_share', action='store_true')
+	program.add_argument("--listen", help = wording.get('gradio_listen_help'), dest = 'gradio_listen', type=str, default=None, metavar="IP", nargs="?", const="0.0.0.0")
+
 
 	args = program.parse_args()
 
@@ -84,6 +88,9 @@ def parse_args() -> None:
 	facefusion.globals.execution_providers = decode_execution_providers(args.execution_providers)
 	facefusion.globals.execution_thread_count = args.execution_thread_count
 	facefusion.globals.execution_queue_count = args.execution_queue_count
+	facefusion.globals.gradio_port = args.gradio_port
+	facefusion.globals.gradio_share = args.gradio_share
+	facefusion.globals.gradio_listen = args.gradio_listen
 
 
 def suggest_execution_providers_choices() -> List[str]:
