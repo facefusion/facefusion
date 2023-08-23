@@ -58,6 +58,9 @@ python run.py [options]
 --execution-thread-count EXECUTION_THREAD_COUNT                                                  specify the number of execution threads
 --execution-queue-count EXECUTION_QUEUE_COUNT                                                    specify the number of execution queries
 -v, --version                                                                                    show program's version number and exit
+--share                                                                                          set whether to share on Gradio
+--port                                                                                           set the listen port
+--listen                                                                                         set the listen interface
 ```
 
 Using the `-s/--source`, `-t/--target` and `-o/--output` arguments will run the program in headless mode.
