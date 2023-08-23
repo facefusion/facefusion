@@ -32,11 +32,15 @@ def parse_args() -> None:
 	program.add_argument('-s', '--source', help = wording.get('source_help'), dest = 'source_path')
 	program.add_argument('-t', '--target', help = wording.get('target_help'), dest = 'target_path')
 	program.add_argument('-o', '--output', help = wording.get('output_help'), dest = 'output_path')
-	program.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(list_module_names('facefusion/processors/frame/modules'))), dest = 'frame_processors', default = ['face_swapper'], nargs='+')
+	program.add_argument("--port", help = wording.get('gradio_port_help'), dest = 'gradio_port', type = int, default = None)
+	program.add_argument("--share", help = wording.get('gradio_share_help'), dest = 'gradio_share', action = 'store_true')
+	program.add_argument("--listen", help = wording.get('gradio_listen_help'), dest = 'gradio_listen', type = str, default = None, metavar = "IP", nargs = "?", const = "0.0.0.0")
+	program.add_argument('--headless', help = wording.get('headless_help'), dest = 'headless', type = bool, default = None)
+	program.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(list_module_names('facefusion/processors/frame/modules'))), dest = 'frame_processors', default = ['face_swapper'], nargs = '+')
 	program.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), dest = 'ui_layouts', default = ['default'], nargs='+')
-	program.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action='store_true')
-	program.add_argument('--keep-temp', help = wording.get('keep_temp_help'), dest = 'keep_temp', action='store_true')
-	program.add_argument('--skip-audio', help = wording.get('skip_audio_help'), dest = 'skip_audio', action='store_true')
+	program.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action = 'store_true')
+	program.add_argument('--keep-temp', help = wording.get('keep_temp_help'), dest = 'keep_temp', action = 'store_true')
+	program.add_argument('--skip-audio', help = wording.get('skip_audio_help'), dest = 'skip_audio', action = 'store_true')
 	program.add_argument('--face-recognition', help = wording.get('face_recognition_help'), dest = 'face_recognition', default = 'reference', choices = facefusion.choices.face_recognition)
 	program.add_argument('--face-analyser-direction', help = wording.get('face_analyser_direction_help'), dest = 'face_analyser_direction', default = 'left-right', choices = facefusion.choices.face_analyser_direction)
 	program.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), dest = 'face_analyser_age', choices = facefusion.choices.face_analyser_age)
@@ -54,10 +58,8 @@ def parse_args() -> None:
 	program.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = 'cpu'), dest = 'execution_providers', default = ['cpu'], choices = suggest_execution_providers_choices(), nargs='+')
 	program.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = suggest_execution_thread_count_default())
 	program.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), dest = 'execution_queue_count', type = int, default = 1)
-	program.add_argument('-v', '--version', action='version', version = metadata.get('name') + ' ' + metadata.get('version'))
-	program.add_argument("--port", help = wording.get('gradio_port_help'), dest = 'gradio_port', type=int, default=None)
-	program.add_argument("--share", help = wording.get('gradio_share_help'), dest = 'gradio_share', action='store_true')
-	program.add_argument("--listen", help = wording.get('gradio_listen_help'), dest = 'gradio_listen', type=str, default=None, metavar="IP", nargs="?", const="0.0.0.0")
+	program.add_argument('-v', '--version', action = 'version', version = metadata.get('name') + ' ' + metadata.get('version'))
+	
 
 
 	args = program.parse_args()
@@ -65,7 +67,10 @@ def parse_args() -> None:
 	facefusion.globals.source_path = args.source_path
 	facefusion.globals.target_path = args.target_path
 	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, args.output_path)
-	facefusion.globals.headless = facefusion.globals.source_path is not None and facefusion.globals.target_path is not None and facefusion.globals.output_path is not None
+	facefusion.globals.gradio_port = args.gradio_port
+	facefusion.globals.gradio_share = args.gradio_share
+	facefusion.globals.gradio_listen = args.gradio_listen
+	facefusion.globals.headless = check_headless()
 	facefusion.globals.frame_processors = args.frame_processors
 	facefusion.globals.ui_layouts = args.ui_layouts
 	facefusion.globals.keep_fps = args.keep_fps
@@ -88,9 +93,24 @@ def parse_args() -> None:
 	facefusion.globals.execution_providers = decode_execution_providers(args.execution_providers)
 	facefusion.globals.execution_thread_count = args.execution_thread_count
 	facefusion.globals.execution_queue_count = args.execution_queue_count
-	facefusion.globals.gradio_port = args.gradio_port
-	facefusion.globals.gradio_share = args.gradio_share
-	facefusion.globals.gradio_listen = args.gradio_listen
+
+
+def check_headless() -> bool:
+    if args.headless is not None
+        if args.source_path is None:
+            facefusion.globals.source_path = input('Please provide a source image: ')
+        if args.target_path is None:
+            facefusion.globals.target_path = input('Please provide a target image/video: ')
+        if args.output_path is None:
+            print("File organization could get messy without an output directory.")
+            use_current_directory = input("Do you want to use the current working directory for output? (y/n): ")
+            if use_current_directory.lower() == "y":
+                facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, os.getcwd())
+            else:
+                facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, input("Please provide an output directory: "))
+		return True
+	else:
+		return False
 
 
 def suggest_execution_providers_choices() -> List[str]:
