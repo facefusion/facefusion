@@ -61,7 +61,6 @@ def parse_args() -> None:
 	program.add_argument('-v', '--version', action = 'version', version = metadata.get('name') + ' ' + metadata.get('version'))
 	
 
-
 	args = program.parse_args()
 
 	facefusion.globals.source_path = args.source_path
