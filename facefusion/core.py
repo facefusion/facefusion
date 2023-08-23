@@ -95,7 +95,7 @@ def parse_args() -> None:
 
 
 def check_headless() -> bool:
-    if args.headless is not None
+    if args.headless is not None:
         if args.source_path is None:
             facefusion.globals.source_path = input('Please provide a source image: ')
         if args.target_path is None:
