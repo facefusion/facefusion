@@ -28,3 +28,6 @@ max_memory : Optional[int] = None
 execution_providers : List[str] = []
 execution_thread_count : Optional[int] = None
 execution_queue_count : Optional[int] = None
+gradio_port : Optional[int] = None
+gradio_share : Optional[bool] = None
+gradio_listen : Optional[str] = None
