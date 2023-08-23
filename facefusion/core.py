@@ -35,7 +35,7 @@ def parse_args() -> None:
 	program.add_argument("--port", help = wording.get('gradio_port_help'), dest = 'gradio_port', type = int, default = None)
 	program.add_argument("--share", help = wording.get('gradio_share_help'), dest = 'gradio_share', action = 'store_true')
 	program.add_argument("--listen", help = wording.get('gradio_listen_help'), dest = 'gradio_listen', type = str, default = None, metavar = "IP", nargs = "?", const = "0.0.0.0")
-	program.add_argument('--headless', help = wording.get('headless_help'), dest = 'headless', type = bool, default = None)
+	program.add_argument('--headless', help = wording.get('headless_help'), dest = 'headless', action = 'store_true')
 	program.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(list_module_names('facefusion/processors/frame/modules'))), dest = 'frame_processors', default = ['face_swapper'], nargs = '+')
 	program.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), dest = 'ui_layouts', default = ['default'], nargs='+')
 	program.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action = 'store_true')
@@ -69,7 +69,7 @@ def parse_args() -> None:
 	facefusion.globals.gradio_port = args.gradio_port
 	facefusion.globals.gradio_share = args.gradio_share
 	facefusion.globals.gradio_listen = args.gradio_listen
-	facefusion.globals.headless = check_headless()
+	facefusion.globals.headless = check_headless(args)
 	facefusion.globals.frame_processors = args.frame_processors
 	facefusion.globals.ui_layouts = args.ui_layouts
 	facefusion.globals.keep_fps = args.keep_fps
@@ -94,19 +94,19 @@ def parse_args() -> None:
 	facefusion.globals.execution_queue_count = args.execution_queue_count
 
 
-def check_headless() -> bool:
-    if args.headless is not None:
-        if args.source_path is None:
-            facefusion.globals.source_path = input('Please provide a source image: ')
-        if args.target_path is None:
-            facefusion.globals.target_path = input('Please provide a target image/video: ')
-        if args.output_path is None:
-            print("File organization could get messy without an output directory.")
-            use_current_directory = input("Do you want to use the current working directory for output? (y/n): ")
-            if use_current_directory.lower() == "y":
-                facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, os.getcwd())
-            else:
-                facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, input("Please provide an output directory: "))
+def check_headless(args) -> bool:
+	if args.headless is not None:
+		if args.source_path is None:
+			facefusion.globals.source_path = input('Please provide a source image: ')
+		if args.target_path is None:
+			facefusion.globals.target_path = input('Please provide a target image/video: ')
+		if args.output_path is None:
+			print("File organization could get messy without an output directory.")
+			use_current_directory = input("Do you want to use the current working directory for output? (y/n): ")
+			if use_current_directory.lower() == "y":
+				facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, os.getcwd())
+			else:
+				facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, input("Please provide an output directory: "))
 		return True
 	else:
 		return False
