@@ -76,14 +76,21 @@ def update(benchmark_cycles : int) -> Update:
 		'.assets/examples/target-1440p.mp4',
 		'.assets/examples/target-2160p.mp4'
 	]
+	warm_up('.assets/examples/target-240p.mp4')
 	value = [ benchmark(target_path, benchmark_cycles) for target_path in target_paths ]
 	return gradio.update(value = value)
+
+
+def warm_up(target_path : str) -> None:
+	facefusion.globals.target_path = target_path
+	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, tempfile.gettempdir())
+	conditional_process()
 
 
 def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	process_times = []
 	total_fps = 0.0
-	for i in range(benchmark_cycles + 1):
+	for i in range(benchmark_cycles):
 		facefusion.globals.target_path = target_path
 		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, tempfile.gettempdir())
 		video_frame_total = get_video_frame_total(facefusion.globals.target_path)
@@ -91,10 +98,8 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 		conditional_process()
 		end_time = time.perf_counter()
 		process_time = end_time - start_time
-		fps = video_frame_total / process_time
-		if i > 0:
-			process_times.append(process_time)
-			total_fps += fps
+		total_fps += video_frame_total / process_time
+		process_times.append(process_time)
 	average_run = round(statistics.mean(process_times), 2)
 	fastest_run = round(min(process_times), 2)
 	slowest_run = round(max(process_times), 2)
