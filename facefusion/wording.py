@@ -1,5 +1,6 @@
 WORDING =\
 {
+	'select_onnxruntime_installed': 'Select the onnxruntime be installed',
 	'python_not_supported': 'Python version is not supported, upgrade to {version} or higher',
 	'ffmpeg_not_installed': 'FFMpeg is not installed',
 	'source_help': 'select a source image',

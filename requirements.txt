@@ -5,10 +5,7 @@ gradio==3.41.0
 insightface==0.7.3
 numpy==1.24.3
 onnx==1.14.0
-onnxruntime==1.15.1; python_version != '3.9' and sys_platform == 'darwin' and platform_machine != 'arm64'
-onnxruntime-coreml==1.13.1; python_version == '3.9' and sys_platform == 'darwin' and platform_machine != 'arm64'
-onnxruntime-gpu==1.15.1; sys_platform != 'darwin'
-onnxruntime-silicon==1.13.1; sys_platform == 'darwin' and platform_machine == 'arm64'
+onnxruntime==1.15.1
 opencv-python==4.8.0.74
 opennsfw2==0.10.2
 pillow==10.0.0
