@@ -10,8 +10,8 @@ from facefusion import wording
 ONNXRUNTIMES =\
 {
 	'cpu': 'onnxruntime==1.15.1',
-	'coreml': 'onnxruntime-silicon==1.13.1',
-	'coreml-silicon': 'onnxruntime-coreml==1.13.1',
+	'coreml-legacy': 'onnxruntime-coreml==1.13.1',
+	'coreml-silicon': 'onnxruntime-silicon==1.13.1',
 	'cuda': 'onnxruntime-gpu==1.15.1',
 	'directml': 'onnxruntime-directml==1.15.1',
 	'openvino': 'onnxruntime-openvino==1.15.0'
