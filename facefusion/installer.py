@@ -14,9 +14,9 @@ from facefusion import wording
 ONNXRUNTIMES =\
 {
 	'cpu': 'onnxruntime==1.15.1',
+	'cuda': 'onnxruntime-gpu==1.15.1',
 	'coreml-legacy': 'onnxruntime-coreml==1.13.1',
 	'coreml-silicon': 'onnxruntime-silicon==1.13.1',
-	'cuda': 'onnxruntime-gpu==1.15.1',
 	'directml': 'onnxruntime-directml==1.15.1',
 	'openvino': 'onnxruntime-openvino==1.15.0'
 }
@@ -40,8 +40,8 @@ def run() -> None:
 	])
 
 	if answers is not None:
-		onnxruntime_key = answers['onnxruntime_key']
 		install_venv = answers['install_venv']
+		onnxruntime_key = answers['onnxruntime_key']
 		onnxruntime_name = ONNXRUNTIMES[onnxruntime_key]
 	if install_venv:
 		shutil.rmtree('venv', ignore_errors = True)
