@@ -24,7 +24,7 @@ def run() -> None:
 	[
 		inquirer.List(
 			'onnxruntime_key',
-			message = wording.get('select_onnxruntime_installed'),
+			message = wording.get('select_onnxruntime_install'),
 			choices = list(ONNXRUNTIMES.keys()),
 		)
 	])
