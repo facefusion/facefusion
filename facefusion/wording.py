@@ -1,5 +1,6 @@
 WORDING =\
 {
+	'create_venv_install': 'Dou you want to create a virtual environment',
 	'select_onnxruntime_install': 'Select the onnxruntime to be installed',
 	'python_not_supported': 'Python version is not supported, upgrade to {version} or higher',
 	'ffmpeg_not_installed': 'FFMpeg is not installed',
