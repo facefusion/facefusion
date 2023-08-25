@@ -52,7 +52,8 @@ def run() -> None:
 		else:
 			activate_path = os.path.join('venv', 'bin', 'activate')
 			subprocess.run([ 'source', activate_path ], shell = True)
-	subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
+	if answers is not None:
+		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
 	if onnxruntime_name:
 		if onnxruntime_name != 'cpu':
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
