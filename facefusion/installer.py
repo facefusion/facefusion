@@ -1,4 +1,7 @@
+from typing import Dict
 import subprocess
+
+subprocess.call([ 'pip', 'install' , 'inquirer', '-q' ])
 
 import inquirer
 
@@ -15,9 +18,9 @@ ONNXRUNTIMES =\
 }
 
 
-def install() -> None:
+def run() -> None:
 	onnxruntime_name = None
-	answers = inquirer.prompt(
+	answers : Dict[str, str] = inquirer.prompt(
 	[
 		inquirer.List(
 			'onnxruntime_key',
