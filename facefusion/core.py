@@ -122,8 +122,8 @@ def update_status(message : str, scope : str = 'FACEFUSION.CORE') -> None:
 
 
 def pre_check() -> bool:
-	if sys.version_info < (3, 10):
-		update_status(wording.get('python_not_supported').format(version = '3.10'))
+	if sys.version_info < (3, 9):
+		update_status(wording.get('python_not_supported').format(version = '3.9'))
 		return False
 	if not shutil.which('ffmpeg'):
 		update_status(wording.get('ffmpeg_not_installed'))
