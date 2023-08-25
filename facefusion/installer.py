@@ -36,5 +36,5 @@ def run() -> None:
 	if onnxruntime_name:
 		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
 		if onnxruntime_name != 'cpu':
-			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', '-y' ])
+			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
 		subprocess.call([ 'pip', 'install', onnxruntime_name ])
