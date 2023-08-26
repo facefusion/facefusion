@@ -32,7 +32,7 @@ def run() -> None:
 		inquirer.List(
 			'virtual_environment',
 			message = wording.get('select_virtual_environment_install'),
-			choices = [ 'conda', 'venv', 'none' ]
+			choices = [ 'venv', 'none' ]
 		),
 		inquirer.List(
 			'onnxruntime_key',
@@ -46,9 +46,6 @@ def run() -> None:
 		onnxruntime_key = answers['onnxruntime_key']
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime_key]
 		shutil.rmtree('venv', ignore_errors = True)
-	if virtual_environment == 'conda':
-		subprocess.call([ 'conda', 'create', '--name', 'venv', '-y' ])
-		subprocess.call([ 'conda', 'activate', 'venv' ])
 	if virtual_environment == 'venv':
 		subprocess.call([ sys.executable, '-m', 'venv', 'venv' ])
 		if platform.system().lower() == 'windows':
