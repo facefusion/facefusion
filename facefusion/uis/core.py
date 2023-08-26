@@ -1,4 +1,5 @@
-from typing import Dict, Optional, Any
+from types import ModuleType
+from typing import Dict, Optional, Any, List
 import importlib
 import sys
 import cv2
@@ -10,22 +11,14 @@ from facefusion.typing import Frame
 from facefusion.uis.typing import Component, ComponentName
 
 COMPONENTS: Dict[ComponentName, Component] = {}
+UI_LAYOUT_MODULES : List[ModuleType] = []
 UI_LAYOUT_METHODS =\
 [
 	'pre_check',
+	'pre_render',
 	'render',
 	'listen'
 ]
-
-
-def launch() -> None:
-	with gradio.Blocks(theme = get_theme(), title = metadata.get('name') + ' ' + metadata.get('version')) as ui:
-		for ui_layout in facefusion.globals.ui_layouts:
-			ui_layout_module = load_ui_layout_module(ui_layout)
-			ui_layout_module.pre_check()
-			ui_layout_module.render()
-			ui_layout_module.listen()
-	ui.launch(show_api = False)
 
 
 def load_ui_layout_module(ui_layout : str) -> Any:
@@ -39,6 +32,26 @@ def load_ui_layout_module(ui_layout : str) -> Any:
 	except NotImplementedError:
 		sys.exit(wording.get('ui_layout_not_implemented').format(ui_layout = ui_layout))
 	return ui_layout_module
+
+
+def get_ui_layouts_modules(ui_layouts : List[str]) -> List[ModuleType]:
+	global UI_LAYOUT_MODULES
+
+	if not UI_LAYOUT_MODULES:
+		for ui_layout in ui_layouts:
+			ui_layout_module = load_ui_layout_module(ui_layout)
+			UI_LAYOUT_MODULES.append(ui_layout_module)
+	return UI_LAYOUT_MODULES
+
+
+def launch() -> None:
+	with gradio.Blocks(theme = get_theme(), title = metadata.get('name') + ' ' + metadata.get('version')) as ui:
+		for ui_layout in facefusion.globals.ui_layouts:
+			ui_layout_module = load_ui_layout_module(ui_layout)
+			if ui_layout_module.pre_render():
+				ui_layout_module.render()
+				ui_layout_module.listen()
+	ui.launch(show_api = False)
 
 
 def get_theme() -> gradio.Theme:

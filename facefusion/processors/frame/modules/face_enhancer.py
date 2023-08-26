@@ -43,9 +43,12 @@ def pre_check() -> bool:
 	return True
 
 
-def pre_process() -> bool:
+def pre_process(is_stream : bool = False) -> bool:
 	if not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
 		update_status(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
+		return False
+	if not is_stream and not facefusion.globals.output_path:
+		update_status(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
 

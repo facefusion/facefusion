@@ -103,7 +103,7 @@ def extract_preview_frame(temp_frame : Frame) -> Frame:
 	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
-		if frame_processor_module.pre_process():
+		if frame_processor_module.pre_process(True):
 			temp_frame = frame_processor_module.process_frame(
 				source_face,
 				reference_face,

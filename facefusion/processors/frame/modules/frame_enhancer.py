@@ -4,7 +4,10 @@ import threading
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from realesrgan import RealESRGANer
 
+import facefusion
 import facefusion.processors.frame.core as frame_processors
+from facefusion import wording
+from facefusion.core import update_status
 from facefusion.typing import Frame, Face
 from facefusion.utilities import conditional_download, resolve_relative_path
 
@@ -51,7 +54,10 @@ def pre_check() -> bool:
 	return True
 
 
-def pre_process() -> bool:
+def pre_process(is_stream : bool = False) -> bool:
+	if not is_stream and not facefusion.globals.output_path:
+		update_status(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
+		return False
 	return True
 
 

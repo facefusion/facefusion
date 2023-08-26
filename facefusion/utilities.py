@@ -114,12 +114,11 @@ def get_temp_output_path(target_path : str) -> str:
 	return os.path.join(temp_directory_path, TEMP_OUTPUT_NAME)
 
 
-def normalize_output_path(source_path : str, target_path : str, output_path : str) -> Optional[str]:
-	if source_path and target_path and output_path:
+def normalize_output_path(source_path : Optional[str], target_path : Optional[str], output_path : Optional[str]) -> Optional[str]:
+	if is_file(source_path) and is_file(target_path) and is_directory(output_path):
 		source_name, _ = os.path.splitext(os.path.basename(source_path))
 		target_name, target_extension = os.path.splitext(os.path.basename(target_path))
-		if os.path.isdir(output_path):
-			return os.path.join(output_path, source_name + '-' + target_name + target_extension)
+		return os.path.join(output_path, source_name + '-' + target_name + target_extension)
 	return output_path
 
 
@@ -130,8 +129,8 @@ def create_temp(target_path : str) -> None:
 
 def move_temp(target_path : str, output_path : str) -> None:
 	temp_output_path = get_temp_output_path(target_path)
-	if os.path.isfile(temp_output_path):
-		if os.path.isfile(output_path):
+	if is_file(temp_output_path):
+		if is_file(output_path):
 			os.remove(output_path)
 		shutil.move(temp_output_path, output_path)
 
@@ -139,21 +138,29 @@ def move_temp(target_path : str, output_path : str) -> None:
 def clear_temp(target_path : str) -> None:
 	temp_directory_path = get_temp_directory_path(target_path)
 	parent_directory_path = os.path.dirname(temp_directory_path)
-	if not facefusion.globals.keep_temp and os.path.isdir(temp_directory_path):
+	if not facefusion.globals.keep_temp and is_directory(temp_directory_path):
 		shutil.rmtree(temp_directory_path)
 	if os.path.exists(parent_directory_path) and not os.listdir(parent_directory_path):
 		os.rmdir(parent_directory_path)
 
 
+def is_file(file_path : str) -> bool:
+	return bool(file_path and os.path.isfile(file_path))
+
+
+def is_directory(directory_path : str) -> bool:
+	return bool(directory_path and os.path.isdir(directory_path))
+
+
 def is_image(image_path : str) -> bool:
-	if image_path and os.path.isfile(image_path):
+	if is_file(image_path):
 		mimetype, _ = mimetypes.guess_type(image_path)
 		return bool(mimetype and mimetype.startswith('image/'))
 	return False
 
 
 def is_video(video_path : str) -> bool:
-	if video_path and os.path.isfile(video_path):
+	if is_file(video_path):
 		mimetype, _ = mimetypes.guess_type(video_path)
 		return bool(mimetype and mimetype.startswith('video/'))
 	return False

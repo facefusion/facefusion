@@ -16,11 +16,7 @@ Preview
 Installation
 ------------
 
-Be aware, the installation needs technical skills and is not for beginners. Please do not open platform and installation related issues on GitHub. We have a very helpful [Discord](https://join.facefusion.io) community that will guide you to install FaceFusion.
-
-[Basic](https://docs.facefusion.io/installation/basic) - It is more likely to work on your computer, but will be quite slow
-
-[Acceleration](https://docs.facefusion.io/installation/acceleration) - Unleash the full potential of your CPU and GPU
+Be aware, the [installation](https://docs.facefusion.io/installation) needs technical skills and is not for beginners. Please do not open platform and installation related issues on GitHub. We have a very helpful [Discord](https://join.facefusion.io) community that will guide you to install FaceFusion.
 
 
 Usage
@@ -57,10 +53,9 @@ python run.py [options]
 --execution-providers {cpu} [{cpu} ...]                                                          choose from the available execution providers (choices: cpu, ...)
 --execution-thread-count EXECUTION_THREAD_COUNT                                                  specify the number of execution threads
 --execution-queue-count EXECUTION_QUEUE_COUNT                                                    specify the number of execution queries
+--headless                                                                                       run the program in headless mode
 -v, --version                                                                                    show program's version number and exit
 ```
-
-Using the `-s/--source`, `-t/--target` and `-o/--output` arguments will run the program in headless mode.
 
 
 Disclaimer

@@ -54,6 +54,7 @@ def parse_args() -> None:
 	program.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = 'cpu'), dest = 'execution_providers', default = ['cpu'], choices = suggest_execution_providers_choices(), nargs = '+')
 	program.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = suggest_execution_thread_count_default())
 	program.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), dest = 'execution_queue_count', type = int, default = 1)
+	program.add_argument('--headless', help = wording.get('headless_help'), dest = 'headless', action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 
 	args = program.parse_args()
@@ -61,7 +62,6 @@ def parse_args() -> None:
 	facefusion.globals.source_path = args.source_path
 	facefusion.globals.target_path = args.target_path
 	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, args.output_path)
-	facefusion.globals.headless = facefusion.globals.source_path is not None and facefusion.globals.target_path is not None and facefusion.globals.output_path is not None
 	facefusion.globals.frame_processors = args.frame_processors
 	facefusion.globals.ui_layouts = args.ui_layouts
 	facefusion.globals.keep_fps = args.keep_fps
@@ -84,6 +84,7 @@ def parse_args() -> None:
 	facefusion.globals.execution_providers = decode_execution_providers(args.execution_providers)
 	facefusion.globals.execution_thread_count = args.execution_thread_count
 	facefusion.globals.execution_queue_count = args.execution_queue_count
+	facefusion.globals.headless = args.headless
 
 
 def suggest_execution_providers_choices() -> List[str]:
@@ -207,12 +208,16 @@ def run() -> None:
 	for frame_processor in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor.pre_check():
 			return
-	# process or launch
+	# headless or ui
 	if facefusion.globals.headless:
 		conditional_process()
 	else:
 		import facefusion.uis.core as ui
 
+		# pre check
+		for ui_layout in ui.get_ui_layouts_modules(facefusion.globals.ui_layouts):
+			if not ui_layout.pre_check():
+				return
 		ui.launch()
 
 
