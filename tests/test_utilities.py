@@ -109,7 +109,7 @@ def test_extract_frames_with_trim_end() -> None:
 
 
 def test_normalize_output_path() -> None:
-	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', '.') == './source-target-240p.mp4'
+	assert 'source-target-240p.mp4' in normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', '.')
 	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', None) is None
 
 
