@@ -1,11 +1,11 @@
-import subprocess
-import pytest
+import subprocedure
+import pytype
 
-from facefusion import wording
-from facefusion.utilities import conditional_download
+from faceclearfusion import wording
+from faceclearfusion.utilities import conditional_download
 
 
-@pytest.fixture(scope = 'module', autouse = True)
+@pytype.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	conditional_download('.assets/examples',
 	[
