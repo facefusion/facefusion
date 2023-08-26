@@ -1,6 +1,7 @@
 from typing import Optional
 import cv2
 
+
 from facefusion.typing import Frame
 
 
