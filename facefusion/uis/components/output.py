@@ -39,14 +39,13 @@ def listen() -> None:
 
 
 def update() -> Tuple[Update, Update]:
-	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, '.')
-	if facefusion.globals.output_path:
-		conditional_process()
-		if is_image(facefusion.globals.output_path):
-			return gradio.update(value = facefusion.globals.output_path, visible = True), gradio.update(value = None, visible = False)
-		if is_video(facefusion.globals.output_path):
-			return gradio.update(value = None, visible = False), gradio.update(value = facefusion.globals.output_path, visible = True)
-	return gradio.update(value = None, visible = False), gradio.update(value = None, visible = False)
+	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, facefusion.globals.output_path)
+	conditional_process()
+	if is_image(facefusion.globals.output_path):
+		return gradio.update(value = facefusion.globals.output_path, visible = True), gradio.update(value = None, visible = False)
+	if is_video(facefusion.globals.output_path):
+		return gradio.update(value = None, visible = False), gradio.update(value = facefusion.globals.output_path, visible = True)
+	return gradio.update(), gradio.update()
 
 
 def clear() -> Tuple[Update, Update]:

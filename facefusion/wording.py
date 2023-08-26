@@ -66,6 +66,7 @@ WORDING =\
 	'face_recognition_dropdown_label': 'FACE RECOGNITION',
 	'reference_face_distance_slider_label': 'REFERENCE FACE DISTANCE',
 	'output_image_or_video_label': 'OUTPUT',
+	'output_path_textbox_label': 'OUTPUT PATH',
 	'output_video_encoder_dropdown_label': 'OUTPUT VIDEO ENCODER',
 	'output_video_quality_slider_label': 'OUTPUT VIDEO QUALITY',
 	'preview_image_label': 'PREVIEW',
