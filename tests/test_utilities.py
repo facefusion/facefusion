@@ -1,4 +1,5 @@
 import glob
+import os
 import subprocess
 import pytest
 
@@ -109,9 +110,9 @@ def test_extract_frames_with_trim_end() -> None:
 
 
 def test_normalize_output_path() -> None:
-	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', '.assets/examples') == '.assets/examples/source-target-240p.mp4'
-	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/source.jpg', '.assets/invalid') == '.assets/invalid.jpg'
-	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', '.assets/invalid') == '.assets/invalid.mp4'
+	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', '.assets/examples') == os.path.join('.assets', 'examples', 'source-target-240p.mp4')
+	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/source.jpg', '.assets/invalid') == os.path.join('.assets', 'invalid.jpg')
+	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', '.assets/invalid') == os.path.join('.assets', 'invalid.mp4')
 	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/source.jpg', 'invalid') == 'invalid.jpg'
 	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', 'invalid') == 'invalid.mp4'
 	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', None) is None
