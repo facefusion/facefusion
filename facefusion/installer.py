@@ -1,8 +1,8 @@
+from typing import Dict
 import os
 import platform
 import shutil
 import sys
-from typing import Dict
 import subprocess
 
 subprocess.call([ 'pip', 'install' , 'inquirer', '-q' ])
@@ -11,7 +11,7 @@ import inquirer
 
 from facefusion import wording
 
-ONNXRUNTIMES =\
+ONNXRUNTIMES : Dict[str, str] =\
 {
 	'cpu': 'onnxruntime==1.15.1',
 	'cuda': 'onnxruntime-gpu==1.15.1',
@@ -23,14 +23,14 @@ ONNXRUNTIMES =\
 
 
 def run() -> None:
-	install_venv = None
+	virtual_environment = None
 	onnxruntime_name = None
 	answers : Dict[str, str] = inquirer.prompt(
 	[
-		inquirer.Confirm(
-			'install_venv',
-			message = wording.get('create_venv_install'),
-			default = True
+		inquirer.List(
+			'virtual_environment',
+			message = wording.get('select_virtual_environment_install'),
+			choices = [ 'conda', 'venv', 'none' ],
 		),
 		inquirer.List(
 			'onnxruntime_key',
@@ -40,11 +40,13 @@ def run() -> None:
 	])
 
 	if answers is not None:
-		install_venv = answers['install_venv']
+		virtual_environment = answers['virtual_environment']
 		onnxruntime_key = answers['onnxruntime_key']
 		onnxruntime_name = ONNXRUNTIMES[onnxruntime_key]
-	if install_venv:
 		shutil.rmtree('venv', ignore_errors = True)
+	if virtual_environment == 'conda':
+		subprocess.call([ 'conda', 'create', '--prefix', 'venv', '-y' ])
+	if virtual_environment == 'venv':
 		subprocess.run([ sys.executable, '-m', 'venv', 'venv' ])
 		if platform.system().lower() == 'windows':
 			activate_path = os.path.join('venv', 'Scripts', 'activate.bat')
