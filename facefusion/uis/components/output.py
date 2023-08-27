@@ -7,17 +7,19 @@ from facefusion.core import conditional_process
 from facefusion.uis.typing import Update
 from facefusion.utilities import is_image, is_video, normalize_output_path, clear_temp
 
-OUTPUT_START_BUTTON : Optional[gradio.Button] = None
-OUTPUT_CLEAR_BUTTON : Optional[gradio.Button] = None
 OUTPUT_IMAGE : Optional[gradio.Image] = None
 OUTPUT_VIDEO : Optional[gradio.Video] = None
+OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
+OUTPUT_START_BUTTON : Optional[gradio.Button] = None
+OUTPUT_CLEAR_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
-	global OUTPUT_START_BUTTON
-	global OUTPUT_CLEAR_BUTTON
 	global OUTPUT_IMAGE
 	global OUTPUT_VIDEO
+	global OUTPUT_PATH_TEXTBOX
+	global OUTPUT_START_BUTTON
+	global OUTPUT_CLEAR_BUTTON
 
 	with gradio.Row():
 		with gradio.Box():
@@ -28,12 +30,18 @@ def render() -> None:
 			OUTPUT_VIDEO = gradio.Video(
 				label = wording.get('output_image_or_video_label')
 			)
+			OUTPUT_PATH_TEXTBOX = gradio.Textbox(
+				label = wording.get('output_path_textbox_label'),
+				value = facefusion.globals.output_path,
+				max_lines = 1
+			)
 	with gradio.Row():
 		OUTPUT_START_BUTTON = gradio.Button(wording.get('start_button_label'))
 		OUTPUT_CLEAR_BUTTON = gradio.Button(wording.get('clear_button_label'))
 
 
 def listen() -> None:
+	OUTPUT_PATH_TEXTBOX.change(update_output_path, inputs=OUTPUT_PATH_TEXTBOX, outputs=OUTPUT_PATH_TEXTBOX)
 	OUTPUT_START_BUTTON.click(update, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO ])
 	OUTPUT_CLEAR_BUTTON.click(clear, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO ])
 
@@ -46,6 +54,11 @@ def update() -> Tuple[Update, Update]:
 	if is_video(facefusion.globals.output_path):
 		return gradio.update(value = None, visible = False), gradio.update(value = facefusion.globals.output_path, visible = True)
 	return gradio.update(), gradio.update()
+
+
+def update_output_path(output_path : str) -> Update:
+	facefusion.globals.output_path = output_path
+	return gradio.update(value = output_path)
 
 
 def clear() -> Tuple[Update, Update]:

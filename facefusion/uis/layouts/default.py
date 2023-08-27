@@ -1,6 +1,6 @@
 import gradio
 
-from facefusion.uis.components import about, processors, execution, temp_frame, settings, source, target, preview, trim_frame, face_analyser, face_selector, output_settings, output
+from facefusion.uis.components import about, processors, execution, temp_frame, output_video, settings, source, target, preview, trim_frame, face_analyser, face_selector, output
 
 
 def pre_check() -> bool:
@@ -19,11 +19,11 @@ def render() -> gradio.Blocks:
 				processors.render()
 				execution.render()
 				temp_frame.render()
+				output_video.render()
 				settings.render()
 			with gradio.Column(scale = 2):
 				source.render()
 				target.render()
-				output_settings.render()
 				output.render()
 			with gradio.Column(scale = 3):
 				preview.render()
@@ -36,13 +36,13 @@ def render() -> gradio.Blocks:
 def listen() -> None:
 	processors.listen()
 	execution.listen()
-	settings.listen()
+	output_video.listen()
 	temp_frame.listen()
+	settings.listen()
 	source.listen()
 	target.listen()
 	preview.listen()
 	trim_frame.listen()
 	face_selector.listen()
 	face_analyser.listen()
-	output_settings.listen()
 	output.listen()

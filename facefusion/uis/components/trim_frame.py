@@ -43,11 +43,11 @@ def render() -> None:
 
 
 def listen() -> None:
+	TRIM_FRAME_START_SLIDER.change(lambda value : update_number('trim_frame_start', int(value)), inputs = TRIM_FRAME_START_SLIDER, outputs = TRIM_FRAME_START_SLIDER)
+	TRIM_FRAME_END_SLIDER.change(lambda value : update_number('trim_frame_end', int(value)), inputs = TRIM_FRAME_END_SLIDER, outputs = TRIM_FRAME_END_SLIDER)
 	target_file = ui.get_component('target_file')
 	if target_file:
 		target_file.change(remote_update, outputs = [ TRIM_FRAME_START_SLIDER, TRIM_FRAME_END_SLIDER ])
-	TRIM_FRAME_START_SLIDER.change(lambda value : update_number('trim_frame_start', int(value)), inputs = TRIM_FRAME_START_SLIDER, outputs = TRIM_FRAME_START_SLIDER)
-	TRIM_FRAME_END_SLIDER.change(lambda value : update_number('trim_frame_end', int(value)), inputs = TRIM_FRAME_END_SLIDER, outputs = TRIM_FRAME_END_SLIDER)
 
 
 def remote_update() -> Tuple[Update, Update]:
