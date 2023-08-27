@@ -1,10 +1,8 @@
 from typing import Dict, Tuple
 import os
 import sys
-import platform
-import tempfile
 import subprocess
-import shutil
+import tempfile
 
 subprocess.call([ 'pip', 'install' , 'inquirer', '-q' ])
 
@@ -24,48 +22,27 @@ ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 
 
 def run() -> None:
-	virtual_environment = None
-	onnxruntime_key = None
-	onnxruntime_name = None
-	onnxruntime_version = None
 	answers : Dict[str, str] = inquirer.prompt(
 	[
-		inquirer.List(
-			'virtual_environment',
-			message = wording.get('select_virtual_environment_install'),
-			choices = [ 'venv', 'none' ]
-		),
 		inquirer.List(
 			'onnxruntime_key',
 			message = wording.get('select_onnxruntime_install'),
 			choices = list(ONNXRUNTIMES.keys())
 		)
 	])
-	python_version = str(sys.version_info.major) + str(sys.version_info.minor)
 
 	if answers is not None:
-		virtual_environment = answers['virtual_environment']
 		onnxruntime_key = answers['onnxruntime_key']
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime_key]
-	if virtual_environment == 'venv':
-		subprocess.call([ sys.executable, '-m', 'venv', 'venv' ])
-		if platform.system().lower() == 'windows':
-			activate_path = os.path.join('venv', 'Scripts', 'activate.bat')
-			subprocess.call([ activate_path ])
-		else:
-			activate_path = os.path.join('venv', 'bin', 'activate')
-			subprocess.call([ 'bash', '-c', 'source ' + activate_path ])
-	if virtual_environment == 'none':
-		shutil.rmtree('venv', ignore_errors = True)
-	if answers is not None:
+		python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
+
 		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
-	if onnxruntime_key:
 		if onnxruntime_key != 'cpu':
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
 		if onnxruntime_key != 'coreml-silicon':
 			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
-		elif python_version in [ '39', '310', '311' ]:
-			wheel_name = 'onnxruntime_silicon-' + onnxruntime_version + '-cp' + python_version + '-cp' + python_version + '-macosx_12_0_arm64.whl'
+		elif python_id in [ 'cp39', 'cp310', 'cp311' ]:
+			wheel_name = 'onnxruntime_silicon-' + onnxruntime_version + '-' + python_id + '-' + python_id + '-macosx_12_0_arm64.whl'
 			wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
 			wheel_url = 'https://github.com/cansik/onnxruntime-silicon/releases/download/v' + onnxruntime_version + '/' + wheel_name
 			subprocess.call([ 'curl', wheel_url, '-o', wheel_path, '-L' ])
