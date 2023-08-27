@@ -41,6 +41,7 @@ def run() -> None:
 			choices = list(ONNXRUNTIMES.keys())
 		)
 	])
+	python_version = str(sys.version_info.major) + str(sys.version_info.minor)
 
 	if answers is not None:
 		virtual_environment = answers['virtual_environment']
@@ -63,9 +64,10 @@ def run() -> None:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
 		if onnxruntime_key != 'coreml-silicon':
 			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
-		else:
-			wheel_name = 'onnxruntime_silicon-' + onnxruntime_version + '-cp310-cp310-macosx_12_0_arm64.whl'
+		elif python_version in [ '39', '310', '311' ]:
+			wheel_name = 'onnxruntime_silicon-' + onnxruntime_version + '-cp' + python_version + '-cp' + python_version + '-macosx_12_0_arm64.whl'
 			wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
-			subprocess.call([ 'curl', 'https://github.com/cansik/onnxruntime-silicon/releases/download/v' + wheel_name, '-o', wheel_path ])
+			wheel_url = 'https://github.com/cansik/onnxruntime-silicon/releases/download/v' + onnxruntime_version + '/' + wheel_name
+			subprocess.call([ 'curl', wheel_url, '-o', wheel_path, '-L' ])
 			subprocess.call([ 'pip', 'install', wheel_path ])
 			os.remove(wheel_path)
