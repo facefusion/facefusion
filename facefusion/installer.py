@@ -42,7 +42,7 @@ def run() -> None:
 		if onnxruntime_key != 'coreml-silicon':
 			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
 		elif python_id in [ 'cp39', 'cp310', 'cp311' ]:
-			wheel_name = 'onnxruntime_silicon-' + onnxruntime_version + '-' + python_id + '-' + python_id + '-macosx_12_0_arm64.whl'
+			wheel_name = '-'.join([ 'onnxruntime_silicon', onnxruntime_version, python_id, python_id, 'macosx_12_0_arm64.whl' ])
 			wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
 			wheel_url = 'https://github.com/cansik/onnxruntime-silicon/releases/download/v' + onnxruntime_version + '/' + wheel_name
 			subprocess.call([ 'curl', wheel_url, '-o', wheel_path, '-L' ])
