@@ -32,6 +32,24 @@ def start() -> None:
 
 	STATE = 'start'
 	capture = cv2.VideoCapture(0)
+	capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+	capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+	capture.set(cv2.CAP_PROP_FPS, 30)
+	while STATE == 'start':
+		_, frame = capture.read()
+		temp_frame = process_stream_frame(frame)
+		if temp_frame is not None:
+			cv2.imshow('FaceFusionCam', temp_frame)
+		cv2.waitKey(1)
+	capture.release()
+	cv2.destroyAllWindows()
+
+
+def __start() -> None:
+	global STATE
+
+	STATE = 'start'
+	capture = cv2.VideoCapture(0)
 	commands =\
 	[
 		'-f', 'rawvideo',
