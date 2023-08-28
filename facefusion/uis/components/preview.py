@@ -34,11 +34,11 @@ def render() -> None:
 		}
 		if is_image(facefusion.globals.target_path):
 			target_frame = cv2.imread(facefusion.globals.target_path)
-			preview_frame = extract_preview_frame(target_frame)
+			preview_frame = process_preview_frame(target_frame)
 			preview_image_args['value'] = ui.normalize_frame(preview_frame)
 		if is_video(facefusion.globals.target_path):
 			temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-			preview_frame = extract_preview_frame(temp_frame)
+			preview_frame = process_preview_frame(temp_frame)
 			preview_image_args['value'] = ui.normalize_frame(preview_frame)
 			preview_image_args['visible'] = True
 			preview_frame_slider_args['value'] = facefusion.globals.reference_frame_number
@@ -80,18 +80,18 @@ def update(frame_number : int = 0) -> Tuple[Update, Update]:
 	sleep(0.1)
 	if is_image(facefusion.globals.target_path):
 		target_frame = cv2.imread(facefusion.globals.target_path)
-		preview_frame = extract_preview_frame(target_frame)
+		preview_frame = process_preview_frame(target_frame)
 		return gradio.update(value = ui.normalize_frame(preview_frame)), gradio.update(value = None, maximum = None, visible = False)
 	if is_video(facefusion.globals.target_path):
 		facefusion.globals.reference_frame_number = frame_number
 		video_frame_total = get_video_frame_total(facefusion.globals.target_path)
 		temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-		preview_frame = extract_preview_frame(temp_frame)
+		preview_frame = process_preview_frame(temp_frame)
 		return gradio.update(value = ui.normalize_frame(preview_frame)), gradio.update(maximum = video_frame_total, visible = True)
 	return gradio.update(value = None), gradio.update(value = None, maximum = None, visible = False)
 
 
-def extract_preview_frame(temp_frame : Frame) -> Frame:
+def process_preview_frame(temp_frame : Frame) -> Frame:
 	if predict_frame(temp_frame):
 		return cv2.GaussianBlur(temp_frame, (99, 99), 0)
 	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
@@ -103,7 +103,7 @@ def extract_preview_frame(temp_frame : Frame) -> Frame:
 	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
-		if frame_processor_module.pre_process(True):
+		if frame_processor_module.pre_process('preview'):
 			temp_frame = frame_processor_module.process_frame(
 				source_face,
 				reference_face,

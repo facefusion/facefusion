@@ -191,7 +191,7 @@ def process_video() -> None:
 
 def conditional_process() -> None:
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
-		if not frame_processor_module.pre_process():
+		if not frame_processor_module.pre_process('output'):
 			return
 	if is_image(facefusion.globals.target_path):
 		process_image()

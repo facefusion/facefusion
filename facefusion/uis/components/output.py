@@ -42,11 +42,11 @@ def render() -> None:
 
 def listen() -> None:
 	OUTPUT_PATH_TEXTBOX.change(update_output_path, inputs=OUTPUT_PATH_TEXTBOX, outputs=OUTPUT_PATH_TEXTBOX)
-	OUTPUT_START_BUTTON.click(update, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO ])
+	OUTPUT_START_BUTTON.click(start, outputs = [OUTPUT_IMAGE, OUTPUT_VIDEO])
 	OUTPUT_CLEAR_BUTTON.click(clear, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO ])
 
 
-def update() -> Tuple[Update, Update]:
+def start() -> Tuple[Update, Update]:
 	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, facefusion.globals.output_path)
 	conditional_process()
 	if is_image(facefusion.globals.output_path):

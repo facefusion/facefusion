@@ -9,7 +9,7 @@ from facefusion import wording
 from facefusion.core import update_status
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces
 from facefusion.face_reference import get_face_reference, set_face_reference
-from facefusion.typing import Face, Frame
+from facefusion.typing import Face, Frame, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video
 
 FRAME_PROCESSOR = None
@@ -39,16 +39,16 @@ def pre_check() -> bool:
 	return True
 
 
-def pre_process(is_stream : bool = False) -> bool:
+def pre_process(mode : ProcessMode) -> bool:
 	if not is_image(facefusion.globals.source_path):
 		update_status(wording.get('select_image_source') + wording.get('exclamation_mark'), NAME)
 		return False
 	elif not get_one_face(cv2.imread(facefusion.globals.source_path)):
 		update_status(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
 		return False
-	if not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
+	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
 		update_status(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
-	if not is_stream and not facefusion.globals.output_path:
+	if mode == 'output' and not facefusion.globals.output_path:
 		update_status(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True

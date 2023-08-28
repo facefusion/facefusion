@@ -8,7 +8,7 @@ import facefusion
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
 from facefusion.core import update_status
-from facefusion.typing import Frame, Face
+from facefusion.typing import Frame, Face, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path
 
 FRAME_PROCESSOR = None
@@ -54,8 +54,8 @@ def pre_check() -> bool:
 	return True
 
 
-def pre_process(is_stream : bool = False) -> bool:
-	if not is_stream and not facefusion.globals.output_path:
+def pre_process(mode : ProcessMode) -> bool:
+	if mode == 'output' and not facefusion.globals.output_path:
 		update_status(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
