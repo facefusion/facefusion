@@ -43,7 +43,7 @@ def pre_check() -> bool:
 	return True
 
 
-def pre_process(mode : ProcessMode = False) -> bool:
+def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
 		update_status(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
