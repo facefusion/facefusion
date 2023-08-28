@@ -52,6 +52,7 @@ WORDING =\
 	'ui_layout_not_loaded': 'UI layout {ui_layout} could not be loaded',
 	'ui_layout_not_implemented': 'UI layout {ui_layout} not implemented correctly',
 	'start_button_label': 'START',
+	'stop_button_label': 'STOP',
 	'clear_button_label': 'CLEAR',
 	'benchmark_result_dataframe_label': 'BENCHMARK RESULT',
 	'benchmark_cycles_slider_label': 'BENCHMARK CYCLES',

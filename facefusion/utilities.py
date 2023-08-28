@@ -28,14 +28,20 @@ def run_ffmpeg(args : List[str]) -> bool:
 	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
 	commands.extend(args)
 	try:
-		subprocess.check_output(commands, stderr = subprocess.STDOUT)
+		subprocess.run(commands, stderr = subprocess.PIPE, check = True)
 		return True
 	except subprocess.CalledProcessError:
 		return False
 
 
+def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
+	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
+	commands.extend(args)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE)
+
+
 def detect_fps(target_path : str) -> Optional[float]:
-	commands = [ 'ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate', '-of', 'default=noprint_wrappers = 1:nokey = 1', target_path ]
+	commands = [ 'ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate', '-of', 'default=noprint_wrappers=1:nokey=1', target_path ]
 	output = subprocess.check_output(commands).decode().strip().split('/')
 	try:
 		numerator, denominator = map(int, output)
