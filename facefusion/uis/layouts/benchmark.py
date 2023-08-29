@@ -39,3 +39,7 @@ def listen() -> None:
 	processors.listen()
 	execution.listen()
 	benchmark.listen()
+
+
+def run(ui : gradio.Blocks) -> None:
+	ui.launch(show_api = False)

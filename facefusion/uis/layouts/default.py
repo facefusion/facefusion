@@ -46,3 +46,7 @@ def listen() -> None:
 	face_selector.listen()
 	face_analyser.listen()
 	output.listen()
+
+
+def run(ui : gradio.Blocks) -> None:
+	ui.launch(show_api = False)

@@ -17,7 +17,8 @@ UI_LAYOUT_METHODS =\
 	'pre_check',
 	'pre_render',
 	'render',
-	'listen'
+	'listen',
+	'run'
 ]
 
 
@@ -51,7 +52,10 @@ def launch() -> None:
 			if ui_layout_module.pre_render():
 				ui_layout_module.render()
 				ui_layout_module.listen()
-	ui.launch(show_api = False)
+
+	for ui_layout in facefusion.globals.ui_layouts:
+		ui_layout_module = load_ui_layout_module(ui_layout)
+		ui_layout_module.run(ui)
 
 
 def get_theme() -> gradio.Theme:

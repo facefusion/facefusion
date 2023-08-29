@@ -1,5 +1,6 @@
 import gradio
 
+import facefusion.globals
 from facefusion.uis.components import about, processors, execution, source, webcam
 
 
@@ -18,8 +19,8 @@ def render() -> gradio.Blocks:
 				about.render()
 				processors.render()
 				execution.render()
-			with gradio.Column(scale = 5):
 				source.render()
+			with gradio.Column(scale = 5):
 				webcam.render()
 	return layout
 
@@ -29,3 +30,9 @@ def listen() -> None:
 	execution.listen()
 	source.listen()
 	webcam.listen()
+
+
+def run(ui : gradio.Blocks) -> None:
+	ui.queue(concurrency_count = facefusion.globals.execution_thread_count)
+	ui.launch(show_api = False)
+

@@ -82,6 +82,7 @@ WORDING =\
 	'trim_frame_end_slider_label': 'TRIM FRAME END',
 	'source_file_label': 'SOURCE',
 	'target_file_label': 'TARGET',
+	'webcam_image_label': 'WEBCAM',
 	'point': '.',
 	'comma': ',',
 	'colon': ':',
