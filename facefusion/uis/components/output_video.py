@@ -1,4 +1,3 @@
-import tempfile
 from time import sleep
 from typing import Optional, Tuple
 import gradio
@@ -20,8 +19,6 @@ def render() -> None:
 	global OUTPUT_VIDEO_QUALITY_SLIDER
 
 	with gradio.Box():
-		if facefusion.globals.output_path is None:
-			facefusion.globals.output_path = tempfile.gettempdir()
 		OUTPUT_VIDEO_ENCODER_DROPDOWN = gradio.Dropdown(
 			label = wording.get('output_video_encoder_dropdown_label'),
 			choices = facefusion.choices.output_video_encoder,

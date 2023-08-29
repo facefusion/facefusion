@@ -1,3 +1,4 @@
+import tempfile
 from typing import Tuple, Optional
 import gradio
 
@@ -32,7 +33,7 @@ def render() -> None:
 			)
 			OUTPUT_PATH_TEXTBOX = gradio.Textbox(
 				label = wording.get('output_path_textbox_label'),
-				value = facefusion.globals.output_path,
+				value = facefusion.globals.output_path or tempfile.gettempdir(),
 				max_lines = 1
 			)
 	with gradio.Row():

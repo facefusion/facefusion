@@ -130,7 +130,8 @@ def normalize_output_path(source_path : Optional[str], target_path : Optional[st
 			return os.path.join(output_path, source_name + '-' + target_name + target_extension)
 		if is_directory(output_directory_path) and output_extension:
 			return os.path.join(output_directory_path, output_name + target_extension)
-	return None
+		return None
+	return output_path
 
 
 def create_temp(target_path : str) -> None:
