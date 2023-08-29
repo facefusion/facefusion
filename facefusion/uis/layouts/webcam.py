@@ -33,6 +33,6 @@ def listen() -> None:
 
 
 def run(ui : gradio.Blocks) -> None:
-	ui.queue(concurrency_count = facefusion.globals.execution_thread_count)
+	ui.queue(concurrency_count = facefusion.globals.execution_thread_count, api_open = False)
 	ui.launch(show_api = False)
 

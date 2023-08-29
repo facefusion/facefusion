@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Generator
 import cv2
 import gradio
 
@@ -32,7 +32,7 @@ def listen() -> None:
 	WEBCAM_STOP_BUTTON.click(None, cancels = start_event)
 
 
-def start() -> Frame:
+def start() -> Generator[Frame, None, None]:
 	capture = cv2.VideoCapture(0)
 
 	while True:
