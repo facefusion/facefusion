@@ -33,8 +33,8 @@ def listen() -> None:
 
 
 def start() -> Generator[Frame, None, None]:
+	facefusion.globals.face_recognition = 'many'
 	capture = cv2.VideoCapture(0)
-
 	while True:
 		_, temp_frame = capture.read()
 		temp_frame = normalize_frame(temp_frame)
@@ -44,7 +44,6 @@ def start() -> Generator[Frame, None, None]:
 
 
 def process_stream_frame(temp_frame : Frame) -> Frame:
-	facefusion.globals.face_recognition = 'many'
 	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
