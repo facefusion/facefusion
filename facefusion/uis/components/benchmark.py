@@ -1,4 +1,4 @@
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Dict
 import time
 import tempfile
 import statistics
@@ -11,21 +11,33 @@ from facefusion.core import conditional_process
 from facefusion.uis.typing import Update
 from facefusion.utilities import normalize_output_path, clear_temp
 
-BENCHMARK_RESULT_DATAFRAME : Optional[gradio.Dataframe] = None
+BENCHMARK_RESULTS_DATAFRAME : Optional[gradio.Dataframe] = None
+BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 BENCHMARK_CYCLES_SLIDER : Optional[gradio.Button] = None
 BENCHMARK_START_BUTTON : Optional[gradio.Button] = None
 BENCHMARK_CLEAR_BUTTON : Optional[gradio.Button] = None
+BENCHMARKS : Dict[str, str] = \
+{
+	'240p': '.assets/examples/target-240p.mp4',
+	'360p': '.assets/examples/target-360p.mp4',
+	'540p': '.assets/examples/target-540p.mp4',
+	'720p': '.assets/examples/target-720p.mp4',
+	'1080p': '.assets/examples/target-1080p.mp4',
+	'1440p': '.assets/examples/target-1440p.mp4',
+	'2160p': '.assets/examples/target-2160p.mp4'
+}
 
 
 def render() -> None:
-	global BENCHMARK_RESULT_DATAFRAME
+	global BENCHMARK_RESULTS_DATAFRAME
+	global BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP
 	global BENCHMARK_CYCLES_SLIDER
 	global BENCHMARK_START_BUTTON
 	global BENCHMARK_CLEAR_BUTTON
 
 	with gradio.Box():
-		BENCHMARK_RESULT_DATAFRAME = gradio.Dataframe(
-			label = wording.get('benchmark_result_dataframe_label'),
+		BENCHMARK_RESULTS_DATAFRAME = gradio.Dataframe(
+			label = wording.get('benchmark_results_dataframe_label'),
 			headers =
 			[
 				'target_path',
@@ -35,8 +47,7 @@ def render() -> None:
 				'slowest_run',
 				'relative_fps'
 			],
-			col_count = (6, 'fixed'),
-			row_count = (7, 'fixed'),
+			row_count = len(BENCHMARKS),
 			datatype =
 			[
 				'str',
@@ -47,38 +58,42 @@ def render() -> None:
 				'number'
 			]
 		)
-	BENCHMARK_CYCLES_SLIDER = gradio.Slider(
-		label = wording.get('benchmark_cycles_slider_label'),
-		minimum = 1,
-		step = 1,
-		value = 3,
-		maximum = 10
-	)
+	with gradio.Box():
+		BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP = gradio.CheckboxGroup(
+			label = wording.get('benchmark_resolutions_checkbox_group_label'),
+			value = list(BENCHMARKS.keys()),
+			choices = list(BENCHMARKS.keys())
+		)
+		BENCHMARK_CYCLES_SLIDER = gradio.Slider(
+			label = wording.get('benchmark_cycles_slider_label'),
+			minimum = 1,
+			step = 1,
+			value = 3,
+			maximum = 10
+		)
 	with gradio.Row():
 		BENCHMARK_START_BUTTON = gradio.Button(wording.get('start_button_label'))
 		BENCHMARK_CLEAR_BUTTON = gradio.Button(wording.get('clear_button_label'))
 
 
 def listen() -> None:
-	BENCHMARK_START_BUTTON.click(update, inputs = BENCHMARK_CYCLES_SLIDER, outputs = BENCHMARK_RESULT_DATAFRAME)
-	BENCHMARK_CLEAR_BUTTON.click(clear, outputs = BENCHMARK_RESULT_DATAFRAME)
+	BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP.change(update_benchmark_resolutions, inputs = BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP, outputs = BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP)
+	BENCHMARK_START_BUTTON.click(start, inputs = [BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP, BENCHMARK_CYCLES_SLIDER], outputs = BENCHMARK_RESULTS_DATAFRAME)
+	BENCHMARK_CLEAR_BUTTON.click(clear, outputs = BENCHMARK_RESULTS_DATAFRAME)
 
 
-def update(benchmark_cycles : int) -> Update:
+def update_benchmark_resolutions(benchmark_resolutions : List[str]) -> Update:
+	return gradio.update(value = benchmark_resolutions)
+
+
+def start(benchmark_resolutions : List[str], benchmark_cycles : int) -> Update:
 	facefusion.globals.source_path = '.assets/examples/source.jpg'
-	target_paths =\
-	[
-		'.assets/examples/target-240p.mp4',
-		'.assets/examples/target-360p.mp4',
-		'.assets/examples/target-540p.mp4',
-		'.assets/examples/target-720p.mp4',
-		'.assets/examples/target-1080p.mp4',
-		'.assets/examples/target-1440p.mp4',
-		'.assets/examples/target-2160p.mp4'
-	]
-	warm_up('.assets/examples/target-240p.mp4')
-	value = [ benchmark(target_path, benchmark_cycles) for target_path in target_paths ]
-	return gradio.update(value = value)
+	target_paths = [ BENCHMARKS[benchmark_resolution] for benchmark_resolution in benchmark_resolutions if benchmark_resolution in BENCHMARKS ]
+	if target_paths:
+		warm_up('.assets/examples/target-240p.mp4')
+		value = [ benchmark(target_path, benchmark_cycles) for target_path in target_paths ]
+		return gradio.update(value = value)
+	return gradio.update(value = None)
 
 
 def warm_up(target_path : str) -> None:
