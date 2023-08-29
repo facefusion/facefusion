@@ -12,7 +12,7 @@ from facefusion.uis.typing import Update
 from facefusion.utilities import normalize_output_path, clear_temp
 
 BENCHMARK_RESULTS_DATAFRAME : Optional[gradio.Dataframe] = None
-BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
+BENCHMARK_RUNS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 BENCHMARK_CYCLES_SLIDER : Optional[gradio.Button] = None
 BENCHMARK_START_BUTTON : Optional[gradio.Button] = None
 BENCHMARK_CLEAR_BUTTON : Optional[gradio.Button] = None
@@ -30,7 +30,7 @@ BENCHMARKS : Dict[str, str] = \
 
 def render() -> None:
 	global BENCHMARK_RESULTS_DATAFRAME
-	global BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP
+	global BENCHMARK_RUNS_CHECKBOX_GROUP
 	global BENCHMARK_CYCLES_SLIDER
 	global BENCHMARK_START_BUTTON
 	global BENCHMARK_CLEAR_BUTTON
@@ -59,8 +59,8 @@ def render() -> None:
 			]
 		)
 	with gradio.Box():
-		BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-			label = wording.get('benchmark_resolutions_checkbox_group_label'),
+		BENCHMARK_RUNS_CHECKBOX_GROUP = gradio.CheckboxGroup(
+			label = wording.get('benchmark_runs_checkbox_group_label'),
 			value = list(BENCHMARKS.keys()),
 			choices = list(BENCHMARKS.keys())
 		)
@@ -77,20 +77,20 @@ def render() -> None:
 
 
 def listen() -> None:
-	BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP.change(update_benchmark_resolutions, inputs = BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP, outputs = BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP)
-	BENCHMARK_START_BUTTON.click(start, inputs = [BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP, BENCHMARK_CYCLES_SLIDER], outputs = BENCHMARK_RESULTS_DATAFRAME)
+	BENCHMARK_RUNS_CHECKBOX_GROUP.change(update_benchmark_runs, inputs = BENCHMARK_RUNS_CHECKBOX_GROUP, outputs = BENCHMARK_RUNS_CHECKBOX_GROUP)
+	BENCHMARK_START_BUTTON.click(start, inputs = [BENCHMARK_RUNS_CHECKBOX_GROUP, BENCHMARK_CYCLES_SLIDER], outputs = BENCHMARK_RESULTS_DATAFRAME)
 	BENCHMARK_CLEAR_BUTTON.click(clear, outputs = BENCHMARK_RESULTS_DATAFRAME)
 
 
-def update_benchmark_resolutions(benchmark_resolutions : List[str]) -> Update:
-	return gradio.update(value = benchmark_resolutions)
+def update_benchmark_runs(benchmark_runs : List[str]) -> Update:
+	return gradio.update(value = benchmark_runs)
 
 
-def start(benchmark_resolutions : List[str], benchmark_cycles : int) -> Update:
+def start(benchmark_runs : List[str], benchmark_cycles : int) -> Update:
 	facefusion.globals.source_path = '.assets/examples/source.jpg'
-	target_paths = [ BENCHMARKS[benchmark_resolution] for benchmark_resolution in benchmark_resolutions if benchmark_resolution in BENCHMARKS ]
+	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 	if target_paths:
-		warm_up('.assets/examples/target-240p.mp4')
+		warm_up(BENCHMARKS['240p'])
 		value = [ benchmark(target_path, benchmark_cycles) for target_path in target_paths ]
 		return gradio.update(value = value)
 	return gradio.update(value = None)

@@ -54,7 +54,7 @@ WORDING =\
 	'start_button_label': 'START',
 	'stop_button_label': 'STOP',
 	'clear_button_label': 'CLEAR',
-	'benchmark_resolutions_checkbox_group_label': 'BENCHMARK RESOLUTIONS',
+	'benchmark_runs_checkbox_group_label': 'BENCHMARK RUNS',
 	'benchmark_results_dataframe_label': 'BENCHMARK RESULTS',
 	'benchmark_cycles_slider_label': 'BENCHMARK CYCLES',
 	'execution_providers_checkbox_group_label': 'EXECUTION PROVIDERS',
