@@ -19,7 +19,7 @@ def render() -> None:
 		is_source_image = is_image(facefusion.globals.source_path)
 		SOURCE_FILE = gradio.File(
 			file_count = 'single',
-			file_types=
+			file_types =
 			[
 				'.png',
 				'.jpg',
