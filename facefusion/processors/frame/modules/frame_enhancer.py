@@ -6,7 +6,7 @@ from realesrgan import RealESRGANer
 
 import facefusion
 import facefusion.processors.frame.core as frame_processors
-from facefusion import wording
+from facefusion import wording, utilities
 from facefusion.core import update_status
 from facefusion.typing import Frame, Face, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path
@@ -33,7 +33,7 @@ def get_frame_processor() -> Any:
 					num_grow_ch = 32,
 					scale = 4
 				),
-				device = frame_processors.get_device(),
+				device = utilities.get_device(facefusion.globals.execution_providers),
 				tile = 512,
 				tile_pad = 32,
 				pre_pad = 0,

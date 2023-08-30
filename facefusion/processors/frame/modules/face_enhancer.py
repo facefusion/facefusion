@@ -5,7 +5,7 @@ from gfpgan.utils import GFPGANer
 
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
-from facefusion import wording
+from facefusion import wording, utilities
 from facefusion.core import update_status
 from facefusion.face_analyser import get_many_faces
 from facefusion.typing import Frame, Face, ProcessMode
@@ -26,7 +26,7 @@ def get_frame_processor() -> Any:
 			FRAME_PROCESSOR = GFPGANer(
 				model_path = model_path,
 				upscale = 1,
-				device = frame_processors.get_device()
+				device = utilities.get_device(facefusion.globals.execution_providers)
 			)
 	return FRAME_PROCESSOR
 
