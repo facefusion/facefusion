@@ -4,7 +4,6 @@ import threading
 from gfpgan.utils import GFPGANer
 
 import facefusion.globals
-import facefusion.processors.frame.core as frame_processors
 from facefusion import wording, utilities
 from facefusion.core import update_status
 from facefusion.face_analyser import get_many_faces
