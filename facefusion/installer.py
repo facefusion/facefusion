@@ -35,7 +35,6 @@ def run() -> None:
 		onnxruntime_key = answers['onnxruntime_key']
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime_key]
 		python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
-
 		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
 		if onnxruntime_key != 'cpu':
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])

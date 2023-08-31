@@ -1,4 +1,4 @@
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional, List, Dict, Generator
 import time
 import tempfile
 import statistics
@@ -86,14 +86,15 @@ def update_benchmark_runs(benchmark_runs : List[str]) -> Update:
 	return gradio.update(value = benchmark_runs)
 
 
-def start(benchmark_runs : List[str], benchmark_cycles : int) -> Update:
+def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
 	facefusion.globals.source_path = '.assets/examples/source.jpg'
 	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
+	benchmark_results = []
 	if target_paths:
 		warm_up(BENCHMARKS['240p'])
-		value = [ benchmark(target_path, benchmark_cycles) for target_path in target_paths ]
-		return gradio.update(value = value)
-	return gradio.update(value = None)
+		for target_path in target_paths:
+			benchmark_results.append(benchmark(target_path, benchmark_cycles))
+			yield benchmark_results
 
 
 def warm_up(target_path : str) -> None:
