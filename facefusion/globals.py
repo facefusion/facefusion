@@ -22,6 +22,7 @@ trim_frame_start : Optional[int] = None
 trim_frame_end : Optional[int] = None
 temp_frame_format : Optional[TempFrameFormat] = None
 temp_frame_quality : Optional[int] = None
+output_image_quality : Optional[int] = None
 output_video_encoder : Optional[str] = None
 output_video_quality : Optional[int] = None
 max_memory : Optional[int] = None

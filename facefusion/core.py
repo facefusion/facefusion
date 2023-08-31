@@ -20,7 +20,7 @@ import facefusion.globals
 from facefusion import wording, metadata
 from facefusion.predictor import predict_image, predict_video
 from facefusion.processors.frame.core import get_frame_processors_modules
-from facefusion.utilities import is_image, is_video, detect_fps, create_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, normalize_output_path, list_module_names, decode_execution_providers, encode_execution_providers
+from facefusion.utilities import is_image, is_video, detect_fps, compress_image, merge_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, normalize_output_path, list_module_names, decode_execution_providers, encode_execution_providers
 
 warnings.filterwarnings('ignore', category = FutureWarning, module = 'insightface')
 warnings.filterwarnings('ignore', category = UserWarning, module = 'torchvision')
@@ -48,6 +48,7 @@ def parse_args() -> None:
 	program.add_argument('--trim-frame-end', help = wording.get('trim_frame_end_help'), dest = 'trim_frame_end', type = int)
 	program.add_argument('--temp-frame-format', help = wording.get('temp_frame_format_help'), dest = 'temp_frame_format', default = 'jpg', choices = facefusion.choices.temp_frame_format)
 	program.add_argument('--temp-frame-quality', help = wording.get('temp_frame_quality_help'), dest = 'temp_frame_quality', type = int, default = 100, choices = range(101), metavar = '[0-100]')
+	program.add_argument('--output-image-quality', help=wording.get('output_image_quality_help'), dest = 'output_image_quality', type = int, default = 90, choices = range(101), metavar = '[0-100]')
 	program.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), dest = 'output_video_encoder', default = 'libx264', choices = facefusion.choices.output_video_encoder)
 	program.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), dest = 'output_video_quality', type = int, default = 90, choices = range(101), metavar = '[0-100]')
 	program.add_argument('--max-memory', help = wording.get('max_memory_help'), dest = 'max_memory', type = int)
@@ -78,6 +79,7 @@ def parse_args() -> None:
 	facefusion.globals.trim_frame_end = args.trim_frame_end
 	facefusion.globals.temp_frame_format = args.temp_frame_format
 	facefusion.globals.temp_frame_quality = args.temp_frame_quality
+	facefusion.globals.output_image_quality = args.output_image_quality
 	facefusion.globals.output_video_encoder = args.output_video_encoder
 	facefusion.globals.output_video_quality = args.output_video_quality
 	facefusion.globals.max_memory = args.max_memory
@@ -141,6 +143,11 @@ def process_image() -> None:
 		update_status(wording.get('processing'), frame_processor_module.NAME)
 		frame_processor_module.process_image(facefusion.globals.source_path, facefusion.globals.output_path, facefusion.globals.output_path)
 		frame_processor_module.post_process()
+	# compress image
+	update_status(wording.get('compressing_image'))
+	if not compress_image(facefusion.globals.output_path):
+		update_status(wording.get('compressing_image_failed'))
+		return
 	# validate image
 	if is_image(facefusion.globals.target_path):
 		update_status(wording.get('processing_image_succeed'))
@@ -167,10 +174,10 @@ def process_video() -> None:
 	else:
 		update_status(wording.get('temp_frames_not_found'))
 		return
-	# create video
-	update_status(wording.get('creating_video_fps').format(fps = fps))
-	if not create_video(facefusion.globals.target_path, fps):
-		update_status(wording.get('creating_video_failed'))
+	# merge video
+	update_status(wording.get('merging_video_fps').format(fps = fps))
+	if not merge_video(facefusion.globals.target_path, fps):
+		update_status(wording.get('merging_video_failed'))
 		return
 	# handle audio
 	if facefusion.globals.skip_audio:
