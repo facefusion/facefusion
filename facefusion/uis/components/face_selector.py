@@ -98,7 +98,7 @@ def clear_and_update_face_reference_position(event: gradio.SelectData) -> Update
 
 
 def update_face_reference_position(reference_face_position : int = 0) -> Update:
-	sleep(0.25)
+	sleep(0.3)
 	gallery_frames = []
 	facefusion.globals.reference_face_position = reference_face_position
 	if is_image(facefusion.globals.target_path):
