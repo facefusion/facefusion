@@ -51,7 +51,7 @@ def listen() -> None:
 
 
 def remote_update() -> Tuple[Update, Update]:
-	sleep(0.1)
+	sleep(1)
 	if is_video(facefusion.globals.target_path):
 		video_frame_total = get_video_frame_total(facefusion.globals.target_path)
 		facefusion.globals.trim_frame_start = 0
