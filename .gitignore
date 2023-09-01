@@ -1,4 +1,6 @@
 .assets
 .idea
 .vscode
-
+gfpgan
+ui-cuda.bat
+__pycache__/
