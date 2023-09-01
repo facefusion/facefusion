@@ -51,7 +51,7 @@ def listen() -> None:
 
 
 def remote_update() -> Tuple[Update, Update, Update]:
-	sleep(0.1)
+	sleep(0.25)
 	if is_image(facefusion.globals.target_path):
 		return gradio.update(visible = True), gradio.update(visible = False), gradio.update(visible = False)
 	if is_video(facefusion.globals.target_path):

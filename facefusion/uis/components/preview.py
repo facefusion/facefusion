@@ -77,7 +77,7 @@ def listen() -> None:
 
 
 def update(frame_number : int = 0) -> Tuple[Update, Update]:
-	sleep(0.1)
+	sleep(0.25)
 	if is_image(facefusion.globals.target_path):
 		target_frame = cv2.imread(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(target_frame)
