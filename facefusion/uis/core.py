@@ -2,12 +2,10 @@ from types import ModuleType
 from typing import Dict, Optional, Any, List
 import importlib
 import sys
-import cv2
 import gradio
 
 import facefusion.globals
 from facefusion import metadata, wording
-from facefusion.typing import Frame
 from facefusion.uis.typing import Component, ComponentName
 
 COMPONENTS: Dict[ComponentName, Component] = {}
@@ -78,7 +76,3 @@ def get_component(name: ComponentName) -> Optional[Component]:
 
 def register_component(name: ComponentName, component: Component) -> None:
 	COMPONENTS[name] = component
-
-
-def normalize_frame(frame : Frame) -> Frame:
-	return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

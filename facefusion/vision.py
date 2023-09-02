@@ -15,8 +15,12 @@ def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[Frame]
 	return None
 
 
-def get_video_frame_total(video_path : str) -> int:
+def count_video_frame_total(video_path : str) -> int:
 	capture = cv2.VideoCapture(video_path)
 	video_frame_total = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
 	capture.release()
 	return video_frame_total
+
+
+def normalize_frame(frame : Frame) -> Frame:
+	return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

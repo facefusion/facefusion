@@ -1,3 +1,6 @@
+from typing import List, Optional
+from pathlib import Path
+from tqdm import tqdm
 import glob
 import mimetypes
 import os
@@ -7,11 +10,7 @@ import ssl
 import subprocess
 import tempfile
 import urllib
-from pathlib import Path
-from typing import List, Optional
-
 import onnxruntime
-from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import wording

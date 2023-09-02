@@ -6,7 +6,7 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.capturer import get_video_frame_total
+from facefusion.vision import count_video_frame_total
 from facefusion.core import limit_resources, conditional_process
 from facefusion.uis.typing import Update
 from facefusion.utilities import normalize_output_path, clear_temp
@@ -109,7 +109,7 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	for i in range(benchmark_cycles):
 		facefusion.globals.target_path = target_path
 		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, tempfile.gettempdir())
-		video_frame_total = get_video_frame_total(facefusion.globals.target_path)
+		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		start_time = time.perf_counter()
 		limit_resources()
 		conditional_process()

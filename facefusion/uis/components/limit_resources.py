@@ -1,4 +1,5 @@
 from typing import Optional
+import platform
 import gradio
 import psutil
 
@@ -16,7 +17,7 @@ def render() -> None:
 		MAX_MEMORY_SLIDER = gradio.Slider(
 			label = wording.get('max_memory_slider_label'),
 			minimum = 0,
-			maximum = psutil.virtual_memory().free // (1024 ** 3) - 1,
+			maximum = calc_free_memory(),
 			step = 1
 		)
 
@@ -28,3 +29,10 @@ def listen() -> None:
 def update_max_memory(max_memory : int) -> Update:
 	facefusion.globals.max_memory = max_memory if max_memory > 0 else None
 	return gradio.update(value = max_memory)
+
+
+def calc_free_memory() -> int:
+	memory = psutil.virtual_memory().free
+	if platform.system().lower() == 'darwin':
+		return memory // (1024 ** 6) - 1
+	return memory // (1024 ** 3) - 1
