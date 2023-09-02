@@ -1,5 +1,4 @@
 from typing import List, Optional, Tuple, Any, Dict
-from time import sleep
 
 import cv2
 import gradio
@@ -62,15 +61,17 @@ def listen() -> None:
 	FACE_RECOGNITION_DROPDOWN.select(update_face_recognition, inputs = FACE_RECOGNITION_DROPDOWN, outputs = [ REFERENCE_FACE_POSITION_GALLERY, REFERENCE_FACE_DISTANCE_SLIDER ])
 	REFERENCE_FACE_POSITION_GALLERY.select(clear_and_update_face_reference_position)
 	REFERENCE_FACE_DISTANCE_SLIDER.change(update_reference_face_distance, inputs = REFERENCE_FACE_DISTANCE_SLIDER)
-	update_component_names : List[ComponentName] =\
+	multi_component_names : List[ComponentName] =\
 	[
-		'target_file',
-		'preview_frame_slider'
+		'source_image',
+		'target_image',
+		'target_video'
 	]
-	for component_name in update_component_names:
+	for component_name in multi_component_names:
 		component = ui.get_component(component_name)
 		if component:
-			component.change(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
+			for method in [ 'upload', 'change', 'clear' ]:
+				getattr(component, method)(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	select_component_names : List[ComponentName] =\
 	[
 		'face_analyser_direction_dropdown',
@@ -81,6 +82,9 @@ def listen() -> None:
 		component = ui.get_component(component_name)
 		if component:
 			component.select(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
+	preview_frame_slider = ui.get_component('preview_frame_slider')
+	if preview_frame_slider:
+		preview_frame_slider.change(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
 
 def update_face_recognition(face_recognition : FaceRecognition) -> Tuple[Update, Update]:
@@ -98,7 +102,6 @@ def clear_and_update_face_reference_position(event: gradio.SelectData) -> Update
 
 
 def update_face_reference_position(reference_face_position : int = 0) -> Update:
-	sleep(0.3)
 	gallery_frames = []
 	facefusion.globals.reference_face_position = reference_face_position
 	if is_image(facefusion.globals.target_path):
