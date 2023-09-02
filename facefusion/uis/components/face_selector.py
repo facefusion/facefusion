@@ -84,7 +84,7 @@ def listen() -> None:
 			component.select(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	preview_frame_slider = ui.get_component('preview_frame_slider')
 	if preview_frame_slider:
-		preview_frame_slider.change(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
+		preview_frame_slider.release(update_face_reference_position, outputs=REFERENCE_FACE_POSITION_GALLERY)
 
 
 def update_face_recognition(face_recognition : FaceRecognition) -> Tuple[Update, Update]:
