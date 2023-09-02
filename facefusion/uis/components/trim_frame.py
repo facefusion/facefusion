@@ -41,8 +41,8 @@ def render() -> None:
 
 
 def listen() -> None:
-	TRIM_FRAME_START_SLIDER.change(lambda value : update_number('trim_frame_start', int(value)), inputs = TRIM_FRAME_START_SLIDER, outputs = TRIM_FRAME_START_SLIDER)
-	TRIM_FRAME_END_SLIDER.change(lambda value : update_number('trim_frame_end', int(value)), inputs = TRIM_FRAME_END_SLIDER, outputs = TRIM_FRAME_END_SLIDER)
+	TRIM_FRAME_START_SLIDER.change(update_trim_frame_start, inputs = TRIM_FRAME_START_SLIDER, outputs = TRIM_FRAME_START_SLIDER)
+	TRIM_FRAME_END_SLIDER.change(update_trim_frame_end, inputs = TRIM_FRAME_END_SLIDER, outputs = TRIM_FRAME_END_SLIDER)
 	target_video = ui.get_component('target_video')
 	if target_video:
 		for method in [ 'upload', 'change', 'clear' ]:
@@ -52,12 +52,18 @@ def listen() -> None:
 def remote_update() -> Tuple[Update, Update]:
 	if is_video(facefusion.globals.target_path):
 		video_frame_total = get_video_frame_total(facefusion.globals.target_path)
-		facefusion.globals.trim_frame_start = 0
-		facefusion.globals.trim_frame_end = video_frame_total
+		facefusion.globals.trim_frame_start = None
+		facefusion.globals.trim_frame_end = None
 		return gradio.update(value = 0, maximum = video_frame_total, visible = True), gradio.update(value = video_frame_total, maximum = video_frame_total, visible = True)
 	return gradio.update(value = None, maximum = None, visible = False), gradio.update(value = None, maximum = None, visible = False)
 
 
-def update_number(name : str, value : int) -> Update:
-	setattr(facefusion.globals, name, value)
-	return gradio.update(value = value)
+def update_trim_frame_start(trim_frame_start : int) -> Update:
+	facefusion.globals.trim_frame_start = trim_frame_start if trim_frame_start > 0 else None
+	return gradio.update(value = trim_frame_start)
+
+
+def update_trim_frame_end(trim_frame_end : int) -> Update:
+	video_frame_total = get_video_frame_total(facefusion.globals.target_path)
+	facefusion.globals.trim_frame_end = trim_frame_end if trim_frame_end < video_frame_total else None
+	return gradio.update(value = trim_frame_end)
