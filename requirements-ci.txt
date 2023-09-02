@@ -1,5 +1,5 @@
 insightface==0.7.3
-numpy==1.25.2
+numpy==1.24.3
 onnx==1.14.1
 onnxruntime==1.15.1
 opencv-python==4.8.0.76
