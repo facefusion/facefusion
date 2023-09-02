@@ -69,6 +69,7 @@ WORDING =\
 	'reference_face_gallery_label': 'REFERENCE FACE',
 	'face_recognition_dropdown_label': 'FACE RECOGNITION',
 	'reference_face_distance_slider_label': 'REFERENCE FACE DISTANCE',
+	'max_memory_slider_label': 'MAX MEMORY',
 	'output_image_or_video_label': 'OUTPUT',
 	'output_path_textbox_label': 'OUTPUT PATH',
 	'output_image_quality_slider_label': 'OUTPUT IMAGE QUALITY',

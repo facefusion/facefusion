@@ -4,7 +4,7 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.core import conditional_process
+from facefusion.core import limit_resources, conditional_process
 from facefusion.uis.typing import Update
 from facefusion.utilities import is_image, is_video, normalize_output_path, clear_temp
 
@@ -49,6 +49,7 @@ def listen() -> None:
 
 def start(output_path : str) -> Tuple[Update, Update]:
 	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, output_path)
+	limit_resources()
 	conditional_process()
 	if is_image(facefusion.globals.output_path):
 		return gradio.update(value = facefusion.globals.output_path, visible = True), gradio.update(value = None, visible = False)

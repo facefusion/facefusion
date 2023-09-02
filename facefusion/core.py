@@ -147,7 +147,6 @@ def process_image() -> None:
 	update_status(wording.get('compressing_image'))
 	if not compress_image(facefusion.globals.output_path):
 		update_status(wording.get('compressing_image_failed'))
-		return
 	# validate image
 	if is_image(facefusion.globals.target_path):
 		update_status(wording.get('processing_image_succeed'))

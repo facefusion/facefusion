@@ -1,7 +1,7 @@
 import gradio
 
 import facefusion.globals
-from facefusion.uis.components import about, processors, execution, source, webcam
+from facefusion.uis.components import about, processors, execution, limit_resources, source, webcam
 
 
 def pre_check() -> bool:
@@ -19,6 +19,7 @@ def render() -> gradio.Blocks:
 				about.render()
 				processors.render()
 				execution.render()
+				limit_resources.render()
 				source.render()
 			with gradio.Column(scale = 5):
 				webcam.render()
@@ -28,6 +29,7 @@ def render() -> gradio.Blocks:
 def listen() -> None:
 	processors.listen()
 	execution.listen()
+	limit_resources.listen()
 	source.listen()
 	webcam.listen()
 
