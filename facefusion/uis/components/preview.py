@@ -1,4 +1,3 @@
-from time import sleep
 from typing import Any, Dict, Tuple, List, Optional
 import cv2
 import gradio
@@ -51,10 +50,19 @@ def render() -> None:
 
 def listen() -> None:
 	PREVIEW_FRAME_SLIDER.change(update, inputs = PREVIEW_FRAME_SLIDER, outputs = [ PREVIEW_IMAGE, PREVIEW_FRAME_SLIDER ])
+	multi_component_names : List[ComponentName] =\
+	[
+		'source_image',
+		'target_image',
+		'target_video'
+	]
+	for component_name in multi_component_names:
+		component = ui.get_component(component_name)
+		if component:
+			for method in [ 'upload', 'change', 'clear' ]:
+				getattr(component, method)(update, inputs = PREVIEW_FRAME_SLIDER, outputs = [ PREVIEW_IMAGE, PREVIEW_FRAME_SLIDER ])
 	update_component_names : List[ComponentName] =\
 	[
-		'source_file',
-		'target_file',
 		'face_recognition_dropdown',
 		'reference_face_distance_slider',
 		'frame_processors_checkbox_group'
@@ -77,7 +85,6 @@ def listen() -> None:
 
 
 def update(frame_number : int = 0) -> Tuple[Update, Update]:
-	sleep(0.2)
 	if is_image(facefusion.globals.target_path):
 		target_frame = cv2.imread(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(target_frame)

@@ -1,6 +1,4 @@
-from time import sleep
 from typing import Any, Dict, Tuple, Optional
-
 import gradio
 
 import facefusion.globals
@@ -45,13 +43,13 @@ def render() -> None:
 def listen() -> None:
 	TRIM_FRAME_START_SLIDER.change(lambda value : update_number('trim_frame_start', int(value)), inputs = TRIM_FRAME_START_SLIDER, outputs = TRIM_FRAME_START_SLIDER)
 	TRIM_FRAME_END_SLIDER.change(lambda value : update_number('trim_frame_end', int(value)), inputs = TRIM_FRAME_END_SLIDER, outputs = TRIM_FRAME_END_SLIDER)
-	target_file = ui.get_component('target_file')
-	if target_file:
-		target_file.change(remote_update, outputs = [ TRIM_FRAME_START_SLIDER, TRIM_FRAME_END_SLIDER ])
+	target_video = ui.get_component('target_video')
+	if target_video:
+		for method in [ 'upload', 'change', 'clear' ]:
+			getattr(target_video, method)(remote_update, outputs = [ TRIM_FRAME_START_SLIDER, TRIM_FRAME_END_SLIDER ])
 
 
 def remote_update() -> Tuple[Update, Update]:
-	sleep(0.2)
 	if is_video(facefusion.globals.target_path):
 		video_frame_total = get_video_frame_total(facefusion.globals.target_path)
 		facefusion.globals.trim_frame_start = 0

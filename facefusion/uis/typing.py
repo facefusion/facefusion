@@ -4,8 +4,9 @@ import gradio
 Component = gradio.File or gradio.Image or gradio.Video or gradio.Slider
 ComponentName = Literal\
 [
-	'source_file',
-	'target_file',
+	'source_image',
+	'target_image',
+	'target_video',
 	'preview_frame_slider',
 	'face_recognition_dropdown',
 	'reference_face_position_gallery',

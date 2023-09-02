@@ -43,7 +43,8 @@ def render() -> None:
 			visible = is_target_video,
 			show_label = False
 		)
-		ui.register_component('target_file', TARGET_FILE)
+		ui.register_component('target_image', TARGET_IMAGE)
+		ui.register_component('target_video', TARGET_VIDEO)
 
 
 def listen() -> None:

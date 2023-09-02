@@ -1,5 +1,4 @@
 from typing import Optional, Tuple
-from time import sleep
 import gradio
 
 import facefusion.choices
@@ -36,13 +35,13 @@ def render() -> None:
 def listen() -> None:
 	TEMP_FRAME_FORMAT_DROPDOWN.select(update_temp_frame_format, inputs = TEMP_FRAME_FORMAT_DROPDOWN, outputs = TEMP_FRAME_FORMAT_DROPDOWN)
 	TEMP_FRAME_QUALITY_SLIDER.change(update_temp_frame_quality, inputs = TEMP_FRAME_QUALITY_SLIDER, outputs = TEMP_FRAME_QUALITY_SLIDER)
-	target_file = ui.get_component('target_file')
-	if target_file:
-		target_file.change(remote_update, outputs = [ TEMP_FRAME_FORMAT_DROPDOWN, TEMP_FRAME_QUALITY_SLIDER ])
+	target_video = ui.get_component('target_video')
+	if target_video:
+		for method in [ 'upload', 'change', 'clear' ]:
+			getattr(target_video, method)(remote_update, outputs = [ TEMP_FRAME_FORMAT_DROPDOWN, TEMP_FRAME_QUALITY_SLIDER ])
 
 
 def remote_update() -> Tuple[Update, Update]:
-	sleep(0.2)
 	if is_video(facefusion.globals.target_path):
 		return gradio.update(visible = True), gradio.update(visible = True)
 	return gradio.update(visible = False), gradio.update(visible = False)
