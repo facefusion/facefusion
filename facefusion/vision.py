@@ -22,5 +22,14 @@ def count_video_frame_total(video_path : str) -> int:
 	return video_frame_total
 
 
-def normalize_frame(frame : Frame) -> Frame:
+def normalize_frame_color(frame : Frame) -> Frame:
 	return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+
+def resize_frame_dimension(frame : Frame, max_height : int) -> Frame:
+	height, width = frame.shape[:2]
+	if height > max_height:
+		scale = max_height / height
+		max_width = int(width * scale)
+		frame = cv2.resize(frame, (max_width, max_height))
+	return frame

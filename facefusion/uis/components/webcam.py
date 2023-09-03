@@ -7,7 +7,7 @@ from facefusion import wording
 from facefusion.typing import Frame
 from facefusion.face_analyser import get_one_face
 from facefusion.processors.frame.core import load_frame_processor_module
-from facefusion.vision import normalize_frame
+from facefusion.vision import normalize_frame_color
 
 WEBCAM_IMAGE : Optional[gradio.Image] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
@@ -38,7 +38,7 @@ def start() -> Generator[Frame, None, None]:
 	while True:
 		_, temp_frame = capture.read()
 		temp_frame = process_stream_frame(temp_frame)
-		temp_frame = normalize_frame(temp_frame)
+		temp_frame = normalize_frame_color(temp_frame)
 		if temp_frame is not None:
 			yield temp_frame
 

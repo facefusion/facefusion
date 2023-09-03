@@ -1,10 +1,10 @@
-from typing import Any, Dict, Tuple, List, Optional
+from typing import Any, Dict, List, Optional
 import cv2
 import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame
+from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension
 from facefusion.face_analyser import get_one_face
 from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.predictor import predict_frame
@@ -36,11 +36,11 @@ def render() -> None:
 		if is_image(facefusion.globals.target_path):
 			target_frame = cv2.imread(facefusion.globals.target_path)
 			preview_frame = process_preview_frame(target_frame)
-			preview_image_args['value'] = normalize_frame(preview_frame)
+			preview_image_args['value'] = normalize_frame_color(preview_frame)
 		if is_video(facefusion.globals.target_path):
 			temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
 			preview_frame = process_preview_frame(temp_frame)
-			preview_image_args['value'] = normalize_frame(preview_frame)
+			preview_image_args['value'] = normalize_frame_color(preview_frame)
 			preview_image_args['visible'] = True
 			preview_frame_slider_args['value'] = facefusion.globals.reference_frame_number
 			preview_frame_slider_args['maximum'] = count_video_frame_total(facefusion.globals.target_path)
@@ -51,7 +51,7 @@ def render() -> None:
 
 
 def listen() -> None:
-	PREVIEW_FRAME_SLIDER.change(update, inputs = PREVIEW_FRAME_SLIDER, outputs = [ PREVIEW_IMAGE, PREVIEW_FRAME_SLIDER ])
+	PREVIEW_FRAME_SLIDER.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	multi_component_names : List[ComponentName] =\
 	[
 		'source_image',
@@ -62,17 +62,17 @@ def listen() -> None:
 		component = ui.get_component(component_name)
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
-				getattr(component, method)(update, inputs = PREVIEW_FRAME_SLIDER, outputs = [ PREVIEW_IMAGE, PREVIEW_FRAME_SLIDER ])
+				getattr(component, method)(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+				getattr(component, method)(update_preview_frame_slider, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_FRAME_SLIDER)
 	update_component_names : List[ComponentName] =\
 	[
 		'face_recognition_dropdown',
-		'reference_face_distance_slider',
 		'frame_processors_checkbox_group'
 	]
 	for component_name in update_component_names:
 		component = ui.get_component(component_name)
 		if component:
-			component.change(update, inputs = PREVIEW_FRAME_SLIDER, outputs = [ PREVIEW_IMAGE, PREVIEW_FRAME_SLIDER ])
+			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	select_component_names : List[ComponentName] =\
 	[
 		'reference_face_position_gallery',
@@ -83,30 +83,42 @@ def listen() -> None:
 	for component_name in select_component_names:
 		component = ui.get_component(component_name)
 		if component:
-			component.select(update, inputs = PREVIEW_FRAME_SLIDER, outputs = [ PREVIEW_IMAGE, PREVIEW_FRAME_SLIDER ])
+			component.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	reference_face_distance_slider = ui.get_component('reference_face_distance_slider')
+	if reference_face_distance_slider:
+		reference_face_distance_slider.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
 
-def update(frame_number : int = 0) -> Tuple[Update, Update]:
+def update_preview_image(frame_number : int = 0) -> Update:
 	if is_image(facefusion.globals.target_path):
 		target_frame = cv2.imread(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(target_frame)
-		preview_frame = normalize_frame(preview_frame)
-		return gradio.update(value = preview_frame), gradio.update(value = None, maximum = None, visible = False)
+		preview_frame = normalize_frame_color(preview_frame)
+		return gradio.update(value = preview_frame)
+	if is_video(facefusion.globals.target_path):
+		facefusion.globals.reference_frame_number = frame_number
+		temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+		preview_frame = process_preview_frame(temp_frame)
+		preview_frame = normalize_frame_color(preview_frame)
+		return gradio.update(value = preview_frame)
+	return gradio.update(value = None)
+
+
+def update_preview_frame_slider(frame_number : int = 0) -> Update:
+	if is_image(facefusion.globals.target_path):
+		return gradio.update(value = None, maximum = None, visible = False)
 	if is_video(facefusion.globals.target_path):
 		facefusion.globals.reference_frame_number = frame_number
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
-		temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-		preview_frame = process_preview_frame(temp_frame)
-		preview_frame = normalize_frame(preview_frame)
-		return gradio.update(value = preview_frame), gradio.update(maximum = video_frame_total, visible = True)
-	return gradio.update(value = None), gradio.update(value = None, maximum = None, visible = False)
+		return gradio.update(maximum = video_frame_total, visible = True)
+	return gradio.update(value = None, maximum = None, visible = False)
 
 
 def process_preview_frame(temp_frame : Frame) -> Frame:
 	if predict_frame(temp_frame):
 		return cv2.GaussianBlur(temp_frame, (99, 99), 0)
 	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
-	temp_frame = reduce_preview_frame(temp_frame)
+	temp_frame = resize_frame_dimension(temp_frame, 480)
 	if 'reference' in facefusion.globals.face_recognition and not get_face_reference():
 		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
 		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
@@ -120,13 +132,4 @@ def process_preview_frame(temp_frame : Frame) -> Frame:
 				reference_face,
 				temp_frame
 			)
-	return temp_frame
-
-
-def reduce_preview_frame(temp_frame : Frame, max_height : int = 480) -> Frame:
-	height, width = temp_frame.shape[:2]
-	if height > max_height:
-		scale = max_height / height
-		max_width = int(width * scale)
-		temp_frame = cv2.resize(temp_frame, (max_width, max_height))
 	return temp_frame
