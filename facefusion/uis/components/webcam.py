@@ -35,12 +35,13 @@ def listen() -> None:
 def start() -> Generator[Frame, None, None]:
 	facefusion.globals.face_recognition = 'many'
 	capture = cv2.VideoCapture(0)
-	while True:
-		_, temp_frame = capture.read()
-		temp_frame = process_stream_frame(temp_frame)
-		temp_frame = normalize_frame_color(temp_frame)
-		if temp_frame is not None:
-			yield temp_frame
+	if capture.isOpened():
+		while True:
+			_, temp_frame = capture.read()
+			temp_frame = process_stream_frame(temp_frame)
+			temp_frame = normalize_frame_color(temp_frame)
+			if temp_frame is not None:
+				yield temp_frame
 
 
 def process_stream_frame(temp_frame : Frame) -> Frame:
