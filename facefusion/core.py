@@ -184,7 +184,9 @@ def process_video() -> None:
 		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
 		update_status(wording.get('restoring_audio'))
-		restore_audio(facefusion.globals.target_path, facefusion.globals.output_path)
+		if not restore_audio(facefusion.globals.target_path, facefusion.globals.output_path):
+			update_status(wording.get('restoring_audio_failed'))
+			move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clear temp
 	update_status(wording.get('clearing_temp'))
 	clear_temp(facefusion.globals.target_path)

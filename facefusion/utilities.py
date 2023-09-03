@@ -90,7 +90,7 @@ def merge_video(target_path : str, fps : float) -> bool:
 	return run_ffmpeg(commands)
 
 
-def restore_audio(target_path : str, output_path : str) -> None:
+def restore_audio(target_path : str, output_path : str) -> bool:
 	fps = detect_fps(target_path)
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
@@ -109,9 +109,7 @@ def restore_audio(target_path : str, output_path : str) -> None:
 			commands.extend([ '-to', str(end_time) ])
 		commands.extend([ '-c:a', 'aac' ])
 	commands.extend([ '-map', '0:v:0', '-map', '1:a:0', '-y', output_path ])
-	done = run_ffmpeg(commands)
-	if not done:
-		move_temp(target_path, output_path)
+	return run_ffmpeg(commands)
 
 
 def get_temp_frame_paths(target_path : str) -> List[str]:

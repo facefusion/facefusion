@@ -41,6 +41,7 @@ WORDING =\
 	'merging_video_failed': 'Merging video failed',
 	'skipping_audio': 'Skipping audio',
 	'restoring_audio': 'Restoring audio',
+	'restoring_audio_failed': 'Restoring audio failed',
 	'clearing_temp': 'Clearing temporary resources',
 	'processing_image_succeed': 'Processing to image succeed',
 	'processing_image_failed': 'Processing to image failed',
