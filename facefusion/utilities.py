@@ -48,6 +48,7 @@ def detect_fps(target_path : str) -> Optional[float]:
 		for stream in entries.get('streams'):
 			numerator, denominator = map(int, stream.get('r_frame_rate').split('/'))
 			return numerator / denominator
+		return None
 	except (ValueError, ZeroDivisionError):
 		return None
 
