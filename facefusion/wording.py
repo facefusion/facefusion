@@ -89,6 +89,7 @@ WORDING =\
 	'source_file_label': 'SOURCE',
 	'target_file_label': 'TARGET',
 	'webcam_image_label': 'WEBCAM',
+	'webcam_mode_radio_label': 'WEBCAM MODE',
 	'point': '.',
 	'comma': ',',
 	'colon': ':',
