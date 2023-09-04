@@ -1,4 +1,5 @@
 from typing import Optional, Generator
+import os
 import subprocess
 import cv2
 import gradio
@@ -97,5 +98,6 @@ def open_stream(mode : StreamMode) -> subprocess.Popen[bytes]:
 	if mode == 'udp':
 		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000' ])
 	if mode == 'v4l2':
-		commands.extend([ '-f', 'v4l2', '/dev/video2' ])
+		device_name = os.listdir('/sys/devices/virtual/video4linux')[0]
+		commands.extend([ '-f', 'v4l2', '/dev/' + device_name ])
 	return open_ffmpeg(commands)

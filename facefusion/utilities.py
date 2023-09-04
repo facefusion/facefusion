@@ -42,7 +42,7 @@ def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 
 def detect_fps(target_path : str) -> Optional[float]:
 	commands = [ 'ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate', '-of', 'json', target_path ]
-	output = subprocess.check_output(commands)
+	output = subprocess.check_output(commands).decode().strip()
 	try:
 		entries = json.loads(output)
 		for stream in entries.get('streams'):
