@@ -91,11 +91,13 @@ def listen() -> None:
 
 def update_preview_image(frame_number : int = 0) -> Update:
 	if is_image(facefusion.globals.target_path):
+		conditional_set_face_reference()
 		target_frame = cv2.imread(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(target_frame)
 		preview_frame = normalize_frame_color(preview_frame)
 		return gradio.update(value = preview_frame)
 	if is_video(facefusion.globals.target_path):
+		conditional_set_face_reference()
 		facefusion.globals.reference_frame_number = frame_number
 		temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
 		preview_frame = process_preview_frame(temp_frame)
@@ -118,12 +120,8 @@ def process_preview_frame(temp_frame : Frame) -> Frame:
 	if predict_frame(temp_frame):
 		return cv2.GaussianBlur(temp_frame, (99, 99), 0)
 	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
-	temp_frame = resize_frame_dimension(temp_frame, 480)
-	if 'reference' in facefusion.globals.face_recognition and not get_face_reference():
-		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
-		set_face_reference(reference_face)
 	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
+	temp_frame = resize_frame_dimension(temp_frame, 480)
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		if frame_processor_module.pre_process('preview'):
@@ -133,3 +131,10 @@ def process_preview_frame(temp_frame : Frame) -> Frame:
 				temp_frame
 			)
 	return temp_frame
+
+
+def conditional_set_face_reference() -> None:
+	if 'reference' in facefusion.globals.face_recognition and not get_face_reference():
+		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
+		set_face_reference(reference_face)
