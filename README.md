@@ -16,13 +16,15 @@ Preview
 Installation
 ------------
 
-Be aware, the [installation](https://docs.facefusion.io/installation) needs technical skills and is not for beginners. Please do not open platform and installation related issues on GitHub. We have a very helpful [Discord](https://join.facefusion.io) community that will guide you to install FaceFusion.
+Be aware, the installation needs technical skills and is not for beginners. Please do not open platform and installation related issues on GitHub. We have a very helpful [Discord](https://join.facefusion.io) community that will guide you to install FaceFusion.
+
+Read the [installation](https://docs.facefusion.io/installation).
 
 
 Usage
 -----
 
-Start the program with arguments:
+Run the program as needed.
 
 ```
 python run.py [options]
@@ -31,8 +33,8 @@ python run.py [options]
 -s SOURCE_PATH, --source SOURCE_PATH                                                             select a source image
 -t TARGET_PATH, --target TARGET_PATH                                                             select a target image or video
 -o OUTPUT_PATH, --output OUTPUT_PATH                                                             specify the output file or directory
---frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                       choose from the available frame processors (choices: face_enhancer_pro, face_enhancer, face_swapper, frame_enhancer, ...)
---ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                         choose from the available ui layouts (choices: player, benchmark, webcam, default, ...)
+--frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                       choose from the available frame processors (choices: face_enhancer, face_swapper, frame_enhancer, ...)
+--ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                         choose from the available ui layouts (choices: benchmark, webcam, default, ...)
 --keep-fps                                                                                       preserve the frames per second (fps) of the target
 --keep-temp                                                                                      retain temporary frames after processing
 --skip-audio                                                                                     omit audio from the target
