@@ -1,7 +1,5 @@
 from typing import Optional
-import platform
 import gradio
-import psutil
 
 import facefusion.globals
 from facefusion import wording
