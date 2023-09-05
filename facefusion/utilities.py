@@ -1,3 +1,7 @@
+import json
+from typing import List, Optional
+from pathlib import Path
+from tqdm import tqdm
 import glob
 import mimetypes
 import os
@@ -7,11 +11,7 @@ import ssl
 import subprocess
 import tempfile
 import urllib
-from pathlib import Path
-from typing import List, Optional
-
 import onnxruntime
-from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import wording
@@ -28,28 +28,37 @@ def run_ffmpeg(args : List[str]) -> bool:
 	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
 	commands.extend(args)
 	try:
-		subprocess.check_output(commands, stderr = subprocess.STDOUT)
+		subprocess.run(commands, stderr = subprocess.PIPE, check = True)
 		return True
 	except subprocess.CalledProcessError:
 		return False
 
 
+def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
+	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
+	commands.extend(args)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE)
+
+
 def detect_fps(target_path : str) -> Optional[float]:
-	commands = [ 'ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate', '-of', 'default=noprint_wrappers = 1:nokey = 1', target_path ]
-	output = subprocess.check_output(commands).decode().strip().split('/')
+	commands = [ 'ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate', '-of', 'json', target_path ]
+	output = subprocess.check_output(commands).decode().strip()
 	try:
-		numerator, denominator = map(int, output)
-		return numerator / denominator
+		entries = json.loads(output)
+		for stream in entries.get('streams'):
+			numerator, denominator = map(int, stream.get('r_frame_rate').split('/'))
+			return numerator / denominator
+		return None
 	except (ValueError, ZeroDivisionError):
 		return None
 
 
 def extract_frames(target_path : str, fps : float) -> bool:
 	temp_directory_path = get_temp_directory_path(target_path)
-	temp_frame_quality = round(31 - (facefusion.globals.temp_frame_quality * 0.31))
+	temp_frame_compression = round(31 - (facefusion.globals.temp_frame_quality * 0.31))
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
-	commands = [ '-hwaccel', 'auto', '-i', target_path, '-q:v', str(temp_frame_quality), '-pix_fmt', 'rgb24', ]
+	commands = [ '-hwaccel', 'auto', '-i', target_path, '-q:v', str(temp_frame_compression), '-pix_fmt', 'rgb24' ]
 	if trim_frame_start is not None and trim_frame_end is not None:
 		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(fps) ])
 	elif trim_frame_start is not None:
@@ -62,20 +71,30 @@ def extract_frames(target_path : str, fps : float) -> bool:
 	return run_ffmpeg(commands)
 
 
-def create_video(target_path : str, fps : float) -> bool:
+def compress_image(output_path : str) -> bool:
+	output_image_compression = round(31 - (facefusion.globals.output_image_quality * 0.31))
+	commands = [ '-hwaccel', 'auto', '-i', output_path, '-q:v', str(output_image_compression), '-y', output_path ]
+	return run_ffmpeg(commands)
+
+
+def merge_video(target_path : str, fps : float) -> bool:
 	temp_output_path = get_temp_output_path(target_path)
 	temp_directory_path = get_temp_directory_path(target_path)
-	output_video_quality = round(51 - (facefusion.globals.output_video_quality * 0.5))
 	commands = [ '-hwaccel', 'auto', '-r', str(fps), '-i', os.path.join(temp_directory_path, '%04d.' + facefusion.globals.temp_frame_format), '-c:v', facefusion.globals.output_video_encoder ]
-	if facefusion.globals.output_video_encoder in [ 'libx264', 'libx265', 'libvpx' ]:
-		commands.extend([ '-crf', str(output_video_quality) ])
+	if facefusion.globals.output_video_encoder in [ 'libx264', 'libx265' ]:
+		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.5))
+		commands.extend([ '-crf', str(output_video_compression) ])
+	if facefusion.globals.output_video_encoder in [ 'libvpx' ]:
+		output_video_compression = round(63 - (facefusion.globals.output_video_quality * 0.5))
+		commands.extend([ '-crf', str(output_video_compression) ])
 	if facefusion.globals.output_video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
-		commands.extend([ '-cq', str(output_video_quality) ])
+		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.5))
+		commands.extend([ '-cq', str(output_video_compression) ])
 	commands.extend([ '-pix_fmt', 'yuv420p', '-vf', 'colorspace=bt709:iall=bt601-6-625', '-y', temp_output_path ])
 	return run_ffmpeg(commands)
 
 
-def restore_audio(target_path : str, output_path : str) -> None:
+def restore_audio(target_path : str, output_path : str) -> bool:
 	fps = detect_fps(target_path)
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
@@ -94,9 +113,7 @@ def restore_audio(target_path : str, output_path : str) -> None:
 			commands.extend([ '-to', str(end_time) ])
 		commands.extend([ '-c:a', 'aac' ])
 	commands.extend([ '-map', '0:v:0', '-map', '1:a:0', '-y', output_path ])
-	done = run_ffmpeg(commands)
-	if not done:
-		move_temp(target_path, output_path)
+	return run_ffmpeg(commands)
 
 
 def get_temp_frame_paths(target_path : str) -> List[str]:
@@ -114,12 +131,18 @@ def get_temp_output_path(target_path : str) -> str:
 	return os.path.join(temp_directory_path, TEMP_OUTPUT_NAME)
 
 
-def normalize_output_path(source_path : str, target_path : str, output_path : str) -> Optional[str]:
-	if source_path and target_path and output_path:
+def normalize_output_path(source_path : Optional[str], target_path : Optional[str], output_path : Optional[str]) -> Optional[str]:
+	if is_file(source_path) and is_file(target_path) and is_directory(output_path):
 		source_name, _ = os.path.splitext(os.path.basename(source_path))
 		target_name, target_extension = os.path.splitext(os.path.basename(target_path))
-		if os.path.isdir(output_path):
-			return os.path.join(output_path, source_name + '-' + target_name + target_extension)
+		return os.path.join(output_path, source_name + '-' + target_name + target_extension)
+	if is_file(target_path) and output_path:
+		target_name, target_extension = os.path.splitext(os.path.basename(target_path))
+		output_name, output_extension = os.path.splitext(os.path.basename(output_path))
+		output_directory_path = os.path.dirname(output_path)
+		if is_directory(output_directory_path) and output_extension:
+			return os.path.join(output_directory_path, output_name + target_extension)
+		return None
 	return output_path
 
 
@@ -130,8 +153,8 @@ def create_temp(target_path : str) -> None:
 
 def move_temp(target_path : str, output_path : str) -> None:
 	temp_output_path = get_temp_output_path(target_path)
-	if os.path.isfile(temp_output_path):
-		if os.path.isfile(output_path):
+	if is_file(temp_output_path):
+		if is_file(output_path):
 			os.remove(output_path)
 		shutil.move(temp_output_path, output_path)
 
@@ -139,21 +162,29 @@ def move_temp(target_path : str, output_path : str) -> None:
 def clear_temp(target_path : str) -> None:
 	temp_directory_path = get_temp_directory_path(target_path)
 	parent_directory_path = os.path.dirname(temp_directory_path)
-	if not facefusion.globals.keep_temp and os.path.isdir(temp_directory_path):
+	if not facefusion.globals.keep_temp and is_directory(temp_directory_path):
 		shutil.rmtree(temp_directory_path)
 	if os.path.exists(parent_directory_path) and not os.listdir(parent_directory_path):
 		os.rmdir(parent_directory_path)
 
 
+def is_file(file_path : str) -> bool:
+	return bool(file_path and os.path.isfile(file_path))
+
+
+def is_directory(directory_path : str) -> bool:
+	return bool(directory_path and os.path.isdir(directory_path))
+
+
 def is_image(image_path : str) -> bool:
-	if image_path and os.path.isfile(image_path):
+	if is_file(image_path):
 		mimetype, _ = mimetypes.guess_type(image_path)
 		return bool(mimetype and mimetype.startswith('image/'))
 	return False
 
 
 def is_video(video_path : str) -> bool:
-	if video_path and os.path.isfile(video_path):
+	if is_file(video_path):
 		mimetype, _ = mimetypes.guess_type(video_path)
 		return bool(mimetype and mimetype.startswith('video/'))
 	return False
@@ -178,13 +209,23 @@ def resolve_relative_path(path : str) -> str:
 def list_module_names(path : str) -> Optional[List[str]]:
 	if os.path.exists(path):
 		files = os.listdir(path)
-		return [Path(file).stem for file in files if not Path(file).stem.startswith('__')]
+		return [ Path(file).stem for file in files if not Path(file).stem.startswith('__') ]
 	return None
 
 
 def encode_execution_providers(execution_providers : List[str]) -> List[str]:
-	return [execution_provider.replace('ExecutionProvider', '').lower() for execution_provider in execution_providers]
+	return [ execution_provider.replace('ExecutionProvider', '').lower() for execution_provider in execution_providers ]
 
 
-def decode_execution_providers(execution_providers : List[str]) -> List[str]:
-	return [provider for provider, encoded_execution_provider in zip(onnxruntime.get_available_providers(), encode_execution_providers(onnxruntime.get_available_providers())) if any(execution_provider in encoded_execution_provider for execution_provider in execution_providers)]
+def decode_execution_providers(execution_providers: List[str]) -> List[str]:
+	available_execution_providers = onnxruntime.get_available_providers()
+	encoded_execution_providers = encode_execution_providers(available_execution_providers)
+	return [ execution_provider for execution_provider, encoded_execution_provider in zip(available_execution_providers, encoded_execution_providers) if any(execution_provider in encoded_execution_provider for execution_provider in execution_providers) ]
+
+
+def get_device(execution_providers : List[str]) -> str:
+	if 'CUDAExecutionProvider' in execution_providers:
+		return 'cuda'
+	if 'CoreMLExecutionProvider' in execution_providers:
+		return 'mps'
+	return 'cpu'

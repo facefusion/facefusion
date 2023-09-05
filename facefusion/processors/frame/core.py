@@ -70,7 +70,7 @@ def multi_process_frame(source_path : str, temp_frame_paths : List[str], process
 
 
 def create_queue(temp_frame_paths : List[str]) -> Queue[str]:
-	queue: Queue[str] = Queue()
+	queue : Queue[str] = Queue()
 	for frame_path in temp_frame_paths:
 		queue.put(frame_path)
 	return queue
@@ -103,11 +103,3 @@ def update_progress(progress : Any = None) -> None:
 	})
 	progress.refresh()
 	progress.update(1)
-
-
-def get_device() -> str:
-	if 'CUDAExecutionProvider' in facefusion.globals.execution_providers:
-		return 'cuda'
-	if 'CoreMLExecutionProvider' in facefusion.globals.execution_providers:
-		return 'mps'
-	return 'cpu'

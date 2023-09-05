@@ -20,7 +20,7 @@ import facefusion.globals
 from facefusion import wording, metadata
 from facefusion.predictor import predict_image, predict_video
 from facefusion.processors.frame.core import get_frame_processors_modules
-from facefusion.utilities import is_image, is_video, detect_fps, create_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, normalize_output_path, list_module_names, decode_execution_providers, encode_execution_providers
+from facefusion.utilities import is_image, is_video, detect_fps, compress_image, merge_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, normalize_output_path, list_module_names, decode_execution_providers, encode_execution_providers
 
 warnings.filterwarnings('ignore', category = FutureWarning, module = 'insightface')
 warnings.filterwarnings('ignore', category = UserWarning, module = 'torchvision')
@@ -32,11 +32,11 @@ def parse_args() -> None:
 	program.add_argument('-s', '--source', help = wording.get('source_help'), dest = 'source_path')
 	program.add_argument('-t', '--target', help = wording.get('target_help'), dest = 'target_path')
 	program.add_argument('-o', '--output', help = wording.get('output_help'), dest = 'output_path')
-	program.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(list_module_names('facefusion/processors/frame/modules'))), dest = 'frame_processors', default = ['face_swapper'], nargs='+')
-	program.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), dest = 'ui_layouts', default = ['default'], nargs='+')
-	program.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action='store_true')
-	program.add_argument('--keep-temp', help = wording.get('keep_temp_help'), dest = 'keep_temp', action='store_true')
-	program.add_argument('--skip-audio', help = wording.get('skip_audio_help'), dest = 'skip_audio', action='store_true')
+	program.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(list_module_names('facefusion/processors/frame/modules'))), dest = 'frame_processors', default = ['face_swapper'], nargs = '+')
+	program.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), dest = 'ui_layouts', default = ['default'], nargs = '+')
+	program.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action = 'store_true')
+	program.add_argument('--keep-temp', help = wording.get('keep_temp_help'), dest = 'keep_temp', action = 'store_true')
+	program.add_argument('--skip-audio', help = wording.get('skip_audio_help'), dest = 'skip_audio', action = 'store_true')
 	program.add_argument('--face-recognition', help = wording.get('face_recognition_help'), dest = 'face_recognition', default = 'reference', choices = facefusion.choices.face_recognition)
 	program.add_argument('--face-analyser-direction', help = wording.get('face_analyser_direction_help'), dest = 'face_analyser_direction', default = 'left-right', choices = facefusion.choices.face_analyser_direction)
 	program.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), dest = 'face_analyser_age', choices = facefusion.choices.face_analyser_age)
@@ -48,20 +48,21 @@ def parse_args() -> None:
 	program.add_argument('--trim-frame-end', help = wording.get('trim_frame_end_help'), dest = 'trim_frame_end', type = int)
 	program.add_argument('--temp-frame-format', help = wording.get('temp_frame_format_help'), dest = 'temp_frame_format', default = 'jpg', choices = facefusion.choices.temp_frame_format)
 	program.add_argument('--temp-frame-quality', help = wording.get('temp_frame_quality_help'), dest = 'temp_frame_quality', type = int, default = 100, choices = range(101), metavar = '[0-100]')
+	program.add_argument('--output-image-quality', help=wording.get('output_image_quality_help'), dest = 'output_image_quality', type = int, default = 90, choices = range(101), metavar = '[0-100]')
 	program.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), dest = 'output_video_encoder', default = 'libx264', choices = facefusion.choices.output_video_encoder)
 	program.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), dest = 'output_video_quality', type = int, default = 90, choices = range(101), metavar = '[0-100]')
 	program.add_argument('--max-memory', help = wording.get('max_memory_help'), dest = 'max_memory', type = int)
-	program.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = 'cpu'), dest = 'execution_providers', default = ['cpu'], choices = suggest_execution_providers_choices(), nargs='+')
+	program.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = 'cpu'), dest = 'execution_providers', default = ['cpu'], choices = suggest_execution_providers_choices(), nargs = '+')
 	program.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = suggest_execution_thread_count_default())
 	program.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), dest = 'execution_queue_count', type = int, default = 1)
-	program.add_argument('-v', '--version', action='version', version = metadata.get('name') + ' ' + metadata.get('version'))
+	program.add_argument('--headless', help = wording.get('headless_help'), dest = 'headless', action = 'store_true')
+	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 
 	args = program.parse_args()
 
 	facefusion.globals.source_path = args.source_path
 	facefusion.globals.target_path = args.target_path
 	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, args.output_path)
-	facefusion.globals.headless = facefusion.globals.source_path is not None and facefusion.globals.target_path is not None and facefusion.globals.output_path is not None
 	facefusion.globals.frame_processors = args.frame_processors
 	facefusion.globals.ui_layouts = args.ui_layouts
 	facefusion.globals.keep_fps = args.keep_fps
@@ -78,12 +79,14 @@ def parse_args() -> None:
 	facefusion.globals.trim_frame_end = args.trim_frame_end
 	facefusion.globals.temp_frame_format = args.temp_frame_format
 	facefusion.globals.temp_frame_quality = args.temp_frame_quality
+	facefusion.globals.output_image_quality = args.output_image_quality
 	facefusion.globals.output_video_encoder = args.output_video_encoder
 	facefusion.globals.output_video_quality = args.output_video_quality
 	facefusion.globals.max_memory = args.max_memory
 	facefusion.globals.execution_providers = decode_execution_providers(args.execution_providers)
 	facefusion.globals.execution_thread_count = args.execution_thread_count
 	facefusion.globals.execution_queue_count = args.execution_queue_count
+	facefusion.globals.headless = args.headless
 
 
 def suggest_execution_providers_choices() -> List[str]:
@@ -122,8 +125,8 @@ def update_status(message : str, scope : str = 'FACEFUSION.CORE') -> None:
 
 
 def pre_check() -> bool:
-	if sys.version_info < (3, 10):
-		update_status(wording.get('python_not_supported').format(version = '3.10'))
+	if sys.version_info < (3, 9):
+		update_status(wording.get('python_not_supported').format(version = '3.9'))
 		return False
 	if not shutil.which('ffmpeg'):
 		update_status(wording.get('ffmpeg_not_installed'))
@@ -140,6 +143,10 @@ def process_image() -> None:
 		update_status(wording.get('processing'), frame_processor_module.NAME)
 		frame_processor_module.process_image(facefusion.globals.source_path, facefusion.globals.output_path, facefusion.globals.output_path)
 		frame_processor_module.post_process()
+	# compress image
+	update_status(wording.get('compressing_image'))
+	if not compress_image(facefusion.globals.output_path):
+		update_status(wording.get('compressing_image_failed'))
 	# validate image
 	if is_image(facefusion.globals.target_path):
 		update_status(wording.get('processing_image_succeed'))
@@ -166,10 +173,10 @@ def process_video() -> None:
 	else:
 		update_status(wording.get('temp_frames_not_found'))
 		return
-	# create video
-	update_status(wording.get('creating_video_fps').format(fps = fps))
-	if not create_video(facefusion.globals.target_path, fps):
-		update_status(wording.get('creating_video_failed'))
+	# merge video
+	update_status(wording.get('merging_video_fps').format(fps = fps))
+	if not merge_video(facefusion.globals.target_path, fps):
+		update_status(wording.get('merging_video_failed'))
 		return
 	# handle audio
 	if facefusion.globals.skip_audio:
@@ -177,7 +184,9 @@ def process_video() -> None:
 		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
 		update_status(wording.get('restoring_audio'))
-		restore_audio(facefusion.globals.target_path, facefusion.globals.output_path)
+		if not restore_audio(facefusion.globals.target_path, facefusion.globals.output_path):
+			update_status(wording.get('restoring_audio_failed'))
+			move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clear temp
 	update_status(wording.get('clearing_temp'))
 	clear_temp(facefusion.globals.target_path)
@@ -190,7 +199,7 @@ def process_video() -> None:
 
 def conditional_process() -> None:
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
-		if not frame_processor_module.pre_process():
+		if not frame_processor_module.pre_process('output'):
 			return
 	if is_image(facefusion.globals.target_path):
 		process_image()
@@ -207,12 +216,16 @@ def run() -> None:
 	for frame_processor in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor.pre_check():
 			return
-	# process or launch
+	# headless or ui
 	if facefusion.globals.headless:
 		conditional_process()
 	else:
 		import facefusion.uis.core as ui
 
+		# pre check
+		for ui_layout in ui.get_ui_layouts_modules(facefusion.globals.ui_layouts):
+			if not ui_layout.pre_check():
+				return
 		ui.launch()
 
 

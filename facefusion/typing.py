@@ -5,6 +5,7 @@ import numpy
 Face = Face
 Frame = numpy.ndarray[Any, Any]
 
+ProcessMode = Literal[ 'output', 'preview', 'stream' ]
 FaceRecognition = Literal[ 'reference', 'many' ]
 FaceAnalyserDirection = Literal[ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small' ]
 FaceAnalyserAge = Literal[ 'child', 'teen', 'adult', 'senior' ]

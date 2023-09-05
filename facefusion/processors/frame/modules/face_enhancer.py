@@ -4,11 +4,10 @@ import threading
 from gfpgan.utils import GFPGANer
 
 import facefusion.globals
-import facefusion.processors.frame.core as frame_processors
-from facefusion import wording
+from facefusion import wording, utilities
 from facefusion.core import update_status
 from facefusion.face_analyser import get_many_faces
-from facefusion.typing import Frame, Face
+from facefusion.typing import Frame, Face, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video
 
 FRAME_PROCESSOR = None
@@ -26,7 +25,7 @@ def get_frame_processor() -> Any:
 			FRAME_PROCESSOR = GFPGANer(
 				model_path = model_path,
 				upscale = 1,
-				device = frame_processors.get_device()
+				device = utilities.get_device(facefusion.globals.execution_providers)
 			)
 	return FRAME_PROCESSOR
 
@@ -39,13 +38,16 @@ def clear_frame_processor() -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	conditional_download(download_directory_path, ['https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.4.pth'])
+	conditional_download(download_directory_path, [ 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.4.pth' ])
 	return True
 
 
-def pre_process() -> bool:
-	if not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
+def pre_process(mode : ProcessMode) -> bool:
+	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
 		update_status(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
+		return False
+	if mode == 'output' and not facefusion.globals.output_path:
+		update_status(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
 

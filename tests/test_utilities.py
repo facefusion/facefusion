@@ -1,9 +1,10 @@
 import glob
+import platform
 import subprocess
 import pytest
 
 import facefusion.globals
-from facefusion.utilities import conditional_download, detect_fps, extract_frames, create_temp, get_temp_directory_path, clear_temp
+from facefusion.utilities import conditional_download, detect_fps, extract_frames, create_temp, get_temp_directory_path, clear_temp, normalize_output_path, is_file, is_directory, is_image, is_video, encode_execution_providers, decode_execution_providers
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -14,6 +15,7 @@ def before_all() -> None:
 	facefusion.globals.temp_frame_format = 'png'
 	conditional_download('.assets/examples',
 	[
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'fps=25', '.assets/examples/target-240p-25fps.mp4' ])
@@ -105,3 +107,48 @@ def test_extract_frames_with_trim_end() -> None:
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == frame_total
 
 		clear_temp(target_path)
+
+
+def test_normalize_output_path() -> None:
+	if platform.system().lower() != 'windows':
+		assert normalize_output_path('.assets/examples/source.jpg', None, '.assets/examples/target-240p.mp4') == '.assets/examples/target-240p.mp4'
+		assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/examples/target-240p.mp4') == '.assets/examples/target-240p.mp4'
+		assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', '.assets/examples') == '.assets/examples/source-target-240p.mp4'
+		assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/examples/output.mp4') == '.assets/examples/output.mp4'
+		assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/output.mov') == '.assets/output.mp4'
+	assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/examples/invalid') is None
+	assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/invalid/output.mp4') is None
+	assert normalize_output_path(None, '.assets/examples/target-240p.mp4', 'invalid') is None
+	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', None) is None
+
+
+def test_is_file() -> None:
+	assert is_file('.assets/examples/source.jpg') is True
+	assert is_file('.assets/examples') is False
+	assert is_file('invalid') is False
+
+
+def test_is_directory() -> None:
+	assert is_directory('.assets/examples') is True
+	assert is_directory('.assets/examples/source.jpg') is False
+	assert is_directory('invalid') is False
+
+
+def test_is_image() -> None:
+	assert is_image('.assets/examples/source.jpg') is True
+	assert is_image('.assets/examples/target-240p.mp4') is False
+	assert is_image('invalid') is False
+
+
+def test_is_video() -> None:
+	assert is_video('.assets/examples/target-240p.mp4') is True
+	assert is_video('.assets/examples/source.jpg') is False
+	assert is_video('invalid') is False
+
+
+def test_encode_execution_providers() -> None:
+	assert encode_execution_providers([ 'CPUExecutionProvider' ]) == [ 'cpu' ]
+
+
+def test_decode_execution_providers() -> None:
+	assert decode_execution_providers([ 'cpu' ]) == [ 'CPUExecutionProvider' ]

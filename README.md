@@ -18,15 +18,13 @@ Installation
 
 Be aware, the installation needs technical skills and is not for beginners. Please do not open platform and installation related issues on GitHub. We have a very helpful [Discord](https://join.facefusion.io) community that will guide you to install FaceFusion.
 
-[Basic](https://docs.facefusion.io/installation/basic) - It is more likely to work on your computer, but will be quite slow
-
-[Acceleration](https://docs.facefusion.io/installation/acceleration) - Unleash the full potential of your CPU and GPU
+Read the [installation](https://docs.facefusion.io/installation) now.
 
 
 Usage
 -----
 
-Start the program with arguments:
+Run the program as needed.
 
 ```
 python run.py [options]
@@ -36,7 +34,7 @@ python run.py [options]
 -t TARGET_PATH, --target TARGET_PATH                                                             select a target image or video
 -o OUTPUT_PATH, --output OUTPUT_PATH                                                             specify the output file or directory
 --frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                       choose from the available frame processors (choices: face_enhancer, face_swapper, frame_enhancer, ...)
---ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                         choose from the available ui layouts (choices: benchmark, default, ...)
+--ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                         choose from the available ui layouts (choices: benchmark, webcam, default, ...)
 --keep-fps                                                                                       preserve the frames per second (fps) of the target
 --keep-temp                                                                                      retain temporary frames after processing
 --skip-audio                                                                                     omit audio from the target
@@ -51,16 +49,16 @@ python run.py [options]
 --trim-frame-end TRIM_FRAME_END                                                                  specify the end frame for extraction
 --temp-frame-format {jpg,png}                                                                    specify the image format used for frame extraction
 --temp-frame-quality [0-100]                                                                     specify the image quality used for frame extraction
+--output-image-quality [0-100]                                                                   specify the quality used for the output image
 --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc}                        specify the encoder used for the output video
 --output-video-quality [0-100]                                                                   specify the quality used for the output video
 --max-memory MAX_MEMORY                                                                          specify the maximum amount of ram to be used (in gb)
 --execution-providers {cpu} [{cpu} ...]                                                          choose from the available execution providers (choices: cpu, ...)
 --execution-thread-count EXECUTION_THREAD_COUNT                                                  specify the number of execution threads
 --execution-queue-count EXECUTION_QUEUE_COUNT                                                    specify the number of execution queries
+--headless                                                                                       run the program in headless mode
 -v, --version                                                                                    show program's version number and exit
 ```
-
-Using the `-s/--source`, `-t/--target` and `-o/--output` arguments will run the program in headless mode.
 
 
 Disclaimer

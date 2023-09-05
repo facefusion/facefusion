@@ -19,7 +19,7 @@ def render() -> None:
 		is_source_image = is_image(facefusion.globals.source_path)
 		SOURCE_FILE = gradio.File(
 			file_count = 'single',
-			file_types=
+			file_types =
 			[
 				'.png',
 				'.jpg',
@@ -28,12 +28,12 @@ def render() -> None:
 			label = wording.get('source_file_label'),
 			value = facefusion.globals.source_path if is_source_image else None
 		)
-		ui.register_component('source_file', SOURCE_FILE)
 		SOURCE_IMAGE = gradio.Image(
 			value = SOURCE_FILE.value['name'] if is_source_image else None,
 			visible = is_source_image,
 			show_label = False
 		)
+		ui.register_component('source_image', SOURCE_IMAGE)
 
 
 def listen() -> None:

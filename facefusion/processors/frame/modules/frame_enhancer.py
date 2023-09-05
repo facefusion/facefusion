@@ -4,8 +4,11 @@ import threading
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from realesrgan import RealESRGANer
 
+import facefusion
 import facefusion.processors.frame.core as frame_processors
-from facefusion.typing import Frame, Face
+from facefusion import wording, utilities
+from facefusion.core import update_status
+from facefusion.typing import Frame, Face, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path
 
 FRAME_PROCESSOR = None
@@ -30,7 +33,7 @@ def get_frame_processor() -> Any:
 					num_grow_ch = 32,
 					scale = 4
 				),
-				device = frame_processors.get_device(),
+				device = utilities.get_device(facefusion.globals.execution_providers),
 				tile = 512,
 				tile_pad = 32,
 				pre_pad = 0,
@@ -47,11 +50,14 @@ def clear_frame_processor() -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	conditional_download(download_directory_path, ['https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x4plus.pth'])
+	conditional_download(download_directory_path, [ 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x4plus.pth' ])
 	return True
 
 
-def pre_process() -> bool:
+def pre_process(mode : ProcessMode) -> bool:
+	if mode == 'output' and not facefusion.globals.output_path:
+		update_status(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
+		return False
 	return True
 
 
