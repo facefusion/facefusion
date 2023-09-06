@@ -96,7 +96,7 @@ def process_stream_frame(temp_frame : Frame) -> Frame:
 def open_stream(mode : StreamMode) -> subprocess.Popen[bytes]:
 	commands = [ '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', '640x480', '-r', '30', '-i', '-' ]
 	if mode == 'udp':
-		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000' ])
+		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000?pkt_size=1316' ])
 	if mode == 'v4l2':
 		device_name = os.listdir('/sys/devices/virtual/video4linux')[0]
 		commands.extend([ '-f', 'v4l2', '/dev/' + device_name ])
