@@ -50,6 +50,8 @@ def listen() -> None:
 def update_execution_providers(execution_providers : List[str]) -> Update:
 	clear_face_analyser()
 	clear_frame_processors_modules()
+	if not execution_providers:
+		execution_providers = encode_execution_providers(onnxruntime.get_available_providers())
 	facefusion.globals.execution_providers = decode_execution_providers(execution_providers)
 	return gradio.update(value = execution_providers)
 
