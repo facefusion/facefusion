@@ -9,7 +9,7 @@ subprocess.call([ 'pip', 'install' , 'inquirer', '-q' ])
 
 import inquirer
 
-from facefusion import wording, metadata
+from facefusion import metadata, wording
 
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 {
@@ -29,12 +29,12 @@ def run() -> None:
 	args = program.parse_args()
 
 	if args.onnxruntime:
-		answers : Dict[str, str] =\
+		answers =\
 		{
 			'onnxruntime': args.onnxruntime
 		}
 	else:
-		answers : Dict[str, str] = inquirer.prompt(
+		answers = inquirer.prompt(
 		[
 			inquirer.List(
 				'onnxruntime',

@@ -67,7 +67,7 @@ def start_inline() -> Generator[Frame, None, None]:
 				yield normalize_frame_color(temp_frame)
 
 
-def start_stream(mode : StreamMode) -> Generator[None, None, None]:
+def start_stream(mode : StreamMode) -> Generator[Frame, None, None]:
 	facefusion.globals.face_recognition = 'many'
 	capture = cv2.VideoCapture(0)
 	ffmpeg_process = open_stream(mode)
