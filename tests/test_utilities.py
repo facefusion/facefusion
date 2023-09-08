@@ -4,7 +4,7 @@ import subprocess
 import pytest
 
 import facefusion.globals
-from facefusion.utilities import conditional_download, detect_fps, extract_frames, create_temp, get_temp_directory_path, clear_temp, normalize_output_path, is_file, is_directory, is_image, is_video, encode_execution_providers, decode_execution_providers
+from facefusion.utilities import conditional_download, extract_frames, create_temp, get_temp_directory_path, clear_temp, normalize_output_path, is_file, is_directory, is_image, is_video, encode_execution_providers, decode_execution_providers
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -29,12 +29,6 @@ def before_each() -> None:
 	facefusion.globals.trim_frame_end = None
 	facefusion.globals.temp_frame_quality = 90
 	facefusion.globals.temp_frame_format = 'jpg'
-
-
-def test_detect_fps() -> None:
-	assert detect_fps('.assets/examples/target-240p-25fps.mp4') == 25.0
-	assert detect_fps('.assets/examples/target-240p-30fps.mp4') == 30.0
-	assert detect_fps('.assets/examples/target-240p-60fps.mp4') == 60.0
 
 
 def test_extract_frames() -> None:

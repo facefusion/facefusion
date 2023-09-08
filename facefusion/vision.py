@@ -16,6 +16,13 @@ def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[Frame]
 	return None
 
 
+def detect_fps(video_path : str) -> Optional[float]:
+	capture = cv2.VideoCapture(video_path)
+	if capture.isOpened():
+		return capture.get(cv2.CAP_PROP_FPS)
+	return None
+
+
 def count_video_frame_total(video_path : str) -> int:
 	capture = cv2.VideoCapture(video_path)
 	if capture.isOpened():

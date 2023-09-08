@@ -15,6 +15,7 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.vision import detect_fps
 
 TEMP_DIRECTORY_PATH = os.path.join(tempfile.gettempdir(), 'facefusion')
 TEMP_OUTPUT_NAME = 'temp.mp4'
@@ -38,19 +39,6 @@ def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
 	commands.extend(args)
 	return subprocess.Popen(commands, stdin = subprocess.PIPE)
-
-
-def detect_fps(target_path : str) -> Optional[float]:
-	commands = [ 'ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate', '-of', 'json', target_path ]
-	output = subprocess.check_output(commands).decode().strip()
-	try:
-		entries = json.loads(output)
-		for stream in entries.get('streams'):
-			numerator, denominator = map(int, stream.get('r_frame_rate').split('/'))
-			return numerator / denominator
-		return None
-	except (ValueError, ZeroDivisionError):
-		return None
 
 
 def extract_frames(target_path : str, fps : float) -> bool:
