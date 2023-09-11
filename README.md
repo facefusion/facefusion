@@ -42,6 +42,7 @@ python run.py [options]
 --face-analyser-direction {left-right,right-left,top-bottom,bottom-top,small-large,large-small}  specify the direction used for face analysis
 --face-analyser-age {child,teen,adult,senior}                                                    specify the age used for face analysis
 --face-analyser-gender {male,female}                                                             specify the gender used for face analysis
+--frame-processors {face_enhancer, face_swapper, frame_enhancer}                                 choose from the available frame processors                 
 --reference-face-position REFERENCE_FACE_POSITION                                                specify the position of the reference face
 --reference-face-distance REFERENCE_FACE_DISTANCE                                                specify the distance between the reference face and the target face
 --reference-frame-number REFERENCE_FRAME_NUMBER                                                  specify the number of the reference frame
