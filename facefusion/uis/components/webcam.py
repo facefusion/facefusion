@@ -6,9 +6,11 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.typing import Frame
+from facefusion.typing import Frame, Face
 from facefusion.face_analyser import get_one_face
 from facefusion.processors.frame.core import load_frame_processor_module
+from facefusion.uis import core as ui
+from facefusion.uis import choices
 from facefusion.uis.typing import StreamMode, WebcamMode, Update
 from facefusion.utilities import open_ffmpeg
 from facefusion.vision import normalize_frame_color
@@ -30,7 +32,7 @@ def render() -> None:
 	)
 	WEBCAM_MODE_RADIO = gradio.Radio(
 		label = wording.get('webcam_mode_radio_label'),
-		choices = [ 'inline', 'stream_udp', 'stream_v4l2' ],
+		choices = choices.webcam_mode,
 		value = 'inline'
 	)
 	WEBCAM_START_BUTTON = gradio.Button(wording.get('start_button_label'))
@@ -41,6 +43,10 @@ def listen() -> None:
 	start_event = WEBCAM_START_BUTTON.click(start, inputs = WEBCAM_MODE_RADIO, outputs = WEBCAM_IMAGE)
 	WEBCAM_MODE_RADIO.change(update, outputs = WEBCAM_IMAGE, cancels = start_event)
 	WEBCAM_STOP_BUTTON.click(None, cancels = start_event)
+	source_image = ui.get_component('source_image')
+	if source_image:
+		for method in [ 'upload', 'change', 'clear' ]:
+			getattr(source_image, method)(None, cancels = start_event)
 
 
 def update() -> Update:
@@ -58,30 +64,33 @@ def start(webcam_mode : WebcamMode) -> Generator[Frame, None, None]:
 
 def start_inline() -> Generator[Frame, None, None]:
 	facefusion.globals.face_recognition = 'many'
+	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
 	capture = cv2.VideoCapture(0)
+	capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 	if capture.isOpened():
 		while True:
 			_, temp_frame = capture.read()
-			temp_frame = process_stream_frame(temp_frame)
+			temp_frame = process_stream_frame(source_face, temp_frame)
 			if temp_frame is not None:
 				yield normalize_frame_color(temp_frame)
 
 
 def start_stream(mode : StreamMode) -> Generator[Frame, None, None]:
 	facefusion.globals.face_recognition = 'many'
+	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
 	capture = cv2.VideoCapture(0)
+	capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 	ffmpeg_process = open_stream(mode)
 	if capture.isOpened():
 		while True:
-			_, frame = capture.read()
-			temp_frame = process_stream_frame(frame)
+			_, temp_frame = capture.read()
+			temp_frame = process_stream_frame(source_face, temp_frame)
 			if temp_frame is not None:
 				ffmpeg_process.stdin.write(temp_frame.tobytes())
 				yield normalize_frame_color(temp_frame)
 
 
-def process_stream_frame(temp_frame : Frame) -> Frame:
-	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
+def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		if frame_processor_module.pre_process('stream'):

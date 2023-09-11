@@ -9,7 +9,7 @@ from facefusion.face_analyser import get_one_face
 from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.predictor import predict_frame
 from facefusion.processors.frame.core import load_frame_processor_module
-from facefusion.typing import Frame
+from facefusion.typing import Frame, Face
 from facefusion.uis import core as ui
 from facefusion.uis.typing import ComponentName, Update
 from facefusion.utilities import is_video, is_image
@@ -33,13 +33,16 @@ def render() -> None:
 			'step': 1,
 			'visible': False
 		}
+		conditional_set_face_reference()
+		source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
+		reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
 		if is_image(facefusion.globals.target_path):
 			target_frame = cv2.imread(facefusion.globals.target_path)
-			preview_frame = process_preview_frame(target_frame)
+			preview_frame = process_preview_frame(source_face, reference_face, target_frame)
 			preview_image_args['value'] = normalize_frame_color(preview_frame)
 		if is_video(facefusion.globals.target_path):
 			temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-			preview_frame = process_preview_frame(temp_frame)
+			preview_frame = process_preview_frame(source_face, reference_face, temp_frame)
 			preview_image_args['value'] = normalize_frame_color(preview_frame)
 			preview_image_args['visible'] = True
 			preview_frame_slider_args['value'] = facefusion.globals.reference_frame_number
@@ -90,17 +93,18 @@ def listen() -> None:
 
 
 def update_preview_image(frame_number : int = 0) -> Update:
+	conditional_set_face_reference()
+	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
+	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
 	if is_image(facefusion.globals.target_path):
-		conditional_set_face_reference()
 		target_frame = cv2.imread(facefusion.globals.target_path)
-		preview_frame = process_preview_frame(target_frame)
+		preview_frame = process_preview_frame(source_face, reference_face, target_frame)
 		preview_frame = normalize_frame_color(preview_frame)
 		return gradio.update(value = preview_frame)
 	if is_video(facefusion.globals.target_path):
-		conditional_set_face_reference()
 		facefusion.globals.reference_frame_number = frame_number
 		temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-		preview_frame = process_preview_frame(temp_frame)
+		preview_frame = process_preview_frame(source_face, reference_face, temp_frame)
 		preview_frame = normalize_frame_color(preview_frame)
 		return gradio.update(value = preview_frame)
 	return gradio.update(value = None)
@@ -116,11 +120,9 @@ def update_preview_frame_slider(frame_number : int = 0) -> Update:
 	return gradio.update(value = None, maximum = None, visible = False)
 
 
-def process_preview_frame(temp_frame : Frame) -> Frame:
+def process_preview_frame(source_face : Face, reference_face : Face, temp_frame : Frame) -> Frame:
 	if predict_frame(temp_frame):
 		return cv2.GaussianBlur(temp_frame, (99, 99), 0)
-	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
-	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
 	temp_frame = resize_frame_dimension(temp_frame, 480)
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
