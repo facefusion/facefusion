@@ -69,8 +69,13 @@ def render() -> None:
 		value = 3,
 		maximum = 10
 	)
-	BENCHMARK_START_BUTTON = gradio.Button(wording.get('start_button_label'))
-	BENCHMARK_CLEAR_BUTTON = gradio.Button(wording.get('clear_button_label'))
+	BENCHMARK_START_BUTTON = gradio.Button(
+		value = wording.get('start_button_label'),
+		variant = 'primary'
+	)
+	BENCHMARK_CLEAR_BUTTON = gradio.Button(
+		value = wording.get('clear_button_label')
+	)
 
 
 def listen() -> None:

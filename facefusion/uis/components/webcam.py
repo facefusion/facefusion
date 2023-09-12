@@ -36,8 +36,13 @@ def render() -> None:
 		choices = choices.webcam_mode,
 		value = 'inline'
 	)
-	WEBCAM_START_BUTTON = gradio.Button(wording.get('start_button_label'))
-	WEBCAM_STOP_BUTTON = gradio.Button(wording.get('stop_button_label'))
+	WEBCAM_START_BUTTON = gradio.Button(
+		value = wording.get('start_button_label'),
+		variant = 'primary'
+	)
+	WEBCAM_STOP_BUTTON = gradio.Button(
+		value = wording.get('stop_button_label')
+	)
 
 
 def listen() -> None:

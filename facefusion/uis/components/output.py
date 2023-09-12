@@ -34,8 +34,13 @@ def render() -> None:
 		value = facefusion.globals.output_path or tempfile.gettempdir(),
 		max_lines = 1
 	)
-	OUTPUT_START_BUTTON = gradio.Button(wording.get('start_button_label'))
-	OUTPUT_CLEAR_BUTTON = gradio.Button(wording.get('clear_button_label'))
+	OUTPUT_START_BUTTON = gradio.Button(
+		value = wording.get('start_button_label'),
+		variant = 'primary'
+	)
+	OUTPUT_CLEAR_BUTTON = gradio.Button(
+		value = wording.get('clear_button_label'),
+	)
 
 
 def listen() -> None:
