@@ -35,45 +35,42 @@ def render() -> None:
 	global BENCHMARK_START_BUTTON
 	global BENCHMARK_CLEAR_BUTTON
 
-	with gradio.Box():
-		BENCHMARK_RESULTS_DATAFRAME = gradio.Dataframe(
-			label = wording.get('benchmark_results_dataframe_label'),
-			headers =
-			[
-				'target_path',
-				'benchmark_cycles',
-				'average_run',
-				'fastest_run',
-				'slowest_run',
-				'relative_fps'
-			],
-			row_count = len(BENCHMARKS),
-			datatype =
-			[
-				'str',
-				'number',
-				'number',
-				'number',
-				'number',
-				'number'
-			]
-		)
-	with gradio.Box():
-		BENCHMARK_RUNS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-			label = wording.get('benchmark_runs_checkbox_group_label'),
-			value = list(BENCHMARKS.keys()),
-			choices = list(BENCHMARKS.keys())
-		)
-		BENCHMARK_CYCLES_SLIDER = gradio.Slider(
-			label = wording.get('benchmark_cycles_slider_label'),
-			minimum = 1,
-			step = 1,
-			value = 3,
-			maximum = 10
-		)
-	with gradio.Row():
-		BENCHMARK_START_BUTTON = gradio.Button(wording.get('start_button_label'))
-		BENCHMARK_CLEAR_BUTTON = gradio.Button(wording.get('clear_button_label'))
+	BENCHMARK_RESULTS_DATAFRAME = gradio.Dataframe(
+		label = wording.get('benchmark_results_dataframe_label'),
+		headers =
+		[
+			'target_path',
+			'benchmark_cycles',
+			'average_run',
+			'fastest_run',
+			'slowest_run',
+			'relative_fps'
+		],
+		row_count = len(BENCHMARKS),
+		datatype =
+		[
+			'str',
+			'number',
+			'number',
+			'number',
+			'number',
+			'number'
+		]
+	)
+	BENCHMARK_RUNS_CHECKBOX_GROUP = gradio.CheckboxGroup(
+		label = wording.get('benchmark_runs_checkbox_group_label'),
+		value = list(BENCHMARKS.keys()),
+		choices = list(BENCHMARKS.keys())
+	)
+	BENCHMARK_CYCLES_SLIDER = gradio.Slider(
+		label = wording.get('benchmark_cycles_slider_label'),
+		minimum = 1,
+		step = 1,
+		value = 3,
+		maximum = 10
+	)
+	BENCHMARK_START_BUTTON = gradio.Button(wording.get('start_button_label'))
+	BENCHMARK_CLEAR_BUTTON = gradio.Button(wording.get('clear_button_label'))
 
 
 def listen() -> None:

@@ -18,33 +18,32 @@ def render() -> None:
 	global TARGET_IMAGE
 	global TARGET_VIDEO
 
-	with gradio.Box():
-		is_target_image = is_image(facefusion.globals.target_path)
-		is_target_video = is_video(facefusion.globals.target_path)
-		TARGET_FILE = gradio.File(
-			label = wording.get('target_file_label'),
-			file_count = 'single',
-			file_types =
-			[
-				'.png',
-				'.jpg',
-				'.webp',
-				'.mp4'
-			],
-			value = facefusion.globals.target_path if is_target_image or is_target_video else None
-		)
-		TARGET_IMAGE = gradio.Image(
-			value = TARGET_FILE.value['name'] if is_target_image else None,
-			visible = is_target_image,
-			show_label = False
-		)
-		TARGET_VIDEO = gradio.Video(
-			value = TARGET_FILE.value['name'] if is_target_video else None,
-			visible = is_target_video,
-			show_label = False
-		)
-		ui.register_component('target_image', TARGET_IMAGE)
-		ui.register_component('target_video', TARGET_VIDEO)
+	is_target_image = is_image(facefusion.globals.target_path)
+	is_target_video = is_video(facefusion.globals.target_path)
+	TARGET_FILE = gradio.File(
+		label = wording.get('target_file_label'),
+		file_count = 'single',
+		file_types =
+		[
+			'.png',
+			'.jpg',
+			'.webp',
+			'.mp4'
+		],
+		value = facefusion.globals.target_path if is_target_image or is_target_video else None
+	)
+	TARGET_IMAGE = gradio.Image(
+		value = TARGET_FILE.value['name'] if is_target_image else None,
+		visible = is_target_image,
+		show_label = False
+	)
+	TARGET_VIDEO = gradio.Video(
+		value = TARGET_FILE.value['name'] if is_target_video else None,
+		visible = is_target_video,
+		show_label = False
+	)
+	ui.register_component('target_image', TARGET_IMAGE)
+	ui.register_component('target_video', TARGET_VIDEO)
 
 
 def listen() -> None:

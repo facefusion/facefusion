@@ -15,12 +15,17 @@ def render() -> gradio.Blocks:
 	with gradio.Blocks() as layout:
 		with gradio.Row():
 			with gradio.Column(scale = 2):
-				about.render()
-				processors.render()
-				execution.render()
-				source.render()
+				with gradio.Box():
+					about.render()
+				with gradio.Blocks():
+					processors.render()
+				with gradio.Blocks():
+					execution.render()
+				with gradio.Blocks():
+					source.render()
 			with gradio.Column(scale = 5):
-				webcam.render()
+				with gradio.Blocks():
+					webcam.render()
 	return layout
 
 

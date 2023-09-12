@@ -15,19 +15,18 @@ def render() -> None:
 	global KEEP_TEMP_CHECKBOX
 	global SKIP_AUDIO_CHECKBOX
 
-	with gradio.Box():
-		KEEP_FPS_CHECKBOX = gradio.Checkbox(
-			label = wording.get('keep_fps_checkbox_label'),
-			value = facefusion.globals.keep_fps
-		)
-		KEEP_TEMP_CHECKBOX = gradio.Checkbox(
-			label = wording.get('keep_temp_checkbox_label'),
-			value = facefusion.globals.keep_temp
-		)
-		SKIP_AUDIO_CHECKBOX = gradio.Checkbox(
-			label = wording.get('skip_audio_checkbox_label'),
-			value = facefusion.globals.skip_audio
-		)
+	KEEP_FPS_CHECKBOX = gradio.Checkbox(
+		label = wording.get('keep_fps_checkbox_label'),
+		value = facefusion.globals.keep_fps
+	)
+	KEEP_TEMP_CHECKBOX = gradio.Checkbox(
+		label = wording.get('keep_temp_checkbox_label'),
+		value = facefusion.globals.keep_temp
+	)
+	SKIP_AUDIO_CHECKBOX = gradio.Checkbox(
+		label = wording.get('skip_audio_checkbox_label'),
+		value = facefusion.globals.skip_audio
+	)
 
 
 def listen() -> None:

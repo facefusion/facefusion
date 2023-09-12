@@ -27,13 +27,18 @@ def render() -> gradio.Blocks:
 	with gradio.Blocks() as layout:
 		with gradio.Row():
 			with gradio.Column(scale = 2):
-				about.render()
-				processors.render()
-				execution.render()
-				execution_settings.render()
-				limit_resources.render()
+				with gradio.Box():
+					about.render()
+				with gradio.Blocks():
+					processors.render()
+				with gradio.Blocks():
+					execution.render()
+					execution_settings.render()
+				with gradio.Blocks():
+					limit_resources.render()
 			with gradio.Column(scale= 5):
-				benchmark.render()
+				with gradio.Blocks():
+					benchmark.render()
 	return layout
 
 

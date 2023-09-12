@@ -22,35 +22,34 @@ def render() -> None:
 	global PREVIEW_IMAGE
 	global PREVIEW_FRAME_SLIDER
 
-	with gradio.Box():
-		preview_image_args: Dict[str, Any] =\
-		{
-			'label': wording.get('preview_image_label')
-		}
-		preview_frame_slider_args: Dict[str, Any] =\
-		{
-			'label': wording.get('preview_frame_slider_label'),
-			'step': 1,
-			'visible': False
-		}
-		conditional_set_face_reference()
-		source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
-		reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
-		if is_image(facefusion.globals.target_path):
-			target_frame = cv2.imread(facefusion.globals.target_path)
-			preview_frame = process_preview_frame(source_face, reference_face, target_frame)
-			preview_image_args['value'] = normalize_frame_color(preview_frame)
-		if is_video(facefusion.globals.target_path):
-			temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-			preview_frame = process_preview_frame(source_face, reference_face, temp_frame)
-			preview_image_args['value'] = normalize_frame_color(preview_frame)
-			preview_image_args['visible'] = True
-			preview_frame_slider_args['value'] = facefusion.globals.reference_frame_number
-			preview_frame_slider_args['maximum'] = count_video_frame_total(facefusion.globals.target_path)
-			preview_frame_slider_args['visible'] = True
-		PREVIEW_IMAGE = gradio.Image(**preview_image_args)
-		PREVIEW_FRAME_SLIDER = gradio.Slider(**preview_frame_slider_args)
-		ui.register_component('preview_frame_slider', PREVIEW_FRAME_SLIDER)
+	preview_image_args: Dict[str, Any] =\
+	{
+		'label': wording.get('preview_image_label')
+	}
+	preview_frame_slider_args: Dict[str, Any] =\
+	{
+		'label': wording.get('preview_frame_slider_label'),
+		'step': 1,
+		'visible': False
+	}
+	conditional_set_face_reference()
+	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
+	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
+	if is_image(facefusion.globals.target_path):
+		target_frame = cv2.imread(facefusion.globals.target_path)
+		preview_frame = process_preview_frame(source_face, reference_face, target_frame)
+		preview_image_args['value'] = normalize_frame_color(preview_frame)
+	if is_video(facefusion.globals.target_path):
+		temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+		preview_frame = process_preview_frame(source_face, reference_face, temp_frame)
+		preview_image_args['value'] = normalize_frame_color(preview_frame)
+		preview_image_args['visible'] = True
+		preview_frame_slider_args['value'] = facefusion.globals.reference_frame_number
+		preview_frame_slider_args['maximum'] = count_video_frame_total(facefusion.globals.target_path)
+		preview_frame_slider_args['visible'] = True
+	PREVIEW_IMAGE = gradio.Image(**preview_image_args)
+	PREVIEW_FRAME_SLIDER = gradio.Slider(**preview_frame_slider_args)
+	ui.register_component('preview_frame_slider', PREVIEW_FRAME_SLIDER)
 
 
 def listen() -> None:

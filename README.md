@@ -24,7 +24,7 @@ Read the [installation](https://docs.facefusion.io/installation) now.
 Usage
 -----
 
-Run the program as needed.
+Run the command:
 
 ```
 python run.py [options]

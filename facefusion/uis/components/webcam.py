@@ -31,12 +31,11 @@ def render() -> None:
 	WEBCAM_IMAGE = gradio.Image(
 		label = wording.get('webcam_image_label')
 	)
-	with gradio.Box():
-		WEBCAM_MODE_RADIO = gradio.Radio(
-			label = wording.get('webcam_mode_radio_label'),
-			choices = choices.webcam_mode,
-			value = 'inline'
-		)
+	WEBCAM_MODE_RADIO = gradio.Radio(
+		label = wording.get('webcam_mode_radio_label'),
+		choices = choices.webcam_mode,
+		value = 'inline'
+	)
 	WEBCAM_START_BUTTON = gradio.Button(wording.get('start_button_label'))
 	WEBCAM_STOP_BUTTON = gradio.Button(wording.get('stop_button_label'))
 

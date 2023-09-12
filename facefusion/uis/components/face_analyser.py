@@ -18,26 +18,24 @@ def render() -> None:
 	global FACE_ANALYSER_AGE_DROPDOWN
 	global FACE_ANALYSER_GENDER_DROPDOWN
 
-	with gradio.Box():
-		with gradio.Row():
-			FACE_ANALYSER_DIRECTION_DROPDOWN = gradio.Dropdown(
-				label = wording.get('face_analyser_direction_dropdown_label'),
-				choices = facefusion.choices.face_analyser_direction,
-				value = facefusion.globals.face_analyser_direction
-			)
-			FACE_ANALYSER_AGE_DROPDOWN = gradio.Dropdown(
-				label = wording.get('face_analyser_age_dropdown_label'),
-				choices = ['none'] + facefusion.choices.face_analyser_age,
-				value = facefusion.globals.face_analyser_age or 'none'
-			)
-			FACE_ANALYSER_GENDER_DROPDOWN = gradio.Dropdown(
-				label = wording.get('face_analyser_gender_dropdown_label'),
-				choices = ['none'] + facefusion.choices.face_analyser_gender,
-				value = facefusion.globals.face_analyser_gender or 'none'
-			)
-		ui.register_component('face_analyser_direction_dropdown', FACE_ANALYSER_DIRECTION_DROPDOWN)
-		ui.register_component('face_analyser_age_dropdown', FACE_ANALYSER_AGE_DROPDOWN)
-		ui.register_component('face_analyser_gender_dropdown', FACE_ANALYSER_GENDER_DROPDOWN)
+	FACE_ANALYSER_DIRECTION_DROPDOWN = gradio.Dropdown(
+		label = wording.get('face_analyser_direction_dropdown_label'),
+		choices = facefusion.choices.face_analyser_direction,
+		value = facefusion.globals.face_analyser_direction
+	)
+	FACE_ANALYSER_AGE_DROPDOWN = gradio.Dropdown(
+		label = wording.get('face_analyser_age_dropdown_label'),
+		choices = ['none'] + facefusion.choices.face_analyser_age,
+		value = facefusion.globals.face_analyser_age or 'none'
+	)
+	FACE_ANALYSER_GENDER_DROPDOWN = gradio.Dropdown(
+		label = wording.get('face_analyser_gender_dropdown_label'),
+		choices = ['none'] + facefusion.choices.face_analyser_gender,
+		value = facefusion.globals.face_analyser_gender or 'none'
+	)
+	ui.register_component('face_analyser_direction_dropdown', FACE_ANALYSER_DIRECTION_DROPDOWN)
+	ui.register_component('face_analyser_age_dropdown', FACE_ANALYSER_AGE_DROPDOWN)
+	ui.register_component('face_analyser_gender_dropdown', FACE_ANALYSER_GENDER_DROPDOWN)
 
 
 def listen() -> None:

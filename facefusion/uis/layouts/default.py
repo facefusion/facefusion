@@ -15,23 +15,37 @@ def render() -> gradio.Blocks:
 	with gradio.Blocks() as layout:
 		with gradio.Row():
 			with gradio.Column(scale = 2):
-				about.render()
-				processors.render()
-				execution.render()
-				execution_settings.render()
-				limit_resources.render()
-				temp_frame.render()
-				output_settings.render()
-				settings.render()
+				with gradio.Box():
+					about.render()
+				with gradio.Blocks():
+					processors.render()
+				with gradio.Blocks():
+					execution.render()
+					execution_settings.render()
+				with gradio.Blocks():
+					limit_resources.render()
+				with gradio.Blocks():
+					temp_frame.render()
+				with gradio.Blocks():
+					output_settings.render()
+				with gradio.Blocks():
+					settings.render()
 			with gradio.Column(scale = 2):
-				source.render()
-				target.render()
-				output.render()
+				with gradio.Blocks():
+					source.render()
+				with gradio.Blocks():
+					target.render()
+				with gradio.Blocks():
+					output.render()
 			with gradio.Column(scale = 3):
-				preview.render()
-				trim_frame.render()
-				face_selector.render()
-				face_analyser.render()
+				with gradio.Blocks():
+					preview.render()
+				with gradio.Row():
+					trim_frame.render()
+				with gradio.Blocks():
+					face_selector.render()
+				with gradio.Row():
+					face_analyser.render()
 	return layout
 
 
