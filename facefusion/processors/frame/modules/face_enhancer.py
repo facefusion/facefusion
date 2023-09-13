@@ -9,6 +9,7 @@ from facefusion.core import update_status
 from facefusion.face_analyser import get_many_faces
 from facefusion.typing import Frame, Face, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video
+from facefusion.vision import read_image, write_image
 
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE = threading.Semaphore()
@@ -85,17 +86,17 @@ def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame)
 
 def process_frames(source_path : str, temp_frame_paths : List[str], update: Callable[[], None]) -> None:
 	for temp_frame_path in temp_frame_paths:
-		temp_frame = cv2.imread(temp_frame_path)
+		temp_frame = read_image(temp_frame_path)
 		result_frame = process_frame(None, None, temp_frame)
-		cv2.imwrite(temp_frame_path, result_frame)
+		write_image(temp_frame_path, result_frame)
 		if update:
 			update()
 
 
 def process_image(source_path : str, target_path : str, output_path : str) -> None:
-	target_frame = cv2.imread(target_path)
+	target_frame = read_image(target_path)
 	result_frame = process_frame(None, None, target_frame)
-	cv2.imwrite(output_path, result_frame)
+	write_image(output_path, result_frame)
 
 
 def process_video(source_path : str, temp_frame_paths : List[str]) -> None:

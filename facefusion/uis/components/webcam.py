@@ -13,7 +13,7 @@ from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.uis import core as ui
 from facefusion.uis.typing import StreamMode, WebcamMode, Update
 from facefusion.utilities import open_ffmpeg
-from facefusion.vision import normalize_frame_color
+from facefusion.vision import normalize_frame_color, read_image
 
 WEBCAM_IMAGE : Optional[gradio.Image] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
@@ -56,7 +56,7 @@ def update() -> Update:
 
 def start(mode : WebcamMode) -> Generator[Frame, None, None]:
 	facefusion.globals.face_recognition = 'many'
-	source_face = get_one_face(cv2.imread(facefusion.globals.source_path)) if facefusion.globals.source_path else None
+	source_face = get_one_face(read_image(facefusion.globals.source_path))
 	stream = None
 	if mode == 'stream_udp':
 		stream = open_stream('udp')

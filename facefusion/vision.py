@@ -1,4 +1,5 @@
 from typing import Optional
+from functools import lru_cache
 import cv2
 
 from facefusion.typing import Frame
@@ -43,3 +44,16 @@ def resize_frame_dimension(frame : Frame, max_height : int) -> Frame:
 		max_width = int(width * scale)
 		frame = cv2.resize(frame, (max_width, max_height))
 	return frame
+
+
+@lru_cache(maxsize = None)
+def read_image(image_path : str) -> Optional[Frame]:
+	if image_path:
+		return cv2.imread(image_path)
+	return None
+
+
+def write_image(image_path : str, frame : Frame) -> bool:
+	if image_path:
+		return cv2.imwrite(image_path, frame)
+	return False

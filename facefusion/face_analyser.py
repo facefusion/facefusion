@@ -100,7 +100,3 @@ def filter_by_gender(faces : List[Face], gender : FaceAnalyserGender) -> List[Fa
 		if face['gender'] == 0 and gender == 'female':
 			filter_faces.append(face)
 	return filter_faces
-
-
-def get_faces_total(frame : Frame) -> int:
-	return len(get_many_faces(frame))
