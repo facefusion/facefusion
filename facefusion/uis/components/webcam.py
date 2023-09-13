@@ -11,30 +11,22 @@ from facefusion.typing import Frame, Face
 from facefusion.face_analyser import get_one_face
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.uis import core as ui
-from facefusion.uis import choices
 from facefusion.uis.typing import StreamMode, WebcamMode, Update
 from facefusion.utilities import open_ffmpeg
 from facefusion.vision import normalize_frame_color
 
 WEBCAM_IMAGE : Optional[gradio.Image] = None
-WEBCAM_MODE_RADIO : Optional[gradio.Radio] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
 WEBCAM_STOP_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
 	global WEBCAM_IMAGE
-	global WEBCAM_MODE_RADIO
 	global WEBCAM_START_BUTTON
 	global WEBCAM_STOP_BUTTON
 
 	WEBCAM_IMAGE = gradio.Image(
 		label = wording.get('webcam_image_label')
-	)
-	WEBCAM_MODE_RADIO = gradio.Radio(
-		label = wording.get('webcam_mode_radio_label'),
-		choices = choices.webcam_mode,
-		value = 'inline'
 	)
 	WEBCAM_START_BUTTON = gradio.Button(
 		value = wording.get('start_button_label'),
@@ -46,8 +38,11 @@ def render() -> None:
 
 
 def listen() -> None:
-	start_event = WEBCAM_START_BUTTON.click(start, inputs = WEBCAM_MODE_RADIO, outputs = WEBCAM_IMAGE)
-	WEBCAM_MODE_RADIO.change(update, outputs = WEBCAM_IMAGE, cancels = start_event)
+	start_event = None
+	webcam_mode_radio = ui.get_component('webcam_mode_radio')
+	if webcam_mode_radio:
+		start_event = WEBCAM_START_BUTTON.click(start, inputs = webcam_mode_radio, outputs = WEBCAM_IMAGE)
+		webcam_mode_radio.change(update, outputs = WEBCAM_IMAGE, cancels = start_event)
 	WEBCAM_STOP_BUTTON.click(None, cancels = start_event)
 	source_image = ui.get_component('source_image')
 	if source_image:

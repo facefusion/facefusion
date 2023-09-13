@@ -9,14 +9,13 @@ from facefusion import wording
 from facefusion.vision import count_video_frame_total
 from facefusion.core import limit_resources, conditional_process
 from facefusion.uis.typing import Update
+from facefusion.uis import core as ui
 from facefusion.utilities import normalize_output_path, clear_temp
 
 BENCHMARK_RESULTS_DATAFRAME : Optional[gradio.Dataframe] = None
-BENCHMARK_RUNS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
-BENCHMARK_CYCLES_SLIDER : Optional[gradio.Button] = None
 BENCHMARK_START_BUTTON : Optional[gradio.Button] = None
 BENCHMARK_CLEAR_BUTTON : Optional[gradio.Button] = None
-BENCHMARKS : Dict[str, str] = \
+BENCHMARKS : Dict[str, str] =\
 {
 	'240p': '.assets/examples/target-240p.mp4',
 	'360p': '.assets/examples/target-360p.mp4',
@@ -30,8 +29,6 @@ BENCHMARKS : Dict[str, str] = \
 
 def render() -> None:
 	global BENCHMARK_RESULTS_DATAFRAME
-	global BENCHMARK_RUNS_CHECKBOX_GROUP
-	global BENCHMARK_CYCLES_SLIDER
 	global BENCHMARK_START_BUTTON
 	global BENCHMARK_CLEAR_BUTTON
 
@@ -46,7 +43,6 @@ def render() -> None:
 			'slowest_run',
 			'relative_fps'
 		],
-		row_count = len(BENCHMARKS),
 		datatype =
 		[
 			'str',
@@ -56,18 +52,6 @@ def render() -> None:
 			'number',
 			'number'
 		]
-	)
-	BENCHMARK_RUNS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-		label = wording.get('benchmark_runs_checkbox_group_label'),
-		value = list(BENCHMARKS.keys()),
-		choices = list(BENCHMARKS.keys())
-	)
-	BENCHMARK_CYCLES_SLIDER = gradio.Slider(
-		label = wording.get('benchmark_cycles_slider_label'),
-		minimum = 1,
-		step = 1,
-		value = 3,
-		maximum = 10
 	)
 	BENCHMARK_START_BUTTON = gradio.Button(
 		value = wording.get('start_button_label'),
@@ -79,13 +63,11 @@ def render() -> None:
 
 
 def listen() -> None:
-	BENCHMARK_RUNS_CHECKBOX_GROUP.change(update_benchmark_runs, inputs = BENCHMARK_RUNS_CHECKBOX_GROUP, outputs = BENCHMARK_RUNS_CHECKBOX_GROUP)
-	BENCHMARK_START_BUTTON.click(start, inputs = [ BENCHMARK_RUNS_CHECKBOX_GROUP, BENCHMARK_CYCLES_SLIDER ], outputs = BENCHMARK_RESULTS_DATAFRAME)
+	benchmark_runs_checkbox_group = ui.get_component('benchmark_runs_checkbox_group')
+	benchmark_cycles_slider = ui.get_component('benchmark_cycles_slider')
+	if benchmark_runs_checkbox_group and benchmark_cycles_slider:
+		BENCHMARK_START_BUTTON.click(start, inputs = [ benchmark_runs_checkbox_group, benchmark_cycles_slider ], outputs = BENCHMARK_RESULTS_DATAFRAME)
 	BENCHMARK_CLEAR_BUTTON.click(clear, outputs = BENCHMARK_RESULTS_DATAFRAME)
-
-
-def update_benchmark_runs(benchmark_runs : List[str]) -> Update:
-	return gradio.update(value = benchmark_runs)
 
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:

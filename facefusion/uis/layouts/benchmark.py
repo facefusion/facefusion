@@ -1,6 +1,6 @@
 import gradio
 
-from facefusion.uis.components import about, processors, execution, execution_settings, limit_resources, benchmark
+from facefusion.uis.components import about, processors, execution, execution_settings, limit_resources, benchmark_settings, benchmark
 from facefusion.utilities import conditional_download
 
 
@@ -36,6 +36,8 @@ def render() -> gradio.Blocks:
 					execution_settings.render()
 				with gradio.Blocks():
 					limit_resources.render()
+				with gradio.Blocks():
+					benchmark_settings.render()
 			with gradio.Column(scale= 5):
 				with gradio.Blocks():
 					benchmark.render()
@@ -47,6 +49,7 @@ def listen() -> None:
 	execution.listen()
 	execution_settings.listen()
 	limit_resources.listen()
+	benchmark_settings.listen()
 	benchmark.listen()
 
 

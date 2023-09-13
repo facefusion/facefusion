@@ -1,6 +1,6 @@
 import gradio
 
-from facefusion.uis.components import about, processors, execution, source, webcam
+from facefusion.uis.components import about, processors, execution, webcam_settings, source, webcam
 
 
 def pre_check() -> bool:
@@ -21,6 +21,8 @@ def render() -> gradio.Blocks:
 					processors.render()
 				with gradio.Blocks():
 					execution.render()
+				with gradio.Blocks():
+					webcam_settings.render()
 				with gradio.Blocks():
 					source.render()
 			with gradio.Column(scale = 5):
