@@ -1,6 +1,5 @@
 from typing import List, Optional, Tuple, Any, Dict
 
-import cv2
 import gradio
 
 import facefusion.choices
