@@ -18,7 +18,6 @@ from facefusion.vision import detect_fps
 
 TEMP_DIRECTORY_PATH = os.path.join(tempfile.gettempdir(), 'facefusion')
 TEMP_OUTPUT_VIDEO_NAME = 'temp.mp4'
-TEMP_OUTPUT_AUDIO_NAME = 'temp.mp3'
 
 # monkey patch ssl
 if platform.system().lower() == 'darwin':
@@ -87,17 +86,15 @@ def restore_audio(target_path : str, output_path : str) -> bool:
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
 	temp_output_video_path = get_temp_output_video_path(target_path)
-	temp_output_audio_path = get_temp_output_audio_path(target_path)
-	extract_commands = [ '-hwaccel', 'auto', '-i', target_path ]
+	commands = [ '-hwaccel', 'auto', '-i', temp_output_video_path ]
 	if trim_frame_start is not None:
 		start_time = trim_frame_start / fps
-		extract_commands.extend([ '-ss', str(start_time) ])
+		commands.extend([ '-ss', str(start_time) ])
 	if trim_frame_end is not None:
 		end_time = trim_frame_end / fps
-		extract_commands.extend([ '-to', str(end_time) ])
-	extract_commands.extend([ '-vn', '-y', temp_output_audio_path ])
-	merge_commands = [ '-hwaccel', 'auto', '-i', temp_output_video_path, '-i', temp_output_audio_path, '-y', output_path ]
-	return run_ffmpeg(extract_commands) and run_ffmpeg(merge_commands)
+		commands.extend([ '-to', str(end_time) ])
+	commands.extend([ '-i', target_path, '-c',  'copy', '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ])
+	return run_ffmpeg(commands)
 
 
 def get_temp_frame_paths(target_path : str) -> List[str]:
@@ -118,11 +115,6 @@ def get_temp_directory_path(target_path : str) -> str:
 def get_temp_output_video_path(target_path : str) -> str:
 	temp_directory_path = get_temp_directory_path(target_path)
 	return os.path.join(temp_directory_path, TEMP_OUTPUT_VIDEO_NAME)
-
-
-def get_temp_output_audio_path(target_path : str) -> str:
-	temp_directory_path = get_temp_directory_path(target_path)
-	return os.path.join(temp_directory_path, TEMP_OUTPUT_AUDIO_NAME)
 
 
 def normalize_output_path(source_path : Optional[str], target_path : Optional[str], output_path : Optional[str]) -> Optional[str]:

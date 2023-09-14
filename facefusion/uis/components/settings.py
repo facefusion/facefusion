@@ -31,10 +31,7 @@ def listen() -> None:
 
 
 def update(settings : List[str]) -> Update:
-	if 'keep-fps' in settings:
-		facefusion.globals.keep_fps = True
-	if 'keep-temp' in settings:
-		facefusion.globals.keep_temp = True
-	if 'skip-audio' in settings:
-		facefusion.globals.skip_audio = True
+	facefusion.globals.keep_fps = 'keep-fps' in settings
+	facefusion.globals.keep_temp = 'keep-temp' in settings
+	facefusion.globals.skip_audio = 'skip-audio' in settings
 	return gradio.update(value = settings)
