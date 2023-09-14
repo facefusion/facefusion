@@ -1,4 +1,4 @@
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Dict
 import hashlib
 import threading
 import insightface
@@ -8,8 +8,8 @@ import facefusion.globals
 from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender
 
 FACE_ANALYSER = None
-FACES_CACHE = {}
-THREAD_LOCK = threading.Lock()
+FACES_CACHE : Dict[str, List[Face]] = {}
+THREAD_LOCK : threading.Lock = threading.Lock()
 
 
 def get_face_analyser() -> Any:

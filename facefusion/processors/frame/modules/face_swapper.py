@@ -13,7 +13,7 @@ from facefusion.utilities import conditional_download, resolve_relative_path, is
 from facefusion.vision import read_image, write_image
 
 FRAME_PROCESSOR = None
-THREAD_LOCK = threading.Lock()
+THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_SWAPPER'
 
 

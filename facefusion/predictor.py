@@ -8,7 +8,7 @@ from keras import Model
 from facefusion.typing import Frame
 
 PREDICTOR = None
-THREAD_LOCK = threading.Lock()
+THREAD_LOCK : threading.Lock = threading.Lock()
 MAX_PROBABILITY = 0.75
 
 
