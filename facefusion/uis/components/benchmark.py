@@ -7,6 +7,7 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.face_analyser import get_face_analyser, clear_faces_cache
+from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total
 from facefusion.core import limit_resources, conditional_process
 from facefusion.uis.typing import Update
@@ -84,8 +85,10 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 
 
 def setup() -> None:
-	get_face_analyser()
 	limit_resources()
+	get_face_analyser()
+	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
+		frame_processor_module.get_frame_processor()
 
 
 def tear_down() -> None:

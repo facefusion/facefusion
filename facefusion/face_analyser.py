@@ -119,7 +119,6 @@ def get_faces_cache(frame : Frame) -> Optional[List[Face]]:
 
 def set_faces_cache(frame : Frame, faces : List[Face]) -> None:
 	frame_hash = hashlib.sha256(frame.tobytes()).hexdigest() if frame is not None else None
-
 	FACES_CACHE[frame_hash] = faces
 
 
