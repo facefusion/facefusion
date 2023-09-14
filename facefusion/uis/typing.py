@@ -17,7 +17,9 @@ ComponentName = Literal\
 	'frame_processors_checkbox_group',
 	'benchmark_runs_checkbox_group',
 	'benchmark_cycles_slider',
-	'webcam_mode_radio'
+	'webcam_mode_radio',
+	'webcam_resolution_dropdown',
+	'webcam_fps_slider'
 ]
 WebcamMode = Literal[ 'inline', 'stream_udp', 'stream_v4l2' ]
 StreamMode = Literal[ 'udp', 'v4l2' ]
