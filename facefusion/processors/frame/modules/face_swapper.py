@@ -56,6 +56,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	clear_frame_processor()
+	read_image.cache_clear()
 
 
 def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:

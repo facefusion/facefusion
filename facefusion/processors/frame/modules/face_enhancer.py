@@ -54,6 +54,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	clear_frame_processor()
+	read_image.cache_clear()
 
 
 def enhance_face(target_face : Face, temp_frame : Frame) -> Frame:

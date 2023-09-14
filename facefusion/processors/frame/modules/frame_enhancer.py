@@ -63,6 +63,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	clear_frame_processor()
+	read_image.cache_clear()
 
 
 def enhance_frame(temp_frame : Frame) -> Frame:
