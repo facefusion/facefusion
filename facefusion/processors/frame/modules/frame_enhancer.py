@@ -1,5 +1,4 @@
 from typing import Any, List, Callable
-import cv2
 import threading
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from realesrgan import RealESRGANer

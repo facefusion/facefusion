@@ -6,6 +6,7 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.face_analyser import get_face_analyser, clear_faces_cache
 from facefusion.vision import count_video_frame_total
 from facefusion.core import limit_resources, conditional_process
 from facefusion.uis.typing import Update
@@ -75,16 +76,20 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 	benchmark_results = []
 	if target_paths:
-		warm_up(BENCHMARKS['240p'])
+		setup()
 		for target_path in target_paths:
 			benchmark_results.append(benchmark(target_path, benchmark_cycles))
 			yield benchmark_results
+		tear_down()
 
 
-def warm_up(target_path : str) -> None:
-	facefusion.globals.target_path = target_path
-	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, tempfile.gettempdir())
-	conditional_process()
+def setup() -> None:
+	get_face_analyser()
+	limit_resources()
+
+
+def tear_down() -> None:
+	clear_faces_cache()
 
 
 def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
@@ -95,7 +100,6 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, tempfile.gettempdir())
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		start_time = time.perf_counter()
-		limit_resources()
 		conditional_process()
 		end_time = time.perf_counter()
 		process_time = end_time - start_time

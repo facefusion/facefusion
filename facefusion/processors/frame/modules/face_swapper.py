@@ -1,5 +1,4 @@
 from typing import Any, List, Callable
-import cv2
 import insightface
 import threading
 
