@@ -57,7 +57,7 @@ def listen() -> None:
 			getattr(source_image, method)(stop, cancels = start_event)
 
 
-def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
+def start(mode: WebcamMode, resolution: str, fps: float) -> Generator[Frame, None, None]:
 	facefusion.globals.face_recognition = 'many'
 	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
 	stream = None
@@ -67,25 +67,30 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 		stream = open_stream('v4l2', resolution, fps)
 	capture = capture_webcam(resolution, fps)
 	if capture.isOpened():
-		progress = tqdm(desc = wording.get('processing'), unit = 'frame', dynamic_ncols = True)
-		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
-			futures = []
-			frames : Deque[Frame] = deque()
-			while True:
-				_, temp_frame = capture.read()
-				future = executor.submit(process_stream_frame, source_face, temp_frame)
-				futures.append(future)
-				completed_futures = [ future for future in futures if future.done() ]
-				for future in completed_futures:
-					temp_frame = future.result()
-					if temp_frame is not None:
-						frames.append(temp_frame)
-					futures.remove(future)
-				while frames:
-					if stream is not None:
-						stream.stdin.write(temp_frame.tobytes())
-					yield normalize_frame_color(frames.popleft())
-					progress.update(1)
+		for capture_frame in multi_process_capture(source_face, capture):
+			if stream is not None:
+				stream.stdin.write(capture_frame.tobytes())
+			yield normalize_frame_color(capture_frame)
+
+
+def multi_process_capture(source_face: Face, capture : cv2.VideoCapture) -> Generator[Frame, None, None]:
+	progress = tqdm(desc = wording.get('processing'), unit = 'frame', dynamic_ncols = True)
+	with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
+		futures = []
+		capture_frames: Deque[Frame] = deque()
+		while True:
+			_, capture_frame = capture.read()
+			future = executor.submit(process_stream_frame, source_face, capture_frame)
+			futures.append(future)
+			future_done = [ future for future in futures if future.done() ]
+			for future in future_done:
+				capture_frame = future.result()
+				if capture_frame is not None:
+					capture_frames.append(capture_frame)
+				futures.remove(future)
+			while capture_frames:
+				yield capture_frames.popleft()
+				progress.update()
 
 
 def stop() -> Update:
