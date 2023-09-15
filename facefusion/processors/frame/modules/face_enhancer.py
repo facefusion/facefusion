@@ -84,13 +84,12 @@ def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame)
 	return temp_frame
 
 
-def process_frames(source_path : str, temp_frame_paths : List[str], update: Callable[[], None]) -> None:
+def process_frames(source_path : str, temp_frame_paths : List[str], update_progress: Callable[[], None]) -> None:
 	for temp_frame_path in temp_frame_paths:
 		temp_frame = read_image(temp_frame_path)
 		result_frame = process_frame(None, None, temp_frame)
 		write_image(temp_frame_path, result_frame)
-		if update:
-			update()
+		update_progress()
 
 
 def process_image(source_path : str, target_path : str, output_path : str) -> None:
@@ -100,4 +99,4 @@ def process_image(source_path : str, target_path : str, output_path : str) -> No
 
 
 def process_video(source_path : str, temp_frame_paths : List[str]) -> None:
-	facefusion.processors.frame.core.process_video(None, temp_frame_paths, process_frames)
+	facefusion.processors.frame.core.multi_process_frames(None, temp_frame_paths, process_frames)

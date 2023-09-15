@@ -77,15 +77,14 @@ def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame)
 	return temp_frame
 
 
-def process_frames(source_path : str, temp_frame_paths : List[str], update: Callable[[], None]) -> None:
+def process_frames(source_path : str, temp_frame_paths : List[str], update_progress: Callable[[], None]) -> None:
 	source_face = get_one_face(read_static_image(source_path))
 	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
 	for temp_frame_path in temp_frame_paths:
 		temp_frame = read_image(temp_frame_path)
 		result_frame = process_frame(source_face, reference_face, temp_frame)
 		write_image(temp_frame_path, result_frame)
-		if update:
-			update()
+		update_progress()
 
 
 def process_image(source_path : str, target_path : str, output_path : str) -> None:
@@ -98,7 +97,7 @@ def process_image(source_path : str, target_path : str, output_path : str) -> No
 
 def process_video(source_path : str, temp_frame_paths : List[str]) -> None:
 	conditional_set_face_reference(temp_frame_paths)
-	frame_processors.process_video(source_path, temp_frame_paths, process_frames)
+	frame_processors.multi_process_frames(source_path, temp_frame_paths, process_frames)
 
 
 def conditional_set_face_reference(temp_frame_paths : List[str]) -> None:
