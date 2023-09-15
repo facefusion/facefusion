@@ -4,7 +4,7 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_image
+from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_static_image
 from facefusion.face_analyser import get_one_face
 from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.predictor import predict_frame
@@ -33,10 +33,10 @@ def render() -> None:
 		'visible': False
 	}
 	conditional_set_face_reference()
-	source_face = get_one_face(read_image(facefusion.globals.source_path))
+	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
 	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
 	if is_image(facefusion.globals.target_path):
-		target_frame = read_image(facefusion.globals.target_path)
+		target_frame = read_static_image(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(source_face, reference_face, target_frame)
 		preview_image_args['value'] = normalize_frame_color(preview_frame)
 	if is_video(facefusion.globals.target_path):
@@ -93,10 +93,10 @@ def listen() -> None:
 
 def update_preview_image(frame_number : int = 0) -> Update:
 	conditional_set_face_reference()
-	source_face = get_one_face(read_image(facefusion.globals.source_path))
+	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
 	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
 	if is_image(facefusion.globals.target_path):
-		target_frame = read_image(facefusion.globals.target_path)
+		target_frame = read_static_image(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(source_face, reference_face, target_frame)
 		preview_frame = normalize_frame_color(preview_frame)
 		return gradio.update(value = preview_frame)

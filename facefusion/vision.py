@@ -46,7 +46,11 @@ def resize_frame_dimension(frame : Frame, max_height : int) -> Frame:
 	return frame
 
 
-@lru_cache(maxsize = None)
+@lru_cache(maxsize = 128)
+def read_static_image(image_path : str) -> Optional[Frame]:
+	return read_image(image_path)
+
+
 def read_image(image_path : str) -> Optional[Frame]:
 	if image_path:
 		return cv2.imread(image_path)

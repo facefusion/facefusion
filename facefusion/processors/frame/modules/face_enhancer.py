@@ -8,7 +8,7 @@ from facefusion.core import update_status
 from facefusion.face_analyser import get_many_faces
 from facefusion.typing import Frame, Face, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video
-from facefusion.vision import read_image, write_image
+from facefusion.vision import read_image, read_static_image, write_image
 
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -54,7 +54,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	clear_frame_processor()
-	read_image.cache_clear()
+	read_static_image.cache_clear()
 
 
 def enhance_face(target_face : Face, temp_frame : Frame) -> Frame:
@@ -94,7 +94,7 @@ def process_frames(source_path : str, temp_frame_paths : List[str], update: Call
 
 
 def process_image(source_path : str, target_path : str, output_path : str) -> None:
-	target_frame = read_image(target_path)
+	target_frame = read_static_image(target_path)
 	result_frame = process_frame(None, None, target_frame)
 	write_image(output_path, result_frame)
 

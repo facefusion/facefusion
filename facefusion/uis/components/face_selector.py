@@ -5,7 +5,7 @@ import gradio
 import facefusion.choices
 import facefusion.globals
 from facefusion import wording
-from facefusion.vision import get_video_frame, normalize_frame_color, read_image
+from facefusion.vision import get_video_frame, normalize_frame_color, read_static_image
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_reference import clear_face_reference
 from facefusion.typing import Frame, FaceRecognition
@@ -33,7 +33,7 @@ def render() -> None:
 		'visible': 'reference' in facefusion.globals.face_recognition
 	}
 	if is_image(facefusion.globals.target_path):
-		reference_frame = read_image(facefusion.globals.target_path)
+		reference_frame = read_static_image(facefusion.globals.target_path)
 		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
 	if is_video(facefusion.globals.target_path):
 		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
@@ -104,7 +104,7 @@ def update_face_reference_position(reference_face_position : int = 0) -> Update:
 	gallery_frames = []
 	facefusion.globals.reference_face_position = reference_face_position
 	if is_image(facefusion.globals.target_path):
-		reference_frame = read_image(facefusion.globals.target_path)
+		reference_frame = read_static_image(facefusion.globals.target_path)
 		gallery_frames = extract_gallery_frames(reference_frame)
 	if is_video(facefusion.globals.target_path):
 		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
