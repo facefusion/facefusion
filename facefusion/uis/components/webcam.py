@@ -1,4 +1,4 @@
-from typing import Optional, Generator
+from typing import Optional, Generator, Deque
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
 import os
@@ -70,7 +70,7 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 		progress = tqdm(desc = wording.get('processing'), unit = 'frame', dynamic_ncols = True)
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
-			frames = deque()
+			frames : Deque[Frame] = deque()
 			while True:
 				_, temp_frame = capture.read()
 				future = executor.submit(process_stream_frame, source_face, temp_frame)
