@@ -1,4 +1,6 @@
 from typing import Optional, Generator
+from concurrent.futures import ThreadPoolExecutor
+from collections import deque
 import os
 import platform
 import subprocess
@@ -66,14 +68,24 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 	capture = capture_webcam(resolution, fps)
 	if capture.isOpened():
 		progress = tqdm(desc = wording.get('processing'), unit = 'frame', dynamic_ncols = True)
-		while True:
-			_, temp_frame = capture.read()
-			temp_frame = process_stream_frame(source_face, temp_frame)
-			if temp_frame is not None:
-				if stream is not None:
-					stream.stdin.write(temp_frame.tobytes())
-				yield normalize_frame_color(temp_frame)
-				progress.update(1)
+		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
+			futures = []
+			frames = deque()
+			while True:
+				_, temp_frame = capture.read()
+				future = executor.submit(process_stream_frame, source_face, temp_frame)
+				futures.append(future)
+				completed_futures = [ future for future in futures if future.done() ]
+				for future in completed_futures:
+					temp_frame = future.result()
+					if temp_frame is not None:
+						frames.append(temp_frame)
+					futures.remove(future)
+				while frames:
+					if stream is not None:
+						stream.stdin.write(temp_frame.tobytes())
+					yield normalize_frame_color(frames.popleft())
+					progress.update(1)
 
 
 def stop() -> Update:
