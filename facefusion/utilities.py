@@ -177,15 +177,29 @@ def is_video(video_path : str) -> bool:
 
 
 def conditional_download(download_directory_path : str, urls : List[str]) -> None:
-	if not os.path.exists(download_directory_path):
-		os.makedirs(download_directory_path)
 	for url in urls:
 		download_file_path = os.path.join(download_directory_path, os.path.basename(url))
-		if not os.path.exists(download_file_path):
-			request = urllib.request.urlopen(url) # type: ignore[attr-defined]
-			total = int(request.headers.get('Content-Length', 0))
-			with tqdm(total = total, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024) as progress:
-				urllib.request.urlretrieve(url, download_file_path, reporthook = lambda count, block_size, total_size: progress.update(block_size)) # type: ignore[attr-defined]
+		total = get_download_size(url)
+		if is_file(download_file_path):
+			initial = os.path.getsize(download_file_path)
+		else:
+			initial = 0
+		if initial < total:
+			with tqdm(total = total, initial = initial, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024) as progress:
+				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--location', '--continue-at', '-', '--output', download_file_path, url ])
+				current = initial
+				while current < total:
+					if is_file(download_file_path):
+						current = os.path.getsize(download_file_path)
+						progress.update(current - progress.n)
+
+
+def get_download_size(url : str) -> int:
+	response = urllib.request.urlopen(url) # type: ignore[attr-defined]
+	content_length = response.getheader('Content-Length')
+	if content_length:
+		return int(content_length)
+	return 0
 
 
 def resolve_relative_path(path : str) -> str:
