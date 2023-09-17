@@ -103,10 +103,10 @@ def capture_webcam(resolution : str, fps : float) -> cv2.VideoCapture:
 		capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 	else:
 		capture = cv2.VideoCapture(0)
+	capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) # type: ignore[attr-defined]
 	capture.set(cv2.CAP_PROP_FRAME_WIDTH, int(width))
 	capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(height))
 	capture.set(cv2.CAP_PROP_FPS, fps)
-	capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')) # type: ignore[attr-defined]
 	return capture
 
 
