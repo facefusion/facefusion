@@ -77,7 +77,7 @@ def merge_video(target_path : str, fps : float) -> bool:
 	if facefusion.globals.output_video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.5))
 		commands.extend([ '-cq', str(output_video_compression) ])
-	commands.extend([ '-pix_fmt', 'yuv420p', '-y', temp_output_video_path ])
+	commands.extend([ '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_output_video_path ])
 	return run_ffmpeg(commands)
 
 

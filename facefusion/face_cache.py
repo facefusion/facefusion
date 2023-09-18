@@ -1,5 +1,5 @@
-import hashlib
 from typing import Optional, List, Dict
+import hashlib
 
 from facefusion.typing import Frame, Face
 

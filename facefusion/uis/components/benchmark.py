@@ -78,21 +78,21 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 	benchmark_results = []
 	if target_paths:
-		setup()
+		pre_process()
 		for target_path in target_paths:
 			benchmark_results.append(benchmark(target_path, benchmark_cycles))
 			yield benchmark_results
-		tear_down()
+		post_process()
 
 
-def setup() -> None:
+def pre_process() -> None:
 	limit_resources()
 	get_face_analyser()
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		frame_processor_module.get_frame_processor()
 
 
-def tear_down() -> None:
+def post_process() -> None:
 	clear_faces_cache()
 
 
