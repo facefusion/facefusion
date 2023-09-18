@@ -62,14 +62,14 @@ def multi_process_frames(source_path : str, temp_frame_paths : List[str], proces
 	with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame', dynamic_ncols = True, bar_format = progress_bar_format) as progress:
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
-			queue = create_queue(temp_frame_paths)
+			queue_temp_frame_paths : Queue[str] = create_queue(temp_frame_paths)
 			queue_per_future = max(len(temp_frame_paths) // facefusion.globals.execution_thread_count * facefusion.globals.execution_queue_count, 1)
-			while not queue.empty():
-				queue_frame_paths = pick_queue(queue, queue_per_future)
-				future = executor.submit(process_frames, source_path, queue_frame_paths, lambda: update_progress(progress))
+			while not queue_temp_frame_paths.empty():
+				payload_temp_frame_paths = pick_queue(queue_temp_frame_paths, queue_per_future)
+				future = executor.submit(process_frames, source_path, payload_temp_frame_paths, lambda: update_progress(progress))
 				futures.append(future)
-			for future in as_completed(futures):
-				future.result()
+			for future_done in as_completed(futures):
+				future_done.result()
 
 
 def create_queue(temp_frame_paths : List[str]) -> Queue[str]:

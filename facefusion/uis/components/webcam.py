@@ -77,19 +77,17 @@ def multi_process_capture(source_face: Face, capture : cv2.VideoCapture) -> Gene
 	progress = tqdm(desc = wording.get('processing'), unit = 'frame', dynamic_ncols = True)
 	with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 		futures = []
-		capture_frames: Deque[Frame] = deque()
+		deque_capture_frames : Deque[Frame] = deque()
 		while True:
 			_, capture_frame = capture.read()
 			future = executor.submit(process_stream_frame, source_face, capture_frame)
 			futures.append(future)
-			future_done = [ future for future in futures if future.done() ]
-			for future in future_done:
-				capture_frame = future.result()
-				if capture_frame is not None:
-					capture_frames.append(capture_frame)
-				futures.remove(future)
-			while capture_frames:
-				yield capture_frames.popleft()
+			for future_done in [ future for future in futures if future.done() ]:
+				capture_frame = future_done.result()
+				deque_capture_frames.append(capture_frame)
+				futures.remove(future_done)
+			while deque_capture_frames:
+				yield deque_capture_frames.popleft()
 				progress.update()
 
 
