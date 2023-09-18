@@ -6,7 +6,8 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.face_analyser import get_face_analyser, clear_faces_cache
+from facefusion.face_analyser import get_face_analyser
+from facefusion.face_cache import clear_faces_cache
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total
 from facefusion.core import limit_resources, conditional_process

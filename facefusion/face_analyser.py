@@ -1,14 +1,13 @@
-from typing import Any, Optional, List, Dict
-import hashlib
+from typing import Any, Optional, List
 import threading
 import insightface
 import numpy
 
 import facefusion.globals
+from facefusion.face_cache import get_faces_cache, set_faces_cache
 from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender
 
 FACE_ANALYSER = None
-FACES_CACHE : Dict[str, List[Face]] = {}
 THREAD_LOCK : threading.Lock = threading.Lock()
 
 
@@ -40,9 +39,9 @@ def get_one_face(frame : Frame, position : int = 0) -> Optional[Face]:
 
 def get_many_faces(frame : Frame) -> List[Face]:
 	try:
-		cache_faces = get_faces_cache(frame)
-		if cache_faces:
-			faces = cache_faces
+		faces_cache = get_faces_cache(frame)
+		if faces_cache:
+			faces = faces_cache
 		else:
 			faces = get_face_analyser().get(frame)
 			set_faces_cache(frame, faces)
@@ -107,22 +106,3 @@ def filter_by_gender(faces : List[Face], gender : FaceAnalyserGender) -> List[Fa
 		if face['gender'] == 0 and gender == 'female':
 			filter_faces.append(face)
 	return filter_faces
-
-
-def get_faces_cache(frame : Frame) -> Optional[List[Face]]:
-	frame_hash = hashlib.sha256(frame.tobytes()).hexdigest() if frame is not None else None
-
-	if frame_hash in FACES_CACHE:
-		return FACES_CACHE[frame_hash]
-	return None
-
-
-def set_faces_cache(frame : Frame, faces : List[Face]) -> None:
-	frame_hash = hashlib.sha256(frame.tobytes()).hexdigest() if frame is not None else None
-	FACES_CACHE[frame_hash] = faces
-
-
-def clear_faces_cache() -> None:
-	global FACES_CACHE
-
-	FACES_CACHE = {}
