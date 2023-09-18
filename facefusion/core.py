@@ -165,6 +165,8 @@ def process_video() -> None:
 	extract_frames(facefusion.globals.target_path, fps)
 	# process frame
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
+	temp_frame_paths = sorted(temp_frame_paths) 
+    
 	if temp_frame_paths:
 		for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 			update_status(wording.get('processing'), frame_processor_module.NAME)
