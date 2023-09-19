@@ -64,11 +64,12 @@ python run.py [options]
 Disclaimer
 ----------
 
-We acknowledge the unethical potential of FaceFusion and are resolutely dedicated to establishing safeguards against such misuse. Our program has been engineered to abstain from processing inappropriate content such as nudity, graphic content and sensitive material.
+We acknowledge the unethical potential of FaceFusion and are resolutely dedicated to establishing safeguards against such misuse. This program has been engineered to abstain from processing inappropriate content such as nudity, graphic content and sensitive material.
 
-It is important to note that we maintain a strong stance against any type of a pornographic nature and do not collaborate with any websites promoting the unauthorized use of our software.
+It is important to note that we maintain a strong stance against any type of pornographic nature and do not collaborate with any websites promoting the unauthorized use of our software.
 
-Users who seek to engage in such activities will face consequences, including being banned from our community. We will report developers who distribute unlocked forks of our software.
+Users who seek to engage in such activities will face consequences, including being banned from our community. Developers who distribute unlocked forks of our software may be subject to reporting at any time.
+
 
 Documentation
 -------------
