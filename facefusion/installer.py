@@ -1,4 +1,5 @@
 from typing import Dict, Tuple
+import argparse
 import os
 import sys
 import subprocess
@@ -8,7 +9,7 @@ subprocess.call([ 'pip', 'install' , 'inquirer', '-q' ])
 
 import inquirer
 
-from facefusion import wording
+from facefusion import metadata, wording
 
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 {
@@ -22,27 +23,38 @@ ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 
 
 def run() -> None:
-	answers : Dict[str, str] = inquirer.prompt(
-	[
-		inquirer.List(
-			'onnxruntime_key',
-			message = wording.get('select_onnxruntime_install'),
-			choices = list(ONNXRUNTIMES.keys())
-		)
-	])
+	program = argparse.ArgumentParser(formatter_class = lambda prog: argparse.HelpFormatter(prog, max_help_position = 120))
+	program.add_argument('--onnxruntime', help = wording.get('onnxruntime_help'), dest = 'onnxruntime', choices = ONNXRUNTIMES.keys())
+	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
+	args = program.parse_args()
+
+	if args.onnxruntime:
+		answers =\
+		{
+			'onnxruntime': args.onnxruntime
+		}
+	else:
+		answers = inquirer.prompt(
+		[
+			inquirer.List(
+				'onnxruntime',
+				message = wording.get('onnxruntime_help'),
+				choices = list(ONNXRUNTIMES.keys())
+			)
+		])
 
 	if answers is not None:
-		onnxruntime_key = answers['onnxruntime_key']
-		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime_key]
+		onnxruntime = answers['onnxruntime']
+		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime]
 		python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 		subprocess.call([ 'pip', 'uninstall', 'torch', '-y' ])
-		if onnxruntime_key == 'cuda':
+		if onnxruntime == 'cuda':
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/cu118' ])
 		else:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
-		if onnxruntime_key != 'cpu':
+		if onnxruntime != 'cpu':
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
-		if onnxruntime_key != 'coreml-silicon':
+		if onnxruntime != 'coreml-silicon':
 			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
 		elif python_id in [ 'cp39', 'cp310', 'cp311' ]:
 			wheel_name = '-'.join([ 'onnxruntime_silicon', onnxruntime_version, python_id, python_id, 'macosx_12_0_arm64.whl' ])

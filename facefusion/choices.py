@@ -8,3 +8,4 @@ face_analyser_age : List[FaceAnalyserAge] = [ 'child', 'teen', 'adult', 'senior'
 face_analyser_gender : List[FaceAnalyserGender] = [ 'male', 'female' ]
 temp_frame_format : List[TempFrameFormat] = [ 'jpg', 'png' ]
 output_video_encoder : List[OutputVideoEncoder] = [ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc' ]
+

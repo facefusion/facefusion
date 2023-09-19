@@ -1,41 +1,37 @@
-from typing import Optional
+from typing import Optional, List
 import gradio
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.uis import choices
 from facefusion.uis.typing import Update
 
-KEEP_FPS_CHECKBOX : Optional[gradio.Checkbox] = None
-KEEP_TEMP_CHECKBOX : Optional[gradio.Checkbox] = None
-SKIP_AUDIO_CHECKBOX : Optional[gradio.Checkbox] = None
+SETTINGS_CHECKBOX_GROUP : Optional[gradio.Checkboxgroup] = None
 
 
 def render() -> None:
-	global KEEP_FPS_CHECKBOX
-	global KEEP_TEMP_CHECKBOX
-	global SKIP_AUDIO_CHECKBOX
+	global SETTINGS_CHECKBOX_GROUP
 
-	with gradio.Box():
-		KEEP_FPS_CHECKBOX = gradio.Checkbox(
-			label = wording.get('keep_fps_checkbox_label'),
-			value = facefusion.globals.keep_fps
-		)
-		KEEP_TEMP_CHECKBOX = gradio.Checkbox(
-			label = wording.get('keep_temp_checkbox_label'),
-			value = facefusion.globals.keep_temp
-		)
-		SKIP_AUDIO_CHECKBOX = gradio.Checkbox(
-			label = wording.get('skip_audio_checkbox_label'),
-			value = facefusion.globals.skip_audio
-		)
+	value = []
+	if facefusion.globals.keep_fps:
+		value.append('keep-fps')
+	if facefusion.globals.keep_temp:
+		value.append('keep-temp')
+	if facefusion.globals.skip_audio:
+		value.append('skip-audio')
+	SETTINGS_CHECKBOX_GROUP = gradio.Checkboxgroup(
+		label = wording.get('settings_checkbox_group_label'),
+		choices = choices.settings,
+		value = value
+	)
 
 
 def listen() -> None:
-	KEEP_FPS_CHECKBOX.change(lambda value: update_checkbox('keep_fps', value), inputs = KEEP_FPS_CHECKBOX, outputs = KEEP_FPS_CHECKBOX)
-	KEEP_TEMP_CHECKBOX.change(lambda value: update_checkbox('keep_temp', value), inputs = KEEP_TEMP_CHECKBOX, outputs = KEEP_TEMP_CHECKBOX)
-	SKIP_AUDIO_CHECKBOX.change(lambda value: update_checkbox('skip_audio', value), inputs = SKIP_AUDIO_CHECKBOX, outputs = SKIP_AUDIO_CHECKBOX)
+	SETTINGS_CHECKBOX_GROUP.change(update, inputs = SETTINGS_CHECKBOX_GROUP, outputs = SETTINGS_CHECKBOX_GROUP)
 
 
-def update_checkbox(name : str, value: bool) -> Update:
-	setattr(facefusion.globals, name, value)
-	return gradio.update(value = value)
+def update(settings : List[str]) -> Update:
+	facefusion.globals.keep_fps = 'keep-fps' in settings
+	facefusion.globals.keep_temp = 'keep-temp' in settings
+	facefusion.globals.skip_audio = 'skip-audio' in settings
+	return gradio.update(value = settings)

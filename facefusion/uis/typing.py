@@ -14,8 +14,13 @@ ComponentName = Literal\
 	'face_analyser_direction_dropdown',
 	'face_analyser_age_dropdown',
 	'face_analyser_gender_dropdown',
-	'frame_processors_checkbox_group'
+	'frame_processors_checkbox_group',
+	'benchmark_runs_checkbox_group',
+	'benchmark_cycles_slider',
+	'webcam_mode_radio',
+	'webcam_resolution_dropdown',
+	'webcam_fps_slider'
 ]
 WebcamMode = Literal[ 'inline', 'stream_udp', 'stream_v4l2' ]
-StreamMode = Literal['udp', 'v4l2']
+StreamMode = Literal[ 'udp', 'v4l2' ]
 Update = Dict[Any, Any]

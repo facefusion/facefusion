@@ -1,12 +1,11 @@
 from typing import List, Optional, Tuple, Any, Dict
 
-import cv2
 import gradio
 
 import facefusion.choices
 import facefusion.globals
 from facefusion import wording
-from facefusion.vision import get_video_frame, normalize_frame_color
+from facefusion.vision import get_video_frame, normalize_frame_color, read_static_image
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_reference import clear_face_reference
 from facefusion.typing import Frame, FaceRecognition
@@ -24,38 +23,37 @@ def render() -> None:
 	global REFERENCE_FACE_POSITION_GALLERY
 	global REFERENCE_FACE_DISTANCE_SLIDER
 
-	with gradio.Box():
-		reference_face_gallery_args: Dict[str, Any] =\
-		{
-			'label': wording.get('reference_face_gallery_label'),
-			'height': 120,
-			'object_fit': 'cover',
-			'columns': 10,
-			'allow_preview': False,
-			'visible': 'reference' in facefusion.globals.face_recognition
-		}
-		if is_image(facefusion.globals.target_path):
-			reference_frame = cv2.imread(facefusion.globals.target_path)
-			reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
-		if is_video(facefusion.globals.target_path):
-			reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-			reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
-		FACE_RECOGNITION_DROPDOWN = gradio.Dropdown(
-			label = wording.get('face_recognition_dropdown_label'),
-			choices = facefusion.choices.face_recognition,
-			value = facefusion.globals.face_recognition
-		)
-		REFERENCE_FACE_POSITION_GALLERY = gradio.Gallery(**reference_face_gallery_args)
-		REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
-			label = wording.get('reference_face_distance_slider_label'),
-			value = facefusion.globals.reference_face_distance,
-			maximum = 3,
-			step = 0.05,
-			visible = 'reference' in facefusion.globals.face_recognition
-		)
-		ui.register_component('face_recognition_dropdown', FACE_RECOGNITION_DROPDOWN)
-		ui.register_component('reference_face_position_gallery', REFERENCE_FACE_POSITION_GALLERY)
-		ui.register_component('reference_face_distance_slider', REFERENCE_FACE_DISTANCE_SLIDER)
+	reference_face_gallery_args: Dict[str, Any] =\
+	{
+		'label': wording.get('reference_face_gallery_label'),
+		'height': 120,
+		'object_fit': 'cover',
+		'columns': 10,
+		'allow_preview': False,
+		'visible': 'reference' in facefusion.globals.face_recognition
+	}
+	if is_image(facefusion.globals.target_path):
+		reference_frame = read_static_image(facefusion.globals.target_path)
+		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
+	if is_video(facefusion.globals.target_path):
+		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
+	FACE_RECOGNITION_DROPDOWN = gradio.Dropdown(
+		label = wording.get('face_recognition_dropdown_label'),
+		choices = facefusion.choices.face_recognition,
+		value = facefusion.globals.face_recognition
+	)
+	REFERENCE_FACE_POSITION_GALLERY = gradio.Gallery(**reference_face_gallery_args)
+	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
+		label = wording.get('reference_face_distance_slider_label'),
+		value = facefusion.globals.reference_face_distance,
+		maximum = 3,
+		step = 0.05,
+		visible = 'reference' in facefusion.globals.face_recognition
+	)
+	ui.register_component('face_recognition_dropdown', FACE_RECOGNITION_DROPDOWN)
+	ui.register_component('reference_face_position_gallery', REFERENCE_FACE_POSITION_GALLERY)
+	ui.register_component('reference_face_distance_slider', REFERENCE_FACE_DISTANCE_SLIDER)
 
 
 def listen() -> None:
@@ -106,7 +104,7 @@ def update_face_reference_position(reference_face_position : int = 0) -> Update:
 	gallery_frames = []
 	facefusion.globals.reference_face_position = reference_face_position
 	if is_image(facefusion.globals.target_path):
-		reference_frame = cv2.imread(facefusion.globals.target_path)
+		reference_frame = read_static_image(facefusion.globals.target_path)
 		gallery_frames = extract_gallery_frames(reference_frame)
 	if is_video(facefusion.globals.target_path):
 		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)

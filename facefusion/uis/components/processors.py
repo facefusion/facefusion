@@ -14,13 +14,12 @@ FRAME_PROCESSORS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 def render() -> None:
 	global FRAME_PROCESSORS_CHECKBOX_GROUP
 
-	with gradio.Box():
-		FRAME_PROCESSORS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-			label = wording.get('frame_processors_checkbox_group_label'),
-			choices = sort_frame_processors(facefusion.globals.frame_processors),
-			value = facefusion.globals.frame_processors
-		)
-		ui.register_component('frame_processors_checkbox_group', FRAME_PROCESSORS_CHECKBOX_GROUP)
+	FRAME_PROCESSORS_CHECKBOX_GROUP = gradio.CheckboxGroup(
+		label = wording.get('frame_processors_checkbox_group_label'),
+		choices = sort_frame_processors(facefusion.globals.frame_processors),
+		value = facefusion.globals.frame_processors
+	)
+	ui.register_component('frame_processors_checkbox_group', FRAME_PROCESSORS_CHECKBOX_GROUP)
 
 
 def listen() -> None:

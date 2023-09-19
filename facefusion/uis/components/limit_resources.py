@@ -11,13 +11,12 @@ MAX_MEMORY_SLIDER : Optional[gradio.Slider] = None
 def render() -> None:
 	global MAX_MEMORY_SLIDER
 
-	with gradio.Box():
-		MAX_MEMORY_SLIDER = gradio.Slider(
-			label = wording.get('max_memory_slider_label'),
-			minimum = 0,
-			maximum = 128,
-			step = 1
-		)
+	MAX_MEMORY_SLIDER = gradio.Slider(
+		label = wording.get('max_memory_slider_label'),
+		minimum = 0,
+		maximum = 128,
+		step = 1
+	)
 
 
 def listen() -> None:

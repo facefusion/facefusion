@@ -1,5 +1,4 @@
 from typing import Any, List, Callable
-import cv2
 import threading
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from realesrgan import RealESRGANer
@@ -10,10 +9,11 @@ from facefusion import wording, utilities
 from facefusion.core import update_status
 from facefusion.typing import Frame, Face, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path
+from facefusion.vision import read_image, read_static_image, write_image
 
 FRAME_PROCESSOR = None
-THREAD_SEMAPHORE = threading.Semaphore()
-THREAD_LOCK = threading.Lock()
+THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
+THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FRAME_ENHANCER'
 
 
@@ -63,6 +63,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	clear_frame_processor()
+	read_static_image.cache_clear()
 
 
 def enhance_frame(temp_frame : Frame) -> Frame:
@@ -75,20 +76,19 @@ def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame)
 	return enhance_frame(temp_frame)
 
 
-def process_frames(source_path : str, temp_frame_paths : List[str], update: Callable[[], None]) -> None:
+def process_frames(source_path : str, temp_frame_paths : List[str], update_progress: Callable[[], None]) -> None:
 	for temp_frame_path in temp_frame_paths:
-		temp_frame = cv2.imread(temp_frame_path)
+		temp_frame = read_image(temp_frame_path)
 		result_frame = process_frame(None, None, temp_frame)
-		cv2.imwrite(temp_frame_path, result_frame)
-		if update:
-			update()
+		write_image(temp_frame_path, result_frame)
+		update_progress()
 
 
 def process_image(source_path : str, target_path : str, output_path : str) -> None:
-	target_frame = cv2.imread(target_path)
+	target_frame = read_static_image(target_path)
 	result = process_frame(None, None, target_frame)
-	cv2.imwrite(output_path, result)
+	write_image(output_path, result)
 
 
 def process_video(source_path : str, temp_frame_paths : List[str]) -> None:
-	frame_processors.process_video(None, temp_frame_paths, process_frames)
+	frame_processors.multi_process_frames(None, temp_frame_paths, process_frames)

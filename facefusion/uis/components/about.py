@@ -9,5 +9,4 @@ ABOUT_HTML : Optional[gradio.HTML] = None
 def render() -> None:
 	global ABOUT_HTML
 
-	with gradio.Box():
-		ABOUT_HTML = gradio.HTML('<center><a href="' + metadata.get('url') + '">' + metadata.get('name') + ' ' + metadata.get('version') + '</a></center>')
+	ABOUT_HTML = gradio.HTML('<center><a href="' + metadata.get('url') + '">' + metadata.get('name') + ' ' + metadata.get('version') + '</a></center>')

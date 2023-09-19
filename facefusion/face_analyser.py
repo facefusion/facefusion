@@ -1,13 +1,14 @@
-import threading
 from typing import Any, Optional, List
+import threading
 import insightface
 import numpy
 
 import facefusion.globals
+from facefusion.face_cache import get_faces_cache, set_faces_cache
 from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender
 
 FACE_ANALYSER = None
-THREAD_LOCK = threading.Lock()
+THREAD_LOCK : threading.Lock = threading.Lock()
 
 
 def get_face_analyser() -> Any:
@@ -38,7 +39,12 @@ def get_one_face(frame : Frame, position : int = 0) -> Optional[Face]:
 
 def get_many_faces(frame : Frame) -> List[Face]:
 	try:
-		faces = get_face_analyser().get(frame)
+		faces_cache = get_faces_cache(frame)
+		if faces_cache:
+			faces = faces_cache
+		else:
+			faces = get_face_analyser().get(frame)
+			set_faces_cache(frame, faces)
 		if facefusion.globals.face_analyser_direction:
 			faces = sort_by_direction(faces, facefusion.globals.face_analyser_direction)
 		if facefusion.globals.face_analyser_age:
@@ -100,7 +106,3 @@ def filter_by_gender(faces : List[Face], gender : FaceAnalyserGender) -> List[Fa
 		if face['gender'] == 0 and gender == 'female':
 			filter_faces.append(face)
 	return filter_faces
-
-
-def get_faces_total(frame : Frame) -> int:
-	return len(get_many_faces(frame))

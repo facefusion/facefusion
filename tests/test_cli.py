@@ -1,4 +1,5 @@
 import subprocess
+import sys
 import pytest
 
 from facefusion import wording
@@ -16,7 +17,7 @@ def before_all() -> None:
 
 
 def test_image_to_image() -> None:
-	commands = [ 'python', 'run.py', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-1080p.jpg', '-o', '.assets/examples', '--headless' ]
+	commands = [ sys.executable, 'run.py', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-1080p.jpg', '-o', '.assets/examples', '--headless' ]
 	run = subprocess.run(commands, stdout = subprocess.PIPE)
 
 	assert run.returncode == 0
@@ -24,7 +25,7 @@ def test_image_to_image() -> None:
 
 
 def test_image_to_video() -> None:
-	commands = [ 'python', 'run.py', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-1080p.mp4', '-o', '.assets/examples', '--trim-frame-end', '10', '--headless' ]
+	commands = [ sys.executable, 'run.py', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-1080p.mp4', '-o', '.assets/examples', '--trim-frame-end', '10', '--headless' ]
 	run = subprocess.run(commands, stdout = subprocess.PIPE)
 
 	assert run.returncode == 0
