@@ -68,7 +68,7 @@ We acknowledge the unethical potential of FaceFusion and are resolutely dedicate
 
 It is important to note that we maintain a strong stance against any type of pornographic nature and do not collaborate with any websites promoting the unauthorized use of our software.
 
-Users who seek to engage in such activities will face consequences, including being banned from our community. Developers who distribute unlocked forks of our software may be subject to reporting at any time.
+Users who seek to engage in such activities will face consequences, including being banned from our community. We reserve the right to report developers on GitHub who distribute unlocked forks of our software at any time.
 
 
 Documentation
