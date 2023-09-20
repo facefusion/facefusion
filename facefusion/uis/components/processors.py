@@ -29,9 +29,10 @@ def listen() -> None:
 def update_frame_processors(frame_processors : List[str]) -> Update:
 	clear_frame_processors_modules()
 	facefusion.globals.frame_processors = frame_processors
-	for frame_processor in facefusion.globals.frame_processors:
+	for frame_processor in frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
-		frame_processor_module.pre_check()
+		if not frame_processor_module.pre_check():
+			return gradio.update()
 	return gradio.update(value = frame_processors, choices = sort_frame_processors(frame_processors))
 
 

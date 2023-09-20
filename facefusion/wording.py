@@ -47,6 +47,7 @@ WORDING =\
 	'processing_image_failed': 'Processing to image failed',
 	'processing_video_succeed': 'Processing to video succeed',
 	'processing_video_failed': 'Processing to video failed',
+	'model_download_not_done': 'Download of the model is not done',
 	'select_image_source': 'Select an image for source path',
 	'select_image_or_video_target': 'Select an image or video for target path',
 	'select_file_or_directory_output': 'Select an file or directory for output path',
