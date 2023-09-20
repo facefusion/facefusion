@@ -13,11 +13,11 @@ from facefusion import metadata, wording
 
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 {
-	'cpu': ('onnxruntime', '1.15.1'),
-	'cuda': ('onnxruntime-gpu', '1.15.1'),
+	'cpu': ('onnxruntime', '1.16.0 '),
+	'cuda': ('onnxruntime-gpu', '1.16.0'),
 	'coreml-legacy': ('onnxruntime-coreml', '1.13.1'),
 	'coreml-silicon': ('onnxruntime-silicon', '1.14.2'),
-	'directml': ('onnxruntime-directml', '1.15.1'),
+	'directml': ('onnxruntime-directml', '1.16.0'),
 	'openvino': ('onnxruntime-openvino', '1.15.0')
 }
 
