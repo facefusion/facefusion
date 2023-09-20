@@ -7,6 +7,7 @@ import facefusion
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording, utilities
 from facefusion.core import update_status
+from facefusion.face_analyser import clear_face_analyser
 from facefusion.typing import Frame, Face, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path
 from facefusion.vision import read_image, read_static_image, write_image
@@ -63,6 +64,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	clear_frame_processor()
+	clear_face_analyser()
 	read_static_image.cache_clear()
 
 

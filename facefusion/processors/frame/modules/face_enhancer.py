@@ -5,7 +5,7 @@ from gfpgan.utils import GFPGANer
 import facefusion.globals
 from facefusion import wording, utilities
 from facefusion.core import update_status
-from facefusion.face_analyser import get_many_faces
+from facefusion.face_analyser import get_many_faces, clear_face_analyser
 from facefusion.typing import Frame, Face, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video
 from facefusion.vision import read_image, read_static_image, write_image
@@ -54,6 +54,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	clear_frame_processor()
+	clear_face_analyser()
 	read_static_image.cache_clear()
 
 

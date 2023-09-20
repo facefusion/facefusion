@@ -6,7 +6,7 @@ import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
 from facefusion.core import update_status
-from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces
+from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.typing import Face, Frame, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video
@@ -56,6 +56,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	clear_frame_processor()
+	clear_face_analyser()
 	read_static_image.cache_clear()
 
 
