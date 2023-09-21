@@ -9,7 +9,7 @@ from facefusion.core import update_status
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.typing import Face, Frame, ProcessMode
-from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_download_done
+from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 
 FRAME_PROCESSOR = None
@@ -35,14 +35,18 @@ def clear_frame_processor() -> None:
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
-	conditional_download(download_directory_path, [ MODEL_URL ])
+	if not facefusion.globals.skip_download:
+		download_directory_path = resolve_relative_path('../.assets/models')
+		conditional_download(download_directory_path, [ MODEL_URL ])
 	return True
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if not is_download_done(MODEL_URL, MODEL_PATH):
+	if not facefusion.globals.skip_download and not is_download_done(MODEL_URL, MODEL_PATH):
 		update_status(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+		return False
+	elif not is_file(MODEL_PATH):
+		update_status(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
 	if not is_image(facefusion.globals.source_path):
 		update_status(wording.get('select_image_source') + wording.get('exclamation_mark'), NAME)

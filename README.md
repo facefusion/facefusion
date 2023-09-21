@@ -56,6 +56,7 @@ python run.py [options]
 --execution-providers {cpu} [{cpu} ...]                                                          choose from the available execution providers (choices: cpu, ...)
 --execution-thread-count EXECUTION_THREAD_COUNT                                                  specify the number of execution threads
 --execution-queue-count EXECUTION_QUEUE_COUNT                                                    specify the number of execution queries
+--skip-download                                                                                  omit automate downloads and lookups
 --headless                                                                                       run the program in headless mode
 -v, --version                                                                                    show program's version number and exit
 ```

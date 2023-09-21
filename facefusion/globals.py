@@ -5,7 +5,6 @@ from facefusion.typing import FaceRecognition, FaceAnalyserDirection, FaceAnalys
 source_path : Optional[str] = None
 target_path : Optional[str] = None
 output_path : Optional[str] = None
-headless : Optional[bool] = None
 frame_processors : List[str] = []
 ui_layouts : List[str] = []
 keep_fps : Optional[bool] = None
@@ -29,3 +28,5 @@ max_memory : Optional[int] = None
 execution_providers : List[str] = []
 execution_thread_count : Optional[int] = None
 execution_queue_count : Optional[int] = None
+skip_download : Optional[bool] = None
+headless : Optional[bool] = None
