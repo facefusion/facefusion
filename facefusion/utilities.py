@@ -196,12 +196,12 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 
 
 @lru_cache(maxsize = None)
-def get_download_size(url : str) -> int:
-	response = urllib.request.urlopen(url) # type: ignore[attr-defined]
-	content_length = response.getheader('Content-Length')
-	if content_length:
-		return int(content_length)
-	return 0
+def get_download_size(url : str) -> Optional[int]:
+	try:
+		response = urllib.request.urlopen(url) # type: ignore[attr-defined]
+		return int(response.getheader('Content-Length'))
+	except ValueError:
+		return None
 
 
 def is_download_done(url : str, file_path : str) -> bool:
