@@ -19,6 +19,8 @@ def render() -> None:
 		value.append('keep-temp')
 	if facefusion.globals.skip_audio:
 		value.append('skip-audio')
+	if facefusion.globals.skip_download:
+		value.append('skip-download')
 	SETTINGS_CHECKBOX_GROUP = gradio.Checkboxgroup(
 		label = wording.get('settings_checkbox_group_label'),
 		choices = choices.settings,
@@ -34,4 +36,5 @@ def update(settings : List[str]) -> Update:
 	facefusion.globals.keep_fps = 'keep-fps' in settings
 	facefusion.globals.keep_temp = 'keep-temp' in settings
 	facefusion.globals.skip_audio = 'skip-audio' in settings
+	facefusion.globals.skip_download = 'skip-download' in settings
 	return gradio.update(value = settings)

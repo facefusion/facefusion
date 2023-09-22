@@ -3,18 +3,21 @@ import threading
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from realesrgan import RealESRGANer
 
-import facefusion
+import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording, utilities
 from facefusion.core import update_status
+from facefusion.face_analyser import clear_face_analyser
 from facefusion.typing import Frame, Face, ProcessMode
-from facefusion.utilities import conditional_download, resolve_relative_path
+from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FRAME_ENHANCER'
+MODEL_URL = 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x4plus.pth'
+MODEL_PATH = resolve_relative_path('../.assets/models/RealESRGAN_x4plus.pth')
 
 
 def get_frame_processor() -> Any:
@@ -22,9 +25,8 @@ def get_frame_processor() -> Any:
 
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
-			model_path = resolve_relative_path('../.assets/models/RealESRGAN_x4plus.pth')
 			FRAME_PROCESSOR = RealESRGANer(
-				model_path = model_path,
+				model_path = MODEL_PATH,
 				model = RRDBNet(
 					num_in_ch = 3,
 					num_out_ch = 3,
@@ -49,12 +51,19 @@ def clear_frame_processor() -> None:
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
-	conditional_download(download_directory_path, [ 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x4plus.pth' ])
+	if not facefusion.globals.skip_download:
+		download_directory_path = resolve_relative_path('../.assets/models')
+		conditional_download(download_directory_path, [ MODEL_URL ])
 	return True
 
 
 def pre_process(mode : ProcessMode) -> bool:
+	if not facefusion.globals.skip_download and not facefusion.globals.skip_download and not is_download_done(MODEL_URL, MODEL_PATH):
+		update_status(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+		return False
+	elif not is_file(MODEL_PATH):
+		update_status(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
+		return False
 	if mode == 'output' and not facefusion.globals.output_path:
 		update_status(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False
@@ -63,6 +72,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	clear_frame_processor()
+	clear_face_analyser()
 	read_static_image.cache_clear()
 
 

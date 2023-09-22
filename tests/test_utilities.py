@@ -4,7 +4,7 @@ import subprocess
 import pytest
 
 import facefusion.globals
-from facefusion.utilities import conditional_download, extract_frames, create_temp, get_temp_directory_path, clear_temp, normalize_output_path, is_file, is_directory, is_image, is_video, encode_execution_providers, decode_execution_providers
+from facefusion.utilities import conditional_download, extract_frames, create_temp, get_temp_directory_path, clear_temp, normalize_output_path, is_file, is_directory, is_image, is_video, get_download_size, is_download_done, encode_execution_providers, decode_execution_providers
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -138,6 +138,18 @@ def test_is_video() -> None:
 	assert is_video('.assets/examples/target-240p.mp4') is True
 	assert is_video('.assets/examples/source.jpg') is False
 	assert is_video('invalid') is False
+
+
+def test_get_download_size() -> None:
+	assert get_download_size('https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4') == 191675
+	assert get_download_size('https://github.com/facefusion/facefusion-assets/releases/download/examples/target-360p.mp4') == 370732
+	assert get_download_size('invalid') is None
+
+
+def test_is_download_done() -> None:
+	assert is_download_done('https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4', '.assets/examples/target-240p.mp4') is True
+	assert is_download_done('https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4','invalid') is False
+	assert is_download_done('invalid', 'invalid') is False
 
 
 def test_encode_execution_providers() -> None:

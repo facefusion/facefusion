@@ -55,6 +55,7 @@ def parse_args() -> None:
 	program.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = 'cpu'), dest = 'execution_providers', default = ['cpu'], choices = suggest_execution_providers_choices(), nargs = '+')
 	program.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = suggest_execution_thread_count_default())
 	program.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), dest = 'execution_queue_count', type = int, default = 1)
+	program.add_argument('--skip-download', help = wording.get('skip_download_help'), dest = 'skip_download', action = 'store_true')
 	program.add_argument('--headless', help = wording.get('headless_help'), dest = 'headless', action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 
@@ -86,6 +87,7 @@ def parse_args() -> None:
 	facefusion.globals.execution_providers = decode_execution_providers(args.execution_providers)
 	facefusion.globals.execution_thread_count = args.execution_thread_count
 	facefusion.globals.execution_queue_count = args.execution_queue_count
+	facefusion.globals.skip_download = args.skip_download
 	facefusion.globals.headless = args.headless
 
 
@@ -104,7 +106,7 @@ def limit_resources() -> None:
 	gpus = tensorflow.config.experimental.list_physical_devices('GPU')
 	for gpu in gpus:
 		tensorflow.config.experimental.set_virtual_device_configuration(gpu, [
-			tensorflow.config.experimental.VirtualDeviceConfiguration(memory_limit = 1024)
+			tensorflow.config.experimental.VirtualDeviceConfiguration(memory_limit = 512)
 		])
 	# limit memory usage
 	if facefusion.globals.max_memory:

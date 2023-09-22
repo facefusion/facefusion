@@ -6,15 +6,17 @@ import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
 from facefusion.core import update_status
-from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces
+from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.typing import Face, Frame, ProcessMode
-from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video
+from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 
 FRAME_PROCESSOR = None
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_SWAPPER'
+MODEL_URL = 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx'
+MODEL_PATH = resolve_relative_path('../.assets/models/inswapper_128.onnx')
 
 
 def get_frame_processor() -> Any:
@@ -22,8 +24,7 @@ def get_frame_processor() -> Any:
 
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
-			model_path = resolve_relative_path('../.assets/models/inswapper_128.onnx')
-			FRAME_PROCESSOR = insightface.model_zoo.get_model(model_path, providers = facefusion.globals.execution_providers)
+			FRAME_PROCESSOR = insightface.model_zoo.get_model(MODEL_PATH, providers = facefusion.globals.execution_providers)
 	return FRAME_PROCESSOR
 
 
@@ -34,12 +35,19 @@ def clear_frame_processor() -> None:
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
-	conditional_download(download_directory_path, [ 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx' ])
+	if not facefusion.globals.skip_download:
+		download_directory_path = resolve_relative_path('../.assets/models')
+		conditional_download(download_directory_path, [ MODEL_URL ])
 	return True
 
 
 def pre_process(mode : ProcessMode) -> bool:
+	if not facefusion.globals.skip_download and not is_download_done(MODEL_URL, MODEL_PATH):
+		update_status(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+		return False
+	elif not is_file(MODEL_PATH):
+		update_status(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
+		return False
 	if not is_image(facefusion.globals.source_path):
 		update_status(wording.get('select_image_source') + wording.get('exclamation_mark'), NAME)
 		return False
@@ -48,6 +56,7 @@ def pre_process(mode : ProcessMode) -> bool:
 		return False
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
 		update_status(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
+		return False
 	if mode == 'output' and not facefusion.globals.output_path:
 		update_status(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False
@@ -56,6 +65,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	clear_frame_processor()
+	clear_face_analyser()
 	read_static_image.cache_clear()
 
 
