@@ -200,7 +200,7 @@ def get_download_size(url : str) -> Optional[int]:
 	try:
 		response = urllib.request.urlopen(url) # type: ignore[attr-defined]
 		return int(response.getheader('Content-Length'))
-	except ValueError:
+	except (OSError, ValueError):
 		return None
 
 
