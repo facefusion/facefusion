@@ -1,4 +1,4 @@
-from typing import Any, List, Callable
+from typing import Any, List
 import threading
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from realesrgan import RealESRGANer
@@ -8,7 +8,7 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import wording, utilities
 from facefusion.core import update_status
 from facefusion.face_analyser import clear_face_analyser
-from facefusion.typing import Frame, Face, ProcessMode
+from facefusion.typing import Frame, Face, Update_Process, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 
@@ -86,7 +86,7 @@ def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame)
 	return enhance_frame(temp_frame)
 
 
-def process_frames(source_path : str, temp_frame_paths : List[str], update_progress: Callable[[], None]) -> None:
+def process_frames(source_path : str, temp_frame_paths : List[str], update_progress : Update_Process) -> None:
 	for temp_frame_path in temp_frame_paths:
 		temp_frame = read_image(temp_frame_path)
 		result_frame = process_frame(None, None, temp_frame)

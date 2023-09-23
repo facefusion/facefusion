@@ -1,9 +1,12 @@
-from typing import Any, Literal
+from typing import Any, Literal, Callable, List
 from insightface.app.common import Face
 import numpy
 
 Face = Face
 Frame = numpy.ndarray[Any, Any]
+
+Update_Process = Callable[[], None]
+Process_Frames = Callable[[str, List[str], Update_Process], None]
 
 ProcessMode = Literal[ 'output', 'preview', 'stream' ]
 FaceRecognition = Literal[ 'reference', 'many' ]

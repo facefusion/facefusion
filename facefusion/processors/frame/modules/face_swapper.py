@@ -1,4 +1,4 @@
-from typing import Any, List, Callable
+from typing import Any, List
 import insightface
 import threading
 
@@ -8,7 +8,7 @@ from facefusion import wording
 from facefusion.core import update_status
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_reference import get_face_reference, set_face_reference
-from facefusion.typing import Face, Frame, ProcessMode
+from facefusion.typing import Face, Frame, Update_Process, ProcessMode
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 
@@ -87,7 +87,7 @@ def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame)
 	return temp_frame
 
 
-def process_frames(source_path : str, temp_frame_paths : List[str], update_progress: Callable[[], None]) -> None:
+def process_frames(source_path : str, temp_frame_paths : List[str], update_progress : Update_Process) -> None:
 	source_face = get_one_face(read_static_image(source_path))
 	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
 	for temp_frame_path in temp_frame_paths:
