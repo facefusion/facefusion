@@ -74,7 +74,8 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 			face_enhancer.get_inputs()[0].name: crop_frame
 		})[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
-	return paste_back(temp_frame, crop_frame, affine_matrix)
+	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix)
+	return temp_frame
 
 
 def warp_face(target_face : Face, temp_frame : Frame) -> Tuple[Frame, Matrix]:
@@ -87,7 +88,7 @@ def warp_face(target_face : Face, temp_frame : Frame) -> Tuple[Frame, Matrix]:
 		[ 313.08905, 371.15118 ]
 	], dtype = numpy.float32)
 	affine_matrix = cv2.estimateAffinePartial2D(target_face['kps'], template, method = cv2.LMEDS)[0]
-	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, (512, 512), borderMode = cv2.BORDER_REFLECT101)
+	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, (512, 512))
 	return crop_frame, affine_matrix
 
 
