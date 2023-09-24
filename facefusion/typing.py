@@ -4,6 +4,7 @@ import numpy
 
 Face = Face
 Frame = numpy.ndarray[Any, Any]
+Matrix = numpy.ndarray[Any, Any]
 
 Update_Process = Callable[[], None]
 Process_Frames = Callable[[str, List[str], Update_Process], None]
