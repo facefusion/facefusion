@@ -65,13 +65,13 @@ def post_process() -> None:
 
 
 def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
-	face_enhancer = get_frame_processor()
+	frame_processor = get_frame_processor()
 	crop_frame, affine_matrix = warp_face(target_face, temp_frame)
 	crop_frame = prepare_crop_frame(crop_frame)
 	with THREAD_SEMAPHORE:
-		crop_frame = face_enhancer.run(None,
+		crop_frame = frame_processor.run(None,
 		{
-			face_enhancer.get_inputs()[0].name: crop_frame
+			frame_processor.get_inputs()[0].name: crop_frame
 		})[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
 	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix)
