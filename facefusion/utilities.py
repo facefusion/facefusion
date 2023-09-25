@@ -73,7 +73,7 @@ def merge_video(target_path : str, fps : float) -> bool:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.5))
 		commands.extend([ '-crf', str(output_video_compression) ])
 	if facefusion.globals.output_video_encoder in [ 'libvpx-vp9' ]:
-		output_video_compression = round(63 - (facefusion.globals.output_video_quality * 0.5))
+		output_video_compression = round(63 - (facefusion.globals.output_video_quality * 0.62))
 		commands.extend([ '-crf', str(output_video_compression) ])
 	if facefusion.globals.output_video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.5))
