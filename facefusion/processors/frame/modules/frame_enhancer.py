@@ -36,9 +36,6 @@ def get_frame_processor() -> Any:
 					scale = 4
 				),
 				device = utilities.get_device(facefusion.globals.execution_providers),
-				tile = 512,
-				tile_pad = 32,
-				pre_pad = 0,
 				scale = 4
 			)
 	return FRAME_PROCESSOR
@@ -78,7 +75,7 @@ def post_process() -> None:
 
 def enhance_frame(temp_frame : Frame) -> Frame:
 	with THREAD_SEMAPHORE:
-		temp_frame, _ = get_frame_processor().enhance(temp_frame, outscale = 1)
+		temp_frame, _ = get_frame_processor().enhance(temp_frame)
 	return temp_frame
 
 
