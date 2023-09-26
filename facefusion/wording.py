@@ -7,6 +7,7 @@ WORDING =\
 	'target_help': 'select a target image or video',
 	'output_help': 'specify the output file or directory',
 	'frame_processors_help': 'choose from the available frame processors (choices: {choices}, ...)',
+	'models_help': 'choose from the available models',
 	'ui_layouts_help': 'choose from the available ui layouts (choices: {choices}, ...)',
 	'keep_fps_help': 'preserve the frames per second (fps) of the target',
 	'keep_temp_help': 'retain temporary frames after processing',

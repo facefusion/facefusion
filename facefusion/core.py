@@ -20,8 +20,9 @@ import facefusion.globals
 from facefusion import wording, metadata
 from facefusion.predictor import predict_image, predict_video
 from facefusion.processors.frame.core import get_frame_processors_modules
+import facefusion.processors.frame.globals as frame_processors_globals
+import facefusion.processors.frame.choices as frame_processors_choices
 from facefusion.utilities import is_image, is_video, detect_fps, compress_image, merge_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, normalize_output_path, list_module_names, decode_execution_providers, encode_execution_providers
-
 warnings.filterwarnings('ignore', category = FutureWarning, module = 'insightface')
 warnings.filterwarnings('ignore', category = UserWarning, module = 'torchvision')
 
@@ -32,32 +33,43 @@ def parse_args() -> None:
 	program.add_argument('-s', '--source', help = wording.get('source_help'), dest = 'source_path')
 	program.add_argument('-t', '--target', help = wording.get('target_help'), dest = 'target_path')
 	program.add_argument('-o', '--output', help = wording.get('output_help'), dest = 'output_path')
-	program.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(list_module_names('facefusion/processors/frame/modules'))), dest = 'frame_processors', default = ['face_swapper'], nargs = '+')
-	program.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), dest = 'ui_layouts', default = ['default'], nargs = '+')
-	program.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action = 'store_true')
-	program.add_argument('--keep-temp', help = wording.get('keep_temp_help'), dest = 'keep_temp', action = 'store_true')
-	program.add_argument('--skip-audio', help = wording.get('skip_audio_help'), dest = 'skip_audio', action = 'store_true')
-	program.add_argument('--face-recognition', help = wording.get('face_recognition_help'), dest = 'face_recognition', default = 'reference', choices = facefusion.choices.face_recognition)
-	program.add_argument('--face-analyser-direction', help = wording.get('face_analyser_direction_help'), dest = 'face_analyser_direction', default = 'left-right', choices = facefusion.choices.face_analyser_direction)
-	program.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), dest = 'face_analyser_age', choices = facefusion.choices.face_analyser_age)
-	program.add_argument('--face-analyser-gender', help = wording.get('face_analyser_gender_help'), dest = 'face_analyser_gender', choices = facefusion.choices.face_analyser_gender)
-	program.add_argument('--reference-face-position', help = wording.get('reference_face_position_help'), dest = 'reference_face_position', type = int, default = 0)
-	program.add_argument('--reference-face-distance', help = wording.get('reference_face_distance_help'), dest = 'reference_face_distance', type = float, default = 1.5)
-	program.add_argument('--reference-frame-number', help = wording.get('reference_frame_number_help'), dest = 'reference_frame_number', type = int, default = 0)
-	program.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), dest = 'trim_frame_start', type = int)
-	program.add_argument('--trim-frame-end', help = wording.get('trim_frame_end_help'), dest = 'trim_frame_end', type = int)
-	program.add_argument('--temp-frame-format', help = wording.get('temp_frame_format_help'), dest = 'temp_frame_format', default = 'jpg', choices = facefusion.choices.temp_frame_format)
-	program.add_argument('--temp-frame-quality', help = wording.get('temp_frame_quality_help'), dest = 'temp_frame_quality', type = int, default = 100, choices = range(101), metavar = '[0-100]')
-	program.add_argument('--output-image-quality', help=wording.get('output_image_quality_help'), dest = 'output_image_quality', type = int, default = 90, choices = range(101), metavar = '[0-100]')
-	program.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), dest = 'output_video_encoder', default = 'libx264', choices = facefusion.choices.output_video_encoder)
-	program.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), dest = 'output_video_quality', type = int, default = 90, choices = range(101), metavar = '[0-100]')
-	program.add_argument('--max-memory', help = wording.get('max_memory_help'), dest = 'max_memory', type = int)
-	program.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = 'cpu'), dest = 'execution_providers', default = ['cpu'], choices = suggest_execution_providers_choices(), nargs = '+')
-	program.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = suggest_execution_thread_count_default())
-	program.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), dest = 'execution_queue_count', type = int, default = 1)
 	program.add_argument('--skip-download', help = wording.get('skip_download_help'), dest = 'skip_download', action = 'store_true')
 	program.add_argument('--headless', help = wording.get('headless_help'), dest = 'headless', action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
+	group_frame_processors = program.add_argument_group('frame processors')
+	group_frame_processors.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(list_module_names('facefusion/processors/frame/modules'))), dest = 'frame_processors', default = [ 'face_swapper' ], nargs = '+')
+	# todo: register argument via frame processors
+	group_frame_processors.add_argument('--face-swapper-model', help = wording.get('models_help'), dest = 'face_swapper_model', choices = frame_processors_choices.face_swapper_models, default = 'inswapper_128')
+	group_frame_processors.add_argument('--face-enhancer-model', help = wording.get('models_help'), dest = 'face_enhancer_model', choices = frame_processors_choices.face_enhancer_models, default = 'GFPGANv1.4')
+	group_frame_processors.add_argument('--frame-enhancer-model', help = wording.get('models_help'), dest = 'frame_enhancer_model', choices = frame_processors_choices.frame_enhancer_models, default = 'RealESRGAN_x2plus')
+	group_uis = program.add_argument_group('uis')
+	group_uis.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), dest = 'ui_layouts', default = [ 'default' ], nargs = '+')
+	# todo: register argument via ui layouts
+	group_execution = program.add_argument_group('execution')
+	group_execution.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = 'cpu'), dest = 'execution_providers', default = [ 'cpu' ], choices = suggest_execution_providers_choices(), nargs = '+')
+	group_execution.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = suggest_execution_thread_count_default())
+	group_execution.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), dest = 'execution_queue_count', type = int, default = 1)
+	group_execution.add_argument('--max-memory', help=wording.get('max_memory_help'), dest='max_memory', type=int)
+	group_face_recognition = program.add_argument_group('face recognition')
+	group_face_recognition.add_argument('--face-recognition', help = wording.get('face_recognition_help'), dest = 'face_recognition', default = 'reference', choices = facefusion.choices.face_recognitions)
+	group_face_recognition.add_argument('--face-analyser-direction', help = wording.get('face_analyser_direction_help'), dest = 'face_analyser_direction', default = 'left-right', choices = facefusion.choices.face_analyser_directions)
+	group_face_recognition.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), dest = 'face_analyser_age', choices = facefusion.choices.face_analyser_ages)
+	group_face_recognition.add_argument('--face-analyser-gender', help = wording.get('face_analyser_gender_help'), dest = 'face_analyser_gender', choices = facefusion.choices.face_analyser_genders)
+	group_face_recognition.add_argument('--reference-face-position', help = wording.get('reference_face_position_help'), dest = 'reference_face_position', type = int, default = 0)
+	group_face_recognition.add_argument('--reference-face-distance', help = wording.get('reference_face_distance_help'), dest = 'reference_face_distance', type = float, default = 1.5)
+	group_face_recognition.add_argument('--reference-frame-number', help = wording.get('reference_frame_number_help'), dest = 'reference_frame_number', type = int, default = 0)
+	group_processing = program.add_argument_group('frame extraction')
+	group_processing.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), dest = 'trim_frame_start', type = int)
+	group_processing.add_argument('--trim-frame-end', help = wording.get('trim_frame_end_help'), dest = 'trim_frame_end', type = int)
+	group_processing.add_argument('--temp-frame-format', help = wording.get('temp_frame_format_help'), dest = 'temp_frame_format', default = 'jpg', choices = facefusion.choices.temp_frame_formats)
+	group_processing.add_argument('--temp-frame-quality', help = wording.get('temp_frame_quality_help'), dest = 'temp_frame_quality', type = int, default = 100, choices = range(101), metavar = '[0-100]')
+	group_processing.add_argument('--keep-temp', help = wording.get('keep_temp_help'), dest = 'keep_temp', action = 'store_true')
+	group_output = program.add_argument_group('output creation')
+	group_output.add_argument('--output-image-quality', help=wording.get('output_image_quality_help'), dest = 'output_image_quality', type = int, default = 90, choices = range(101), metavar = '[0-100]')
+	group_output.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), dest = 'output_video_encoder', default = 'libx264', choices = facefusion.choices.output_video_encoders)
+	group_output.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), dest = 'output_video_quality', type = int, default = 90, choices = range(101), metavar = '[0-100]')
+	group_output.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action = 'store_true')
+	group_output.add_argument('--skip-audio', help = wording.get('skip_audio_help'), dest = 'skip_audio', action = 'store_true')
 
 	args = program.parse_args()
 
@@ -65,6 +77,10 @@ def parse_args() -> None:
 	facefusion.globals.target_path = args.target_path
 	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, args.output_path)
 	facefusion.globals.frame_processors = args.frame_processors
+	# todo: parse argument via frame processors
+	frame_processors_globals.face_swapper_model = args.face_swapper_model
+	frame_processors_globals.face_enhancer_model = args.face_enhancer_model
+	frame_processors_globals.frame_enhancer_model = args.frame_enhancer_model
 	facefusion.globals.ui_layouts = args.ui_layouts
 	facefusion.globals.keep_fps = args.keep_fps
 	facefusion.globals.keep_temp = args.keep_temp
@@ -105,7 +121,8 @@ def limit_resources() -> None:
 	# prevent tensorflow memory leak
 	gpus = tensorflow.config.experimental.list_physical_devices('GPU')
 	for gpu in gpus:
-		tensorflow.config.experimental.set_virtual_device_configuration(gpu, [
+		tensorflow.config.experimental.set_virtual_device_configuration(gpu,
+		[
 			tensorflow.config.experimental.VirtualDeviceConfiguration(memory_limit = 512)
 		])
 	# limit memory usage

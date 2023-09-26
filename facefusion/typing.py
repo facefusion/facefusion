@@ -1,4 +1,4 @@
-from typing import Any, Literal, Callable, List
+from typing import Any, Literal, Callable, List, TypedDict
 from insightface.app.common import Face
 import numpy
 
@@ -16,3 +16,18 @@ FaceAnalyserAge = Literal[ 'child', 'teen', 'adult', 'senior' ]
 FaceAnalyserGender = Literal[ 'male', 'female' ]
 TempFrameFormat = Literal[ 'jpg', 'png' ]
 OutputVideoEncoder = Literal[ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc' ]
+
+ModelValue = TypedDict('ModelValue',
+{
+	'url' : str,
+	'path' : str
+})
+ModelOption = TypedDict('ModelOption',
+{
+	'value' : ModelValue,
+	'choices' : List[str]
+})
+OptionsWithModel = TypedDict('OptionsWithModel',
+{
+	'model' : ModelOption
+})

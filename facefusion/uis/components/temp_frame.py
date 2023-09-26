@@ -19,7 +19,7 @@ def render() -> None:
 
 	TEMP_FRAME_FORMAT_DROPDOWN = gradio.Dropdown(
 		label = wording.get('temp_frame_format_dropdown_label'),
-		choices = facefusion.choices.temp_frame_format,
+		choices = facefusion.choices.temp_frame_formats,
 		value = facefusion.globals.temp_frame_format,
 		visible = is_video(facefusion.globals.target_path)
 	)

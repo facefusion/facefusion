@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Dict, Literal
 import insightface
 import threading
 
@@ -8,15 +8,35 @@ from facefusion import wording
 from facefusion.core import update_status
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_reference import get_face_reference, set_face_reference
-from facefusion.typing import Face, Frame, Update_Process, ProcessMode
+from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_SWAPPER'
-MODEL_URL = 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx'
-MODEL_PATH = resolve_relative_path('../.assets/models/inswapper_128.onnx')
+MODELS : Dict[str, ModelValue] =\
+{
+	'inswapper_128':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
+		'path': resolve_relative_path('../.assets/models/inswapper_128.onnx')
+	},
+	'inswapper_128_fp16':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
+		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx')
+	}
+}
+OPTIONS : OptionsWithModel =\
+{
+	'model':
+	{
+		'value': MODELS[frame_processors_globals.face_swapper_model],
+		'choices': frame_processors_choices.face_swapper_models
+	}
+}
 
 
 def get_frame_processor() -> Any:
@@ -24,7 +44,8 @@ def get_frame_processor() -> Any:
 
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
-			FRAME_PROCESSOR = insightface.model_zoo.get_model(MODEL_PATH, providers = facefusion.globals.execution_providers)
+			model_path = get_options('model').get('value').get('path')
+			FRAME_PROCESSOR = insightface.model_zoo.get_model(model_path, providers = facefusion.globals.execution_providers)
 	return FRAME_PROCESSOR
 
 
@@ -34,18 +55,31 @@ def clear_frame_processor() -> None:
 	FRAME_PROCESSOR = None
 
 
+def get_options(key : Literal[ 'model' ]) -> Any:
+	return OPTIONS.get(key)
+
+
+def set_options(key : Literal[ 'model' ], value : Any) -> None:
+	global OPTIONS
+
+	OPTIONS[key] = value
+
+
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		conditional_download(download_directory_path, [ MODEL_URL ])
+		model_url = get_options('model').get('value').get('url')
+		conditional_download(download_directory_path, [ model_url ])
 	return True
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if not facefusion.globals.skip_download and not is_download_done(MODEL_URL, MODEL_PATH):
+	model_url = get_options('model').get('value').get('url')
+	model_path = get_options('model').get('value').get('path')
+	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
 		update_status(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
-	elif not is_file(MODEL_PATH):
+	elif not is_file(model_path):
 		update_status(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
 	if not is_image(facefusion.globals.source_path):

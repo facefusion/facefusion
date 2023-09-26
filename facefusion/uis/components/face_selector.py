@@ -40,7 +40,7 @@ def render() -> None:
 		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
 	FACE_RECOGNITION_DROPDOWN = gradio.Dropdown(
 		label = wording.get('face_recognition_dropdown_label'),
-		choices = facefusion.choices.face_recognition,
+		choices = facefusion.choices.face_recognitions,
 		value = facefusion.globals.face_recognition
 	)
 	REFERENCE_FACE_POSITION_GALLERY = gradio.Gallery(**reference_face_gallery_args)

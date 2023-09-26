@@ -27,7 +27,7 @@ def render() -> None:
 	)
 	OUTPUT_VIDEO_ENCODER_DROPDOWN = gradio.Dropdown(
 		label = wording.get('output_video_encoder_dropdown_label'),
-		choices = facefusion.choices.output_video_encoder,
+		choices = facefusion.choices.output_video_encoders,
 		value = facefusion.globals.output_video_encoder,
 		visible = is_video(facefusion.globals.target_path)
 	)
