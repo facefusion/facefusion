@@ -41,7 +41,7 @@ def parse_args() -> None:
 	# todo: register argument via frame processors
 	group_frame_processors.add_argument('--face-swapper-model', help = wording.get('models_help'), dest = 'face_swapper_model', choices = frame_processors_choices.face_swapper_models, default = 'inswapper_128')
 	group_frame_processors.add_argument('--face-enhancer-model', help = wording.get('models_help'), dest = 'face_enhancer_model', choices = frame_processors_choices.face_enhancer_models, default = 'GFPGANv1.4')
-	group_frame_processors.add_argument('--frame-enhancer-model', help = wording.get('models_help'), dest = 'frame_enhancer_model', choices = frame_processors_choices.frame_enhancer_models, default = 'RealESRGAN_x2plus')
+	group_frame_processors.add_argument('--frame-enhancer-model', help = wording.get('models_help'), dest = 'frame_enhancer_model', choices = frame_processors_choices.frame_enhancer_models, default = 'RealESRGAN_x4plus')
 	group_uis = program.add_argument_group('uis')
 	group_uis.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), dest = 'ui_layouts', default = [ 'default' ], nargs = '+')
 	# todo: register argument via ui layouts

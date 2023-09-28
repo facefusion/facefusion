@@ -17,17 +17,20 @@ FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FRAME_ENHANCER'
-MODELS : Dict[str, ModelValue] =\
+MODELS: Dict[str, ModelValue] =\
 {
 	'RealESRGAN_x2plus':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x2plus.pth',
-		'path': resolve_relative_path('../.assets/models/RealESRGAN_x2plus.pth')
+		'path': resolve_relative_path('../.assets/models/RealESRGAN_x2plus.pth'),
+		'scale': 2
+
 	},
 	'RealESRGAN_x4plus':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x4plus.pth',
-		'path': resolve_relative_path('../.assets/models/RealESRGAN_x4plus.pth')
+		'path': resolve_relative_path('../.assets/models/RealESRGAN_x4plus.pth'),
+		'scale': 4
 	}
 }
 OPTIONS : OptionsWithModel =\
@@ -45,19 +48,17 @@ def get_frame_processor() -> Any:
 
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
-			model_path = get_options('model').get('value').get('path')
+			model_path = get_options('model').get('path')
+			model_scale = get_options('model').get('scale')
 			FRAME_PROCESSOR = RealESRGANer(
 				model_path = model_path,
 				model = RRDBNet(
 					num_in_ch = 3,
 					num_out_ch = 3,
-					num_feat = 64,
-					num_block = 23,
-					num_grow_ch = 32,
-					scale = 4
+					scale = model_scale
 				),
 				device = get_device(facefusion.globals.execution_providers),
-				scale = 4
+				scale = model_scale
 			)
 	return FRAME_PROCESSOR
 
@@ -69,26 +70,26 @@ def clear_frame_processor() -> None:
 
 
 def get_options(key : Literal[ 'model' ]) -> Any:
-	return OPTIONS.get(key)
+	return OPTIONS.get(key).get('value')
 
 
 def set_options(key : Literal[ 'model' ], value : Any) -> None:
 	global OPTIONS
 
-	OPTIONS[key] = value
+	OPTIONS[key]['value'] = value
 
 
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		model_url = get_options('model').get('value').get('url')
+		model_url = get_options('model').get('url')
 		conditional_download(download_directory_path, [ model_url ])
 	return True
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	model_url = get_options('model').get('value').get('url')
-	model_path = get_options('model').get('value').get('path')
+	model_url = get_options('model').get('url')
+	model_path = get_options('model').get('path')
 	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
 		update_status(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False

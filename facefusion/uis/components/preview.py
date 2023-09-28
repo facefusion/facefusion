@@ -69,7 +69,10 @@ def listen() -> None:
 	update_component_names : List[ComponentName] =\
 	[
 		'face_recognition_dropdown',
-		'frame_processors_checkbox_group'
+		'frame_processors_checkbox_group',
+		'face_swapper_model_dropdown',
+		'face_enhancer_model_dropdown',
+		'frame_enhancer_model_dropdown'
 	]
 	for component_name in update_component_names:
 		component = ui.get_component(component_name)

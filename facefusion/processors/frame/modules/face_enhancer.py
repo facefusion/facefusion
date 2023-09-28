@@ -45,7 +45,7 @@ def get_frame_processor() -> Any:
 
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
-			model_path = get_options('model').get('value').get('path')
+			model_path = get_options('model').get('path')
 			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
 	return FRAME_PROCESSOR
 
@@ -57,26 +57,26 @@ def clear_frame_processor() -> None:
 
 
 def get_options(key : Literal[ 'model' ]) -> Any:
-	return OPTIONS.get(key)
+	return OPTIONS.get(key).get('value')
 
 
 def set_options(key : Literal[ 'model' ], value : Any) -> None:
 	global OPTIONS
 
-	OPTIONS[key] = value
+	OPTIONS[key]['value'] = value
 
 
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		model_url = get_options('model').get('value').get('url')
+		model_url = get_options('model').get('url')
 		conditional_download(download_directory_path, [ model_url ])
 	return True
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	model_url = get_options('model').get('value').get('url')
-	model_path = get_options('model').get('value').get('path')
+	model_url = get_options('model').get('url')
+	model_path = get_options('model').get('path')
 	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
 		update_status(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False

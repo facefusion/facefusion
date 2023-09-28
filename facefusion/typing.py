@@ -1,4 +1,4 @@
-from typing import Any, Literal, Callable, List, TypedDict
+from typing import Any, Literal, Callable, List, TypedDict, Dict
 from insightface.app.common import Face
 import numpy
 
@@ -17,11 +17,7 @@ FaceAnalyserGender = Literal[ 'male', 'female' ]
 TempFrameFormat = Literal[ 'jpg', 'png' ]
 OutputVideoEncoder = Literal[ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc' ]
 
-ModelValue = TypedDict('ModelValue',
-{
-	'url' : str,
-	'path' : str
-})
+ModelValue = Dict['str', Any]
 ModelOption = TypedDict('ModelOption',
 {
 	'value' : ModelValue,
