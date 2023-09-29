@@ -11,7 +11,7 @@ from facefusion.face_analyser import clear_face_analyser
 from facefusion.typing import Frame, Face, Update_Process, ProcessMode, ModelValue, OptionsWithModel
 from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done, get_device
 from facefusion.vision import read_image, read_static_image, write_image
-from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
+from facefusion.processors.frame import globals as frame_processors_globals
 
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()

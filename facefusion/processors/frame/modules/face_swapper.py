@@ -11,7 +11,7 @@ from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
-from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
+from facefusion.processors.frame import globals as frame_processors_globals
 
 FRAME_PROCESSOR = None
 THREAD_LOCK : threading.Lock = threading.Lock()
