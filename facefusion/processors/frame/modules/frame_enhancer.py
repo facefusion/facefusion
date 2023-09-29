@@ -35,11 +35,7 @@ MODELS: Dict[str, ModelValue] =\
 }
 OPTIONS : OptionsWithModel =\
 {
-	'model':
-	{
-		'value': MODELS[frame_processors_globals.frame_enhancer_model],
-		'choices': frame_processors_choices.frame_enhancer_models
-	}
+	'model': MODELS[frame_processors_globals.frame_enhancer_model]
 }
 
 
@@ -70,13 +66,13 @@ def clear_frame_processor() -> None:
 
 
 def get_options(key : Literal[ 'model' ]) -> Any:
-	return OPTIONS.get(key).get('value')
+	return OPTIONS.get(key)
 
 
 def set_options(key : Literal[ 'model' ], value : Any) -> None:
 	global OPTIONS
 
-	OPTIONS[key]['value'] = value
+	OPTIONS[key] = value
 
 
 def pre_check() -> bool:
