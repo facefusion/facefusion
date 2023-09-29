@@ -86,7 +86,7 @@ WORDING =\
 	'face_swapper_model_dropdown_label': 'FACE SWAPPER MODEL',
 	'face_enhancer_model_dropdown_label': 'FACE ENHANCER MODEL',
 	'frame_enhancer_model_dropdown_label': 'FRAME ENHANCER MODEL',
-	'settings_checkbox_group_label': 'SETTINGS',
+	'common_options_checkbox_group_label': 'SETTINGS',
 	'temp_frame_format_dropdown_label': 'TEMP FRAME FORMAT',
 	'temp_frame_quality_slider_label': 'TEMP FRAME QUALITY',
 	'trim_frame_start_slider_label': 'TRIM FRAME START',
