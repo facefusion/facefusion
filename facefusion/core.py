@@ -38,13 +38,13 @@ def parse_args() -> None:
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	group_frame_processors = program.add_argument_group('frame processors')
 	group_frame_processors.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(list_module_names('facefusion/processors/frame/modules'))), dest = 'frame_processors', default = [ 'face_swapper' ], nargs = '+')
-	# todo: register argument via frame processors
-	group_frame_processors.add_argument('--face-swapper-model', help = wording.get('models_help'), dest = 'face_swapper_model', choices = frame_processors_choices.face_swapper_models, default = 'inswapper_128')
-	group_frame_processors.add_argument('--face-enhancer-model', help = wording.get('models_help'), dest = 'face_enhancer_model', choices = frame_processors_choices.face_enhancer_models, default = 'GFPGANv1.4')
-	group_frame_processors.add_argument('--frame-enhancer-model', help = wording.get('models_help'), dest = 'frame_enhancer_model', choices = frame_processors_choices.frame_enhancer_models, default = 'RealESRGAN_x4plus')
+	group_frame_processors.add_argument('--face-swapper-model', help = wording.get('frame_processor_model_help'), dest = 'face_swapper_model', default = 'inswapper_128', choices = frame_processors_choices.face_swapper_models, )
+	group_frame_processors.add_argument('--face-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'face_enhancer_model', default = 'GFPGANv1.4', choices = frame_processors_choices.face_enhancer_models)
+	group_frame_processors.add_argument('--face-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest= 'face_enhancer_blend', type = int, default= 100, choices = range(101), metavar = '[0-100]')
+	group_frame_processors.add_argument('--frame-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'frame_enhancer_model', default = 'RealESRGAN_x4plus', choices = frame_processors_choices.frame_enhancer_models)
+	group_frame_processors.add_argument('--frame-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest = 'frame_enhancer_blend', type = int, default = 100, choices = range(101), metavar = '[0-100]')
 	group_uis = program.add_argument_group('uis')
 	group_uis.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), dest = 'ui_layouts', default = [ 'default' ], nargs = '+')
-	# todo: register argument via ui layouts
 	group_execution = program.add_argument_group('execution')
 	group_execution.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = 'cpu'), dest = 'execution_providers', default = [ 'cpu' ], choices = suggest_execution_providers_choices(), nargs = '+')
 	group_execution.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = suggest_execution_thread_count_default())
@@ -77,10 +77,11 @@ def parse_args() -> None:
 	facefusion.globals.target_path = args.target_path
 	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, args.output_path)
 	facefusion.globals.frame_processors = args.frame_processors
-	# todo: parse argument via frame processors
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
 	frame_processors_globals.face_enhancer_model = args.face_enhancer_model
+	frame_processors_globals.face_enhancer_blend = args.face_enhancer_blend
 	frame_processors_globals.frame_enhancer_model = args.frame_enhancer_model
+	frame_processors_globals.frame_enhancer_blend = args.frame_enhancer_blend
 	facefusion.globals.ui_layouts = args.ui_layouts
 	facefusion.globals.keep_fps = args.keep_fps
 	facefusion.globals.keep_temp = args.keep_temp

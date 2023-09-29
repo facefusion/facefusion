@@ -21,9 +21,9 @@ def render() -> None:
 	)
 	BENCHMARK_CYCLES_SLIDER = gradio.Slider(
 		label = wording.get('benchmark_cycles_slider_label'),
-		minimum = 1,
-		step = 1,
 		value = 3,
+		step = 1,
+		minimum = 1,
 		maximum = 10
 	)
 	ui.register_component('benchmark_runs_checkbox_group', BENCHMARK_RUNS_CHECKBOX_GROUP)

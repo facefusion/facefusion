@@ -104,7 +104,9 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 			frame_processor.get_inputs()[0].name: crop_frame
 		})[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
-	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix)
+	paste_frame = paste_back(temp_frame, crop_frame, affine_matrix)
+	face_enhancer_blend = 1 - (frame_processors_globals.face_enhancer_blend / 100)
+	temp_frame = cv2.addWeighted(temp_frame, face_enhancer_blend, paste_frame, 1 - face_enhancer_blend, 0)
 	return temp_frame
 
 

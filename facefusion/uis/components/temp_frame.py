@@ -27,6 +27,8 @@ def render() -> None:
 		label = wording.get('temp_frame_quality_slider_label'),
 		value = facefusion.globals.temp_frame_quality,
 		step = 1,
+		minimum = 0,
+		maximum = 100,
 		visible = is_video(facefusion.globals.target_path)
 	)
 

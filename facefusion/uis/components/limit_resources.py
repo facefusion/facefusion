@@ -13,9 +13,9 @@ def render() -> None:
 
 	MAX_MEMORY_SLIDER = gradio.Slider(
 		label = wording.get('max_memory_slider_label'),
+		step = 1,
 		minimum = 0,
-		maximum = 128,
-		step = 1
+		maximum = 128
 	)
 
 

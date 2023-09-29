@@ -28,10 +28,10 @@ def render() -> None:
 	)
 	WEBCAM_FPS_SLIDER = gradio.Slider(
 		label = wording.get('webcam_fps_slider'),
-		minimum = 1,
-		maximum = 60,
+		value = 25,
 		step = 1,
-		value = 25
+		minimum = 1,
+		maximum = 60
 	)
 	ui.register_component('webcam_mode_radio', WEBCAM_MODE_RADIO)
 	ui.register_component('webcam_resolution_dropdown', WEBCAM_RESOLUTION_DROPDOWN)

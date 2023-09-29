@@ -47,8 +47,9 @@ def render() -> None:
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
 		label = wording.get('reference_face_distance_slider_label'),
 		value = facefusion.globals.reference_face_distance,
-		maximum = 3,
 		step = 0.05,
+		minimum = 0,
+		maximum = 3,
 		visible = 'reference' in facefusion.globals.face_recognition
 	)
 	ui.register_component('face_recognition_dropdown', FACE_RECOGNITION_DROPDOWN)

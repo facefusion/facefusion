@@ -30,6 +30,8 @@ def render() -> None:
 	{
 		'label': wording.get('preview_frame_slider_label'),
 		'step': 1,
+		'minimum': 0,
+		'maximum': 100,
 		'visible': False
 	}
 	conditional_set_face_reference()
@@ -89,9 +91,16 @@ def listen() -> None:
 		component = ui.get_component(component_name)
 		if component:
 			component.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
-	reference_face_distance_slider = ui.get_component('reference_face_distance_slider')
-	if reference_face_distance_slider:
-		reference_face_distance_slider.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	change_component_names : List[ComponentName] =\
+	[
+		'reference_face_distance_slider',
+		'face_enhancer_blend_slider',
+		'frame_enhancer_blend_slider'
+	]
+	for component_name in change_component_names:
+		component = ui.get_component(component_name)
+		if component:
+			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
 
 def update_preview_image(frame_number : int = 0) -> Update:
