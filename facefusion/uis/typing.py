@@ -26,6 +26,6 @@ ComponentName = Literal\
 	'webcam_resolution_dropdown',
 	'webcam_fps_slider'
 ]
-WebcamMode = Literal[ 'inline', 'stream_udp', 'stream_v4l2' ]
+WebcamMode = Literal[ 'inline', 'udp', 'v4l2' ]
 StreamMode = Literal[ 'udp', 'v4l2' ]
 Update = Dict[Any, Any]

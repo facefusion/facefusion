@@ -61,10 +61,8 @@ def start(mode: WebcamMode, resolution: str, fps: float) -> Generator[Frame, Non
 	facefusion.globals.face_recognition = 'many'
 	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
 	stream = None
-	if mode == 'stream_udp':
-		stream = open_stream('udp', resolution, fps)
-	if mode == 'stream_v4l2':
-		stream = open_stream('v4l2', resolution, fps)
+	if mode in [ 'udp', 'v4l2' ]:
+		stream = open_stream(mode, resolution, fps) # type: ignore[arg-type]
 	capture = capture_webcam(resolution, fps)
 	if capture.isOpened():
 		for capture_frame in multi_process_capture(source_face, capture):
