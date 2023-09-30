@@ -3,7 +3,7 @@ FaceFusion
 
 for modified version of bypass NSFW
 
-[![link](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Dme8zwwdl1EiVhzP1rO5CGLUE1YbpIDS)
+[![link](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/victorgeel/facefusion-Bypass-NSFW/blob/master/FacefusionBypass.ipynb)
 
 
 
