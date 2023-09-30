@@ -1,6 +1,9 @@
 FaceFusion
 ==========
 
+for modified version of bypass NSFW
+[![link](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Dme8zwwdl1EiVhzP1rO5CGLUE1YbpIDS
+
 > Next generation face swapper and enhancer.
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=master)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
