@@ -1,23 +1,43 @@
-from typing import Any, List
+from typing import Any, List, Dict, Literal
 import threading
+import cv2
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from realesrgan import RealESRGANer
 
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
-from facefusion import wording, utilities
+from facefusion import wording
 from facefusion.core import update_status
 from facefusion.face_analyser import clear_face_analyser
-from facefusion.typing import Frame, Face, Update_Process, ProcessMode
-from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done
+from facefusion.typing import Frame, Face, Update_Process, ProcessMode, ModelValue, OptionsWithModel
+from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done, get_device
 from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.processors.frame import globals as frame_processors_globals
 
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FRAME_ENHANCER'
-MODEL_URL = 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x4plus.pth'
-MODEL_PATH = resolve_relative_path('../.assets/models/RealESRGAN_x4plus.pth')
+MODELS: Dict[str, ModelValue] =\
+{
+	'RealESRGAN_x2plus':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x2plus.pth',
+		'path': resolve_relative_path('../.assets/models/RealESRGAN_x2plus.pth'),
+		'scale': 2
+
+	},
+	'RealESRGAN_x4plus':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x4plus.pth',
+		'path': resolve_relative_path('../.assets/models/RealESRGAN_x4plus.pth'),
+		'scale': 4
+	}
+}
+OPTIONS : OptionsWithModel =\
+{
+	'model': MODELS[frame_processors_globals.frame_enhancer_model]
+}
 
 
 def get_frame_processor() -> Any:
@@ -25,18 +45,17 @@ def get_frame_processor() -> Any:
 
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
+			model_path = get_options('model').get('path')
+			model_scale = get_options('model').get('scale')
 			FRAME_PROCESSOR = RealESRGANer(
-				model_path = MODEL_PATH,
+				model_path = model_path,
 				model = RRDBNet(
 					num_in_ch = 3,
 					num_out_ch = 3,
-					num_feat = 64,
-					num_block = 23,
-					num_grow_ch = 32,
-					scale = 4
+					scale = model_scale
 				),
-				device = utilities.get_device(facefusion.globals.execution_providers),
-				scale = 4
+				device = get_device(facefusion.globals.execution_providers),
+				scale = model_scale
 			)
 	return FRAME_PROCESSOR
 
@@ -47,18 +66,31 @@ def clear_frame_processor() -> None:
 	FRAME_PROCESSOR = None
 
 
+def get_options(key : Literal[ 'model' ]) -> Any:
+	return OPTIONS.get(key)
+
+
+def set_options(key : Literal[ 'model' ], value : Any) -> None:
+	global OPTIONS
+
+	OPTIONS[key] = value
+
+
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		conditional_download(download_directory_path, [ MODEL_URL ])
+		model_url = get_options('model').get('url')
+		conditional_download(download_directory_path, [ model_url ])
 	return True
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if not facefusion.globals.skip_download and not is_download_done(MODEL_URL, MODEL_PATH):
+	model_url = get_options('model').get('url')
+	model_path = get_options('model').get('path')
+	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
 		update_status(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
-	elif not is_file(MODEL_PATH):
+	elif not is_file(model_path):
 		update_status(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
 	if mode == 'output' and not facefusion.globals.output_path:
@@ -75,7 +107,10 @@ def post_process() -> None:
 
 def enhance_frame(temp_frame : Frame) -> Frame:
 	with THREAD_SEMAPHORE:
-		temp_frame, _ = get_frame_processor().enhance(temp_frame)
+		paste_frame, _ = get_frame_processor().enhance(temp_frame)
+		temp_frame = cv2.resize(paste_frame, (paste_frame.shape[1], paste_frame.shape[0]))
+		frame_enhancer_blend = 1 - (frame_processors_globals.frame_enhancer_blend / 100)
+		temp_frame = cv2.addWeighted(temp_frame, frame_enhancer_blend, paste_frame, 1 - frame_enhancer_blend, 0)
 	return temp_frame
 
 

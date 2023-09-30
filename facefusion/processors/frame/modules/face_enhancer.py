@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Dict, Literal
 import cv2
 import threading
 import numpy
@@ -8,16 +8,32 @@ import facefusion.globals
 from facefusion import wording
 from facefusion.core import update_status
 from facefusion.face_analyser import get_many_faces, clear_face_analyser
-from facefusion.typing import Face, Frame, Matrix, Update_Process, ProcessMode
+from facefusion.typing import Face, Frame, Matrix, Update_Process, ProcessMode, ModelValue, OptionsWithModel
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.processors.frame import globals as frame_processors_globals
 
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_ENHANCER'
-MODEL_URL = 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.4.onnx'
-MODEL_PATH = resolve_relative_path('../.assets/models/GFPGANv1.4.onnx')
+MODELS : Dict[str, ModelValue] =\
+{
+	'GFPGANv1.3':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.3.onnx',
+		'path': resolve_relative_path('../.assets/models/GFPGANv1.3.onnx')
+	},
+	'GFPGANv1.4':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.4.onnx',
+		'path': resolve_relative_path('../.assets/models/GFPGANv1.4.onnx')
+	}
+}
+OPTIONS : OptionsWithModel =\
+{
+	'model': MODELS[frame_processors_globals.face_enhancer_model]
+}
 
 
 def get_frame_processor() -> Any:
@@ -25,7 +41,8 @@ def get_frame_processor() -> Any:
 
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(MODEL_PATH, providers = facefusion.globals.execution_providers)
+			model_path = get_options('model').get('path')
+			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
 	return FRAME_PROCESSOR
 
 
@@ -35,18 +52,31 @@ def clear_frame_processor() -> None:
 	FRAME_PROCESSOR = None
 
 
+def get_options(key : Literal[ 'model' ]) -> Any:
+	return OPTIONS.get(key)
+
+
+def set_options(key : Literal[ 'model' ], value : Any) -> None:
+	global OPTIONS
+
+	OPTIONS[key] = value
+
+
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		conditional_download(download_directory_path, [ MODEL_URL ])
+		model_url = get_options('model').get('url')
+		conditional_download(download_directory_path, [ model_url ])
 	return True
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if not facefusion.globals.skip_download and not is_download_done(MODEL_URL, MODEL_PATH):
+	model_url = get_options('model').get('url')
+	model_path = get_options('model').get('path')
+	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
 		update_status(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
-	elif not is_file(MODEL_PATH):
+	elif not is_file(model_path):
 		update_status(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
@@ -74,7 +104,9 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 			frame_processor.get_inputs()[0].name: crop_frame
 		})[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
-	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix)
+	paste_frame = paste_back(temp_frame, crop_frame, affine_matrix)
+	face_enhancer_blend = 1 - (frame_processors_globals.face_enhancer_blend / 100)
+	temp_frame = cv2.addWeighted(temp_frame, face_enhancer_blend, paste_frame, 1 - face_enhancer_blend, 0)
 	return temp_frame
 
 

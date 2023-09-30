@@ -23,11 +23,13 @@ def render() -> None:
 		label = wording.get('output_image_quality_slider_label'),
 		value = facefusion.globals.output_image_quality,
 		step = 1,
+		minimum = 0,
+		maximum = 100,
 		visible = is_image(facefusion.globals.target_path)
 	)
 	OUTPUT_VIDEO_ENCODER_DROPDOWN = gradio.Dropdown(
 		label = wording.get('output_video_encoder_dropdown_label'),
-		choices = facefusion.choices.output_video_encoder,
+		choices = facefusion.choices.output_video_encoders,
 		value = facefusion.globals.output_video_encoder,
 		visible = is_video(facefusion.globals.target_path)
 	)
@@ -35,6 +37,8 @@ def render() -> None:
 		label = wording.get('output_video_quality_slider_label'),
 		value = facefusion.globals.output_video_quality,
 		step = 1,
+		minimum = 0,
+		maximum = 100,
 		visible = is_video(facefusion.globals.target_path)
 	)
 

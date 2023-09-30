@@ -20,12 +20,16 @@ def render() -> None:
 	{
 		'label': wording.get('trim_frame_start_slider_label'),
 		'step': 1,
+		'minimum': 0,
+		'maximum': 100,
 		'visible': False
 	}
 	trim_frame_end_slider_args : Dict[str, Any] =\
 	{
 		'label': wording.get('trim_frame_end_slider_label'),
 		'step': 1,
+		'minimum': 0,
+		'maximum': 100,
 		'visible': False
 	}
 	if is_video(facefusion.globals.target_path):
