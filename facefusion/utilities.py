@@ -187,7 +187,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 			initial = 0
 		if initial < total:
 			with tqdm(total = total, initial = initial, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024) as progress:
-				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--location', '--continue-at', '-', '--output', download_file_path, url ])
+				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])
 				current = initial
 				while current < total:
 					if is_file(download_file_path):
