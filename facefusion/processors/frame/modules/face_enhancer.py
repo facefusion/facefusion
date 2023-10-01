@@ -1,4 +1,5 @@
-from typing import Any, List, Tuple, Dict, Literal
+from typing import Any, List, Tuple, Dict, Literal, Optional
+from argparse import ArgumentParser
 import cv2
 import threading
 import numpy
@@ -12,6 +13,7 @@ from facefusion.typing import Face, Frame, Matrix, Update_Process, ProcessMode, 
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
+from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -30,10 +32,7 @@ MODELS : Dict[str, ModelValue] =\
 		'path': resolve_relative_path('../.assets/models/GFPGANv1.4.onnx')
 	}
 }
-OPTIONS : OptionsWithModel =\
-{
-	'model': MODELS[frame_processors_globals.face_enhancer_model]
-}
+OPTIONS : Optional[OptionsWithModel] = None
 
 
 def get_frame_processor() -> Any:
@@ -53,6 +52,13 @@ def clear_frame_processor() -> None:
 
 
 def get_options(key : Literal[ 'model' ]) -> Any:
+	global OPTIONS
+
+	if OPTIONS is None:
+		OPTIONS =\
+		{
+			'model': MODELS[frame_processors_globals.face_enhancer_model]
+		}
 	return OPTIONS.get(key)
 
 
@@ -60,6 +66,17 @@ def set_options(key : Literal[ 'model' ], value : Any) -> None:
 	global OPTIONS
 
 	OPTIONS[key] = value
+
+
+def register_args(program : ArgumentParser) -> None:
+	program.add_argument('--face-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'face_enhancer_model', default = 'GFPGANv1.4', choices = frame_processors_choices.face_enhancer_models)
+	program.add_argument('--face-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest= 'face_enhancer_blend', type = int, default= 100, choices = range(101), metavar = '[0-100]')
+
+
+def apply_args(program : ArgumentParser) -> None:
+	args = program.parse_args()
+	frame_processors_globals.face_enhancer_model = args.face_enhancer_model
+	frame_processors_globals.face_enhancer_blend = args.face_enhancer_blend
 
 
 def pre_check() -> bool:

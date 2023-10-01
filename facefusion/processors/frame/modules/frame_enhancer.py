@@ -1,4 +1,5 @@
-from typing import Any, List, Dict, Literal
+from typing import Any, List, Dict, Literal, Optional
+from argparse import ArgumentParser
 import threading
 import cv2
 from basicsr.archs.rrdbnet_arch import RRDBNet
@@ -13,6 +14,7 @@ from facefusion.typing import Frame, Face, Update_Process, ProcessMode, ModelVal
 from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done, get_device
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
+from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -34,10 +36,7 @@ MODELS: Dict[str, ModelValue] =\
 		'scale': 4
 	}
 }
-OPTIONS : OptionsWithModel =\
-{
-	'model': MODELS[frame_processors_globals.frame_enhancer_model]
-}
+OPTIONS : Optional[OptionsWithModel] = None
 
 
 def get_frame_processor() -> Any:
@@ -67,6 +66,13 @@ def clear_frame_processor() -> None:
 
 
 def get_options(key : Literal[ 'model' ]) -> Any:
+	global OPTIONS
+
+	if OPTIONS is None:
+		OPTIONS = \
+		{
+			'model': MODELS[frame_processors_globals.frame_enhancer_model]
+		}
 	return OPTIONS.get(key)
 
 
@@ -74,6 +80,17 @@ def set_options(key : Literal[ 'model' ], value : Any) -> None:
 	global OPTIONS
 
 	OPTIONS[key] = value
+
+
+def register_args(program : ArgumentParser) -> None:
+	program.add_argument('--frame-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'frame_enhancer_model', default = 'RealESRGAN_x2plus', choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest = 'frame_enhancer_blend', type = int, default = 100, choices = range(101), metavar = '[0-100]')
+
+
+def apply_args(program : ArgumentParser) -> None:
+	args = program.parse_args()
+	frame_processors_globals.frame_enhancer_model = args.frame_enhancer_model
+	frame_processors_globals.frame_enhancer_blend = args.frame_enhancer_blend
 
 
 def pre_check() -> bool:

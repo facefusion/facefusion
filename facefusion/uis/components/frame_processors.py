@@ -37,5 +37,5 @@ def update_frame_processors(frame_processors : List[str]) -> Update:
 
 
 def sort_frame_processors(frame_processors : List[str]) -> list[str]:
-	frame_processors_names = list_module_names('facefusion/processors/frame/modules')
-	return sorted(frame_processors_names, key = lambda frame_processor : frame_processors.index(frame_processor) if frame_processor in frame_processors else len(frame_processors))
+	available_frame_processors = list_module_names('facefusion/processors/frame/modules')
+	return sorted(available_frame_processors, key = lambda frame_processor : frame_processors.index(frame_processor) if frame_processor in frame_processors else len(frame_processors))

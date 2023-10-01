@@ -1,9 +1,9 @@
 from typing import Dict, Tuple
-import argparse
 import os
 import sys
 import subprocess
 import tempfile
+from argparse import ArgumentParser, HelpFormatter
 
 subprocess.call([ 'pip', 'install' , 'inquirer', '-q' ])
 
@@ -22,10 +22,14 @@ ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 }
 
 
-def run() -> None:
-	program = argparse.ArgumentParser(formatter_class = lambda prog: argparse.HelpFormatter(prog, max_help_position = 120))
+def cli() -> None:
+	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 120))
 	program.add_argument('--onnxruntime', help = wording.get('onnxruntime_help'), dest = 'onnxruntime', choices = ONNXRUNTIMES.keys())
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
+	run(program)
+
+
+def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 
 	if args.onnxruntime:
@@ -42,7 +46,6 @@ def run() -> None:
 				choices = list(ONNXRUNTIMES.keys())
 			)
 		])
-
 	if answers is not None:
 		onnxruntime = answers['onnxruntime']
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime]

@@ -1,4 +1,5 @@
-from typing import Any, List, Dict, Literal
+from typing import Any, List, Dict, Literal, Optional
+from argparse import ArgumentParser
 import insightface
 import threading
 
@@ -12,6 +13,7 @@ from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelVal
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
+from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
 THREAD_LOCK : threading.Lock = threading.Lock()
@@ -29,10 +31,7 @@ MODELS : Dict[str, ModelValue] =\
 		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx')
 	}
 }
-OPTIONS : OptionsWithModel =\
-{
-	'model': MODELS[frame_processors_globals.face_swapper_model]
-}
+OPTIONS : Optional[OptionsWithModel] = None
 
 
 def get_frame_processor() -> Any:
@@ -52,6 +51,13 @@ def clear_frame_processor() -> None:
 
 
 def get_options(key : Literal[ 'model' ]) -> Any:
+	global OPTIONS
+
+	if OPTIONS is None:
+		OPTIONS = \
+		{
+			'model': MODELS[frame_processors_globals.face_swapper_model]
+		}
 	return OPTIONS.get(key)
 
 
@@ -59,6 +65,15 @@ def set_options(key : Literal[ 'model' ], value : Any) -> None:
 	global OPTIONS
 
 	OPTIONS[key] = value
+
+
+def register_args(program : ArgumentParser) -> None:
+	program.add_argument('--face-swapper-model', help = wording.get('frame_processor_model_help'), dest = 'face_swapper_model', default = 'inswapper_128', choices = frame_processors_choices.face_swapper_models)
+
+
+def apply_args(program : ArgumentParser) -> None:
+	args = program.parse_args()
+	frame_processors_globals.face_swapper_model = args.face_swapper_model
 
 
 def pre_check() -> bool:
