@@ -58,10 +58,12 @@ def render() -> None:
 	)
 	BENCHMARK_START_BUTTON = gradio.Button(
 		value = wording.get('start_button_label'),
-		variant = 'primary'
+		variant = 'primary',
+		size = 'sm'
 	)
 	BENCHMARK_CLEAR_BUTTON = gradio.Button(
-		value = wording.get('clear_button_label')
+		value = wording.get('clear_button_label'),
+		size = 'sm'
 	)
 
 

@@ -36,10 +36,12 @@ def render() -> None:
 	)
 	OUTPUT_START_BUTTON = gradio.Button(
 		value = wording.get('start_button_label'),
-		variant = 'primary'
+		variant = 'primary',
+		size = 'sm'
 	)
 	OUTPUT_CLEAR_BUTTON = gradio.Button(
 		value = wording.get('clear_button_label'),
+		size = 'sm'
 	)
 
 

@@ -57,14 +57,51 @@ def launch() -> None:
 
 
 def get_theme() -> gradio.Theme:
-	return gradio.themes.Soft(
+	return gradio.themes.Base(
 		primary_hue = gradio.themes.colors.red,
-		secondary_hue = gradio.themes.colors.gray,
+		secondary_hue = gradio.themes.colors.neutral,
 		font = gradio.themes.GoogleFont('Inter')
 	).set(
-		background_fill_primary = '*neutral_50',
-		block_label_text_size = '*text_sm',
-		block_title_text_size = '*text_sm'
+		background_fill_primary = '*neutral_100',
+		block_background_fill = 'white',
+		block_border_width = '0',
+		block_label_background_fill = '*primary_100',
+		block_label_background_fill_dark = '*primary_600',
+		block_label_border_width = 'none',
+		block_label_margin = '0.5rem',
+		block_label_radius = '*radius_md',
+		block_label_text_color = '*primary_500',
+		block_label_text_color_dark = 'white',
+		block_label_text_weight = '600',
+		block_title_background_fill = '*primary_100',
+		block_title_padding = '*block_label_padding',
+		block_title_radius = '*block_label_radius',
+		block_title_text_color = '*primary_500',
+		block_title_text_size = '*text_sm',
+		block_title_text_weight = '600',
+		block_padding = '0.5rem',
+		button_large_padding = '2rem 0.5rem',
+		button_large_text_weight = 'normal',
+		button_primary_background_fill = '*primary_500',
+		button_primary_text_color = 'white',
+		button_secondary_background_fill = 'white',
+		button_secondary_border_color='*neutral_50',
+		button_secondary_text_color = '*neutral_800',
+		button_small_padding = '0.75rem',
+		checkbox_background_color = '*neutral_200',
+		checkbox_background_color_selected = '*primary_600',
+		checkbox_background_color_selected_dark = '*primary_700',
+		checkbox_border_color_focus = '*primary_500',
+		checkbox_border_color_focus_dark = '*primary_600',
+		checkbox_border_color_selected = '*primary_600',
+		checkbox_border_color_selected_dark = '*primary_700',
+		checkbox_label_background_fill = '*neutral_50',
+		checkbox_label_background_fill_selected = '*primary_500',
+		checkbox_label_background_fill_selected_dark = '*primary_600',
+		checkbox_label_text_color_selected = 'white',
+		input_background_fill = '*neutral_50',
+		slider_color = '*primary_500',
+		slider_color_dark = '*primary_600'
 	)
 
 

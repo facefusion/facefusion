@@ -33,10 +33,12 @@ def render() -> None:
 	)
 	WEBCAM_START_BUTTON = gradio.Button(
 		value = wording.get('start_button_label'),
-		variant = 'primary'
+		variant = 'primary',
+		size = 'sm'
 	)
 	WEBCAM_STOP_BUTTON = gradio.Button(
-		value = wording.get('stop_button_label')
+		value = wording.get('stop_button_label'),
+		size = 'sm'
 	)
 
 
