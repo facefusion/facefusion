@@ -54,7 +54,7 @@ def run(program : ArgumentParser) -> None:
 		if onnxruntime == 'cuda':
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/cu118' ])
 		else:
-			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
+			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/cpu' ])
 		if onnxruntime != 'cpu':
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
 		if onnxruntime != 'coreml-silicon':
