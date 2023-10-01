@@ -16,7 +16,7 @@ import facefusion.choices
 import facefusion.globals
 from facefusion import metadata, wording
 from facefusion.predictor import predict_image, predict_video
-from facefusion.processors.frame.core import get_frame_processors_modules
+from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.utilities import is_image, is_video, detect_fps, compress_image, merge_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, list_module_names, encode_execution_providers, decode_execution_providers, normalize_output_path
 
 warnings.filterwarnings('ignore', category = FutureWarning, module = 'insightface')
@@ -65,11 +65,12 @@ def cli() -> None:
 	group_output.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action = 'store_true')
 	group_output.add_argument('--skip-audio', help = wording.get('skip_audio_help'), dest = 'skip_audio', action = 'store_true')
 	# frame processors
-	program = ArgumentParser(parents = [ program ], formatter_class = program.formatter_class, add_help = True)
 	available_frame_processors = list_module_names('facefusion/processors/frame/modules')
+	program = ArgumentParser(parents = [ program ], formatter_class = program.formatter_class, add_help = True)
 	group_frame_processors = program.add_argument_group('frame processors')
 	group_frame_processors.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(available_frame_processors)), dest = 'frame_processors', default = [ 'face_swapper' ], nargs = '+')
-	for frame_processor_module in get_frame_processors_modules(available_frame_processors):
+	for frame_processor in available_frame_processors:
+		frame_processor_module = load_frame_processor_module(frame_processor)
 		frame_processor_module.register_args(group_frame_processors)
 	# uis
 	group_uis = program.add_argument_group('uis')
@@ -114,7 +115,8 @@ def apply_args(program : ArgumentParser) -> None:
 	# frame processors
 	available_frame_processors = list_module_names('facefusion/processors/frame/modules')
 	facefusion.globals.frame_processors = args.frame_processors
-	for frame_processor_module in get_frame_processors_modules(available_frame_processors):
+	for frame_processor in available_frame_processors:
+		frame_processor_module = load_frame_processor_module(frame_processor)
 		frame_processor_module.apply_args(program)
 	# uis
 	facefusion.globals.ui_layouts = args.ui_layouts

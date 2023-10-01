@@ -74,6 +74,7 @@ def get_theme() -> gradio.Theme:
 		block_label_text_color_dark = 'white',
 		block_label_text_weight = '600',
 		block_title_background_fill = '*primary_100',
+		block_title_background_fill_dark = '*primary_600',
 		block_title_padding = '*block_label_padding',
 		block_title_radius = '*block_label_radius',
 		block_title_text_color = '*primary_500',
