@@ -1,5 +1,6 @@
 import threading
 from functools import lru_cache
+
 import numpy
 import opennsfw2
 from PIL import Image
@@ -10,6 +11,7 @@ from facefusion.typing import Frame
 PREDICTOR = None
 THREAD_LOCK : threading.Lock = threading.Lock()
 MAX_PROBABILITY = 0.75
+STREAM_COUNTER = 0
 
 
 def get_predictor() -> Model:
@@ -27,8 +29,17 @@ def clear_predictor() -> None:
 	PREDICTOR = None
 
 
-def predict_frame(target_frame : Frame) -> bool:
-	image = Image.fromarray(target_frame)
+def predict_stream(frame : Frame) -> bool:
+	global STREAM_COUNTER
+
+	STREAM_COUNTER = STREAM_COUNTER + 1
+	if STREAM_COUNTER % 25 == 0:
+		return predict_frame(frame)
+	return False
+
+
+def predict_frame(frame : Frame) -> bool:
+	image = Image.fromarray(frame)
 	image = opennsfw2.preprocess_image(image, opennsfw2.Preprocessing.YAHOO)
 	views = numpy.expand_dims(image, axis = 0)
 	_, probability = get_predictor().predict(views)[0]
