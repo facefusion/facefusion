@@ -30,6 +30,11 @@ MODELS : Dict[str, ModelValue] =\
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.4.onnx',
 		'path': resolve_relative_path('../.assets/models/GFPGANv1.4.onnx')
+	},
+	'codeformer':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/codeformer.onnx',
+		'path': resolve_relative_path('../.assets/models/codeformer.onnx')
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -118,11 +123,14 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	frame_processor = get_frame_processor()
 	crop_frame, affine_matrix = warp_face(target_face, temp_frame)
 	crop_frame = prepare_crop_frame(crop_frame)
+	frame_processor_inputs = {}
+	for frame_processor_input in frame_processor.get_inputs():
+		if frame_processor_input.name == 'input':
+			frame_processor_inputs[frame_processor_input.name] = crop_frame
+		if frame_processor_input.name == 'weight':
+			frame_processor_inputs[frame_processor_input.name] = numpy.array([ 1 ], dtype = numpy.double)
 	with THREAD_SEMAPHORE:
-		crop_frame = frame_processor.run(None,
-		{
-			frame_processor.get_inputs()[0].name: crop_frame
-		})[0][0]
+		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
 	face_enhancer_blend = 1 - (frame_processors_globals.face_enhancer_blend / 100)
 	paste_frame = paste_back(temp_frame, crop_frame, affine_matrix)
