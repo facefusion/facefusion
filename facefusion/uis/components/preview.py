@@ -132,9 +132,9 @@ def update_preview_frame_slider(frame_number : int = 0) -> Update:
 
 
 def process_preview_frame(source_face : Face, reference_face : Face, temp_frame : Frame) -> Frame:
+	temp_frame = resize_frame_dimension(temp_frame, 640, 640)
 	if predict_frame(temp_frame):
 		return cv2.GaussianBlur(temp_frame, (99, 99), 0)
-	temp_frame = resize_frame_dimension(temp_frame, 480)
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		if frame_processor_module.pre_process('preview'):

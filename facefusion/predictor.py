@@ -11,6 +11,7 @@ from facefusion.typing import Frame
 PREDICTOR = None
 THREAD_LOCK : threading.Lock = threading.Lock()
 MAX_PROBABILITY = 0.75
+FRAME_INTERVAL = 25
 STREAM_COUNTER = 0
 
 
@@ -33,7 +34,7 @@ def predict_stream(frame : Frame) -> bool:
 	global STREAM_COUNTER
 
 	STREAM_COUNTER = STREAM_COUNTER + 1
-	if STREAM_COUNTER % 25 == 0:
+	if STREAM_COUNTER % FRAME_INTERVAL == 0:
 		return predict_frame(frame)
 	return False
 
@@ -53,5 +54,5 @@ def predict_image(image_path : str) -> bool:
 
 @lru_cache(maxsize = None)
 def predict_video(video_path : str) -> bool:
-	_, probabilities = opennsfw2.predict_video_frames(video_path = video_path, frame_interval = 25)
+	_, probabilities = opennsfw2.predict_video_frames(video_path = video_path, frame_interval = FRAME_INTERVAL)
 	return any(probability > MAX_PROBABILITY for probability in probabilities)
