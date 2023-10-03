@@ -30,8 +30,6 @@ def render() -> gradio.Blocks:
 					temp_frame.render()
 				with gradio.Blocks():
 					output_options.render()
-				with gradio.Blocks():
-					common_options.render()
 			with gradio.Column(scale = 2):
 				with gradio.Blocks():
 					source.render()
@@ -48,6 +46,8 @@ def render() -> gradio.Blocks:
 					face_selector.render()
 				with gradio.Row():
 					face_analyser.render()
+				with gradio.Blocks():
+					common_options.render()
 	return layout
 
 
