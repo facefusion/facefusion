@@ -142,9 +142,8 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	with THREAD_SEMAPHORE:
 		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
-	face_enhancer_blend = 1 - (frame_processors_globals.face_enhancer_blend / 100)
 	paste_frame = paste_back(temp_frame, crop_frame, affine_matrix)
-	temp_frame = cv2.addWeighted(temp_frame, face_enhancer_blend, paste_frame, 1 - face_enhancer_blend, 0)
+	temp_frame = blend_frame(temp_frame, paste_frame)
 	return temp_frame
 
 
@@ -195,6 +194,12 @@ def paste_back(temp_frame : Frame, crop_frame : Frame, affine_matrix : Matrix) -
 	inverse_mask_blur_area = cv2.GaussianBlur(inverse_mask_center, (inverse_mask_blur_size, inverse_mask_blur_size), 0)
 	temp_frame = inverse_mask_blur_area * inverse_mask_border + (1 - inverse_mask_blur_area) * temp_frame
 	temp_frame = temp_frame.clip(0, 255).astype(numpy.uint8)
+	return temp_frame
+
+
+def blend_frame(temp_frame : Frame, paste_frame : Frame) -> Frame:
+	face_enhancer_blend = 1 - (frame_processors_globals.face_enhancer_blend / 100)
+	temp_frame = cv2.addWeighted(temp_frame, face_enhancer_blend, paste_frame, 1 - face_enhancer_blend, 0)
 	return temp_frame
 
 

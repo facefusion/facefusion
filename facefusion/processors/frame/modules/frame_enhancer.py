@@ -123,10 +123,15 @@ def post_process() -> None:
 
 def enhance_frame(temp_frame : Frame) -> Frame:
 	with THREAD_SEMAPHORE:
-		frame_enhancer_blend = 1 - (frame_processors_globals.frame_enhancer_blend / 100)
 		paste_frame, _ = get_frame_processor().enhance(temp_frame)
-		temp_frame = cv2.resize(temp_frame, (paste_frame.shape[1], paste_frame.shape[0]))
-		temp_frame = cv2.addWeighted(temp_frame, frame_enhancer_blend, paste_frame, 1 - frame_enhancer_blend, 0)
+		temp_frame = blend_frame(temp_frame, paste_frame)
+	return temp_frame
+
+
+def blend_frame(temp_frame : Frame, paste_frame : Frame) -> Frame:
+	frame_enhancer_blend = 1 - (frame_processors_globals.frame_enhancer_blend / 100)
+	temp_frame = cv2.resize(temp_frame, (paste_frame.shape[1], paste_frame.shape[0]))
+	temp_frame = cv2.addWeighted(temp_frame, frame_enhancer_blend, paste_frame, 1 - frame_enhancer_blend, 0)
 	return temp_frame
 
 
