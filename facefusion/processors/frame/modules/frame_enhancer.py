@@ -27,7 +27,6 @@ MODELS: Dict[str, ModelValue] =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x2plus.pth',
 		'path': resolve_relative_path('../.assets/models/RealESRGAN_x2plus.pth'),
 		'scale': 2
-
 	},
 	'RealESRGAN_x4plus':
 	{

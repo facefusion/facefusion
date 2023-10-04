@@ -97,6 +97,7 @@ WORDING =\
 	'trim_frame_end_slider_label': 'TRIM FRAME END',
 	'source_file_label': 'SOURCE',
 	'target_file_label': 'TARGET',
+	'player_image_label': 'PLAYER',
 	'webcam_image_label': 'WEBCAM',
 	'webcam_mode_radio_label': 'WEBCAM MODE',
 	'webcam_resolution_dropdown': 'WEBCAM RESOLUTION',

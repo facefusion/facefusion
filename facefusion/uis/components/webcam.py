@@ -13,7 +13,7 @@ from facefusion import wording
 from facefusion.predictor import predict_stream
 from facefusion.typing import Frame, Face
 from facefusion.face_analyser import get_one_face
-from facefusion.processors.frame.core import load_frame_processor_module
+from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.uis import core as ui
 from facefusion.uis.typing import StreamMode, WebcamMode, Update
 from facefusion.utilities import open_ffmpeg
@@ -112,8 +112,7 @@ def capture_webcam(resolution : str, fps : float) -> cv2.VideoCapture:
 
 
 def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
-	for frame_processor in facefusion.globals.frame_processors:
-		frame_processor_module = load_frame_processor_module(frame_processor)
+	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if frame_processor_module.pre_process('stream'):
 			temp_frame = frame_processor_module.process_frame(
 				source_face,

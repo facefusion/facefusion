@@ -21,6 +21,16 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_ENHANCER'
 MODELS : Dict[str, ModelValue] =\
 {
+	'codeformer':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/codeformer.onnx',
+		'path': resolve_relative_path('../.assets/models/codeformer.onnx')
+	},
+	'GFPGANv1.2':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.2.onnx',
+		'path': resolve_relative_path('../.assets/models/GFPGANv1.2.onnx')
+	},
 	'GFPGANv1.3':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.3.onnx',
@@ -31,10 +41,10 @@ MODELS : Dict[str, ModelValue] =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.4.onnx',
 		'path': resolve_relative_path('../.assets/models/GFPGANv1.4.onnx')
 	},
-	'codeformer':
+	'GPEN-BFR-512':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/codeformer.onnx',
-		'path': resolve_relative_path('../.assets/models/codeformer.onnx')
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GPEN-BFR-512.onnx',
+		'path': resolve_relative_path('../.assets/models/GPEN-BFR-512.onnx')
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
