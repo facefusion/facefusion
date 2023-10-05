@@ -4,15 +4,15 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.typing import Frame, Face
 from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_static_image
 from facefusion.face_analyser import get_one_face
 from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.predictor import predict_frame
 from facefusion.processors.frame.core import load_frame_processor_module
-from facefusion.typing import Frame, Face
-from facefusion.uis import core as ui
-from facefusion.uis.typing import ComponentName, Update
 from facefusion.utilities import is_video, is_image
+from facefusion.uis.typing import ComponentName, Update
+from facefusion.uis.core import get_ui_component, register_ui_component
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 PREVIEW_FRAME_SLIDER : Optional[gradio.Slider] = None
@@ -51,7 +51,7 @@ def render() -> None:
 		preview_frame_slider_args['visible'] = True
 	PREVIEW_IMAGE = gradio.Image(**preview_image_args)
 	PREVIEW_FRAME_SLIDER = gradio.Slider(**preview_frame_slider_args)
-	ui.register_component('preview_frame_slider', PREVIEW_FRAME_SLIDER)
+	register_ui_component('preview_frame_slider', PREVIEW_FRAME_SLIDER)
 
 
 def listen() -> None:
@@ -63,7 +63,7 @@ def listen() -> None:
 		'target_video'
 	]
 	for component_name in multi_component_names:
-		component = ui.get_component(component_name)
+		component = get_ui_component(component_name)
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
 				getattr(component, method)(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
@@ -77,7 +77,7 @@ def listen() -> None:
 		'frame_enhancer_model_dropdown'
 	]
 	for component_name in update_component_names:
-		component = ui.get_component(component_name)
+		component = get_ui_component(component_name)
 		if component:
 			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	select_component_names : List[ComponentName] =\
@@ -88,7 +88,7 @@ def listen() -> None:
 		'face_analyser_gender_dropdown'
 	]
 	for component_name in select_component_names:
-		component = ui.get_component(component_name)
+		component = get_ui_component(component_name)
 		if component:
 			component.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	change_component_names : List[ComponentName] =\
@@ -98,7 +98,7 @@ def listen() -> None:
 		'frame_enhancer_blend_slider'
 	]
 	for component_name in change_component_names:
-		component = ui.get_component(component_name)
+		component = get_ui_component(component_name)
 		if component:
 			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 

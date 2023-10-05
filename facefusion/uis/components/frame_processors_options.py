@@ -4,9 +4,9 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.processors.frame.core import load_frame_processor_module
-from facefusion.uis import core as ui
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 from facefusion.uis.typing import Update
+from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_SWAPPER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -56,11 +56,11 @@ def render() -> None:
 		maximum = 100,
 		visible = 'face_enhancer' in facefusion.globals.frame_processors
 	)
-	ui.register_component('face_swapper_model_dropdown', FACE_SWAPPER_MODEL_DROPDOWN)
-	ui.register_component('face_enhancer_model_dropdown', FACE_ENHANCER_MODEL_DROPDOWN)
-	ui.register_component('face_enhancer_blend_slider', FACE_ENHANCER_BLEND_SLIDER)
-	ui.register_component('frame_enhancer_model_dropdown', FRAME_ENHANCER_MODEL_DROPDOWN)
-	ui.register_component('frame_enhancer_blend_slider', FRAME_ENHANCER_BLEND_SLIDER)
+	register_ui_component('face_swapper_model_dropdown', FACE_SWAPPER_MODEL_DROPDOWN)
+	register_ui_component('face_enhancer_model_dropdown', FACE_ENHANCER_MODEL_DROPDOWN)
+	register_ui_component('face_enhancer_blend_slider', FACE_ENHANCER_BLEND_SLIDER)
+	register_ui_component('frame_enhancer_model_dropdown', FRAME_ENHANCER_MODEL_DROPDOWN)
+	register_ui_component('frame_enhancer_blend_slider', FRAME_ENHANCER_BLEND_SLIDER)
 
 
 def listen() -> None:
@@ -69,7 +69,7 @@ def listen() -> None:
 	FACE_ENHANCER_BLEND_SLIDER.change(update_face_enhancer_blend, inputs = FACE_ENHANCER_BLEND_SLIDER, outputs = FACE_ENHANCER_BLEND_SLIDER)
 	FRAME_ENHANCER_MODEL_DROPDOWN.change(update_frame_enhancer_model, inputs = FRAME_ENHANCER_MODEL_DROPDOWN, outputs = FRAME_ENHANCER_MODEL_DROPDOWN)
 	FRAME_ENHANCER_BLEND_SLIDER.change(update_frame_enhancer_blend, inputs = FRAME_ENHANCER_BLEND_SLIDER, outputs = FRAME_ENHANCER_BLEND_SLIDER)
-	frame_processors_checkbox_group = ui.get_component('frame_processors_checkbox_group')
+	frame_processors_checkbox_group = get_ui_component('frame_processors_checkbox_group')
 	if frame_processors_checkbox_group:
 		frame_processors_checkbox_group.change(toggle_face_swapper_model, inputs = frame_processors_checkbox_group, outputs = [ FACE_SWAPPER_MODEL_DROPDOWN, FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER, FRAME_ENHANCER_MODEL_DROPDOWN, FRAME_ENHANCER_BLEND_SLIDER ])
 

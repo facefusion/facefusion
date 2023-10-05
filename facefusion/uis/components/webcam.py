@@ -14,10 +14,10 @@ from facefusion.predictor import predict_stream
 from facefusion.typing import Frame, Face
 from facefusion.face_analyser import get_one_face
 from facefusion.processors.frame.core import get_frame_processors_modules
-from facefusion.uis import core as ui
-from facefusion.uis.typing import StreamMode, WebcamMode, Update
 from facefusion.utilities import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_image
+from facefusion.uis.typing import StreamMode, WebcamMode, Update
+from facefusion.uis.core import get_ui_component
 
 WEBCAM_IMAGE : Optional[gradio.Image] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
@@ -45,16 +45,16 @@ def render() -> None:
 
 def listen() -> None:
 	start_event = None
-	webcam_mode_radio = ui.get_component('webcam_mode_radio')
-	webcam_resolution_dropdown = ui.get_component('webcam_resolution_dropdown')
-	webcam_fps_slider = ui.get_component('webcam_fps_slider')
+	webcam_mode_radio = get_ui_component('webcam_mode_radio')
+	webcam_resolution_dropdown = get_ui_component('webcam_resolution_dropdown')
+	webcam_fps_slider = get_ui_component('webcam_fps_slider')
 	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 		webcam_mode_radio.change(stop, outputs = WEBCAM_IMAGE, cancels = start_event)
 		webcam_resolution_dropdown.change(stop, outputs = WEBCAM_IMAGE, cancels = start_event)
 		webcam_fps_slider.change(stop, outputs = WEBCAM_IMAGE, cancels = start_event)
 	WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
-	source_image = ui.get_component('source_image')
+	source_image = get_ui_component('source_image')
 	if source_image:
 		for method in [ 'upload', 'change', 'clear' ]:
 			getattr(source_image, method)(stop, cancels = start_event)

@@ -3,9 +3,9 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.uis import core as ui
-from facefusion.uis.typing import Update
 from facefusion.utilities import is_image
+from facefusion.uis.typing import Update
+from facefusion.uis.core import register_ui_component
 
 SOURCE_FILE : Optional[gradio.File] = None
 SOURCE_IMAGE : Optional[gradio.Image] = None
@@ -32,7 +32,7 @@ def render() -> None:
 		visible = is_source_image,
 		show_label = False
 	)
-	ui.register_component('source_image', SOURCE_IMAGE)
+	register_ui_component('source_image', SOURCE_IMAGE)
 
 
 def listen() -> None:

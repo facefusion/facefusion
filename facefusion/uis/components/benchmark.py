@@ -11,9 +11,9 @@ from facefusion.face_cache import clear_faces_cache
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total
 from facefusion.core import limit_resources, conditional_process
-from facefusion.uis.typing import Update
-from facefusion.uis import core as ui
 from facefusion.utilities import normalize_output_path, clear_temp
+from facefusion.uis.typing import Update
+from facefusion.uis.core import get_ui_component
 
 BENCHMARK_RESULTS_DATAFRAME : Optional[gradio.Dataframe] = None
 BENCHMARK_START_BUTTON : Optional[gradio.Button] = None
@@ -68,8 +68,8 @@ def render() -> None:
 
 
 def listen() -> None:
-	benchmark_runs_checkbox_group = ui.get_component('benchmark_runs_checkbox_group')
-	benchmark_cycles_slider = ui.get_component('benchmark_cycles_slider')
+	benchmark_runs_checkbox_group = get_ui_component('benchmark_runs_checkbox_group')
+	benchmark_cycles_slider = get_ui_component('benchmark_cycles_slider')
 	if benchmark_runs_checkbox_group and benchmark_cycles_slider:
 		BENCHMARK_START_BUTTON.click(start, inputs = [ benchmark_runs_checkbox_group, benchmark_cycles_slider ], outputs = BENCHMARK_RESULTS_DATAFRAME)
 	BENCHMARK_CLEAR_BUTTON.click(clear, outputs = BENCHMARK_RESULTS_DATAFRAME)

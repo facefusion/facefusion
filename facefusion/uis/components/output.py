@@ -5,8 +5,8 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.core import limit_resources, conditional_process
-from facefusion.uis.typing import Update
 from facefusion.utilities import is_image, is_video, normalize_output_path, clear_temp
+from facefusion.uis.typing import Update
 
 OUTPUT_IMAGE : Optional[gradio.Image] = None
 OUTPUT_VIDEO : Optional[gradio.Video] = None

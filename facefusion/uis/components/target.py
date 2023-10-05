@@ -4,9 +4,9 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.face_reference import clear_face_reference
-from facefusion.uis import core as ui
-from facefusion.uis.typing import Update
 from facefusion.utilities import is_image, is_video
+from facefusion.uis.typing import Update
+from facefusion.uis.core import register_ui_component
 
 TARGET_FILE : Optional[gradio.File] = None
 TARGET_IMAGE : Optional[gradio.Image] = None
@@ -42,8 +42,8 @@ def render() -> None:
 		visible = is_target_video,
 		show_label = False
 	)
-	ui.register_component('target_image', TARGET_IMAGE)
-	ui.register_component('target_video', TARGET_VIDEO)
+	register_ui_component('target_image', TARGET_IMAGE)
+	register_ui_component('target_video', TARGET_VIDEO)
 
 
 def listen() -> None:

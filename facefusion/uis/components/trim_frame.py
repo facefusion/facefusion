@@ -4,9 +4,9 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.vision import count_video_frame_total
-from facefusion.uis import core as ui
-from facefusion.uis.typing import Update
 from facefusion.utilities import is_video
+from facefusion.uis.typing import Update
+from facefusion.uis.core import get_ui_component
 
 TRIM_FRAME_START_SLIDER : Optional[gradio.Slider] = None
 TRIM_FRAME_END_SLIDER : Optional[gradio.Slider] = None
@@ -47,7 +47,7 @@ def render() -> None:
 def listen() -> None:
 	TRIM_FRAME_START_SLIDER.change(update_trim_frame_start, inputs = TRIM_FRAME_START_SLIDER, outputs = TRIM_FRAME_START_SLIDER)
 	TRIM_FRAME_END_SLIDER.change(update_trim_frame_end, inputs = TRIM_FRAME_END_SLIDER, outputs = TRIM_FRAME_END_SLIDER)
-	target_video = ui.get_component('target_video')
+	target_video = get_ui_component('target_video')
 	if target_video:
 		for method in [ 'upload', 'change', 'clear' ]:
 			getattr(target_video, method)(remote_update, outputs = [ TRIM_FRAME_START_SLIDER, TRIM_FRAME_END_SLIDER ])

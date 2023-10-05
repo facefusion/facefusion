@@ -9,9 +9,9 @@ from facefusion.vision import get_video_frame, normalize_frame_color, read_stati
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_reference import clear_face_reference
 from facefusion.typing import Frame, FaceRecognition
-from facefusion.uis import core as ui
-from facefusion.uis.typing import ComponentName, Update
 from facefusion.utilities import is_image, is_video
+from facefusion.uis.core import get_ui_component, register_ui_component
+from facefusion.uis.typing import ComponentName, Update
 
 FACE_RECOGNITION_DROPDOWN : Optional[gradio.Dropdown] = None
 REFERENCE_FACE_POSITION_GALLERY : Optional[gradio.Gallery] = None
@@ -52,9 +52,9 @@ def render() -> None:
 		maximum = 3,
 		visible = 'reference' in facefusion.globals.face_recognition
 	)
-	ui.register_component('face_recognition_dropdown', FACE_RECOGNITION_DROPDOWN)
-	ui.register_component('reference_face_position_gallery', REFERENCE_FACE_POSITION_GALLERY)
-	ui.register_component('reference_face_distance_slider', REFERENCE_FACE_DISTANCE_SLIDER)
+	register_ui_component('face_recognition_dropdown', FACE_RECOGNITION_DROPDOWN)
+	register_ui_component('reference_face_position_gallery', REFERENCE_FACE_POSITION_GALLERY)
+	register_ui_component('reference_face_distance_slider', REFERENCE_FACE_DISTANCE_SLIDER)
 
 
 def listen() -> None:
@@ -68,7 +68,7 @@ def listen() -> None:
 		'target_video'
 	]
 	for component_name in multi_component_names:
-		component = ui.get_component(component_name)
+		component = get_ui_component(component_name)
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
 				getattr(component, method)(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
@@ -79,10 +79,10 @@ def listen() -> None:
 		'face_analyser_gender_dropdown'
 	]
 	for component_name in select_component_names:
-		component = ui.get_component(component_name)
+		component = get_ui_component(component_name)
 		if component:
 			component.select(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
-	preview_frame_slider = ui.get_component('preview_frame_slider')
+	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
 		preview_frame_slider.release(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
 

@@ -3,8 +3,8 @@ import gradio
 
 from facefusion import wording
 from facefusion.uis import choices
-from facefusion.uis import core as ui
 from facefusion.uis.typing import Update
+from facefusion.uis.core import register_ui_component
 
 WEBCAM_MODE_RADIO : Optional[gradio.Radio] = None
 WEBCAM_RESOLUTION_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -33,9 +33,9 @@ def render() -> None:
 		minimum = 1,
 		maximum = 60
 	)
-	ui.register_component('webcam_mode_radio', WEBCAM_MODE_RADIO)
-	ui.register_component('webcam_resolution_dropdown', WEBCAM_RESOLUTION_DROPDOWN)
-	ui.register_component('webcam_fps_slider', WEBCAM_FPS_SLIDER)
+	register_ui_component('webcam_mode_radio', WEBCAM_MODE_RADIO)
+	register_ui_component('webcam_resolution_dropdown', WEBCAM_RESOLUTION_DROPDOWN)
+	register_ui_component('webcam_fps_slider', WEBCAM_FPS_SLIDER)
 
 
 def update() -> Update:

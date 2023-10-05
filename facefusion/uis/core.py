@@ -8,7 +8,7 @@ import facefusion.globals
 from facefusion import metadata, wording
 from facefusion.uis.typing import Component, ComponentName
 
-COMPONENTS: Dict[ComponentName, Component] = {}
+UI_COMPONENTS: Dict[ComponentName, Component] = {}
 UI_LAYOUT_MODULES : List[ModuleType] = []
 UI_LAYOUT_METHODS =\
 [
@@ -41,6 +41,16 @@ def get_ui_layouts_modules(ui_layouts : List[str]) -> List[ModuleType]:
 			ui_layout_module = load_ui_layout_module(ui_layout)
 			UI_LAYOUT_MODULES.append(ui_layout_module)
 	return UI_LAYOUT_MODULES
+
+
+def get_ui_component(name: ComponentName) -> Optional[Component]:
+	if name in UI_COMPONENTS:
+		return UI_COMPONENTS[name]
+	return None
+
+
+def register_ui_component(name: ComponentName, component: Component) -> None:
+	UI_COMPONENTS[name] = component
 
 
 def launch() -> None:
@@ -105,12 +115,3 @@ def get_theme() -> gradio.Theme:
 		slider_color_dark = '*primary_600'
 	)
 
-
-def get_component(name: ComponentName) -> Optional[Component]:
-	if name in COMPONENTS:
-		return COMPONENTS[name]
-	return None
-
-
-def register_component(name: ComponentName, component: Component) -> None:
-	COMPONENTS[name] = component

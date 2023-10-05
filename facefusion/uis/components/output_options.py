@@ -5,9 +5,9 @@ import facefusion.choices
 import facefusion.globals
 from facefusion import wording
 from facefusion.typing import OutputVideoEncoder
-from facefusion.uis import core as ui
-from facefusion.uis.typing import Update, ComponentName
 from facefusion.utilities import is_image, is_video
+from facefusion.uis.typing import Update, ComponentName
+from facefusion.uis.core import get_ui_component
 
 OUTPUT_IMAGE_QUALITY_SLIDER : Optional[gradio.Slider] = None
 OUTPUT_VIDEO_ENCODER_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -54,7 +54,7 @@ def listen() -> None:
 		'target_video'
 	]
 	for component_name in multi_component_names:
-		component = ui.get_component(component_name)
+		component = get_ui_component(component_name)
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
 				getattr(component, method)(remote_update, outputs = [ OUTPUT_IMAGE_QUALITY_SLIDER, OUTPUT_VIDEO_ENCODER_DROPDOWN, OUTPUT_VIDEO_QUALITY_SLIDER ])

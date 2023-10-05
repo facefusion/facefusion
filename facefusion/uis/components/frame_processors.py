@@ -4,9 +4,9 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.processors.frame.core import load_frame_processor_module, clear_frame_processors_modules
-from facefusion.uis import core as ui
-from facefusion.uis.typing import Update
 from facefusion.utilities import list_module_names
+from facefusion.uis.core import register_ui_component
+from facefusion.uis.typing import Update
 
 FRAME_PROCESSORS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 
@@ -19,7 +19,7 @@ def render() -> None:
 		choices = sort_frame_processors(facefusion.globals.frame_processors),
 		value = facefusion.globals.frame_processors
 	)
-	ui.register_component('frame_processors_checkbox_group', FRAME_PROCESSORS_CHECKBOX_GROUP)
+	register_ui_component('frame_processors_checkbox_group', FRAME_PROCESSORS_CHECKBOX_GROUP)
 
 
 def listen() -> None:
