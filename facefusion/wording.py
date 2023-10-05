@@ -98,6 +98,7 @@ WORDING =\
 	'source_file_label': 'SOURCE',
 	'target_file_label': 'TARGET',
 	'player_image_label': 'PLAYER',
+	'player_url_textbox_label': 'URL',
 	'webcam_image_label': 'WEBCAM',
 	'webcam_mode_radio_label': 'WEBCAM MODE',
 	'webcam_resolution_dropdown': 'WEBCAM RESOLUTION',

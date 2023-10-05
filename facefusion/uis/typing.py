@@ -20,8 +20,10 @@ ComponentName = Literal\
 	'face_enhancer_blend_slider',
 	'frame_enhancer_model_dropdown',
 	'frame_enhancer_blend_slider',
+	'output_path_textbox',
 	'benchmark_runs_checkbox_group',
 	'benchmark_cycles_slider',
+	'player_url_textbox_label',
 	'webcam_mode_radio',
 	'webcam_resolution_dropdown',
 	'webcam_fps_slider'

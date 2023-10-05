@@ -1,4 +1,5 @@
 from typing import Optional, Tuple, List
+import tempfile
 import gradio
 
 import facefusion.choices
@@ -7,18 +8,25 @@ from facefusion import wording
 from facefusion.typing import OutputVideoEncoder
 from facefusion.utilities import is_image, is_video
 from facefusion.uis.typing import Update, ComponentName
-from facefusion.uis.core import get_ui_component
+from facefusion.uis.core import get_ui_component, register_ui_component
 
+OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
 OUTPUT_IMAGE_QUALITY_SLIDER : Optional[gradio.Slider] = None
 OUTPUT_VIDEO_ENCODER_DROPDOWN : Optional[gradio.Dropdown] = None
 OUTPUT_VIDEO_QUALITY_SLIDER : Optional[gradio.Slider] = None
 
 
 def render() -> None:
+	global OUTPUT_PATH_TEXTBOX
 	global OUTPUT_IMAGE_QUALITY_SLIDER
 	global OUTPUT_VIDEO_ENCODER_DROPDOWN
 	global OUTPUT_VIDEO_QUALITY_SLIDER
 
+	OUTPUT_PATH_TEXTBOX = gradio.Textbox(
+		label = wording.get('output_path_textbox_label'),
+		value = facefusion.globals.output_path or tempfile.gettempdir(),
+		max_lines = 1
+	)
 	OUTPUT_IMAGE_QUALITY_SLIDER = gradio.Slider(
 		label = wording.get('output_image_quality_slider_label'),
 		value = facefusion.globals.output_image_quality,
@@ -41,9 +49,11 @@ def render() -> None:
 		maximum = 100,
 		visible = is_video(facefusion.globals.target_path)
 	)
+	register_ui_component('output_path_textbox', OUTPUT_PATH_TEXTBOX)
 
 
 def listen() -> None:
+	OUTPUT_PATH_TEXTBOX.change(update_output_path, inputs = OUTPUT_PATH_TEXTBOX, outputs = OUTPUT_PATH_TEXTBOX)
 	OUTPUT_IMAGE_QUALITY_SLIDER.change(update_output_image_quality, inputs = OUTPUT_IMAGE_QUALITY_SLIDER, outputs = OUTPUT_IMAGE_QUALITY_SLIDER)
 	OUTPUT_VIDEO_ENCODER_DROPDOWN.select(update_output_video_encoder, inputs = OUTPUT_VIDEO_ENCODER_DROPDOWN, outputs = OUTPUT_VIDEO_ENCODER_DROPDOWN)
 	OUTPUT_VIDEO_QUALITY_SLIDER.change(update_output_video_quality, inputs = OUTPUT_VIDEO_QUALITY_SLIDER, outputs = OUTPUT_VIDEO_QUALITY_SLIDER)
@@ -66,6 +76,11 @@ def remote_update() -> Tuple[Update, Update, Update]:
 	if is_video(facefusion.globals.target_path):
 		return gradio.update(visible = False), gradio.update(visible = True), gradio.update(visible = True)
 	return gradio.update(visible = False), gradio.update(visible = False), gradio.update(visible = False)
+
+
+def update_output_path(output_path : str) -> Update:
+	facefusion.globals.output_path = output_path
+	return gradio.update(value = output_path)
 
 
 def update_output_image_quality(output_image_quality : int) -> Update:
