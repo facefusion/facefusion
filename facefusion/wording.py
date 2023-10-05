@@ -2,7 +2,7 @@ WORDING =\
 {
 	'python_not_supported': 'Python version is not supported, upgrade to {version} or higher',
 	'ffmpeg_not_installed': 'FFMpeg is not installed',
-	'onnxruntime_help': 'select the onnxruntime to be installed',
+	'install_dependency_help': 'select the variant of {dependency} to install',
 	'source_help': 'select a source image',
 	'target_help': 'select a target image or video',
 	'output_help': 'specify the output file or directory',
