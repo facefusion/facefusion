@@ -34,8 +34,8 @@ def render() -> None:
 
 
 def listen() -> None:
-	TEMP_FRAME_FORMAT_DROPDOWN.select(update_temp_frame_format, inputs = TEMP_FRAME_FORMAT_DROPDOWN, outputs = TEMP_FRAME_FORMAT_DROPDOWN)
-	TEMP_FRAME_QUALITY_SLIDER.change(update_temp_frame_quality, inputs = TEMP_FRAME_QUALITY_SLIDER, outputs = TEMP_FRAME_QUALITY_SLIDER)
+	TEMP_FRAME_FORMAT_DROPDOWN.select(update_temp_frame_format, inputs = TEMP_FRAME_FORMAT_DROPDOWN)
+	TEMP_FRAME_QUALITY_SLIDER.change(update_temp_frame_quality, inputs = TEMP_FRAME_QUALITY_SLIDER)
 	target_video = get_ui_component('target_video')
 	if target_video:
 		for method in [ 'upload', 'change', 'clear' ]:
@@ -48,11 +48,9 @@ def remote_update() -> Tuple[Update, Update]:
 	return gradio.update(visible = False), gradio.update(visible = False)
 
 
-def update_temp_frame_format(temp_frame_format : TempFrameFormat) -> Update:
+def update_temp_frame_format(temp_frame_format : TempFrameFormat) -> None:
 	facefusion.globals.temp_frame_format = temp_frame_format
-	return gradio.update(value = temp_frame_format)
 
 
-def update_temp_frame_quality(temp_frame_quality : int) -> Update:
+def update_temp_frame_quality(temp_frame_quality : int) -> None:
 	facefusion.globals.temp_frame_quality = temp_frame_quality
-	return gradio.update(value = temp_frame_quality)

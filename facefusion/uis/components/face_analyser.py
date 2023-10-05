@@ -5,7 +5,6 @@ import gradio
 import facefusion.choices
 import facefusion.globals
 from facefusion import wording
-from facefusion.uis.typing import Update
 from facefusion.uis.core import register_ui_component
 
 FACE_ANALYSER_DIRECTION_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -39,14 +38,13 @@ def render() -> None:
 
 
 def listen() -> None:
-	FACE_ANALYSER_DIRECTION_DROPDOWN.select(lambda value: update_dropdown('face_analyser_direction', value), inputs = FACE_ANALYSER_DIRECTION_DROPDOWN, outputs = FACE_ANALYSER_DIRECTION_DROPDOWN)
-	FACE_ANALYSER_AGE_DROPDOWN.select(lambda value: update_dropdown('face_analyser_age', value), inputs = FACE_ANALYSER_AGE_DROPDOWN, outputs = FACE_ANALYSER_AGE_DROPDOWN)
-	FACE_ANALYSER_GENDER_DROPDOWN.select(lambda value: update_dropdown('face_analyser_gender', value), inputs = FACE_ANALYSER_GENDER_DROPDOWN, outputs = FACE_ANALYSER_GENDER_DROPDOWN)
+	FACE_ANALYSER_DIRECTION_DROPDOWN.select(lambda value: update_dropdown('face_analyser_direction', value), inputs = FACE_ANALYSER_DIRECTION_DROPDOWN)
+	FACE_ANALYSER_AGE_DROPDOWN.select(lambda value: update_dropdown('face_analyser_age', value), inputs = FACE_ANALYSER_AGE_DROPDOWN)
+	FACE_ANALYSER_GENDER_DROPDOWN.select(lambda value: update_dropdown('face_analyser_gender', value), inputs = FACE_ANALYSER_GENDER_DROPDOWN)
 
 
-def update_dropdown(name : str, value : str) -> Update:
+def update_dropdown(name : str, value : str) -> None:
 	if value == 'none':
 		setattr(facefusion.globals, name, None)
 	else:
 		setattr(facefusion.globals, name, value)
-	return gradio.update(value = value)

@@ -66,9 +66,9 @@ def render() -> None:
 def listen() -> None:
 	FACE_SWAPPER_MODEL_DROPDOWN.change(update_face_swapper_model, inputs = FACE_SWAPPER_MODEL_DROPDOWN, outputs = FACE_SWAPPER_MODEL_DROPDOWN)
 	FACE_ENHANCER_MODEL_DROPDOWN.change(update_face_enhancer_model, inputs = FACE_ENHANCER_MODEL_DROPDOWN, outputs = FACE_ENHANCER_MODEL_DROPDOWN)
-	FACE_ENHANCER_BLEND_SLIDER.change(update_face_enhancer_blend, inputs = FACE_ENHANCER_BLEND_SLIDER, outputs = FACE_ENHANCER_BLEND_SLIDER)
+	FACE_ENHANCER_BLEND_SLIDER.change(update_face_enhancer_blend, inputs = FACE_ENHANCER_BLEND_SLIDER)
 	FRAME_ENHANCER_MODEL_DROPDOWN.change(update_frame_enhancer_model, inputs = FRAME_ENHANCER_MODEL_DROPDOWN, outputs = FRAME_ENHANCER_MODEL_DROPDOWN)
-	FRAME_ENHANCER_BLEND_SLIDER.change(update_frame_enhancer_blend, inputs = FRAME_ENHANCER_BLEND_SLIDER, outputs = FRAME_ENHANCER_BLEND_SLIDER)
+	FRAME_ENHANCER_BLEND_SLIDER.change(update_frame_enhancer_blend, inputs = FRAME_ENHANCER_BLEND_SLIDER)
 	frame_processors_checkbox_group = get_ui_component('frame_processors_checkbox_group')
 	if frame_processors_checkbox_group:
 		frame_processors_checkbox_group.change(toggle_face_swapper_model, inputs = frame_processors_checkbox_group, outputs = [ FACE_SWAPPER_MODEL_DROPDOWN, FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER, FRAME_ENHANCER_MODEL_DROPDOWN, FRAME_ENHANCER_BLEND_SLIDER ])
@@ -94,9 +94,8 @@ def update_face_enhancer_model(face_enhancer_model : str) -> Update:
 	return gradio.update(value = face_enhancer_model)
 
 
-def update_face_enhancer_blend(face_enhancer_blend : int) -> Update:
+def update_face_enhancer_blend(face_enhancer_blend : int) -> None:
 	frame_processors_globals.face_enhancer_blend = face_enhancer_blend
-	return gradio.update(value = face_enhancer_blend)
 
 
 def update_frame_enhancer_model(frame_enhancer_model : str) -> Update:
@@ -109,9 +108,8 @@ def update_frame_enhancer_model(frame_enhancer_model : str) -> Update:
 	return gradio.update(value = frame_enhancer_model)
 
 
-def update_frame_enhancer_blend(frame_enhancer_blend : int) -> Update:
+def update_frame_enhancer_blend(frame_enhancer_blend : int) -> None:
 	frame_processors_globals.frame_enhancer_blend = frame_enhancer_blend
-	return gradio.update(value = frame_enhancer_blend)
 
 
 def toggle_face_swapper_model(frame_processors : List[str]) -> Tuple[Update, Update, Update, Update, Update]:

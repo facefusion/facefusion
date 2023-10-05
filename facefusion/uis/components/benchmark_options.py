@@ -1,8 +1,7 @@
-from typing import Optional, List
+from typing import Optional
 import gradio
 
 from facefusion import wording
-from facefusion.uis.typing import Update
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.components.benchmark import BENCHMARKS
 
@@ -28,11 +27,3 @@ def render() -> None:
 	)
 	register_ui_component('benchmark_runs_checkbox_group', BENCHMARK_RUNS_CHECKBOX_GROUP)
 	register_ui_component('benchmark_cycles_slider', BENCHMARK_CYCLES_SLIDER)
-
-
-def listen() -> None:
-	BENCHMARK_RUNS_CHECKBOX_GROUP.change(update_benchmark_runs, inputs = BENCHMARK_RUNS_CHECKBOX_GROUP, outputs = BENCHMARK_RUNS_CHECKBOX_GROUP)
-
-
-def update_benchmark_runs(benchmark_runs : List[str]) -> Update:
-	return gradio.update(value = benchmark_runs)

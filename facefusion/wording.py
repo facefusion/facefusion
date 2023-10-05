@@ -90,7 +90,7 @@ WORDING =\
 	'face_enhancer_blend_slider_label': 'FACE ENHANCER BLEND',
 	'frame_enhancer_model_dropdown_label': 'FRAME ENHANCER MODEL',
 	'frame_enhancer_blend_slider_label': 'FRAME ENHANCER BLEND',
-	'common_options_checkbox_group_label': 'SETTINGS',
+	'common_options_checkbox_group_label': 'OPTIONS',
 	'temp_frame_format_dropdown_label': 'TEMP FRAME FORMAT',
 	'temp_frame_quality_slider_label': 'TEMP FRAME QUALITY',
 	'trim_frame_start_slider_label': 'TRIM FRAME START',

@@ -4,7 +4,6 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.uis import choices
-from facefusion.uis.typing import Update
 
 COMMON_OPTIONS_CHECKBOX_GROUP : Optional[gradio.Checkboxgroup] = None
 
@@ -29,12 +28,11 @@ def render() -> None:
 
 
 def listen() -> None:
-	COMMON_OPTIONS_CHECKBOX_GROUP.change(update, inputs = COMMON_OPTIONS_CHECKBOX_GROUP, outputs = COMMON_OPTIONS_CHECKBOX_GROUP)
+	COMMON_OPTIONS_CHECKBOX_GROUP.change(update, inputs = COMMON_OPTIONS_CHECKBOX_GROUP)
 
 
-def update(common_options : List[str]) -> Update:
+def update(common_options : List[str]) -> None:
 	facefusion.globals.keep_fps = 'keep-fps' in common_options
 	facefusion.globals.keep_temp = 'keep-temp' in common_options
 	facefusion.globals.skip_audio = 'skip-audio' in common_options
 	facefusion.globals.skip_download = 'skip-download' in common_options
-	return gradio.update(value = common_options)

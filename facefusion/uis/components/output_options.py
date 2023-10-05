@@ -53,10 +53,10 @@ def render() -> None:
 
 
 def listen() -> None:
-	OUTPUT_PATH_TEXTBOX.change(update_output_path, inputs = OUTPUT_PATH_TEXTBOX, outputs = OUTPUT_PATH_TEXTBOX)
-	OUTPUT_IMAGE_QUALITY_SLIDER.change(update_output_image_quality, inputs = OUTPUT_IMAGE_QUALITY_SLIDER, outputs = OUTPUT_IMAGE_QUALITY_SLIDER)
-	OUTPUT_VIDEO_ENCODER_DROPDOWN.select(update_output_video_encoder, inputs = OUTPUT_VIDEO_ENCODER_DROPDOWN, outputs = OUTPUT_VIDEO_ENCODER_DROPDOWN)
-	OUTPUT_VIDEO_QUALITY_SLIDER.change(update_output_video_quality, inputs = OUTPUT_VIDEO_QUALITY_SLIDER, outputs = OUTPUT_VIDEO_QUALITY_SLIDER)
+	OUTPUT_PATH_TEXTBOX.change(update_output_path, inputs = OUTPUT_PATH_TEXTBOX)
+	OUTPUT_IMAGE_QUALITY_SLIDER.change(update_output_image_quality, inputs = OUTPUT_IMAGE_QUALITY_SLIDER)
+	OUTPUT_VIDEO_ENCODER_DROPDOWN.select(update_output_video_encoder, inputs = OUTPUT_VIDEO_ENCODER_DROPDOWN)
+	OUTPUT_VIDEO_QUALITY_SLIDER.change(update_output_video_quality, inputs = OUTPUT_VIDEO_QUALITY_SLIDER)
 	multi_component_names : List[ComponentName] =\
 	[
 		'source_image',
@@ -78,21 +78,17 @@ def remote_update() -> Tuple[Update, Update, Update]:
 	return gradio.update(visible = False), gradio.update(visible = False), gradio.update(visible = False)
 
 
-def update_output_path(output_path : str) -> Update:
+def update_output_path(output_path : str) -> None:
 	facefusion.globals.output_path = output_path
-	return gradio.update(value = output_path)
 
 
-def update_output_image_quality(output_image_quality : int) -> Update:
+def update_output_image_quality(output_image_quality : int) -> None:
 	facefusion.globals.output_image_quality = output_image_quality
-	return gradio.update(value = output_image_quality)
 
 
-def update_output_video_encoder(output_video_encoder: OutputVideoEncoder) -> Update:
+def update_output_video_encoder(output_video_encoder: OutputVideoEncoder) -> None:
 	facefusion.globals.output_video_encoder = output_video_encoder
-	return gradio.update(value = output_video_encoder)
 
 
-def update_output_video_quality(output_video_quality : int) -> Update:
+def update_output_video_quality(output_video_quality : int) -> None:
 	facefusion.globals.output_video_quality = output_video_quality
-	return gradio.update(value = output_video_quality)

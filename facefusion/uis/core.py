@@ -1,5 +1,5 @@
-from types import ModuleType
 from typing import Dict, Optional, Any, List
+from types import ModuleType
 import importlib
 import sys
 import gradio
@@ -7,6 +7,7 @@ import gradio
 import facefusion.globals
 from facefusion import metadata, wording
 from facefusion.uis.typing import Component, ComponentName
+from facefusion.utilities import resolve_relative_path
 
 UI_COMPONENTS: Dict[ComponentName, Component] = {}
 UI_LAYOUT_MODULES : List[ModuleType] = []
@@ -54,7 +55,7 @@ def register_ui_component(name: ComponentName, component: Component) -> None:
 
 
 def launch() -> None:
-	with gradio.Blocks(theme = get_theme(), title = metadata.get('name') + ' ' + metadata.get('version')) as ui:
+	with gradio.Blocks(theme = get_theme(), css = get_css(), title = metadata.get('name') + ' ' + metadata.get('version')) as ui:
 		for ui_layout in facefusion.globals.ui_layouts:
 			ui_layout_module = load_ui_layout_module(ui_layout)
 			if ui_layout_module.pre_render():
@@ -91,6 +92,8 @@ def get_theme() -> gradio.Theme:
 		block_title_text_size = '*text_sm',
 		block_title_text_weight = '600',
 		block_padding = '0.5rem',
+		border_color_primary = 'transparent',
+		border_color_primary_dark = 'transparent',
 		button_large_padding = '2rem 0.5rem',
 		button_large_text_weight = 'normal',
 		button_primary_background_fill = '*primary_500',
@@ -115,3 +118,7 @@ def get_theme() -> gradio.Theme:
 		slider_color_dark = '*primary_600'
 	)
 
+
+def get_css() -> str:
+	overrides_css_path = resolve_relative_path('uis/assets/overrides.css')
+	return open(overrides_css_path, 'r').read()
