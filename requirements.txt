@@ -1,5 +1,5 @@
 basicsr==1.4.2
-gradio==3.46.1
+gradio==3.44.3
 insightface==0.7.3
 numpy==1.24.3
 onnx==1.14.1
