@@ -1,4 +1,4 @@
-input[type="number"]
+:root input[type="number"]
 {
-	max-width: 8rem;
+	max-width: 6rem;
 }
