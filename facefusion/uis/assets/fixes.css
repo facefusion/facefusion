@@ -1,0 +1,6 @@
+:root:root:root button:not([class])
+{
+	border-radius: 0.375rem;
+	float: left;
+	overflow: hidden;
+}
