@@ -11,7 +11,7 @@ from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.predictor import predict_frame
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.utilities import is_video, is_image
-from facefusion.uis.typing import ComponentName, Update
+from facefusion.uis.typing import ComponentName
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
@@ -103,7 +103,7 @@ def listen() -> None:
 			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
 
-def update_preview_image(frame_number : int = 0) -> Update:
+def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	conditional_set_face_reference()
 	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
 	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
@@ -111,24 +111,24 @@ def update_preview_image(frame_number : int = 0) -> Update:
 		target_frame = read_static_image(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(source_face, reference_face, target_frame)
 		preview_frame = normalize_frame_color(preview_frame)
-		return gradio.update(value = preview_frame)
+		return gradio.Image(value = preview_frame)
 	if is_video(facefusion.globals.target_path):
 		facefusion.globals.reference_frame_number = frame_number
 		temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
 		preview_frame = process_preview_frame(source_face, reference_face, temp_frame)
 		preview_frame = normalize_frame_color(preview_frame)
-		return gradio.update(value = preview_frame)
-	return gradio.update(value = None)
+		return gradio.Image(value = preview_frame)
+	return gradio.Image(value = None)
 
 
-def update_preview_frame_slider(frame_number : int = 0) -> Update:
+def update_preview_frame_slider(frame_number : int = 0) -> gradio.Slider:
 	if is_image(facefusion.globals.target_path):
-		return gradio.update(value = None, maximum = None, visible = False)
+		return gradio.Slider(value = None, maximum = None, visible = False)
 	if is_video(facefusion.globals.target_path):
 		facefusion.globals.reference_frame_number = frame_number
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
-		return gradio.update(maximum = video_frame_total, visible = True)
-	return gradio.update()
+		return gradio.Slider(maximum = video_frame_total, visible = True)
+	return gradio.Slider()
 
 
 def process_preview_frame(source_face : Face, reference_face : Face, temp_frame : Frame) -> Frame:

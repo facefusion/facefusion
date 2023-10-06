@@ -30,4 +30,3 @@ ComponentName = Literal\
 ]
 WebcamMode = Literal[ 'inline', 'udp', 'v4l2' ]
 StreamMode = Literal[ 'udp', 'v4l2' ]
-Update = Dict[Any, Any]

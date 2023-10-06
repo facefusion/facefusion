@@ -16,7 +16,7 @@ from facefusion.face_analyser import get_one_face
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.utilities import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_image
-from facefusion.uis.typing import StreamMode, WebcamMode, Update
+from facefusion.uis.typing import StreamMode, WebcamMode
 from facefusion.uis.core import get_ui_component
 
 WEBCAM_IMAGE : Optional[gradio.Image] = None
@@ -94,8 +94,8 @@ def multi_process_capture(source_face: Face, capture : cv2.VideoCapture) -> Gene
 				progress.update()
 
 
-def stop() -> Update:
-	return gradio.update(value = None)
+def stop() -> gradio.Image:
+	return gradio.Image(value = None)
 
 
 def capture_webcam(resolution : str, fps : float) -> cv2.VideoCapture:

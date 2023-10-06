@@ -7,7 +7,7 @@ import facefusion.globals
 from facefusion import wording
 from facefusion.typing import OutputVideoEncoder
 from facefusion.utilities import is_image, is_video
-from facefusion.uis.typing import Update, ComponentName
+from facefusion.uis.typing import ComponentName
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
@@ -70,12 +70,12 @@ def listen() -> None:
 				getattr(component, method)(remote_update, outputs = [ OUTPUT_IMAGE_QUALITY_SLIDER, OUTPUT_VIDEO_ENCODER_DROPDOWN, OUTPUT_VIDEO_QUALITY_SLIDER ])
 
 
-def remote_update() -> Tuple[Update, Update, Update]:
+def remote_update() -> Tuple[gradio.Slider, gradio.Dropdown, gradio.Slider]:
 	if is_image(facefusion.globals.target_path):
-		return gradio.update(visible = True), gradio.update(visible = False), gradio.update(visible = False)
+		return gradio.Slider(visible = True), gradio.Dropdown(visible = False), gradio.Slider(visible = False)
 	if is_video(facefusion.globals.target_path):
-		return gradio.update(visible = False), gradio.update(visible = True), gradio.update(visible = True)
-	return gradio.update(visible = False), gradio.update(visible = False), gradio.update(visible = False)
+		return gradio.Slider(visible = False), gradio.Dropdown(visible = True), gradio.Slider(visible = True)
+	return gradio.Slider(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False)
 
 
 def update_output_path(output_path : str) -> None:

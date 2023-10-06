@@ -2,3 +2,10 @@
 {
 	max-width: 6rem;
 }
+
+:root:root:root:root button:not([class])
+{
+	border-radius: 0.375rem;
+	float: left;
+	overflow: hidden;
+}
