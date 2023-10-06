@@ -1,4 +1,4 @@
-from typing import Literal, Dict, Any
+from typing import Literal
 import gradio
 
 Component = gradio.File or gradio.Image or gradio.Video or gradio.Slider
