@@ -33,6 +33,12 @@ MODELS: Dict[str, ModelValue] =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x4plus.pth',
 		'path': resolve_relative_path('../.assets/models/RealESRGAN_x4plus.pth'),
 		'scale': 4
+	},
+	'RealESRNet_x4plus':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRNet_x4plus.pth',
+		'path': resolve_relative_path('../.assets/models/RealESRNet_x4plus.pth'),
+		'scale': 4
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
