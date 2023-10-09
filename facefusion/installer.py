@@ -12,7 +12,8 @@ TORCH : Dict[str, str] =\
 {
 	'cpu': 'https://download.pytorch.org/whl/cpu',
 	'cuda': 'https://download.pytorch.org/whl/cu118',
-	'rocm': 'https://download.pytorch.org/whl/rocm5.6'
+	'rocm': 'https://download.pytorch.org/whl/rocm5.6',
+	'mac': ''
 }
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 {
@@ -62,7 +63,10 @@ def run(program : ArgumentParser) -> None:
 		onnxruntime = answers['onnxruntime']
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime]
 		subprocess.call([ 'pip', 'uninstall', 'torch', '-y' ])
-		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', torch_url ])
+		if torch_url:
+			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', torch_url ])
+		else:
+			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
 		if onnxruntime != 'cpu':
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
 		subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
