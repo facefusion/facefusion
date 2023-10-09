@@ -24,7 +24,8 @@ def render() -> None:
 
 	preview_image_args: Dict[str, Any] =\
 	{
-		'label': wording.get('preview_image_label')
+		'label': wording.get('preview_image_label'),
+		'interactive': False
 	}
 	preview_frame_slider_args: Dict[str, Any] =\
 	{
