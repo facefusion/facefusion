@@ -71,14 +71,14 @@ output creation:
 
 frame processors:
   --frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                       choose from the available frame processors (choices: face_enhancer, face_swapper, frame_enhancer, ...)
-  --face-enhancer-model {GFPGANv1.3,GFPGANv1.4}                                                    choose from the mode for the frame processor
+  --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_512}                 choose from the mode for the frame processor
   --face-enhancer-blend [0-100]                                                                    specify the blend factor for the frame processor
   --face-swapper-model {inswapper_128,inswapper_128_fp16}                                          choose from the mode for the frame processor
-  --frame-enhancer-model {RealESRGAN_x2plus,RealESRGAN_x4plus}                                     choose from the mode for the frame processor
+  --frame-enhancer-model {realesrgan_x2plus,realesrgan_x4plus,realesrnet_x4plus}                   choose from the mode for the frame processor
   --frame-enhancer-blend [0-100]                                                                   specify the blend factor for the frame processor
 
 uis:
-  --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                         choose from the available ui layouts (choices: player, benchmark, webcam, default, ...)
+  --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                         choose from the available ui layouts (choices: benchmark, webcam, default, ...)
 ```
 
 

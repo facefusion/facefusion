@@ -22,19 +22,19 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FRAME_ENHANCER'
 MODELS: Dict[str, ModelValue] =\
 {
-	'RealESRGAN_x2plus':
+	'realesrgan_x2plus':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x2plus.pth',
 		'path': resolve_relative_path('../.assets/models/RealESRGAN_x2plus.pth'),
 		'scale': 2
 	},
-	'RealESRGAN_x4plus':
+	'realesrgan_x4plus':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x4plus.pth',
 		'path': resolve_relative_path('../.assets/models/RealESRGAN_x4plus.pth'),
 		'scale': 4
 	},
-	'RealESRNet_x4plus':
+	'realesrnet_x4plus':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRNet_x4plus.pth',
 		'path': resolve_relative_path('../.assets/models/RealESRNet_x4plus.pth'),
@@ -88,7 +88,7 @@ def set_options(key : Literal[ 'model' ], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'frame_enhancer_model', default = 'RealESRGAN_x2plus', choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'frame_enhancer_model', default = 'realesrgan_x2plus', choices = frame_processors_choices.frame_enhancer_models)
 	program.add_argument('--frame-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest = 'frame_enhancer_blend', type = int, default = 100, choices = range(101), metavar = '[0-100]')
 
 

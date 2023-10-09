@@ -26,22 +26,22 @@ MODELS : Dict[str, ModelValue] =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/codeformer.onnx',
 		'path': resolve_relative_path('../.assets/models/codeformer.onnx')
 	},
-	'GFPGANv1.2':
+	'gfpgan_1.2':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.2.onnx',
 		'path': resolve_relative_path('../.assets/models/GFPGANv1.2.onnx')
 	},
-	'GFPGANv1.3':
+	'gfpgan_1.3':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.3.onnx',
 		'path': resolve_relative_path('../.assets/models/GFPGANv1.3.onnx')
 	},
-	'GFPGANv1.4':
+	'gfpgan_1.4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.4.onnx',
 		'path': resolve_relative_path('../.assets/models/GFPGANv1.4.onnx')
 	},
-	'GPEN-BFR-512':
+	'gpen_bfr_512':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GPEN-BFR-512.onnx',
 		'path': resolve_relative_path('../.assets/models/GPEN-BFR-512.onnx')
@@ -84,7 +84,7 @@ def set_options(key : Literal[ 'model' ], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--face-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'face_enhancer_model', default = 'GFPGANv1.4', choices = frame_processors_choices.face_enhancer_models)
+	program.add_argument('--face-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'face_enhancer_model', default = 'gfpgan_1.4', choices = frame_processors_choices.face_enhancer_models)
 	program.add_argument('--face-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest= 'face_enhancer_blend', type = int, default= 100, choices = range(101), metavar = '[0-100]')
 
 
