@@ -56,10 +56,7 @@ def get_frame_processor() -> Any:
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			execution_providers = facefusion.globals.execution_providers
-			if 'CoreMLExecutionProvider' in execution_providers:
-				execution_providers = [ 'CPUExecutionProvider' ]
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = execution_providers)
+			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
 	return FRAME_PROCESSOR
 
 
