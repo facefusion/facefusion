@@ -9,9 +9,9 @@ from facefusion.vision import get_video_frame, normalize_frame_color, read_stati
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_reference import clear_face_reference
 from facefusion.typing import Frame, FaceRecognition
-from facefusion.uis import core as ui
-from facefusion.uis.typing import ComponentName, Update
 from facefusion.utilities import is_image, is_video
+from facefusion.uis.core import get_ui_component, register_ui_component
+from facefusion.uis.typing import ComponentName
 
 FACE_RECOGNITION_DROPDOWN : Optional[gradio.Dropdown] = None
 REFERENCE_FACE_POSITION_GALLERY : Optional[gradio.Gallery] = None
@@ -40,20 +40,21 @@ def render() -> None:
 		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
 	FACE_RECOGNITION_DROPDOWN = gradio.Dropdown(
 		label = wording.get('face_recognition_dropdown_label'),
-		choices = facefusion.choices.face_recognition,
+		choices = facefusion.choices.face_recognitions,
 		value = facefusion.globals.face_recognition
 	)
 	REFERENCE_FACE_POSITION_GALLERY = gradio.Gallery(**reference_face_gallery_args)
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
 		label = wording.get('reference_face_distance_slider_label'),
 		value = facefusion.globals.reference_face_distance,
-		maximum = 3,
 		step = 0.05,
+		minimum = 0,
+		maximum = 3,
 		visible = 'reference' in facefusion.globals.face_recognition
 	)
-	ui.register_component('face_recognition_dropdown', FACE_RECOGNITION_DROPDOWN)
-	ui.register_component('reference_face_position_gallery', REFERENCE_FACE_POSITION_GALLERY)
-	ui.register_component('reference_face_distance_slider', REFERENCE_FACE_DISTANCE_SLIDER)
+	register_ui_component('face_recognition_dropdown', FACE_RECOGNITION_DROPDOWN)
+	register_ui_component('reference_face_position_gallery', REFERENCE_FACE_POSITION_GALLERY)
+	register_ui_component('reference_face_distance_slider', REFERENCE_FACE_DISTANCE_SLIDER)
 
 
 def listen() -> None:
@@ -67,7 +68,7 @@ def listen() -> None:
 		'target_video'
 	]
 	for component_name in multi_component_names:
-		component = ui.get_component(component_name)
+		component = get_ui_component(component_name)
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
 				getattr(component, method)(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
@@ -78,29 +79,29 @@ def listen() -> None:
 		'face_analyser_gender_dropdown'
 	]
 	for component_name in select_component_names:
-		component = ui.get_component(component_name)
+		component = get_ui_component(component_name)
 		if component:
 			component.select(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
-	preview_frame_slider = ui.get_component('preview_frame_slider')
+	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
 		preview_frame_slider.release(update_face_reference_position, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
 
-def update_face_recognition(face_recognition : FaceRecognition) -> Tuple[Update, Update]:
+def update_face_recognition(face_recognition : FaceRecognition) -> Tuple[gradio.Gallery, gradio.Slider]:
 	if face_recognition == 'reference':
 		facefusion.globals.face_recognition = face_recognition
-		return gradio.update(visible = True), gradio.update(visible = True)
+		return gradio.Gallery(visible = True), gradio.Slider(visible = True)
 	if face_recognition == 'many':
 		facefusion.globals.face_recognition = face_recognition
-		return gradio.update(visible = False), gradio.update(visible = False)
+		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
 
 
-def clear_and_update_face_reference_position(event: gradio.SelectData) -> Update:
+def clear_and_update_face_reference_position(event: gradio.SelectData) -> gradio.Gallery:
 	clear_face_reference()
 	return update_face_reference_position(event.index)
 
 
-def update_face_reference_position(reference_face_position : int = 0) -> Update:
+def update_face_reference_position(reference_face_position : int = 0) -> gradio.Gallery:
 	gallery_frames = []
 	facefusion.globals.reference_face_position = reference_face_position
 	if is_image(facefusion.globals.target_path):
@@ -110,13 +111,12 @@ def update_face_reference_position(reference_face_position : int = 0) -> Update:
 		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
 		gallery_frames = extract_gallery_frames(reference_frame)
 	if gallery_frames:
-		return gradio.update(value = gallery_frames)
-	return gradio.update(value = None)
+		return gradio.Gallery(value = gallery_frames)
+	return gradio.Gallery(value = None)
 
 
-def update_reference_face_distance(reference_face_distance : float) -> Update:
+def update_reference_face_distance(reference_face_distance : float) -> None:
 	facefusion.globals.reference_face_distance = reference_face_distance
-	return gradio.update(value = reference_face_distance)
 
 
 def extract_gallery_frames(reference_frame : Frame) -> List[Frame]:

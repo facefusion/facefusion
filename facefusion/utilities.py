@@ -70,13 +70,13 @@ def merge_video(target_path : str, fps : float) -> bool:
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
 	commands = [ '-hwaccel', 'auto', '-r', str(fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
 	if facefusion.globals.output_video_encoder in [ 'libx264', 'libx265' ]:
-		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.5))
+		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
 		commands.extend([ '-crf', str(output_video_compression) ])
 	if facefusion.globals.output_video_encoder in [ 'libvpx-vp9' ]:
-		output_video_compression = round(63 - (facefusion.globals.output_video_quality * 0.5))
+		output_video_compression = round(63 - (facefusion.globals.output_video_quality * 0.63))
 		commands.extend([ '-crf', str(output_video_compression) ])
 	if facefusion.globals.output_video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
-		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.5))
+		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
 		commands.extend([ '-cq', str(output_video_compression) ])
 	commands.extend([ '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_output_video_path ])
 	return run_ffmpeg(commands)
@@ -187,7 +187,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 			initial = 0
 		if initial < total:
 			with tqdm(total = total, initial = initial, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024) as progress:
-				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--location', '--continue-at', '-', '--output', download_file_path, url ])
+				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])
 				current = initial
 				while current < total:
 					if is_file(download_file_path):
@@ -196,12 +196,12 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 
 
 @lru_cache(maxsize = None)
-def get_download_size(url : str) -> Optional[int]:
+def get_download_size(url : str) -> int:
 	try:
 		response = urllib.request.urlopen(url) # type: ignore[attr-defined]
 		return int(response.getheader('Content-Length'))
 	except (OSError, ValueError):
-		return None
+		return 0
 
 
 def is_download_done(url : str, file_path : str) -> bool:

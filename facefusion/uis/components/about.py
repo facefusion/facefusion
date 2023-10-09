@@ -1,12 +1,23 @@
 from typing import Optional
 import gradio
 
-from facefusion import metadata
+from facefusion import metadata, wording
 
-ABOUT_HTML : Optional[gradio.HTML] = None
+ABOUT_BUTTON : Optional[gradio.HTML] = None
+DONATE_BUTTON : Optional[gradio.HTML] = None
 
 
 def render() -> None:
-	global ABOUT_HTML
+	global ABOUT_BUTTON
+	global DONATE_BUTTON
 
-	ABOUT_HTML = gradio.HTML('<center><a href="' + metadata.get('url') + '">' + metadata.get('name') + ' ' + metadata.get('version') + '</a></center>')
+	ABOUT_BUTTON = gradio.Button(
+		value = metadata.get('name') + ' ' + metadata.get('version'),
+		variant = 'primary',
+		link = metadata.get('url')
+	)
+	DONATE_BUTTON = gradio.Button(
+		value = wording.get('donate_button_label'),
+		link = 'https://donate.facefusion.io',
+		size = 'sm'
+	)

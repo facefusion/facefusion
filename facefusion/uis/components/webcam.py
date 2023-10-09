@@ -10,13 +10,14 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.predictor import predict_stream
 from facefusion.typing import Frame, Face
 from facefusion.face_analyser import get_one_face
-from facefusion.processors.frame.core import load_frame_processor_module
-from facefusion.uis import core as ui
-from facefusion.uis.typing import StreamMode, WebcamMode, Update
+from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.utilities import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_image
+from facefusion.uis.typing import StreamMode, WebcamMode
+from facefusion.uis.core import get_ui_component
 
 WEBCAM_IMAGE : Optional[gradio.Image] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
@@ -33,25 +34,27 @@ def render() -> None:
 	)
 	WEBCAM_START_BUTTON = gradio.Button(
 		value = wording.get('start_button_label'),
-		variant = 'primary'
+		variant = 'primary',
+		size = 'sm'
 	)
 	WEBCAM_STOP_BUTTON = gradio.Button(
-		value = wording.get('stop_button_label')
+		value = wording.get('stop_button_label'),
+		size = 'sm'
 	)
 
 
 def listen() -> None:
 	start_event = None
-	webcam_mode_radio = ui.get_component('webcam_mode_radio')
-	webcam_resolution_dropdown = ui.get_component('webcam_resolution_dropdown')
-	webcam_fps_slider = ui.get_component('webcam_fps_slider')
+	webcam_mode_radio = get_ui_component('webcam_mode_radio')
+	webcam_resolution_dropdown = get_ui_component('webcam_resolution_dropdown')
+	webcam_fps_slider = get_ui_component('webcam_fps_slider')
 	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 		webcam_mode_radio.change(stop, outputs = WEBCAM_IMAGE, cancels = start_event)
 		webcam_resolution_dropdown.change(stop, outputs = WEBCAM_IMAGE, cancels = start_event)
 		webcam_fps_slider.change(stop, outputs = WEBCAM_IMAGE, cancels = start_event)
 	WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
-	source_image = ui.get_component('source_image')
+	source_image = get_ui_component('source_image')
 	if source_image:
 		for method in [ 'upload', 'change', 'clear' ]:
 			getattr(source_image, method)(stop, cancels = start_event)
@@ -61,10 +64,8 @@ def start(mode: WebcamMode, resolution: str, fps: float) -> Generator[Frame, Non
 	facefusion.globals.face_recognition = 'many'
 	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
 	stream = None
-	if mode == 'stream_udp':
-		stream = open_stream('udp', resolution, fps)
-	if mode == 'stream_v4l2':
-		stream = open_stream('v4l2', resolution, fps)
+	if mode in [ 'udp', 'v4l2' ]:
+		stream = open_stream(mode, resolution, fps) # type: ignore[arg-type]
 	capture = capture_webcam(resolution, fps)
 	if capture.isOpened():
 		for capture_frame in multi_process_capture(source_face, capture):
@@ -80,6 +81,8 @@ def multi_process_capture(source_face: Face, capture : cv2.VideoCapture) -> Gene
 		deque_capture_frames : Deque[Frame] = deque()
 		while True:
 			_, capture_frame = capture.read()
+			if predict_stream(capture_frame):
+				return
 			future = executor.submit(process_stream_frame, source_face, capture_frame)
 			futures.append(future)
 			for future_done in [ future for future in futures if future.done() ]:
@@ -91,8 +94,8 @@ def multi_process_capture(source_face: Face, capture : cv2.VideoCapture) -> Gene
 				progress.update()
 
 
-def stop() -> Update:
-	return gradio.update(value = None)
+def stop() -> gradio.Image:
+	return gradio.Image(value = None)
 
 
 def capture_webcam(resolution : str, fps : float) -> cv2.VideoCapture:
@@ -109,8 +112,7 @@ def capture_webcam(resolution : str, fps : float) -> cv2.VideoCapture:
 
 
 def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
-	for frame_processor in facefusion.globals.frame_processors:
-		frame_processor_module = load_frame_processor_module(frame_processor)
+	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if frame_processor_module.pre_process('stream'):
 			temp_frame = frame_processor_module.process_frame(
 				source_face,

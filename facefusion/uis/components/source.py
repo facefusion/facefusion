@@ -3,9 +3,8 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.uis import core as ui
-from facefusion.uis.typing import Update
 from facefusion.utilities import is_image
+from facefusion.uis.core import register_ui_component
 
 SOURCE_FILE : Optional[gradio.File] = None
 SOURCE_IMAGE : Optional[gradio.Image] = None
@@ -32,16 +31,16 @@ def render() -> None:
 		visible = is_source_image,
 		show_label = False
 	)
-	ui.register_component('source_image', SOURCE_IMAGE)
+	register_ui_component('source_image', SOURCE_IMAGE)
 
 
 def listen() -> None:
 	SOURCE_FILE.change(update, inputs = SOURCE_FILE, outputs = SOURCE_IMAGE)
 
 
-def update(file: IO[Any]) -> Update:
+def update(file: IO[Any]) -> gradio.Image:
 	if file and is_image(file.name):
 		facefusion.globals.source_path = file.name
-		return gradio.update(value = file.name, visible = True)
+		return gradio.Image(value = file.name, visible = True)
 	facefusion.globals.source_path = None
-	return gradio.update(value = None, visible = False)
+	return gradio.Image(value = None, visible = False)

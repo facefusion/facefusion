@@ -5,17 +5,22 @@ import psutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue
 from types import ModuleType
-from typing import Any, List, Callable
+from typing import Any, List
 from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.typing import Process_Frames
 
 FRAME_PROCESSORS_MODULES : List[ModuleType] = []
 FRAME_PROCESSORS_METHODS =\
 [
 	'get_frame_processor',
 	'clear_frame_processor',
+	'get_options',
+	'set_options',
+	'register_args',
+	'apply_args',
 	'pre_check',
 	'pre_process',
 	'process_frame',
@@ -57,7 +62,7 @@ def clear_frame_processors_modules() -> None:
 	FRAME_PROCESSORS_MODULES = []
 
 
-def multi_process_frames(source_path : str, temp_frame_paths : List[str], process_frames : Callable[[str, List[str], Callable[[], None]], None]) -> None:
+def multi_process_frames(source_path : str, temp_frame_paths : List[str], process_frames : Process_Frames) -> None:
 	progress_bar_format = '{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]'
 	with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame', dynamic_ncols = True, bar_format = progress_bar_format) as progress:
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:

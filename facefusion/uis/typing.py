@@ -1,4 +1,4 @@
-from typing import Literal, Dict, Any
+from typing import Literal
 import gradio
 
 Component = gradio.File or gradio.Image or gradio.Video or gradio.Slider
@@ -15,12 +15,18 @@ ComponentName = Literal\
 	'face_analyser_age_dropdown',
 	'face_analyser_gender_dropdown',
 	'frame_processors_checkbox_group',
+	'face_swapper_model_dropdown',
+	'face_enhancer_model_dropdown',
+	'face_enhancer_blend_slider',
+	'frame_enhancer_model_dropdown',
+	'frame_enhancer_blend_slider',
+	'output_path_textbox',
 	'benchmark_runs_checkbox_group',
 	'benchmark_cycles_slider',
+	'player_url_textbox_label',
 	'webcam_mode_radio',
 	'webcam_resolution_dropdown',
 	'webcam_fps_slider'
 ]
-WebcamMode = Literal[ 'inline', 'stream_udp', 'stream_v4l2' ]
+WebcamMode = Literal[ 'inline', 'udp', 'v4l2' ]
 StreamMode = Literal[ 'udp', 'v4l2' ]
-Update = Dict[Any, Any]
