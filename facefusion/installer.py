@@ -36,7 +36,7 @@ def cli() -> None:
 def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 
-	if args.onnxruntime:
+	if args.torch and args.onnxruntime:
 		answers =\
 		{
 			'torch': args.torch,
