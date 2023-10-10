@@ -63,6 +63,5 @@ def run(program : ArgumentParser) -> None:
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime]
 		subprocess.call([ 'pip', 'uninstall', 'torch', '-y' ])
 		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', torch_url ])
-		if onnxruntime != 'cpu':
-			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
+		subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
 		subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
