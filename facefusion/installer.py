@@ -10,13 +10,14 @@ from facefusion import metadata, wording
 
 TORCH : Dict[str, str] =\
 {
-	'cpu': 'https://download.pytorch.org/whl/cpu',
-	'cuda': 'https://download.pytorch.org/whl/cu118',
-	'rocm': 'https://download.pytorch.org/whl/rocm5.6'
+	'default': 'default',
+	'cpu': 'cpu',
+	'cuda': 'cu118',
+	'rocm': 'rocm5.6'
 }
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 {
-	'cpu': ('onnxruntime', '1.16.0 '),
+	'default': ('onnxruntime', '1.16.0'),
 	'cuda': ('onnxruntime-gpu', '1.16.0'),
 	'coreml-legacy': ('onnxruntime-coreml', '1.13.1'),
 	'coreml-silicon': ('onnxruntime-silicon', '1.16.0'),
@@ -58,11 +59,13 @@ def run(program : ArgumentParser) -> None:
 		])
 	if answers is not None:
 		torch = answers['torch']
-		torch_url = TORCH[torch]
+		torch_wheel = TORCH[torch]
 		onnxruntime = answers['onnxruntime']
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime]
 		subprocess.call([ 'pip', 'uninstall', 'torch', '-y' ])
-		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', torch_url ])
-		if onnxruntime != 'cpu':
-			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
+		if torch_wheel == 'default':
+			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
+		else:
+			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel ])
+		subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
 		subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
