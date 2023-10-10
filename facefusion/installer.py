@@ -10,13 +10,13 @@ from facefusion import metadata, wording
 
 TORCH : Dict[str, str] =\
 {
-	'cpu': 'https://download.pytorch.org/whl/cpu',
+	'default': 'https://download.pytorch.org/whl/cpu',
 	'cuda': 'https://download.pytorch.org/whl/cu118',
 	'rocm': 'https://download.pytorch.org/whl/rocm5.6'
 }
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 {
-	'cpu': ('onnxruntime', '1.16.0 '),
+	'default': ('onnxruntime', '1.16.0'),
 	'cuda': ('onnxruntime-gpu', '1.16.0'),
 	'coreml-legacy': ('onnxruntime-coreml', '1.13.1'),
 	'coreml-silicon': ('onnxruntime-silicon', '1.16.0'),
