@@ -123,7 +123,7 @@ def extract_gallery_frames(reference_frame : Frame) -> List[Frame]:
 	crop_frames = []
 	faces = get_many_faces(reference_frame)
 	for face in faces:
-		start_x, start_y, end_x, end_y = map(int, face['bbox'])
+		start_x, start_y, end_x, end_y = map(int, face.bbox)
 		padding_x = int((end_x - start_x) * 0.25)
 		padding_y = int((end_y - start_y) * 0.25)
 		start_x = max(0, start_x - padding_x)

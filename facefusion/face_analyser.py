@@ -70,17 +70,17 @@ def find_similar_faces(frame : Frame, reference_face : Face, face_distance : flo
 
 def sort_by_direction(faces : List[Face], direction : FaceAnalyserDirection) -> List[Face]:
 	if direction == 'left-right':
-		return sorted(faces, key = lambda face: face['bbox'][0])
+		return sorted(faces, key = lambda face: face.bbox[0])
 	if direction == 'right-left':
-		return sorted(faces, key = lambda face: face['bbox'][0], reverse = True)
+		return sorted(faces, key = lambda face: face.bbox[0], reverse = True)
 	if direction == 'top-bottom':
-		return sorted(faces, key = lambda face: face['bbox'][1])
+		return sorted(faces, key = lambda face: face.bbox[1])
 	if direction == 'bottom-top':
-		return sorted(faces, key = lambda face: face['bbox'][1], reverse = True)
+		return sorted(faces, key = lambda face: face.bbox[1], reverse = True)
 	if direction == 'small-large':
-		return sorted(faces, key = lambda face: (face['bbox'][2] - face['bbox'][0]) * (face['bbox'][3] - face['bbox'][1]))
+		return sorted(faces, key = lambda face: (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1]))
 	if direction == 'large-small':
-		return sorted(faces, key = lambda face: (face['bbox'][2] - face['bbox'][0]) * (face['bbox'][3] - face['bbox'][1]), reverse = True)
+		return sorted(faces, key = lambda face: (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1]), reverse = True)
 	return faces
 
 
