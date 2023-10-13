@@ -24,12 +24,12 @@ def render() -> None:
 	)
 	FACE_ANALYSER_AGE_DROPDOWN = gradio.Dropdown(
 		label = wording.get('face_analyser_age_dropdown_label'),
-		choices = ['none'] + facefusion.choices.face_analyser_ages,
+		choices = [ 'none' ] + facefusion.choices.face_analyser_ages,
 		value = facefusion.globals.face_analyser_age or 'none'
 	)
 	FACE_ANALYSER_GENDER_DROPDOWN = gradio.Dropdown(
 		label = wording.get('face_analyser_gender_dropdown_label'),
-		choices = ['none'] + facefusion.choices.face_analyser_genders,
+		choices = [ 'none' ] + facefusion.choices.face_analyser_genders,
 		value = facefusion.globals.face_analyser_gender or 'none'
 	)
 	register_ui_component('face_analyser_direction_dropdown', FACE_ANALYSER_DIRECTION_DROPDOWN)
