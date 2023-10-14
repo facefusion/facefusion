@@ -35,6 +35,7 @@ WORDING =\
 	'headless_help': 'run the program in headless mode',
 	'creating_temp': 'Creating temporary resources',
 	'extracting_frames_fps': 'Extracting frames with {fps} FPS',
+	'analysing': 'Analysing',
 	'processing': 'Processing',
 	'downloading': 'Downloading',
 	'temp_frames_not_found': 'Temporary frames not found',

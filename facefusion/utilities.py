@@ -237,3 +237,7 @@ def get_device(execution_providers : List[str]) -> str:
 	if 'CoreMLExecutionProvider' in execution_providers:
 		return 'mps'
 	return 'cpu'
+
+
+def update_status(message : str, scope : str = 'FACEFUSION.CORE') -> None:
+	print('[' + scope + '] ' + message)

@@ -60,7 +60,7 @@ def listen() -> None:
 			getattr(source_image, method)(stop, cancels = start_event)
 
 
-def start(mode: WebcamMode, resolution: str, fps: float) -> Generator[Frame, None, None]:
+def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
 	facefusion.globals.face_recognition = 'many'
 	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
 	stream = None
@@ -68,20 +68,20 @@ def start(mode: WebcamMode, resolution: str, fps: float) -> Generator[Frame, Non
 		stream = open_stream(mode, resolution, fps) # type: ignore[arg-type]
 	capture = capture_webcam(resolution, fps)
 	if capture.isOpened():
-		for capture_frame in multi_process_capture(source_face, capture):
+		for capture_frame in multi_process_capture(source_face, capture, fps):
 			if stream is not None:
 				stream.stdin.write(capture_frame.tobytes())
 			yield normalize_frame_color(capture_frame)
 
 
-def multi_process_capture(source_face: Face, capture : cv2.VideoCapture) -> Generator[Frame, None, None]:
+def multi_process_capture(source_face : Face, capture : cv2.VideoCapture, fps : float) -> Generator[Frame, None, None]:
 	progress = tqdm(desc = wording.get('processing'), unit = 'frame', dynamic_ncols = True)
 	with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 		futures = []
 		deque_capture_frames : Deque[Frame] = deque()
 		while True:
 			_, capture_frame = capture.read()
-			if predict_stream(capture_frame):
+			if predict_stream(capture_frame, fps):
 				return
 			future = executor.submit(process_stream_frame, source_face, capture_frame)
 			futures.append(future)

@@ -8,10 +8,10 @@ from realesrgan import RealESRGANer
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
-from facefusion.core import update_status
 from facefusion.face_analyser import clear_face_analyser
+from facefusion.predictor import clear_predictor
 from facefusion.typing import Frame, Face, Update_Process, ProcessMode, ModelValue, OptionsWithModel
-from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done, get_device
+from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done, get_device, update_status
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
@@ -124,6 +124,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	clear_frame_processor()
 	clear_face_analyser()
+	clear_predictor()
 	read_static_image.cache_clear()
 
 

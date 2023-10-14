@@ -9,15 +9,14 @@ import warnings
 import platform
 import shutil
 import onnxruntime
-import tensorflow
 from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
 import facefusion.globals
-from facefusion import metadata, wording
+from facefusion import metadata, predictor, wording
 from facefusion.predictor import predict_image, predict_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
-from facefusion.utilities import is_image, is_video, detect_fps, compress_image, merge_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, list_module_names, encode_execution_providers, decode_execution_providers, normalize_output_path
+from facefusion.utilities import is_image, is_video, detect_fps, compress_image, merge_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, list_module_names, encode_execution_providers, decode_execution_providers, normalize_output_path, update_status
 
 warnings.filterwarnings('ignore', category = FutureWarning, module = 'insightface')
 warnings.filterwarnings('ignore', category = UserWarning, module = 'torchvision')
@@ -125,7 +124,7 @@ def apply_args(program : ArgumentParser) -> None:
 def run(program : ArgumentParser) -> None:
 	apply_args(program)
 	limit_resources()
-	if not pre_check():
+	if not pre_check() or not predictor.pre_check():
 		return
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_check():
@@ -148,14 +147,6 @@ def destroy() -> None:
 
 
 def limit_resources() -> None:
-	# prevent tensorflow memory leak
-	gpus = tensorflow.config.experimental.list_physical_devices('GPU')
-	for gpu in gpus:
-		tensorflow.config.experimental.set_virtual_device_configuration(gpu,
-		[
-			tensorflow.config.experimental.VirtualDeviceConfiguration(memory_limit = 512)
-		])
-	# limit memory usage
 	if facefusion.globals.max_memory:
 		memory = facefusion.globals.max_memory * 1024 ** 3
 		if platform.system().lower() == 'darwin':
@@ -210,7 +201,7 @@ def process_image() -> None:
 
 
 def process_video() -> None:
-	if predict_video(facefusion.globals.target_path):
+	if predict_video(facefusion.globals.target_path, facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
 		return
 	fps = detect_fps(facefusion.globals.target_path) if facefusion.globals.keep_fps else 25.0
 	# create temp
@@ -251,7 +242,3 @@ def process_video() -> None:
 		update_status(wording.get('processing_video_succeed'))
 	else:
 		update_status(wording.get('processing_video_failed'))
-
-
-def update_status(message : str, scope : str = 'FACEFUSION.CORE') -> None:
-	print('[' + scope + '] ' + message)

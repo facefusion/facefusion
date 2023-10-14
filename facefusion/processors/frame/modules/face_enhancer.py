@@ -7,16 +7,17 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.core import update_status
 from facefusion.face_analyser import get_many_faces, clear_face_analyser
 from facefusion.face_helper import warp_face, paste_back
+from facefusion.predictor import clear_predictor
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
-from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done
+from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done, update_status
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
+THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_ENHANCER'
 MODELS : Dict[str, ModelValue] =\
@@ -123,6 +124,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	clear_frame_processor()
 	clear_face_analyser()
+	clear_predictor()
 	read_static_image.cache_clear()
 
 
@@ -136,7 +138,8 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 		if frame_processor_input.name == 'weight':
 			frame_processor_inputs[frame_processor_input.name] = numpy.array([ 1 ], dtype = numpy.double)
-	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
+	with THREAD_SEMAPHORE:
+		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
 	paste_frame = paste_back(temp_frame, crop_frame, affine_matrix)
 	temp_frame = blend_frame(temp_frame, paste_frame)
