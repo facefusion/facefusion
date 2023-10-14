@@ -22,7 +22,6 @@ from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
 MODEL_MATRIX = None
-THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_SWAPPER'
 MODELS : Dict[str, ModelValue] =\
@@ -141,16 +140,16 @@ def post_process() -> None:
 
 def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
 	frame_processor = get_frame_processor()
+	source_face = prepare_source_face(source_face)
 	crop_frame, affine_matrix = warp_face(target_face, temp_frame, 'arcface', (128, 128))
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
+		if frame_processor_input.name == 'source':
+			frame_processor_inputs[frame_processor_input.name] = source_face
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
-		if frame_processor_input.name == 'source':
-			frame_processor_inputs[frame_processor_input.name] = prepare_source_face(source_face)
-	with THREAD_SEMAPHORE:
-		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
+	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
 	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix)
 	return temp_frame
