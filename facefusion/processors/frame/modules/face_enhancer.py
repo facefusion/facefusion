@@ -6,6 +6,7 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
+import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
 from facefusion.face_analyser import get_many_faces, clear_face_analyser
 from facefusion.face_helper import warp_face, paste_back
@@ -191,4 +192,4 @@ def process_image(source_path : str, target_path : str, output_path : str) -> No
 
 
 def process_video(source_path : str, temp_frame_paths : List[str]) -> None:
-	facefusion.processors.frame.core.multi_process_frames(None, temp_frame_paths, process_frames)
+	frame_processors.multi_process_frames(None, temp_frame_paths, process_frames)

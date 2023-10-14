@@ -17,7 +17,7 @@ PREDICTOR = None
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.PREDICTOR'
 MODEL_URL = 'https://github.com/facefusion/facefusion-assets/releases/download/models/open_nsfw.onnx'
-MODEL_PATH = resolve_relative_path('../.assets/models/_open_nsfw.onnx')
+MODEL_PATH = resolve_relative_path('../.assets/models/open_nsfw.onnx')
 MAX_PROBABILITY = 0.80
 STREAM_COUNTER = 0
 
