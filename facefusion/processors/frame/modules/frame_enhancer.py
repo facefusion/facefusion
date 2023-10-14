@@ -74,7 +74,7 @@ def get_options(key : Literal[ 'model' ]) -> Any:
 	global OPTIONS
 
 	if OPTIONS is None:
-		OPTIONS = \
+		OPTIONS =\
 		{
 			'model': MODELS[frame_processors_globals.frame_enhancer_model]
 		}

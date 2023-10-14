@@ -1,13 +1,13 @@
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Sequence
 
 import cv2
 import numpy
 
 from facefusion.typing import Face, Frame, Matrix, Template
 
-TEMPLATES : Dict[str, numpy.array] =\
+TEMPLATES : Dict[Template, numpy.array] =\
 {
-	'arface': numpy.array(
+	'arcface': numpy.array(
 	[
 		[ 38.2946, 51.6963 ],
 		[ 73.5318, 51.5014 ],
@@ -26,9 +26,9 @@ TEMPLATES : Dict[str, numpy.array] =\
 }
 
 
-def warp_face(target_face : Face, temp_frame : Frame, template : Template) -> Tuple[Frame, Matrix]:
+def warp_face(target_face : Face, temp_frame : Frame, template : Template, size = cv2.typing.Size) -> Tuple[Frame, Matrix]:
 	affine_matrix = cv2.estimateAffinePartial2D(target_face.kps, TEMPLATES[template], method = cv2.LMEDS)[0]
-	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, (512, 512))
+	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, size)
 	return crop_frame, affine_matrix
 
 

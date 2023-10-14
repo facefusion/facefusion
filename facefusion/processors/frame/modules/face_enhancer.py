@@ -129,7 +129,7 @@ def post_process() -> None:
 
 def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	frame_processor = get_frame_processor()
-	crop_frame, affine_matrix = warp_face(target_face, temp_frame, 'ffhq')
+	crop_frame, affine_matrix = warp_face(target_face, temp_frame, 'ffhq', (512, 512))
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
