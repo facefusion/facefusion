@@ -29,12 +29,16 @@ MODELS : Dict[str, ModelValue] =\
 	'inswapper_128':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
-		'path': resolve_relative_path('../.assets/models/inswapper_128.onnx')
+		'path': resolve_relative_path('../.assets/models/inswapper_128.onnx'),
+		'template': 'arcface',
+		'size': (128, 128)
 	},
 	'inswapper_128_fp16':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
-		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx')
+		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx'),
+		'template': 'arcface',
+		'size': (128, 128)
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -141,8 +145,10 @@ def post_process() -> None:
 
 def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
 	frame_processor = get_frame_processor()
+	model_template = get_options('model').get('template')
+	model_size = get_options('model').get('size')
 	source_face = prepare_source_face(source_face)
-	crop_frame, affine_matrix = warp_face(target_face, temp_frame, 'arcface', (128, 128))
+	crop_frame, affine_matrix = warp_face(target_face, temp_frame, model_template, model_size)
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():

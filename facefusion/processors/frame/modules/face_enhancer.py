@@ -26,27 +26,37 @@ MODELS : Dict[str, ModelValue] =\
 	'codeformer':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/codeformer.onnx',
-		'path': resolve_relative_path('../.assets/models/codeformer.onnx')
+		'path': resolve_relative_path('../.assets/models/codeformer.onnx'),
+		'template': 'ffhq',
+		'size': (512, 512)
 	},
 	'gfpgan_1.2':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.2.onnx',
-		'path': resolve_relative_path('../.assets/models/GFPGANv1.2.onnx')
+		'path': resolve_relative_path('../.assets/models/GFPGANv1.2.onnx'),
+		'template': 'ffhq',
+		'size': (512, 512)
 	},
 	'gfpgan_1.3':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.3.onnx',
-		'path': resolve_relative_path('../.assets/models/GFPGANv1.3.onnx')
+		'path': resolve_relative_path('../.assets/models/GFPGANv1.3.onnx'),
+		'template': 'ffhq',
+		'size': (512, 512)
 	},
 	'gfpgan_1.4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.4.onnx',
-		'path': resolve_relative_path('../.assets/models/GFPGANv1.4.onnx')
+		'path': resolve_relative_path('../.assets/models/GFPGANv1.4.onnx'),
+		'template': 'ffhq',
+		'size': (512, 512)
 	},
 	'gpen_bfr_512':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GPEN-BFR-512.onnx',
-		'path': resolve_relative_path('../.assets/models/GPEN-BFR-512.onnx')
+		'path': resolve_relative_path('../.assets/models/GPEN-BFR-512.onnx'),
+		'template': 'ffhq',
+		'size': (512, 512)
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -131,7 +141,9 @@ def post_process() -> None:
 
 def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	frame_processor = get_frame_processor()
-	crop_frame, affine_matrix = warp_face(target_face, temp_frame, 'ffhq', (512, 512))
+	model_template = get_options('model').get('template')
+	model_size = get_options('model').get('size')
+	crop_frame, affine_matrix = warp_face(target_face, temp_frame, model_template, model_size)
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
