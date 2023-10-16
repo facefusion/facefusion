@@ -61,11 +61,16 @@ def predict_stream(frame : Frame, fps : float) -> bool:
 	return False
 
 
+def prepare_frame(frame : Frame) -> Frame:
+	frame = cv2.resize(frame, (224, 224)).astype(numpy.float32)
+	frame -= numpy.array([ 104, 117, 123 ]).astype(numpy.float32)
+	frame = numpy.expand_dims(frame, axis = 0)
+	return frame
+
+
 def predict_frame(frame : Frame) -> bool:
 	predictor = get_predictor()
-	frame = cv2.resize(frame, (224, 224)).astype(numpy.float32)
-	frame -= numpy.array([ 104, 117, 123 ], dtype = numpy.float32)
-	frame = numpy.expand_dims(frame, axis = 0)
+	frame = prepare_frame(frame)
 	probability = predictor.run(None,
 	{
 		'input:0': frame
