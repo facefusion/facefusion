@@ -2,6 +2,7 @@ from typing import Any, Literal, Callable, List, TypedDict, Dict
 from insightface.app.common import Face
 import numpy
 
+Kps = numpy.ndarray[Any, Any]
 Face = Face
 Frame = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]

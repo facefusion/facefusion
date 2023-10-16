@@ -143,7 +143,7 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	frame_processor = get_frame_processor()
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
-	crop_frame, affine_matrix = warp_face(target_face, temp_frame, model_template, model_size)
+	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():

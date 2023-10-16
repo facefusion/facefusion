@@ -1,7 +1,6 @@
 from typing import Any, List, Dict, Literal, Optional
 from argparse import ArgumentParser
 import threading
-
 import numpy
 import onnx
 import onnxruntime
@@ -148,7 +147,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
 	source_face = prepare_source_face(source_face)
-	crop_frame, affine_matrix = warp_face(target_face, temp_frame, model_template, model_size)
+	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():

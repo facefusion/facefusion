@@ -4,7 +4,7 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.typing import Face, Frame, Matrix, Template
+from facefusion.typing import Frame, Kps, Matrix, Template
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -27,8 +27,8 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 }
 
 
-def warp_face(target_face : Face, temp_frame : Frame, template : Template, size : Size) -> Tuple[Frame, Matrix]:
-	affine_matrix = cv2.estimateAffinePartial2D(target_face.kps, TEMPLATES[template], method = cv2.LMEDS)[0]
+def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -> Tuple[Frame, Matrix]:
+	affine_matrix = cv2.estimateAffinePartial2D(kps, TEMPLATES[template], method = cv2.LMEDS)[0]
 	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, size)
 	return crop_frame, affine_matrix
 
