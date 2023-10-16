@@ -10,7 +10,7 @@ import shutil
 import ssl
 import subprocess
 import tempfile
-import urllib
+import urllib.request
 import onnxruntime
 
 import facefusion.globals
@@ -198,7 +198,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 @lru_cache(maxsize = None)
 def get_download_size(url : str) -> int:
 	try:
-		response = urllib.request.urlopen(url) # type: ignore[attr-defined]
+		response = urllib.request.urlopen(url)
 		return int(response.getheader('Content-Length'))
 	except (OSError, ValueError):
 		return 0
