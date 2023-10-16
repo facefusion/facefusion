@@ -1,14 +1,35 @@
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Dict
 import threading
-import insightface
+import dlib
 import numpy
+import onnxruntime
 
 import facefusion.globals
 from facefusion.face_cache import get_faces_cache, set_faces_cache
-from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender
+from facefusion.face_helper import warp_face
+from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Kps, Embedding
+from facefusion.utilities import resolve_relative_path, conditional_download
 
 FACE_ANALYSER = None
 THREAD_LOCK : threading.Lock = threading.Lock()
+MODELS : Dict[str, ModelValue] =\
+{
+	'arcface':
+	{
+		'url': 'https://huggingface.co/bluefoxcreation/insightface-retinaface-arcface-model/resolve/main/w600k_r50.onnx',
+		'path': resolve_relative_path('../.assets/models/w600k_r50.onnx')
+	},
+	'shape_predictor':
+	{
+		'url': 'https://github.com/ageitgey/face_recognition_models/raw/master/face_recognition_models/models/shape_predictor_68_face_landmarks.dat',
+		'path': resolve_relative_path('../.assets/models/shape_predictor_68_face_landmarks.dat')
+	},
+	'face_recognition':
+	{
+		'url': 'https://github.com/ageitgey/face_recognition_models/raw/master/face_recognition_models/models/dlib_face_recognition_resnet_model_v1.dat',
+		'path': resolve_relative_path('../.assets/models/dlib_face_recognition_resnet_model_v1.dat')
+	}
+}
 
 
 def get_face_analyser() -> Any:
@@ -16,8 +37,12 @@ def get_face_analyser() -> Any:
 
 	with THREAD_LOCK:
 		if FACE_ANALYSER is None:
-			FACE_ANALYSER = insightface.app.FaceAnalysis(name = 'buffalo_l', providers = facefusion.globals.execution_providers)
-			FACE_ANALYSER.prepare(ctx_id = 0)
+			FACE_ANALYSER =\
+			{
+				'face_recognition_arcface': onnxruntime.InferenceSession(MODELS.get('arcface').get('path'), None, providers = facefusion.globals.execution_providers),
+				'frontal_face_detector': dlib.get_frontal_face_detector(),
+				'shape_predictor': dlib.shape_predictor(MODELS.get('shape_predictor').get('path')),
+			}
 	return FACE_ANALYSER
 
 
@@ -25,6 +50,62 @@ def clear_face_analyser() -> Any:
 	global FACE_ANALYSER
 
 	FACE_ANALYSER = None
+
+
+def pre_check() -> bool:
+	if not facefusion.globals.skip_download:
+		download_directory_path = resolve_relative_path('../.assets/models')
+		model_urls = [ MODELS.get('arcface').get('url'), MODELS.get('shape_predictor').get('url'), MODELS.get('face_recognition').get('url') ]
+		conditional_download(download_directory_path, model_urls)
+	return True
+
+
+def extract_faces(frame : Frame) -> List[Face]:
+	face_analyser = get_face_analyser()
+	frontal_face_detector = face_analyser.get('frontal_face_detector')
+	faces : List[Face] = []
+	for temp_rectangle in frontal_face_detector(frame):
+		bbox = numpy.array([ temp_rectangle.left(), temp_rectangle.top(), temp_rectangle.right(), temp_rectangle.bottom() ])
+		kps = create_kps(frame, temp_rectangle)
+		embedding = create_embedding(frame, kps)
+		normed_embedding = numpy.linalg.norm(embedding)
+		faces.append(Face(
+			bbox = bbox,
+			kps = kps,
+			embedding = embedding,
+			normed_embedding = normed_embedding,
+			gender = 0,
+			age = 0
+		))
+	return faces
+
+
+def create_kps(frame : Frame, temp_rectangle : dlib.rectangle) -> Kps:
+	face_analyser = get_face_analyser()
+	shape_predictor = face_analyser.get('shape_predictor')
+	shape = shape_predictor(frame, temp_rectangle)
+	left_eye = numpy.mean(shape.parts()[36:42], axis = 0)
+	right_eye = numpy.mean(shape.parts()[42:48], axis = 0)
+	nose = shape.part(30)
+	left_mouth = shape.part(48)
+	right_mouth = shape.part(54)
+	landmarks = [ left_eye, right_eye, nose, left_mouth, right_mouth ]
+	kps = numpy.array([[ landmark.x, landmark.y ] for landmark in landmarks ]).astype(numpy.float32)
+	return kps
+
+
+def create_embedding(temp_frame : Frame, kps : Kps) -> Embedding:
+	face_analyser = get_face_analyser()
+	face_recognition = face_analyser.get('face_recognition_arcface')
+	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface', (112, 112))
+	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
+	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
+	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
+	embedding = face_recognition.run(None,
+	{
+		face_recognition.get_inputs()[0].name: crop_frame
+	})[0]
+	return embedding.ravel()
 
 
 def get_one_face(frame : Frame, position : int = 0) -> Optional[Face]:
@@ -43,7 +124,7 @@ def get_many_faces(frame : Frame) -> List[Face]:
 		if faces_cache:
 			faces = faces_cache
 		else:
-			faces = get_face_analyser().get(frame)
+			faces = extract_faces(frame)
 			set_faces_cache(frame, faces)
 		if facefusion.globals.face_analyser_direction:
 			faces = sort_by_direction(faces, facefusion.globals.face_analyser_direction)

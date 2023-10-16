@@ -1,9 +1,11 @@
+from collections import namedtuple
 from typing import Any, Literal, Callable, List, TypedDict, Dict
-from insightface.app.common import Face
 import numpy
 
+Bbox = numpy.ndarray[Any, Any]
 Kps = numpy.ndarray[Any, Any]
-Face = Face
+Embedding = numpy.ndarray[Any, Any]
+Face = namedtuple('Face', [ 'bbox', 'kps', 'embedding', 'normed_embedding', 'gender', 'age' ])
 Frame = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
 

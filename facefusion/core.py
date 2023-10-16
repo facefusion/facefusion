@@ -13,7 +13,7 @@ from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
 import facefusion.globals
-from facefusion import metadata, predictor, wording
+from facefusion import face_analyser, predictor, metadata, wording
 from facefusion.predictor import predict_image, predict_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.utilities import is_image, is_video, detect_fps, compress_image, merge_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, list_module_names, encode_execution_providers, decode_execution_providers, normalize_output_path, update_status
@@ -124,7 +124,7 @@ def apply_args(program : ArgumentParser) -> None:
 def run(program : ArgumentParser) -> None:
 	apply_args(program)
 	limit_resources()
-	if not pre_check() or not predictor.pre_check():
+	if not pre_check() or not predictor.pre_check() or not face_analyser.pre_check():
 		return
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_check():
