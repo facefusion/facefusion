@@ -90,7 +90,7 @@ def predict_video(video_path : str, start_frame : int, end_frame : int) -> bool:
 	video_frame_total = count_video_frame_total(video_path)
 	fps = detect_fps(video_path)
 	frame_range = range(start_frame or 0, end_frame or video_frame_total)
-	rate = 0
+	rate = 0.0
 	counter = 0
 	with tqdm(total = len(frame_range), desc = wording.get('analysing'), unit = 'frame') as progress:
 		for frame_number in frame_range:
