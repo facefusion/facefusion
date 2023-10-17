@@ -25,6 +25,7 @@ MODELS : Dict[str, ModelValue] =\
 	}
 }
 MAX_PROBABILITY = 0.80
+MAX_MATCHES = 5
 STREAM_COUNTER = 0
 
 
@@ -89,9 +90,13 @@ def predict_video(video_path : str, start_frame : int, end_frame : int) -> bool:
 	video_frame_total = count_video_frame_total(video_path)
 	fps = detect_fps(video_path)
 	frame_range = range(start_frame or 0, end_frame or video_frame_total)
-	for frame_number in tqdm(frame_range, desc = wording.get('analysing')):
-		if frame_number % int(fps) == 0:
-			frame = get_video_frame(video_path, frame_number)
-			if predict_frame(frame):
-				return True
-	return False
+	matches = 0
+	with tqdm(total = len(frame_range), desc = wording.get('analysing'), unit = 'frame') as progress:
+		for frame_number in frame_range:
+			if frame_number % int(fps) == 0:
+				frame = get_video_frame(video_path, frame_number)
+				if predict_frame(frame):
+					matches += 1
+			progress.update()
+			progress.set_postfix(matches = matches)
+	return matches > MAX_MATCHES
