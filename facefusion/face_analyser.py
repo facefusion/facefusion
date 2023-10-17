@@ -7,7 +7,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion.face_cache import get_faces_cache, set_faces_cache
 from facefusion.face_helper import warp_face
-from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Kps, Embedding
+from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Kps, Embedding, Bbox
 from facefusion.utilities import resolve_relative_path, conditional_download
 
 FACE_ANALYSER = None
@@ -64,20 +64,25 @@ def extract_faces(frame : Frame) -> List[Face]:
 	face_analyser = get_face_analyser()
 	frontal_face_detector = face_analyser.get('frontal_face_detector')
 	faces : List[Face] = []
-	for temp_rectangle in frontal_face_detector(frame):
-		bbox = numpy.array([ temp_rectangle.left(), temp_rectangle.top(), temp_rectangle.right(), temp_rectangle.bottom() ])
-		kps = create_kps(frame, temp_rectangle)
-		embedding = create_embedding(frame, kps)
-		normed_embedding = numpy.linalg.norm(embedding)
-		faces.append(Face(
-			bbox = bbox,
-			kps = kps,
-			embedding = embedding,
-			normed_embedding = normed_embedding,
-			gender = 0,
-			age = 0
-		))
+	if frame.any():
+		for temp_rectangle in frontal_face_detector(frame):
+			bbox = create_bbox(temp_rectangle)
+			kps = create_kps(frame, temp_rectangle)
+			embedding = create_embedding(frame, kps)
+			normed_embedding = numpy.linalg.norm(embedding)
+			faces.append(Face(
+				bbox = bbox,
+				kps = kps,
+				embedding = embedding,
+				normed_embedding = normed_embedding,
+				gender = 0,
+				age = 0
+			))
 	return faces
+
+
+def create_bbox(temp_rectangle : dlib.rectangle) -> Bbox:
+	return numpy.array([ temp_rectangle.left(), temp_rectangle.top(), temp_rectangle.right(), temp_rectangle.bottom() ])
 
 
 def create_kps(frame : Frame, temp_rectangle : dlib.rectangle) -> Kps:
