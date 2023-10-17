@@ -1,4 +1,3 @@
-dlib==19.24.2
 basicsr==1.4.2
 gradio==3.47.1
 numpy==1.24.3
