@@ -60,6 +60,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 	faces: List[Face] = []
 	height, width, _ = frame.shape
 	face_detector.setScoreThreshold(0.5)
+	face_detector.setTopK(100)
 	face_detector.setInputSize((width, height))
 	with THREAD_SEMAPHORE:
 		_, detections = face_detector.detect(frame)
@@ -67,11 +68,13 @@ def extract_faces(frame : Frame) -> List[Face]:
 		for detection in detections:
 			bbox = detection[0:4]
 			kps = detection[4:14].reshape((5, 2))
+			score = detection[14]
 			embedding = create_embedding(frame, kps)
 			normed_embedding = numpy.linalg.norm(embedding) / 3
 			faces.append(Face(
 				bbox = bbox,
 				kps = kps,
+				score = score,
 				embedding = embedding,
 				normed_embedding = normed_embedding,
 				gender = 0,
