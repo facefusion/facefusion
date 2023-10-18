@@ -68,7 +68,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 			bbox = detection[0:4]
 			kps = detection[4:14].reshape((5, 2))
 			embedding = create_embedding(frame, kps)
-			normed_embedding = numpy.linalg.norm(embedding)
+			normed_embedding = numpy.linalg.norm(embedding) / 3
 			faces.append(Face(
 				bbox = bbox,
 				kps = kps,
