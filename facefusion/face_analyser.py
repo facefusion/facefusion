@@ -50,7 +50,7 @@ def clear_face_analyser() -> Any:
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		model_urls = [ MODELS.get('face_recognition_arcface').get('url'), MODELS.get('face_recognition_arcface').get('url') ]
+		model_urls = [ MODELS.get('face_recognition_arcface').get('url'), MODELS.get('face_detection_yunet').get('url') ]
 		conditional_download(download_directory_path, model_urls)
 	return True
 
