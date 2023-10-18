@@ -6,7 +6,7 @@ import numpy
 import facefusion.choices
 import facefusion.globals
 from facefusion import wording
-from facefusion.vision import get_video_frame, normalize_frame_color, read_static_image
+from facefusion.vision import get_video_frame, read_static_image
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_reference import clear_face_reference
 from facefusion.typing import Frame, FaceRecognition
