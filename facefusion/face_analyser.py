@@ -22,7 +22,7 @@ MODELS : Dict[str, ModelValue] =\
 	},
 	'face_detection_yunet':
 	{
-		'url': 'https://github.com/opencv/opencv_zoo/blob/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx',
+		'url': 'https://github.com/opencv/opencv_zoo/blob/resolve/models/face_detection_yunet/face_detection_yunet_2023mar.onnx',
 		'path': resolve_relative_path('../.assets/models/face_detection_yunet_2023mar.onnx')
 	}
 }
