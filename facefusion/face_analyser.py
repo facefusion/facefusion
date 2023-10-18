@@ -34,7 +34,7 @@ def get_face_analyser() -> Any:
 		if FACE_ANALYSER is None:
 			FACE_ANALYSER =\
 			{
-				'face_detector': cv2.FaceDetectorYN.create(MODELS.get('face_detection_yunet').get('path'), None, (320, 320)),
+				'face_detector': cv2.FaceDetectorYN.create(MODELS.get('face_detection_yunet').get('path'), None, (0, 0)),
 				'face_recognition': onnxruntime.InferenceSession(MODELS.get('face_recognition_arcface').get('path'), None, providers = facefusion.globals.execution_providers)
 			}
 	return FACE_ANALYSER
@@ -49,7 +49,7 @@ def clear_face_analyser() -> Any:
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		model_urls = [ MODELS.get('arcface').get('url'), MODELS.get('shape_predictor').get('url'), MODELS.get('face_recognition').get('url') ]
+		model_urls = [ MODELS.get('face_recognition_arcface').get('url'), MODELS.get('face_recognition_arcface').get('url') ]
 		conditional_download(download_directory_path, model_urls)
 	return True
 
@@ -58,7 +58,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 	face_detector = get_face_analyser().get('face_detector')
 	faces: List[Face] = []
 	height, width, _ = frame.shape
-	face_detector.setScoreThreshold(0.85)
+	face_detector.setScoreThreshold(0.5)
 	face_detector.setInputSize((width, height))
 	_, detections = face_detector.detect(frame)
 	if detections.any():
