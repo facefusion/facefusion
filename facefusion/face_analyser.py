@@ -11,6 +11,7 @@ from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAg
 from facefusion.utilities import resolve_relative_path, conditional_download
 
 FACE_ANALYSER = None
+THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : Dict[str, ModelValue] =\
 {
@@ -35,7 +36,7 @@ def get_face_analyser() -> Any:
 			FACE_ANALYSER =\
 			{
 				'face_detector': cv2.FaceDetectorYN.create(MODELS.get('face_detection_yunet').get('path'), None, (0, 0)),
-				'face_recognition': onnxruntime.InferenceSession(MODELS.get('face_recognition_arcface').get('path'), None, providers = facefusion.globals.execution_providers)
+				'face_recognition': onnxruntime.InferenceSession(MODELS.get('face_recognition_arcface').get('path'), providers = facefusion.globals.execution_providers)
 			}
 	return FACE_ANALYSER
 
@@ -60,7 +61,8 @@ def extract_faces(frame : Frame) -> List[Face]:
 	height, width, _ = frame.shape
 	face_detector.setScoreThreshold(0.5)
 	face_detector.setInputSize((width, height))
-	_, detections = face_detector.detect(frame)
+	with THREAD_SEMAPHORE:
+		_, detections = face_detector.detect(frame)
 	if detections.any():
 		for detection in detections:
 			bbox = detection[0:4]
