@@ -66,7 +66,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 		_, detections = face_detector.detect(frame)
 	if detections.any():
 		for detection in detections:
-			bbox = detection[0:4]
+			bbox = [ detection[0:4][0], detection[0:4][1], detection[0:4][0] + detection[0:4][2], detection[0:4][1] + detection[0:4][3] ]
 			kps = detection[4:14].reshape((5, 2))
 			score = detection[14]
 			embedding = create_embedding(frame, kps)

@@ -1,12 +1,11 @@
 from typing import List, Optional, Tuple, Any, Dict
 
 import gradio
-import numpy
 
 import facefusion.choices
 import facefusion.globals
 from facefusion import wording
-from facefusion.vision import get_video_frame, read_static_image
+from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_reference import clear_face_reference
 from facefusion.typing import Frame, FaceRecognition
@@ -124,17 +123,15 @@ def extract_gallery_frames(reference_frame : Frame) -> List[Frame]:
 	crop_frames = []
 	faces = get_many_faces(reference_frame)
 	for face in faces:
-		#start_x, start_y, end_x, end_y = map(int, face.bbox)
-		#padding_x = int((end_x - start_x) * 0.25)
-		#padding_y = int((end_y - start_y) * 0.25)
-		#start_x = max(0, start_x - padding_x)
-		#start_y = max(0, start_y - padding_y)
-		#end_x = max(0, end_x + padding_x)
-		#end_y = max(0, end_y + padding_y)
-		#crop_frame = reference_frame[start_y:end_y, start_x:end_x]
-		#crop_frame = normalize_frame_color(crop_frame)
-
-		crop_frame = numpy.zeros((200, 200, 3), dtype = numpy.uint8)
+		start_x, start_y, end_x, end_y = map(int, face.bbox)
+		padding_x = int((end_x - start_x) * 0.25)
+		padding_y = int((end_y - start_y) * 0.25)
+		start_x = max(0, start_x - padding_x)
+		start_y = max(0, start_y - padding_y)
+		end_x = max(0, end_x + padding_x)
+		end_y = max(0, end_y + padding_y)
+		crop_frame = reference_frame[start_y:end_y, start_x:end_x]
+		crop_frame = normalize_frame_color(crop_frame)
 		crop_frames.append(crop_frame)
 	return crop_frames
 
