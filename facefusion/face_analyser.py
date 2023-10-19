@@ -70,7 +70,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 			kps = detection[4:14].reshape((5, 2))
 			score = detection[14]
 			embedding = create_embedding(frame, kps)
-			normed_embedding = numpy.linalg.norm(embedding) / 3
+			normed_embedding = embedding / numpy.linalg.norm(embedding)
 			faces.append(Face(
 				bbox = bbox,
 				kps = kps,
@@ -132,7 +132,7 @@ def find_similar_faces(frame : Frame, reference_face : Face, face_distance : flo
 	if many_faces:
 		for face in many_faces:
 			if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
-				current_face_distance = numpy.sum(numpy.square(face.normed_embedding - reference_face.normed_embedding))
+				current_face_distance = 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
 				if current_face_distance < face_distance:
 					similar_faces.append(face)
 	return similar_faces
