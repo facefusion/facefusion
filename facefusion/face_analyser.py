@@ -1,4 +1,4 @@
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional, List, Dict, Tuple
 import threading
 import cv2
 import numpy
@@ -24,6 +24,11 @@ MODELS : Dict[str, ModelValue] =\
 	{
 		'url': 'https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx',
 		'path': resolve_relative_path('../.assets/models/face_detection_yunet_2023mar.onnx')
+	},
+	'gender_age':
+	{
+		'url': 'https://huggingface.co/facefusion/buffalo_l/resolve/main/genderage.onnx',
+		'path': resolve_relative_path('../.assets/models/genderage.onnx')
 	}
 }
 
@@ -36,7 +41,8 @@ def get_face_analyser() -> Any:
 			FACE_ANALYSER =\
 			{
 				'face_detector': cv2.FaceDetectorYN.create(MODELS.get('face_detection_yunet').get('path'), None, (0, 0)),
-				'face_recognition': onnxruntime.InferenceSession(MODELS.get('face_recognition_arcface').get('path'), providers = facefusion.globals.execution_providers)
+				'face_recognition': onnxruntime.InferenceSession(MODELS.get('face_recognition_arcface').get('path'), providers = facefusion.globals.execution_providers),
+				'gender_age': onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = facefusion.globals.execution_providers),
 			}
 	return FACE_ANALYSER
 
@@ -50,7 +56,7 @@ def clear_face_analyser() -> Any:
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		model_urls = [ MODELS.get('face_recognition_arcface').get('url'), MODELS.get('face_detection_yunet').get('url') ]
+		model_urls = [ MODELS.get('face_recognition_arcface').get('url'), MODELS.get('face_detection_yunet').get('url'), MODELS.get('gender_age').get('url') ]
 		conditional_download(download_directory_path, model_urls)
 	return True
 
@@ -69,21 +75,22 @@ def extract_faces(frame : Frame) -> List[Face]:
 			bbox = [ detection[0:4][0], detection[0:4][1], detection[0:4][0] + detection[0:4][2], detection[0:4][1] + detection[0:4][3] ]
 			kps = detection[4:14].reshape((5, 2))
 			score = detection[14]
-			embedding = create_embedding(frame, kps)
+			embedding = calc_embedding(frame, kps)
 			normed_embedding = embedding / numpy.linalg.norm(embedding)
+			gender, age = detect_gender_age(frame, kps)
 			faces.append(Face(
 				bbox = bbox,
 				kps = kps,
 				score = score,
 				embedding = embedding,
 				normed_embedding = normed_embedding,
-				gender = 0,
-				age = 0
+				gender = gender,
+				age = age
 			))
 	return faces
 
 
-def create_embedding(temp_frame : Frame, kps : Kps) -> Embedding:
+def calc_embedding(temp_frame : Frame, kps : Kps) -> Embedding:
 	face_recognition = get_face_analyser().get('face_recognition')
 	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface', (112, 112))
 	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
@@ -95,6 +102,19 @@ def create_embedding(temp_frame : Frame, kps : Kps) -> Embedding:
 	})[0]
 	embedding = embedding.ravel()
 	return embedding
+
+
+def detect_gender_age(frame : Frame, kps : Kps) -> Tuple[int, int]:
+	gender_age = get_face_analyser().get('gender_age')
+	crop_frame, affine_matrix = warp_face(frame, kps, 'arcface', (96, 96))
+	crop_frame = numpy.expand_dims(crop_frame, axis = 0).transpose(0, 3, 1, 2).astype(numpy.float32)
+	prediction = gender_age.run(None,
+	{
+		gender_age.get_inputs()[0].name: crop_frame
+	})[0][0]
+	gender = int(numpy.argmax(prediction[:2]))
+	age = int(numpy.round(prediction[2] * 100))
+	return gender, age
 
 
 def get_one_face(frame : Frame, position : int = 0) -> Optional[Face]:
