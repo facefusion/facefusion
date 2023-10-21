@@ -2,7 +2,6 @@ from typing import Tuple, Dict, Any
 
 import cv2
 import numpy
-import numpy as np
 from cv2.typing import Size
 
 from facefusion.typing import Frame, Kps, Matrix, Template
