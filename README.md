@@ -31,6 +31,8 @@ python run.py [options]
 
 options:
   -h, --help                                                                                       show this help message and exit
+  -p PORT, --port PORT                                                                             specify the port used for the web server. Default: 7860
+  -l, --listen                                                                                     listen a server, allowing other devices within your local network to access the server
   -s SOURCE_PATH, --source SOURCE_PATH                                                             select a source image
   -t TARGET_PATH, --target TARGET_PATH                                                             select a target image or video
   -o OUTPUT_PATH, --output OUTPUT_PATH                                                             specify the output file or directory

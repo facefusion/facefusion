@@ -27,10 +27,13 @@ def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 120), add_help = False)
 	# general
-	program.add_argument('-s', '--source', help = wording.get('source_help'), dest = 'source_path')
-	program.add_argument('-t', '--target', help = wording.get('target_help'), dest = 'target_path')
-	program.add_argument('-o', '--output', help = wording.get('output_help'), dest = 'output_path')
-	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
+	program.add_argument('-l', '--listen', help=wording.get('listen_help'), dest='listen', action='store_true')
+	program.add_argument('-p', '--port', help=wording.get('port_help'), dest='port', type=int, default=7860)
+	program.add_argument('-s', '--source', help=wording.get('source_help'), dest='source_path')
+	program.add_argument('-t', '--target', help=wording.get('target_help'), dest='target_path')
+	program.add_argument('-o', '--output', help=wording.get('output_help'), dest='output_path')
+	program.add_argument('-v', '--version', version=metadata.get('name') + ' ' + metadata.get('version'),
+						 action='version')
 	# misc
 	group_misc = program.add_argument_group('misc')
 	group_misc.add_argument('--skip-download', help = wording.get('skip_download_help'), dest = 'skip_download', action = 'store_true')
@@ -81,6 +84,8 @@ def cli() -> None:
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	# general
+	facefusion.globals.listen = args.listen
+	facefusion.globals.port = args.port
 	facefusion.globals.source_path = args.source_path
 	facefusion.globals.target_path = args.target_path
 	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, args.output_path)

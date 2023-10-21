@@ -6,6 +6,8 @@ from facefusion.typing import FaceRecognition, FaceAnalyserDirection, FaceAnalys
 source_path : Optional[str] = None
 target_path : Optional[str] = None
 output_path : Optional[str] = None
+listen : Optional[bool] = False
+port : Optional[int] = 7860
 # misc
 skip_download : Optional[bool] = None
 headless : Optional[bool] = None
