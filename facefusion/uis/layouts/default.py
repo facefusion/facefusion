@@ -73,4 +73,5 @@ def listen() -> None:
 
 
 def run(ui: gradio.Blocks) -> None:
-	ui.launch(show_api=False)
+	from facefusion import globals
+	server_name = '127.0.0.1' if not globals.listen else '0.0.0.0'

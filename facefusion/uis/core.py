@@ -65,7 +65,7 @@ def launch() -> None:
 
 	for ui_layout in facefusion.globals.ui_layouts:
 		ui_layout_module = load_ui_layout_module(ui_layout)
-		ui_layout_module.run(ui, port=facefusion.globals.port, listen=facefusion.globals.listen)
+		ui_layout_module.run(ui)
 
 
 def get_theme() -> gradio.Theme:
