@@ -1,6 +1,7 @@
 import gradio
 
-from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, webcam_options, source, webcam
+from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, \
+	execution_thread_count, webcam_options, source, webcam
 
 
 def pre_check() -> bool:
@@ -14,7 +15,7 @@ def pre_render() -> bool:
 def render() -> gradio.Blocks:
 	with gradio.Blocks() as layout:
 		with gradio.Row():
-			with gradio.Column(scale = 2):
+			with gradio.Column(scale=2):
 				with gradio.Blocks():
 					about.render()
 				with gradio.Blocks():
@@ -27,7 +28,7 @@ def render() -> gradio.Blocks:
 					webcam_options.render()
 				with gradio.Blocks():
 					source.render()
-			with gradio.Column(scale = 5):
+			with gradio.Column(scale=5):
 				with gradio.Blocks():
 					webcam.render()
 	return layout
@@ -42,5 +43,5 @@ def listen() -> None:
 	webcam.listen()
 
 
-def run(ui : gradio.Blocks) -> None:
-	ui.queue(concurrency_count = 2, api_open = False).launch(show_api = False)
+def run(ui: gradio.Blocks) -> None:
+	ui.queue(concurrency_count=2, api_open=False).launch(show_api=False)
