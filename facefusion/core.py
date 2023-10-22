@@ -40,15 +40,15 @@ def cli() -> None:
 	group_execution.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = 1)
 	group_execution.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), dest = 'execution_queue_count', type = int, default = 1)
 	group_execution.add_argument('--max-memory', help=wording.get('max_memory_help'), dest='max_memory', type = int)
-	# face recognition
-	group_face_recognition = program.add_argument_group('face recognition')
-	group_face_recognition.add_argument('--face-recognition', help = wording.get('face_recognition_help'), dest = 'face_recognition', default = 'reference', choices = facefusion.choices.face_recognitions)
-	group_face_recognition.add_argument('--face-analyser-direction', help = wording.get('face_analyser_direction_help'), dest = 'face_analyser_direction', default = 'left-right', choices = facefusion.choices.face_analyser_directions)
-	group_face_recognition.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), dest = 'face_analyser_age', choices = facefusion.choices.face_analyser_ages)
-	group_face_recognition.add_argument('--face-analyser-gender', help = wording.get('face_analyser_gender_help'), dest = 'face_analyser_gender', choices = facefusion.choices.face_analyser_genders)
-	group_face_recognition.add_argument('--reference-face-position', help = wording.get('reference_face_position_help'), dest = 'reference_face_position', type = int, default = 0)
-	group_face_recognition.add_argument('--reference-face-distance', help = wording.get('reference_face_distance_help'), dest = 'reference_face_distance', type = float, default = 0.6)
-	group_face_recognition.add_argument('--reference-frame-number', help = wording.get('reference_frame_number_help'), dest = 'reference_frame_number', type = int, default = 0)
+	# face analyser
+	group_face_analyser = program.add_argument_group('face recognition')
+	group_face_analyser.add_argument('--face-analyser-direction', help = wording.get('face_analyser_direction_help'), dest = 'face_analyser_direction', default = 'left-right', choices = facefusion.choices.face_analyser_directions)
+	group_face_analyser.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), dest = 'face_analyser_age', choices = facefusion.choices.face_analyser_ages)
+	group_face_analyser.add_argument('--face-analyser-gender', help = wording.get('face_analyser_gender_help'), dest = 'face_analyser_gender', choices = facefusion.choices.face_analyser_genders)
+	group_face_analyser.add_argument('--face-recognition', help = wording.get('face_recognition_help'), dest = 'face_recognition', default = 'reference', choices = facefusion.choices.face_recognitions)
+	group_face_analyser.add_argument('--reference-face-position', help = wording.get('reference_face_position_help'), dest = 'reference_face_position', type = int, default = 0)
+	group_face_analyser.add_argument('--reference-face-distance', help = wording.get('reference_face_distance_help'), dest = 'reference_face_distance', type = float, default = 0.6)
+	group_face_analyser.add_argument('--reference-frame-number', help = wording.get('reference_frame_number_help'), dest = 'reference_frame_number', type = int, default = 0)
 	# frame extraction
 	group_frame_extraction = program.add_argument_group('frame extraction')
 	group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), dest = 'trim_frame_start', type = int)
@@ -91,11 +91,11 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.execution_thread_count = args.execution_thread_count
 	facefusion.globals.execution_queue_count = args.execution_queue_count
 	facefusion.globals.max_memory = args.max_memory
-	# face recognition
-	facefusion.globals.face_recognition = args.face_recognition
+	# face analyser
 	facefusion.globals.face_analyser_direction = args.face_analyser_direction
 	facefusion.globals.face_analyser_age = args.face_analyser_age
 	facefusion.globals.face_analyser_gender = args.face_analyser_gender
+	facefusion.globals.face_recognition = args.face_recognition
 	facefusion.globals.reference_face_position = args.reference_face_position
 	facefusion.globals.reference_face_distance = args.reference_face_distance
 	facefusion.globals.reference_frame_number = args.reference_frame_number

@@ -14,11 +14,11 @@ execution_providers : List[str] = []
 execution_thread_count : Optional[int] = None
 execution_queue_count : Optional[int] = None
 max_memory : Optional[int] = None
-# face recognition
-face_recognition : Optional[FaceRecognition] = None
+# face analyser
 face_analyser_direction : Optional[FaceAnalyserDirection] = None
 face_analyser_age : Optional[FaceAnalyserAge] = None
 face_analyser_gender : Optional[FaceAnalyserGender] = None
+face_recognition : Optional[FaceRecognition] = None
 reference_face_position : Optional[int] = None
 reference_face_distance : Optional[float] = None
 reference_frame_number : Optional[int] = None
