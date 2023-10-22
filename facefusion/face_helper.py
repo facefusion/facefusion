@@ -33,7 +33,7 @@ def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -
 	return crop_frame, affine_matrix
 
 
-def paste_back(temp_frame: Frame, crop_frame: Frame, affine_matrix: Matrix) -> Frame:
+def paste_back(temp_frame : Frame, crop_frame : Frame, affine_matrix : Matrix) -> Frame:
 	inverse_affine_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_frame_height, temp_frame_width = temp_frame.shape[0:2]
 	crop_frame_height, crop_frame_width = crop_frame.shape[0:2]

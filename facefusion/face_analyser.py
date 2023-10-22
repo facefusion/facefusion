@@ -9,6 +9,7 @@ from facefusion.face_cache import get_faces_cache, set_faces_cache
 from facefusion.face_helper import warp_face
 from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Kps, Embedding
 from facefusion.utilities import resolve_relative_path, conditional_download
+from facefusion.vision import resize_frame_dimension
 
 FACE_ANALYSER = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -64,16 +65,26 @@ def pre_check() -> bool:
 def extract_faces(frame : Frame) -> List[Face]:
 	face_detector = get_face_analyser().get('face_detector')
 	faces: List[Face] = []
-	height, width, _ = frame.shape
+	temp_frame = resize_frame_dimension(frame, 640, 640)
+	temp_frame_height, temp_frame_width, _ = temp_frame.shape
+	frame_height, frame_width, _ = frame.shape
+	ratio_height = frame_height / temp_frame_height
+	ratio_width = frame_width / temp_frame_width
 	face_detector.setScoreThreshold(0.5)
 	face_detector.setTopK(100)
-	face_detector.setInputSize((width, height))
+	face_detector.setInputSize((temp_frame_width, temp_frame_height))
 	with THREAD_SEMAPHORE:
-		_, detections = face_detector.detect(frame)
+		_, detections = face_detector.detect(temp_frame)
 	if detections.any():
 		for detection in detections:
-			bbox = [ detection[0:4][0], detection[0:4][1], detection[0:4][0] + detection[0:4][2], detection[0:4][1] + detection[0:4][3] ]
-			kps = detection[4:14].reshape((5, 2))
+			bbox =\
+			[
+				detection[0:4][0] * ratio_width,
+				detection[0:4][1] * ratio_height,
+				(detection[0:4][0] + detection[0:4][2]) * ratio_width,
+				(detection[0:4][1] + detection[0:4][3]) * ratio_height
+			]
+			kps = (detection[4:14].reshape((5, 2)) * [[ ratio_width, ratio_height ]]).astype(int)
 			score = detection[14]
 			embedding = calc_embedding(frame, kps)
 			normed_embedding = embedding / numpy.linalg.norm(embedding)
