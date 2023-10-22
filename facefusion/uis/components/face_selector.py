@@ -5,7 +5,7 @@ import gradio
 import facefusion.choices
 import facefusion.globals
 from facefusion import wording
-from facefusion.vision import get_video_frame, normalize_frame_color, read_static_image
+from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_reference import clear_face_reference
 from facefusion.typing import Frame, FaceRecognition
@@ -47,9 +47,9 @@ def render() -> None:
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
 		label = wording.get('reference_face_distance_slider_label'),
 		value = facefusion.globals.reference_face_distance,
-		step = 0.05,
+		step = 0.025,
 		minimum = 0,
-		maximum = 3,
+		maximum = 1.5,
 		visible = 'reference' in facefusion.globals.face_recognition
 	)
 	register_ui_component('face_recognition_dropdown', FACE_RECOGNITION_DROPDOWN)
@@ -134,3 +134,4 @@ def extract_gallery_frames(reference_frame : Frame) -> List[Frame]:
 		crop_frame = normalize_frame_color(crop_frame)
 		crop_frames.append(crop_frame)
 	return crop_frames
+

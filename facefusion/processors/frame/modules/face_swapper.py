@@ -154,7 +154,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 		if frame_processor_input.name == 'source':
 			frame_processor_inputs[frame_processor_input.name] = source_face
 		if frame_processor_input.name == 'target':
-			frame_processor_inputs[frame_processor_input.name] = crop_frame
+			frame_processor_inputs[frame_processor_input.name] = crop_frame # type: ignore[assignment]
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
 	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix)

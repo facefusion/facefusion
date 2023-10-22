@@ -1,6 +1,5 @@
 basicsr==1.4.2
 gradio==3.47.1
-insightface==0.7.3
 numpy==1.24.3
 onnx==1.14.1
 onnxruntime==1.16.0
