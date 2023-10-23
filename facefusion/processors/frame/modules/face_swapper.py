@@ -30,21 +30,21 @@ MODELS : Dict[str, ModelValue] =\
 		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_1_block.onnx',
 		'path': resolve_relative_path('../.assets/models/ghost_unet_1_block.onnx'),
 		'template': 'ghost',
-		'size': (112, 244)
+		'size': (112, 256)
 	},
 	'ghost_unet_2_block':
 	{
 		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_2_block.onnx',
 		'path': resolve_relative_path('../.assets/models/ghost_unet_2_block.onnx'),
 		'template': 'ghost',
-		'size': (112, 244)
+		'size': (112, 256)
 	},
 	'ghost_unet_3_block':
 	{
 		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_3_block.onnx',
 		'path': resolve_relative_path('../.assets/models/ghost_unet_3_block.onnx'),
 		'template': 'ghost',
-		'size': (112, 244)
+		'size': (112, 256)
 	},
 	'inswapper_128':
 	{
@@ -210,15 +210,24 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 
 
 def prepare_crop_frame(crop_frame : Frame) -> Frame:
-	crop_frame = crop_frame / 255.0
-	crop_frame = crop_frame[:, :, ::-1]
-	crop_frame = numpy.expand_dims(crop_frame, axis = 0).transpose(0, 3, 1, 2).astype(numpy.float32)
+	model_template = get_options('model').get('template')
+	if model_template == 'ghost':
+		crop_frame = crop_frame / 127.5 - 1
+		crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
+	else:
+		crop_frame = crop_frame / 255.0
+		crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
+	crop_frame = numpy.expand_dims(crop_frame, axis = 0).astype(numpy.float32)
 	return crop_frame
 
 
 def normalize_crop_frame(crop_frame : Frame) -> Frame:
+	model_template = get_options('model').get('template')
 	crop_frame = crop_frame.transpose(1, 2, 0)
-	crop_frame = (crop_frame * 255.0).round()
+	if model_template == 'ghost':
+		crop_frame = crop_frame * 127.5 + 127.5
+	else:
+		crop_frame = (crop_frame * 255.0).round()
 	crop_frame = crop_frame.astype(numpy.uint8)[:, :, ::-1]
 	return crop_frame
 
