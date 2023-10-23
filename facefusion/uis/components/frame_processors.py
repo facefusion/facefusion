@@ -3,6 +3,7 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.face_analyser import clear_face_analyser
 from facefusion.processors.frame.core import load_frame_processor_module, clear_frame_processors_modules
 from facefusion.utilities import list_module_names
 from facefusion.uis.core import register_ui_component
@@ -27,6 +28,7 @@ def listen() -> None:
 
 def update_frame_processors(frame_processors : List[str]) -> gradio.CheckboxGroup:
 	facefusion.globals.frame_processors = frame_processors
+	clear_face_analyser()
 	clear_frame_processors_modules()
 	for frame_processor in frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)

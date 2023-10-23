@@ -10,6 +10,7 @@ from facefusion.face_helper import warp_face
 from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Kps, Embedding
 from facefusion.utilities import resolve_relative_path, conditional_download
 from facefusion.vision import resize_frame_dimension
+from facefusion.processors.frame import globals as frame_processors_globals
 
 FACE_ANALYSER = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -20,6 +21,11 @@ MODELS : Dict[str, ModelValue] =\
 	{
 		'url': 'https://huggingface.co/bluefoxcreation/insightface-retinaface-arcface-model/resolve/main/w600k_r50.onnx',
 		'path': resolve_relative_path('../.assets/models/w600k_r50.onnx')
+	},
+	'face_recognition_arcface_simswap':
+	{
+		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/simswap/simswap_arcface_backbone.onnx',
+		'path': resolve_relative_path('../.assets/models/simswap_arcface_backbone.onnx')
 	},
 	'face_detection_yunet':
 	{
@@ -39,10 +45,14 @@ def get_face_analyser() -> Any:
 
 	with THREAD_LOCK:
 		if FACE_ANALYSER is None:
+			if frame_processors_globals.face_swapper_model == 'inswapper_128' or frame_processors_globals.face_swapper_model == 'inswapper_128_fp16':
+				face_recognition_model_path = MODELS.get('face_recognition_arcface').get('path')
+			if frame_processors_globals.face_swapper_model == 'simswap_244' or frame_processors_globals.face_swapper_model == 'simswap_512_beta':
+				face_recognition_model_path = MODELS.get('face_recognition_arcface_simswap').get('path')
 			FACE_ANALYSER =\
 			{
 				'face_detector': cv2.FaceDetectorYN.create(MODELS.get('face_detection_yunet').get('path'), None, (0, 0)),
-				'face_recognition': onnxruntime.InferenceSession(MODELS.get('face_recognition_arcface').get('path'), providers = facefusion.globals.execution_providers),
+				'face_recognition': onnxruntime.InferenceSession(face_recognition_model_path, providers = facefusion.globals.execution_providers),
 				'gender_age': onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = facefusion.globals.execution_providers),
 			}
 	return FACE_ANALYSER
@@ -57,7 +67,13 @@ def clear_face_analyser() -> Any:
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		model_urls = [ MODELS.get('face_recognition_arcface').get('url'), MODELS.get('face_detection_yunet').get('url'), MODELS.get('gender_age').get('url') ]
+		model_urls =\
+		[
+			MODELS.get('face_recognition_arcface').get('url'),
+			MODELS.get('face_recognition_arcface_simswap').get('url'),
+			MODELS.get('face_detection_yunet').get('url'),
+			MODELS.get('gender_age').get('url')
+		]
 		conditional_download(download_directory_path, model_urls)
 	return True
 
