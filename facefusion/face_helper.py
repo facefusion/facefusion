@@ -66,8 +66,9 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 
 
 def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -> Tuple[Frame, Matrix]:
-	affine_matrix = cv2.estimateAffinePartial2D(kps, TEMPLATES[template], method = cv2.LMEDS)[0]
-	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, size)
+	normed_template = TEMPLATES.get(template) * size[1] / size[0]
+	affine_matrix = cv2.estimateAffinePartial2D(kps, normed_template, method = cv2.LMEDS)[0]
+	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, (size[1], size[1]))
 	return crop_frame, affine_matrix
 
 

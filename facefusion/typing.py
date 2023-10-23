@@ -12,7 +12,7 @@ Matrix = numpy.ndarray[Any, Any]
 Update_Process = Callable[[], None]
 Process_Frames = Callable[[str, List[str], Update_Process], None]
 
-Template = Literal[ 'arcface', 'ffhq' ]
+Template = Literal[ 'arcface', 'ghost', 'ffhq' ]
 ProcessMode = Literal[ 'output', 'preview', 'stream' ]
 FaceRecognition = Literal[ 'reference', 'many' ]
 FaceAnalyserDirection = Literal[ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small' ]

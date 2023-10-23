@@ -30,21 +30,21 @@ MODELS : Dict[str, ModelValue] =\
 		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_1_block.onnx',
 		'path': resolve_relative_path('../.assets/models/ghost_unet_1_block.onnx'),
 		'template': 'ghost',
-		'size': (224, 224)
+		'size': (112, 244)
 	},
 	'ghost_unet_2_block':
 	{
 		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_2_block.onnx',
 		'path': resolve_relative_path('../.assets/models/ghost_unet_2_block.onnx'),
 		'template': 'ghost',
-		'size': (224, 224)
+		'size': (112, 244)
 	},
 	'ghost_unet_3_block':
 	{
 		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_3_block.onnx',
 		'path': resolve_relative_path('../.assets/models/ghost_unet_3_block.onnx'),
 		'template': 'ghost',
-		'size': (224, 224)
+		'size': (112, 244)
 	},
 	'inswapper_128':
 	{
@@ -65,7 +65,7 @@ MODELS : Dict[str, ModelValue] =\
 		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/simswap/simswap.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap.onnx'),
 		'template': 'arcface',
-		'size': (224, 224)
+		'size': (112, 224)
 	},
 	'simswap_512_beta':
 	{
