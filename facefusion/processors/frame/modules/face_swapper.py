@@ -25,6 +25,27 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_SWAPPER'
 MODELS : Dict[str, ModelValue] =\
 {
+	'ghost_unet_1_block':
+	{
+		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_1_block.onnx',
+		'path': resolve_relative_path('../.assets/models/ghost_unet_1_block.onnx'),
+		'template': 'ghost',
+		'size': (224, 224)
+	},
+	'ghost_unet_2_block':
+	{
+		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_2_block.onnx',
+		'path': resolve_relative_path('../.assets/models/ghost_unet_2_block.onnx'),
+		'template': 'ghost',
+		'size': (224, 224)
+	},
+	'ghost_unet_3_block':
+	{
+		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_3_block.onnx',
+		'path': resolve_relative_path('../.assets/models/ghost_unet_3_block.onnx'),
+		'template': 'ghost',
+		'size': (224, 224)
+	},
 	'inswapper_128':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
