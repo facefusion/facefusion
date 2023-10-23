@@ -188,7 +188,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 		if frame_processor_input.name == 'source':
 			frame_processor_inputs[frame_processor_input.name] = prepare_source_face(source_face)
 		if frame_processor_input.name == 'source_embedding':
-			frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
+			frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face) # type: ignore[assignment]
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame # type: ignore[assignment]
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
@@ -213,10 +213,9 @@ def prepare_crop_frame(crop_frame : Frame) -> Frame:
 	model_template = get_options('model').get('template')
 	if model_template == 'ghost':
 		crop_frame = crop_frame / 127.5 - 1
-		crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
 	else:
 		crop_frame = crop_frame / 255.0
-		crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
+	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0).astype(numpy.float32)
 	return crop_frame
 
@@ -228,7 +227,7 @@ def normalize_crop_frame(crop_frame : Frame) -> Frame:
 		crop_frame = crop_frame * 127.5 + 127.5
 	else:
 		crop_frame = (crop_frame * 255.0).round()
-	crop_frame = crop_frame.astype(numpy.uint8)[:, :, ::-1]
+	crop_frame = crop_frame[:, :, ::-1].astype(numpy.uint8)
 	return crop_frame
 
 
