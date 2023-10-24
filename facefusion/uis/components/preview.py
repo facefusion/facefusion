@@ -123,8 +123,7 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		preview_frame = normalize_frame_color(preview_frame)
 		return gradio.Image(value = preview_frame)
 	if is_video(facefusion.globals.target_path):
-		facefusion.globals.reference_frame_number = frame_number
-		temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+		temp_frame = get_video_frame(facefusion.globals.target_path, frame_number)
 		preview_frame = process_preview_frame(source_face, reference_face, temp_frame)
 		preview_frame = normalize_frame_color(preview_frame)
 		return gradio.Image(value = preview_frame)
