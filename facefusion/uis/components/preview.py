@@ -57,23 +57,23 @@ def render() -> None:
 
 def listen() -> None:
 	PREVIEW_FRAME_SLIDER.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
-	multi_component_names : List[ComponentName] =\
+	multi_one_component_names : List[ComponentName] =\
 	[
 		'source_image',
 		'target_image',
 		'target_video'
 	]
-	for component_name in multi_component_names:
+	for component_name in multi_one_component_names:
 		component = get_ui_component(component_name)
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
 				getattr(component, method)(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
-	multi_component_names : List[ComponentName] =\
+	multi_two_component_names : List[ComponentName] =\
 	[
 		'target_image',
 		'target_video'
 	]
-	for component_name in multi_component_names:
+	for component_name in multi_two_component_names:
 		component = get_ui_component(component_name)
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
