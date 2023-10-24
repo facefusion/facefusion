@@ -77,7 +77,7 @@ def listen() -> None:
 		component = get_ui_component(component_name)
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
-				getattr(component, method)(update_preview_frame_slider, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_FRAME_SLIDER)
+				getattr(component, method)(update_preview_frame_slider, outputs = PREVIEW_FRAME_SLIDER)
 	update_component_names : List[ComponentName] =\
 	[
 		'face_recognition_dropdown',
@@ -131,11 +131,8 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	return gradio.Image(value = None)
 
 
-def update_preview_frame_slider(frame_number : int = 0) -> gradio.Slider:
-	if is_image(facefusion.globals.target_path):
-		return gradio.Slider(value = None, maximum = None, visible = False)
+def update_preview_frame_slider() -> gradio.Slider:
 	if is_video(facefusion.globals.target_path):
-		facefusion.globals.reference_frame_number = frame_number
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		return gradio.Slider(maximum = video_frame_total, visible = True)
 	return gradio.Slider(value = None, maximum = None, visible = False)
