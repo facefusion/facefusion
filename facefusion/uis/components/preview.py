@@ -68,6 +68,15 @@ def listen() -> None:
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
 				getattr(component, method)(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	multi_component_names : List[ComponentName] =\
+	[
+		'target_image',
+		'target_video'
+	]
+	for component_name in multi_component_names:
+		component = get_ui_component(component_name)
+		if component:
+			for method in [ 'upload', 'change', 'clear' ]:
 				getattr(component, method)(update_preview_frame_slider, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_FRAME_SLIDER)
 	update_component_names : List[ComponentName] =\
 	[
@@ -129,7 +138,7 @@ def update_preview_frame_slider(frame_number : int = 0) -> gradio.Slider:
 		facefusion.globals.reference_frame_number = frame_number
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		return gradio.Slider(maximum = video_frame_total, visible = True)
-	return gradio.Slider()
+	return gradio.Slider(value = None, maximum = None, visible = False)
 
 
 def process_preview_frame(source_face : Face, reference_face : Face, temp_frame : Frame) -> Frame:

@@ -47,7 +47,7 @@ def render() -> None:
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
 		label = wording.get('reference_face_distance_slider_label'),
 		value = facefusion.globals.reference_face_distance,
-		step = 0.025,
+		step = 0.05,
 		minimum = 0,
 		maximum = 1.5,
 		visible = 'reference' in facefusion.globals.face_recognition
@@ -63,7 +63,6 @@ def listen() -> None:
 	REFERENCE_FACE_DISTANCE_SLIDER.change(update_reference_face_distance, inputs = REFERENCE_FACE_DISTANCE_SLIDER)
 	multi_component_names : List[ComponentName] =\
 	[
-		'source_image',
 		'target_image',
 		'target_video'
 	]
