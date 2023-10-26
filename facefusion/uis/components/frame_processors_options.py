@@ -1,13 +1,12 @@
-from time import sleep
 from typing import List, Optional, Tuple
 import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.face_analyser import clear_face_analyser, get_face_analyser
+from facefusion.face_analyser import clear_face_analyser
 from facefusion.face_cache import clear_faces_cache
 from facefusion.face_reference import clear_face_reference
-from facefusion.processors.frame.core import load_frame_processor_module, clear_frame_processors_modules
+from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 from facefusion.uis.core import get_ui_component, register_ui_component
 

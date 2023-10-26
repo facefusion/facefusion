@@ -25,27 +25,6 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_SWAPPER'
 MODELS : Dict[str, ModelValue] =\
 {
-	'ghost_unet_1_block':
-	{
-		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_1_block.onnx',
-		'path': resolve_relative_path('../.assets/models/ghost_unet_1_block.onnx'),
-		'template': 'ghost',
-		'size': (112, 256)
-	},
-	'ghost_unet_2_block':
-	{
-		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_2_block.onnx',
-		'path': resolve_relative_path('../.assets/models/ghost_unet_2_block.onnx'),
-		'template': 'ghost',
-		'size': (112, 256)
-	},
-	'ghost_unet_3_block':
-	{
-		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_unet_3_block.onnx',
-		'path': resolve_relative_path('../.assets/models/ghost_unet_3_block.onnx'),
-		'template': 'ghost',
-		'size': (112, 256)
-	},
 	'inswapper_128':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
@@ -66,13 +45,6 @@ MODELS : Dict[str, ModelValue] =\
 		'path': resolve_relative_path('../.assets/models/simswap.onnx'),
 		'template': 'arcface',
 		'size': (112, 224)
-	},
-	'simswap_512_beta':
-	{
-		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/simswap/simswap_512_beta.onnx',
-		'path': resolve_relative_path('../.assets/models/simswap_512_beta.onnx'),
-		'template': 'ffhq',
-		'size': (512, 512)
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -210,23 +182,15 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 
 
 def prepare_crop_frame(crop_frame : Frame) -> Frame:
-	model_template = get_options('model').get('template')
-	if model_template == 'ghost':
-		crop_frame = crop_frame / 127.5 - 1
-	else:
-		crop_frame = crop_frame / 255.0
+	crop_frame = crop_frame / 255.0
 	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0).astype(numpy.float32)
 	return crop_frame
 
 
 def normalize_crop_frame(crop_frame : Frame) -> Frame:
-	model_template = get_options('model').get('template')
 	crop_frame = crop_frame.transpose(1, 2, 0)
-	if model_template == 'ghost':
-		crop_frame = crop_frame * 127.5 + 127.5
-	else:
-		crop_frame = (crop_frame * 255.0).round()
+	crop_frame = (crop_frame * 255.0).round()
 	crop_frame = crop_frame[:, :, ::-1].astype(numpy.uint8)
 	return crop_frame
 

@@ -17,11 +17,6 @@ THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : Dict[str, ModelValue] =\
 {
-	'face_recognition_arcface_ghost':
-	{
-		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/ghost/ghost_arcface_backbone.onnx',
-		'path': resolve_relative_path('../.assets/models/ghost_arcface_backbone.onnx')
-	},
 	'face_recognition_arcface_inswapper':
 	{
 		'url': 'https://huggingface.co/bluefoxcreation/insightface-retinaface-arcface-model/resolve/main/w600k_r50.onnx',
@@ -50,11 +45,9 @@ def get_face_analyser() -> Any:
 
 	with THREAD_LOCK:
 		if FACE_ANALYSER is None:
-			if frame_processors_globals.face_swapper_model == 'ghost_unet_1_block' or frame_processors_globals.face_swapper_model == 'ghost_unet_2_block' or frame_processors_globals.face_swapper_model == 'ghost_unet_3_block':
-				face_recognition_model_path = MODELS.get('face_recognition_arcface_ghost').get('path')
 			if frame_processors_globals.face_swapper_model == 'inswapper_128' or frame_processors_globals.face_swapper_model == 'inswapper_128_fp16':
 				face_recognition_model_path = MODELS.get('face_recognition_arcface_inswapper').get('path')
-			if frame_processors_globals.face_swapper_model == 'simswap_244' or frame_processors_globals.face_swapper_model == 'simswap_512_beta':
+			if frame_processors_globals.face_swapper_model == 'simswap_244':
 				face_recognition_model_path = MODELS.get('face_recognition_arcface_simswap').get('path')
 			FACE_ANALYSER =\
 			{
@@ -76,7 +69,6 @@ def pre_check() -> bool:
 		download_directory_path = resolve_relative_path('../.assets/models')
 		model_urls =\
 		[
-			MODELS.get('face_recognition_arcface_ghost').get('url'),
 			MODELS.get('face_recognition_arcface_inswapper').get('url'),
 			MODELS.get('face_recognition_arcface_simswap').get('url'),
 			MODELS.get('face_detection_yunet').get('url'),
