@@ -51,7 +51,7 @@ def get_face_analyser() -> Any:
 	with THREAD_LOCK:
 		if FACE_ANALYSER is None:
 			if frame_processors_globals.face_swapper_model == 'ghost_unet_1_block' or frame_processors_globals.face_swapper_model == 'ghost_unet_2_block' or frame_processors_globals.face_swapper_model == 'ghost_unet_3_block':
-				face_recognition_model_path = MODELS.get('face_recognition_arcface_inswapper').get('path')
+				face_recognition_model_path = MODELS.get('face_recognition_arcface_ghost').get('path')
 			if frame_processors_globals.face_swapper_model == 'inswapper_128' or frame_processors_globals.face_swapper_model == 'inswapper_128_fp16':
 				face_recognition_model_path = MODELS.get('face_recognition_arcface_inswapper').get('path')
 			if frame_processors_globals.face_swapper_model == 'simswap_244' or frame_processors_globals.face_swapper_model == 'simswap_512_beta':
@@ -60,7 +60,7 @@ def get_face_analyser() -> Any:
 			{
 				'face_detector': cv2.FaceDetectorYN.create(MODELS.get('face_detection_yunet').get('path'), None, (0, 0)),
 				'face_recognition': onnxruntime.InferenceSession(face_recognition_model_path, providers = facefusion.globals.execution_providers),
-				'gender_age': onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = facefusion.globals.execution_providers),
+				'gender_age': onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = facefusion.globals.execution_providers)
 			}
 	return FACE_ANALYSER
 
