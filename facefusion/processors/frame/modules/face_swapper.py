@@ -13,7 +13,7 @@ from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_
 from facefusion.face_helper import warp_face, paste_back
 from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.predictor import clear_predictor
-from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
+from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel, Embedding
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done, update_status
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
@@ -38,6 +38,13 @@ MODELS : Dict[str, ModelValue] =\
 		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx'),
 		'template': 'arcface',
 		'size': (128, 128)
+	},
+	'simswap_244':
+	{
+		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/simswap/simswap.onnx',
+		'path': resolve_relative_path('../.assets/models/simswap.onnx'),
+		'template': 'arcface',
+		'size': (112, 224)
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -146,13 +153,14 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	frame_processor = get_frame_processor()
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
-	source_face = prepare_source_face(source_face)
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
 		if frame_processor_input.name == 'source':
-			frame_processor_inputs[frame_processor_input.name] = source_face
+			frame_processor_inputs[frame_processor_input.name] = prepare_source_face(source_face)
+		if frame_processor_input.name == 'source_embedding':
+			frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face) # type: ignore[assignment]
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame # type: ignore[assignment]
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
@@ -168,17 +176,22 @@ def prepare_source_face(source_face : Face) -> Face:
 	return source_face
 
 
+def prepare_source_embedding(source_face : Face) -> Embedding:
+	source_embedding = source_face.normed_embedding.reshape(1, -1)
+	return source_embedding
+
+
 def prepare_crop_frame(crop_frame : Frame) -> Frame:
 	crop_frame = crop_frame / 255.0
-	crop_frame = crop_frame[:, :, ::-1]
-	crop_frame = numpy.expand_dims(crop_frame, axis = 0).transpose(0, 3, 1, 2).astype(numpy.float32)
+	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
+	crop_frame = numpy.expand_dims(crop_frame, axis = 0).astype(numpy.float32)
 	return crop_frame
 
 
 def normalize_crop_frame(crop_frame : Frame) -> Frame:
 	crop_frame = crop_frame.transpose(1, 2, 0)
 	crop_frame = (crop_frame * 255.0).round()
-	crop_frame = crop_frame.astype(numpy.uint8)[:, :, ::-1]
+	crop_frame = crop_frame[:, :, ::-1].astype(numpy.uint8)
 	return crop_frame
 
 

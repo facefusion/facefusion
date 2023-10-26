@@ -78,18 +78,6 @@ def listen() -> None:
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
 				getattr(component, method)(update_preview_frame_slider, outputs = PREVIEW_FRAME_SLIDER)
-	update_component_names : List[ComponentName] =\
-	[
-		'face_recognition_dropdown',
-		'frame_processors_checkbox_group',
-		'face_swapper_model_dropdown',
-		'face_enhancer_model_dropdown',
-		'frame_enhancer_model_dropdown'
-	]
-	for component_name in update_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	select_component_names : List[ComponentName] =\
 	[
 		'reference_face_position_gallery',
@@ -103,8 +91,13 @@ def listen() -> None:
 			component.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	change_component_names : List[ComponentName] =\
 	[
+		'face_recognition_dropdown',
 		'reference_face_distance_slider',
+		'frame_processors_checkbox_group',
+		'face_swapper_model_dropdown',
+		'face_enhancer_model_dropdown',
 		'face_enhancer_blend_slider',
+		'frame_enhancer_model_dropdown',
 		'frame_enhancer_blend_slider'
 	]
 	for component_name in change_component_names:
