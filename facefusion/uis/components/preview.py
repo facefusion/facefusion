@@ -4,10 +4,11 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.face_cache import clear_faces_cache
 from facefusion.typing import Frame, Face
 from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_static_image
-from facefusion.face_analyser import get_one_face
-from facefusion.face_reference import get_face_reference, set_face_reference
+from facefusion.face_analyser import get_one_face, clear_face_analyser
+from facefusion.face_reference import get_face_reference, set_face_reference, clear_face_reference
 from facefusion.predictor import predict_frame
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.utilities import is_video, is_image
@@ -94,7 +95,6 @@ def listen() -> None:
 		'face_recognition_dropdown',
 		'reference_face_distance_slider',
 		'frame_processors_checkbox_group',
-		'face_swapper_model_dropdown',
 		'face_enhancer_model_dropdown',
 		'face_enhancer_blend_slider',
 		'frame_enhancer_model_dropdown',
@@ -104,6 +104,16 @@ def listen() -> None:
 		component = get_ui_component(component_name)
 		if component:
 			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	face_swapper_model_dropdown = get_ui_component('face_swapper_model_dropdown')
+	if face_swapper_model_dropdown:
+		face_swapper_model_dropdown.change(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+
+
+def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
+	clear_face_analyser()
+	clear_face_reference()
+	clear_faces_cache()
+	return update_preview_image(frame_number)
 
 
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
