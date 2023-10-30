@@ -37,18 +37,22 @@ def cli() -> None:
 	# execution
 	group_execution = program.add_argument_group('execution')
 	group_execution.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = 'cpu'), dest = 'execution_providers', default = [ 'cpu' ], choices = encode_execution_providers(onnxruntime.get_available_providers()), nargs = '+')
-	group_execution.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = 1)
+	group_execution.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = 4)
 	group_execution.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), dest = 'execution_queue_count', type = int, default = 1)
 	group_execution.add_argument('--max-memory', help=wording.get('max_memory_help'), dest='max_memory', type = int)
 	# face analyser
-	group_face_analyser = program.add_argument_group('face recognition')
+	group_face_analyser = program.add_argument_group('face analyser')
 	group_face_analyser.add_argument('--face-analyser-direction', help = wording.get('face_analyser_direction_help'), dest = 'face_analyser_direction', default = 'left-right', choices = facefusion.choices.face_analyser_directions)
 	group_face_analyser.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), dest = 'face_analyser_age', choices = facefusion.choices.face_analyser_ages)
 	group_face_analyser.add_argument('--face-analyser-gender', help = wording.get('face_analyser_gender_help'), dest = 'face_analyser_gender', choices = facefusion.choices.face_analyser_genders)
-	group_face_analyser.add_argument('--face-recognition', help = wording.get('face_recognition_help'), dest = 'face_recognition', default = 'reference', choices = facefusion.choices.face_recognitions)
-	group_face_analyser.add_argument('--reference-face-position', help = wording.get('reference_face_position_help'), dest = 'reference_face_position', type = int, default = 0)
-	group_face_analyser.add_argument('--reference-face-distance', help = wording.get('reference_face_distance_help'), dest = 'reference_face_distance', type = float, default = 0.6)
-	group_face_analyser.add_argument('--reference-frame-number', help = wording.get('reference_frame_number_help'), dest = 'reference_frame_number', type = int, default = 0)
+	group_face_analyser.add_argument('--face-detection-size', help = wording.get('face_detection_size_help'), dest = 'face_detection_size', default= '1024x1024', choices = facefusion.choices.face_detection_sizes)
+	group_face_analyser.add_argument('--face-detection-score', help = wording.get('face_detection_score_help'), dest = 'face_detection_score', type = float, default = 0.5)
+	# face selector
+	group_face_selector= program.add_argument_group('face selector')
+	group_face_selector.add_argument('--face-selector-mode', help = wording.get('face_selector_mode_help'), dest = 'face_selector_mode', default = 'reference', choices = facefusion.choices.face_selector_modes)
+	group_face_selector.add_argument('--reference-face-position', help = wording.get('reference_face_position_help'), dest = 'reference_face_position', type = int, default = 0)
+	group_face_selector.add_argument('--reference-face-distance', help = wording.get('reference_face_distance_help'), dest = 'reference_face_distance', type = float, default = 0.6)
+	group_face_selector.add_argument('--reference-frame-number', help = wording.get('reference_frame_number_help'), dest = 'reference_frame_number', type = int, default = 0)
 	# frame extraction
 	group_frame_extraction = program.add_argument_group('frame extraction')
 	group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), dest = 'trim_frame_start', type = int)
@@ -95,7 +99,10 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.face_analyser_direction = args.face_analyser_direction
 	facefusion.globals.face_analyser_age = args.face_analyser_age
 	facefusion.globals.face_analyser_gender = args.face_analyser_gender
-	facefusion.globals.face_recognition = args.face_recognition
+	facefusion.globals.face_detection_size = args.face_detection_size
+	facefusion.globals.face_detection_score = args.face_detection_score
+	# face selector
+	facefusion.globals.face_selector_mode = args.face_selector_mode
 	facefusion.globals.reference_face_position = args.reference_face_position
 	facefusion.globals.reference_face_distance = args.reference_face_distance
 	facefusion.globals.reference_frame_number = args.reference_frame_number

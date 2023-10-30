@@ -38,7 +38,7 @@ def render() -> None:
 	}
 	conditional_set_face_reference()
 	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
-	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
+	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_selector_mode else None
 	if is_image(facefusion.globals.target_path):
 		target_frame = read_static_image(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(source_face, reference_face, target_frame)
@@ -90,9 +90,9 @@ def listen() -> None:
 		component = get_ui_component(component_name)
 		if component:
 			component.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
-	change_component_names : List[ComponentName] =\
+	change_one_component_names : List[ComponentName] =\
 	[
-		'face_recognition_dropdown',
+		'face_selector_mode_dropdown',
 		'reference_face_distance_slider',
 		'frame_processors_checkbox_group',
 		'face_enhancer_model_dropdown',
@@ -100,13 +100,20 @@ def listen() -> None:
 		'frame_enhancer_model_dropdown',
 		'frame_enhancer_blend_slider'
 	]
-	for component_name in change_component_names:
+	for component_name in change_one_component_names:
 		component = get_ui_component(component_name)
 		if component:
 			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
-	face_swapper_model_dropdown = get_ui_component('face_swapper_model_dropdown')
-	if face_swapper_model_dropdown:
-		face_swapper_model_dropdown.change(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	change_two_component_names : List[ComponentName] =\
+	[
+		'face_swapper_model_dropdown',
+		'face_detection_size_dropdown',
+		'face_detection_score_slider'
+	]
+	for component_name in change_two_component_names:
+		component = get_ui_component(component_name)
+		if component:
+			component.change(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
 
 def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
@@ -119,7 +126,7 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	conditional_set_face_reference()
 	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
-	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
+	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_selector_mode else None
 	if is_image(facefusion.globals.target_path):
 		target_frame = read_static_image(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(source_face, reference_face, target_frame)
@@ -156,7 +163,7 @@ def process_preview_frame(source_face : Face, reference_face : Face, temp_frame 
 
 
 def conditional_set_face_reference() -> None:
-	if 'reference' in facefusion.globals.face_recognition and not get_face_reference():
+	if 'reference' in facefusion.globals.face_selector_mode and not get_face_reference():
 		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
 		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
 		set_face_reference(reference_face)
