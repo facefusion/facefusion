@@ -41,7 +41,7 @@ misc:
 execution:
   --execution-providers {cpu} [{cpu} ...]                                                          choose from the available execution providers (choices: cpu, ...)
   --execution-thread-count [1-128]                                                                 specify the number of execution threads
-  --execution-queue-count [1-31]                                                                   specify the number of execution queries
+  --execution-queue-count [1-32]                                                                   specify the number of execution queries
   --max-memory [1-128]                                                                             specify the maximum amount of ram to be used (in gb)
 
 face analyser:
