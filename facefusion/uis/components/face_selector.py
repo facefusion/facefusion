@@ -2,8 +2,8 @@ from typing import List, Optional, Tuple, Any, Dict
 
 import gradio
 
-import facefusion.choices
 import facefusion.globals
+import facefusion.choices
 from facefusion import wording
 from facefusion.face_cache import clear_faces_cache
 from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color
@@ -48,9 +48,9 @@ def render() -> None:
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
 		label = wording.get('reference_face_distance_slider_label'),
 		value = facefusion.globals.reference_face_distance,
-		step = 0.05,
-		minimum = 0,
-		maximum = 1.5,
+		step = facefusion.choices.reference_face_distance_range[1] - facefusion.choices.reference_face_distance_range[0],
+		minimum = facefusion.choices.reference_face_distance_range[0],
+		maximum = facefusion.choices.reference_face_distance_range[-1],
 		visible = 'reference' in facefusion.globals.face_selector_mode
 	)
 	register_ui_component('face_selector_mode_dropdown', FACE_SELECTOR_MODE_DROPDOWN)

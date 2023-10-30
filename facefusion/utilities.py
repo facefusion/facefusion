@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 from functools import lru_cache
 from pathlib import Path
+
 from tqdm import tqdm
 import glob
 import mimetypes
@@ -239,6 +240,10 @@ def map_device(execution_providers : List[str]) -> str:
 	if 'OpenVINOExecutionProvider' in execution_providers:
 		return 'mkl'
 	return 'cpu'
+
+
+def create_metavar(ranges : List[Any]) -> str:
+	return '[' + str(ranges[0]) + '-' + str(ranges[-1]) + ']'
 
 
 def update_status(message : str, scope : str = 'FACEFUSION.CORE') -> None:

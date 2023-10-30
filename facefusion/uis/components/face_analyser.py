@@ -2,8 +2,8 @@ from typing import Optional
 
 import gradio
 
-import facefusion.choices
 import facefusion.globals
+import facefusion.choices
 from facefusion import wording
 from facefusion.typing import FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender
 from facefusion.uis.core import register_ui_component
@@ -46,9 +46,9 @@ def render() -> None:
 	FACE_DETECTION_SCORE_SLIDER = gradio.Slider(
 		label = wording.get('face_detection_score_slider_label'),
 		value = facefusion.globals.face_detection_score,
-		step = 0.05,
-		minimum = 0,
-		maximum = 1
+		step = facefusion.choices.face_detection_score_range[1] - facefusion.choices.face_detection_score_range[0],
+		minimum = facefusion.choices.face_detection_score_range[0],
+		maximum = facefusion.choices.face_detection_score_range[-1]
 	)
 	register_ui_component('face_analyser_direction_dropdown', FACE_ANALYSER_DIRECTION_DROPDOWN)
 	register_ui_component('face_analyser_age_dropdown', FACE_ANALYSER_AGE_DROPDOWN)

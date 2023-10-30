@@ -12,7 +12,7 @@ from facefusion.face_analyser import get_many_faces, clear_face_analyser
 from facefusion.face_helper import warp_face, paste_back
 from facefusion.predictor import clear_predictor
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
-from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done, update_status
+from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done, create_metavar, update_status
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
@@ -97,7 +97,7 @@ def set_options(key : Literal[ 'model' ], value : Any) -> None:
 
 def register_args(program : ArgumentParser) -> None:
 	program.add_argument('--face-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'face_enhancer_model', default = 'gfpgan_1.4', choices = frame_processors_choices.face_enhancer_models)
-	program.add_argument('--face-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest= 'face_enhancer_blend', type = int, default= 80, choices = range(101), metavar = '[0-100]')
+	program.add_argument('--face-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest= 'face_enhancer_blend', type = int, default= 80, choices = frame_processors_choices.face_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.face_enhancer_blend_range))
 
 
 def apply_args(program : ArgumentParser) -> None:

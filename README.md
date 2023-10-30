@@ -40,21 +40,21 @@ misc:
 
 execution:
   --execution-providers {cpu} [{cpu} ...]                                                          choose from the available execution providers (choices: cpu, ...)
-  --execution-thread-count EXECUTION_THREAD_COUNT                                                  specify the number of execution threads
-  --execution-queue-count EXECUTION_QUEUE_COUNT                                                    specify the number of execution queries
-  --max-memory MAX_MEMORY                                                                          specify the maximum amount of ram to be used (in gb)
+  --execution-thread-count [1-128]                                                                 specify the number of execution threads
+  --execution-queue-count [1-31]                                                                   specify the number of execution queries
+  --max-memory [1-128]                                                                             specify the maximum amount of ram to be used (in gb)
 
 face analyser:
   --face-analyser-direction {left-right,right-left,top-bottom,bottom-top,small-large,large-small}  specify the direction used for face analysis
   --face-analyser-age {child,teen,adult,senior}                                                    specify the age used for face analysis
   --face-analyser-gender {male,female}                                                             specify the gender used for face analysis
   --face-detection-size {320x320,480x480,512x512,640x640,768x768,1024x1024}                        specify the size threshold used for face detection
-  --face-detection-score FACE_DETECTION_SCORE                                                      specify the score threshold used for face detection
+  --face-detection-score [0.0-1.0]                                                                 specify the score threshold used for face detection
 
 face selector:
   --face-selector-mode {reference,many}                                                            specify the mode for face selection
   --reference-face-position REFERENCE_FACE_POSITION                                                specify the position of the reference face
-  --reference-face-distance REFERENCE_FACE_DISTANCE                                                specify the distance between the reference face and the target face
+  --reference-face-distance [0.0-1.5]                                                              specify the distance between the reference face and the target face
   --reference-frame-number REFERENCE_FRAME_NUMBER                                                  specify the number of the reference frame
 
 frame extraction:
