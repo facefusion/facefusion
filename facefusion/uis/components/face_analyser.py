@@ -66,21 +66,20 @@ def listen() -> None:
 
 
 def update_face_analyser_direction(face_analyser_direction : FaceAnalyserDirection) -> None:
-	if face_analyser_direction == 'none':
-		facefusion.globals.update_face_analyser_direction = None if face_analyser_direction == 'none' else face_analyser_direction
+	facefusion.globals.update_face_analyser_direction = face_analyser_direction if face_analyser_direction != 'none' else None
 
 
 def update_face_analyser_age(face_analyser_age : FaceAnalyserAge) -> None:
-	facefusion.globals.face_analyser_age = None if face_analyser_age == 'none' else face_analyser_age
+	facefusion.globals.face_analyser_age = face_analyser_age if face_analyser_age != 'none' else None
 
 
 def update_face_analyser_gender(face_analyser_gender : FaceAnalyserGender) -> None:
-	facefusion.globals.face_analyser_gender = None if face_analyser_gender == 'none' else face_analyser_gender
+	facefusion.globals.face_analyser_gender = face_analyser_gender if face_analyser_gender != 'none' else None
 
 
 def update_face_detection_size(face_detection_size : str) -> None:
 	facefusion.globals.face_detection_size = face_detection_size
 
 
-def update_face_detection_score(face_detection_score : int) -> None:
+def update_face_detection_score(face_detection_score : float) -> None:
 	facefusion.globals.face_detection_score = face_detection_score
