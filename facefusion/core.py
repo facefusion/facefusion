@@ -38,16 +38,16 @@ def cli() -> None:
 	group_execution.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = 'cpu'), dest = 'execution_providers', default = [ 'cpu' ], choices = encode_execution_providers(onnxruntime.get_available_providers()), nargs = '+')
 	group_execution.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), dest = 'execution_thread_count', type = int, default = 4, choices = facefusion.choices.execution_thread_count_range, metavar = create_metavar(facefusion.choices.execution_thread_count_range))
 	group_execution.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), dest = 'execution_queue_count', type = int, default = 1, choices = facefusion.choices.execution_queue_count_range, metavar = create_metavar(facefusion.choices.execution_queue_count_range))
-	group_execution.add_argument('--max-memory', help = wording.get('max_memory_help'), dest='max_memory', type = int, choices = facefusion.choices.max_memory_range, metavar = create_metavar(facefusion.choices.max_memory_range))
+	group_execution.add_argument('--max-memory', help = wording.get('max_memory_help'), dest = 'max_memory', type = int, choices = facefusion.choices.max_memory_range, metavar = create_metavar(facefusion.choices.max_memory_range))
 	# face analyser
 	group_face_analyser = program.add_argument_group('face analyser')
 	group_face_analyser.add_argument('--face-analyser-direction', help = wording.get('face_analyser_direction_help'), dest = 'face_analyser_direction', default = 'left-right', choices = facefusion.choices.face_analyser_directions)
 	group_face_analyser.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), dest = 'face_analyser_age', choices = facefusion.choices.face_analyser_ages)
 	group_face_analyser.add_argument('--face-analyser-gender', help = wording.get('face_analyser_gender_help'), dest = 'face_analyser_gender', choices = facefusion.choices.face_analyser_genders)
-	group_face_analyser.add_argument('--face-detection-size', help = wording.get('face_detection_size_help'), dest = 'face_detection_size', default= '1024x1024', choices = facefusion.choices.face_detection_sizes)
+	group_face_analyser.add_argument('--face-detection-size', help = wording.get('face_detection_size_help'), dest = 'face_detection_size', default = '1024x1024', choices = facefusion.choices.face_detection_sizes)
 	group_face_analyser.add_argument('--face-detection-score', help = wording.get('face_detection_score_help'), dest = 'face_detection_score', type = float, default = 0.5, choices = facefusion.choices.face_detection_score_range, metavar = create_metavar(facefusion.choices.face_detection_score_range))
 	# face selector
-	group_face_selector= program.add_argument_group('face selector')
+	group_face_selector = program.add_argument_group('face selector')
 	group_face_selector.add_argument('--face-selector-mode', help = wording.get('face_selector_mode_help'), dest = 'face_selector_mode', default = 'reference', choices = facefusion.choices.face_selector_modes)
 	group_face_selector.add_argument('--reference-face-position', help = wording.get('reference_face_position_help'), dest = 'reference_face_position', type = int, default = 0)
 	group_face_selector.add_argument('--reference-face-distance', help = wording.get('reference_face_distance_help'), dest = 'reference_face_distance', type = float, default = 0.6, choices = facefusion.choices.reference_face_distance_range, metavar = create_metavar(facefusion.choices.reference_face_distance_range))
@@ -61,7 +61,7 @@ def cli() -> None:
 	group_frame_extraction.add_argument('--keep-temp', help = wording.get('keep_temp_help'), dest = 'keep_temp', action = 'store_true')
 	# output creation
 	group_output_creation = program.add_argument_group('output creation')
-	group_output_creation.add_argument('--output-image-quality', help=wording.get('output_image_quality_help'), dest = 'output_image_quality', type = int, default = 80, choices = facefusion.choices.output_image_quality_range, metavar = create_metavar(facefusion.choices.output_image_quality_range))
+	group_output_creation.add_argument('--output-image-quality', help = wording.get('output_image_quality_help'), dest = 'output_image_quality', type = int, default = 80, choices = facefusion.choices.output_image_quality_range, metavar = create_metavar(facefusion.choices.output_image_quality_range))
 	group_output_creation.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), dest = 'output_video_encoder', default = 'libx264', choices = facefusion.choices.output_video_encoders)
 	group_output_creation.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), dest = 'output_video_quality', type = int, default = 80, choices = facefusion.choices.output_video_quality_range, metavar = create_metavar(facefusion.choices.output_video_quality_range))
 	group_output_creation.add_argument('--keep-fps', help = wording.get('keep_fps_help'), dest = 'keep_fps', action = 'store_true')

@@ -43,7 +43,7 @@ def render() -> gradio.Blocks:
 					limit_resources.render()
 				with gradio.Blocks():
 					benchmark_options.render()
-			with gradio.Column(scale= 5):
+			with gradio.Column(scale = 5):
 				with gradio.Blocks():
 					benchmark.render()
 	return layout

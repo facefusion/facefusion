@@ -13,7 +13,7 @@ def render() -> None:
 
 	MAX_MEMORY_SLIDER = gradio.Slider(
 		label = wording.get('max_memory_slider_label'),
-		step =facefusion.choices.max_memory_range[1] - facefusion.choices.max_memory_range[0],
+		step = facefusion.choices.max_memory_range[1] - facefusion.choices.max_memory_range[0],
 		minimum = facefusion.choices.max_memory_range[0],
 		maximum = facefusion.choices.max_memory_range[-1]
 	)

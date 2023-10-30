@@ -97,7 +97,7 @@ def set_options(key : Literal[ 'model' ], value : Any) -> None:
 
 def register_args(program : ArgumentParser) -> None:
 	program.add_argument('--face-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'face_enhancer_model', default = 'gfpgan_1.4', choices = frame_processors_choices.face_enhancer_models)
-	program.add_argument('--face-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest= 'face_enhancer_blend', type = int, default= 80, choices = frame_processors_choices.face_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.face_enhancer_blend_range))
+	program.add_argument('--face-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest = 'face_enhancer_blend', type = int, default = 80, choices = frame_processors_choices.face_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.face_enhancer_blend_range))
 
 
 def apply_args(program : ArgumentParser) -> None:

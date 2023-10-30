@@ -36,7 +36,7 @@ def render() -> None:
 	FACE_ENHANCER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('face_enhancer_blend_slider_label'),
 		value = frame_processors_globals.face_enhancer_blend,
-		step =frame_processors_choices.face_enhancer_blend_range[1] - frame_processors_choices.face_enhancer_blend_range[0],
+		step = frame_processors_choices.face_enhancer_blend_range[1] - frame_processors_choices.face_enhancer_blend_range[0],
 		minimum = frame_processors_choices.face_enhancer_blend_range[0],
 		maximum = frame_processors_choices.face_enhancer_blend_range[-1],
 		visible = 'face_enhancer' in facefusion.globals.frame_processors
@@ -50,7 +50,7 @@ def render() -> None:
 	FRAME_ENHANCER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('frame_enhancer_blend_slider_label'),
 		value = frame_processors_globals.frame_enhancer_blend,
-		step =frame_processors_choices.frame_enhancer_blend_range[1] - frame_processors_choices.frame_enhancer_blend_range[0],
+		step = frame_processors_choices.frame_enhancer_blend_range[1] - frame_processors_choices.frame_enhancer_blend_range[0],
 		minimum = frame_processors_choices.frame_enhancer_blend_range[0],
 		maximum = frame_processors_choices.frame_enhancer_blend_range[-1],
 		visible = 'face_enhancer' in facefusion.globals.frame_processors
