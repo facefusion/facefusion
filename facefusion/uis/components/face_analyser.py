@@ -66,7 +66,7 @@ def listen() -> None:
 
 
 def update_face_analyser_direction(face_analyser_direction : FaceAnalyserDirection) -> None:
-	facefusion.globals.update_face_analyser_direction = face_analyser_direction if face_analyser_direction != 'none' else None
+	facefusion.globals.face_analyser_direction = face_analyser_direction if face_analyser_direction != 'none' else None
 
 
 def update_face_analyser_age(face_analyser_age : FaceAnalyserAge) -> None:

@@ -219,8 +219,8 @@ def filter_by_age(faces : List[Face], age : FaceAnalyserAge) -> List[Face]:
 def filter_by_gender(faces : List[Face], gender : FaceAnalyserGender) -> List[Face]:
 	filter_faces = []
 	for face in faces:
-		if face.gender == 1 and gender == 'male':
-			filter_faces.append(face)
 		if face.gender == 0 and gender == 'female':
+			filter_faces.append(face)
+		if face.gender == 1 and gender == 'male':
 			filter_faces.append(face)
 	return filter_faces
