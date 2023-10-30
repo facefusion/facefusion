@@ -61,7 +61,7 @@ def listen() -> None:
 
 
 def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
-	facefusion.globals.face_recognition = 'many'
+	facefusion.globals.face_selector_mode = 'many'
 	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
 	stream = None
 	if mode in [ 'udp', 'v4l2' ]:
@@ -99,14 +99,14 @@ def stop() -> gradio.Image:
 
 
 def capture_webcam(resolution : str, fps : float) -> cv2.VideoCapture:
-	width, height = resolution.split('x')
+	webcam_width, webcam_height = map(int, resolution.split('x'))
 	if platform.system().lower() == 'windows':
 		capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 	else:
 		capture = cv2.VideoCapture(0)
 	capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) # type: ignore[attr-defined]
-	capture.set(cv2.CAP_PROP_FRAME_WIDTH, int(width))
-	capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(height))
+	capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
+	capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
 	capture.set(cv2.CAP_PROP_FPS, fps)
 	return capture
 

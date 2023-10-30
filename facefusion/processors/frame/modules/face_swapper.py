@@ -196,12 +196,12 @@ def normalize_crop_frame(crop_frame : Frame) -> Frame:
 
 
 def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame) -> Frame:
-	if 'reference' in facefusion.globals.face_recognition:
+	if 'reference' in facefusion.globals.face_selector_mode:
 		similar_faces = find_similar_faces(temp_frame, reference_face, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
 				temp_frame = swap_face(source_face, similar_face, temp_frame)
-	if 'many' in facefusion.globals.face_recognition:
+	if 'many' in facefusion.globals.face_selector_mode:
 		many_faces = get_many_faces(temp_frame)
 		if many_faces:
 			for target_face in many_faces:
@@ -211,7 +211,7 @@ def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame)
 
 def process_frames(source_path : str, temp_frame_paths : List[str], update_progress : Update_Process) -> None:
 	source_face = get_one_face(read_static_image(source_path))
-	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_recognition else None
+	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_selector_mode else None
 	for temp_frame_path in temp_frame_paths:
 		temp_frame = read_image(temp_frame_path)
 		result_frame = process_frame(source_face, reference_face, temp_frame)
@@ -222,7 +222,7 @@ def process_frames(source_path : str, temp_frame_paths : List[str], update_progr
 def process_image(source_path : str, target_path : str, output_path : str) -> None:
 	source_face = get_one_face(read_static_image(source_path))
 	target_frame = read_static_image(target_path)
-	reference_face = get_one_face(target_frame, facefusion.globals.reference_face_position) if 'reference' in facefusion.globals.face_recognition else None
+	reference_face = get_one_face(target_frame, facefusion.globals.reference_face_position) if 'reference' in facefusion.globals.face_selector_mode else None
 	result_frame = process_frame(source_face, reference_face, target_frame)
 	write_image(output_path, result_frame)
 
@@ -233,7 +233,7 @@ def process_video(source_path : str, temp_frame_paths : List[str]) -> None:
 
 
 def conditional_set_face_reference(temp_frame_paths : List[str]) -> None:
-	if 'reference' in facefusion.globals.face_recognition and not get_face_reference():
+	if 'reference' in facefusion.globals.face_selector_mode and not get_face_reference():
 		reference_frame = read_static_image(temp_frame_paths[facefusion.globals.reference_frame_number])
 		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
 		set_face_reference(reference_face)

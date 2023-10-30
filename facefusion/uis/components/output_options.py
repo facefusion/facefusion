@@ -2,8 +2,8 @@ from typing import Optional, Tuple, List
 import tempfile
 import gradio
 
-import facefusion.choices
 import facefusion.globals
+import facefusion.choices
 from facefusion import wording
 from facefusion.typing import OutputVideoEncoder
 from facefusion.utilities import is_image, is_video
@@ -30,9 +30,9 @@ def render() -> None:
 	OUTPUT_IMAGE_QUALITY_SLIDER = gradio.Slider(
 		label = wording.get('output_image_quality_slider_label'),
 		value = facefusion.globals.output_image_quality,
-		step = 1,
-		minimum = 0,
-		maximum = 100,
+		step = facefusion.choices.output_image_quality_range[1] - facefusion.choices.output_image_quality_range[0],
+		minimum = facefusion.choices.output_image_quality_range[0],
+		maximum = facefusion.choices.output_image_quality_range[-1],
 		visible = is_image(facefusion.globals.target_path)
 	)
 	OUTPUT_VIDEO_ENCODER_DROPDOWN = gradio.Dropdown(
@@ -44,9 +44,9 @@ def render() -> None:
 	OUTPUT_VIDEO_QUALITY_SLIDER = gradio.Slider(
 		label = wording.get('output_video_quality_slider_label'),
 		value = facefusion.globals.output_video_quality,
-		step = 1,
-		minimum = 0,
-		maximum = 100,
+		step = facefusion.choices.output_video_quality_range[1] - facefusion.choices.output_video_quality_range[0],
+		minimum = facefusion.choices.output_video_quality_range[0],
+		maximum = facefusion.choices.output_video_quality_range[-1],
 		visible = is_video(facefusion.globals.target_path)
 	)
 	register_ui_component('output_path_textbox', OUTPUT_PATH_TEXTBOX)

@@ -81,13 +81,13 @@ def pre_check() -> bool:
 def extract_faces(frame : Frame) -> List[Face]:
 	face_detector = get_face_analyser().get('face_detector')
 	faces: List[Face] = []
-	temp_frame = resize_frame_dimension(frame, 1024, 1024)
+	face_detection_width, face_detection_height = map(int, facefusion.globals.face_detection_size.split('x'))
+	temp_frame = resize_frame_dimension(frame, face_detection_width, face_detection_height)
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
 	frame_height, frame_width, _ = frame.shape
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width
-	face_detector.setScoreThreshold(0.5)
-	face_detector.setNMSThreshold(0.5)
+	face_detector.setScoreThreshold(facefusion.globals.face_detection_score)
 	face_detector.setTopK(100)
 	face_detector.setInputSize((temp_frame_width, temp_frame_height))
 	with THREAD_SEMAPHORE:
@@ -219,8 +219,8 @@ def filter_by_age(faces : List[Face], age : FaceAnalyserAge) -> List[Face]:
 def filter_by_gender(faces : List[Face], gender : FaceAnalyserGender) -> List[Face]:
 	filter_faces = []
 	for face in faces:
-		if face.gender == 1 and gender == 'male':
-			filter_faces.append(face)
 		if face.gender == 0 and gender == 'female':
+			filter_faces.append(face)
+		if face.gender == 1 and gender == 'male':
 			filter_faces.append(face)
 	return filter_faces

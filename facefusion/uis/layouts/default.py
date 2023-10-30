@@ -40,11 +40,11 @@ def render() -> gradio.Blocks:
 			with gradio.Column(scale = 3):
 				with gradio.Blocks():
 					preview.render()
-				with gradio.Row():
+				with gradio.Blocks():
 					trim_frame.render()
 				with gradio.Blocks():
 					face_selector.render()
-				with gradio.Row():
+				with gradio.Blocks():
 					face_analyser.render()
 				with gradio.Blocks():
 					common_options.render()
