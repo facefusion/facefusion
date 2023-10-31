@@ -44,9 +44,9 @@ def paste_back(temp_frame: Frame, crop_frame: Frame, affine_matrix: Matrix) -> F
 	inverse_mask_size = int(numpy.sqrt(numpy.sum(inverse_crop_frame == 255)))
 	kernel_size = max(inverse_mask_size // 10, 10)
 	inverse_crop_frame = cv2.erode(inverse_crop_frame, numpy.ones((kernel_size, kernel_size)))
-	kernel_size = max(inverse_mask_size // 30, 5)
+	kernel_size = max(inverse_mask_size // 20, 5)
 	blur_size = kernel_size * 2 + 1
-	inverse_blur_frame = cv2.blur(inverse_crop_frame, (blur_size , blur_size)) / 255
+	inverse_blur_frame = cv2.GaussianBlur(inverse_crop_frame, (blur_size , blur_size), 0) / 255
 	inverse_blur_frame = numpy.reshape(inverse_blur_frame, [ temp_frame_height, temp_frame_width, 1 ])
 	temp_frame = inverse_blur_frame * inverse_temp_frame + (1 - inverse_blur_frame) * temp_frame
 	temp_frame = temp_frame.astype(numpy.uint8)
