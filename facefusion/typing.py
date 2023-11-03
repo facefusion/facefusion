@@ -2,9 +2,9 @@ from collections import namedtuple
 from typing import Any, Literal, Callable, List, TypedDict, Dict
 import numpy
 
-Bbox = numpy.ndarray[Any, Any]
-Kps = numpy.ndarray[Any, Any]
-Embedding = numpy.ndarray[Any, Any]
+Bbox = List[float]
+Kps = List[float]
+Embedding = List[float]
 Face = namedtuple('Face', [ 'bbox', 'kps', 'score', 'embedding', 'normed_embedding', 'gender', 'age' ])
 Frame = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]

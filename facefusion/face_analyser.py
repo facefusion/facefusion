@@ -7,7 +7,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion.face_cache import get_faces_cache, set_faces_cache
 from facefusion.face_helper import warp_face
-from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Kps, Embedding
+from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Embedding
 from facefusion.utilities import resolve_relative_path, conditional_download
 from facefusion.vision import resize_frame_dimension
 from facefusion.processors.frame import globals as frame_processors_globals
@@ -80,45 +80,56 @@ def pre_check() -> bool:
 
 def extract_faces(frame : Frame) -> List[Face]:
 	face_detector = get_face_analyser().get('face_detector')
-	faces: List[Face] = []
 	face_detection_width, face_detection_height = map(int, facefusion.globals.face_detection_size.split('x'))
 	temp_frame = resize_frame_dimension(frame, face_detection_width, face_detection_height)
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
 	frame_height, frame_width, _ = frame.shape
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width
-	face_detector.setScoreThreshold(facefusion.globals.face_detection_score)
 	face_detector.setTopK(100)
 	face_detector.setInputSize((temp_frame_width, temp_frame_height))
+	bbox_list = []
+	kps_list = []
+	score_list = []
 	with THREAD_SEMAPHORE:
 		_, detections = face_detector.detect(temp_frame)
 	if detections.any():
 		for detection in detections:
-			bbox =\
+			bbox_list.append(
 			[
-				detection[0:4][0] * ratio_width,
-				detection[0:4][1] * ratio_height,
-				(detection[0:4][0] + detection[0:4][2]) * ratio_width,
-				(detection[0:4][1] + detection[0:4][3]) * ratio_height
-			]
-			kps = (detection[4:14].reshape((5, 2)) * [[ ratio_width, ratio_height ]])
-			score = detection[14]
-			embedding = calc_embedding(frame, kps)
-			normed_embedding = embedding / numpy.linalg.norm(embedding)
-			gender, age = detect_gender_age(frame, kps)
-			faces.append(Face(
-				bbox = bbox,
-				kps = kps,
-				score = score,
-				embedding = embedding,
-				normed_embedding = normed_embedding,
-				gender = gender,
-				age = age
-			))
+				detection[0] * ratio_width,
+				detection[1] * ratio_height,
+				(detection[0] + detection[2]) * ratio_width,
+				(detection[1] + detection[3]) * ratio_height
+			])
+			kps_list.append((detection[4:14].reshape((5, 2)) * [[ ratio_width, ratio_height ]]))
+			score_list.append(detection[14])
+	faces = create_faces(frame, bbox_list, kps_list, score_list)
 	return faces
 
 
-def calc_embedding(temp_frame : Frame, kps : Kps) -> Embedding:
+def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[float]) -> List[Face] :
+	faces = []
+	keep_indices = cv2.dnn.NMSBoxes(bbox_list, score_list, facefusion.globals.face_detection_score, 0.5)
+	for index in keep_indices:
+		bbox = bbox_list[index]
+		kps = kps_list[index]
+		score = score_list[index]
+		embedding, normed_embedding = calc_embedding(frame, kps)
+		gender, age = detect_gender_age(frame, kps)
+		faces.append(Face(
+			bbox = bbox,
+			kps = kps,
+			score = score,
+			embedding = embedding,
+			normed_embedding = normed_embedding,
+			gender = gender,
+			age = age
+		))
+	return faces
+
+
+def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]:
 	face_recognition = get_face_analyser().get('face_recognition')
 	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface', (112, 112))
 	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
@@ -129,7 +140,8 @@ def calc_embedding(temp_frame : Frame, kps : Kps) -> Embedding:
 		face_recognition.get_inputs()[0].name: crop_frame
 	})[0]
 	embedding = embedding.ravel()
-	return embedding
+	normed_embedding = embedding / numpy.linalg.norm(embedding)
+	return embedding, normed_embedding
 
 
 def detect_gender_age(frame : Frame, kps : Kps) -> Tuple[int, int]:
