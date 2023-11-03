@@ -48,6 +48,7 @@ face analyser:
   --face-analyser-direction {left-right,right-left,top-bottom,bottom-top,small-large,large-small}  specify the direction used for face analysis
   --face-analyser-age {child,teen,adult,senior}                                                    specify the age used for face analysis
   --face-analyser-gender {male,female}                                                             specify the gender used for face analysis
+  --face-detection-model {retinaface,yunet}                                                        specify the model used for face detection
   --face-detection-size {320x320,480x480,512x512,640x640,768x768,1024x1024}                        specify the size threshold used for face detection
   --face-detection-score [0.0-1.0]                                                                 specify the score threshold used for face detection
 

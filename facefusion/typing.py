@@ -18,6 +18,8 @@ FaceSelectorMode = Literal[ 'reference', 'many' ]
 FaceAnalyserDirection = Literal[ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small' ]
 FaceAnalyserAge = Literal[ 'child', 'teen', 'adult', 'senior' ]
 FaceAnalyserGender = Literal[ 'male', 'female' ]
+FaceDetectionModel = Literal[ 'retinaface', 'yunet' ]
+FaceRecognitionModel = Literal[ 'arcface_inswapper', 'arcface_simswap' ]
 TempFrameFormat = Literal[ 'jpg', 'png' ]
 OutputVideoEncoder = Literal[ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc' ]
 

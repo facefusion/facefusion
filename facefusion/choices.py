@@ -8,6 +8,7 @@ from facefusion.typing import FaceSelectorMode, FaceAnalyserDirection, FaceAnaly
 face_analyser_directions : List[FaceAnalyserDirection] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small' ]
 face_analyser_ages : List[FaceAnalyserAge] = [ 'child', 'teen', 'adult', 'senior' ]
 face_analyser_genders : List[FaceAnalyserGender] = [ 'male', 'female' ]
+face_detection_models : List[str] = [ 'retinaface', 'yunet' ]
 face_detection_sizes : List[str] = [ '320x320', '480x480', '512x512', '640x640', '768x768', '1024x1024' ]
 face_selector_modes : List[FaceSelectorMode] = [ 'reference', 'many' ]
 temp_frame_formats : List[TempFrameFormat] = [ 'jpg', 'png' ]

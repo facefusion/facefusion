@@ -10,13 +10,17 @@ from facefusion.face_helper import warp_face
 from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Embedding
 from facefusion.utilities import resolve_relative_path, conditional_download
 from facefusion.vision import resize_frame_dimension
-from facefusion.processors.frame import globals as frame_processors_globals
 
 FACE_ANALYSER = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : Dict[str, ModelValue] =\
 {
+	'face_detection_yunet':
+	{
+		'url': 'https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx',
+		'path': resolve_relative_path('../.assets/models/face_detection_yunet_2023mar.onnx')
+	},
 	'face_recognition_arcface_inswapper':
 	{
 		'url': 'https://huggingface.co/bluefoxcreation/insightface-retinaface-arcface-model/resolve/main/w600k_r50.onnx',
@@ -26,11 +30,6 @@ MODELS : Dict[str, ModelValue] =\
 	{
 		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/simswap/simswap_arcface_backbone.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap_arcface_backbone.onnx')
-	},
-	'face_detection_yunet':
-	{
-		'url': 'https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx',
-		'path': resolve_relative_path('../.assets/models/face_detection_yunet_2023mar.onnx')
 	},
 	'gender_age':
 	{
@@ -45,13 +44,13 @@ def get_face_analyser() -> Any:
 
 	with THREAD_LOCK:
 		if FACE_ANALYSER is None:
-			if frame_processors_globals.face_swapper_model == 'inswapper_128' or frame_processors_globals.face_swapper_model == 'inswapper_128_fp16':
+			if facefusion.globals.face_recognition_model == 'arcface_inswapper':
 				face_recognition_model_path = MODELS.get('face_recognition_arcface_inswapper').get('path')
-			if frame_processors_globals.face_swapper_model == 'simswap_244':
+			if facefusion.globals.face_recognition_model == 'arcface_simswap':
 				face_recognition_model_path = MODELS.get('face_recognition_arcface_simswap').get('path')
 			FACE_ANALYSER =\
 			{
-				'face_detector': cv2.FaceDetectorYN.create(MODELS.get('face_detection_yunet').get('path'), None, (0, 0)),
+				'face_detection': cv2.FaceDetectorYN.create(MODELS.get('face_detection_yunet').get('path'), None, (0, 0)),
 				'face_recognition': onnxruntime.InferenceSession(face_recognition_model_path, providers = facefusion.globals.execution_providers),
 				'gender_age': onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = facefusion.globals.execution_providers)
 			}
@@ -69,9 +68,9 @@ def pre_check() -> bool:
 		download_directory_path = resolve_relative_path('../.assets/models')
 		model_urls =\
 		[
+			MODELS.get('face_detection_yunet').get('url'),
 			MODELS.get('face_recognition_arcface_inswapper').get('url'),
 			MODELS.get('face_recognition_arcface_simswap').get('url'),
-			MODELS.get('face_detection_yunet').get('url'),
 			MODELS.get('gender_age').get('url')
 		]
 		conditional_download(download_directory_path, model_urls)
@@ -79,20 +78,20 @@ def pre_check() -> bool:
 
 
 def extract_faces(frame : Frame) -> List[Face]:
-	face_detector = get_face_analyser().get('face_detector')
+	face_detection = get_face_analyser().get('face_detection')
 	face_detection_width, face_detection_height = map(int, facefusion.globals.face_detection_size.split('x'))
 	temp_frame = resize_frame_dimension(frame, face_detection_width, face_detection_height)
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
 	frame_height, frame_width, _ = frame.shape
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width
-	face_detector.setTopK(100)
-	face_detector.setInputSize((temp_frame_width, temp_frame_height))
+	face_detection.setTopK(100)
+	face_detection.setInputSize((temp_frame_width, temp_frame_height))
 	bbox_list = []
 	kps_list = []
 	score_list = []
 	with THREAD_SEMAPHORE:
-		_, detections = face_detector.detect(temp_frame)
+		_, detections = face_detection.detect(temp_frame)
 	if detections.any():
 		for detection in detections:
 			bbox_list.append(
@@ -109,7 +108,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 
 
 def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[float]) -> List[Face] :
-	faces = []
+	faces : List[Face] = []
 	keep_indices = cv2.dnn.NMSBoxes(bbox_list, score_list, facefusion.globals.face_detection_score, 0.5)
 	for index in keep_indices:
 		bbox = bbox_list[index]

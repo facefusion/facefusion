@@ -75,6 +75,10 @@ def listen() -> None:
 
 def update_face_swapper_model(face_swapper_model : str) -> gradio.Dropdown:
 	frame_processors_globals.face_swapper_model = face_swapper_model
+	if face_swapper_model == 'inswapper_128' or face_swapper_model == 'inswapper_128_fp16':
+		facefusion.globals.face_recognition_model = 'arcface_inswapper'
+	if face_swapper_model == 'simswap_244':
+		facefusion.globals.face_recognition_model = 'arcface_simswap'
 	face_swapper_module = load_frame_processor_module('face_swapper')
 	face_swapper_module.clear_frame_processor()
 	face_swapper_module.set_options('model', face_swapper_module.MODELS[face_swapper_model])

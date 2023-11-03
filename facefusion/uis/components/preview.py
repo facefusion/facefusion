@@ -107,6 +107,7 @@ def listen() -> None:
 	change_two_component_names : List[ComponentName] =\
 	[
 		'face_swapper_model_dropdown',
+		'face_detection_model_dropdown',
 		'face_detection_size_dropdown',
 		'face_detection_score_slider'
 	]
