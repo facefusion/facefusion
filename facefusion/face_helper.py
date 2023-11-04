@@ -1,10 +1,10 @@
-from typing import Tuple, Dict, Any
+from typing import Any, Dict, Tuple
 
 import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.typing import Frame, Kps, Matrix, Template
+from facefusion.typing import Frame, Kps, Matrix, Template, Bbox
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -51,3 +51,18 @@ def paste_back(temp_frame: Frame, crop_frame: Frame, affine_matrix: Matrix) -> F
 	temp_frame = inverse_blur_frame * inverse_temp_frame + (1 - inverse_blur_frame) * temp_frame
 	temp_frame = temp_frame.astype(numpy.uint8)
 	return temp_frame
+
+
+def distance_to_bbox(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> Bbox:
+	x1 = points[:, 0] - distance[:, 0]
+	y1 = points[:, 1] - distance[:, 1]
+	x2 = points[:, 0] + distance[:, 2]
+	y2 = points[:, 1] + distance[:, 3]
+	return numpy.column_stack([ x1, y1, x2, y2 ])
+
+
+def distance_to_kps(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> Kps:
+	x = points[:, 0::2] + distance[:, 0::2]
+	y = points[:, 1::2] + distance[:, 1::2]
+	kps = numpy.stack((x, y), axis = -1)
+	return kps.reshape((kps.shape[0], -1, 2))
