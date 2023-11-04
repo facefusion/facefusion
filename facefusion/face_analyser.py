@@ -6,7 +6,7 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion.face_cache import get_faces_cache, set_faces_cache
-from facefusion.face_helper import warp_face, distance_to_kps, distance_to_bbox
+from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox
 from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Score, Embedding
 from facefusion.utilities import resolve_relative_path, conditional_download
 from facefusion.vision import resize_frame_dimension
@@ -113,14 +113,11 @@ def extract_faces(frame : Frame) -> List[Face]:
 				face_detection.get_inputs()[0].name: temp_frame
 			})
 		for index, feature_stride in enumerate(feature_strides):
-			bbox_raw = detections[index + feature_map_channel]
-			bbox_raw = bbox_raw * feature_stride
-			kps_raw = detections[index + feature_map_channel * 2] * feature_stride
 			stride_height = temp_frame.shape[2] // feature_stride
 			stride_width = temp_frame.shape[3] // feature_stride
-			anchors = numpy.stack(numpy.mgrid[:stride_height, :stride_width][::-1], axis = -1).astype(numpy.float32) # type: ignore[call-overload]
-			anchors = (anchors * feature_stride).reshape((-1, 2))
-			anchors = numpy.stack([ anchors ] * anchor_total, axis = 1).reshape((-1, 2))
+			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
+			bbox_raw = detections[index + feature_map_channel] * feature_stride
+			kps_raw = detections[index + feature_map_channel * 2] * feature_stride
 			bbox_list.append(distance_to_bbox(anchors, bbox_raw))
 			kps_list.append(distance_to_kps(anchors, kps_raw))
 			score_list.append(detections[index])

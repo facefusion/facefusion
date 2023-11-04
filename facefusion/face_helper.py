@@ -1,10 +1,10 @@
 from typing import Any, Dict, Tuple
-
+from functools import lru_cache
+from cv2.typing import Size
 import cv2
 import numpy
-from cv2.typing import Size
 
-from facefusion.typing import Frame, Kps, Matrix, Template, Bbox
+from facefusion.typing import Bbox, Kps, Frame, Matrix, Template
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -34,7 +34,7 @@ def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -
 	return crop_frame, affine_matrix
 
 
-def paste_back(temp_frame: Frame, crop_frame: Frame, affine_matrix: Matrix) -> Frame:
+def paste_back(temp_frame : Frame, crop_frame : Frame, affine_matrix : Matrix) -> Frame:
 	inverse_affine_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_frame_height, temp_frame_width = temp_frame.shape[0:2]
 	crop_frame_height, crop_frame_width = crop_frame.shape[0:2]
@@ -53,16 +53,26 @@ def paste_back(temp_frame: Frame, crop_frame: Frame, affine_matrix: Matrix) -> F
 	return temp_frame
 
 
+@lru_cache(maxsize = None)
+def create_static_anchors(feature_stride : int, anchor_total : int, stride_height : int, stride_width : int) -> numpy.ndarray[Any, Any]:
+	y, x = numpy.mgrid[:stride_height, :stride_width][::-1]
+	anchors = numpy.stack((y, x), axis = -1)
+	anchors = (anchors * feature_stride).reshape((-1, 2))
+	anchors = numpy.stack([ anchors ] * anchor_total, axis = 1).reshape((-1, 2))
+	return anchors
+
+
 def distance_to_bbox(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> Bbox:
 	x1 = points[:, 0] - distance[:, 0]
 	y1 = points[:, 1] - distance[:, 1]
 	x2 = points[:, 0] + distance[:, 2]
 	y2 = points[:, 1] + distance[:, 3]
-	return numpy.column_stack([ x1, y1, x2, y2 ])
+	bbox = numpy.column_stack([ x1, y1, x2, y2 ])
+	return bbox
 
 
 def distance_to_kps(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> Kps:
 	x = points[:, 0::2] + distance[:, 0::2]
 	y = points[:, 1::2] + distance[:, 1::2]
 	kps = numpy.stack((x, y), axis = -1)
-	return kps.reshape((kps.shape[0], -1, 2))
+	return kps
