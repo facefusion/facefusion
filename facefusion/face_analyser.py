@@ -113,14 +113,16 @@ def extract_faces(frame : Frame) -> List[Face]:
 				face_detection.get_inputs()[0].name: temp_frame
 			})
 		for index, feature_stride in enumerate(feature_strides):
-			stride_height = temp_frame.shape[2] // feature_stride
-			stride_width = temp_frame.shape[3] // feature_stride
-			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
-			bbox_raw = detections[index + feature_map_channel] * feature_stride
-			kps_raw = detections[index + feature_map_channel * 2] * feature_stride
-			bbox_list.append(distance_to_bbox(anchors, bbox_raw))
-			kps_list.append(distance_to_kps(anchors, kps_raw))
-			score_list.append(detections[index])
+			keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detection_score)[0]
+			if keep_indices.any():
+				stride_height = temp_frame.shape[2] // feature_stride
+				stride_width = temp_frame.shape[3] // feature_stride
+				anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
+				bbox_raw = (detections[index + feature_map_channel] * feature_stride)
+				kps_raw = detections[index + feature_map_channel * 2] * feature_stride
+				bbox_list.append(distance_to_bbox(anchors, bbox_raw)[keep_indices])
+				kps_list.append(distance_to_kps(anchors, kps_raw)[keep_indices])
+				score_list.append(detections[index][keep_indices])
 		bbox_list = numpy.vstack(bbox_list) * ratio_height # type: ignore[assignment]
 		kps_list = numpy.vstack(kps_list) * ratio_height # type: ignore[assignment]
 		score_list = numpy.vstack(score_list) # type: ignore[assignment]
