@@ -85,6 +85,7 @@ def listen() -> None:
 			component.change(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	change_two_component_names : List[ComponentName] =\
 	[
+		'face_detection_model_dropdown',
 		'face_detection_size_dropdown',
 		'face_detection_score_slider'
 	]

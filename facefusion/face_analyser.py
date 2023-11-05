@@ -103,9 +103,9 @@ def extract_faces(frame : Frame) -> List[Face]:
 		feature_strides = [ 8, 16, 32 ]
 		feature_map_channel = 3
 		anchor_total = 2
-		crop_frame = numpy.zeros((face_detection_height, face_detection_width, 3))
-		crop_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
-		temp_frame = (crop_frame - 127.5) / 128.0
+		pad_frame = numpy.zeros((face_detection_height, face_detection_width, 3))
+		pad_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
+		temp_frame = (pad_frame - 127.5) / 128.0
 		temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 		with THREAD_SEMAPHORE:
 			detections = face_detection.run(None,
@@ -115,8 +115,8 @@ def extract_faces(frame : Frame) -> List[Face]:
 		for index, feature_stride in enumerate(feature_strides):
 			keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detection_score)[0]
 			if keep_indices.any():
-				stride_height = temp_frame.shape[2] // feature_stride
-				stride_width = temp_frame.shape[3] // feature_stride
+				stride_height = face_detection_height // feature_stride
+				stride_width = face_detection_width // feature_stride
 				anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
 				bbox_raw = (detections[index + feature_map_channel] * feature_stride)
 				kps_raw = detections[index + feature_map_channel * 2] * feature_stride
