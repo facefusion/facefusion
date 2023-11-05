@@ -13,9 +13,8 @@ from facefusion.typing import Frame, ModelValue
 from facefusion.vision import get_video_frame, count_video_frame_total, read_image, detect_fps
 from facefusion.utilities import resolve_relative_path, conditional_download
 
-PREDICTOR = None
+CONTENT_ANALYSER = None
 THREAD_LOCK : threading.Lock = threading.Lock()
-NAME = 'FACEFUSION.PREDICTOR'
 MODELS : Dict[str, ModelValue] =\
 {
 	'open_nsfw':
@@ -29,20 +28,20 @@ MAX_RATE = 5
 STREAM_COUNTER = 0
 
 
-def get_predictor() -> Any:
-	global PREDICTOR
+def get_content_analyser() -> Any:
+	global CONTENT_ANALYSER
 
 	with THREAD_LOCK:
-		if PREDICTOR is None:
+		if CONTENT_ANALYSER is None:
 			model_path = MODELS.get('open_nsfw').get('path')
-			PREDICTOR = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
-	return PREDICTOR
+			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
+	return CONTENT_ANALYSER
 
 
-def clear_predictor() -> None:
-	global PREDICTOR
+def clear_content_analyser() -> None:
+	global CONTENT_ANALYSER
 
-	PREDICTOR = None
+	CONTENT_ANALYSER = None
 
 
 def pre_check() -> bool:
@@ -53,12 +52,12 @@ def pre_check() -> bool:
 	return True
 
 
-def predict_stream(frame : Frame, fps : float) -> bool:
+def analyse_stream(frame : Frame, fps : float) -> bool:
 	global STREAM_COUNTER
 
 	STREAM_COUNTER = STREAM_COUNTER + 1
 	if STREAM_COUNTER % int(fps) == 0:
-		return predict_frame(frame)
+		return analyse_frame(frame)
 	return False
 
 
@@ -69,10 +68,10 @@ def prepare_frame(frame : Frame) -> Frame:
 	return frame
 
 
-def predict_frame(frame : Frame) -> bool:
-	predictor = get_predictor()
+def analyse_frame(frame : Frame) -> bool:
+	content_analyser = get_content_analyser()
 	frame = prepare_frame(frame)
-	probability = predictor.run(None,
+	probability = content_analyser.run(None,
 	{
 		'input:0': frame
 	})[0][0][1]
@@ -80,13 +79,13 @@ def predict_frame(frame : Frame) -> bool:
 
 
 @lru_cache(maxsize = None)
-def predict_image(image_path : str) -> bool:
+def analyse_image(image_path : str) -> bool:
 	frame = read_image(image_path)
-	return predict_frame(frame)
+	return analyse_frame(frame)
 
 
 @lru_cache(maxsize = None)
-def predict_video(video_path : str, start_frame : int, end_frame : int) -> bool:
+def analyse_video(video_path : str, start_frame : int, end_frame : int) -> bool:
 	video_frame_total = count_video_frame_total(video_path)
 	fps = detect_fps(video_path)
 	frame_range = range(start_frame or 0, end_frame or video_frame_total)
@@ -96,7 +95,7 @@ def predict_video(video_path : str, start_frame : int, end_frame : int) -> bool:
 		for frame_number in frame_range:
 			if frame_number % int(fps) == 0:
 				frame = get_video_frame(video_path, frame_number)
-				if predict_frame(frame):
+				if analyse_frame(frame):
 					counter += 1
 			rate = counter * int(fps) / len(frame_range) * 100
 			progress.update()

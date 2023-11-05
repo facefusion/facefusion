@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.predictor import predict_stream
+from facefusion.content_analyser import analyse_stream
 from facefusion.typing import Frame, Face
 from facefusion.face_analyser import get_one_face
 from facefusion.processors.frame.core import get_frame_processors_modules
@@ -81,7 +81,7 @@ def multi_process_capture(source_face : Face, capture : cv2.VideoCapture, fps : 
 		deque_capture_frames : Deque[Frame] = deque()
 		while True:
 			_, capture_frame = capture.read()
-			if predict_stream(capture_frame, fps):
+			if analyse_stream(capture_frame, fps):
 				return
 			future = executor.submit(process_stream_frame, source_face, capture_frame)
 			futures.append(future)

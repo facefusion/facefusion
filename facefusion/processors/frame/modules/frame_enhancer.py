@@ -9,7 +9,7 @@ import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
 from facefusion.face_analyser import clear_face_analyser
-from facefusion.predictor import clear_predictor
+from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Frame, Face, Update_Process, ProcessMode, ModelValue, OptionsWithModel
 from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done, map_device, create_metavar, update_status
 from facefusion.vision import read_image, read_static_image, write_image
@@ -124,7 +124,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	clear_frame_processor()
 	clear_face_analyser()
-	clear_predictor()
+	clear_content_analyser()
 	read_static_image.cache_clear()
 
 

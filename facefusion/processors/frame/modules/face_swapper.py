@@ -12,7 +12,7 @@ from facefusion import wording
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_helper import warp_face, paste_back
 from facefusion.face_reference import get_face_reference, set_face_reference
-from facefusion.predictor import clear_predictor
+from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel, Embedding
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done, update_status
 from facefusion.vision import read_image, read_static_image, write_image
@@ -149,7 +149,7 @@ def post_process() -> None:
 	clear_frame_processor()
 	clear_model_matrix()
 	clear_face_analyser()
-	clear_predictor()
+	clear_content_analyser()
 	read_static_image.cache_clear()
 
 
