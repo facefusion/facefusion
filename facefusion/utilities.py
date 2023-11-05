@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 from functools import lru_cache
 from pathlib import Path
+
 from tqdm import tqdm
 import glob
 import mimetypes
@@ -10,7 +11,7 @@ import shutil
 import ssl
 import subprocess
 import tempfile
-import urllib
+import urllib.request
 import onnxruntime
 
 import facefusion.globals
@@ -70,13 +71,13 @@ def merge_video(target_path : str, fps : float) -> bool:
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
 	commands = [ '-hwaccel', 'auto', '-r', str(fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
 	if facefusion.globals.output_video_encoder in [ 'libx264', 'libx265' ]:
-		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.5))
+		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
 		commands.extend([ '-crf', str(output_video_compression) ])
 	if facefusion.globals.output_video_encoder in [ 'libvpx-vp9' ]:
-		output_video_compression = round(63 - (facefusion.globals.output_video_quality * 0.5))
+		output_video_compression = round(63 - (facefusion.globals.output_video_quality * 0.63))
 		commands.extend([ '-crf', str(output_video_compression) ])
 	if facefusion.globals.output_video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
-		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.5))
+		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
 		commands.extend([ '-cq', str(output_video_compression) ])
 	commands.extend([ '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_output_video_path ])
 	return run_ffmpeg(commands)
@@ -187,7 +188,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 			initial = 0
 		if initial < total:
 			with tqdm(total = total, initial = initial, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024) as progress:
-				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--location', '--continue-at', '-', '--output', download_file_path, url ])
+				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])
 				current = initial
 				while current < total:
 					if is_file(download_file_path):
@@ -196,12 +197,12 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 
 
 @lru_cache(maxsize = None)
-def get_download_size(url : str) -> Optional[int]:
+def get_download_size(url : str) -> int:
 	try:
-		response = urllib.request.urlopen(url) # type: ignore[attr-defined]
+		response = urllib.request.urlopen(url)
 		return int(response.getheader('Content-Length'))
 	except (OSError, ValueError):
-		return None
+		return 0
 
 
 def is_download_done(url : str, file_path : str) -> bool:
@@ -231,9 +232,19 @@ def decode_execution_providers(execution_providers: List[str]) -> List[str]:
 	return [ execution_provider for execution_provider, encoded_execution_provider in zip(available_execution_providers, encoded_execution_providers) if any(execution_provider in encoded_execution_provider for execution_provider in execution_providers) ]
 
 
-def get_device(execution_providers : List[str]) -> str:
-	if 'CUDAExecutionProvider' in execution_providers:
-		return 'cuda'
+def map_device(execution_providers : List[str]) -> str:
 	if 'CoreMLExecutionProvider' in execution_providers:
 		return 'mps'
+	if 'CUDAExecutionProvider' in execution_providers or 'ROCMExecutionProvider' in execution_providers :
+		return 'cuda'
+	if 'OpenVINOExecutionProvider' in execution_providers:
+		return 'mkl'
 	return 'cpu'
+
+
+def create_metavar(ranges : List[Any]) -> str:
+	return '[' + str(ranges[0]) + '-' + str(ranges[-1]) + ']'
+
+
+def update_status(message : str, scope : str = 'FACEFUSION.CORE') -> None:
+	print('[' + scope + '] ' + message)
