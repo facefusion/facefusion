@@ -125,7 +125,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 				score_list.append(detections[index][keep_indices])
 		bbox_list = numpy.vstack(bbox_list) * ratio_height # type: ignore[assignment]
 		kps_list = numpy.vstack(kps_list) * ratio_height # type: ignore[assignment]
-		score_list = numpy.hstack(numpy.vstack(score_list)) # type: ignore[assignment]
+		score_list = numpy.hstack(numpy.vstack(score_list)) # type: ignore[call-overload]
 	if facefusion.globals.face_detection_model == 'yunet':
 		face_detection.setInputSize((temp_frame_width, temp_frame_height))
 		face_detection.setScoreThreshold(facefusion.globals.face_detection_score)
