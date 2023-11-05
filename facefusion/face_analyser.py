@@ -125,10 +125,11 @@ def extract_faces(frame : Frame) -> List[Face]:
 				score_list.append(detections[index][keep_indices])
 		bbox_list = numpy.vstack(bbox_list) * ratio_height # type: ignore[assignment]
 		kps_list = numpy.vstack(kps_list) * ratio_height # type: ignore[assignment]
-		score_list = numpy.vstack(score_list) # type: ignore[assignment]
-		score_list = numpy.hstack(score_list) # type: ignore[assignment]
+		score_list = numpy.hstack(numpy.vstack(score_list)) # type: ignore[assignment]
 	if facefusion.globals.face_detection_model == 'yunet':
 		face_detection.setInputSize((temp_frame_width, temp_frame_height))
+		face_detection.setScoreThreshold(facefusion.globals.face_detection_score)
+		face_detection.setNMSThreshold(0.4)
 		with THREAD_SEMAPHORE:
 			_, detections = face_detection.detect(temp_frame)
 		if detections.any():
@@ -140,7 +141,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 					(detection[0] + detection[2]) * ratio_width,
 					(detection[1] + detection[3]) * ratio_height
 				]))
-				kps_list.append((detection[4:14].reshape((5, 2)) * [[ ratio_width, ratio_height ]]))
+				kps_list.append(detection[4:14].reshape((5, 2)) * [[ ratio_width, ratio_height ]])
 				score_list.append(detection[14])
 	faces = create_faces(frame, bbox_list, kps_list, score_list)
 	return faces
@@ -148,7 +149,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 
 def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face] :
 	faces : List[Face] = []
-	keep_indices = cv2.dnn.NMSBoxes(bbox_list, score_list, facefusion.globals.face_detection_score, 0.5)
+	keep_indices = cv2.dnn.NMSBoxes(bbox_list, score_list, facefusion.globals.face_detection_score, 0.4)
 	for index in keep_indices:
 		bbox = bbox_list[index]
 		kps = kps_list[index]
