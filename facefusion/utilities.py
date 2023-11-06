@@ -120,12 +120,14 @@ def get_temp_output_video_path(target_path : str) -> str:
 
 
 def normalize_output_path(source_path : Optional[str], target_path : Optional[str], output_path : Optional[str]) -> Optional[str]:
-	if is_file(source_path) and is_file(target_path) and is_directory(output_path):
-		source_name, _ = os.path.splitext(os.path.basename(source_path))
+	if is_file(target_path) and is_directory(output_path):
 		target_name, target_extension = os.path.splitext(os.path.basename(target_path))
-		return os.path.join(output_path, source_name + '-' + target_name + target_extension)
+		if is_file(source_path):
+			source_name, _ = os.path.splitext(os.path.basename(source_path))
+			return os.path.join(output_path, source_name + '-' + target_name + target_extension)
+		return os.path.join(output_path, target_name + target_extension)
 	if is_file(target_path) and output_path:
-		target_name, target_extension = os.path.splitext(os.path.basename(target_path))
+		_, target_extension = os.path.splitext(os.path.basename(target_path))
 		output_name, output_extension = os.path.splitext(os.path.basename(output_path))
 		output_directory_path = os.path.dirname(output_path)
 		if is_directory(output_directory_path) and output_extension:
