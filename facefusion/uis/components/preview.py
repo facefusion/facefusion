@@ -4,11 +4,12 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.core import conditional_set_face_reference
 from facefusion.face_cache import clear_faces_cache
 from facefusion.typing import Frame, Face
 from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_static_image
 from facefusion.face_analyser import get_one_face, clear_face_analyser
-from facefusion.face_reference import get_face_reference, set_face_reference, clear_face_reference
+from facefusion.face_reference import get_face_reference, clear_face_reference
 from facefusion.content_analyser import analyse_frame
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.utilities import is_video, is_image
@@ -161,10 +162,3 @@ def process_preview_frame(source_face : Face, reference_face : Face, temp_frame 
 				temp_frame
 			)
 	return temp_frame
-
-
-def conditional_set_face_reference() -> None:
-	if 'reference' in facefusion.globals.face_selector_mode and not get_face_reference():
-		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
-		set_face_reference(reference_face)

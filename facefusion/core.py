@@ -1,5 +1,9 @@
 import os
 
+from facefusion.face_analyser import get_one_face
+from facefusion.face_reference import get_face_reference, set_face_reference
+from facefusion.vision import get_video_frame, read_image
+
 os.environ['OMP_NUM_THREADS'] = '1'
 
 import signal
@@ -179,6 +183,7 @@ def pre_check() -> bool:
 
 
 def conditional_process() -> None:
+	conditional_set_face_reference()
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_process('output'):
 			return
@@ -186,6 +191,16 @@ def conditional_process() -> None:
 		process_image()
 	if is_video(facefusion.globals.target_path):
 		process_video()
+
+
+def conditional_set_face_reference() -> None:
+	if 'reference' in facefusion.globals.face_selector_mode and not get_face_reference():
+		if is_video(facefusion.globals.target_path):
+			reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+		else:
+			reference_frame = read_image(facefusion.globals.target_path)
+		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
+		set_face_reference(reference_face)
 
 
 def process_image() -> None:

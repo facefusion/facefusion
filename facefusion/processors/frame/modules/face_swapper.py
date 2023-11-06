@@ -11,7 +11,7 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_helper import warp_face, paste_back
-from facefusion.face_reference import get_face_reference, set_face_reference
+from facefusion.face_reference import get_face_reference
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel, Embedding
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done, update_status
@@ -232,12 +232,4 @@ def process_image(source_path : str, target_path : str, output_path : str) -> No
 
 
 def process_video(source_path : str, temp_frame_paths : List[str]) -> None:
-	conditional_set_face_reference(temp_frame_paths)
 	frame_processors.multi_process_frames(source_path, temp_frame_paths, process_frames)
-
-
-def conditional_set_face_reference(temp_frame_paths : List[str]) -> None:
-	if 'reference' in facefusion.globals.face_selector_mode and not get_face_reference():
-		reference_frame = read_static_image(temp_frame_paths[facefusion.globals.reference_frame_number])
-		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
-		set_face_reference(reference_face)
