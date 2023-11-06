@@ -16,22 +16,22 @@ THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : Dict[str, ModelValue] =\
 {
-	'face_detection_retinaface':
+	'face_detector_retinaface':
 	{
 		'url': 'https://huggingface.co/bluefoxcreation/insightface-retinaface-arcface-model/resolve/main/det_10g.onnx',
 		'path': resolve_relative_path('../.assets/models/det_10g.onnx')
 	},
-	'face_detection_yunet':
+	'face_detector_yunet':
 	{
 		'url': 'https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx',
 		'path': resolve_relative_path('../.assets/models/face_detection_yunet_2023mar.onnx')
 	},
-	'face_recognition_arcface_inswapper':
+	'face_recognizer_arcface_inswapper':
 	{
 		'url': 'https://huggingface.co/bluefoxcreation/insightface-retinaface-arcface-model/resolve/main/w600k_r50.onnx',
 		'path': resolve_relative_path('../.assets/models/w600k_r50.onnx')
 	},
-	'face_recognition_arcface_simswap':
+	'face_recognizer_arcface_simswap':
 	{
 		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/simswap/simswap_arcface_backbone.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap_arcface_backbone.onnx')
@@ -49,19 +49,19 @@ def get_face_analyser() -> Any:
 
 	with THREAD_LOCK:
 		if FACE_ANALYSER is None:
-			if facefusion.globals.face_detection_model == 'retinaface':
-				face_detection = onnxruntime.InferenceSession(MODELS.get('face_detection_retinaface').get('path'), providers = facefusion.globals.execution_providers)
-			if facefusion.globals.face_detection_model == 'yunet':
-				face_detection = cv2.FaceDetectorYN.create(MODELS.get('face_detection_yunet').get('path'), '', (0, 0))
-			if facefusion.globals.face_recognition_model == 'arcface_inswapper':
-				face_recognition = onnxruntime.InferenceSession(MODELS.get('face_recognition_arcface_inswapper').get('path'), providers = facefusion.globals.execution_providers)
-			if facefusion.globals.face_recognition_model == 'arcface_simswap':
-				face_recognition = onnxruntime.InferenceSession(MODELS.get('face_recognition_arcface_simswap').get('path'), providers = facefusion.globals.execution_providers)
+			if facefusion.globals.face_detector_model == 'retinaface':
+				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = facefusion.globals.execution_providers)
+			if facefusion.globals.face_detector_model == 'yunet':
+				face_detector = cv2.FaceDetectorYN.create(MODELS.get('face_detector_yunet').get('path'), '', (0, 0))
+			if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = facefusion.globals.execution_providers)
+			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = facefusion.globals.execution_providers)
 			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'),  providers=facefusion.globals.execution_providers)
 			FACE_ANALYSER =\
 			{
-				'face_detection': face_detection,
-				'face_recognition': face_recognition,
+				'face_detector': face_detector,
+				'face_recognizer': face_recognizer,
 				'gender_age': gender_age
 			}
 	return FACE_ANALYSER
@@ -78,10 +78,10 @@ def pre_check() -> bool:
 		download_directory_path = resolve_relative_path('../.assets/models')
 		model_urls =\
 		[
-			MODELS.get('face_detection_retinaface').get('url'),
-			MODELS.get('face_detection_yunet').get('url'),
-			MODELS.get('face_recognition_arcface_inswapper').get('url'),
-			MODELS.get('face_recognition_arcface_simswap').get('url'),
+			MODELS.get('face_detector_retinaface').get('url'),
+			MODELS.get('face_detector_yunet').get('url'),
+			MODELS.get('face_recognizer_arcface_inswapper').get('url'),
+			MODELS.get('face_recognizer_arcface_simswap').get('url'),
 			MODELS.get('gender_age').get('url')
 		]
 		conditional_download(download_directory_path, model_urls)
@@ -89,34 +89,34 @@ def pre_check() -> bool:
 
 
 def extract_faces(frame : Frame) -> List[Face]:
-	face_detection = get_face_analyser().get('face_detection')
-	face_detection_width, face_detection_height = map(int, facefusion.globals.face_detection_size.split('x'))
+	face_detector = get_face_analyser().get('face_detector')
+	face_detector_width, face_detector_height = map(int, facefusion.globals.face_detector_size.split('x'))
 	frame_height, frame_width, _ = frame.shape
-	temp_frame = resize_frame_dimension(frame, face_detection_width, face_detection_height)
+	temp_frame = resize_frame_dimension(frame, face_detector_width, face_detector_height)
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width
 	bbox_list : List[Bbox] = []
 	kps_list : List[Kps] = []
 	score_list : List[Score] = []
-	if facefusion.globals.face_detection_model == 'retinaface':
+	if facefusion.globals.face_detector_model == 'retinaface':
 		feature_strides = [ 8, 16, 32 ]
 		feature_map_channel = 3
 		anchor_total = 2
-		pad_frame = numpy.zeros((face_detection_height, face_detection_width, 3))
+		pad_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
 		pad_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
 		temp_frame = (pad_frame - 127.5) / 128.0
 		temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 		with THREAD_SEMAPHORE:
-			detections = face_detection.run(None,
+			detections = face_detector.run(None,
 			{
-				face_detection.get_inputs()[0].name: temp_frame
+				face_detector.get_inputs()[0].name: temp_frame
 			})
 		for index, feature_stride in enumerate(feature_strides):
-			keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detection_score)[0]
+			keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
 			if keep_indices.any():
-				stride_height = face_detection_height // feature_stride
-				stride_width = face_detection_width // feature_stride
+				stride_height = face_detector_height // feature_stride
+				stride_width = face_detector_width // feature_stride
 				anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
 				bbox_raw = (detections[index + feature_map_channel] * feature_stride)
 				kps_raw = detections[index + feature_map_channel * 2] * feature_stride
@@ -132,12 +132,12 @@ def extract_faces(frame : Frame) -> List[Face]:
 					kps_list.append(kps * [[ ratio_width, ratio_height ]])
 				for score in detections[index][keep_indices]:
 					score_list.append(score[0])
-	if facefusion.globals.face_detection_model == 'yunet':
-		face_detection.setInputSize((temp_frame_width, temp_frame_height))
-		face_detection.setScoreThreshold(facefusion.globals.face_detection_score)
-		face_detection.setNMSThreshold(0.4)
+	if facefusion.globals.face_detector_model == 'yunet':
+		face_detector.setInputSize((temp_frame_width, temp_frame_height))
+		face_detector.setScoreThreshold(facefusion.globals.face_detector_score)
+		face_detector.setNMSThreshold(0.4)
 		with THREAD_SEMAPHORE:
-			_, detections = face_detection.detect(temp_frame)
+			_, detections = face_detector.detect(temp_frame)
 		if detections.any():
 			for detection in detections:
 				bbox_list.append(numpy.array(
@@ -155,7 +155,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 
 def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face] :
 	faces : List[Face] = []
-	keep_indices = cv2.dnn.NMSBoxes(bbox_list, score_list, facefusion.globals.face_detection_score, 0.4)
+	keep_indices = cv2.dnn.NMSBoxes(bbox_list, score_list, facefusion.globals.face_detector_score, 0.4)
 	for index in keep_indices:
 		bbox = bbox_list[index]
 		kps = kps_list[index]
@@ -175,14 +175,14 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 
 
 def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]:
-	face_recognition = get_face_analyser().get('face_recognition')
+	face_recognizer = get_face_analyser().get('face_recognizer')
 	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface', (112, 112))
 	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
 	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
-	embedding = face_recognition.run(None,
+	embedding = face_recognizer.run(None,
 	{
-		face_recognition.get_inputs()[0].name: crop_frame
+		face_recognizer.get_inputs()[0].name: crop_frame
 	})[0]
 	embedding = embedding.ravel()
 	normed_embedding = embedding / numpy.linalg.norm(embedding)

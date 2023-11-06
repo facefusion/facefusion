@@ -44,9 +44,9 @@ def cli() -> None:
 	group_face_analyser.add_argument('--face-analyser-direction', help = wording.get('face_analyser_direction_help'), dest = 'face_analyser_direction', default = 'left-right', choices = facefusion.choices.face_analyser_directions)
 	group_face_analyser.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), dest = 'face_analyser_age', choices = facefusion.choices.face_analyser_ages)
 	group_face_analyser.add_argument('--face-analyser-gender', help = wording.get('face_analyser_gender_help'), dest = 'face_analyser_gender', choices = facefusion.choices.face_analyser_genders)
-	group_face_analyser.add_argument('--face-detection-model', help = wording.get('face_detection_model_help'), dest ='face_detection_model', default = 'retinaface', choices = facefusion.choices.face_detection_models)
-	group_face_analyser.add_argument('--face-detection-size', help = wording.get('face_detection_size_help'), dest = 'face_detection_size', default = '640x640', choices = facefusion.choices.face_detection_sizes)
-	group_face_analyser.add_argument('--face-detection-score', help = wording.get('face_detection_score_help'), dest = 'face_detection_score', type = float, default = 0.5, choices = facefusion.choices.face_detection_score_range, metavar = create_metavar(facefusion.choices.face_detection_score_range))
+	group_face_analyser.add_argument('--face-detector-model', help = wording.get('face_detector_model_help'), dest ='face_detector_model', default = 'retinaface', choices = facefusion.choices.face_detector_models)
+	group_face_analyser.add_argument('--face-detector-size', help = wording.get('face_detector_size_help'), dest = 'face_detector_size', default = '640x640', choices = facefusion.choices.face_detector_sizes)
+	group_face_analyser.add_argument('--face-detector-score', help = wording.get('face_detector_score_help'), dest = 'face_detector_score', type = float, default = 0.5, choices = facefusion.choices.face_detector_score_range, metavar = create_metavar(facefusion.choices.face_detector_score_range))
 	# face selector
 	group_face_selector = program.add_argument_group('face selector')
 	group_face_selector.add_argument('--face-selector-mode', help = wording.get('face_selector_mode_help'), dest = 'face_selector_mode', default = 'reference', choices = facefusion.choices.face_selector_modes)
@@ -99,9 +99,9 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.face_analyser_direction = args.face_analyser_direction
 	facefusion.globals.face_analyser_age = args.face_analyser_age
 	facefusion.globals.face_analyser_gender = args.face_analyser_gender
-	facefusion.globals.face_detection_model = args.face_detection_model
-	facefusion.globals.face_detection_size = args.face_detection_size
-	facefusion.globals.face_detection_score = args.face_detection_score
+	facefusion.globals.face_detector_model = args.face_detector_model
+	facefusion.globals.face_detector_size = args.face_detector_size
+	facefusion.globals.face_detector_score = args.face_detector_score
 	# face selector
 	facefusion.globals.face_selector_mode = args.face_selector_mode
 	facefusion.globals.reference_face_position = args.reference_face_position

@@ -108,9 +108,9 @@ def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
 	if args.face_swapper_model == 'inswapper_128' or args.face_swapper_model== 'inswapper_128_fp16':
-		facefusion.globals.face_recognition_model = 'arcface_inswapper'
+		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 	if args.face_swapper_model == 'simswap_244':
-		facefusion.globals.face_recognition_model = 'arcface_simswap'
+		facefusion.globals.face_recognizer_model = 'arcface_simswap'
 
 
 def pre_check() -> bool:
