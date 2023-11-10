@@ -189,7 +189,8 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		else:
 			initial = 0
 		if initial < total:
-			with tqdm(total = total, initial = initial, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024) as progress:
+			bar_format = '{l_bar}{bar}| {n_fmt}/{total_fmt}]'
+			with tqdm(total = total, initial = initial, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, bar_format = bar_format) as progress:
 				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])
 				current = initial
 				while current < total:
@@ -201,7 +202,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 @lru_cache(maxsize = None)
 def get_download_size(url : str) -> int:
 	try:
-		response = urllib.request.urlopen(url)
+		response = urllib.request.urlopen(url, timeout = 10)
 		return int(response.getheader('Content-Length'))
 	except (OSError, ValueError):
 		return 0
