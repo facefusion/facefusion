@@ -32,29 +32,36 @@ MODELS : Dict[str, ModelValue] =\
 	},
 	'gfpgan_1.2':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.2.onnx',
-		'path': resolve_relative_path('../.assets/models/GFPGANv1.2.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.2.onnx',
+		'path': resolve_relative_path('../.assets/models/gfpgan_1.2.onnx'),
 		'template': 'ffhq',
 		'size': (512, 512)
 	},
 	'gfpgan_1.3':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.3.onnx',
-		'path': resolve_relative_path('../.assets/models/GFPGANv1.3.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.3.onnx',
+		'path': resolve_relative_path('../.assets/models/gfpgan_1.3.onnx'),
 		'template': 'ffhq',
 		'size': (512, 512)
 	},
 	'gfpgan_1.4':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GFPGANv1.4.onnx',
-		'path': resolve_relative_path('../.assets/models/GFPGANv1.4.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.4.onnx',
+		'path': resolve_relative_path('../.assets/models/gfpgan_1.4.onnx'),
 		'template': 'ffhq',
 		'size': (512, 512)
 	},
 	'gpen_bfr_512':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/GPEN-BFR-512.onnx',
-		'path': resolve_relative_path('../.assets/models/GPEN-BFR-512.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_512.onnx',
+		'path': resolve_relative_path('../.assets/models/gpen_bfr_512.onnx'),
+		'template': 'ffhq',
+		'size': (512, 512)
+	},
+	'restoreformer':
+	{
+		'url': 'https://github.com/harisreedhar/Face-Upscalers-ONNX/releases/download/Models/restoreformer.onnx',
+		'path': resolve_relative_path('../.assets/models/restoreformer.onnx'),
 		'template': 'ffhq',
 		'size': (512, 512)
 	}

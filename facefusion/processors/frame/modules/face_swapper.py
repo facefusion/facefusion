@@ -41,8 +41,8 @@ MODELS : Dict[str, ModelValue] =\
 	},
 	'simswap_244':
 	{
-		'url': 'https://github.com/harisreedhar/Face-Swappers-ONNX/releases/download/simswap/simswap.onnx',
-		'path': resolve_relative_path('../.assets/models/simswap.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_244.onnx',
+		'path': resolve_relative_path('../.assets/models/simswap_244.onnx'),
 		'template': 'arcface',
 		'size': (112, 224)
 	}
@@ -108,9 +108,9 @@ def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
 	if args.face_swapper_model == 'inswapper_128' or args.face_swapper_model == 'inswapper_128_fp16':
-		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
+		facefusion.globals.face_recognizer_model = 'inswapper_webface'
 	if args.face_swapper_model == 'simswap_244':
-		facefusion.globals.face_recognizer_model = 'arcface_simswap'
+		facefusion.globals.face_recognizer_model = 'simswap_arcface'
 
 
 def pre_check() -> bool:
