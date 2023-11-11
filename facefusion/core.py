@@ -1,9 +1,5 @@
 import os
 
-from facefusion.face_analyser import get_one_face
-from facefusion.face_reference import get_face_reference, set_face_reference
-from facefusion.vision import get_video_frame, read_image
-
 os.environ['OMP_NUM_THREADS'] = '1'
 
 import signal
@@ -16,6 +12,9 @@ from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
 import facefusion.globals
+from facefusion.face_analyser import get_one_face
+from facefusion.face_reference import get_face_reference, set_face_reference
+from facefusion.vision import get_video_frame, read_image
 from facefusion import face_analyser, content_analyser, metadata, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
