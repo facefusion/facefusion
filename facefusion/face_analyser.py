@@ -88,69 +88,84 @@ def pre_check() -> bool:
 	return True
 
 
-def extract_faces(frame : Frame) -> List[Face]:
-	face_detector = get_face_analyser().get('face_detector')
+def extract_faces(frame: Frame) -> List[Face]:
 	face_detector_width, face_detector_height = map(int, facefusion.globals.face_detector_size.split('x'))
 	frame_height, frame_width, _ = frame.shape
 	temp_frame = resize_frame_dimension(frame, face_detector_width, face_detector_height)
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width
-	bbox_list : List[Bbox] = []
-	kps_list : List[Kps] = []
-	score_list : List[Score] = []
 	if facefusion.globals.face_detector_model == 'retinaface':
-		feature_strides = [ 8, 16, 32 ]
-		feature_map_channel = 3
-		anchor_total = 2
-		pad_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
-		pad_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
-		temp_frame = (pad_frame - 127.5) / 128.0
-		temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
-		with THREAD_SEMAPHORE:
-			detections = face_detector.run(None,
-			{
-				face_detector.get_inputs()[0].name: temp_frame
-			})
-		for index, feature_stride in enumerate(feature_strides):
-			keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
-			if keep_indices.any():
-				stride_height = face_detector_height // feature_stride
-				stride_width = face_detector_width // feature_stride
-				anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
-				bbox_raw = (detections[index + feature_map_channel] * feature_stride)
-				kps_raw = detections[index + feature_map_channel * 2] * feature_stride
-				for bbox in distance_to_bbox(anchors, bbox_raw)[keep_indices]:
-					bbox_list.append(numpy.array(
-					[
-						bbox[0] * ratio_width,
-						bbox[1] * ratio_height,
-						bbox[2] * ratio_width,
-						bbox[3] * ratio_height
-					]))
-				for kps in distance_to_kps(anchors, kps_raw)[keep_indices]:
-					kps_list.append(kps * [[ ratio_width, ratio_height ]])
-				for score in detections[index][keep_indices]:
-					score_list.append(score[0])
-	if facefusion.globals.face_detector_model == 'yunet':
-		face_detector.setInputSize((temp_frame_width, temp_frame_height))
-		face_detector.setScoreThreshold(facefusion.globals.face_detector_score)
-		face_detector.setNMSThreshold(0.4)
-		with THREAD_SEMAPHORE:
-			_, detections = face_detector.detect(temp_frame)
-		if detections.any():
-			for detection in detections:
+		bbox_list, kps_list, score_list = detect_with_retina(temp_frame, temp_frame_height, temp_frame_width, face_detector_height, face_detector_width, ratio_height, ratio_width)
+		return create_faces(frame, bbox_list, kps_list, score_list)
+	elif facefusion.globals.face_detector_model == 'yunet':
+		bbox_list, kps_list, score_list = detect_with_yunet(temp_frame, temp_frame_height, temp_frame_width, ratio_height,  ratio_width)
+		return create_faces(frame, bbox_list, kps_list, score_list)
+	return []
+
+
+def detect_with_retina(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+	face_detector = get_face_analyser().get('face_detector')
+	bbox_list = []
+	kps_list = []
+	score_list = []
+	feature_strides = [ 8, 16, 32 ]
+	feature_map_channel = 3
+	anchor_total = 2
+	pad_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
+	pad_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
+	temp_frame = (pad_frame - 127.5) / 128.0
+	temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
+	with THREAD_SEMAPHORE:
+		detections = face_detector.run(None,
+		{
+			face_detector.get_inputs()[0].name: temp_frame
+		})
+	for index, feature_stride in enumerate(feature_strides):
+		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
+		if keep_indices.any():
+			stride_height = face_detector_height // feature_stride
+			stride_width = face_detector_width // feature_stride
+			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
+			bbox_raw = (detections[index + feature_map_channel] * feature_stride)
+			kps_raw = detections[index + feature_map_channel * 2] * feature_stride
+			for bbox in distance_to_bbox(anchors, bbox_raw)[keep_indices]:
 				bbox_list.append(numpy.array(
 				[
-					detection[0] * ratio_width,
-					detection[1] * ratio_height,
-					(detection[0] + detection[2]) * ratio_width,
-					(detection[1] + detection[3]) * ratio_height
+					bbox[0] * ratio_width,
+					bbox[1] * ratio_height,
+					bbox[2] * ratio_width,
+					bbox[3] * ratio_height
 				]))
-				kps_list.append(detection[4:14].reshape((5, 2)) * [[ ratio_width, ratio_height ]])
-				score_list.append(detection[14])
-	faces = create_faces(frame, bbox_list, kps_list, score_list)
-	return faces
+			for kps in distance_to_kps(anchors, kps_raw)[keep_indices]:
+				kps_list.append(kps * [ ratio_width, ratio_height ])
+			for score in detections[index][keep_indices]:
+				score_list.append(score[0])
+	return bbox_list, kps_list, score_list
+
+
+def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, ratio_height : float,  ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+	face_detector = get_face_analyser().get('face_detector')
+	face_detector.setInputSize((temp_frame_width, temp_frame_height))
+	face_detector.setScoreThreshold(facefusion.globals.face_detector_score)
+	face_detector.setNMSThreshold(0.4)
+	bbox_list = []
+	kps_list = []
+	score_list = []
+	with THREAD_SEMAPHORE:
+		_, detections = face_detector.detect(temp_frame)
+	if detections.any():
+		for detection in detections:
+			bbox_list.append(numpy.array(
+			[
+				detection[0] * ratio_width,
+				detection[1] * ratio_height,
+				(detection[0] + detection[2]) * ratio_width,
+				(detection[1] + detection[3]) * ratio_height
+			]))
+			kps_list.append(detection[4:14].reshape((5, 2)) * [ ratio_width, ratio_height])
+			score_list.append(detection[14])
+	return bbox_list, kps_list, score_list
 
 
 def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face] :
