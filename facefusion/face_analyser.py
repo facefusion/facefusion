@@ -57,7 +57,7 @@ def get_face_analyser() -> Any:
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = facefusion.globals.execution_providers)
 			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = facefusion.globals.execution_providers)
-			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'),  providers=facefusion.globals.execution_providers)
+			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'),  providers = facefusion.globals.execution_providers)
 			FACE_ANALYSER =\
 			{
 				'face_detector': face_detector,
