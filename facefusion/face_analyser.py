@@ -26,15 +26,15 @@ MODELS : Dict[str, ModelValue] =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yunet_2023mar.onnx',
 		'path': resolve_relative_path('../.assets/models/face_detection_yunet_2023mar.onnx')
 	},
-	'face_recognizer_inswapper_webface':
+	'face_recognizer_arcface_inswapper':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/webface_600k_r50.onnx',
-		'path': resolve_relative_path('../.assets/models/webface_600k_r50.onnx')
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+		'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 	},
-	'face_recognizer_simswap_arcface':
+	'face_recognizer_arcface_simswap':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_arcface.onnx',
-		'path': resolve_relative_path('../.assets/models/simswap_arcface.onnx')
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_simswap.onnx',
+		'path': resolve_relative_path('../.assets/models/arcface_simswap.onnx')
 	},
 	'gender_age':
 	{
@@ -53,10 +53,10 @@ def get_face_analyser() -> Any:
 				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = facefusion.globals.execution_providers)
 			if facefusion.globals.face_detector_model == 'yunet':
 				face_detector = cv2.FaceDetectorYN.create(MODELS.get('face_detector_yunet').get('path'), '', (0, 0))
-			if facefusion.globals.face_recognizer_model == 'inswapper_webface':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_inswapper_webface').get('path'), providers = facefusion.globals.execution_providers)
-			if facefusion.globals.face_recognizer_model == 'simswap_arcface':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_simswap_arcface').get('path'), providers = facefusion.globals.execution_providers)
+			if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = facefusion.globals.execution_providers)
+			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = facefusion.globals.execution_providers)
 			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'),  providers=facefusion.globals.execution_providers)
 			FACE_ANALYSER =\
 			{
@@ -80,8 +80,8 @@ def pre_check() -> bool:
 		[
 			MODELS.get('face_detector_retinaface').get('url'),
 			MODELS.get('face_detector_yunet').get('url'),
-			MODELS.get('face_recognizer_inswapper_webface').get('url'),
-			MODELS.get('face_recognizer_simswap_arcface').get('url'),
+			MODELS.get('face_recognizer_arcface_inswapper').get('url'),
+			MODELS.get('face_recognizer_arcface_simswap').get('url'),
 			MODELS.get('gender_age').get('url')
 		]
 		conditional_download(download_directory_path, model_urls)
