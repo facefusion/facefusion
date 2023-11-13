@@ -191,7 +191,7 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 
 def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]:
 	face_recognizer = get_face_analyser().get('face_recognizer')
-	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface', (112, 112))
+	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface_v2', (112, 112))
 	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
 	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
@@ -206,7 +206,7 @@ def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]
 
 def detect_gender_age(frame : Frame, kps : Kps) -> Tuple[int, int]:
 	gender_age = get_face_analyser().get('gender_age')
-	crop_frame, affine_matrix = warp_face(frame, kps, 'arcface', (96, 96))
+	crop_frame, affine_matrix = warp_face(frame, kps, 'arcface_v2', (96, 96))
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0).transpose(0, 3, 1, 2).astype(numpy.float32)
 	prediction = gender_age.run(None,
 	{
