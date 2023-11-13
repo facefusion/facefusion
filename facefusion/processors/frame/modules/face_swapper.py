@@ -30,28 +30,36 @@ MODELS : Dict[str, ModelValue] =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
 		'path': resolve_relative_path('../.assets/models/inswapper_128.onnx'),
 		'template': 'arcface_v2',
-		'size': (128, 128)
+		'size': (128, 128),
+		'mean': [ 0.0, 0.0, 0.0 ],
+		'standard_deviation': [ 1.0, 1.0, 1.0 ]
 	},
 	'inswapper_128_fp16':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
 		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx'),
 		'template': 'arcface_v2',
-		'size': (128, 128)
+		'size': (128, 128),
+		'mean': [ 0.0, 0.0, 0.0 ],
+		'standard_deviation': [ 1.0, 1.0, 1.0 ]
 	},
 	'simswap_256':
 	{
 		'url': 'https://huggingface.co/netrunner-exe/Insight-Swap-models-onnx/resolve/main/simswap_256.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap_256.onnx'),
 		'template': 'arcface_v1',
-		'size': (112, 256)
+		'size': (112, 256),
+		'mean': [ 0.485, 0.456, 0.406 ],
+		'standard_deviation': [ 0.229, 0.224, 0.225 ]
 	},
 	'simswap_512':
 	{
 		'url': 'https://huggingface.co/netrunner-exe/Insight-Swap-models-onnx/resolve/main/simswap_512_unoff.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap_512_unoff.onnx'),
 		'template': 'arcface_v1',
-		'size': (112, 512)
+		'size': (112, 512),
+		'mean': [ 0.0, 0.0, 0.0 ],
+		'standard_deviation': [ 1.0, 1.0, 1.0 ]
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -193,8 +201,11 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 
 
 def prepare_crop_frame(crop_frame : Frame) -> Frame:
-	crop_frame = crop_frame / 255.0
-	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
+	model_mean = get_options('model').get('mean')
+	model_standard_deviation = get_options('model').get('standard_deviation')
+	crop_frame = crop_frame[:, :, ::-1] / 255.0
+	crop_frame = (crop_frame - model_mean) / model_standard_deviation
+	crop_frame = crop_frame.transpose(2, 0, 1)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0).astype(numpy.float32)
 	return crop_frame
 
