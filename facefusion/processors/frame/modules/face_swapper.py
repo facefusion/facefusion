@@ -29,22 +29,29 @@ MODELS : Dict[str, ModelValue] =\
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
 		'path': resolve_relative_path('../.assets/models/inswapper_128.onnx'),
-		'template': 'arcface',
+		'template': 'arcface_v2',
 		'size': (128, 128)
 	},
 	'inswapper_128_fp16':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
 		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx'),
-		'template': 'arcface',
+		'template': 'arcface_v2',
 		'size': (128, 128)
 	},
-	'simswap_244':
+	'simswap_256':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_244.onnx',
-		'path': resolve_relative_path('../.assets/models/simswap_244.onnx'),
-		'template': 'arcface',
-		'size': (112, 224)
+		'url': 'https://huggingface.co/netrunner-exe/Insight-Swap-models-onnx/resolve/main/simswap_256.onnx',
+		'path': resolve_relative_path('../.assets/models/simswap_256.onnx'),
+		'template': 'arcface_v1',
+		'size': (112, 256)
+	},
+	'simswap_512':
+	{
+		'url': 'https://huggingface.co/netrunner-exe/Insight-Swap-models-onnx/resolve/main/simswap_512_unoff.onnx',
+		'path': resolve_relative_path('../.assets/models/simswap_512_unoff.onnx'),
+		'template': 'arcface_v1',
+		'size': (112, 512)
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -109,7 +116,7 @@ def apply_args(program : ArgumentParser) -> None:
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
 	if args.face_swapper_model == 'inswapper_128' or args.face_swapper_model == 'inswapper_128_fp16':
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
-	if args.face_swapper_model == 'simswap_244':
+	if args.face_swapper_model == 'simswap_256' or args.face_swapper_model == 'simswap_512':
 		facefusion.globals.face_recognizer_model = 'arcface_simswap'
 
 
@@ -163,9 +170,9 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	for frame_processor_input in frame_processor.get_inputs():
 		if frame_processor_input.name == 'source':
 			frame_processor_inputs[frame_processor_input.name] = prepare_source_face(source_face)
-		if frame_processor_input.name == 'source_embedding':
+		if frame_processor_input.name == 'source_embedding' or frame_processor_input.name == 'onnx::Gemm_1':
 			frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face) # type: ignore[assignment]
-		if frame_processor_input.name == 'target':
+		if frame_processor_input.name == 'target' or frame_processor_input.name == 'input':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame # type: ignore[assignment]
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
@@ -194,7 +201,7 @@ def prepare_crop_frame(crop_frame : Frame) -> Frame:
 
 def normalize_crop_frame(crop_frame : Frame) -> Frame:
 	crop_frame = crop_frame.transpose(1, 2, 0)
-	crop_frame = (crop_frame * 255.0).round()
+	crop_frame = (crop_frame * 255.0)
 	crop_frame = crop_frame[:, :, ::-1].astype(numpy.uint8)
 	return crop_frame
 
