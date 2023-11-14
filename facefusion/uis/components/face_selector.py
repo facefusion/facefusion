@@ -7,7 +7,7 @@ import facefusion.choices
 from facefusion import wording
 from facefusion.face_cache import clear_faces_cache
 from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color
-from facefusion.face_analyser import get_many_faces, clear_face_analyser
+from facefusion.face_analyser import get_many_faces
 from facefusion.face_reference import clear_face_reference
 from facefusion.typing import Frame, FaceSelectorMode
 from facefusion.utilities import is_image, is_video
