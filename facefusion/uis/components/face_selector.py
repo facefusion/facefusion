@@ -27,9 +27,8 @@ def render() -> None:
 	reference_face_gallery_args: Dict[str, Any] =\
 	{
 		'label': wording.get('reference_face_gallery_label'),
-		'height': 120,
 		'object_fit': 'cover',
-		'columns': 10,
+		'columns': 8,
 		'allow_preview': False,
 		'visible': 'reference' in facefusion.globals.face_selector_mode
 	}
