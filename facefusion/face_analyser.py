@@ -170,22 +170,23 @@ def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_wi
 
 def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face] :
 	faces : List[Face] = []
-	keep_indices = cv2.dnn.NMSBoxes(bbox_list, score_list, facefusion.globals.face_detector_score, 0.4)
-	for index in keep_indices:
-		bbox = bbox_list[index]
-		kps = kps_list[index]
-		score = score_list[index]
-		embedding, normed_embedding = calc_embedding(frame, kps)
-		gender, age = detect_gender_age(frame, kps)
-		faces.append(Face(
-			bbox = bbox,
-			kps = kps,
-			score = score,
-			embedding = embedding,
-			normed_embedding = normed_embedding,
-			gender = gender,
-			age = age
-		))
+	if facefusion.globals.face_detector_score > 0:
+		keep_indices = cv2.dnn.NMSBoxes(bbox_list, score_list, facefusion.globals.face_detector_score, 0.4)
+		for index in keep_indices:
+			bbox = bbox_list[index]
+			kps = kps_list[index]
+			score = score_list[index]
+			embedding, normed_embedding = calc_embedding(frame, kps)
+			gender, age = detect_gender_age(frame, kps)
+			faces.append(Face(
+				bbox = bbox,
+				kps = kps,
+				score = score,
+				embedding = embedding,
+				normed_embedding = normed_embedding,
+				gender = gender,
+				age = age
+			))
 	return faces
 
 

@@ -109,6 +109,7 @@ def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gr
 
 def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradio.Gallery:
 	clear_face_reference()
+	clear_faces_cache()
 	update_reference_face_position(event.index)
 	return update_reference_position_gallery()
 
@@ -126,7 +127,6 @@ def update_reference_frame_number(reference_frame_number : int) -> None:
 
 
 def clear_and_update_reference_position_gallery() -> gradio.Gallery:
-	clear_face_analyser()
 	clear_face_reference()
 	clear_faces_cache()
 	return update_reference_position_gallery()
