@@ -75,7 +75,7 @@ def listen() -> None:
 				getattr(component, method)(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	change_one_component_names : List[ComponentName] =\
 	[
-		'face_analyser_direction_dropdown',
+		'face_analyser_order_dropdown',
 		'face_analyser_age_dropdown',
 		'face_analyser_gender_dropdown'
 	]

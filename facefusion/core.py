@@ -44,7 +44,7 @@ def cli() -> None:
 	group_execution.add_argument('--max-memory', help = wording.get('max_memory_help'), dest = 'max_memory', type = int, choices = facefusion.choices.max_memory_range, metavar = create_metavar(facefusion.choices.max_memory_range))
 	# face analyser
 	group_face_analyser = program.add_argument_group('face analyser')
-	group_face_analyser.add_argument('--face-analyser-direction', help = wording.get('face_analyser_direction_help'), dest = 'face_analyser_direction', default = 'left-right', choices = facefusion.choices.face_analyser_directions)
+	group_face_analyser.add_argument('--face-analyser-order', help = wording.get('face_analyser_order_help'), dest = 'face_analyser_order', default = 'left-right', choices = facefusion.choices.face_analyser_orders)
 	group_face_analyser.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), dest = 'face_analyser_age', choices = facefusion.choices.face_analyser_ages)
 	group_face_analyser.add_argument('--face-analyser-gender', help = wording.get('face_analyser_gender_help'), dest = 'face_analyser_gender', choices = facefusion.choices.face_analyser_genders)
 	group_face_analyser.add_argument('--face-detector-model', help = wording.get('face_detector_model_help'), dest = 'face_detector_model', default = 'retinaface', choices = facefusion.choices.face_detector_models)
@@ -99,7 +99,7 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.execution_queue_count = args.execution_queue_count
 	facefusion.globals.max_memory = args.max_memory
 	# face analyser
-	facefusion.globals.face_analyser_direction = args.face_analyser_direction
+	facefusion.globals.face_analyser_order = args.face_analyser_order
 	facefusion.globals.face_analyser_age = args.face_analyser_age
 	facefusion.globals.face_analyser_gender = args.face_analyser_gender
 	facefusion.globals.face_detector_model = args.face_detector_model

@@ -7,7 +7,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion.face_cache import get_faces_cache, set_faces_cache
 from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox
-from facefusion.typing import Frame, Face, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Score, Embedding
+from facefusion.typing import Frame, Face, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Score, Embedding
 from facefusion.utilities import resolve_relative_path, conditional_download
 from facefusion.vision import resize_frame_dimension
 
@@ -235,8 +235,8 @@ def get_many_faces(frame : Frame) -> List[Face]:
 		else:
 			faces = extract_faces(frame)
 			set_faces_cache(frame, faces)
-		if facefusion.globals.face_analyser_direction:
-			faces = sort_by_direction(faces, facefusion.globals.face_analyser_direction)
+		if facefusion.globals.face_analyser_order:
+			faces = sort_by_order(faces, facefusion.globals.face_analyser_order)
 		if facefusion.globals.face_analyser_age:
 			faces = filter_by_age(faces, facefusion.globals.face_analyser_age)
 		if facefusion.globals.face_analyser_gender:
@@ -258,18 +258,18 @@ def find_similar_faces(frame : Frame, reference_face : Face, face_distance : flo
 	return similar_faces
 
 
-def sort_by_direction(faces : List[Face], direction : FaceAnalyserDirection) -> List[Face]:
-	if direction == 'left-right':
+def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:
+	if order == 'left-right':
 		return sorted(faces, key = lambda face: face.bbox[0])
-	if direction == 'right-left':
+	if order == 'right-left':
 		return sorted(faces, key = lambda face: face.bbox[0], reverse = True)
-	if direction == 'top-bottom':
+	if order == 'top-bottom':
 		return sorted(faces, key = lambda face: face.bbox[1])
-	if direction == 'bottom-top':
+	if order == 'bottom-top':
 		return sorted(faces, key = lambda face: face.bbox[1], reverse = True)
-	if direction == 'small-large':
+	if order == 'small-large':
 		return sorted(faces, key = lambda face: (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1]))
-	if direction == 'large-small':
+	if order == 'large-small':
 		return sorted(faces, key = lambda face: (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1]), reverse = True)
 	return faces
 

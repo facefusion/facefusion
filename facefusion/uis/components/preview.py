@@ -83,7 +83,7 @@ def listen() -> None:
 	select_component_names : List[ComponentName] =\
 	[
 		'reference_face_position_gallery',
-		'face_analyser_direction_dropdown',
+		'face_analyser_order_dropdown',
 		'face_analyser_age_dropdown',
 		'face_analyser_gender_dropdown'
 	]

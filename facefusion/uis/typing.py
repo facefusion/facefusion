@@ -11,7 +11,7 @@ ComponentName = Literal\
 	'face_selector_mode_dropdown',
 	'reference_face_position_gallery',
 	'reference_face_distance_slider',
-	'face_analyser_direction_dropdown',
+	'face_analyser_order_dropdown',
 	'face_analyser_age_dropdown',
 	'face_analyser_gender_dropdown',
 	'face_detector_model_dropdown',
