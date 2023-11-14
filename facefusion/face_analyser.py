@@ -271,6 +271,10 @@ def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:
 		return sorted(faces, key = lambda face: (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1]))
 	if order == 'large-small':
 		return sorted(faces, key = lambda face: (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1]), reverse = True)
+	if order == 'best-worst':
+		return sorted(faces, key = lambda face: face.score, reverse = True)
+	if order == 'worst-best':
+		return sorted(faces, key = lambda face: face.score)
 	return faces
 
 

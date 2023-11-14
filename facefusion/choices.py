@@ -5,7 +5,7 @@ import numpy
 from facefusion.typing import FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, TempFrameFormat, OutputVideoEncoder
 
 
-face_analyser_orders : List[FaceAnalyserOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small' ]
+face_analyser_orders : List[FaceAnalyserOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
 face_analyser_ages : List[FaceAnalyserAge] = [ 'child', 'teen', 'adult', 'senior' ]
 face_analyser_genders : List[FaceAnalyserGender] = [ 'male', 'female' ]
 face_detector_models : List[str] = [ 'retinaface', 'yunet' ]

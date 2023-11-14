@@ -85,7 +85,7 @@ def clear_frame_processor() -> None:
 	FRAME_PROCESSOR = None
 
 
-def get_options(key : Literal[ 'model' ]) -> Any:
+def get_options(key : Literal['model']) -> Any:
 	global OPTIONS
 
 	if OPTIONS is None:
@@ -96,7 +96,7 @@ def get_options(key : Literal[ 'model' ]) -> Any:
 	return OPTIONS.get(key)
 
 
-def set_options(key : Literal[ 'model' ], value : Any) -> None:
+def set_options(key : Literal['model'], value : Any) -> None:
 	global OPTIONS
 
 	OPTIONS[key] = value
