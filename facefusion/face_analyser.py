@@ -57,7 +57,7 @@ def get_face_analyser() -> Any:
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = facefusion.globals.execution_providers)
 			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = facefusion.globals.execution_providers)
-			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'),  providers = facefusion.globals.execution_providers)
+			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = facefusion.globals.execution_providers)
 			FACE_ANALYSER =\
 			{
 				'face_detector': face_detector,
@@ -96,15 +96,15 @@ def extract_faces(frame: Frame) -> List[Face]:
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width
 	if facefusion.globals.face_detector_model == 'retinaface':
-		bbox_list, kps_list, score_list = detect_with_retina(temp_frame, temp_frame_height, temp_frame_width, face_detector_height, face_detector_width, ratio_height, ratio_width)
+		bbox_list, kps_list, score_list = detect_with_retinaface(temp_frame, temp_frame_height, temp_frame_width, face_detector_height, face_detector_width, ratio_height, ratio_width)
 		return create_faces(frame, bbox_list, kps_list, score_list)
 	elif facefusion.globals.face_detector_model == 'yunet':
-		bbox_list, kps_list, score_list = detect_with_yunet(temp_frame, temp_frame_height, temp_frame_width, ratio_height,  ratio_width)
+		bbox_list, kps_list, score_list = detect_with_yunet(temp_frame, temp_frame_height, temp_frame_width, ratio_height, ratio_width)
 		return create_faces(frame, bbox_list, kps_list, score_list)
 	return []
 
 
-def detect_with_retina(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
 	bbox_list = []
 	kps_list = []
@@ -144,7 +144,7 @@ def detect_with_retina(temp_frame : Frame, temp_frame_height : int, temp_frame_w
 	return bbox_list, kps_list, score_list
 
 
-def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, ratio_height : float,  ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
 	face_detector.setInputSize((temp_frame_width, temp_frame_height))
 	face_detector.setScoreThreshold(facefusion.globals.face_detector_score)

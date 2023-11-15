@@ -95,7 +95,7 @@ def restore_audio(target_path : str, output_path : str) -> bool:
 	if trim_frame_end is not None:
 		end_time = trim_frame_end / fps
 		commands.extend([ '-to', str(end_time) ])
-	commands.extend([ '-i', target_path, '-c',  'copy', '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ])
+	commands.extend([ '-i', target_path, '-c', 'copy', '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ])
 	return run_ffmpeg(commands)
 
 
