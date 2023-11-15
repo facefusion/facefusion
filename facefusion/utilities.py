@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from pathlib import Path
-
 from tqdm import tqdm
 import glob
 import mimetypes
@@ -181,6 +181,9 @@ def is_video(video_path : str) -> bool:
 
 
 def conditional_download(download_directory_path : str, urls : List[str]) -> None:
+	with ThreadPoolExecutor() as executor:
+		for url in urls:
+			executor.submit(get_download_size, url)
 	for url in urls:
 		download_file_path = os.path.join(download_directory_path, os.path.basename(url))
 		total = get_download_size(url)
