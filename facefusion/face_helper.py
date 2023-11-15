@@ -42,7 +42,7 @@ def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -
 	return crop_frame, affine_matrix
 
 
-def paste_back(temp_frame : Frame, crop_frame : Frame, affine_matrix : Matrix) -> Frame:
+def paste_back_old(temp_frame : Frame, crop_frame : Frame, affine_matrix : Matrix) -> Frame:
 	inverse_affine_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_frame_height, temp_frame_width = temp_frame.shape[0:2]
 	crop_frame_height, crop_frame_width = crop_frame.shape[0:2]
@@ -59,6 +59,30 @@ def paste_back(temp_frame : Frame, crop_frame : Frame, affine_matrix : Matrix) -
 	temp_frame = inverse_blur_frame * inverse_temp_frame + (1 - inverse_blur_frame) * temp_frame
 	temp_frame = temp_frame.astype(numpy.uint8)
 	return temp_frame
+
+
+def paste_back(background: numpy.ndarray, foreground: numpy.ndarray, affine_matrix: numpy.ndarray, fade_amount: float = 0.25, offset_factor: Tuple[float] = (0, 0, 0, 0)):
+    inverse_matrix = cv2.invertAffineTransform(affine_matrix)
+    f_height, f_width = foreground.shape[:2]
+    b_height, b_width = background.shape[:2]
+    mask_size = max(512, f_width)
+    mask = numpy.ones((mask_size, mask_size), dtype='float32')
+    fade_amount = int(mask_size * 0.5 * fade_amount)
+    border = max(fade_amount // 2, 1)
+    mask[:max(border, int(offset_factor[0] * mask_size)), :] = 0
+    mask[-max(border, int(offset_factor[1] * mask_size)):, :] = 0
+    mask[:, :max(border, int(offset_factor[2] * mask_size))] = 0
+    mask[:, -max(border, int(offset_factor[3] * mask_size)):] = 0
+    if fade_amount > 0:
+        mask = cv2.GaussianBlur(mask, (0, 0), fade_amount * 0.25)
+    mask = cv2.resize(mask, (f_width, f_height))
+    foreground = cv2.warpAffine(foreground, inverse_matrix, (b_width, b_height), borderMode=cv2.BORDER_REPLICATE)
+    mask = cv2.warpAffine(mask, inverse_matrix, (b_width, b_height)).clip(0, 1)
+    composite_image = background.copy()
+    composite_image[:, :, 0] = mask * foreground[:, :, 0] + (1 - mask) * background[:, :, 0]
+    composite_image[:, :, 1] = mask * foreground[:, :, 1] + (1 - mask) * background[:, :, 1]
+    composite_image[:, :, 2] = mask * foreground[:, :, 2] + (1 - mask) * background[:, :, 2]
+    return composite_image
 
 
 @lru_cache(maxsize = None)
