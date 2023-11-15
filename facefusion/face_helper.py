@@ -61,7 +61,7 @@ def paste_back_old(temp_frame : Frame, crop_frame : Frame, affine_matrix : Matri
 	return temp_frame
 
 
-def paste_back(background: numpy.ndarray, foreground: numpy.ndarray, affine_matrix: numpy.ndarray, fade_amount: float = 0.25, offset_factor: Tuple[float, float, float, float] = ( 0.0, 0.0, 0.0, 0.0 )):
+def paste_back(background: numpy.ndarray, foreground: numpy.ndarray, affine_matrix: numpy.ndarray, fade_amount: float = 0.25, offset_factor: Tuple[float, float, float, float] = ( 0.0, 0.0, 0.0, 0.0 )) -> Frame:
     inverse_matrix = cv2.invertAffineTransform(affine_matrix)
     f_height, f_width = foreground.shape[:2]
     b_height, b_width = background.shape[:2]
