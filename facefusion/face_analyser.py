@@ -24,7 +24,7 @@ MODELS : Dict[str, ModelValue] =\
 	'face_detector_yunet':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yunet_2023mar.onnx',
-		'path': resolve_relative_path('../.assets/models/face_detection_yunet_2023mar.onnx')
+		'path': resolve_relative_path('../.assets/models/yunet_2023mar.onnx')
 	},
 	'face_recognizer_arcface_blendface':
 	{
