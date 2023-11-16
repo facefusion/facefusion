@@ -25,8 +25,19 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_SWAPPER'
 MODELS : Dict[str, ModelValue] =\
 {
+	'blendface_256':
+	{
+		'type': 'blendface',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/blendface_256.onnx',
+		'path': resolve_relative_path('../.assets/models/blendface_256.onnx'),
+		'template': 'arcface_v2',
+		'size': (112, 256),
+		'mean': [ 0.0, 0.0, 0.0 ],
+		'standard_deviation': [ 1.0, 1.0, 1.0 ]
+	},
 	'inswapper_128':
 	{
+		'type': 'inswapper',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
 		'path': resolve_relative_path('../.assets/models/inswapper_128.onnx'),
 		'template': 'arcface_v2',
@@ -36,6 +47,7 @@ MODELS : Dict[str, ModelValue] =\
 	},
 	'inswapper_128_fp16':
 	{
+		'type': 'inswapper',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
 		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx'),
 		'template': 'arcface_v2',
@@ -45,6 +57,7 @@ MODELS : Dict[str, ModelValue] =\
 	},
 	'simswap_256':
 	{
+		'type': 'simswap',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_256.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap_256.onnx'),
 		'template': 'arcface_v1',
@@ -54,6 +67,7 @@ MODELS : Dict[str, ModelValue] =\
 	},
 	'simswap_512_unofficial':
 	{
+		'type': 'simswap',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_512_unofficial.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap_512_unofficial.onnx'),
 		'template': 'arcface_v1',
@@ -122,6 +136,8 @@ def register_args(program : ArgumentParser) -> None:
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
+	if args.face_swapper_model == 'blendface_256':
+		facefusion.globals.face_recognizer_model = 'arcface_blendface'
 	if args.face_swapper_model == 'inswapper_128' or args.face_swapper_model == 'inswapper_128_fp16':
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 	if args.face_swapper_model == 'simswap_256' or args.face_swapper_model == 'simswap_512_unofficial':
@@ -178,25 +194,22 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	for frame_processor_input in frame_processor.get_inputs():
 		if frame_processor_input.name == 'source':
 			frame_processor_inputs[frame_processor_input.name] = prepare_source_face(source_face)
-		if frame_processor_input.name == 'source_embedding':
-			frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face) # type: ignore[assignment]
 		if frame_processor_input.name == 'target':
-			frame_processor_inputs[frame_processor_input.name] = crop_frame # type: ignore[assignment]
+			frame_processor_inputs[frame_processor_input.name] = crop_frame
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
 	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix)
 	return temp_frame
 
 
-def prepare_source_face(source_face : Face) -> Face:
-	model_matrix = get_model_matrix()
-	source_face = source_face.embedding.reshape((1, -1))
-	source_face = numpy.dot(source_face, model_matrix) / numpy.linalg.norm(source_face)
-	return source_face
-
-
-def prepare_source_embedding(source_face : Face) -> Embedding:
-	source_embedding = source_face.normed_embedding.reshape(1, -1)
+def prepare_source_face(source_face : Face) -> Embedding:
+	model_type = get_options('model').get('type')
+	if model_type == 'inswapper':
+		model_matrix = get_model_matrix()
+		source_embedding = source_face.embedding.reshape((1, -1))
+		source_embedding = numpy.dot(source_embedding, model_matrix) / numpy.linalg.norm(source_embedding)
+	else:
+		source_embedding = source_face.normed_embedding.reshape(1, -1)
 	return source_embedding
 
 
