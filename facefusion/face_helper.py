@@ -4,7 +4,7 @@ from cv2.typing import Size
 import cv2
 import numpy
 
-from facefusion.typing import Bbox, Kps, Frame, Matrix, Template
+from facefusion.typing import Bbox, Kps, Frame, Matrix, Template, Padding
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -42,47 +42,31 @@ def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -
 	return crop_frame, affine_matrix
 
 
-def paste_back_old(temp_frame : Frame, crop_frame : Frame, affine_matrix : Matrix) -> Frame:
-	inverse_affine_matrix = cv2.invertAffineTransform(affine_matrix)
-	temp_frame_height, temp_frame_width = temp_frame.shape[0:2]
-	crop_frame_height, crop_frame_width = crop_frame.shape[0:2]
-	inverse_mask = numpy.full((crop_frame_height, crop_frame_width), 255).astype(numpy.float32)
-	inverse_crop_frame = cv2.warpAffine(inverse_mask, inverse_affine_matrix, (temp_frame_width, temp_frame_height))
-	inverse_temp_frame = cv2.warpAffine(crop_frame, inverse_affine_matrix, (temp_frame_width, temp_frame_height))
-	inverse_mask_size = int(numpy.sqrt(numpy.sum(inverse_crop_frame == 255)))
-	kernel_size = max(inverse_mask_size // 10, 10)
-	inverse_crop_frame = cv2.erode(inverse_crop_frame, numpy.ones((kernel_size, kernel_size)))
-	kernel_size = max(inverse_mask_size // 20, 5)
-	blur_size = kernel_size * 2 + 1
-	inverse_blur_frame = cv2.GaussianBlur(inverse_crop_frame, (blur_size , blur_size), 0) / 255
-	inverse_blur_frame = numpy.reshape(inverse_blur_frame, [ temp_frame_height, temp_frame_width, 1 ])
-	temp_frame = inverse_blur_frame * inverse_temp_frame + (1 - inverse_blur_frame) * temp_frame
-	temp_frame = temp_frame.astype(numpy.uint8)
-	return temp_frame
+def paste_back(temp_frame: numpy.ndarray, crop_frame: numpy.ndarray, affine_matrix: numpy.ndarray, blur: float, padding: Padding):
+	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
+	temp_frame_size = temp_frame.shape[:2][::-1]
+	mask = create_static_mask(tuple(crop_frame.shape[:2]), blur, tuple(padding))
+	mask_warped = cv2.warpAffine(mask, inverse_matrix, temp_frame_size).clip(0, 1)
+	crop_frame_warped = cv2.warpAffine(crop_frame, inverse_matrix, temp_frame_size, borderMode=cv2.BORDER_REPLICATE)
+	composite_frame = temp_frame.copy()
+	composite_frame[:, :, 0] = mask_warped * crop_frame_warped[:, :, 0] + (1 - mask_warped) * temp_frame[:, :, 0]
+	composite_frame[:, :, 1] = mask_warped * crop_frame_warped[:, :, 1] + (1 - mask_warped) * temp_frame[:, :, 1]
+	composite_frame[:, :, 2] = mask_warped * crop_frame_warped[:, :, 2] + (1 - mask_warped) * temp_frame[:, :, 2]
+	return composite_frame
 
 
-def paste_back(background: numpy.ndarray, foreground: numpy.ndarray, affine_matrix: numpy.ndarray, fade_amount: float = 0.25, offset_factor: Tuple[float, float, float, float] = ( 0.0, 0.0, 0.0, 0.0 )) -> Frame:
-    inverse_matrix = cv2.invertAffineTransform(affine_matrix)
-    f_height, f_width = foreground.shape[:2]
-    b_height, b_width = background.shape[:2]
-    mask_size = max(512, f_width)
-    mask = numpy.ones((mask_size, mask_size), dtype='float32')
-    fade_amount = int(mask_size * 0.5 * fade_amount)
-    border = max(fade_amount // 2, 1)
-    mask[:max(border, int(offset_factor[0] * mask_size)), :] = 0
-    mask[-max(border, int(offset_factor[1] * mask_size)):, :] = 0
-    mask[:, :max(border, int(offset_factor[2] * mask_size))] = 0
-    mask[:, -max(border, int(offset_factor[3] * mask_size)):] = 0
-    if fade_amount > 0:
-        mask = cv2.GaussianBlur(mask, (0, 0), fade_amount * 0.25)
-    mask = cv2.resize(mask, (f_width, f_height))
-    foreground = cv2.warpAffine(foreground, inverse_matrix, (b_width, b_height), borderMode=cv2.BORDER_REPLICATE)
-    mask = cv2.warpAffine(mask, inverse_matrix, (b_width, b_height)).clip(0, 1)
-    composite_image = background.copy()
-    composite_image[:, :, 0] = mask * foreground[:, :, 0] + (1 - mask) * background[:, :, 0]
-    composite_image[:, :, 1] = mask * foreground[:, :, 1] + (1 - mask) * background[:, :, 1]
-    composite_image[:, :, 2] = mask * foreground[:, :, 2] + (1 - mask) * background[:, :, 2]
-    return composite_image
+@lru_cache(maxsize = None)
+def create_static_mask(size : Tuple[int, int], blur : float, padding : Padding) -> numpy.ndarray[Any, Any]:
+	mask = numpy.ones(size, dtype='float32')
+	blur_amount = int(size[0] * 0.5 * blur)
+	blur_area = max(blur_amount // 2, 1)
+	mask[:max(blur_area, int(padding[0] * size[1])), :] = 0
+	mask[-max(blur_area, int(padding[1] * size[1])):, :] = 0
+	mask[:, :max(blur_area, int(padding[2] * size[0]))] = 0
+	mask[:, -max(blur_area, int(padding[3] * size[0])):] = 0
+	if blur_amount > 0:
+		mask = cv2.GaussianBlur(mask, (0, 0), blur_amount * 0.25)
+	return mask
 
 
 @lru_cache(maxsize = None)

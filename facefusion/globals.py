@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from facefusion.typing import FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, OutputVideoEncoder, FaceDetectorModel, FaceRecognizerModel, TempFrameFormat
+from facefusion.typing import FaceSelectorMode, FaceAnalyserDirection, FaceAnalyserAge, FaceAnalyserGender, OutputVideoEncoder, FaceDetectorModel, FaceRecognizerModel, TempFrameFormat, Padding
 
 # general
 source_path : Optional[str] = None
@@ -15,7 +15,7 @@ execution_thread_count : Optional[int] = None
 execution_queue_count : Optional[int] = None
 max_memory : Optional[int] = None
 # face analyser
-face_analyser_order : Optional[FaceAnalyserOrder] = None
+face_analyser_direction : Optional[FaceAnalyserDirection] = None
 face_analyser_age : Optional[FaceAnalyserAge] = None
 face_analyser_gender : Optional[FaceAnalyserGender] = None
 face_detector_model : Optional[FaceDetectorModel] = None
@@ -27,6 +27,9 @@ face_selector_mode : Optional[FaceSelectorMode] = None
 reference_face_position : Optional[int] = None
 reference_face_distance : Optional[float] = None
 reference_frame_number : Optional[int] = None
+# face mask
+face_mask_blur : Optional[float] = None
+face_mask_padding : Optional[Padding] = None
 # frame extraction
 trim_frame_start : Optional[int] = None
 trim_frame_end : Optional[int] = None
