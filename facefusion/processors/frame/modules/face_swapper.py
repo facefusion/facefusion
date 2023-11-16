@@ -198,9 +198,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
-	face_mask_blur = facefusion.globals.face_mask_blur
-	face_mask_padding = facefusion.globals.face_mask_padding
-	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix, face_mask_blur, face_mask_padding)
+	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix, facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
 	return temp_frame
 
 

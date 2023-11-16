@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional
 import gradio
 
 import facefusion.globals
+import facefusion.choices
 from facefusion import wording
 from facefusion.uis.core import register_ui_component
 
@@ -22,9 +23,9 @@ def render() -> None:
 	face_mask_blur_slider_args : Dict[str, Any] =\
 	{
 		'label': wording.get('face_mask_blur_slider_label'),
-		'step': 0.01,
-		'minimum': 0,
-		'maximum': 1,
+		'step': facefusion.choices.face_mask_blur_range[1] - facefusion.choices.face_mask_blur_range[0],
+		'minimum': facefusion.choices.face_mask_blur_range[0],
+		'maximum': facefusion.choices.face_mask_blur_range[-1],
 		'value': facefusion.globals.face_mask_blur
 	}
 	face_mask_pad_top_slider_args : Dict[str, Any] =\

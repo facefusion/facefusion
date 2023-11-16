@@ -161,9 +161,7 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	with THREAD_SEMAPHORE:
 		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
-	face_mask_blur = facefusion.globals.face_mask_blur
-	face_mask_padding = facefusion.globals.face_mask_padding
-	paste_frame = paste_back(temp_frame, crop_frame, affine_matrix, face_mask_blur, face_mask_padding)
+	paste_frame = paste_back(temp_frame, crop_frame, affine_matrix, facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
 	temp_frame = blend_frame(temp_frame, paste_frame)
 	return temp_frame
 
