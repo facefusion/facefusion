@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Any, Literal, Callable, List, TypedDict, Dict
+from typing import Any, Literal, Callable, List, TypedDict, Dict, Tuple
 import numpy
 
 Bbox = numpy.ndarray[Any, Any]
@@ -18,6 +18,7 @@ Face = namedtuple('Face',
 ])
 Frame = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
+Padding = Tuple[float, float, float, float]
 
 Update_Process = Callable[[], None]
 Process_Frames = Callable[[str, List[str], Update_Process], None]
