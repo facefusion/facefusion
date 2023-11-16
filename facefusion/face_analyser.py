@@ -119,9 +119,9 @@ def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_fra
 	feature_strides = [ 8, 16, 32 ]
 	feature_map_channel = 3
 	anchor_total = 2
-	pad_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
-	pad_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
-	temp_frame = (pad_frame - 127.5) / 128.0
+	prepare_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
+	prepare_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
+	temp_frame = (prepare_frame - 127.5) / 128.0
 	temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
