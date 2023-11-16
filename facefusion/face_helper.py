@@ -47,24 +47,24 @@ def paste_back(temp_frame : Frame, crop_frame: Frame, affine_matrix : Matrix, fa
 	temp_frame_size = temp_frame.shape[:2][::-1]
 	mask_size = tuple(crop_frame.shape[:2])
 	mask_frame = create_static_mask_frame(mask_size, face_mask_blur, tuple(face_mask_padding))
-	mask_warped = cv2.warpAffine(mask_frame, inverse_matrix, temp_frame_size).clip(0, 1)
-	crop_frame_warped = cv2.warpAffine(crop_frame, inverse_matrix, temp_frame_size, borderMode = cv2.BORDER_REPLICATE)
+	inverse_mask_frame = cv2.warpAffine(mask_frame, inverse_matrix, temp_frame_size).clip(0, 1)
+	inverse_crop_frame = cv2.warpAffine(crop_frame, inverse_matrix, temp_frame_size, borderMode = cv2.BORDER_REPLICATE)
 	paste_frame = temp_frame.copy()
-	paste_frame[:, :, 0] = mask_warped * crop_frame_warped[:, :, 0] + (1 - mask_warped) * temp_frame[:, :, 0]
-	paste_frame[:, :, 1] = mask_warped * crop_frame_warped[:, :, 1] + (1 - mask_warped) * temp_frame[:, :, 1]
-	paste_frame[:, :, 2] = mask_warped * crop_frame_warped[:, :, 2] + (1 - mask_warped) * temp_frame[:, :, 2]
+	paste_frame[:, :, 0] = inverse_mask_frame * inverse_crop_frame[:, :, 0] + (1 - inverse_mask_frame) * temp_frame[:, :, 0]
+	paste_frame[:, :, 1] = inverse_mask_frame * inverse_crop_frame[:, :, 1] + (1 - inverse_mask_frame) * temp_frame[:, :, 1]
+	paste_frame[:, :, 2] = inverse_mask_frame * inverse_crop_frame[:, :, 2] + (1 - inverse_mask_frame) * temp_frame[:, :, 2]
 	return paste_frame
 
 
 @lru_cache(maxsize = None)
-def create_static_mask_frame(mask_size : Size, blur : float, padding : Padding) -> Frame:
+def create_static_mask_frame(mask_size : Size, face_mask_blur : float, face_mask_padding : Padding) -> Frame:
 	mask_frame = numpy.ones(mask_size, numpy.float32)
-	blur_amount = int(mask_size[0] * 0.5 * blur)
+	blur_amount = int(mask_size[0] * 0.5 * face_mask_blur)
 	blur_area = max(blur_amount // 2, 1)
-	mask_frame[:max(blur_area, int(padding[0] * mask_size[1])), :] = 0
-	mask_frame[-max(blur_area, int(padding[1] * mask_size[1])):, :] = 0
-	mask_frame[:, :max(blur_area, int(padding[2] * mask_size[0]))] = 0
-	mask_frame[:, -max(blur_area, int(padding[3] * mask_size[0])):] = 0
+	mask_frame[:max(blur_area, int(face_mask_padding[0] * mask_size[1])), :] = 0
+	mask_frame[-max(blur_area, int(face_mask_padding[2] * mask_size[1])):, :] = 0
+	mask_frame[:, :max(blur_area, int(face_mask_padding[3] * mask_size[0]))] = 0
+	mask_frame[:, -max(blur_area, int(face_mask_padding[1] * mask_size[0])):] = 0
 	if blur_amount > 0:
 		mask_frame = cv2.GaussianBlur(mask_frame, (0, 0), blur_amount * 0.25)
 	return mask_frame
