@@ -17,6 +17,11 @@ ComponentName = Literal\
 	'face_detector_model_dropdown',
 	'face_detector_size_dropdown',
 	'face_detector_score_slider',
+	'face_mask_blur_slider',
+	'face_mask_padding_top_slider',
+	'face_mask_padding_bottom_slider',
+	'face_mask_padding_left_slider',
+	'face_mask_padding_right_slider',
 	'frame_processors_checkbox_group',
 	'face_swapper_model_dropdown',
 	'face_enhancer_model_dropdown',
@@ -28,12 +33,7 @@ ComponentName = Literal\
 	'benchmark_cycles_slider',
 	'webcam_mode_radio',
 	'webcam_resolution_dropdown',
-	'webcam_fps_slider',
-	'face_mask_blur_slider',
-	'face_mask_pad_top_slider',
-	'face_mask_pad_bottom_slider',
-	'face_mask_pad_left_slider',
-	'face_mask_pad_right_slider'
+	'webcam_fps_slider'
 ]
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']

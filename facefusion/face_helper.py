@@ -47,7 +47,7 @@ def paste_back(temp_frame: Frame, crop_frame: Frame, affine_matrix: Matrix, blur
 	temp_frame_size = temp_frame.shape[:2][::-1]
 	mask = create_static_mask(tuple(crop_frame.shape[:2]), blur, tuple(padding))
 	mask_warped = cv2.warpAffine(mask, inverse_matrix, temp_frame_size).clip(0, 1)
-	crop_frame_warped = cv2.warpAffine(crop_frame, inverse_matrix, temp_frame_size, borderMode=cv2.BORDER_REPLICATE)
+	crop_frame_warped = cv2.warpAffine(crop_frame, inverse_matrix, temp_frame_size, borderMode = cv2.BORDER_REPLICATE)
 	composite_frame = temp_frame.copy()
 	composite_frame[:, :, 0] = mask_warped * crop_frame_warped[:, :, 0] + (1 - mask_warped) * temp_frame[:, :, 0]
 	composite_frame[:, :, 1] = mask_warped * crop_frame_warped[:, :, 1] + (1 - mask_warped) * temp_frame[:, :, 1]
@@ -56,17 +56,17 @@ def paste_back(temp_frame: Frame, crop_frame: Frame, affine_matrix: Matrix, blur
 
 
 @lru_cache(maxsize = None)
-def create_static_mask(size : Tuple[int, int], blur : float, padding : Padding) -> numpy.ndarray[Any, Any]:
-	mask = numpy.ones(size, dtype='float32')
-	blur_amount = int(size[0] * 0.5 * blur)
+def create_static_mask(mask_size : Size, blur : float, padding : Padding) -> Frame:
+	mask_frame = numpy.ones(mask_size, numpy.float32)
+	blur_amount = int(mask_size[0] * 0.5 * blur)
 	blur_area = max(blur_amount // 2, 1)
-	mask[:max(blur_area, int(padding[0] * size[1])), :] = 0
-	mask[-max(blur_area, int(padding[1] * size[1])):, :] = 0
-	mask[:, :max(blur_area, int(padding[2] * size[0]))] = 0
-	mask[:, -max(blur_area, int(padding[3] * size[0])):] = 0
+	mask_frame[:max(blur_area, int(padding[0] * mask_size[1])), :] = 0
+	mask_frame[-max(blur_area, int(padding[1] * mask_size[1])):, :] = 0
+	mask_frame[:, :max(blur_area, int(padding[2] * mask_size[0]))] = 0
+	mask_frame[:, -max(blur_area, int(padding[3] * mask_size[0])):] = 0
 	if blur_amount > 0:
-		mask = cv2.GaussianBlur(mask, (0, 0), blur_amount * 0.25)
-	return mask
+		mask_frame = cv2.GaussianBlur(mask_frame, (0, 0), blur_amount * 0.25)
+	return mask_frame
 
 
 @lru_cache(maxsize = None)

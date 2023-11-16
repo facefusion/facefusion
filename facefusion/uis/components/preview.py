@@ -93,18 +93,18 @@ def listen() -> None:
 			component.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	change_one_component_names : List[ComponentName] =\
 	[
-		'face_selector_mode_dropdown',
-		'reference_face_distance_slider',
 		'frame_processors_checkbox_group',
 		'face_enhancer_model_dropdown',
 		'face_enhancer_blend_slider',
 		'frame_enhancer_model_dropdown',
 		'frame_enhancer_blend_slider',
+		'face_selector_mode_dropdown',
+		'reference_face_distance_slider',
 		'face_mask_blur_slider',
-		'face_mask_pad_top_slider',
-		'face_mask_pad_bottom_slider',
-		'face_mask_pad_left_slider',
-		'face_mask_pad_right_slider'
+		'face_mask_padding_top_slider',
+		'face_mask_padding_bottom_slider',
+		'face_mask_padding_left_slider',
+		'face_mask_padding_right_slider'
 	]
 	for component_name in change_one_component_names:
 		component = get_ui_component(component_name)
