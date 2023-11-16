@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 import gradio
 
 import facefusion.globals
@@ -20,54 +20,44 @@ def render() -> None:
 	global FACE_MASK_PADDING_LEFT_SLIDER
 	global FACE_MASK_PADDING_RIGHT_SLIDER
 
-	face_mask_blur_slider_args : Dict[str, Any] =\
-	{
-		'label': wording.get('face_mask_blur_slider_label'),
-		'step': facefusion.choices.face_mask_blur_range[1] - facefusion.choices.face_mask_blur_range[0],
-		'minimum': facefusion.choices.face_mask_blur_range[0],
-		'maximum': facefusion.choices.face_mask_blur_range[-1],
-		'value': facefusion.globals.face_mask_blur
-	}
-	face_mask_pad_top_slider_args : Dict[str, Any] =\
-	{
-		'label': wording.get('face_mask_padding_top_slider_label'),
-		'step': 0.01,
-		'minimum': 0,
-		'maximum': 1,
-		'value': facefusion.globals.face_mask_padding[0]
-	}
-	face_mask_pad_bottom_slider_args : Dict[str, Any] =\
-	{
-		'label': wording.get('face_mask_padding_bottom_slider_label'),
-		'step': 0.01,
-		'minimum': 0,
-		'maximum': 1,
-		'value': facefusion.globals.face_mask_padding[1]
-	}
-	face_mask_pad_left_slider_args : Dict[str, Any] =\
-	{
-		'label': wording.get('face_mask_padding_left_slider_label'),
-		'step': 0.01,
-		'minimum': 0,
-		'maximum': 1,
-		'value': facefusion.globals.face_mask_padding[2]
-	}
-	face_mask_pad_right_slider_args : Dict[str, Any] =\
-	{
-		'label': wording.get('face_mask_padding_right_slider_label'),
-		'step': 0.01,
-		'minimum': 0,
-		'maximum': 1,
-		'value': facefusion.globals.face_mask_padding[3]
-	}
 	with gradio.Group():
-		FACE_MASK_BLUR_SLIDER = gradio.Slider(**face_mask_blur_slider_args)
+		FACE_MASK_BLUR_SLIDER = gradio.Slider(
+			label = wording.get('face_mask_blur_slider_label'),
+			step = facefusion.choices.face_mask_blur_range[1] - facefusion.choices.face_mask_blur_range[0],
+			minimum = facefusion.choices.face_mask_blur_range[0],
+			maximum = facefusion.choices.face_mask_blur_range[-1],
+			value = facefusion.globals.face_mask_blur
+		)
 		with gradio.Row():
-			FACE_MASK_PADDING_TOP_SLIDER = gradio.Slider(**face_mask_pad_top_slider_args)
-			FACE_MASK_PADDING_BOTTOM_SLIDER = gradio.Slider(**face_mask_pad_bottom_slider_args)
+			FACE_MASK_PADDING_TOP_SLIDER = gradio.Slider(
+				label = wording.get('face_mask_padding_top_slider_label'),
+				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				minimum = facefusion.choices.face_mask_padding_range[0],
+				maximum = facefusion.choices.face_mask_padding_range[-1],
+				value = facefusion.globals.face_mask_padding[0]
+			)
+			FACE_MASK_PADDING_BOTTOM_SLIDER = gradio.Slider(
+				label = wording.get('face_mask_padding_bottom_slider_label'),
+				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				minimum = facefusion.choices.face_mask_padding_range[0],
+				maximum = facefusion.choices.face_mask_padding_range[-1],
+				value = facefusion.globals.face_mask_padding[1]
+			)
 		with gradio.Row():
-			FACE_MASK_PADDING_LEFT_SLIDER = gradio.Slider(**face_mask_pad_left_slider_args)
-			FACE_MASK_PADDING_RIGHT_SLIDER = gradio.Slider(**face_mask_pad_right_slider_args)
+			FACE_MASK_PADDING_LEFT_SLIDER = gradio.Slider(
+				label = wording.get('face_mask_padding_left_slider_label'),
+				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				minimum = facefusion.choices.face_mask_padding_range[0],
+				maximum = facefusion.choices.face_mask_padding_range[-1],
+				value = facefusion.globals.face_mask_padding[2]
+			)
+			FACE_MASK_PADDING_RIGHT_SLIDER = gradio.Slider(
+				label = wording.get('face_mask_padding_right_slider_label'),
+				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				minimum = facefusion.choices.face_mask_padding_range[0],
+				maximum = facefusion.choices.face_mask_padding_range[-1],
+				value = facefusion.globals.face_mask_padding[3]
+			)
 	register_ui_component('face_mask_blur_slider', FACE_MASK_BLUR_SLIDER)
 	register_ui_component('face_mask_padding_top_slider', FACE_MASK_PADDING_TOP_SLIDER)
 	register_ui_component('face_mask_padding_bottom_slider', FACE_MASK_PADDING_BOTTOM_SLIDER)
@@ -77,9 +67,9 @@ def render() -> None:
 
 def listen() -> None:
 	FACE_MASK_BLUR_SLIDER.change(update_face_mask_blur, inputs = FACE_MASK_BLUR_SLIDER)
-	face_mask_padding_sliders = [FACE_MASK_PADDING_TOP_SLIDER, FACE_MASK_PADDING_BOTTOM_SLIDER, FACE_MASK_PADDING_LEFT_SLIDER, FACE_MASK_PADDING_RIGHT_SLIDER]
-	for pad_slider in face_mask_padding_sliders:
-		pad_slider.change(update_face_mask_padding, inputs = face_mask_padding_sliders)
+	face_mask_padding_sliders = [ FACE_MASK_PADDING_TOP_SLIDER, FACE_MASK_PADDING_BOTTOM_SLIDER, FACE_MASK_PADDING_LEFT_SLIDER, FACE_MASK_PADDING_RIGHT_SLIDER ]
+	for face_mask_padding_slider in face_mask_padding_sliders:
+		face_mask_padding_slider.change(update_face_mask_padding, inputs = face_mask_padding_sliders)
 
 
 def update_face_mask_blur(face_mask_blur : float) -> None:
