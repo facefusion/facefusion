@@ -42,7 +42,7 @@ def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -
 	return crop_frame, affine_matrix
 
 
-def paste_back(temp_frame: numpy.ndarray, crop_frame: numpy.ndarray, affine_matrix: numpy.ndarray, blur: float, padding: Padding):
+def paste_back(temp_frame: Frame, crop_frame: Frame, affine_matrix: Matrix, blur: float, padding: Padding) -> Frame:
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_frame_size = temp_frame.shape[:2][::-1]
 	mask = create_static_mask(tuple(crop_frame.shape[:2]), blur, tuple(padding))
