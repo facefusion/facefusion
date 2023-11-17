@@ -30,8 +30,8 @@ MODELS : Dict[str, ModelValue] =\
 		'type': 'blendface',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/blendface_256.onnx',
 		'path': resolve_relative_path('../.assets/models/blendface_256.onnx'),
-		'template': 'arcface_v2',
-		'size': (112, 256),
+		'template': 'ffhq',
+		'size': (512, 256),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
 	},
@@ -188,12 +188,16 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	frame_processor = get_frame_processor()
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
+	model_type = get_options('model').get('type')
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
 		if frame_processor_input.name == 'source':
-			frame_processor_inputs[frame_processor_input.name] = prepare_source_face(source_face)
+			if model_type == 'blendface':
+				frame_processor_inputs[frame_processor_input.name] = prepare_source_frame(source_face)
+			else:
+				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
@@ -202,7 +206,17 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	return temp_frame
 
 
-def prepare_source_face(source_face : Face) -> Embedding:
+def prepare_source_frame(source_face : Face) -> numpy.ndarray[Any, Any]:
+	source_path = facefusion.globals.source_path
+	source_image = read_static_image(source_path)
+	source_crop_image = warp_face(source_image, source_face.kps, "arcface_v2", (112, 112))[0]
+	source_crop_image = source_crop_image.astype("float32") / 255
+	source_crop_image = source_crop_image[:, :, ::-1]
+	source_crop_image = numpy.expand_dims(source_crop_image, axis=0).transpose(0, 3, 1, 2)
+	return source_crop_image
+
+
+def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_options('model').get('type')
 	if model_type == 'inswapper':
 		model_matrix = get_model_matrix()
