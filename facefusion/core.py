@@ -117,7 +117,7 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.reference_frame_number = args.reference_frame_number
 	# face mask
 	facefusion.globals.face_mask_blur = args.face_mask_blur
-	facefusion.globals.face_mask_padding = tuple(args.face_mask_padding)
+	facefusion.globals.face_mask_padding = tuple(args.face_mask_padding) # type: ignore[assignment]
 	# frame extraction
 	facefusion.globals.trim_frame_start = args.trim_frame_start
 	facefusion.globals.trim_frame_end = args.trim_frame_end
