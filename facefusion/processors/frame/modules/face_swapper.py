@@ -207,13 +207,12 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 
 
 def prepare_source_frame(source_face : Face) -> numpy.ndarray[Any, Any]:
-	source_path = facefusion.globals.source_path
-	source_image = read_static_image(source_path)
-	source_crop_image = warp_face(source_image, source_face.kps, "arcface_v2", (112, 112))[0]
-	source_crop_image = source_crop_image.astype("float32") / 255
-	source_crop_image = source_crop_image[:, :, ::-1]
-	source_crop_image = numpy.expand_dims(source_crop_image, axis=0).transpose(0, 3, 1, 2)
-	return source_crop_image
+	source_frame = read_static_image(facefusion.globals.source_path)
+	source_frame, _ = warp_face(source_frame, source_face.kps, 'arcface_v2', (112, 112))
+	source_frame = source_frame[:, :, ::-1] / 255.0
+	source_frame = source_frame.transpose(2, 0, 1)
+	source_frame = numpy.expand_dims(source_frame, axis = 0).astype(numpy.float32)
+	return source_frame
 
 
 def prepare_source_embedding(source_face : Face) -> Embedding:
