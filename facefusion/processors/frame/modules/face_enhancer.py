@@ -51,6 +51,13 @@ MODELS : Dict[str, ModelValue] =\
 		'template': 'ffhq',
 		'size': (512, 512)
 	},
+	'gpen_bfr_256':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_256.onnx',
+		'path': resolve_relative_path('../.assets/models/gpen_bfr_256.onnx'),
+		'template': 'arcface_v2',
+		'size': (128, 256)
+	},
 	'gpen_bfr_512':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_512.onnx',
