@@ -60,7 +60,7 @@ def cli() -> None:
 	# face mask
 	group_face_mask = program.add_argument_group('face mask')
 	group_face_mask.add_argument('--face-mask-blur', help = wording.get('face_mask_blur_help'), dest = 'face_mask_blur', type = float, default = 0.3, choices = facefusion.choices.face_mask_blur_range, metavar = create_metavar(facefusion.choices.face_mask_blur_range))
-	group_face_mask.add_argument('--face-mask-padding', help = wording.get('face_mask_padding_help'), dest = 'face_mask_padding', default = [ 0.0, 0.0, 0.0, 0.0 ], nargs = '+')
+	group_face_mask.add_argument('--face-mask-padding', help = wording.get('face_mask_padding_help'), dest = 'face_mask_padding', default = [ 0, 0, 0, 0 ], nargs = '+')
 	# frame extraction
 	group_frame_extraction = program.add_argument_group('frame extraction')
 	group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), dest = 'trim_frame_start', type = int)
@@ -117,7 +117,7 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.reference_frame_number = args.reference_frame_number
 	# face mask
 	facefusion.globals.face_mask_blur = args.face_mask_blur
-	facefusion.globals.face_mask_padding = args.face_mask_padding
+	facefusion.globals.face_mask_padding = tuple(args.face_mask_padding)
 	# frame extraction
 	facefusion.globals.trim_frame_start = args.trim_frame_start
 	facefusion.globals.trim_frame_end = args.trim_frame_end

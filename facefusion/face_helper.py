@@ -46,7 +46,7 @@ def paste_back(temp_frame : Frame, crop_frame: Frame, affine_matrix : Matrix, fa
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_frame_size = temp_frame.shape[:2][::-1]
 	mask_size = tuple(crop_frame.shape[:2])
-	mask_frame = create_static_mask_frame(mask_size, face_mask_blur, tuple(face_mask_padding))
+	mask_frame = create_static_mask_frame(mask_size, face_mask_blur, face_mask_padding)
 	inverse_mask_frame = cv2.warpAffine(mask_frame, inverse_matrix, temp_frame_size).clip(0, 1)
 	inverse_crop_frame = cv2.warpAffine(crop_frame, inverse_matrix, temp_frame_size, borderMode = cv2.BORDER_REPLICATE)
 	paste_frame = temp_frame.copy()
@@ -61,10 +61,10 @@ def create_static_mask_frame(mask_size : Size, face_mask_blur : float, face_mask
 	mask_frame = numpy.ones(mask_size, numpy.float32)
 	blur_amount = int(mask_size[0] * 0.5 * face_mask_blur)
 	blur_area = max(blur_amount // 2, 1)
-	mask_frame[:max(blur_area, int(face_mask_padding[0] * mask_size[1])), :] = 0
-	mask_frame[-max(blur_area, int(face_mask_padding[2] * mask_size[1])):, :] = 0
-	mask_frame[:, :max(blur_area, int(face_mask_padding[3] * mask_size[0]))] = 0
-	mask_frame[:, -max(blur_area, int(face_mask_padding[1] * mask_size[0])):] = 0
+	mask_frame[:max(blur_area, int(mask_size[1] * face_mask_padding[0] / 100)), :] = 0
+	mask_frame[-max(blur_area, int(mask_size[1] * face_mask_padding[2] / 100)):, :] = 0
+	mask_frame[:, :max(blur_area, int(mask_size[0] * face_mask_padding[3] / 100))] = 0
+	mask_frame[:, -max(blur_area, int(mask_size[0] * face_mask_padding[1] / 100)):] = 0
 	if blur_amount > 0:
 		mask_frame = cv2.GaussianBlur(mask_frame, (0, 0), blur_amount * 0.25)
 	return mask_frame

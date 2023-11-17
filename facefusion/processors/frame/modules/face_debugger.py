@@ -58,10 +58,10 @@ def debug_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame
 	bounding_box = target_face.bbox.astype(numpy.int32)
 	padding_box =\
 	[
-		int(bounding_box[1] + (bounding_box[3] - bounding_box[1]) * face_mask_padding[0]),
-		int(bounding_box[2] - (bounding_box[2] - bounding_box[0]) * face_mask_padding[1]),
-		int(bounding_box[3] - (bounding_box[3] - bounding_box[1]) * face_mask_padding[2]),
-		int(bounding_box[0] + (bounding_box[2] - bounding_box[0]) * face_mask_padding[3])
+		int(bounding_box[1] + (bounding_box[3] - bounding_box[1]) * face_mask_padding[0] / 100),
+		int(bounding_box[2] - (bounding_box[2] - bounding_box[0]) * face_mask_padding[1] / 100),
+		int(bounding_box[3] - (bounding_box[3] - bounding_box[1]) * face_mask_padding[2] / 100),
+		int(bounding_box[0] + (bounding_box[2] - bounding_box[0]) * face_mask_padding[3] / 100)
 	]
 	cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), (0, 0, 255), 2)
 	cv2.rectangle(temp_frame, (padding_box[3], padding_box[0]), (padding_box[1], padding_box[2]), (0, 255, 0), 2)

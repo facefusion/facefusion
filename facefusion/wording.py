@@ -24,7 +24,7 @@ WORDING =\
 	'reference_face_distance_help': 'specify the distance between the reference face and the target face',
 	'reference_frame_number_help': 'specify the number of the reference frame',
 	'face_mask_blur_help': 'specify the blur amount for face mask',
-	'face_mask_padding_help': 'specify the face mask padding (top, right, bottom, left)',
+	'face_mask_padding_help': 'specify the face mask padding (top, right, bottom, left) in percent',
 	'trim_frame_start_help': 'specify the start frame for extraction',
 	'trim_frame_end_help': 'specify the end frame for extraction',
 	'temp_frame_format_help': 'specify the image format used for frame extraction',
