@@ -53,8 +53,9 @@ def post_process() -> None:
 
 
 def debug_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame:
+	primary_color = (0, 0, 255)
+	secondary_color = (0, 255, 0)
 	face_mask_padding = facefusion.globals.face_mask_padding
-	temp_frame = temp_frame.copy()
 	bounding_box = target_face.bbox.astype(numpy.int32)
 	padding_box =\
 	[
@@ -63,13 +64,12 @@ def debug_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame
 		int(bounding_box[3] - (bounding_box[3] - bounding_box[1]) * face_mask_padding[2] / 100),
 		int(bounding_box[0] + (bounding_box[2] - bounding_box[0]) * face_mask_padding[3] / 100)
 	]
-	cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), (0, 0, 255), 2)
-	cv2.rectangle(temp_frame, (padding_box[3], padding_box[0]), (padding_box[1], padding_box[2]), (0, 255, 0), 2)
-	if bounding_box[3] - bounding_box[1] > 100 and bounding_box[2] - bounding_box[0] > 100:
+	cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), primary_color, 2)
+	cv2.rectangle(temp_frame, (padding_box[3], padding_box[0]), (padding_box[1], padding_box[2]), secondary_color, 2)
+	if bounding_box[3] - bounding_box[1] > 60 and bounding_box[2] - bounding_box[0] > 60:
 		kps = target_face.kps.astype(numpy.int32)
 		for index in range(kps.shape[0]):
-			cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, (0, 0, 255), -1)
-		cv2.putText(temp_frame, str(round(target_face.score, 2)), (bounding_box[0] + 10, bounding_box[1] + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+			cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, primary_color, -1)
 	return temp_frame
 
 
