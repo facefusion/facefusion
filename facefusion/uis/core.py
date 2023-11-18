@@ -44,13 +44,13 @@ def get_ui_layouts_modules(ui_layouts : List[str]) -> List[ModuleType]:
 	return UI_LAYOUT_MODULES
 
 
-def get_ui_component(name: ComponentName) -> Optional[Component]:
+def get_ui_component(name : ComponentName) -> Optional[Component]:
 	if name in UI_COMPONENTS:
 		return UI_COMPONENTS[name]
 	return None
 
 
-def register_ui_component(name: ComponentName, component: Component) -> None:
+def register_ui_component(name : ComponentName, component: Component) -> None:
 	UI_COMPONENTS[name] = component
 
 
