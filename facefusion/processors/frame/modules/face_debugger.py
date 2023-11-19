@@ -56,30 +56,28 @@ def post_process() -> None:
 def debug_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame:
 	primary_color = (0, 0, 255)
 	secondary_color = (0, 255, 0)
-	tertiary_color = (255, 0, 0)
 	bounding_box = target_face.bbox.astype(numpy.int32)
 	cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), secondary_color, 2)
-	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, "arcface_v2", (128,128))
+	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, 'arcface_v2', (128, 128))
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_frame_size = temp_frame.shape[:2][::-1]
-	mask_frame = numpy.ones(crop_frame.shape[:2], dtype = numpy.uint8) * 255
-	mask_frame[:1, :] = mask_frame[-1:, :] = mask_frame[:, :1] = mask_frame[:, -1:] = 0
-	mask_frame_padded = create_static_mask_frame(crop_frame.shape[:2], 0, facefusion.globals.face_mask_padding)
-	mask_frame_padded[mask_frame_padded > 0] = 255
-	inverse_mask_frame = cv2.warpAffine(mask_frame, inverse_matrix, temp_frame_size)
-	inverse_mask_frame_padded = cv2.warpAffine(mask_frame_padded.astype(numpy.uint8), inverse_matrix, temp_frame_size)
-	inverse_mask_frame_contours = cv2.findContours(inverse_mask_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
-	inverse_mask_frame_padded_contours = cv2.findContours(inverse_mask_frame_padded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
-	cv2.drawContours(temp_frame, inverse_mask_frame_contours, 0, primary_color, 2)
-	cv2.drawContours(temp_frame, inverse_mask_frame_padded_contours, 0, tertiary_color, 2)
-	if bounding_box[3] - bounding_box[1] > 100 and bounding_box[2] - bounding_box[0] > 100:
+	paste_back_frame = numpy.ones(crop_frame.shape[:2]) * 255
+	paste_back_frame[:1, :] = 0
+	paste_back_frame[-1:, :] = 0
+	paste_back_frame[:, :1] = 0
+	paste_back_frame[:, -1:] = 0
+	mask_frame = create_static_mask_frame(crop_frame.shape[:2], 0, facefusion.globals.face_mask_padding)
+	mask_frame[mask_frame > 0] = 255
+	inverse_mask_frame = cv2.warpAffine(mask_frame.astype(numpy.uint8), inverse_matrix, temp_frame_size)
+	inverse_mask_contours = cv2.findContours(inverse_mask_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+	cv2.drawContours(temp_frame, inverse_mask_contours, 0, primary_color, 2)
+	if bounding_box[3] - bounding_box[1] > 80 and bounding_box[2] - bounding_box[0] > 80:
 		kps = target_face.kps.astype(numpy.int32)
 		for index in range(kps.shape[0]):
 			cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, primary_color, -1)
 		score_text = str(round(target_face.score, 2))
-		score_text_position = (bounding_box[0] + 10, bounding_box[1] + 20)
-		cv2.putText(temp_frame, score_text, score_text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 3)
-		cv2.putText(temp_frame, score_text, score_text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+		score_position = (bounding_box[0] + 10, bounding_box[1] + 20)
+		cv2.putText(temp_frame, score_text, score_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
 	return temp_frame
 
 
