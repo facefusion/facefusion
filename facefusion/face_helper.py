@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, List
 from functools import lru_cache
 from cv2.typing import Size
 import cv2
@@ -93,3 +93,27 @@ def distance_to_kps(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[A
 	y = points[:, 1::2] + distance[:, 1::2]
 	kps = numpy.stack((x, y), axis = -1)
 	return kps
+
+
+def apply_nms(bbox_list : List[Bbox], threshold : float) -> List[int]:
+	keep_indices = []
+	dimension_list = numpy.reshape(bbox_list, (-1, 4))
+	x1 = dimension_list[:, 0]
+	y1 = dimension_list[:, 1]
+	x2 = dimension_list[:, 2]
+	y2 = dimension_list[:, 3]
+	areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+	indices = numpy.arange(len(bbox_list))
+	while indices.size > 0:
+		index = indices[0]
+		remain_indices = indices[1:]
+		keep_indices.append(index)
+		xx1 = numpy.maximum(x1[index], x1[remain_indices])
+		yy1 = numpy.maximum(y1[index], y1[remain_indices])
+		xx2 = numpy.minimum(x2[index], x2[remain_indices])
+		yy2 = numpy.minimum(y2[index], y2[remain_indices])
+		width = numpy.maximum(0, xx2 - xx1 + 1)
+		height = numpy.maximum(0, yy2 - yy1 + 1)
+		iou = width * height / (areas[index] + areas[remain_indices] - width * height)
+		indices = indices[numpy.where(iou <= threshold)[0] + 1]
+	return keep_indices

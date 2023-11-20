@@ -6,7 +6,7 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion.face_cache import get_faces_cache, set_faces_cache
-from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox
+from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
 from facefusion.typing import Frame, Face, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Score, Embedding
 from facefusion.utilities import resolve_relative_path, conditional_download
 from facefusion.vision import resize_frame_dimension
@@ -155,7 +155,6 @@ def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_wi
 	face_detector = get_face_analyser().get('face_detector')
 	face_detector.setInputSize((temp_frame_width, temp_frame_height))
 	face_detector.setScoreThreshold(facefusion.globals.face_detector_score)
-	face_detector.setNMSThreshold(0.4)
 	bbox_list = []
 	kps_list = []
 	score_list = []
@@ -178,7 +177,7 @@ def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_wi
 def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face] :
 	faces : List[Face] = []
 	if facefusion.globals.face_detector_score > 0:
-		keep_indices = cv2.dnn.NMSBoxes(bbox_list, score_list, facefusion.globals.face_detector_score, 0.4)
+		keep_indices = apply_nms(bbox_list, 0.4)
 		for index in keep_indices:
 			bbox = bbox_list[index]
 			kps = kps_list[index]
