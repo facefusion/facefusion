@@ -61,11 +61,6 @@ def debug_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, 'arcface_v2', (128, 128))
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_frame_size = temp_frame.shape[:2][::-1]
-	paste_back_frame = numpy.ones(crop_frame.shape[:2]) * 255
-	paste_back_frame[:1, :] = 0
-	paste_back_frame[-1:, :] = 0
-	paste_back_frame[:, :1] = 0
-	paste_back_frame[:, -1:] = 0
 	mask_frame = create_static_mask_frame(crop_frame.shape[:2], 0, facefusion.globals.face_mask_padding)
 	mask_frame[mask_frame > 0] = 255
 	inverse_mask_frame = cv2.warpAffine(mask_frame.astype(numpy.uint8), inverse_matrix, temp_frame_size)
