@@ -1,4 +1,5 @@
 basicsr==1.4.2
+filetype==1.2.0
 gradio==3.50.2
 numpy==1.26.1
 onnx==1.15.0
@@ -8,4 +9,3 @@ psutil==5.9.6
 realesrgan==0.3.0
 torch==2.1.0
 tqdm==4.66.1
-filetype==1.2.0
