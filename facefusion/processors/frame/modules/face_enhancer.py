@@ -67,7 +67,7 @@ MODELS : Dict[str, ModelValue] =\
 	},
 	'restoreformer':
 	{
-		'url': 'https://github.com/harisreedhar/Face-Upscalers-ONNX/releases/download/Models/restoreformer.onnx',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/restoreformer.onnx',
 		'path': resolve_relative_path('../.assets/models/restoreformer.onnx'),
 		'template': 'ffhq',
 		'size': (512, 512)
