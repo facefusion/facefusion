@@ -5,12 +5,14 @@ import numpy
 
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
+from facefusion import wording
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_reference import get_face_reference
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.face_helper import warp_face, create_static_mask_frame
+from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_DEBUGGER'
 
@@ -32,11 +34,12 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	pass
+	program.add_argument('--face-debugger-items', help = wording.get('face_debugger_items_help'), dest = 'face_debugger_items', default = [ 'kps', 'paste-back' ], choices = frame_processors_choices.face_debugger_items, nargs = '+')
 
 
 def apply_args(program : ArgumentParser) -> None:
-	pass
+	args = program.parse_args()
+	frame_processors_globals.face_debugger_items = args.face_debugger_items
 
 
 def pre_check() -> bool:
@@ -57,22 +60,26 @@ def debug_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame
 	primary_color = (0, 0, 255)
 	secondary_color = (0, 255, 0)
 	bounding_box = target_face.bbox.astype(numpy.int32)
-	cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), secondary_color, 2)
-	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, 'arcface_v2', (128, 128))
-	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
-	temp_frame_size = temp_frame.shape[:2][::-1]
-	mask_frame = create_static_mask_frame(crop_frame.shape[:2], 0, facefusion.globals.face_mask_padding)
-	mask_frame[mask_frame > 0] = 255
-	inverse_mask_frame = cv2.warpAffine(mask_frame.astype(numpy.uint8), inverse_matrix, temp_frame_size)
-	inverse_mask_contours = cv2.findContours(inverse_mask_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
-	cv2.drawContours(temp_frame, inverse_mask_contours, 0, primary_color, 2)
+	if 'bbox' in frame_processors_globals.face_debugger_items:
+		cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), secondary_color, 2)
+	if 'paste-back' in frame_processors_globals.face_debugger_items:
+		crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, 'arcface_v2', (128, 128))
+		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
+		temp_frame_size = temp_frame.shape[:2][::-1]
+		mask_frame = create_static_mask_frame(crop_frame.shape[:2], 0, facefusion.globals.face_mask_padding)
+		mask_frame[mask_frame > 0] = 255
+		inverse_mask_frame = cv2.warpAffine(mask_frame.astype(numpy.uint8), inverse_matrix, temp_frame_size)
+		inverse_mask_contours = cv2.findContours(inverse_mask_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+		cv2.drawContours(temp_frame, inverse_mask_contours, 0, primary_color, 2)
 	if bounding_box[3] - bounding_box[1] > 80 and bounding_box[2] - bounding_box[0] > 80:
-		kps = target_face.kps.astype(numpy.int32)
-		for index in range(kps.shape[0]):
-			cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, primary_color, -1)
-		score_text = str(round(target_face.score, 2))
-		score_position = (bounding_box[0] + 10, bounding_box[1] + 20)
-		cv2.putText(temp_frame, score_text, score_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
+		if 'kps' in frame_processors_globals.face_debugger_items:
+			kps = target_face.kps.astype(numpy.int32)
+			for index in range(kps.shape[0]):
+				cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, primary_color, -1)
+		if 'score' in frame_processors_globals.face_debugger_items:
+			score_text = str(round(target_face.score, 2))
+			score_position = (bounding_box[0] + 10, bounding_box[1] + 20)
+			cv2.putText(temp_frame, score_text, score_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
 	return temp_frame
 
 

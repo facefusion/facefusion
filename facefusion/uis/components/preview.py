@@ -94,6 +94,7 @@ def listen() -> None:
 	change_one_component_names : List[ComponentName] =\
 	[
 		'frame_processors_checkbox_group',
+		'face_debugger_items_checkbox_group',
 		'face_enhancer_model_dropdown',
 		'face_enhancer_blend_slider',
 		'frame_enhancer_model_dropdown',
