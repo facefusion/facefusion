@@ -1,4 +1,5 @@
 from typing import List
+from facefusion.typing import FaceDebuggerItems
 
 import numpy
 
@@ -9,4 +10,4 @@ frame_enhancer_models : List[str] = [ 'real_esrgan_x2plus', 'real_esrgan_x4plus'
 face_enhancer_blend_range : List[int] = numpy.arange(0, 101, 1).tolist()
 frame_enhancer_blend_range : List[int] = numpy.arange(0, 101, 1).tolist()
 
-face_debugger_items : List[str] = [ 'bbox', 'kps', 'paste-back', 'score' ]
+face_debugger_items : FaceDebuggerItems = [ 'bbox', 'kps', 'paste-back', 'score' ]

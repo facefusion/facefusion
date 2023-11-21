@@ -62,7 +62,6 @@ def render() -> None:
 		choices = frame_processors_choices.face_debugger_items,
 		value = frame_processors_globals.face_debugger_items,
 		visible = 'face_debugger' in facefusion.globals.frame_processors,
-		interactive = True
 	)
 
 	register_ui_component('face_swapper_model_dropdown', FACE_SWAPPER_MODEL_DROPDOWN)
