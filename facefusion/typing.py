@@ -33,7 +33,6 @@ FaceDetectorModel = Literal['retinaface', 'yunet']
 FaceRecognizerModel = Literal['arcface_blendface', 'arcface_inswapper', 'arcface_simswap']
 TempFrameFormat = Literal['jpg', 'png']
 OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc']
-FaceDebuggerItems = List[str]
 
 ModelValue = Dict[str, Any]
 OptionsWithModel = TypedDict('OptionsWithModel',

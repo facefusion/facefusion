@@ -56,7 +56,7 @@ def post_process() -> None:
 	clear_content_analyser()
 
 
-def debug_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame:
+def debug_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
 	primary_color = (0, 0, 255)
 	secondary_color = (0, 255, 0)
 	bounding_box = target_face.bbox.astype(numpy.int32)
@@ -71,7 +71,7 @@ def debug_face(source_face: Face, target_face: Face, temp_frame: Frame) -> Frame
 		inverse_mask_frame = cv2.warpAffine(mask_frame.astype(numpy.uint8), inverse_matrix, temp_frame_size)
 		inverse_mask_contours = cv2.findContours(inverse_mask_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
 		cv2.drawContours(temp_frame, inverse_mask_contours, 0, primary_color, 2)
-	if bounding_box[3] - bounding_box[1] > 80 and bounding_box[2] - bounding_box[0] > 80:
+	if bounding_box[3] - bounding_box[1] > 60 and bounding_box[2] - bounding_box[0] > 60:
 		if 'kps' in frame_processors_globals.face_debugger_items:
 			kps = target_face.kps.astype(numpy.int32)
 			for index in range(kps.shape[0]):
