@@ -21,6 +21,7 @@ def render() -> None:
 		[
 			'.png',
 			'.jpg',
+			'.jpeg',
 			'.webp'
 		],
 		label = wording.get('source_file_label'),

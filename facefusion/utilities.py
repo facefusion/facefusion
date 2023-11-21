@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 import urllib.request
 import onnxruntime
+import filetype as ft
 
 import facefusion.globals
 from facefusion import wording
@@ -168,8 +169,8 @@ def is_directory(directory_path : str) -> bool:
 
 def is_image(image_path : str) -> bool:
 	if is_file(image_path):
-		mimetype, _ = mimetypes.guess_type(image_path)
-		return bool(mimetype and mimetype.startswith('image/'))
+		mimetype = ft.guess(image_path)
+		return bool(mimetype.mime and mimetype.mime.startswith('image/'))
 	return False
 
 
