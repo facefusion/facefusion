@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from tqdm import tqdm
 import glob
-import mimetypes
+import filetype
 import os
 import platform
 import shutil
@@ -168,14 +168,14 @@ def is_directory(directory_path : str) -> bool:
 
 def is_image(image_path : str) -> bool:
 	if is_file(image_path):
-		mimetype, _ = mimetypes.guess_type(image_path)
+		mimetype = filetype.guess(image_path).mime
 		return bool(mimetype and mimetype.startswith('image/'))
 	return False
 
 
 def is_video(video_path : str) -> bool:
 	if is_file(video_path):
-		mimetype, _ = mimetypes.guess_type(video_path)
+		mimetype = filetype.guess(video_path).mime
 		return bool(mimetype and mimetype.startswith('video/'))
 	return False
 
