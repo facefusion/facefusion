@@ -95,7 +95,7 @@ def distance_to_kps(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[A
 	return kps
 
 
-def apply_nms(bbox_list : List[Bbox], threshold : float) -> List[int]:
+def apply_nms(bbox_list : List[Bbox], iou_threshold : float) -> List[int]:
 	keep_indices = []
 	dimension_list = numpy.reshape(bbox_list, (-1, 4))
 	x1 = dimension_list[:, 0]
@@ -115,5 +115,5 @@ def apply_nms(bbox_list : List[Bbox], threshold : float) -> List[int]:
 		width = numpy.maximum(0, xx2 - xx1 + 1)
 		height = numpy.maximum(0, yy2 - yy1 + 1)
 		iou = width * height / (areas[index] + areas[remain_indices] - width * height)
-		indices = indices[numpy.where(iou <= threshold)[0] + 1]
+		indices = indices[numpy.where(iou <= iou_threshold)[0] + 1]
 	return keep_indices
