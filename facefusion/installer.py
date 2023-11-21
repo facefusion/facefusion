@@ -17,12 +17,12 @@ TORCH : Dict[str, str] =\
 }
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 {
-	'default': ('onnxruntime', '1.16.0'),
-	'cuda': ('onnxruntime-gpu', '1.16.0'),
+	'default': ('onnxruntime', '1.16.3'),
+	'cuda': ('onnxruntime-gpu', '1.16.3'),
 	'coreml-legacy': ('onnxruntime-coreml', '1.13.1'),
 	'coreml-silicon': ('onnxruntime-silicon', '1.16.0'),
-	'directml': ('onnxruntime-directml', '1.16.0'),
-	'openvino': ('onnxruntime-openvino', '1.15.0')
+	'directml': ('onnxruntime-directml', '1.16.3'),
+	'openvino': ('onnxruntime-openvino', '1.16.0')
 }
 
 
