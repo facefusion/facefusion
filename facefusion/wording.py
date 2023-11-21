@@ -34,7 +34,7 @@ WORDING =\
 	'output_video_encoder_help': 'specify the encoder used for the output video',
 	'output_video_quality_help': 'specify the quality used for the output video',
 	'max_memory_help': 'specify the maximum amount of ram to be used (in gb)',
-	'execution_providers_help': 'choose from the available execution providers (choices: {choices}, ...)',
+	'execution_providers_help': 'choose from the available execution providers',
 	'execution_thread_count_help': 'specify the number of execution threads',
 	'execution_queue_count_help': 'specify the number of execution queries',
 	'skip_download_help': 'omit automate downloads and lookups',
