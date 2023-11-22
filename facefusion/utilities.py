@@ -181,25 +181,61 @@ def is_video(video_path : str) -> bool:
 
 
 def conditional_download(download_directory_path : str, urls : List[str]) -> None:
-	with ThreadPoolExecutor() as executor:
-		for url in urls:
-			executor.submit(get_download_size, url)
+	# Initialize dictionaries to store file sizes
+	file_sizes_on_disk = {}
+	download_sizes = {}
+
+	# For each URL, get the download size and the current file size on disk
 	for url in urls:
 		download_file_path = os.path.join(download_directory_path, os.path.basename(url))
-		total = get_download_size(url)
+		download_sizes[url] = get_download_size(url)
 		if is_file(download_file_path):
-			initial = os.path.getsize(download_file_path)
+			file_sizes_on_disk[download_file_path] = os.path.getsize(download_file_path)
 		else:
-			initial = 0
-		if initial < total:
-			bar_format = '{l_bar}{bar}| {n_fmt}/{total_fmt}]'
-			with tqdm(total = total, initial = initial, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, bar_format = bar_format) as progress:
-				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])
-				current = initial
-				while current < total:
-					if is_file(download_file_path):
-						current = os.path.getsize(download_file_path)
-						progress.update(current - progress.n)
+			file_sizes_on_disk[download_file_path] = 0
+
+	# Calculate the total size on disk and the total size to download
+	total_on_disk = sum(file_sizes_on_disk.values())
+	total_to_download = sum(download_sizes.values())
+
+	# sort the dictionaries so they are in the same order of names
+	sorted_file_sizes_on_disk = dict(sorted(file_sizes_on_disk.items()))
+	urls.sort()
+
+	
+	if total_on_disk < total_to_download:
+		bar_format = '{l_bar}{bar}| {n_fmt}/{total_fmt}]'
+		# Create a progress bar
+		with tqdm(total = total_to_download, initial = total_on_disk, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, bar_format = bar_format) as progress:
+			# List to store the download processes
+			processes = []
+			for url in urls:
+				download_file_path = os.path.join(download_directory_path, os.path.basename(url))
+				try:
+					# Download the model
+					process = subprocess.Popen(['curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url])
+					processes.append((process, download_file_path))
+				except Exception as e:
+					print(f"Failed to start download {url}. Error: {e}")
+
+			while processes:
+				# rocesses that are still running
+				still_running = []
+				for process, file in processes:
+					# If the process is still running
+					if process.poll() is None:
+						still_running.append((process, file))
+						if is_file(file):
+							current_file_size = os.path.getsize(file)
+							size_delta = current_file_size - file_sizes_on_disk[file]
+							progress.update(size_delta)
+							file_sizes_on_disk[file] = current_file_size
+				processes = still_running
+
+
+					
+
+								
 
 
 @lru_cache(maxsize = None)
