@@ -227,9 +227,9 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 						still_running.append((process, file))
 						if is_file(file):
 							current_file_size = os.path.getsize(file)
-							size_delta = current_file_size - file_sizes_on_disk[file]
+							size_delta = current_file_size - sorted_file_sizes_on_disk[file]
 							progress.update(size_delta)
-							file_sizes_on_disk[file] = current_file_size
+							sorted_file_sizes_on_disk[file] = current_file_size
 				processes = still_running
 
 
