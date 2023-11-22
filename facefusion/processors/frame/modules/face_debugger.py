@@ -34,7 +34,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--face-debugger-items', help = wording.get('face_debugger_items_help'), dest = 'face_debugger_items', default = [ 'kps', 'paste-back' ], choices = frame_processors_choices.face_debugger_items, nargs = '+')
+	program.add_argument('--face-debugger-items', help = wording.get('face_debugger_items_help'), dest = 'face_debugger_items', default = [ 'kps', 'face-mask' ], choices = frame_processors_choices.face_debugger_items, nargs = '+')
 
 
 def apply_args(program : ArgumentParser) -> None:
@@ -62,7 +62,7 @@ def debug_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fr
 	bounding_box = target_face.bbox.astype(numpy.int32)
 	if 'bbox' in frame_processors_globals.face_debugger_items:
 		cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), secondary_color, 2)
-	if 'paste-back' in frame_processors_globals.face_debugger_items:
+	if 'face-mask' in frame_processors_globals.face_debugger_items:
 		crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, 'arcface_v2', (128, 128))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_frame_size = temp_frame.shape[:2][::-1]

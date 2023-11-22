@@ -10,4 +10,4 @@ frame_enhancer_models : List[FrameEnhancerModel] = [ 'real_esrgan_x2plus', 'real
 face_enhancer_blend_range : List[int] = numpy.arange(0, 101, 1).tolist()
 frame_enhancer_blend_range : List[int] = numpy.arange(0, 101, 1).tolist()
 
-face_debugger_items : List[FaceDebuggerItem] = [ 'bbox', 'kps', 'paste-back', 'score' ]
+face_debugger_items : List[FaceDebuggerItem] = [ 'bbox', 'kps', 'face-mask', 'score' ]
