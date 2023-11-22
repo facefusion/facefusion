@@ -233,11 +233,6 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 				processes = still_running
 
 
-					
-
-								
-
-
 @lru_cache(maxsize = None)
 def get_download_size(url : str) -> int:
 	try:
