@@ -1,5 +1,4 @@
 from typing import Any, List, Optional
-from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from pathlib import Path
 from tqdm import tqdm
@@ -202,7 +201,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 	sorted_file_sizes_on_disk = dict(sorted(file_sizes_on_disk.items()))
 	urls.sort()
 
-	
+
 	if total_on_disk < total_to_download:
 		bar_format = '{l_bar}{bar}| {n_fmt}/{total_fmt}]'
 		# Create a progress bar
@@ -217,7 +216,6 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 					processes.append((process, download_file_path))
 				except Exception as e:
 					print(f"Failed to start download {url}. Error: {e}")
-
 			while processes:
 				# rocesses that are still running
 				still_running = []
