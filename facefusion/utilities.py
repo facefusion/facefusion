@@ -179,7 +179,18 @@ def is_video(video_path : str) -> bool:
 	return False
 
 
-def conditional_download(download_directory_path : str, urls : List[str]) -> None:
+def conditional_download(download_directory_path: str, urls: List[str]) -> None:
+		file_sizes_on_disk, download_sizes = calculate_sizes(download_directory_path, urls)
+		total_on_disk = sum(file_sizes_on_disk.values())
+		total_to_download = sum(download_sizes.values())
+		if total_on_disk < total_to_download:
+			bar_format = '{l_bar}{bar}| {n_fmt}/{total_fmt}]'
+			with tqdm(total=total_to_download, initial=total_on_disk, desc=wording.get('downloading'), unit='B', unit_scale=True, unit_divisor=1024, bar_format=bar_format) as progress:
+				processes = start_download_processes(download_directory_path, urls)
+				monitor_processes(processes, progress, file_sizes_on_disk)
+
+
+def calculate_sizes(download_directory_path: str, urls: List[str]) -> tuple[dict[str, int], dict[str, int]]:
 	file_sizes_on_disk = {}
 	download_sizes = {}
 	for url in urls:
@@ -189,37 +200,28 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 			file_sizes_on_disk[download_file_path] = os.path.getsize(download_file_path)
 		else:
 			file_sizes_on_disk[download_file_path] = 0
+	return file_sizes_on_disk, download_sizes
 
-	total_on_disk = sum(file_sizes_on_disk.values())
-	total_to_download = sum(download_sizes.values())
+def start_download_processes(download_directory_path: str, urls: List[str]) -> List[tuple[subprocess.Popen, str]]:
+	processes = []
+	for url in urls:
+		download_file_path = os.path.join(download_directory_path, os.path.basename(url))
+		process = subprocess.Popen(['curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url])
+		processes.append((process, download_file_path))
+	return processes
 
-	sorted_file_sizes_on_disk = dict(sorted(file_sizes_on_disk.items()))
-	urls.sort()
-
-
-	if total_on_disk < total_to_download:
-		bar_format = '{l_bar}{bar}| {n_fmt}/{total_fmt}]'
-		with tqdm(total = total_to_download, initial = total_on_disk, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, bar_format = bar_format) as progress:
-			processes = []
-			for url in urls:
-				download_file_path = os.path.join(download_directory_path, os.path.basename(url))
-				try:
-					process = subprocess.Popen(['curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url])
-					processes.append((process, download_file_path))
-				except Exception as e:
-					print(f"Failed to start download {url}. Error: {e}")
-			while processes:
-				still_running = []
-				for process, file in processes:
-					if process.poll() is None:
-						still_running.append((process, file))
-						if is_file(file):
-							current_file_size = os.path.getsize(file)
-							size_delta = current_file_size - sorted_file_sizes_on_disk[file]
-							progress.update(size_delta)
-							sorted_file_sizes_on_disk[file] = current_file_size
-				processes = still_running
-
+def monitor_processes(processes: List[tuple[subprocess.Popen, str]], progress: tqdm, file_sizes_on_disk: dict[str, int]) -> None:
+	while processes:
+		still_running = []
+		for process, file in processes:
+			if process.poll() is None:
+				still_running.append((process, file))
+				if is_file(file):
+					current_file_size = os.path.getsize(file)
+					size_delta = current_file_size - file_sizes_on_disk[file]
+					progress.update(size_delta)
+					file_sizes_on_disk[file] = current_file_size
+		processes = still_running
 
 @lru_cache(maxsize = None)
 def get_download_size(url : str) -> int:
