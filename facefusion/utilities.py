@@ -224,7 +224,7 @@ def resolve_relative_path(path : str) -> str:
 def list_module_names(path : str) -> Optional[List[str]]:
 	if os.path.exists(path):
 		files = os.listdir(path)
-		return [ Path(file).stem for file in files if not Path(file).stem.startswith('__') ]
+		return [ Path(file).stem for file in files if not Path(file).stem.startswith('__') and not Path(file).stem.startswith('.') ]
 	return None
 
 
