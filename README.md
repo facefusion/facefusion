@@ -90,10 +90,16 @@ uis:
 ```
 
 
+License
+-------
+
+FaceFusion is released under the MIT license. Modifications to the software that allow processing inappropriate content such as nudity, graphic content and sensitive material are strictly prohibited.
+
+
 Disclaimer
 ----------
 
-We acknowledge the unethical potential of FaceFusion and are resolutely dedicated to establishing safeguards against such misuse. This program has been engineered to abstain from processing inappropriate content such as nudity, graphic content and sensitive material.
+We acknowledge the unethical potential of FaceFusion and are resolutely dedicated to establishing safeguards against such misuse. This software has been engineered to abstain from processing inappropriate content such as nudity, graphic content and sensitive material.
 
 It is important to note that we maintain a strong stance against any type of pornographic nature and do not collaborate with any websites promoting the unauthorized use of our software.
 
