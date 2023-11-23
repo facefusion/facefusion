@@ -25,7 +25,7 @@ Process_Frames = Callable[[str, List[str], Update_Process], None]
 
 Template = Literal['arcface_v1', 'arcface_v2', 'ffhq']
 ProcessMode = Literal['output', 'preview', 'stream']
-FaceSelectorMode = Literal['reference', 'many']
+FaceSelectorMode = Literal['reference', 'one', 'many']
 FaceAnalyserOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
 FaceAnalyserAge = Literal['child', 'teen', 'adult', 'senior']
 FaceAnalyserGender = Literal['male', 'female']

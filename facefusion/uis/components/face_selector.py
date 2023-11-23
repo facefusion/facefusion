@@ -102,6 +102,9 @@ def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gr
 	if face_selector_mode == 'reference':
 		facefusion.globals.face_selector_mode = face_selector_mode
 		return gradio.Gallery(visible = True), gradio.Slider(visible = True)
+	if face_selector_mode == 'one':
+		facefusion.globals.face_selector_mode = face_selector_mode
+		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
 	if face_selector_mode == 'many':
 		facefusion.globals.face_selector_mode = face_selector_mode
 		return gradio.Gallery(visible = False), gradio.Slider(visible = False)

@@ -53,7 +53,7 @@ face analyser:
   --face-detector-score [0.0-1.0]                                                                                    specify the score threshold used for the face detector
 
 face selector:
-  --face-selector-mode {reference,many}                                                                              specify the mode for the face selector
+  --face-selector-mode {reference,one,many}                                                                          specify the mode for the face selector
   --reference-face-position REFERENCE_FACE_POSITION                                                                  specify the position of the reference face
   --reference-face-distance [0.0-1.5]                                                                                specify the distance between the reference face and the target face
   --reference-frame-number REFERENCE_FRAME_NUMBER                                                                    specify the number of the reference frame
@@ -78,7 +78,7 @@ output creation:
 
 frame processors:
   --frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                                         choose from the available frame processors (choices: face_debugger, face_enhancer, face_swapper, frame_enhancer, ...)
-  --face-debugger-items {bbox,kps,paste-back,score} [{bbox,kps,paste-back,score} ...]                                specify the face debugger items
+  --face-debugger-items {bbox,kps,face-mask,score} [{bbox,kps,face-mask,score} ...]                                  specify the face debugger items
   --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,restoreformer}        choose the model for the frame processor
   --face-enhancer-blend [0-100]                                                                                      specify the blend factor for the frame processor
   --face-swapper-model {blendface_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial}           choose the model for the frame processor

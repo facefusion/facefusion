@@ -89,6 +89,10 @@ def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame)
 		if similar_faces:
 			for similar_face in similar_faces:
 				temp_frame = debug_face(source_face, similar_face, temp_frame)
+	if 'one' in facefusion.globals.face_selector_mode:
+		target_face = get_one_face(temp_frame)
+		if target_face:
+			temp_frame = debug_face(source_face, target_face, temp_frame)
 	if 'many' in facefusion.globals.face_selector_mode:
 		many_faces = get_many_faces(temp_frame)
 		if many_faces:

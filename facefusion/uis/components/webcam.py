@@ -61,7 +61,7 @@ def listen() -> None:
 
 
 def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
-	facefusion.globals.face_selector_mode = 'many'
+	facefusion.globals.face_selector_mode = 'one'
 	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
 	stream = None
 	if mode in [ 'udp', 'v4l2' ]:
