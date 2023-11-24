@@ -25,20 +25,16 @@ WEBCAM_START_BUTTON : Optional[gradio.Button] = None
 WEBCAM_STOP_BUTTON : Optional[gradio.Button] = None
 
 
-def get_webcam_capture(resolution : str, fps : float) -> Optional[cv2.VideoCapture]:
+def get_webcam_capture() -> Optional[cv2.VideoCapture]:
 	global WEBCAM_CAPTURE
 
 	if WEBCAM_CAPTURE is None:
 		if platform.system().lower() == 'windows':
-			WEBCAM_CAPTURE = cv2.VideoCapture(-1, cv2.CAP_DSHOW)
+			webcam_capture = cv2.VideoCapture(-1, cv2.CAP_DSHOW)
 		else:
-			WEBCAM_CAPTURE = cv2.VideoCapture(-1)
-		if WEBCAM_CAPTURE.isOpened():
-			webcam_width, webcam_height = map(int, resolution.split('x'))
-			WEBCAM_CAPTURE.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))  # type: ignore[attr-defined]
-			WEBCAM_CAPTURE.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
-			WEBCAM_CAPTURE.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
-			WEBCAM_CAPTURE.set(cv2.CAP_PROP_FPS, fps)
+			webcam_capture = cv2.VideoCapture(-1)
+		if webcam_capture.isOpened():
+			WEBCAM_CAPTURE = webcam_capture
 	return WEBCAM_CAPTURE
 
 
@@ -89,8 +85,13 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 	stream = None
 	if mode in [ 'udp', 'v4l2' ]:
 		stream = open_stream(mode, resolution, fps) # type: ignore[arg-type]
-	webcam_capture = get_webcam_capture(resolution, fps)
+	webcam_width, webcam_height = map(int, resolution.split('x'))
+	webcam_capture = get_webcam_capture()
 	if webcam_capture.isOpened():
+		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))  # type: ignore[attr-defined]
+		webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
+		webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
+		webcam_capture.set(cv2.CAP_PROP_FPS, fps)
 		for capture_frame in multi_process_capture(source_face, webcam_capture, fps):
 			if mode == 'inline':
 				yield normalize_frame_color(capture_frame)
