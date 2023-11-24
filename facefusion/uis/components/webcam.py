@@ -33,7 +33,7 @@ def get_webcam_capture() -> Optional[cv2.VideoCapture]:
 			webcam_capture = cv2.VideoCapture(-1, cv2.CAP_DSHOW)
 		else:
 			webcam_capture = cv2.VideoCapture(-1)
-		if webcam_capture.isOpened():
+		if webcam_capture and webcam_capture.isOpened():
 			WEBCAM_CAPTURE = webcam_capture
 	return WEBCAM_CAPTURE
 
@@ -87,7 +87,7 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 		stream = open_stream(mode, resolution, fps) # type: ignore[arg-type]
 	webcam_width, webcam_height = map(int, resolution.split('x'))
 	webcam_capture = get_webcam_capture()
-	if webcam_capture.isOpened():
+	if webcam_capture and webcam_capture.isOpened():
 		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))  # type: ignore[attr-defined]
 		webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
 		webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
@@ -105,7 +105,7 @@ def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture,
 	with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 		futures = []
 		deque_capture_frames : Deque[Frame] = deque()
-		while webcam_capture.isOpened():
+		while webcam_capture and webcam_capture.isOpened():
 			_, capture_frame = webcam_capture.read()
 			if analyse_stream(capture_frame, fps):
 				return
