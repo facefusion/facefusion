@@ -50,9 +50,6 @@ def listen() -> None:
 	webcam_fps_slider = get_ui_component('webcam_fps_slider')
 	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
-		webcam_mode_radio.change(stop, outputs = WEBCAM_IMAGE, cancels = start_event)
-		webcam_resolution_dropdown.change(stop, outputs = WEBCAM_IMAGE, cancels = start_event)
-		webcam_fps_slider.change(stop, outputs = WEBCAM_IMAGE, cancels = start_event)
 	WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
 	source_image = get_ui_component('source_image')
 	if source_image:
@@ -81,7 +78,7 @@ def multi_process_capture(source_face : Face, capture : cv2.VideoCapture, fps : 
 	with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 		futures = []
 		deque_capture_frames : Deque[Frame] = deque()
-		while True:
+		while capture.isOpened():
 			_, capture_frame = capture.read()
 			if analyse_stream(capture_frame, fps):
 				return
@@ -92,8 +89,8 @@ def multi_process_capture(source_face : Face, capture : cv2.VideoCapture, fps : 
 				deque_capture_frames.append(capture_frame)
 				futures.remove(future_done)
 			while deque_capture_frames:
-				yield deque_capture_frames.popleft()
 				progress.update()
+				yield deque_capture_frames.popleft()
 
 
 def stop() -> gradio.Image:
