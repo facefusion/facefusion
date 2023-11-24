@@ -69,9 +69,11 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 	capture = capture_webcam(resolution, fps)
 	if capture.isOpened():
 		for capture_frame in multi_process_capture(source_face, capture, fps):
-			if stream is not None:
+			if mode == 'inline':
+				yield normalize_frame_color(capture_frame)
+			else:
 				stream.stdin.write(capture_frame.tobytes())
-			yield normalize_frame_color(capture_frame)
+				yield None
 
 
 def multi_process_capture(source_face : Face, capture : cv2.VideoCapture, fps : float) -> Generator[Frame, None, None]:
