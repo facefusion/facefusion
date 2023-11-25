@@ -62,7 +62,7 @@ def clear_frame_processors_modules() -> None:
 
 
 def multi_process_frames(source_path : str, temp_frame_paths : List[str], process_frames : Process_Frames) -> None:
-	with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame') as progress:
+	with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame', ascii = ' =') as progress:
 		progress.set_postfix(
 		{
 			'execution_providers': encode_execution_providers(facefusion.globals.execution_providers),
