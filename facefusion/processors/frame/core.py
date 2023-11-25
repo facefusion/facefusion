@@ -1,7 +1,5 @@
-import os
 import sys
 import importlib
-import psutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue
 from types import ModuleType
@@ -93,14 +91,10 @@ def pick_queue(queue : Queue[str], queue_per_future : int) -> List[str]:
 
 
 def update_progress(progress : Any = None) -> None:
-	process = psutil.Process(os.getpid())
-	memory_usage = process.memory_info().rss / 1024 / 1024 / 1024
 	progress.set_postfix(
 	{
-		'memory_usage': '{:.2f}'.format(memory_usage).zfill(5) + 'GB',
 		'execution_providers': facefusion.globals.execution_providers,
 		'execution_thread_count': facefusion.globals.execution_thread_count,
 		'execution_queue_count': facefusion.globals.execution_queue_count
 	})
-	progress.refresh()
-	progress.update(1)
+	progress.update()
