@@ -1,7 +1,6 @@
 from typing import Any, Dict
-import threading
 from functools import lru_cache
-
+import threading
 import cv2
 import numpy
 import onnxruntime
