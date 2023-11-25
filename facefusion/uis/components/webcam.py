@@ -30,9 +30,9 @@ def get_webcam_capture() -> Optional[cv2.VideoCapture]:
 
 	if WEBCAM_CAPTURE is None:
 		if platform.system().lower() == 'windows':
-			webcam_capture = cv2.VideoCapture(-1, cv2.CAP_DSHOW)
+			webcam_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 		else:
-			webcam_capture = cv2.VideoCapture(-1)
+			webcam_capture = cv2.VideoCapture(0)
 		if webcam_capture and webcam_capture.isOpened():
 			WEBCAM_CAPTURE = webcam_capture
 	return WEBCAM_CAPTURE
