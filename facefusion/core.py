@@ -224,7 +224,7 @@ def process_image() -> None:
 	if not compress_image(facefusion.globals.output_path):
 		update_status(wording.get('compressing_image_failed'))
 	# validate image
-	if is_image(facefusion.globals.target_path):
+	if is_image(facefusion.globals.output_path):
 		update_status(wording.get('processing_image_succeed'))
 	else:
 		update_status(wording.get('processing_image_failed'))
@@ -268,7 +268,7 @@ def process_video() -> None:
 	update_status(wording.get('clearing_temp'))
 	clear_temp(facefusion.globals.target_path)
 	# validate video
-	if is_video(facefusion.globals.target_path):
+	if is_video(facefusion.globals.output_path):
 		update_status(wording.get('processing_video_succeed'))
 	else:
 		update_status(wording.get('processing_video_failed'))
