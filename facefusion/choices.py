@@ -16,7 +16,7 @@ output_video_encoders : List[OutputVideoEncoder] = [ 'libx264', 'libx265', 'libv
 
 execution_thread_count_range : List[int] = numpy.arange(1, 129, 1).tolist()
 execution_queue_count_range : List[int] = numpy.arange(1, 33, 1).tolist()
-max_memory_range : List[int] = numpy.arange(1, 129, 1).tolist()
+max_memory_range : List[int] = numpy.arange(0, 129, 1).tolist()
 face_detector_score_range : List[float] = numpy.arange(0.0, 1.05, 0.05).tolist()
 face_mask_blur_range : List[float] = numpy.arange(0.0, 1.05, 0.05).tolist()
 face_mask_padding_range : List[float] = numpy.arange(0, 101, 1).tolist()
