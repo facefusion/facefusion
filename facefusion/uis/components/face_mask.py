@@ -20,14 +20,14 @@ def render() -> None:
 	global FACE_MASK_PADDING_BOTTOM_SLIDER
 	global FACE_MASK_PADDING_LEFT_SLIDER
 
+	FACE_MASK_BLUR_SLIDER = gradio.Slider(
+		label = wording.get('face_mask_blur_slider_label'),
+		step = facefusion.choices.face_mask_blur_range[1] - facefusion.choices.face_mask_blur_range[0],
+		minimum = facefusion.choices.face_mask_blur_range[0],
+		maximum = facefusion.choices.face_mask_blur_range[-1],
+		value = facefusion.globals.face_mask_blur
+	)
 	with gradio.Group():
-		FACE_MASK_BLUR_SLIDER = gradio.Slider(
-			label = wording.get('face_mask_blur_slider_label'),
-			step = facefusion.choices.face_mask_blur_range[1] - facefusion.choices.face_mask_blur_range[0],
-			minimum = facefusion.choices.face_mask_blur_range[0],
-			maximum = facefusion.choices.face_mask_blur_range[-1],
-			value = facefusion.globals.face_mask_blur
-		)
 		with gradio.Row():
 			FACE_MASK_PADDING_TOP_SLIDER = gradio.Slider(
 				label = wording.get('face_mask_padding_top_slider_label'),
