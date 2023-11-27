@@ -16,6 +16,7 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.typing import Padding
 from facefusion.vision import detect_fps
 
 TEMP_DIRECTORY_PATH = os.path.join(tempfile.gettempdir(), 'facefusion')
@@ -119,23 +120,6 @@ def get_temp_output_video_path(target_path : str) -> str:
 	return os.path.join(temp_directory_path, TEMP_OUTPUT_VIDEO_NAME)
 
 
-def normalize_output_path(source_path : Optional[str], target_path : Optional[str], output_path : Optional[str]) -> Optional[str]:
-	if is_file(target_path) and is_directory(output_path):
-		target_name, target_extension = os.path.splitext(os.path.basename(target_path))
-		if is_file(source_path):
-			source_name, _ = os.path.splitext(os.path.basename(source_path))
-			return os.path.join(output_path, source_name + '-' + target_name + target_extension)
-		return os.path.join(output_path, target_name + target_extension)
-	if is_file(target_path) and output_path:
-		_, target_extension = os.path.splitext(os.path.basename(target_path))
-		output_name, output_extension = os.path.splitext(os.path.basename(output_path))
-		output_directory_path = os.path.dirname(output_path)
-		if is_directory(output_directory_path) and output_extension:
-			return os.path.join(output_directory_path, output_name + target_extension)
-		return None
-	return output_path
-
-
 def create_temp(target_path : str) -> None:
 	temp_directory_path = get_temp_directory_path(target_path)
 	Path(temp_directory_path).mkdir(parents = True, exist_ok = True)
@@ -156,6 +140,35 @@ def clear_temp(target_path : str) -> None:
 		shutil.rmtree(temp_directory_path)
 	if os.path.exists(parent_directory_path) and not os.listdir(parent_directory_path):
 		os.rmdir(parent_directory_path)
+
+
+def normalize_output_path(source_path : Optional[str], target_path : Optional[str], output_path : Optional[str]) -> Optional[str]:
+	if is_file(target_path) and is_directory(output_path):
+		target_name, target_extension = os.path.splitext(os.path.basename(target_path))
+		if is_file(source_path):
+			source_name, _ = os.path.splitext(os.path.basename(source_path))
+			return os.path.join(output_path, source_name + '-' + target_name + target_extension)
+		return os.path.join(output_path, target_name + target_extension)
+	if is_file(target_path) and output_path:
+		_, target_extension = os.path.splitext(os.path.basename(target_path))
+		output_name, output_extension = os.path.splitext(os.path.basename(output_path))
+		output_directory_path = os.path.dirname(output_path)
+		if is_directory(output_directory_path) and output_extension:
+			return os.path.join(output_directory_path, output_name + target_extension)
+		return None
+	return output_path
+
+
+def normalize_padding(padding : Optional[List[int]]) -> Optional[Padding]:
+	if padding and len(padding) == 1:
+		return tuple([ padding[0], padding[0], padding[0], padding[0] ]) # type: ignore[return-value]
+	if padding and len(padding) == 2:
+		return tuple([ padding[0], padding[1], padding[0], padding[1] ]) # type: ignore[return-value]
+	if padding and len(padding) == 3:
+		return tuple([ padding[0], padding[1], padding[2], padding[1] ]) # type: ignore[return-value]
+	if padding and len(padding) == 4:
+		return tuple(padding) # type: ignore[return-value]
+	return None
 
 
 def is_file(file_path : str) -> bool:
