@@ -16,9 +16,9 @@ Preview
 Installation
 ------------
 
-Be aware, the installation needs technical skills and is not for beginners. Please do not open platform and installation related issues on GitHub. We have a very helpful [Discord](https://join.facefusion.io) community that will guide you to install FaceFusion.
+Be aware, the installation needs technical skills and is not for beginners. Please do not open platform and installation related issues on GitHub. We have a very helpful [Discord](https://join.facefusion.io) community that will guide you to complete the installation.
 
-Read the [installation](https://docs.facefusion.io/installation) now.
+Get started with the [installation](https://docs.facefusion.io/installation) guide.
 
 
 Usage
@@ -27,6 +27,8 @@ Usage
 Run the command:
 
 ```
+python run.py [options]
+
 options:
   -h, --help                                                                                                         show this help message and exit
   -s SOURCE_PATH, --source SOURCE_PATH                                                                               select a source image
