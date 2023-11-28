@@ -8,10 +8,10 @@ from realesrgan import RealESRGANer
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
-from facefusion.core import update_status
 from facefusion.face_analyser import clear_face_analyser
+from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Frame, Face, Update_Process, ProcessMode, ModelValue, OptionsWithModel
-from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done, get_device
+from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done, map_device, create_metavar, update_status
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
@@ -22,22 +22,22 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FRAME_ENHANCER'
 MODELS: Dict[str, ModelValue] =\
 {
-	'realesrgan_x2plus':
+	'real_esrgan_x2plus':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x2plus.pth',
-		'path': resolve_relative_path('../.assets/models/RealESRGAN_x2plus.pth'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x2plus.pth',
+		'path': resolve_relative_path('../.assets/models/real_esrgan_x2plus.pth'),
 		'scale': 2
 	},
-	'realesrgan_x4plus':
+	'real_esrgan_x4plus':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRGAN_x4plus.pth',
-		'path': resolve_relative_path('../.assets/models/RealESRGAN_x4plus.pth'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4plus.pth',
+		'path': resolve_relative_path('../.assets/models/real_esrgan_x4plus.pth'),
 		'scale': 4
 	},
-	'realesrnet_x4plus':
+	'real_esrnet_x4plus':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/RealESRNet_x4plus.pth',
-		'path': resolve_relative_path('../.assets/models/RealESRNet_x4plus.pth'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrnet_x4plus.pth',
+		'path': resolve_relative_path('../.assets/models/real_esrnet_x4plus.pth'),
 		'scale': 4
 	}
 }
@@ -58,7 +58,7 @@ def get_frame_processor() -> Any:
 					num_out_ch = 3,
 					scale = model_scale
 				),
-				device = get_device(facefusion.globals.execution_providers),
+				device = map_device(facefusion.globals.execution_providers),
 				scale = model_scale
 			)
 	return FRAME_PROCESSOR
@@ -70,26 +70,26 @@ def clear_frame_processor() -> None:
 	FRAME_PROCESSOR = None
 
 
-def get_options(key : Literal[ 'model' ]) -> Any:
+def get_options(key : Literal['model']) -> Any:
 	global OPTIONS
 
 	if OPTIONS is None:
-		OPTIONS = \
+		OPTIONS =\
 		{
 			'model': MODELS[frame_processors_globals.frame_enhancer_model]
 		}
 	return OPTIONS.get(key)
 
 
-def set_options(key : Literal[ 'model' ], value : Any) -> None:
+def set_options(key : Literal['model'], value : Any) -> None:
 	global OPTIONS
 
 	OPTIONS[key] = value
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'frame_enhancer_model', default = 'realesrgan_x2plus', choices = frame_processors_choices.frame_enhancer_models)
-	program.add_argument('--frame-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest = 'frame_enhancer_blend', type = int, default = 100, choices = range(101), metavar = '[0-100]')
+	program.add_argument('--frame-enhancer-model', help = wording.get('frame_processor_model_help'), dest = 'frame_enhancer_model', default = 'real_esrgan_x2plus', choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-blend', help = wording.get('frame_processor_blend_help'), dest = 'frame_enhancer_blend', type = int, default = 80, choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
 
 
 def apply_args(program : ArgumentParser) -> None:
@@ -124,6 +124,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	clear_frame_processor()
 	clear_face_analyser()
+	clear_content_analyser()
 	read_static_image.cache_clear()
 
 
@@ -136,7 +137,8 @@ def enhance_frame(temp_frame : Frame) -> Frame:
 
 def blend_frame(temp_frame : Frame, paste_frame : Frame) -> Frame:
 	frame_enhancer_blend = 1 - (frame_processors_globals.frame_enhancer_blend / 100)
-	temp_frame = cv2.resize(temp_frame, (paste_frame.shape[1], paste_frame.shape[0]))
+	paste_frame_height, paste_frame_width = paste_frame.shape[0:2]
+	temp_frame = cv2.resize(temp_frame, (paste_frame_width, paste_frame_height))
 	temp_frame = cv2.addWeighted(temp_frame, frame_enhancer_blend, paste_frame, 1 - frame_enhancer_blend, 0)
 	return temp_frame
 

@@ -39,8 +39,9 @@ def render() -> None:
 		trim_frame_end_slider_args['value'] = facefusion.globals.trim_frame_end or video_frame_total
 		trim_frame_end_slider_args['maximum'] = video_frame_total
 		trim_frame_end_slider_args['visible'] = True
-	TRIM_FRAME_START_SLIDER = gradio.Slider(**trim_frame_start_slider_args)
-	TRIM_FRAME_END_SLIDER = gradio.Slider(**trim_frame_end_slider_args)
+	with gradio.Row():
+		TRIM_FRAME_START_SLIDER = gradio.Slider(**trim_frame_start_slider_args)
+		TRIM_FRAME_END_SLIDER = gradio.Slider(**trim_frame_end_slider_args)
 
 
 def listen() -> None:

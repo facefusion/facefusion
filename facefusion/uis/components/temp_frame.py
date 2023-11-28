@@ -1,8 +1,8 @@
 from typing import Optional, Tuple
 import gradio
 
-import facefusion.choices
 import facefusion.globals
+import facefusion.choices
 from facefusion import wording
 from facefusion.typing import TempFrameFormat
 from facefusion.utilities import is_video
@@ -25,9 +25,9 @@ def render() -> None:
 	TEMP_FRAME_QUALITY_SLIDER = gradio.Slider(
 		label = wording.get('temp_frame_quality_slider_label'),
 		value = facefusion.globals.temp_frame_quality,
-		step = 1,
-		minimum = 0,
-		maximum = 100,
+		step = facefusion.choices.temp_frame_quality_range[1] - facefusion.choices.temp_frame_quality_range[0],
+		minimum = facefusion.choices.temp_frame_quality_range[0],
+		maximum = facefusion.choices.temp_frame_quality_range[-1],
 		visible = is_video(facefusion.globals.target_path)
 	)
 

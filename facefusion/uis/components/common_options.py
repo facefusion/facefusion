@@ -3,7 +3,7 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.uis import choices
+from facefusion.uis import choices as uis_choices
 
 COMMON_OPTIONS_CHECKBOX_GROUP : Optional[gradio.Checkboxgroup] = None
 
@@ -22,7 +22,7 @@ def render() -> None:
 		value.append('skip-download')
 	COMMON_OPTIONS_CHECKBOX_GROUP = gradio.Checkboxgroup(
 		label = wording.get('common_options_checkbox_group_label'),
-		choices = choices.common_options,
+		choices = uis_choices.common_options,
 		value = value
 	)
 

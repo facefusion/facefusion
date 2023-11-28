@@ -26,4 +26,4 @@ def clear_faces_cache() -> None:
 
 
 def create_frame_hash(frame : Frame) -> Optional[str]:
-	return hashlib.sha256(frame.tobytes()).hexdigest() if frame is not None else None
+	return hashlib.sha1(frame.tobytes()).hexdigest() if frame.any() else None
