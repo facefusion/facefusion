@@ -1,11 +1,11 @@
 basicsr==1.4.2
 filetype==1.2.0
 gradio==3.50.2
-numpy==1.26.1
+numpy==1.26.2
 onnx==1.15.0
-onnxruntime==1.16.0
+onnxruntime==1.16.3
 opencv-python==4.8.1.78
 psutil==5.9.6
 realesrgan==0.3.0
-torch==2.1.0
+torch==2.1.1
 tqdm==4.66.1
