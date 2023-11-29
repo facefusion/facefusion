@@ -1,4 +1,5 @@
 from typing import Dict, Tuple
+import platform
 import subprocess
 from argparse import ArgumentParser, HelpFormatter
 
@@ -11,19 +12,22 @@ from facefusion import metadata, wording
 TORCH : Dict[str, str] =\
 {
 	'default': 'default',
-	'cpu': 'cpu',
-	'cuda': 'cu118',
-	'rocm': 'rocm5.6'
+	'cpu': 'cpu'
 }
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 {
-	'default': ('onnxruntime', '1.16.3'),
-	'cuda': ('onnxruntime-gpu', '1.16.3'),
-	'coreml-legacy': ('onnxruntime-coreml', '1.13.1'),
-	'coreml-silicon': ('onnxruntime-silicon', '1.16.0'),
-	'directml': ('onnxruntime-directml', '1.16.3'),
-	'openvino': ('onnxruntime-openvino', '1.16.0')
+	'default': ('onnxruntime', '1.16.3')
 }
+if platform.system().lower() == 'linux' or platform.system().lower() == 'windows':
+	TORCH['cuda'] = 'cu118'
+	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.16.3')
+	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
+if platform.system().lower() == 'linux':
+	TORCH['rocm'] = 'rocm5.6'
+	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.16.3')
+if platform.system().lower() == 'darwin':
+	ONNXRUNTIMES['coreml-legacy'] = ('onnxruntime-coreml', '1.13.1')
+	ONNXRUNTIMES['coreml-silicon'] = ('onnxruntime-silicon', '1.16.0')
 
 
 def cli() -> None:
