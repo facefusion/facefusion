@@ -174,9 +174,13 @@ def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_wi
 	return bbox_list, kps_list, score_list
 
 
-def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face] :
+def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face]:
 	faces : List[Face] = []
 	if facefusion.globals.face_detector_score > 0:
+		sort_indices = numpy.argsort(-numpy.array(score_list))
+		bbox_list = [ bbox_list[index] for index in sort_indices ]
+		kps_list = [ kps_list[index] for index in sort_indices ]
+		score_list = [ score_list[index] for index in sort_indices ]
 		keep_indices = apply_nms(bbox_list, 0.4)
 		for index in keep_indices:
 			bbox = bbox_list[index]
