@@ -33,10 +33,10 @@ pip install onnxruntime-gpu
 pip uninstall torch
 
 # Manual Download For WIn https://download.pytorch.org/whl/cu118/torch-2.1.0%2Bcu118-cp310-cp310-win_amd64.whl#sha256=eb512249df3083bce7bd3d89d9d1289fa82fe807e714a02b754e66971d358da3
-pip install torch-2.1.0%2Bcu118-cp310-cp310-win_amd64.whl
+pip install torch-2.1.0+cu118-cp310-cp310-win_amd64.whl
 
 # Manual Download For Linux https://download.pytorch.org/whl/cu118/torch-2.1.0%2Bcu118-cp310-cp310-linux_x86_64.whl#sha256=a81b554184492005543ddc32e96469f9369d778dedd195d73bda9bed407d6589
-pip install torch-2.1.0%2Bcu118-cp310-cp310-linux_x86_64.whl
+pip install torch-2.1.0+cu118-cp310-cp310-linux_x86_64.whl
 
 python run.py
 
