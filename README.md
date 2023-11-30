@@ -19,7 +19,7 @@ READ :
 
 ```sh
 git clone https://github.com/EKI-INDRADI/facefusion_rnd_20231129_freedom_dont_be_evil.git
-cd facefusion
+cd facefusion_rnd_20231129_freedom_dont_be_evil
 py -3.10 -m venv venv
 cd venv\Scripts
 
