@@ -1,6 +1,47 @@
 FaceFusion Version 2.0 FREEDOM DONT BE EVIL
 ==========
 
+Thanks to [FaceFusion](https://github.com/facefusion/facefusion)
+
+# WARNING DONT BE EVIL !
+
+READ : 
+[windows 1](https://docs.facefusion.io/installation/platform/windows)
+
+[windows 2](https://docs.facefusion.io/installation/environment/windows)
+
+[windows 3](https://docs.facefusion.io/installation/accelerator/cuda)
+
+[Manual Download For WIn](https://download.pytorch.org/whl/cu118/torch-2.1.0%2Bcu118-cp310-cp310-win_amd64.whl#sha256=eb512249df3083bce7bd3d89d9d1289fa82fe807e714a02b754e66971d358da3)
+
+[Manual Download For Linux](https://download.pytorch.org/whl/cu118/torch-2.1.0%2Bcu118-cp310-cp310-linux_x86_64.whl#sha256=a81b554184492005543ddc32e96469f9369d778dedd195d73bda9bed407d6589)
+
+```sh
+git clone https://github.com/EKI-INDRADI/facefusion_rnd_20231129_freedom_dont_be_evil.git
+cd facefusion
+py -3.10 -m venv venv
+cd venv\Scripts
+
+activate
+cd ..
+cd ..
+
+pip install -r requirements.txt
+pip install onnxruntime-gpu
+
+pip uninstall torch
+
+# Manual Download For WIn https://download.pytorch.org/whl/cu118/torch-2.1.0%2Bcu118-cp310-cp310-win_amd64.whl#sha256=eb512249df3083bce7bd3d89d9d1289fa82fe807e714a02b754e66971d358da3
+pip install torch-2.1.0%2Bcu118-cp310-cp310-win_amd64.whl
+
+# Manual Download For Linux https://download.pytorch.org/whl/cu118/torch-2.1.0%2Bcu118-cp310-cp310-linux_x86_64.whl#sha256=a81b554184492005543ddc32e96469f9369d778dedd195d73bda9bed407d6589
+pip install torch-2.1.0%2Bcu118-cp310-cp310-linux_x86_64.whl
+
+python run.py
+
+```
+
+
 > Next generation face swapper and enhancer.
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=master)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
