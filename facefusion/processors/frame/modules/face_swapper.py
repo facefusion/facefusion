@@ -206,7 +206,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	return temp_frame
 
 
-def prepare_source_frame(source_face : Face) -> numpy.ndarray[Any, Any]:
+def prepare_source_frame(source_face : Face) -> Frame:
 	source_frame = read_static_image(facefusion.globals.source_path)
 	source_frame, _ = warp_face(source_frame, source_face.kps, 'arcface_v2', (112, 112))
 	source_frame = source_frame[:, :, ::-1] / 255.0
