@@ -29,11 +29,14 @@ STREAM_COUNTER = 0
 
 def get_content_analyser() -> Any:
 	global CONTENT_ANALYSER
+	# ------------FREEDOM DONT BE EVIL
+	# with THREAD_LOCK:
+	# 	if CONTENT_ANALYSER is None:
+	# 		model_path = MODELS.get('open_nsfw').get('path')
+	# 		CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
+	# ------------/FREEDOM DONT BE EVIL
+	CONTENT_ANALYSER = None
 
-	with THREAD_LOCK:
-		if CONTENT_ANALYSER is None:
-			model_path = MODELS.get('open_nsfw').get('path')
-			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
 	return CONTENT_ANALYSER
 
 
@@ -44,10 +47,12 @@ def clear_content_analyser() -> None:
 
 
 def pre_check() -> bool:
-	if not facefusion.globals.skip_download:
-		download_directory_path = resolve_relative_path('../.assets/models')
-		model_url = MODELS.get('open_nsfw').get('url')
-		conditional_download(download_directory_path, [ model_url ])
+	# ------------FREEDOM DONT BE EVIL
+	# if not facefusion.globals.skip_download:
+	# 	download_directory_path = resolve_relative_path('../.assets/models')
+	# 	model_url = MODELS.get('open_nsfw').get('url')
+	# 	conditional_download(download_directory_path, [ model_url ])
+	# ------------/FREEDOM DONT BE EVIL
 	return True
 
 
@@ -68,13 +73,16 @@ def prepare_frame(frame : Frame) -> Frame:
 
 
 def analyse_frame(frame : Frame) -> bool:
-	content_analyser = get_content_analyser()
-	frame = prepare_frame(frame)
-	probability = content_analyser.run(None,
-	{
-		'input:0': frame
-	})[0][0][1]
-	return probability > MAX_PROBABILITY
+	# ------------FREEDOM DONT BE EVIL
+	# content_analyser = get_content_analyser()
+	# frame = prepare_frame(frame)
+	# probability = content_analyser.run(None,
+	# {
+	# 	'input:0': frame
+	# })[0][0][1]
+	# return probability > MAX_PROBABILITY
+	# ------------/FREEDOM DONT BE EVIL
+	return False
 
 
 @lru_cache(maxsize = None)
