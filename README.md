@@ -6,6 +6,7 @@ Thanks to [FaceFusion](https://github.com/facefusion/facefusion)
 # WARNING DONT BE EVIL !
 
 READ : 
+
 [windows 1](https://docs.facefusion.io/installation/platform/windows)
 
 [windows 2](https://docs.facefusion.io/installation/environment/windows)
