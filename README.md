@@ -1,4 +1,4 @@
-FaceFusion
+FaceFusion Version 2.0 FREEDOM DONT BE EVIL
 ==========
 
 > Next generation face swapper and enhancer.
