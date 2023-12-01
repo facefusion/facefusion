@@ -26,6 +26,7 @@ onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 warnings.filterwarnings('ignore', category = UserWarning, module = 'torchvision')
 
+
 def get_args(mode : ArgumentsMode = 'all') -> ArgumentParser:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 120), add_help = False)
 	if mode in ('batch-common'):
@@ -70,6 +71,7 @@ def get_args(mode : ArgumentsMode = 'all') -> ArgumentParser:
 		group_face_mask = program.add_argument_group('face mask')
 		group_face_mask.add_argument('--face-mask-blur', help = wording.get('face_mask_blur_help'), dest = 'face_mask_blur', type = float, default = 0.3, choices = facefusion.choices.face_mask_blur_range, metavar = create_metavar(facefusion.choices.face_mask_blur_range))
 		group_face_mask.add_argument('--face-mask-padding', help = wording.get('face_mask_padding_help'), dest = 'face_mask_padding', type = int, default = [ 0, 0, 0, 0 ], nargs = '+')
+	if mode in ('all', 'batch-task'):
 		# frame extraction
 		group_frame_extraction = program.add_argument_group('frame extraction')
 		group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), dest = 'trim_frame_start', type = int)
