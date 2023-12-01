@@ -39,3 +39,5 @@ OptionsWithModel = TypedDict('OptionsWithModel',
 {
 	'model' : ModelValue
 })
+
+ArgumentsMode = Literal['all', 'batch-common', 'batch-task']

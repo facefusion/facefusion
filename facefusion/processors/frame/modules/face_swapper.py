@@ -176,11 +176,12 @@ def pre_process(mode : ProcessMode) -> bool:
 	return True
 
 
-def post_process() -> None:
-	clear_frame_processor()
-	clear_model_matrix()
-	clear_face_analyser()
-	clear_content_analyser()
+def post_process(is_warm : bool = False) -> None:
+	if not is_warm:
+		clear_frame_processor()
+		clear_model_matrix()
+		clear_face_analyser()
+		clear_content_analyser()
 	read_static_image.cache_clear()
 
 

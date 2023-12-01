@@ -121,7 +121,13 @@ WORDING =\
 	'comma': ',',
 	'colon': ':',
 	'question_mark': '?',
-	'exclamation_mark': '!'
+	'exclamation_mark': '!',
+	'batch_help': 'select a batch file',
+	'batch_release_resources_limit': 'specifies N counter that will be used to release a frame processor resources after each N tasks',
+	'batch_file_bad_path': 'Batch file not found',
+	'batch_file_empty': 'Batch file contain no instructions',
+	'batch_line_started': 'Batch line {line_id} processing started',
+	'batch_processing_ended': 'Batch processing ended',
 }
 
 
