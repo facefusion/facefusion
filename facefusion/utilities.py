@@ -186,6 +186,12 @@ def is_image(image_path : str) -> bool:
 	return False
 
 
+def are_images(image_paths : List[str]) -> bool:
+	if image_paths is not None:
+		return all(is_image(image_path) for image_path in image_paths)
+	return False
+
+
 def is_video(video_path : str) -> bool:
 	if is_file(video_path):
 		mimetype = filetype.guess(video_path).mime
