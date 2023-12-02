@@ -187,7 +187,7 @@ def is_image(image_path : str) -> bool:
 
 
 def are_images(image_paths : List[str]) -> bool:
-	if image_paths is not None:
+	if image_paths:
 		return all(is_image(image_path) for image_path in image_paths)
 	return False
 

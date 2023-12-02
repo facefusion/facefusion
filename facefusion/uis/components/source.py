@@ -27,7 +27,7 @@ def render() -> None:
 		label = wording.get('source_file_label'),
 		value = facefusion.globals.source_paths if are_source_images else None
 	)
-	source_file_names = [ source_file_value['name'] for source_file_value in SOURCE_FILE.value ]
+	source_file_names = [ source_file_value['name'] for source_file_value in SOURCE_FILE.value ] if SOURCE_FILE.value else None
 	SOURCE_IMAGE = gradio.Image(
 		value = source_file_names[0] if are_source_images else None,
 		visible = are_source_images,
