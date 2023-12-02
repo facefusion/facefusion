@@ -29,7 +29,7 @@ def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 120), add_help = False)
 	# general
-	program.add_argument('-s', '--source', help = wording.get('source_help'), dest = 'source_path')
+	program.add_argument('-s', '--source', action = 'append', help = wording.get('source_help'), dest = 'source_paths')
 	program.add_argument('-t', '--target', help = wording.get('target_help'), dest = 'target_path')
 	program.add_argument('-o', '--output', help = wording.get('output_help'), dest = 'output_path')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
@@ -92,7 +92,9 @@ def cli() -> None:
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	# general
-	facefusion.globals.source_path = args.source_path
+	print(args.source_paths)
+	facefusion.globals.source_path = args.source_paths[0] if args.source_paths else None
+	facefusion.globals.source_paths = args.source_paths
 	facefusion.globals.target_path = args.target_path
 	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, args.output_path)
 	# misc
@@ -217,7 +219,7 @@ def process_image() -> None:
 	# process frame
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		update_status(wording.get('processing'), frame_processor_module.NAME)
-		frame_processor_module.process_image(facefusion.globals.source_path, facefusion.globals.output_path, facefusion.globals.output_path)
+		frame_processor_module.process_image(facefusion.globals.source_paths, facefusion.globals.output_path, facefusion.globals.output_path)
 		frame_processor_module.post_process()
 	# compress image
 	update_status(wording.get('compressing_image'))
@@ -245,7 +247,7 @@ def process_video() -> None:
 	if temp_frame_paths:
 		for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 			update_status(wording.get('processing'), frame_processor_module.NAME)
-			frame_processor_module.process_video(facefusion.globals.source_path, temp_frame_paths)
+			frame_processor_module.process_video(facefusion.globals.source_paths, temp_frame_paths)
 			frame_processor_module.post_process()
 	else:
 		update_status(wording.get('temp_frames_not_found'))

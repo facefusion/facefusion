@@ -21,7 +21,7 @@ Matrix = numpy.ndarray[Any, Any]
 Padding = Tuple[int, int, int, int]
 
 Update_Process = Callable[[], None]
-Process_Frames = Callable[[str, List[str], Update_Process], None]
+Process_Frames = Callable[[List[str], List[str], Update_Process], None]
 
 Template = Literal['arcface_v1', 'arcface_v2', 'ffhq']
 ProcessMode = Literal['output', 'preview', 'stream']
