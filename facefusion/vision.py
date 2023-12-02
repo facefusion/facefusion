@@ -57,8 +57,9 @@ def read_static_image(image_path : str) -> Optional[Frame]:
 
 def read_static_images(image_paths : List[str]) -> Optional[List[Frame]]:
 	frames = []
-	for image_path in image_paths:
-		frames.append(read_static_image(image_path))
+	if image_paths:
+		for image_path in image_paths:
+			frames.append(read_static_image(image_path))
 	return frames
 
 

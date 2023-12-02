@@ -102,7 +102,7 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	total_fps = 0.0
 	for i in range(benchmark_cycles):
 		facefusion.globals.target_path = target_path
-		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, tempfile.gettempdir())
+		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_paths, facefusion.globals.target_path, tempfile.gettempdir())
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		start_time = time.perf_counter()
 		conditional_process()
