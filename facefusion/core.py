@@ -92,7 +92,6 @@ def cli() -> None:
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	# general
-	print(args.source_paths)
 	facefusion.globals.source_path = args.source_paths[0] if args.source_paths else None
 	facefusion.globals.source_paths = args.source_paths
 	facefusion.globals.target_path = args.target_path
