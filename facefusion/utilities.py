@@ -145,11 +145,9 @@ def clear_temp(target_path : str) -> None:
 def normalize_output_path(source_paths : List[str], target_path : str, output_path : str) -> Optional[str]:
 	if is_file(target_path) and is_directory(output_path):
 		target_name, target_extension = os.path.splitext(os.path.basename(target_path))
-		if source_paths:
-			for source_path in source_paths:
-				if is_file(source_path):
-					source_name, _ = os.path.splitext(os.path.basename(source_path))
-					return os.path.join(output_path, source_name + '-' + target_name + target_extension)
+		if source_paths and is_file(source_paths[0]):
+			source_name, _ = os.path.splitext(os.path.basename(source_paths[0]))
+			return os.path.join(output_path, source_name + '-' + target_name + target_extension)
 		return os.path.join(output_path, target_name + target_extension)
 	if is_file(target_path) and output_path:
 		_, target_extension = os.path.splitext(os.path.basename(target_path))
@@ -269,7 +267,7 @@ def map_device(execution_providers : List[str]) -> str:
 
 
 def create_metavar(ranges : List[Any]) -> str:
-	return '[' + str(ranges[0]) + '-' + str(ranges[1]) + ']'
+	return '[' + str(ranges[0]) + '-' + str(ranges[-1]) + ']'
 
 
 def update_status(message : str, scope : str = 'FACEFUSION.CORE') -> None:
