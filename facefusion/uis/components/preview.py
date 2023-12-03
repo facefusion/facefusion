@@ -58,8 +58,7 @@ def render() -> None:
 
 
 def listen() -> None:
-	for method in [ 'change', 'release' ]:
-		getattr(PREVIEW_FRAME_SLIDER, method)(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	PREVIEW_FRAME_SLIDER.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	multi_one_component_names : List[ComponentName] =\
 	[
 		'source_image',
