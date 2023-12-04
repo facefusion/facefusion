@@ -1,6 +1,6 @@
 import gradio
 
-from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, limit_resources, temp_frame, output_options, common_options, source, target, output, preview, trim_frame, face_analyser, face_selector, face_mask
+from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, limit_resources, temp_frame, output_options, common_options, source, target, output, preview, trim_frame, face_analyser, face_selector, face_masker
 
 
 def pre_check() -> bool:
@@ -47,7 +47,7 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					face_selector.render()
 				with gradio.Blocks():
-					face_mask.render()
+					face_masker.render()
 				with gradio.Blocks():
 					face_analyser.render()
 	return layout
@@ -69,7 +69,7 @@ def listen() -> None:
 	preview.listen()
 	trim_frame.listen()
 	face_selector.listen()
-	face_mask.listen()
+	face_masker.listen()
 	face_analyser.listen()
 
 
