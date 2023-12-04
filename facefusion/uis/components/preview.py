@@ -102,6 +102,7 @@ def listen() -> None:
 		'frame_enhancer_blend_slider',
 		'face_selector_mode_dropdown',
 		'reference_face_distance_slider',
+		'face_mask_types_checkbox_group',
 		'face_mask_blur_slider',
 		'face_mask_padding_top_slider',
 		'face_mask_padding_bottom_slider',

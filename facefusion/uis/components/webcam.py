@@ -90,7 +90,7 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 	webcam_width, webcam_height = map(int, resolution.split('x'))
 	webcam_capture = get_webcam_capture()
 	if webcam_capture and webcam_capture.isOpened():
-		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))  # type: ignore[attr-defined]
+		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) # type: ignore[attr-defined]
 		webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
 		webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
 		webcam_capture.set(cv2.CAP_PROP_FPS, fps)
