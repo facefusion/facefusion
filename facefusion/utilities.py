@@ -142,11 +142,11 @@ def clear_temp(target_path : str) -> None:
 		os.rmdir(parent_directory_path)
 
 
-def normalize_output_path(source_path : Optional[str], target_path : Optional[str], output_path : Optional[str]) -> Optional[str]:
+def normalize_output_path(source_paths : List[str], target_path : str, output_path : str) -> Optional[str]:
 	if is_file(target_path) and is_directory(output_path):
 		target_name, target_extension = os.path.splitext(os.path.basename(target_path))
-		if is_file(source_path):
-			source_name, _ = os.path.splitext(os.path.basename(source_path))
+		if source_paths and is_file(source_paths[0]):
+			source_name, _ = os.path.splitext(os.path.basename(source_paths[0]))
 			return os.path.join(output_path, source_name + '-' + target_name + target_extension)
 		return os.path.join(output_path, target_name + target_extension)
 	if is_file(target_path) and output_path:
@@ -183,6 +183,12 @@ def is_image(image_path : str) -> bool:
 	if is_file(image_path):
 		mimetype = filetype.guess(image_path).mime
 		return bool(mimetype and mimetype.startswith('image/'))
+	return False
+
+
+def are_images(image_paths : List[str]) -> bool:
+	if image_paths:
+		return all(is_image(image_path) for image_path in image_paths)
 	return False
 
 

@@ -75,7 +75,7 @@ def listen() -> None:
 
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
-	facefusion.globals.source_path = '.assets/examples/source.jpg'
+	facefusion.globals.source_paths = [ '.assets/examples/source.jpg' ]
 	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 	benchmark_results = []
 	if target_paths:
@@ -102,7 +102,7 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	total_fps = 0.0
 	for i in range(benchmark_cycles):
 		facefusion.globals.target_path = target_path
-		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, tempfile.gettempdir())
+		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_paths, facefusion.globals.target_path, tempfile.gettempdir())
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		start_time = time.perf_counter()
 		conditional_process()

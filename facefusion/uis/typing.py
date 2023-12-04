@@ -1,6 +1,7 @@
-from typing import Literal
+from typing import Literal, Any, IO
 import gradio
 
+File = IO[Any]
 Component = gradio.File or gradio.Image or gradio.Video or gradio.Slider
 ComponentName = Literal\
 [

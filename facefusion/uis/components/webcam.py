@@ -12,10 +12,10 @@ import facefusion.globals
 from facefusion import wording
 from facefusion.content_analyser import analyse_stream
 from facefusion.typing import Frame, Face
-from facefusion.face_analyser import get_one_face
+from facefusion.face_analyser import get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.utilities import open_ffmpeg
-from facefusion.vision import normalize_frame_color, read_static_image
+from facefusion.vision import normalize_frame_color, read_static_images
 from facefusion.uis.typing import StreamMode, WebcamMode
 from facefusion.uis.core import get_ui_component
 
@@ -82,7 +82,8 @@ def listen() -> None:
 def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_analyser_order = 'large-small'
-	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
+	source_frames = read_static_images(facefusion.globals.source_paths)
+	source_face = get_average_face(source_frames)
 	stream = None
 	if mode in [ 'udp', 'v4l2' ]:
 		stream = open_stream(mode, resolution, fps) # type: ignore[arg-type]

@@ -4,7 +4,7 @@ import subprocess
 import pytest
 
 import facefusion.globals
-from facefusion.utilities import conditional_download, extract_frames, create_temp, get_temp_directory_path, clear_temp, normalize_output_path, normalize_padding, is_file, is_directory, is_image, is_video, get_download_size, is_download_done, encode_execution_providers, decode_execution_providers
+from facefusion.utilities import conditional_download, extract_frames, create_temp, get_temp_directory_path, clear_temp, normalize_output_path, normalize_padding, is_file, is_directory, is_image, are_images, is_video, get_download_size, is_download_done, encode_execution_providers, decode_execution_providers
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -105,16 +105,16 @@ def test_extract_frames_with_trim_end() -> None:
 
 def test_normalize_output_path() -> None:
 	if platform.system().lower() != 'windows':
-		assert normalize_output_path('.assets/examples/source.jpg', None, '.assets/examples/target-240p.mp4') == '.assets/examples/target-240p.mp4'
+		assert normalize_output_path([ '.assets/examples/source.jpg' ], None, '.assets/examples/target-240p.mp4') == '.assets/examples/target-240p.mp4'
 		assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/examples/target-240p.mp4') == '.assets/examples/target-240p.mp4'
 		assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/examples') == '.assets/examples/target-240p.mp4'
-		assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', '.assets/examples') == '.assets/examples/source-target-240p.mp4'
+		assert normalize_output_path([ '.assets/examples/source.jpg' ], '.assets/examples/target-240p.mp4', '.assets/examples') == '.assets/examples/source-target-240p.mp4'
 		assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/examples/output.mp4') == '.assets/examples/output.mp4'
 		assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/output.mov') == '.assets/output.mp4'
 	assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/examples/invalid') is None
 	assert normalize_output_path(None, '.assets/examples/target-240p.mp4', '.assets/invalid/output.mp4') is None
 	assert normalize_output_path(None, '.assets/examples/target-240p.mp4', 'invalid') is None
-	assert normalize_output_path('.assets/examples/source.jpg', '.assets/examples/target-240p.mp4', None) is None
+	assert normalize_output_path([ '.assets/examples/source.jpg' ], '.assets/examples/target-240p.mp4', None) is None
 
 
 def test_normalize_padding() -> None:
@@ -141,6 +141,12 @@ def test_is_image() -> None:
 	assert is_image('.assets/examples/source.jpg') is True
 	assert is_image('.assets/examples/target-240p.mp4') is False
 	assert is_image('invalid') is False
+
+
+def test_are_images() -> None:
+	assert are_images([ '.assets/examples/source.jpg' ]) is True
+	assert are_images([ '.assets/examples/source.jpg', '.assets/examples/target-240p.mp4' ]) is False
+	assert are_images([ 'invalid' ]) is False
 
 
 def test_is_video() -> None:
