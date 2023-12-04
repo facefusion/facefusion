@@ -31,7 +31,7 @@ python run.py [options]
 
 options:
   -h, --help                                                                                                         show this help message and exit
-  -s SOURCE_PATH, --source SOURCE_PATH                                                                               select a source image
+  -s SOURCE_PATHS, --source SOURCE_PATHS                                                                             select a source image
   -t TARGET_PATH, --target TARGET_PATH                                                                               select a target image or video
   -o OUTPUT_PATH, --output OUTPUT_PATH                                                                               specify the output file or directory
   -v, --version                                                                                                      show program's version number and exit
@@ -61,6 +61,7 @@ face selector:
   --reference-frame-number REFERENCE_FRAME_NUMBER                                                                    specify the number of the reference frame
 
 face mask:
+  --face-mask-types {box,occluder} [{box,occluder} ...]                                                              choose from the available face mask types
   --face-mask-blur [0.0-1.0]                                                                                         specify the blur amount for face mask
   --face-mask-padding FACE_MASK_PADDING [FACE_MASK_PADDING ...]                                                      specify the face mask padding (top, right, bottom, left) in percent
 
