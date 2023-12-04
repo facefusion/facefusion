@@ -11,7 +11,8 @@ from facefusion.face_reference import get_face_reference
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
-from facefusion.face_helper import warp_face, create_static_mask_frame
+from facefusion.face_helper import warp_face
+from facefusion.face_masker import create_static_box_mask
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_DEBUGGER'
@@ -66,7 +67,7 @@ def debug_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fr
 		crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, 'arcface_v2', (128, 128))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_frame_size = temp_frame.shape[:2][::-1]
-		mask_frame = create_static_mask_frame(crop_frame.shape[:2], 0, facefusion.globals.face_mask_padding)
+		mask_frame = create_static_box_mask(crop_frame.shape[:2], 0, facefusion.globals.face_mask_padding)
 		mask_frame[mask_frame > 0] = 255
 		inverse_mask_frame = cv2.warpAffine(mask_frame.astype(numpy.uint8), inverse_matrix, temp_frame_size)
 		inverse_mask_contours = cv2.findContours(inverse_mask_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
