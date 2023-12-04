@@ -56,15 +56,13 @@ def create_mask(crop_frame : Frame, face_mask_type : FaceMaskType, face_mask_blu
 
 
 def create_face_occluder_mask(crop_frame : Frame, face_mask_blur : float) -> Mask:
-	global FACE_OCCLUDER
-
-	FACE_OCCLUDER = get_face_occluder()
+	face_occluder = get_face_occluder()
 	crop_frame_size = crop_frame.shape[:2][::-1]
-	occluder_inputs = FACE_OCCLUDER.get_inputs()
+	occluder_inputs = face_occluder.get_inputs()
 	crop_frame_resized = cv2.resize(crop_frame, occluder_inputs[0].shape[1:3][::-1])
 	crop_frame_resized = numpy.expand_dims(crop_frame_resized, axis=0).astype(numpy.float32) / 255
 	crop_frame_resized = crop_frame_resized.transpose(0, 1, 2, 3)
-	occluder_mask = FACE_OCCLUDER.run(None, {occluder_inputs[0].name: crop_frame_resized})[0][0]
+	occluder_mask = face_occluder.run(None, {occluder_inputs[0].name: crop_frame_resized})[0][0]
 	occluder_mask = occluder_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
 	occluder_mask = cv2.resize(occluder_mask, crop_frame_size)
 	occluder_mask = cv2.GaussianBlur(occluder_mask, (0, 0), max(int(crop_frame.shape[1] * 0.125 * face_mask_blur), 1))
