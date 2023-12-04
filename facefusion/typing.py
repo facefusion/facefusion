@@ -17,6 +17,7 @@ Face = namedtuple('Face',
 	'age'
 ])
 Frame = numpy.ndarray[Any, Any]
+Mask = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
 Padding = Tuple[int, int, int, int]
 
@@ -31,6 +32,7 @@ FaceAnalyserAge = Literal['child', 'teen', 'adult', 'senior']
 FaceAnalyserGender = Literal['male', 'female']
 FaceDetectorModel = Literal['retinaface', 'yunet']
 FaceRecognizerModel = Literal['arcface_blendface', 'arcface_inswapper', 'arcface_simswap']
+FaceMaskType = Literal['box', 'occluder']
 TempFrameFormat = Literal['jpg', 'png']
 OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc']
 
