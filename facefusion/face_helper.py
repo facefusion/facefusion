@@ -1,9 +1,9 @@
 from typing import Any, Dict, Tuple, List
+from cv2.typing import Size
 from functools import lru_cache
 import cv2
 import numpy
 
-from cv2.typing import Size
 from facefusion.typing import Bbox, Kps, Frame, Mask, Matrix, Template
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
