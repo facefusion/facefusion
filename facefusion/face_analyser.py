@@ -248,7 +248,7 @@ def get_average_face(frames : List[Frame], position : int = 0) -> Optional[Face]
 		if face:
 			faces.append(face)
 			embedding_list.append(face.embedding)
-			normed_embedding_list.append(face.embedding)
+			normed_embedding_list.append(face.normed_embedding)
 	if faces:
 		average_face = Face(
 			bbox = faces[0].bbox,
