@@ -2,7 +2,7 @@ from typing import List
 
 import numpy
 
-from facefusion.typing import FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, TempFrameFormat, OutputVideoEncoder
+from facefusion.typing import FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceMaskType, TempFrameFormat, OutputVideoEncoder
 
 
 face_analyser_orders : List[FaceAnalyserOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
@@ -11,7 +11,7 @@ face_analyser_genders : List[FaceAnalyserGender] = [ 'male', 'female' ]
 face_detector_models : List[str] = [ 'retinaface', 'yunet' ]
 face_detector_sizes : List[str] = [ '160x160', '320x320', '480x480', '512x512', '640x640', '768x768', '960x960', '1024x1024' ]
 face_selector_modes : List[FaceSelectorMode] = [ 'reference', 'one', 'many' ]
-face_mask_types : List[str] = [ 'box', 'occluder' ]
+face_mask_types : List[FaceMaskType] = [ 'box', 'occluder' ]
 temp_frame_formats : List[TempFrameFormat] = [ 'jpg', 'png' ]
 output_video_encoders : List[OutputVideoEncoder] = [ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc' ]
 

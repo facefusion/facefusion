@@ -193,7 +193,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	model_size = get_options('model').get('size')
 	model_type = get_options('model').get('type')
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
-	crop_mask = create_mask(crop_frame, facefusion.globals.face_mask_type, facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
+	crop_mask = create_mask(crop_frame, facefusion.globals.face_mask_types, facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():

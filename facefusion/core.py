@@ -59,7 +59,7 @@ def cli() -> None:
 	group_face_selector.add_argument('--reference-frame-number', help = wording.get('reference_frame_number_help'), dest = 'reference_frame_number', type = int, default = 0)
 	# face mask
 	group_face_mask = program.add_argument_group('face mask')
-	group_face_mask.add_argument('--face-mask-type', help = wording.get('face_mask_type_help'), dest = 'face_mask_type', default = [ 'box' ], choices = facefusion.choices.face_mask_types, nargs = '+')
+	group_face_mask.add_argument('--face-mask-types', help = wording.get('face_mask_types_help'), dest = 'face_mask_types', default = [ 'box' ], choices = facefusion.choices.face_mask_types, nargs = '+')
 	group_face_mask.add_argument('--face-mask-blur', help = wording.get('face_mask_blur_help'), dest = 'face_mask_blur', type = float, default = 0.3, choices = facefusion.choices.face_mask_blur_range, metavar = create_metavar(facefusion.choices.face_mask_blur_range))
 	group_face_mask.add_argument('--face-mask-padding', help = wording.get('face_mask_padding_help'), dest = 'face_mask_padding', type = int, default = [ 0, 0, 0, 0 ], nargs = '+')
 	# frame extraction
@@ -117,7 +117,7 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.reference_face_distance = args.reference_face_distance
 	facefusion.globals.reference_frame_number = args.reference_frame_number
 	# face mask
-	facefusion.globals.face_mask_type = args.face_mask_type
+	facefusion.globals.face_mask_types = args.face_mask_types
 	facefusion.globals.face_mask_blur = args.face_mask_blur
 	facefusion.globals.face_mask_padding = normalize_padding(args.face_mask_padding)
 	# frame extraction

@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 from functools import lru_cache
 import threading
 import cv2
@@ -46,11 +46,11 @@ def pre_check() -> bool:
 	return True
 
 
-def create_mask(crop_frame : Frame, face_mask_type : FaceMaskType, face_mask_blur : float, face_mask_padding : Padding) -> Mask:
+def create_mask(crop_frame : Frame, face_mask_types : List[FaceMaskType], face_mask_blur : float, face_mask_padding : Padding) -> Mask:
 	masks = []
-	if 'box' in face_mask_type:
+	if 'box' in face_mask_types:
 		masks.append(create_static_box_mask(crop_frame.shape[:2][::-1], face_mask_blur, face_mask_padding))
-	if 'occluder' in face_mask_type:
+	if 'occluder' in face_mask_types:
 		masks.append(create_face_occluder_mask(crop_frame, face_mask_blur))
 	return numpy.minimum.reduce(masks).clip(0, 1)
 

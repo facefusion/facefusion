@@ -28,7 +28,7 @@ reference_face_position : Optional[int] = None
 reference_face_distance : Optional[float] = None
 reference_frame_number : Optional[int] = None
 # face mask
-face_mask_type : Optional[FaceMaskType] = None
+face_mask_types : Optional[List[FaceMaskType]] = None
 face_mask_blur : Optional[float] = None
 face_mask_padding : Optional[Padding] = None
 # frame extraction
