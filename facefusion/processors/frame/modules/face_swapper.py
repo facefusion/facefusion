@@ -1,6 +1,7 @@
 from typing import Any, List, Dict, Literal, Optional
 from argparse import ArgumentParser
 import threading
+import cv2
 import numpy
 import onnx
 import onnxruntime
@@ -10,7 +11,7 @@ import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
-from facefusion.face_helper import warp_face, paste_back
+from facefusion.face_helper import warp_face, paste_back, create_static_mask_frame
 from facefusion.face_reference import get_face_reference
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel, Embedding
@@ -18,6 +19,7 @@ from facefusion.utilities import conditional_download, resolve_relative_path, is
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
+from facefusion.face_masker import create_face_occluder_mask
 
 FRAME_PROCESSOR = None
 MODEL_MATRIX = None
@@ -191,6 +193,13 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	model_size = get_options('model').get('size')
 	model_type = get_options('model').get('type')
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
+	masks = []
+	masks.append(create_static_mask_frame(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding))
+	if 'occluder' in facefusion.globals.face_mask_options:
+		face_occluder_mask = create_face_occluder_mask(crop_frame)
+		face_occluder_mask = cv2.GaussianBlur(face_occluder_mask, (0, 0), max(int(crop_frame.shape[1] * 0.125 * facefusion.globals.face_mask_blur), 1))
+		masks.append(face_occluder_mask)
+	final_mask = numpy.minimum.reduce(masks).clip(0, 1)
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
@@ -203,7 +212,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
-	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix, facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
+	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix, final_mask)
 	return temp_frame
 
 

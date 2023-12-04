@@ -15,7 +15,7 @@ import facefusion.globals
 from facefusion.face_analyser import get_one_face
 from facefusion.face_reference import get_face_reference, set_face_reference
 from facefusion.vision import get_video_frame, read_image
-from facefusion import face_analyser, content_analyser, metadata, wording
+from facefusion import face_analyser, face_masker, content_analyser, metadata, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.utilities import is_image, is_video, detect_fps, compress_image, merge_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, list_module_names, encode_execution_providers, decode_execution_providers, normalize_output_path, normalize_padding, create_metavar, update_status
@@ -61,6 +61,7 @@ def cli() -> None:
 	group_face_mask = program.add_argument_group('face mask')
 	group_face_mask.add_argument('--face-mask-blur', help = wording.get('face_mask_blur_help'), dest = 'face_mask_blur', type = float, default = 0.3, choices = facefusion.choices.face_mask_blur_range, metavar = create_metavar(facefusion.choices.face_mask_blur_range))
 	group_face_mask.add_argument('--face-mask-padding', help = wording.get('face_mask_padding_help'), dest = 'face_mask_padding', type = int, default = [ 0, 0, 0, 0 ], nargs = '+')
+	group_face_mask.add_argument('--face-mask-options', help = wording.get('face_mask_options_help'), dest = 'face_mask_options', default = [], choices = facefusion.choices.face_mask_options, nargs = '+')
 	# frame extraction
 	group_frame_extraction = program.add_argument_group('frame extraction')
 	group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), dest = 'trim_frame_start', type = int)
@@ -118,6 +119,7 @@ def apply_args(program : ArgumentParser) -> None:
 	# face mask
 	facefusion.globals.face_mask_blur = args.face_mask_blur
 	facefusion.globals.face_mask_padding = normalize_padding(args.face_mask_padding)
+	facefusion.globals.face_mask_options = args.face_mask_options
 	# frame extraction
 	facefusion.globals.trim_frame_start = args.trim_frame_start
 	facefusion.globals.trim_frame_end = args.trim_frame_end
@@ -143,7 +145,7 @@ def apply_args(program : ArgumentParser) -> None:
 def run(program : ArgumentParser) -> None:
 	apply_args(program)
 	limit_resources()
-	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check():
+	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check():
 		return
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_check():

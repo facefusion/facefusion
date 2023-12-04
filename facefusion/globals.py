@@ -30,6 +30,7 @@ reference_frame_number : Optional[int] = None
 # face mask
 face_mask_blur : Optional[float] = None
 face_mask_padding : Optional[Padding] = None
+face_mask_options : List[str] = []
 # frame extraction
 trim_frame_start : Optional[int] = None
 trim_frame_end : Optional[int] = None

@@ -20,6 +20,7 @@ max_memory_range : List[int] = numpy.arange(0, 129, 1).tolist()
 face_detector_score_range : List[float] = numpy.arange(0.0, 1.05, 0.05).tolist()
 face_mask_blur_range : List[float] = numpy.arange(0.0, 1.05, 0.05).tolist()
 face_mask_padding_range : List[float] = numpy.arange(0, 101, 1).tolist()
+face_mask_options : List[str] = [ 'occluder' ]
 reference_face_distance_range : List[float] = numpy.arange(0.0, 1.55, 0.05).tolist()
 temp_frame_quality_range : List[int] = numpy.arange(0, 101, 1).tolist()
 output_image_quality_range : List[int] = numpy.arange(0, 101, 1).tolist()

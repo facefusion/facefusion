@@ -9,7 +9,7 @@ import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
 from facefusion.face_analyser import get_many_faces, clear_face_analyser
-from facefusion.face_helper import warp_face, paste_back
+from facefusion.face_helper import warp_face, paste_back, create_static_mask_frame
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
 from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done, create_metavar, update_status
@@ -158,6 +158,7 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
+	mask = create_static_mask_frame(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, (0, 0, 0, 0))
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
@@ -168,7 +169,7 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	with THREAD_SEMAPHORE:
 		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
-	paste_frame = paste_back(temp_frame, crop_frame, affine_matrix, facefusion.globals.face_mask_blur, (0, 0, 0, 0))
+	paste_frame = paste_back(temp_frame, crop_frame, affine_matrix, mask)
 	temp_frame = blend_frame(temp_frame, paste_frame)
 	return temp_frame
 
