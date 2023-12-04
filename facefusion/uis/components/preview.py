@@ -7,8 +7,8 @@ from facefusion import wording
 from facefusion.core import conditional_set_face_reference
 from facefusion.face_cache import clear_faces_cache
 from facefusion.typing import Frame, Face
-from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_static_image
-from facefusion.face_analyser import get_one_face, clear_face_analyser
+from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_static_image, read_static_images
+from facefusion.face_analyser import get_average_face, clear_face_analyser
 from facefusion.face_reference import get_face_reference, clear_face_reference
 from facefusion.content_analyser import analyse_frame
 from facefusion.processors.frame.core import load_frame_processor_module
@@ -38,7 +38,8 @@ def render() -> None:
 		'visible': False
 	}
 	conditional_set_face_reference()
-	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
+	source_frames = read_static_images(facefusion.globals.source_paths)
+	source_face = get_average_face(source_frames)
 	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_selector_mode else None
 	if is_image(facefusion.globals.target_path):
 		target_frame = read_static_image(facefusion.globals.target_path)
@@ -133,7 +134,8 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	conditional_set_face_reference()
-	source_face = get_one_face(read_static_image(facefusion.globals.source_path))
+	source_frames = read_static_images(facefusion.globals.source_paths)
+	source_face = get_average_face(source_frames)
 	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_selector_mode else None
 	if is_image(facefusion.globals.target_path):
 		target_frame = read_static_image(facefusion.globals.target_path)

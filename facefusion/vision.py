@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from functools import lru_cache
 import cv2
 
@@ -53,6 +53,14 @@ def resize_frame_dimension(frame : Frame, max_width : int, max_height : int) -> 
 @lru_cache(maxsize = 128)
 def read_static_image(image_path : str) -> Optional[Frame]:
 	return read_image(image_path)
+
+
+def read_static_images(image_paths : List[str]) -> Optional[List[Frame]]:
+	frames = []
+	if image_paths:
+		for image_path in image_paths:
+			frames.append(read_static_image(image_path))
+	return frames
 
 
 def read_image(image_path : str) -> Optional[Frame]:

@@ -175,7 +175,7 @@ def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_wi
 
 
 def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face]:
-	faces : List[Face] = []
+	faces = []
 	if facefusion.globals.face_detector_score > 0:
 		sort_indices = numpy.argsort(-numpy.array(score_list))
 		bbox_list = [ bbox_list[index] for index in sort_indices ]
@@ -236,6 +236,30 @@ def get_one_face(frame : Frame, position : int = 0) -> Optional[Face]:
 		except IndexError:
 			return many_faces[-1]
 	return None
+
+
+def get_average_face(frames : List[Frame], position : int = 0) -> Optional[Face]:
+	average_face = None
+	faces = []
+	embedding_list = []
+	normed_embedding_list = []
+	for frame in frames:
+		face = get_one_face(frame, position)
+		if face:
+			faces.append(face)
+			embedding_list.append(face.embedding)
+			normed_embedding_list.append(face.embedding)
+	if faces:
+		average_face = Face(
+			bbox = faces[0].bbox,
+			kps = faces[0].kps,
+			score = faces[0].score,
+			embedding = numpy.mean(embedding_list, axis = 0),
+			normed_embedding = numpy.mean(normed_embedding_list, axis = 0),
+			gender = faces[0].gender,
+			age = faces[0].age
+		)
+	return average_face
 
 
 def get_many_faces(frame : Frame) -> List[Face]:
