@@ -45,7 +45,7 @@ def listen() -> None:
 
 
 def start(output_path : str) -> Tuple[gradio.Image, gradio.Video]:
-	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, output_path)
+	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_paths, facefusion.globals.target_path, output_path)
 	limit_resources()
 	conditional_process()
 	if is_image(facefusion.globals.output_path):
