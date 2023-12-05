@@ -28,7 +28,7 @@ def get_face_occluder() -> Any:
 	with THREAD_LOCK:
 		if FACE_OCCLUDER is None:
 			model_path = MODELS.get('occluder').get('path')
-			FACE_OCCLUDER = onnxruntime.InferenceSession(model_path, providers = [ 'CPUExecutionProvider' ])
+			FACE_OCCLUDER = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
 	return FACE_OCCLUDER
 
 
@@ -51,7 +51,7 @@ def create_mask(crop_frame : Frame, face_mask_types : List[FaceMaskType], face_m
 	if 'box' in face_mask_types:
 		masks.append(create_static_box_mask(crop_frame.shape[:2][::-1], face_mask_blur, face_mask_padding))
 	if 'occluder' in face_mask_types:
-		masks.append(create_occluder_mask(crop_frame, face_mask_blur))
+		masks.append(create_occluder_mask(crop_frame))
 	return numpy.minimum.reduce(masks).clip(0, 1)
 
 
@@ -69,7 +69,7 @@ def create_static_box_mask(mask_size : Size, face_mask_blur : float, face_mask_p
 	return box_mask
 
 
-def create_occluder_mask(crop_frame : Frame, face_mask_blur : float) -> Mask:
+def create_occluder_mask(crop_frame : Frame) -> Mask:
 	face_occluder = get_face_occluder()
 	prepare_frame = cv2.resize(crop_frame, face_occluder.get_inputs()[0].shape[1:3][::-1])
 	prepare_frame = numpy.expand_dims(prepare_frame, axis = 0).astype(numpy.float32) / 255
@@ -80,5 +80,4 @@ def create_occluder_mask(crop_frame : Frame, face_mask_blur : float) -> Mask:
 	})[0][0]
 	occluder_mask = occluder_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
 	occluder_mask = cv2.resize(occluder_mask, crop_frame.shape[:2][::-1])
-	occluder_mask = cv2.GaussianBlur(occluder_mask, (0, 0), max(int(crop_frame.shape[1] * 0.125 * face_mask_blur), 1))
 	return occluder_mask
