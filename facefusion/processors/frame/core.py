@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion.typing import Process_Frames
-from facefusion.execution import encode_execution_providers
+from facefusion.execution_helper import encode_execution_providers
 from facefusion import wording
 
 FRAME_PROCESSORS_MODULES : List[ModuleType] = []

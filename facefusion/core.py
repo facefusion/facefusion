@@ -21,7 +21,7 @@ from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import detect_fps
 from facefusion.misc import create_metavar, update_status
-from facefusion.execution import encode_execution_providers, decode_execution_providers
+from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_output_path, normalize_padding
 from facefusion.filesystem import is_image, is_video, list_module_names, get_temp_frame_paths, create_temp, move_temp, \
 	clear_temp
