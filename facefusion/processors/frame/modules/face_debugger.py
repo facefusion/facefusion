@@ -12,7 +12,7 @@ from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
 from facefusion.face_helper import warp_face
-from facefusion.face_masker import create_static_box_mask
+from facefusion.face_masker import create_mask
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_DEBUGGER'
@@ -67,11 +67,12 @@ def debug_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fr
 		crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, 'arcface_v2', (128, 128))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_frame_size = temp_frame.shape[:2][::-1]
-		mask_frame = create_static_box_mask(crop_frame.shape[:2], 0, facefusion.globals.face_mask_padding)
-		mask_frame[mask_frame > 0] = 255
-		inverse_mask_frame = cv2.warpAffine(mask_frame.astype(numpy.uint8), inverse_matrix, temp_frame_size)
-		inverse_mask_contours = cv2.findContours(inverse_mask_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
-		cv2.drawContours(temp_frame, inverse_mask_contours, 0, primary_color, 2)
+		crop_mask = create_mask(crop_frame, facefusion.globals.face_mask_types, 0, facefusion.globals.face_mask_padding)
+		inverse_mask_frame = cv2.warpAffine((crop_mask * 255).astype(numpy.uint8), inverse_matrix, temp_frame_size)
+		inverse_mask_frame_edges = cv2.threshold(inverse_mask_frame, 100, 255, cv2.THRESH_BINARY)[1]
+		inverse_mask_frame_edges[inverse_mask_frame_edges > 0] = 255
+		inverse_mask_contours = cv2.findContours(inverse_mask_frame_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
+		cv2.drawContours(temp_frame, inverse_mask_contours, -1, primary_color, 2)
 	if bounding_box[3] - bounding_box[1] > 60 and bounding_box[2] - bounding_box[0] > 60:
 		if 'kps' in frame_processors_globals.face_debugger_items:
 			kps = target_face.kps.astype(numpy.int32)
