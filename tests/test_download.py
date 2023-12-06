@@ -1,4 +1,14 @@
-from facefusion.download import get_download_size, is_download_done
+import pytest
+
+from facefusion.download import conditional_download, get_download_size, is_download_done
+
+
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
+	conditional_download('.assets/examples',
+	[
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
+	])
 
 
 def test_get_download_size() -> None:
