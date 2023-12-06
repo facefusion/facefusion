@@ -3,8 +3,8 @@ import glob
 import os
 import shutil
 import tempfile
-from pathlib import Path
 import filetype
+from pathlib import Path
 
 import facefusion.globals
 

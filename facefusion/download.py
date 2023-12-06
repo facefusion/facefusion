@@ -1,10 +1,9 @@
 import os
 import subprocess
 import urllib.request
+from typing import List
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
-from typing import List
-
 from tqdm import tqdm
 
 from facefusion import wording

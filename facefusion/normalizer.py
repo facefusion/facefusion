@@ -1,5 +1,5 @@
-import os
 from typing import List, Optional
+import os
 
 from facefusion.filesystem import is_file, is_directory
 from facefusion.typing import Padding

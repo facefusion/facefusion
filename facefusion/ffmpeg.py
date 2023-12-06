@@ -1,5 +1,5 @@
-import subprocess
 from typing import List
+import subprocess
 
 import facefusion.globals
 from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video_path
