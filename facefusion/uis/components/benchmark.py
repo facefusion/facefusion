@@ -11,7 +11,8 @@ from facefusion.face_cache import clear_faces_cache
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total
 from facefusion.core import limit_resources, conditional_process
-from facefusion.utilities import normalize_output_path, clear_temp
+from facefusion.normalizer import normalize_output_path
+from facefusion.filesystem import clear_temp
 from facefusion.uis.core import get_ui_component
 
 BENCHMARK_RESULTS_DATAFRAME : Optional[gradio.Dataframe] = None

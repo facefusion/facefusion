@@ -3,7 +3,7 @@ import sys
 import pytest
 
 from facefusion import wording
-from facefusion.utilities import conditional_download
+from facefusion.helpers.download import conditional_download
 
 
 @pytest.fixture(scope = 'module', autouse = True)

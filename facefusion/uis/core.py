@@ -7,7 +7,7 @@ import gradio
 import facefusion.globals
 from facefusion import metadata, wording
 from facefusion.uis.typing import Component, ComponentName
-from facefusion.utilities import resolve_relative_path
+from facefusion.filesystem import resolve_relative_path
 
 UI_COMPONENTS: Dict[ComponentName, Component] = {}
 UI_LAYOUT_MODULES : List[ModuleType] = []

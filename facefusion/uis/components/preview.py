@@ -12,7 +12,7 @@ from facefusion.face_analyser import get_average_face, clear_face_analyser
 from facefusion.face_reference import get_face_reference, clear_face_reference
 from facefusion.content_analyser import analyse_frame
 from facefusion.processors.frame.core import load_frame_processor_module
-from facefusion.utilities import is_video, is_image
+from facefusion.filesystem import is_image, is_video
 from facefusion.uis.typing import ComponentName
 from facefusion.uis.core import get_ui_component, register_ui_component
 

@@ -4,7 +4,11 @@ import subprocess
 import pytest
 
 import facefusion.globals
-from facefusion.utilities import conditional_download, extract_frames, create_temp, get_temp_directory_path, clear_temp, normalize_output_path, normalize_padding, is_file, is_directory, is_image, are_images, is_video, get_download_size, is_download_done, encode_execution_providers, decode_execution_providers
+from facefusion.execution import encode_execution_providers, decode_execution_providers
+from facefusion.normalizer import normalize_output_path, normalize_padding
+from facefusion.filesystem import get_temp_directory_path, create_temp, clear_temp, is_file, is_directory, is_image, are_images, is_video
+from facefusion.download import conditional_download, get_download_size, is_download_done
+from facefusion.ffmpeg import extract_frames
 
 
 @pytest.fixture(scope = 'module', autouse = True)

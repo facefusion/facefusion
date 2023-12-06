@@ -2,7 +2,7 @@ import subprocess
 import pytest
 
 import facefusion.globals
-from facefusion.utilities import  conditional_download
+from facefusion.helpers.download import conditional_download
 from facefusion.vision import get_video_frame, detect_fps, count_video_frame_total
 
 

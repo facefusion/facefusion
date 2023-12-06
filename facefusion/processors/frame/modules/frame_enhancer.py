@@ -11,7 +11,10 @@ from facefusion import wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Frame, Face, Update_Process, ProcessMode, ModelValue, OptionsWithModel
-from facefusion.utilities import conditional_download, resolve_relative_path, is_file, is_download_done, map_device, create_metavar, update_status
+from facefusion.misc import create_metavar, update_status
+from facefusion.execution import map_device
+from facefusion.filesystem import is_file, resolve_relative_path
+from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
