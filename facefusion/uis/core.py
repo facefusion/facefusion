@@ -5,7 +5,7 @@ import sys
 import gradio
 
 import facefusion.globals
-from facefusion import metadata, wording
+from facefusion import metadata, logger, wording
 from facefusion.uis.typing import Component, ComponentName
 from facefusion.filesystem import resolve_relative_path
 
@@ -27,7 +27,8 @@ def load_ui_layout_module(ui_layout : str) -> Any:
 		for method_name in UI_LAYOUT_METHODS:
 			if not hasattr(ui_layout_module, method_name):
 				raise NotImplementedError
-	except ModuleNotFoundError:
+	except ModuleNotFoundError as exception:
+		logger.debug(exception.msg, 'FACEFUSION.UIS.CORE')
 		sys.exit(wording.get('ui_layout_not_loaded').format(ui_layout = ui_layout))
 	except NotImplementedError:
 		sys.exit(wording.get('ui_layout_not_implemented').format(ui_layout = ui_layout))
