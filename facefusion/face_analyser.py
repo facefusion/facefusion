@@ -5,10 +5,11 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
+from facefusion.download import conditional_download
 from facefusion.face_cache import get_faces_cache, set_faces_cache
 from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
+from facefusion.filesystem import resolve_relative_path
 from facefusion.typing import Frame, Face, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Score, Embedding
-from facefusion.utilities import resolve_relative_path, conditional_download
 from facefusion.vision import resize_frame_dimension
 
 FACE_ANALYSER = None

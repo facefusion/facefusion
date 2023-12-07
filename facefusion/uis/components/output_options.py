@@ -6,7 +6,7 @@ import facefusion.globals
 import facefusion.choices
 from facefusion import wording
 from facefusion.typing import OutputVideoEncoder
-from facefusion.utilities import is_image, is_video
+from facefusion.filesystem import is_image, is_video
 from facefusion.uis.typing import ComponentName
 from facefusion.uis.core import get_ui_component, register_ui_component
 
