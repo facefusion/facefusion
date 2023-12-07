@@ -9,7 +9,7 @@ from tqdm import tqdm
 import facefusion.globals
 from facefusion.typing import Process_Frames
 from facefusion.execution_helper import encode_execution_providers
-from facefusion import wording
+from facefusion import logger, wording
 
 FRAME_PROCESSORS_MODULES : List[ModuleType] = []
 FRAME_PROCESSORS_METHODS =\
@@ -36,7 +36,8 @@ def load_frame_processor_module(frame_processor : str) -> Any:
 		for method_name in FRAME_PROCESSORS_METHODS:
 			if not hasattr(frame_processor_module, method_name):
 				raise NotImplementedError
-	except ModuleNotFoundError:
+	except ModuleNotFoundError as exception:
+		logger.debug(exception.msg, 'FACEFUSION.FRAME.CORE')
 		sys.exit(wording.get('frame_processor_not_loaded').format(frame_processor = frame_processor))
 	except NotImplementedError:
 		sys.exit(wording.get('frame_processor_not_implemented').format(frame_processor = frame_processor))

@@ -2,6 +2,7 @@ from typing import List
 import subprocess
 
 import facefusion.globals
+from facefusion import logger
 from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video_path
 from facefusion.vision import detect_fps
 
@@ -12,7 +13,8 @@ def run_ffmpeg(args : List[str]) -> bool:
 	try:
 		subprocess.run(commands, stderr = subprocess.PIPE, check = True)
 		return True
-	except subprocess.CalledProcessError:
+	except subprocess.CalledProcessError as exception:
+		logger.debug(exception.stderr.decode().strip(), 'FACEFUSION.FFMPEG')
 		return False
 
 
