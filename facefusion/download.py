@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from tqdm import tqdm
 
+import facefusion.globals
 from facefusion import wording
 from facefusion.filesystem import is_file
 
@@ -19,7 +20,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		initial = os.path.getsize(download_file_path) if is_file(download_file_path) else 0
 		total = get_download_size(url)
 		if initial < total:
-			with tqdm(total = total, initial = initial, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =') as progress:
+			with tqdm(total = total, initial = initial, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = facefusion.globals.log_level == 'warn' or facefusion.globals.log_level == 'error') as progress:
 				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])
 				current = initial
 				while current < total:

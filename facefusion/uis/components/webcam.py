@@ -103,7 +103,7 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 
 
 def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, fps : float) -> Generator[Frame, None, None]:
-	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =') as progress:
+	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level == 'warn' or facefusion.globals.log_level == 'error') as progress:
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
 			deque_capture_frames : Deque[Frame] = deque()
