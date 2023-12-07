@@ -4,7 +4,7 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.processors.frame.core import load_frame_processor_module, clear_frame_processors_modules
-from facefusion.utilities import list_module_names
+from facefusion.filesystem import list_module_names
 from facefusion.uis.core import register_ui_component
 
 FRAME_PROCESSORS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None

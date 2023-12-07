@@ -10,7 +10,8 @@ import facefusion.globals
 from facefusion import wording
 from facefusion.typing import Frame, ModelValue
 from facefusion.vision import get_video_frame, count_video_frame_total, read_image, detect_fps
-from facefusion.utilities import resolve_relative_path, conditional_download
+from facefusion.filesystem import resolve_relative_path
+from facefusion.download import conditional_download
 
 CONTENT_ANALYSER = None
 THREAD_LOCK : threading.Lock = threading.Lock()

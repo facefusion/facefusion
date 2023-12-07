@@ -6,7 +6,7 @@ import facefusion.globals
 from facefusion import wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.processors.frame.core import clear_frame_processors_modules
-from facefusion.utilities import encode_execution_providers, decode_execution_providers
+from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
 
 EXECUTION_PROVIDERS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 

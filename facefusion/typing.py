@@ -1,5 +1,5 @@
-from collections import namedtuple
 from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict
+from collections import namedtuple
 import numpy
 
 Bbox = numpy.ndarray[Any, Any]

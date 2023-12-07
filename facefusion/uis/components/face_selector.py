@@ -10,7 +10,7 @@ from facefusion.vision import get_video_frame, read_static_image, normalize_fram
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_reference import clear_face_reference
 from facefusion.typing import Frame, FaceSelectorMode
-from facefusion.utilities import is_image, is_video
+from facefusion.filesystem import is_image, is_video
 from facefusion.uis.core import get_ui_component, register_ui_component
 from facefusion.uis.typing import ComponentName
 

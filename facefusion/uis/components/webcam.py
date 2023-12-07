@@ -14,7 +14,7 @@ from facefusion.content_analyser import analyse_stream
 from facefusion.typing import Frame, Face
 from facefusion.face_analyser import get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules
-from facefusion.utilities import open_ffmpeg
+from facefusion.ffmpeg import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_images
 from facefusion.uis.typing import StreamMode, WebcamMode
 from facefusion.uis.core import get_ui_component
