@@ -16,11 +16,8 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 			executor.submit(get_download_size, url)
 	for url in urls:
 		download_file_path = os.path.join(download_directory_path, os.path.basename(url))
+		initial = os.path.getsize(download_file_path) if is_file(download_file_path) else 0
 		total = get_download_size(url)
-		if is_file(download_file_path):
-			initial = os.path.getsize(download_file_path)
-		else:
-			initial = 0
 		if initial < total:
 			with tqdm(total = total, initial = initial, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =') as progress:
 				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])

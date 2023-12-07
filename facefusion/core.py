@@ -23,8 +23,7 @@ from facefusion.ffmpeg import detect_fps
 from facefusion.misc import create_metavar, update_status
 from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_output_path, normalize_padding
-from facefusion.filesystem import is_image, is_video, list_module_names, get_temp_frame_paths, create_temp, move_temp, \
-	clear_temp
+from facefusion.filesystem import is_image, is_video, list_module_names, get_temp_frame_paths, create_temp, move_temp, clear_temp
 from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio
 
 onnxruntime.set_default_logger_severity(3)
