@@ -8,7 +8,8 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion.typing import FaceMaskType, Frame, Mask, ModelValue, Padding
-from facefusion.utilities import resolve_relative_path, conditional_download
+from facefusion.filesystem import resolve_relative_path
+from facefusion.download import conditional_download
 
 FACE_OCCLUDER = None
 THREAD_LOCK : threading.Lock = threading.Lock()

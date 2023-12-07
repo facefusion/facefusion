@@ -1,7 +1,7 @@
 import gradio
 
 import facefusion.globals
-from facefusion.utilities import conditional_download
+from facefusion.download import conditional_download
 from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, limit_resources, benchmark_options, benchmark
 
 

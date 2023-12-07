@@ -3,6 +3,7 @@ import os
 os.environ['OMP_NUM_THREADS'] = '1'
 
 import signal
+import ssl
 import sys
 import warnings
 import platform
@@ -18,10 +19,19 @@ from facefusion.vision import get_video_frame, read_image
 from facefusion import face_analyser, face_masker, content_analyser, metadata, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
-from facefusion.utilities import is_image, is_video, detect_fps, compress_image, merge_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clear_temp, list_module_names, encode_execution_providers, decode_execution_providers, normalize_output_path, normalize_padding, create_metavar, update_status
+from facefusion.ffmpeg import detect_fps
+from facefusion.misc import create_metavar, update_status
+from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
+from facefusion.normalizer import normalize_output_path, normalize_padding
+from facefusion.filesystem import is_image, is_video, list_module_names, get_temp_frame_paths, create_temp, move_temp, \
+	clear_temp
+from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'torchvision')
+
+if platform.system().lower() == 'darwin':
+	ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def cli() -> None:
