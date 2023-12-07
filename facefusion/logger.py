@@ -13,19 +13,19 @@ def get_package_logger() -> Logger:
 	return getLogger('facefusion')
 
 
-def debug(message : str, scope : str = 'FACEFUSION.DEBUG') -> None:
+def debug(message : str, scope : str = 'FACEFUSION.CORE') -> None:
 	get_package_logger().debug('[' + scope + '] ' + message)
 
 
-def info(message : str, scope : str = 'FACEFUSION.INFO') -> None:
+def info(message : str, scope : str = 'FACEFUSION.CORE') -> None:
 	get_package_logger().info('[' + scope + '] ' + message)
 
 
-def warn(message : str, scope : str = 'FACEFUSION.WARN') -> None:
+def warn(message : str, scope : str = 'FACEFUSION.CORE') -> None:
 	get_package_logger().warning('[' + scope + '] ' + message)
 
 
-def error(message : str, scope : str = 'FACEFUSION.ERROR') -> None:
+def error(message : str, scope : str = 'FACEFUSION.CORE') -> None:
 	get_package_logger().error('[' + scope + '] ' + message)
 
 
