@@ -8,13 +8,12 @@ from onnx import numpy_helper
 
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
-from facefusion import wording
+from facefusion import logger, wording
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_helper import warp_face, paste_back
 from facefusion.face_reference import get_face_reference
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel, Embedding
-from facefusion.misc import update_status
 from facefusion.filesystem import is_file, is_image, are_images, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
@@ -159,23 +158,23 @@ def pre_process(mode : ProcessMode) -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
-		update_status(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
 	elif not is_file(model_path):
-		update_status(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
 	if not are_images(facefusion.globals.source_paths):
-		update_status(wording.get('select_image_source') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('select_image_source') + wording.get('exclamation_mark'), NAME)
 		return False
 	for source_frame in read_static_images(facefusion.globals.source_paths):
 		if not get_one_face(source_frame):
-			update_status(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
+			logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
 			return False
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
-		update_status(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
 	if mode == 'output' and not facefusion.globals.output_path:
-		update_status(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
 
