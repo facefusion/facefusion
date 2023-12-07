@@ -39,6 +39,7 @@ options:
 misc:
   --skip-download                                                                                                    omit automate downloads and lookups
   --headless                                                                                                         run the program in headless mode
+  --log-level {error,warn,info,debug}                                                                                choose from the available log levels
 
 execution:
   --execution-providers {cpu} [{cpu} ...]                                                                            choose from the available execution providers
