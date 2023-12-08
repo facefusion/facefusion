@@ -1,6 +1,9 @@
 import os
 
 os.environ['OMP_NUM_THREADS'] = '1'
+#---- SPESIFIC CUDA
+os.environ["CUDA_VISIBLE_DEVICES"] = str(1)
+#---- SPESIFIC CUDA
 
 import signal
 import sys
