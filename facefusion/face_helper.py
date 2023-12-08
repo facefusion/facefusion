@@ -8,7 +8,7 @@ from facefusion.typing import Bbox, Kps, Frame, Mask, Matrix, Template
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
-	'arcface_v1': numpy.array(
+	'arcface_112_v1': numpy.array(
 	[
 		[ 39.7300, 51.1380 ],
 		[ 72.2700, 51.1380 ],
@@ -16,7 +16,7 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 		[ 42.4630, 87.0100 ],
 		[ 69.5370, 87.0100 ]
 	]),
-	'arcface_v2': numpy.array(
+	'arcface_112_v2': numpy.array(
 	[
 		[ 38.2946, 51.6963 ],
 		[ 73.5318, 51.5014 ],
@@ -24,7 +24,15 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 		[ 41.5493, 92.3655 ],
 		[ 70.7299, 92.2041 ]
 	]),
-	'ffhq': numpy.array(
+	'arcface_128_v2': numpy.array(
+	[
+		[ 46.2946, 51.6963 ],
+		[ 81.5318, 51.5014 ],
+		[ 64.0252, 71.7366 ],
+		[ 49.5493, 92.3655 ],
+		[ 78.7299, 92.2041 ]
+	]),
+	'ffhq_512': numpy.array(
 	[
 		[ 192.98138, 239.94708 ],
 		[ 318.90277, 240.1936 ],
@@ -36,10 +44,7 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 
 
 def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -> Tuple[Frame, Matrix]:
-	ratio = size[1] / size[0]
-	normed_template = TEMPLATES.get(template) * ratio
-	if (size[1] % 128) == 0 and template == 'arcface_v2':
-		normed_template[:, 0] += ratio * 8
+	normed_template = TEMPLATES.get(template) * size[1] / size[0]
 	affine_matrix = cv2.estimateAffinePartial2D(kps, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, (size[1], size[1]), borderMode = cv2.BORDER_REPLICATE)
 	return crop_frame, affine_matrix

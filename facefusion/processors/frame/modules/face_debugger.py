@@ -64,7 +64,7 @@ def debug_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fr
 	if 'bbox' in frame_processors_globals.face_debugger_items:
 		cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), secondary_color, 2)
 	if 'face-mask' in frame_processors_globals.face_debugger_items:
-		crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, 'arcface_v2', (128, 128))
+		crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, 'arcface_128_v2', (128, 128))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_frame_size = temp_frame.shape[:2][::-1]
 		crop_mask = create_mask(crop_frame, facefusion.globals.face_mask_types, 0, facefusion.globals.face_mask_padding)
