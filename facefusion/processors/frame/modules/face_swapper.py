@@ -32,7 +32,7 @@ MODELS : Dict[str, ModelValue] =\
 		'type': 'blendswap',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/blendswap_256.onnx',
 		'path': resolve_relative_path('../.assets/models/blendswap_256.onnx'),
-		'template': 'ffhq',
+		'template': 'ffhq_512',
 		'size': (512, 256),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -42,7 +42,7 @@ MODELS : Dict[str, ModelValue] =\
 		'type': 'inswapper',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
 		'path': resolve_relative_path('../.assets/models/inswapper_128.onnx'),
-		'template': 'arcface_v2',
+		'template': 'arcface_128_v2',
 		'size': (128, 128),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -52,7 +52,7 @@ MODELS : Dict[str, ModelValue] =\
 		'type': 'inswapper',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
 		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx'),
-		'template': 'arcface_v2',
+		'template': 'arcface_128_v2',
 		'size': (128, 128),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -62,7 +62,7 @@ MODELS : Dict[str, ModelValue] =\
 		'type': 'simswap',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_256.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap_256.onnx'),
-		'template': 'arcface_v1',
+		'template': 'arcface_112_v1',
 		'size': (112, 256),
 		'mean': [ 0.485, 0.456, 0.406 ],
 		'standard_deviation': [ 0.229, 0.224, 0.225 ]
@@ -72,7 +72,7 @@ MODELS : Dict[str, ModelValue] =\
 		'type': 'simswap',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_512_unofficial.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap_512_unofficial.onnx'),
-		'template': 'arcface_v1',
+		'template': 'arcface_112_v1',
 		'size': (112, 512),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -213,7 +213,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 
 def prepare_source_frame(source_face : Face) -> Frame:
 	source_frame = read_static_image(facefusion.globals.source_paths[0])
-	source_frame, _ = warp_face(source_frame, source_face.kps, 'arcface_v2', (112, 112))
+	source_frame, _ = warp_face(source_frame, source_face.kps, 'arcface_112_v2', (112, 112))
 	source_frame = source_frame[:, :, ::-1] / 255.0
 	source_frame = source_frame.transpose(2, 0, 1)
 	source_frame = numpy.expand_dims(source_frame, axis = 0).astype(numpy.float32)
