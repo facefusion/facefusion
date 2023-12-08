@@ -8,7 +8,7 @@ from facefusion.typing import Bbox, Kps, Frame, Mask, Matrix, Template
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
-	'arcface_v1': numpy.array(
+	'arcface_112_v1': numpy.array(
 	[
 		[ 39.7300, 51.1380 ],
 		[ 72.2700, 51.1380 ],
@@ -16,7 +16,7 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 		[ 42.4630, 87.0100 ],
 		[ 69.5370, 87.0100 ]
 	]),
-	'arcface_v2': numpy.array(
+	'arcface_112_v2': numpy.array(
 	[
 		[ 38.2946, 51.6963 ],
 		[ 73.5318, 51.5014 ],
@@ -24,7 +24,15 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 		[ 41.5493, 92.3655 ],
 		[ 70.7299, 92.2041 ]
 	]),
-	'ffhq': numpy.array(
+	'arcface_128_v2': numpy.array(
+	[
+		[ 46.2946, 51.6963 ],
+		[ 81.5318, 51.5014 ],
+		[ 64.0252, 71.7366 ],
+		[ 49.5493, 92.3655 ],
+		[ 78.7299, 92.2041 ]
+	]),
+	'ffhq_512': numpy.array(
 	[
 		[ 192.98138, 239.94708 ],
 		[ 318.90277, 240.1936 ],
