@@ -36,7 +36,10 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 
 
 def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -> Tuple[Frame, Matrix]:
-	normed_template = TEMPLATES.get(template) * size[1] / size[0]
+	ratio = size[1] / size[0]
+	normed_template = TEMPLATES.get(template) * ratio
+	if (size[1] % 128) == 0 and template == 'arcface_v2':
+		normed_template[:, 0] += ratio * 8
 	affine_matrix = cv2.estimateAffinePartial2D(kps, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, (size[1], size[1]), borderMode = cv2.BORDER_REPLICATE)
 	return crop_frame, affine_matrix
