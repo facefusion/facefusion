@@ -4,7 +4,7 @@ import platform
 import subprocess
 from argparse import ArgumentParser, HelpFormatter
 
-subprocess.call([ 'pip', 'install' , 'inquirer', '-y', '-q' ])
+subprocess.call([ 'pip', 'install' , 'inquirer', '-q' ])
 
 import inquirer
 
