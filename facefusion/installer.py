@@ -1,9 +1,10 @@
 from typing import Dict, Tuple
+import os
 import platform
 import subprocess
 from argparse import ArgumentParser, HelpFormatter
 
-subprocess.call([ 'pip', 'install' , 'inquirer', '-q' ])
+subprocess.call([ 'pip', 'install' , 'inquirer', '-y', '-q' ])
 
 import inquirer
 
@@ -32,8 +33,9 @@ if platform.system().lower() == 'darwin':
 
 def cli() -> None:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 120))
-	program.add_argument('--torch', help = wording.get('install_dependency_help').format(dependency = 'torch'), dest = 'torch', choices = TORCH.keys())
-	program.add_argument('--onnxruntime', help = wording.get('install_dependency_help').format(dependency = 'onnxruntime'), dest = 'onnxruntime', choices = ONNXRUNTIMES.keys())
+	program.add_argument('--torch', help = wording.get('install_dependency_help').format(dependency = 'torch'), choices = TORCH.keys())
+	program.add_argument('--onnxruntime', help = wording.get('install_dependency_help').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys())
+	program.add_argument('--skip-venv', help = wording.get('skip_venv_help'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	run(program)
 
@@ -41,6 +43,8 @@ def cli() -> None:
 def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 
+	if not args.skip_venv:
+		os.environ['PIP_REQUIRE_VIRTUALENV'] = '1'
 	if args.torch and args.onnxruntime:
 		answers =\
 		{
@@ -58,10 +62,10 @@ def run(program : ArgumentParser) -> None:
 		torch_wheel = TORCH[torch]
 		onnxruntime = answers['onnxruntime']
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime]
-		subprocess.call([ 'pip', 'uninstall', 'torch', '-y' ])
+		subprocess.call([ 'pip', 'uninstall', 'torch', '-y', '-q' ])
 		if torch_wheel == 'default':
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
 		else:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel ])
-		subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y' ])
+		subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
 		subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
