@@ -7,7 +7,7 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.face_analyser import get_face_analyser
-from facefusion.face_cache import clear_faces_cache
+from facefusion.face_cache import clear_static_faces
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total
 from facefusion.core import limit_resources, conditional_process
@@ -95,7 +95,7 @@ def pre_process() -> None:
 
 
 def post_process() -> None:
-	clear_faces_cache()
+	clear_static_faces()
 
 
 def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:

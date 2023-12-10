@@ -101,6 +101,10 @@ def apply_args(program : ArgumentParser) -> None:
 	frame_processors_globals.frame_enhancer_blend = args.frame_enhancer_blend
 
 
+def get_derivate_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
+	pass
+
+
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')

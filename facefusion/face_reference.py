@@ -1,21 +1,23 @@
-from typing import Optional
+from typing import Optional, List
 
 from facefusion.typing import Face
 
-FACE_REFERENCE = None
+FACE_REFERENCES : List[Face] = []
 
 
-def get_face_reference() -> Optional[Face]:
-	return FACE_REFERENCE
+def get_face_references() -> Optional[List[Face]]:
+	if FACE_REFERENCES:
+		return FACE_REFERENCES
+	return None
 
 
-def set_face_reference(face : Face) -> None:
-	global FACE_REFERENCE
+def append_face_reference(face : Face) -> None:
+	global FACE_REFERENCES
 
-	FACE_REFERENCE = face
+	FACE_REFERENCES.append(face)
 
 
-def clear_face_reference() -> None:
-	global FACE_REFERENCE
+def clear_face_references() -> None:
+	global FACE_REFERENCES
 
-	FACE_REFERENCE = None
+	FACE_REFERENCES = []
