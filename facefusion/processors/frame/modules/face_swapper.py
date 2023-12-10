@@ -25,11 +25,11 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_SWAPPER'
 MODELS : Dict[str, ModelValue] =\
 {
-	'blendface_256':
+	'blendswap_256':
 	{
-		'type': 'blendface',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/blendface_256.onnx',
-		'path': resolve_relative_path('../.assets/models/blendface_256.onnx'),
+		'type': 'blendswap',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/blendswap_256.onnx',
+		'path': resolve_relative_path('../.assets/models/blendswap_256.onnx'),
 		'template': 'ffhq',
 		'size': (512, 256),
 		'mean': [ 0.0, 0.0, 0.0 ],
@@ -136,8 +136,8 @@ def register_args(program : ArgumentParser) -> None:
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
-	if args.face_swapper_model == 'blendface_256':
-		facefusion.globals.face_recognizer_model = 'arcface_blendface'
+	if args.face_swapper_model == 'blendswap_256':
+		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
 	if args.face_swapper_model == 'inswapper_128' or args.face_swapper_model == 'inswapper_128_fp16':
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 	if args.face_swapper_model == 'simswap_256' or args.face_swapper_model == 'simswap_512_unofficial':
@@ -194,7 +194,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
 		if frame_processor_input.name == 'source':
-			if model_type == 'blendface':
+			if model_type == 'blendswap':
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_frame(source_face)
 			else:
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)

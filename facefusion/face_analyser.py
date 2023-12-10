@@ -26,7 +26,7 @@ MODELS : Dict[str, ModelValue] =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yunet_2023mar.onnx',
 		'path': resolve_relative_path('../.assets/models/yunet_2023mar.onnx')
 	},
-	'face_recognizer_arcface_blendface':
+	'face_recognizer_arcface_blendswap':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
 		'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
@@ -58,8 +58,8 @@ def get_face_analyser() -> Any:
 				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = facefusion.globals.execution_providers)
 			if facefusion.globals.face_detector_model == 'yunet':
 				face_detector = cv2.FaceDetectorYN.create(MODELS.get('face_detector_yunet').get('path'), '', (0, 0))
-			if facefusion.globals.face_recognizer_model == 'arcface_blendface':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_blendface').get('path'), providers = facefusion.globals.execution_providers)
+			if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_blendswap').get('path'), providers = facefusion.globals.execution_providers)
 			if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = facefusion.globals.execution_providers)
 			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
