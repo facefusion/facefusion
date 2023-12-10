@@ -14,7 +14,7 @@ from argparse import ArgumentParser, HelpFormatter
 import facefusion.choices
 import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
-from facefusion.face_reference import get_face_references, append_face_reference
+from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.vision import get_video_frame, read_image, read_static_images
 from facefusion import face_analyser, face_masker, content_analyser, metadata, logger, wording
 from facefusion.content_analyser import analyse_image, analyse_video
@@ -203,7 +203,7 @@ def pre_check() -> bool:
 
 
 def conditional_process() -> None:
-	conditional_set_face_reference()
+	conditional_set_reference_faces()
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_process('output'):
 			return
@@ -213,8 +213,8 @@ def conditional_process() -> None:
 		process_video()
 
 
-def conditional_set_face_reference() -> None:
-	if 'reference' in facefusion.globals.face_selector_mode and not get_face_references():
+def conditional_set_reference_faces() -> None:
+	if 'reference' in facefusion.globals.face_selector_mode and not get_reference_faces():
 		source_frames = read_static_images(facefusion.globals.source_paths)
 		source_face = get_average_face(source_frames)
 		if is_video(facefusion.globals.target_path):
@@ -222,13 +222,12 @@ def conditional_set_face_reference() -> None:
 		else:
 			reference_frame = read_image(facefusion.globals.target_path)
 		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
-		append_face_reference(reference_face)
-
+		append_reference_face(reference_face)
 		if source_face and reference_face:
 			for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
-				derivate_frame = frame_processor_module.get_derivate_frame(source_face, reference_face, reference_frame)
-				derivate_face = get_one_face(derivate_frame, facefusion.globals.reference_face_position)
-				append_face_reference(derivate_face)
+				reference_frame = frame_processor_module.get_reference_frame(source_face, reference_face, reference_frame)
+				reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
+				append_reference_face(reference_face)
 
 
 def process_image() -> None:

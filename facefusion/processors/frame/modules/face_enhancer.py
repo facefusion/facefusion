@@ -11,7 +11,7 @@ from facefusion import logger, wording
 from facefusion.face_analyser import get_many_faces, clear_face_analyser, find_similar_faces, get_one_face
 from facefusion.face_helper import warp_face, paste_back
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.face_reference import get_face_references
+from facefusion.face_store import get_reference_faces
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
 from facefusion.cli_helper import create_metavar
 from facefusion.filesystem import is_file, is_image, is_video, resolve_relative_path
@@ -124,12 +124,6 @@ def apply_args(program : ArgumentParser) -> None:
 	frame_processors_globals.face_enhancer_blend = args.face_enhancer_blend
 
 
-def get_derivate_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Optional[Frame]:
-	if 'reference' in facefusion.globals.face_selector_mode:
-		return enhance_face(target_face, temp_frame)
-	return None
-
-
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
@@ -207,6 +201,10 @@ def blend_frame(temp_frame : Frame, paste_frame : Frame) -> Frame:
 	return temp_frame
 
 
+def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Optional[Frame]:
+	return enhance_face(target_face, temp_frame)
+
+
 def process_frame(source_face : Face, reference_faces : List[Face], temp_frame : Frame) -> Frame:
 	if 'reference' in facefusion.globals.face_selector_mode:
 		similar_faces = find_similar_faces(temp_frame, reference_faces, facefusion.globals.reference_face_distance)
@@ -226,7 +224,7 @@ def process_frame(source_face : Face, reference_faces : List[Face], temp_frame :
 
 
 def process_frames(source_path : List[str], temp_frame_paths : List[str], update_progress : Update_Process) -> None:
-	reference_faces = get_face_references() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	for temp_frame_path in temp_frame_paths:
 		temp_frame = read_image(temp_frame_path)
 		result_frame = process_frame(None, reference_faces, temp_frame)

@@ -101,10 +101,6 @@ def apply_args(program : ArgumentParser) -> None:
 	frame_processors_globals.frame_enhancer_blend = args.frame_enhancer_blend
 
 
-def get_derivate_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
-	pass
-
-
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
@@ -148,6 +144,10 @@ def blend_frame(temp_frame : Frame, paste_frame : Frame) -> Frame:
 	temp_frame = cv2.resize(temp_frame, (paste_frame_width, paste_frame_height))
 	temp_frame = cv2.addWeighted(temp_frame, frame_enhancer_blend, paste_frame, 1 - frame_enhancer_blend, 0)
 	return temp_frame
+
+
+def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
+	pass
 
 
 def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame) -> Frame:

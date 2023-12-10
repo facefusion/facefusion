@@ -5,10 +5,9 @@ import gradio
 import facefusion.globals
 import facefusion.choices
 from facefusion import wording
-from facefusion.face_cache import clear_static_faces
+from facefusion.face_store import clear_static_faces, clear_reference_faces
 from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color
 from facefusion.face_analyser import get_many_faces
-from facefusion.face_reference import clear_face_references
 from facefusion.typing import Frame, FaceSelectorMode
 from facefusion.filesystem import is_image, is_video
 from facefusion.uis.core import get_ui_component, register_ui_component
@@ -111,7 +110,7 @@ def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gr
 
 
 def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradio.Gallery:
-	clear_face_references()
+	clear_reference_faces()
 	clear_static_faces()
 	update_reference_face_position(event.index)
 	return update_reference_position_gallery()
@@ -130,7 +129,7 @@ def update_reference_frame_number(reference_frame_number : int) -> None:
 
 
 def clear_and_update_reference_position_gallery() -> gradio.Gallery:
-	clear_face_references()
+	clear_reference_faces()
 	clear_static_faces()
 	return update_reference_position_gallery()
 

@@ -4,12 +4,11 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.core import conditional_set_face_reference
-from facefusion.face_cache import clear_static_faces
+from facefusion.core import conditional_set_reference_faces
+from facefusion.face_store import clear_static_faces, get_reference_faces, clear_reference_faces
 from facefusion.typing import Frame, Face
 from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_static_image, read_static_images
 from facefusion.face_analyser import get_average_face, clear_face_analyser
-from facefusion.face_reference import get_face_references, clear_face_references
 from facefusion.content_analyser import analyse_frame
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.filesystem import is_image, is_video
@@ -37,11 +36,11 @@ def render() -> None:
 		'maximum': 100,
 		'visible': False
 	}
-	clear_face_references()
-	conditional_set_face_reference()
+	clear_reference_faces()
+	conditional_set_reference_faces()
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
-	reference_faces = get_face_references() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	if is_image(facefusion.globals.target_path):
 		target_frame = read_static_image(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(source_face, reference_faces, target_frame)
@@ -129,16 +128,16 @@ def listen() -> None:
 
 def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 	clear_face_analyser()
-	clear_face_references()
+	clear_reference_faces()
 	clear_static_faces()
 	return update_preview_image(frame_number)
 
 
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
-	conditional_set_face_reference()
+	conditional_set_reference_faces()
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
-	reference_face = get_face_references() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_face = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	if is_image(facefusion.globals.target_path):
 		target_frame = read_static_image(facefusion.globals.target_path)
 		preview_frame = process_preview_frame(source_face, reference_face, target_frame)
