@@ -4,7 +4,7 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.core import conditional_set_reference_faces
+from facefusion.core import conditional_append_reference_faces
 from facefusion.face_store import clear_static_faces, get_reference_faces, clear_reference_faces
 from facefusion.typing import Frame, Face
 from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_static_image, read_static_images
@@ -36,8 +36,7 @@ def render() -> None:
 		'maximum': 100,
 		'visible': False
 	}
-	clear_reference_faces()
-	conditional_set_reference_faces()
+	conditional_append_reference_faces()
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
@@ -134,7 +133,8 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 
 
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
-	conditional_set_reference_faces()
+	clear_reference_faces()
+	conditional_append_reference_faces()
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
 	reference_face = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None

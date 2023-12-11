@@ -203,7 +203,7 @@ def pre_check() -> bool:
 
 
 def conditional_process() -> None:
-	conditional_set_reference_faces()
+	conditional_append_reference_faces()
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_process('output'):
 			return
@@ -213,7 +213,7 @@ def conditional_process() -> None:
 		process_video()
 
 
-def conditional_set_reference_faces() -> None:
+def conditional_append_reference_faces() -> None:
 	if 'reference' in facefusion.globals.face_selector_mode and not get_reference_faces():
 		source_frames = read_static_images(facefusion.globals.source_paths)
 		source_face = get_average_face(source_frames)
