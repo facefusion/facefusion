@@ -6,7 +6,7 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion.download import conditional_download
-from facefusion.face_cache import get_faces_cache, set_faces_cache
+from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
 from facefusion.filesystem import resolve_relative_path
 from facefusion.typing import Frame, Face, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Score, Embedding
@@ -265,12 +265,12 @@ def get_average_face(frames : List[Frame], position : int = 0) -> Optional[Face]
 
 def get_many_faces(frame : Frame) -> List[Face]:
 	try:
-		faces_cache = get_faces_cache(frame)
+		faces_cache = get_static_faces(frame)
 		if faces_cache:
 			faces = faces_cache
 		else:
 			faces = extract_faces(frame)
-			set_faces_cache(frame, faces)
+			set_static_faces(frame, faces)
 		if facefusion.globals.face_analyser_order:
 			faces = sort_by_order(faces, facefusion.globals.face_analyser_order)
 		if facefusion.globals.face_analyser_age:
@@ -282,15 +282,16 @@ def get_many_faces(frame : Frame) -> List[Face]:
 		return []
 
 
-def find_similar_faces(frame : Frame, reference_face : Face, face_distance : float) -> List[Face]:
-	many_faces = get_many_faces(frame)
+def find_similar_faces(frame : Frame, reference_faces : List[Face], face_distance : float) -> List[Face]:
 	similar_faces = []
-	if many_faces:
-		for face in many_faces:
-			if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
-				current_face_distance = 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
-				if current_face_distance < face_distance:
-					similar_faces.append(face)
+	many_faces = get_many_faces(frame)
+	if many_faces and reference_faces:
+		for reference_face in reference_faces:
+			for face in many_faces:
+				if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
+					current_face_distance = 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
+					if current_face_distance < face_distance:
+						similar_faces.append(face)
 	return similar_faces
 
 

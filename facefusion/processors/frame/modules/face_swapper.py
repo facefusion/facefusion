@@ -11,7 +11,7 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import logger, wording
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_helper import warp_face, paste_back
-from facefusion.face_reference import get_face_reference
+from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel, Embedding
 from facefusion.filesystem import is_file, is_image, are_images, is_video, resolve_relative_path
@@ -248,9 +248,13 @@ def normalize_crop_frame(crop_frame : Frame) -> Frame:
 	return crop_frame
 
 
-def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame) -> Frame:
+def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
+	return swap_face(source_face, target_face, temp_frame)
+
+
+def process_frame(source_face : Face, reference_faces : List[Face], temp_frame : Frame) -> Frame:
 	if 'reference' in facefusion.globals.face_selector_mode:
-		similar_faces = find_similar_faces(temp_frame, reference_face, facefusion.globals.reference_face_distance)
+		similar_faces = find_similar_faces(temp_frame, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
 				temp_frame = swap_face(source_face, similar_face, temp_frame)
@@ -269,10 +273,10 @@ def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame)
 def process_frames(source_paths : List[str], temp_frame_paths : List[str], update_progress : Update_Process) -> None:
 	source_frames = read_static_images(source_paths)
 	source_face = get_average_face(source_frames)
-	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	for temp_frame_path in temp_frame_paths:
 		temp_frame = read_image(temp_frame_path)
-		result_frame = process_frame(source_face, reference_face, temp_frame)
+		result_frame = process_frame(source_face, reference_faces, temp_frame)
 		write_image(temp_frame_path, result_frame)
 		update_progress()
 
@@ -281,8 +285,8 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 	source_frames = read_static_images(source_paths)
 	source_face = get_average_face(source_frames)
 	target_frame = read_static_image(target_path)
-	reference_face = get_one_face(target_frame, facefusion.globals.reference_face_position) if 'reference' in facefusion.globals.face_selector_mode else None
-	result_frame = process_frame(source_face, reference_face, target_frame)
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	result_frame = process_frame(source_face, reference_faces, target_frame)
 	write_image(output_path, result_frame)
 
 
