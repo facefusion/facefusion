@@ -22,6 +22,7 @@ FRAME_PROCESSORS_METHODS =\
 	'apply_args',
 	'pre_check',
 	'pre_process',
+	'get_reference_frame',
 	'process_frame',
 	'process_frames',
 	'process_image',
