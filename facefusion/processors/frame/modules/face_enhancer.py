@@ -1,4 +1,4 @@
-from typing import Any, List, Dict, Literal, Optional
+from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 import cv2
 import threading
@@ -12,7 +12,7 @@ from facefusion.face_analyser import get_many_faces, clear_face_analyser, find_s
 from facefusion.face_helper import warp_face, paste_back
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
-from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
+from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
 from facefusion.cli_helper import create_metavar
 from facefusion.filesystem import is_file, is_image, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
@@ -25,7 +25,7 @@ FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
-MODELS : Dict[str, ModelValue] =\
+MODELS : ModelSet =\
 {
 	'codeformer':
 	{

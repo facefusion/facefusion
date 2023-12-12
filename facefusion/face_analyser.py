@@ -1,4 +1,4 @@
-from typing import Any, Optional, List, Dict, Tuple
+from typing import Any, Optional, List, Tuple
 import threading
 import cv2
 import numpy
@@ -9,13 +9,13 @@ from facefusion.download import conditional_download
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
 from facefusion.filesystem import resolve_relative_path
-from facefusion.typing import Frame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Score, Embedding
+from facefusion.typing import Frame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding
 from facefusion.vision import resize_frame_dimension
 
 FACE_ANALYSER = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
-MODELS : Dict[str, ModelValue] =\
+MODELS : ModelSet =\
 {
 	'face_detector_retinaface':
 	{

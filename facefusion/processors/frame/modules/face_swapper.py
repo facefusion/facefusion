@@ -1,4 +1,4 @@
-from typing import Any, List, Dict, Literal, Optional
+from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 import threading
 import numpy
@@ -13,7 +13,7 @@ from facefusion.face_analyser import get_one_face, get_average_face, get_many_fa
 from facefusion.face_helper import warp_face, paste_back
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel, Embedding
+from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, Embedding
 from facefusion.filesystem import is_file, is_image, are_images, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
@@ -25,7 +25,7 @@ FRAME_PROCESSOR = None
 MODEL_MATRIX = None
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
-MODELS : Dict[str, ModelValue] =\
+MODELS : ModelSet =\
 {
 	'blendswap_256':
 	{
