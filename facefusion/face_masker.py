@@ -82,6 +82,7 @@ def clear_face_parser() -> None:
 
 	FACE_PARSER = None
 
+
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
