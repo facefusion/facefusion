@@ -9,7 +9,7 @@ from facefusion.download import conditional_download
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
 from facefusion.filesystem import resolve_relative_path
-from facefusion.typing import Frame, Face, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Score, Embedding
+from facefusion.typing import Frame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Score, Embedding
 from facefusion.vision import resize_frame_dimension
 
 FACE_ANALYSER = None
@@ -282,17 +282,24 @@ def get_many_faces(frame : Frame) -> List[Face]:
 		return []
 
 
-def find_similar_faces(frame : Frame, reference_faces : List[Face], face_distance : float) -> List[Face]:
-	similar_faces = []
+def find_similar_faces(frame : Frame, reference_faces : FaceSet, face_distance : float) -> List[Face]:
+	similar_faces : List[Face] = []
 	many_faces = get_many_faces(frame)
-	if many_faces and reference_faces:
-		for reference_face in reference_faces:
-			for face in many_faces:
-				if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
-					current_face_distance = 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
-					if current_face_distance < face_distance:
+
+	for reference_set in reference_faces:
+		if not similar_faces:
+			for reference_face in reference_faces[reference_set]:
+				for face in many_faces:
+					if compare_faces(face, reference_face, face_distance):
 						similar_faces.append(face)
 	return similar_faces
+
+
+def compare_faces(face : Face, reference_face : Face, face_distance : float) -> bool:
+	if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
+		current_face_distance = 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
+		return current_face_distance < face_distance
+	return False
 
 
 def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:

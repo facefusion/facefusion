@@ -14,7 +14,7 @@ def run_ffmpeg(args : List[str]) -> bool:
 		subprocess.run(commands, stderr = subprocess.PIPE, check = True)
 		return True
 	except subprocess.CalledProcessError as exception:
-		logger.debug(exception.stderr.decode().strip(), 'FACEFUSION.FFMPEG')
+		logger.debug(exception.stderr.decode().strip(), __name__.upper())
 		return False
 
 

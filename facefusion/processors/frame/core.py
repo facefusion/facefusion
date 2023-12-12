@@ -38,7 +38,7 @@ def load_frame_processor_module(frame_processor : str) -> Any:
 			if not hasattr(frame_processor_module, method_name):
 				raise NotImplementedError
 	except ModuleNotFoundError as exception:
-		logger.debug(exception.msg, 'FACEFUSION.FRAME.CORE')
+		logger.debug(exception.msg, __name__.upper())
 		sys.exit(wording.get('frame_processor_not_loaded').format(frame_processor = frame_processor))
 	except NotImplementedError:
 		sys.exit(wording.get('frame_processor_not_implemented').format(frame_processor = frame_processor))

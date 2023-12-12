@@ -16,10 +16,11 @@ Face = namedtuple('Face',
 	'gender',
 	'age'
 ])
+FaceSet = Dict[str, List[Face]]
 FaceStore = TypedDict('FaceStore',
 {
-	'static_faces' : Dict[str, List[Face]],
-	'reference_faces': List[Face]
+	'static_faces' : FaceSet,
+	'reference_faces': FaceSet
 })
 Frame = numpy.ndarray[Any, Any]
 Mask = numpy.ndarray[Any, Any]

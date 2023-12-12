@@ -194,10 +194,10 @@ def limit_resources() -> None:
 
 def pre_check() -> bool:
 	if sys.version_info < (3, 9):
-		logger.info(wording.get('python_not_supported').format(version ='3.9'))
+		logger.info(wording.get('python_not_supported').format(version ='3.9'), __name__.upper())
 		return False
 	if not shutil.which('ffmpeg'):
-		logger.info(wording.get('ffmpeg_not_installed'))
+		logger.info(wording.get('ffmpeg_not_installed'), __name__.upper())
 		return False
 	return True
 
@@ -222,12 +222,12 @@ def conditional_append_reference_faces() -> None:
 		else:
 			reference_frame = read_image(facefusion.globals.target_path)
 		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
-		append_reference_face(reference_face)
+		append_reference_face('origin', reference_face)
 		if source_face and reference_face:
 			for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 				reference_frame = frame_processor_module.get_reference_frame(source_face, reference_face, reference_frame)
 				reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
-				append_reference_face(reference_face)
+				append_reference_face(frame_processor_module.__name__, reference_face)
 
 
 def process_image() -> None:
@@ -240,14 +240,14 @@ def process_image() -> None:
 		frame_processor_module.process_image(facefusion.globals.source_paths, facefusion.globals.output_path, facefusion.globals.output_path)
 		frame_processor_module.post_process()
 	# compress image
-	logger.info(wording.get('compressing_image'))
+	logger.info(wording.get('compressing_image'), __name__.upper())
 	if not compress_image(facefusion.globals.output_path):
-		logger.error(wording.get('compressing_image_failed'))
+		logger.error(wording.get('compressing_image_failed'), __name__.upper())
 	# validate image
 	if is_image(facefusion.globals.output_path):
-		logger.info(wording.get('processing_image_succeed'))
+		logger.info(wording.get('processing_image_succeed'), __name__.upper())
 	else:
-		logger.error(wording.get('processing_image_failed'))
+		logger.error(wording.get('processing_image_failed'), __name__.upper())
 
 
 def process_video() -> None:
@@ -255,10 +255,10 @@ def process_video() -> None:
 		return
 	fps = detect_fps(facefusion.globals.target_path) if facefusion.globals.keep_fps else 25.0
 	# create temp
-	logger.info(wording.get('creating_temp'))
+	logger.info(wording.get('creating_temp'), __name__.upper())
 	create_temp(facefusion.globals.target_path)
 	# extract frames
-	logger.info(wording.get('extracting_frames_fps').format(fps = fps))
+	logger.info(wording.get('extracting_frames_fps').format(fps = fps), __name__.upper())
 	extract_frames(facefusion.globals.target_path, fps)
 	# process frame
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
@@ -268,27 +268,27 @@ def process_video() -> None:
 			frame_processor_module.process_video(facefusion.globals.source_paths, temp_frame_paths)
 			frame_processor_module.post_process()
 	else:
-		logger.error(wording.get('temp_frames_not_found'))
+		logger.error(wording.get('temp_frames_not_found'), __name__.upper())
 		return
 	# merge video
-	logger.info(wording.get('merging_video_fps').format(fps = fps))
+	logger.info(wording.get('merging_video_fps').format(fps = fps), __name__.upper())
 	if not merge_video(facefusion.globals.target_path, fps):
-		logger.error(wording.get('merging_video_failed'))
+		logger.error(wording.get('merging_video_failed'), __name__.upper())
 		return
 	# handle audio
 	if facefusion.globals.skip_audio:
-		logger.info(wording.get('skipping_audio'))
+		logger.info(wording.get('skipping_audio'), __name__.upper())
 		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
-		logger.info(wording.get('restoring_audio'))
+		logger.info(wording.get('restoring_audio'), __name__.upper())
 		if not restore_audio(facefusion.globals.target_path, facefusion.globals.output_path):
-			logger.warn(wording.get('restoring_audio_skipped'))
+			logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
 			move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clear temp
-	logger.info(wording.get('clearing_temp'))
+	logger.info(wording.get('clearing_temp'), __name__.upper())
 	clear_temp(facefusion.globals.target_path)
 	# validate video
 	if is_video(facefusion.globals.output_path):
-		logger.info(wording.get('processing_video_succeed'))
+		logger.info(wording.get('processing_video_succeed'), __name__.upper())
 	else:
-		logger.error(wording.get('processing_video_failed'))
+		logger.error(wording.get('processing_video_failed'), __name__.upper())
