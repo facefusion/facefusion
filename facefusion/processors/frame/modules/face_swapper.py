@@ -19,7 +19,7 @@ from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
-from facefusion.face_masker import create_mask, clear_face_occluder
+from facefusion.face_masker import create_mask, clear_face_occluder, clear_face_parser
 
 FRAME_PROCESSOR = None
 MODEL_MATRIX = None
@@ -185,6 +185,7 @@ def post_process() -> None:
 	clear_face_analyser()
 	clear_content_analyser()
 	clear_face_occluder()
+	clear_face_parser()
 	read_static_image.cache_clear()
 
 
@@ -194,7 +195,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	model_size = get_options('model').get('size')
 	model_type = get_options('model').get('type')
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
-	crop_mask = create_mask(crop_frame, facefusion.globals.face_mask_types, facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
+	crop_mask = create_mask(crop_frame, facefusion.globals.face_mask_types, facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding, facefusion.globals.face_mask_parser_regions)
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():

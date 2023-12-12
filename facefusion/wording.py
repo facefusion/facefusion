@@ -28,6 +28,7 @@ WORDING =\
 	'face_mask_types_help': 'choose from the available face mask types',
 	'face_mask_blur_help': 'specify the blur amount for face mask',
 	'face_mask_padding_help': 'specify the face mask padding (top, right, bottom, left) in percent',
+	'face_mask_parser_regions_help': 'choose from the available face mask regions',
 	'trim_frame_start_help': 'specify the start frame for extraction',
 	'trim_frame_end_help': 'specify the end frame for extraction',
 	'temp_frame_format_help': 'specify the image format used for frame extraction',
