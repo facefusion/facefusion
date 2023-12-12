@@ -15,10 +15,10 @@ FACE_OCCLUDER = None
 THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : Dict[str, ModelValue] =\
 {
-	'occluder':
+	'face_occluder':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/occluder.onnx',
-		'path': resolve_relative_path('../.assets/models/occluder.onnx')
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_occluder.onnx',
+		'path': resolve_relative_path('../.assets/models/face_occluder.onnx')
 	}
 }
 
@@ -28,7 +28,7 @@ def get_face_occluder() -> Any:
 
 	with THREAD_LOCK:
 		if FACE_OCCLUDER is None:
-			model_path = MODELS.get('occluder').get('path')
+			model_path = MODELS.get('face_occluder').get('path')
 			FACE_OCCLUDER = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
 	return FACE_OCCLUDER
 
@@ -42,7 +42,7 @@ def clear_face_occluder() -> None:
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		model_url = MODELS.get('occluder').get('url')
+		model_url = MODELS.get('face_occluder').get('url')
 		conditional_download(download_directory_path, [ model_url ])
 	return True
 
