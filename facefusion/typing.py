@@ -43,6 +43,7 @@ TempFrameFormat = Literal['jpg', 'png']
 OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc']
 
 ModelValue = Dict[str, Any]
+ModelSet = Dict[str, ModelValue]
 OptionsWithModel = TypedDict('OptionsWithModel',
 {
 	'model' : ModelValue

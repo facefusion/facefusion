@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, List
 from cv2.typing import Size
 from functools import lru_cache
 import threading
@@ -7,13 +7,13 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
-from facefusion.typing import FaceMaskType, Frame, Mask, ModelValue, Padding
+from facefusion.typing import FaceMaskType, Frame, Mask, ModelSet, Padding
 from facefusion.filesystem import resolve_relative_path
 from facefusion.download import conditional_download
 
 FACE_OCCLUDER = None
 THREAD_LOCK : threading.Lock = threading.Lock()
-MODELS : Dict[str, ModelValue] =\
+MODELS : ModelSet =\
 {
 	'face_occluder':
 	{
