@@ -9,7 +9,7 @@ import gradio
 from tqdm import tqdm
 
 import facefusion.globals
-from facefusion import wording
+from facefusion import logger, wording
 from facefusion.content_analyser import analyse_stream
 from facefusion.typing import Frame, Face
 from facefusion.face_analyser import get_average_face
@@ -98,7 +98,10 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 			if mode == 'inline':
 				yield normalize_frame_color(capture_frame)
 			else:
-				stream.stdin.write(capture_frame.tobytes())
+				try:
+					stream.stdin.write(capture_frame.tobytes())
+				except Exception:
+					clear_webcam_capture()
 				yield None
 
 
@@ -143,6 +146,10 @@ def open_stream(mode : StreamMode, resolution : str, fps : float) -> subprocess.
 	if mode == 'udp':
 		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000?pkt_size=1316' ])
 	if mode == 'v4l2':
-		device_name = os.listdir('/sys/devices/virtual/video4linux')[0]
-		commands.extend([ '-f', 'v4l2', '/dev/' + device_name ])
+		try:
+			device_name = os.listdir('/sys/devices/virtual/video4linux')[0]
+			if device_name:
+				commands.extend([ '-f', 'v4l2', '/dev/' + device_name ])
+		except FileNotFoundError:
+			logger.error(wording.get('webcam_mode_not_loaded').format(mode = mode), __name__.upper())
 	return open_ffmpeg(commands)
