@@ -28,7 +28,7 @@ def load_ui_layout_module(ui_layout : str) -> Any:
 			if not hasattr(ui_layout_module, method_name):
 				raise NotImplementedError
 	except ModuleNotFoundError as exception:
-		logger.debug(exception.msg, 'FACEFUSION.UIS.CORE')
+		logger.debug(exception.msg, __name__.upper())
 		sys.exit(wording.get('ui_layout_not_loaded').format(ui_layout = ui_layout))
 	except NotImplementedError:
 		sys.exit(wording.get('ui_layout_not_implemented').format(ui_layout = ui_layout))

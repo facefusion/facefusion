@@ -12,7 +12,7 @@ from facefusion.face_analyser import get_many_faces, clear_face_analyser, find_s
 from facefusion.face_helper import warp_face, paste_back
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
-from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
+from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
 from facefusion.cli_helper import create_metavar
 from facefusion.filesystem import is_file, is_image, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
@@ -24,7 +24,7 @@ from facefusion.face_masker import create_mask, clear_face_occluder
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
-NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_ENHANCER'
+NAME = __name__.upper()
 MODELS : Dict[str, ModelValue] =\
 {
 	'codeformer':
@@ -205,7 +205,7 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Fra
 	return enhance_face(target_face, temp_frame)
 
 
-def process_frame(source_face : Face, reference_faces : List[Face], temp_frame : Frame) -> Frame:
+def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
 	if 'reference' in facefusion.globals.face_selector_mode:
 		similar_faces = find_similar_faces(temp_frame, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:

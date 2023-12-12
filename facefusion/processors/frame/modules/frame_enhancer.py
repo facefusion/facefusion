@@ -10,7 +10,7 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Frame, Face, Update_Process, ProcessMode, ModelValue, OptionsWithModel
+from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel
 from facefusion.cli_helper import create_metavar
 from facefusion.execution_helper import map_device
 from facefusion.filesystem import is_file, resolve_relative_path
@@ -22,7 +22,7 @@ from facefusion.processors.frame import choices as frame_processors_choices
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
-NAME = 'FACEFUSION.FRAME_PROCESSOR.FRAME_ENHANCER'
+NAME = __name__.upper()
 MODELS: Dict[str, ModelValue] =\
 {
 	'real_esrgan_x2plus':
@@ -150,7 +150,7 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Fra
 	pass
 
 
-def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame) -> Frame:
+def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
 	return enhance_frame(temp_frame)
 
 

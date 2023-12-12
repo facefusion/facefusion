@@ -6,7 +6,7 @@ import facefusion.globals
 from facefusion import wording
 from facefusion.core import conditional_append_reference_faces
 from facefusion.face_store import clear_static_faces, get_reference_faces, clear_reference_faces
-from facefusion.typing import Frame, Face
+from facefusion.typing import Frame, Face, FaceSet
 from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_static_image, read_static_images
 from facefusion.face_analyser import get_average_face, clear_face_analyser
 from facefusion.content_analyser import analyse_frame
@@ -158,7 +158,7 @@ def update_preview_frame_slider() -> gradio.Slider:
 	return gradio.Slider(value = None, maximum = None, visible = False)
 
 
-def process_preview_frame(source_face : Face, reference_faces : List[Face], temp_frame : Frame) -> Frame:
+def process_preview_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
 	temp_frame = resize_frame_dimension(temp_frame, 640, 640)
 	if analyse_frame(temp_frame):
 		return cv2.GaussianBlur(temp_frame, (99, 99), 0)
