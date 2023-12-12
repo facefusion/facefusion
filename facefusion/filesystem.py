@@ -64,8 +64,7 @@ def is_directory(directory_path : str) -> bool:
 
 def is_image(image_path : str) -> bool:
 	if is_file(image_path):
-		mimetype = filetype.guess(image_path)
-		return bool(mimetype and mimetype.mime.startswith('image/'))
+		return filetype.helpers.is_image(image_path)
 	return False
 
 
@@ -77,8 +76,7 @@ def are_images(image_paths : List[str]) -> bool:
 
 def is_video(video_path : str) -> bool:
 	if is_file(video_path):
-		mimetype = filetype.guess(video_path)
-		return bool(mimetype and mimetype.mime.startswith('video/'))
+		return filetype.helpers.is_video(video_path)
 	return False
 
 

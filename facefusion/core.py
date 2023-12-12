@@ -27,6 +27,7 @@ from facefusion.filesystem import is_image, is_video, list_module_names, get_tem
 from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio
 
 onnxruntime.set_default_logger_severity(3)
+warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 warnings.filterwarnings('ignore', category = UserWarning, module = 'torchvision')
 
 if platform.system().lower() == 'darwin':
