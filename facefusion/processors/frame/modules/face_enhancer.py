@@ -233,8 +233,9 @@ def process_frames(source_path : List[str], temp_frame_paths : List[str], update
 
 
 def process_image(source_path : str, target_path : str, output_path : str) -> None:
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	target_frame = read_static_image(target_path)
-	result_frame = process_frame(None, None, target_frame)
+	result_frame = process_frame(None, reference_faces, target_frame)
 	write_image(output_path, result_frame)
 
 
