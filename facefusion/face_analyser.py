@@ -287,7 +287,7 @@ def find_similar_faces(frame : Frame, reference_faces : FaceSet, face_distance :
 	many_faces = get_many_faces(frame)
 
 	for reference_set in reference_faces:
-		if not similar_faces:
+		if not similar_faces and reference_set in reference_faces:
 			for reference_face in reference_faces[reference_set]:
 				for face in many_faces:
 					if compare_faces(face, reference_face, face_distance):
