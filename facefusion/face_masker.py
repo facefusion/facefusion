@@ -7,7 +7,7 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
-from facefusion.typing import Frame, Mask, ModelValue, Padding, FaceMaskRegion, ModelSet
+from facefusion.typing import Frame, Mask, Padding, FaceMaskRegion, ModelSet
 from facefusion.filesystem import resolve_relative_path
 from facefusion.download import conditional_download
 
