@@ -79,14 +79,14 @@ def listen() -> None:
 			getattr(source_image, method)(stop, cancels = start_event)
 
 
-def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
+def start(webcam_mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_analyser_order = 'large-small'
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
 	stream = None
-	if mode in [ 'udp', 'v4l2' ]:
-		stream = open_stream(mode, resolution, fps) # type: ignore[arg-type]
+	if webcam_mode in [ 'udp', 'v4l2' ]:
+		stream = open_stream(webcam_mode, resolution, fps) # type: ignore[arg-type]
 	webcam_width, webcam_height = map(int, resolution.split('x'))
 	webcam_capture = get_webcam_capture()
 	if webcam_capture and webcam_capture.isOpened():
@@ -95,7 +95,7 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 		webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
 		webcam_capture.set(cv2.CAP_PROP_FPS, fps)
 		for capture_frame in multi_process_capture(source_face, webcam_capture, fps):
-			if mode == 'inline':
+			if webcam_mode == 'inline':
 				yield normalize_frame_color(capture_frame)
 			else:
 				try:
@@ -106,7 +106,7 @@ def start(mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, 
 
 
 def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, fps : float) -> Generator[Frame, None, None]:
-	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level == 'warn' or facefusion.globals.log_level == 'error') as progress:
+	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
 			deque_capture_frames : Deque[Frame] = deque()
@@ -141,15 +141,15 @@ def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
 	return temp_frame
 
 
-def open_stream(mode : StreamMode, resolution : str, fps : float) -> subprocess.Popen[bytes]:
+def open_stream(stream_mode : StreamMode, resolution : str, fps : float) -> subprocess.Popen[bytes]:
 	commands = [ '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', resolution, '-r', str(fps), '-i', '-' ]
-	if mode == 'udp':
+	if stream_mode == 'udp':
 		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000?pkt_size=1316' ])
-	if mode == 'v4l2':
+	if stream_mode == 'v4l2':
 		try:
 			device_name = os.listdir('/sys/devices/virtual/video4linux')[0]
 			if device_name:
 				commands.extend([ '-f', 'v4l2', '/dev/' + device_name ])
 		except FileNotFoundError:
-			logger.error(wording.get('webcam_mode_not_loaded').format(mode = mode), __name__.upper())
+			logger.error(wording.get('stream_not_loaded').format(stream_mode = stream_mode), __name__.upper())
 	return open_ffmpeg(commands)

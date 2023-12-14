@@ -53,7 +53,7 @@ def render() -> None:
 	FACE_DETECTOR_SCORE_SLIDER = gradio.Slider(
 		label = wording.get('face_detector_score_slider_label'),
 		value = facefusion.globals.face_detector_score,
-		step =facefusion.choices.face_detector_score_range[1] - facefusion.choices.face_detector_score_range[0],
+		step = facefusion.choices.face_detector_score_range[1] - facefusion.choices.face_detector_score_range[0],
 		minimum = facefusion.choices.face_detector_score_range[0],
 		maximum = facefusion.choices.face_detector_score_range[-1]
 	)
