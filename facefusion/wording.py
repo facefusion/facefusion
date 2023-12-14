@@ -90,7 +90,7 @@ WORDING =\
 	'face_selector_mode_dropdown_label': 'FACE SELECTOR MODE',
 	'reference_face_gallery_label': 'REFERENCE FACE',
 	'reference_face_distance_slider_label': 'REFERENCE FACE DISTANCE',
-	'face_mask_types_checkbox_group_label': 'FACE MASK TYPE',
+	'face_mask_types_checkbox_group_label': 'FACE MASK TYPES',
 	'face_mask_blur_slider_label': 'FACE MASK BLUR',
 	'face_mask_padding_top_slider_label': 'FACE MASK PADDING TOP',
 	'face_mask_padding_bottom_slider_label': 'FACE MASK PADDING BOTTOM',
