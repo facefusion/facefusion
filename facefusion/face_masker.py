@@ -51,8 +51,8 @@ def create_mask(crop_frame : Frame, face_mask_types : List[FaceMaskType], face_m
 	masks = []
 	if 'box' in face_mask_types:
 		masks.append(create_static_box_mask(crop_frame.shape[:2][::-1], face_mask_blur, face_mask_padding))
-	if 'occlution' in face_mask_types:
-		masks.append(create_occlution_mask(crop_frame))
+	if 'occlusion' in face_mask_types:
+		masks.append(create_occlusion_mask(crop_frame))
 	return numpy.minimum.reduce(masks).clip(0, 1)
 
 
@@ -70,15 +70,15 @@ def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_p
 	return box_mask
 
 
-def create_occlution_mask(crop_frame : Frame) -> Mask:
+def create_occlusion_mask(crop_frame : Frame) -> Mask:
 	face_occluder = get_face_occluder()
 	prepare_frame = cv2.resize(crop_frame, face_occluder.get_inputs()[0].shape[1:3][::-1])
 	prepare_frame = numpy.expand_dims(prepare_frame, axis = 0).astype(numpy.float32) / 255
 	prepare_frame = prepare_frame.transpose(0, 1, 2, 3)
-	occlution_mask = face_occluder.run(None,
+	occlusion_mask = face_occluder.run(None,
 	{
 		face_occluder.get_inputs()[0].name: prepare_frame
 	})[0][0]
-	occlution_mask = occlution_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
-	occlution_mask = cv2.resize(occlution_mask, crop_frame.shape[:2][::-1])
-	return occlution_mask
+	occlusion_mask = occlusion_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
+	occlusion_mask = cv2.resize(occlusion_mask, crop_frame.shape[:2][::-1])
+	return occlusion_mask
