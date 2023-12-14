@@ -71,7 +71,7 @@ def cli() -> None:
 	group_face_mask.add_argument('--face-mask-types', help = wording.get('face_mask_types_help'), dest = 'face_mask_types', default = [ 'box' ], choices = facefusion.choices.face_mask_types, nargs = '+')
 	group_face_mask.add_argument('--face-mask-blur', help = wording.get('face_mask_blur_help'), dest = 'face_mask_blur', type = float, default = 0.3, choices = facefusion.choices.face_mask_blur_range, metavar = create_metavar(facefusion.choices.face_mask_blur_range))
 	group_face_mask.add_argument('--face-mask-padding', help = wording.get('face_mask_padding_help'), dest = 'face_mask_padding', type = int, default = [ 0, 0, 0, 0 ], nargs = '+')
-	group_face_mask.add_argument('--face-mask-regions', help = wording.get('face_mask_regions_help'), dest = 'face_mask_regions', default = [ 'skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'eye-glasses', 'nose', 'upper-lip', 'lower-lip', 'mouth', 'hair', 'occlusion' ], choices = facefusion.choices.face_mask_regions, nargs = '+')
+	group_face_mask.add_argument('--face-mask-regions', help = wording.get('face_mask_regions_help'), dest = 'face_mask_regions', default = facefusion.choices.face_mask_regions, choices = facefusion.choices.face_mask_regions, nargs = '+')
 	# frame extraction
 	group_frame_extraction = program.add_argument_group('frame extraction')
 	group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), dest = 'trim_frame_start', type = int)

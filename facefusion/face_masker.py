@@ -29,25 +29,24 @@ MODELS : ModelSet =\
 }
 FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
 {
-	"skin": 1,
-	"left-eyebrow": 2,
-	"right-eyebrow": 3,
-	"left-eye": 4,
-	"right-eye": 5,
-	"eye-glasses": 6,
-	"left-ear": 7,
-	"right-ear": 8,
-	"earring": 9,
-	"nose": 10,
-	"mouth": 11,
-	"upper-lip": 12,
-	"lower-lip": 13,
-	"neck": 14,
-	"necklace": 15,
-	"cloth": 16,
-	"hair": 17,
-	"hat": 18,
-	"occlusion": 19
+	'skin': 1,
+	'left-eyebrow': 2,
+	'right-eyebrow': 3,
+	'left-eye': 4,
+	'right-eye': 5,
+	'eye-glasses': 6,
+	'left-ear': 7,
+	'right-ear': 8,
+	'earring': 9,
+	'nose': 10,
+	'mouth': 11,
+	'upper-lip': 12,
+	'lower-lip': 13,
+	'neck': 14,
+	'necklace': 15,
+	'cloth': 16,
+	'hair': 17,
+	'hat': 18
 }
 
 
@@ -71,11 +70,15 @@ def get_face_parser() -> Any:
 	return FACE_PARSER
 
 
-def clear_masks() -> None:
+def clear_face_occluder() -> None:
 	global FACE_OCCLUDER
-	global FACE_PARSER
 
 	FACE_OCCLUDER = None
+
+
+def clear_face_parser() -> None:
+	global FACE_PARSER
+
 	FACE_PARSER = None
 
 
@@ -89,10 +92,6 @@ def pre_check() -> bool:
 		]
 		conditional_download(download_directory_path, model_urls)
 	return True
-
-
-def merge_masks(masks : List[Mask]) -> Mask:
-	return numpy.minimum.reduce(masks).clip(0, 1)
 
 
 @lru_cache(maxsize = None)
@@ -109,31 +108,29 @@ def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_p
 	return box_mask
 
 
-def create_occlution_mask(crop_frame : Frame) -> Mask:
+def create_occlusion_mask(crop_frame : Frame) -> Mask:
 	face_occluder = get_face_occluder()
 	prepare_frame = cv2.resize(crop_frame, face_occluder.get_inputs()[0].shape[1:3][::-1])
 	prepare_frame = numpy.expand_dims(prepare_frame, axis = 0).astype(numpy.float32) / 255
 	prepare_frame = prepare_frame.transpose(0, 1, 2, 3)
-	occlution_mask = face_occluder.run(None,
+	occlusion_mask = face_occluder.run(None,
 	{
 		face_occluder.get_inputs()[0].name: prepare_frame
 	})[0][0]
-	occluder_mask = occluder_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
-	occluder_mask = cv2.resize(occluder_mask, crop_frame.shape[:2][::-1])
-	occluder_mask = 1 - (create_parser_mask(crop_frame, ['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'eye-glasses', 'nose', 'upper-lip', 'lower-lip', 'mouth', 'hair']) - occluder_mask)
-	return occluder_mask
+	occlusion_mask = occlusion_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
+	occlusion_mask = cv2.resize(occlusion_mask, crop_frame.shape[:2][::-1])
+	return occlusion_mask
 
 
-def create_parser_mask(crop_frame : Frame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
+def create_region_mask(crop_frame : Frame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
 	face_parser = get_face_parser()
 	prepare_frame = cv2.resize(crop_frame, (512, 512))
 	prepare_frame = numpy.expand_dims(prepare_frame, axis = 0).astype(numpy.float32)[:, :, ::-1] / 127.5 - 1
 	prepare_frame = prepare_frame.transpose(0, 3, 1, 2)
-	parser_output = face_parser.run(None,
+	region_mask = face_parser.run(None,
 	{
 		face_parser.get_inputs()[0].name: prepare_frame
-  	})[0][0]
-	parser_mask = numpy.isin(parser_output.argmax(0), [FACE_MASK_REGIONS[region] for region in face_mask_regions if region != 'occlusion'])
-	parser_mask = (cv2.GaussianBlur(parser_mask.astype(numpy.float32).clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
-	parser_mask = cv2.resize(parser_mask, crop_frame.shape[:2][::-1])
-	return parser_mask
+	})[0][0]
+	region_mask = numpy.isin(region_mask.argmax(0), [ FACE_MASK_REGIONS[region] for region in face_mask_regions ])
+	region_mask = cv2.resize(region_mask, crop_frame.shape[:2][::-1])
+	return region_mask
