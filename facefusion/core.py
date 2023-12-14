@@ -186,19 +186,21 @@ def limit_resources() -> None:
 			memory = facefusion.globals.max_memory * 1024 ** 6
 		if platform.system().lower() == 'windows':
 			import ctypes
+
 			kernel32 = ctypes.windll.kernel32 # type: ignore[attr-defined]
 			kernel32.SetProcessWorkingSetSize(-1, ctypes.c_size_t(memory), ctypes.c_size_t(memory))
 		else:
 			import resource
+
 			resource.setrlimit(resource.RLIMIT_DATA, (memory, memory))
 
 
 def pre_check() -> bool:
 	if sys.version_info < (3, 9):
-		logger.info(wording.get('python_not_supported').format(version ='3.9'), __name__.upper())
+		logger.error(wording.get('python_not_supported').format(version = '3.9'), __name__.upper())
 		return False
 	if not shutil.which('ffmpeg'):
-		logger.info(wording.get('ffmpeg_not_installed'), __name__.upper())
+		logger.error(wording.get('ffmpeg_not_installed'), __name__.upper())
 		return False
 	return True
 
