@@ -1,6 +1,8 @@
 from typing import Dict, Tuple
+import sys
 import os
 import platform
+import tempfile
 import subprocess
 from argparse import ArgumentParser, HelpFormatter
 
@@ -26,6 +28,7 @@ if platform.system().lower() == 'linux' or platform.system().lower() == 'windows
 if platform.system().lower() == 'linux':
 	TORCH['rocm'] = 'rocm5.6'
 	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.16.3')
+	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.16.3')
 if platform.system().lower() == 'darwin':
 	ONNXRUNTIMES['coreml-legacy'] = ('onnxruntime-coreml', '1.13.1')
 	ONNXRUNTIMES['coreml-silicon'] = ('onnxruntime-silicon', '1.16.0')
@@ -42,6 +45,7 @@ def cli() -> None:
 
 def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
+	python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
 	if not args.skip_venv:
 		os.environ['PIP_REQUIRE_VIRTUALENV'] = '1'
@@ -67,5 +71,14 @@ def run(program : ArgumentParser) -> None:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
 		else:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel ])
-		subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
-		subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
+		if onnxruntime != 'rocm':
+			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
+			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
+		elif python_id in [ 'cp39', 'cp310', 'cp311' ]:
+			wheel_name = 'onnxruntime_training-' + onnxruntime_version + '+rocm56-' + python_id + '-' + python_id + '-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
+			wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
+			wheel_url = 'https://download.onnxruntime.ai/' + wheel_name
+			subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
+			subprocess.call([ 'pip', 'uninstall', wheel_path, '-y', '-q' ])
+			subprocess.call([ 'pip', 'install', wheel_path ])
+			os.remove(wheel_path)
