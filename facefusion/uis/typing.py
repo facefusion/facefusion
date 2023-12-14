@@ -24,6 +24,7 @@ ComponentName = Literal\
 	'face_mask_padding_bottom_slider',
 	'face_mask_padding_left_slider',
 	'face_mask_padding_right_slider',
+    'face_mask_region_checkbox_group',
 	'frame_processors_checkbox_group',
 	'face_swapper_model_dropdown',
 	'face_enhancer_model_dropdown',

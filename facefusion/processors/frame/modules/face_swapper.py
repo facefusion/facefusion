@@ -19,7 +19,7 @@ from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
-from facefusion.face_masker import create_mask, clear_face_occluder, clear_face_parser
+from facefusion.face_masker import create_static_box_mask, create_occluder_mask, create_parser_mask, merge_masks, clear_masks
 
 FRAME_PROCESSOR = None
 MODEL_MATRIX = None
@@ -184,8 +184,7 @@ def post_process() -> None:
 	clear_model_matrix()
 	clear_face_analyser()
 	clear_content_analyser()
-	clear_face_occluder()
-	clear_face_parser()
+	clear_masks()
 	read_static_image.cache_clear()
 
 
@@ -195,7 +194,11 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	model_size = get_options('model').get('size')
 	model_type = get_options('model').get('type')
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
-	crop_mask = create_mask(crop_frame, facefusion.globals.face_mask_types, facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding, facefusion.globals.face_mask_parser_regions)
+	crop_masks = []
+	if 'box' in facefusion.globals.face_mask_types:
+		crop_masks.append(create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding))
+	if 'region' in facefusion.globals.face_mask_types and 'occlusion' not in facefusion.globals.face_mask_regions:
+		crop_masks.append(create_occluder_mask(crop_frame))
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
@@ -208,6 +211,9 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
+	if 'region' in facefusion.globals.face_mask_types:
+		crop_masks.append(create_parser_mask(crop_frame, facefusion.globals.face_mask_regions))
+	crop_mask = merge_masks(crop_masks)
 	temp_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	return temp_frame
 
