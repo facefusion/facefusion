@@ -69,7 +69,7 @@ def debug_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fr
 		temp_frame_size = temp_frame.shape[:2][::-1]
 		crop_masks = []
 		if 'box' in facefusion.globals.face_mask_types:
-			crop_masks.append(create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding))
+			crop_masks.append(create_static_box_mask(crop_frame.shape[:2][::-1], 0, facefusion.globals.face_mask_padding))
 		if 'region' in facefusion.globals.face_mask_types and 'occlusion' not in facefusion.globals.face_mask_regions:
 			crop_masks.append(create_occluder_mask(crop_frame))
 		if 'region' in facefusion.globals.face_mask_types:

@@ -164,8 +164,7 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	model_size = get_options('model').get('size')
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
 	crop_masks = []
-	if 'box' in facefusion.globals.face_mask_types:
-		crop_masks.append(create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding))
+	crop_masks.append(create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, (0, 0, 0, 0)))
 	if 'region' in facefusion.globals.face_mask_types and 'occlusion' not in facefusion.globals.face_mask_regions:
 		crop_masks.append(create_occluder_mask(crop_frame))
 	crop_mask = merge_masks(crop_masks)
