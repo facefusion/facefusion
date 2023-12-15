@@ -19,7 +19,7 @@ from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
-from facefusion.face_masker import create_mask, clear_face_occluder
+from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder
 
 FRAME_PROCESSOR = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -163,7 +163,11 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
-	crop_mask = create_mask(crop_frame, facefusion.globals.face_mask_types, facefusion.globals.face_mask_blur, (0, 0, 0, 0))
+	crop_mask_list = []
+	if 'box' in facefusion.globals.face_mask_types:
+		crop_mask_list.append(create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, (0, 0, 0, 0)))
+	if 'occlusion' in facefusion.globals.face_mask_types:
+		crop_mask_list.append(create_occlusion_mask(crop_frame))
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
@@ -174,6 +178,7 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	with THREAD_SEMAPHORE:
 		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
+	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
 	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	temp_frame = blend_frame(temp_frame, paste_frame)
 	return temp_frame

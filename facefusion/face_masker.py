@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, Dict, List
 from cv2.typing import Size
 from functools import lru_cache
 import threading
@@ -7,11 +7,12 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
-from facefusion.typing import FaceMaskType, Frame, Mask, ModelSet, Padding
+from facefusion.typing import Frame, Mask, Padding, FaceMaskRegion, ModelSet
 from facefusion.filesystem import resolve_relative_path
 from facefusion.download import conditional_download
 
 FACE_OCCLUDER = None
+FACE_PARSER = None
 THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : ModelSet =\
 {
@@ -19,7 +20,25 @@ MODELS : ModelSet =\
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_occluder.onnx',
 		'path': resolve_relative_path('../.assets/models/face_occluder.onnx')
+	},
+	'face_parser':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_parser.onnx',
+		'path': resolve_relative_path('../.assets/models/face_parser.onnx')
 	}
+}
+FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
+{
+	'skin': 1,
+	'left-eyebrow': 2,
+	'right-eyebrow': 3,
+	'left-eye': 4,
+	'right-eye': 5,
+	'eye-glasses': 6,
+	'nose': 10,
+	'mouth': 11,
+	'upper-lip': 12,
+	'lower-lip': 13
 }
 
 
@@ -33,27 +52,38 @@ def get_face_occluder() -> Any:
 	return FACE_OCCLUDER
 
 
+def get_face_parser() -> Any:
+	global FACE_PARSER
+
+	with THREAD_LOCK:
+		if FACE_PARSER is None:
+			model_path = MODELS.get('face_parser').get('path')
+			FACE_PARSER = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
+	return FACE_PARSER
+
+
 def clear_face_occluder() -> None:
 	global FACE_OCCLUDER
 
 	FACE_OCCLUDER = None
 
 
+def clear_face_parser() -> None:
+	global FACE_PARSER
+
+	FACE_PARSER = None
+
+
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
-		model_url = MODELS.get('face_occluder').get('url')
-		conditional_download(download_directory_path, [ model_url ])
+		model_urls =\
+		[
+			MODELS.get('face_occluder').get('url'),
+			MODELS.get('face_parser').get('url'),
+		]
+		conditional_download(download_directory_path, model_urls)
 	return True
-
-
-def create_mask(crop_frame : Frame, face_mask_types : List[FaceMaskType], face_mask_blur : float, face_mask_padding : Padding) -> Mask:
-	masks = []
-	if 'box' in face_mask_types:
-		masks.append(create_static_box_mask(crop_frame.shape[:2][::-1], face_mask_blur, face_mask_padding))
-	if 'occlusion' in face_mask_types:
-		masks.append(create_occlusion_mask(crop_frame))
-	return numpy.minimum.reduce(masks).clip(0, 1)
 
 
 @lru_cache(maxsize = None)
@@ -82,3 +112,17 @@ def create_occlusion_mask(crop_frame : Frame) -> Mask:
 	occlusion_mask = occlusion_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
 	occlusion_mask = cv2.resize(occlusion_mask, crop_frame.shape[:2][::-1])
 	return occlusion_mask
+
+
+def create_region_mask(crop_frame : Frame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
+	face_parser = get_face_parser()
+	prepare_frame = cv2.flip(cv2.resize(crop_frame, (512, 512)), 1)
+	prepare_frame = numpy.expand_dims(prepare_frame, axis = 0).astype(numpy.float32)[:, :, ::-1] / 127.5 - 1
+	prepare_frame = prepare_frame.transpose(0, 3, 1, 2)
+	region_mask = face_parser.run(None,
+	{
+		face_parser.get_inputs()[0].name: prepare_frame
+	})[0][0]
+	region_mask = numpy.isin(region_mask.argmax(0), [ FACE_MASK_REGIONS[region] for region in face_mask_regions ])
+	region_mask = cv2.resize(region_mask.astype(numpy.float32), crop_frame.shape[:2][::-1])
+	return region_mask
