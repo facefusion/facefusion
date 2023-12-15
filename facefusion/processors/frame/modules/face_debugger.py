@@ -35,7 +35,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--face-debugger-items', help = wording.get('face_debugger_items_help'), dest = 'face_debugger_items', default = [ 'kps', 'face-mask' ], choices = frame_processors_choices.face_debugger_items, nargs = '+')
+	program.add_argument('--face-debugger-items', help = wording.get('face_debugger_items_help'), default = [ 'kps', 'face-mask' ], choices = frame_processors_choices.face_debugger_items, nargs = '+')
 
 
 def apply_args(program : ArgumentParser) -> None:
