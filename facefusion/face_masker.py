@@ -124,7 +124,7 @@ def create_occlusion_mask(crop_frame : Frame) -> Mask:
 
 def create_region_mask(crop_frame : Frame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
 	face_parser = get_face_parser()
-	prepare_frame = cv2.resize(crop_frame, (512, 512))
+	prepare_frame = cv2.flip(cv2.resize(crop_frame, (512, 512)), 1)
 	prepare_frame = numpy.expand_dims(prepare_frame, axis = 0).astype(numpy.float32)[:, :, ::-1] / 127.5 - 1
 	prepare_frame = prepare_frame.transpose(0, 3, 1, 2)
 	region_mask = face_parser.run(None,
