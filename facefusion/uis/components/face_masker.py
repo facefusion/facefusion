@@ -93,7 +93,7 @@ def render() -> None:
 def listen() -> None:
 	FACE_MASK_TYPES_CHECKBOX_GROUP.change(update_face_mask_type, inputs = FACE_MASK_TYPES_CHECKBOX_GROUP, outputs = [ FACE_MASK_TYPES_CHECKBOX_GROUP, FACE_MASK_BOX_GROUP, FACE_MASK_REGION_CHECKBOX_GROUP ])
 	FACE_MASK_BLUR_SLIDER.change(update_face_mask_blur, inputs = FACE_MASK_BLUR_SLIDER)
-	FACE_MASK_REGION_CHECKBOX_GROUP.change(update_face_mask_regions, inputs = FACE_MASK_REGION_CHECKBOX_GROUP)
+	FACE_MASK_REGION_CHECKBOX_GROUP.change(update_face_mask_regions, inputs = FACE_MASK_REGION_CHECKBOX_GROUP, outputs = FACE_MASK_REGION_CHECKBOX_GROUP)
 	face_mask_padding_sliders = [ FACE_MASK_PADDING_TOP_SLIDER, FACE_MASK_PADDING_RIGHT_SLIDER, FACE_MASK_PADDING_BOTTOM_SLIDER, FACE_MASK_PADDING_LEFT_SLIDER ]
 	for face_mask_padding_slider in face_mask_padding_sliders:
 		face_mask_padding_slider.change(update_face_mask_padding, inputs = face_mask_padding_sliders)
@@ -116,5 +116,8 @@ def update_face_mask_padding(face_mask_padding_top : int, face_mask_padding_righ
 	facefusion.globals.face_mask_padding = (face_mask_padding_top, face_mask_padding_right, face_mask_padding_bottom, face_mask_padding_left)
 
 
-def update_face_mask_regions(face_mask_regions : List[FaceMaskRegion]) -> None:
+def update_face_mask_regions(face_mask_regions : List[FaceMaskRegion]) -> gradio.CheckboxGroup:
+	if not face_mask_regions:
+		face_mask_regions = facefusion.choices.face_mask_regions
 	facefusion.globals.face_mask_regions = face_mask_regions
+	return gradio.CheckboxGroup(value = face_mask_regions)
