@@ -36,52 +36,51 @@ def render() -> None:
 		choices = facefusion.choices.face_mask_types,
 		value = facefusion.globals.face_mask_types
 	)
-	with gradio.Group():
-		with gradio.Group(visible = has_box_mask) as FACE_MASK_BOX_GROUP:
-			FACE_MASK_BLUR_SLIDER = gradio.Slider(
-				label = wording.get('face_mask_blur_slider_label'),
-				step = facefusion.choices.face_mask_blur_range[1] - facefusion.choices.face_mask_blur_range[0],
-				minimum = facefusion.choices.face_mask_blur_range[0],
-				maximum = facefusion.choices.face_mask_blur_range[-1],
-				value = facefusion.globals.face_mask_blur
-			)
-			with gradio.Row():
-				FACE_MASK_PADDING_TOP_SLIDER = gradio.Slider(
-					label = wording.get('face_mask_padding_top_slider_label'),
-					step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
-					minimum = facefusion.choices.face_mask_padding_range[0],
-					maximum = facefusion.choices.face_mask_padding_range[-1],
-					value = facefusion.globals.face_mask_padding[0]
-				)
-				FACE_MASK_PADDING_RIGHT_SLIDER = gradio.Slider(
-					label = wording.get('face_mask_padding_right_slider_label'),
-					step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
-					minimum = facefusion.choices.face_mask_padding_range[0],
-					maximum = facefusion.choices.face_mask_padding_range[-1],
-					value = facefusion.globals.face_mask_padding[1]
-				)
-			with gradio.Row():
-				FACE_MASK_PADDING_BOTTOM_SLIDER = gradio.Slider(
-					label = wording.get('face_mask_padding_bottom_slider_label'),
-					step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
-					minimum = facefusion.choices.face_mask_padding_range[0],
-					maximum = facefusion.choices.face_mask_padding_range[-1],
-					value = facefusion.globals.face_mask_padding[2]
-				)
-				FACE_MASK_PADDING_LEFT_SLIDER = gradio.Slider(
-					label = wording.get('face_mask_padding_left_slider_label'),
-					step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
-					minimum = facefusion.choices.face_mask_padding_range[0],
-					maximum = facefusion.choices.face_mask_padding_range[-1],
-					value = facefusion.globals.face_mask_padding[3]
-				)
+	with gradio.Group(visible = has_box_mask) as FACE_MASK_BOX_GROUP:
+		FACE_MASK_BLUR_SLIDER = gradio.Slider(
+			label = wording.get('face_mask_blur_slider_label'),
+			step = facefusion.choices.face_mask_blur_range[1] - facefusion.choices.face_mask_blur_range[0],
+			minimum = facefusion.choices.face_mask_blur_range[0],
+			maximum = facefusion.choices.face_mask_blur_range[-1],
+			value = facefusion.globals.face_mask_blur
+		)
 		with gradio.Row():
-			FACE_MASK_REGION_CHECKBOX_GROUP = gradio.CheckboxGroup(
-				label = wording.get('face_mask_region_checkbox_group_label'),
-				choices = facefusion.choices.face_mask_regions,
-				value = facefusion.globals.face_mask_regions,
-				visible = has_region_mask
+			FACE_MASK_PADDING_TOP_SLIDER = gradio.Slider(
+				label = wording.get('face_mask_padding_top_slider_label'),
+				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				minimum = facefusion.choices.face_mask_padding_range[0],
+				maximum = facefusion.choices.face_mask_padding_range[-1],
+				value = facefusion.globals.face_mask_padding[0]
 			)
+			FACE_MASK_PADDING_RIGHT_SLIDER = gradio.Slider(
+				label = wording.get('face_mask_padding_right_slider_label'),
+				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				minimum = facefusion.choices.face_mask_padding_range[0],
+				maximum = facefusion.choices.face_mask_padding_range[-1],
+				value = facefusion.globals.face_mask_padding[1]
+			)
+		with gradio.Row():
+			FACE_MASK_PADDING_BOTTOM_SLIDER = gradio.Slider(
+				label = wording.get('face_mask_padding_bottom_slider_label'),
+				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				minimum = facefusion.choices.face_mask_padding_range[0],
+				maximum = facefusion.choices.face_mask_padding_range[-1],
+				value = facefusion.globals.face_mask_padding[2]
+			)
+			FACE_MASK_PADDING_LEFT_SLIDER = gradio.Slider(
+				label = wording.get('face_mask_padding_left_slider_label'),
+				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				minimum = facefusion.choices.face_mask_padding_range[0],
+				maximum = facefusion.choices.face_mask_padding_range[-1],
+				value = facefusion.globals.face_mask_padding[3]
+			)
+	with gradio.Row():
+		FACE_MASK_REGION_CHECKBOX_GROUP = gradio.CheckboxGroup(
+			label = wording.get('face_mask_region_checkbox_group_label'),
+			choices = facefusion.choices.face_mask_regions,
+			value = facefusion.globals.face_mask_regions,
+			visible = has_region_mask
+		)
 	register_ui_component('face_mask_types_checkbox_group', FACE_MASK_TYPES_CHECKBOX_GROUP)
 	register_ui_component('face_mask_blur_slider', FACE_MASK_BLUR_SLIDER)
 	register_ui_component('face_mask_padding_top_slider', FACE_MASK_PADDING_TOP_SLIDER)
