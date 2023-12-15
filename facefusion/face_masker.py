@@ -35,18 +35,10 @@ FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
 	'left-eye': 4,
 	'right-eye': 5,
 	'eye-glasses': 6,
-	'left-ear': 7,
-	'right-ear': 8,
-	'earring': 9,
 	'nose': 10,
 	'mouth': 11,
 	'upper-lip': 12,
-	'lower-lip': 13,
-	'neck': 14,
-	'necklace': 15,
-	'cloth': 16,
-	'hair': 17,
-	'hat': 18
+	'lower-lip': 13
 }
 
 
