@@ -12,7 +12,7 @@ from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
 from facefusion.face_helper import warp_face
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask
+from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
 NAME = __name__.upper()
@@ -55,6 +55,9 @@ def post_process() -> None:
 	clear_frame_processor()
 	clear_face_analyser()
 	clear_content_analyser()
+	clear_face_occluder()
+	clear_face_parser()
+	read_static_image.cache_clear()
 
 
 def debug_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
