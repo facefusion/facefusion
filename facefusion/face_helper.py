@@ -1,14 +1,14 @@
 from typing import Any, Dict, Tuple, List
-from functools import lru_cache
 from cv2.typing import Size
+from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Bbox, Kps, Frame, Matrix, Template, Padding
+from facefusion.typing import Bbox, Kps, Frame, Mask, Matrix, Template
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
-	'arcface_v1': numpy.array(
+	'arcface_112_v1': numpy.array(
 	[
 		[ 39.7300, 51.1380 ],
 		[ 72.2700, 51.1380 ],
@@ -16,7 +16,7 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 		[ 42.4630, 87.0100 ],
 		[ 69.5370, 87.0100 ]
 	]),
-	'arcface_v2': numpy.array(
+	'arcface_112_v2': numpy.array(
 	[
 		[ 38.2946, 51.6963 ],
 		[ 73.5318, 51.5014 ],
@@ -24,7 +24,15 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 		[ 41.5493, 92.3655 ],
 		[ 70.7299, 92.2041 ]
 	]),
-	'ffhq': numpy.array(
+	'arcface_128_v2': numpy.array(
+	[
+		[ 46.2946, 51.6963 ],
+		[ 81.5318, 51.5014 ],
+		[ 64.0252, 71.7366 ],
+		[ 49.5493, 92.3655 ],
+		[ 78.7299, 92.2041 ]
+	]),
+	'ffhq_512': numpy.array(
 	[
 		[ 192.98138, 239.94708 ],
 		[ 318.90277, 240.1936 ],
@@ -37,37 +45,21 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 
 def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -> Tuple[Frame, Matrix]:
 	normed_template = TEMPLATES.get(template) * size[1] / size[0]
-	affine_matrix = cv2.estimateAffinePartial2D(kps, normed_template, method = cv2.LMEDS)[0]
+	affine_matrix = cv2.estimateAffinePartial2D(kps, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, (size[1], size[1]), borderMode = cv2.BORDER_REPLICATE)
 	return crop_frame, affine_matrix
 
 
-def paste_back(temp_frame : Frame, crop_frame: Frame, affine_matrix : Matrix, face_mask_blur : float, face_mask_padding : Padding) -> Frame:
+def paste_back(temp_frame : Frame, crop_frame: Frame, crop_mask : Mask, affine_matrix : Matrix) -> Frame:
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_frame_size = temp_frame.shape[:2][::-1]
-	mask_size = tuple(crop_frame.shape[:2])
-	mask_frame = create_static_mask_frame(mask_size, face_mask_blur, face_mask_padding)
-	inverse_mask_frame = cv2.warpAffine(mask_frame, inverse_matrix, temp_frame_size).clip(0, 1)
+	inverse_crop_mask = cv2.warpAffine(crop_mask, inverse_matrix, temp_frame_size).clip(0, 1)
 	inverse_crop_frame = cv2.warpAffine(crop_frame, inverse_matrix, temp_frame_size, borderMode = cv2.BORDER_REPLICATE)
 	paste_frame = temp_frame.copy()
-	paste_frame[:, :, 0] = inverse_mask_frame * inverse_crop_frame[:, :, 0] + (1 - inverse_mask_frame) * temp_frame[:, :, 0]
-	paste_frame[:, :, 1] = inverse_mask_frame * inverse_crop_frame[:, :, 1] + (1 - inverse_mask_frame) * temp_frame[:, :, 1]
-	paste_frame[:, :, 2] = inverse_mask_frame * inverse_crop_frame[:, :, 2] + (1 - inverse_mask_frame) * temp_frame[:, :, 2]
+	paste_frame[:, :, 0] = inverse_crop_mask * inverse_crop_frame[:, :, 0] + (1 - inverse_crop_mask) * temp_frame[:, :, 0]
+	paste_frame[:, :, 1] = inverse_crop_mask * inverse_crop_frame[:, :, 1] + (1 - inverse_crop_mask) * temp_frame[:, :, 1]
+	paste_frame[:, :, 2] = inverse_crop_mask * inverse_crop_frame[:, :, 2] + (1 - inverse_crop_mask) * temp_frame[:, :, 2]
 	return paste_frame
-
-
-@lru_cache(maxsize = None)
-def create_static_mask_frame(mask_size : Size, face_mask_blur : float, face_mask_padding : Padding) -> Frame:
-	mask_frame = numpy.ones(mask_size, numpy.float32)
-	blur_amount = int(mask_size[0] * 0.5 * face_mask_blur)
-	blur_area = max(blur_amount // 2, 1)
-	mask_frame[:max(blur_area, int(mask_size[1] * face_mask_padding[0] / 100)), :] = 0
-	mask_frame[-max(blur_area, int(mask_size[1] * face_mask_padding[2] / 100)):, :] = 0
-	mask_frame[:, :max(blur_area, int(mask_size[0] * face_mask_padding[3] / 100))] = 0
-	mask_frame[:, -max(blur_area, int(mask_size[0] * face_mask_padding[1] / 100)):] = 0
-	if blur_amount > 0:
-		mask_frame = cv2.GaussianBlur(mask_frame, (0, 0), blur_amount * 0.25)
-	return mask_frame
 
 
 @lru_cache(maxsize = None)

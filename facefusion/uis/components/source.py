@@ -1,9 +1,10 @@
-from typing import Any, IO, Optional
+from typing import Optional, List
 import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.utilities import is_image
+from facefusion.uis.typing import File
+from facefusion.filesystem import are_images
 from facefusion.uis.core import register_ui_component
 
 SOURCE_FILE : Optional[gradio.File] = None
@@ -14,9 +15,9 @@ def render() -> None:
 	global SOURCE_FILE
 	global SOURCE_IMAGE
 
-	is_source_image = is_image(facefusion.globals.source_path)
+	are_source_images = are_images(facefusion.globals.source_paths)
 	SOURCE_FILE = gradio.File(
-		file_count = 'single',
+		file_count = 'multiple',
 		file_types =
 		[
 			'.png',
@@ -24,11 +25,12 @@ def render() -> None:
 			'.webp'
 		],
 		label = wording.get('source_file_label'),
-		value = facefusion.globals.source_path if is_source_image else None
+		value = facefusion.globals.source_paths if are_source_images else None
 	)
+	source_file_names = [ source_file_value['name'] for source_file_value in SOURCE_FILE.value ] if SOURCE_FILE.value else None
 	SOURCE_IMAGE = gradio.Image(
-		value = SOURCE_FILE.value['name'] if is_source_image else None,
-		visible = is_source_image,
+		value = source_file_names[0] if are_source_images else None,
+		visible = are_source_images,
 		show_label = False
 	)
 	register_ui_component('source_image', SOURCE_IMAGE)
@@ -38,9 +40,10 @@ def listen() -> None:
 	SOURCE_FILE.change(update, inputs = SOURCE_FILE, outputs = SOURCE_IMAGE)
 
 
-def update(file: IO[Any]) -> gradio.Image:
-	if file and is_image(file.name):
-		facefusion.globals.source_path = file.name
-		return gradio.Image(value = file.name, visible = True)
-	facefusion.globals.source_path = None
+def update(files : List[File]) -> gradio.Image:
+	file_names = [ file.name for file in files ] if files else None
+	if are_images(file_names):
+		facefusion.globals.source_paths = file_names
+		return gradio.Image(value = file_names[0], visible = True)
+	facefusion.globals.source_paths = None
 	return gradio.Image(value = None, visible = False)

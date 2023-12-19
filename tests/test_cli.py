@@ -3,7 +3,7 @@ import sys
 import pytest
 
 from facefusion import wording
-from facefusion.utilities import conditional_download
+from facefusion.download import conditional_download
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -18,7 +18,7 @@ def before_all() -> None:
 
 def test_image_to_image() -> None:
 	commands = [ sys.executable, 'run.py', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-1080p.jpg', '-o', '.assets/examples', '--headless' ]
-	run = subprocess.run(commands, stdout = subprocess.PIPE)
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
 	assert run.returncode == 0
 	assert wording.get('processing_image_succeed') in run.stdout.decode()
@@ -26,7 +26,7 @@ def test_image_to_image() -> None:
 
 def test_image_to_video() -> None:
 	commands = [ sys.executable, 'run.py', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-1080p.mp4', '-o', '.assets/examples', '--trim-frame-end', '10', '--headless' ]
-	run = subprocess.run(commands, stdout = subprocess.PIPE)
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
 	assert run.returncode == 0
 	assert wording.get('processing_video_succeed') in run.stdout.decode()

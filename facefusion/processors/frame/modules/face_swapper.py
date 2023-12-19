@@ -1,4 +1,4 @@
-from typing import Any, List, Dict, Literal, Optional
+from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 import threading
 import numpy
@@ -8,29 +8,31 @@ from onnx import numpy_helper
 
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
-from facefusion import wording
-from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
+from facefusion import logger, wording
+from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_helper import warp_face, paste_back
-from facefusion.face_reference import get_face_reference
+from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, Frame, Update_Process, ProcessMode, ModelValue, OptionsWithModel, Embedding
-from facefusion.utilities import conditional_download, resolve_relative_path, is_image, is_video, is_file, is_download_done, update_status
-from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, Embedding
+from facefusion.filesystem import is_file, is_image, are_images, is_video, resolve_relative_path
+from facefusion.download import conditional_download, is_download_done
+from facefusion.vision import read_image, read_static_image, read_static_images, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
+from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 
 FRAME_PROCESSOR = None
 MODEL_MATRIX = None
 THREAD_LOCK : threading.Lock = threading.Lock()
-NAME = 'FACEFUSION.FRAME_PROCESSOR.FACE_SWAPPER'
-MODELS : Dict[str, ModelValue] =\
+NAME = __name__.upper()
+MODELS : ModelSet =\
 {
 	'blendswap_256':
 	{
 		'type': 'blendswap',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/blendswap_256.onnx',
 		'path': resolve_relative_path('../.assets/models/blendswap_256.onnx'),
-		'template': 'ffhq',
+		'template': 'ffhq_512',
 		'size': (512, 256),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -40,7 +42,7 @@ MODELS : Dict[str, ModelValue] =\
 		'type': 'inswapper',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
 		'path': resolve_relative_path('../.assets/models/inswapper_128.onnx'),
-		'template': 'arcface_v2',
+		'template': 'arcface_128_v2',
 		'size': (128, 128),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -50,7 +52,7 @@ MODELS : Dict[str, ModelValue] =\
 		'type': 'inswapper',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
 		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx'),
-		'template': 'arcface_v2',
+		'template': 'arcface_128_v2',
 		'size': (128, 128),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -60,7 +62,7 @@ MODELS : Dict[str, ModelValue] =\
 		'type': 'simswap',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_256.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap_256.onnx'),
-		'template': 'arcface_v1',
+		'template': 'arcface_112_v1',
 		'size': (112, 256),
 		'mean': [ 0.485, 0.456, 0.406 ],
 		'standard_deviation': [ 0.229, 0.224, 0.225 ]
@@ -70,7 +72,7 @@ MODELS : Dict[str, ModelValue] =\
 		'type': 'simswap',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_512_unofficial.onnx',
 		'path': resolve_relative_path('../.assets/models/simswap_512_unofficial.onnx'),
-		'template': 'arcface_v1',
+		'template': 'arcface_112_v1',
 		'size': (112, 512),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -130,7 +132,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--face-swapper-model', help = wording.get('frame_processor_model_help'), dest = 'face_swapper_model', default = 'inswapper_128', choices = frame_processors_choices.face_swapper_models)
+	program.add_argument('--face-swapper-model', help = wording.get('frame_processor_model_help'), default = 'inswapper_128', choices = frame_processors_choices.face_swapper_models)
 
 
 def apply_args(program : ArgumentParser) -> None:
@@ -156,22 +158,23 @@ def pre_process(mode : ProcessMode) -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
-		update_status(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
 	elif not is_file(model_path):
-		update_status(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
-	if not is_image(facefusion.globals.source_path):
-		update_status(wording.get('select_image_source') + wording.get('exclamation_mark'), NAME)
+	if not are_images(facefusion.globals.source_paths):
+		logger.error(wording.get('select_image_source') + wording.get('exclamation_mark'), NAME)
 		return False
-	elif not get_one_face(read_static_image(facefusion.globals.source_path)):
-		update_status(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
-		return False
+	for source_frame in read_static_images(facefusion.globals.source_paths):
+		if not get_one_face(source_frame):
+			logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
+			return False
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
-		update_status(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
 	if mode == 'output' and not facefusion.globals.output_path:
-		update_status(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
 
@@ -181,6 +184,8 @@ def post_process() -> None:
 	clear_model_matrix()
 	clear_face_analyser()
 	clear_content_analyser()
+	clear_face_occluder()
+	clear_face_parser()
 	read_static_image.cache_clear()
 
 
@@ -190,6 +195,11 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	model_size = get_options('model').get('size')
 	model_type = get_options('model').get('type')
 	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
+	crop_mask_list = []
+	if 'box' in facefusion.globals.face_mask_types:
+		crop_mask_list.append(create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding))
+	if 'occlusion' in facefusion.globals.face_mask_types:
+		crop_mask_list.append(create_occlusion_mask(crop_frame))
 	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
 	for frame_processor_input in frame_processor.get_inputs():
@@ -202,13 +212,16 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
-	temp_frame = paste_back(temp_frame, crop_frame, affine_matrix, facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
+	if 'region' in facefusion.globals.face_mask_types:
+		crop_mask_list.append(create_region_mask(crop_frame, facefusion.globals.face_mask_regions))
+	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
+	temp_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	return temp_frame
 
 
-def prepare_source_frame(source_face : Face) -> numpy.ndarray[Any, Any]:
-	source_frame = read_static_image(facefusion.globals.source_path)
-	source_frame, _ = warp_face(source_frame, source_face.kps, 'arcface_v2', (112, 112))
+def prepare_source_frame(source_face : Face) -> Frame:
+	source_frame = read_static_image(facefusion.globals.source_paths[0])
+	source_frame, _ = warp_face(source_frame, source_face.kps, 'arcface_112_v2', (112, 112))
 	source_frame = source_frame[:, :, ::-1] / 255.0
 	source_frame = source_frame.transpose(2, 0, 1)
 	source_frame = numpy.expand_dims(source_frame, axis = 0).astype(numpy.float32)
@@ -243,9 +256,13 @@ def normalize_crop_frame(crop_frame : Frame) -> Frame:
 	return crop_frame
 
 
-def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame) -> Frame:
+def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
+	return swap_face(source_face, target_face, temp_frame)
+
+
+def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
 	if 'reference' in facefusion.globals.face_selector_mode:
-		similar_faces = find_similar_faces(temp_frame, reference_face, facefusion.globals.reference_face_distance)
+		similar_faces = find_similar_faces(temp_frame, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
 				temp_frame = swap_face(source_face, similar_face, temp_frame)
@@ -261,23 +278,25 @@ def process_frame(source_face : Face, reference_face : Face, temp_frame : Frame)
 	return temp_frame
 
 
-def process_frames(source_path : str, temp_frame_paths : List[str], update_progress : Update_Process) -> None:
-	source_face = get_one_face(read_static_image(source_path))
-	reference_face = get_face_reference() if 'reference' in facefusion.globals.face_selector_mode else None
+def process_frames(source_paths : List[str], temp_frame_paths : List[str], update_progress : Update_Process) -> None:
+	source_frames = read_static_images(source_paths)
+	source_face = get_average_face(source_frames)
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	for temp_frame_path in temp_frame_paths:
 		temp_frame = read_image(temp_frame_path)
-		result_frame = process_frame(source_face, reference_face, temp_frame)
+		result_frame = process_frame(source_face, reference_faces, temp_frame)
 		write_image(temp_frame_path, result_frame)
 		update_progress()
 
 
-def process_image(source_path : str, target_path : str, output_path : str) -> None:
-	source_face = get_one_face(read_static_image(source_path))
+def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
+	source_frames = read_static_images(source_paths)
+	source_face = get_average_face(source_frames)
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	target_frame = read_static_image(target_path)
-	reference_face = get_one_face(target_frame, facefusion.globals.reference_face_position) if 'reference' in facefusion.globals.face_selector_mode else None
-	result_frame = process_frame(source_face, reference_face, target_frame)
+	result_frame = process_frame(source_face, reference_faces, target_frame)
 	write_image(output_path, result_frame)
 
 
-def process_video(source_path : str, temp_frame_paths : List[str]) -> None:
-	frame_processors.multi_process_frames(source_path, temp_frame_paths, process_frames)
+def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
+	frame_processors.multi_process_frames(source_paths, temp_frame_paths, process_frames)

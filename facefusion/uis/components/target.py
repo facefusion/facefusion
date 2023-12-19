@@ -1,11 +1,11 @@
-from typing import Any, IO, Tuple, Optional
+from typing import Tuple, Optional
 import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.face_cache import clear_faces_cache
-from facefusion.face_reference import clear_face_reference
-from facefusion.utilities import is_image, is_video
+from facefusion.face_store import clear_static_faces, clear_reference_faces
+from facefusion.uis.typing import File
+from facefusion.filesystem import is_image, is_video
 from facefusion.uis.core import register_ui_component
 
 TARGET_FILE : Optional[gradio.File] = None
@@ -50,9 +50,9 @@ def listen() -> None:
 	TARGET_FILE.change(update, inputs = TARGET_FILE, outputs = [ TARGET_IMAGE, TARGET_VIDEO ])
 
 
-def update(file : IO[Any]) -> Tuple[gradio.Image, gradio.Video]:
-	clear_face_reference()
-	clear_faces_cache()
+def update(file : File) -> Tuple[gradio.Image, gradio.Video]:
+	clear_reference_faces()
+	clear_static_faces()
 	if file and is_image(file.name):
 		facefusion.globals.target_path = file.name
 		return gradio.Image(value = file.name, visible = True), gradio.Video(value = None, visible = False)

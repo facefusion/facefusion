@@ -1,6 +1,7 @@
-from typing import Literal
+from typing import Literal, Any, IO
 import gradio
 
+File = IO[Any]
 Component = gradio.File or gradio.Image or gradio.Video or gradio.Slider
 ComponentName = Literal\
 [
@@ -17,11 +18,13 @@ ComponentName = Literal\
 	'face_detector_model_dropdown',
 	'face_detector_size_dropdown',
 	'face_detector_score_slider',
+	'face_mask_types_checkbox_group',
 	'face_mask_blur_slider',
 	'face_mask_padding_top_slider',
 	'face_mask_padding_bottom_slider',
 	'face_mask_padding_left_slider',
 	'face_mask_padding_right_slider',
+	'face_mask_region_checkbox_group',
 	'frame_processors_checkbox_group',
 	'face_swapper_model_dropdown',
 	'face_enhancer_model_dropdown',

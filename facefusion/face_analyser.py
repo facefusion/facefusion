@@ -1,20 +1,21 @@
-from typing import Any, Optional, List, Dict, Tuple
+from typing import Any, Optional, List, Tuple
 import threading
 import cv2
 import numpy
 import onnxruntime
 
 import facefusion.globals
-from facefusion.face_cache import get_faces_cache, set_faces_cache
+from facefusion.download import conditional_download
+from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
-from facefusion.typing import Frame, Face, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelValue, Bbox, Kps, Score, Embedding
-from facefusion.utilities import resolve_relative_path, conditional_download
+from facefusion.filesystem import resolve_relative_path
+from facefusion.typing import Frame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding
 from facefusion.vision import resize_frame_dimension
 
 FACE_ANALYSER = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
-MODELS : Dict[str, ModelValue] =\
+MODELS : ModelSet =\
 {
 	'face_detector_retinaface':
 	{
@@ -174,9 +175,13 @@ def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_wi
 	return bbox_list, kps_list, score_list
 
 
-def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face] :
-	faces : List[Face] = []
+def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face]:
+	faces = []
 	if facefusion.globals.face_detector_score > 0:
+		sort_indices = numpy.argsort(-numpy.array(score_list))
+		bbox_list = [ bbox_list[index] for index in sort_indices ]
+		kps_list = [ kps_list[index] for index in sort_indices ]
+		score_list = [ score_list[index] for index in sort_indices ]
 		keep_indices = apply_nms(bbox_list, 0.4)
 		for index in keep_indices:
 			bbox = bbox_list[index]
@@ -198,7 +203,7 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 
 def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]:
 	face_recognizer = get_face_analyser().get('face_recognizer')
-	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface_v2', (112, 112))
+	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface_112_v2', (112, 112))
 	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
 	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
@@ -213,7 +218,7 @@ def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]
 
 def detect_gender_age(frame : Frame, kps : Kps) -> Tuple[int, int]:
 	gender_age = get_face_analyser().get('gender_age')
-	crop_frame, affine_matrix = warp_face(frame, kps, 'arcface_v2', (96, 96))
+	crop_frame, affine_matrix = warp_face(frame, kps, 'arcface_112_v2', (96, 96))
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0).transpose(0, 3, 1, 2).astype(numpy.float32)
 	prediction = gender_age.run(None,
 	{
@@ -234,14 +239,38 @@ def get_one_face(frame : Frame, position : int = 0) -> Optional[Face]:
 	return None
 
 
+def get_average_face(frames : List[Frame], position : int = 0) -> Optional[Face]:
+	average_face = None
+	faces = []
+	embedding_list = []
+	normed_embedding_list = []
+	for frame in frames:
+		face = get_one_face(frame, position)
+		if face:
+			faces.append(face)
+			embedding_list.append(face.embedding)
+			normed_embedding_list.append(face.normed_embedding)
+	if faces:
+		average_face = Face(
+			bbox = faces[0].bbox,
+			kps = faces[0].kps,
+			score = faces[0].score,
+			embedding = numpy.mean(embedding_list, axis = 0),
+			normed_embedding = numpy.mean(normed_embedding_list, axis = 0),
+			gender = faces[0].gender,
+			age = faces[0].age
+		)
+	return average_face
+
+
 def get_many_faces(frame : Frame) -> List[Face]:
 	try:
-		faces_cache = get_faces_cache(frame)
+		faces_cache = get_static_faces(frame)
 		if faces_cache:
 			faces = faces_cache
 		else:
 			faces = extract_faces(frame)
-			set_faces_cache(frame, faces)
+			set_static_faces(frame, faces)
 		if facefusion.globals.face_analyser_order:
 			faces = sort_by_order(faces, facefusion.globals.face_analyser_order)
 		if facefusion.globals.face_analyser_age:
@@ -253,16 +282,25 @@ def get_many_faces(frame : Frame) -> List[Face]:
 		return []
 
 
-def find_similar_faces(frame : Frame, reference_face : Face, face_distance : float) -> List[Face]:
+def find_similar_faces(frame : Frame, reference_faces : FaceSet, face_distance : float) -> List[Face]:
+	similar_faces : List[Face] = []
 	many_faces = get_many_faces(frame)
-	similar_faces = []
-	if many_faces:
-		for face in many_faces:
-			if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
-				current_face_distance = 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
-				if current_face_distance < face_distance:
-					similar_faces.append(face)
+
+	if reference_faces:
+		for reference_set in reference_faces:
+			if not similar_faces:
+				for reference_face in reference_faces[reference_set]:
+					for face in many_faces:
+						if compare_faces(face, reference_face, face_distance):
+							similar_faces.append(face)
 	return similar_faces
+
+
+def compare_faces(face : Face, reference_face : Face, face_distance : float) -> bool:
+	if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
+		current_face_distance = 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
+		return current_face_distance < face_distance
+	return False
 
 
 def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:

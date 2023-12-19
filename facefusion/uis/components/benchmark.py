@@ -7,11 +7,12 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.face_analyser import get_face_analyser
-from facefusion.face_cache import clear_faces_cache
+from facefusion.face_store import clear_static_faces
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total
 from facefusion.core import limit_resources, conditional_process
-from facefusion.utilities import normalize_output_path, clear_temp
+from facefusion.normalizer import normalize_output_path
+from facefusion.filesystem import clear_temp
 from facefusion.uis.core import get_ui_component
 
 BENCHMARK_RESULTS_DATAFRAME : Optional[gradio.Dataframe] = None
@@ -75,7 +76,7 @@ def listen() -> None:
 
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
-	facefusion.globals.source_path = '.assets/examples/source.jpg'
+	facefusion.globals.source_paths = [ '.assets/examples/source.jpg' ]
 	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 	benchmark_results = []
 	if target_paths:
@@ -94,7 +95,7 @@ def pre_process() -> None:
 
 
 def post_process() -> None:
-	clear_faces_cache()
+	clear_static_faces()
 
 
 def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
@@ -102,7 +103,7 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	total_fps = 0.0
 	for i in range(benchmark_cycles):
 		facefusion.globals.target_path = target_path
-		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_path, facefusion.globals.target_path, tempfile.gettempdir())
+		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_paths, facefusion.globals.target_path, tempfile.gettempdir())
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		start_time = time.perf_counter()
 		conditional_process()
