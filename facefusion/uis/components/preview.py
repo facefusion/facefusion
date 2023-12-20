@@ -156,7 +156,7 @@ def update_preview_frame_slider() -> gradio.Slider:
 	if is_video(facefusion.globals.target_path):
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		return gradio.Slider(maximum = video_frame_total, visible = True)
-	return gradio.Slider(value = None, maximum = None, visible = False)
+	return gradio.Slider(value = 0, maximum = 100, visible = False)
 
 
 def process_preview_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
