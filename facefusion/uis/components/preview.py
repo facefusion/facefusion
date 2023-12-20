@@ -134,7 +134,6 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 
 
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
-	clear_reference_faces()
 	conditional_append_reference_faces()
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
