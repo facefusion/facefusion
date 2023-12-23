@@ -84,7 +84,7 @@ def run(program : ArgumentParser) -> None:
 			os.remove(wheel_path)
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
-			if onnxruntime_name == 'cuda-nightly':
+			if onnxruntime == 'cuda-nightly':
 				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--extra-index-url', 'https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-12-nightly/pypi/simple' ])
 			else:
 				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
