@@ -11,7 +11,7 @@ from facefusion import logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
-from facefusion.cli_helper import create_metavar
+from facefusion.common_helper import create_metavar
 from facefusion.execution_helper import map_device
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
