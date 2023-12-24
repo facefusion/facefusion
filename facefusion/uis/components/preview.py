@@ -93,7 +93,6 @@ def listen() -> None:
 			component.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	change_one_component_names : List[ComponentName] =\
 	[
-		'frame_processors_checkbox_group',
 		'face_debugger_items_checkbox_group',
 		'face_enhancer_model_dropdown',
 		'face_enhancer_blend_slider',
@@ -115,6 +114,7 @@ def listen() -> None:
 			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	change_two_component_names : List[ComponentName] =\
 	[
+		'frame_processors_checkbox_group',
 		'face_swapper_model_dropdown',
 		'face_detector_model_dropdown',
 		'face_detector_size_dropdown',
