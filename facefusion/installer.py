@@ -75,13 +75,14 @@ def run(program : ArgumentParser) -> None:
 		else:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel ])
 		if onnxruntime == 'rocm':
-			wheel_name = 'onnxruntime_training-' + onnxruntime_version + '+rocm56-' + python_id + '-' + python_id + '-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
-			wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
-			wheel_url = 'https://download.onnxruntime.ai/' + wheel_name
-			subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
-			subprocess.call([ 'pip', 'uninstall', wheel_path, '-y', '-q' ])
-			subprocess.call([ 'pip', 'install', wheel_path ])
-			os.remove(wheel_path)
+			if python_id in [ 'cp39', 'cp310', 'cp311' ]:
+				wheel_name = 'onnxruntime_training-' + onnxruntime_version + '+rocm56-' + python_id + '-' + python_id + '-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
+				wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
+				wheel_url = 'https://download.onnxruntime.ai/' + wheel_name
+				subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
+				subprocess.call([ 'pip', 'uninstall', wheel_path, '-y', '-q' ])
+				subprocess.call([ 'pip', 'install', wheel_path ])
+				os.remove(wheel_path)
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
 			if onnxruntime == 'cuda-nightly':
