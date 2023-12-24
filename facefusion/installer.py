@@ -74,7 +74,7 @@ def run(program : ArgumentParser) -> None:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
 		else:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel ])
-		if onnxruntime == 'rocm' and python_id in [ 'cp39', 'cp310', 'cp311' ]:
+		if onnxruntime == 'rocm':
 			wheel_name = 'onnxruntime_training-' + onnxruntime_version + '+rocm56-' + python_id + '-' + python_id + '-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
 			wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
 			wheel_url = 'https://download.onnxruntime.ai/' + wheel_name
