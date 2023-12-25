@@ -8,6 +8,8 @@ import sys
 import warnings
 import platform
 import shutil
+import logging
+logging.basicConfig(level=logging.INFO)
 import onnxruntime
 from argparse import ArgumentParser, HelpFormatter
 
