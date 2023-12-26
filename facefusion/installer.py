@@ -29,10 +29,8 @@ if platform.system().lower() == 'linux' or platform.system().lower() == 'windows
 	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.16.3')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
 if platform.system().lower() == 'linux':
-	TORCH['rocm-542'] = 'rocm5.4.2'
-	TORCH['rocm-56'] = 'rocm5.6'
-	ONNXRUNTIMES['rocm-542'] = ('onnxruntime-rocm', '1.16.3')
-	ONNXRUNTIMES['rocm-56'] = ('onnxruntime-rocm', '1.16.3')
+	TORCH['rocm'] = 'rocm5.6'
+	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.16.3')
 if platform.system().lower() == 'darwin':
 	ONNXRUNTIMES['coreml-legacy'] = ('onnxruntime-coreml', '1.13.1')
 	ONNXRUNTIMES['coreml-silicon'] = ('onnxruntime-silicon', '1.16.0')
@@ -76,7 +74,7 @@ def run(program : ArgumentParser) -> None:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
 		else:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel ])
-		if onnxruntime == 'rocm-56':
+		if onnxruntime == 'rocm':
 			if python_id in [ 'cp39', 'cp310', 'cp311' ]:
 				wheel_name = 'onnxruntime_training-' + onnxruntime_version + '+rocm56-' + python_id + '-' + python_id + '-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
 				wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
@@ -84,17 +82,6 @@ def run(program : ArgumentParser) -> None:
 				subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
 				subprocess.call([ 'pip', 'uninstall', wheel_path, '-y', '-q' ])
 				subprocess.call([ 'pip', 'install', wheel_path ])
-				os.remove(wheel_path)
-		elif onnxruntime == 'rocm-542':
-			if python_id in [ 'cp39', 'cp310', 'cp311' ]:
-				wheel_name = 'onnxruntime_training-' + onnxruntime_version + '+rocm542-' + python_id + '-' + python_id + '-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
-				wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
-				wheel_url = 'https://download.onnxruntime.ai/' + wheel_name
-				subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
-				subprocess.call([ 'pip', 'uninstall', wheel_path, '-y', '-q' ])
-				subprocess.call([ 'pip', 'uninstall', 'torch', '-y', '-q' ])
-				subprocess.call([ 'pip', 'install', 'torch==2.0.1', 'torchvision==0.15.2', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel ])
-				subprocess.call([ 'pip', 'install', '--force-reinstall', wheel_path ])
 				os.remove(wheel_path)
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
