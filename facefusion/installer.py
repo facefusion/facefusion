@@ -29,11 +29,12 @@ if platform.system().lower() == 'linux' or platform.system().lower() == 'windows
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
 if platform.system().lower() == 'linux':
 	TORCH['rocm'] = 'rocm5.6'
-	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.16.3')
 	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.16.3')
 if platform.system().lower() == 'darwin':
 	ONNXRUNTIMES['coreml-legacy'] = ('onnxruntime-coreml', '1.13.1')
 	ONNXRUNTIMES['coreml-silicon'] = ('onnxruntime-silicon', '1.16.0')
+if platform.system().lower() == 'windows':
+	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.16.3')
 
 
 def cli() -> None:
