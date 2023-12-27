@@ -21,6 +21,19 @@ Be aware, the installation needs technical skills and is not for beginners. Plea
 Get started with the [installation](https://docs.facefusion.io/installation) guide.
 
 
+__Note for Conda Users__:
+
+If you are using Conda instead of Python venv and encounter issues while running `install.py`, you may need to make a modification in the `facefusion/installer.py` file. 
+
+Open `facefusion/installer.py` and locate line 54:
+
+os.environ['PIP_REQUIRE_VIRTUALENV'] = '1'
+Change it to:
+os.environ['PIP_REQUIRE_VIRTUALENV'] = '0'
+
+This change will allow you to run install.py with Conda without virtual environment restrictions.
+Additionally, please note that the highest supported Python version is 3.10.13. Ensure that you have Python 3.10.13 installed when using Conda for installation.
+
 Usage
 -----
 
