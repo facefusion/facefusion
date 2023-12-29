@@ -1,7 +1,9 @@
 from typing import Optional, List
 from functools import lru_cache
 import cv2
+import filetype
 
+from facefusion.filesystem import is_file
 from facefusion.typing import Frame
 
 
@@ -72,4 +74,22 @@ def read_image(image_path : str) -> Optional[Frame]:
 def write_image(image_path : str, frame : Frame) -> bool:
 	if image_path:
 		return cv2.imwrite(image_path, frame)
+	return False
+
+
+def is_image(image_path : str) -> bool:
+	if is_file(image_path):
+		return filetype.helpers.is_image(image_path)
+	return False
+
+
+def are_images(image_paths : List[str]) -> bool:
+	if image_paths:
+		return all(is_image(image_path) for image_path in image_paths)
+	return False
+
+
+def is_video(video_path : str) -> bool:
+	if is_file(video_path):
+		return filetype.helpers.is_video(video_path)
 	return False

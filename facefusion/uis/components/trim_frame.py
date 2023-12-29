@@ -3,8 +3,7 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.vision import count_video_frame_total
-from facefusion.filesystem import is_video
+from facefusion.vision import count_video_frame_total, is_video
 from facefusion.uis.core import get_ui_component
 
 TRIM_FRAME_START_SLIDER : Optional[gradio.Slider] = None

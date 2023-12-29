@@ -6,7 +6,8 @@ from facefusion import wording
 from facefusion.core import limit_resources, conditional_process
 from facefusion.uis.core import get_ui_component
 from facefusion.normalizer import normalize_output_path
-from facefusion.filesystem import is_image, is_video, clear_temp
+from facefusion.filesystem import clear_temp
+from facefusion.vision import is_image, is_video
 
 OUTPUT_IMAGE : Optional[gradio.Image] = None
 OUTPUT_VIDEO : Optional[gradio.Video] = None
