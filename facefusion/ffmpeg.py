@@ -24,12 +24,24 @@ def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stdin = subprocess.PIPE)
 
 
+def get_full_pixel_format(video_file):
+	cmd = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=pix_fmt,bits_per_raw_sample", "-of", "default=noprint_wrappers=1:nokey=1", video_file]
+	result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+	stdout = result.stdout.decode().strip().split('\r\n')
+	if len(stdout) < 2:
+		raise ValueError("Unexpected output from ffprobe")
+	pix_fmt, bits_per_raw_sample = stdout
+	if pix_fmt.startswith("yuv4") and bits_per_raw_sample == "8":
+		pix_fmt = f"{pix_fmt}9le"
+	return pix_fmt
+
+
 def extract_frames(target_path : str, fps : float) -> bool:
 	temp_frame_compression = round(31 - (facefusion.globals.temp_frame_quality * 0.31))
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
-	commands = [ '-hwaccel', 'auto', '-i', target_path, '-q:v', str(temp_frame_compression), '-pix_fmt', 'rgb24' ]
+	commands = [ '-hwaccel', 'auto', '-i', target_path, '-q:v', str(temp_frame_compression), '-pix_fmt', get_full_pixel_format(target_path)]
 	if trim_frame_start is not None and trim_frame_end is not None:
 		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(fps) ])
 	elif trim_frame_start is not None:
