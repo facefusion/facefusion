@@ -3,6 +3,7 @@ import pytest
 from facefusion.download import conditional_download
 from facefusion.filesystem import is_file, is_directory, list_directory
 
+
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	conditional_download('.assets/examples',
