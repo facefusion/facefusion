@@ -4,7 +4,7 @@ import gradio
 import facefusion.globals
 from facefusion import wording
 from facefusion.uis.typing import File
-from facefusion.filesystem import are_images
+from facefusion.vision import are_images
 from facefusion.uis.core import register_ui_component
 
 SOURCE_FILE : Optional[gradio.File] = None

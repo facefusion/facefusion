@@ -15,14 +15,14 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
-from facefusion.vision import get_video_frame, detect_fps, read_image, read_static_images
+from facefusion.vision import get_video_frame, detect_fps, read_image, read_static_images, is_image, is_video
 from facefusion import face_analyser, face_masker, content_analyser, metadata, logger, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.common_helper import create_metavar
 from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_output_path, normalize_padding
-from facefusion.filesystem import is_image, is_video, list_module_names, get_temp_frame_paths, create_temp, move_temp, clear_temp
+from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp
 from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio
 
 onnxruntime.set_default_logger_severity(3)
@@ -88,7 +88,7 @@ def cli() -> None:
 	group_output_creation.add_argument('--keep-fps', help = wording.get('keep_fps_help'), action = 'store_true')
 	group_output_creation.add_argument('--skip-audio', help = wording.get('skip_audio_help'), action = 'store_true')
 	# frame processors
-	available_frame_processors = list_module_names('facefusion/processors/frame/modules')
+	available_frame_processors = list_directory('facefusion/processors/frame/modules')
 	program = ArgumentParser(parents = [ program ], formatter_class = program.formatter_class, add_help = True)
 	group_frame_processors = program.add_argument_group('frame processors')
 	group_frame_processors.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(available_frame_processors)), default = [ 'face_swapper' ], nargs = '+')
@@ -96,8 +96,9 @@ def cli() -> None:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		frame_processor_module.register_args(group_frame_processors)
 	# uis
+	available_ui_layouts = list_directory('facefusion/uis/layouts')
 	group_uis = program.add_argument_group('uis')
-	group_uis.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(list_module_names('facefusion/uis/layouts'))), default = [ 'default' ], nargs = '+')
+	group_uis.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(available_ui_layouts)), default = [ 'default' ], nargs = '+')
 	run(program)
 
 
@@ -146,7 +147,7 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.keep_fps = args.keep_fps
 	facefusion.globals.skip_audio = args.skip_audio
 	# frame processors
-	available_frame_processors = list_module_names('facefusion/processors/frame/modules')
+	available_frame_processors = list_directory('facefusion/processors/frame/modules')
 	facefusion.globals.frame_processors = args.frame_processors
 	for frame_processor in available_frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)

@@ -5,7 +5,7 @@ import facefusion.globals
 from facefusion import wording
 from facefusion.face_store import clear_static_faces, clear_reference_faces
 from facefusion.uis.typing import File
-from facefusion.filesystem import is_image, is_video
+from facefusion.vision import is_image, is_video
 from facefusion.uis.core import register_ui_component
 
 TARGET_FILE : Optional[gradio.File] = None

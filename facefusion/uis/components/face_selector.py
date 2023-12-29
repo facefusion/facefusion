@@ -6,10 +6,9 @@ import facefusion.globals
 import facefusion.choices
 from facefusion import wording
 from facefusion.face_store import clear_static_faces, clear_reference_faces
-from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color
+from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color, is_image, is_video
 from facefusion.face_analyser import get_many_faces
 from facefusion.typing import Frame, FaceSelectorMode
-from facefusion.filesystem import is_image, is_video
 from facefusion.uis.core import get_ui_component, register_ui_component
 from facefusion.uis.typing import ComponentName
 
