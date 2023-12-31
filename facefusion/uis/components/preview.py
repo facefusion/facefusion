@@ -136,15 +136,15 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	conditional_append_reference_faces()
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
-	reference_face = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	if is_image(facefusion.globals.target_path):
 		target_frame = read_static_image(facefusion.globals.target_path)
-		preview_frame = process_preview_frame(source_face, reference_face, target_frame)
+		preview_frame = process_preview_frame(source_face, reference_faces, target_frame)
 		preview_frame = normalize_frame_color(preview_frame)
 		return gradio.Image(value = preview_frame)
 	if is_video(facefusion.globals.target_path):
 		temp_frame = get_video_frame(facefusion.globals.target_path, frame_number)
-		preview_frame = process_preview_frame(source_face, reference_face, temp_frame)
+		preview_frame = process_preview_frame(source_face, reference_faces, temp_frame)
 		preview_frame = normalize_frame_color(preview_frame)
 		return gradio.Image(value = preview_frame)
 	return gradio.Image(value = None)

@@ -297,10 +297,14 @@ def find_similar_faces(frame : Frame, reference_faces : FaceSet, face_distance :
 
 
 def compare_faces(face : Face, reference_face : Face, face_distance : float) -> bool:
+	current_face_distance = calc_face_distance(face, reference_face)
+	return current_face_distance < face_distance
+
+
+def calc_face_distance(face : Face, reference_face : Face) -> float:
 	if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
-		current_face_distance = 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
-		return current_face_distance < face_distance
-	return False
+		return 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
+	return 0
 
 
 def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:

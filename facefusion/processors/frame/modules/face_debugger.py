@@ -6,7 +6,7 @@ import numpy
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import wording
-from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
+from facefusion.face_analyser import calc_face_distance, get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode
@@ -60,7 +60,7 @@ def post_process() -> None:
 	read_static_image.cache_clear()
 
 
-def debug_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
+def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
 	primary_color = (0, 0, 255)
 	secondary_color = (0, 255, 0)
 	bounding_box = target_face.bbox.astype(numpy.int32)
@@ -90,9 +90,17 @@ def debug_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fr
 			for index in range(kps.shape[0]):
 				cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, primary_color, -1)
 		if 'score' in frame_processors_globals.face_debugger_items:
-			score_text = str(round(target_face.score, 2))
-			score_position = (bounding_box[0] + 10, bounding_box[1] + 20)
-			cv2.putText(temp_frame, score_text, score_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
+			face_score_text = str(round(target_face.score, 2))
+			face_score_position = (bounding_box[0] + 10, bounding_box[1] + 20)
+			cv2.putText(temp_frame, face_score_text, face_score_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
+		if 'distance' in frame_processors_globals.face_debugger_items and reference_faces:
+			face_distance = None
+			for reference_face in reference_faces.get('origin'):
+				if not face_distance:
+					face_distance = calc_face_distance(target_face, reference_face)
+			face_distance_text = str(round(face_distance, 2))
+			face_distance_position = (bounding_box[0] + 10, bounding_box[3] - 10)
+			cv2.putText(temp_frame, face_distance_text, face_distance_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
 	return temp_frame
 
 
@@ -105,16 +113,16 @@ def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Fr
 		similar_faces = find_similar_faces(temp_frame, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
-				temp_frame = debug_face(source_face, similar_face, temp_frame)
+				temp_frame = debug_face(source_face, similar_face, reference_faces, temp_frame)
 	if 'one' in facefusion.globals.face_selector_mode:
 		target_face = get_one_face(temp_frame)
 		if target_face:
-			temp_frame = debug_face(source_face, target_face, temp_frame)
+			temp_frame = debug_face(source_face, target_face, None, temp_frame)
 	if 'many' in facefusion.globals.face_selector_mode:
 		many_faces = get_many_faces(temp_frame)
 		if many_faces:
 			for target_face in many_faces:
-				temp_frame = debug_face(source_face, target_face, temp_frame)
+				temp_frame = debug_face(source_face, target_face, None, temp_frame)
 	return temp_frame
 
 
