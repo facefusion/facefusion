@@ -80,9 +80,9 @@ def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet
 		crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
 		crop_mask = (crop_mask * 255).astype(numpy.uint8)
 		inverse_mask_frame = cv2.warpAffine(crop_mask, inverse_matrix, temp_frame_size)
-		inverse_mask_frame_edges = cv2.threshold(inverse_mask_frame, 100, 255, cv2.THRESH_BINARY)[1]
-		inverse_mask_frame_edges[inverse_mask_frame_edges > 0] = 255
-		inverse_mask_contours = cv2.findContours(inverse_mask_frame_edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
+		inverse_mask_frame = cv2.threshold(inverse_mask_frame, 100, 255, cv2.THRESH_BINARY)[1]
+		inverse_mask_frame[inverse_mask_frame > 0] = 255
+		inverse_mask_contours = cv2.findContours(inverse_mask_frame, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
 		cv2.drawContours(temp_frame, inverse_mask_contours, -1, primary_color, 2)
 	if bounding_box[3] - bounding_box[1] > 60 and bounding_box[2] - bounding_box[0] > 60:
 		if 'kps' in frame_processors_globals.face_debugger_items:
