@@ -97,8 +97,7 @@ def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet
 			face_distance = None
 			for reference_set in reference_faces:
 				for reference_face in reference_faces[reference_set]:
-					if reference_set != __name__:
-						face_distance = calc_face_distance(target_face, reference_face)
+					face_distance = calc_face_distance(target_face, reference_face)
 			face_distance_text = str(round(face_distance, 2))
 			face_distance_position = (bounding_box[0] + 10, bounding_box[3] - 10)
 			cv2.putText(temp_frame, face_distance_text, face_distance_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)

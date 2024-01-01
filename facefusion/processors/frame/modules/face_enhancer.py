@@ -207,7 +207,7 @@ def blend_frame(temp_frame : Frame, paste_frame : Frame) -> Frame:
 	return temp_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Optional[Frame]:
+def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
 	return enhance_face(target_face, temp_frame)
 
 
