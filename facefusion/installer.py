@@ -25,7 +25,7 @@ if platform.system().lower() == 'linux' or platform.system().lower() == 'windows
 	TORCH['cuda'] = 'cu118'
 	TORCH['cuda-nightly'] = 'cu121'
 	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.16.3')
-	ONNXRUNTIMES['cuda-nightly'] = ('ort-nightly-gpu', '1.17.0.dev20231205004')
+	ONNXRUNTIMES['cuda-nightly'] = ('onnxruntime-gpu', '1.17.0')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
 if platform.system().lower() == 'linux':
 	TORCH['rocm'] = 'rocm5.6'
@@ -87,6 +87,6 @@ def run(program : ArgumentParser) -> None:
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
 			if onnxruntime == 'cuda-nightly':
-				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--extra-index-url', 'https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-12-nightly/pypi/simple' ])
+				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--extra-index-url', 'https://pkgs.dev.azure.com/onnxruntime/onnxruntime/_packaging/onnxruntime-cuda-12/pypi/simple' ])
 			else:
 				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
