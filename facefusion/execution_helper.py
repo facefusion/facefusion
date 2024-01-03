@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 import onnxruntime
 
 
@@ -13,8 +13,8 @@ def decode_execution_providers(execution_providers: List[str]) -> List[str]:
 	return [ execution_provider for execution_provider, encoded_execution_provider in zip(available_execution_providers, encoded_execution_providers) if any(execution_provider in encoded_execution_provider for execution_provider in execution_providers) ]
 
 
-def apply_execution_provider_options(execution_providers: List[str]) -> List[str]:
-	execution_providers_with_options = []
+def apply_execution_provider_options(execution_providers: List[str]) -> List[Any]:
+	execution_providers_with_options : List[Any] = []
 
 	for execution_provider in execution_providers:
 		if execution_provider == 'CUDAExecutionProvider':
