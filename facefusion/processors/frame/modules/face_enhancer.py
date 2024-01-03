@@ -176,7 +176,8 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 		if frame_processor_input.name == 'input':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 		if frame_processor_input.name == 'weight':
-			frame_processor_inputs[frame_processor_input.name] = numpy.array([ 1 ], dtype = numpy.double)
+			weight = numpy.array([ 1 ], dtype = numpy.double)
+			frame_processor_inputs[frame_processor_input.name] = weight
 	with THREAD_SEMAPHORE:
 		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	crop_frame = normalize_crop_frame(crop_frame)
