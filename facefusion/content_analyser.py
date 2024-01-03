@@ -9,6 +9,7 @@ from tqdm import tqdm
 import facefusion.globals
 from facefusion import wording
 from facefusion.typing import Frame, ModelValue
+from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.vision import get_video_frame, count_video_frame_total, read_image, detect_fps
 from facefusion.filesystem import resolve_relative_path
 from facefusion.download import conditional_download
@@ -34,7 +35,7 @@ def get_content_analyser() -> Any:
 	with THREAD_LOCK:
 		if CONTENT_ANALYSER is None:
 			model_path = MODELS.get('open_nsfw').get('path')
-			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
+			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 	return CONTENT_ANALYSER
 
 

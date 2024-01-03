@@ -9,7 +9,22 @@ def encode_execution_providers(execution_providers : List[str]) -> List[str]:
 def decode_execution_providers(execution_providers: List[str]) -> List[str]:
 	available_execution_providers = onnxruntime.get_available_providers()
 	encoded_execution_providers = encode_execution_providers(available_execution_providers)
+
 	return [ execution_provider for execution_provider, encoded_execution_provider in zip(available_execution_providers, encoded_execution_providers) if any(execution_provider in encoded_execution_provider for execution_provider in execution_providers) ]
+
+
+def apply_execution_provider_options(execution_providers: List[str]) -> List[str]:
+	execution_providers_with_options = []
+
+	for execution_provider in execution_providers:
+		if execution_provider == 'CUDAExecutionProvider':
+			execution_providers_with_options.append((execution_provider,
+			{
+				'cudnn_conv_algo_search': 'DEFAULT'
+			}))
+		else:
+			execution_providers_with_options.append(execution_provider)
+	return execution_providers_with_options
 
 
 def map_device(execution_providers : List[str]) -> str:

@@ -9,6 +9,7 @@ from onnx import numpy_helper
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import logger, wording
+from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_helper import warp_face, paste_back
 from facefusion.face_store import get_reference_faces
@@ -87,7 +88,7 @@ def get_frame_processor() -> Any:
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
+			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 	return FRAME_PROCESSOR
 
 
