@@ -136,7 +136,7 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
-		while not frame_processor_module.pre_process('download'):
+		while not frame_processor_module.post_check():
 			logger.disable()
 			sleep(1)
 		logger.enable()

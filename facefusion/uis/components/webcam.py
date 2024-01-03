@@ -83,7 +83,7 @@ def listen() -> None:
 def start(webcam_mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
-		while not frame_processor_module.pre_process('download'):
+		while not frame_processor_module.post_check():
 			logger.disable()
 			sleep(1)
 		logger.enable()

@@ -109,17 +109,19 @@ def pre_check() -> bool:
 	return True
 
 
-def pre_process(mode : ProcessMode) -> bool:
+def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
-	if mode == 'download':
-		if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
-			logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
-			return False
-		elif not is_file(model_path):
-			logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-			return False
-		return True
+	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
+		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+		return False
+	elif not is_file(model_path):
+		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
+		return False
+	return True
+
+
+def pre_process(mode : ProcessMode) -> bool:
 	if mode == 'output' and not facefusion.globals.output_path:
 		logger.error(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False

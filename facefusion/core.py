@@ -212,7 +212,7 @@ def pre_check() -> bool:
 
 def conditional_process() -> None:
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
-		while not frame_processor_module.pre_process('download'):
+		while not frame_processor_module.post_check():
 			logger.disable()
 			sleep(1)
 		logger.enable()
