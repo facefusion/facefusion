@@ -1,9 +1,10 @@
 from typing import Any, Dict, List, Optional
+from time import sleep
 import cv2
 import gradio
 
 import facefusion.globals
-from facefusion import wording
+from facefusion import wording, logger
 from facefusion.core import conditional_append_reference_faces
 from facefusion.face_store import clear_static_faces, get_reference_faces, clear_reference_faces
 from facefusion.typing import Frame, Face, FaceSet
@@ -133,6 +134,14 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 
 
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
+	for frame_processor in facefusion.globals.frame_processors:
+		frame_processor_module = load_frame_processor_module(frame_processor)
+		while not frame_processor_module.pre_process('download'):
+			logger.disable()
+			sleep(1)
+		logger.enable()
+		if not frame_processor_module.pre_process('preview'):
+			return gradio.Image(value = None)
 	conditional_append_reference_faces()
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
@@ -163,10 +172,9 @@ def process_preview_frame(source_face : Face, reference_faces : FaceSet, temp_fr
 		return cv2.GaussianBlur(temp_frame, (99, 99), 0)
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
-		if frame_processor_module.pre_process('preview'):
-			temp_frame = frame_processor_module.process_frame(
-				source_face,
-				reference_faces,
-				temp_frame
-			)
+		temp_frame = frame_processor_module.process_frame(
+			source_face,
+			reference_faces,
+			temp_frame
+		)
 	return temp_frame

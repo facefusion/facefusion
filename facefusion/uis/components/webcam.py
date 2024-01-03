@@ -1,11 +1,12 @@
 from typing import Optional, Generator, Deque
-from concurrent.futures import ThreadPoolExecutor
-from collections import deque
 import os
 import platform
 import subprocess
 import cv2
 import gradio
+from time import sleep
+from concurrent.futures import ThreadPoolExecutor
+from collections import deque
 from tqdm import tqdm
 
 import facefusion.globals
@@ -13,7 +14,7 @@ from facefusion import logger, wording
 from facefusion.content_analyser import analyse_stream
 from facefusion.typing import Frame, Face
 from facefusion.face_analyser import get_average_face
-from facefusion.processors.frame.core import get_frame_processors_modules
+from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_images
 from facefusion.uis.typing import StreamMode, WebcamMode
@@ -80,6 +81,14 @@ def listen() -> None:
 
 
 def start(webcam_mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
+	for frame_processor in facefusion.globals.frame_processors:
+		frame_processor_module = load_frame_processor_module(frame_processor)
+		while not frame_processor_module.pre_process('download'):
+			logger.disable()
+			sleep(1)
+		logger.enable()
+		if not frame_processor_module.pre_process('stream'):
+			return
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_analyser_order = 'large-small'
 	source_frames = read_static_images(facefusion.globals.source_paths)
@@ -132,12 +141,11 @@ def stop() -> gradio.Image:
 
 def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
-		if frame_processor_module.pre_process('stream'):
-			temp_frame = frame_processor_module.process_frame(
-				source_face,
-				None,
-				temp_frame
-			)
+		temp_frame = frame_processor_module.process_frame(
+			source_face,
+			None,
+			temp_frame
+		)
 	return temp_frame
 
 
