@@ -10,6 +10,7 @@ import platform
 import shutil
 import numpy
 import onnxruntime
+from time import sleep
 from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
@@ -210,10 +211,14 @@ def pre_check() -> bool:
 
 
 def conditional_process() -> None:
-	conditional_append_reference_faces()
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
+		while not frame_processor_module.post_check():
+			logger.disable()
+			sleep(1)
+		logger.enable()
 		if not frame_processor_module.pre_process('output'):
 			return
+	conditional_append_reference_faces()
 	if is_image(facefusion.globals.target_path):
 		process_image()
 	if is_video(facefusion.globals.target_path):

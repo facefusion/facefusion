@@ -47,6 +47,10 @@ def pre_check() -> bool:
 	return True
 
 
+def post_check() -> bool:
+	return True
+
+
 def pre_process(mode : ProcessMode) -> bool:
 	return True
 

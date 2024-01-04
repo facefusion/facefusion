@@ -21,13 +21,14 @@ FRAME_PROCESSORS_METHODS =\
 	'register_args',
 	'apply_args',
 	'pre_check',
+	'post_check',
 	'pre_process',
+	'post_process',
 	'get_reference_frame',
 	'process_frame',
 	'process_frames',
 	'process_image',
-	'process_video',
-	'post_process'
+	'process_video'
 ]
 
 
