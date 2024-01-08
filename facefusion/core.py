@@ -85,7 +85,7 @@ def cli() -> None:
 	# output creation
 	group_output_creation = program.add_argument_group('output creation')
 	group_output_creation.add_argument('--output-image-quality', help = wording.get('output_image_quality_help'), type = int, default = config.get_int_value('output_creation.output_image_quality', '80'), choices = facefusion.choices.output_image_quality_range, metavar = create_metavar(facefusion.choices.output_image_quality_range))
-	group_output_creation.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), default = config.get_str_list('output_creation.output_video_encoder', 'libx264'), choices = facefusion.choices.output_video_encoders)
+	group_output_creation.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), default = config.get_str_value('output_creation.output_video_encoder', 'libx264'), choices = facefusion.choices.output_video_encoders)
 	group_output_creation.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), type = int, default = config.get_int_value('output_creation.output_video_quality', '80'), choices = facefusion.choices.output_video_quality_range, metavar = create_metavar(facefusion.choices.output_video_quality_range))
 	group_output_creation.add_argument('--keep-fps', help = wording.get('keep_fps_help'), action = 'store_true', default = config.get_bool_value('output_creation.keep_fps'))
 	group_output_creation.add_argument('--skip-audio', help = wording.get('skip_audio_help'), action = 'store_true', default = config.get_bool_value('output_creation.skip_audio'))
