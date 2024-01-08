@@ -18,7 +18,7 @@ import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.vision import get_video_frame, detect_fps, read_image, read_static_images, is_image, is_video
-from facefusion import face_analyser, face_masker, content_analyser, metadata, logger, wording
+from facefusion import face_analyser, face_masker, content_analyser, config, metadata, logger, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.common_helper import create_metavar
@@ -39,68 +39,68 @@ def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 120), add_help = False)
 	# general
-	program.add_argument('-s', '--source', action = 'append', help = wording.get('source_help'), dest = 'source_paths')
-	program.add_argument('-t', '--target', help = wording.get('target_help'), dest = 'target_path')
-	program.add_argument('-o', '--output', help = wording.get('output_help'), dest = 'output_path')
+	program.add_argument('-s', '--source', help = wording.get('source_help'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
+	program.add_argument('-t', '--target', help = wording.get('target_help'), dest = 'target_path', default = config.get_str_value('general.target_path'))
+	program.add_argument('-o', '--output', help = wording.get('output_help'), dest = 'output_path', default = config.get_str_value('general.output_path'))
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	# misc
 	group_misc = program.add_argument_group('misc')
-	group_misc.add_argument('--skip-download', help = wording.get('skip_download_help'), action = 'store_true')
-	group_misc.add_argument('--headless', help = wording.get('headless_help'), action = 'store_true')
-	group_misc.add_argument('--log-level', help = wording.get('log_level_help'), default = 'info', choices = logger.get_log_levels())
+	group_misc.add_argument('--skip-download', help = wording.get('skip_download_help'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
+	group_misc.add_argument('--headless', help = wording.get('headless_help'), action = 'store_true', default = config.get_bool_value('misc.headless'))
+	group_misc.add_argument('--log-level', help = wording.get('log_level_help'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
 	# execution
 	execution_providers = encode_execution_providers(onnxruntime.get_available_providers())
 	group_execution = program.add_argument_group('execution')
-	group_execution.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = ', '.join(execution_providers)), default = [ 'cpu' ], choices = execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
-	group_execution.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), type = int, default = 4, choices = facefusion.choices.execution_thread_count_range, metavar = create_metavar(facefusion.choices.execution_thread_count_range))
-	group_execution.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), type = int, default = 1, choices = facefusion.choices.execution_queue_count_range, metavar = create_metavar(facefusion.choices.execution_queue_count_range))
-	group_execution.add_argument('--max-memory', help = wording.get('max_memory_help'), type = int, choices = facefusion.choices.max_memory_range, metavar = create_metavar(facefusion.choices.max_memory_range))
+	group_execution.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = ' '.join(execution_providers)), default = config.get_str_list('execution.execution_providers', 'cpu'), choices = execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
+	group_execution.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), type = int, default = config.get_int_value('execution.execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_metavar(facefusion.choices.execution_thread_count_range))
+	group_execution.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), type = int, default = config.get_int_value('execution.execution_queue_count', '1'), choices = facefusion.choices.execution_queue_count_range, metavar = create_metavar(facefusion.choices.execution_queue_count_range))
+	group_execution.add_argument('--max-memory', help = wording.get('max_memory_help'), type = int, default = config.get_int_value('execution.max_memory', '0'), choices = facefusion.choices.max_memory_range, metavar = create_metavar(facefusion.choices.max_memory_range))
 	# face analyser
 	group_face_analyser = program.add_argument_group('face analyser')
-	group_face_analyser.add_argument('--face-analyser-order', help = wording.get('face_analyser_order_help'), default = 'left-right', choices = facefusion.choices.face_analyser_orders)
-	group_face_analyser.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), choices = facefusion.choices.face_analyser_ages)
-	group_face_analyser.add_argument('--face-analyser-gender', help = wording.get('face_analyser_gender_help'), choices = facefusion.choices.face_analyser_genders)
-	group_face_analyser.add_argument('--face-detector-model', help = wording.get('face_detector_model_help'), default = 'retinaface', choices = facefusion.choices.face_detector_models)
-	group_face_analyser.add_argument('--face-detector-size', help = wording.get('face_detector_size_help'), default = '640x640', choices = facefusion.choices.face_detector_sizes)
-	group_face_analyser.add_argument('--face-detector-score', help = wording.get('face_detector_score_help'), type = float, default = 0.5, choices = facefusion.choices.face_detector_score_range, metavar = create_metavar(facefusion.choices.face_detector_score_range))
+	group_face_analyser.add_argument('--face-analyser-order', help = wording.get('face_analyser_order_help'), default = config.get_str_value('face_analyser.face_analyser_order', 'left-right'), choices = facefusion.choices.face_analyser_orders)
+	group_face_analyser.add_argument('--face-analyser-age', help = wording.get('face_analyser_age_help'), default = config.get_str_value('face_analyser.face_analyser_age'), choices = facefusion.choices.face_analyser_ages)
+	group_face_analyser.add_argument('--face-analyser-gender', help = wording.get('face_analyser_gender_help'), default = config.get_str_value('face_analyser.face_analyser_gender'), choices = facefusion.choices.face_analyser_genders)
+	group_face_analyser.add_argument('--face-detector-model', help = wording.get('face_detector_model_help'), default = config.get_str_value('face_analyser.face_detector_model', 'retinaface'), choices = facefusion.choices.face_detector_models)
+	group_face_analyser.add_argument('--face-detector-size', help = wording.get('face_detector_size_help'), default = config.get_str_value('face_analyser.face_detector_size', '640x640'), choices = facefusion.choices.face_detector_sizes)
+	group_face_analyser.add_argument('--face-detector-score', help = wording.get('face_detector_score_help'), type = float, default = config.get_float_value('face_analyser.face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_metavar(facefusion.choices.face_detector_score_range))
 	# face selector
 	group_face_selector = program.add_argument_group('face selector')
-	group_face_selector.add_argument('--face-selector-mode', help = wording.get('face_selector_mode_help'), default = 'reference', choices = facefusion.choices.face_selector_modes)
-	group_face_selector.add_argument('--reference-face-position', help = wording.get('reference_face_position_help'), type = int, default = 0)
-	group_face_selector.add_argument('--reference-face-distance', help = wording.get('reference_face_distance_help'), type = float, default = 0.6, choices = facefusion.choices.reference_face_distance_range, metavar = create_metavar(facefusion.choices.reference_face_distance_range))
-	group_face_selector.add_argument('--reference-frame-number', help = wording.get('reference_frame_number_help'), type = int, default = 0)
+	group_face_selector.add_argument('--face-selector-mode', help = wording.get('face_selector_mode_help'), default = config.get_str_value('face_selector.face_selector_mode', 'reference'), choices = facefusion.choices.face_selector_modes)
+	group_face_selector.add_argument('--reference-face-position', help = wording.get('reference_face_position_help'), type = int, default = config.get_int_value('face_selector.reference_face_position', '0'))
+	group_face_selector.add_argument('--reference-face-distance', help = wording.get('reference_face_distance_help'), type = float, default = config.get_float_value('face_selector.reference_face_distance', '0.6'), choices = facefusion.choices.reference_face_distance_range, metavar = create_metavar(facefusion.choices.reference_face_distance_range))
+	group_face_selector.add_argument('--reference-frame-number', help = wording.get('reference_frame_number_help'), type = int, default = config.get_int_value('face_selector.reference_frame_number', '0'))
 	# face mask
 	group_face_mask = program.add_argument_group('face mask')
-	group_face_mask.add_argument('--face-mask-types', help = wording.get('face_mask_types_help').format(choices = ', '.join(facefusion.choices.face_mask_types)), default = [ 'box' ], choices = facefusion.choices.face_mask_types, nargs = '+', metavar = 'FACE_MASK_TYPES')
-	group_face_mask.add_argument('--face-mask-blur', help = wording.get('face_mask_blur_help'), type = float, default = 0.3, choices = facefusion.choices.face_mask_blur_range, metavar = create_metavar(facefusion.choices.face_mask_blur_range))
-	group_face_mask.add_argument('--face-mask-padding', help = wording.get('face_mask_padding_help'), type = int, default = [ 0, 0, 0, 0 ], nargs = '+')
-	group_face_mask.add_argument('--face-mask-regions', help = wording.get('face_mask_regions_help').format(choices = ', '.join(facefusion.choices.face_mask_regions)), default = facefusion.choices.face_mask_regions, choices = facefusion.choices.face_mask_regions,  nargs = '+', metavar = 'FACE_MASK_REGIONS')
+	group_face_mask.add_argument('--face-mask-types', help = wording.get('face_mask_types_help').format(choices = ' '.join(facefusion.choices.face_mask_types)), default = config.get_str_list('face_mask.face_mask_types', 'box'), choices = facefusion.choices.face_mask_types, nargs = '+', metavar = 'FACE_MASK_TYPES')
+	group_face_mask.add_argument('--face-mask-blur', help = wording.get('face_mask_blur_help'), type = float, default = config.get_float_value('face_mask.face_mask_blur', '0.3'), choices = facefusion.choices.face_mask_blur_range, metavar = create_metavar(facefusion.choices.face_mask_blur_range))
+	group_face_mask.add_argument('--face-mask-padding', help = wording.get('face_mask_padding_help'), type = int, default = config.get_int_list('face_mask.face_mask_padding', '0 0 0 0'), nargs = '+')
+	group_face_mask.add_argument('--face-mask-regions', help = wording.get('face_mask_regions_help').format(choices = ' '.join(facefusion.choices.face_mask_regions)), default = config.get_str_list('face_mask.face_mask_regions', ' '.join(facefusion.choices.face_mask_regions)), choices = facefusion.choices.face_mask_regions, nargs = '+', metavar = 'FACE_MASK_REGIONS')
 	# frame extraction
 	group_frame_extraction = program.add_argument_group('frame extraction')
-	group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), type = int)
-	group_frame_extraction.add_argument('--trim-frame-end', help = wording.get('trim_frame_end_help'), type = int)
-	group_frame_extraction.add_argument('--temp-frame-format', help = wording.get('temp_frame_format_help'), default = 'jpg', choices = facefusion.choices.temp_frame_formats)
-	group_frame_extraction.add_argument('--temp-frame-quality', help = wording.get('temp_frame_quality_help'), type = int, default = 100, choices = facefusion.choices.temp_frame_quality_range, metavar = create_metavar(facefusion.choices.temp_frame_quality_range))
-	group_frame_extraction.add_argument('--keep-temp', help = wording.get('keep_temp_help'), action = 'store_true')
+	group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), type = int, default = facefusion.config.get_int_value('frame_extraction.trim_frame_start'))
+	group_frame_extraction.add_argument('--trim-frame-end',	help = wording.get('trim_frame_end_help'), type = int, default = facefusion.config.get_int_value('frame_extraction.trim_frame_end'))
+	group_frame_extraction.add_argument('--temp-frame-format', help = wording.get('temp_frame_format_help'), default = config.get_str_value('frame_extraction.temp_frame_format', 'jpg'), choices = facefusion.choices.temp_frame_formats)
+	group_frame_extraction.add_argument('--temp-frame-quality', help = wording.get('temp_frame_quality_help'), type = int, default = config.get_int_value('frame_extraction.temp_frame_quality', '100'), choices = facefusion.choices.temp_frame_quality_range, metavar = create_metavar(facefusion.choices.temp_frame_quality_range))
+	group_frame_extraction.add_argument('--keep-temp', help = wording.get('keep_temp_help'), action = 'store_true',	default = config.get_bool_value('frame_extraction.keep_temp'))
 	# output creation
 	group_output_creation = program.add_argument_group('output creation')
-	group_output_creation.add_argument('--output-image-quality', help = wording.get('output_image_quality_help'), type = int, default = 80, choices = facefusion.choices.output_image_quality_range, metavar = create_metavar(facefusion.choices.output_image_quality_range))
-	group_output_creation.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), default = 'libx264', choices = facefusion.choices.output_video_encoders)
-	group_output_creation.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), type = int, default = 80, choices = facefusion.choices.output_video_quality_range, metavar = create_metavar(facefusion.choices.output_video_quality_range))
-	group_output_creation.add_argument('--keep-fps', help = wording.get('keep_fps_help'), action = 'store_true')
-	group_output_creation.add_argument('--skip-audio', help = wording.get('skip_audio_help'), action = 'store_true')
+	group_output_creation.add_argument('--output-image-quality', help = wording.get('output_image_quality_help'), type = int, default = config.get_int_value('output_creation.output_image_quality', '80'), choices = facefusion.choices.output_image_quality_range, metavar = create_metavar(facefusion.choices.output_image_quality_range))
+	group_output_creation.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), default = config.get_str_list('output_creation.output_video_encoder', 'libx264'), choices = facefusion.choices.output_video_encoders)
+	group_output_creation.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), type = int, default = config.get_int_value('output_creation.output_video_quality', '80'), choices = facefusion.choices.output_video_quality_range, metavar = create_metavar(facefusion.choices.output_video_quality_range))
+	group_output_creation.add_argument('--keep-fps', help = wording.get('keep_fps_help'), action = 'store_true', default = config.get_bool_value('output_creation.keep_fps'))
+	group_output_creation.add_argument('--skip-audio', help = wording.get('skip_audio_help'), action = 'store_true', default = config.get_bool_value('output_creation.skip_audio'))
 	# frame processors
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')
 	program = ArgumentParser(parents = [ program ], formatter_class = program.formatter_class, add_help = True)
 	group_frame_processors = program.add_argument_group('frame processors')
-	group_frame_processors.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(available_frame_processors)), default = [ 'face_swapper' ], nargs = '+')
+	group_frame_processors.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ' '.join(available_frame_processors)), default = config.get_str_list('frame_processors.frame_processors', 'face_swapper'), nargs = '+')
 	for frame_processor in available_frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		frame_processor_module.register_args(group_frame_processors)
 	# uis
 	available_ui_layouts = list_directory('facefusion/uis/layouts')
 	group_uis = program.add_argument_group('uis')
-	group_uis.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(available_ui_layouts)), default = [ 'default' ], nargs = '+')
+	group_uis.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ' '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layout', 'default'), nargs = '+')
 	run(program)
 
 
@@ -181,11 +181,11 @@ def run(program : ArgumentParser) -> None:
 def destroy() -> None:
 	if facefusion.globals.target_path:
 		clear_temp(facefusion.globals.target_path)
-	sys.exit()
+	sys.exit(0)
 
 
 def limit_resources() -> None:
-	if facefusion.globals.max_memory:
+	if facefusion.globals.max_memory > 0:
 		memory = facefusion.globals.max_memory * 1024 ** 3
 		if platform.system().lower() == 'darwin':
 			memory = facefusion.globals.max_memory * 1024 ** 6

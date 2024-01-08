@@ -5,7 +5,7 @@ import numpy
 
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
-from facefusion import wording
+from facefusion import config, wording
 from facefusion.face_analyser import calc_face_distance, get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
@@ -35,7 +35,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--face-debugger-items', help = wording.get('face_debugger_items_help').format(choices = ', '.join(frame_processors_choices.face_debugger_items)), default = [ 'kps', 'face-mask' ], choices = frame_processors_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
+	program.add_argument('--face-debugger-items', help = wording.get('face_debugger_items_help').format(choices = ' '.join(frame_processors_choices.face_debugger_items)), default = config.get_str_list('frame_processors.face_debugger_items', 'kps face-mask'), choices = frame_processors_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
 
 
 def apply_args(program : ArgumentParser) -> None:

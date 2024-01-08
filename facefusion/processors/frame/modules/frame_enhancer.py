@@ -7,7 +7,7 @@ from realesrgan import RealESRGANer
 
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
-from facefusion import logger, wording
+from facefusion import config, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
@@ -91,8 +91,8 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('frame_processor_model_help'), default = 'real_esrgan_x2plus', choices = frame_processors_choices.frame_enhancer_models)
-	program.add_argument('--frame-enhancer-blend', help = wording.get('frame_processor_blend_help'), type = int, default = 80, choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
+	program.add_argument('--frame-enhancer-model', help = wording.get('frame_processor_model_help'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'real_esrgan_x2plus'), choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-blend', help = wording.get('frame_processor_blend_help'), type = int, default = config.get_int_value('frame_processors.frame_enhancer_blend', '80'), choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
 
 
 def apply_args(program : ArgumentParser) -> None:
