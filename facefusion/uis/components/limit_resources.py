@@ -15,7 +15,8 @@ def render() -> None:
 		label = wording.get('max_memory_slider_label'),
 		step = facefusion.choices.max_memory_range[1] - facefusion.choices.max_memory_range[0],
 		minimum = facefusion.choices.max_memory_range[0],
-		maximum = facefusion.choices.max_memory_range[-1]
+		maximum = facefusion.choices.max_memory_range[-1],
+		value = facefusion.globals.max_memory
 	)
 
 
@@ -24,4 +25,4 @@ def listen() -> None:
 
 
 def update_max_memory(max_memory : int) -> None:
-	facefusion.globals.max_memory = max_memory if max_memory > 0 else None
+	facefusion.globals.max_memory = max_memory
