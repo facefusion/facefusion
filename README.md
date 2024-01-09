@@ -77,6 +77,7 @@ frame extraction:
 output creation:
   --output-image-quality [0-100]                                                                                     specify the quality used for the output image
   --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc}                                          specify the encoder used for the output video
+  --output-video-preset {ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow}                       specify the preset used for the output video
   --output-video-quality [0-100]                                                                                     specify the quality used for the output video
   --keep-fps                                                                                                         preserve the frames per second (fps) of the target
   --skip-audio                                                                                                       omit audio from the target

@@ -5,7 +5,7 @@ import gradio
 import facefusion.globals
 import facefusion.choices
 from facefusion import wording
-from facefusion.typing import OutputVideoEncoder
+from facefusion.typing import OutputVideoEncoder, OutputVideoPreset
 from facefusion.vision import is_image, is_video
 from facefusion.uis.typing import ComponentName
 from facefusion.uis.core import get_ui_component, register_ui_component
@@ -13,6 +13,7 @@ from facefusion.uis.core import get_ui_component, register_ui_component
 OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
 OUTPUT_IMAGE_QUALITY_SLIDER : Optional[gradio.Slider] = None
 OUTPUT_VIDEO_ENCODER_DROPDOWN : Optional[gradio.Dropdown] = None
+OUTPUT_VIDEO_PRESET_DROPDOWN : Optional[gradio.Dropdown] = None
 OUTPUT_VIDEO_QUALITY_SLIDER : Optional[gradio.Slider] = None
 
 
@@ -20,6 +21,7 @@ def render() -> None:
 	global OUTPUT_PATH_TEXTBOX
 	global OUTPUT_IMAGE_QUALITY_SLIDER
 	global OUTPUT_VIDEO_ENCODER_DROPDOWN
+	global OUTPUT_VIDEO_PRESET_DROPDOWN
 	global OUTPUT_VIDEO_QUALITY_SLIDER
 
 	OUTPUT_PATH_TEXTBOX = gradio.Textbox(
@@ -41,6 +43,12 @@ def render() -> None:
 		value = facefusion.globals.output_video_encoder,
 		visible = is_video(facefusion.globals.target_path)
 	)
+	OUTPUT_VIDEO_PRESET_DROPDOWN = gradio.Dropdown(
+		label = wording.get('output_video_preset_dropdown_label'),
+		choices = facefusion.choices.output_video_presets,
+		value = facefusion.globals.output_video_preset,
+		visible = is_video(facefusion.globals.target_path)
+	)
 	OUTPUT_VIDEO_QUALITY_SLIDER = gradio.Slider(
 		label = wording.get('output_video_quality_slider_label'),
 		value = facefusion.globals.output_video_quality,
@@ -56,6 +64,7 @@ def listen() -> None:
 	OUTPUT_PATH_TEXTBOX.change(update_output_path, inputs = OUTPUT_PATH_TEXTBOX)
 	OUTPUT_IMAGE_QUALITY_SLIDER.change(update_output_image_quality, inputs = OUTPUT_IMAGE_QUALITY_SLIDER)
 	OUTPUT_VIDEO_ENCODER_DROPDOWN.select(update_output_video_encoder, inputs = OUTPUT_VIDEO_ENCODER_DROPDOWN)
+	OUTPUT_VIDEO_PRESET_DROPDOWN.select(update_output_video_preset, inputs = OUTPUT_VIDEO_PRESET_DROPDOWN)
 	OUTPUT_VIDEO_QUALITY_SLIDER.change(update_output_video_quality, inputs = OUTPUT_VIDEO_QUALITY_SLIDER)
 	multi_component_names : List[ComponentName] =\
 	[
@@ -88,6 +97,10 @@ def update_output_image_quality(output_image_quality : int) -> None:
 
 def update_output_video_encoder(output_video_encoder: OutputVideoEncoder) -> None:
 	facefusion.globals.output_video_encoder = output_video_encoder
+
+
+def update_output_video_preset(output_video_preset: OutputVideoPreset) -> None:
+	facefusion.globals.output_video_preset = output_video_preset
 
 
 def update_output_video_quality(output_video_quality : int) -> None:

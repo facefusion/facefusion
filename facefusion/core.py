@@ -82,6 +82,7 @@ def cli() -> None:
 	group_output_creation = program.add_argument_group('output creation')
 	group_output_creation.add_argument('--output-image-quality', help = wording.get('output_image_quality_help'), type = int, default = config.get_int_value('output_creation.output_image_quality', '80'), choices = facefusion.choices.output_image_quality_range, metavar = create_metavar(facefusion.choices.output_image_quality_range))
 	group_output_creation.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), default = config.get_str_value('output_creation.output_video_encoder', 'libx264'), choices = facefusion.choices.output_video_encoders)
+	group_output_creation.add_argument('--output-video-preset', help = wording.get('output_video_preset_help'), default = config.get_str_value('output_creation.output_video_preset', 'veryfast'), choices = facefusion.choices.output_video_presets)
 	group_output_creation.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), type = int, default = config.get_int_value('output_creation.output_video_quality', '80'), choices = facefusion.choices.output_video_quality_range, metavar = create_metavar(facefusion.choices.output_video_quality_range))
 	group_output_creation.add_argument('--keep-fps', help = wording.get('keep_fps_help'), action = 'store_true', default = config.get_bool_value('output_creation.keep_fps'))
 	group_output_creation.add_argument('--skip-audio', help = wording.get('skip_audio_help'), action = 'store_true', default = config.get_bool_value('output_creation.skip_audio'))
@@ -141,6 +142,7 @@ def apply_args(program : ArgumentParser) -> None:
 	# output creation
 	facefusion.globals.output_image_quality = args.output_image_quality
 	facefusion.globals.output_video_encoder = args.output_video_encoder
+	facefusion.globals.output_video_preset = args.output_video_preset
 	facefusion.globals.output_video_quality = args.output_video_quality
 	facefusion.globals.keep_fps = args.keep_fps
 	facefusion.globals.skip_audio = args.skip_audio
