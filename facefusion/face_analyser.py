@@ -8,7 +8,7 @@ import facefusion.globals
 from facefusion.download import conditional_download
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
-from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
+from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
 from facefusion.filesystem import resolve_relative_path
 from facefusion.typing import Frame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding
 from facefusion.vision import resize_frame_dimension
@@ -204,7 +204,7 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 
 def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]:
 	face_recognizer = get_face_analyser().get('face_recognizer')
-	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface_112_v2', (112, 112))
+	crop_frame, matrix = warp_face_by_kps(temp_frame, kps, 'arcface_112_v2', (112, 112))
 	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
 	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
