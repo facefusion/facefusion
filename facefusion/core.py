@@ -3,7 +3,6 @@ import os
 os.environ['OMP_NUM_THREADS'] = '1'
 
 import signal
-import ssl
 import sys
 import warnings
 import platform
@@ -31,9 +30,6 @@ onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 warnings.filterwarnings('ignore', category = UserWarning, module = 'torchvision')
 
-if platform.system().lower() == 'darwin':
-	ssl._create_default_https_context = ssl._create_unverified_context
-
 
 def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
@@ -51,7 +47,7 @@ def cli() -> None:
 	# execution
 	execution_providers = encode_execution_providers(onnxruntime.get_available_providers())
 	group_execution = program.add_argument_group('execution')
-	group_execution.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = ' '.join(execution_providers)), default = config.get_str_list('execution.execution_providers', 'cpu'), choices = execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
+	group_execution.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = ', '.join(execution_providers)), default = config.get_str_list('execution.execution_providers', 'cpu'), choices = execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
 	group_execution.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), type = int, default = config.get_int_value('execution.execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_metavar(facefusion.choices.execution_thread_count_range))
 	group_execution.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), type = int, default = config.get_int_value('execution.execution_queue_count', '1'), choices = facefusion.choices.execution_queue_count_range, metavar = create_metavar(facefusion.choices.execution_queue_count_range))
 	group_execution.add_argument('--max-memory', help = wording.get('max_memory_help'), type = int, default = config.get_int_value('execution.max_memory', '0'), choices = facefusion.choices.max_memory_range, metavar = create_metavar(facefusion.choices.max_memory_range))
@@ -71,10 +67,10 @@ def cli() -> None:
 	group_face_selector.add_argument('--reference-frame-number', help = wording.get('reference_frame_number_help'), type = int, default = config.get_int_value('face_selector.reference_frame_number', '0'))
 	# face mask
 	group_face_mask = program.add_argument_group('face mask')
-	group_face_mask.add_argument('--face-mask-types', help = wording.get('face_mask_types_help').format(choices = ' '.join(facefusion.choices.face_mask_types)), default = config.get_str_list('face_mask.face_mask_types', 'box'), choices = facefusion.choices.face_mask_types, nargs = '+', metavar = 'FACE_MASK_TYPES')
+	group_face_mask.add_argument('--face-mask-types', help = wording.get('face_mask_types_help').format(choices = ', '.join(facefusion.choices.face_mask_types)), default = config.get_str_list('face_mask.face_mask_types', 'box'), choices = facefusion.choices.face_mask_types, nargs = '+', metavar = 'FACE_MASK_TYPES')
 	group_face_mask.add_argument('--face-mask-blur', help = wording.get('face_mask_blur_help'), type = float, default = config.get_float_value('face_mask.face_mask_blur', '0.3'), choices = facefusion.choices.face_mask_blur_range, metavar = create_metavar(facefusion.choices.face_mask_blur_range))
 	group_face_mask.add_argument('--face-mask-padding', help = wording.get('face_mask_padding_help'), type = int, default = config.get_int_list('face_mask.face_mask_padding', '0 0 0 0'), nargs = '+')
-	group_face_mask.add_argument('--face-mask-regions', help = wording.get('face_mask_regions_help').format(choices = ' '.join(facefusion.choices.face_mask_regions)), default = config.get_str_list('face_mask.face_mask_regions', ' '.join(facefusion.choices.face_mask_regions)), choices = facefusion.choices.face_mask_regions, nargs = '+', metavar = 'FACE_MASK_REGIONS')
+	group_face_mask.add_argument('--face-mask-regions', help = wording.get('face_mask_regions_help').format(choices = ', '.join(facefusion.choices.face_mask_regions)), default = config.get_str_list('face_mask.face_mask_regions', ' '.join(facefusion.choices.face_mask_regions)), choices = facefusion.choices.face_mask_regions, nargs = '+', metavar = 'FACE_MASK_REGIONS')
 	# frame extraction
 	group_frame_extraction = program.add_argument_group('frame extraction')
 	group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('trim_frame_start_help'), type = int, default = facefusion.config.get_int_value('frame_extraction.trim_frame_start'))
@@ -93,14 +89,14 @@ def cli() -> None:
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')
 	program = ArgumentParser(parents = [ program ], formatter_class = program.formatter_class, add_help = True)
 	group_frame_processors = program.add_argument_group('frame processors')
-	group_frame_processors.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ' '.join(available_frame_processors)), default = config.get_str_list('frame_processors.frame_processors', 'face_swapper'), nargs = '+')
+	group_frame_processors.add_argument('--frame-processors', help = wording.get('frame_processors_help').format(choices = ', '.join(available_frame_processors)), default = config.get_str_list('frame_processors.frame_processors', 'face_swapper'), nargs = '+')
 	for frame_processor in available_frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		frame_processor_module.register_args(group_frame_processors)
 	# uis
 	available_ui_layouts = list_directory('facefusion/uis/layouts')
 	group_uis = program.add_argument_group('uis')
-	group_uis.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ' '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layout', 'default'), nargs = '+')
+	group_uis.add_argument('--ui-layouts', help = wording.get('ui_layouts_help').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layout', 'default'), nargs = '+')
 	run(program)
 
 

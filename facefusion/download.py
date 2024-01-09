@@ -1,5 +1,7 @@
 import os
 import subprocess
+import platform
+import ssl
 import urllib.request
 from typing import List
 from concurrent.futures import ThreadPoolExecutor
@@ -9,6 +11,9 @@ from tqdm import tqdm
 import facefusion.globals
 from facefusion import wording
 from facefusion.filesystem import is_file
+
+if platform.system().lower() == 'darwin':
+	ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def conditional_download(download_directory_path : str, urls : List[str]) -> None:
