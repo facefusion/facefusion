@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Optional
 import subprocess
 
 import facefusion.globals
 from facefusion import logger
 from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video_path
+from facefusion.typing import OutputVideoPreset
 from facefusion.vision import detect_fps
 
 
@@ -54,14 +55,13 @@ def merge_video(target_path : str, fps : float) -> bool:
 	commands = [ '-hwaccel', 'auto', '-r', str(fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
 	if facefusion.globals.output_video_encoder in [ 'libx264', 'libx265' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
-		commands.extend([ '-crf', str(output_video_compression) ])
+		commands.extend([ '-crf', str(output_video_compression), '-preset', facefusion.globals.output_video_preset ])
 	if facefusion.globals.output_video_encoder in [ 'libvpx-vp9' ]:
 		output_video_compression = round(63 - (facefusion.globals.output_video_quality * 0.63))
 		commands.extend([ '-crf', str(output_video_compression) ])
 	if facefusion.globals.output_video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
-		commands.extend([ '-cq', str(output_video_compression) ])
-	commands.extend([ '-preset', facefusion.globals.output_video_preset ])
+		commands.extend([ '-cq', str(output_video_compression), '-preset', map_nvenc_preset(facefusion.globals.output_video_preset) ])
 	commands.extend([ '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_output_video_path ])
 	return run_ffmpeg(commands)
 
@@ -80,3 +80,21 @@ def restore_audio(target_path : str, output_path : str) -> bool:
 		commands.extend([ '-to', str(end_time) ])
 	commands.extend([ '-i', target_path, '-c', 'copy', '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ])
 	return run_ffmpeg(commands)
+
+
+def map_nvenc_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
+	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast' ]:
+		return 'p1'
+	if output_video_preset == 'faster':
+		return 'p2'
+	if output_video_preset == 'fast':
+		return 'p3'
+	if output_video_preset == 'medium':
+		return 'p4'
+	if output_video_preset == 'slow':
+		return 'p5'
+	if output_video_preset == 'slower':
+		return 'p6'
+	if output_video_preset == 'veryslow':
+		return 'p7'
+	return None
