@@ -50,7 +50,7 @@ def warp_face_by_kps(temp_frame : Frame, kps : Kps, template : Template, size : 
 	return crop_frame, affine_matrix
 
 
-def warp_face_by_bbox(temp_frame : Frame, bbox : Bbox, size : Size):
+def warp_face_by_bbox(temp_frame : Frame, bbox : Bbox, size : Size) -> Tuple[Frame, Matrix]:
 	source_points = numpy.float32([[bbox[0], bbox[1]], [bbox[2], bbox[1]], [bbox[0], bbox[3]]])
 	target_points = numpy.float32([[0, 0], [size[0], 0], [0, size[1]]])
 	affine_matrix = cv2.getAffineTransform(source_points, target_points)
