@@ -11,7 +11,7 @@ from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
-from facefusion.face_helper import warp_face
+from facefusion.face_helper import warp_face_by_kps
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
@@ -71,7 +71,7 @@ def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet
 	if 'bbox' in frame_processors_globals.face_debugger_items:
 		cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), secondary_color, 2)
 	if 'face-mask' in frame_processors_globals.face_debugger_items:
-		crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, 'arcface_128_v2', (128, 512))
+		crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'arcface_128_v2', (512, 512))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_frame_size = temp_frame.shape[:2][::-1]
 		crop_mask_list = []

@@ -8,7 +8,7 @@ import facefusion.globals
 from facefusion.download import conditional_download
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
-from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
+from facefusion.face_helper import warp_face_by_kps, warp_face_by_bbox, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
 from facefusion.filesystem import resolve_relative_path
 from facefusion.typing import Frame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding
 from facefusion.vision import resize_frame_dimension
@@ -189,7 +189,7 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 			kps = kps_list[index]
 			score = score_list[index]
 			embedding, normed_embedding = calc_embedding(frame, kps)
-			gender, age = detect_gender_age(frame, kps)
+			gender, age = detect_gender_age(frame, bbox)
 			faces.append(Face(
 				bbox = bbox,
 				kps = kps,
@@ -204,7 +204,7 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 
 def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]:
 	face_recognizer = get_face_analyser().get('face_recognizer')
-	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface_112_v2', (112, 112))
+	crop_frame, matrix = warp_face_by_kps(temp_frame, kps, 'arcface_112_v2', (112, 112))
 	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
 	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
@@ -217,9 +217,9 @@ def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]
 	return embedding, normed_embedding
 
 
-def detect_gender_age(frame : Frame, kps : Kps) -> Tuple[int, int]:
+def detect_gender_age(frame : Frame, bbox : Bbox) -> Tuple[int, int]:
 	gender_age = get_face_analyser().get('gender_age')
-	crop_frame, affine_matrix = warp_face(frame, kps, 'ffhq_512', (512, 96))
+	crop_frame, affine_matrix = warp_face_by_bbox(frame, bbox, (96, 96))
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0).transpose(0, 3, 1, 2).astype(numpy.float32)
 	prediction = gender_age.run(None,
 	{
