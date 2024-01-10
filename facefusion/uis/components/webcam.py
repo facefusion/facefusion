@@ -139,7 +139,7 @@ def update() -> None:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		while not frame_processor_module.post_check():
 			logger.disable()
-			sleep(1)
+			sleep(0.5)
 		logger.enable()
 		if not frame_processor_module.pre_process('stream'):
 			return
@@ -152,11 +152,14 @@ def stop() -> gradio.Image:
 
 def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
-		temp_frame = frame_processor_module.process_frame(
-			source_face,
-			None,
-			temp_frame
-		)
+		logger.disable()
+		if frame_processor_module.pre_process('stream'):
+			logger.enable()
+			temp_frame = frame_processor_module.process_frame(
+				source_face,
+				None,
+				temp_frame
+			)
 	return temp_frame
 
 

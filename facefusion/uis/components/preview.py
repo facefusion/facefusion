@@ -130,6 +130,7 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 	clear_face_analyser()
 	clear_reference_faces()
 	clear_static_faces()
+	sleep(0.5)
 	return update_preview_image(frame_number)
 
 
@@ -138,7 +139,7 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		while not frame_processor_module.post_check():
 			logger.disable()
-			sleep(1)
+			sleep(0.5)
 		logger.enable()
 		if not frame_processor_module.pre_process('preview'):
 			return gradio.Image(value = None)
@@ -172,9 +173,12 @@ def process_preview_frame(source_face : Face, reference_faces : FaceSet, temp_fr
 		return cv2.GaussianBlur(temp_frame, (99, 99), 0)
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
-		temp_frame = frame_processor_module.process_frame(
-			source_face,
-			reference_faces,
-			temp_frame
-		)
+		logger.disable()
+		if frame_processor_module.pre_process('preview'):
+			logger.enable()
+			temp_frame = frame_processor_module.process_frame(
+				source_face,
+				reference_faces,
+				temp_frame
+			)
 	return temp_frame
