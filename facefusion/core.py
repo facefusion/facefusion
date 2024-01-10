@@ -4,6 +4,7 @@ os.environ['OMP_NUM_THREADS'] = '1'
 
 import signal
 import sys
+import time
 import warnings
 import platform
 import shutil
@@ -209,6 +210,7 @@ def pre_check() -> bool:
 
 
 def conditional_process() -> None:
+	start_time = time.time()
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		while not frame_processor_module.post_check():
 			logger.disable()
@@ -218,9 +220,9 @@ def conditional_process() -> None:
 			return
 	conditional_append_reference_faces()
 	if is_image(facefusion.globals.target_path):
-		process_image()
+		process_image(start_time)
 	if is_video(facefusion.globals.target_path):
-		process_video()
+		process_video(start_time)
 
 
 def conditional_append_reference_faces() -> None:
@@ -242,7 +244,7 @@ def conditional_append_reference_faces() -> None:
 					append_reference_face(frame_processor_module.__name__, reference_face)
 
 
-def process_image() -> None:
+def process_image(start_time : float) -> None:
 	if analyse_image(facefusion.globals.target_path):
 		return
 	shutil.copy2(facefusion.globals.target_path, facefusion.globals.output_path)
@@ -257,12 +259,13 @@ def process_image() -> None:
 		logger.error(wording.get('compressing_image_failed'), __name__.upper())
 	# validate image
 	if is_image(facefusion.globals.output_path):
-		logger.info(wording.get('processing_image_succeed'), __name__.upper())
+		seconds = '{:.2f}'.format((time.time() - start_time) % 60)
+		logger.info(wording.get('processing_image_succeed').format(seconds = seconds), __name__.upper())
 	else:
 		logger.error(wording.get('processing_image_failed'), __name__.upper())
 
 
-def process_video() -> None:
+def process_video(start_time : float) -> None:
 	if analyse_video(facefusion.globals.target_path, facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
 		return
 	fps = detect_fps(facefusion.globals.target_path) if facefusion.globals.keep_fps else 25.0
@@ -301,6 +304,7 @@ def process_video() -> None:
 	clear_temp(facefusion.globals.target_path)
 	# validate video
 	if is_video(facefusion.globals.output_path):
-		logger.info(wording.get('processing_video_succeed'), __name__.upper())
+		seconds = '{:.2f}'.format((time.time() - start_time) % 60)
+		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__.upper())
 	else:
 		logger.error(wording.get('processing_video_failed'), __name__.upper())
