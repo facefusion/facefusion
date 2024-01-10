@@ -2,7 +2,6 @@ import subprocess
 import sys
 import pytest
 
-from facefusion import wording
 from facefusion.download import conditional_download
 
 
