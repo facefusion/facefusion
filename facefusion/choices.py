@@ -11,7 +11,7 @@ face_detector_sizes : List[str] = [ '160x160', '320x320', '480x480', '512x512', 
 face_selector_modes : List[FaceSelectorMode] = [ 'reference', 'one', 'many' ]
 face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'region' ]
 face_mask_regions : List[FaceMaskRegion] = [ 'skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'eye-glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip' ]
-temp_frame_formats : List[TempFrameFormat] = [ 'jpg', 'png' ]
+temp_frame_formats : List[TempFrameFormat] = [ 'jpg', 'png', 'bmp' ]
 output_video_encoders : List[OutputVideoEncoder] = [ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc' ]
 output_video_presets : List[OutputVideoPreset] = [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow' ]
 
