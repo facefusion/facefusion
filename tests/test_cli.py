@@ -21,7 +21,7 @@ def test_image_to_image() -> None:
 	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
 	assert run.returncode == 0
-	assert wording.get('processing_image_succeed') in run.stdout.decode()
+	assert 'image succeed' in run.stdout.decode()
 
 
 def test_image_to_video() -> None:
@@ -29,4 +29,4 @@ def test_image_to_video() -> None:
 	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
 	assert run.returncode == 0
-	assert wording.get('processing_video_succeed') in run.stdout.decode()
+	assert 'video succeed' in run.stdout.decode()
