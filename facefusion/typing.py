@@ -40,7 +40,7 @@ FaceDetectorModel = Literal['retinaface', 'yunet']
 FaceRecognizerModel = Literal['arcface_blendswap', 'arcface_inswapper', 'arcface_simswap']
 FaceMaskType = Literal['box', 'occlusion', 'region']
 FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'eye-glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip']
-TempFrameFormat = Literal['jpg', 'png']
+TempFrameFormat = Literal['jpg', 'png', 'bmp']
 OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc']
 OutputVideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
