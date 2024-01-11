@@ -44,7 +44,7 @@ output_image_quality : Optional[int] = None
 output_video_encoder : Optional[OutputVideoEncoder] = None
 output_video_preset : Optional[OutputVideoPreset] = None
 output_video_quality : Optional[int] = None
-keep_fps : Optional[bool] = None
+output_video_fps : Optional[int] = None
 skip_audio : Optional[bool] = None
 # frame processors
 frame_processors : List[str] = []
