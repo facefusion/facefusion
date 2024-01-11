@@ -97,7 +97,7 @@ def pre_check() -> bool:
 	return True
 
 
-def extract_faces(frame: Frame) -> List[Face]:
+def extract_faces(frame : Frame) -> List[Face]:
 	face_detector_width, face_detector_height = map(int, facefusion.globals.face_detector_size.split('x'))
 	frame_height, frame_width, _ = frame.shape
 	temp_frame = resize_frame_dimension(frame, face_detector_width, face_detector_height)

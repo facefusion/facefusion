@@ -28,7 +28,7 @@ def clear_static_faces() -> None:
 	FACE_STORE['static_faces'] = {}
 
 
-def create_frame_hash(frame: Frame) -> Optional[str]:
+def create_frame_hash(frame : Frame) -> Optional[str]:
 	return hashlib.sha1(frame.tobytes()).hexdigest() if numpy.any(frame) else None
 
 

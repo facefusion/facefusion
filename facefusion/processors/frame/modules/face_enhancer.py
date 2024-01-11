@@ -163,7 +163,7 @@ def post_process() -> None:
 	read_static_image.cache_clear()
 
 
-def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
+def enhance_face(target_face: Face, temp_frame : Frame) -> Frame:
 	frame_processor = get_frame_processor()
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
