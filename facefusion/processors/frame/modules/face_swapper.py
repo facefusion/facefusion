@@ -15,9 +15,9 @@ from facefusion.face_helper import warp_face, paste_back
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, Embedding
-from facefusion.filesystem import is_file, resolve_relative_path
+from facefusion.filesystem import is_file, is_image, are_images, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
-from facefusion.vision import read_image, read_static_image, read_static_images, write_image, is_image, are_images, is_video
+from facefusion.vision import read_image, read_static_image, read_static_images, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser

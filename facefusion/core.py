@@ -17,14 +17,14 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
-from facefusion.vision import get_video_frame, detect_fps, read_image, read_static_images, is_image, is_video
+from facefusion.vision import get_video_frame, detect_fps, read_image, read_static_images
 from facefusion import face_analyser, face_masker, content_analyser, config, metadata, logger, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.common_helper import create_metavar
 from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_output_path, normalize_padding
-from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp
+from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video
 from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio
 
 onnxruntime.set_default_logger_severity(3)
