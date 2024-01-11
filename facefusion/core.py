@@ -274,7 +274,7 @@ def process_video(start_time : float) -> None:
 	create_temp(facefusion.globals.target_path)
 	# extract frames
 	logger.info(wording.get('extracting_frames_fps').format(fps = fps), __name__.upper())
-	extract_frames(facefusion.globals.target_path, fps)
+	extract_frames(facefusion.globals.target_path, facefusion.globals.output_video_fps)
 	# process frame
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
 	if temp_frame_paths:
@@ -287,7 +287,7 @@ def process_video(start_time : float) -> None:
 		return
 	# merge video
 	logger.info(wording.get('merging_video_fps').format(fps = fps), __name__.upper())
-	if not merge_video(facefusion.globals.target_path, fps):
+	if not merge_video(facefusion.globals.target_path, facefusion.globals.output_video_fps):
 		logger.error(wording.get('merging_video_failed'), __name__.upper())
 		return
 	# handle audio
