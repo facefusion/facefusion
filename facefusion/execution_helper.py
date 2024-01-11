@@ -27,7 +27,7 @@ def apply_execution_provider_options(execution_providers: List[str]) -> List[Any
 	return execution_providers_with_options
 
 
-def map_device(execution_providers : List[str]) -> str:
+def map_torch_backend(execution_providers : List[str]) -> str:
 	if 'CoreMLExecutionProvider' in execution_providers:
 		return 'mps'
 	if 'CUDAExecutionProvider' in execution_providers or 'ROCMExecutionProvider' in execution_providers :

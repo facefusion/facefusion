@@ -12,7 +12,7 @@ from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
 from facefusion.common_helper import create_metavar
-from facefusion.execution_helper import map_device
+from facefusion.execution_helper import map_torch_backend
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
@@ -61,7 +61,7 @@ def get_frame_processor() -> Any:
 					num_out_ch = 3,
 					scale = model_scale
 				),
-				device = map_device(facefusion.globals.execution_providers),
+				device = map_torch_backend(facefusion.globals.execution_providers),
 				scale = model_scale
 			)
 	return FRAME_PROCESSOR
