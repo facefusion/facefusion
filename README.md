@@ -70,7 +70,7 @@ face mask:
 frame extraction:
   --trim-frame-start TRIM_FRAME_START                                                                                specify the start frame for extraction
   --trim-frame-end TRIM_FRAME_END                                                                                    specify the end frame for extraction
-  --temp-frame-format {jpg,png}                                                                                      specify the image format used for frame extraction
+  --temp-frame-format {jpg,png,bmp}                                                                                  specify the image format used for frame extraction
   --temp-frame-quality [0-100]                                                                                       specify the image quality used for frame extraction
   --keep-temp                                                                                                        retain temporary frames after processing
 
@@ -79,7 +79,7 @@ output creation:
   --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc}                                          specify the encoder used for the output video
   --output-video-preset {ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow}                       specify the preset used for the output video
   --output-video-quality [0-100]                                                                                     specify the quality used for the output video
-  --keep-fps                                                                                                         preserve the frames per second (fps) of the target
+  --output-video-fps [1.0-60.0]                                                                                      specify the frames per second (fps) used for the output video
   --skip-audio                                                                                                       omit audio from the target
 
 frame processors:
