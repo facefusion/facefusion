@@ -304,7 +304,7 @@ def process_video(start_time : float) -> None:
 	clear_temp(facefusion.globals.target_path)
 	# validate video
 	if is_video(facefusion.globals.output_path):
-		seconds = '{:.2f}'.format((time.time() - start_time) % 60)
+		seconds = '{:.2f}'.format((time.time() - start_time))
 		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__.upper())
 	else:
 		logger.error(wording.get('processing_video_failed'), __name__.upper())
