@@ -12,8 +12,6 @@ def render() -> None:
 	global COMMON_OPTIONS_CHECKBOX_GROUP
 
 	value = []
-	if facefusion.globals.keep_fps:
-		value.append('keep-fps')
 	if facefusion.globals.keep_temp:
 		value.append('keep-temp')
 	if facefusion.globals.skip_audio:
@@ -32,7 +30,6 @@ def listen() -> None:
 
 
 def update(common_options : List[str]) -> None:
-	facefusion.globals.keep_fps = 'keep-fps' in common_options
 	facefusion.globals.keep_temp = 'keep-temp' in common_options
 	facefusion.globals.skip_audio = 'skip-audio' in common_options
 	facefusion.globals.skip_download = 'skip-download' in common_options

@@ -5,7 +5,6 @@ import facefusion.globals
 from facefusion import logger
 from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video_path
 from facefusion.typing import OutputVideoPreset
-from facefusion.vision import detect_fps
 
 
 def run_ffmpeg(args : List[str]) -> bool:
@@ -67,7 +66,7 @@ def merge_video(target_path : str, fps : float) -> bool:
 
 
 def restore_audio(target_path : str, output_path : str) -> bool:
-	fps = detect_fps(target_path)
+	fps = facefusion.globals.output_video_fps
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
 	temp_output_video_path = get_temp_output_video_path(target_path)
