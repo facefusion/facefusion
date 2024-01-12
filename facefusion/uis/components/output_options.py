@@ -9,6 +9,7 @@ from facefusion.typing import OutputVideoEncoder, OutputVideoPreset
 from facefusion.filesystem import is_image, is_video
 from facefusion.uis.typing import ComponentName
 from facefusion.uis.core import get_ui_component, register_ui_component
+from facefusion.vision import detect_fps
 
 OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
 OUTPUT_IMAGE_QUALITY_SLIDER : Optional[gradio.Slider] = None
@@ -62,7 +63,7 @@ def render() -> None:
 	OUTPUT_VIDEO_FPS_SLIDER = gradio.Slider(
 		label = wording.get('output_video_fps_slider_label'),
 		value = facefusion.globals.output_video_fps,
-		step = 0.1,
+		step = facefusion.choices.output_video_fps_range[1] - facefusion.choices.output_video_fps_range[0],
 		minimum = facefusion.choices.output_video_fps_range[0],
 		maximum = facefusion.choices.output_video_fps_range[-1],
 		visible = is_video(facefusion.globals.target_path)
@@ -90,12 +91,13 @@ def listen() -> None:
 				getattr(component, method)(remote_update, outputs = [ OUTPUT_IMAGE_QUALITY_SLIDER, OUTPUT_VIDEO_ENCODER_DROPDOWN, OUTPUT_VIDEO_QUALITY_SLIDER, OUTPUT_VIDEO_FPS_SLIDER ])
 
 
-def remote_update() -> Tuple[gradio.Slider, gradio.Dropdown, gradio.Slider]:
+def remote_update() -> Tuple[gradio.Slider, gradio.Dropdown, gradio.Slider, gradio.Slider]:
 	if is_image(facefusion.globals.target_path):
-		return gradio.Slider(visible = True), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Slider(visible = False)
+		return gradio.Slider(visible = True), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Slider(visible = False, value = None)
 	if is_video(facefusion.globals.target_path):
-		return gradio.Slider(visible = False), gradio.Dropdown(visible = True), gradio.Slider(visible = True), gradio.Slider(visible = True)
-	return gradio.Slider(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Slider(visible = False)
+		fps = detect_fps(facefusion.globals.target_path)
+		return gradio.Slider(visible = False), gradio.Dropdown(visible = True), gradio.Slider(visible = True), gradio.Slider(visible = True, value = fps)
+	return gradio.Slider(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Slider(visible = False, value = None)
 
 
 def update_output_path(output_path : str) -> None:
@@ -117,5 +119,6 @@ def update_output_video_preset(output_video_preset: OutputVideoPreset) -> None:
 def update_output_video_quality(output_video_quality : int) -> None:
 	facefusion.globals.output_video_quality = output_video_quality
 
-def update_output_video_fps(output_fps : int) -> None:
+
+def update_output_video_fps(output_fps : float) -> None:
 	facefusion.globals.output_video_fps = output_fps

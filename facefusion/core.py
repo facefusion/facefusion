@@ -17,7 +17,7 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
-from facefusion.vision import get_video_frame, read_image, read_static_images
+from facefusion.vision import get_video_frame, read_image, read_static_images, detect_fps
 from facefusion import face_analyser, face_masker, content_analyser, config, metadata, logger, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
@@ -145,7 +145,8 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.output_video_encoder = args.output_video_encoder
 	facefusion.globals.output_video_preset = args.output_video_preset
 	facefusion.globals.output_video_quality = args.output_video_quality
-	facefusion.globals.output_video_fps = args.output_video_fps
+	if args.output_video_fps or is_video(args.target_path):
+		facefusion.globals.output_video_fps = args.output_video_fps or detect_fps(args.target_path)
 	facefusion.globals.skip_audio = args.skip_audio
 	# frame processors
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')

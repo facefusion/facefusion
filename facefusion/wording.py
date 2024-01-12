@@ -106,7 +106,7 @@ WORDING =\
 	'output_video_encoder_dropdown_label': 'OUTPUT VIDEO ENCODER',
 	'output_video_preset_dropdown_label': 'OUTPUT VIDEO PRESET',
 	'output_video_quality_slider_label': 'OUTPUT VIDEO QUALITY',
-	'output_video_fps_slider_label': 'OUTPUT FPS',
+	'output_video_fps_slider_label': 'OUTPUT VIDEO FPS',
 	'preview_image_label': 'PREVIEW',
 	'preview_frame_slider_label': 'PREVIEW FRAME',
 	'frame_processors_checkbox_group_label': 'FRAME PROCESSORS',
