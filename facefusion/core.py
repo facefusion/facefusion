@@ -85,7 +85,7 @@ def cli() -> None:
 	group_output_creation.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), default = config.get_str_value('output_creation.output_video_encoder', 'libx264'), choices = facefusion.choices.output_video_encoders)
 	group_output_creation.add_argument('--output-video-preset', help = wording.get('output_video_preset_help'), default = config.get_str_value('output_creation.output_video_preset', 'veryfast'), choices = facefusion.choices.output_video_presets)
 	group_output_creation.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), type = int, default = config.get_int_value('output_creation.output_video_quality', '80'), choices = facefusion.choices.output_video_quality_range, metavar = create_metavar(facefusion.choices.output_video_quality_range))
-	group_output_creation.add_argument('--output-video-fps', help = wording.get('output_video_fps_help'), type = float, default = config.get_float_value('output_creation.output_video_fps', '25'), choices = facefusion.choices.output_video_fps_range, metavar = create_metavar(facefusion.choices.output_video_fps_range))
+	group_output_creation.add_argument('--output-video-fps', help = wording.get('output_video_fps_help'), type = float, choices = facefusion.choices.output_video_fps_range, metavar = create_metavar(facefusion.choices.output_video_fps_range))
 	group_output_creation.add_argument('--skip-audio', help = wording.get('skip_audio_help'), action = 'store_true', default = config.get_bool_value('output_creation.skip_audio'))
 	# frame processors
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')
