@@ -269,12 +269,11 @@ def process_image(start_time : float) -> None:
 def process_video(start_time : float) -> None:
 	if analyse_video(facefusion.globals.target_path, facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
 		return
-	fps = facefusion.globals.output_video_fps
 	# create temp
 	logger.info(wording.get('creating_temp'), __name__.upper())
 	create_temp(facefusion.globals.target_path)
 	# extract frames
-	logger.info(wording.get('extracting_frames_fps').format(fps = fps), __name__.upper())
+	logger.info(wording.get('extracting_frames_fps').format(fps = facefusion.globals.output_video_fps), __name__.upper())
 	extract_frames(facefusion.globals.target_path, facefusion.globals.output_video_fps)
 	# process frame
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
@@ -287,7 +286,7 @@ def process_video(start_time : float) -> None:
 		logger.error(wording.get('temp_frames_not_found'), __name__.upper())
 		return
 	# merge video
-	logger.info(wording.get('merging_video_fps').format(fps = fps), __name__.upper())
+	logger.info(wording.get('merging_video_fps').format(fps = facefusion.globals.output_video_fps), __name__.upper())
 	if not merge_video(facefusion.globals.target_path, facefusion.globals.output_video_fps):
 		logger.error(wording.get('merging_video_failed'), __name__.upper())
 		return
@@ -297,7 +296,7 @@ def process_video(start_time : float) -> None:
 		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
 		logger.info(wording.get('restoring_audio'), __name__.upper())
-		if not restore_audio(facefusion.globals.target_path, facefusion.globals.output_path):
+		if not restore_audio(facefusion.globals.target_path, facefusion.globals.output_path, facefusion.globals.output_video_fps):
 			logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
 			move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clear temp
