@@ -63,9 +63,9 @@ def render() -> None:
 	OUTPUT_VIDEO_FPS_SLIDER = gradio.Slider(
 		label = wording.get('output_video_fps_slider_label'),
 		value = facefusion.globals.output_video_fps,
-		step = facefusion.choices.output_video_fps_range[1] - facefusion.choices.output_video_fps_range[0],
-		minimum = facefusion.choices.output_video_fps_range[0],
-		maximum = facefusion.choices.output_video_fps_range[-1],
+		step = 0.01,
+		minimum = 0,
+		maximum = 60,
 		visible = is_video(facefusion.globals.target_path)
 	)
 	register_ui_component('output_path_textbox', OUTPUT_PATH_TEXTBOX)
