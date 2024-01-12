@@ -64,7 +64,7 @@ def render() -> None:
 		label = wording.get('output_video_fps_slider_label'),
 		value = facefusion.globals.output_video_fps,
 		step = 0.01,
-		minimum = 0,
+		minimum = 1,
 		maximum = 60,
 		visible = is_video(facefusion.globals.target_path)
 	)
