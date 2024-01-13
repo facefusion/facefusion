@@ -6,7 +6,7 @@ import numpy
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, wording
-from facefusion.face_analyser import calc_face_distance, get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
+from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode
@@ -97,14 +97,6 @@ def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet
 			face_score_text = str(round(target_face.score, 2))
 			face_score_position = (bounding_box[0] + 10, bounding_box[1] + 20)
 			cv2.putText(temp_frame, face_score_text, face_score_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
-		if 'distance' in frame_processors_globals.face_debugger_items and reference_faces:
-			face_distance = None
-			for reference_set in reference_faces:
-				for reference_face in reference_faces[reference_set]:
-					face_distance = calc_face_distance(target_face, reference_face)
-			face_distance_text = str(round(face_distance, 2))
-			face_distance_position = (bounding_box[0] + 10, bounding_box[3] - 10)
-			cv2.putText(temp_frame, face_distance_text, face_distance_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
 	return temp_frame
 
 

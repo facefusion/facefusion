@@ -10,4 +10,4 @@ frame_enhancer_models : List[FrameEnhancerModel] = [ 'real_esrgan_x2plus', 'real
 face_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
 
-face_debugger_items : List[FaceDebuggerItem] = [ 'bbox', 'kps', 'face-mask', 'score', 'distance' ]
+face_debugger_items : List[FaceDebuggerItem] = [ 'bbox', 'kps', 'face-mask', 'score' ]

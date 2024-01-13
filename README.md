@@ -79,12 +79,12 @@ output creation:
   --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc}                                          specify the encoder used for the output video
   --output-video-preset {ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow}                       specify the preset used for the output video
   --output-video-quality [0-100]                                                                                     specify the quality used for the output video
-  --output-video-fps [1.0-60.0]                                                                                      specify the frames per second (fps) used for the output video
+  --output-video-fps OUTPUT_VIDEO_FPS                                                                                specify the frames per second (fps) used for the output video
   --skip-audio                                                                                                       omit audio from the target
 
 frame processors:
   --frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                                         choose from the available frame processors (choices: face_debugger, face_enhancer, face_swapper, frame_enhancer, ...)
-  --face-debugger-items FACE_DEBUGGER_ITEMS [FACE_DEBUGGER_ITEMS ...]                                                specify the face debugger items (choices: bbox, kps, face-mask, score, distance)
+  --face-debugger-items FACE_DEBUGGER_ITEMS [FACE_DEBUGGER_ITEMS ...]                                                specify the face debugger items (choices: bbox, kps, face-mask, score)
   --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,restoreformer}        choose the model for the frame processor
   --face-enhancer-blend [0-100]                                                                                      specify the blend amount for the frame processor
   --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial}           choose the model for the frame processor
