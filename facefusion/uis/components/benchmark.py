@@ -9,7 +9,7 @@ from facefusion import wording
 from facefusion.face_analyser import get_face_analyser
 from facefusion.face_store import clear_static_faces
 from facefusion.processors.frame.core import get_frame_processors_modules
-from facefusion.vision import count_video_frame_total
+from facefusion.vision import count_video_frame_total, detect_fps
 from facefusion.core import limit_resources, conditional_process
 from facefusion.normalizer import normalize_output_path
 from facefusion.filesystem import clear_temp
@@ -104,6 +104,7 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	for i in range(benchmark_cycles):
 		facefusion.globals.target_path = target_path
 		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_paths, facefusion.globals.target_path, tempfile.gettempdir())
+		facefusion.globals.output_video_fps = detect_fps(facefusion.globals.target_path)
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		start_time = time.perf_counter()
 		conditional_process()
