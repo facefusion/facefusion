@@ -1,12 +1,13 @@
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from functools import lru_cache
 import cv2
 
+from facefusion.filesystem import is_image, is_video
 from facefusion.typing import Frame
 
 
 def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[Frame]:
-	if video_path:
+	if is_video(video_path):
 		video_capture = cv2.VideoCapture(video_path)
 		if video_capture.isOpened():
 			frame_total = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
@@ -18,16 +19,29 @@ def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[Frame]
 	return None
 
 
-def detect_fps(video_path : str) -> Optional[float]:
-	if video_path:
+def detect_video_fps(video_path : str) -> Optional[float]:
+	if is_video(video_path):
 		video_capture = cv2.VideoCapture(video_path)
 		if video_capture.isOpened():
-			return video_capture.get(cv2.CAP_PROP_FPS)
+			video_fps = video_capture.get(cv2.CAP_PROP_FPS)
+			video_capture.release()
+			return video_fps
+	return None
+
+
+def detect_video_resolution(video_path : str) -> Optional[Tuple[float, float]]:
+	if is_video(video_path):
+		video_capture = cv2.VideoCapture(video_path)
+		if video_capture.isOpened():
+			width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+			height = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+			video_capture.release()
+			return width, height
 	return None
 
 
 def count_video_frame_total(video_path : str) -> int:
-	if video_path:
+	if is_video(video_path):
 		video_capture = cv2.VideoCapture(video_path)
 		if video_capture.isOpened():
 			video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -64,7 +78,7 @@ def read_static_images(image_paths : List[str]) -> Optional[List[Frame]]:
 
 
 def read_image(image_path : str) -> Optional[Frame]:
-	if image_path:
+	if is_image(image_path):
 		return cv2.imread(image_path)
 	return None
 

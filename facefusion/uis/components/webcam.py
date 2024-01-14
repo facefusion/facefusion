@@ -88,22 +88,22 @@ def listen() -> None:
 			component.change(update, cancels = start_event)
 
 
-def start(webcam_mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
+def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : float) -> Generator[Frame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_analyser_order = 'large-small'
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
 	stream = None
 	if webcam_mode in [ 'udp', 'v4l2' ]:
-		stream = open_stream(webcam_mode, resolution, fps) # type: ignore[arg-type]
-	webcam_width, webcam_height = map(int, resolution.split('x'))
+		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) # type: ignore[arg-type]
+	webcam_width, webcam_height = map(int, webcam_resolution.split('x'))
 	webcam_capture = get_webcam_capture()
 	if webcam_capture and webcam_capture.isOpened():
 		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) # type: ignore[attr-defined]
 		webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
 		webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
-		webcam_capture.set(cv2.CAP_PROP_FPS, fps)
-		for capture_frame in multi_process_capture(source_face, webcam_capture, fps):
+		webcam_capture.set(cv2.CAP_PROP_FPS, webcam_fps)
+		for capture_frame in multi_process_capture(source_face, webcam_capture, webcam_fps):
 			if webcam_mode == 'inline':
 				yield normalize_frame_color(capture_frame)
 			else:
@@ -114,14 +114,14 @@ def start(webcam_mode : WebcamMode, resolution : str, fps : float) -> Generator[
 				yield None
 
 
-def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, fps : float) -> Generator[Frame, None, None]:
+def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, webcam_fps : float) -> Generator[Frame, None, None]:
 	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
 			deque_capture_frames : Deque[Frame] = deque()
 			while webcam_capture and webcam_capture.isOpened():
 				_, capture_frame = webcam_capture.read()
-				if analyse_stream(capture_frame, fps):
+				if analyse_stream(capture_frame, webcam_fps):
 					return
 				future = executor.submit(process_stream_frame, source_face, capture_frame)
 				futures.append(future)
@@ -163,8 +163,8 @@ def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
 	return temp_frame
 
 
-def open_stream(stream_mode : StreamMode, resolution : str, fps : float) -> subprocess.Popen[bytes]:
-	commands = [ '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', resolution, '-r', str(fps), '-i', '-' ]
+def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : float) -> subprocess.Popen[bytes]:
+	commands = [ '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', stream_resolution, '-r', str(stream_fps), '-i', '-']
 	if stream_mode == 'udp':
 		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000?pkt_size=1316' ])
 	if stream_mode == 'v4l2':

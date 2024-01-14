@@ -17,7 +17,7 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
-from facefusion.vision import get_video_frame, read_image, read_static_images, detect_fps
+from facefusion.vision import get_video_frame, read_image, read_static_images, detect_video_fps
 from facefusion import face_analyser, face_masker, content_analyser, config, metadata, logger, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
@@ -146,7 +146,7 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.output_video_preset = args.output_video_preset
 	facefusion.globals.output_video_quality = args.output_video_quality
 	if args.output_video_fps or is_video(args.target_path):
-		facefusion.globals.output_video_fps = args.output_video_fps or detect_fps(args.target_path)
+		facefusion.globals.output_video_fps = args.output_video_fps or detect_video_fps(args.target_path)
 	facefusion.globals.skip_audio = args.skip_audio
 	# frame processors
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')
@@ -215,7 +215,7 @@ def conditional_process() -> None:
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		while not frame_processor_module.post_check():
 			logger.disable()
-			sleep(1)
+			sleep(0.5)
 		logger.enable()
 		if not frame_processor_module.pre_process('output'):
 			return
@@ -273,7 +273,7 @@ def process_video(start_time : float) -> None:
 	logger.info(wording.get('creating_temp'), __name__.upper())
 	create_temp(facefusion.globals.target_path)
 	# extract frames
-	logger.info(wording.get('extracting_frames_fps').format(fps = facefusion.globals.output_video_fps), __name__.upper())
+	logger.info(wording.get('extracting_frames_fps').format(video_fps = facefusion.globals.output_video_fps), __name__.upper())
 	extract_frames(facefusion.globals.target_path, facefusion.globals.output_video_fps)
 	# process frame
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
@@ -286,7 +286,7 @@ def process_video(start_time : float) -> None:
 		logger.error(wording.get('temp_frames_not_found'), __name__.upper())
 		return
 	# merge video
-	logger.info(wording.get('merging_video_fps').format(fps = facefusion.globals.output_video_fps), __name__.upper())
+	logger.info(wording.get('merging_video_fps').format(video_fps = facefusion.globals.output_video_fps), __name__.upper())
 	if not merge_video(facefusion.globals.target_path, facefusion.globals.output_video_fps):
 		logger.error(wording.get('merging_video_failed'), __name__.upper())
 		return
