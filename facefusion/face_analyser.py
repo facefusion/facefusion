@@ -221,8 +221,8 @@ def detect_gender_age(frame : Frame, bbox : Bbox) -> Tuple[int, int]:
 	gender_age = get_face_analyser().get('gender_age')
 	bbox = bbox.reshape(2, -1)
 	scale = 64 / numpy.subtract(*bbox[::-1]).max()
-	offset_x, offset_y = 48 - bbox.sum(axis = 0) * 0.5 * scale
-	affine_matrix = numpy.array([[ scale, 0, offset_x ], [ 0, scale, offset_y ]])
+	translation = 48 - bbox.sum(axis = 0) * 0.5 * scale
+	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]])
 	crop_frame = cv2.warpAffine(frame, affine_matrix, (96, 96))
 	crop_frame = crop_frame.astype(numpy.float32)[:, :, ::-1].transpose(2, 0, 1)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
