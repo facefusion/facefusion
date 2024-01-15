@@ -219,15 +219,13 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
-	crop_frame = frame_processor.run(None, frame_processor_inputs)[0]
-	iterations = int(numpy.ceil(frame_processors_globals.face_swapper_weight))
-	blend = frame_processors_globals.face_swapper_weight % 1.0
-	for iteration in range(1, iterations):
-		frame_processor_inputs['target'] = crop_frame.copy()
+	weights = [1.0] * int(numpy.floor(frame_processors_globals.face_swapper_weight))
+	if len(weights) > 1:
+		weights.append(frame_processors_globals.face_swapper_weight % 1.0)
+	for weight in weights:
 		crop_frame = frame_processor.run(None, frame_processor_inputs)[0]
-		if iteration == (iterations - 1):
-			crop_frame = frame_processor_inputs['target'] * (1 - blend) + crop_frame * blend
-	crop_frame = normalize_crop_frame(crop_frame[0])
+		frame_processor_inputs['target'] = frame_processor_inputs['target'] * (1 - weight) + crop_frame * weight
+	crop_frame = normalize_crop_frame(frame_processor_inputs['target'][0])
 	if 'region' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_region_mask(crop_frame, facefusion.globals.face_mask_regions))
 	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
