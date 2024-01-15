@@ -1,6 +1,7 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 import threading
+
 import numpy
 import onnx
 import onnxruntime
@@ -13,6 +14,7 @@ from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_helper import warp_face, paste_back
 from facefusion.face_store import get_reference_faces
+from facefusion.common_helper import create_metavar
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, Embedding
 from facefusion.filesystem import is_file, is_image, are_images, is_video, resolve_relative_path
@@ -134,11 +136,13 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 def register_args(program : ArgumentParser) -> None:
 	program.add_argument('--face-swapper-model', help = wording.get('frame_processor_model_help'), default = config.get_str_value('frame_processors.face_swapper_model', 'inswapper_128_fp16'), choices = frame_processors_choices.face_swapper_models)
+	program.add_argument('--face-swapper-weight', help = wording.get('face_swapper_weight_help'), type = float, default = config.get_float_value('frame_processors.face_swapper_weight', '1.0'), choices = frame_processors_choices.face_swapper_weight_range, metavar = create_metavar(frame_processors_choices.face_swapper_weight_range))
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
+	frame_processors_globals.face_swapper_weight = args.face_swapper_weight
 	if args.face_swapper_model == 'blendswap_256':
 		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
 	if args.face_swapper_model == 'inswapper_128' or args.face_swapper_model == 'inswapper_128_fp16':
@@ -215,8 +219,15 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
-	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
-	crop_frame = normalize_crop_frame(crop_frame)
+	crop_frame = frame_processor.run(None, frame_processor_inputs)[0]
+	iterations = int(numpy.ceil(frame_processors_globals.face_swapper_weight))
+	blend = frame_processors_globals.face_swapper_weight % 1.0
+	for iteration in range(1, iterations):
+		frame_processor_inputs['target'] = crop_frame.copy()
+		crop_frame = frame_processor.run(None, frame_processor_inputs)[0]
+		if iteration == (iterations - 1):
+			crop_frame = frame_processor_inputs['target'] * (1 - blend) + crop_frame * blend
+	crop_frame = normalize_crop_frame(crop_frame[0])
 	if 'region' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_region_mask(crop_frame, facefusion.globals.face_mask_regions))
 	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
