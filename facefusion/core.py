@@ -17,7 +17,6 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
-from facefusion.vision import get_video_frame, read_image, read_static_images, detect_video_fps
 from facefusion import face_analyser, face_masker, content_analyser, config, metadata, logger, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
@@ -26,6 +25,7 @@ from facefusion.execution_helper import encode_execution_providers, decode_execu
 from facefusion.normalizer import normalize_output_path, normalize_padding
 from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video
 from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio
+from facefusion.vision import get_video_frame, read_image, read_static_images, create_video_resolution_range, detect_video_fps
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
@@ -85,6 +85,7 @@ def cli() -> None:
 	group_output_creation.add_argument('--output-video-encoder', help = wording.get('output_video_encoder_help'), default = config.get_str_value('output_creation.output_video_encoder', 'libx264'), choices = facefusion.choices.output_video_encoders)
 	group_output_creation.add_argument('--output-video-preset', help = wording.get('output_video_preset_help'), default = config.get_str_value('output_creation.output_video_preset', 'veryfast'), choices = facefusion.choices.output_video_presets)
 	group_output_creation.add_argument('--output-video-quality', help = wording.get('output_video_quality_help'), type = int, default = config.get_int_value('output_creation.output_video_quality', '80'), choices = facefusion.choices.output_video_quality_range, metavar = create_metavar(facefusion.choices.output_video_quality_range))
+	group_output_creation.add_argument('--output-video-resolution', help = wording.get('output_video_resolution_help'), default = config.get_str_value('output_creation.output_video_resolution'))
 	group_output_creation.add_argument('--output-video-fps', help = wording.get('output_video_fps_help'), type = float)
 	group_output_creation.add_argument('--skip-audio', help = wording.get('skip_audio_help'), action = 'store_true', default = config.get_bool_value('output_creation.skip_audio'))
 	# frame processors
@@ -145,6 +146,9 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.output_video_encoder = args.output_video_encoder
 	facefusion.globals.output_video_preset = args.output_video_preset
 	facefusion.globals.output_video_quality = args.output_video_quality
+	if args.output_video_resolution or is_video(args.target_path):
+		video_resolution_range = create_video_resolution_range(args.target_path)
+		facefusion.globals.output_video_resolution = args.output_video_resolution or video_resolution_range[0]
 	if args.output_video_fps or is_video(args.target_path):
 		facefusion.globals.output_video_fps = args.output_video_fps or detect_video_fps(args.target_path)
 	facefusion.globals.skip_audio = args.skip_audio
@@ -274,7 +278,7 @@ def process_video(start_time : float) -> None:
 	create_temp(facefusion.globals.target_path)
 	# extract frames
 	logger.info(wording.get('extracting_frames_fps').format(video_fps = facefusion.globals.output_video_fps), __name__.upper())
-	extract_frames(facefusion.globals.target_path, facefusion.globals.output_video_fps)
+	extract_frames(facefusion.globals.target_path, facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps)
 	# process frame
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
 	if temp_frame_paths:

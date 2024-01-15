@@ -50,9 +50,9 @@ def detect_video_resolution(video_path : str) -> Optional[Tuple[float, float]]:
 	return None
 
 
-def calc_video_resolution_range(video_path : str) -> Optional[List[str]]:
+def create_video_resolution_range(video_path : str) -> Optional[List[str]]:
 	resolution_range = []
-	template_range = [ 240, 360, 540, 720, 1080, 1440, 2160 ]
+	template_range = [ 240, 360, 480, 540, 720, 1080, 1440, 2160 ]
 	video_resolution = detect_video_resolution(video_path)
 
 	if video_resolution:
@@ -60,11 +60,13 @@ def calc_video_resolution_range(video_path : str) -> Optional[List[str]]:
 
 		if width > height:
 			for template_height in template_range:
-				template_width = round(width / height * template_height)
+				template_width = round(width / height * template_height / 2) * 2
+				template_height = round(template_height / 2) * 2
 				resolution_range.append(str(template_width) + 'x' + str(template_height))
 		else:
 			for template_width in template_range:
-				template_height = round(height / width * template_width)
+				template_width = round(template_width / 2) * 2
+				template_height = round(height / width * template_width / 2) * 2
 				resolution_range.append(str(template_width) + 'x' + str(template_height))
 		return resolution_range
 	return None
