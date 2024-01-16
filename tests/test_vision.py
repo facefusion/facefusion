@@ -2,7 +2,7 @@ import subprocess
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.vision import get_video_frame, count_video_frame_total, detect_video_fps, detect_video_resolution, create_video_resolution_range
+from facefusion.vision import get_video_frame, count_video_frame_total, detect_video_fps, detect_video_resolution, create_video_resolutions
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -45,9 +45,9 @@ def test_detect_video_resolution() -> None:
 	assert detect_video_resolution('invalid') is None
 
 
-def test_create_video_resolution_range() -> None:
-	assert create_video_resolution_range('.assets/examples/target-240p.mp4') == [ '426x226', '452x240', '678x360', '904x480', '1018x540', '1358x720', '2036x1080', '2714x1440', '4072x2160' ]
-	assert create_video_resolution_range('.assets/examples/target-240p-90deg.mp4') == [ '226x426', '240x452', '360x678', '480x904', '540x1018', '720x1358', '1080x2036', '1440x2714', '2160x4072' ]
-	assert create_video_resolution_range('.assets/examples/target-1080p.mp4') == [ '456x240', '682x360', '910x480', '1024x540', '1366x720', '2048x1080', '2730x1440', '4096x2160' ]
-	assert create_video_resolution_range('.assets/examples/target-1080p-90deg.mp4') == [ '240x456', '360x682', '480x910', '540x1024', '720x1366', '1080x2048', '1440x2730', '2160x4096' ]
-	assert create_video_resolution_range('invalid') is None
+def test_create_video_resolutions() -> None:
+	assert create_video_resolutions('.assets/examples/target-240p.mp4') == [ '426x226', '452x240', '678x360', '904x480', '1018x540', '1358x720', '2036x1080', '2714x1440', '4072x2160' ]
+	assert create_video_resolutions('.assets/examples/target-240p-90deg.mp4') == [ '226x426', '240x452', '360x678', '480x904', '540x1018', '720x1358', '1080x2036', '1440x2714', '2160x4072' ]
+	assert create_video_resolutions('.assets/examples/target-1080p.mp4') == [ '456x240', '682x360', '910x480', '1024x540', '1366x720', '2048x1080', '2730x1440', '4096x2160' ]
+	assert create_video_resolutions('.assets/examples/target-1080p-90deg.mp4') == [ '240x456', '360x682', '480x910', '540x1024', '720x1366', '1080x2048', '1440x2730', '2160x4096' ]
+	assert create_video_resolutions('invalid') is None

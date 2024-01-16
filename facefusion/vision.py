@@ -1,9 +1,9 @@
-from typing import Optional, List, Tuple
+from typing import Optional, List
 from functools import lru_cache
 import cv2
 
 from facefusion.filesystem import is_image, is_video
-from facefusion.typing import Frame
+from facefusion.typing import Frame, Resolution
 
 
 def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[Frame]:
@@ -39,7 +39,7 @@ def detect_video_fps(video_path : str) -> Optional[float]:
 	return None
 
 
-def detect_video_resolution(video_path : str) -> Optional[Tuple[float, float]]:
+def detect_video_resolution(video_path : str) -> Optional[Resolution]:
 	if is_video(video_path):
 		video_capture = cv2.VideoCapture(video_path)
 		if video_capture.isOpened():
@@ -50,7 +50,7 @@ def detect_video_resolution(video_path : str) -> Optional[Tuple[float, float]]:
 	return None
 
 
-def create_video_resolution_range(video_path : str) -> Optional[List[str]]:
+def create_video_resolutions(video_path : str) -> Optional[List[str]]:
 	temp_range = []
 	video_resolution_range = []
 	template_range = [ 240, 360, 480, 540, 720, 1080, 1440, 2160 ]
@@ -58,41 +58,36 @@ def create_video_resolution_range(video_path : str) -> Optional[List[str]]:
 
 	if video_resolution:
 		width, height = video_resolution
-
-		width = round(width / 2) * 2
-		height = round(height / 2) * 2
-		temp_range.append((width, height))
+		temp_range.append(normalize_resolution(video_resolution))
 		if width > height:
 			for template_height in template_range:
-				template_width = round(width / height * template_height / 2) * 2
-				template_height = round(template_height / 2) * 2
-				temp_range.append((template_width, template_height))
+				template_width = width / height * template_height
+				temp_range.append(normalize_resolution((template_width, template_height)))
 		else:
 			for template_width in template_range:
-				template_width = round(template_width / 2) * 2
-				template_height = round(height / width * template_width / 2) * 2
-				temp_range.append((template_width, template_height))
-
+				template_height = height / width * template_width # type: ignore[assignment]
+				temp_range.append(normalize_resolution((template_width, template_height)))
 		temp_range = sorted(set(temp_range))
 		for temp in temp_range:
-			video_resolution_range.append(str(temp[0]) + 'x' + str(temp[1]))
+			video_resolution_range.append(stringify_resolution(temp))
 		return video_resolution_range
 	return None
 
 
-def stringify_resolution_value(resolution_value : Tuple[float, float]) -> Optional[str]:
-	width, height = resolution_value
+def normalize_resolution(resolution : Resolution) -> Resolution:
+	width, height = resolution
 
 	if width and height:
-		width = round(width / 2) * 2
-		height = round(height / 2) * 2
+		normalize_width = round(width / 2) * 2
+		normalize_height = round(height / 2) * 2
 
-		return str(width) + 'x' + str(height)
-	return None
+		return normalize_width, normalize_height
+	return 0, 0
 
 
-def normalize_frame_color(frame : Frame) -> Frame:
-	return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+def stringify_resolution(resolution : Resolution) -> str:
+	width, height = normalize_resolution(resolution)
+	return str(width) + 'x' + str(height)
 
 
 def resize_frame_resolution(frame : Frame, max_width : int, max_height : int) -> Frame:
@@ -104,6 +99,10 @@ def resize_frame_resolution(frame : Frame, max_width : int, max_height : int) ->
 		new_height = int(height * scale)
 		return cv2.resize(frame, (new_width, new_height))
 	return frame
+
+
+def normalize_frame_color(frame : Frame) -> Frame:
+	return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
 
 @lru_cache(maxsize = 128)
