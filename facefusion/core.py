@@ -25,7 +25,7 @@ from facefusion.execution_helper import encode_execution_providers, decode_execu
 from facefusion.normalizer import normalize_output_path, normalize_padding
 from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video
 from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio
-from facefusion.vision import get_video_frame, read_image, read_static_images, create_video_resolution_range, detect_video_fps
+from facefusion.vision import get_video_frame, read_image, read_static_images, stringify_resolution_value, detect_video_resolution, detect_video_fps
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
@@ -147,8 +147,8 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.output_video_preset = args.output_video_preset
 	facefusion.globals.output_video_quality = args.output_video_quality
 	if args.output_video_resolution or is_video(args.target_path):
-		video_resolution_range = create_video_resolution_range(args.target_path)
-		facefusion.globals.output_video_resolution = args.output_video_resolution or video_resolution_range[0]
+		target_video_resolution = detect_video_resolution(args.target_path)
+		facefusion.globals.output_video_resolution = args.output_video_resolution or stringify_resolution_value(target_video_resolution)
 	if args.output_video_fps or is_video(args.target_path):
 		facefusion.globals.output_video_fps = args.output_video_fps or detect_video_fps(args.target_path)
 	facefusion.globals.skip_audio = args.skip_audio

@@ -51,24 +51,43 @@ def detect_video_resolution(video_path : str) -> Optional[Tuple[float, float]]:
 
 
 def create_video_resolution_range(video_path : str) -> Optional[List[str]]:
-	resolution_range = []
+	temp_range = []
+	video_resolution_range = []
 	template_range = [ 240, 360, 480, 540, 720, 1080, 1440, 2160 ]
 	video_resolution = detect_video_resolution(video_path)
 
 	if video_resolution:
 		width, height = video_resolution
 
+		width = round(width / 2) * 2
+		height = round(height / 2) * 2
+		temp_range.append((width, height))
 		if width > height:
 			for template_height in template_range:
 				template_width = round(width / height * template_height / 2) * 2
 				template_height = round(template_height / 2) * 2
-				resolution_range.append(str(template_width) + 'x' + str(template_height))
+				temp_range.append((template_width, template_height))
 		else:
 			for template_width in template_range:
 				template_width = round(template_width / 2) * 2
 				template_height = round(height / width * template_width / 2) * 2
-				resolution_range.append(str(template_width) + 'x' + str(template_height))
-		return resolution_range
+				temp_range.append((template_width, template_height))
+
+		temp_range = sorted(set(temp_range))
+		for temp in temp_range:
+			video_resolution_range.append(str(temp[0]) + 'x' + str(temp[1]))
+		return video_resolution_range
+	return None
+
+
+def stringify_resolution_value(resolution_value : Tuple[float, float]) -> Optional[str]:
+	width, height = resolution_value
+
+	if width and height:
+		width = round(width / 2) * 2
+		height = round(height / 2) * 2
+
+		return str(width) + 'x' + str(height)
 	return None
 
 
