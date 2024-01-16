@@ -202,14 +202,17 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	model_size = get_options('model').get('size')
 	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, model_template, model_size)
 	crop_mask_list = []
+
 	if 'box' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding))
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_occlusion_mask(crop_frame))
-	iterations = int(numpy.ceil(frame_processors_globals.face_swapper_weight))
-	for iteration in range(iterations):
+	swap_iterations = int(numpy.ceil(frame_processors_globals.face_swapper_weight))
+	for swap_iteration in range(swap_iterations):
 		before_frame = crop_frame.copy()
+		crop_frame = prepare_crop_frame(crop_frame)
 		crop_frame = apply_swap(source_face, crop_frame)
+		crop_frame = normalize_crop_frame(crop_frame)
 	current_weight = frame_processors_globals.face_swapper_weight % 1.0
 	if current_weight > 0:
 		crop_frame = before_frame * (1 - current_weight) + crop_frame * current_weight
@@ -223,8 +226,8 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 def apply_swap(source_face : Face, crop_frame : Frame) -> Frame:
 	frame_processor = get_frame_processor()
 	model_type = get_options('model').get('type')
-	crop_frame = prepare_crop_frame(crop_frame)
 	frame_processor_inputs = {}
+
 	for frame_processor_input in frame_processor.get_inputs():
 		if frame_processor_input.name == 'source':
 			if model_type == 'blendswap':
@@ -234,7 +237,6 @@ def apply_swap(source_face : Face, crop_frame : Frame) -> Frame:
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
-	crop_frame = normalize_crop_frame(crop_frame)
 	return crop_frame
 
 
