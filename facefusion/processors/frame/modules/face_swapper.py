@@ -188,13 +188,15 @@ def pre_process(mode : ProcessMode) -> bool:
 
 
 def post_process() -> None:
-	clear_frame_processor()
-	clear_model_matrix()
-	clear_face_analyser()
-	clear_content_analyser()
-	clear_face_occluder()
-	clear_face_parser()
-	read_static_image.cache_clear()
+	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
+		clear_frame_processor()
+		clear_model_matrix()
+		read_static_image.cache_clear()
+	if facefusion.globals.video_memory_strategy == 'strict':
+		clear_face_analyser()
+		clear_content_analyser()
+		clear_face_occluder()
+		clear_face_parser()
 
 
 def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:

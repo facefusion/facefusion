@@ -45,7 +45,10 @@ execution:
   --execution-providers EXECUTION_PROVIDERS [EXECUTION_PROVIDERS ...]                                                choose from the available execution providers (choices: cpu, ...)
   --execution-thread-count [1-128]                                                                                   specify the number of execution threads
   --execution-queue-count [1-32]                                                                                     specify the number of execution queries
-  --max-memory [0-128]                                                                                               specify the maximum amount of ram to be used (in gb)
+
+memory:
+  --video-memory-strategy {full-clear,partial-clear,no-clear}                                                        specify strategy to handle the video memory
+  --max-system-memory [0-128]                                                                                        specify the maximum amount of system memory to be used (in gb)
 
 face analyser:
   --face-analyser-order {left-right,right-left,top-bottom,bottom-top,small-large,large-small,best-worst,worst-best}  specify the order used for the face analyser
@@ -89,6 +92,7 @@ frame processors:
   --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,restoreformer}        choose the model for the frame processor
   --face-enhancer-blend [0-100]                                                                                      specify the blend amount for the frame processor
   --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial}           choose the model for the frame processor
+  --face-swapper-weight [1.0-5.0]                                                                                    specify the weight for the face swapper
   --frame-enhancer-model {real_esrgan_x2plus,real_esrgan_x4plus,real_esrnet_x4plus}                                  choose the model for the frame processor
   --frame-enhancer-blend [0-100]                                                                                     specify the blend amount for the frame processor
 

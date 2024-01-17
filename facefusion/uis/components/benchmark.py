@@ -6,11 +6,10 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.face_analyser import get_face_analyser
 from facefusion.face_store import clear_static_faces
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total, detect_video_resolution, detect_video_fps, pack_resolution
-from facefusion.core import limit_resources, conditional_process
+from facefusion.core import limit_system_memory, conditional_process
 from facefusion.normalizer import normalize_output_path
 from facefusion.filesystem import clear_temp
 from facefusion.uis.core import get_ui_component
@@ -90,8 +89,8 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 
 
 def pre_process() -> None:
-	limit_resources()
-	get_face_analyser()
+	if facefusion.globals.max_system_memory > 0:
+		limit_system_memory()
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		frame_processor_module.get_frame_processor()
 

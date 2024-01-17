@@ -1,8 +1,9 @@
 from typing import List
 
-from facefusion.typing import FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputVideoEncoder, OutputVideoPreset
+from facefusion.typing import VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputVideoEncoder, OutputVideoPreset
 from facefusion.common_helper import create_int_range, create_float_range
 
+video_memory_strategies : List[VideoMemoryStrategy] = ['strict', 'moderate', 'tolerant']
 face_analyser_orders : List[FaceAnalyserOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
 face_analyser_ages : List[FaceAnalyserAge] = [ 'child', 'teen', 'adult', 'senior' ]
 face_analyser_genders : List[FaceAnalyserGender] = [ 'male', 'female' ]
@@ -19,7 +20,7 @@ video_template_sizes : List[int] = [ 240, 360, 480, 540, 720, 1080, 1440, 2160 ]
 
 execution_thread_count_range : List[int] = create_int_range(1, 128, 1)
 execution_queue_count_range : List[int] = create_int_range(1, 32, 1)
-max_memory_range : List[int] = create_int_range(0, 128, 1)
+max_system_memory_range : List[int] = create_int_range(0, 128, 1)
 face_detector_score_range : List[float] = create_float_range(0.0, 1.0, 0.05)
 face_mask_blur_range : List[float] = create_float_range(0.0, 1.0, 0.05)
 face_mask_padding_range : List[int] = create_int_range(0, 100, 1)
