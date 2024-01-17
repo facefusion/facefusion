@@ -51,7 +51,10 @@ def cli() -> None:
 	group_execution.add_argument('--execution-providers', help = wording.get('execution_providers_help').format(choices = ', '.join(execution_providers)), default = config.get_str_list('execution.execution_providers', 'cpu'), choices = execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
 	group_execution.add_argument('--execution-thread-count', help = wording.get('execution_thread_count_help'), type = int, default = config.get_int_value('execution.execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_metavar(facefusion.choices.execution_thread_count_range))
 	group_execution.add_argument('--execution-queue-count', help = wording.get('execution_queue_count_help'), type = int, default = config.get_int_value('execution.execution_queue_count', '1'), choices = facefusion.choices.execution_queue_count_range, metavar = create_metavar(facefusion.choices.execution_queue_count_range))
-	group_execution.add_argument('--max-memory', help = wording.get('max_memory_help'), type = int, default = config.get_int_value('execution.max_memory', '0'), choices = facefusion.choices.max_memory_range, metavar = create_metavar(facefusion.choices.max_memory_range))
+	# memory
+	group_memory = program.add_argument_group('memory')
+	group_memory.add_argument('--video-memory-strategy', help = wording.get('video_memory_strategy_help'), default = config.get_str_value('memory.video_memory_strategy', 'strict'), choices = facefusion.choices.video_memory_strategies)
+	group_memory.add_argument('--max-system-memory', help = wording.get('max_system_memory_help'), type = int, default = config.get_int_value('memory.max_system_memory', '0'), choices = facefusion.choices.max_system_memory_range, metavar = create_metavar(facefusion.choices.max_system_memory_range))
 	# face analyser
 	group_face_analyser = program.add_argument_group('face analyser')
 	group_face_analyser.add_argument('--face-analyser-order', help = wording.get('face_analyser_order_help'), default = config.get_str_value('face_analyser.face_analyser_order', 'left-right'), choices = facefusion.choices.face_analyser_orders)
@@ -117,7 +120,9 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.execution_providers = decode_execution_providers(args.execution_providers)
 	facefusion.globals.execution_thread_count = args.execution_thread_count
 	facefusion.globals.execution_queue_count = args.execution_queue_count
-	facefusion.globals.max_memory = args.max_memory
+	# memory
+	facefusion.globals.video_memory_strategy = args.video_memory_strategy
+	facefusion.globals.max_system_memory = args.max_system_memory
 	# face analyser
 	facefusion.globals.face_analyser_order = args.face_analyser_order
 	facefusion.globals.face_analyser_age = args.face_analyser_age
@@ -165,7 +170,8 @@ def apply_args(program : ArgumentParser) -> None:
 def run(program : ArgumentParser) -> None:
 	apply_args(program)
 	logger.init(facefusion.globals.log_level)
-	limit_resources()
+	if facefusion.globals.max_system_memory > 0:
+		limit_system_memory()
 	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check():
 		return
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
@@ -188,20 +194,19 @@ def destroy() -> None:
 	sys.exit(0)
 
 
-def limit_resources() -> None:
-	if facefusion.globals.max_memory > 0:
-		memory = facefusion.globals.max_memory * 1024 ** 3
-		if platform.system().lower() == 'darwin':
-			memory = facefusion.globals.max_memory * 1024 ** 6
-		if platform.system().lower() == 'windows':
-			import ctypes
+def limit_system_memory() -> None:
+	system_memory = facefusion.globals.max_system_memory * 1024 ** 3
+	if platform.system().lower() == 'darwin':
+		system_memory = facefusion.globals.max_system_memory * 1024 ** 6
+	if platform.system().lower() == 'windows':
+		import ctypes
 
-			kernel32 = ctypes.windll.kernel32 # type: ignore[attr-defined]
-			kernel32.SetProcessWorkingSetSize(-1, ctypes.c_size_t(memory), ctypes.c_size_t(memory))
-		else:
-			import resource
+		kernel32 = ctypes.windll.kernel32 # type: ignore[attr-defined]
+		kernel32.SetProcessWorkingSetSize(-1, ctypes.c_size_t(system_memory), ctypes.c_size_t(system_memory))
+	else:
+		import resource
 
-			resource.setrlimit(resource.RLIMIT_DATA, (memory, memory))
+		resource.setrlimit(resource.RLIMIT_DATA, (system_memory, system_memory))
 
 
 def pre_check() -> bool:

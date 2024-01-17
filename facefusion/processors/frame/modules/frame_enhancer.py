@@ -129,10 +129,12 @@ def pre_process(mode : ProcessMode) -> bool:
 
 
 def post_process() -> None:
-	clear_frame_processor()
-	clear_face_analyser()
-	clear_content_analyser()
-	read_static_image.cache_clear()
+	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
+		clear_frame_processor()
+		read_static_image.cache_clear()
+	if facefusion.globals.video_memory_strategy == 'strict':
+		clear_face_analyser()
+		clear_content_analyser()
 
 
 def enhance_frame(temp_frame : Frame) -> Frame:
