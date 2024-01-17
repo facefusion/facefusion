@@ -10,4 +10,4 @@ face_debugger_items : List[FaceDebuggerItem] = [ 'bbox', 'kps', 'face-mask', 'sc
 
 face_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
-face_swapper_weight_range : List[float] = create_float_range(1.0, 5.0, 0.25)
+face_swapper_weight_range : List[float] = create_float_range(1.0, 3.0, 0.25)

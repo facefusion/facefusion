@@ -136,7 +136,7 @@ def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_fra
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
 			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
-			bbox_raw = (detections[index + feature_map_channel] * feature_stride)
+			bbox_raw = detections[index + feature_map_channel] * feature_stride
 			kps_raw = detections[index + feature_map_channel * 2] * feature_stride
 			for bbox in distance_to_bbox(anchors, bbox_raw)[keep_indices]:
 				bbox_list.append(numpy.array(
