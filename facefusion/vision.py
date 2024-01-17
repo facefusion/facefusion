@@ -2,8 +2,9 @@ from typing import Optional, List, Tuple
 from functools import lru_cache
 import cv2
 
-from facefusion.filesystem import is_image, is_video
 from facefusion.typing import Frame, Resolution
+from facefusion.choices import video_template_sizes
+from facefusion.filesystem import is_image, is_video
 
 
 def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[Frame]:
@@ -53,18 +54,17 @@ def detect_video_resolution(video_path : str) -> Optional[Tuple[float, float]]:
 def create_video_resolutions(video_path : str) -> Optional[List[str]]:
 	temp_range = []
 	video_resolution_range = []
-	template_range = [ 240, 360, 480, 540, 720, 1080, 1440, 2160 ]
 	video_resolution = detect_video_resolution(video_path)
 
 	if video_resolution:
 		width, height = video_resolution
 		temp_range.append(normalize_resolution(video_resolution))
 		if width > height:
-			for template_height in template_range:
+			for template_height in video_template_sizes:
 				template_width = width / height * template_height
 				temp_range.append(normalize_resolution((template_width, template_height)))
 		else:
-			for template_width in template_range:
+			for template_width in video_template_sizes:
 				template_height = height / width * template_width # type: ignore[assignment]
 				temp_range.append(normalize_resolution((template_width, template_height)))
 		temp_range = sorted(set(temp_range))
