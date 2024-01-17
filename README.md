@@ -47,7 +47,7 @@ execution:
   --execution-queue-count [1-32]                                                                                     specify the number of execution queries
 
 memory:
-  --video-memory-strategy {full-clear,partial-clear,no-clear}                                                        specify strategy to handle the video memory
+  --video-memory-strategy {strict,moderate,tolerant}                                                                 specify strategy to handle the video memory
   --max-system-memory [0-128]                                                                                        specify the maximum amount of system memory to be used (in gb)
 
 face analyser:
