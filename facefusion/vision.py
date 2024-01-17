@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from functools import lru_cache
 import cv2
 
@@ -39,7 +39,7 @@ def detect_video_fps(video_path : str) -> Optional[float]:
 	return None
 
 
-def detect_video_resolution(video_path : str) -> Optional[Resolution]:
+def detect_video_resolution(video_path : str) -> Optional[Tuple[float, float]]:
 	if is_video(video_path):
 		video_capture = cv2.VideoCapture(video_path)
 		if video_capture.isOpened():
@@ -69,12 +69,12 @@ def create_video_resolutions(video_path : str) -> Optional[List[str]]:
 				temp_range.append(normalize_resolution((template_width, template_height)))
 		temp_range = sorted(set(temp_range))
 		for temp in temp_range:
-			video_resolution_range.append(stringify_resolution(temp))
+			video_resolution_range.append(pack_resolution(temp))
 		return video_resolution_range
 	return None
 
 
-def normalize_resolution(resolution : Resolution) -> Resolution:
+def normalize_resolution(resolution : Tuple[float, float]) -> Resolution:
 	width, height = resolution
 
 	if width and height:
@@ -85,9 +85,14 @@ def normalize_resolution(resolution : Resolution) -> Resolution:
 	return 0, 0
 
 
-def stringify_resolution(resolution : Resolution) -> str:
+def pack_resolution(resolution : Tuple[float, float]) -> str:
 	width, height = normalize_resolution(resolution)
 	return str(width) + 'x' + str(height)
+
+
+def unpack_resolution(resolution : str) -> Resolution:
+	width, height = map(int, resolution.split('x'))
+	return width, height
 
 
 def resize_frame_resolution(frame : Frame, max_width : int, max_height : int) -> Frame:

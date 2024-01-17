@@ -9,7 +9,7 @@ from facefusion.typing import OutputVideoEncoder, OutputVideoPreset
 from facefusion.filesystem import is_image, is_video
 from facefusion.uis.typing import ComponentName
 from facefusion.uis.core import get_ui_component, register_ui_component
-from facefusion.vision import detect_video_fps, create_video_resolutions, detect_video_resolution, stringify_resolution
+from facefusion.vision import detect_video_fps, create_video_resolutions, detect_video_resolution, pack_resolution
 
 OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
 OUTPUT_IMAGE_QUALITY_SLIDER : Optional[gradio.Slider] = None
@@ -105,7 +105,7 @@ def remote_update() -> Tuple[gradio.Slider, gradio.Dropdown, gradio.Slider, grad
 		return gradio.Slider(visible = True), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Dropdown(visible = False, value = None, choices = None), gradio.Slider(visible = False, value = None)
 	if is_video(facefusion.globals.target_path):
 		target_video_resolution = detect_video_resolution(facefusion.globals.target_path)
-		output_video_resolution = stringify_resolution(target_video_resolution)
+		output_video_resolution = pack_resolution(target_video_resolution)
 		output_video_resolutions = create_video_resolutions(facefusion.globals.target_path)
 		output_video_fps = detect_video_fps(facefusion.globals.target_path)
 		return gradio.Slider(visible = False), gradio.Dropdown(visible = True), gradio.Slider(visible = True), gradio.Dropdown(visible = True, value = output_video_resolution, choices = output_video_resolutions), gradio.Slider(visible = True, value = output_video_fps)

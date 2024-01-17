@@ -16,7 +16,7 @@ from facefusion.typing import Frame, Face
 from facefusion.face_analyser import get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import open_ffmpeg
-from facefusion.vision import normalize_frame_color, read_static_images
+from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
 from facefusion.uis.typing import StreamMode, WebcamMode, ComponentName
 from facefusion.uis.core import get_ui_component
 
@@ -96,7 +96,7 @@ def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : float)
 	stream = None
 	if webcam_mode in [ 'udp', 'v4l2' ]:
 		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) # type: ignore[arg-type]
-	webcam_width, webcam_height = map(int, webcam_resolution.split('x'))
+	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
 	webcam_capture = get_webcam_capture()
 	if webcam_capture and webcam_capture.isOpened():
 		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) # type: ignore[attr-defined]

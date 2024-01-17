@@ -26,7 +26,7 @@ Frame = numpy.ndarray[Any, Any]
 Mask = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
 Padding = Tuple[int, int, int, int]
-Resolution = Tuple[float, float]
+Resolution = Tuple[int, int]
 
 Update_Process = Callable[[], None]
 Process_Frames = Callable[[List[str], List[str], Update_Process], None]

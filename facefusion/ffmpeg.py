@@ -3,8 +3,9 @@ import subprocess
 
 import facefusion.globals
 from facefusion import logger
-from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video_path
 from facefusion.typing import OutputVideoPreset
+from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video_path
+from facefusion.vision import unpack_resolution
 
 
 def run_ffmpeg(args : List[str]) -> bool:
@@ -25,7 +26,7 @@ def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 
 
 def extract_frames(target_path : str, video_resolution : str, video_fps : float) -> bool:
-	video_width, video_height = map(int, video_resolution.split('x'))
+	video_width, video_height = unpack_resolution(video_resolution)
 	temp_frame_compression = round(31 - (facefusion.globals.temp_frame_quality * 0.31))
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
