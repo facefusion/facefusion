@@ -11,7 +11,7 @@ from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
 from facefusion.filesystem import resolve_relative_path
 from facefusion.typing import Frame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding
-from facefusion.vision import resize_frame_dimension
+from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -98,9 +98,9 @@ def pre_check() -> bool:
 
 
 def extract_faces(frame : Frame) -> List[Face]:
-	face_detector_width, face_detector_height = map(int, facefusion.globals.face_detector_size.split('x'))
+	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
 	frame_height, frame_width, _ = frame.shape
-	temp_frame = resize_frame_dimension(frame, face_detector_width, face_detector_height)
+	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width

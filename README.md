@@ -79,6 +79,7 @@ output creation:
   --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc}                                          specify the encoder used for the output video
   --output-video-preset {ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow}                       specify the preset used for the output video
   --output-video-quality [0-100]                                                                                     specify the quality used for the output video
+  --output-video-resolution OUTPUT_VIDEO_RESOLUTION                                                                  specify the resolution used for the output video
   --output-video-fps OUTPUT_VIDEO_FPS                                                                                specify the frames per second (fps) used for the output video
   --skip-audio                                                                                                       omit audio from the target
 
