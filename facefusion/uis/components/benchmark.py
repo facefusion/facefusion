@@ -77,6 +77,8 @@ def listen() -> None:
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
 	facefusion.globals.source_paths = [ '.assets/examples/source.jpg' ]
+	facefusion.globals.temp_frame_format = 'bmp'
+	facefusion.globals.output_video_preset = 'ultrafast'
 	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 	benchmark_results = []
 	if target_paths:
