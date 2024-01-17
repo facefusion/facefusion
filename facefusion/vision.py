@@ -52,25 +52,23 @@ def detect_video_resolution(video_path : str) -> Optional[Tuple[float, float]]:
 
 
 def create_video_resolutions(video_path : str) -> Optional[List[str]]:
-	temp_range = []
-	video_resolution_range = []
+	temp_resolutions = []
+	video_resolutions = []
 	video_resolution = detect_video_resolution(video_path)
 
 	if video_resolution:
 		width, height = video_resolution
-		temp_range.append(normalize_resolution(video_resolution))
-		if width > height:
-			for template_height in video_template_sizes:
-				template_width = width / height * template_height
-				temp_range.append(normalize_resolution((template_width, template_height)))
-		else:
-			for template_width in video_template_sizes:
-				template_height = height / width * template_width # type: ignore[assignment]
-				temp_range.append(normalize_resolution((template_width, template_height)))
-		temp_range = sorted(set(temp_range))
-		for temp in temp_range:
-			video_resolution_range.append(pack_resolution(temp))
-		return video_resolution_range
+		temp_resolutions.append(normalize_resolution(video_resolution))
+
+		for template_size in video_template_sizes:
+			if width > height:
+				temp_resolutions.append(normalize_resolution((template_size * width / height, template_size)))
+			else:
+				temp_resolutions.append(normalize_resolution((template_size, template_size * height / width)))
+		temp_resolutions = sorted(set(temp_resolutions))
+		for temp in temp_resolutions:
+			video_resolutions.append(pack_resolution(temp))
+		return video_resolutions
 	return None
 
 
