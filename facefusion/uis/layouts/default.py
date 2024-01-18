@@ -30,8 +30,6 @@ def render() -> gradio.Blocks:
 					temp_frame.render()
 				with gradio.Blocks():
 					output_options.render()
-				with gradio.Blocks():
-					common_options.render()
 			with gradio.Column(scale = 2):
 				with gradio.Blocks():
 					source.render()
@@ -50,6 +48,8 @@ def render() -> gradio.Blocks:
 					face_masker.render()
 				with gradio.Blocks():
 					face_analyser.render()
+				with gradio.Blocks():
+					common_options.render()
 	return layout
 
 
@@ -62,7 +62,6 @@ def listen() -> None:
 	memory.listen()
 	temp_frame.listen()
 	output_options.listen()
-	common_options.listen()
 	source.listen()
 	target.listen()
 	output.listen()
@@ -71,6 +70,7 @@ def listen() -> None:
 	face_selector.listen()
 	face_masker.listen()
 	face_analyser.listen()
+	common_options.listen()
 
 
 def run(ui : gradio.Blocks) -> None:
