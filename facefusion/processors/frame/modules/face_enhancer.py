@@ -166,7 +166,6 @@ def post_process() -> None:
 
 
 def enhance_face(target_face: Face, temp_frame : Frame) -> Frame:
-	frame_processor = get_frame_processor()
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
 	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, model_template, model_size)
@@ -177,20 +176,27 @@ def enhance_face(target_face: Face, temp_frame : Frame) -> Frame:
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_occlusion_mask(crop_frame))
 	crop_frame = prepare_crop_frame(crop_frame)
-	frame_processor_inputs = {}
-	for frame_processor_input in frame_processor.get_inputs():
-		if frame_processor_input.name == 'input':
-			frame_processor_inputs[frame_processor_input.name] = crop_frame
-		if frame_processor_input.name == 'weight':
-			weight = numpy.array([ 1 ], dtype = numpy.double)
-			frame_processor_inputs[frame_processor_input.name] = weight
-	with THREAD_SEMAPHORE:
-		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
+	crop_frame = apply_enhance(crop_frame)
 	crop_frame = normalize_crop_frame(crop_frame)
 	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
 	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	temp_frame = blend_frame(temp_frame, paste_frame)
 	return temp_frame
+
+
+def apply_enhance(crop_frame : Frame) -> Frame:
+	frame_processor = get_frame_processor()
+	frame_processor_inputs = {}
+
+	for frame_processor_input in frame_processor.get_inputs():
+		if frame_processor_input.name == 'input':
+			frame_processor_inputs[frame_processor_input.name] = crop_frame
+		if frame_processor_input.name == 'weight':
+			weight = numpy.array([1], dtype = numpy.double)
+			frame_processor_inputs[frame_processor_input.name] = weight
+	with THREAD_SEMAPHORE:
+		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
+	return crop_frame
 
 
 def prepare_crop_frame(crop_frame : Frame) -> Frame:

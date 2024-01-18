@@ -94,7 +94,6 @@ def listen() -> None:
 			component.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	change_one_component_names : List[ComponentName] =\
 	[
-		'face_swapper_weight_slider',
 		'face_debugger_items_checkbox_group',
 		'face_enhancer_model_dropdown',
 		'face_enhancer_blend_slider',

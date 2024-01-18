@@ -9,7 +9,6 @@ from onnx import numpy_helper
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, wording
-from facefusion.common_helper import create_metavar
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_helper import warp_face_by_kps, paste_back
@@ -135,13 +134,11 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 def register_args(program : ArgumentParser) -> None:
 	program.add_argument('--face-swapper-model', help = wording.get('frame_processor_model_help'), default = config.get_str_value('frame_processors.face_swapper_model', 'inswapper_128_fp16'), choices = frame_processors_choices.face_swapper_models)
-	program.add_argument('--face-swapper-weight', help = wording.get('face_swapper_weight_help'), type = float, default = config.get_float_value('frame_processors.face_swapper_weight', '1.0'), choices = frame_processors_choices.face_swapper_weight_range, metavar = create_metavar(frame_processors_choices.face_swapper_weight_range))
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
-	frame_processors_globals.face_swapper_weight = args.face_swapper_weight
 	if args.face_swapper_model == 'blendswap_256':
 		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
 	if args.face_swapper_model == 'inswapper_128' or args.face_swapper_model == 'inswapper_128_fp16':
@@ -209,15 +206,9 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 		crop_mask_list.append(create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding))
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_occlusion_mask(crop_frame))
-	swap_iterations = int(numpy.ceil(frame_processors_globals.face_swapper_weight))
-	for swap_iteration in range(swap_iterations):
-		before_frame = crop_frame.copy()
-		crop_frame = prepare_crop_frame(crop_frame)
-		crop_frame = apply_swap(source_face, crop_frame)
-		crop_frame = normalize_crop_frame(crop_frame)
-	current_weight = frame_processors_globals.face_swapper_weight % 1.0
-	if current_weight > 0:
-		crop_frame = before_frame * (1 - current_weight) + crop_frame * current_weight
+	crop_frame = prepare_crop_frame(crop_frame)
+	crop_frame = apply_swap(source_face, crop_frame)
+	crop_frame = normalize_crop_frame(crop_frame)
 	if 'region' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_region_mask(crop_frame, facefusion.globals.face_mask_regions))
 	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
