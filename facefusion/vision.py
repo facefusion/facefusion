@@ -59,7 +59,6 @@ def create_video_resolutions(video_path : str) -> Optional[List[str]]:
 	if video_resolution:
 		width, height = video_resolution
 		temp_resolutions.append(normalize_resolution(video_resolution))
-
 		for template_size in video_template_sizes:
 			if width > height:
 				temp_resolutions.append(normalize_resolution((template_size * width / height, template_size)))
@@ -78,7 +77,6 @@ def normalize_resolution(resolution : Tuple[float, float]) -> Resolution:
 	if width and height:
 		normalize_width = round(width / 2) * 2
 		normalize_height = round(height / 2) * 2
-
 		return normalize_width, normalize_height
 	return 0, 0
 

@@ -2,7 +2,7 @@ import subprocess
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.vision import get_video_frame, count_video_frame_total, detect_video_fps, detect_video_resolution, create_video_resolutions
+from facefusion.vision import get_video_frame, count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution, unpack_resolution, create_video_resolutions
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -43,6 +43,16 @@ def test_detect_video_resolution() -> None:
 	assert detect_video_resolution('.assets/examples/target-240p.mp4') == (426.0, 226.0)
 	assert detect_video_resolution('.assets/examples/target-1080p.mp4') == (2048.0, 1080.0)
 	assert detect_video_resolution('invalid') is None
+
+
+def test_pack_resolution() -> None:
+	assert pack_resolution((1.0, 1.0)) == '0x0'
+	assert pack_resolution((2.0, 2.0)) == '2x2'
+
+
+def test_unpack_resolution() -> None:
+	assert unpack_resolution('0x0') == (0, 0)
+	assert unpack_resolution('2x2') == (2, 2)
 
 
 def test_create_video_resolutions() -> None:
