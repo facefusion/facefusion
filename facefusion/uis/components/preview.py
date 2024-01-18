@@ -142,8 +142,6 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 			logger.disable()
 			sleep(0.5)
 		logger.enable()
-		if not frame_processor_module.pre_process('preview'):
-			return gradio.Image(value = None)
 	conditional_append_reference_faces()
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)

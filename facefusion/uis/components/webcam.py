@@ -141,8 +141,6 @@ def update() -> None:
 			logger.disable()
 			sleep(0.5)
 		logger.enable()
-		if not frame_processor_module.pre_process('stream'):
-			return
 
 
 def stop() -> gradio.Image:
