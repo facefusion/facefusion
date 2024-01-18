@@ -34,7 +34,7 @@ Process_Frames = Callable[[List[str], List[str], Update_Process], None]
 Template = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
 ProcessMode = Literal['output', 'preview', 'stream']
 
-LogLevel = Literal['error',	'warn',	'info',	'debug']
+LogLevel = Literal['error', 'warn', 'info', 'debug']
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 FaceSelectorMode = Literal['reference', 'one', 'many']
 FaceAnalyserOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
