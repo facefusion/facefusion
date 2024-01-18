@@ -95,9 +95,7 @@ def listen() -> None:
 	change_one_component_names : List[ComponentName] =\
 	[
 		'face_debugger_items_checkbox_group',
-		'face_enhancer_model_dropdown',
 		'face_enhancer_blend_slider',
-		'frame_enhancer_model_dropdown',
 		'frame_enhancer_blend_slider',
 		'face_selector_mode_dropdown',
 		'reference_face_distance_slider',
@@ -116,7 +114,9 @@ def listen() -> None:
 	change_two_component_names : List[ComponentName] =\
 	[
 		'frame_processors_checkbox_group',
+		'face_enhancer_model_dropdown',
 		'face_swapper_model_dropdown',
+		'frame_enhancer_model_dropdown',
 		'face_detector_model_dropdown',
 		'face_detector_size_dropdown',
 		'face_detector_score_slider'
