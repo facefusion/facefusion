@@ -266,7 +266,7 @@ def prepare_crop_frame(crop_frame : Frame) -> Frame:
 def normalize_crop_frame(crop_frame : Frame) -> Frame:
 	crop_frame = crop_frame.transpose(1, 2, 0)
 	crop_frame = (crop_frame * 255.0).round()
-	crop_frame = crop_frame[:, :, ::-1].astype(numpy.uint8)
+	crop_frame = crop_frame[:, :, ::-1]
 	return crop_frame
 
 
