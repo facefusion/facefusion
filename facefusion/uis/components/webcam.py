@@ -74,7 +74,7 @@ def listen() -> None:
 	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 	WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
-	change_two_component_names : List[ComponentName] = \
+	change_two_component_names : List[ComponentName] =\
 	[
 		'frame_processors_checkbox_group',
 		'face_swapper_model_dropdown',

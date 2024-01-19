@@ -124,7 +124,7 @@ def update_output_video_encoder(output_video_encoder: OutputVideoEncoder) -> Non
 	facefusion.globals.output_video_encoder = output_video_encoder
 
 
-def update_output_video_preset(output_video_preset: OutputVideoPreset) -> None:
+def update_output_video_preset(output_video_preset : OutputVideoPreset) -> None:
 	facefusion.globals.output_video_preset = output_video_preset
 
 

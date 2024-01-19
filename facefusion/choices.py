@@ -3,7 +3,7 @@ from typing import List
 from facefusion.typing import VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputVideoEncoder, OutputVideoPreset
 from facefusion.common_helper import create_int_range, create_float_range
 
-video_memory_strategies : List[VideoMemoryStrategy] = ['strict', 'moderate', 'tolerant']
+video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
 face_analyser_orders : List[FaceAnalyserOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
 face_analyser_ages : List[FaceAnalyserAge] = [ 'child', 'teen', 'adult', 'senior' ]
 face_analyser_genders : List[FaceAnalyserGender] = [ 'male', 'female' ]
