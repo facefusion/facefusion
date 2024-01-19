@@ -56,7 +56,7 @@ def render() -> None:
 		step = frame_processors_choices.frame_enhancer_blend_range[1] - frame_processors_choices.frame_enhancer_blend_range[0],
 		minimum = frame_processors_choices.frame_enhancer_blend_range[0],
 		maximum = frame_processors_choices.frame_enhancer_blend_range[-1],
-		visible = 'face_enhancer' in facefusion.globals.frame_processors
+		visible = 'frame_enhancer' in facefusion.globals.frame_processors
 	)
 	FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('face_debugger_items_checkbox_group_label'),

@@ -45,7 +45,10 @@ execution:
   --execution-providers EXECUTION_PROVIDERS [EXECUTION_PROVIDERS ...]                                                choose from the available execution providers (choices: cpu, ...)
   --execution-thread-count [1-128]                                                                                   specify the number of execution threads
   --execution-queue-count [1-32]                                                                                     specify the number of execution queries
-  --max-memory [0-128]                                                                                               specify the maximum amount of ram to be used (in gb)
+
+memory:
+  --video-memory-strategy {strict,moderate,tolerant}                                                                 specify strategy to handle the video memory
+  --system-memory-limit [0-128]                                                                                      specify the amount (gb) of system memory to be used
 
 face analyser:
   --face-analyser-order {left-right,right-left,top-bottom,bottom-top,small-large,large-small,best-worst,worst-best}  specify the order used for the face analyser
@@ -70,15 +73,17 @@ face mask:
 frame extraction:
   --trim-frame-start TRIM_FRAME_START                                                                                specify the start frame for extraction
   --trim-frame-end TRIM_FRAME_END                                                                                    specify the end frame for extraction
-  --temp-frame-format {jpg,png}                                                                                      specify the image format used for frame extraction
+  --temp-frame-format {jpg,png,bmp}                                                                                  specify the image format used for frame extraction
   --temp-frame-quality [0-100]                                                                                       specify the image quality used for frame extraction
   --keep-temp                                                                                                        retain temporary frames after processing
 
 output creation:
   --output-image-quality [0-100]                                                                                     specify the quality used for the output image
   --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc}                                          specify the encoder used for the output video
+  --output-video-preset {ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow}                       specify the preset used for the output video
   --output-video-quality [0-100]                                                                                     specify the quality used for the output video
-  --keep-fps                                                                                                         preserve the frames per second (fps) of the target
+  --output-video-resolution OUTPUT_VIDEO_RESOLUTION                                                                  specify the resolution used for the output video
+  --output-video-fps OUTPUT_VIDEO_FPS                                                                                specify the frames per second (fps) used for the output video
   --skip-audio                                                                                                       omit audio from the target
 
 frame processors:

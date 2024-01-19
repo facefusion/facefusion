@@ -25,7 +25,7 @@ if platform.system().lower() == 'linux' or platform.system().lower() == 'windows
 	TORCH['cuda'] = 'cu118'
 	TORCH['cuda-nightly'] = 'cu121'
 	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.16.3')
-	ONNXRUNTIMES['cuda-nightly'] = ('ort-nightly-gpu', '1.17.0.dev20231205004')
+	ONNXRUNTIMES['cuda-nightly'] = ('onnxruntime-gpu', '1.17.0')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
 if platform.system().lower() == 'linux':
 	TORCH['rocm'] = 'rocm5.6'
@@ -72,9 +72,9 @@ def run(program : ArgumentParser) -> None:
 
 		subprocess.call([ 'pip', 'uninstall', 'torch', '-y', '-q' ])
 		if torch_wheel == 'default':
-			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt' ])
+			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--force-reinstall' ])
 		else:
-			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel ])
+			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel, '--force-reinstall' ])
 		if onnxruntime == 'rocm':
 			if python_id in [ 'cp39', 'cp310', 'cp311' ]:
 				wheel_name = 'onnxruntime_training-' + onnxruntime_version + '+rocm56-' + python_id + '-' + python_id + '-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
@@ -82,11 +82,11 @@ def run(program : ArgumentParser) -> None:
 				wheel_url = 'https://download.onnxruntime.ai/' + wheel_name
 				subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
 				subprocess.call([ 'pip', 'uninstall', wheel_path, '-y', '-q' ])
-				subprocess.call([ 'pip', 'install', wheel_path ])
+				subprocess.call([ 'pip', 'install', wheel_path, '--force-reinstall' ])
 				os.remove(wheel_path)
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
 			if onnxruntime == 'cuda-nightly':
-				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--extra-index-url', 'https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ort-cuda-12-nightly/pypi/simple' ])
+				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--extra-index-url', 'https://pkgs.dev.azure.com/onnxruntime/onnxruntime/_packaging/onnxruntime-cuda-12/pypi/simple', '--force-reinstall' ])
 			else:
-				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version ])
+				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])

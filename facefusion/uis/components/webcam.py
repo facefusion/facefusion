@@ -1,22 +1,23 @@
-from typing import Optional, Generator, Deque
-from concurrent.futures import ThreadPoolExecutor
-from collections import deque
+from typing import Optional, Generator, Deque, List
 import os
 import platform
 import subprocess
 import cv2
 import gradio
+from time import sleep
+from concurrent.futures import ThreadPoolExecutor
+from collections import deque
 from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import logger, wording
 from facefusion.content_analyser import analyse_stream
-from facefusion.typing import Frame, Face
+from facefusion.typing import Frame, Face, Fps
 from facefusion.face_analyser import get_average_face
-from facefusion.processors.frame.core import get_frame_processors_modules
+from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import open_ffmpeg
-from facefusion.vision import normalize_frame_color, read_static_images
-from facefusion.uis.typing import StreamMode, WebcamMode
+from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
+from facefusion.uis.typing import StreamMode, WebcamMode, ComponentName
 from facefusion.uis.core import get_ui_component
 
 WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
@@ -73,28 +74,36 @@ def listen() -> None:
 	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 	WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
-	source_image = get_ui_component('source_image')
-	if source_image:
-		for method in [ 'upload', 'change', 'clear' ]:
-			getattr(source_image, method)(stop, cancels = start_event)
+	change_two_component_names : List[ComponentName] =\
+	[
+		'frame_processors_checkbox_group',
+		'face_swapper_model_dropdown',
+		'face_enhancer_model_dropdown',
+		'frame_enhancer_model_dropdown',
+		'source_image'
+	]
+	for component_name in change_two_component_names:
+		component = get_ui_component(component_name)
+		if component:
+			component.change(update, cancels = start_event)
 
 
-def start(webcam_mode : WebcamMode, resolution : str, fps : float) -> Generator[Frame, None, None]:
+def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[Frame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_analyser_order = 'large-small'
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
 	stream = None
 	if webcam_mode in [ 'udp', 'v4l2' ]:
-		stream = open_stream(webcam_mode, resolution, fps) # type: ignore[arg-type]
-	webcam_width, webcam_height = map(int, resolution.split('x'))
+		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) # type: ignore[arg-type]
+	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
 	webcam_capture = get_webcam_capture()
 	if webcam_capture and webcam_capture.isOpened():
 		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) # type: ignore[attr-defined]
 		webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
 		webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
-		webcam_capture.set(cv2.CAP_PROP_FPS, fps)
-		for capture_frame in multi_process_capture(source_face, webcam_capture, fps):
+		webcam_capture.set(cv2.CAP_PROP_FPS, webcam_fps)
+		for capture_frame in multi_process_capture(source_face, webcam_capture, webcam_fps):
 			if webcam_mode == 'inline':
 				yield normalize_frame_color(capture_frame)
 			else:
@@ -105,14 +114,14 @@ def start(webcam_mode : WebcamMode, resolution : str, fps : float) -> Generator[
 				yield None
 
 
-def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, fps : float) -> Generator[Frame, None, None]:
+def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[Frame, None, None]:
 	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
 			deque_capture_frames : Deque[Frame] = deque()
 			while webcam_capture and webcam_capture.isOpened():
 				_, capture_frame = webcam_capture.read()
-				if analyse_stream(capture_frame, fps):
+				if analyse_stream(capture_frame, webcam_fps):
 					return
 				future = executor.submit(process_stream_frame, source_face, capture_frame)
 				futures.append(future)
@@ -125,6 +134,15 @@ def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture,
 					yield deque_capture_frames.popleft()
 
 
+def update() -> None:
+	for frame_processor in facefusion.globals.frame_processors:
+		frame_processor_module = load_frame_processor_module(frame_processor)
+		while not frame_processor_module.post_check():
+			logger.disable()
+			sleep(0.5)
+		logger.enable()
+
+
 def stop() -> gradio.Image:
 	clear_webcam_capture()
 	return gradio.Image(value = None)
@@ -132,7 +150,9 @@ def stop() -> gradio.Image:
 
 def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
+		logger.disable()
 		if frame_processor_module.pre_process('stream'):
+			logger.enable()
 			temp_frame = frame_processor_module.process_frame(
 				source_face,
 				None,
@@ -141,8 +161,8 @@ def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
 	return temp_frame
 
 
-def open_stream(stream_mode : StreamMode, resolution : str, fps : float) -> subprocess.Popen[bytes]:
-	commands = [ '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', resolution, '-r', str(fps), '-i', '-' ]
+def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : Fps) -> subprocess.Popen[bytes]:
+	commands = [ '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', stream_resolution, '-r', str(stream_fps), '-i', '-']
 	if stream_mode == 'udp':
 		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000?pkt_size=1316' ])
 	if stream_mode == 'v4l2':

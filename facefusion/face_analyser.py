@@ -7,10 +7,11 @@ import onnxruntime
 import facefusion.globals
 from facefusion.download import conditional_download
 from facefusion.face_store import get_static_faces, set_static_faces
-from facefusion.face_helper import warp_face, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
+from facefusion.execution_helper import apply_execution_provider_options
+from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
 from facefusion.filesystem import resolve_relative_path
 from facefusion.typing import Frame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding
-from facefusion.vision import resize_frame_dimension
+from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -56,16 +57,16 @@ def get_face_analyser() -> Any:
 	with THREAD_LOCK:
 		if FACE_ANALYSER is None:
 			if facefusion.globals.face_detector_model == 'retinaface':
-				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = facefusion.globals.execution_providers)
+				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_detector_model == 'yunet':
 				face_detector = cv2.FaceDetectorYN.create(MODELS.get('face_detector_yunet').get('path'), '', (0, 0))
 			if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_blendswap').get('path'), providers = facefusion.globals.execution_providers)
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_blendswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = facefusion.globals.execution_providers)
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = facefusion.globals.execution_providers)
-			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = facefusion.globals.execution_providers)
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			FACE_ANALYSER =\
 			{
 				'face_detector': face_detector,
@@ -96,10 +97,10 @@ def pre_check() -> bool:
 	return True
 
 
-def extract_faces(frame: Frame) -> List[Face]:
-	face_detector_width, face_detector_height = map(int, facefusion.globals.face_detector_size.split('x'))
+def extract_faces(frame : Frame) -> List[Face]:
+	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
 	frame_height, frame_width, _ = frame.shape
-	temp_frame = resize_frame_dimension(frame, face_detector_width, face_detector_height)
+	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width
@@ -135,7 +136,7 @@ def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_fra
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
 			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
-			bbox_raw = (detections[index + feature_map_channel] * feature_stride)
+			bbox_raw = detections[index + feature_map_channel] * feature_stride
 			kps_raw = detections[index + feature_map_channel * 2] * feature_stride
 			for bbox in distance_to_bbox(anchors, bbox_raw)[keep_indices]:
 				bbox_list.append(numpy.array(
@@ -188,7 +189,7 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 			kps = kps_list[index]
 			score = score_list[index]
 			embedding, normed_embedding = calc_embedding(frame, kps)
-			gender, age = detect_gender_age(frame, kps)
+			gender, age = detect_gender_age(frame, bbox)
 			faces.append(Face(
 				bbox = bbox,
 				kps = kps,
@@ -203,7 +204,7 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 
 def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]:
 	face_recognizer = get_face_analyser().get('face_recognizer')
-	crop_frame, matrix = warp_face(temp_frame, kps, 'arcface_112_v2', (112, 112))
+	crop_frame, matrix = warp_face_by_kps(temp_frame, kps, 'arcface_112_v2', (112, 112))
 	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
 	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
@@ -216,10 +217,15 @@ def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]
 	return embedding, normed_embedding
 
 
-def detect_gender_age(frame : Frame, kps : Kps) -> Tuple[int, int]:
+def detect_gender_age(frame : Frame, bbox : Bbox) -> Tuple[int, int]:
 	gender_age = get_face_analyser().get('gender_age')
-	crop_frame, affine_matrix = warp_face(frame, kps, 'arcface_112_v2', (96, 96))
-	crop_frame = numpy.expand_dims(crop_frame, axis = 0).transpose(0, 3, 1, 2).astype(numpy.float32)
+	bbox = bbox.reshape(2, -1)
+	scale = 64 / numpy.subtract(*bbox[::-1]).max()
+	translation = 48 - bbox.sum(axis = 0) * 0.5 * scale
+	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]])
+	crop_frame = cv2.warpAffine(frame, affine_matrix, (96, 96))
+	crop_frame = crop_frame.astype(numpy.float32)[:, :, ::-1].transpose(2, 0, 1)
+	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
 	prediction = gender_age.run(None,
 	{
 		gender_age.get_inputs()[0].name: crop_frame
@@ -297,10 +303,14 @@ def find_similar_faces(frame : Frame, reference_faces : FaceSet, face_distance :
 
 
 def compare_faces(face : Face, reference_face : Face, face_distance : float) -> bool:
+	current_face_distance = calc_face_distance(face, reference_face)
+	return current_face_distance < face_distance
+
+
+def calc_face_distance(face : Face, reference_face : Face) -> float:
 	if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
-		current_face_distance = 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
-		return current_face_distance < face_distance
-	return False
+		return 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
+	return 0
 
 
 def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:

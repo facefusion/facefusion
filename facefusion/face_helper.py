@@ -10,47 +10,59 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
 	'arcface_112_v1': numpy.array(
 	[
-		[ 39.7300, 51.1380 ],
-		[ 72.2700, 51.1380 ],
-		[ 56.0000, 68.4930 ],
-		[ 42.4630, 87.0100 ],
-		[ 69.5370, 87.0100 ]
+		[ 0.35473214, 0.45658929 ],
+		[ 0.64526786, 0.45658929 ],
+		[ 0.50000000, 0.61154464 ],
+		[ 0.37913393, 0.77687500 ],
+		[ 0.62086607, 0.77687500 ]
 	]),
 	'arcface_112_v2': numpy.array(
 	[
-		[ 38.2946, 51.6963 ],
-		[ 73.5318, 51.5014 ],
-		[ 56.0252, 71.7366 ],
-		[ 41.5493, 92.3655 ],
-		[ 70.7299, 92.2041 ]
+		[ 0.34191607, 0.46157411 ],
+		[ 0.65653393, 0.45983393 ],
+		[ 0.50022500, 0.64050536 ],
+		[ 0.37097589, 0.82469196 ],
+		[ 0.63151696, 0.82325089 ]
 	]),
 	'arcface_128_v2': numpy.array(
 	[
-		[ 46.2946, 51.6963 ],
-		[ 81.5318, 51.5014 ],
-		[ 64.0252, 71.7366 ],
-		[ 49.5493, 92.3655 ],
-		[ 78.7299, 92.2041 ]
+		[ 0.36167656, 0.40387734 ],
+		[ 0.63696719, 0.40235469 ],
+		[ 0.50019687, 0.56044219 ],
+		[ 0.38710391, 0.72160547 ],
+		[ 0.61507734, 0.72034453 ]
 	]),
 	'ffhq_512': numpy.array(
 	[
-		[ 192.98138, 239.94708 ],
-		[ 318.90277, 240.1936 ],
-		[ 256.63416, 314.01935 ],
-		[ 201.26117, 371.41043 ],
-		[ 313.08905, 371.15118 ]
+		[ 0.37691676, 0.46864664 ],
+		[ 0.62285697, 0.46912813 ],
+		[ 0.50123859, 0.61331904 ],
+		[ 0.39308822, 0.72541100 ],
+		[ 0.61150205, 0.72490465 ]
 	])
 }
 
 
-def warp_face(temp_frame : Frame, kps : Kps, template : Template, size : Size) -> Tuple[Frame, Matrix]:
-	normed_template = TEMPLATES.get(template) * size[1] / size[0]
+def warp_face_by_kps(temp_frame : Frame, kps : Kps, template : Template, crop_size : Size) -> Tuple[Frame, Matrix]:
+	normed_template = TEMPLATES.get(template) * crop_size
 	affine_matrix = cv2.estimateAffinePartial2D(kps, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
-	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, (size[1], size[1]), borderMode = cv2.BORDER_REPLICATE)
+	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
 	return crop_frame, affine_matrix
 
 
-def paste_back(temp_frame : Frame, crop_frame: Frame, crop_mask : Mask, affine_matrix : Matrix) -> Frame:
+def warp_face_by_bbox(temp_frame : Frame, bbox : Bbox, crop_size : Size) -> Tuple[Frame, Matrix]:
+	source_kps = numpy.array([[ bbox[0], bbox[1] ], [bbox[2], bbox[1] ], [bbox[0], bbox[3] ]], dtype = numpy.float32)
+	target_kps = numpy.array([[ 0, 0 ], [ crop_size[0], 0 ], [ 0, crop_size[1] ]], dtype = numpy.float32)
+	affine_matrix = cv2.getAffineTransform(source_kps, target_kps)
+	if bbox[2] - bbox[0] > crop_size[0] or bbox[3] - bbox[1] > crop_size[1]:
+		interpolation_method = cv2.INTER_AREA
+	else:
+		interpolation_method = cv2.INTER_LINEAR
+	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, crop_size, flags = interpolation_method)
+	return crop_frame, affine_matrix
+
+
+def paste_back(temp_frame : Frame, crop_frame : Frame, crop_mask : Mask, affine_matrix : Matrix) -> Frame:
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_frame_size = temp_frame.shape[:2][::-1]
 	inverse_crop_mask = cv2.warpAffine(crop_mask, inverse_matrix, temp_frame_size).clip(0, 1)

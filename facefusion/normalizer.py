@@ -2,7 +2,7 @@ from typing import List, Optional
 import os
 
 from facefusion.filesystem import is_file, is_directory
-from facefusion.typing import Padding
+from facefusion.typing import Padding, Fps
 
 
 def normalize_output_path(source_paths : List[str], target_path : str, output_path : str) -> Optional[str]:
@@ -31,4 +31,14 @@ def normalize_padding(padding : Optional[List[int]]) -> Optional[Padding]:
 		return tuple([ padding[0], padding[1], padding[2], padding[1] ]) # type: ignore[return-value]
 	if padding and len(padding) == 4:
 		return tuple(padding) # type: ignore[return-value]
+	return None
+
+
+def normalize_fps(fps : Optional[float]) -> Optional[Fps]:
+	if fps is not None:
+		if fps < 1.0:
+			return 1.0
+		if fps > 60.0:
+			return 60.0
+		return fps
 	return None

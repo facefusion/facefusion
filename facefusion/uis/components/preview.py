@@ -1,17 +1,18 @@
 from typing import Any, Dict, List, Optional
+from time import sleep
 import cv2
 import gradio
 
 import facefusion.globals
-from facefusion import wording
+from facefusion import wording, logger
 from facefusion.core import conditional_append_reference_faces
 from facefusion.face_store import clear_static_faces, get_reference_faces, clear_reference_faces
 from facefusion.typing import Frame, Face, FaceSet
-from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_dimension, read_static_image, read_static_images
+from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_resolution, read_static_image, read_static_images
+from facefusion.filesystem import is_image, is_video
 from facefusion.face_analyser import get_average_face, clear_face_analyser
 from facefusion.content_analyser import analyse_frame
 from facefusion.processors.frame.core import load_frame_processor_module
-from facefusion.filesystem import is_image, is_video
 from facefusion.uis.typing import ComponentName
 from facefusion.uis.core import get_ui_component, register_ui_component
 
@@ -94,9 +95,7 @@ def listen() -> None:
 	change_one_component_names : List[ComponentName] =\
 	[
 		'face_debugger_items_checkbox_group',
-		'face_enhancer_model_dropdown',
 		'face_enhancer_blend_slider',
-		'frame_enhancer_model_dropdown',
 		'frame_enhancer_blend_slider',
 		'face_selector_mode_dropdown',
 		'reference_face_distance_slider',
@@ -115,7 +114,9 @@ def listen() -> None:
 	change_two_component_names : List[ComponentName] =\
 	[
 		'frame_processors_checkbox_group',
+		'face_enhancer_model_dropdown',
 		'face_swapper_model_dropdown',
+		'frame_enhancer_model_dropdown',
 		'face_detector_model_dropdown',
 		'face_detector_size_dropdown',
 		'face_detector_score_slider'
@@ -130,22 +131,29 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 	clear_face_analyser()
 	clear_reference_faces()
 	clear_static_faces()
+	sleep(0.5)
 	return update_preview_image(frame_number)
 
 
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
+	for frame_processor in facefusion.globals.frame_processors:
+		frame_processor_module = load_frame_processor_module(frame_processor)
+		while not frame_processor_module.post_check():
+			logger.disable()
+			sleep(0.5)
+		logger.enable()
 	conditional_append_reference_faces()
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
-	reference_face = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	if is_image(facefusion.globals.target_path):
 		target_frame = read_static_image(facefusion.globals.target_path)
-		preview_frame = process_preview_frame(source_face, reference_face, target_frame)
+		preview_frame = process_preview_frame(source_face, reference_faces, target_frame)
 		preview_frame = normalize_frame_color(preview_frame)
 		return gradio.Image(value = preview_frame)
 	if is_video(facefusion.globals.target_path):
 		temp_frame = get_video_frame(facefusion.globals.target_path, frame_number)
-		preview_frame = process_preview_frame(source_face, reference_face, temp_frame)
+		preview_frame = process_preview_frame(source_face, reference_faces, temp_frame)
 		preview_frame = normalize_frame_color(preview_frame)
 		return gradio.Image(value = preview_frame)
 	return gradio.Image(value = None)
@@ -159,12 +167,14 @@ def update_preview_frame_slider() -> gradio.Slider:
 
 
 def process_preview_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
-	temp_frame = resize_frame_dimension(temp_frame, 640, 640)
+	temp_frame = resize_frame_resolution(temp_frame, 640, 640)
 	if analyse_frame(temp_frame):
 		return cv2.GaussianBlur(temp_frame, (99, 99), 0)
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
+		logger.disable()
 		if frame_processor_module.pre_process('preview'):
+			logger.enable()
 			temp_frame = frame_processor_module.process_frame(
 				source_face,
 				reference_faces,

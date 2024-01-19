@@ -7,12 +7,12 @@ from realesrgan import RealESRGANer
 
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
-from facefusion import logger, wording
+from facefusion import config, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
 from facefusion.common_helper import create_metavar
-from facefusion.execution_helper import map_device
+from facefusion.execution_helper import map_torch_backend
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
@@ -61,7 +61,7 @@ def get_frame_processor() -> Any:
 					num_out_ch = 3,
 					scale = model_scale
 				),
-				device = map_device(facefusion.globals.execution_providers),
+				device = map_torch_backend(facefusion.globals.execution_providers),
 				scale = model_scale
 			)
 	return FRAME_PROCESSOR
@@ -91,8 +91,8 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('frame_processor_model_help'), default = 'real_esrgan_x2plus', choices = frame_processors_choices.frame_enhancer_models)
-	program.add_argument('--frame-enhancer-blend', help = wording.get('frame_processor_blend_help'), type = int, default = 80, choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
+	program.add_argument('--frame-enhancer-model', help = wording.get('frame_processor_model_help'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'real_esrgan_x2plus'), choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-blend', help = wording.get('frame_processor_blend_help'), type = int, default = config.get_int_value('frame_processors.frame_enhancer_blend', '80'), choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
 
 
 def apply_args(program : ArgumentParser) -> None:
@@ -109,7 +109,7 @@ def pre_check() -> bool:
 	return True
 
 
-def pre_process(mode : ProcessMode) -> bool:
+def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
@@ -118,6 +118,10 @@ def pre_process(mode : ProcessMode) -> bool:
 	elif not is_file(model_path):
 		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
+	return True
+
+
+def pre_process(mode : ProcessMode) -> bool:
 	if mode == 'output' and not facefusion.globals.output_path:
 		logger.error(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False
@@ -125,10 +129,12 @@ def pre_process(mode : ProcessMode) -> bool:
 
 
 def post_process() -> None:
-	clear_frame_processor()
-	clear_face_analyser()
-	clear_content_analyser()
-	read_static_image.cache_clear()
+	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
+		clear_frame_processor()
+		read_static_image.cache_clear()
+	if facefusion.globals.video_memory_strategy == 'strict':
+		clear_face_analyser()
+		clear_content_analyser()
 
 
 def enhance_frame(temp_frame : Frame) -> Frame:

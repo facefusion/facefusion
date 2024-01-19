@@ -21,13 +21,14 @@ FRAME_PROCESSORS_METHODS =\
 	'register_args',
 	'apply_args',
 	'pre_check',
+	'post_check',
 	'pre_process',
+	'post_process',
 	'get_reference_frame',
 	'process_frame',
 	'process_frames',
 	'process_image',
-	'process_video',
-	'post_process'
+	'process_video'
 ]
 
 
@@ -38,10 +39,12 @@ def load_frame_processor_module(frame_processor : str) -> Any:
 			if not hasattr(frame_processor_module, method_name):
 				raise NotImplementedError
 	except ModuleNotFoundError as exception:
+		logger.error(wording.get('frame_processor_not_loaded').format(frame_processor = frame_processor), __name__.upper())
 		logger.debug(exception.msg, __name__.upper())
-		sys.exit(wording.get('frame_processor_not_loaded').format(frame_processor = frame_processor))
+		sys.exit(1)
 	except NotImplementedError:
-		sys.exit(wording.get('frame_processor_not_implemented').format(frame_processor = frame_processor))
+		logger.error(wording.get('frame_processor_not_implemented').format(frame_processor = frame_processor), __name__.upper())
+		sys.exit(1)
 	return frame_processor_module
 
 
@@ -73,11 +76,11 @@ def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str],
 		})
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
-			queue_temp_frame_paths : Queue[str] = create_queue(temp_frame_paths)
+			queue_frame_paths : Queue[str] = create_queue(temp_frame_paths)
 			queue_per_future = max(len(temp_frame_paths) // facefusion.globals.execution_thread_count * facefusion.globals.execution_queue_count, 1)
-			while not queue_temp_frame_paths.empty():
-				payload_temp_frame_paths = pick_queue(queue_temp_frame_paths, queue_per_future)
-				future = executor.submit(process_frames, source_paths, payload_temp_frame_paths, progress.update)
+			while not queue_frame_paths.empty():
+				submit_frame_paths = pick_queue(queue_frame_paths, queue_per_future)
+				future = executor.submit(process_frames, source_paths, submit_frame_paths, progress.update)
 				futures.append(future)
 			for future_done in as_completed(futures):
 				future_done.result()

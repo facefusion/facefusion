@@ -29,6 +29,14 @@ def error(message : str, scope : str) -> None:
 	get_package_logger().error('[' + scope + '] ' + message)
 
 
+def enable() -> None:
+	get_package_logger().disabled = False
+
+
+def disable() -> None:
+	get_package_logger().disabled = True
+
+
 def get_log_levels() -> Dict[LogLevel, int]:
 	return\
 	{

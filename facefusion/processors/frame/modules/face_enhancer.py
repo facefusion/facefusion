@@ -7,9 +7,10 @@ import onnxruntime
 
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
-from facefusion import logger, wording
+from facefusion import config, logger, wording
 from facefusion.face_analyser import get_many_faces, clear_face_analyser, find_similar_faces, get_one_face
-from facefusion.face_helper import warp_face, paste_back
+from facefusion.execution_helper import apply_execution_provider_options
+from facefusion.face_helper import warp_face_by_kps, paste_back
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
 from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
@@ -60,7 +61,7 @@ MODELS : ModelSet =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_256.onnx',
 		'path': resolve_relative_path('../.assets/models/gpen_bfr_256.onnx'),
 		'template': 'arcface_128_v2',
-		'size': (128, 256)
+		'size': (256, 256)
 	},
 	'gpen_bfr_512':
 	{
@@ -86,7 +87,7 @@ def get_frame_processor() -> Any:
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = facefusion.globals.execution_providers)
+			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 	return FRAME_PROCESSOR
 
 
@@ -114,8 +115,8 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--face-enhancer-model', help = wording.get('frame_processor_model_help'), default = 'gfpgan_1.4', choices = frame_processors_choices.face_enhancer_models)
-	program.add_argument('--face-enhancer-blend', help = wording.get('frame_processor_blend_help'), type = int, default = 80, choices = frame_processors_choices.face_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.face_enhancer_blend_range))
+	program.add_argument('--face-enhancer-model', help = wording.get('frame_processor_model_help'), default = config.get_str_value('frame_processors.face_enhancer_model', 'gfpgan_1.4'), choices = frame_processors_choices.face_enhancer_models)
+	program.add_argument('--face-enhancer-blend', help = wording.get('frame_processor_blend_help'), type = int, default = config.get_int_value('frame_processors.face_enhancer_blend', '80'), choices = frame_processors_choices.face_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.face_enhancer_blend_range))
 
 
 def apply_args(program : ArgumentParser) -> None:
@@ -132,7 +133,7 @@ def pre_check() -> bool:
 	return True
 
 
-def pre_process(mode : ProcessMode) -> bool:
+def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
@@ -141,6 +142,10 @@ def pre_process(mode : ProcessMode) -> bool:
 	elif not is_file(model_path):
 		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
+	return True
+
+
+def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
 		logger.error(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
@@ -151,18 +156,19 @@ def pre_process(mode : ProcessMode) -> bool:
 
 
 def post_process() -> None:
-	clear_frame_processor()
-	clear_face_analyser()
-	clear_content_analyser()
-	clear_face_occluder()
-	read_static_image.cache_clear()
+	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
+		clear_frame_processor()
+		read_static_image.cache_clear()
+	if facefusion.globals.video_memory_strategy == 'strict':
+		clear_face_analyser()
+		clear_content_analyser()
+		clear_face_occluder()
 
 
-def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
-	frame_processor = get_frame_processor()
+def enhance_face(target_face: Face, temp_frame : Frame) -> Frame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
-	crop_frame, affine_matrix = warp_face(temp_frame, target_face.kps, model_template, model_size)
+	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, model_template, model_size)
 	crop_mask_list =\
 	[
 		create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, (0, 0, 0, 0))
@@ -170,19 +176,27 @@ def enhance_face(target_face: Face, temp_frame: Frame) -> Frame:
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_occlusion_mask(crop_frame))
 	crop_frame = prepare_crop_frame(crop_frame)
-	frame_processor_inputs = {}
-	for frame_processor_input in frame_processor.get_inputs():
-		if frame_processor_input.name == 'input':
-			frame_processor_inputs[frame_processor_input.name] = crop_frame
-		if frame_processor_input.name == 'weight':
-			frame_processor_inputs[frame_processor_input.name] = numpy.array([ 1 ], dtype = numpy.double)
-	with THREAD_SEMAPHORE:
-		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
+	crop_frame = apply_enhance(crop_frame)
 	crop_frame = normalize_crop_frame(crop_frame)
 	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
 	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	temp_frame = blend_frame(temp_frame, paste_frame)
 	return temp_frame
+
+
+def apply_enhance(crop_frame : Frame) -> Frame:
+	frame_processor = get_frame_processor()
+	frame_processor_inputs = {}
+
+	for frame_processor_input in frame_processor.get_inputs():
+		if frame_processor_input.name == 'input':
+			frame_processor_inputs[frame_processor_input.name] = crop_frame
+		if frame_processor_input.name == 'weight':
+			weight = numpy.array([ 1 ], dtype = numpy.double)
+			frame_processor_inputs[frame_processor_input.name] = weight
+	with THREAD_SEMAPHORE:
+		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
+	return crop_frame
 
 
 def prepare_crop_frame(crop_frame : Frame) -> Frame:
@@ -207,7 +221,7 @@ def blend_frame(temp_frame : Frame, paste_frame : Frame) -> Frame:
 	return temp_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Optional[Frame]:
+def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
 	return enhance_face(target_face, temp_frame)
 
 
