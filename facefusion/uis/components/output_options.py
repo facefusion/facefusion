@@ -5,7 +5,7 @@ import gradio
 import facefusion.globals
 import facefusion.choices
 from facefusion import wording
-from facefusion.typing import OutputVideoEncoder, OutputVideoPreset
+from facefusion.typing import OutputVideoEncoder, OutputVideoPreset, Fps
 from facefusion.filesystem import is_image, is_video
 from facefusion.uis.typing import ComponentName
 from facefusion.uis.core import get_ui_component, register_ui_component
@@ -136,5 +136,5 @@ def update_output_video_resolution(output_video_resolution : str) -> None:
 	facefusion.globals.output_video_resolution = output_video_resolution
 
 
-def update_output_video_fps(output_video_fps : float) -> None:
+def update_output_video_fps(output_video_fps : Fps) -> None:
 	facefusion.globals.output_video_fps = output_video_fps

@@ -12,7 +12,7 @@ from tqdm import tqdm
 import facefusion.globals
 from facefusion import logger, wording
 from facefusion.content_analyser import analyse_stream
-from facefusion.typing import Frame, Face
+from facefusion.typing import Frame, Face, Fps
 from facefusion.face_analyser import get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import open_ffmpeg
@@ -88,7 +88,7 @@ def listen() -> None:
 			component.change(update, cancels = start_event)
 
 
-def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : float) -> Generator[Frame, None, None]:
+def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[Frame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_analyser_order = 'large-small'
 	source_frames = read_static_images(facefusion.globals.source_paths)
@@ -114,7 +114,7 @@ def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : float)
 				yield None
 
 
-def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, webcam_fps : float) -> Generator[Frame, None, None]:
+def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[Frame, None, None]:
 	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
@@ -161,7 +161,7 @@ def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
 	return temp_frame
 
 
-def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : float) -> subprocess.Popen[bytes]:
+def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : Fps) -> subprocess.Popen[bytes]:
 	commands = [ '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', stream_resolution, '-r', str(stream_fps), '-i', '-']
 	if stream_mode == 'udp':
 		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000?pkt_size=1316' ])

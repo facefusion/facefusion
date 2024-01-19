@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.typing import Frame, ModelValue
+from facefusion.typing import Frame, ModelValue, Fps
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.vision import get_video_frame, count_video_frame_total, read_image, detect_video_fps
 from facefusion.filesystem import resolve_relative_path
@@ -53,7 +53,7 @@ def pre_check() -> bool:
 	return True
 
 
-def analyse_stream(frame : Frame, video_fps : float) -> bool:
+def analyse_stream(frame : Frame, video_fps : Fps) -> bool:
 	global STREAM_COUNTER
 
 	STREAM_COUNTER = STREAM_COUNTER + 1

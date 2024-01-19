@@ -25,6 +25,8 @@ FaceStore = TypedDict('FaceStore',
 Frame = numpy.ndarray[Any, Any]
 Mask = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
+
+Fps = float
 Padding = Tuple[int, int, int, int]
 Resolution = Tuple[int, int]
 

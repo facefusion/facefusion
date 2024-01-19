@@ -22,10 +22,10 @@ from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.common_helper import create_metavar
 from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
-from facefusion.normalizer import normalize_output_path, normalize_padding
+from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
 from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video
 from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio
-from facefusion.vision import get_video_frame, read_image, read_static_images, pack_resolution, detect_video_resolution, detect_video_fps
+from facefusion.vision import get_video_frame, read_image, read_static_images, pack_resolution, detect_video_resolution, detect_video_fps, create_video_resolutions
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
@@ -151,11 +151,12 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.output_video_encoder = args.output_video_encoder
 	facefusion.globals.output_video_preset = args.output_video_preset
 	facefusion.globals.output_video_quality = args.output_video_quality
-	if args.output_video_resolution or is_video(args.target_path):
+	if is_video(args.target_path):
 		target_video_resolution = detect_video_resolution(args.target_path)
-		facefusion.globals.output_video_resolution = args.output_video_resolution or pack_resolution(target_video_resolution)
+		target_video_resolutions = create_video_resolutions(facefusion.globals.target_path)
+		facefusion.globals.output_video_resolution = args.output_video_resolution if args.output_video_resolution in target_video_resolutions else pack_resolution(target_video_resolution)
 	if args.output_video_fps or is_video(args.target_path):
-		facefusion.globals.output_video_fps = args.output_video_fps or detect_video_fps(args.target_path)
+		facefusion.globals.output_video_fps = normalize_fps(args.output_video_fps) or detect_video_fps(args.target_path)
 	facefusion.globals.skip_audio = args.skip_audio
 	# frame processors
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')

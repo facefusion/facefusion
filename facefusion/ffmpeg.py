@@ -3,9 +3,8 @@ import subprocess
 
 import facefusion.globals
 from facefusion import logger
-from facefusion.typing import OutputVideoPreset
+from facefusion.typing import OutputVideoPreset, Fps
 from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video_path
-from facefusion.vision import unpack_resolution
 
 
 def run_ffmpeg(args : List[str]) -> bool:
@@ -25,21 +24,20 @@ def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stdin = subprocess.PIPE)
 
 
-def extract_frames(target_path : str, video_resolution : str, video_fps : float) -> bool:
-	video_width, video_height = unpack_resolution(video_resolution)
+def extract_frames(target_path : str, video_resolution : str, video_fps : Fps) -> bool:
 	temp_frame_compression = round(31 - (facefusion.globals.temp_frame_quality * 0.31))
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
 	commands = [ '-hwaccel', 'auto', '-i', target_path, '-q:v', str(temp_frame_compression), '-pix_fmt', 'rgb24' ]
 	if trim_frame_start is not None and trim_frame_end is not None:
-		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',scale=' + str(video_width) + ':' + str(video_height) + ',fps=' + str(video_fps) ])
+		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',scale=' + str(video_resolution) + ',fps=' + str(video_fps) ])
 	elif trim_frame_start is not None:
-		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ',scale=' + str(video_width) + ':' + str(video_height) + ',fps=' + str(video_fps) ])
+		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ',scale=' + str(video_resolution) + ',fps=' + str(video_fps) ])
 	elif trim_frame_end is not None:
-		commands.extend([ '-vf', 'trim=end_frame=' + str(trim_frame_end) + ',scale=' + str(video_width) + ':' + str(video_height) + ',fps=' + str(video_fps) ])
+		commands.extend([ '-vf', 'trim=end_frame=' + str(trim_frame_end) + ',scale=' + str(video_resolution) + ',fps=' + str(video_fps) ])
 	else:
-		commands.extend([ '-vf', 'scale=' + str(video_width) + ':' + str(video_height) + ',fps=' + str(video_fps) ])
+		commands.extend([ '-vf', 'scale=' + str(video_resolution) + ',fps=' + str(video_fps) ])
 	commands.extend([ '-vsync', '0', temp_frames_pattern ])
 	return run_ffmpeg(commands)
 
@@ -50,7 +48,7 @@ def compress_image(output_path : str) -> bool:
 	return run_ffmpeg(commands)
 
 
-def merge_video(target_path : str, video_fps : float) -> bool:
+def merge_video(target_path : str, video_fps : Fps) -> bool:
 	temp_output_video_path = get_temp_output_video_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
 	commands = [ '-hwaccel', 'auto', '-r', str(video_fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
@@ -67,7 +65,7 @@ def merge_video(target_path : str, video_fps : float) -> bool:
 	return run_ffmpeg(commands)
 
 
-def restore_audio(target_path : str, output_path : str, video_fps : float) -> bool:
+def restore_audio(target_path : str, output_path : str, video_fps : Fps) -> bool:
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
 	temp_output_video_path = get_temp_output_video_path(target_path)
