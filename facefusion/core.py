@@ -6,7 +6,6 @@ import signal
 import sys
 import time
 import warnings
-import platform
 import shutil
 import numpy
 import onnxruntime
@@ -23,6 +22,7 @@ from facefusion.processors.frame.core import get_frame_processors_modules, load_
 from facefusion.common_helper import create_metavar
 from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
+from facefusion.memory import limit_system_memory
 from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video
 from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio
 from facefusion.vision import get_video_frame, read_image, read_static_images, pack_resolution, detect_video_resolution, detect_video_fps, create_video_resolutions
@@ -175,7 +175,7 @@ def run(program : ArgumentParser) -> None:
 	apply_args(program)
 	logger.init(facefusion.globals.log_level)
 	if facefusion.globals.max_system_memory > 0:
-		limit_system_memory()
+		limit_system_memory(facefusion.globals.max_system_memory)
 	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check():
 		return
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
@@ -196,21 +196,6 @@ def destroy() -> None:
 	if facefusion.globals.target_path:
 		clear_temp(facefusion.globals.target_path)
 	sys.exit(0)
-
-
-def limit_system_memory() -> None:
-	system_memory = facefusion.globals.max_system_memory * 1024 ** 3
-	if platform.system().lower() == 'darwin':
-		system_memory = facefusion.globals.max_system_memory * 1024 ** 6
-	if platform.system().lower() == 'windows':
-		import ctypes
-
-		kernel32 = ctypes.windll.kernel32 # type: ignore[attr-defined]
-		kernel32.SetProcessWorkingSetSize(-1, ctypes.c_size_t(system_memory), ctypes.c_size_t(system_memory))
-	else:
-		import resource
-
-		resource.setrlimit(resource.RLIMIT_DATA, (system_memory, system_memory))
 
 
 def pre_check() -> bool:

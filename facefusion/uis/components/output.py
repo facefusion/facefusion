@@ -3,7 +3,8 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.core import limit_system_memory, conditional_process
+from facefusion.core import conditional_process
+from facefusion.memory import limit_system_memory
 from facefusion.uis.core import get_ui_component
 from facefusion.normalizer import normalize_output_path
 from facefusion.filesystem import clear_temp, is_image, is_video
@@ -48,7 +49,7 @@ def listen() -> None:
 def start(output_path : str) -> Tuple[gradio.Image, gradio.Video]:
 	facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_paths, facefusion.globals.target_path, output_path)
 	if facefusion.globals.max_system_memory > 0:
-		limit_system_memory()
+		limit_system_memory(facefusion.globals.max_system_memory)
 	conditional_process()
 	if is_image(facefusion.globals.output_path):
 		return gradio.Image(value = facefusion.globals.output_path, visible = True), gradio.Video(value = None, visible = False)
