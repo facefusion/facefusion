@@ -48,7 +48,7 @@ execution:
 
 memory:
   --video-memory-strategy {strict,moderate,tolerant}                                                                 specify strategy to handle the video memory
-  --max-system-memory [0-128]                                                                                        specify the maximum amount of system memory to be used (in gb)
+  --system-memory-limit [0-128]                                                                                      specify the amount (gb) of system memory to be used
 
 face analyser:
   --face-analyser-order {left-right,right-left,top-bottom,bottom-top,small-large,large-small,best-worst,worst-best}  specify the order used for the face analyser

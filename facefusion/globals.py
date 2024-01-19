@@ -16,7 +16,7 @@ execution_thread_count : Optional[int] = None
 execution_queue_count : Optional[int] = None
 # memory
 video_memory_strategy : Optional[VideoMemoryStrategy] = None
-max_system_memory : Optional[int] = None
+system_memory_limit : Optional[int] = None
 # face analyser
 face_analyser_order : Optional[FaceAnalyserOrder] = None
 face_analyser_age : Optional[FaceAnalyserAge] = None

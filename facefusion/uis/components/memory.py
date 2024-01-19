@@ -7,35 +7,35 @@ from facefusion.typing import VideoMemoryStrategy
 from facefusion import wording
 
 VIDEO_MEMORY_STRATEGY : Optional[gradio.Dropdown] = None
-MAX_MEMORY_SLIDER : Optional[gradio.Slider] = None
+SYSTEM_MEMORY_LIMIT_SLIDER : Optional[gradio.Slider] = None
 
 
 def render() -> None:
 	global VIDEO_MEMORY_STRATEGY
-	global MAX_MEMORY_SLIDER
+	global SYSTEM_MEMORY_LIMIT_SLIDER
 
 	VIDEO_MEMORY_STRATEGY = gradio.Dropdown(
 		label = wording.get('video_memory_strategy_dropdown_label'),
 		choices = facefusion.choices.video_memory_strategies,
 		value = facefusion.globals.video_memory_strategy
 	)
-	MAX_MEMORY_SLIDER = gradio.Slider(
-		label = wording.get('max_system_memory_slider_label'),
-		step =facefusion.choices.max_system_memory_range[1] - facefusion.choices.max_system_memory_range[0],
-		minimum = facefusion.choices.max_system_memory_range[0],
-		maximum = facefusion.choices.max_system_memory_range[-1],
-		value = facefusion.globals.max_system_memory
+	SYSTEM_MEMORY_LIMIT_SLIDER = gradio.Slider(
+		label = wording.get('system_memory_limit_slider_label'),
+		step =facefusion.choices.system_memory_limit_range[1] - facefusion.choices.system_memory_limit_range[0],
+		minimum = facefusion.choices.system_memory_limit_range[0],
+		maximum = facefusion.choices.system_memory_limit_range[-1],
+		value = facefusion.globals.system_memory_limit
 	)
 
 
 def listen() -> None:
 	VIDEO_MEMORY_STRATEGY.change(update_video_memory_strategy, inputs = VIDEO_MEMORY_STRATEGY)
-	MAX_MEMORY_SLIDER.change(update_max_system_memory, inputs = MAX_MEMORY_SLIDER)
+	SYSTEM_MEMORY_LIMIT_SLIDER.change(update_system_memory_limit, inputs = SYSTEM_MEMORY_LIMIT_SLIDER)
 
 
 def update_video_memory_strategy(video_memory_strategy : VideoMemoryStrategy) -> None:
 	facefusion.globals.video_memory_strategy = video_memory_strategy
 
 
-def update_max_system_memory(max_system_memory : int) -> None:
-	facefusion.globals.max_system_memory = max_system_memory
+def update_system_memory_limit(system_memory_limit : int) -> None:
+	facefusion.globals.system_memory_limit = system_memory_limit
