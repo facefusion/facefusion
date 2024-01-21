@@ -18,15 +18,15 @@ THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : ModelSet =\
 {
-	'face_detector_yolov8':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yoloface_8n.onnx',
-		'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
-	},
 	'face_detector_retinaface':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/retinaface_10g.onnx',
 		'path': resolve_relative_path('../.assets/models/retinaface_10g.onnx')
+	},
+	'face_detector_yoloface':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yoloface_8n.onnx',
+		'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
 	},
 	'face_detector_yunet':
 	{
@@ -61,10 +61,10 @@ def get_face_analyser() -> Any:
 
 	with THREAD_LOCK:
 		if FACE_ANALYSER is None:
-			if facefusion.globals.face_detector_model == 'yolov8':
-				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_yolov8').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_detector_model == 'retinaface':
 				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			if facefusion.globals.face_detector_model == 'yoloface':
+				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_yoloface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_detector_model == 'yunet':
 				face_detector = cv2.FaceDetectorYN.create(MODELS.get('face_detector_yunet').get('path'), '', (0, 0))
 			if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
@@ -94,8 +94,8 @@ def pre_check() -> bool:
 		download_directory_path = resolve_relative_path('../.assets/models')
 		model_urls =\
 		[
-			MODELS.get('face_detector_yolov8').get('url'),
 			MODELS.get('face_detector_retinaface').get('url'),
+			MODELS.get('face_detector_yoloface').get('url'),
 			MODELS.get('face_detector_yunet').get('url'),
 			MODELS.get('face_recognizer_arcface_inswapper').get('url'),
 			MODELS.get('face_recognizer_arcface_simswap').get('url'),
@@ -112,27 +112,65 @@ def extract_faces(frame : Frame) -> List[Face]:
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width
-	if facefusion.globals.face_detector_model == 'yolov8':
-		bbox_list, kps_list, score_list = detect_with_yolov8(frame, face_detector_height, face_detector_width)
-		return create_faces(frame, bbox_list, kps_list, score_list)
 	if facefusion.globals.face_detector_model == 'retinaface':
 		bbox_list, kps_list, score_list = detect_with_retinaface(temp_frame, temp_frame_height, temp_frame_width, face_detector_height, face_detector_width, ratio_height, ratio_width)
 		return create_faces(frame, bbox_list, kps_list, score_list)
-	elif facefusion.globals.face_detector_model == 'yunet':
+	if facefusion.globals.face_detector_model == 'yoloface':
+		bbox_list, kps_list, score_list = detect_with_yoloface(frame, face_detector_height, face_detector_width)
+		return create_faces(frame, bbox_list, kps_list, score_list)
+	if facefusion.globals.face_detector_model == 'yunet':
 		bbox_list, kps_list, score_list = detect_with_yunet(temp_frame, temp_frame_height, temp_frame_width, ratio_height, ratio_width)
 		return create_faces(frame, bbox_list, kps_list, score_list)
 	return []
 
 
-def detect_with_yolov8(temp_frame : Frame, face_detector_height : int, face_detector_width : int) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+	face_detector = get_face_analyser().get('face_detector')
+	bbox_list = []
+	kps_list = []
+	score_list = []
+	feature_strides = [ 8, 16, 32 ]
+	feature_map_channel = 3
+	anchor_total = 2
+	prepare_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
+	prepare_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
+	temp_frame = (prepare_frame - 127.5) / 128.0
+	temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
+	with THREAD_SEMAPHORE:
+		detections = face_detector.run(None,
+		{
+			face_detector.get_inputs()[0].name: temp_frame
+		})
+	for index, feature_stride in enumerate(feature_strides):
+		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
+		if keep_indices.any():
+			stride_height = face_detector_height // feature_stride
+			stride_width = face_detector_width // feature_stride
+			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
+			bbox_raw = detections[index + feature_map_channel] * feature_stride
+			kps_raw = detections[index + feature_map_channel * 2] * feature_stride
+			for bbox in distance_to_bbox(anchors, bbox_raw)[keep_indices]:
+				bbox_list.append(numpy.array(
+				[
+					bbox[0] * ratio_width,
+					bbox[1] * ratio_height,
+					bbox[2] * ratio_width,
+					bbox[3] * ratio_height
+				]))
+			for kps in distance_to_kps(anchors, kps_raw)[keep_indices]:
+				kps_list.append(kps * [ ratio_width, ratio_height ])
+			for score in detections[index][keep_indices]:
+				score_list.append(score[0])
+	return bbox_list, kps_list, score_list
+
+
+def detect_with_yoloface(temp_frame : Frame, face_detector_height : int, face_detector_width : int) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
 	input_size = (face_detector_height, face_detector_width)
 	shape = temp_frame.shape[:2]
 	ratio = min(input_size[0] / shape[0], input_size[1] / shape[1])
 	new_unpad = int(round(shape[1] * ratio)), int(round(shape[0] * ratio))
-	dw, dh = input_size[1] - new_unpad[0], input_size[0] - new_unpad[1]
-	dw /= 2
-	dh /= 2
+	dw, dh = (input_size[1] - new_unpad[0]) / 2, (input_size[0] - new_unpad[1]) / 2
 	temp_frame = cv2.resize(temp_frame, new_unpad, interpolation=cv2.INTER_LINEAR)
 	top, bottom = round(dh - 0.1), round(dh + 0.1)
 	left, right = round(dw - 0.1), round(dw + 0.1)
@@ -187,46 +225,6 @@ def detect_with_yolov8(temp_frame : Frame, face_detector_height : int, face_dete
 	return bbox_list, kps_list, score_list
 
 
-def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
-	face_detector = get_face_analyser().get('face_detector')
-	bbox_list = []
-	kps_list = []
-	score_list = []
-	feature_strides = [ 8, 16, 32 ]
-	feature_map_channel = 3
-	anchor_total = 2
-	prepare_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
-	prepare_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
-	temp_frame = (prepare_frame - 127.5) / 128.0
-	temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
-	with THREAD_SEMAPHORE:
-		detections = face_detector.run(None,
-		{
-			face_detector.get_inputs()[0].name: temp_frame
-		})
-	for index, feature_stride in enumerate(feature_strides):
-		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
-		if keep_indices.any():
-			stride_height = face_detector_height // feature_stride
-			stride_width = face_detector_width // feature_stride
-			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
-			bbox_raw = detections[index + feature_map_channel] * feature_stride
-			kps_raw = detections[index + feature_map_channel * 2] * feature_stride
-			for bbox in distance_to_bbox(anchors, bbox_raw)[keep_indices]:
-				bbox_list.append(numpy.array(
-				[
-					bbox[0] * ratio_width,
-					bbox[1] * ratio_height,
-					bbox[2] * ratio_width,
-					bbox[3] * ratio_height
-				]))
-			for kps in distance_to_kps(anchors, kps_raw)[keep_indices]:
-				kps_list.append(kps * [ ratio_width, ratio_height ])
-			for score in detections[index][keep_indices]:
-				score_list.append(score[0])
-	return bbox_list, kps_list, score_list
-
-
 def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
 	face_detector.setInputSize((temp_frame_width, temp_frame_height))
@@ -273,14 +271,14 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 				gender = gender,
 				age = age
 			))
-	
+
 	bbox_list = []
 	kps_list = []
 	for face in faces:
 		bbox_list.append(face.bbox)
 		kps_list.append(face.kps)
-	print(f'\nbboxes: {bbox_list}')
-	print(f'kps: {kps_list}')
+	#print(f'\nbboxes: {bbox_list}')
+	#print(f'kps: {kps_list}')
 	return faces
 
 
