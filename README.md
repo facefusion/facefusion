@@ -54,7 +54,7 @@ face analyser:
   --face-analyser-order {left-right,right-left,top-bottom,bottom-top,small-large,large-small,best-worst,worst-best}  specify the order used for the face analyser
   --face-analyser-age {child,teen,adult,senior}                                                                      specify the age used for the face analyser
   --face-analyser-gender {male,female}                                                                               specify the gender used for the face analyser
-  --face-detector-model {retinaface,yunet}                                                                           specify the model used for the face detector
+  --face-detector-model {yolov8,retinaface,yunet}                                                                           specify the model used for the face detector
   --face-detector-size {160x160,320x320,480x480,512x512,640x640,768x768,960x960,1024x1024}                           specify the size threshold used for the face detector
   --face-detector-score [0.0-1.0]                                                                                    specify the score threshold used for the face detector
 
