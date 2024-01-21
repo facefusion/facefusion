@@ -163,7 +163,6 @@ def detect_with_yolov8(temp_frame: Frame, face_detector_height: int, face_detect
 	return bbox_list, kps_list, score_list
 
 
-
 def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
 	bbox_list = []
