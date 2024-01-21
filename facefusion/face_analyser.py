@@ -61,10 +61,10 @@ def get_face_analyser() -> Any:
 
 	with THREAD_LOCK:
 		if FACE_ANALYSER is None:
-			if facefusion.globals.face_detector_model == 'retinaface':
-				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_detector_model == 'yoloface':
 				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_yoloface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			if facefusion.globals.face_detector_model == 'retinaface':
+				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_detector_model == 'yunet':
 				face_detector = cv2.FaceDetectorYN.create(MODELS.get('face_detector_yunet').get('path'), '', (0, 0))
 			if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
@@ -94,8 +94,8 @@ def pre_check() -> bool:
 		download_directory_path = resolve_relative_path('../.assets/models')
 		model_urls =\
 		[
-			MODELS.get('face_detector_retinaface').get('url'),
 			MODELS.get('face_detector_yoloface').get('url'),
+			MODELS.get('face_detector_retinaface').get('url'),
 			MODELS.get('face_detector_yunet').get('url'),
 			MODELS.get('face_recognizer_arcface_inswapper').get('url'),
 			MODELS.get('face_recognizer_arcface_simswap').get('url'),
@@ -112,16 +112,64 @@ def extract_faces(frame : Frame) -> List[Face]:
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width
+	if facefusion.globals.face_detector_model == 'yoloface':
+		bbox_list, kps_list, score_list = detect_with_yoloface(frame, face_detector_height, face_detector_width, ratio_height, ratio_width)
+		return create_faces(frame, bbox_list, kps_list, score_list)
 	if facefusion.globals.face_detector_model == 'retinaface':
 		bbox_list, kps_list, score_list = detect_with_retinaface(temp_frame, temp_frame_height, temp_frame_width, face_detector_height, face_detector_width, ratio_height, ratio_width)
 		return create_faces(frame, bbox_list, kps_list, score_list)
-	if facefusion.globals.face_detector_model == 'yoloface':
-		bbox_list, kps_list, score_list = detect_with_yoloface(frame, face_detector_height, face_detector_width)
-		return create_faces(frame, bbox_list, kps_list, score_list)
-	if facefusion.globals.face_detector_model == 'yunet':
+	elif facefusion.globals.face_detector_model == 'yunet':
 		bbox_list, kps_list, score_list = detect_with_yunet(temp_frame, temp_frame_height, temp_frame_width, ratio_height, ratio_width)
 		return create_faces(frame, bbox_list, kps_list, score_list)
 	return []
+
+
+def detect_with_yoloface(temp_frame : Frame, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+	face_detector = get_face_analyser().get('face_detector')
+	bbox_list = []
+	kps_list = []
+	score_list = []
+	shape = temp_frame.shape[:2]
+	resized_width = int(round(shape[1] * ratio_width))
+	resized_height = int(round(shape[0] * ratio_height))
+	padding_width = (face_detector_width - resized_width) / 2
+	padding_height = (face_detector_height - resized_height) / 2
+	temp_frame = cv2.copyMakeBorder(temp_frame, round(padding_height - 0.1), round(padding_height + 0.1), round(padding_width - 0.1), round(padding_width + 0.1), cv2.BORDER_CONSTANT, value=(114, 114, 114))
+	temp_frame = temp_frame.astype(numpy.float32) / 255.0
+	temp_frame = temp_frame[..., ::-1].transpose(2, 0, 1)
+	temp_frame = numpy.ascontiguousarray(temp_frame)
+	with THREAD_SEMAPHORE:
+		detections = face_detector.run(None,
+		{
+			face_detector.get_inputs()[0].name: temp_frame
+		})
+	detections = numpy.ascontiguousarray(numpy.squeeze(detections).T)
+	bbox_raw, score_raw, kps_raw = numpy.split(detections, [4, 5], axis=1)
+	keep_indices = numpy.where(score_raw > facefusion.globals.face_detector_score)[0]
+	if keep_indices.any():
+		bbox_raw, kps_raw, score_raw = bbox_raw[keep_indices], kps_raw[keep_indices], score_raw[keep_indices]
+		half_width = bbox_raw[:, 2] / 2
+		half_height = bbox_raw[:, 3] / 2
+		for bbox in bbox_raw:
+			half_width = bbox[2] / 2
+			half_height = bbox[3] / 2
+			bbox_list.append(numpy.array(
+				[
+					(bbox[0] - half_width - padding_width) / ratio_width,
+					(bbox[1] - half_height - padding_height) / ratio_height,
+					(bbox[0] + half_width - padding_width) / ratio_width,
+					(bbox[1] + half_height - padding_height) / ratio_height
+				]))
+		kps_raw[:, 0::3] = (kps_raw[:, 0::3] - padding_width) / ratio_width
+		kps_raw[:, 1::3] = (kps_raw[:, 1::3] - padding_height) / ratio_height
+		for kps in kps_raw:
+			kps_xy = []
+			for j in range(0, len(kps), 3):
+				kps_pair = [kps[j], kps[j + 1]]
+				kps_xy.append(kps_pair)
+			kps_list.append(numpy.array(kps_xy))
+		score_list = score_raw.ravel().tolist()
+	return bbox_list, kps_list, score_list
 
 
 def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
@@ -161,67 +209,6 @@ def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_fra
 				kps_list.append(kps * [ ratio_width, ratio_height ])
 			for score in detections[index][keep_indices]:
 				score_list.append(score[0])
-	return bbox_list, kps_list, score_list
-
-
-def detect_with_yoloface(temp_frame : Frame, face_detector_height : int, face_detector_width : int) -> Tuple[List[Bbox], List[Kps], List[Score]]:
-	face_detector = get_face_analyser().get('face_detector')
-	input_size = (face_detector_height, face_detector_width)
-	shape = temp_frame.shape[:2]
-	ratio = min(input_size[0] / shape[0], input_size[1] / shape[1])
-	new_unpad = int(round(shape[1] * ratio)), int(round(shape[0] * ratio))
-	dw, dh = (input_size[1] - new_unpad[0]) / 2, (input_size[0] - new_unpad[1]) / 2
-	temp_frame = cv2.resize(temp_frame, new_unpad, interpolation=cv2.INTER_LINEAR)
-	top, bottom = round(dh - 0.1), round(dh + 0.1)
-	left, right = round(dw - 0.1), round(dw + 0.1)
-	temp_frame = cv2.copyMakeBorder(temp_frame, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(114, 114, 114))
-	temp_frame = temp_frame[..., ::-1].transpose((2, 0, 1))
-	temp_frame = numpy.expand_dims(temp_frame, axis=0)
-	temp_frame = temp_frame.astype(numpy.float32) / 255.0
-	temp_frame = numpy.ascontiguousarray(temp_frame)
-	with THREAD_SEMAPHORE:
-		pred = face_detector.run(None, {face_detector.get_inputs()[0].name: temp_frame})
-	pred = numpy.squeeze(pred)
-	pred = numpy.transpose(pred, (1, 0))
-	pred = numpy.ascontiguousarray(pred)
-	bbox, score, kps = numpy.split(pred, [4, 5], axis=1)
-	indices_above_threshold = numpy.where(score > facefusion.globals.face_detector_score)[0]
-	bbox = bbox[indices_above_threshold]
-	score = score[indices_above_threshold]
-	kps = kps[indices_above_threshold]
-	new_ratio = 1/ratio
-	x_center, y_center, width, height = bbox[:, 0], bbox[:, 1], bbox[:, 2], bbox[:, 3]
-	x_min = (x_center - (width / 2) - dw) * new_ratio
-	y_min = (y_center - (height / 2) - dh) * new_ratio
-	x_max = (x_center + (width / 2) - dw) * new_ratio
-	y_max = (y_center + (height / 2) - dh) * new_ratio
-	bbox = numpy.stack((x_min, y_min, x_max, y_max), axis=1)
-	for i in range(kps.shape[1] // 3):
-		kps[:, i * 3] = (kps[:, i * 3] - dw) * new_ratio
-		kps[:, i * 3 + 1] = (kps[:, i * 3 + 1] - dh) * new_ratio
-	bbox_list = []
-	for box in bbox:
-		bbox_list.append(numpy.array(
-		[
-			box[0],
-			box[1],
-			box[2],
-			box[3],
-		]))
-	score_list = score.ravel().tolist()
-	kps_list = []
-	for keypoints in kps:
-		kps_xy = []
-		for i in range(0, len(keypoints), 3):
-			kps_xy.append([keypoints[i], keypoints[i+1]])
-		kps_list.append(numpy.array(kps_xy))
-	for bbox, keypoints in zip(bbox_list, kps_list):
-		start_point = (int(bbox[0]), int(bbox[1]))
-		end_point = (int(bbox[2]), int(bbox[3]))
-		temp_frame = cv2.rectangle(temp_frame, start_point, end_point, (0, 255, 0), 2)
-		for kp in keypoints:
-			x, y = int(kp[0]), int(kp[1])
-			temp_frame = cv2.circle(temp_frame, (x, y), 2, (0, 0, 255), -1)
 	return bbox_list, kps_list, score_list
 
 
@@ -271,14 +258,6 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 				gender = gender,
 				age = age
 			))
-
-	bbox_list = []
-	kps_list = []
-	for face in faces:
-		bbox_list.append(face.bbox)
-		kps_list.append(face.kps)
-	#print(f'\nbboxes: {bbox_list}')
-	#print(f'kps: {kps_list}')
 	return faces
 
 
