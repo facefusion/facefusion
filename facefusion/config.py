@@ -23,7 +23,7 @@ def clear_config() -> None:
 
 
 def get_str_value(key : str, fallback : Optional[str] = None) -> Optional[str]:
-	value = find_value_by_section(key)
+	value = get_value_by_notation(key)
 
 	if value or fallback:
 		return str(value or fallback)
@@ -31,7 +31,7 @@ def get_str_value(key : str, fallback : Optional[str] = None) -> Optional[str]:
 
 
 def get_int_value(key : str, fallback : Optional[str] = None) -> Optional[int]:
-	value = find_value_by_section(key)
+	value = get_value_by_notation(key)
 
 	if value or fallback:
 		return int(value or fallback)
@@ -39,7 +39,7 @@ def get_int_value(key : str, fallback : Optional[str] = None) -> Optional[int]:
 
 
 def get_float_value(key : str, fallback : Optional[str] = None) -> Optional[float]:
-	value = find_value_by_section(key)
+	value = get_value_by_notation(key)
 
 	if value or fallback:
 		return float(value or fallback)
@@ -47,7 +47,7 @@ def get_float_value(key : str, fallback : Optional[str] = None) -> Optional[floa
 
 
 def get_bool_value(key : str, fallback : Optional[str] = None) -> Optional[bool]:
-	value = find_value_by_section(key)
+	value = get_value_by_notation(key)
 
 	if value == 'True' or fallback == 'True':
 		return True
@@ -57,7 +57,7 @@ def get_bool_value(key : str, fallback : Optional[str] = None) -> Optional[bool]
 
 
 def get_str_list(key : str, fallback : Optional[str] = None) -> Optional[List[str]]:
-	value = find_value_by_section(key)
+	value = get_value_by_notation(key)
 
 	if value or fallback:
 		return [ str(value) for value in (value or fallback).split(' ') ]
@@ -65,7 +65,7 @@ def get_str_list(key : str, fallback : Optional[str] = None) -> Optional[List[st
 
 
 def get_int_list(key : str, fallback : Optional[str] = None) -> Optional[List[int]]:
-	value = find_value_by_section(key)
+	value = get_value_by_notation(key)
 
 	if value or fallback:
 		return [ int(value) for value in (value or fallback).split(' ') ]
@@ -73,17 +73,17 @@ def get_int_list(key : str, fallback : Optional[str] = None) -> Optional[List[in
 
 
 def get_float_list(key : str, fallback : Optional[str] = None) -> Optional[List[float]]:
-	value = find_value_by_section(key)
+	value = get_value_by_notation(key)
 
 	if value or fallback:
 		return [ float(value) for value in (value or fallback).split(' ') ]
 	return None
 
 
-def find_value_by_section(key : str) -> Optional[Any]:
+def get_value_by_notation(key : str) -> Optional[Any]:
 	config = get_config()
-	section, option = key.split('.')
+	section, name = key.split('.')
 
-	if section in config and option in config[section]:
-		return config[section][option]
+	if section in config and name in config[section]:
+		return config[section][name]
 	return None
