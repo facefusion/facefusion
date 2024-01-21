@@ -20,8 +20,8 @@ MODELS : ModelSet =\
 {
 	'face_detector_yolov8':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yolov8n-face.onnx',
-		'path': resolve_relative_path('../.assets/models/yolov8n-face.onnx')
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yoloface_8n.onnx',
+		'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
 	},
 	'face_detector_retinaface':
 	{
