@@ -169,9 +169,9 @@ def detect_with_yoloface(temp_frame : Frame, temp_frame_height : int, temp_frame
 	bbox_list = []
 	kps_list = []
 	score_list = []
-	padding_width = (face_detector_width - temp_frame_width) / 2
-	padding_height = (face_detector_height - temp_frame_height) / 2
-	temp_frame = cv2.copyMakeBorder(temp_frame, round(padding_height - 0.1), round(padding_height + 0.1), round(padding_width - 0.1), round(padding_width + 0.1), cv2.BORDER_CONSTANT, value=(114, 114, 114))
+	offset_width = (face_detector_width - temp_frame_width) / 2
+	offset_height = (face_detector_height - temp_frame_height) / 2
+	temp_frame = cv2.copyMakeBorder(temp_frame, round(offset_height - 0.1), round(offset_height + 0.1), round(offset_width - 0.1), round(offset_width + 0.1), cv2.BORDER_CONSTANT, value=(114, 114, 114))
 	temp_frame = temp_frame.astype(numpy.float32) / 255.0
 	temp_frame = temp_frame[..., ::-1].transpose(2, 0, 1)
 	temp_frame = numpy.expand_dims(temp_frame, axis = 0)
@@ -186,26 +186,23 @@ def detect_with_yoloface(temp_frame : Frame, temp_frame_height : int, temp_frame
 	keep_indices = numpy.where(score_raw > facefusion.globals.face_detector_score)[0]
 	if keep_indices.any():
 		bbox_raw, kps_raw, score_raw = bbox_raw[keep_indices], kps_raw[keep_indices], score_raw[keep_indices]
-		half_width = bbox_raw[:, 2] / 2
-		half_height = bbox_raw[:, 3] / 2
 		for bbox in bbox_raw:
-			half_width = bbox[2] / 2
-			half_height = bbox[3] / 2
 			bbox_list.append(numpy.array(
 				[
-					(bbox[0] - half_width - padding_width) * ratio_width,
-					(bbox[1] - half_height - padding_height) * ratio_height,
-					(bbox[0] + half_width - padding_width) * ratio_width,
-					(bbox[1] + half_height - padding_height) * ratio_height
+					(bbox[0] - bbox[2] / 2 - offset_width) * ratio_width,
+					(bbox[1] - bbox[3] / 2 - offset_height) * ratio_height,
+					(bbox[0] + bbox[2] / 2 - offset_width) * ratio_width,
+					(bbox[1] + bbox[3] / 2 - offset_height) * ratio_height
 				]))
-		kps_raw[:, 0::3] = (kps_raw[:, 0::3] - padding_width) * ratio_width
-		kps_raw[:, 1::3] = (kps_raw[:, 1::3] - padding_height) * ratio_height
+		kps_raw[:, 0::3] = (kps_raw[:, 0::3] - offset_width) * ratio_width
+		kps_raw[:, 1::3] = (kps_raw[:, 1::3] - offset_height) * ratio_height
 		for kps in kps_raw:
-			kps_xy = []
-			for j in range(0, len(kps), 3):
-				kps_pair = [kps[j], kps[j + 1]]
-				kps_xy.append(kps_pair)
-			kps_list.append(numpy.array(kps_xy))
+			indexes = numpy.arange(0, len(kps), 3)
+			temp_kps = []
+			for index in indexes:
+				temp_kps.append([kps[index], kps[index + 1]])
+			kps_list.append(numpy.array(temp_kps))
+		kps_list = numpy.array(kps_list)
 		score_list = score_raw.ravel().tolist()
 	return bbox_list, kps_list, score_list
 
