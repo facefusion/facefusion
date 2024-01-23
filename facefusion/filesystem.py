@@ -80,6 +80,12 @@ def is_video(video_path : str) -> bool:
 	return False
 
 
+def is_audio(audio_path : str) -> bool:
+	if is_file(audio_path):
+		return filetype.helpers.is_audio(audio_path)
+	return False
+
+
 def resolve_relative_path(path : str) -> str:
 	return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
 
@@ -89,3 +95,21 @@ def list_directory(directory_path : str) -> Optional[List[str]]:
 		files = os.listdir(directory_path)
 		return [ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ]
 	return None
+
+
+def filter_image_paths(paths : List[str]) -> List[Optional[str]]:
+	image_paths = []
+	if paths:
+		for path in paths:
+			if is_image(path):
+				image_paths.append(path)
+	return image_paths
+
+
+def filter_audio_paths(paths : List[str]) -> List[Optional[str]]:
+	audio_paths = []
+	if paths:
+		for path in paths:
+			if is_audio(path):
+				audio_paths.append(path)
+	return audio_paths
