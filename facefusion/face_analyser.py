@@ -132,14 +132,29 @@ def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_fra
 	feature_strides = [ 8, 16, 32 ]
 	feature_map_channel = 3
 	anchor_total = 2
-	prepare_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
-	prepare_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
-	temp_frame = (prepare_frame - 127.5) / 128.0
+	offset_width = (face_detector_width - temp_frame_width) / 2
+	offset_height = (face_detector_height - temp_frame_height) / 2
+	reduction_size = round(min(face_detector_height, face_detector_width) / 2)
+	reduction_ratio_width = face_detector_width / reduction_size
+	reduction_ratio_height = face_detector_height / reduction_size
+	reduction_offset_width = (face_detector_width - reduction_size) / 2
+	reduction_offset_height = (face_detector_height - reduction_size) / 2
+	temp_frame = cv2.copyMakeBorder(temp_frame, round(offset_height - 0.1), round(offset_height + 0.1), round(offset_width - 0.1), round(offset_width + 0.1), cv2.BORDER_CONSTANT, value = (114, 114, 114))
+	temp_frame_redused = temp_frame.copy()
+	temp_frame = (temp_frame - 127.5) / 128.0
 	temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
+	temp_frame_redused = cv2.resize(temp_frame_redused, (reduction_size, reduction_size), interpolation = cv2.INTER_LINEAR)
+	temp_frame_redused = cv2.copyMakeBorder(temp_frame_redused, round(reduction_offset_height - 0.1), round(reduction_offset_height + 0.1), round(reduction_offset_width - 0.1), round(reduction_offset_width + 0.1), cv2.BORDER_CONSTANT, value = (114, 114, 114))
+	temp_frame_redused = (temp_frame_redused.astype(numpy.float32) - 127.5) / 128.0
+	temp_frame_redused = numpy.expand_dims(temp_frame_redused.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
 		{
 			face_detector.get_inputs()[0].name: temp_frame
+		})
+		detections_redused = face_detector.run(None,
+		{
+			face_detector.get_inputs()[0].name: temp_frame_redused
 		})
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
@@ -152,14 +167,34 @@ def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_fra
 			for bbox in distance_to_bbox(anchors, bbox_raw)[keep_indices]:
 				bbox_list.append(numpy.array(
 				[
-					bbox[0] * ratio_width,
-					bbox[1] * ratio_height,
-					bbox[2] * ratio_width,
-					bbox[3] * ratio_height
+					(bbox[0] - offset_width) * ratio_width,
+					(bbox[1] - offset_height) * ratio_height,
+					(bbox[2] - offset_width) * ratio_width,
+					(bbox[3] - offset_height) * ratio_height
 				]))
 			for kps in distance_to_kps(anchors, kps_raw)[keep_indices]:
-				kps_list.append(kps * [ ratio_width, ratio_height ])
+				kps_list.append((kps - [offset_width, offset_height]) * [ ratio_width, ratio_height ])
 			for score in detections[index][keep_indices]:
+				score_list.append(score[0])
+	for index, feature_stride in enumerate(feature_strides):
+		keep_indices = numpy.where(detections_redused[index] >= facefusion.globals.face_detector_score)[0]
+		if keep_indices.any():
+			stride_height = face_detector_height // feature_stride
+			stride_width = face_detector_width // feature_stride
+			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
+			bbox_raw = detections_redused[index + feature_map_channel] * feature_stride
+			kps_raw = detections_redused[index + feature_map_channel * 2] * feature_stride
+			for bbox in distance_to_bbox(anchors, bbox_raw)[keep_indices]:
+				bbox_list.append(numpy.array(
+				[
+					max(0, ((bbox[0] - reduction_offset_width) * reduction_ratio_width - offset_width) * ratio_width),
+					min(temp_frame_height,((bbox[1] - reduction_offset_height) * reduction_ratio_height - offset_height) * ratio_height),
+					min(temp_frame_width, ((bbox[2] - reduction_offset_width) * reduction_ratio_width - offset_width) * ratio_width),
+					max(0, ((bbox[3] - reduction_offset_height) * reduction_ratio_height - offset_height) * ratio_height),
+				]))
+			for kps in distance_to_kps(anchors, kps_raw)[keep_indices]:
+				kps_list.append(((kps - [reduction_offset_width, reduction_offset_height]) * [ reduction_ratio_width, reduction_ratio_height ] - [offset_width, offset_height]) * [ ratio_width, ratio_height ])
+			for score in detections_redused[index][keep_indices]:
 				score_list.append(score[0])
 	return bbox_list, kps_list, score_list
 
