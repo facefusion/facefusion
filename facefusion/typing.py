@@ -26,6 +26,11 @@ Frame = numpy.ndarray[Any, Any]
 Mask = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
 
+AudioBuffer = bytes
+Audio = numpy.ndarray[Any, Any]
+AudioFrame = numpy.ndarray[Any, Any]
+Spectrogram = numpy.ndarray[Any, Any]
+
 Fps = float
 Padding = Tuple[int, int, int, int]
 Resolution = Tuple[int, int]
