@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Bbox, Kps, Frame, Mask, Matrix, Template
+from facefusion.typing import Bbox, Kps, VisionFrame, Mask, Matrix, Template
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -43,14 +43,14 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 }
 
 
-def warp_face_by_kps(temp_frame : Frame, kps : Kps, template : Template, crop_size : Size) -> Tuple[Frame, Matrix]:
+def warp_face_by_kps(temp_frame : VisionFrame, kps : Kps, template : Template, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
 	normed_template = TEMPLATES.get(template) * crop_size
 	affine_matrix = cv2.estimateAffinePartial2D(kps, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
 	return crop_frame, affine_matrix
 
 
-def warp_face_by_bbox(temp_frame : Frame, bbox : Bbox, crop_size : Size) -> Tuple[Frame, Matrix]:
+def warp_face_by_bbox(temp_frame : VisionFrame, bbox : Bbox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
 	source_kps = numpy.array([[ bbox[0], bbox[1] ], [bbox[2], bbox[1] ], [bbox[0], bbox[3] ]], dtype = numpy.float32)
 	target_kps = numpy.array([[ 0, 0 ], [ crop_size[0], 0 ], [ 0, crop_size[1] ]], dtype = numpy.float32)
 	affine_matrix = cv2.getAffineTransform(source_kps, target_kps)
@@ -62,7 +62,7 @@ def warp_face_by_bbox(temp_frame : Frame, bbox : Bbox, crop_size : Size) -> Tupl
 	return crop_frame, affine_matrix
 
 
-def paste_back(temp_frame : Frame, crop_frame : Frame, crop_mask : Mask, affine_matrix : Matrix) -> Frame:
+def paste_back(temp_frame : VisionFrame, crop_frame : VisionFrame, crop_mask : Mask, affine_matrix : Matrix) -> VisionFrame:
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_frame_size = temp_frame.shape[:2][::-1]
 	inverse_crop_mask = cv2.warpAffine(crop_mask, inverse_matrix, temp_frame_size).clip(0, 1)

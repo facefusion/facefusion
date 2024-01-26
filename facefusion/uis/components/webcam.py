@@ -12,7 +12,7 @@ from tqdm import tqdm
 import facefusion.globals
 from facefusion import logger, wording
 from facefusion.content_analyser import analyse_stream
-from facefusion.typing import Frame, Face, Fps
+from facefusion.typing import VisionFrame, Face, Fps
 from facefusion.face_analyser import get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import open_ffmpeg
@@ -88,7 +88,7 @@ def listen() -> None:
 			component.change(update, cancels = start_event)
 
 
-def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[Frame, None, None]:
+def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_analyser_order = 'large-small'
 	source_frames = read_static_images(facefusion.globals.source_paths)
@@ -114,11 +114,11 @@ def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -
 				yield None
 
 
-def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[Frame, None, None]:
+def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
-			deque_capture_frames : Deque[Frame] = deque()
+			deque_capture_frames : Deque[VisionFrame] = deque()
 			while webcam_capture and webcam_capture.isOpened():
 				_, capture_frame = webcam_capture.read()
 				if analyse_stream(capture_frame, webcam_fps):
@@ -148,7 +148,7 @@ def stop() -> gradio.Image:
 	return gradio.Image(value = None)
 
 
-def process_stream_frame(source_face : Face, temp_frame : Frame) -> Frame:
+def process_stream_frame(source_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		logger.disable()
 		if frame_processor_module.pre_process('stream'):

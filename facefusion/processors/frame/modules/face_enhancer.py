@@ -13,7 +13,7 @@ from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_helper import warp_face_by_kps, paste_back
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
-from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
+from facefusion.typing import Face, FaceSet, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, is_image, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
@@ -165,7 +165,7 @@ def post_process() -> None:
 		clear_face_occluder()
 
 
-def enhance_face(target_face: Face, temp_frame : Frame) -> Frame:
+def enhance_face(target_face: Face, temp_frame : VisionFrame) -> VisionFrame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
 	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, model_template, model_size)
@@ -184,7 +184,7 @@ def enhance_face(target_face: Face, temp_frame : Frame) -> Frame:
 	return temp_frame
 
 
-def apply_enhance(crop_frame : Frame) -> Frame:
+def apply_enhance(crop_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	frame_processor_inputs = {}
 
@@ -199,14 +199,14 @@ def apply_enhance(crop_frame : Frame) -> Frame:
 	return crop_frame
 
 
-def prepare_crop_frame(crop_frame : Frame) -> Frame:
+def prepare_crop_frame(crop_frame : VisionFrame) -> VisionFrame:
 	crop_frame = crop_frame[:, :, ::-1] / 255.0
 	crop_frame = (crop_frame - 0.5) / 0.5
 	crop_frame = numpy.expand_dims(crop_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 	return crop_frame
 
 
-def normalize_crop_frame(crop_frame : Frame) -> Frame:
+def normalize_crop_frame(crop_frame : VisionFrame) -> VisionFrame:
 	crop_frame = numpy.clip(crop_frame, -1, 1)
 	crop_frame = (crop_frame + 1) / 2
 	crop_frame = crop_frame.transpose(1, 2, 0)
@@ -215,17 +215,17 @@ def normalize_crop_frame(crop_frame : Frame) -> Frame:
 	return crop_frame
 
 
-def blend_frame(temp_frame : Frame, paste_frame : Frame) -> Frame:
+def blend_frame(temp_frame : VisionFrame, paste_frame : VisionFrame) -> VisionFrame:
 	face_enhancer_blend = 1 - (frame_processors_globals.face_enhancer_blend / 100)
 	temp_frame = cv2.addWeighted(temp_frame, face_enhancer_blend, paste_frame, 1 - face_enhancer_blend, 0)
 	return temp_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
+def get_reference_frame(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	return enhance_face(target_face, temp_frame)
 
 
-def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
+def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : VisionFrame) -> VisionFrame:
 	if 'reference' in facefusion.globals.face_selector_mode:
 		similar_faces = find_similar_faces(temp_frame, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:

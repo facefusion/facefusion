@@ -22,7 +22,7 @@ FaceStore = TypedDict('FaceStore',
 	'static_faces' : FaceSet,
 	'reference_faces': FaceSet
 })
-Frame = numpy.ndarray[Any, Any]
+VisionFrame = numpy.ndarray[Any, Any]
 Mask = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
 

@@ -10,7 +10,7 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
+from facefusion.typing import Face, FaceSet, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
 from facefusion.common_helper import create_metavar
 from facefusion.execution_helper import map_torch_backend
 from facefusion.filesystem import is_file, resolve_relative_path
@@ -137,14 +137,14 @@ def post_process() -> None:
 		clear_content_analyser()
 
 
-def enhance_frame(temp_frame : Frame) -> Frame:
+def enhance_frame(temp_frame : VisionFrame) -> VisionFrame:
 	with THREAD_SEMAPHORE:
 		paste_frame, _ = get_frame_processor().enhance(temp_frame)
 		temp_frame = blend_frame(temp_frame, paste_frame)
 	return temp_frame
 
 
-def blend_frame(temp_frame : Frame, paste_frame : Frame) -> Frame:
+def blend_frame(temp_frame : VisionFrame, paste_frame : VisionFrame) -> VisionFrame:
 	frame_enhancer_blend = 1 - (frame_processors_globals.frame_enhancer_blend / 100)
 	paste_frame_height, paste_frame_width = paste_frame.shape[0:2]
 	temp_frame = cv2.resize(temp_frame, (paste_frame_width, paste_frame_height))
@@ -152,11 +152,11 @@ def blend_frame(temp_frame : Frame, paste_frame : Frame) -> Frame:
 	return temp_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
+def get_reference_frame(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	pass
 
 
-def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
+def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : VisionFrame) -> VisionFrame:
 	return enhance_frame(temp_frame)
 
 

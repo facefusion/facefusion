@@ -15,7 +15,7 @@ from facefusion.face_analyser import get_one_face, get_average_face, get_many_fa
 from facefusion.face_helper import warp_face_by_kps, paste_back
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, Embedding
+from facefusion.typing import Face, FaceSet, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, Embedding
 from facefusion.filesystem import is_file, is_image, are_images, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
@@ -201,7 +201,7 @@ def post_process() -> None:
 		clear_face_parser()
 
 
-def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
+def swap_face(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
 	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, model_template, model_size)
@@ -221,7 +221,7 @@ def swap_face(source_face : Face, target_face : Face, temp_frame : Frame) -> Fra
 	return temp_frame
 
 
-def apply_swap(source_face : Face, crop_frame : Frame) -> Frame:
+def apply_swap(source_face : Face, crop_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	model_type = get_options('model').get('type')
 	frame_processor_inputs = {}
@@ -238,7 +238,7 @@ def apply_swap(source_face : Face, crop_frame : Frame) -> Frame:
 	return crop_frame
 
 
-def prepare_source_frame(source_face : Face) -> Frame:
+def prepare_source_frame(source_face : Face) -> VisionFrame:
 	source_frame = read_static_image(facefusion.globals.source_paths[0])
 	source_frame, _ = warp_face_by_kps(source_frame, source_face.kps, 'arcface_112_v2', (112, 112))
 	source_frame = source_frame[:, :, ::-1] / 255.0
@@ -258,7 +258,7 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 	return source_embedding
 
 
-def prepare_crop_frame(crop_frame : Frame) -> Frame:
+def prepare_crop_frame(crop_frame : VisionFrame) -> VisionFrame:
 	model_mean = get_options('model').get('mean')
 	model_standard_deviation = get_options('model').get('standard_deviation')
 	crop_frame = crop_frame[:, :, ::-1] / 255.0
@@ -268,18 +268,18 @@ def prepare_crop_frame(crop_frame : Frame) -> Frame:
 	return crop_frame
 
 
-def normalize_crop_frame(crop_frame : Frame) -> Frame:
+def normalize_crop_frame(crop_frame : VisionFrame) -> VisionFrame:
 	crop_frame = crop_frame.transpose(1, 2, 0)
 	crop_frame = (crop_frame * 255.0).round()
 	crop_frame = crop_frame[:, :, ::-1]
 	return crop_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
+def get_reference_frame(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	return swap_face(source_face, target_face, temp_frame)
 
 
-def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
+def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : VisionFrame) -> VisionFrame:
 	if 'reference' in facefusion.globals.face_selector_mode:
 		similar_faces = find_similar_faces(temp_frame, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
