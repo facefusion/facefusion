@@ -197,9 +197,9 @@ def detect_with_yoloface(temp_frame : Frame, temp_frame_height : int, temp_frame
 		kps_raw[:, 0::3] = (kps_raw[:, 0::3] - offset_width) * ratio_width
 		kps_raw[:, 1::3] = (kps_raw[:, 1::3] - offset_height) * ratio_height
 		for kps in kps_raw:
-			indexes = numpy.arange(0, len(kps), 3)
+			indices = numpy.arange(0, len(kps), 3)
 			temp_kps = []
-			for index in indexes:
+			for index in indices:
 				temp_kps.append([kps[index], kps[index + 1]])
 			kps_list.append(numpy.array(temp_kps))
 		score_list = score_raw.ravel().tolist()
