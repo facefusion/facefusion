@@ -42,7 +42,7 @@ WORDING : Dict[str, Any] =\
 	{
 		# installer
 		'install_dependency': 'select the variant of {dependency} to install',
-		'skip_venv_help': 'skip the virtual environment check',
+		'skip_venv': 'skip the virtual environment check',
 		# general
 		'source': 'choose single or multiple source images',
 		'target': 'choose single target image or video',
