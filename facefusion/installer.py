@@ -61,8 +61,8 @@ def run(program : ArgumentParser) -> None:
 	else:
 		answers = inquirer.prompt(
 		[
-			inquirer.List('torch', message = wording.get('install_dependency_help').format(dependency = 'torch'), choices = list(TORCH.keys())),
-			inquirer.List('onnxruntime', message = wording.get('install_dependency_help').format(dependency = 'onnxruntime'), choices = list(ONNXRUNTIMES.keys()))
+			inquirer.List('torch', message = wording.get('help.install_dependency').format(dependency = 'torch'), choices = list(TORCH.keys())),
+			inquirer.List('onnxruntime', message = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = list(ONNXRUNTIMES.keys()))
 		])
 	if answers:
 		torch = answers['torch']

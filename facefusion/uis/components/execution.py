@@ -15,7 +15,7 @@ def render() -> None:
 	global EXECUTION_PROVIDERS_CHECKBOX_GROUP
 
 	EXECUTION_PROVIDERS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-		label = wording.get('execution_providers_checkbox_group_label'),
+		label = wording.get('uis.execution_providers_checkbox_group'),
 		choices = encode_execution_providers(onnxruntime.get_available_providers()),
 		value = encode_execution_providers(facefusion.globals.execution_providers)
 	)

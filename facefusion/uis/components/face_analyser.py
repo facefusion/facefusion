@@ -26,32 +26,32 @@ def render() -> None:
 
 	with gradio.Row():
 		FACE_ANALYSER_ORDER_DROPDOWN = gradio.Dropdown(
-			label = wording.get('face_analyser_order_dropdown_label'),
+			label = wording.get('uis.face_analyser_order_dropdown'),
 			choices = facefusion.choices.face_analyser_orders,
 			value = facefusion.globals.face_analyser_order
 		)
 		FACE_ANALYSER_AGE_DROPDOWN = gradio.Dropdown(
-			label = wording.get('face_analyser_age_dropdown_label'),
+			label = wording.get('uis.face_analyser_age_dropdown'),
 			choices = [ 'none' ] + facefusion.choices.face_analyser_ages,
 			value = facefusion.globals.face_analyser_age or 'none'
 		)
 		FACE_ANALYSER_GENDER_DROPDOWN = gradio.Dropdown(
-			label = wording.get('face_analyser_gender_dropdown_label'),
+			label = wording.get('uis.face_analyser_gender_dropdown'),
 			choices = [ 'none' ] + facefusion.choices.face_analyser_genders,
 			value = facefusion.globals.face_analyser_gender or 'none'
 		)
 	FACE_DETECTOR_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('face_detector_model_dropdown_label'),
+		label = wording.get('uis.face_detector_model_dropdown'),
 		choices = facefusion.choices.face_detector_models,
 		value = facefusion.globals.face_detector_model
 	)
 	FACE_DETECTOR_SIZE_DROPDOWN = gradio.Dropdown(
-		label = wording.get('face_detector_size_dropdown_label'),
+		label = wording.get('uis.face_detector_size_dropdown'),
 		choices = facefusion.choices.face_detector_sizes,
 		value = facefusion.globals.face_detector_size
 	)
 	FACE_DETECTOR_SCORE_SLIDER = gradio.Slider(
-		label = wording.get('face_detector_score_slider_label'),
+		label = wording.get('uis.face_detector_score_slider'),
 		value = facefusion.globals.face_detector_score,
 		step = facefusion.choices.face_detector_score_range[1] - facefusion.choices.face_detector_score_range[0],
 		minimum = facefusion.choices.face_detector_score_range[0],

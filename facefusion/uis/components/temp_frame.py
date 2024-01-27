@@ -17,13 +17,13 @@ def render() -> None:
 	global TEMP_FRAME_QUALITY_SLIDER
 
 	TEMP_FRAME_FORMAT_DROPDOWN = gradio.Dropdown(
-		label = wording.get('temp_frame_format_dropdown_label'),
+		label = wording.get('uis.temp_frame_format_dropdown'),
 		choices = facefusion.choices.temp_frame_formats,
 		value = facefusion.globals.temp_frame_format,
 		visible = is_video(facefusion.globals.target_path)
 	)
 	TEMP_FRAME_QUALITY_SLIDER = gradio.Slider(
-		label = wording.get('temp_frame_quality_slider_label'),
+		label = wording.get('uis.temp_frame_quality_slider'),
 		value = facefusion.globals.temp_frame_quality,
 		step = facefusion.choices.temp_frame_quality_range[1] - facefusion.choices.temp_frame_quality_range[0],
 		minimum = facefusion.choices.temp_frame_quality_range[0],
