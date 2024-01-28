@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.typing import Frame, ModelValue, Fps
+from facefusion.typing import VisionFrame, ModelValue, Fps
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.vision import get_video_frame, count_video_frame_total, read_image, detect_video_fps
 from facefusion.filesystem import resolve_relative_path
@@ -53,7 +53,7 @@ def pre_check() -> bool:
 	return True
 
 
-def analyse_stream(frame : Frame, video_fps : Fps) -> bool:
+def analyse_stream(frame : VisionFrame, video_fps : Fps) -> bool:
 	global STREAM_COUNTER
 
 	STREAM_COUNTER = STREAM_COUNTER + 1
@@ -62,14 +62,14 @@ def analyse_stream(frame : Frame, video_fps : Fps) -> bool:
 	return False
 
 
-def prepare_frame(frame : Frame) -> Frame:
+def prepare_frame(frame : VisionFrame) -> VisionFrame:
 	frame = cv2.resize(frame, (224, 224)).astype(numpy.float32)
 	frame -= numpy.array([ 104, 117, 123 ]).astype(numpy.float32)
 	frame = numpy.expand_dims(frame, axis = 0)
 	return frame
 
 
-def analyse_frame(frame : Frame) -> bool:
+def analyse_frame(frame : VisionFrame) -> bool:
 	content_analyser = get_content_analyser()
 	frame = prepare_frame(frame)
 	probability = content_analyser.run(None,

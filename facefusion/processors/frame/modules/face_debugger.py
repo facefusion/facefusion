@@ -9,7 +9,7 @@ from facefusion import config, wording
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, FaceSet, Frame, Update_Process, ProcessMode
+from facefusion.typing import Face, FaceSet, VisionFrame, Update_Process, ProcessMode
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
 from facefusion.face_helper import warp_face_by_kps
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
@@ -66,7 +66,7 @@ def post_process() -> None:
 		clear_face_parser()
 
 
-def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
+def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet, temp_frame : VisionFrame) -> VisionFrame:
 	primary_color = (0, 0, 255)
 	secondary_color = (0, 255, 0)
 	bounding_box = target_face.bbox.astype(numpy.int32)
@@ -103,11 +103,11 @@ def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet
 	return temp_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Frame) -> Frame:
+def get_reference_frame(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	pass
 
 
-def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : Frame) -> Frame:
+def process_frame(source_face : Face, reference_faces : FaceSet, temp_frame : VisionFrame) -> VisionFrame:
 	if 'reference' in facefusion.globals.face_selector_mode:
 		similar_faces = find_similar_faces(temp_frame, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:

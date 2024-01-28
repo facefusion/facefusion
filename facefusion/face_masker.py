@@ -7,7 +7,7 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
-from facefusion.typing import Frame, Mask, Padding, FaceMaskRegion, ModelSet
+from facefusion.typing import VisionFrame, Mask, Padding, FaceMaskRegion, ModelSet
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.filesystem import resolve_relative_path
 from facefusion.download import conditional_download
@@ -101,7 +101,7 @@ def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_p
 	return box_mask
 
 
-def create_occlusion_mask(crop_frame : Frame) -> Mask:
+def create_occlusion_mask(crop_frame : VisionFrame) -> Mask:
 	face_occluder = get_face_occluder()
 	prepare_frame = cv2.resize(crop_frame, face_occluder.get_inputs()[0].shape[1:3][::-1])
 	prepare_frame = numpy.expand_dims(prepare_frame, axis = 0).astype(numpy.float32) / 255
@@ -115,7 +115,7 @@ def create_occlusion_mask(crop_frame : Frame) -> Mask:
 	return occlusion_mask
 
 
-def create_region_mask(crop_frame : Frame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
+def create_region_mask(crop_frame : VisionFrame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
 	face_parser = get_face_parser()
 	prepare_frame = cv2.flip(cv2.resize(crop_frame, (512, 512)), 1)
 	prepare_frame = numpy.expand_dims(prepare_frame, axis = 0).astype(numpy.float32)[:, :, ::-1] / 127.5 - 1

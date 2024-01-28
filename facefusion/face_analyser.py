@@ -10,7 +10,7 @@ from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms
 from facefusion.filesystem import resolve_relative_path
-from facefusion.typing import Frame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding
+from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
@@ -105,7 +105,7 @@ def pre_check() -> bool:
 	return True
 
 
-def extract_faces(frame : Frame) -> List[Face]:
+def extract_faces(frame : VisionFrame) -> List[Face]:
 	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
 	frame_height, frame_width, _ = frame.shape
 	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
@@ -124,7 +124,7 @@ def extract_faces(frame : Frame) -> List[Face]:
 	return []
 
 
-def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+def detect_with_retinaface(temp_frame : VisionFrame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
 	bbox_list = []
 	kps_list = []
@@ -164,7 +164,7 @@ def detect_with_retinaface(temp_frame : Frame, temp_frame_height : int, temp_fra
 	return bbox_list, kps_list, score_list
 
 
-def detect_with_yoloface(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+def detect_with_yoloface(temp_frame : VisionFrame, temp_frame_height : int, temp_frame_width : int, face_detector_height : int, face_detector_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
 	bbox_list = []
 	kps_list = []
@@ -206,7 +206,7 @@ def detect_with_yoloface(temp_frame : Frame, temp_frame_height : int, temp_frame
 	return bbox_list, kps_list, score_list
 
 
-def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+def detect_with_yunet(temp_frame : VisionFrame, temp_frame_height : int, temp_frame_width : int, ratio_height : float, ratio_width : float) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
 	face_detector.setInputSize((temp_frame_width, temp_frame_height))
 	face_detector.setScoreThreshold(facefusion.globals.face_detector_score)
@@ -229,7 +229,7 @@ def detect_with_yunet(temp_frame : Frame, temp_frame_height : int, temp_frame_wi
 	return bbox_list, kps_list, score_list
 
 
-def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face]:
+def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face]:
 	faces = []
 	if facefusion.globals.face_detector_score > 0:
 		sort_indices = numpy.argsort(-numpy.array(score_list))
@@ -255,7 +255,7 @@ def create_faces(frame : Frame, bbox_list : List[Bbox], kps_list : List[Kps], sc
 	return faces
 
 
-def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]:
+def calc_embedding(temp_frame : VisionFrame, kps : Kps) -> Tuple[Embedding, Embedding]:
 	face_recognizer = get_face_analyser().get('face_recognizer')
 	crop_frame, matrix = warp_face_by_kps(temp_frame, kps, 'arcface_112_v2', (112, 112))
 	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
@@ -270,7 +270,7 @@ def calc_embedding(temp_frame : Frame, kps : Kps) -> Tuple[Embedding, Embedding]
 	return embedding, normed_embedding
 
 
-def detect_gender_age(frame : Frame, bbox : Bbox) -> Tuple[int, int]:
+def detect_gender_age(frame : VisionFrame, bbox : Bbox) -> Tuple[int, int]:
 	gender_age = get_face_analyser().get('gender_age')
 	bbox = bbox.reshape(2, -1)
 	scale = 64 / numpy.subtract(*bbox[::-1]).max()
@@ -288,7 +288,7 @@ def detect_gender_age(frame : Frame, bbox : Bbox) -> Tuple[int, int]:
 	return gender, age
 
 
-def get_one_face(frame : Frame, position : int = 0) -> Optional[Face]:
+def get_one_face(frame : VisionFrame, position : int = 0) -> Optional[Face]:
 	many_faces = get_many_faces(frame)
 	if many_faces:
 		try:
@@ -298,7 +298,7 @@ def get_one_face(frame : Frame, position : int = 0) -> Optional[Face]:
 	return None
 
 
-def get_average_face(frames : List[Frame], position : int = 0) -> Optional[Face]:
+def get_average_face(frames : List[VisionFrame], position : int = 0) -> Optional[Face]:
 	average_face = None
 	faces = []
 	embedding_list = []
@@ -322,7 +322,7 @@ def get_average_face(frames : List[Frame], position : int = 0) -> Optional[Face]
 	return average_face
 
 
-def get_many_faces(frame : Frame) -> List[Face]:
+def get_many_faces(frame : VisionFrame) -> List[Face]:
 	try:
 		faces_cache = get_static_faces(frame)
 		if faces_cache:
@@ -341,7 +341,7 @@ def get_many_faces(frame : Frame) -> List[Face]:
 		return []
 
 
-def find_similar_faces(frame : Frame, reference_faces : FaceSet, face_distance : float) -> List[Face]:
+def find_similar_faces(frame : VisionFrame, reference_faces : FaceSet, face_distance : float) -> List[Face]:
 	similar_faces : List[Face] = []
 	many_faces = get_many_faces(frame)
 
