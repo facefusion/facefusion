@@ -7,7 +7,7 @@ from facefusion.ffmpeg import read_audio_buffer
 from facefusion.typing import Fps, Audio, Spectrogram, AudioFrame
 
 
-def get_audio_frame(audio_path : str, fps : Fps, frame_number : int) -> Optional[AudioFrame]:
+def get_audio_frame(audio_path : str, fps : Fps, frame_number : int = 0) -> Optional[AudioFrame]:
 	if audio_path:
 		audio_frames = read_static_audio(audio_path, fps)
 		if frame_number < len(audio_frames):
@@ -16,11 +16,12 @@ def get_audio_frame(audio_path : str, fps : Fps, frame_number : int) -> Optional
 
 
 @lru_cache(maxsize = None)
-def read_static_audio(audio_path : str, fps : Fps) -> List[Optional[AudioFrame]]:
+def read_static_audio(audio_path : str, fps : Fps) -> List[AudioFrame]:
 	audio_buffer = read_audio_buffer(audio_path, 16000, 2)
 	audio = numpy.frombuffer(audio_buffer, dtype = numpy.int16).reshape(-1, 2)
 	audio = normalize_audio(audio)
-	spectrogram = create_spectrogram(audio, 16000, 80, 800)
+	audio = filter_audio(audio, -0.97)
+	spectrogram = create_spectrogram(audio, 16000, 80, 800, 55.0, 7600.0)
 	audio_frames = extract_audio_frames(spectrogram, 80, 16, fps)
 	return audio_frames
 
@@ -29,36 +30,43 @@ def normalize_audio(audio : numpy.ndarray[Any, Any]) -> Audio:
 	if audio.ndim > 1:
 		audio = numpy.mean(audio, axis = 1)
 	audio = audio / numpy.max(numpy.abs(audio), axis = 0)
-	audio = scipy.signal.resample(audio, len(audio))
-	audio = scipy.signal.lfilter([1, -0.97], [1], audio)
 	return audio
 
 
+def filter_audio(audio : Audio, filter_coefficient: float) -> Audio:
+	audio = scipy.signal.lfilter([1.0, filter_coefficient], [1.0], audio)
+	return audio
+
+
+def convert_hertz_to_mel(hertz : float) -> float:
+	return 2595 * numpy.log10(1 + hertz / 700)
+
+
+def convert_mel_to_hertz(mel : numpy.ndarray[Any, Any]) -> numpy.ndarray[Any, Any]:
+	return 700 * (10 ** (mel / 2595) - 1)
+
+
 @lru_cache(maxsize = None)
-def create_static_mel_filter(sample_rate : int, filter_total : int, filter_size : int) -> numpy.ndarray[Any, Any]:
-	bins = (10 ** (numpy.linspace(85, 2787, filter_total + 2) / 2595) - 1) * 700
-	indices = numpy.floor((filter_size + 1) * bins / sample_rate).astype(numpy.int16)
-	filters = numpy.zeros((filter_total, filter_size // 2 + 1))
-	for index in range(1, filter_total + 1):
-		filters[index - 1, indices[index - 1] : indices[index]] = scipy.signal.windows.triang(indices[index] - indices[index - 1])
-	return filters
+def create_static_mel_filter(sample_rate : int, filter_total : int, filter_size : int, frequency_minimum : float, frequency_maximum : float) -> numpy.ndarray[Any, Any]:
+	mel_filter = numpy.zeros((filter_total, filter_size // 2 + 1))
+	mel_bins = numpy.linspace(convert_hertz_to_mel(frequency_minimum), convert_hertz_to_mel(frequency_maximum), filter_total + 2)
+	indices = numpy.floor((filter_size + 1) * convert_mel_to_hertz(mel_bins) / sample_rate).astype(numpy.int16)
+	for index in range(filter_total):
+		mel_filter[index, indices[index]: indices[index + 1]] = scipy.signal.windows.triang(indices[index + 1] - indices[index])
+	return mel_filter
 
 
-def create_spectrogram(audio : Audio, sample_rate : int, filter_total : int, filter_size : int) -> Spectrogram:
-	mel_filters = create_static_mel_filter(sample_rate, filter_total, filter_size)
+def create_spectrogram(audio : Audio, sample_rate : int, filter_total : int, filter_size : int, frequency_minimum : float, frequency_maximum : float) -> Spectrogram:
+	mel_filter = create_static_mel_filter(sample_rate, filter_total, filter_size, frequency_minimum, frequency_maximum)
 	spectrogram = scipy.signal.stft(audio, nperseg = filter_size, noverlap = 600, nfft = filter_size)[2]
-	spectrogram = numpy.dot(mel_filters, numpy.abs(spectrogram))
+	spectrogram = numpy.dot(mel_filter, numpy.abs(spectrogram))
 	return spectrogram
 
 
-def extract_audio_frames(spectrogram : Spectrogram, filter_total : int, steps : int, fps : Fps) -> List[Optional[AudioFrame]]:
+def extract_audio_frames(spectrogram: Spectrogram, filter_total: int, audio_frame_step: int, fps: Fps) -> List[AudioFrame]:
+	indices = numpy.arange(0, spectrogram.shape[1], filter_total / fps).astype(numpy.int16)
+	indices = indices[indices >= audio_frame_step]
 	audio_frames = []
-	index = 0
-	while True:
-		start_index = int(index * filter_total / fps)
-		if start_index + steps > spectrogram.shape[1]:
-			audio_frames.append(spectrogram[:, spectrogram.shape[1] - steps : ])
-			break
-		audio_frames.append(spectrogram[:, start_index : start_index + steps])
-		index += 1
+	for index in indices:
+		audio_frames.append(spectrogram[:, max(0, index - audio_frame_step) : index])
 	return audio_frames
