@@ -65,6 +65,15 @@ def merge_video(target_path : str, video_fps : Fps) -> bool:
 	return run_ffmpeg(commands)
 
 
+def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int) -> Optional[AudioBuffer]:
+	commands = [ '-i', target_path, '-vn', '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', str(sample_rate), '-ac', str(channel_total), '-' ]
+	process = open_ffmpeg(commands)
+	audio_buffer, error = process.communicate()
+	if process.returncode == 0:
+		return audio_buffer
+	return None
+
+
 def restore_audio(target_path : str, output_path : str, video_fps : Fps) -> bool:
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
@@ -80,19 +89,9 @@ def restore_audio(target_path : str, output_path : str, video_fps : Fps) -> bool
 	return run_ffmpeg(commands)
 
 
-def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int) -> Optional[AudioBuffer]:
-	commands = [ '-i', target_path, '-vn', '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', str(sample_rate), '-ac', str(channel_total), '-' ]
-	process = open_ffmpeg(commands)
-	audio_buffer, error = process.communicate()
-	if process.returncode == 0:
-		return audio_buffer
-	logger.debug(error.decode().strip(), __name__.upper())
-	return None
-
-
 def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:
 	temp_output_path = get_temp_output_video_path(target_path)
-	commands = [ '-i', temp_output_path, '-i', audio_path, '-c:v', 'copy', '-af', 'apad', '-shortest', '-map', '0:v:0', '-map', '1:a:0', '-y', output_path ]
+	commands = [ '-hwaccel', 'auto', '-i', temp_output_path, '-i', audio_path, '-c:v', 'copy', '-af', 'apad', '-shortest', '-map', '0:v:0', '-map', '1:a:0', '-y', output_path ]
 	return run_ffmpeg(commands)
 
 

@@ -1,8 +1,8 @@
 from typing import Optional, Any, List
-
+from functools import lru_cache
 import numpy
 import scipy
-from functools import lru_cache
+
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.typing import Fps, Audio, Spectrogram, AudioFrame
 
@@ -33,8 +33,8 @@ def normalize_audio(audio : numpy.ndarray[Any, Any]) -> Audio:
 	return audio
 
 
-def filter_audio(audio : Audio, filter_coefficient: float) -> Audio:
-	audio = scipy.signal.lfilter([1.0, filter_coefficient], [1.0], audio)
+def filter_audio(audio : Audio, filter_coefficient : float) -> Audio:
+	audio = scipy.signal.lfilter([ 1.0, filter_coefficient ], [1.0], audio)
 	return audio
 
 
@@ -63,7 +63,7 @@ def create_spectrogram(audio : Audio, sample_rate : int, filter_total : int, fil
 	return spectrogram
 
 
-def extract_audio_frames(spectrogram: Spectrogram, filter_total: int, audio_frame_step: int, fps: Fps) -> List[AudioFrame]:
+def extract_audio_frames(spectrogram : Spectrogram, filter_total : int, audio_frame_step : int, fps : Fps) -> List[AudioFrame]:
 	indices = numpy.arange(0, spectrogram.shape[1], filter_total / fps).astype(numpy.int16)
 	indices = indices[indices >= audio_frame_step]
 	audio_frames = []
