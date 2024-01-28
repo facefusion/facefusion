@@ -3,7 +3,7 @@ import subprocess
 
 import facefusion.globals
 from facefusion import logger
-from facefusion.typing import OutputVideoPreset, Fps
+from facefusion.typing import OutputVideoPreset, Fps, AudioBuffer
 from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video_path
 
 
@@ -21,7 +21,7 @@ def run_ffmpeg(args : List[str]) -> bool:
 def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
 	commands.extend(args)
-	return subprocess.Popen(commands, stdin = subprocess.PIPE)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
 def extract_frames(target_path : str, video_resolution : str, video_fps : Fps) -> bool:
@@ -77,6 +77,22 @@ def restore_audio(target_path : str, output_path : str, video_fps : Fps) -> bool
 		end_time = trim_frame_end / video_fps
 		commands.extend([ '-to', str(end_time) ])
 	commands.extend([ '-i', target_path, '-c', 'copy', '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ])
+	return run_ffmpeg(commands)
+
+
+def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int) -> Optional[AudioBuffer]:
+	commands = [ '-i', target_path, '-vn', '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', str(sample_rate), '-ac', str(channel_total), '-' ]
+	process = open_ffmpeg(commands)
+	audio_buffer, error = process.communicate()
+	if process.returncode == 0:
+		return audio_buffer
+	logger.debug(error.decode().strip(), __name__.upper())
+	return None
+
+
+def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:
+	temp_output_path = get_temp_output_video_path(target_path)
+	commands = [ '-i', temp_output_path, '-i', audio_path, '-c:v', 'copy', '-af', 'apad', '-shortest', '-map', '0:v:0', '-map', '1:a:0', '-y', output_path ]
 	return run_ffmpeg(commands)
 
 
