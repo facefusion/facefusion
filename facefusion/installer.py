@@ -4,11 +4,8 @@ import os
 import platform
 import tempfile
 import subprocess
-from argparse import ArgumentParser, HelpFormatter
-
-subprocess.call([ 'pip', 'install' , 'inquirer', '-q' ])
-
 import inquirer
+from argparse import ArgumentParser, HelpFormatter
 
 from facefusion import metadata, wording
 
