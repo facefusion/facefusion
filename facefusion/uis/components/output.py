@@ -22,19 +22,19 @@ def render() -> None:
 	global OUTPUT_CLEAR_BUTTON
 
 	OUTPUT_IMAGE = gradio.Image(
-		label = wording.get('output_image_or_video_label'),
+		label = wording.get('uis.output_image_or_video'),
 		visible = False
 	)
 	OUTPUT_VIDEO = gradio.Video(
-		label = wording.get('output_image_or_video_label')
+		label = wording.get('uis.output_image_or_video')
 	)
 	OUTPUT_START_BUTTON = gradio.Button(
-		value = wording.get('start_button_label'),
+		value = wording.get('uis.start_button'),
 		variant = 'primary',
 		size = 'sm'
 	)
 	OUTPUT_CLEAR_BUTTON = gradio.Button(
-		value = wording.get('clear_button_label'),
+		value = wording.get('uis.clear_button'),
 		size = 'sm'
 	)
 

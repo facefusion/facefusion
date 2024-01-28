@@ -19,7 +19,7 @@ def render() -> None:
 	if facefusion.globals.skip_download:
 		value.append('skip-download')
 	COMMON_OPTIONS_CHECKBOX_GROUP = gradio.Checkboxgroup(
-		label = wording.get('common_options_checkbox_group_label'),
+		label = wording.get('uis.common_options_checkbox_group'),
 		choices = uis_choices.common_options,
 		value = value
 	)

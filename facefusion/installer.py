@@ -39,9 +39,9 @@ if platform.system().lower() == 'windows':
 
 def cli() -> None:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 120))
-	program.add_argument('--torch', help = wording.get('install_dependency_help').format(dependency = 'torch'), choices = TORCH.keys())
-	program.add_argument('--onnxruntime', help = wording.get('install_dependency_help').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys())
-	program.add_argument('--skip-venv', help = wording.get('skip_venv_help'), action = 'store_true')
+	program.add_argument('--torch', help = wording.get('help.install_dependency').format(dependency = 'torch'), choices = TORCH.keys())
+	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys())
+	program.add_argument('--skip-venv', help = wording.get('help.skip_venv'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	run(program)
 
@@ -61,8 +61,8 @@ def run(program : ArgumentParser) -> None:
 	else:
 		answers = inquirer.prompt(
 		[
-			inquirer.List('torch', message = wording.get('install_dependency_help').format(dependency = 'torch'), choices = list(TORCH.keys())),
-			inquirer.List('onnxruntime', message = wording.get('install_dependency_help').format(dependency = 'onnxruntime'), choices = list(ONNXRUNTIMES.keys()))
+			inquirer.List('torch', message = wording.get('help.install_dependency').format(dependency = 'torch'), choices = list(TORCH.keys())),
+			inquirer.List('onnxruntime', message = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = list(ONNXRUNTIMES.keys()))
 		])
 	if answers:
 		torch = answers['torch']

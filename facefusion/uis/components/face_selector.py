@@ -25,7 +25,7 @@ def render() -> None:
 
 	reference_face_gallery_args: Dict[str, Any] =\
 	{
-		'label': wording.get('reference_face_gallery_label'),
+		'label': wording.get('uis.reference_face_gallery'),
 		'object_fit': 'cover',
 		'columns': 8,
 		'allow_preview': False,
@@ -38,13 +38,13 @@ def render() -> None:
 		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
 		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
-		label = wording.get('face_selector_mode_dropdown_label'),
+		label = wording.get('uis.face_selector_mode_dropdown'),
 		choices = facefusion.choices.face_selector_modes,
 		value = facefusion.globals.face_selector_mode
 	)
 	REFERENCE_FACE_POSITION_GALLERY = gradio.Gallery(**reference_face_gallery_args)
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
-		label = wording.get('reference_face_distance_slider_label'),
+		label = wording.get('uis.reference_face_distance_slider'),
 		value = facefusion.globals.reference_face_distance,
 		step = facefusion.choices.reference_face_distance_range[1] - facefusion.choices.reference_face_distance_range[0],
 		minimum = facefusion.choices.reference_face_distance_range[0],

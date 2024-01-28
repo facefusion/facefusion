@@ -16,17 +16,17 @@ def render() -> None:
 	global WEBCAM_FPS_SLIDER
 
 	WEBCAM_MODE_RADIO = gradio.Radio(
-		label = wording.get('webcam_mode_radio_label'),
+		label = wording.get('uis.webcam_mode_radio'),
 		choices = uis_choices.webcam_modes,
 		value = 'inline'
 	)
 	WEBCAM_RESOLUTION_DROPDOWN = gradio.Dropdown(
-		label = wording.get('webcam_resolution_dropdown'),
+		label = wording.get('uis.webcam_resolution_dropdown'),
 		choices = uis_choices.webcam_resolutions,
 		value = uis_choices.webcam_resolutions[0]
 	)
 	WEBCAM_FPS_SLIDER = gradio.Slider(
-		label = wording.get('webcam_fps_slider'),
+		label = wording.get('uis.webcam_fps_slider'),
 		value = 25,
 		step = 1,
 		minimum = 1,

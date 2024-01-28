@@ -14,12 +14,12 @@ def render() -> None:
 	global BENCHMARK_CYCLES_SLIDER
 
 	BENCHMARK_RUNS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-		label = wording.get('benchmark_runs_checkbox_group_label'),
+		label = wording.get('uis.benchmark_runs_checkbox_group'),
 		value = list(BENCHMARKS.keys()),
 		choices = list(BENCHMARKS.keys())
 	)
 	BENCHMARK_CYCLES_SLIDER = gradio.Slider(
-		label = wording.get('benchmark_cycles_slider_label'),
+		label = wording.get('uis.benchmark_cycles_slider'),
 		value = 5,
 		step = 1,
 		minimum = 1,

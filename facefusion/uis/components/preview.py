@@ -26,12 +26,12 @@ def render() -> None:
 
 	preview_image_args: Dict[str, Any] =\
 	{
-		'label': wording.get('preview_image_label'),
+		'label': wording.get('uis.preview_image'),
 		'interactive': False
 	}
 	preview_frame_slider_args: Dict[str, Any] =\
 	{
-		'label': wording.get('preview_frame_slider_label'),
+		'label': wording.get('uis.preview_frame_slider'),
 		'step': 1,
 		'minimum': 0,
 		'maximum': 100,

@@ -34,6 +34,7 @@ def render() -> gradio.Blocks:
 					about.render()
 				with gradio.Blocks():
 					frame_processors.render()
+				with gradio.Blocks():
 					frame_processors_options.render()
 				with gradio.Blocks():
 					execution.render()

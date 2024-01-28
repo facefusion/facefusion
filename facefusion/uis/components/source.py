@@ -24,7 +24,7 @@ def render() -> None:
 			'.jpg',
 			'.webp'
 		],
-		label = wording.get('source_file_label'),
+		label = wording.get('uis.source_file'),
 		value = facefusion.globals.source_paths if are_source_images else None
 	)
 	source_file_names = [ source_file_value['name'] for source_file_value in SOURCE_FILE.value ] if SOURCE_FILE.value else None
