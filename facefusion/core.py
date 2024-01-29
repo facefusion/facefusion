@@ -268,10 +268,10 @@ def process_video(start_time : float) -> None:
 	if analyse_video(facefusion.globals.target_path, facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
 		return
 	# clear temp
-	logger.info(wording.get('clearing_temp'), __name__.upper())
+	logger.debug(wording.get('clearing_temp'), __name__.upper())
 	clear_temp(facefusion.globals.target_path)
 	# create temp
-	logger.info(wording.get('creating_temp'), __name__.upper())
+	logger.debug(wording.get('creating_temp'), __name__.upper())
 	create_temp(facefusion.globals.target_path)
 	# extract frames
 	logger.info(wording.get('extracting_frames_fps').format(video_fps = facefusion.globals.output_video_fps), __name__.upper())
@@ -296,12 +296,13 @@ def process_video(start_time : float) -> None:
 		logger.info(wording.get('skipping_audio'), __name__.upper())
 		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
-		logger.info(wording.get('restoring_audio'), __name__.upper())
-		if not restore_audio(facefusion.globals.target_path, facefusion.globals.output_path, facefusion.globals.output_video_fps):
+		if restore_audio(facefusion.globals.target_path, facefusion.globals.output_path, facefusion.globals.output_video_fps):
+			logger.info(wording.get('restoring_audio_succeed'), __name__.upper())
+		else:
 			logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
 			move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clear temp
-	logger.info(wording.get('clearing_temp'), __name__.upper())
+	logger.debug(wording.get('clearing_temp'), __name__.upper())
 	clear_temp(facefusion.globals.target_path)
 	# validate video
 	if is_video(facefusion.globals.output_path):

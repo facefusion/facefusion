@@ -15,7 +15,7 @@ WORDING : Dict[str, Any] =\
 	'merging_video_fps': 'Merging video with {video_fps} FPS',
 	'merging_video_failed': 'Merging video failed',
 	'skipping_audio': 'Skipping audio',
-	'restoring_audio': 'Restoring audio',
+	'restoring_audio_succeed': 'Restoring audio succeed',
 	'restoring_audio_skipped': 'Restoring audio skipped',
 	'clearing_temp': 'Clearing temporary resources',
 	'processing_image_succeed': 'Processing to image succeed in {seconds} seconds',
