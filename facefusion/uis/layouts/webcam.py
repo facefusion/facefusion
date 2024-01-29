@@ -44,4 +44,4 @@ def listen() -> None:
 
 
 def run(ui : gradio.Blocks) -> None:
-	ui.queue(concurrency_count = 2, api_open = False).launch(show_api = False)
+	ui.queue(concurrency_count = 2).launch(quiet = True)
