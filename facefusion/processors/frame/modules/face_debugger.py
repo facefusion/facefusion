@@ -98,7 +98,7 @@ def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet
 				cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, primary_color, -1)
 		if 'score' in frame_processors_globals.face_debugger_items:
 			face_score_text = str(round(target_face.score, 2))
-			face_score_position = (bounding_box[0] + 10, bounding_box[1] + 20)
+			face_score_position = (bounding_box[0] + 20, bounding_box[1] + 20)
 			cv2.putText(temp_frame, face_score_text, face_score_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
 	return temp_frame
 
