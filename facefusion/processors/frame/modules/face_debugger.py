@@ -11,7 +11,7 @@ from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, VisionFrame, Update_Process, ProcessMode
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
-from facefusion.face_helper import warp_face_by_kps
+from facefusion.face_helper import warp_face_by_kps, translate_age, translate_gender
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
@@ -96,10 +96,20 @@ def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet
 			kps = target_face.kps.astype(numpy.int32)
 			for index in range(kps.shape[0]):
 				cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, primary_color, -1)
+		top = bounding_box[1]
+		left = bounding_box[0] + 20
 		if 'score' in frame_processors_globals.face_debugger_items:
 			face_score_text = str(round(target_face.score, 2))
-			face_score_position = (bounding_box[0] + 20, bounding_box[1] + 20)
-			cv2.putText(temp_frame, face_score_text, face_score_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
+			top = top + 20
+			cv2.putText(temp_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
+		if 'age' in frame_processors_globals.face_debugger_items:
+			face_age_text = translate_age(target_face.age)
+			top = top + 20
+			cv2.putText(temp_frame, face_age_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
+		if 'gender' in frame_processors_globals.face_debugger_items:
+			face_gender_text = translate_gender(target_face.gender)
+			top = top + 20
+			cv2.putText(temp_frame, face_gender_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
 	return temp_frame
 
 
