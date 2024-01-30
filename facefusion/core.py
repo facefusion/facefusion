@@ -288,7 +288,7 @@ def process_video(start_time : float) -> None:
 		return
 	# merge video
 	logger.info(wording.get('merging_video_fps').format(video_fps = facefusion.globals.output_video_fps), __name__.upper())
-	if not merge_video(facefusion.globals.target_path, facefusion.globals.output_video_fps):
+	if not merge_video(facefusion.globals.target_path, facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps):
 		logger.error(wording.get('merging_video_failed'), __name__.upper())
 		return
 	# handle audio
