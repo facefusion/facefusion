@@ -1,7 +1,7 @@
 import subprocess
 import pytest
 
-#from facefusion.audio import get_audio_frame
+from facefusion.audio import get_audio_frame, read_static_audio
 from facefusion.download import conditional_download
 
 
@@ -15,8 +15,12 @@ def before_all() -> None:
 
 
 def test_get_audio_frame() -> None:
-	pass
-	# todo: testing
-	#assert get_audio_frame('.assets/examples/source.mp3', 25) is not None
-	# assert get_audio_frame('.assets/examples/source.wav', 25) is not None
-	#assert get_audio_frame('invalid', 25) is None
+	assert get_audio_frame('.assets/examples/source.mp3', 25) is not None
+	assert get_audio_frame('.assets/examples/source.wav', 25) is not None
+	assert get_audio_frame('invalid', 25) is None
+
+
+def test_read_static_audio() -> None:
+	assert len(read_static_audio('.assets/examples/source.mp3', 25)) == 91
+	assert len(read_static_audio('.assets/examples/source.wav', 25)) == 91
+	assert read_static_audio('invalid', 25) is None

@@ -5,7 +5,7 @@ import pytest
 import facefusion.globals
 from facefusion.filesystem import get_temp_directory_path, create_temp, clear_temp
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import extract_frames# #read_audio_buffer, replace_audio
+from facefusion.ffmpeg import extract_frames, read_audio_buffer
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -103,12 +103,9 @@ def test_extract_frames_with_trim_end() -> None:
 
 
 def test_read_audio_buffer() -> None:
-	# todo: testing
-	pass
-	# todo: if you can use different values, then test not just against None or not None
-	#assert read_audio_buffer('.assets/examples/source.mp3', 1, 1) is not None
-	#assert read_audio_buffer('.assets/examples/source.wav', 1, 1) is not None
-	#assert read_audio_buffer('.assets/examples/invalid.mp3', 1, 1) is None
+	assert isinstance(read_audio_buffer('.assets/examples/source.mp3', 1, 1), bytes)
+	assert isinstance(read_audio_buffer('.assets/examples/source.wav', 1, 1), bytes)
+	assert read_audio_buffer('.assets/examples/invalid.mp3', 1, 1) is None
 
 
 def test_replace_audio() -> None:
