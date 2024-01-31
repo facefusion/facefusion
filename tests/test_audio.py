@@ -11,7 +11,7 @@ def before_all() -> None:
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.mp3'
 	])
-	subprocess.run(['ffmpeg', '-i', '.assets/examples/source.mp3', '.assets/examples/source.wav'])
+	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/source.mp3', '.assets/examples/source.wav' ])
 
 
 def test_get_audio_frame() -> None:

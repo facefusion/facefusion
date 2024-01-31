@@ -11,13 +11,13 @@ def before_all() -> None:
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.mp3',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-1080p.mp4'
 	])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vframes', '1', '.assets/examples/target-240p.jpg' ])
+	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-1080p.mp4', '-vframes', '1', '.assets/examples/target-1080p.jpg' ])
 
 
 def test_image_to_image() -> None:
-	commands = [ sys.executable, 'run.py', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-240p.jpg', '-o', '.assets/examples', '--headless' ]
+	commands = [ sys.executable, 'run.py', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-1080p.jpg', '-o', '.assets/examples', '--headless' ]
 	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
 	assert run.returncode == 0

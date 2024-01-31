@@ -32,7 +32,7 @@ MODELS : ModelSet =\
 {
 	'wav2lip':
 	{
-		'url': 'https://huggingface.co/bluefoxcreation/Wav2lip-Onnx/resolve/main/wav2lip_gan.onnx?download=true',
+		'url': 'https://huggingface.co/bluefoxcreation/Wav2lip-Onnx/resolve/main/wav2lip_gan.onnx',
 		'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx'),
 	}
 }
