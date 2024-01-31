@@ -19,13 +19,11 @@ TORCH : Dict[str, str] =\
 }
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 {
-	'default': ('onnxruntime', '1.16.3')
+	'default': ('onnxruntime', '1.17.0')
 }
 if platform.system().lower() == 'linux' or platform.system().lower() == 'windows':
-	TORCH['cuda'] = 'cu118'
-	TORCH['cuda-nightly'] = 'cu121'
-	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.16.3')
-	ONNXRUNTIMES['cuda-nightly'] = ('onnxruntime-gpu', '1.17.0')
+	TORCH['cuda'] = 'cu121'
+	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.17.0')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
 if platform.system().lower() == 'linux':
 	TORCH['rocm'] = 'rocm5.6'
@@ -34,7 +32,7 @@ if platform.system().lower() == 'darwin':
 	ONNXRUNTIMES['coreml-legacy'] = ('onnxruntime-coreml', '1.13.1')
 	ONNXRUNTIMES['coreml-silicon'] = ('onnxruntime-silicon', '1.16.0')
 if platform.system().lower() == 'windows':
-	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.16.3')
+	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.17.0')
 
 
 def cli() -> None:
@@ -86,7 +84,4 @@ def run(program : ArgumentParser) -> None:
 				os.remove(wheel_path)
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
-			if onnxruntime == 'cuda-nightly':
-				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--extra-index-url', 'https://pkgs.dev.azure.com/onnxruntime/onnxruntime/_packaging/onnxruntime-cuda-12/pypi/simple', '--force-reinstall' ])
-			else:
-				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
+			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
