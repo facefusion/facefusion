@@ -33,7 +33,7 @@ def test_image_to_video() -> None:
 
 
 def test_audio_to_video() -> None:
-	commands = [ sys.executable, 'run.py', '--frame-processors', 'lip_sync', '-s', '.assets/examples/source.mp3', '-t', '.assets/examples/target-240p.mp4', '-o', '.assets/examples', '--trim-frame-end', '10', '--headless' ]
+	commands = [ sys.executable, 'run.py', '--frame-processors', 'lip_syncer', '-s', '.assets/examples/source.mp3', '-t', '.assets/examples/target-240p.mp4', '-o', '.assets/examples', '--trim-frame-end', '10', '--headless' ]
 	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
 	assert run.returncode == 0

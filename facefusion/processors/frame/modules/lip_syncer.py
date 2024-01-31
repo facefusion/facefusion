@@ -34,7 +34,7 @@ MODELS : ModelSet =\
 	{
 		'url': 'https://huggingface.co/bluefoxcreation/Wav2lip-Onnx/resolve/main/wav2lip_gan.onnx?download=true',
 		'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx'),
-	},
+	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
 
@@ -61,7 +61,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[frame_processors_globals.lip_sync_model]
+			'model': MODELS[frame_processors_globals.lip_syncer_model]
 		}
 	return OPTIONS.get(key)
 
@@ -73,12 +73,12 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--lip-sync-model', help = wording.get('help.lip_sync_model_help'), default = config.get_str_value('frame_processors.lip_sync_model', 'wav2lip'), choices = frame_processors_choices.lip_sync_models)
+	program.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('frame_processors.lip_syncer_model', 'wav2lip'), choices = frame_processors_choices.lip_syncer_models)
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.lip_sync_model = args.lip_sync_model
+	frame_processors_globals.lip_syncer_model = args.lip_syncer_model
 
 
 def pre_check() -> bool:
@@ -132,7 +132,11 @@ def lip_sync(audio_frame : AudioFrame, target_face : Face, temp_frame : VisionFr
 	crop_frame, affine_matrix = warp_face_by_bbox(temp_frame, target_face.bbox, (96, 96))
 	audio_frame = prepare_audio_frame(audio_frame)
 	crop_frame = prepare_crop_frame(crop_frame)
-	crop_frame = frame_processor.run(None, {'vid' : crop_frame, 'mel' : audio_frame})[0]
+	crop_frame = frame_processor.run(None,
+	{
+		'vid' : crop_frame,
+		'mel' : audio_frame
+	})[0]
 	crop_frame = normalize_crop_frame(crop_frame)
 	crop_mask = create_static_box_mask(crop_frame.shape[:2][::-1], 0.1, (50, 0, 0, 0))
 	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
