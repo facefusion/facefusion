@@ -296,7 +296,7 @@ def process_video(start_time : float) -> None:
 		logger.info(wording.get('skipping_audio'), __name__.upper())
 		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
-		if 'lip_sync' in facefusion.globals.frame_processors:
+		if 'lip_syncer' in facefusion.globals.frame_processors:
 			audio_path = get_first_item(filter_audio_paths(facefusion.globals.source_paths))
 			if not audio_path or not replace_audio(facefusion.globals.target_path, audio_path, facefusion.globals.output_path):
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
