@@ -25,6 +25,8 @@ WORDING : Dict[str, Any] =\
 	'model_download_not_done': 'Download of the model is not done',
 	'model_file_not_present': 'File of the model is not present',
 	'select_image_source': 'Select an image for source path',
+	'select_audio_source': 'Select an audio for source path',
+	'select_video_target': 'Select a video for target path',
 	'select_image_or_video_target': 'Select an image or video for target path',
 	'select_file_or_directory_output': 'Select an file or directory for output path',
 	'no_source_face_detected': 'No source face detected',
@@ -95,6 +97,7 @@ WORDING : Dict[str, Any] =\
 		'face_enhancer_model': 'choose the model responsible for enhancing the face',
 		'face_enhancer_blend': 'blend the enhanced into the previous face',
 		'face_swapper_model': 'choose the model responsible for swapping the face',
+		'lip_sync_model': 'choose the model responsible for lip syncing',
 		'frame_enhancer_model': 'choose the model responsible for enhancing the frame',
 		'frame_enhancer_blend': 'blend the enhanced into the previous frame',
 		# uis
