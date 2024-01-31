@@ -18,10 +18,11 @@ from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.audio import read_static_audio, get_audio_frame
 from facefusion.filesystem import is_video, filter_audio_paths
-from facefusion.vision import read_image, write_image, detect_video_fps
+from facefusion.vision import read_image, write_image, detect_video_fps, read_static_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder, create_region_mask, clear_face_parser
+from facefusion.common_helper import get_first_item
 
 FRAME_PROCESSOR = None
 MODEL_MATRIX = None
@@ -29,15 +30,10 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
-	'wav2lip_gan':
+	'wav2lip':
 	{
 		'url': 'https://huggingface.co/bluefoxcreation/Wav2lip-Onnx/resolve/main/wav2lip_gan.onnx?download=true',
 		'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx'),
-	},
-	'wav2lip':
-	{
-		'url': 'https://huggingface.co/bluefoxcreation/Wav2lip-Onnx/resolve/main/wav2lip.onnx?download=true',
-		'path': resolve_relative_path('../.assets/models/wav2lip.onnx'),
 	},
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -77,7 +73,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--lip-sync-model', help = wording.get('help.lip_sync_model_help'), default = config.get_str_value('frame_processors.lip_sync_model', 'wav2lip_gan'), choices = frame_processors_choices.lip_sync_models)
+	program.add_argument('--lip-sync-model', help = wording.get('help.lip_sync_model_help'), default = config.get_str_value('frame_processors.lip_sync_model', 'wav2lip'), choices = frame_processors_choices.lip_sync_models)
 
 
 def apply_args(program : ArgumentParser) -> None:
@@ -106,8 +102,8 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	audio_paths = filter_audio_paths(facefusion.globals.source_paths)
-	if not audio_paths:
+	audio_path = get_first_item(filter_audio_paths(facefusion.globals.source_paths))
+	if not audio_path:
 		logger.error(wording.get('select_audio_source') + wording.get('exclamation_mark'), NAME)
 		return False
 	if mode in [ 'output', 'preview' ] and not is_video(facefusion.globals.target_path):
@@ -120,12 +116,15 @@ def pre_process(mode : ProcessMode) -> bool:
 
 
 def post_process() -> None:
-	clear_frame_processor()
-	clear_face_analyser()
-	clear_content_analyser()
-	clear_face_occluder()
-	clear_face_parser()
+	read_static_image.cache_clear()
 	read_static_audio.cache_clear()
+	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
+		clear_frame_processor()
+	if facefusion.globals.video_memory_strategy == 'strict':
+		clear_face_analyser()
+		clear_content_analyser()
+		clear_face_occluder()
+		clear_face_parser()
 
 
 def lip_sync(audio_frame : AudioFrame, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
@@ -137,14 +136,14 @@ def lip_sync(audio_frame : AudioFrame, target_face : Face, temp_frame : VisionFr
 	crop_frame = normalize_crop_frame(crop_frame)
 	crop_mask = create_static_box_mask(crop_frame.shape[:2][::-1], 0.1, (50, 0, 0, 0))
 	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
-	if 'occlusion' in facefusion.globals.face_mask_types or 'region' in facefusion.globals.face_mask_types:
-		crop_mask_list = []
-		if 'occlusion' in facefusion.globals.face_mask_types:
-			crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, "ffhq_512", (512, 512))
-			crop_mask_list.append(create_occlusion_mask(crop_frame))
-		crop_frame, affine_matrix = warp_face_by_kps(paste_frame, target_face.kps, "ffhq_512", (512, 512))
-		if 'region' in facefusion.globals.face_mask_types:
-			crop_mask_list.append(create_region_mask(crop_frame, facefusion.globals.face_mask_regions))
+	crop_mask_list = []
+	if 'occlusion' in facefusion.globals.face_mask_types:
+		temp_crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, "ffhq_512", (512, 512))
+		crop_mask_list.append(create_occlusion_mask(temp_crop_frame))
+	if 'region' in facefusion.globals.face_mask_types:
+		paste_crop_frame, affine_matrix = warp_face_by_kps(paste_frame, target_face.kps, "ffhq_512", (512, 512))
+		crop_mask_list.append(create_region_mask(paste_crop_frame, facefusion.globals.face_mask_regions))
+	if crop_mask_list:
 		crop_mask = numpy.minimum.reduce(crop_mask_list)
 		paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	return paste_frame
@@ -175,10 +174,14 @@ def normalize_crop_frame(crop_frame : VisionFrame) -> VisionFrame:
 
 
 def get_reference_frame(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
-	pass
+	audio_path = get_first_item(filter_audio_paths(facefusion.globals.source_paths))
+	audio_frame = get_audio_frame(audio_path, detect_video_fps(facefusion.globals.target_path), facefusion.globals.reference_frame_number)
+	if audio_frame is not None:
+		return lip_sync(audio_frame, target_face, temp_frame)
+	return temp_frame
 
 
-def process_frame(audio_frame : numpy.ndarray[Any, Any], reference_faces : FaceSet, temp_frame : VisionFrame) -> VisionFrame:
+def process_frame(audio_frame : AudioFrame, reference_faces : FaceSet, temp_frame : VisionFrame) -> VisionFrame:
 	if 'reference' in facefusion.globals.face_selector_mode:
 		similar_faces = find_similar_faces(temp_frame, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
@@ -198,7 +201,7 @@ def process_frame(audio_frame : numpy.ndarray[Any, Any], reference_faces : FaceS
 
 def process_frames(source_paths : List[str], temp_frame_paths : List[str], update_progress : Update_Process) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
-	source_audio_path = filter_audio_paths(source_paths)[0]
+	source_audio_path = get_first_item(filter_audio_paths(source_paths))
 	video_fps = detect_video_fps(facefusion.globals.target_path)
 	for temp_frame_path in temp_frame_paths:
 		frame_number = int(os.path.basename(temp_frame_path).split(".")[0])
@@ -211,11 +214,13 @@ def process_frames(source_paths : List[str], temp_frame_paths : List[str], updat
 
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
-	# TODO
-	# Ignore single image processing for lip_sync?
-	# Or
-	# Render as video according source audio length?
-	pass
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	source_audio_path = get_first_item(filter_audio_paths(source_paths))
+	audio_frame = get_audio_frame(source_audio_path, 25, 0)
+	if audio_frame is not None:
+		target_frame = read_static_image(target_path)
+		result_frame = process_frame(audio_frame, reference_faces, target_frame)
+		write_image(output_path, result_frame)
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:

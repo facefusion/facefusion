@@ -19,7 +19,7 @@ from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion import face_analyser, face_masker, content_analyser, config, metadata, logger, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
-from facefusion.common_helper import create_metavar
+from facefusion.common_helper import create_metavar, get_first_item
 from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
@@ -297,8 +297,8 @@ def process_video(start_time : float) -> None:
 		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
 		if 'lip_sync' in facefusion.globals.frame_processors:
-			audio_paths = filter_audio_paths(facefusion.globals.source_paths)
-			if not audio_paths or not replace_audio(facefusion.globals.target_path, audio_paths[0], facefusion.globals.output_path):
+			audio_path = get_first_item(filter_audio_paths(facefusion.globals.source_paths))
+			if not audio_path or not replace_audio(facefusion.globals.target_path, audio_path, facefusion.globals.output_path):
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
 				move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 		else:
