@@ -23,8 +23,8 @@ from facefusion.common_helper import create_metavar
 from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
-from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video
-from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio
+from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video, filter_audio_paths
+from facefusion.ffmpeg import extract_frames, compress_image, merge_video, restore_audio, replace_audio
 from facefusion.vision import get_video_frame, read_image, read_static_images, pack_resolution, detect_video_resolution, detect_video_fps, create_video_resolutions
 
 onnxruntime.set_default_logger_severity(3)
@@ -296,11 +296,15 @@ def process_video(start_time : float) -> None:
 		logger.info(wording.get('skipping_audio'), __name__.upper())
 		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
-		if restore_audio(facefusion.globals.target_path, facefusion.globals.output_path, facefusion.globals.output_video_fps):
-			logger.info(wording.get('restoring_audio_succeed'), __name__.upper())
+		if 'lip_sync' in facefusion.globals.frame_processors:
+			audio_paths = filter_audio_paths(facefusion.globals.source_paths)
+			if not audio_paths or not replace_audio(facefusion.globals.target_path, audio_paths[0], facefusion.globals.output_path):
+				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
+				move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 		else:
-			logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
-			move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
+			if not restore_audio(facefusion.globals.target_path, facefusion.globals.output_path, facefusion.globals.output_video_fps):
+				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
+				move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
 	clear_temp(facefusion.globals.target_path)
