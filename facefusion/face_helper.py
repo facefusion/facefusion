@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Bbox, Kps, VisionFrame, Mask, Matrix, Template
+from facefusion.typing import Bbox, Kps, VisionFrame, Mask, Matrix, Template, FaceAnalyserAge, FaceAnalyserGender
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -121,3 +121,19 @@ def apply_nms(bbox_list : List[Bbox], iou_threshold : float) -> List[int]:
 		iou = width * height / (areas[index] + areas[remain_indices] - width * height)
 		indices = indices[numpy.where(iou <= iou_threshold)[0] + 1]
 	return keep_indices
+
+
+def categorize_age(age : int) -> FaceAnalyserAge:
+	if age < 13:
+		return 'child'
+	elif age < 19:
+		return 'teen'
+	elif age < 60:
+		return 'adult'
+	return 'senior'
+
+
+def categorize_gender(gender : int) -> FaceAnalyserGender:
+	if gender == 0:
+		return 'female'
+	return 'male'

@@ -11,7 +11,7 @@ from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, VisionFrame, Update_Process, ProcessMode
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
-from facefusion.face_helper import warp_face_by_kps
+from facefusion.face_helper import warp_face_by_kps, categorize_age, categorize_gender
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
@@ -71,6 +71,7 @@ def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet
 	secondary_color = (0, 255, 0)
 	bounding_box = target_face.bbox.astype(numpy.int32)
 	temp_frame = temp_frame.copy()
+
 	if 'bbox' in frame_processors_globals.face_debugger_items:
 		cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), secondary_color, 2)
 	if 'face-mask' in frame_processors_globals.face_debugger_items:
@@ -92,14 +93,24 @@ def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet
 		inverse_mask_contours = cv2.findContours(inverse_mask_frame, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
 		cv2.drawContours(temp_frame, inverse_mask_contours, -1, primary_color, 2)
 	if bounding_box[3] - bounding_box[1] > 60 and bounding_box[2] - bounding_box[0] > 60:
+		top = bounding_box[1]
+		left = bounding_box[0] + 20
 		if 'kps' in frame_processors_globals.face_debugger_items:
 			kps = target_face.kps.astype(numpy.int32)
 			for index in range(kps.shape[0]):
 				cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, primary_color, -1)
 		if 'score' in frame_processors_globals.face_debugger_items:
 			face_score_text = str(round(target_face.score, 2))
-			face_score_position = (bounding_box[0] + 20, bounding_box[1] + 20)
-			cv2.putText(temp_frame, face_score_text, face_score_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
+			top = top + 20
+			cv2.putText(temp_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
+		if 'age' in frame_processors_globals.face_debugger_items:
+			face_age_text = categorize_age(target_face.age)
+			top = top + 20
+			cv2.putText(temp_frame, face_age_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
+		if 'gender' in frame_processors_globals.face_debugger_items:
+			face_gender_text = categorize_gender(target_face.gender)
+			top = top + 20
+			cv2.putText(temp_frame, face_gender_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, secondary_color, 2)
 	return temp_frame
 
 
@@ -129,6 +140,7 @@ def process_frames(source_paths : List[str], temp_frame_paths : List[str], updat
 	source_frames = read_static_images(source_paths)
 	source_face = get_average_face(source_frames)
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+
 	for temp_frame_path in temp_frame_paths:
 		temp_frame = read_image(temp_frame_path)
 		result_frame = process_frame(source_face, reference_faces, temp_frame)
