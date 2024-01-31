@@ -19,5 +19,5 @@ def test_get_download_size() -> None:
 
 def test_is_download_done() -> None:
 	assert is_download_done('https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4', '.assets/examples/target-240p.mp4') is True
-	assert is_download_done('https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4','invalid') is False
+	assert is_download_done('https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4', 'invalid') is False
 	assert is_download_done('invalid', 'invalid') is False
