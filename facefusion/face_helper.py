@@ -123,7 +123,7 @@ def apply_nms(bbox_list : List[Bbox], iou_threshold : float) -> List[int]:
 	return keep_indices
 
 
-def translate_age(age : int) -> FaceAnalyserAge:
+def categorize_age(age : int) -> FaceAnalyserAge:
 	if age < 13:
 		return 'child'
 	elif age < 19:
@@ -133,7 +133,7 @@ def translate_age(age : int) -> FaceAnalyserAge:
 	return 'senior'
 
 
-def translate_gender(gender : int) -> FaceAnalyserGender:
+def categorize_gender(gender : int) -> FaceAnalyserGender:
 	if gender == 0:
 		return 'female'
 	return 'male'

@@ -8,7 +8,7 @@ import facefusion.globals
 from facefusion.download import conditional_download
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
-from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms, translate_age, translate_gender
+from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms, categorize_age, categorize_gender
 from facefusion.filesystem import resolve_relative_path
 from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding
 from facefusion.vision import resize_frame_resolution, unpack_resolution
@@ -389,7 +389,7 @@ def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:
 def filter_by_age(faces : List[Face], age : FaceAnalyserAge) -> List[Face]:
 	filter_faces = []
 	for face in faces:
-		if translate_age(face.age) == age:
+		if categorize_age(face.age) == age:
 			filter_faces.append(face)
 	return filter_faces
 
@@ -397,6 +397,6 @@ def filter_by_age(faces : List[Face], age : FaceAnalyserAge) -> List[Face]:
 def filter_by_gender(faces : List[Face], gender : FaceAnalyserGender) -> List[Face]:
 	filter_faces = []
 	for face in faces:
-		if translate_gender(face.gender) == gender:
+		if categorize_gender(face.gender) == gender:
 			filter_faces.append(face)
 	return filter_faces
