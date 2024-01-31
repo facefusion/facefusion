@@ -23,7 +23,9 @@ ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
 }
 if platform.system().lower() == 'linux' or platform.system().lower() == 'windows':
 	TORCH['cuda'] = 'cu121'
+	TORCH['cuda-legacy'] = 'cu118'
 	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.17.0')
+	ONNXRUNTIMES['cuda-legacy'] = ('onnxruntime-gpu', '1.16.3')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
 if platform.system().lower() == 'linux':
 	TORCH['rocm'] = 'rocm5.6'
