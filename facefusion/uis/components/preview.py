@@ -62,6 +62,7 @@ def listen() -> None:
 	PREVIEW_FRAME_SLIDER.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	multi_one_component_names : List[ComponentName] =\
 	[
+		'source_audio',
 		'source_image',
 		'target_image',
 		'target_video'

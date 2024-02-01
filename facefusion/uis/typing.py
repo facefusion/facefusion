@@ -5,6 +5,7 @@ File = IO[Any]
 Component = gradio.File or gradio.Image or gradio.Video or gradio.Slider
 ComponentName = Literal\
 [
+	'source_audio',
 	'source_image',
 	'target_image',
 	'target_video',

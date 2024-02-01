@@ -89,7 +89,6 @@ def listen() -> None:
 	OUTPUT_VIDEO_FPS_SLIDER.change(update_output_video_fps, inputs = OUTPUT_VIDEO_FPS_SLIDER)
 	multi_component_names : List[ComponentName] =\
 	[
-		'source_image',
 		'target_image',
 		'target_video'
 	]
