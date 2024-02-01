@@ -1,7 +1,7 @@
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.filesystem import is_file, is_directory, is_audio, is_image, are_images, is_video, filter_audio_paths, filter_image_paths, list_directory
+from facefusion.filesystem import is_file, is_directory, is_audio, are_audios, is_image, are_images, is_video, filter_audio_paths, filter_image_paths, list_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -30,6 +30,12 @@ def test_is_audio() -> None:
 	assert is_audio('.assets/examples/source.mp3') is True
 	assert is_audio('.assets/examples/source.jpg') is False
 	assert is_audio('invalid') is False
+
+
+def test_are_audios() -> None:
+	assert are_audios([ '.assets/examples/source.mp3' ]) is True
+	assert are_audios([ '.assets/examples/source.mp3', '.assets/examples/target-240p.mp4' ]) is False
+	assert are_audios([ 'invalid' ]) is False
 
 
 def test_is_image() -> None:

@@ -68,6 +68,12 @@ def is_audio(audio_path : str) -> bool:
 	return False
 
 
+def are_audios(audio_paths : List[str]) -> bool:
+	if audio_paths:
+		return all(is_audio(audio_path) for audio_path in audio_paths)
+	return False
+
+
 def is_image(image_path : str) -> bool:
 	if is_file(image_path):
 		return filetype.helpers.is_image(image_path)
