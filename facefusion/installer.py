@@ -25,16 +25,13 @@ if platform.system().lower() == 'linux' or platform.system().lower() == 'windows
 	TORCH['cuda-12.1'] = 'cu121'
 	TORCH['cuda-11.8'] = 'cu118'
 	ONNXRUNTIMES['cuda-12.1'] = ('onnxruntime-gpu', '1.17.0')
-	ONNXRUNTIMES['cuda-11.8'] = ('onnxruntime-gpu', '1.16.3')
+	ONNXRUNTIMES['cuda-11.8'] = ('onnxruntime-gpu', '1.17.0')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
 if platform.system().lower() == 'linux':
 	TORCH['rocm-5.4.2'] = 'rocm5.4.2'
 	TORCH['rocm-5.6'] = 'rocm5.6'
 	ONNXRUNTIMES['rocm-5.4.2'] = ('onnxruntime-rocm', '1.16.3')
 	ONNXRUNTIMES['rocm-5.6'] = ('onnxruntime-rocm', '1.16.3')
-if platform.system().lower() == 'darwin':
-	ONNXRUNTIMES['coreml-legacy'] = ('onnxruntime-coreml', '1.13.1')
-	ONNXRUNTIMES['coreml-silicon'] = ('onnxruntime-silicon', '1.16.0')
 if platform.system().lower() == 'windows':
 	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.17.0')
 
