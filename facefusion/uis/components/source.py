@@ -39,8 +39,7 @@ def render() -> None:
 	SOURCE_AUDIO = gradio.Audio(
 		value = source_audio_path if are_source_audios else None,
 		visible = are_source_audios,
-		show_label = False,
-		show_download_button = False
+		show_label = False
 	)
 	SOURCE_IMAGE = gradio.Image(
 		value = source_image_path if are_source_images else None,
@@ -56,10 +55,12 @@ def listen() -> None:
 
 def update(files : List[File]) -> Tuple[gradio.Audio, gradio.Image]:
 	file_names = [ file.name for file in files ] if files else None
-	if are_audios(file_names) or are_images(file_names):
+	are_source_audios = are_audios(facefusion.globals.source_paths)
+	are_source_images = are_images(facefusion.globals.source_paths)
+	if are_source_audios or are_source_images:
 		facefusion.globals.source_paths = file_names
 		audio_path = get_first_item(filter_audio_paths(facefusion.globals.source_paths))
 		image_path = get_first_item(filter_image_paths(facefusion.globals.source_paths))
-		return gradio.Audio(value = audio_path, visible = True), gradio.Image(value = image_path, visible = True)
+		return gradio.Audio(value = audio_path, visible = are_source_audios), gradio.Image(value = image_path, visible = are_source_images)
 	facefusion.globals.source_paths = None
 	return gradio.Audio(value = None, visible = False), gradio.Image(value = None, visible = False)
