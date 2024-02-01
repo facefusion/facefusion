@@ -17,7 +17,7 @@ from facefusion.typing import Face, FaceSet, VisionFrame, Update_Process, Proces
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.audio import read_static_audio, get_audio_frame
-from facefusion.filesystem import is_video, filter_audio_paths
+from facefusion.filesystem import is_image, is_video, filter_audio_paths
 from facefusion.vision import read_image, write_image, detect_video_fps, read_static_image
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
@@ -106,8 +106,8 @@ def pre_process(mode : ProcessMode) -> bool:
 	if not audio_path:
 		logger.error(wording.get('select_audio_source') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode in [ 'output', 'preview' ] and not is_video(facefusion.globals.target_path):
-		logger.error(wording.get('select_video_target') + wording.get('exclamation_mark'), NAME)
+	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
+		logger.error(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
 	if mode == 'output' and not facefusion.globals.output_path:
 		logger.error(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
