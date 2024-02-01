@@ -106,9 +106,3 @@ def test_read_audio_buffer() -> None:
 	assert isinstance(read_audio_buffer('.assets/examples/source.mp3', 1, 1), bytes)
 	assert isinstance(read_audio_buffer('.assets/examples/source.wav', 1, 1), bytes)
 	assert read_audio_buffer('.assets/examples/invalid.mp3', 1, 1) is None
-
-
-def test_replace_audio() -> None:
-	# todo: testing
-	# todo: question: does this work with trim start and trim end?
-	pass

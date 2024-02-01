@@ -1,7 +1,7 @@
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.filesystem import is_file, is_directory, is_audio, are_audios, is_image, are_images, is_video, filter_audio_paths, filter_image_paths, list_directory
+from facefusion.filesystem import is_file, is_directory, is_audio, has_audio, is_image, has_image, is_video, filter_audio_paths, filter_image_paths, list_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -32,10 +32,11 @@ def test_is_audio() -> None:
 	assert is_audio('invalid') is False
 
 
-def test_are_audios() -> None:
-	assert are_audios([ '.assets/examples/source.mp3' ]) is True
-	assert are_audios([ '.assets/examples/source.mp3', '.assets/examples/target-240p.mp4' ]) is False
-	assert are_audios([ 'invalid' ]) is False
+def test_has_audio() -> None:
+	assert has_audio([ '.assets/examples/source.mp3' ]) is True
+	assert has_audio([ '.assets/examples/source.mp3', '.assets/examples/source.jpg' ]) is True
+	assert has_audio([ '.assets/examples/source.jpg', '.assets/examples/source.jpg' ]) is False
+	assert has_audio([ 'invalid' ]) is False
 
 
 def test_is_image() -> None:
@@ -44,10 +45,11 @@ def test_is_image() -> None:
 	assert is_image('invalid') is False
 
 
-def test_are_images() -> None:
-	assert are_images([ '.assets/examples/source.jpg' ]) is True
-	assert are_images([ '.assets/examples/source.jpg', '.assets/examples/target-240p.mp4' ]) is False
-	assert are_images([ 'invalid' ]) is False
+def test_has_image() -> None:
+	assert has_image([ '.assets/examples/source.jpg' ]) is True
+	assert has_image([ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ]) is True
+	assert has_image([ '.assets/examples/source.mp3', '.assets/examples/source.mp3' ]) is False
+	assert has_image([ 'invalid' ]) is False
 
 
 def test_is_video() -> None:

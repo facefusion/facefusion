@@ -16,7 +16,7 @@ from facefusion.face_helper import warp_face_by_kps, paste_back
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, Embedding
-from facefusion.filesystem import is_file, is_image, is_video, resolve_relative_path, filter_image_paths
+from facefusion.filesystem import is_file, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
 from facefusion.processors.frame import globals as frame_processors_globals
@@ -173,11 +173,12 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	source_images = filter_image_paths(facefusion.globals.source_paths)
-	if not source_images:
+	if not has_image(facefusion.globals.source_paths):
 		logger.error(wording.get('select_image_source') + wording.get('exclamation_mark'), NAME)
 		return False
-	for source_frame in read_static_images(source_images):
+	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
+	source_frames = read_static_images(source_image_paths)
+	for source_frame in source_frames:
 		if not get_one_face(source_frame):
 			logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
 			return False

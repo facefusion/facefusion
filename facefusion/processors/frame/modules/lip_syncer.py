@@ -14,7 +14,7 @@ from facefusion.face_helper import paste_back, warp_face_by_kps, warp_face_by_bb
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, FaceSet, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame
-from facefusion.filesystem import is_file, resolve_relative_path
+from facefusion.filesystem import is_file, has_audio, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.audio import read_static_audio, get_audio_frame
 from facefusion.filesystem import is_image, is_video, filter_audio_paths
@@ -22,7 +22,7 @@ from facefusion.vision import read_image, write_image, detect_video_fps, read_st
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder, create_region_mask, clear_face_parser
-from facefusion.common_helper import get_first_item
+from facefusion.common_helper import get_first
 
 FRAME_PROCESSOR = None
 MODEL_MATRIX = None
@@ -102,8 +102,7 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	audio_path = get_first_item(filter_audio_paths(facefusion.globals.source_paths))
-	if not audio_path:
+	if not has_audio(facefusion.globals.source_paths):
 		logger.error(wording.get('select_audio_source') + wording.get('exclamation_mark'), NAME)
 		return False
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
@@ -178,11 +177,7 @@ def normalize_crop_frame(crop_frame : VisionFrame) -> VisionFrame:
 
 
 def get_reference_frame(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
-	audio_path = get_first_item(filter_audio_paths(facefusion.globals.source_paths))
-	audio_frame = get_audio_frame(audio_path, detect_video_fps(facefusion.globals.target_path), facefusion.globals.reference_frame_number)
-	if audio_frame is not None:
-		return lip_sync(audio_frame, target_face, temp_frame)
-	return temp_frame
+	pass
 
 
 def process_frame(audio_frame : AudioFrame, reference_faces : FaceSet, temp_frame : VisionFrame) -> VisionFrame:
@@ -205,7 +200,7 @@ def process_frame(audio_frame : AudioFrame, reference_faces : FaceSet, temp_fram
 
 def process_frames(source_paths : List[str], temp_frame_paths : List[str], update_progress : Update_Process) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
-	source_audio_path = get_first_item(filter_audio_paths(source_paths))
+	source_audio_path = get_first(filter_audio_paths(source_paths))
 	video_fps = detect_video_fps(facefusion.globals.target_path)
 	for temp_frame_path in temp_frame_paths:
 		frame_number = int(os.path.basename(temp_frame_path).split(".")[0])
@@ -219,7 +214,7 @@ def process_frames(source_paths : List[str], temp_frame_paths : List[str], updat
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
-	source_audio_path = get_first_item(filter_audio_paths(source_paths))
+	source_audio_path = get_first(filter_audio_paths(source_paths))
 	audio_frame = get_audio_frame(source_audio_path, 25, 0)
 	if audio_frame is not None:
 		target_frame = read_static_image(target_path)
