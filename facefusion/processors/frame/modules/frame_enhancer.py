@@ -10,12 +10,13 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
+from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
 from facefusion.common_helper import create_metavar
 from facefusion.execution_helper import map_torch_backend
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.processors.frame.typings import FrameEnhancerInputs
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
@@ -156,22 +157,29 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Vis
 	pass
 
 
-def process_frame(source_face : Face, reference_faces : FaceSet, audio_frame : AudioFrame, vision_frame : VisionFrame) -> VisionFrame:
-	return enhance_frame(vision_frame)
+def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
+	target_vision_frame = inputs['target_vision_frame']
+	return enhance_frame(target_vision_frame)
 
 
 def process_frames(source_paths : List[str], temp_frame_paths : List[str], update_progress : Update_Process) -> None:
 	for temp_frame_path in temp_frame_paths:
-		temp_frame = read_image(temp_frame_path)
-		result_frame = process_frame(None, None, None, temp_frame)
+		target_vision_frame = read_image(temp_frame_path)
+		result_frame = process_frame(
+		{
+			'target_vision_frame': target_vision_frame
+		})
 		write_image(temp_frame_path, result_frame)
 		update_progress()
 
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
-	target_frame = read_static_image(target_path)
-	result = process_frame(None, None, None, target_frame)
-	write_image(output_path, result)
+	target_vision_frame = read_static_image(target_path)
+	result_frame = process_frame(
+	{
+		'target_vision_frame': target_vision_frame
+	})
+	write_image(output_path, result_frame)
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:

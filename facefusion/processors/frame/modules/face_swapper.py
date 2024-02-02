@@ -12,16 +12,17 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, wording
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
+from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 from facefusion.face_helper import warp_face_by_kps, paste_back
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, FaceSet, Embedding, AudioFrame, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
+from facefusion.typing import Face, Embedding, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
 from facefusion.filesystem import is_file, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
+from facefusion.processors.frame.typings import FaceSwapperInputs
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 
 FRAME_PROCESSOR = None
 MODEL_MATRIX = None
@@ -281,22 +282,26 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Vis
 	return swap_face(source_face, target_face, temp_frame)
 
 
-def process_frame(source_face : Face, reference_faces : FaceSet, audio_frame : AudioFrame, vision_frame : VisionFrame) -> VisionFrame:
+def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
+	source_face = inputs['source_face']
+	target_vision_frame = inputs['target_vision_frame']
+	reference_faces = inputs['reference_faces']
+
 	if 'reference' in facefusion.globals.face_selector_mode:
-		similar_faces = find_similar_faces(vision_frame, reference_faces, facefusion.globals.reference_face_distance)
+		similar_faces = find_similar_faces(target_vision_frame, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
-				vision_frame = swap_face(source_face, similar_face, vision_frame)
+				target_vision_frame = swap_face(source_face, similar_face, target_vision_frame)
 	if 'one' in facefusion.globals.face_selector_mode:
-		target_face = get_one_face(vision_frame)
+		target_face = get_one_face(target_vision_frame)
 		if target_face:
-			vision_frame = swap_face(source_face, target_face, vision_frame)
+			target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
 	if 'many' in facefusion.globals.face_selector_mode:
-		many_faces = get_many_faces(vision_frame)
+		many_faces = get_many_faces(target_vision_frame)
 		if many_faces:
 			for target_face in many_faces:
-				vision_frame = swap_face(source_face, target_face, vision_frame)
-	return vision_frame
+				target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
+	return target_vision_frame
 
 
 def process_frames(source_paths : List[str], temp_frame_paths : List[str], update_progress : Update_Process) -> None:
@@ -304,8 +309,13 @@ def process_frames(source_paths : List[str], temp_frame_paths : List[str], updat
 	source_face = get_average_face(source_frames)
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	for temp_frame_path in temp_frame_paths:
-		temp_frame = read_image(temp_frame_path)
-		result_frame = process_frame(source_face, reference_faces, None, temp_frame)
+		target_vision_frame = read_image(temp_frame_path)
+		result_frame = process_frame(
+		{
+			'source_face': source_face,
+			'target_vision_frame': target_vision_frame,
+			'reference_faces': reference_faces
+		})
 		write_image(temp_frame_path, result_frame)
 		update_progress()
 
@@ -313,9 +323,14 @@ def process_frames(source_paths : List[str], temp_frame_paths : List[str], updat
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
 	source_frames = read_static_images(source_paths)
 	source_face = get_average_face(source_frames)
+	target_vision_frame = read_static_image(target_path)
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
-	target_frame = read_static_image(target_path)
-	result_frame = process_frame(source_face, reference_faces, None, target_frame)
+	result_frame = process_frame(
+	{
+		'source_face': source_face,
+		'target_vision_frame': target_vision_frame,
+		'reference_faces': reference_faces
+	})
 	write_image(output_path, result_frame)
 
 
