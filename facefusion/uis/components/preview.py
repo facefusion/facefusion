@@ -179,6 +179,7 @@ def process_preview_frame(source_face : Face, reference_faces : FaceSet, temp_fr
 			temp_frame = frame_processor_module.process_frame(
 				source_face,
 				reference_faces,
+				None,
 				temp_frame
 			)
 	return temp_frame

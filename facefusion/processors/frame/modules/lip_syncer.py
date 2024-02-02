@@ -126,7 +126,7 @@ def post_process() -> None:
 		clear_face_parser()
 
 
-def sync_lip(audio_frame : AudioFrame, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
+def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	crop_frame, affine_matrix = warp_face_by_bbox(temp_frame, target_face.bbox, (96, 96))
 	audio_frame = prepare_audio_frame(audio_frame)
@@ -180,24 +180,23 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Vis
 	pass
 
 
-def process_frame(audio_frame : AudioFrame, reference_faces : FaceSet, temp_frame : VisionFrame) -> VisionFrame:
+def process_frame(source_face : Face, reference_faces : FaceSet, audio_frame : AudioFrame, vision_frame : VisionFrame) -> VisionFrame:
+	is_audio_frame = isinstance(audio_frame, numpy.ndarray) and audio_frame.any()
 	if 'reference' in facefusion.globals.face_selector_mode:
-		similar_faces = find_similar_faces(temp_frame, reference_faces, facefusion.globals.reference_face_distance)
-		if similar_faces:
+		similar_faces = find_similar_faces(vision_frame, reference_faces, facefusion.globals.reference_face_distance)
+		if similar_faces and is_audio_frame:
 			for similar_face in similar_faces:
-				# todo: condition
-				temp_frame = sync_lip(audio_frame, similar_face, temp_frame)
+				vision_frame = sync_lip(similar_face, audio_frame, vision_frame)
 	if 'one' in facefusion.globals.face_selector_mode:
-		target_face = get_one_face(temp_frame)
-		if target_face: # todo: condition
-			temp_frame = sync_lip(audio_frame, target_face, temp_frame)
+		target_face = get_one_face(vision_frame)
+		if target_face and is_audio_frame:
+			vision_frame = sync_lip(target_face, audio_frame, vision_frame)
 	if 'many' in facefusion.globals.face_selector_mode:
-		many_faces = get_many_faces(temp_frame)
-		if many_faces:
+		many_faces = get_many_faces(vision_frame)
+		if many_faces and is_audio_frame:
 			for target_face in many_faces:
-				# todo: condition
-				temp_frame = sync_lip(audio_frame, target_face, temp_frame)
-	return temp_frame
+				vision_frame = sync_lip(target_face, audio_frame, vision_frame)
+	return vision_frame
 
 
 def process_frames(source_paths : List[str], temp_frame_paths : List[str], update_progress : Update_Process) -> None:
@@ -207,10 +206,9 @@ def process_frames(source_paths : List[str], temp_frame_paths : List[str], updat
 	for temp_frame_path in temp_frame_paths:
 		frame_number = int(os.path.basename(temp_frame_path).split('.')[0]) # todo: why not index?
 		audio_frame = get_audio_frame(source_audio_path, video_fps, frame_number)
-		if audio_frame is not None: # todo: simplify
-			temp_frame = read_image(temp_frame_path)
-			result_frame = process_frame(audio_frame, reference_faces, temp_frame)
-			write_image(temp_frame_path, result_frame)
+		temp_frame = read_image(temp_frame_path)
+		result_frame = process_frame(None, reference_faces, audio_frame, temp_frame)
+		write_image(temp_frame_path, result_frame)
 		update_progress()
 
 
@@ -218,10 +216,9 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
 	audio_frame = get_audio_frame(source_audio_path, 25, 0) # todo: remove hardcoded
-	if audio_frame is not None: # todo: simplify
-		target_frame = read_static_image(target_path)
-		result_frame = process_frame(audio_frame, reference_faces, target_frame)
-		write_image(output_path, result_frame)
+	target_frame = read_static_image(target_path)
+	result_frame = process_frame(None, reference_faces, audio_frame, target_frame)
+	write_image(output_path, result_frame)
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
