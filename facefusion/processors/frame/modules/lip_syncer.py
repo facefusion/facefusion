@@ -203,13 +203,13 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 	return target_vision_frame
 
 
-def process_frames(source_paths : List[str], temp_frame_payload_paths : List[PayloadPath], update_progress : Update_Process) -> None:
+def process_frames(source_paths : List[str], payload_paths : List[PayloadPath], update_progress : Update_Process) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
 	video_fps = detect_video_fps(facefusion.globals.target_path)
-	for temp_frame_payload_path in temp_frame_payload_paths:
-		frame_number = temp_frame_payload_path['index']
-		temp_frame_path = temp_frame_payload_path['path']
+	for payload_path in payload_paths:
+		frame_number = payload_path['index']
+		temp_frame_path = payload_path['path']
 		source_audio_frame = get_audio_frame(source_audio_path, video_fps, frame_number)
 		target_vision_frame = read_image(temp_frame_path)
 		result_frame = process_frame(

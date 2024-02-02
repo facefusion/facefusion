@@ -304,12 +304,12 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 	return target_vision_frame
 
 
-def process_frames(source_paths : List[str], temp_frame_payload_paths : List[PayloadPath], update_progress : Update_Process) -> None:
+def process_frames(source_paths : List[str], payload_paths : List[PayloadPath], update_progress : Update_Process) -> None:
 	source_frames = read_static_images(source_paths)
 	source_face = get_average_face(source_frames)
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
-	for temp_frame_payload_path in temp_frame_payload_paths:
-		temp_frame_path = temp_frame_payload_path['path']
+	for payload_path in payload_paths:
+		temp_frame_path = payload_path['path']
 		target_vision_frame = read_image(temp_frame_path)
 		result_frame = process_frame(
 		{

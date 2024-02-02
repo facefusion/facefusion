@@ -77,8 +77,8 @@ def create_payload_paths(paths : List[str]) -> List[PayloadPath]:
 
 
 def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str], process_frames : Process_Frames) -> None:
-	temp_frame_payload_paths = create_payload_paths(temp_frame_paths)
-	with tqdm(total = len(temp_frame_payload_paths), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
+	payload_paths = create_payload_paths(temp_frame_paths)
+	with tqdm(total = len(payload_paths), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
 		progress.set_postfix(
 		{
 			'execution_providers': encode_execution_providers(facefusion.globals.execution_providers),
@@ -87,8 +87,8 @@ def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str],
 		})
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
-			queue_frame_paths : Queue[PayloadPath] = create_queue(temp_frame_payload_paths)
-			queue_per_future = max(len(temp_frame_payload_paths) // facefusion.globals.execution_thread_count * facefusion.globals.execution_queue_count, 1)
+			queue_frame_paths : Queue[PayloadPath] = create_queue(payload_paths)
+			queue_per_future = max(len(payload_paths) // facefusion.globals.execution_thread_count * facefusion.globals.execution_queue_count, 1)
 			while not queue_frame_paths.empty():
 				submit_frame_paths = pick_queue(queue_frame_paths, queue_per_future)
 				future = executor.submit(process_frames, source_paths, submit_frame_paths, progress.update)
@@ -97,10 +97,10 @@ def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str],
 				future_done.result()
 
 
-def create_queue(temp_frame_payload_paths : List[PayloadPath]) -> Queue[PayloadPath]:
+def create_queue(payload_paths : List[PayloadPath]) -> Queue[PayloadPath]:
 	queue : Queue[PayloadPath] = Queue()
-	for frame_payload_path in temp_frame_payload_paths:
-		queue.put(frame_payload_path)
+	for payload_path in payload_paths:
+		queue.put(payload_path)
 	return queue
 
 
