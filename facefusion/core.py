@@ -253,9 +253,10 @@ def process_image(start_time : float) -> None:
 		frame_processor_module.process_image(facefusion.globals.source_paths, facefusion.globals.output_path, facefusion.globals.output_path)
 		frame_processor_module.post_process()
 	# compress image
-	logger.info(wording.get('compressing_image'), __name__.upper())
-	if not compress_image(facefusion.globals.output_path):
-		logger.error(wording.get('compressing_image_failed'), __name__.upper())
+	if compress_image(facefusion.globals.output_path):
+		logger.info(wording.get('compressing_image_succeed'), __name__.upper())
+	else:
+		logger.warn(wording.get('compressing_image_skipped'), __name__.upper())
 	# validate image
 	if is_image(facefusion.globals.output_path):
 		seconds = '{:.2f}'.format((time.time() - start_time) % 60)
@@ -298,11 +299,15 @@ def process_video(start_time : float) -> None:
 	else:
 		if 'lip_syncer' in facefusion.globals.frame_processors:
 			source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
-			if not source_audio_path or not replace_audio(facefusion.globals.target_path, source_audio_path, facefusion.globals.output_path):
+			if source_audio_path and replace_audio(facefusion.globals.target_path, source_audio_path, facefusion.globals.output_path):
+				logger.info(wording.get('restoring_audio_succeed'), __name__.upper())
+			else:
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
 				move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 		else:
-			if not restore_audio(facefusion.globals.target_path, facefusion.globals.output_path, facefusion.globals.output_video_fps):
+			if restore_audio(facefusion.globals.target_path, facefusion.globals.output_path, facefusion.globals.output_video_fps):
+				logger.info(wording.get('restoring_audio_succeed'), __name__.upper())
+			else:
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
 				move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clear temp
