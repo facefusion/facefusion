@@ -204,9 +204,9 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 
 
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : Update_Process) -> None:
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
 	target_video_fps = detect_video_fps(facefusion.globals.target_path)
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 
 	for queue_payload in queue_payloads:
 		frame_number = queue_payload['frame_number']
@@ -215,9 +215,9 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 		target_vision_frame = read_image(target_vision_path)
 		result_frame = process_frame(
 		{
-			'source_audio_frame': source_audio_frame,
-			'target_vision_frame': target_vision_frame,
 			'reference_faces': reference_faces,
+			'source_audio_frame': source_audio_frame,
+			'target_vision_frame': target_vision_frame
 		})
 		write_image(target_vision_path, result_frame)
 		update_progress()
@@ -226,13 +226,13 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
-	source_audio_frame = get_audio_frame(source_audio_path, 25, 0) # todo: remove hardcoded
+	source_audio_frame = get_audio_frame(source_audio_path, 25)
 	target_vision_frame = read_static_image(target_path)
 	result_frame = process_frame(
 	{
-		'source_audio_frame': source_audio_frame,
-		'target_vision_frame': target_vision_frame,
 		'reference_faces': reference_faces,
+		'source_audio_frame': source_audio_frame,
+		'target_vision_frame': target_vision_frame
 	})
 	write_image(output_path, result_frame)
 
