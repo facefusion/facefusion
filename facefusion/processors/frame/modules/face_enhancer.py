@@ -14,7 +14,7 @@ from facefusion.face_helper import warp_face_by_kps, paste_back
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
-from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel
+from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, PayloadPath
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, is_image, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
@@ -247,9 +247,10 @@ def process_frame(inputs : FaceEnhancerInputs) -> VisionFrame:
 	return target_vision_frame
 
 
-def process_frames(source_path : List[str], temp_frame_paths : List[str], update_progress : Update_Process) -> None:
+def process_frames(source_path : List[str], payload_paths : List[PayloadPath], update_progress : Update_Process) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
-	for temp_frame_path in temp_frame_paths:
+	for payload_path in payload_paths:
+		temp_frame_path = payload_path['path']
 		target_vision_frame = read_image(temp_frame_path)
 		result_frame = process_frame(
 		{

@@ -1,3 +1,4 @@
+import os
 import sys
 import importlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -7,7 +8,7 @@ from typing import Any, List
 from tqdm import tqdm
 
 import facefusion.globals
-from facefusion.typing import Process_Frames
+from facefusion.typing import Process_Frames, PayloadPath
 from facefusion.execution_helper import encode_execution_providers
 from facefusion import logger, wording
 
@@ -66,8 +67,18 @@ def clear_frame_processors_modules() -> None:
 	FRAME_PROCESSORS_MODULES = []
 
 
+def create_payload_paths(paths : List[str]) -> List[PayloadPath]:
+	paths = sorted(paths, key = lambda path: os.path.basename(path))
+	payload_paths = []
+	for index, path in enumerate(paths):
+		payload_path : PayloadPath = {'index' : index, 'path' : path}
+		payload_paths.append(payload_path)
+	return payload_paths
+
+
 def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str], process_frames : Process_Frames) -> None:
-	with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
+	payload_paths = create_payload_paths(temp_frame_paths)
+	with tqdm(total = len(payload_paths), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
 		progress.set_postfix(
 		{
 			'execution_providers': encode_execution_providers(facefusion.globals.execution_providers),
@@ -76,8 +87,8 @@ def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str],
 		})
 		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
 			futures = []
-			queue_frame_paths : Queue[str] = create_queue(temp_frame_paths)
-			queue_per_future = max(len(temp_frame_paths) // facefusion.globals.execution_thread_count * facefusion.globals.execution_queue_count, 1)
+			queue_frame_paths : Queue[PayloadPath] = create_queue(payload_paths)
+			queue_per_future = max(len(payload_paths) // facefusion.globals.execution_thread_count * facefusion.globals.execution_queue_count, 1)
 			while not queue_frame_paths.empty():
 				submit_frame_paths = pick_queue(queue_frame_paths, queue_per_future)
 				future = executor.submit(process_frames, source_paths, submit_frame_paths, progress.update)
@@ -86,14 +97,14 @@ def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str],
 				future_done.result()
 
 
-def create_queue(temp_frame_paths : List[str]) -> Queue[str]:
-	queue : Queue[str] = Queue()
-	for frame_path in temp_frame_paths:
-		queue.put(frame_path)
+def create_queue(payload_paths : List[PayloadPath]) -> Queue[PayloadPath]:
+	queue : Queue[PayloadPath] = Queue()
+	for payload_path in payload_paths:
+		queue.put(payload_path)
 	return queue
 
 
-def pick_queue(queue : Queue[str], queue_per_future : int) -> List[str]:
+def pick_queue(queue : Queue[PayloadPath], queue_per_future : int) -> List[PayloadPath]:
 	queues = []
 	for _ in range(queue_per_future):
 		if not queue.empty():
