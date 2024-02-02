@@ -181,6 +181,6 @@ def process_preview_frame(source_face : Face, reference_faces : FaceSet, temp_fr
 				'source_face': source_face,
 				'source_audio_frame': None,
 				'target_vision_frame': temp_frame,
-				'reference_faces': reference_faces,
+				'reference_faces': reference_faces
 			})
 	return temp_frame
