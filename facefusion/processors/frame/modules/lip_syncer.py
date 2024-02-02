@@ -181,13 +181,13 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Vis
 
 
 def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
+	reference_faces = inputs['reference_faces']
 	source_audio_frame = inputs['source_audio_frame']
 	target_vision_frame = inputs['target_vision_frame']
-	reference_faces = inputs['reference_faces']
 	is_source_audio_frame = isinstance(source_audio_frame, numpy.ndarray) and source_audio_frame.any()
 
 	if 'reference' in facefusion.globals.face_selector_mode:
-		similar_faces = find_similar_faces(target_vision_frame, reference_faces, facefusion.globals.reference_face_distance)
+		similar_faces = find_similar_faces(reference_faces, target_vision_frame, facefusion.globals.reference_face_distance)
 		if similar_faces and is_source_audio_frame:
 			for similar_face in similar_faces:
 				target_vision_frame = sync_lip(similar_face, source_audio_frame, target_vision_frame)

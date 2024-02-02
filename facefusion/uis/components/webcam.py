@@ -156,9 +156,9 @@ def process_stream_frame(source_face : Face, temp_frame : VisionFrame) -> Vision
 			temp_frame = frame_processor_module.process_frame(
 			{
 				'source_face': source_face,
+				'reference_faces': None,
 				'source_audio_frame': None,
-				'target_vision_frame': temp_frame,
-				'reference_faces': None
+				'target_vision_frame': temp_frame
 			})
 	return temp_frame
 

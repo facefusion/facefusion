@@ -341,7 +341,7 @@ def get_many_faces(frame : VisionFrame) -> List[Face]:
 		return []
 
 
-def find_similar_faces(frame : VisionFrame, reference_faces : FaceSet, face_distance : float) -> List[Face]:
+def find_similar_faces(reference_faces : FaceSet, frame : VisionFrame, face_distance : float) -> List[Face]:
 	similar_faces : List[Face] = []
 	many_faces = get_many_faces(frame)
 

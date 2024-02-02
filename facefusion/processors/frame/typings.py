@@ -10,19 +10,19 @@ LipSyncerModel = Literal['wav2lip']
 
 FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',
 {
-	'target_vision_frame' : VisionFrame,
-	'reference_faces' : FaceSet
+	'reference_faces' : FaceSet,
+	'target_vision_frame' : VisionFrame
 })
 FaceEnhancerInputs = TypedDict('FaceEnhancerInputs',
 {
-	'target_vision_frame' : VisionFrame,
 	'reference_faces' : FaceSet,
+	'target_vision_frame' : VisionFrame
 })
 FaceSwapperInputs = TypedDict('FaceSwapperInputs',
 {
-	'source_face' : Face,
-	'target_vision_frame' : VisionFrame,
 	'reference_faces' : FaceSet,
+	'source_face' : Face,
+	'target_vision_frame' : VisionFrame
 })
 FrameEnhancerInputs = TypedDict('FrameEnhancerInputs',
 {
@@ -30,7 +30,7 @@ FrameEnhancerInputs = TypedDict('FrameEnhancerInputs',
 })
 LipSyncerInputs = TypedDict('LipSyncerInputs',
 {
+	'reference_faces' : FaceSet,
 	'source_audio_frame' : AudioFrame,
-	'target_vision_frame' : VisionFrame,
-	'reference_faces': FaceSet,
+	'target_vision_frame' : VisionFrame
 })

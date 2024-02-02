@@ -283,12 +283,12 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Vis
 
 
 def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
+	reference_faces = inputs['reference_faces']
 	source_face = inputs['source_face']
 	target_vision_frame = inputs['target_vision_frame']
-	reference_faces = inputs['reference_faces']
 
 	if 'reference' in facefusion.globals.face_selector_mode:
-		similar_faces = find_similar_faces(target_vision_frame, reference_faces, facefusion.globals.reference_face_distance)
+		similar_faces = find_similar_faces(reference_faces, target_vision_frame, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
 				target_vision_frame = swap_face(source_face, similar_face, target_vision_frame)
