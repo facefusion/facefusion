@@ -154,10 +154,12 @@ def process_stream_frame(source_face : Face, temp_frame : VisionFrame) -> Vision
 		if frame_processor_module.pre_process('stream'):
 			logger.enable()
 			temp_frame = frame_processor_module.process_frame(
-				source_face,
-				None,
-				temp_frame
-			)
+			{
+				'source_face': source_face,
+				'source_audio_frame': None,
+				'target_vision_frame': temp_frame,
+				'reference_faces': None
+			})
 	return temp_frame
 
 

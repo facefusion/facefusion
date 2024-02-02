@@ -6,13 +6,14 @@ import numpy
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, wording
-from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
+from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
+from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
+from facefusion.face_helper import warp_face_by_kps, categorize_age, categorize_gender
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame, Update_Process, ProcessMode
-from facefusion.vision import read_image, read_static_image, read_static_images, write_image
-from facefusion.face_helper import warp_face_by_kps, categorize_age, categorize_gender
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
+from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode
+from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.processors.frame.typings import FaceDebuggerInputs
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
 NAME = __name__.upper()
@@ -66,7 +67,7 @@ def post_process() -> None:
 		clear_face_parser()
 
 
-def debug_face(source_face : Face, target_face : Face, reference_faces : FaceSet, temp_frame : VisionFrame) -> VisionFrame:
+def debug_face(target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	primary_color = (0, 0, 255)
 	secondary_color = (0, 255, 0)
 	bounding_box = target_face.bbox.astype(numpy.int32)
@@ -118,42 +119,49 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_frame : Vis
 	pass
 
 
-def process_frame(source_face : Face, reference_faces : FaceSet, audio_frame : AudioFrame, vision_frame : VisionFrame) -> VisionFrame:
+def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
+	target_vision_frame = inputs['target_vision_frame']
+	reference_faces = inputs['reference_faces']
+
 	if 'reference' in facefusion.globals.face_selector_mode:
-		similar_faces = find_similar_faces(vision_frame, reference_faces, facefusion.globals.reference_face_distance)
+		similar_faces = find_similar_faces(target_vision_frame, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
-				vision_frame = debug_face(source_face, similar_face, reference_faces, vision_frame)
+				target_vision_frame = debug_face(similar_face, target_vision_frame)
 	if 'one' in facefusion.globals.face_selector_mode:
-		target_face = get_one_face(vision_frame)
+		target_face = get_one_face(target_vision_frame)
 		if target_face:
-			vision_frame = debug_face(source_face, target_face, None, vision_frame)
+			target_vision_frame = debug_face(target_face, target_vision_frame)
 	if 'many' in facefusion.globals.face_selector_mode:
-		many_faces = get_many_faces(vision_frame)
+		many_faces = get_many_faces(target_vision_frame)
 		if many_faces:
 			for target_face in many_faces:
-				vision_frame = debug_face(source_face, target_face, None, vision_frame)
-	return vision_frame
+				target_vision_frame = debug_face(target_face, target_vision_frame)
+	return target_vision_frame
 
 
 def process_frames(source_paths : List[str], temp_frame_paths : List[str], update_progress : Update_Process) -> None:
-	source_frames = read_static_images(source_paths)
-	source_face = get_average_face(source_frames)
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 
 	for temp_frame_path in temp_frame_paths:
-		temp_frame = read_image(temp_frame_path)
-		result_frame = process_frame(source_face, reference_faces, None, temp_frame)
+		target_vision_frame = read_image(temp_frame_path)
+		result_frame = process_frame(
+		{
+			'target_vision_frame': target_vision_frame,
+			'reference_faces': reference_faces
+		})
 		write_image(temp_frame_path, result_frame)
 		update_progress()
 
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
-	source_frames = read_static_images(source_paths)
-	source_face = get_average_face(source_frames)
-	target_frame = read_static_image(target_path)
+	target_vision_frame = read_static_image(target_path)
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
-	result_frame = process_frame(source_face, reference_faces, None, target_frame)
+	result_frame = process_frame(
+	{
+		'target_vision_frame': target_vision_frame,
+		'reference_faces': reference_faces
+	})
 	write_image(output_path, result_frame)
 
 

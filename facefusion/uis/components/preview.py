@@ -177,9 +177,10 @@ def process_preview_frame(source_face : Face, reference_faces : FaceSet, temp_fr
 		if frame_processor_module.pre_process('preview'):
 			logger.enable()
 			temp_frame = frame_processor_module.process_frame(
-				source_face,
-				reference_faces,
-				None,
-				temp_frame
-			)
+			{
+				'source_face': source_face,
+				'source_audio_frame': None,
+				'target_vision_frame': temp_frame,
+				'reference_faces': reference_faces
+			})
 	return temp_frame
