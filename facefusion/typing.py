@@ -35,8 +35,13 @@ Fps = float
 Padding = Tuple[int, int, int, int]
 Resolution = Tuple[int, int]
 
+PayloadPath = TypedDict('PayloadPath',
+{
+	'index' : int,
+	'path' : str
+})
 Update_Process = Callable[[], None]
-Process_Frames = Callable[[List[str], List[str], Update_Process], None]
+Process_Frames = Callable[[List[str], List[PayloadPath], Update_Process], None]
 
 Template = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
 ProcessMode = Literal['output', 'preview', 'stream']
