@@ -11,7 +11,7 @@ from facefusion.face_masker import create_static_box_mask, create_occlusion_mask
 from facefusion.face_helper import warp_face_by_kps, categorize_age, categorize_gender
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, PayloadPath
+from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, QueuePayload
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame.typings import FaceDebuggerInputs
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
@@ -140,18 +140,18 @@ def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
 	return target_vision_frame
 
 
-def process_frames(source_paths : List[str], payload_paths : List[PayloadPath], update_progress : Update_Process) -> None:
+def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : Update_Process) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 
-	for payload_path in payload_paths:
-		temp_frame_path = payload_path['path']
-		target_vision_frame = read_image(temp_frame_path)
+	for queue_payload in queue_payloads:
+		target_vision_path = queue_payload['frame_path']
+		target_vision_frame = read_image(target_vision_path)
 		result_frame = process_frame(
 		{
 			'target_vision_frame': target_vision_frame,
 			'reference_faces': reference_faces
 		})
-		write_image(temp_frame_path, result_frame)
+		write_image(target_vision_path, result_frame)
 		update_progress()
 
 

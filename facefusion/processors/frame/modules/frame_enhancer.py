@@ -10,7 +10,7 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, PayloadPath
+from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
 from facefusion.execution_helper import map_torch_backend
 from facefusion.filesystem import is_file, resolve_relative_path
@@ -162,15 +162,15 @@ def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
 	return enhance_frame(target_vision_frame)
 
 
-def process_frames(source_paths : List[str], payload_paths : List[PayloadPath], update_progress : Update_Process) -> None:
-	for payload_path in payload_paths:
-		temp_frame_path = payload_path['path']
-		target_vision_frame = read_image(temp_frame_path)
+def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : Update_Process) -> None:
+	for queue_payload in queue_payloads:
+		target_vision_path = queue_payload['frame_path']
+		target_vision_frame = read_image(target_vision_path)
 		result_frame = process_frame(
 		{
 			'target_vision_frame': target_vision_frame
 		})
-		write_image(temp_frame_path, result_frame)
+		write_image(target_vision_path, result_frame)
 		update_progress()
 
 

@@ -13,7 +13,7 @@ from facefusion.face_masker import create_static_box_mask, create_occlusion_mask
 from facefusion.face_helper import paste_back, warp_face_by_kps, warp_face_by_bbox
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, PayloadPath
+from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
 from facefusion.filesystem import is_file, has_audio, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.audio import read_static_audio, get_audio_frame
@@ -203,22 +203,23 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 	return target_vision_frame
 
 
-def process_frames(source_paths : List[str], payload_paths : List[PayloadPath], update_progress : Update_Process) -> None:
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : Update_Process) -> None:
 	source_audio_path = get_first(filter_audio_paths(source_paths))
-	video_fps = detect_video_fps(facefusion.globals.target_path)
-	for payload_path in payload_paths:
-		frame_number = payload_path['index']
-		temp_frame_path = payload_path['path']
-		source_audio_frame = get_audio_frame(source_audio_path, video_fps, frame_number)
-		target_vision_frame = read_image(temp_frame_path)
+	target_video_fps = detect_video_fps(facefusion.globals.target_path)
+	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+
+	for queue_payload in queue_payloads:
+		frame_number = queue_payload['frame_number']
+		target_vision_path = queue_payload['frame_path']
+		source_audio_frame = get_audio_frame(source_audio_path, target_video_fps, frame_number)
+		target_vision_frame = read_image(target_vision_path)
 		result_frame = process_frame(
 		{
 			'source_audio_frame': source_audio_frame,
 			'target_vision_frame': target_vision_frame,
 			'reference_faces': reference_faces,
 		})
-		write_image(temp_frame_path, result_frame)
+		write_image(target_vision_path, result_frame)
 		update_progress()
 
 
