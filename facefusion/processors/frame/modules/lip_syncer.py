@@ -207,7 +207,7 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : Update_Process) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
-	target_video_fps = detect_video_fps(facefusion.globals.target_path)
+	target_video_fps = facefusion.globals.output_video_fps
 
 	for queue_payload in queue_payloads:
 		frame_number = queue_payload['frame_number']
