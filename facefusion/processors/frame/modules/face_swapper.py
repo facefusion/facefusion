@@ -135,7 +135,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	if platform.system().lower() == 'darwin':
+	if platform.system().lower() == 'darwin' or onnxruntime.__version__ == '1.17.0':
 		face_swapper_model_fallback = 'inswapper_128'
 	else:
 		face_swapper_model_fallback = 'inswapper_128_fp16'
