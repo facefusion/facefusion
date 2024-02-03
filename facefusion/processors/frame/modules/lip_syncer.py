@@ -19,7 +19,7 @@ from facefusion.download import conditional_download, is_download_done
 from facefusion.audio import read_static_audio, get_audio_frame
 from facefusion.filesystem import is_image, is_video, filter_audio_paths
 from facefusion.common_helper import get_first
-from facefusion.vision import read_image, write_image, detect_video_fps, read_static_image
+from facefusion.vision import read_image, write_image, read_static_image
 from facefusion.processors.frame.typings import LipSyncerInputs
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
