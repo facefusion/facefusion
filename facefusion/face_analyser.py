@@ -14,6 +14,7 @@ from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, Fac
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
+FACE_LANDMARK_68_MODEL = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : ModelSet =\
@@ -52,6 +53,11 @@ MODELS : ModelSet =\
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gender_age.onnx',
 		'path': resolve_relative_path('../.assets/models/gender_age.onnx')
+	},
+	'face_landmark_68':
+	{
+		'url': 'https://huggingface.co/bluefoxcreation/FaceAlignment/resolve/main/fan2_68_landmark.onnx',
+		'path': resolve_relative_path('../.assets/models/fan2_68_landmark.onnx')
 	}
 }
 
@@ -89,6 +95,19 @@ def clear_face_analyser() -> Any:
 	FACE_ANALYSER = None
 
 
+def get_face_landmark_68_model() -> Any:
+	global FACE_LANDMARK_68_MODEL
+
+	if FACE_LANDMARK_68_MODEL is None:
+		FACE_LANDMARK_68_MODEL = onnxruntime.InferenceSession(MODELS.get('face_landmark_68').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+
+
+def clear_face_landmark_68_model() -> Any:
+	global FACE_LANDMARK_68_MODEL
+
+	FACE_LANDMARK_68_MODEL = None
+
+
 def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
@@ -99,7 +118,8 @@ def pre_check() -> bool:
 			MODELS.get('face_detector_yunet').get('url'),
 			MODELS.get('face_recognizer_arcface_inswapper').get('url'),
 			MODELS.get('face_recognizer_arcface_simswap').get('url'),
-			MODELS.get('gender_age').get('url')
+			MODELS.get('gender_age').get('url'),
+			MODELS.get('face_landmark_68').get('url'),
 		]
 		conditional_download(download_directory_path, model_urls)
 	return True
@@ -400,3 +420,19 @@ def filter_by_gender(faces : List[Face], gender : FaceAnalyserGender) -> List[Fa
 		if categorize_gender(face.gender) == gender:
 			filter_faces.append(face)
 	return filter_faces
+
+
+def get_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> numpy.ndarray[Any, Any]:
+	face_landmark_68_model = get_face_landmark_68_model()
+	crop_size = face_landmark_68_model.get_inputs()[0].shape[2]
+	scale = (crop_size / numpy.subtract(bbox[2:], bbox[:2]).max()) * 0.86
+	translation = (crop_size - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
+	affine_matrix = numpy.array([ [scale, 0, translation[0]], [0, scale, translation[1]] ], dtype = numpy.float32)
+	warp_frame = cv2.warpAffine(frame, affine_matrix, (crop_size, crop_size), borderValue=0.0)
+	warp_frame = warp_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
+	landmark, heatmaps = face_landmark_68_model.run(None, {'input': [warp_frame]})
+	landmark = landmark[:, :, :2][0] / heatmaps.shape[2:][::-1]
+	landmark = landmark.reshape(1, -1, 2) * crop_size
+	landmark = cv2.transform(landmark, cv2.invertAffineTransform(affine_matrix))
+	landmark = landmark.reshape(-1, 2)
+	return landmark
