@@ -77,6 +77,7 @@ def render() -> None:
 		visible = is_video(facefusion.globals.target_path)
 	)
 	register_ui_component('output_path_textbox', OUTPUT_PATH_TEXTBOX)
+	register_ui_component('output_video_fps_slider', OUTPUT_VIDEO_FPS_SLIDER)
 
 
 def listen() -> None:

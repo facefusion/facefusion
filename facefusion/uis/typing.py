@@ -34,6 +34,7 @@ ComponentName = Literal\
 	'frame_enhancer_blend_slider',
 	'face_debugger_items_checkbox_group',
 	'output_path_textbox',
+	'output_video_fps_slider',
 	'benchmark_runs_checkbox_group',
 	'benchmark_cycles_slider',
 	'webcam_mode_radio',

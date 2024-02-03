@@ -44,7 +44,10 @@ def render() -> None:
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
 	source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
-	source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, facefusion.globals.reference_frame_number)
+	if source_audio_path and facefusion.globals.output_video_fps:
+		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, facefusion.globals.reference_frame_number)
+	else:
+		source_audio_frame = None
 
 	if is_image(facefusion.globals.target_path):
 		target_frame = read_static_image(facefusion.globals.target_path)
@@ -65,6 +68,9 @@ def render() -> None:
 
 def listen() -> None:
 	PREVIEW_FRAME_SLIDER.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
+	if reference_face_position_gallery:
+		reference_face_position_gallery.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	multi_one_component_names : List[ComponentName] =\
 	[
 		'source_audio',
@@ -87,17 +93,6 @@ def listen() -> None:
 		if component:
 			for method in [ 'upload', 'change', 'clear' ]:
 				getattr(component, method)(update_preview_frame_slider, outputs = PREVIEW_FRAME_SLIDER)
-	select_component_names : List[ComponentName] =\
-	[
-		'reference_face_position_gallery',
-		'face_analyser_order_dropdown',
-		'face_analyser_age_dropdown',
-		'face_analyser_gender_dropdown'
-	]
-	for component_name in select_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			component.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	change_one_component_names : List[ComponentName] =\
 	[
 		'face_debugger_items_checkbox_group',
@@ -111,7 +106,11 @@ def listen() -> None:
 		'face_mask_padding_bottom_slider',
 		'face_mask_padding_left_slider',
 		'face_mask_padding_right_slider',
-		'face_mask_region_checkbox_group'
+		'face_mask_region_checkbox_group',
+		'face_analyser_order_dropdown',
+		'face_analyser_age_dropdown',
+		'face_analyser_gender_dropdown',
+		'output_video_fps_slider'
 	]
 	for component_name in change_one_component_names:
 		component = get_ui_component(component_name)
@@ -153,7 +152,10 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
 	source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
-	source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, frame_number)
+	if source_audio_path and facefusion.globals.output_video_fps:
+		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, facefusion.globals.reference_frame_number)
+	else:
+		source_audio_frame = None
 
 	if is_image(facefusion.globals.target_path):
 		target_frame = read_static_image(facefusion.globals.target_path)
