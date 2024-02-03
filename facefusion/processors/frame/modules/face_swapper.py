@@ -1,6 +1,5 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
-import platform
 import threading
 import numpy
 import onnx
@@ -135,11 +134,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	if onnxruntime.__version__ == '1.17.0':
-		face_swapper_model_fallback = 'inswapper_128'
-	else:
-		face_swapper_model_fallback = 'inswapper_128_fp16'
-	program.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', face_swapper_model_fallback), choices = frame_processors_choices.face_swapper_models)
+	program.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', 'inswapper_128'), choices = frame_processors_choices.face_swapper_models)
 
 
 def apply_args(program : ArgumentParser) -> None:
