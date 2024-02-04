@@ -6,6 +6,10 @@ Bbox = numpy.ndarray[Any, Any]
 Kps = numpy.ndarray[Any, Any]
 Score = float
 Embedding = numpy.ndarray[Any, Any]
+Landmark = TypedDict('Landmark',
+{
+	'68' : numpy.ndarray[Any, Any]
+})
 Face = namedtuple('Face',
 [
 	'bbox',
@@ -14,7 +18,8 @@ Face = namedtuple('Face',
 	'embedding',
 	'normed_embedding',
 	'gender',
-	'age'
+	'age',
+	'landmark'
 ])
 FaceSet = Dict[str, List[Face]]
 FaceStore = TypedDict('FaceStore',
