@@ -239,7 +239,7 @@ def detect_with_yunet(temp_frame : VisionFrame, temp_frame_height : int, temp_fr
 	return bbox_list, kps_list, score_list
 
 
-def detect_landmark_68(frame : VisionFrame, bbox : Bbox) -> numpy.ndarray[Any, Any]:
+def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> numpy.ndarray[Any, Any]:
 	landmark_68 = get_face_analyser().get('face_landmark_68')
 	crop_size = landmark_68.get_inputs()[0].shape[2]
 	scale = (crop_size / numpy.subtract(bbox[2:], bbox[:2]).max()) * 0.86
@@ -269,7 +269,7 @@ def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kp
 			landmark : FaceLandmarkSet =\
 				{
 					'5' : kps_list[index],
-					'68' : detect_landmark_68(frame, bbox)
+					'68' : detect_face_landmark_68(frame, bbox)
 				}
 			score = score_list[index]
 			embedding, normed_embedding = calc_embedding(frame, kps)
