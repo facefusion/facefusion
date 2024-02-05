@@ -3,12 +3,12 @@ from collections import namedtuple
 import numpy
 
 Bbox = numpy.ndarray[Any, Any]
-FaceLandmark5 = numpy.ndarray[Any, Any]
-FaceLandmark68 = numpy.ndarray[Any, Any]
+FaceLandmark_Five = numpy.ndarray[Any, Any]
+FaceLandmark_SixtyEight = numpy.ndarray[Any, Any]
 FaceLandmarkSet = TypedDict('FaceLandmarkSet',
 {
-	'5' : FaceLandmark5,
-	'68' : FaceLandmark68
+	'5' : FaceLandmark_Five,
+	'68' : FaceLandmark_SixtyEight
 })
 Kps = numpy.ndarray[Any, Any]
 Score = float
