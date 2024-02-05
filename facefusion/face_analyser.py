@@ -267,8 +267,8 @@ def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kp
 			bbox = bbox_list[index]
 			landmark : FaceLandmarkSet =\
 				{
-					'5' : kps_list[index], # type: ignore
-					'68' : detect_face_landmark_68(frame, bbox) # type: ignore
+					'5' : kps_list[index], # type: ignore[valid-type]
+					'68' : detect_face_landmark_68(frame, bbox) # type: ignore[valid-type]
 				}
 			kps = kps_list[index]
 			score = score_list[index]
