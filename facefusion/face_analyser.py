@@ -34,11 +34,6 @@ MODELS : ModelSet =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yunet_2023mar.onnx',
 		'path': resolve_relative_path('../.assets/models/yunet_2023mar.onnx')
 	},
-	'face_landmark_68':
-	{
-		'url': 'https://huggingface.co/bluefoxcreation/FaceAlignment/resolve/main/fan2_68_landmark.onnx',
-		'path': resolve_relative_path('../.assets/models/fan2_68_landmark.onnx')
-	},
 	'face_recognizer_arcface_blendswap':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
@@ -53,6 +48,11 @@ MODELS : ModelSet =\
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_simswap.onnx',
 		'path': resolve_relative_path('../.assets/models/arcface_simswap.onnx')
+	},
+	'face_landmark_68':
+	{
+		'url': 'https://huggingface.co/bluefoxcreation/FaceAlignment/resolve/main/fan2_68_landmark.onnx',
+		'path': resolve_relative_path('../.assets/models/fan2_68_landmark.onnx')
 	},
 	'gender_age':
 	{
@@ -79,11 +79,13 @@ def get_face_analyser() -> Any:
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			face_landmark_68 = onnxruntime.InferenceSession(MODELS.get('face_landmark_68').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			FACE_ANALYSER =\
 			{
 				'face_detector': face_detector,
 				'face_recognizer': face_recognizer,
+				'face_landmark_68': face_landmark_68,
 				'gender_age': gender_age
 			}
 	return FACE_ANALYSER
@@ -103,9 +105,9 @@ def pre_check() -> bool:
 			MODELS.get('face_detector_retinaface').get('url'),
 			MODELS.get('face_detector_yoloface').get('url'),
 			MODELS.get('face_detector_yunet').get('url'),
-			MODELS.get('face_landmark_68').get('url'),
 			MODELS.get('face_recognizer_arcface_inswapper').get('url'),
 			MODELS.get('face_recognizer_arcface_simswap').get('url'),
+			MODELS.get('face_landmark_68').get('url'),
 			MODELS.get('gender_age').get('url'),
 		]
 		conditional_download(download_directory_path, model_urls)
@@ -285,16 +287,16 @@ def calc_embedding(temp_frame : VisionFrame, kps : Kps) -> Tuple[Embedding, Embe
 
 
 def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
-	landmark_68 = get_face_analyser().get('face_landmark_68')
-	crop_size = landmark_68.get_inputs()[0].shape[2]
+	face_landmark_68 = get_face_analyser().get('face_landmark_68')
+	crop_size = face_landmark_68.get_inputs()[0].shape[2]
 	scale = (crop_size / numpy.subtract(bbox[2:], bbox[:2]).max()) * 0.86
 	translation = (crop_size - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
 	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]], dtype = numpy.float32)
 	crop_frame = cv2.warpAffine(frame, affine_matrix, (crop_size, crop_size))
 	crop_frame = crop_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
-	landmark, heatmap = landmark_68.run(None,
+	landmark, heatmap = face_landmark_68.run(None,
 	{
-		landmark_68.get_inputs()[0].name: [ crop_frame ]
+		face_landmark_68.get_inputs()[0].name: [ crop_frame ]
 	})
 	landmark = landmark[:, :, :2][0] / heatmap.shape[2:][::-1]
 	landmark = landmark.reshape(1, -1, 2) * crop_size
@@ -366,8 +368,6 @@ def get_many_faces(frame : VisionFrame) -> List[Face]:
 		else:
 			if facefusion.globals.face_detector_model == 'retinaface':
 				bbox_list, kps_list, score_list = detect_with_retinaface(frame, facefusion.globals.face_detector_size)
-				if not bbox_list and not kps_list and not score_list:
-					bbox_list, kps_list, score_list = detect_with_retinaface(frame, '320x320')
 				faces = create_faces(frame, bbox_list, kps_list, score_list)
 			if facefusion.globals.face_detector_model == 'yoloface':
 				bbox_list, kps_list, score_list = detect_with_yoloface(frame, facefusion.globals.face_detector_size)
