@@ -149,7 +149,7 @@ def detect_with_retinaface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], 
 					bbox[3] * ratio_height
 				]))
 			for kps in distance_to_kps(anchors, kps_raw)[keep_indices]:
-				kps_list.append(kps * [ ratio_width, ratio_height])
+				kps_list.append(kps * [ ratio_width, ratio_height ])
 			for score in detections[index][keep_indices]:
 				score_list.append(score[0])
 	return bbox_list, kps_list, score_list
