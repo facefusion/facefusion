@@ -24,7 +24,7 @@ def before_each() -> None:
 	clear_face_analyser()
 
 
-def test_detect_with_retinaface() -> None:
+def test_get_one_face_with_retinaface() -> None:
 	facefusion.globals.face_detector_model = 'retinaface'
 	facefusion.globals.face_detector_size = '640x640'
 	facefusion.globals.face_detector_score = 0.5
@@ -44,7 +44,7 @@ def test_detect_with_retinaface() -> None:
 		assert isinstance(face, Face)
 
 
-def test_detect_with_yoloface() -> None:
+def test_get_one_face_with_yoloface() -> None:
 	facefusion.globals.face_detector_model = 'yoloface'
 	facefusion.globals.face_detector_size = '640x640'
 	facefusion.globals.face_detector_score = 0.5
@@ -65,7 +65,7 @@ def test_detect_with_yoloface() -> None:
 		assert isinstance(face, Face)
 
 
-def test_detect_with_yunet() -> None:
+def test_get_one_face_with_yunet() -> None:
 	facefusion.globals.face_detector_model = 'yunet'
 	facefusion.globals.face_detector_size = '640x640'
 	facefusion.globals.face_detector_score = 0.5

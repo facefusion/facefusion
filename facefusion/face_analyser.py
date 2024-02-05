@@ -365,7 +365,6 @@ def get_many_faces(frame : VisionFrame) -> List[Face]:
 		if faces_cache:
 			faces = faces_cache
 		else:
-
 			if facefusion.globals.face_detector_model == 'retinaface':
 				bbox_list, kps_list, score_list = detect_with_retinaface(frame)
 				faces = create_faces(frame, bbox_list, kps_list, score_list)
@@ -375,7 +374,8 @@ def get_many_faces(frame : VisionFrame) -> List[Face]:
 			if facefusion.globals.face_detector_model == 'yunet':
 				bbox_list, kps_list, score_list = detect_with_yunet(frame)
 				faces = create_faces(frame, bbox_list, kps_list, score_list)
-			set_static_faces(frame, faces)
+			if faces:
+				set_static_faces(frame, faces)
 		if facefusion.globals.face_analyser_order:
 			faces = sort_by_order(faces, facefusion.globals.face_analyser_order)
 		if facefusion.globals.face_analyser_age:
