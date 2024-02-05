@@ -122,8 +122,6 @@ def detect_with_retinaface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], 
 	frame_height, frame_width, _ = frame.shape
 	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
-	ratio_height = frame_height / temp_frame_height
-	ratio_width = frame_width / temp_frame_width
 
 	bbox_list = []
 	kps_list = []
@@ -135,6 +133,10 @@ def detect_with_retinaface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], 
 	prepare_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
 	temp_frame = (prepare_frame - 127.5) / 128.0
 	temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
+
+	ratio_height = frame_height / temp_frame_height
+	ratio_width = frame_width / temp_frame_width
+
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
 		{
@@ -170,19 +172,19 @@ def detect_with_yoloface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], Li
 	frame_height, frame_width, _ = frame.shape
 	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
-	ratio_height = frame_height / temp_frame_height
-	ratio_width = frame_width / temp_frame_width
 
 	bbox_list = []
 	kps_list = []
 	score_list = []
-	offset_width = (face_detector_width - temp_frame_width) / 2
-	offset_height = (face_detector_height - temp_frame_height) / 2
-	temp_frame = cv2.copyMakeBorder(temp_frame, round(offset_height - 0.1), round(offset_height + 0.1), round(offset_width - 0.1), round(offset_width + 0.1), cv2.BORDER_CONSTANT, value = (114, 114, 114))
-	temp_frame = temp_frame.astype(numpy.float32) / 255.0
-	temp_frame = temp_frame[..., ::-1].transpose(2, 0, 1)
-	temp_frame = numpy.expand_dims(temp_frame, axis = 0)
-	temp_frame = numpy.ascontiguousarray(temp_frame)
+
+	prepare_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
+	prepare_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
+	temp_frame = (prepare_frame - 127.5) / 128.0
+	temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
+
+	ratio_height = frame_height / temp_frame_height
+	ratio_width = frame_width / temp_frame_width
+
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
 		{
@@ -196,13 +198,13 @@ def detect_with_yoloface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], Li
 		for bbox in bbox_raw:
 			bbox_list.append(numpy.array(
 			[
-				(bbox[0] - bbox[2] / 2 - offset_width) * ratio_width,
-				(bbox[1] - bbox[3] / 2 - offset_height) * ratio_height,
-				(bbox[0] + bbox[2] / 2 - offset_width) * ratio_width,
-				(bbox[1] + bbox[3] / 2 - offset_height) * ratio_height
+				(bbox[0] - bbox[2] / 2) * ratio_width,
+				(bbox[1] - bbox[3] / 2) * ratio_height,
+				(bbox[0] + bbox[2] / 2) * ratio_width,
+				(bbox[1] + bbox[3] / 2) * ratio_height
 			]))
-		kps_raw[:, 0::3] = (kps_raw[:, 0::3] - offset_width) * ratio_width
-		kps_raw[:, 1::3] = (kps_raw[:, 1::3] - offset_height) * ratio_height
+		kps_raw[:, 0::3] = (kps_raw[:, 0::3]) * ratio_width
+		kps_raw[:, 1::3] = (kps_raw[:, 1::3]) * ratio_height
 		for kps in kps_raw:
 			indices = numpy.arange(0, len(kps), 3)
 			temp_kps = []
