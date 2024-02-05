@@ -239,22 +239,6 @@ def detect_with_yunet(temp_frame : VisionFrame, temp_frame_height : int, temp_fr
 	return bbox_list, kps_list, score_list
 
 
-def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
-	landmark_68 = get_face_analyser().get('face_landmark_68')
-	crop_size = landmark_68.get_inputs()[0].shape[2]
-	scale = (crop_size / numpy.subtract(bbox[2:], bbox[:2]).max()) * 0.86
-	translation = (crop_size - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
-	affine_matrix = numpy.array([ [scale, 0, translation[0]], [0, scale, translation[1]] ], dtype = numpy.float32)
-	warp_frame = cv2.warpAffine(frame, affine_matrix, (crop_size, crop_size), borderValue=0.0)
-	warp_frame = warp_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
-	landmark, heatmaps = landmark_68.run(None, {'input': [warp_frame]})
-	landmark = landmark[:, :, :2][0] / heatmaps.shape[2:][::-1]
-	landmark = landmark.reshape(1, -1, 2) * crop_size
-	landmark = cv2.transform(landmark, cv2.invertAffineTransform(affine_matrix))
-	landmark = landmark.reshape(-1, 2)
-	return landmark
-
-
 def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face]:
 	faces = []
 	if facefusion.globals.face_detector_score > 0:
@@ -266,10 +250,10 @@ def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kp
 		for index in keep_indices:
 			bbox = bbox_list[index]
 			landmark : FaceLandmarkSet =\
-				{
-					'5' : kps_list[index], # type: ignore[valid-type]
-					'68' : detect_face_landmark_68(frame, bbox) # type: ignore[valid-type]
-				}
+			{
+				'5' : kps_list[index],
+				'68' : detect_face_landmark_68(frame, bbox)
+			}
 			kps = kps_list[index]
 			score = score_list[index]
 			embedding, normed_embedding = calc_embedding(frame, kps)
@@ -300,6 +284,25 @@ def calc_embedding(temp_frame : VisionFrame, kps : Kps) -> Tuple[Embedding, Embe
 	embedding = embedding.ravel()
 	normed_embedding = embedding / numpy.linalg.norm(embedding)
 	return embedding, normed_embedding
+
+
+def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
+	landmark_68 = get_face_analyser().get('face_landmark_68')
+	crop_size = landmark_68.get_inputs()[0].shape[2]
+	scale = (crop_size / numpy.subtract(bbox[2:], bbox[:2]).max()) * 0.86
+	translation = (crop_size - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
+	affine_matrix = numpy.array([ [scale, 0, translation[0]], [0, scale, translation[1]] ], dtype = numpy.float32)
+	crop_frame = cv2.warpAffine(frame, affine_matrix, (crop_size, crop_size))
+	crop_frame = crop_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
+	landmark, heatmap = landmark_68.run(None,
+	{
+		landmark_68.get_inputs()[0].name: [ crop_frame ]
+	})[0]
+	landmark = landmark[:, :, :2] / heatmap.shape[2:][::-1]
+	landmark = landmark.reshape(1, -1, 2) * crop_size
+	landmark = cv2.transform(landmark, cv2.invertAffineTransform(affine_matrix))
+	landmark = landmark.reshape(-1, 2)
+	return landmark
 
 
 def detect_gender_age(frame : VisionFrame, bbox : Bbox) -> Tuple[int, int]:
