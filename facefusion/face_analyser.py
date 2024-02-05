@@ -291,14 +291,14 @@ def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
 	crop_size = landmark_68.get_inputs()[0].shape[2]
 	scale = (crop_size / numpy.subtract(bbox[2:], bbox[:2]).max()) * 0.86
 	translation = (crop_size - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
-	affine_matrix = numpy.array([ [scale, 0, translation[0]], [0, scale, translation[1]] ], dtype = numpy.float32)
+	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]], dtype = numpy.float32)
 	crop_frame = cv2.warpAffine(frame, affine_matrix, (crop_size, crop_size))
 	crop_frame = crop_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 	landmark, heatmap = landmark_68.run(None,
 	{
 		landmark_68.get_inputs()[0].name: [ crop_frame ]
-	})[0]
-	landmark = landmark[:, :, :2] / heatmap.shape[2:][::-1]
+	})
+	landmark = landmark[:, :, :2][0] / heatmap.shape[2:][::-1]
 	landmark = landmark.reshape(1, -1, 2) * crop_size
 	landmark = cv2.transform(landmark, cv2.invertAffineTransform(affine_matrix))
 	landmark = landmark.reshape(-1, 2)
