@@ -3,9 +3,6 @@ from collections import namedtuple
 import numpy
 
 Bbox = numpy.ndarray[Any, Any]
-Kps = numpy.ndarray[Any, Any]
-Score = float
-Embedding = numpy.ndarray[Any, Any]
 FaceLandmark5 = numpy.ndarray[Any, Any]
 FaceLandmark68 = numpy.ndarray[Any, Any]
 FaceLandmarkSet = TypedDict('FaceLandmarkSet',
@@ -13,6 +10,9 @@ FaceLandmarkSet = TypedDict('FaceLandmarkSet',
 	'5' : FaceLandmark5,
 	'68' : FaceLandmark68
 })
+Kps = numpy.ndarray[Any, Any]
+Score = float
+Embedding = numpy.ndarray[Any, Any]
 Face = namedtuple('Face',
 [
 	'bbox',
