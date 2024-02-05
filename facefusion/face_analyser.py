@@ -5,14 +5,14 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
-from facefusion.download import conditional_download
+from facefusion.common_helper import get_first
+from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms, categorize_age, categorize_gender
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
-from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms, categorize_age, categorize_gender
+from facefusion.download import conditional_download
 from facefusion.filesystem import resolve_relative_path
-from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding, FaceLandmarkSet, FaceLandmark68
+from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, FaceLandmarkSet, FaceLandmark68, Score, Embedding
 from facefusion.vision import resize_frame_resolution, unpack_resolution
-from facefusion.common_helper import get_first
 
 FACE_ANALYSER = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -79,15 +79,12 @@ def get_face_analyser() -> Any:
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
-			face_landmark_68 = onnxruntime.InferenceSession(MODELS.get('face_landmark_68').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			FACE_ANALYSER =\
 			{
 				'face_detector': face_detector,
 				'face_recognizer': face_recognizer,
-				'face_landmark_68': face_landmark_68,
 				'gender_age': gender_age
-
 			}
 	return FACE_ANALYSER
 
@@ -117,30 +114,23 @@ def pre_check() -> bool:
 
 def detect_with_retinaface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
-
 	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
-	frame_height, frame_width, _ = frame.shape
 	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
+	frame_height, frame_width, _ = frame.shape
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
-
+	ratio_height = frame_height / temp_frame_height
+	ratio_width = frame_width / temp_frame_width
 	bbox_list = []
 	kps_list = []
 	score_list = []
 	feature_strides = [ 8, 16, 32 ]
 	feature_map_channel = 3
 	anchor_total = 2
-	prepare_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
-	prepare_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
-	temp_frame = (prepare_frame - 127.5) / 128.0
-	temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
-
-	ratio_height = frame_height / temp_frame_height
-	ratio_width = frame_width / temp_frame_width
 
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
 		{
-			face_detector.get_inputs()[0].name: temp_frame
+			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_frame)
 		})
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
@@ -159,7 +149,7 @@ def detect_with_retinaface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], 
 					bbox[3] * ratio_height
 				]))
 			for kps in distance_to_kps(anchors, kps_raw)[keep_indices]:
-				kps_list.append(kps * [ ratio_width, ratio_height ])
+				kps_list.append(kps * [ ratio_width, ratio_height])
 			for score in detections[index][keep_indices]:
 				score_list.append(score[0])
 	return bbox_list, kps_list, score_list
@@ -167,28 +157,20 @@ def detect_with_retinaface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], 
 
 def detect_with_yoloface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
-
 	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
-	frame_height, frame_width, _ = frame.shape
 	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
+	frame_height, frame_width, _ = frame.shape
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
-
+	ratio_height = frame_height / temp_frame_height
+	ratio_width = frame_width / temp_frame_width
 	bbox_list = []
 	kps_list = []
 	score_list = []
 
-	prepare_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
-	prepare_frame[:temp_frame_height, :temp_frame_width, :] = temp_frame
-	temp_frame = (prepare_frame - 127.5) / 128.0
-	temp_frame = numpy.expand_dims(temp_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
-
-	ratio_height = frame_height / temp_frame_height
-	ratio_width = frame_width / temp_frame_width
-
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
 		{
-			face_detector.get_inputs()[0].name: temp_frame
+			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_frame)
 		})
 	detections = numpy.squeeze(detections).T
 	bbox_raw, score_raw, kps_raw = numpy.split(detections, [ 4, 5 ], axis = 1)
@@ -217,19 +199,18 @@ def detect_with_yoloface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], Li
 
 def detect_with_yunet(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
-
 	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
-	frame_height, frame_width, _ = frame.shape
 	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
+	frame_height, frame_width, _ = frame.shape
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
 	ratio_height = frame_height / temp_frame_height
 	ratio_width = frame_width / temp_frame_width
-
-	face_detector.setInputSize((temp_frame_width, temp_frame_height))
-	face_detector.setScoreThreshold(facefusion.globals.face_detector_score)
 	bbox_list = []
 	kps_list = []
 	score_list = []
+
+	face_detector.setInputSize((temp_frame_width, temp_frame_height))
+	face_detector.setScoreThreshold(facefusion.globals.face_detector_score)
 	with THREAD_SEMAPHORE:
 		_, detections = face_detector.detect(temp_frame)
 	if detections.any():
@@ -241,9 +222,20 @@ def detect_with_yunet(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], List[
 				(detection[0] + detection[2]) * ratio_width,
 				(detection[1] + detection[3]) * ratio_height
 			]))
-			kps_list.append(detection[4:14].reshape((5, 2)) * [ ratio_width, ratio_height])
+			kps_list.append(detection[4:14].reshape((5, 2)) * [ ratio_width, ratio_height ])
 			score_list.append(detection[14])
 	return bbox_list, kps_list, score_list
+
+
+def prepare_detect_frame(frame : VisionFrame) -> VisionFrame:
+	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
+	frame_height, frame_width, _ = frame.shape
+
+	detect_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
+	detect_frame[:frame_height, :frame_width, :] = frame
+	detect_frame = (detect_frame - 127.5) / 128.0
+	detect_frame = numpy.expand_dims(detect_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
+	return detect_frame
 
 
 def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face]:
