@@ -10,8 +10,9 @@ from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms, categorize_age, categorize_gender
 from facefusion.filesystem import resolve_relative_path
-from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding, Landmark
+from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding, FaceLandmarkSet
 from facefusion.vision import resize_frame_resolution, unpack_resolution
+from facefusion.common_helper import get_first
 
 FACE_ANALYSER = None
 THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
@@ -33,6 +34,11 @@ MODELS : ModelSet =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yunet_2023mar.onnx',
 		'path': resolve_relative_path('../.assets/models/yunet_2023mar.onnx')
 	},
+	'face_landmark_68':
+	{
+		'url': 'https://huggingface.co/bluefoxcreation/FaceAlignment/resolve/main/fan2_68_landmark.onnx',
+		'path': resolve_relative_path('../.assets/models/fan2_68_landmark.onnx')
+	},
 	'face_recognizer_arcface_blendswap':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
@@ -52,11 +58,6 @@ MODELS : ModelSet =\
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gender_age.onnx',
 		'path': resolve_relative_path('../.assets/models/gender_age.onnx')
-	},
-	'landmark_68':
-	{
-		'url': 'https://huggingface.co/bluefoxcreation/FaceAlignment/resolve/main/fan2_68_landmark.onnx',
-		'path': resolve_relative_path('../.assets/models/fan2_68_landmark.onnx')
 	}
 }
 
@@ -78,14 +79,15 @@ def get_face_analyser() -> Any:
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			face_landmark_68 = onnxruntime.InferenceSession(MODELS.get('face_landmark_68').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
-			landmark_68 = onnxruntime.InferenceSession(MODELS.get('landmark_68').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			FACE_ANALYSER =\
 			{
 				'face_detector': face_detector,
 				'face_recognizer': face_recognizer,
-				'gender_age': gender_age,
-				'landmark_68': landmark_68
+				'face_landmark_68': face_landmark_68,
+				'gender_age': gender_age
+
 			}
 	return FACE_ANALYSER
 
@@ -104,10 +106,10 @@ def pre_check() -> bool:
 			MODELS.get('face_detector_retinaface').get('url'),
 			MODELS.get('face_detector_yoloface').get('url'),
 			MODELS.get('face_detector_yunet').get('url'),
+			MODELS.get('face_landmark_68').get('url'),
 			MODELS.get('face_recognizer_arcface_inswapper').get('url'),
 			MODELS.get('face_recognizer_arcface_simswap').get('url'),
 			MODELS.get('gender_age').get('url'),
-			MODELS.get('landmark_68').get('url'),
 		]
 		conditional_download(download_directory_path, model_urls)
 	return True
@@ -237,6 +239,22 @@ def detect_with_yunet(temp_frame : VisionFrame, temp_frame_height : int, temp_fr
 	return bbox_list, kps_list, score_list
 
 
+def detect_landmark_68(frame : VisionFrame, bbox : Bbox) -> numpy.ndarray[Any, Any]:
+	landmark_68 = get_face_analyser().get('face_landmark_68')
+	crop_size = landmark_68.get_inputs()[0].shape[2]
+	scale = (crop_size / numpy.subtract(bbox[2:], bbox[:2]).max()) * 0.86
+	translation = (crop_size - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
+	affine_matrix = numpy.array([ [scale, 0, translation[0]], [0, scale, translation[1]] ], dtype = numpy.float32)
+	warp_frame = cv2.warpAffine(frame, affine_matrix, (crop_size, crop_size), borderValue=0.0)
+	warp_frame = warp_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
+	landmark, heatmaps = landmark_68.run(None, {'input': [warp_frame]})
+	landmark = landmark[:, :, :2][0] / heatmaps.shape[2:][::-1]
+	landmark = landmark.reshape(1, -1, 2) * crop_size
+	landmark = cv2.transform(landmark, cv2.invertAffineTransform(affine_matrix))
+	landmark = landmark.reshape(-1, 2)
+	return landmark
+
+
 def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kps], score_list : List[Score]) -> List[Face]:
 	faces = []
 	if facefusion.globals.face_detector_score > 0:
@@ -248,19 +266,23 @@ def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kp
 		for index in keep_indices:
 			bbox = bbox_list[index]
 			kps = kps_list[index]
+			landmark : FaceLandmarkSet =\
+				{
+					'5' : kps_list[index],
+					'68' : detect_landmark_68(frame, bbox)
+				}
 			score = score_list[index]
 			embedding, normed_embedding = calc_embedding(frame, kps)
 			gender, age = detect_gender_age(frame, bbox)
-			landmark : Landmark = {'68' : detect_landmark_68(frame, bbox)}
 			faces.append(Face(
 				bbox = bbox,
 				kps = kps,
+				landmark = landmark,
 				score = score,
 				embedding = embedding,
 				normed_embedding = normed_embedding,
 				gender = gender,
-				age = age,
-				landmark = landmark
+				age = age
 			))
 	return faces
 
@@ -320,15 +342,16 @@ def get_average_face(frames : List[VisionFrame], position : int = 0) -> Optional
 			embedding_list.append(face.embedding)
 			normed_embedding_list.append(face.normed_embedding)
 	if faces:
+		first_face = get_first(faces)
 		average_face = Face(
-			bbox = faces[0].bbox,
-			kps = faces[0].kps,
-			score = faces[0].score,
+			bbox = first_face.bbox,
+			kps = first_face.kps,
+			landmark = first_face.landmark,
+			score = first_face.score,
 			embedding = numpy.mean(embedding_list, axis = 0),
 			normed_embedding = numpy.mean(normed_embedding_list, axis = 0),
-			gender = faces[0].gender,
-			age = faces[0].age,
-			landmark = faces[0].landmark
+			gender = first_face.gender,
+			age = first_face.age
 		)
 	return average_face
 
@@ -411,19 +434,3 @@ def filter_by_gender(faces : List[Face], gender : FaceAnalyserGender) -> List[Fa
 		if categorize_gender(face.gender) == gender:
 			filter_faces.append(face)
 	return filter_faces
-
-
-def detect_landmark_68(frame : VisionFrame, bbox : Bbox) -> numpy.ndarray[Any, Any]:
-	landmark_68 = get_face_analyser().get('landmark_68')
-	crop_size = landmark_68.get_inputs()[0].shape[2]
-	scale = (crop_size / numpy.subtract(bbox[2:], bbox[:2]).max()) * 0.86
-	translation = (crop_size - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
-	affine_matrix = numpy.array([ [scale, 0, translation[0]], [0, scale, translation[1]] ], dtype = numpy.float32)
-	warp_frame = cv2.warpAffine(frame, affine_matrix, (crop_size, crop_size), borderValue=0.0)
-	warp_frame = warp_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
-	landmark, heatmaps = landmark_68.run(None, {'input': [warp_frame]})
-	landmark = landmark[:, :, :2][0] / heatmaps.shape[2:][::-1]
-	landmark = landmark.reshape(1, -1, 2) * crop_size
-	landmark = cv2.transform(landmark, cv2.invertAffineTransform(affine_matrix))
-	landmark = landmark.reshape(-1, 2)
-	return landmark
