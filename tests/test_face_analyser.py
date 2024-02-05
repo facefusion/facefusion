@@ -33,9 +33,9 @@ def test_get_one_face_with_retinaface() -> None:
 	source_paths =\
 	[
 		'.assets/examples/source.jpg',
-		#'.assets/examples/source-80crop.jpg',
-		#'.assets/examples/source-70crop.jpg',
-		#'.assets/examples/source-60crop.jpg'
+		'.assets/examples/source-80crop.jpg',
+		'.assets/examples/source-70crop.jpg',
+		'.assets/examples/source-60crop.jpg'
 	]
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
@@ -58,7 +58,6 @@ def test_get_one_face_with_yoloface() -> None:
 		'.assets/examples/source-60crop.jpg'
 	]
 	for source_path in source_paths:
-		source_frame = read_static_image(source_path)
 		source_frame = read_static_image(source_path)
 		face = get_one_face(source_frame)
 

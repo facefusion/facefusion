@@ -112,9 +112,9 @@ def pre_check() -> bool:
 	return True
 
 
-def detect_with_retinaface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+def detect_with_retinaface(frame : VisionFrame, face_detector_size : str) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
-	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
+	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
 	frame_height, frame_width, _ = frame.shape
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
@@ -130,7 +130,7 @@ def detect_with_retinaface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], 
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
 		{
-			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_frame)
+			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_frame, face_detector_size)
 		})
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
@@ -155,9 +155,9 @@ def detect_with_retinaface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], 
 	return bbox_list, kps_list, score_list
 
 
-def detect_with_yoloface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+def detect_with_yoloface(frame : VisionFrame, face_detector_size : str) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
-	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
+	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
 	frame_height, frame_width, _ = frame.shape
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
@@ -170,7 +170,7 @@ def detect_with_yoloface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], Li
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
 		{
-			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_frame)
+			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_frame, face_detector_size)
 		})
 	detections = numpy.squeeze(detections).T
 	bbox_raw, score_raw, kps_raw = numpy.split(detections, [ 4, 5 ], axis = 1)
@@ -197,9 +197,9 @@ def detect_with_yoloface(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], Li
 	return bbox_list, kps_list, score_list
 
 
-def detect_with_yunet(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], List[Score]]:
+def detect_with_yunet(frame : VisionFrame, face_detector_size : str) -> Tuple[List[Bbox], List[Kps], List[Score]]:
 	face_detector = get_face_analyser().get('face_detector')
-	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
+	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	temp_frame = resize_frame_resolution(frame, face_detector_width, face_detector_height)
 	frame_height, frame_width, _ = frame.shape
 	temp_frame_height, temp_frame_width, _ = temp_frame.shape
@@ -227,10 +227,9 @@ def detect_with_yunet(frame : VisionFrame) -> Tuple[List[Bbox], List[Kps], List[
 	return bbox_list, kps_list, score_list
 
 
-def prepare_detect_frame(frame : VisionFrame) -> VisionFrame:
-	face_detector_width, face_detector_height = unpack_resolution(facefusion.globals.face_detector_size)
+def prepare_detect_frame(frame : VisionFrame, face_detector_size : str) -> VisionFrame:
+	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	frame_height, frame_width, _ = frame.shape
-
 	detect_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
 	detect_frame[:frame_height, :frame_width, :] = frame
 	detect_frame = (detect_frame - 127.5) / 128.0
@@ -366,13 +365,15 @@ def get_many_faces(frame : VisionFrame) -> List[Face]:
 			faces = faces_cache
 		else:
 			if facefusion.globals.face_detector_model == 'retinaface':
-				bbox_list, kps_list, score_list = detect_with_retinaface(frame)
+				bbox_list, kps_list, score_list = detect_with_retinaface(frame, facefusion.globals.face_detector_size)
+				if not bbox_list and not kps_list and not score_list:
+					bbox_list, kps_list, score_list = detect_with_retinaface(frame, '320x320')
 				faces = create_faces(frame, bbox_list, kps_list, score_list)
 			if facefusion.globals.face_detector_model == 'yoloface':
-				bbox_list, kps_list, score_list = detect_with_yoloface(frame)
+				bbox_list, kps_list, score_list = detect_with_yoloface(frame, facefusion.globals.face_detector_size)
 				faces = create_faces(frame, bbox_list, kps_list, score_list)
 			if facefusion.globals.face_detector_model == 'yunet':
-				bbox_list, kps_list, score_list = detect_with_yunet(frame)
+				bbox_list, kps_list, score_list = detect_with_yunet(frame, facefusion.globals.face_detector_size)
 				faces = create_faces(frame, bbox_list, kps_list, score_list)
 			if faces:
 				set_static_faces(frame, faces)
