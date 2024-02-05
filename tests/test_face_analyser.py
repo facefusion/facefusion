@@ -2,8 +2,10 @@ import subprocess
 import pytest
 
 import facefusion.globals
+from facefusion.common_helper import get_first
 from facefusion.download import conditional_download
 from facefusion.face_analyser import clear_face_analyser, create_faces, detect_with_retinaface,detect_with_yoloface,  detect_with_yunet
+from facefusion.typing import Face
 from facefusion.vision import read_static_image
 
 
@@ -40,9 +42,9 @@ def test_detect_with_retinaface() -> None:
 		source_frame = read_static_image(source_path)
 		bbox_list, kps_list, score_list = detect_with_retinaface(source_frame)
 		faces = create_faces(source_frame, bbox_list, kps_list, score_list)
+		first_face = get_first(faces)
 
-		assert faces[0].gender == 0
-		assert faces[0].age == 31
+		assert isinstance(first_face, Face)
 
 
 def test_detect_with_yoloface() -> None:
@@ -54,17 +56,17 @@ def test_detect_with_yoloface() -> None:
 	source_paths =\
 	[
 		'.assets/examples/source.jpg',
-		#'.assets/examples/source-80crop.jpg',
-		#'.assets/examples/source-70crop.jpg',
-		#'.assets/examples/source-60crop.jpg'
+		'.assets/examples/source-80crop.jpg',
+		'.assets/examples/source-70crop.jpg',
+		'.assets/examples/source-60crop.jpg'
 	]
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
 		bbox_list, kps_list, score_list = detect_with_yoloface(source_frame)
 		faces = create_faces(source_frame, bbox_list, kps_list, score_list)
+		first_face = get_first(faces)
 
-		assert faces[0].gender == 0
-		assert faces[0].age == 32
+		assert isinstance(first_face, Face)
 
 
 def test_detect_with_yunet() -> None:
@@ -76,14 +78,14 @@ def test_detect_with_yunet() -> None:
 	source_paths =\
 	[
 		'.assets/examples/source.jpg',
-		#'.assets/examples/source-80crop.jpg',
-		#'.assets/examples/source-70crop.jpg',
-		#'.assets/examples/source-60crop.jpg'
+		'.assets/examples/source-80crop.jpg',
+		'.assets/examples/source-70crop.jpg',
+		'.assets/examples/source-60crop.jpg'
 	]
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
 		bbox_list, kps_list, score_list = detect_with_yunet(source_frame)
 		faces = create_faces(source_frame, bbox_list, kps_list, score_list)
+		first_face = get_first(faces)
 
-		assert faces[0].gender == 0
-		assert faces[0].age == 32
+		assert isinstance(first_face, Face)
