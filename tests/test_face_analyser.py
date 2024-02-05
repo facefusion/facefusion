@@ -2,9 +2,8 @@ import subprocess
 import pytest
 
 import facefusion.globals
-from facefusion.common_helper import get_first
 from facefusion.download import conditional_download
-from facefusion.face_analyser import clear_face_analyser, create_faces, detect_with_retinaface,detect_with_yoloface,  detect_with_yunet
+from facefusion.face_analyser import clear_face_analyser, get_one_face
 from facefusion.typing import Face
 from facefusion.vision import read_static_image
 
@@ -40,11 +39,9 @@ def test_detect_with_retinaface() -> None:
 	]
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		bbox_list, kps_list, score_list = detect_with_retinaface(source_frame)
-		faces = create_faces(source_frame, bbox_list, kps_list, score_list)
-		first_face = get_first(faces)
+		face = get_one_face(source_frame)
 
-		assert isinstance(first_face, Face)
+		assert isinstance(face, Face)
 
 
 def test_detect_with_yoloface() -> None:
@@ -62,11 +59,10 @@ def test_detect_with_yoloface() -> None:
 	]
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		bbox_list, kps_list, score_list = detect_with_yoloface(source_frame)
-		faces = create_faces(source_frame, bbox_list, kps_list, score_list)
-		first_face = get_first(faces)
+		source_frame = read_static_image(source_path)
+		face = get_one_face(source_frame)
 
-		assert isinstance(first_face, Face)
+		assert isinstance(face, Face)
 
 
 def test_detect_with_yunet() -> None:
@@ -84,8 +80,6 @@ def test_detect_with_yunet() -> None:
 	]
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		bbox_list, kps_list, score_list = detect_with_yunet(source_frame)
-		faces = create_faces(source_frame, bbox_list, kps_list, score_list)
-		first_face = get_first(faces)
+		face = get_one_face(source_frame)
 
-		assert isinstance(first_face, Face)
+		assert isinstance(face, Face)

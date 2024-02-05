@@ -359,21 +359,22 @@ def get_average_face(frames : List[VisionFrame], position : int = 0) -> Optional
 
 
 def get_many_faces(frame : VisionFrame) -> List[Face]:
+	faces = []
 	try:
 		faces_cache = get_static_faces(frame)
 		if faces_cache:
 			faces = faces_cache
 		else:
-			faces = []
+
 			if facefusion.globals.face_detector_model == 'retinaface':
 				bbox_list, kps_list, score_list = detect_with_retinaface(frame)
-				return create_faces(frame, bbox_list, kps_list, score_list)
+				faces = create_faces(frame, bbox_list, kps_list, score_list)
 			if facefusion.globals.face_detector_model == 'yoloface':
 				bbox_list, kps_list, score_list = detect_with_yoloface(frame)
-				return create_faces(frame, bbox_list, kps_list, score_list)
+				faces = create_faces(frame, bbox_list, kps_list, score_list)
 			if facefusion.globals.face_detector_model == 'yunet':
 				bbox_list, kps_list, score_list = detect_with_yunet(frame)
-				return create_faces(frame, bbox_list, kps_list, score_list)
+				faces = create_faces(frame, bbox_list, kps_list, score_list)
 			set_static_faces(frame, faces)
 		if facefusion.globals.face_analyser_order:
 			faces = sort_by_order(faces, facefusion.globals.face_analyser_order)
@@ -381,9 +382,9 @@ def get_many_faces(frame : VisionFrame) -> List[Face]:
 			faces = filter_by_age(faces, facefusion.globals.face_analyser_age)
 		if facefusion.globals.face_analyser_gender:
 			faces = filter_by_gender(faces, facefusion.globals.face_analyser_gender)
-		return faces
 	except (AttributeError, ValueError):
-		return []
+		pass
+	return faces
 
 
 def find_similar_faces(reference_faces : FaceSet, frame : VisionFrame, face_distance : float) -> List[Face]:
