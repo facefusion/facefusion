@@ -265,19 +265,19 @@ def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kp
 		keep_indices = apply_nms(bbox_list, 0.4)
 		for index in keep_indices:
 			bbox = bbox_list[index]
-			kps = kps_list[index]
 			landmark : FaceLandmarkSet =\
 				{
 					'5' : kps_list[index],
 					'68' : detect_face_landmark_68(frame, bbox)
 				}
+			kps = kps_list[index]
 			score = score_list[index]
 			embedding, normed_embedding = calc_embedding(frame, kps)
 			gender, age = detect_gender_age(frame, bbox)
 			faces.append(Face(
 				bbox = bbox,
-				kps = kps,
 				landmark = landmark,
+				kps = kps,
 				score = score,
 				embedding = embedding,
 				normed_embedding = normed_embedding,
@@ -345,8 +345,8 @@ def get_average_face(frames : List[VisionFrame], position : int = 0) -> Optional
 		first_face = get_first(faces)
 		average_face = Face(
 			bbox = first_face.bbox,
-			kps = first_face.kps,
 			landmark = first_face.landmark,
+			kps = first_face.kps,
 			score = first_face.score,
 			embedding = numpy.mean(embedding_list, axis = 0),
 			normed_embedding = numpy.mean(normed_embedding_list, axis = 0),
