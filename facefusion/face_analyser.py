@@ -10,7 +10,7 @@ from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms, categorize_age, categorize_gender
 from facefusion.filesystem import resolve_relative_path
-from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding, FaceLandmarkSet, FaceLandmark_SixtyEight
+from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, Score, Embedding, FaceLandmarkSet, FaceLandmark68
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 from facefusion.common_helper import get_first
 
@@ -239,7 +239,7 @@ def detect_with_yunet(temp_frame : VisionFrame, temp_frame_height : int, temp_fr
 	return bbox_list, kps_list, score_list
 
 
-def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark_SixtyEight:
+def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
 	landmark_68 = get_face_analyser().get('face_landmark_68')
 	crop_size = landmark_68.get_inputs()[0].shape[2]
 	scale = (crop_size / numpy.subtract(bbox[2:], bbox[:2]).max()) * 0.86
