@@ -33,6 +33,7 @@ FaceStore = TypedDict('FaceStore',
 VisionFrame = numpy.ndarray[Any, Any]
 Mask = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
+Translation = numpy.ndarray[Any, Any]
 
 AudioBuffer = bytes
 Audio = numpy.ndarray[Any, Any]
