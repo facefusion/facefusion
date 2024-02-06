@@ -1,6 +1,7 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 import threading
+import cv2
 import numpy
 import onnxruntime
 
@@ -10,7 +11,7 @@ from facefusion import config, logger, wording
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder, create_region_mask, clear_face_parser
-from facefusion.face_helper import paste_back, warp_face_by_kps, warp_face_by_bbox
+from facefusion.face_helper import warp_face_by_kps, warp_face_by_bbox, paste_back, create_bbox_from_landmark
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
@@ -129,7 +130,10 @@ def post_process() -> None:
 def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	audio_frame = prepare_audio_frame(audio_frame)
-	crop_frame, affine_matrix = warp_face_by_bbox(temp_frame, target_face.bbox, (96, 96))
+	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
+	face_landmark_68 = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+	bbox = create_bbox_from_landmark(face_landmark_68)
+	crop_frame, restore_affine_matrix = warp_face_by_bbox(crop_frame, bbox, (96, 96))
 	crop_frame = prepare_crop_frame(crop_frame)
 	crop_frame = frame_processor.run(None,
 	{
@@ -137,13 +141,12 @@ def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFr
 		'target': crop_frame
 	})[0]
 	crop_frame = normalize_crop_frame(crop_frame)
+	crop_frame = cv2.warpAffine(crop_frame, cv2.invertAffineTransform(restore_affine_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
 	crop_mask = create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
 	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	crop_mask_list = []
-	if 'occlusion' in facefusion.globals.face_mask_types or 'region' in facefusion.globals.face_mask_types:
-		crop_frame, affine_matrix = warp_face_by_kps(paste_frame, target_face.kps, 'ffhq_512', (512, 512))
 	if 'occlusion' in facefusion.globals.face_mask_types:
-		occlusion_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
+		occlusion_frame, _ = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
 		crop_mask_list.append(create_occlusion_mask(occlusion_frame))
 	if 'region' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_region_mask(crop_frame, facefusion.globals.face_mask_regions))
