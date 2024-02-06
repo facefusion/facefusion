@@ -6,7 +6,7 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion.common_helper import get_first
-from facefusion.face_helper import warp_face_by_kps, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms, categorize_age, categorize_gender
+from facefusion.face_helper import warp_face_by_kps, warp_face_by_translation, create_static_anchors, distance_to_kps, distance_to_bbox, apply_nms, categorize_age, categorize_gender
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -274,8 +274,8 @@ def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kp
 def calc_embedding(temp_frame : VisionFrame, kps : Kps) -> Tuple[Embedding, Embedding]:
 	face_recognizer = get_face_analyser().get('face_recognizer')
 	crop_frame, matrix = warp_face_by_kps(temp_frame, kps, 'arcface_112_v2', (112, 112))
-	crop_frame = crop_frame.astype(numpy.float32) / 127.5 - 1
-	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1)
+	crop_frame = crop_frame / 127.5 - 1
+	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
 	embedding = face_recognizer.run(None,
 	{
@@ -288,10 +288,10 @@ def calc_embedding(temp_frame : VisionFrame, kps : Kps) -> Tuple[Embedding, Embe
 
 def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
 	face_predictor = get_face_analyser().get('face_predictor')
-	scale = 256 / numpy.subtract(bbox[2:], bbox[:2]).max() * 0.86
-	translation = (256 - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
-	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]])
-	crop_frame = cv2.warpAffine(frame, affine_matrix, (256, 256))
+	bbox = bbox.reshape(2, -1)
+	scale = 256 / numpy.subtract(*bbox[::-1]).max() * 0.86
+	translation = (256 - bbox.sum(axis = 0)) * scale * 0.5
+	crop_frame, affine_matrix = warp_face_by_translation(frame, translation, scale, (256, 256))
 	crop_frame = crop_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 	face_landmark_68, face_heatmap = face_predictor.run(None,
 	{
@@ -309,8 +309,7 @@ def detect_gender_age(frame : VisionFrame, bbox : Bbox) -> Tuple[int, int]:
 	bbox = bbox.reshape(2, -1)
 	scale = 64 / numpy.subtract(*bbox[::-1]).max()
 	translation = 48 - bbox.sum(axis = 0) * scale * 0.5
-	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]])
-	crop_frame = cv2.warpAffine(frame, affine_matrix, (96, 96))
+	crop_frame, affine_matrix = warp_face_by_translation(frame, translation, scale, (96, 96))
 	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
 	prediction = gender_age.run(None,
