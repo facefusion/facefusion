@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Bbox, Kps, VisionFrame, Mask, Matrix, Template, FaceAnalyserAge, FaceAnalyserGender
+from facefusion.typing import Bbox, Kps, VisionFrame, Mask, Matrix, Template, FaceAnalyserAge, FaceAnalyserGender, FaceLandmark68
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -137,3 +137,10 @@ def categorize_gender(gender : int) -> FaceAnalyserGender:
 	if gender == 0:
 		return 'female'
 	return 'male'
+
+
+def compute_bbox_from_landmark(landmark : FaceLandmark68) -> Bbox:
+	min_x, min_y = numpy.min(landmark, axis=0)
+	max_x, max_y = numpy.max(landmark, axis=0)
+	bbox = numpy.array([min_x, min_y, max_x, max_y]).astype(numpy.int16)
+	return bbox

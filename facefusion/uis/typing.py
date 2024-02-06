@@ -32,6 +32,7 @@ ComponentName = Literal\
 	'face_enhancer_blend_slider',
 	'frame_enhancer_model_dropdown',
 	'frame_enhancer_blend_slider',
+	'lip_syncer_padding_slider',
 	'face_debugger_items_checkbox_group',
 	'output_path_textbox',
 	'output_video_fps_slider',

@@ -9,3 +9,4 @@ face_swapper_model : Optional[FaceSwapperModel] = None
 frame_enhancer_model : Optional[FrameEnhancerModel] = None
 frame_enhancer_blend : Optional[int] = None
 lip_syncer_model : Optional[LipSyncerModel] = None
+lip_syncer_padding : Optional[int] = None

@@ -1,6 +1,7 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 import threading
+import cv2
 import numpy
 import onnxruntime
 
@@ -9,11 +10,11 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, wording
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder, create_region_mask, clear_face_parser
-from facefusion.face_helper import paste_back, warp_face_by_kps, warp_face_by_bbox
+from facefusion.face_masker import create_occlusion_mask, clear_face_occluder, create_region_mask, clear_face_parser
+from facefusion.face_helper import paste_back, warp_face_by_kps, warp_face_by_bbox, compute_bbox_from_landmark
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
+from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload, FaceLandmark68
 from facefusion.filesystem import is_file, has_audio, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.audio import read_static_audio, get_audio_frame
@@ -23,6 +24,7 @@ from facefusion.vision import read_image, write_image, read_static_image
 from facefusion.processors.frame.typings import LipSyncerInputs
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
+from facefusion.common_helper import create_metavar
 
 FRAME_PROCESSOR = None
 MODEL_MATRIX = None
@@ -74,11 +76,13 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 def register_args(program : ArgumentParser) -> None:
 	program.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('frame_processors.lip_syncer_model', 'wav2lip_gan'), choices = frame_processors_choices.lip_syncer_models)
+	program.add_argument('--lip-syncer-padding', help = wording.get('help.lip_syncer_padding'), type = int, default = config.get_int_value('frame_processors.lip_syncer_padding', '0'), choices = frame_processors_choices.lip_syncer_padding_range, metavar = create_metavar(frame_processors_choices.lip_syncer_padding_range))
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.lip_syncer_model = args.lip_syncer_model
+	frame_processors_globals.lip_syncer_padding = args.lip_syncer_padding
 
 
 def pre_check() -> bool:
@@ -129,19 +133,22 @@ def post_process() -> None:
 def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	audio_frame = prepare_audio_frame(audio_frame)
-	crop_frame, affine_matrix = warp_face_by_bbox(temp_frame, target_face.bbox, (96, 96))
-	crop_frame = prepare_crop_frame(crop_frame)
-	crop_frame = frame_processor.run(None,
+	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
+	landmark = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+	bbox = compute_bbox_from_landmark(landmark)
+	bbox[3] = min(bbox[3] + bbox[3] * frame_processors_globals.lip_syncer_padding / 1000, 512)
+	new_crop_frame, new_affine_matrix = warp_face_by_bbox(crop_frame, bbox, (96, 96))
+	new_crop_frame = prepare_crop_frame(new_crop_frame)
+	new_crop_frame = frame_processor.run(None,
 	{
 		'source': audio_frame,
-		'target': crop_frame
+		'target': new_crop_frame
 	})[0]
-	crop_frame = normalize_crop_frame(crop_frame)
-	crop_mask = create_static_box_mask(crop_frame.shape[:2][::-1], 0.1, (50, 0, 0, 0))
-	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
+	new_crop_frame = normalize_crop_frame(new_crop_frame)
+	new_crop_frame = cv2.warpAffine(new_crop_frame, cv2.invertAffineTransform(new_affine_matrix), (512,512), borderMode = cv2.BORDER_REPLICATE)
+	crop_mask = create_lower_face_mask(crop_frame, landmark)
+	paste_frame = paste_back(temp_frame, new_crop_frame, crop_mask, affine_matrix)
 	crop_mask_list = []
-	if 'occlusion' in facefusion.globals.face_mask_types or 'region' in facefusion.globals.face_mask_types:
-		crop_frame, affine_matrix = warp_face_by_kps(paste_frame, target_face.kps, 'ffhq_512', (512, 512))
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		occlusion_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
 		crop_mask_list.append(create_occlusion_mask(occlusion_frame))
@@ -151,6 +158,16 @@ def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFr
 		crop_mask = numpy.minimum.reduce(crop_mask_list)
 		paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	return paste_frame
+
+
+def create_lower_face_mask(crop_frame : VisionFrame, landmark : FaceLandmark68) -> numpy.ndarray[Any, Any]:
+	landmark = landmark[numpy.r_[3:14, 31:36]]
+	mask = numpy.zeros(crop_frame.shape[:2], dtype = numpy.uint8)
+	convexhull = cv2.convexHull(landmark.astype(numpy.int32))
+	cv2.fillConvexPoly(mask, convexhull, 255) / 255.0
+	mask = mask.astype(numpy.float32).clip(0, 1)
+	mask = (cv2.GaussianBlur(mask, (0, 0), 5).clip(0.5, 1) - 0.5) * 2
+	return mask
 
 
 def prepare_audio_frame(audio_frame : AudioFrame) -> AudioFrame:

@@ -100,6 +100,7 @@ WORDING : Dict[str, Any] =\
 		'frame_enhancer_model': 'choose the model responsible for enhancing the frame',
 		'frame_enhancer_blend': 'blend the enhanced into the previous frame',
 		'lip_syncer_model': 'choose the model responsible for the lip syncing',
+		'lip_syncer_padding': 'apply bottom padding to lip syncer',
 		# uis
 		'ui_layouts': 'Launch a single or multiple UI layouts (choices: {choices}, ...)'
 	},
@@ -152,6 +153,7 @@ WORDING : Dict[str, Any] =\
 		'face_swapper_model_dropdown': 'FACE SWAPPER MODEL',
 		'frame_enhancer_model_dropdown': 'FRAME ENHANCER MODEL',
 		'frame_enhancer_blend_slider': 'FRAME ENHANCER BLEND',
+		'lip_syncer_padding_slider': 'LIP SYNCER PADDING',
 		# memory
 		'video_memory_strategy_dropdown': 'VIDEO MEMORY STRATEGY',
 		'system_memory_limit_slider': 'SYSTEM MEMORY LIMIT',

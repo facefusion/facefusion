@@ -11,3 +11,4 @@ lip_syncer_models : List[LipSyncerModel] = [ 'wav2lip_gan' ]
 
 face_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
+lip_syncer_padding_range : List[int] = create_int_range(0, 100, 1)

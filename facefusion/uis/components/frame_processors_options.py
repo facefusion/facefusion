@@ -14,6 +14,7 @@ FACE_ENHANCER_BLEND_SLIDER : Optional[gradio.Slider] = None
 FACE_SWAPPER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FRAME_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FRAME_ENHANCER_BLEND_SLIDER : Optional[gradio.Slider] = None
+LIP_SYNCER_PADDING_SLIDER : Optional[gradio.Slider] = None
 
 
 def render() -> None:
@@ -23,6 +24,7 @@ def render() -> None:
 	global FACE_SWAPPER_MODEL_DROPDOWN
 	global FRAME_ENHANCER_MODEL_DROPDOWN
 	global FRAME_ENHANCER_BLEND_SLIDER
+	global LIP_SYNCER_PADDING_SLIDER
 
 	FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.face_debugger_items_checkbox_group'),
@@ -64,12 +66,21 @@ def render() -> None:
 		maximum = frame_processors_choices.frame_enhancer_blend_range[-1],
 		visible = 'frame_enhancer' in facefusion.globals.frame_processors
 	)
+	LIP_SYNCER_PADDING_SLIDER = gradio.Slider(
+		label = wording.get('uis.lip_syncer_padding_slider'),
+		value = frame_processors_globals.lip_syncer_padding,
+		step = frame_processors_choices.lip_syncer_padding_range[1] - frame_processors_choices.lip_syncer_padding_range[0],
+		minimum = frame_processors_choices.lip_syncer_padding_range[0],
+		maximum = frame_processors_choices.lip_syncer_padding_range[-1],
+		visible = 'lip_syncer' in facefusion.globals.frame_processors
+	)
 	register_ui_component('face_debugger_items_checkbox_group', FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
 	register_ui_component('face_enhancer_model_dropdown', FACE_ENHANCER_MODEL_DROPDOWN)
 	register_ui_component('face_enhancer_blend_slider', FACE_ENHANCER_BLEND_SLIDER)
 	register_ui_component('face_swapper_model_dropdown', FACE_SWAPPER_MODEL_DROPDOWN)
 	register_ui_component('frame_enhancer_model_dropdown', FRAME_ENHANCER_MODEL_DROPDOWN)
 	register_ui_component('frame_enhancer_blend_slider', FRAME_ENHANCER_BLEND_SLIDER)
+	register_ui_component('lip_syncer_padding_slider', LIP_SYNCER_PADDING_SLIDER)
 
 
 def listen() -> None:
@@ -79,17 +90,19 @@ def listen() -> None:
 	FACE_SWAPPER_MODEL_DROPDOWN.change(update_face_swapper_model, inputs = FACE_SWAPPER_MODEL_DROPDOWN, outputs = FACE_SWAPPER_MODEL_DROPDOWN)
 	FRAME_ENHANCER_MODEL_DROPDOWN.change(update_frame_enhancer_model, inputs = FRAME_ENHANCER_MODEL_DROPDOWN, outputs = FRAME_ENHANCER_MODEL_DROPDOWN)
 	FRAME_ENHANCER_BLEND_SLIDER.change(update_frame_enhancer_blend, inputs = FRAME_ENHANCER_BLEND_SLIDER)
+	LIP_SYNCER_PADDING_SLIDER.change(update_lip_syncer_padding, inputs = LIP_SYNCER_PADDING_SLIDER)
 	frame_processors_checkbox_group = get_ui_component('frame_processors_checkbox_group')
 	if frame_processors_checkbox_group:
-		frame_processors_checkbox_group.change(update_frame_processors, inputs = frame_processors_checkbox_group, outputs = [ FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP, FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER, FACE_SWAPPER_MODEL_DROPDOWN, FRAME_ENHANCER_MODEL_DROPDOWN, FRAME_ENHANCER_BLEND_SLIDER ])
+		frame_processors_checkbox_group.change(update_frame_processors, inputs = frame_processors_checkbox_group, outputs = [ FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP, FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER, FACE_SWAPPER_MODEL_DROPDOWN, FRAME_ENHANCER_MODEL_DROPDOWN, FRAME_ENHANCER_BLEND_SLIDER, LIP_SYNCER_PADDING_SLIDER ])
 
 
-def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.CheckboxGroup, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider]:
+def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.CheckboxGroup, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Slider]:
 	has_face_debugger = 'face_debugger' in frame_processors
 	has_face_enhancer = 'face_enhancer' in frame_processors
 	has_face_swapper = 'face_swapper' in frame_processors
 	has_frame_enhancer = 'frame_enhancer' in frame_processors
-	return gradio.CheckboxGroup(visible = has_face_debugger), gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_frame_enhancer), gradio.Slider(visible = has_frame_enhancer)
+	has_lip_syncer = 'lip_syncer' in frame_processors
+	return gradio.CheckboxGroup(visible = has_face_debugger), gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_frame_enhancer), gradio.Slider(visible = has_frame_enhancer), gradio.Slider(visible = has_lip_syncer)
 
 
 def update_face_debugger_items(face_debugger_items : List[FaceDebuggerItem]) -> None:
@@ -138,3 +151,7 @@ def update_frame_enhancer_model(frame_enhancer_model : FrameEnhancerModel) -> gr
 
 def update_frame_enhancer_blend(frame_enhancer_blend : int) -> None:
 	frame_processors_globals.frame_enhancer_blend = frame_enhancer_blend
+
+
+def update_lip_syncer_padding(lip_syncer_padding : int) -> None:
+	frame_processors_globals.lip_syncer_padding = lip_syncer_padding
