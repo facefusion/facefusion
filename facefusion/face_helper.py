@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Bbox, Kps, VisionFrame, Mask, Matrix, Template, FaceAnalyserAge, FaceAnalyserGender, FaceLandmark68
+from facefusion.typing import Bbox, Kps, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, Template, FaceAnalyserAge, FaceAnalyserGender
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -59,6 +59,12 @@ def warp_face_by_bbox(temp_frame : VisionFrame, bbox : Bbox, crop_size : Size) -
 	else:
 		interpolation_method = cv2.INTER_LINEAR
 	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, crop_size, flags = interpolation_method)
+	return crop_frame, affine_matrix
+
+
+def warp_face_by_translation(frame : VisionFrame, translation : Translation, scale : float, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]])
+	crop_frame = cv2.warpAffine(frame, affine_matrix, crop_size)
 	return crop_frame, affine_matrix
 
 
