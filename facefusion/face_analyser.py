@@ -288,18 +288,17 @@ def calc_embedding(temp_frame : VisionFrame, kps : Kps) -> Tuple[Embedding, Embe
 
 def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
 	face_predictor = get_face_analyser().get('face_predictor')
-	crop_size = face_predictor.get_inputs()[0].shape[2]
-	scale = (crop_size / numpy.subtract(bbox[2:], bbox[:2]).max()) * 0.86
-	translation = (crop_size - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
-	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]], dtype = numpy.float32)
-	crop_frame = cv2.warpAffine(frame, affine_matrix, (crop_size, crop_size))
+	scale = 256 / numpy.subtract(bbox[2:], bbox[:2]).max() * 0.86
+	translation = (256 - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
+	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]])
+	crop_frame = cv2.warpAffine(frame, affine_matrix, (256, 256))
 	crop_frame = crop_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 	face_landmark_68, face_heatmap = face_predictor.run(None,
 	{
 		face_predictor.get_inputs()[0].name: [ crop_frame ]
 	})
 	face_landmark_68 = face_landmark_68[:, :, :2][0] / face_heatmap.shape[2:][::-1]
-	face_landmark_68 = face_landmark_68.reshape(1, -1, 2) * crop_size
+	face_landmark_68 = face_landmark_68.reshape(1, -1, 2) * 256
 	face_landmark_68 = cv2.transform(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_68 = face_landmark_68.reshape(-1, 2)
 	return face_landmark_68
@@ -309,10 +308,10 @@ def detect_gender_age(frame : VisionFrame, bbox : Bbox) -> Tuple[int, int]:
 	gender_age = get_face_analyser().get('gender_age')
 	bbox = bbox.reshape(2, -1)
 	scale = 64 / numpy.subtract(*bbox[::-1]).max()
-	translation = 48 - bbox.sum(axis = 0) * 0.5 * scale
+	translation = 48 - bbox.sum(axis = 0) * scale * 0.5
 	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]])
 	crop_frame = cv2.warpAffine(frame, affine_matrix, (96, 96))
-	crop_frame = crop_frame.astype(numpy.float32)[:, :, ::-1].transpose(2, 0, 1)
+	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
 	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
 	prediction = gender_age.run(None,
 	{
