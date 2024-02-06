@@ -137,7 +137,7 @@ def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFr
 		'target': crop_frame
 	})[0]
 	crop_frame = normalize_crop_frame(crop_frame)
-	crop_mask = create_static_box_mask(crop_frame.shape[:2][::-1], 0.1, (50, 0, 0, 0))
+	crop_mask = create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
 	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	crop_mask_list = []
 	if 'occlusion' in facefusion.globals.face_mask_types or 'region' in facefusion.globals.face_mask_types:
