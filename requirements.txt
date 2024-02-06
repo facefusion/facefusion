@@ -3,7 +3,7 @@ filetype==1.2.0
 gradio==3.50.2
 numpy==1.26.2
 onnx==1.15.0
-onnxruntime==1.17.0
+onnxruntime==1.16.3
 opencv-python==4.9.0.80
 psutil==5.9.6
 realesrgan==0.3.0
