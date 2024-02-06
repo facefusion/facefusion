@@ -288,9 +288,8 @@ def calc_embedding(temp_frame : VisionFrame, kps : Kps) -> Tuple[Embedding, Embe
 
 def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
 	face_predictor = get_face_analyser().get('face_predictor')
-	bbox = bbox.reshape(2, -1)
-	scale = 256 / numpy.subtract(*bbox[::-1]).max() * 0.86
-	translation = (256 - bbox.sum(axis = 0)) * scale * 0.5
+	scale = 256 / numpy.subtract(bbox[2:], bbox[:2]).max() * 0.86
+	translation = (256 - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
 	crop_frame, affine_matrix = warp_face_by_translation(frame, translation, scale, (256, 256))
 	crop_frame = crop_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 	face_landmark_68, face_heatmap = face_predictor.run(None,
