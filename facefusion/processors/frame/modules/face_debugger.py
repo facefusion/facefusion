@@ -36,7 +36,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--face-debugger-items', help = wording.get('help.face_debugger_items').format(choices = ', '.join(frame_processors_choices.face_debugger_items)), default = config.get_str_list('frame_processors.face_debugger_items', 'kps face-mask'), choices = frame_processors_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
+	program.add_argument('--face-debugger-items', help = wording.get('help.face_debugger_items').format(choices = ', '.join(frame_processors_choices.face_debugger_items)), default = config.get_str_list('frame_processors.face_debugger_items', 'landmark-5 face-mask'), choices = frame_processors_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
 
 
 def apply_args(program : ArgumentParser) -> None:
@@ -73,7 +73,7 @@ def debug_face(target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	bounding_box = target_face.bbox.astype(numpy.int32)
 	temp_frame = temp_frame.copy()
 
-	if 'bbox' in frame_processors_globals.face_debugger_items:
+	if 'bounding-box' in frame_processors_globals.face_debugger_items:
 		cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), secondary_color, 2)
 	if 'face-mask' in frame_processors_globals.face_debugger_items:
 		crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'arcface_128_v2', (512, 512))
@@ -96,10 +96,14 @@ def debug_face(target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	if bounding_box[3] - bounding_box[1] > 60 and bounding_box[2] - bounding_box[0] > 60:
 		top = bounding_box[1]
 		left = bounding_box[0] + 20
-		if 'kps' in frame_processors_globals.face_debugger_items:
-			kps = target_face.kps.astype(numpy.int32)
+		if 'landmark-5' in frame_processors_globals.face_debugger_items:
+			kps = target_face.landmark['5'].astype(numpy.int32)
 			for index in range(kps.shape[0]):
 				cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, primary_color, -1)
+		if 'landmark-68' in frame_processors_globals.face_debugger_items:
+			kps = target_face.landmark['68'].astype(numpy.int32)
+			for index in range(kps.shape[0]):
+				cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, secondary_color, -1)
 		if 'score' in frame_processors_globals.face_debugger_items:
 			face_score_text = str(round(target_face.score, 2))
 			top = top + 20
