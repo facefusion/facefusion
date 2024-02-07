@@ -78,7 +78,17 @@ MODELS : ModelSet =\
 		'size': (512, 512),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
-	}
+	},
+	'uniface_256':
+	{
+		'type': 'uniface',
+		'url': 'https://huggingface.co/netrunner-exe/Insight-Swap-models-onnx/resolve/main/uniface_256.onnx', # todo replace model link
+		'path': resolve_relative_path('../.assets/models/uniface_256.onnx'),
+		'template': 'ffhq_512',
+		'size': (256, 256),
+		'mean': [ 0.0, 0.0, 0.0 ],
+		'standard_deviation': [ 1.0, 1.0, 1.0 ]
+	},
 }
 OPTIONS : Optional[OptionsWithModel] = None
 
@@ -144,7 +154,7 @@ def register_args(program : ArgumentParser) -> None:
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
-	if args.face_swapper_model == 'blendswap_256':
+	if args.face_swapper_model == 'blendswap_256' or args.face_swapper_model == 'uniface_256':
 		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
 	if args.face_swapper_model == 'inswapper_128' or args.face_swapper_model == 'inswapper_128_fp16':
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
@@ -229,20 +239,24 @@ def apply_swap(source_face : Face, crop_frame : VisionFrame) -> VisionFrame:
 	frame_processor_inputs = {}
 
 	for frame_processor_input in frame_processor.get_inputs():
-		if frame_processor_input.name == 'source':
-			if model_type == 'blendswap':
+		if frame_processor_input.name == 'source' or frame_processor_input.name == 'onnx::Sub_1': # todo rename model input
+			if model_type == 'blendswap' or model_type == 'uniface':
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_frame(source_face)
 			else:
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
-		if frame_processor_input.name == 'target':
+		if frame_processor_input.name == 'target' or frame_processor_input.name == 'input': # todo rename model input
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	return crop_frame
 
 
 def prepare_source_frame(source_face : Face) -> VisionFrame:
+	model_type = get_options('model').get('type')
 	source_frame = read_static_image(facefusion.globals.source_paths[0])
-	source_frame, _ = warp_face_by_kps(source_frame, source_face.kps, 'arcface_112_v2', (112, 112))
+	if model_type == 'blendswap':
+		source_frame, _ = warp_face_by_kps(source_frame, source_face.kps, 'arcface_112_v2', (112, 112))
+	elif model_type == 'uniface':
+		source_frame, _ = warp_face_by_kps(source_frame, source_face.kps, 'ffhq_512', (256, 256))
 	source_frame = source_frame[:, :, ::-1] / 255.0
 	source_frame = source_frame.transpose(2, 0, 1)
 	source_frame = numpy.expand_dims(source_frame, axis = 0).astype(numpy.float32)
