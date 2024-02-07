@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Bbox, Kps, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, Template, FaceAnalyserAge, FaceAnalyserGender
+from facefusion.typing import Bbox, Kps, VisionFrame, Mask, Matrix, Translation, Template, FaceAnalyserAge, FaceAnalyserGender
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
