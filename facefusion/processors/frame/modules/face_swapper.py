@@ -82,7 +82,7 @@ MODELS : ModelSet =\
 	'uniface_256':
 	{
 		'type': 'uniface',
-		'url': 'https://huggingface.co/netrunner-exe/Insight-Swap-models-onnx/resolve/main/uniface_256.onnx', # todo replace model link
+		'url': 'https://huggingface.co/netrunner-exe/Insight-Swap-models-onnx/resolve/main/uniface_256.onnx',
 		'path': resolve_relative_path('../.assets/models/uniface_256.onnx'),
 		'template': 'ffhq_512',
 		'size': (256, 256),
@@ -154,12 +154,14 @@ def register_args(program : ArgumentParser) -> None:
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
-	if args.face_swapper_model == 'blendswap_256' or args.face_swapper_model == 'uniface_256':
+	if args.face_swapper_model == 'blendswap_256':
 		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
 	if args.face_swapper_model == 'inswapper_128' or args.face_swapper_model == 'inswapper_128_fp16':
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 	if args.face_swapper_model == 'simswap_256' or args.face_swapper_model == 'simswap_512_unofficial':
 		facefusion.globals.face_recognizer_model = 'arcface_simswap'
+	if args.face_swapper_model == 'uniface_256':
+		facefusion.globals.face_recognizer_model = 'arcface_uniface'
 
 
 def pre_check() -> bool:
@@ -239,12 +241,12 @@ def apply_swap(source_face : Face, crop_frame : VisionFrame) -> VisionFrame:
 	frame_processor_inputs = {}
 
 	for frame_processor_input in frame_processor.get_inputs():
-		if frame_processor_input.name == 'source' or frame_processor_input.name == 'onnx::Sub_1': # todo rename model input
+		if frame_processor_input.name == 'source' or frame_processor_input.name == 'onnx::Sub_1':
 			if model_type == 'blendswap' or model_type == 'uniface':
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_frame(source_face)
 			else:
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
-		if frame_processor_input.name == 'target' or frame_processor_input.name == 'input': # todo rename model input
+		if frame_processor_input.name == 'target' or frame_processor_input.name == 'input':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	return crop_frame
@@ -255,7 +257,7 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 	source_frame = read_static_image(facefusion.globals.source_paths[0])
 	if model_type == 'blendswap':
 		source_frame, _ = warp_face_by_kps(source_frame, source_face.kps, 'arcface_112_v2', (112, 112))
-	elif model_type == 'uniface':
+	if model_type == 'uniface':
 		source_frame, _ = warp_face_by_kps(source_frame, source_face.kps, 'ffhq_512', (256, 256))
 	source_frame = source_frame[:, :, ::-1] / 255.0
 	source_frame = source_frame.transpose(2, 0, 1)

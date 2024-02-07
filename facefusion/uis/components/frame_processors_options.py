@@ -118,6 +118,8 @@ def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> gradio.D
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 	if face_swapper_model == 'simswap_256' or face_swapper_model == 'simswap_512_unofficial':
 		facefusion.globals.face_recognizer_model = 'arcface_simswap'
+	if face_swapper_model == 'uniface_256':
+		facefusion.globals.face_recognizer_model = 'arcface_uniface'
 	face_swapper_module = load_frame_processor_module('face_swapper')
 	face_swapper_module.clear_frame_processor()
 	face_swapper_module.set_options('model', face_swapper_module.MODELS[face_swapper_model])
