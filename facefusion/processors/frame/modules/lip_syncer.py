@@ -154,15 +154,12 @@ def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFr
 
 
 def restore_crop_frame(crop_frame : VisionFrame, inner_crop_frame : VisionFrame, face_landmark_68 : FaceLandmark68, restore_affine_matrix : Matrix) -> VisionFrame:
-	crop_mask_blur = 30
 	inner_crop_frame = cv2.warpAffine(inner_crop_frame, cv2.invertAffineTransform(restore_affine_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
 	crop_mask = numpy.zeros(crop_frame.shape[:2], dtype = numpy.float32)
 	convex_hull = cv2.convexHull(face_landmark_68[numpy.r_[3:14, 31:36]].astype(numpy.int32))
 	crop_mask = cv2.fillConvexPoly(crop_mask, convex_hull, 1.0)
 	crop_mask = cv2.erode(crop_mask.clip(0, 1), numpy.ones((21, 3)))
-	kernel = numpy.zeros((crop_mask_blur, crop_mask_blur), dtype=numpy.float32)
-	kernel[:, crop_mask_blur // 2] = 1.0 / crop_mask_blur
-	crop_mask = cv2.filter2D(crop_mask, -1, kernel)
+	crop_mask = cv2.GaussianBlur(crop_mask, (0, 0), sigmaX = 1, sigmaY = 15)
 	crop_mask = numpy.stack([crop_mask] * 3, axis = -1)
 	crop_frame = crop_mask * inner_crop_frame + (1 - crop_mask) * crop_frame
 	return crop_frame
