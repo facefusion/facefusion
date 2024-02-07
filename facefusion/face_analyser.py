@@ -49,6 +49,11 @@ MODELS : ModelSet =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_simswap.onnx',
 		'path': resolve_relative_path('../.assets/models/arcface_simswap.onnx')
 	},
+	'face_recognizer_arcface_uniface':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+		'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
+	},
 	'face_predictor':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/2dfan2.onnx',
@@ -79,6 +84,8 @@ def get_face_analyser() -> Any:
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			if facefusion.globals.face_recognizer_model == 'arcface_uniface':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_uniface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			face_predictor = onnxruntime.InferenceSession(MODELS.get('face_predictor').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			FACE_ANALYSER =\
@@ -105,8 +112,10 @@ def pre_check() -> bool:
 			MODELS.get('face_detector_retinaface').get('url'),
 			MODELS.get('face_detector_yoloface').get('url'),
 			MODELS.get('face_detector_yunet').get('url'),
+			MODELS.get('face_recognizer_arcface_blendswap').get('url'),
 			MODELS.get('face_recognizer_arcface_inswapper').get('url'),
 			MODELS.get('face_recognizer_arcface_simswap').get('url'),
+			MODELS.get('face_recognizer_arcface_uniface').get('url'),
 			MODELS.get('face_predictor').get('url'),
 			MODELS.get('gender_age').get('url'),
 		]
