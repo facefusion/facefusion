@@ -14,7 +14,7 @@ from facefusion.face_masker import create_static_box_mask, create_occlusion_mask
 from facefusion.face_helper import warp_face_by_kps, warp_face_by_bbox, paste_back, create_bbox_from_landmark
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
+from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload, FaceLandmark68, Matrix
 from facefusion.filesystem import is_file, has_audio, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.audio import read_static_audio, get_audio_frame
@@ -130,30 +130,42 @@ def post_process() -> None:
 def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	audio_frame = prepare_audio_frame(audio_frame)
-	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
-	face_landmark_68 = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-	bbox = create_bbox_from_landmark(face_landmark_68)
-	crop_frame, restore_affine_matrix = warp_face_by_bbox(crop_frame, bbox, (96, 96))
-	crop_frame = prepare_crop_frame(crop_frame)
-	crop_frame = frame_processor.run(None,
-	{
-		'source': audio_frame,
-		'target': crop_frame
-	})[0]
-	crop_frame = normalize_crop_frame(crop_frame)
-	crop_frame = cv2.warpAffine(crop_frame, cv2.invertAffineTransform(restore_affine_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
-	crop_mask = create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
-	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	crop_mask_list = []
+	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
+	crop_mask_list.append(create_static_box_mask(crop_frame.shape[:2][::-1], 0.2, (0, 0, 0, 0)))
 	if 'occlusion' in facefusion.globals.face_mask_types:
-		occlusion_frame, _ = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
-		crop_mask_list.append(create_occlusion_mask(occlusion_frame))
+		crop_mask_list.append(create_occlusion_mask(crop_frame))
+	face_landmark_68 = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+	inner_bbox = create_bbox_from_landmark(face_landmark_68)
+	inner_crop_frame, restore_affine_matrix = warp_face_by_bbox(crop_frame, inner_bbox, (96, 96))
+	inner_crop_frame = prepare_crop_frame(inner_crop_frame)
+	inner_crop_frame = frame_processor.run(None,
+	{
+		'mel': audio_frame,
+		'vid': inner_crop_frame
+	})[0]
+	inner_crop_frame = normalize_crop_frame(inner_crop_frame)
+	crop_frame = restore_crop_frame(crop_frame, inner_crop_frame, face_landmark_68, restore_affine_matrix)
 	if 'region' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_region_mask(crop_frame, facefusion.globals.face_mask_regions))
-	if crop_mask_list:
-		crop_mask = numpy.minimum.reduce(crop_mask_list)
-		paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
+	crop_mask = numpy.minimum.reduce(crop_mask_list)
+	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	return paste_frame
+
+
+def restore_crop_frame(crop_frame : VisionFrame, inner_crop_frame : VisionFrame, face_landmark_68 : FaceLandmark68, restore_affine_matrix : Matrix) -> VisionFrame:
+	crop_mask_blur = 30
+	inner_crop_frame = cv2.warpAffine(inner_crop_frame, cv2.invertAffineTransform(restore_affine_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
+	crop_mask = numpy.zeros(crop_frame.shape[:2], dtype = numpy.float32)
+	convex_hull = cv2.convexHull(face_landmark_68[numpy.r_[3:14, 31:36]].astype(numpy.int32))
+	crop_mask = cv2.fillConvexPoly(crop_mask, convex_hull, 1.0)
+	crop_mask = cv2.erode(crop_mask.clip(0, 1), numpy.ones((21, 3)))
+	kernel = numpy.zeros((crop_mask_blur, crop_mask_blur), dtype=numpy.float32)
+	kernel[:, crop_mask_blur // 2] = 1.0 / crop_mask_blur
+	crop_mask = cv2.filter2D(crop_mask, -1, kernel)
+	crop_mask = numpy.stack([crop_mask] * 3, axis = -1)
+	crop_frame = crop_mask * inner_crop_frame + (1 - crop_mask) * crop_frame
+	return crop_frame
 
 
 def prepare_audio_frame(audio_frame : AudioFrame) -> AudioFrame:
