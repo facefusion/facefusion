@@ -141,8 +141,8 @@ def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFr
 	inner_crop_frame = prepare_crop_frame(inner_crop_frame)
 	inner_crop_frame = frame_processor.run(None,
 	{
-		'mel': audio_frame,
-		'vid': inner_crop_frame
+		'source': audio_frame,
+		'target': inner_crop_frame
 	})[0]
 	inner_crop_frame = normalize_crop_frame(inner_crop_frame)
 	crop_frame = restore_crop_frame(crop_frame, inner_crop_frame, face_landmark_68, restore_affine_matrix)
