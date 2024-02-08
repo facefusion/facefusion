@@ -132,11 +132,15 @@ def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFr
 	audio_frame = prepare_audio_frame(audio_frame)
 	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
 	face_landmark_68 = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-	crop_mask_list = []
-	crop_mask_list.append(create_lower_face_mask(face_landmark_68))
+	bounding_box = create_bbox_from_landmark(face_landmark_68)
+	crop_mask_list =\
+	[
+		create_lower_face_mask(face_landmark_68)
+	]
+
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_occlusion_mask(crop_frame))
-	part_crop_frame, part_affine_matrix = warp_face_by_bbox(crop_frame, create_bbox_from_landmark(face_landmark_68), (96, 96))
+	part_crop_frame, part_affine_matrix = warp_face_by_bbox(crop_frame, bounding_box, (96, 96))
 	part_crop_frame = prepare_crop_frame(part_crop_frame)
 	part_crop_frame = frame_processor.run(None,
 	{
