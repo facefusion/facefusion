@@ -10,11 +10,11 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, wording
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder, create_region_mask, clear_face_parser
+from facefusion.face_masker import create_occlusion_mask, clear_face_occluder, clear_face_parser
 from facefusion.face_helper import warp_face_by_kps, warp_face_by_bbox, paste_back, create_bbox_from_landmark
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload, FaceLandmark68, Matrix
+from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload, FaceLandmark68, Mask
 from facefusion.filesystem import is_file, has_audio, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.audio import read_static_audio, get_audio_frame
@@ -130,39 +130,33 @@ def post_process() -> None:
 def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	audio_frame = prepare_audio_frame(audio_frame)
-	crop_mask_list = []
 	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
-	crop_mask_list.append(create_static_box_mask(crop_frame.shape[:2][::-1], 0.2, (0, 0, 0, 0)))
+	face_landmark_68 = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+	crop_mask_list = []
+	crop_mask_list.append(create_lower_face_mask(face_landmark_68))
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_occlusion_mask(crop_frame))
-	face_landmark_68 = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-	inner_bbox = create_bbox_from_landmark(face_landmark_68)
-	inner_crop_frame, restore_affine_matrix = warp_face_by_bbox(crop_frame, inner_bbox, (96, 96))
-	inner_crop_frame = prepare_crop_frame(inner_crop_frame)
-	inner_crop_frame = frame_processor.run(None,
+	part_crop_frame, part_affine_matrix = warp_face_by_bbox(crop_frame, create_bbox_from_landmark(face_landmark_68), (96, 96))
+	part_crop_frame = prepare_crop_frame(part_crop_frame)
+	part_crop_frame = frame_processor.run(None,
 	{
 		'source': audio_frame,
-		'target': inner_crop_frame
+		'target': part_crop_frame
 	})[0]
-	inner_crop_frame = normalize_crop_frame(inner_crop_frame)
-	crop_frame = restore_crop_frame(crop_frame, inner_crop_frame, face_landmark_68, restore_affine_matrix)
-	if 'region' in facefusion.globals.face_mask_types:
-		crop_mask_list.append(create_region_mask(crop_frame, facefusion.globals.face_mask_regions))
+	face_landmark_crop_frame = normalize_crop_frame(part_crop_frame)
+	crop_frame = cv2.warpAffine(face_landmark_crop_frame, cv2.invertAffineTransform(part_affine_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
 	crop_mask = numpy.minimum.reduce(crop_mask_list)
 	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	return paste_frame
 
 
-def restore_crop_frame(crop_frame : VisionFrame, inner_crop_frame : VisionFrame, face_landmark_68 : FaceLandmark68, restore_affine_matrix : Matrix) -> VisionFrame:
-	inner_crop_frame = cv2.warpAffine(inner_crop_frame, cv2.invertAffineTransform(restore_affine_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
-	crop_mask = numpy.zeros(crop_frame.shape[:2], dtype = numpy.float32)
+def create_lower_face_mask(face_landmark_68 : FaceLandmark68) -> Mask:
+	crop_mask = numpy.zeros((512, 512), dtype = numpy.float32)
 	convex_hull = cv2.convexHull(face_landmark_68[numpy.r_[3:14, 31:36]].astype(numpy.int32))
 	crop_mask = cv2.fillConvexPoly(crop_mask, convex_hull, 1.0)
 	crop_mask = cv2.erode(crop_mask.clip(0, 1), numpy.ones((21, 3)))
 	crop_mask = cv2.GaussianBlur(crop_mask, (0, 0), sigmaX = 1, sigmaY = 15)
-	crop_mask = numpy.stack([crop_mask] * 3, axis = -1)
-	crop_frame = crop_mask * inner_crop_frame + (1 - crop_mask) * crop_frame
-	return crop_frame
+	return crop_mask
 
 
 def prepare_audio_frame(audio_frame : AudioFrame) -> AudioFrame:
