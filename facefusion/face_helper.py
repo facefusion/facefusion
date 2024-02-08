@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Bbox, Kps, VisionFrame, Mask, Matrix, Translation, Template, FaceAnalyserAge, FaceAnalyserGender
+from facefusion.typing import Bbox, Kps, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, Template, FaceAnalyserAge, FaceAnalyserGender
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -87,6 +87,13 @@ def create_static_anchors(feature_stride : int, anchor_total : int, stride_heigh
 	anchors = (anchors * feature_stride).reshape((-1, 2))
 	anchors = numpy.stack([ anchors ] * anchor_total, axis = 1).reshape((-1, 2))
 	return anchors
+
+
+def create_bbox_from_landmark(face_landmark_68 : FaceLandmark68) -> Bbox:
+	min_x, min_y = numpy.min(face_landmark_68, axis = 0)
+	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
+	bbox = numpy.array([ min_x, min_y, max_x, max_y ]).astype(numpy.int16)
+	return bbox
 
 
 def distance_to_bbox(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> Bbox:
