@@ -56,8 +56,8 @@ MODELS : ModelSet =\
 	},
 	'face_predictor':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/2dfan2.onnx',
-		'path': resolve_relative_path('../.assets/models/2dfan2.onnx')
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/2dfan4.onnx',
+		'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
 	},
 	'gender_age':
 	{
@@ -297,15 +297,15 @@ def calc_embedding(temp_frame : VisionFrame, kps : Kps) -> Tuple[Embedding, Embe
 
 def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
 	face_predictor = get_face_analyser().get('face_predictor')
-	scale = 256 / numpy.subtract(bbox[2:], bbox[:2]).max() * 0.86
+	scale = 195 / numpy.subtract(bbox[2:], bbox[:2]).max()
 	translation = (256 - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
 	crop_frame, affine_matrix = warp_face_by_translation(frame, translation, scale, (256, 256))
 	crop_frame = crop_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
-	face_landmark_68, face_heatmap = face_predictor.run(None,
+	face_landmark_68 = face_predictor.run(None,
 	{
-		face_predictor.get_inputs()[0].name: [ crop_frame ]
-	})
-	face_landmark_68 = face_landmark_68[:, :, :2][0] / face_heatmap.shape[2:][::-1]
+		face_predictor.get_inputs()[0].name: [crop_frame]
+	})[0]
+	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64
 	face_landmark_68 = face_landmark_68.reshape(1, -1, 2) * 256
 	face_landmark_68 = cv2.transform(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_68 = face_landmark_68.reshape(-1, 2)
