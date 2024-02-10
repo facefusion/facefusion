@@ -11,7 +11,7 @@ from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.download import conditional_download
 from facefusion.filesystem import resolve_relative_path
-from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, FaceLandmarkSet, FaceLandmark68, Score, Embedding
+from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, Bbox, Kps, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Score, Embedding
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
@@ -258,12 +258,14 @@ def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kp
 		keep_indices = apply_nms(bbox_list, 0.4)
 		for index in keep_indices:
 			bbox = bbox_list[index]
+			landmark_68 = detect_face_landmark_68(frame, bbox)
 			landmark : FaceLandmarkSet =\
 			{
-				'5' : kps_list[index],
-				'68' : detect_face_landmark_68(frame, bbox)
+				'5' : convert_landmark_68_to_5(landmark_68),
+				'68' : landmark_68
 			}
-			kps = kps_list[index]
+			#kps = kps_list[index]
+			kps = landmark['5']
 			score = score_list[index]
 			embedding, normed_embedding = calc_embedding(frame, kps)
 			gender, age = detect_gender_age(frame, bbox)
@@ -310,6 +312,16 @@ def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
 	face_landmark_68 = cv2.transform(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_68 = face_landmark_68.reshape(-1, 2)
 	return face_landmark_68
+
+
+def convert_landmark_68_to_5(landmark_68 : FaceLandmark68) -> FaceLandmark5:
+	left_eye = numpy.mean(landmark_68[36:42], axis = 0)
+	right_eye = numpy.mean(landmark_68[42:48], axis = 0)
+	nose = landmark_68[30]
+	left_mouth_end = landmark_68[48]
+	right_mouth_end = landmark_68[54]
+	landmark_5 = numpy.array([ left_eye, right_eye, nose, left_mouth_end, right_mouth_end ]).astype(numpy.float32)
+	return landmark_5
 
 
 def detect_gender_age(frame : VisionFrame, bbox : Bbox) -> Tuple[int, int]:
