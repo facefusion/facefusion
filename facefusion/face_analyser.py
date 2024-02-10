@@ -261,11 +261,11 @@ def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kp
 			face_landmark_68 = detect_face_landmark_68(frame, bbox)
 			landmark : FaceLandmarkSet =\
 			{
-				'5' : convert_landmark_68_to_5(face_landmark_68),
-				'68' : face_landmark_68
+				'5': kps_list[index],
+				'5/68': convert_face_landmark_68_to_5(face_landmark_68),
+				'68': face_landmark_68
 			}
-			#kps = kps_list[index]
-			kps = landmark['5']
+			kps = landmark['5/68']
 			score = score_list[index]
 			embedding, normed_embedding = calc_embedding(frame, kps)
 			gender, age = detect_gender_age(frame, bbox)
@@ -314,14 +314,14 @@ def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
 	return face_landmark_68
 
 
-def convert_landmark_68_to_5(landmark_68 : FaceLandmark68) -> FaceLandmark5:
+def convert_face_landmark_68_to_5(landmark_68 : FaceLandmark68) -> FaceLandmark5:
 	left_eye = numpy.mean(landmark_68[36:42], axis = 0)
 	right_eye = numpy.mean(landmark_68[42:48], axis = 0)
 	nose = landmark_68[30]
 	left_mouth_end = landmark_68[48]
 	right_mouth_end = landmark_68[54]
-	landmark_5 = numpy.array([ left_eye, right_eye, nose, left_mouth_end, right_mouth_end ]).astype(numpy.float32)
-	return landmark_5
+	face_landmark_5 = numpy.array([ left_eye, right_eye, nose, left_mouth_end, right_mouth_end ])
+	return face_landmark_5
 
 
 def detect_gender_age(frame : VisionFrame, bbox : Bbox) -> Tuple[int, int]:
