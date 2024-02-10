@@ -258,11 +258,11 @@ def create_faces(frame : VisionFrame, bbox_list : List[Bbox], kps_list : List[Kp
 		keep_indices = apply_nms(bbox_list, 0.4)
 		for index in keep_indices:
 			bbox = bbox_list[index]
-			landmark_68 = detect_face_landmark_68(frame, bbox)
+			face_landmark_68 = detect_face_landmark_68(frame, bbox)
 			landmark : FaceLandmarkSet =\
 			{
-				'5' : convert_landmark_68_to_5(landmark_68),
-				'68' : landmark_68
+				'5' : convert_landmark_68_to_5(face_landmark_68),
+				'68' : face_landmark_68
 			}
 			#kps = kps_list[index]
 			kps = landmark['5']
