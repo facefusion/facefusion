@@ -54,7 +54,7 @@ MODELS : ModelSet =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
 		'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 	},
-	'face_predictor':
+	'face_landmarker':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/2dfan4.onnx',
 		'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
@@ -86,13 +86,13 @@ def get_face_analyser() -> Any:
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_uniface':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_uniface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
-			face_predictor = onnxruntime.InferenceSession(MODELS.get('face_predictor').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			face_landmarker = onnxruntime.InferenceSession(MODELS.get('face_landmarker').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			FACE_ANALYSER =\
 			{
 				'face_detector': face_detector,
 				'face_recognizer': face_recognizer,
-				'face_predictor': face_predictor,
+				'face_landmarker': face_landmarker,
 				'gender_age': gender_age
 			}
 	return FACE_ANALYSER
@@ -116,7 +116,7 @@ def pre_check() -> bool:
 			MODELS.get('face_recognizer_arcface_inswapper').get('url'),
 			MODELS.get('face_recognizer_arcface_simswap').get('url'),
 			MODELS.get('face_recognizer_arcface_uniface').get('url'),
-			MODELS.get('face_predictor').get('url'),
+			MODELS.get('face_landmarker').get('url'),
 			MODELS.get('gender_age').get('url'),
 		]
 		conditional_download(download_directory_path, model_urls)
@@ -296,14 +296,14 @@ def calc_embedding(temp_frame : VisionFrame, kps : Kps) -> Tuple[Embedding, Embe
 
 
 def detect_face_landmark_68(frame : VisionFrame, bbox : Bbox) -> FaceLandmark68:
-	face_predictor = get_face_analyser().get('face_predictor')
+	face_landmarker = get_face_analyser().get('face_landmarker')
 	scale = 195 / numpy.subtract(bbox[2:], bbox[:2]).max()
 	translation = (256 - numpy.add(bbox[2:], bbox[:2]) * scale) * 0.5
 	crop_frame, affine_matrix = warp_face_by_translation(frame, translation, scale, (256, 256))
 	crop_frame = crop_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
-	face_landmark_68 = face_predictor.run(None,
+	face_landmark_68 = face_landmarker.run(None,
 	{
-		face_predictor.get_inputs()[0].name: [crop_frame]
+		face_landmarker.get_inputs()[0].name: [crop_frame]
 	})[0]
 	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64
 	face_landmark_68 = face_landmark_68.reshape(1, -1, 2) * 256
