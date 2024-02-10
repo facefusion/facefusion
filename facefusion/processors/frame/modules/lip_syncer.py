@@ -133,6 +133,7 @@ def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFr
 	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
 	face_landmark_68 = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
 	bounding_box = create_bbox_from_landmark(face_landmark_68)
+	bounding_box[1] -= numpy.abs(bounding_box[3] - bounding_box[1]) * 0.08
 	crop_mask_list =\
 	[
 		create_mouth_mask(face_landmark_68),
@@ -141,15 +142,15 @@ def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFr
 
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		crop_mask_list.append(create_occlusion_mask(crop_frame))
-	calc_frame, calc_affine_matrix = warp_face_by_bbox(crop_frame, bounding_box, (96, 96))
-	calc_frame = prepare_crop_frame(calc_frame)
-	calc_frame = frame_processor.run(None,
+	closeup_frame, closeup_matrix = warp_face_by_bbox(crop_frame, bounding_box, (96, 96))
+	closeup_frame = prepare_crop_frame(closeup_frame)
+	closeup_frame = frame_processor.run(None,
 	{
 		'source': audio_frame,
-		'target': calc_frame
+		'target': closeup_frame
 	})[0]
-	crop_frame = normalize_crop_frame(calc_frame)
-	crop_frame = cv2.warpAffine(crop_frame, cv2.invertAffineTransform(calc_affine_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
+	crop_frame = normalize_crop_frame(closeup_frame)
+	crop_frame = cv2.warpAffine(crop_frame, cv2.invertAffineTransform(closeup_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
 	crop_mask = numpy.minimum.reduce(crop_mask_list)
 	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	return paste_frame
