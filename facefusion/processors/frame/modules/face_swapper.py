@@ -82,7 +82,7 @@ MODELS : ModelSet =\
 	'uniface_256':
 	{
 		'type': 'uniface',
-		'url': 'https://huggingface.co/netrunner-exe/Insight-Swap-models-onnx/resolve/main/uniface_256.onnx',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/uniface_256.onnx',
 		'path': resolve_relative_path('../.assets/models/uniface_256.onnx'),
 		'template': 'ffhq_512',
 		'size': (256, 256),
@@ -241,12 +241,12 @@ def apply_swap(source_face : Face, crop_frame : VisionFrame) -> VisionFrame:
 	frame_processor_inputs = {}
 
 	for frame_processor_input in frame_processor.get_inputs():
-		if frame_processor_input.name == 'source' or frame_processor_input.name == 'onnx::Sub_1':
+		if frame_processor_input.name == 'source':
 			if model_type == 'blendswap' or model_type == 'uniface':
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_frame(source_face)
 			else:
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
-		if frame_processor_input.name == 'target' or frame_processor_input.name == 'input':
+		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_frame
 	crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	return crop_frame
