@@ -10,7 +10,7 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, wording
 from facefusion.face_analyser import get_many_faces, clear_face_analyser, find_similar_faces, get_one_face
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder
-from facefusion.face_helper import warp_face_by_kps, paste_back
+from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
@@ -169,7 +169,7 @@ def post_process() -> None:
 def enhance_face(target_face: Face, temp_frame : VisionFrame) -> VisionFrame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
-	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, model_template, model_size)
+	crop_frame, affine_matrix = warp_face_by_face_landmark_5(temp_frame, target_face.landmark['5/68'], model_template, model_size)
 	crop_mask_list =\
 	[
 		create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, (0, 0, 0, 0))

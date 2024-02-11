@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Bbox, Kps, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, Template, FaceAnalyserAge, FaceAnalyserGender
+from facefusion.typing import Bbox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, Template, FaceAnalyserAge, FaceAnalyserGender
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -43,17 +43,17 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 }
 
 
-def warp_face_by_kps(temp_frame : VisionFrame, kps : Kps, template : Template, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+def warp_face_by_face_landmark_5(temp_frame : VisionFrame, face_landmark_5 : FaceLandmark5, template : Template, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
 	normed_template = TEMPLATES.get(template) * crop_size
-	affine_matrix = cv2.estimateAffinePartial2D(kps, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
+	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
 	return crop_frame, affine_matrix
 
 
 def warp_face_by_bbox(temp_frame : VisionFrame, bbox : Bbox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
-	source_kps = numpy.array([[ bbox[0], bbox[1] ], [bbox[2], bbox[1] ], [bbox[0], bbox[3] ]], dtype = numpy.float32)
-	target_kps = numpy.array([[ 0, 0 ], [ crop_size[0], 0 ], [ 0, crop_size[1] ]], dtype = numpy.float32)
-	affine_matrix = cv2.getAffineTransform(source_kps, target_kps)
+	source_points = numpy.array([[ bbox[0], bbox[1] ], [bbox[2], bbox[1] ], [bbox[0], bbox[3] ]], dtype = numpy.float32)
+	target_points = numpy.array([[ 0, 0 ], [ crop_size[0], 0 ], [ 0, crop_size[1] ]], dtype = numpy.float32)
+	affine_matrix = cv2.getAffineTransform(source_points, target_points)
 	if bbox[2] - bbox[0] > crop_size[0] or bbox[3] - bbox[1] > crop_size[1]:
 		interpolation_method = cv2.INTER_AREA
 	else:
@@ -105,11 +105,11 @@ def distance_to_bbox(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[
 	return bbox
 
 
-def distance_to_kps(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> Kps:
+def distance_to_face_landmark5(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> FaceLandmark5:
 	x = points[:, 0::2] + distance[:, 0::2]
 	y = points[:, 1::2] + distance[:, 1::2]
-	kps = numpy.stack((x, y), axis = -1)
-	return kps
+	face_landmark_5 = numpy.stack((x, y), axis = -1)
+	return face_landmark_5
 
 
 def apply_nms(bbox_list : List[Bbox], iou_threshold : float) -> List[int]:

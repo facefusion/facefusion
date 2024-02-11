@@ -11,7 +11,7 @@ from facefusion import config, logger, wording
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder, clear_face_parser
-from facefusion.face_helper import warp_face_by_kps, warp_face_by_bbox, paste_back, create_bbox_from_landmark
+from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_bbox, paste_back, create_bbox_from_landmark
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload, FaceLandmark68, Mask
@@ -130,7 +130,7 @@ def post_process() -> None:
 def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	audio_frame = prepare_audio_frame(audio_frame)
-	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'ffhq_512', (512, 512))
+	crop_frame, affine_matrix = warp_face_by_face_landmark_5(temp_frame, target_face.landmark['5/68'], 'ffhq_512', (512, 512))
 	face_landmark_68 = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
 	bounding_box = create_bbox_from_landmark(face_landmark_68)
 	bounding_box[1] -= numpy.abs(bounding_box[3] - bounding_box[1]) * 0.08
