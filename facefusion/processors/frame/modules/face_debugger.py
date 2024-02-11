@@ -97,7 +97,7 @@ def debug_face(target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 		top = bounding_box[1]
 		left = bounding_box[0] + 20
 		if 'landmark-5' in frame_processors_globals.face_debugger_items:
-			face_landmark_5 = target_face.landmark['5'].astype(numpy.int32)
+			face_landmark_5 = target_face.landmark['5/68'].astype(numpy.int32)
 			for index in range(face_landmark_5.shape[0]):
 				cv2.circle(temp_frame, (face_landmark_5[index][0], face_landmark_5[index][1]), 3, primary_color, -1)
 		if 'landmark-68' in frame_processors_globals.face_debugger_items:
