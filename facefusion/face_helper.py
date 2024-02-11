@@ -105,10 +105,20 @@ def distance_to_bounding_box(points : numpy.ndarray[Any, Any], distance : numpy.
 	return bounding_box
 
 
-def distance_to_face_landmark5(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> FaceLandmark5:
+def distance_to_face_landmark_5(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> FaceLandmark5:
 	x = points[:, 0::2] + distance[:, 0::2]
 	y = points[:, 1::2] + distance[:, 1::2]
 	face_landmark_5 = numpy.stack((x, y), axis = -1)
+	return face_landmark_5
+
+
+def convert_face_landmark_68_to_5(landmark_68 : FaceLandmark68) -> FaceLandmark5:
+	left_eye = numpy.mean(landmark_68[36:42], axis = 0)
+	right_eye = numpy.mean(landmark_68[42:48], axis = 0)
+	nose = landmark_68[30]
+	left_mouth_end = landmark_68[48]
+	right_mouth_end = landmark_68[54]
+	face_landmark_5 = numpy.array([ left_eye, right_eye, nose, left_mouth_end, right_mouth_end ])
 	return face_landmark_5
 
 

@@ -6,7 +6,7 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion.common_helper import get_first
-from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark5, distance_to_bounding_box, apply_nms, categorize_age, categorize_gender
+from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, apply_nms, categorize_age, categorize_gender
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -159,7 +159,7 @@ def detect_with_retinaface(frame : VisionFrame, face_detector_size : str) -> Tup
 					bounding_box[2] * ratio_width,
 					bounding_box[3] * ratio_height
 				]))
-			for face_landmark5 in distance_to_face_landmark5(anchors, face_landmark_5_raw)[keep_indices]:
+			for face_landmark5 in distance_to_face_landmark_5(anchors, face_landmark_5_raw)[keep_indices]:
 				face_landmark5_list.append(face_landmark5 * [ ratio_width, ratio_height ])
 			for score in detections[index][keep_indices]:
 				score_list.append(score[0])
@@ -306,16 +306,6 @@ def detect_face_landmark_68(frame : VisionFrame, bounding_box : BoundingBox) -> 
 	face_landmark_68 = cv2.transform(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_68 = face_landmark_68.reshape(-1, 2)
 	return face_landmark_68
-
-
-def convert_face_landmark_68_to_5(landmark_68 : FaceLandmark68) -> FaceLandmark5:
-	left_eye = numpy.mean(landmark_68[36:42], axis = 0)
-	right_eye = numpy.mean(landmark_68[42:48], axis = 0)
-	nose = landmark_68[30]
-	left_mouth_end = landmark_68[48]
-	right_mouth_end = landmark_68[54]
-	face_landmark_5 = numpy.array([ left_eye, right_eye, nose, left_mouth_end, right_mouth_end ])
-	return face_landmark_5
 
 
 def detect_gender_age(frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[int, int]:
