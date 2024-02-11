@@ -199,11 +199,7 @@ def detect_with_yoloface(frame : VisionFrame, face_detector_size : str) -> Tuple
 		face_landmark_5_raw[:, 0::3] = (face_landmark_5_raw[:, 0::3]) * ratio_width
 		face_landmark_5_raw[:, 1::3] = (face_landmark_5_raw[:, 1::3]) * ratio_height
 		for face_landmark_5 in face_landmark_5_raw:
-			indices = numpy.arange(0, len(face_landmark_5), 3)
-			face_landmark_5_temp = []
-			for index in indices:
-				face_landmark_5_temp.append([ face_landmark_5[index], face_landmark_5[index + 1] ])
-			face_landmark5_list.append(numpy.array(face_landmark_5_temp))
+			face_landmark5_list.append(numpy.array(face_landmark_5.reshape(-1, 3)[:, :2]))
 		score_list = score_raw.ravel().tolist()
 	return bounding_box_list, face_landmark5_list, score_list
 
