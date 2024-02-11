@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Bbox, Kps, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, Template, FaceAnalyserAge, FaceAnalyserGender
+from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, Template, FaceAnalyserAge, FaceAnalyserGender
 
 TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 {
@@ -43,18 +43,18 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 }
 
 
-def warp_face_by_kps(temp_frame : VisionFrame, kps : Kps, template : Template, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+def warp_face_by_face_landmark_5(temp_frame : VisionFrame, face_landmark_5 : FaceLandmark5, template : Template, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
 	normed_template = TEMPLATES.get(template) * crop_size
-	affine_matrix = cv2.estimateAffinePartial2D(kps, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
+	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
 	return crop_frame, affine_matrix
 
 
-def warp_face_by_bbox(temp_frame : VisionFrame, bbox : Bbox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
-	source_kps = numpy.array([[ bbox[0], bbox[1] ], [bbox[2], bbox[1] ], [bbox[0], bbox[3] ]], dtype = numpy.float32)
-	target_kps = numpy.array([[ 0, 0 ], [ crop_size[0], 0 ], [ 0, crop_size[1] ]], dtype = numpy.float32)
-	affine_matrix = cv2.getAffineTransform(source_kps, target_kps)
-	if bbox[2] - bbox[0] > crop_size[0] or bbox[3] - bbox[1] > crop_size[1]:
+def warp_face_by_bounding_box(temp_frame : VisionFrame, bounding_box : BoundingBox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+	source_points = numpy.array([[bounding_box[0], bounding_box[1]], [bounding_box[2], bounding_box[1]], [bounding_box[0], bounding_box[3]]], dtype = numpy.float32)
+	target_points = numpy.array([[ 0, 0 ], [ crop_size[0], 0 ], [ 0, crop_size[1] ]], dtype = numpy.float32)
+	affine_matrix = cv2.getAffineTransform(source_points, target_points)
+	if bounding_box[2] - bounding_box[0] > crop_size[0] or bounding_box[3] - bounding_box[1] > crop_size[1]:
 		interpolation_method = cv2.INTER_AREA
 	else:
 		interpolation_method = cv2.INTER_LINEAR
@@ -89,38 +89,48 @@ def create_static_anchors(feature_stride : int, anchor_total : int, stride_heigh
 	return anchors
 
 
-def create_bbox_from_landmark(face_landmark_68 : FaceLandmark68) -> Bbox:
+def create_bounding_box_from_landmark(face_landmark_68 : FaceLandmark68) -> BoundingBox:
 	min_x, min_y = numpy.min(face_landmark_68, axis = 0)
 	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
-	bbox = numpy.array([ min_x, min_y, max_x, max_y ]).astype(numpy.int16)
-	return bbox
+	bounding_box = numpy.array([ min_x, min_y, max_x, max_y ]).astype(numpy.int16)
+	return bounding_box
 
 
-def distance_to_bbox(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> Bbox:
+def distance_to_bounding_box(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> BoundingBox:
 	x1 = points[:, 0] - distance[:, 0]
 	y1 = points[:, 1] - distance[:, 1]
 	x2 = points[:, 0] + distance[:, 2]
 	y2 = points[:, 1] + distance[:, 3]
-	bbox = numpy.column_stack([ x1, y1, x2, y2 ])
-	return bbox
+	bounding_box = numpy.column_stack([ x1, y1, x2, y2 ])
+	return bounding_box
 
 
-def distance_to_kps(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> Kps:
+def distance_to_face_landmark_5(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> FaceLandmark5:
 	x = points[:, 0::2] + distance[:, 0::2]
 	y = points[:, 1::2] + distance[:, 1::2]
-	kps = numpy.stack((x, y), axis = -1)
-	return kps
+	face_landmark_5 = numpy.stack((x, y), axis = -1)
+	return face_landmark_5
 
 
-def apply_nms(bbox_list : List[Bbox], iou_threshold : float) -> List[int]:
+def convert_face_landmark_68_to_5(landmark_68 : FaceLandmark68) -> FaceLandmark5:
+	left_eye = numpy.mean(landmark_68[36:42], axis = 0)
+	right_eye = numpy.mean(landmark_68[42:48], axis = 0)
+	nose = landmark_68[30]
+	left_mouth_end = landmark_68[48]
+	right_mouth_end = landmark_68[54]
+	face_landmark_5 = numpy.array([ left_eye, right_eye, nose, left_mouth_end, right_mouth_end ])
+	return face_landmark_5
+
+
+def apply_nms(bounding_box_list : List[BoundingBox], iou_threshold : float) -> List[int]:
 	keep_indices = []
-	dimension_list = numpy.reshape(bbox_list, (-1, 4))
+	dimension_list = numpy.reshape(bounding_box_list, (-1, 4))
 	x1 = dimension_list[:, 0]
 	y1 = dimension_list[:, 1]
 	x2 = dimension_list[:, 2]
 	y2 = dimension_list[:, 3]
 	areas = (x2 - x1 + 1) * (y2 - y1 + 1)
-	indices = numpy.arange(len(bbox_list))
+	indices = numpy.arange(len(bounding_box_list))
 	while indices.size > 0:
 		index = indices[0]
 		remain_indices = indices[1:]

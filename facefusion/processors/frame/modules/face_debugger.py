@@ -8,7 +8,7 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import config, wording
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
-from facefusion.face_helper import warp_face_by_kps, categorize_age, categorize_gender
+from facefusion.face_helper import warp_face_by_face_landmark_5, categorize_age, categorize_gender
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, QueuePayload
@@ -70,13 +70,13 @@ def post_process() -> None:
 def debug_face(target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	primary_color = (0, 0, 255)
 	secondary_color = (0, 255, 0)
-	bounding_box = target_face.bbox.astype(numpy.int32)
+	bounding_box = target_face.bounding_box.astype(numpy.int32)
 	temp_frame = temp_frame.copy()
 
 	if 'bounding-box' in frame_processors_globals.face_debugger_items:
 		cv2.rectangle(temp_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), secondary_color, 2)
 	if 'face-mask' in frame_processors_globals.face_debugger_items:
-		crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, 'arcface_128_v2', (512, 512))
+		crop_frame, affine_matrix = warp_face_by_face_landmark_5(temp_frame, target_face.landmark['5/68'], 'arcface_128_v2', (512, 512))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_frame_size = temp_frame.shape[:2][::-1]
 		crop_mask_list = []
@@ -97,13 +97,13 @@ def debug_face(target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 		top = bounding_box[1]
 		left = bounding_box[0] + 20
 		if 'landmark-5' in frame_processors_globals.face_debugger_items:
-			kps = target_face.landmark['5'].astype(numpy.int32)
-			for index in range(kps.shape[0]):
-				cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, primary_color, -1)
+			face_landmark_5 = target_face.landmark['5/68'].astype(numpy.int32)
+			for index in range(face_landmark_5.shape[0]):
+				cv2.circle(temp_frame, (face_landmark_5[index][0], face_landmark_5[index][1]), 3, primary_color, -1)
 		if 'landmark-68' in frame_processors_globals.face_debugger_items:
-			kps = target_face.landmark['68'].astype(numpy.int32)
-			for index in range(kps.shape[0]):
-				cv2.circle(temp_frame, (kps[index][0], kps[index][1]), 3, secondary_color, -1)
+			face_landmark_68 = target_face.landmark['68'].astype(numpy.int32)
+			for index in range(face_landmark_68.shape[0]):
+				cv2.circle(temp_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, secondary_color, -1)
 		if 'score' in frame_processors_globals.face_debugger_items:
 			face_score_text = str(round(target_face.score, 2))
 			top = top + 20

@@ -12,7 +12,7 @@ from facefusion import config, logger, wording
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
-from facefusion.face_helper import warp_face_by_kps, paste_back
+from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, Embedding, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
@@ -218,7 +218,7 @@ def post_process() -> None:
 def swap_face(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
-	crop_frame, affine_matrix = warp_face_by_kps(temp_frame, target_face.kps, model_template, model_size)
+	crop_frame, affine_matrix = warp_face_by_face_landmark_5(temp_frame, target_face.landmark['5/68'], model_template, model_size)
 	crop_mask_list = []
 
 	if 'box' in facefusion.globals.face_mask_types:
@@ -256,9 +256,9 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 	model_type = get_options('model').get('type')
 	source_frame = read_static_image(facefusion.globals.source_paths[0])
 	if model_type == 'blendswap':
-		source_frame, _ = warp_face_by_kps(source_frame, source_face.kps, 'arcface_112_v2', (112, 112))
+		source_frame, _ = warp_face_by_face_landmark_5(source_frame, source_face.landmark['5/68'], 'arcface_112_v2', (112, 112))
 	if model_type == 'uniface':
-		source_frame, _ = warp_face_by_kps(source_frame, source_face.kps, 'ffhq_512', (256, 256))
+		source_frame, _ = warp_face_by_face_landmark_5(source_frame, source_face.landmark['5/68'], 'ffhq_512', (256, 256))
 	source_frame = source_frame[:, :, ::-1] / 255.0
 	source_frame = source_frame.transpose(2, 0, 1)
 	source_frame = numpy.expand_dims(source_frame, axis = 0).astype(numpy.float32)
