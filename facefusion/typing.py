@@ -2,7 +2,7 @@ from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict
 from collections import namedtuple
 import numpy
 
-Bbox = numpy.ndarray[Any, Any]
+BoundingBox = numpy.ndarray[Any, Any]
 FaceLandmark5 = numpy.ndarray[Any, Any]
 FaceLandmark68 = numpy.ndarray[Any, Any]
 FaceLandmarkSet = TypedDict('FaceLandmarkSet',
@@ -15,7 +15,7 @@ Score = float
 Embedding = numpy.ndarray[Any, Any]
 Face = namedtuple('Face',
 [
-	'bbox',
+	'bounding_box',
 	'landmark',
 	'score',
 	'embedding',

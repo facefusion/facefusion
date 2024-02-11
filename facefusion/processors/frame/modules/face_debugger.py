@@ -70,7 +70,7 @@ def post_process() -> None:
 def debug_face(target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
 	primary_color = (0, 0, 255)
 	secondary_color = (0, 255, 0)
-	bounding_box = target_face.bbox.astype(numpy.int32)
+	bounding_box = target_face.bounding_box.astype(numpy.int32)
 	temp_frame = temp_frame.copy()
 
 	if 'bounding-box' in frame_processors_globals.face_debugger_items:
