@@ -80,6 +80,7 @@ def listen() -> None:
 		'face_swapper_model_dropdown',
 		'face_enhancer_model_dropdown',
 		'frame_enhancer_model_dropdown',
+		'lip_syncer_model_dropdown',
 		'source_image'
 	]
 	for component_name in change_two_component_names:

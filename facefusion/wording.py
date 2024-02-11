@@ -152,6 +152,7 @@ WORDING : Dict[str, Any] =\
 		'face_swapper_model_dropdown': 'FACE SWAPPER MODEL',
 		'frame_enhancer_model_dropdown': 'FRAME ENHANCER MODEL',
 		'frame_enhancer_blend_slider': 'FRAME ENHANCER BLEND',
+		'lip_syncer_model_dropdown': 'LIP SYNCER MODEL',
 		# memory
 		'video_memory_strategy_dropdown': 'VIDEO MEMORY STRATEGY',
 		'system_memory_limit_slider': 'SYSTEM MEMORY LIMIT',

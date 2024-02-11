@@ -122,6 +122,7 @@ def listen() -> None:
 		'face_enhancer_model_dropdown',
 		'face_swapper_model_dropdown',
 		'frame_enhancer_model_dropdown',
+		'lip_syncer_model_dropdown',
 		'face_detector_model_dropdown',
 		'face_detector_size_dropdown',
 		'face_detector_score_slider'
