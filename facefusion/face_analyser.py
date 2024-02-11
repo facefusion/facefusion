@@ -248,7 +248,7 @@ def create_faces(frame : VisionFrame, bounding_box_list : List[BoundingBox], fac
 	faces = []
 	if facefusion.globals.face_detector_score > 0:
 		sort_indices = numpy.argsort(-numpy.array(score_list))
-		bounding_box_list = [bounding_box_list[index] for index in sort_indices]
+		bounding_box_list = [ bounding_box_list[index] for index in sort_indices ]
 		face_landmark5_list = [ face_landmark5_list[index] for index in sort_indices ]
 		score_list = [ score_list[index] for index in sort_indices ]
 		keep_indices = apply_nms(bounding_box_list, 0.4)
