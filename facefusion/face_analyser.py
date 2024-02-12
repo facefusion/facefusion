@@ -299,7 +299,7 @@ def detect_face_landmark_68(frame : VisionFrame, bounding_box : BoundingBox) -> 
 	crop_frame = crop_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 	face_landmark_68 = face_landmarker.run(None,
 	{
-		face_landmarker.get_inputs()[0].name: [crop_frame]
+		face_landmarker.get_inputs()[0].name: [ crop_frame ]
 	})[0]
 	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64
 	face_landmark_68 = face_landmark_68.reshape(1, -1, 2) * 256
