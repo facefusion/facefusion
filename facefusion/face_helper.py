@@ -70,9 +70,9 @@ def warp_face_by_translation(temp_vision_frame : VisionFrame, translation : Tran
 
 def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, crop_mask : Mask, affine_matrix : Matrix) -> VisionFrame:
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
-	temp_vision_size = temp_vision_frame.shape[:2][::-1]
-	inverse_mask = cv2.warpAffine(crop_mask, inverse_matrix, temp_vision_size).clip(0, 1)
-	inverse_vision_frame = cv2.warpAffine(crop_vision_frame, inverse_matrix, temp_vision_size, borderMode = cv2.BORDER_REPLICATE)
+	temp_size = temp_vision_frame.shape[:2][::-1]
+	inverse_mask = cv2.warpAffine(crop_mask, inverse_matrix, temp_size).clip(0, 1)
+	inverse_vision_frame = cv2.warpAffine(crop_vision_frame, inverse_matrix, temp_size, borderMode = cv2.BORDER_REPLICATE)
 	paste_vision_frame = temp_vision_frame.copy()
 	paste_vision_frame[:, :, 0] = inverse_mask * inverse_vision_frame[:, :, 0] + (1 - inverse_mask) * temp_vision_frame[:, :, 0]
 	paste_vision_frame[:, :, 1] = inverse_mask * inverse_vision_frame[:, :, 1] + (1 - inverse_mask) * temp_vision_frame[:, :, 1]
