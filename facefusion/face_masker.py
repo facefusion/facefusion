@@ -112,6 +112,7 @@ def create_occlusion_mask(crop_frame : VisionFrame) -> Mask:
 	})[0][0]
 	occlusion_mask = occlusion_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
 	occlusion_mask = cv2.resize(occlusion_mask, crop_frame.shape[:2][::-1])
+	occlusion_mask = (cv2.GaussianBlur(occlusion_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
 	return occlusion_mask
 
 
@@ -126,4 +127,5 @@ def create_region_mask(crop_frame : VisionFrame, face_mask_regions : List[FaceMa
 	})[0][0]
 	region_mask = numpy.isin(region_mask.argmax(0), [ FACE_MASK_REGIONS[region] for region in face_mask_regions ])
 	region_mask = cv2.resize(region_mask.astype(numpy.float32), crop_frame.shape[:2][::-1])
+	region_mask = (cv2.GaussianBlur(region_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
 	return region_mask
