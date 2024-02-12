@@ -43,14 +43,14 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 }
 
 
-def warp_face_by_face_landmark_5(temp_frame : VisionFrame, face_landmark_5 : FaceLandmark5, template : Template, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5, template : Template, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
 	normed_template = TEMPLATES.get(template) * crop_size
 	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
-	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
-	return crop_frame, affine_matrix
+	crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
+	return crop_vision_frame, affine_matrix
 
 
-def warp_face_by_bounding_box(temp_frame : VisionFrame, bounding_box : BoundingBox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+def warp_face_by_bounding_box(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
 	source_points = numpy.array([[bounding_box[0], bounding_box[1]], [bounding_box[2], bounding_box[1]], [bounding_box[0], bounding_box[3]]], dtype = numpy.float32)
 	target_points = numpy.array([[ 0, 0 ], [ crop_size[0], 0 ], [ 0, crop_size[1] ]], dtype = numpy.float32)
 	affine_matrix = cv2.getAffineTransform(source_points, target_points)
@@ -58,26 +58,26 @@ def warp_face_by_bounding_box(temp_frame : VisionFrame, bounding_box : BoundingB
 		interpolation_method = cv2.INTER_AREA
 	else:
 		interpolation_method = cv2.INTER_LINEAR
-	crop_frame = cv2.warpAffine(temp_frame, affine_matrix, crop_size, flags = interpolation_method)
-	return crop_frame, affine_matrix
+	crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size, flags = interpolation_method)
+	return crop_vision_frame, affine_matrix
 
 
-def warp_face_by_translation(frame : VisionFrame, translation : Translation, scale : float, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+def warp_face_by_translation(temp_vision_frame : VisionFrame, translation : Translation, scale : float, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
 	affine_matrix = numpy.array([[ scale, 0, translation[0] ], [ 0, scale, translation[1] ]])
-	crop_frame = cv2.warpAffine(frame, affine_matrix, crop_size)
-	return crop_frame, affine_matrix
+	crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size)
+	return crop_vision_frame, affine_matrix
 
 
-def paste_back(temp_frame : VisionFrame, crop_frame : VisionFrame, crop_mask : Mask, affine_matrix : Matrix) -> VisionFrame:
+def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, crop_mask : Mask, affine_matrix : Matrix) -> VisionFrame:
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
-	temp_frame_size = temp_frame.shape[:2][::-1]
-	inverse_crop_mask = cv2.warpAffine(crop_mask, inverse_matrix, temp_frame_size).clip(0, 1)
-	inverse_crop_frame = cv2.warpAffine(crop_frame, inverse_matrix, temp_frame_size, borderMode = cv2.BORDER_REPLICATE)
-	paste_frame = temp_frame.copy()
-	paste_frame[:, :, 0] = inverse_crop_mask * inverse_crop_frame[:, :, 0] + (1 - inverse_crop_mask) * temp_frame[:, :, 0]
-	paste_frame[:, :, 1] = inverse_crop_mask * inverse_crop_frame[:, :, 1] + (1 - inverse_crop_mask) * temp_frame[:, :, 1]
-	paste_frame[:, :, 2] = inverse_crop_mask * inverse_crop_frame[:, :, 2] + (1 - inverse_crop_mask) * temp_frame[:, :, 2]
-	return paste_frame
+	temp_vision_size = temp_vision_frame.shape[:2][::-1]
+	inverse_mask = cv2.warpAffine(crop_mask, inverse_matrix, temp_vision_size).clip(0, 1)
+	inverse_vision_frame = cv2.warpAffine(crop_vision_frame, inverse_matrix, temp_vision_size, borderMode = cv2.BORDER_REPLICATE)
+	paste_vision_frame = temp_vision_frame.copy()
+	paste_vision_frame[:, :, 0] = inverse_mask * inverse_vision_frame[:, :, 0] + (1 - inverse_mask) * temp_vision_frame[:, :, 0]
+	paste_vision_frame[:, :, 1] = inverse_mask * inverse_vision_frame[:, :, 1] + (1 - inverse_mask) * temp_vision_frame[:, :, 1]
+	paste_vision_frame[:, :, 2] = inverse_mask * inverse_vision_frame[:, :, 2] + (1 - inverse_mask) * temp_vision_frame[:, :, 2]
+	return paste_vision_frame
 
 
 @lru_cache(maxsize = None)
