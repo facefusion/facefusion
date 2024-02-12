@@ -105,5 +105,5 @@ def resolve_relative_path(path : str) -> str:
 def list_directory(directory_path : str) -> Optional[List[str]]:
 	if is_directory(directory_path):
 		files = os.listdir(directory_path)
-		return [ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ]
+		return sorted([ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ])
 	return None

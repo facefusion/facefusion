@@ -99,9 +99,9 @@ WORDING : Dict[str, Any] =\
 		'face_swapper_model': 'choose the model responsible for swapping the face',
 		'frame_enhancer_model': 'choose the model responsible for enhancing the frame',
 		'frame_enhancer_blend': 'blend the enhanced into the previous frame',
-		'lip_syncer_model': 'choose the model responsible for the lip syncing',
+		'lip_syncer_model': 'choose the model responsible for syncing the lips',
 		# uis
-		'ui_layouts': 'Launch a single or multiple UI layouts (choices: {choices}, ...)'
+		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)'
 	},
 	'uis':
 	{
