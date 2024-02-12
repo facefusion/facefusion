@@ -53,28 +53,28 @@ def pre_check() -> bool:
 	return True
 
 
-def analyse_stream(frame : VisionFrame, video_fps : Fps) -> bool:
+def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
 	global STREAM_COUNTER
 
 	STREAM_COUNTER = STREAM_COUNTER + 1
 	if STREAM_COUNTER % int(video_fps) == 0:
-		return analyse_frame(frame)
+		return analyse_frame(vision_frame)
 	return False
 
 
-def prepare_frame(frame : VisionFrame) -> VisionFrame:
-	frame = cv2.resize(frame, (224, 224)).astype(numpy.float32)
-	frame -= numpy.array([ 104, 117, 123 ]).astype(numpy.float32)
-	frame = numpy.expand_dims(frame, axis = 0)
-	return frame
+def prepare_frame(vision_frame : VisionFrame) -> VisionFrame:
+	vision_frame = cv2.resize(vision_frame, (224, 224)).astype(numpy.float32)
+	vision_frame -= numpy.array([ 104, 117, 123 ]).astype(numpy.float32)
+	vision_frame = numpy.expand_dims(vision_frame, axis = 0)
+	return vision_frame
 
 
-def analyse_frame(frame : VisionFrame) -> bool:
+def analyse_frame(vision_frame : VisionFrame) -> bool:
 	content_analyser = get_content_analyser()
-	frame = prepare_frame(frame)
+	vision_frame = prepare_frame(vision_frame)
 	probability = content_analyser.run(None,
 	{
-		'input:0': frame
+		'input:0': vision_frame
 	})[0][0][1]
 	return probability > PROBABILITY_LIMIT
 
