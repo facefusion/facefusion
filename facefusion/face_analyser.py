@@ -129,12 +129,12 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 	temp_vision_frame = resize_frame_resolution(vision_frame, face_detector_width, face_detector_height)
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
-	bounding_box_list = []
-	face_landmark5_list = []
-	score_list = []
 	feature_strides = [ 8, 16, 32 ]
 	feature_map_channel = 3
 	anchor_total = 2
+	bounding_box_list = []
+	face_landmark5_list = []
+	score_list = []
 
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
@@ -271,13 +271,13 @@ def create_faces(vision_frame : VisionFrame, bounding_box_list : List[BoundingBo
 
 def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[Embedding, Embedding]:
 	face_recognizer = get_face_analyser().get('face_recognizer')
-	crop_frame, matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, 'arcface_112_v2', (112, 112))
-	crop_frame = crop_frame / 127.5 - 1
-	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
-	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
+	crop_vision_frame, matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, 'arcface_112_v2', (112, 112))
+	crop_vision_frame = crop_vision_frame / 127.5 - 1
+	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
+	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
 	embedding = face_recognizer.run(None,
 	{
-		face_recognizer.get_inputs()[0].name: crop_frame
+		face_recognizer.get_inputs()[0].name: crop_vision_frame
 	})[0]
 	embedding = embedding.ravel()
 	normed_embedding = embedding / numpy.linalg.norm(embedding)
@@ -288,11 +288,11 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 	face_landmarker = get_face_analyser().get('face_landmarker')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max()
 	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
-	crop_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
-	crop_frame = crop_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
+	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
+	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 	face_landmark_68 = face_landmarker.run(None,
 	{
-		face_landmarker.get_inputs()[0].name: [ crop_frame ]
+		face_landmarker.get_inputs()[0].name: [ crop_vision_frame ]
 	})[0]
 	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64
 	face_landmark_68 = face_landmark_68.reshape(1, -1, 2) * 256
@@ -306,12 +306,12 @@ def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBo
 	bounding_box = bounding_box.reshape(2, -1)
 	scale = 64 / numpy.subtract(*bounding_box[::-1]).max()
 	translation = 48 - bounding_box.sum(axis = 0) * scale * 0.5
-	crop_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (96, 96))
-	crop_frame = crop_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
-	crop_frame = numpy.expand_dims(crop_frame, axis = 0)
+	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (96, 96))
+	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
+	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
 	prediction = gender_age.run(None,
 	{
-		gender_age.get_inputs()[0].name: crop_frame
+		gender_age.get_inputs()[0].name: crop_vision_frame
 	})[0][0]
 	gender = int(numpy.argmax(prediction[:2]))
 	age = int(numpy.round(prediction[2] * 100))
