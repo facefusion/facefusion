@@ -166,64 +166,67 @@ def post_process() -> None:
 		clear_face_occluder()
 
 
-def enhance_face(target_face: Face, temp_frame : VisionFrame) -> VisionFrame:
+def enhance_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
-	crop_frame, affine_matrix = warp_face_by_face_landmark_5(temp_frame, target_face.landmark['5/68'], model_template, model_size)
+	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark['5/68'], model_template, model_size)
+	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, (0, 0, 0, 0))
 	crop_mask_list =\
 	[
-		create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, (0, 0, 0, 0))
+		box_mask
 	]
+
 	if 'occlusion' in facefusion.globals.face_mask_types:
-		crop_mask_list.append(create_occlusion_mask(crop_frame))
-	crop_frame = prepare_crop_frame(crop_frame)
-	crop_frame = apply_enhance(crop_frame)
-	crop_frame = normalize_crop_frame(crop_frame)
+		occlusion_mask = create_occlusion_mask(crop_vision_frame)
+		crop_mask_list.append(occlusion_mask)
+	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
+	crop_vision_frame = apply_enhance(crop_vision_frame)
+	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
-	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
-	temp_frame = blend_frame(temp_frame, paste_frame)
-	return temp_frame
+	paste_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
+	temp_vision_frame = blend_frame(temp_vision_frame, paste_frame)
+	return temp_vision_frame
 
 
-def apply_enhance(crop_frame : VisionFrame) -> VisionFrame:
+def apply_enhance(crop_vision_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	frame_processor_inputs = {}
 
 	for frame_processor_input in frame_processor.get_inputs():
 		if frame_processor_input.name == 'input':
-			frame_processor_inputs[frame_processor_input.name] = crop_frame
+			frame_processor_inputs[frame_processor_input.name] = crop_vision_frame
 		if frame_processor_input.name == 'weight':
 			weight = numpy.array([ 1 ], dtype = numpy.double)
 			frame_processor_inputs[frame_processor_input.name] = weight
 	with THREAD_SEMAPHORE:
-		crop_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
-	return crop_frame
+		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
+	return crop_vision_frame
 
 
-def prepare_crop_frame(crop_frame : VisionFrame) -> VisionFrame:
-	crop_frame = crop_frame[:, :, ::-1] / 255.0
-	crop_frame = (crop_frame - 0.5) / 0.5
-	crop_frame = numpy.expand_dims(crop_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
-	return crop_frame
+def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
+	crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
+	crop_vision_frame = (crop_vision_frame - 0.5) / 0.5
+	crop_vision_frame = numpy.expand_dims(crop_vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
+	return crop_vision_frame
 
 
-def normalize_crop_frame(crop_frame : VisionFrame) -> VisionFrame:
-	crop_frame = numpy.clip(crop_frame, -1, 1)
-	crop_frame = (crop_frame + 1) / 2
-	crop_frame = crop_frame.transpose(1, 2, 0)
-	crop_frame = (crop_frame * 255.0).round()
-	crop_frame = crop_frame.astype(numpy.uint8)[:, :, ::-1]
-	return crop_frame
+def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
+	crop_vision_frame = numpy.clip(crop_vision_frame, -1, 1)
+	crop_vision_frame = (crop_vision_frame + 1) / 2
+	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
+	crop_vision_frame = (crop_vision_frame * 255.0).round()
+	crop_vision_frame = crop_vision_frame.astype(numpy.uint8)[:, :, ::-1]
+	return crop_vision_frame
 
 
-def blend_frame(temp_frame : VisionFrame, paste_frame : VisionFrame) -> VisionFrame:
+def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
 	face_enhancer_blend = 1 - (frame_processors_globals.face_enhancer_blend / 100)
-	temp_frame = cv2.addWeighted(temp_frame, face_enhancer_blend, paste_frame, 1 - face_enhancer_blend, 0)
-	return temp_frame
+	temp_vision_frame = cv2.addWeighted(temp_vision_frame, face_enhancer_blend, paste_vision_frame, 1 - face_enhancer_blend, 0)
+	return temp_vision_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
-	return enhance_face(target_face, temp_frame)
+def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+	return enhance_face(target_face, temp_vision_frame)
 
 
 def process_frame(inputs : FaceEnhancerInputs) -> VisionFrame:

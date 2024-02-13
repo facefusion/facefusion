@@ -10,7 +10,7 @@ import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, wording
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder, clear_face_parser
+from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_mouth_mask, clear_face_occluder, clear_face_parser
 from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_bounding_box, paste_back, create_bounding_box_from_landmark
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
@@ -154,15 +154,6 @@ def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFr
 	crop_mask = numpy.minimum.reduce(crop_mask_list)
 	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
 	return paste_frame
-
-
-def create_mouth_mask(face_landmark_68 : FaceLandmark68) -> Mask:
-	mouth_mask = numpy.zeros((512, 512), dtype = numpy.float32)
-	convex_hull = cv2.convexHull(face_landmark_68[numpy.r_[3:14, 31:36]].astype(numpy.int32))
-	mouth_mask = cv2.fillConvexPoly(mouth_mask, convex_hull, 1.0)
-	mouth_mask = cv2.erode(mouth_mask.clip(0, 1), numpy.ones((21, 3)))
-	mouth_mask = cv2.GaussianBlur(mouth_mask, (0, 0), sigmaX = 1, sigmaY = 15)
-	return mouth_mask
 
 
 def prepare_audio_frame(audio_frame : AudioFrame) -> AudioFrame:

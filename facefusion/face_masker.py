@@ -7,7 +7,7 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
-from facefusion.typing import VisionFrame, Mask, Padding, FaceMaskRegion, ModelSet
+from facefusion.typing import FaceLandmark68, VisionFrame, Mask, Padding, FaceMaskRegion, ModelSet
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.filesystem import resolve_relative_path
 from facefusion.download import conditional_download
@@ -129,3 +129,12 @@ def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List
 	region_mask = cv2.resize(region_mask.astype(numpy.float32), crop_vision_frame.shape[:2][::-1])
 	region_mask = (cv2.GaussianBlur(region_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
 	return region_mask
+
+
+def create_mouth_mask(face_landmark_68 : FaceLandmark68) -> Mask:
+	convex_hull = cv2.convexHull(face_landmark_68[numpy.r_[3:14, 31:36]].astype(numpy.int32))
+	mouth_mask : Mask = numpy.zeros((512, 512), dtype = numpy.float32)
+	mouth_mask = cv2.fillConvexPoly(mouth_mask, convex_hull, 1.0)
+	mouth_mask = cv2.erode(mouth_mask.clip(0, 1), numpy.ones((21, 3)))
+	mouth_mask = cv2.GaussianBlur(mouth_mask, (0, 0), sigmaX = 1, sigmaY = 15)
+	return mouth_mask
