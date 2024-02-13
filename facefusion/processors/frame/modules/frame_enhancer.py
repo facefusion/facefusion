@@ -138,19 +138,18 @@ def post_process() -> None:
 		clear_content_analyser()
 
 
-def enhance_frame(temp_frame : VisionFrame) -> VisionFrame:
+def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	with THREAD_SEMAPHORE:
-		paste_frame, _ = get_frame_processor().enhance(temp_frame)
-		temp_frame = blend_frame(temp_frame, paste_frame)
-	return temp_frame
+		paste_vision_frame, _ = get_frame_processor().enhance(temp_vision_frame)
+		temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame)
+	return temp_vision_frame
 
 
-def blend_frame(temp_frame : VisionFrame, paste_frame : VisionFrame) -> VisionFrame:
+def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
 	frame_enhancer_blend = 1 - (frame_processors_globals.frame_enhancer_blend / 100)
-	paste_frame_height, paste_frame_width = paste_frame.shape[0:2]
-	temp_frame = cv2.resize(temp_frame, (paste_frame_width, paste_frame_height))
-	temp_frame = cv2.addWeighted(temp_frame, frame_enhancer_blend, paste_frame, 1 - frame_enhancer_blend, 0)
-	return temp_frame
+	temp_vision_frame = cv2.resize(temp_vision_frame, (paste_vision_frame.shape[1], paste_vision_frame.shape[0]))
+	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_enhancer_blend, paste_vision_frame, 1 - frame_enhancer_blend, 0)
+	return temp_vision_frame
 
 
 def get_reference_frame(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
