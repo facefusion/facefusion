@@ -49,13 +49,13 @@ def render() -> None:
 	else:
 		source_audio_frame = None
 	if is_image(facefusion.globals.target_path):
-		target_frame = read_static_image(facefusion.globals.target_path)
-		preview_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_frame)
-		preview_image_args['value'] = normalize_frame_color(preview_frame)
+		target_vision_frame = read_static_image(facefusion.globals.target_path)
+		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)
+		preview_image_args['value'] = normalize_frame_color(preview_vision_frame)
 	if is_video(facefusion.globals.target_path):
-		temp_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-		preview_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_frame)
-		preview_image_args['value'] = normalize_frame_color(preview_frame)
+		temp_vision_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
+		preview_image_args['value'] = normalize_frame_color(preview_vision_frame)
 		preview_image_args['visible'] = True
 		preview_frame_slider_args['value'] = facefusion.globals.reference_frame_number
 		preview_frame_slider_args['maximum'] = count_video_frame_total(facefusion.globals.target_path)
@@ -158,15 +158,15 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		source_audio_frame = None
 
 	if is_image(facefusion.globals.target_path):
-		target_frame = read_static_image(facefusion.globals.target_path)
-		preview_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_frame)
-		preview_frame = normalize_frame_color(preview_frame)
-		return gradio.Image(value = preview_frame)
+		target_vision_frame = read_static_image(facefusion.globals.target_path)
+		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)
+		preview_vision_frame = normalize_frame_color(preview_vision_frame)
+		return gradio.Image(value = preview_vision_frame)
 	if is_video(facefusion.globals.target_path):
-		temp_frame = get_video_frame(facefusion.globals.target_path, frame_number)
-		preview_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_frame)
-		preview_frame = normalize_frame_color(preview_frame)
-		return gradio.Image(value = preview_frame)
+		temp_vision_frame = get_video_frame(facefusion.globals.target_path, frame_number)
+		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
+		preview_vision_frame = normalize_frame_color(preview_vision_frame)
+		return gradio.Image(value = preview_vision_frame)
 	return gradio.Image(value = None)
 
 

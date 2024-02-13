@@ -13,10 +13,10 @@ def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[Vision
 		if video_capture.isOpened():
 			frame_total = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
 			video_capture.set(cv2.CAP_PROP_POS_FRAMES, min(frame_total, frame_number - 1))
-			has_frame, frame = video_capture.read()
+			has_vision_frame, vision_frame = video_capture.read()
 			video_capture.release()
-			if has_frame:
-				return frame
+			if has_vision_frame:
+				return vision_frame
 	return None
 
 
@@ -91,19 +91,19 @@ def unpack_resolution(resolution : str) -> Resolution:
 	return width, height
 
 
-def resize_frame_resolution(frame : VisionFrame, max_width : int, max_height : int) -> VisionFrame:
-	height, width = frame.shape[:2]
+def resize_frame_resolution(vision_frame : VisionFrame, max_width : int, max_height : int) -> VisionFrame:
+	height, width = vision_frame.shape[:2]
 
 	if height > max_height or width > max_width:
 		scale = min(max_height / height, max_width / width)
 		new_width = int(width * scale)
 		new_height = int(height * scale)
-		return cv2.resize(frame, (new_width, new_height))
-	return frame
+		return cv2.resize(vision_frame, (new_width, new_height))
+	return vision_frame
 
 
-def normalize_frame_color(frame : VisionFrame) -> VisionFrame:
-	return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+def normalize_frame_color(vision_frame : VisionFrame) -> VisionFrame:
+	return cv2.cvtColor(vision_frame, cv2.COLOR_BGR2RGB)
 
 
 @lru_cache(maxsize = 128)

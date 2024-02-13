@@ -149,19 +149,19 @@ def stop() -> gradio.Image:
 	return gradio.Image(value = None)
 
 
-def process_stream_frame(source_face : Face, temp_frame : VisionFrame) -> VisionFrame:
+def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) -> VisionFrame:
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		logger.disable()
 		if frame_processor_module.pre_process('stream'):
 			logger.enable()
-			temp_frame = frame_processor_module.process_frame(
+			target_vision_frame = frame_processor_module.process_frame(
 			{
 				'source_face': source_face,
 				'reference_faces': None,
 				'source_audio_frame': None,
-				'target_vision_frame': temp_frame
+				'target_vision_frame': target_vision_frame
 			})
-	return temp_frame
+	return target_vision_frame
 
 
 def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : Fps) -> subprocess.Popen[bytes]:

@@ -152,7 +152,7 @@ def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFram
 	return temp_vision_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_frame : VisionFrame) -> VisionFrame:
+def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	pass
 
 

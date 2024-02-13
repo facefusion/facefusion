@@ -135,21 +135,21 @@ def clear_and_update_reference_position_gallery() -> gradio.Gallery:
 
 
 def update_reference_position_gallery() -> gradio.Gallery:
-	gallery_frames = []
+	gallery_vision_frames = []
 	if is_image(facefusion.globals.target_path):
-		reference_frame = read_static_image(facefusion.globals.target_path)
-		gallery_frames = extract_gallery_frames(reference_frame)
+		temp_vision_frame = read_static_image(facefusion.globals.target_path)
+		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
 	if is_video(facefusion.globals.target_path):
-		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
-		gallery_frames = extract_gallery_frames(reference_frame)
-	if gallery_frames:
-		return gradio.Gallery(value = gallery_frames)
+		temp_vision_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
+	if gallery_vision_frames:
+		return gradio.Gallery(value = gallery_vision_frames)
 	return gradio.Gallery(value = None)
 
 
-def extract_gallery_frames(reference_frame : VisionFrame) -> List[VisionFrame]:
-	crop_frames = []
-	faces = get_many_faces(reference_frame)
+def extract_gallery_frames(temp_vision_frame : VisionFrame) -> List[VisionFrame]:
+	gallery_vision_frames = []
+	faces = get_many_faces(temp_vision_frame)
 
 	for face in faces:
 		start_x, start_y, end_x, end_y = map(int, face.bounding_box)
@@ -159,7 +159,7 @@ def extract_gallery_frames(reference_frame : VisionFrame) -> List[VisionFrame]:
 		start_y = max(0, start_y - padding_y)
 		end_x = max(0, end_x + padding_x)
 		end_y = max(0, end_y + padding_y)
-		crop_frame = reference_frame[start_y:end_y, start_x:end_x]
-		crop_frame = normalize_frame_color(crop_frame)
-		crop_frames.append(crop_frame)
-	return crop_frames
+		crop_vision_frame = temp_vision_frame[start_y:end_y, start_x:end_x]
+		crop_vision_frame = normalize_frame_color(crop_vision_frame)
+		gallery_vision_frames.append(crop_vision_frame)
+	return gallery_vision_frames

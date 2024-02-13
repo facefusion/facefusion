@@ -183,8 +183,8 @@ def enhance_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFr
 	crop_vision_frame = apply_enhance(crop_vision_frame)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
-	paste_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
-	temp_vision_frame = blend_frame(temp_vision_frame, paste_frame)
+	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
+	temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame)
 	return temp_vision_frame
 
 
