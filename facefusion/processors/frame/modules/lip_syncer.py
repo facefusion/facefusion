@@ -14,7 +14,7 @@ from facefusion.face_masker import create_static_box_mask, create_occlusion_mask
 from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_bounding_box, paste_back, create_bounding_box_from_landmark
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload, FaceLandmark68, Mask
+from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
 from facefusion.filesystem import is_file, has_audio, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.audio import read_static_audio, get_audio_frame
@@ -127,32 +127,35 @@ def post_process() -> None:
 		clear_face_parser()
 
 
-def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_frame : VisionFrame) -> VisionFrame:
+def sync_lip(target_face : Face, audio_frame : AudioFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	audio_frame = prepare_audio_frame(audio_frame)
-	crop_frame, affine_matrix = warp_face_by_face_landmark_5(temp_frame, target_face.landmark['5/68'], 'ffhq_512', (512, 512))
+	crop_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark['5/68'], 'ffhq_512', (512, 512))
 	face_landmark_68 = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
 	bounding_box = create_bounding_box_from_landmark(face_landmark_68)
 	bounding_box[1] -= numpy.abs(bounding_box[3] - bounding_box[1]) * 0.08
+	mouth_mask = create_mouth_mask(face_landmark_68)
+	box_mask = create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
 	crop_mask_list =\
 	[
-		create_mouth_mask(face_landmark_68),
-		create_static_box_mask(crop_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
+		mouth_mask,
+		box_mask
 	]
 
 	if 'occlusion' in facefusion.globals.face_mask_types:
-		crop_mask_list.append(create_occlusion_mask(crop_frame))
-	closeup_frame, closeup_matrix = warp_face_by_bounding_box(crop_frame, bounding_box, (96, 96))
-	closeup_frame = prepare_crop_frame(closeup_frame)
-	closeup_frame = frame_processor.run(None,
+		occlusion_mask = create_occlusion_mask(crop_frame)
+		crop_mask_list.append(occlusion_mask)
+	close_vision_frame, closeup_matrix = warp_face_by_bounding_box(crop_frame, bounding_box, (96, 96))
+	close_vision_frame = prepare_crop_frame(close_vision_frame)
+	close_vision_frame = frame_processor.run(None,
 	{
 		'source': audio_frame,
-		'target': closeup_frame
+		'target': close_vision_frame
 	})[0]
-	crop_frame = normalize_crop_frame(closeup_frame)
+	crop_frame = normalize_crop_frame(close_vision_frame)
 	crop_frame = cv2.warpAffine(crop_frame, cv2.invertAffineTransform(closeup_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
 	crop_mask = numpy.minimum.reduce(crop_mask_list)
-	paste_frame = paste_back(temp_frame, crop_frame, crop_mask, affine_matrix)
+	paste_frame = paste_back(temp_vision_frame, crop_frame, crop_mask, affine_matrix)
 	return paste_frame
 
 
