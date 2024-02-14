@@ -31,7 +31,7 @@ python run.py [options]
 
 options:
   -h, --help                                                                                                             show this help message and exit
-  -s SOURCE_PATHS, --source SOURCE_PATHS                                                                                 choose single or multiple source images
+  -s SOURCE_PATHS, --source SOURCE_PATHS                                                                                 choose single or multiple source images or audios
   -t TARGET_PATH, --target TARGET_PATH                                                                                   choose single target image or video
   -o OUTPUT_PATH, --output OUTPUT_PATH                                                                                   specify the output file or directory
   -v, --version                                                                                                          show program's version number and exit
