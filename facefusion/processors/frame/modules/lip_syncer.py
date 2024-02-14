@@ -133,7 +133,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark['5/68'], 'ffhq_512', (512, 512))
 	face_landmark_68 = cv2.transform(target_face.landmark['68'].reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
 	bounding_box = create_bounding_box_from_landmark(face_landmark_68)
-	bounding_box[1] -= numpy.abs(bounding_box[3] - bounding_box[1]) * 0.08
+	bounding_box[1] -= numpy.abs(bounding_box[3] - bounding_box[1]) * 0.125
 	mouth_mask = create_mouth_mask(face_landmark_68)
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
 	crop_mask_list =\
