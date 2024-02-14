@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import gradio
 
@@ -24,34 +24,37 @@ def render() -> None:
 	global FACE_DETECTOR_SCORE_SLIDER
 	global FACE_DETECTOR_MODEL_DROPDOWN
 
+	face_detector_size_dropdown_args : Dict[str, Any] =\
+	{
+		'label': wording.get('uis.face_detector_size_dropdown'),
+		'value': facefusion.globals.face_detector_size
+	}
+	if facefusion.globals.face_detector_size in facefusion.choices.face_detector_set[facefusion.globals.face_detector_model]:
+		face_detector_size_dropdown_args['choices'] = facefusion.choices.face_detector_set[facefusion.globals.face_detector_model]
 	with gradio.Row():
 		FACE_ANALYSER_ORDER_DROPDOWN = gradio.Dropdown(
-			label = wording.get('face_analyser_order_dropdown_label'),
+			label = wording.get('uis.face_analyser_order_dropdown'),
 			choices = facefusion.choices.face_analyser_orders,
 			value = facefusion.globals.face_analyser_order
 		)
 		FACE_ANALYSER_AGE_DROPDOWN = gradio.Dropdown(
-			label = wording.get('face_analyser_age_dropdown_label'),
+			label = wording.get('uis.face_analyser_age_dropdown'),
 			choices = [ 'none' ] + facefusion.choices.face_analyser_ages,
 			value = facefusion.globals.face_analyser_age or 'none'
 		)
 		FACE_ANALYSER_GENDER_DROPDOWN = gradio.Dropdown(
-			label = wording.get('face_analyser_gender_dropdown_label'),
+			label = wording.get('uis.face_analyser_gender_dropdown'),
 			choices = [ 'none' ] + facefusion.choices.face_analyser_genders,
 			value = facefusion.globals.face_analyser_gender or 'none'
 		)
 	FACE_DETECTOR_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('face_detector_model_dropdown_label'),
-		choices = facefusion.choices.face_detector_models,
+		label = wording.get('uis.face_detector_model_dropdown'),
+		choices = facefusion.choices.face_detector_set.keys(),
 		value = facefusion.globals.face_detector_model
 	)
-	FACE_DETECTOR_SIZE_DROPDOWN = gradio.Dropdown(
-		label = wording.get('face_detector_size_dropdown_label'),
-		choices = facefusion.choices.face_detector_sizes,
-		value = facefusion.globals.face_detector_size
-	)
+	FACE_DETECTOR_SIZE_DROPDOWN = gradio.Dropdown(**face_detector_size_dropdown_args)
 	FACE_DETECTOR_SCORE_SLIDER = gradio.Slider(
-		label = wording.get('face_detector_score_slider_label'),
+		label = wording.get('uis.face_detector_score_slider'),
 		value = facefusion.globals.face_detector_score,
 		step = facefusion.choices.face_detector_score_range[1] - facefusion.choices.face_detector_score_range[0],
 		minimum = facefusion.choices.face_detector_score_range[0],
@@ -69,7 +72,7 @@ def listen() -> None:
 	FACE_ANALYSER_ORDER_DROPDOWN.change(update_face_analyser_order, inputs = FACE_ANALYSER_ORDER_DROPDOWN)
 	FACE_ANALYSER_AGE_DROPDOWN.change(update_face_analyser_age, inputs = FACE_ANALYSER_AGE_DROPDOWN)
 	FACE_ANALYSER_GENDER_DROPDOWN.change(update_face_analyser_gender, inputs = FACE_ANALYSER_GENDER_DROPDOWN)
-	FACE_DETECTOR_MODEL_DROPDOWN.change(update_face_detector_model, inputs = FACE_DETECTOR_MODEL_DROPDOWN)
+	FACE_DETECTOR_MODEL_DROPDOWN.change(update_face_detector_model, inputs = FACE_DETECTOR_MODEL_DROPDOWN, outputs = FACE_DETECTOR_SIZE_DROPDOWN)
 	FACE_DETECTOR_SIZE_DROPDOWN.change(update_face_detector_size, inputs = FACE_DETECTOR_SIZE_DROPDOWN)
 	FACE_DETECTOR_SCORE_SLIDER.change(update_face_detector_score, inputs = FACE_DETECTOR_SCORE_SLIDER)
 
@@ -86,8 +89,11 @@ def update_face_analyser_gender(face_analyser_gender : FaceAnalyserGender) -> No
 	facefusion.globals.face_analyser_gender = face_analyser_gender if face_analyser_gender != 'none' else None
 
 
-def update_face_detector_model(face_detector_model : FaceDetectorModel) -> None:
+def update_face_detector_model(face_detector_model : FaceDetectorModel) -> gradio.Dropdown:
 	facefusion.globals.face_detector_model = face_detector_model
+	if facefusion.globals.face_detector_size in facefusion.choices.face_detector_set[face_detector_model]:
+		return gradio.Dropdown(value = '640x640', choices = facefusion.choices.face_detector_set[face_detector_model])
+	return gradio.Dropdown(value = '640x640', choices = [ '640x640' ])
 
 
 def update_face_detector_size(face_detector_size : str) -> None:

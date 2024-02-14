@@ -36,7 +36,7 @@ def render() -> None:
 	global BENCHMARK_CLEAR_BUTTON
 
 	BENCHMARK_RESULTS_DATAFRAME = gradio.Dataframe(
-		label = wording.get('benchmark_results_dataframe_label'),
+		label = wording.get('uis.benchmark_results_dataframe'),
 		headers =
 		[
 			'target_path',
@@ -57,12 +57,12 @@ def render() -> None:
 		]
 	)
 	BENCHMARK_START_BUTTON = gradio.Button(
-		value = wording.get('start_button_label'),
+		value = wording.get('uis.start_button'),
 		variant = 'primary',
 		size = 'sm'
 	)
 	BENCHMARK_CLEAR_BUTTON = gradio.Button(
-		value = wording.get('clear_button_label'),
+		value = wording.get('uis.clear_button'),
 		size = 'sm'
 	)
 

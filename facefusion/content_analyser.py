@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import wording
-from facefusion.typing import Frame, ModelValue, Fps
+from facefusion.typing import VisionFrame, ModelValue, Fps
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.vision import get_video_frame, count_video_frame_total, read_image, detect_video_fps
 from facefusion.filesystem import resolve_relative_path
@@ -53,28 +53,28 @@ def pre_check() -> bool:
 	return True
 
 
-def analyse_stream(frame : Frame, video_fps : Fps) -> bool:
+def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
 	global STREAM_COUNTER
 
 	STREAM_COUNTER = STREAM_COUNTER + 1
 	if STREAM_COUNTER % int(video_fps) == 0:
-		return analyse_frame(frame)
+		return analyse_frame(vision_frame)
 	return False
 
 
-def prepare_frame(frame : Frame) -> Frame:
-	frame = cv2.resize(frame, (224, 224)).astype(numpy.float32)
-	frame -= numpy.array([ 104, 117, 123 ]).astype(numpy.float32)
-	frame = numpy.expand_dims(frame, axis = 0)
-	return frame
+def prepare_frame(vision_frame : VisionFrame) -> VisionFrame:
+	vision_frame = cv2.resize(vision_frame, (224, 224)).astype(numpy.float32)
+	vision_frame -= numpy.array([ 104, 117, 123 ]).astype(numpy.float32)
+	vision_frame = numpy.expand_dims(vision_frame, axis = 0)
+	return vision_frame
 
 
-def analyse_frame(frame : Frame) -> bool:
+def analyse_frame(vision_frame : VisionFrame) -> bool:
 	content_analyser = get_content_analyser()
-	frame = prepare_frame(frame)
+	vision_frame = prepare_frame(vision_frame)
 	probability = content_analyser.run(None,
 	{
-		'input:0': frame
+		'input:0': vision_frame
 	})[0][0][1]
 	return probability > PROBABILITY_LIMIT
 
@@ -92,6 +92,7 @@ def analyse_video(video_path : str, start_frame : int, end_frame : int) -> bool:
 	frame_range = range(start_frame or 0, end_frame or video_frame_total)
 	rate = 0.0
 	counter = 0
+
 	with tqdm(total = len(frame_range), desc = wording.get('analysing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
 		for frame_number in frame_range:
 			if frame_number % int(video_fps) == 0:

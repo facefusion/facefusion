@@ -4,11 +4,8 @@ import os
 import platform
 import tempfile
 import subprocess
-from argparse import ArgumentParser, HelpFormatter
-
-subprocess.call([ 'pip', 'install' , 'inquirer', '-q' ])
-
 import inquirer
+from argparse import ArgumentParser, HelpFormatter
 
 from facefusion import metadata, wording
 
@@ -17,31 +14,32 @@ TORCH : Dict[str, str] =\
 	'default': 'default',
 	'cpu': 'cpu'
 }
-ONNXRUNTIMES : Dict[str, Tuple[str, str]] =\
-{
-	'default': ('onnxruntime', '1.16.3')
-}
+ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
+
+if platform.system().lower() == 'darwin':
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.17.0')
+else:
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.16.3')
 if platform.system().lower() == 'linux' or platform.system().lower() == 'windows':
-	TORCH['cuda'] = 'cu118'
-	TORCH['cuda-nightly'] = 'cu121'
-	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.16.3')
-	ONNXRUNTIMES['cuda-nightly'] = ('onnxruntime-gpu', '1.17.0')
+	TORCH['cuda-12.1'] = 'cu121'
+	TORCH['cuda-11.8'] = 'cu118'
+	ONNXRUNTIMES['cuda-12.1'] = ('onnxruntime-gpu', '1.17.0')
+	ONNXRUNTIMES['cuda-11.8'] = ('onnxruntime-gpu', '1.16.3')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
 if platform.system().lower() == 'linux':
-	TORCH['rocm'] = 'rocm5.6'
-	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.16.3')
-if platform.system().lower() == 'darwin':
-	ONNXRUNTIMES['coreml-legacy'] = ('onnxruntime-coreml', '1.13.1')
-	ONNXRUNTIMES['coreml-silicon'] = ('onnxruntime-silicon', '1.16.0')
+	TORCH['rocm-5.4.2'] = 'rocm5.4.2'
+	TORCH['rocm-5.6'] = 'rocm5.6'
+	ONNXRUNTIMES['rocm-5.4.2'] = ('onnxruntime-rocm', '1.16.3')
+	ONNXRUNTIMES['rocm-5.6'] = ('onnxruntime-rocm', '1.16.3')
 if platform.system().lower() == 'windows':
-	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.16.3')
+	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.16.0')
 
 
 def cli() -> None:
-	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 120))
-	program.add_argument('--torch', help = wording.get('install_dependency_help').format(dependency = 'torch'), choices = TORCH.keys())
-	program.add_argument('--onnxruntime', help = wording.get('install_dependency_help').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys())
-	program.add_argument('--skip-venv', help = wording.get('skip_venv_help'), action = 'store_true')
+	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 130))
+	program.add_argument('--torch', help = wording.get('help.install_dependency').format(dependency = 'torch'), choices = TORCH.keys())
+	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys())
+	program.add_argument('--skip-venv', help = wording.get('help.skip_venv'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	run(program)
 
@@ -61,8 +59,8 @@ def run(program : ArgumentParser) -> None:
 	else:
 		answers = inquirer.prompt(
 		[
-			inquirer.List('torch', message = wording.get('install_dependency_help').format(dependency = 'torch'), choices = list(TORCH.keys())),
-			inquirer.List('onnxruntime', message = wording.get('install_dependency_help').format(dependency = 'onnxruntime'), choices = list(ONNXRUNTIMES.keys()))
+			inquirer.List('torch', message = wording.get('help.install_dependency').format(dependency = 'torch'), choices = list(TORCH.keys())),
+			inquirer.List('onnxruntime', message = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = list(ONNXRUNTIMES.keys()))
 		])
 	if answers:
 		torch = answers['torch']
@@ -75,9 +73,11 @@ def run(program : ArgumentParser) -> None:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--force-reinstall' ])
 		else:
 			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel, '--force-reinstall' ])
-		if onnxruntime == 'rocm':
+		if onnxruntime == 'rocm-5.4.2' or onnxruntime == 'rocm-5.6':
 			if python_id in [ 'cp39', 'cp310', 'cp311' ]:
-				wheel_name = 'onnxruntime_training-' + onnxruntime_version + '+rocm56-' + python_id + '-' + python_id + '-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
+				rocm_version = onnxruntime.replace('-', '')
+				rocm_version = rocm_version.replace('.', '')
+				wheel_name = 'onnxruntime_training-' + onnxruntime_version + '+' + rocm_version + '-' + python_id + '-' + python_id + '-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
 				wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
 				wheel_url = 'https://download.onnxruntime.ai/' + wheel_name
 				subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
@@ -86,7 +86,7 @@ def run(program : ArgumentParser) -> None:
 				os.remove(wheel_path)
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
-			if onnxruntime == 'cuda-nightly':
+			if onnxruntime == 'cuda-12.1':
 				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--extra-index-url', 'https://pkgs.dev.azure.com/onnxruntime/onnxruntime/_packaging/onnxruntime-cuda-12/pypi/simple', '--force-reinstall' ])
 			else:
 				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])

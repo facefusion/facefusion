@@ -5,7 +5,7 @@ import pytest
 import facefusion.globals
 from facefusion.filesystem import get_temp_directory_path, create_temp, clear_temp
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import extract_frames
+from facefusion.ffmpeg import extract_frames, read_audio_buffer
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -13,8 +13,10 @@ def before_all() -> None:
 	conditional_download('.assets/examples',
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.mp3',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
 	])
+	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/source.mp3', '.assets/examples/source.wav' ])
 	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'fps=25', '.assets/examples/target-240p-25fps.mp4' ])
 	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'fps=30', '.assets/examples/target-240p-30fps.mp4' ])
 	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'fps=60', '.assets/examples/target-240p-60fps.mp4' ])
@@ -98,3 +100,9 @@ def test_extract_frames_with_trim_end() -> None:
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == frame_total
 
 		clear_temp(target_path)
+
+
+def test_read_audio_buffer() -> None:
+	assert isinstance(read_audio_buffer('.assets/examples/source.mp3', 1, 1), bytes)
+	assert isinstance(read_audio_buffer('.assets/examples/source.wav', 1, 1), bytes)
+	assert read_audio_buffer('.assets/examples/invalid.mp3', 1, 1) is None

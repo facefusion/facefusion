@@ -82,8 +82,11 @@ def get_float_list(key : str, fallback : Optional[str] = None) -> Optional[List[
 
 def get_value_by_notation(key : str) -> Optional[Any]:
 	config = get_config()
-	section, name = key.split('.')
 
-	if section in config and name in config[section]:
-		return config[section][name]
+	if '.' in key:
+		section, name = key.split('.')
+		if section in config and name in config[section]:
+			return config[section][name]
+	if key in config:
+		return config[key]
 	return None
