@@ -88,7 +88,7 @@ MODELS : ModelSet =\
 		'size': (256, 256),
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
-	},
+	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
 
