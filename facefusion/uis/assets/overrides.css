@@ -42,3 +42,17 @@
 	grid-template-columns: repeat(var(--grid-cols), minmax(5em, 1fr));
 	grid-template-rows: repeat(var(--grid-rows), minmax(5em, 1fr));
 }
+
+:root:root:root .tab-nav > button
+{
+	border: unset;
+	border-bottom: 0.125rem solid transparent;
+	font-size: 1.125em;
+	margin: 0.5rem 1rem;
+	padding: 0;
+}
+
+:root:root:root .tab-nav > button.selected
+{
+	border-bottom: 0.125rem solid;
+}
