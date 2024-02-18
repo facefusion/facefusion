@@ -19,7 +19,6 @@ ComponentName = Literal\
 	'face_detector_model_dropdown',
 	'face_detector_size_dropdown',
 	'face_detector_score_slider',
-	'face_detector_tweaks_checkbox_group',
 	'face_mask_types_checkbox_group',
 	'face_mask_blur_slider',
 	'face_mask_padding_top_slider',

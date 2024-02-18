@@ -67,7 +67,6 @@ WORDING : Dict[str, Any] =\
 		'face_detector_model': 'choose the model responsible for detecting the face',
 		'face_detector_size': 'specify the size of the frame provided to the face detector',
 		'face_detector_score': 'filter the detected faces base on the confidence score',
-		'face_detector_tweaks': 'tweak the face detector capabilities (choices: {choices})',
 		# face selector
 		'face_selector_mode': 'use reference based tracking with simple matching',
 		'reference_face_position': 'specify the position used to create the reference face',
@@ -132,7 +131,6 @@ WORDING : Dict[str, Any] =\
 		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',
 		'face_detector_size_dropdown': 'FACE DETECTOR SIZE',
 		'face_detector_score_slider': 'FACE DETECTOR SCORE',
-		'face_detector_tweaks_checkbox_group': 'FACE DETECTOR TWEAKS',
 		# face masker
 		'face_mask_types_checkbox_group': 'FACE MASK TYPES',
 		'face_mask_blur_slider': 'FACE MASK BLUR',

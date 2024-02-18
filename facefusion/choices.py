@@ -14,7 +14,6 @@ face_detector_set : Dict[FaceDetectorModel, List[str]] =\
 	'yoloface': [ '640x640' ],
 	'yunet': [ '160x160', '320x320', '480x480', '512x512', '640x640', '768x768', '960x960', '1024x1024' ]
 }
-face_detector_tweaks : List[FaceDetectorTweak] = [ 'low-luminance', 'high-luminance' ]
 face_selector_modes : List[FaceSelectorMode] = [ 'many', 'one', 'reference' ]
 face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'region' ]
 face_mask_regions : List[FaceMaskRegion] = [ 'skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'eye-glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip' ]

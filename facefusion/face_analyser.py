@@ -234,17 +234,6 @@ def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> T
 
 def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : str) -> VisionFrame:
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
-	if numpy.any(temp_vision_frame) and facefusion.globals.face_detector_tweaks:
-		if 'low-luminance' in facefusion.globals.face_detector_tweaks:
-			low_luminance_iterations = 0
-			while numpy.mean(temp_vision_frame) < 30 and low_luminance_iterations < 20:
-				temp_vision_frame = numpy.clip(temp_vision_frame * 1.1, 0, 255)
-				low_luminance_iterations += 1
-		if 'high-luminance' in facefusion.globals.face_detector_tweaks:
-			high_luminance_iterations = 0
-			while numpy.mean(temp_vision_frame) > 150 and high_luminance_iterations < 20:
-				temp_vision_frame = numpy.clip(temp_vision_frame * 0.9, 0, 255)
-				high_luminance_iterations += 1
 	detect_vision_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
 	detect_vision_frame[:temp_vision_frame.shape[0], :temp_vision_frame.shape[1], :] = temp_vision_frame
 	detect_vision_frame = (detect_vision_frame - 127.5) / 128.0
