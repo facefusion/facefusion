@@ -98,15 +98,15 @@ def listen() -> None:
 
 
 def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gradio.Gallery, gradio.Slider]:
-	if face_selector_mode == 'reference':
-		facefusion.globals.face_selector_mode = face_selector_mode
-		return gradio.Gallery(visible = True), gradio.Slider(visible = True)
-	if face_selector_mode == 'one':
-		facefusion.globals.face_selector_mode = face_selector_mode
-		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
 	if face_selector_mode == 'many':
 		facefusion.globals.face_selector_mode = face_selector_mode
 		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
+	if face_selector_mode == 'one':
+		facefusion.globals.face_selector_mode = face_selector_mode
+		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
+	if face_selector_mode == 'reference':
+		facefusion.globals.face_selector_mode = face_selector_mode
+		return gradio.Gallery(visible = True), gradio.Slider(visible = True)
 
 
 def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradio.Gallery:

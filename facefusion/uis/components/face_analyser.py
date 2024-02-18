@@ -1,28 +1,30 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 import gradio
 
 import facefusion.globals
 import facefusion.choices
 from facefusion import wording
-from facefusion.typing import FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorModel
+from facefusion.typing import FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorModel, FaceDetectorTweak
 from facefusion.uis.core import register_ui_component
 
 FACE_ANALYSER_ORDER_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_ANALYSER_AGE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_ANALYSER_GENDER_DROPDOWN : Optional[gradio.Dropdown] = None
+FACE_DETECTOR_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_DETECTOR_SIZE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_DETECTOR_SCORE_SLIDER : Optional[gradio.Slider] = None
-FACE_DETECTOR_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
+FACE_DETECTOR_TWEAKS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 
 
 def render() -> None:
 	global FACE_ANALYSER_ORDER_DROPDOWN
 	global FACE_ANALYSER_AGE_DROPDOWN
 	global FACE_ANALYSER_GENDER_DROPDOWN
+	global FACE_DETECTOR_MODEL_DROPDOWN
 	global FACE_DETECTOR_SIZE_DROPDOWN
 	global FACE_DETECTOR_SCORE_SLIDER
-	global FACE_DETECTOR_MODEL_DROPDOWN
+	global FACE_DETECTOR_TWEAKS_CHECKBOX_GROUP
 
 	face_detector_size_dropdown_args : Dict[str, Any] =\
 	{
@@ -60,12 +62,18 @@ def render() -> None:
 		minimum = facefusion.choices.face_detector_score_range[0],
 		maximum = facefusion.choices.face_detector_score_range[-1]
 	)
+	FACE_DETECTOR_TWEAKS_CHECKBOX_GROUP = gradio.CheckboxGroup(
+		label = wording.get('uis.face_detector_tweaks_checkbox_group'),
+		value = facefusion.globals.face_detector_tweaks,
+		choices = facefusion.choices.face_detector_tweaks
+	)
 	register_ui_component('face_analyser_order_dropdown', FACE_ANALYSER_ORDER_DROPDOWN)
 	register_ui_component('face_analyser_age_dropdown', FACE_ANALYSER_AGE_DROPDOWN)
 	register_ui_component('face_analyser_gender_dropdown', FACE_ANALYSER_GENDER_DROPDOWN)
 	register_ui_component('face_detector_model_dropdown', FACE_DETECTOR_MODEL_DROPDOWN)
 	register_ui_component('face_detector_size_dropdown', FACE_DETECTOR_SIZE_DROPDOWN)
 	register_ui_component('face_detector_score_slider', FACE_DETECTOR_SCORE_SLIDER)
+	register_ui_component('face_detector_tweaks_checkbox_group', FACE_DETECTOR_TWEAKS_CHECKBOX_GROUP)
 
 
 def listen() -> None:
@@ -75,6 +83,7 @@ def listen() -> None:
 	FACE_DETECTOR_MODEL_DROPDOWN.change(update_face_detector_model, inputs = FACE_DETECTOR_MODEL_DROPDOWN, outputs = FACE_DETECTOR_SIZE_DROPDOWN)
 	FACE_DETECTOR_SIZE_DROPDOWN.change(update_face_detector_size, inputs = FACE_DETECTOR_SIZE_DROPDOWN)
 	FACE_DETECTOR_SCORE_SLIDER.change(update_face_detector_score, inputs = FACE_DETECTOR_SCORE_SLIDER)
+	FACE_DETECTOR_TWEAKS_CHECKBOX_GROUP.change(update_face_detector_tweaks, inputs = FACE_DETECTOR_TWEAKS_CHECKBOX_GROUP)
 
 
 def update_face_analyser_order(face_analyser_order : FaceAnalyserOrder) -> None:
@@ -102,3 +111,7 @@ def update_face_detector_size(face_detector_size : str) -> None:
 
 def update_face_detector_score(face_detector_score : float) -> None:
 	facefusion.globals.face_detector_score = face_detector_score
+
+
+def update_face_detector_tweaks(face_detector_tweaks : List[FaceDetectorTweak]) -> None:
+	facefusion.globals.face_detector_tweaks = face_detector_tweaks
