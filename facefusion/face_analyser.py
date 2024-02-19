@@ -251,11 +251,11 @@ def create_faces(vision_frame : VisionFrame, bounding_box_list : List[BoundingBo
 		keep_indices = apply_nms(bounding_box_list, 0.4)
 		for index in keep_indices:
 			bounding_box = bounding_box_list[index]
-			face_landmark_68 = detect_face_landmark_68(vision_frame, bounding_box)
+			face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box)
 			landmark : FaceLandmarkSet =\
 			{
 				'5': face_landmark_5_list[index],
-				'5/68': convert_face_landmark_68_to_5(face_landmark_68),
+				'5/68': convert_face_landmark_68_to_5(face_landmark_68) if face_landmark_68_score > 0.5 else face_landmark_5_list[index],
 				'68': face_landmark_68
 			}
 			score = score_list[index]
@@ -288,21 +288,23 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 	return embedding, normed_embedding
 
 
-def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> FaceLandmark68:
+def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[FaceLandmark68, Score]:
 	face_landmarker = get_face_analyser().get('face_landmarker')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max()
 	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
-	face_landmark_68 = face_landmarker.run(None,
+	face_landmark_68, face_heatmap = face_landmarker.run(None,
 	{
 		face_landmarker.get_inputs()[0].name: [ crop_vision_frame ]
-	})[0]
+	})
 	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64
 	face_landmark_68 = face_landmark_68.reshape(1, -1, 2) * 256
 	face_landmark_68 = cv2.transform(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_68 = face_landmark_68.reshape(-1, 2)
-	return face_landmark_68
+	face_landmark_68_score = numpy.amax(face_heatmap, axis = (2, 3))
+	face_landmark_68_score = numpy.mean(face_landmark_68_score)
+	return face_landmark_68, face_landmark_68_score
 
 
 def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[int, int]:
