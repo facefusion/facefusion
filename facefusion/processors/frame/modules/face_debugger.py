@@ -97,9 +97,13 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		inverse_contours = cv2.findContours(inverse_vision_frame, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
 		cv2.drawContours(temp_vision_frame, inverse_contours, -1, primary_color, 2)
 	if 'landmark-5' in frame_processors_globals.face_debugger_items:
-		face_landmark_5 = target_face.landmark['5/68'].astype(numpy.int32)
+		face_landmark_5 = target_face.landmark['5'].astype(numpy.int32)
 		for index in range(face_landmark_5.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_5[index][0], face_landmark_5[index][1]), 3, primary_color, -1)
+	if 'landmark-5/68' in frame_processors_globals.face_debugger_items:
+		face_landmark_5_68 = target_face.landmark['5/68'].astype(numpy.int32)
+		for index in range(face_landmark_5_68.shape[0]):
+			cv2.circle(temp_vision_frame, (face_landmark_5_68[index][0], face_landmark_5_68[index][1]), 3, secondary_color, -1)
 	if 'landmark-68' in frame_processors_globals.face_debugger_items:
 		face_landmark_68 = target_face.landmark['68'].astype(numpy.int32)
 		for index in range(face_landmark_68.shape[0]):
