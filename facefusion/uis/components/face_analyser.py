@@ -1,11 +1,11 @@
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 import gradio
 
 import facefusion.globals
 import facefusion.choices
 from facefusion import wording
-from facefusion.typing import FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorModel, FaceDetectorTweak
+from facefusion.typing import FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorModel
 from facefusion.uis.core import register_ui_component
 
 FACE_ANALYSER_ORDER_DROPDOWN : Optional[gradio.Dropdown] = None
