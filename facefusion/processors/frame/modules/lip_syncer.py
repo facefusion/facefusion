@@ -145,7 +145,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_mask_list.append(occlusion_mask)
-	close_vision_frame, closeup_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, (96, 96))
+	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, (96, 96))
 	close_vision_frame = prepare_crop_frame(close_vision_frame)
 	close_vision_frame = frame_processor.run(None,
 	{
@@ -153,7 +153,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 		'target': close_vision_frame
 	})[0]
 	crop_vision_frame = normalize_crop_frame(close_vision_frame)
-	crop_vision_frame = cv2.warpAffine(crop_vision_frame, cv2.invertAffineTransform(closeup_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
+	crop_vision_frame = cv2.warpAffine(crop_vision_frame, cv2.invertAffineTransform(close_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
 	crop_mask = numpy.minimum.reduce(crop_mask_list)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return paste_vision_frame
