@@ -48,6 +48,8 @@ def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
+	if platform.system().lower() == 'darwin':
+		os.environ['SYSTEM_VERSION_COMPAT'] = '0'
 	if not args.skip_venv:
 		os.environ['PIP_REQUIRE_VIRTUALENV'] = '1'
 	if args.torch and args.onnxruntime:
