@@ -44,6 +44,26 @@ def test_get_one_face_with_retinaface() -> None:
 		assert isinstance(face, Face)
 
 
+def test_get_one_face_with_scrfd() -> None:
+	facefusion.globals.face_detector_model = 'scrfd'
+	facefusion.globals.face_detector_size = '640x640'
+	facefusion.globals.face_detector_score = 0.5
+	facefusion.globals.face_recognizer_model = 'arcface_inswapper'
+
+	source_paths =\
+	[
+		'.assets/examples/source.jpg',
+		'.assets/examples/source-80crop.jpg',
+		'.assets/examples/source-70crop.jpg',
+		'.assets/examples/source-60crop.jpg'
+	]
+	for source_path in source_paths:
+		source_frame = read_static_image(source_path)
+		face = get_one_face(source_frame)
+
+		assert isinstance(face, Face)
+
+
 def test_get_one_face_with_yoloface() -> None:
 	facefusion.globals.face_detector_model = 'yoloface'
 	facefusion.globals.face_detector_size = '640x640'

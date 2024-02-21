@@ -24,6 +24,11 @@ MODELS : ModelSet =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/retinaface_10g.onnx',
 		'path': resolve_relative_path('../.assets/models/retinaface_10g.onnx')
 	},
+	'face_detector_scrfd':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/scrfd_10g.onnx',
+		'path': resolve_relative_path('../.assets/models/scrfd_10g.onnx')
+	},
 	'face_detector_yoloface':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yoloface_8n.onnx',
@@ -76,6 +81,9 @@ def get_face_analyser() -> Any:
 			if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
 				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 				face_detectors['retinaface'] = face_detector
+			if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
+				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_scrfd').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+				face_detectors['scrfd'] = face_detector
 			if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
 				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_yoloface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 				face_detectors['yoloface'] = face_detector
@@ -114,6 +122,7 @@ def pre_check() -> bool:
 		model_urls =\
 		[
 			MODELS.get('face_detector_retinaface').get('url'),
+			MODELS.get('face_detector_scrfd').get('url'),
 			MODELS.get('face_detector_yoloface').get('url'),
 			MODELS.get('face_detector_yunet').get('url'),
 			MODELS.get('face_recognizer_arcface_blendswap').get('url'),
@@ -145,6 +154,48 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 		{
 			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_vision_frame, face_detector_size)
 		})
+	for index, feature_stride in enumerate(feature_strides):
+		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
+		if keep_indices.any():
+			stride_height = face_detector_height // feature_stride
+			stride_width = face_detector_width // feature_stride
+			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
+			bounding_box_raw = detections[index + feature_map_channel] * feature_stride
+			face_landmark_5_raw = detections[index + feature_map_channel * 2] * feature_stride
+			for bounding_box in distance_to_bounding_box(anchors, bounding_box_raw)[keep_indices]:
+				bounding_box_list.append(numpy.array(
+				[
+					bounding_box[0] * ratio_width,
+					bounding_box[1] * ratio_height,
+					bounding_box[2] * ratio_width,
+					bounding_box[3] * ratio_height
+				]))
+			for face_landmark_5 in distance_to_face_landmark_5(anchors, face_landmark_5_raw)[keep_indices]:
+				face_landmark_5_list.append(face_landmark_5 * [ ratio_width, ratio_height ])
+			for score in detections[index][keep_indices]:
+				score_list.append(score[0])
+	return bounding_box_list, face_landmark_5_list, score_list
+
+
+def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
+	face_detector = get_face_analyser().get('face_detectors').get('scrfd')
+	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
+	temp_vision_frame = resize_frame_resolution(vision_frame, face_detector_width, face_detector_height)
+	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
+	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
+	feature_strides = [ 8, 16, 32 ]
+	feature_map_channel = 3
+	anchor_total = 2
+	bounding_box_list = []
+	face_landmark_5_list = []
+	score_list = []
+
+	with THREAD_SEMAPHORE:
+		detections = face_detector.run(None,
+		{
+			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_vision_frame, face_detector_size)
+		})
+		detections = [ detection.squeeze(0) for detection in detections ]
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
 		if keep_indices.any():
@@ -376,6 +427,11 @@ def get_many_faces(vision_frame : VisionFrame) -> List[Face]:
 				bounding_box_list.extend(bounding_box_list_retinaface)
 				face_landmark_5_list.extend(face_landmark_5_list_retinaface)
 				score_list.extend(score_list_retinaface)
+			if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
+				bounding_box_list_scrfd, face_landmark_5_list_scrfd, score_list_scrfd = detect_with_scrfd(vision_frame, facefusion.globals.face_detector_size)
+				bounding_box_list.extend(bounding_box_list_scrfd)
+				face_landmark_5_list.extend(face_landmark_5_list_scrfd)
+				score_list.extend(score_list_scrfd)
 			if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
 				bounding_box_list_yoloface, face_landmark_5_list_yoloface, score_list_yoloface = detect_with_yoloface(vision_frame, facefusion.globals.face_detector_size)
 				bounding_box_list.extend(bounding_box_list_yoloface)
