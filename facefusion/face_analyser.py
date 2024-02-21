@@ -26,8 +26,8 @@ MODELS : ModelSet =\
 	},
 	'face_detector_scrfd':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/scrfd_10g.onnx',
-		'path': resolve_relative_path('../.assets/models/scrfd_10g.onnx')
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/scrfd_2.5g.onnx',
+		'path': resolve_relative_path('../.assets/models/scrfd_2.5g.onnx')
 	},
 	'face_detector_yoloface':
 	{
@@ -195,7 +195,6 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 		{
 			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_vision_frame, face_detector_size)
 		})
-		detections = [ detection.squeeze(0) for detection in detections ]
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
 		if keep_indices.any():
