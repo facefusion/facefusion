@@ -220,13 +220,13 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 		target_vision_path = queue_payload['frame_path']
 		source_audio_frame = get_audio_frame(source_audio_path, target_video_fps, frame_number)
 		target_vision_frame = read_image(target_vision_path)
-		result_frame = process_frame(
+		output_vision_frame = process_frame(
 		{
 			'reference_faces': reference_faces,
 			'source_audio_frame': source_audio_frame,
 			'target_vision_frame': target_vision_frame
 		})
-		write_image(target_vision_path, result_frame)
+		write_image(target_vision_path, output_vision_frame)
 		update_progress()
 
 
@@ -235,13 +235,13 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 	source_audio_path = get_first(filter_audio_paths(source_paths))
 	source_audio_frame = get_audio_frame(source_audio_path, 25)
 	target_vision_frame = read_static_image(target_path)
-	result_frame = process_frame(
+	output_vision_frame = process_frame(
 	{
 		'reference_faces': reference_faces,
 		'source_audio_frame': source_audio_frame,
 		'target_vision_frame': target_vision_frame
 	})
-	write_image(output_path, result_frame)
+	write_image(output_path, output_vision_frame)
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
