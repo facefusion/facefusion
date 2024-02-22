@@ -22,7 +22,7 @@ def test_pause() -> None:
 	assert is_pending()
 
 
-def test_manage():
+def test_manage() -> None:
 	queue_payloads =\
 	[
 		{
