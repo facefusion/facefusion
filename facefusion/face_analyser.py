@@ -149,10 +149,11 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 	face_landmark_5_list = []
 	score_list = []
 
+	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
 		{
-			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_vision_frame, face_detector_size)
+			face_detector.get_inputs()[0].name: detect_vision_frame
 		})
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
@@ -190,10 +191,11 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 	face_landmark_5_list = []
 	score_list = []
 
+	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
 		{
-			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_vision_frame, face_detector_size)
+			face_detector.get_inputs()[0].name: detect_vision_frame
 		})
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
@@ -228,10 +230,11 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 	face_landmark_5_list = []
 	score_list = []
 
+	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
 	with THREAD_SEMAPHORE:
 		detections = face_detector.run(None,
 		{
-			face_detector.get_inputs()[0].name: prepare_detect_frame(temp_vision_frame, face_detector_size)
+			face_detector.get_inputs()[0].name: detect_vision_frame
 		})
 	detections = numpy.squeeze(detections).T
 	bounding_box_raw, score_raw, face_landmark_5_raw = numpy.split(detections, [ 4, 5 ], axis = 1)
