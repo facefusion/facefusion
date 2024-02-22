@@ -1,7 +1,4 @@
-from typing import List
-
 from facefusion.process_manager import set_process_state, is_processing, is_stopping, is_pending, start, stop, pause, manage
-from facefusion.typing import QueuePayload
 
 
 def test_start() -> None:
