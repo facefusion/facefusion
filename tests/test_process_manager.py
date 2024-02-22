@@ -1,3 +1,6 @@
+from typing import List
+
+from facefusion.typing import QueuePayload
 from facefusion.process_manager import set_process_state, is_processing, is_stopping, is_pending, start, stop, pause, manage
 
 
@@ -23,7 +26,7 @@ def test_pause() -> None:
 
 
 def test_manage() -> None:
-	queue_payloads =\
+	queue_payloads : List[QueuePayload] =\
 	[
 		{
 			'frame_number': 1,
