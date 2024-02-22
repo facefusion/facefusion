@@ -113,12 +113,14 @@ def distance_to_face_landmark_5(points : numpy.ndarray[Any, Any], distance : num
 
 
 def convert_face_landmark_68_to_5(landmark_68 : FaceLandmark68) -> FaceLandmark5:
-	left_eye = numpy.mean(landmark_68[36:42], axis = 0)
-	right_eye = numpy.mean(landmark_68[42:48], axis = 0)
-	nose = landmark_68[30]
-	left_mouth = landmark_68[48]
-	right_mouth = landmark_68[54]
-	face_landmark_5 = numpy.array([ left_eye, right_eye, nose, left_mouth, right_mouth ])
+	face_landmark_5 = numpy.array(
+	[
+		numpy.mean(landmark_68[36:42], axis = 0),
+		numpy.mean(landmark_68[42:48], axis = 0),
+		landmark_68[30],
+		landmark_68[48],
+		landmark_68[54]
+	])
 	return face_landmark_5
 
 
