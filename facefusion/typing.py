@@ -43,13 +43,14 @@ Fps = float
 Padding = Tuple[int, int, int, int]
 Resolution = Tuple[int, int]
 
+ProcessState = Literal['processing', 'stopping', 'pending']
 QueuePayload = TypedDict('QueuePayload',
 {
 	'frame_number' : int,
 	'frame_path' : str
 })
-Update_Process = Callable[[], None]
-Process_Frames = Callable[[List[str], List[QueuePayload], Update_Process], None]
+UpdateProcess = Callable[[], None]
+ProcessFrames = Callable[[List[str], List[QueuePayload], UpdateProcess], None]
 
 Template = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
 ProcessMode = Literal['output', 'preview', 'stream']

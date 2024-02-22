@@ -18,6 +18,7 @@ WORDING : Dict[str, Any] =\
 	'restoring_audio_succeed': 'Restoring audio succeed',
 	'restoring_audio_skipped': 'Restoring audio skipped',
 	'clearing_temp': 'Clearing temporary resources',
+	'processing_stopped': 'Processing stopped',
 	'processing_image_succeed': 'Processing to image succeed in {seconds} seconds',
 	'processing_image_failed': 'Processing to image failed',
 	'processing_video_succeed': 'Processing to video succeed in {seconds} seconds',

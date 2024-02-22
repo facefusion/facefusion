@@ -49,7 +49,7 @@ def clear_temp(target_path : str) -> None:
 	temp_directory_path = get_temp_directory_path(target_path)
 	parent_directory_path = os.path.dirname(temp_directory_path)
 	if not facefusion.globals.keep_temp and is_directory(temp_directory_path):
-		shutil.rmtree(temp_directory_path)
+		shutil.rmtree(temp_directory_path, ignore_errors = True)
 	if os.path.exists(parent_directory_path) and not os.listdir(parent_directory_path):
 		os.rmdir(parent_directory_path)
 
