@@ -109,8 +109,8 @@ def create_queue_payloads(temp_frame_paths : List[str]) -> List[QueuePayload]:
 	for frame_number, frame_path in enumerate(temp_frame_paths):
 		frame_payload : QueuePayload =\
 		{
-			'frame_number' : frame_number,
-			'frame_path' : frame_path
+			'frame_number': frame_number,
+			'frame_path': frame_path
 		}
 		queue_payloads.append(frame_payload)
 	return queue_payloads
