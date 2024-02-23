@@ -1,18 +1,17 @@
-from typing import Any, List, Literal, Optional
+from typing import Any, List, Literal, Optional, Tuple
 from argparse import ArgumentParser
 import threading
 import cv2
-from basicsr.archs.rrdbnet_arch import RRDBNet
-from realesrgan import RealESRGANer
-
+import numpy
+import onnxruntime
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
+from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.typing import Face, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
-from facefusion.execution_helper import map_torch_backend
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
@@ -26,24 +25,12 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
-	'real_esrgan_x2plus':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x2plus.pth',
-		'path': resolve_relative_path('../.assets/models/real_esrgan_x2plus.pth'),
-		'scale': 2
-	},
 	'real_esrgan_x4plus':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4plus.pth',
-		'path': resolve_relative_path('../.assets/models/real_esrgan_x4plus.pth'),
+		'url': 'https://filebin.net/f5fg25rlfci17kjo/realesrganx4.onnx',
+		'path': resolve_relative_path('../.assets/models/real_esrgan_x4plus.onnx'),
 		'scale': 4
 	},
-	'real_esrnet_x4plus':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrnet_x4plus.pth',
-		'path': resolve_relative_path('../.assets/models/real_esrnet_x4plus.pth'),
-		'scale': 4
-	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
 
@@ -54,17 +41,7 @@ def get_frame_processor() -> Any:
 	with THREAD_LOCK:
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			model_scale = get_options('model').get('scale')
-			FRAME_PROCESSOR = RealESRGANer(
-				model_path = model_path,
-				model = RRDBNet(
-					num_in_ch = 3,
-					num_out_ch = 3,
-					scale = model_scale
-				),
-				device = map_torch_backend(facefusion.globals.execution_providers),
-				scale = model_scale
-			)
+			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 	return FRAME_PROCESSOR
 
 
@@ -92,7 +69,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'real_esrgan_x2plus'), choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'real_esrgan_x4plus'), choices = frame_processors_choices.frame_enhancer_models)
 	program.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.frame_enhancer_blend', '80'), choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
 
 
@@ -138,11 +115,60 @@ def post_process() -> None:
 		clear_content_analyser()
 
 
+def split_frame_into_tiles(frame: VisionFrame, tile_size : int, pad_size : int) -> Tuple[numpy.ndarray[Any, Any], Tuple[int]]:
+    pad_size_bottom = pad_size + tile_size - frame.shape[0] % tile_size
+    pad_size_right = pad_size + tile_size - frame.shape[1] % tile_size
+    pad_frame = cv2.copyMakeBorder(frame, pad_size, pad_size_bottom, pad_size, pad_size_right, cv2.BORDER_REPLICATE)
+    tiles = []
+    for row in range(pad_size, pad_frame.shape[0] - pad_size, tile_size):
+        for column in range(pad_size, pad_frame.shape[1] - pad_size, tile_size):
+            top = row - pad_size
+            bottom = row + pad_size + tile_size
+            left = column - pad_size
+            right = column + pad_size + tile_size
+            tiles.append(pad_frame[top : bottom, left : right, :])
+    return numpy.array(tiles), pad_frame.shape
+
+
+def stitch_tiles_into_frame(tiles : numpy.ndarray[Any, Any], pad_frame_shape : Tuple[int], target_shape : Tuple[int], pad_size: int) -> VisionFrame:
+    tiles = tiles[:, pad_size:-pad_size, pad_size:-pad_size, :]
+    tile_height, tile_width, _ = tiles.shape[1:]
+    tiles_per_row = min(pad_frame_shape[1] // tile_width, len(tiles))
+    frame = numpy.zeros(pad_frame_shape)
+    for index, tile in enumerate(tiles):
+        top = (index // tiles_per_row) * tile_height
+        bottom = top + tile_height
+        left = (index % tiles_per_row) * tile_width
+        right = left + tile_width
+        frame[top : bottom, left : right, :] = tile
+    frame = frame[:target_shape[0], :target_shape[1], :]
+    return frame
+
+
 def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
+	frame_processor = get_frame_processor()
+	pre_padding = 15
+	tile_size = 128
+	padding = 24
+	scale = get_options('model').get('scale')
+	tile_size = tile_size - (2 * padding)
+	batch_size = 1 # TODO: remove this only few model supports it
+	temp_vision_frame = cv2.copyMakeBorder(temp_vision_frame, pre_padding, pre_padding, pre_padding, pre_padding, cv2.BORDER_REFLECT)
+	tiles, pad_frame_shape = split_frame_into_tiles(temp_vision_frame, tile_size, padding)
+	tiles = tiles.transpose(0, 3, 1, 2).astype(numpy.float32) / 255
 	with THREAD_SEMAPHORE:
-		paste_vision_frame, _ = get_frame_processor().enhance(temp_vision_frame)
-		temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame)
-	return temp_vision_frame
+		enhanced_tiles = frame_processor.run(None, {frame_processor.get_inputs()[0].name : tiles[0:batch_size]})[0]
+		for index in range(batch_size, tiles.shape[0], batch_size):
+			tile = tiles[index:index + batch_size]
+			enhanced_tiles = numpy.concatenate((enhanced_tiles, frame_processor.run(None, {frame_processor.get_inputs()[0].name : tile})[0]), 0)
+	enhanced_tiles = (enhanced_tiles.transpose(0, 2, 3, 1) * 255).clip(0, 255).astype(numpy.uint8)
+	pad_frame_shape = tuple(numpy.multiply(pad_frame_shape[0:2], scale)) + (3,)
+	temp_vision_frame_shape = tuple(numpy.multiply(temp_vision_frame.shape[0:2], scale)) + (3,)
+	paste_vision_frame = stitch_tiles_into_frame(enhanced_tiles, pad_frame_shape, temp_vision_frame_shape, padding * scale)
+	pre_padding = pre_padding * scale
+	paste_vision_frame = paste_vision_frame[pre_padding:-pre_padding, pre_padding:-pre_padding, :].astype(numpy.uint8)
+	# TODO : blend frame
+	return paste_vision_frame
 
 
 def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
