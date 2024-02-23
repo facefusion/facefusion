@@ -5,7 +5,7 @@ import statistics
 import gradio
 
 import facefusion.globals
-from facefusion import wording
+from facefusion import process_manager, wording
 from facefusion.face_store import clear_static_faces
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total, detect_video_resolution, detect_video_fps, pack_resolution
@@ -132,6 +132,8 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 
 
 def clear() -> gradio.Dataframe:
+	while process_manager.is_processing():
+		time.sleep(0.5)
 	if facefusion.globals.target_path:
 		clear_temp(facefusion.globals.target_path)
 	return gradio.Dataframe(value = None)

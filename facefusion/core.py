@@ -16,7 +16,7 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
-from facefusion import face_analyser, face_masker, content_analyser, config, metadata, logger, wording
+from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, wording
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.common_helper import create_metavar, get_first
@@ -196,6 +196,9 @@ def run(program : ArgumentParser) -> None:
 
 
 def destroy() -> None:
+	process_manager.stop()
+	while process_manager.is_processing():
+		sleep(0.5)
 	if facefusion.globals.target_path:
 		clear_temp(facefusion.globals.target_path)
 	sys.exit(0)
@@ -250,11 +253,16 @@ def process_image(start_time : float) -> None:
 	if analyse_image(facefusion.globals.target_path):
 		return
 	shutil.copy2(facefusion.globals.target_path, facefusion.globals.output_path)
-	# process frame
+	# process
+	process_manager.start()
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		logger.info(wording.get('processing'), frame_processor_module.NAME)
 		frame_processor_module.process_image(facefusion.globals.source_paths, facefusion.globals.output_path, facefusion.globals.output_path)
 		frame_processor_module.post_process()
+	if process_manager.is_stopping():
+		process_manager.pause()
+		logger.info(wording.get('processing_stopped'), __name__.upper())
+		return
 	# compress image
 	if compress_image(facefusion.globals.output_path):
 		logger.info(wording.get('compressing_image_succeed'), __name__.upper())
@@ -266,6 +274,7 @@ def process_image(start_time : float) -> None:
 		logger.info(wording.get('processing_image_succeed').format(seconds = seconds), __name__.upper())
 	else:
 		logger.error(wording.get('processing_image_failed'), __name__.upper())
+	process_manager.pause()
 
 
 def process_video(start_time : float) -> None:
@@ -280,7 +289,8 @@ def process_video(start_time : float) -> None:
 	# extract frames
 	logger.info(wording.get('extracting_frames_fps').format(video_fps = facefusion.globals.output_video_fps), __name__.upper())
 	extract_frames(facefusion.globals.target_path, facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps)
-	# process frame
+	# process
+	process_manager.start()
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
 	if temp_frame_paths:
 		for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
@@ -289,6 +299,10 @@ def process_video(start_time : float) -> None:
 			frame_processor_module.post_process()
 	else:
 		logger.error(wording.get('temp_frames_not_found'), __name__.upper())
+		return
+	if process_manager.is_stopping():
+		process_manager.pause()
+		logger.info(wording.get('processing_stopped'), __name__.upper())
 		return
 	# merge video
 	logger.info(wording.get('merging_video_fps').format(video_fps = facefusion.globals.output_video_fps), __name__.upper())
@@ -322,3 +336,4 @@ def process_video(start_time : float) -> None:
 		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__.upper())
 	else:
 		logger.error(wording.get('processing_video_failed'), __name__.upper())
+	process_manager.pause()
