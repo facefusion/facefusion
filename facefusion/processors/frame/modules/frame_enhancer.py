@@ -115,7 +115,7 @@ def post_process() -> None:
 		clear_content_analyser()
 
 
-def split_frame_into_tiles(frame: VisionFrame, tile_size : int, pad_size : int) -> Tuple[numpy.ndarray[Any, Any], Tuple[int]]:
+def split_frame_into_tiles(frame: VisionFrame, tile_size : int, pad_size : int) -> Tuple[numpy.ndarray[Any, Any], Tuple[int, int, int]]:
     pad_size_bottom = pad_size + tile_size - frame.shape[0] % tile_size
     pad_size_right = pad_size + tile_size - frame.shape[1] % tile_size
     pad_frame = cv2.copyMakeBorder(frame, pad_size, pad_size_bottom, pad_size, pad_size_right, cv2.BORDER_REPLICATE)
@@ -130,7 +130,7 @@ def split_frame_into_tiles(frame: VisionFrame, tile_size : int, pad_size : int) 
     return numpy.array(tiles), pad_frame.shape
 
 
-def stitch_tiles_into_frame(tiles : numpy.ndarray[Any, Any], pad_frame_shape : Tuple[int], target_shape : Tuple[int], pad_size: int) -> VisionFrame:
+def stitch_tiles_into_frame(tiles : numpy.ndarray[Any, Any], pad_frame_shape : Tuple[int, int, int], target_shape : Tuple[int, int, int], pad_size: int) -> VisionFrame:
     tiles = tiles[:, pad_size:-pad_size, pad_size:-pad_size, :]
     tile_height, tile_width, _ = tiles.shape[1:]
     tiles_per_row = min(pad_frame_shape[1] // tile_width, len(tiles))
