@@ -41,12 +41,6 @@ def extract_frames(target_path : str, video_resolution : str, video_fps : Fps) -
 	return run_ffmpeg(commands)
 
 
-def compress_image(output_path : str) -> bool:
-	output_image_compression = round(31 - (facefusion.globals.output_image_quality * 0.31))
-	commands = [ '-hwaccel', 'auto', '-i', output_path, '-q:v', str(output_image_compression), '-y', output_path ]
-	return run_ffmpeg(commands)
-
-
 def merge_video(target_path : str, video_resolution : str, video_fps : Fps) -> bool:
 	temp_output_video_path = get_temp_output_video_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
@@ -61,6 +55,17 @@ def merge_video(target_path : str, video_resolution : str, video_fps : Fps) -> b
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
 		commands.extend([ '-cq', str(output_video_compression), '-preset', map_nvenc_preset(facefusion.globals.output_video_preset) ])
 	commands.extend([ '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_output_video_path ])
+	return run_ffmpeg(commands)
+
+
+def copy_image(target_path : str, output_path : str, image_resolution : str) -> bool:
+	commands = [ '-i', target_path, '-vf', 'scale=' + str(image_resolution), '-y', output_path ]
+	return run_ffmpeg(commands)
+
+
+def compress_image(output_path : str) -> bool:
+	output_image_compression = round(31 - (facefusion.globals.output_image_quality * 0.31))
+	commands = [ '-i', output_path, '-q:v', str(output_image_compression), '-y', output_path ]
 	return run_ffmpeg(commands)
 
 

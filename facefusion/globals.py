@@ -43,6 +43,7 @@ temp_frame_quality : Optional[int] = None
 keep_temp : Optional[bool] = None
 # output creation
 output_image_quality : Optional[int] = None
+output_image_resolution : Optional[str] = None
 output_video_encoder : Optional[OutputVideoEncoder] = None
 output_video_preset : Optional[OutputVideoPreset] = None
 output_video_quality : Optional[int] = None

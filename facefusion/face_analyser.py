@@ -139,7 +139,7 @@ def pre_check() -> bool:
 def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
 	face_detector = get_face_analyser().get('face_detectors').get('retinaface')
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
-	temp_vision_frame = resize_frame_resolution(vision_frame, face_detector_width, face_detector_height)
+	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	feature_strides = [ 8, 16, 32 ]
@@ -181,7 +181,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
 	face_detector = get_face_analyser().get('face_detectors').get('scrfd')
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
-	temp_vision_frame = resize_frame_resolution(vision_frame, face_detector_width, face_detector_height)
+	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	feature_strides = [ 8, 16, 32 ]
@@ -223,7 +223,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
 	face_detector = get_face_analyser().get('face_detectors').get('yoloface')
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
-	temp_vision_frame = resize_frame_resolution(vision_frame, face_detector_width, face_detector_height)
+	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	bounding_box_list = []
@@ -260,7 +260,7 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
 	face_detector = get_face_analyser().get('face_detectors').get('yunet')
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
-	temp_vision_frame = resize_frame_resolution(vision_frame, face_detector_width, face_detector_height)
+	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	bounding_box_list = []
