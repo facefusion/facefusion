@@ -2,7 +2,7 @@ import subprocess
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.vision import get_video_frame, count_video_frame_total, detect_video_fps, detect_video_resolution, detect_image_resolution, normalize_resolution, pack_resolution, unpack_resolution, create_resolutions
+from facefusion.vision import detect_image_resolution, get_video_frame, count_video_frame_total, detect_video_fps, detect_video_resolution, normalize_resolution, pack_resolution, unpack_resolution, create_resolutions
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -22,6 +22,14 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'fps=60', '.assets/examples/target-240p-60fps.mp4' ])
 	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'transpose=0', '.assets/examples/target-240p-90deg.mp4' ])
 	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-1080p.mp4', '-vf', 'transpose=0', '.assets/examples/target-1080p-90deg.mp4' ])
+
+
+def test_detect_image_resolution() -> None:
+	assert detect_image_resolution('.assets/examples/target-240p.jpg') == (426, 226)
+	assert detect_image_resolution('.assets/examples/target-240p-90deg.jpg') == (226, 426)
+	assert detect_image_resolution('.assets/examples/target-1080p.jpg') == (2048, 1080)
+	assert detect_image_resolution('.assets/examples/target-1080p-90deg.jpg') == (1080, 2048)
+	assert detect_image_resolution('invalid') is None
 
 
 def test_get_video_frame() -> None:
@@ -51,17 +59,10 @@ def test_detect_video_resolution() -> None:
 	assert detect_video_resolution('invalid') is None
 
 
-def test_detect_image_resolution() -> None:
-	assert detect_image_resolution('.assets/examples/target-240p.jpg') == (426, 226)
-	assert detect_image_resolution('.assets/examples/target-240p-90deg.jpg') == (226, 426)
-	assert detect_image_resolution('.assets/examples/target-1080p.jpg') == (2048, 1080)
-	assert detect_image_resolution('.assets/examples/target-1080p-90deg.jpg') == (1080, 2048)
-	assert detect_image_resolution('invalid') is None
-
-
 def test_normalize_resolution() -> None:
-	assert normalize_resolution((1.0, 1.0)) == (0, 0)
-	assert normalize_resolution((2.0, 2.0)) == (2, 2)
+	assert normalize_resolution((2.5, 2.5)) == (2, 2)
+	assert normalize_resolution((3.0, 3.0)) == (4, 4)
+	assert normalize_resolution((6.5, 6.5)) == (6, 6)
 
 
 def test_pack_resolution() -> None:

@@ -25,7 +25,7 @@ from facefusion.normalizer import normalize_output_path, normalize_padding, norm
 from facefusion.memory import limit_system_memory
 from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video, filter_audio_paths
 from facefusion.ffmpeg import extract_frames, merge_video, copy_image, compress_image, restore_audio, replace_audio
-from facefusion.vision import get_video_frame, detect_video_resolution, detect_video_fps, read_image, read_static_images, detect_image_resolution, create_resolutions, pack_resolution
+from facefusion.vision import read_image, read_static_images, detect_image_resolution, get_video_frame, detect_video_resolution, detect_video_fps,create_resolutions, pack_resolution
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')

@@ -7,6 +7,39 @@ from facefusion.choices import video_template_sizes
 from facefusion.filesystem import is_image, is_video
 
 
+@lru_cache(maxsize = 128)
+def read_static_image(image_path : str) -> Optional[VisionFrame]:
+	return read_image(image_path)
+
+
+def read_static_images(image_paths : List[str]) -> Optional[List[VisionFrame]]:
+	frames = []
+	if image_paths:
+		for image_path in image_paths:
+			frames.append(read_static_image(image_path))
+	return frames
+
+
+def read_image(image_path : str) -> Optional[VisionFrame]:
+	if is_image(image_path):
+		return cv2.imread(image_path)
+	return None
+
+
+def write_image(image_path : str, vision_frame : VisionFrame) -> bool:
+	if image_path:
+		return cv2.imwrite(image_path, vision_frame)
+	return False
+
+
+def detect_image_resolution(image_path : str) -> Optional[Resolution]:
+	if is_image(image_path):
+		image = read_image(image_path)
+		height, width = image.shape[:2]
+		return width, height
+	return None
+
+
 def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
 		video_capture = cv2.VideoCapture(video_path)
@@ -48,39 +81,6 @@ def detect_video_resolution(video_path : str) -> Optional[Resolution]:
 			height = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
 			video_capture.release()
 			return int(width), int(height)
-	return None
-
-
-@lru_cache(maxsize = 128)
-def read_static_image(image_path : str) -> Optional[VisionFrame]:
-	return read_image(image_path)
-
-
-def read_static_images(image_paths : List[str]) -> Optional[List[VisionFrame]]:
-	frames = []
-	if image_paths:
-		for image_path in image_paths:
-			frames.append(read_static_image(image_path))
-	return frames
-
-
-def read_image(image_path : str) -> Optional[VisionFrame]:
-	if is_image(image_path):
-		return cv2.imread(image_path)
-	return None
-
-
-def write_image(image_path : str, vision_frame : VisionFrame) -> bool:
-	if image_path:
-		return cv2.imwrite(image_path, vision_frame)
-	return False
-
-
-def detect_image_resolution(image_path : str) -> Optional[Resolution]:
-	if is_image(image_path):
-		image = read_image(image_path)
-		height, width = image.shape[:2]
-		return width, height
 	return None
 
 
