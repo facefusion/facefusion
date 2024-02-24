@@ -8,4 +8,5 @@ face_enhancer_blend : Optional[int] = None
 face_swapper_model : Optional[FaceSwapperModel] = None
 frame_enhancer_model : Optional[FrameEnhancerModel] = None
 frame_enhancer_blend : Optional[int] = None
+frame_enhancer_disable_upscale : Optional[bool] = None
 lip_syncer_model : Optional[LipSyncerModel] = None

@@ -25,11 +25,19 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
-	'real_esrgan_x4plus':
+	'real_esrgan_x4':
 	{
 		'url': 'https://filebin.net/f5fg25rlfci17kjo/realesrganx4.onnx',
 		'path': resolve_relative_path('../.assets/models/realesrganx4.onnx'),
-		'scale': 4
+		'scale': 4,
+		'tile_size': 128,
+	},
+	'hfa2k_x4':
+	{
+		'url': 'https://github.com/Phhofm/models/raw/main/4xHFA2k/4xHFA2k_fp32.onnx',
+		'path': resolve_relative_path('../.assets/models/4xHFA2k/4xHFA2k_fp32.onnx'),
+		'scale': 4,
+		'tile_size': 256,
 	},
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -69,14 +77,16 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'real_esrgan_x4plus'), choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'real_esrgan_x4'), choices = frame_processors_choices.frame_enhancer_models)
 	program.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.frame_enhancer_blend', '80'), choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
+	program.add_argument('--frame-enhancer-disable-upscale', help = wording.get('help.frame_enhancer_disable_upscale'), action = 'store_true', default = False)
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.frame_enhancer_model = args.frame_enhancer_model
 	frame_processors_globals.frame_enhancer_blend = args.frame_enhancer_blend
+	frame_processors_globals.frame_enhancer_disable_upscale = args.frame_enhancer_disable_upscale
 
 
 def pre_check() -> bool:
@@ -141,53 +151,36 @@ def stitch_tiles_into_frame(tiles : numpy.ndarray[Any, Any], pad_frame_shape : T
         left = (index % tiles_per_row) * tile_width
         right = left + tile_width
         frame[top : bottom, left : right, :] = tile
-    frame = frame[:target_shape[0], :target_shape[1], :]
+    frame = frame[:target_shape[0], :target_shape[1], :].astype(numpy.uint8)
     return frame
 
 
-def enhance_frame_old(temp_vision_frame : VisionFrame) -> VisionFrame:
+def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
-	pre_padding = 15
-	tile_size = 128
-	padding = 24
+	pre_pad_size = 15
+	pad_size = 24
 	scale = get_options('model').get('scale')
-	tile_size = tile_size - (2 * padding)
-	batch_size = 1 # TODO: remove this only few model supports it
-	upscale = False # set this to false to enhance but keep original size
-	temp_vision_frame = cv2.copyMakeBorder(temp_vision_frame, pre_padding, pre_padding, pre_padding, pre_padding, cv2.BORDER_REFLECT)
-	tiles, pad_frame_shape = split_frame_into_tiles(temp_vision_frame, tile_size, padding)
+	tile_size = get_options('model').get('tile_size') - (2 * pad_size)
+	temp_vision_frame = cv2.copyMakeBorder(temp_vision_frame, pre_pad_size, pre_pad_size, pre_pad_size, pre_pad_size, cv2.BORDER_REFLECT)
+	tiles, pad_frame_shape = split_frame_into_tiles(temp_vision_frame, tile_size, pad_size)
 	tiles = tiles.transpose(0, 3, 1, 2).astype(numpy.float32) / 255
 	with THREAD_SEMAPHORE:
-		enhanced_tiles = frame_processor.run(None, {frame_processor.get_inputs()[0].name : tiles[0:batch_size]})[0]
-		for index in range(batch_size, tiles.shape[0], batch_size):
-			tile = tiles[index:index + batch_size]
-			enhanced_tiles = numpy.concatenate((enhanced_tiles, frame_processor.run(None, {frame_processor.get_inputs()[0].name : tile})[0]), 0)
+		enhanced_tiles = frame_processor.run(None, {frame_processor.get_inputs()[0].name : [tiles[0]]})[0]
+		for index in range(1, tiles.shape[0]):
+			enhanced_tiles = numpy.concatenate((enhanced_tiles, frame_processor.run(None, {frame_processor.get_inputs()[0].name : [tiles[index]]})[0]), 0)
 	enhanced_tiles = (enhanced_tiles.transpose(0, 2, 3, 1) * 255).clip(0, 255).astype(numpy.uint8)
-	if upscale:
+	if frame_processors_globals.frame_enhancer_disable_upscale:
+		enhanced_tiles = numpy.array([cv2.resize(enhanced_tile, tiles.shape[2:4]) for enhanced_tile in enhanced_tiles])
+		temp_vision_frame_shape = (temp_vision_frame.shape[0], temp_vision_frame.shape[1], 3)
+	else:
 		pad_frame_shape = tuple(numpy.multiply(pad_frame_shape[0:2], scale)) + (3,)
 		temp_vision_frame_shape = tuple(numpy.multiply(temp_vision_frame.shape[0:2], scale)) + (3,)
-		pre_padding = pre_padding * scale
-		padding = padding * scale
-	else:
-		enhanced_tiles = numpy.array([cv2.resize(enhanced_tile, tiles.shape[2:4]) for enhanced_tile in enhanced_tiles])
-		temp_vision_frame_shape = temp_vision_frame.shape
-	paste_vision_frame = stitch_tiles_into_frame(enhanced_tiles, pad_frame_shape, temp_vision_frame_shape, padding)
-	paste_vision_frame = paste_vision_frame[pre_padding:-pre_padding, pre_padding:-pre_padding, :].astype(numpy.uint8)
-	# TODO : blend frame
-	return paste_vision_frame
-
-
-def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame: # without tiles
-	frame_processor = get_frame_processor()
-	upscale = True # set this to false to enhance but keep original size
-	temp_vision_frame_shape = temp_vision_frame.shape
-	# temp_vision_frame = cv2.resize(temp_vision_frame, (1280, 720))
-	temp_vision_frame = temp_vision_frame.astype(numpy.float32).transpose(2, 0, 1) / 255
-	paste_vision_frame = frame_processor.run(None, {frame_processor.get_inputs()[0].name : [temp_vision_frame]})[0]
-	paste_vision_frame = (paste_vision_frame.transpose(0, 2, 3, 1)[0] * 255).clip(0, 255).astype(numpy.uint8)
-	if not upscale:
-		paste_vision_frame = cv2.resize(paste_vision_frame, temp_vision_frame_shape[:2][::-1])
-	return paste_vision_frame
+		pre_pad_size *= scale
+		pad_size *= scale
+	paste_vision_frame = stitch_tiles_into_frame(enhanced_tiles, pad_frame_shape, temp_vision_frame_shape, pad_size)
+	temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame)
+	temp_vision_frame = temp_vision_frame[pre_pad_size:-pre_pad_size, pre_pad_size:-pre_pad_size, :]
+	return temp_vision_frame
 
 
 def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:

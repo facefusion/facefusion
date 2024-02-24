@@ -99,6 +99,7 @@ WORDING : Dict[str, Any] =\
 		'face_swapper_model': 'choose the model responsible for swapping the face',
 		'frame_enhancer_model': 'choose the model responsible for enhancing the frame',
 		'frame_enhancer_blend': 'blend the enhanced into the previous frame',
+		'frame_enhancer_disable_upscale': 'disable up-scaling when enhancing the frame',
 		'lip_syncer_model': 'choose the model responsible for syncing the lips',
 		# uis
 		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)'
@@ -152,6 +153,7 @@ WORDING : Dict[str, Any] =\
 		'face_swapper_model_dropdown': 'FACE SWAPPER MODEL',
 		'frame_enhancer_model_dropdown': 'FRAME ENHANCER MODEL',
 		'frame_enhancer_blend_slider': 'FRAME ENHANCER BLEND',
+		'frame_enhancer_disable_upscale_checkbox': 'Disable Upscale',
 		'lip_syncer_model_dropdown': 'LIP SYNCER MODEL',
 		# memory
 		'video_memory_strategy_dropdown': 'VIDEO MEMORY STRATEGY',

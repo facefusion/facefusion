@@ -33,6 +33,7 @@ ComponentName = Literal\
 	'face_swapper_model_dropdown',
 	'frame_enhancer_model_dropdown',
 	'frame_enhancer_blend_slider',
+	'frame_enhancer_disable_upscale_checkbox',
 	'lip_syncer_model_dropdown',
 	'output_path_textbox',
 	'output_video_fps_slider',
