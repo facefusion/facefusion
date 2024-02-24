@@ -58,6 +58,8 @@ def listen() -> None:
 
 
 def start() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
+	while not process_manager.is_processing():
+		sleep(0.5)
 	return gradio.Image(value = None), gradio.Video(value = None), gradio.Button(visible = False), gradio.Button(visible = True)
 
 
