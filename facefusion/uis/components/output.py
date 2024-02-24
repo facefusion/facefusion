@@ -51,16 +51,16 @@ def render() -> None:
 def listen() -> None:
 	output_path_textbox = get_ui_component('output_path_textbox')
 	if output_path_textbox:
-		OUTPUT_START_BUTTON.click(start, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO, OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
+		OUTPUT_START_BUTTON.click(start, outputs = [ OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
 		OUTPUT_START_BUTTON.click(process, inputs = output_path_textbox, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO, OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
-	OUTPUT_STOP_BUTTON.click(stop, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO, OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
+	OUTPUT_STOP_BUTTON.click(stop, outputs = [ OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
 	OUTPUT_CLEAR_BUTTON.click(clear, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO ])
 
 
-def start() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
+def start() -> Tuple[gradio.Button, gradio.Button]:
 	while not process_manager.is_processing():
 		sleep(0.5)
-	return gradio.Image(value = None), gradio.Video(value = None), gradio.Button(visible = False), gradio.Button(visible = True)
+	return gradio.Button(visible = False), gradio.Button(visible = True)
 
 
 def process(output_path : str) -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
@@ -75,9 +75,9 @@ def process(output_path : str) -> Tuple[gradio.Image, gradio.Video, gradio.Butto
 	return gradio.Image(), gradio.Video(), gradio.Button(), gradio.Button()
 
 
-def stop() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
+def stop() -> Tuple[gradio.Button, gradio.Button]:
 	process_manager.stop()
-	return gradio.Image(value = None), gradio.Video(value = None), gradio.Button(visible = True), gradio.Button(visible = False)
+	return gradio.Button(visible = True), gradio.Button(visible = False)
 
 
 def clear() -> Tuple[gradio.Image, gradio.Video]:
