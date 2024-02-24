@@ -260,7 +260,7 @@ def process_image(start_time : float) -> None:
 		frame_processor_module.process_image(facefusion.globals.source_paths, facefusion.globals.output_path, facefusion.globals.output_path)
 		frame_processor_module.post_process()
 	if process_manager.is_stopping():
-		process_manager.pause()
+		process_manager.end()
 		logger.info(wording.get('processing_stopped'), __name__.upper())
 		return
 	# compress image
@@ -274,7 +274,7 @@ def process_image(start_time : float) -> None:
 		logger.info(wording.get('processing_image_succeed').format(seconds = seconds), __name__.upper())
 	else:
 		logger.error(wording.get('processing_image_failed'), __name__.upper())
-	process_manager.pause()
+	process_manager.end()
 
 
 def process_video(start_time : float) -> None:
@@ -287,10 +287,10 @@ def process_video(start_time : float) -> None:
 	logger.debug(wording.get('creating_temp'), __name__.upper())
 	create_temp(facefusion.globals.target_path)
 	# extract frames
+	process_manager.start()
 	logger.info(wording.get('extracting_frames_fps').format(video_fps = facefusion.globals.output_video_fps), __name__.upper())
 	extract_frames(facefusion.globals.target_path, facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps)
 	# process
-	process_manager.start()
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
 	if temp_frame_paths:
 		for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
@@ -301,7 +301,7 @@ def process_video(start_time : float) -> None:
 		logger.error(wording.get('temp_frames_not_found'), __name__.upper())
 		return
 	if process_manager.is_stopping():
-		process_manager.pause()
+		process_manager.end()
 		logger.info(wording.get('processing_stopped'), __name__.upper())
 		return
 	# merge video
@@ -336,4 +336,4 @@ def process_video(start_time : float) -> None:
 		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__.upper())
 	else:
 		logger.error(wording.get('processing_video_failed'), __name__.upper())
-	process_manager.pause()
+	process_manager.end()

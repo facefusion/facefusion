@@ -2,7 +2,7 @@ from typing import List, Optional
 import subprocess
 
 import facefusion.globals
-from facefusion import logger
+from facefusion import process_manager
 from facefusion.typing import OutputVideoPreset, Fps, AudioBuffer
 from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video_path
 
@@ -10,12 +10,11 @@ from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video
 def run_ffmpeg(args : List[str]) -> bool:
 	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
 	commands.extend(args)
-	try:
-		subprocess.run(commands, stderr = subprocess.PIPE, check = True)
-		return True
-	except subprocess.CalledProcessError as exception:
-		logger.debug(exception.stderr.decode().strip(), __name__.upper())
-		return False
+	process = subprocess.Popen(commands, stderr = subprocess.PIPE)
+
+	while process_manager.is_processing() and process.poll() is None:
+		pass
+	return process.returncode == 0
 
 
 def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:

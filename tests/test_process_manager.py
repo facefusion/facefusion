@@ -1,4 +1,4 @@
-from facefusion.process_manager import set_process_state, is_processing, is_stopping, is_pending, start, stop, pause
+from facefusion.process_manager import set_process_state, is_processing, is_stopping, is_pending, start, stop, end
 
 
 def test_start() -> None:
@@ -15,8 +15,8 @@ def test_stop() -> None:
 	assert is_stopping()
 
 
-def test_pause() -> None:
+def test_end() -> None:
 	set_process_state('processing')
-	pause()
+	end()
 
 	assert is_pending()
