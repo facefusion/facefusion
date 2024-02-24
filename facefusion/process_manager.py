@@ -35,7 +35,7 @@ def stop() -> None:
 	set_process_state('stopping')
 
 
-def pause() -> None:
+def end() -> None:
 	set_process_state('pending')
 
 
