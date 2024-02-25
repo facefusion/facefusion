@@ -127,7 +127,10 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	for index, vision_tile_frame in enumerate(vision_tile_frames):
 		vision_tile_frame = prepare_vision_tile_frame(vision_tile_frame)
 		with THREAD_SEMAPHORE:
-			vision_tile_frame = frame_processor.run(None, {frame_processor.get_inputs()[0].name : vision_tile_frame})[0]
+			vision_tile_frame = frame_processor.run(None,
+			{
+				frame_processor.get_inputs()[0].name : vision_tile_frame
+			})[0]
 		vision_tile_frames[index] = normalize_vision_tile_frame(vision_tile_frame, tile_size)
 	paste_vision_frame = merge_tiles_into_frame(vision_tile_frames, pad_frame_width, pad_frame_height, vision_frame_width, vision_frame_height, pre_pad_size, pad_size)
 	temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame)
