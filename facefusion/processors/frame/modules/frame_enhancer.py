@@ -6,7 +6,7 @@ import numpy
 import onnxruntime
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, logger, wording
+from facefusion import config, process_manager, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution_helper import apply_execution_provider_options
@@ -197,7 +197,7 @@ def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
 
 
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProcess) -> None:
-	for queue_payload in queue_payloads:
+	for queue_payload in process_manager.manage(queue_payloads):
 		target_vision_path = queue_payload['frame_path']
 		target_vision_frame = read_image(target_vision_path)
 		output_vision_frame = process_frame(
