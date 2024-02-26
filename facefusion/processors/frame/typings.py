@@ -5,7 +5,7 @@ from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-mask', 'score', 'age', 'gender']
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'restoreformer_plus_plus']
 FaceSwapperModel = Literal['blendswap_256', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_512_unofficial', 'uniface_256']
-FrameEnhancerModel = Literal['hfa2k_x4']
+FrameEnhancerModel = Literal['lsdir_x4', 'lsdir_compact3_x4', 'lsdir_plus_c_x4', 'lsdir_plus_n_x4', 'lsdir_plus_r_x4', 'parimg_compact_x2']
 LipSyncerModel = Literal['wav2lip_gan']
 
 FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',

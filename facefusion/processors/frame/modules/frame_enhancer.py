@@ -25,10 +25,50 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
-	'hfa2k_x4':
+	'lsdir_x4':
 	{
-		'url': 'https://github.com/Phhofm/models/raw/main/4xHFA2k/4xHFA2k_fp32.onnx',
-		'path': resolve_relative_path('../.assets/models/4xHFA2k/4xHFA2k_fp32.onnx'),
+		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIR/4xLSDIR_fp32.onnx',
+		'path': resolve_relative_path('../.assets/models/4xLSDIR_fp32.onnx'),
+		'tile_size': 192,
+		'pre_pad_size': 15,
+		'pad_size': 24
+	},
+	'lsdir_compact3_x4':
+	{
+		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRCompact/Version3/4xLSDIRCompact3_fp32.onnx',
+		'path': resolve_relative_path('../.assets/models/4xLSDIRCompact3_fp32.onnx'),
+		'tile_size': 192,
+		'pre_pad_size': 15,
+		'pad_size': 24
+	},
+	'lsdir_plus_c_x4':
+	{
+		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRplus/4xLSDIRplusC_fp32.onnx',
+		'path': resolve_relative_path('../.assets/models/4xLSDIRplusC_fp32.onnx'),
+		'tile_size': 192,
+		'pre_pad_size': 15,
+		'pad_size': 24
+	},
+	'lsdir_plus_n_x4':
+	{
+		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRplus/4xLSDIRplusN_fp32.onnx',
+		'path': resolve_relative_path('../.assets/models/4xLSDIRplusN_fp32.onnx'),
+		'tile_size': 192,
+		'pre_pad_size': 15,
+		'pad_size': 24
+	},
+	'lsdir_plus_r_x4':
+	{
+		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRplus/4xLSDIRplusR_fp32.onnx',
+		'path': resolve_relative_path('../.assets/models/4xLSDIRplusR_fp32.onnx'),
+		'tile_size': 192,
+		'pre_pad_size': 15,
+		'pad_size': 24
+	},
+	'parimg_compact_x2':
+	{
+		'url': 'https://github.com/Phhofm/models/raw/main/2xParimgCompact/2xParimgCompact_fp32.onnx',
+		'path': resolve_relative_path('../.assets/models/2xParimgCompact_fp32.onnx'),
 		'tile_size': 256,
 		'pre_pad_size': 15,
 		'pad_size': 24
@@ -71,7 +111,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'hfa2k_x4'), choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'lsdir_x4'), choices = frame_processors_choices.frame_enhancer_models)
 	program.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.frame_enhancer_blend', '80'), choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
 
 
