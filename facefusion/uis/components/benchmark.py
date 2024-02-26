@@ -70,6 +70,7 @@ def render() -> None:
 def listen() -> None:
 	benchmark_runs_checkbox_group = get_ui_component('benchmark_runs_checkbox_group')
 	benchmark_cycles_slider = get_ui_component('benchmark_cycles_slider')
+
 	if benchmark_runs_checkbox_group and benchmark_cycles_slider:
 		BENCHMARK_START_BUTTON.click(start, inputs = [ benchmark_runs_checkbox_group, benchmark_cycles_slider ], outputs = BENCHMARK_RESULTS_DATAFRAME)
 	BENCHMARK_CLEAR_BUTTON.click(clear, outputs = BENCHMARK_RESULTS_DATAFRAME)
@@ -77,10 +78,12 @@ def listen() -> None:
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
 	facefusion.globals.source_paths = [ '.assets/examples/source.jpg' ]
+	facefusion.globals.face_landmarker_score = 0
 	facefusion.globals.temp_frame_format = 'bmp'
 	facefusion.globals.output_video_preset = 'ultrafast'
-	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 	benchmark_results = []
+	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
+
 	if target_paths:
 		pre_process()
 		for target_path in target_paths:
@@ -103,6 +106,7 @@ def post_process() -> None:
 def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	process_times = []
 	total_fps = 0.0
+
 	for index in range(benchmark_cycles):
 		facefusion.globals.target_path = target_path
 		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_paths, facefusion.globals.target_path, tempfile.gettempdir())

@@ -124,7 +124,8 @@ def listen() -> None:
 		'lip_syncer_model_dropdown',
 		'face_detector_model_dropdown',
 		'face_detector_size_dropdown',
-		'face_detector_score_slider'
+		'face_detector_score_slider',
+		'face_landmarker_score_slider'
 	]
 	for component_name in change_two_component_names:
 		component = get_ui_component(component_name)
