@@ -11,7 +11,7 @@ from facefusion import config, process_manager, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution_helper import apply_execution_provider_options
-from facefusion.typing import Face, VisionFrame, VisionTiles, UpdateProcess, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
+from facefusion.typing import Face, VisionFrame, UpdateProcess, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
@@ -179,7 +179,7 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	return temp_vision_frame
 
 
-def split_frame_into_tiles(vision_frame : VisionFrame, tile_size : int, pre_pad_size : int, pad_size : int) -> Tuple[VisionTiles, int, int]:
+def split_frame_into_tiles(vision_frame : VisionFrame, tile_size : int, pre_pad_size : int, pad_size : int) -> Tuple[List[VisionFrame], int, int]:
 	vision_frame = cv2.copyMakeBorder(vision_frame, pre_pad_size, pre_pad_size, pre_pad_size, pre_pad_size, cv2.BORDER_REFLECT)
 	tile_size = tile_size - (2 * pad_size)
 	pad_size_bottom = pad_size + tile_size - vision_frame.shape[0] % tile_size
@@ -198,7 +198,7 @@ def split_frame_into_tiles(vision_frame : VisionFrame, tile_size : int, pre_pad_
 	return vision_tile_frames, pad_frame_width, pad_frame_height
 
 
-def merge_tiles_into_frame(vision_tiles : VisionTiles, pad_frame_width : int, pad_frame_height : int, vision_frame_width : int, vision_frame_height : int, pre_pad_size : int, pad_size : int) -> VisionFrame:
+def merge_tiles_into_frame(vision_tiles : List[VisionFrame], pad_frame_width : int, pad_frame_height : int, vision_frame_width : int, vision_frame_height : int, pre_pad_size : int, pad_size : int) -> VisionFrame:
 	vision_frame = numpy.zeros((pad_frame_height, pad_frame_width, 3))
 	vision_tiles_per_row = min(pad_frame_width // (vision_tiles[0].shape[1] - (2 * pad_size)), len(vision_tiles))
 
