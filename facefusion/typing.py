@@ -30,6 +30,7 @@ FaceStore = TypedDict('FaceStore',
 	'reference_faces': FaceSet
 })
 VisionFrame = numpy.ndarray[Any, Any]
+VisionTiles = List[VisionFrame]
 Mask = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
 Translation = numpy.ndarray[Any, Any]

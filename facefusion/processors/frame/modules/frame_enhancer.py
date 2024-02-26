@@ -4,13 +4,14 @@ import threading
 import cv2
 import numpy
 import onnxruntime
+
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution_helper import apply_execution_provider_options
-from facefusion.typing import Face, VisionFrame, UpdateProcess, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
+from facefusion.typing import Face, VisionFrame, VisionTiles, UpdateProcess, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
@@ -111,7 +112,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'lsdir_x4'), choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'parimg_compact_x2'), choices = frame_processors_choices.frame_enhancer_models)
 	program.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.frame_enhancer_blend', '80'), choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
 
 
@@ -163,21 +164,22 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	pad_size = get_options('model').get('pad_size')
 	tile_size = get_options('model').get('tile_size')
 	vision_frame_height, vision_frame_width = temp_vision_frame.shape[:2]
-	vision_tile_frames, pad_frame_width, pad_frame_height = split_frame_into_tiles(temp_vision_frame, tile_size, pre_pad_size, pad_size)
-	for index, vision_tile_frame in enumerate(vision_tile_frames):
-		vision_tile_frame = prepare_vision_tile_frame(vision_tile_frame)
+	vision_tiles, pad_frame_width, pad_frame_height = split_frame_into_tiles(temp_vision_frame, tile_size, pre_pad_size, pad_size)
+
+	for index, vision_tile in enumerate(vision_tiles):
+		vision_tile = prepare_vision_tile_frame(vision_tile)
 		with THREAD_SEMAPHORE:
-			vision_tile_frame = frame_processor.run(None,
+			vision_tile = frame_processor.run(None,
 			{
-				frame_processor.get_inputs()[0].name : vision_tile_frame
+				frame_processor.get_inputs()[0].name : vision_tile
 			})[0]
-		vision_tile_frames[index] = normalize_vision_tile_frame(vision_tile_frame, tile_size)
-	paste_vision_frame = merge_tiles_into_frame(vision_tile_frames, pad_frame_width, pad_frame_height, vision_frame_width, vision_frame_height, pre_pad_size, pad_size)
+		vision_tiles[index] = normalize_vision_tile_frame(vision_tile, tile_size)
+	paste_vision_frame = merge_tiles_into_frame(vision_tiles, pad_frame_width, pad_frame_height, vision_frame_width, vision_frame_height, pre_pad_size, pad_size)
 	temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame)
 	return temp_vision_frame
 
 
-def split_frame_into_tiles(vision_frame: VisionFrame, tile_size : int, pre_pad_size : int, pad_size : int) -> Tuple[List[VisionFrame], int, int]:
+def split_frame_into_tiles(vision_frame : VisionFrame, tile_size : int, pre_pad_size : int, pad_size : int) -> Tuple[VisionTiles, int, int]:
 	vision_frame = cv2.copyMakeBorder(vision_frame, pre_pad_size, pre_pad_size, pre_pad_size, pre_pad_size, cv2.BORDER_REFLECT)
 	tile_size = tile_size - (2 * pad_size)
 	pad_size_bottom = pad_size + tile_size - vision_frame.shape[0] % tile_size
@@ -185,6 +187,7 @@ def split_frame_into_tiles(vision_frame: VisionFrame, tile_size : int, pre_pad_s
 	pad_frame = cv2.copyMakeBorder(vision_frame, pad_size, pad_size_bottom, pad_size, pad_size_right, cv2.BORDER_REPLICATE)
 	pad_frame_height, pad_frame_width = pad_frame.shape[:2]
 	vision_tile_frames = []
+
 	for row_vision_frame in range(pad_size, pad_frame_height - pad_size, tile_size):
 		for column_vision_frame in range(pad_size, pad_frame_width - pad_size, tile_size):
 			top = row_vision_frame - pad_size
@@ -195,16 +198,17 @@ def split_frame_into_tiles(vision_frame: VisionFrame, tile_size : int, pre_pad_s
 	return vision_tile_frames, pad_frame_width, pad_frame_height
 
 
-def merge_tiles_into_frame(vision_tile_frames : List[VisionFrame], pad_frame_width : int, pad_frame_height : int, vision_frame_width : int, vision_frame_height : int, pre_pad_size: int, pad_size: int) -> VisionFrame:
+def merge_tiles_into_frame(vision_tiles : VisionTiles, pad_frame_width : int, pad_frame_height : int, vision_frame_width : int, vision_frame_height : int, pre_pad_size : int, pad_size : int) -> VisionFrame:
 	vision_frame = numpy.zeros((pad_frame_height, pad_frame_width, 3))
-	vision_tile_frames_per_row = min(pad_frame_width // (vision_tile_frames[0].shape[1] - (2 * pad_size)), len(vision_tile_frames))
-	for index, vision_tile_frame in enumerate(vision_tile_frames):
-		vision_tile_frame = vision_tile_frame[pad_size:-pad_size, pad_size:-pad_size]
-		top = (index // vision_tile_frames_per_row) * vision_tile_frame.shape[0]
-		bottom = top + vision_tile_frame.shape[0]
-		left = (index % vision_tile_frames_per_row) * vision_tile_frame.shape[1]
-		right = left + vision_tile_frame.shape[1]
-		vision_frame[top : bottom, left : right, :] = vision_tile_frame
+	vision_tiles_per_row = min(pad_frame_width // (vision_tiles[0].shape[1] - (2 * pad_size)), len(vision_tiles))
+
+	for index, vision_tile in enumerate(vision_tiles):
+		vision_tile = vision_tile[pad_size:-pad_size, pad_size:-pad_size]
+		top = (index // vision_tiles_per_row) * vision_tile.shape[0]
+		bottom = top + vision_tile.shape[0]
+		left = (index % vision_tiles_per_row) * vision_tile.shape[1]
+		right = left + vision_tile.shape[1]
+		vision_frame[top : bottom, left : right, :] = vision_tile
 	vision_frame = vision_frame[pre_pad_size : pre_pad_size + vision_frame_height, pre_pad_size : pre_pad_size + vision_frame_width, :]
 	return vision_frame.astype(numpy.uint8)
 
