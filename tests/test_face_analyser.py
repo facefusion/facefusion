@@ -49,7 +49,6 @@ def test_get_one_face_with_scrfd() -> None:
 	facefusion.globals.face_detector_model = 'scrfd'
 	facefusion.globals.face_detector_size = '640x640'
 
-
 	source_paths =\
 	[
 		'.assets/examples/source.jpg',
