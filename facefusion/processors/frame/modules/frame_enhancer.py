@@ -1,4 +1,4 @@
-from typing import Any, List, Literal, Optional, Tuple
+from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 import threading
 import cv2
@@ -15,7 +15,7 @@ from facefusion.typing import Face, VisionFrame, UpdateProcess, ProcessMode, Mod
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
-from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.vision import read_image, read_static_image, write_image, merge_tile_frames, create_tile_frames
 from facefusion.processors.frame.typings import FrameEnhancerInputs
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
@@ -30,49 +30,37 @@ MODELS : ModelSet =\
 	{
 		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIR/4xLSDIR_fp32.onnx',
 		'path': resolve_relative_path('../.assets/models/4xLSDIR_fp32.onnx'),
-		'tile_size': 192,
-		'pre_pad_size': 15,
-		'pad_size': 24
+		'size': (128, 8, 2)
 	},
 	'lsdir_compact3_x4':
 	{
 		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRCompact/Version3/4xLSDIRCompact3_fp32.onnx',
 		'path': resolve_relative_path('../.assets/models/4xLSDIRCompact3_fp32.onnx'),
-		'tile_size': 192,
-		'pre_pad_size': 15,
-		'pad_size': 24
+		'size': (128, 8, 2)
 	},
 	'lsdir_plus_c_x4':
 	{
 		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRplus/4xLSDIRplusC_fp32.onnx',
 		'path': resolve_relative_path('../.assets/models/4xLSDIRplusC_fp32.onnx'),
-		'tile_size': 192,
-		'pre_pad_size': 15,
-		'pad_size': 24
+		'size': (128, 8, 2)
 	},
 	'lsdir_plus_n_x4':
 	{
 		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRplus/4xLSDIRplusN_fp32.onnx',
 		'path': resolve_relative_path('../.assets/models/4xLSDIRplusN_fp32.onnx'),
-		'tile_size': 192,
-		'pre_pad_size': 15,
-		'pad_size': 24
+		'size': (128, 8, 2)
 	},
 	'lsdir_plus_r_x4':
 	{
 		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRplus/4xLSDIRplusR_fp32.onnx',
 		'path': resolve_relative_path('../.assets/models/4xLSDIRplusR_fp32.onnx'),
-		'tile_size': 192,
-		'pre_pad_size': 15,
-		'pad_size': 24
+		'size': (128, 8, 2)
 	},
 	'parimg_compact_x2':
 	{
 		'url': 'https://github.com/Phhofm/models/raw/main/2xParimgCompact/2xParimgCompact_fp32.onnx',
 		'path': resolve_relative_path('../.assets/models/2xParimgCompact_fp32.onnx'),
-		'tile_size': 256,
-		'pre_pad_size': 15,
-		'pad_size': 24
+		'size': (128, 8, 2)
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -160,67 +148,31 @@ def post_process() -> None:
 
 def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
-	pre_pad_size = get_options('model').get('pre_pad_size')
-	pad_size = get_options('model').get('pad_size')
-	tile_size = get_options('model').get('tile_size')
-	vision_frame_height, vision_frame_width = temp_vision_frame.shape[:2]
-	vision_tiles, pad_frame_width, pad_frame_height = split_frame_into_tiles(temp_vision_frame, tile_size, pre_pad_size, pad_size)
+	size = get_options('model').get('size')
+	temp_height, temp_width = temp_vision_frame.shape[:2]
+	tile_vision_frames, pad_width, pad_height = create_tile_frames(temp_vision_frame, size)
 
-	for index, vision_tile in enumerate(vision_tiles):
-		vision_tile = prepare_vision_tile_frame(vision_tile)
+	for index, tile_vision_frame in enumerate(tile_vision_frames):
+		tile_vision_frame = prepare_tile_frame(tile_vision_frame)
 		with THREAD_SEMAPHORE:
-			vision_tile = frame_processor.run(None,
+			tile_vision_frame = frame_processor.run(None,
 			{
-				frame_processor.get_inputs()[0].name : vision_tile
+				frame_processor.get_inputs()[0].name : tile_vision_frame
 			})[0]
-		vision_tiles[index] = normalize_vision_tile_frame(vision_tile, tile_size)
-	paste_vision_frame = merge_tiles_into_frame(vision_tiles, pad_frame_width, pad_frame_height, vision_frame_width, vision_frame_height, pre_pad_size, pad_size)
-	temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame)
+		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame, size[0])
+	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width, temp_height, pad_width, pad_height, size)
+	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
 	return temp_vision_frame
 
 
-def split_frame_into_tiles(vision_frame : VisionFrame, tile_size : int, pre_pad_size : int, pad_size : int) -> Tuple[List[VisionFrame], int, int]:
-	vision_frame = cv2.copyMakeBorder(vision_frame, pre_pad_size, pre_pad_size, pre_pad_size, pre_pad_size, cv2.BORDER_REFLECT)
-	tile_size = tile_size - (2 * pad_size)
-	pad_size_bottom = pad_size + tile_size - vision_frame.shape[0] % tile_size
-	pad_size_right = pad_size + tile_size - vision_frame.shape[1] % tile_size
-	pad_frame = cv2.copyMakeBorder(vision_frame, pad_size, pad_size_bottom, pad_size, pad_size_right, cv2.BORDER_REPLICATE)
-	pad_frame_height, pad_frame_width = pad_frame.shape[:2]
-	vision_tile_frames = []
-
-	for row_vision_frame in range(pad_size, pad_frame_height - pad_size, tile_size):
-		for column_vision_frame in range(pad_size, pad_frame_width - pad_size, tile_size):
-			top = row_vision_frame - pad_size
-			bottom = row_vision_frame + pad_size + tile_size
-			left = column_vision_frame - pad_size
-			right = column_vision_frame + pad_size + tile_size
-			vision_tile_frames.append(pad_frame[top : bottom, left : right, :])
-	return vision_tile_frames, pad_frame_width, pad_frame_height
-
-
-def merge_tiles_into_frame(vision_tiles : List[VisionFrame], pad_frame_width : int, pad_frame_height : int, vision_frame_width : int, vision_frame_height : int, pre_pad_size : int, pad_size : int) -> VisionFrame:
-	vision_frame = numpy.zeros((pad_frame_height, pad_frame_width, 3))
-	vision_tiles_per_row = min(pad_frame_width // (vision_tiles[0].shape[1] - (2 * pad_size)), len(vision_tiles))
-
-	for index, vision_tile in enumerate(vision_tiles):
-		vision_tile = vision_tile[pad_size:-pad_size, pad_size:-pad_size]
-		top = (index // vision_tiles_per_row) * vision_tile.shape[0]
-		bottom = top + vision_tile.shape[0]
-		left = (index % vision_tiles_per_row) * vision_tile.shape[1]
-		right = left + vision_tile.shape[1]
-		vision_frame[top : bottom, left : right, :] = vision_tile
-	vision_frame = vision_frame[pre_pad_size : pre_pad_size + vision_frame_height, pre_pad_size : pre_pad_size + vision_frame_width, :]
-	return vision_frame.astype(numpy.uint8)
-
-
-def prepare_vision_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
+def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
 	vision_tile_frame = numpy.expand_dims(vision_tile_frame[:,:,::-1], axis = 0)
 	vision_tile_frame = vision_tile_frame.transpose(0, 3, 1, 2)
 	vision_tile_frame = vision_tile_frame.astype(numpy.float32) / 255
 	return vision_tile_frame
 
 
-def normalize_vision_tile_frame(vision_tile_frame : VisionFrame, tile_size : int) -> VisionFrame:
+def normalize_tile_frame(vision_tile_frame : VisionFrame, tile_size : int) -> VisionFrame:
 	vision_tile_frame = vision_tile_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
 	vision_tile_frame = vision_tile_frame.clip(0, 255).astype(numpy.uint8)[:,:,::-1]
 	vision_tile_frame = cv2.resize(vision_tile_frame, (tile_size, tile_size))

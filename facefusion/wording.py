@@ -71,7 +71,7 @@ WORDING : Dict[str, Any] =\
 		'face_detector_size': 'specify the size of the frame provided to the face detector',
 		'face_detector_score': 'filter the detected faces base on the confidence score',
 		# face selector
-		'face_selector_mode': 'use reference based tracking with simple matching',
+		'face_selector_mode': 'use reference based tracking or simple matching',
 		'reference_face_position': 'specify the position used to create the reference face',
 		'reference_face_distance': 'specify the desired similarity between the reference face and target face',
 		'reference_frame_number': 'specify the frame used to create the reference face',
@@ -88,7 +88,7 @@ WORDING : Dict[str, Any] =\
 		'keep_temp': 'keep the temporary resources after processing',
 		# output creation
 		'output_image_quality': 'specify the image quality which translates to the compression factor',
-		'output_image_resolution': 'specify the image output resolution based on the image video',
+		'output_image_resolution': 'specify the image output resolution based on the target image',
 		'output_video_encoder': 'specify the encoder use for the video compression',
 		'output_video_preset': 'balance fast video processing and video file size',
 		'output_video_quality': 'specify the video quality which translates to the compression factor',
