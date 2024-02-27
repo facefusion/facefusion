@@ -141,37 +141,39 @@ def normalize_frame_color(vision_frame : VisionFrame) -> VisionFrame:
 
 
 def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[VisionFrame], int, int]:
-	vision_frame = cv2.copyMakeBorder(vision_frame, size[1], size[1], size[1], size[1], cv2.BORDER_REFLECT)
-	tile_size = size[0] - (2 * size[2])
-	pad_size_bottom = size[2] + tile_size - vision_frame.shape[0] % tile_size
-	pad_size_right = size[2] + tile_size - vision_frame.shape[1] % tile_size
-	pad_frame = cv2.copyMakeBorder(vision_frame, size[2], pad_size_bottom, size[2], pad_size_right, cv2.BORDER_REPLICATE)
-	pad_height, pad_width = pad_frame.shape[:2]
-	row_range = range(size[2], pad_height - size[2], tile_size)
-	col_range = range(size[2], pad_width - size[2], tile_size)
+	vision_frame = numpy.pad(vision_frame, ((size[1], size[1]), (size[1], size[1]), (0, 0)))
+	tile_width = size[0] - 2 * size[2]
+	pad_size_bottom = size[2] + tile_width - vision_frame.shape[0] % tile_width
+	pad_size_right = size[2] + tile_width - vision_frame.shape[1] % tile_width
+	pad_vision_frame = numpy.pad(vision_frame, ((size[2], pad_size_bottom), (size[2], pad_size_right), (0, 0)))
+	pad_height, pad_width = pad_vision_frame.shape[:2]
+	row_range = range(size[2], pad_height - size[2], tile_width)
+	col_range = range(size[2], pad_width - size[2], tile_width)
 	tile_vision_frames = []
 
 	for row_vision_frame in row_range:
+		top = row_vision_frame - size[2]
+		bottom = row_vision_frame + size[2] + tile_width
 		for column_vision_frame in col_range:
-			top = row_vision_frame - size[2]
-			bottom = row_vision_frame + size[2] + tile_size
 			left = column_vision_frame - size[2]
-			right = column_vision_frame + size[2] + tile_size
-			tile_vision_frames.append(pad_frame[top : bottom, left : right, :])
+			right = column_vision_frame + size[2] + tile_width
+			tile_vision_frames.append(pad_vision_frame[top:bottom, left:right, :])
 	return tile_vision_frames, pad_width, pad_height
 
 
 def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, temp_height : int, pad_width : int, pad_height : int, size : Size) -> VisionFrame:
-	vision_frame = numpy.zeros((pad_height, pad_width, 3))
-	tiles_per_row = min(pad_width // (tile_vision_frames[0].shape[1] - (2 * size[2])), len(tile_vision_frames))
+	merge_vision_frame = numpy.zeros((pad_height, pad_width, 3)).astype(numpy.uint8)
+	tile_width = tile_vision_frames[0].shape[1] - 2 * size[2]
+	total_tiles_per_row = min(pad_width // tile_width, len(tile_vision_frames))
 
 	for index, tile_vision_frame in enumerate(tile_vision_frames):
 		tile_vision_frame = tile_vision_frame[size[2]:-size[2], size[2]:-size[2]]
-		top = (index // tiles_per_row) * tile_vision_frame.shape[0]
+		row_index = index // total_tiles_per_row
+		col_index = index % total_tiles_per_row
+		top = row_index * tile_vision_frame.shape[0]
 		bottom = top + tile_vision_frame.shape[0]
-		left = (index % tiles_per_row) * tile_vision_frame.shape[1]
+		left = col_index * tile_vision_frame.shape[1]
 		right = left + tile_vision_frame.shape[1]
-		vision_frame[top : bottom, left : right, :] = tile_vision_frame
-	vision_frame = vision_frame[size[1] : size[1] + temp_height, size[1]: size[1] + temp_width, :]
-	vision_frame = vision_frame.astype(numpy.uint8)
-	return vision_frame
+		merge_vision_frame[top:bottom, left:right, :] = tile_vision_frame
+	merge_vision_frame = merge_vision_frame[size[1] : size[1] + temp_height, size[1]: size[1] + temp_width, :]
+	return merge_vision_frame

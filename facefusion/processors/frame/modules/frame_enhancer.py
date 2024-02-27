@@ -22,7 +22,6 @@ from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
-THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
 MODELS : ModelSet =\
@@ -177,13 +176,12 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	temp_height, temp_width = temp_vision_frame.shape[:2]
 	tile_vision_frames, pad_width, pad_height = create_tile_frames(temp_vision_frame, size)
 
-	with THREAD_SEMAPHORE:
-		for index, tile_vision_frame in enumerate(tile_vision_frames):
-			tile_vision_frame = frame_processor.run(None,
-			{
-				frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
-			})[0]
-			tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame, size)
+	for index, tile_vision_frame in enumerate(tile_vision_frames):
+		tile_vision_frame = frame_processor.run(None,
+		{
+			frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
+		})[0]
+		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame, size)
 	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width, temp_height, pad_width, pad_height, size)
 	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
 	return temp_vision_frame
