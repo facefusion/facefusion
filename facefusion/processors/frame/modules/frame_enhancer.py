@@ -74,16 +74,22 @@ MODELS : ModelSet =\
 		'path': resolve_relative_path('../.assets/models/2xParimgCompact_fp32.onnx'),
 		'size': (128, 8, 2)
 	},
-	'realesrgan_128':
+	'real_esrgan_128':
 	{
 		'url': 'https://huggingface.co/facefusion/next/resolve/main/realesrgan_128x128.onnx',
 		'path': resolve_relative_path('../.assets/models/realesrgan_128x128.onnx'),
 		'size': (128, 8, 2)
 	},
-	'realesrgan_256':
+	'real_esrgan_256':
 	{
 		'url': 'https://huggingface.co/facefusion/next/resolve/main/realesrgan_256x256.onnx',
 		'path': resolve_relative_path('../.assets/models/realesrgan_256x256.onnx'),
+		'size': (256, 8, 2)
+	},
+	'span_kendata_4x':
+	{
+		'url': 'https://github.com/terrainer/AI-Upscaling-Models/raw/main/4xSPANkendata/4xSPANkendata_fp32.onnx',
+		'path': resolve_relative_path('../.assets/models/4xSPANkendata_fp32.onnx'),
 		'size': (256, 8, 2)
 	}
 }

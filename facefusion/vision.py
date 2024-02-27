@@ -164,12 +164,12 @@ def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[Vi
 def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, temp_height : int, pad_width : int, pad_height : int, size : Size) -> VisionFrame:
 	merge_vision_frame = numpy.zeros((pad_height, pad_width, 3)).astype(numpy.uint8)
 	tile_width = tile_vision_frames[0].shape[1] - 2 * size[2]
-	total_tiles_per_row = min(pad_width // tile_width, len(tile_vision_frames))
+	tiles_per_row = min(pad_width // tile_width, len(tile_vision_frames))
 
 	for index, tile_vision_frame in enumerate(tile_vision_frames):
 		tile_vision_frame = tile_vision_frame[size[2]:-size[2], size[2]:-size[2]]
-		row_index = index // total_tiles_per_row
-		col_index = index % total_tiles_per_row
+		row_index = index // tiles_per_row
+		col_index = index % tiles_per_row
 		top = row_index * tile_vision_frame.shape[0]
 		bottom = top + tile_vision_frame.shape[0]
 		left = col_index * tile_vision_frame.shape[1]
