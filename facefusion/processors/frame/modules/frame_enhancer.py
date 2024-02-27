@@ -1,5 +1,6 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
+from cv2.typing import Size
 import threading
 import cv2
 import numpy
@@ -178,12 +179,11 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 	with THREAD_SEMAPHORE:
 		for index, tile_vision_frame in enumerate(tile_vision_frames):
-			tile_vision_frame = prepare_tile_frame(tile_vision_frame)
 			tile_vision_frame = frame_processor.run(None,
 			{
-				frame_processor.get_inputs()[0].name : tile_vision_frame
+				frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
 			})[0]
-			tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame, size[0])
+			tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame, size)
 	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width, temp_height, pad_width, pad_height, size)
 	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
 	return temp_vision_frame
@@ -196,10 +196,10 @@ def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
 	return vision_tile_frame
 
 
-def normalize_tile_frame(vision_tile_frame : VisionFrame, tile_size : int) -> VisionFrame:
+def normalize_tile_frame(vision_tile_frame : VisionFrame, size : Size) -> VisionFrame:
 	vision_tile_frame = vision_tile_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
 	vision_tile_frame = vision_tile_frame.clip(0, 255).astype(numpy.uint8)[:,:,::-1]
-	vision_tile_frame = cv2.resize(vision_tile_frame, (tile_size, tile_size))
+	vision_tile_frame = cv2.resize(vision_tile_frame, (size[0], size[0]))
 	return vision_tile_frame
 
 
