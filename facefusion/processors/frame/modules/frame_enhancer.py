@@ -32,7 +32,13 @@ MODELS : ModelSet =\
 		'path': resolve_relative_path('../.assets/models/4xLSDIR_fp32.onnx'),
 		'size': (128, 8, 2)
 	},
-	'lsdir_compact3_x4':
+	'lsdir_compact_2_x4':
+	{
+		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRCompact/Version2/4xLSDIRCompact2_fp32.onnx',
+		'path': resolve_relative_path('../.assets/models/4xLSDIRCompact2_fp32.onnx'),
+		'size': (128, 8, 2)
+	},
+	'lsdir_compact_3_x4':
 	{
 		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRCompact/Version3/4xLSDIRCompact3_fp32.onnx',
 		'path': resolve_relative_path('../.assets/models/4xLSDIRCompact3_fp32.onnx'),
@@ -56,11 +62,29 @@ MODELS : ModelSet =\
 		'path': resolve_relative_path('../.assets/models/4xLSDIRplusR_fp32.onnx'),
 		'size': (128, 8, 2)
 	},
+	'nomos8k_sc_4x':
+	{
+		'url': 'https://github.com/Phhofm/models/raw/main/4xNomos8kSC/4xNomos8kSC_fp32.onnx',
+		'path': resolve_relative_path('../.assets/models/4xNomos8kSC_fp32.onnx'),
+		'size': (128, 8, 2)
+	},
 	'parimg_compact_x2':
 	{
 		'url': 'https://github.com/Phhofm/models/raw/main/2xParimgCompact/2xParimgCompact_fp32.onnx',
 		'path': resolve_relative_path('../.assets/models/2xParimgCompact_fp32.onnx'),
 		'size': (128, 8, 2)
+	},
+	'realesrgan_128':
+	{
+		'url': 'https://huggingface.co/facefusion/next/resolve/main/realesrgan_128x128.onnx',
+		'path': resolve_relative_path('../.assets/models/realesrgan_128x128.onnx'),
+		'size': (128, 8, 2)
+	},
+	'realesrgan_256':
+	{
+		'url': 'https://huggingface.co/facefusion/next/resolve/main/realesrgan_256x256.onnx',
+		'path': resolve_relative_path('../.assets/models/realesrgan_256x256.onnx'),
+		'size': (256, 8, 2)
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -152,14 +176,14 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	temp_height, temp_width = temp_vision_frame.shape[:2]
 	tile_vision_frames, pad_width, pad_height = create_tile_frames(temp_vision_frame, size)
 
-	for index, tile_vision_frame in enumerate(tile_vision_frames):
-		tile_vision_frame = prepare_tile_frame(tile_vision_frame)
-		with THREAD_SEMAPHORE:
+	with THREAD_SEMAPHORE:
+		for index, tile_vision_frame in enumerate(tile_vision_frames):
+			tile_vision_frame = prepare_tile_frame(tile_vision_frame)
 			tile_vision_frame = frame_processor.run(None,
 			{
 				frame_processor.get_inputs()[0].name : tile_vision_frame
 			})[0]
-		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame, size[0])
+			tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame, size[0])
 	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width, temp_height, pad_width, pad_height, size)
 	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
 	return temp_vision_frame
