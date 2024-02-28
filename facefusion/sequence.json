@@ -1,25 +1,82 @@
 {
-  "target_folder": "user/facefusion/img_swaps",
+  "target_folder": "img_swaps",
   "images": [
     {
       "filename": "image1.jpg",
       "parameters": {
-        "model": "default",
-        "parameter1": "high"
+        "video_memory_strategy": "strict",
+        "face_analyser_order": "left-right",
+        "face_analyser_age": "adult",
+        "face_analyser_gender": "female",
+        "face_detector_model": "retinaface",
+        "face_mask_type": "region",
+        "face_mask_region": "nose",
+        "temp_frame_format": "jpg",
+        "output_video_encoder": "libx264",
+        "output_video_preset": "medium",
+        "video_template_size": 1080,
+        "execution_thread_count": 4,
+        "execution_queue_count": 2,
+        "system_memory_limit": 32,
+        "face_detector_score": 0.5,
+        "face_mask_blur": 0.1,
+        "face_mask_padding": 10,
+        "reference_face_distance": 0.6,
+        "temp_frame_quality": 90,
+        "output_image_quality": 95,
+        "output_video_quality": 90
       }
     },
     {
       "filename": "image2.jpg",
       "parameters": {
-        "model": "default",
-        "parameter1": "medium"
+        "video_memory_strategy": "strict",
+        "face_analyser_order": "left-right",
+        "face_analyser_age": "adult",
+        "face_analyser_gender": "female",
+        "face_detector_model": "retinaface",
+        "face_mask_type": "region",
+        "face_mask_region": "nose",
+        "temp_frame_format": "jpg",
+        "output_video_encoder": "libx264",
+        "output_video_preset": "medium",
+        "video_template_size": 1080,
+        "execution_thread_count": 4,
+        "execution_queue_count": 2,
+        "system_memory_limit": 32,
+        "face_detector_score": 0.5,
+        "face_mask_blur": 0.1,
+        "face_mask_padding": 10,
+        "reference_face_distance": 0.6,
+        "temp_frame_quality": 90,
+        "output_image_quality": 95,
+        "output_video_quality": 90
       }
     },
     {
       "filename": "image3.jpg",
       "parameters": {
-        "model": "default",
-        "parameter1": "low"
+        "video_memory_strategy": "strict",
+        "face_analyser_order": "left-right",
+        "face_analyser_age": "adult",
+        "face_analyser_gender": "female",
+        "face_detector_model": "retinaface",
+        "face_mask_type": "region",
+        "face_mask_region": "nose",
+        "temp_frame_format": "jpg",
+        "output_video_encoder": "libx264",
+        "output_video_preset": "medium",
+        "video_template_size": 1080,
+        "execution_thread_count": 4,
+        "execution_queue_count": 2,
+        "system_memory_limit": 32,
+        "face_detector_score": 0.5,
+        "face_mask_blur": 0.1,
+        "face_mask_padding": 10,
+        "reference_face_distance": 0.6,
+        "temp_frame_quality": 90,
+        "output_image_quality": 95,
+        "output_video_quality": 90
       }
     }
   ]
