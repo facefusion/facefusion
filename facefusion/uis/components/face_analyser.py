@@ -85,8 +85,8 @@ def listen() -> None:
 	FACE_ANALYSER_GENDER_DROPDOWN.change(update_face_analyser_gender, inputs = FACE_ANALYSER_GENDER_DROPDOWN)
 	FACE_DETECTOR_MODEL_DROPDOWN.change(update_face_detector_model, inputs = FACE_DETECTOR_MODEL_DROPDOWN, outputs = FACE_DETECTOR_SIZE_DROPDOWN)
 	FACE_DETECTOR_SIZE_DROPDOWN.change(update_face_detector_size, inputs = FACE_DETECTOR_SIZE_DROPDOWN)
-	FACE_DETECTOR_SCORE_SLIDER.change(update_face_detector_score, inputs = FACE_DETECTOR_SCORE_SLIDER)
-	FACE_LANDMARKER_SCORE_SLIDER.change(update_face_landmarker_score, inputs = FACE_LANDMARKER_SCORE_SLIDER)
+	FACE_DETECTOR_SCORE_SLIDER.release(update_face_detector_score, inputs = FACE_DETECTOR_SCORE_SLIDER)
+	FACE_LANDMARKER_SCORE_SLIDER.release(update_face_landmarker_score, inputs = FACE_LANDMARKER_SCORE_SLIDER)
 
 
 def update_face_analyser_order(face_analyser_order : FaceAnalyserOrder) -> None:
