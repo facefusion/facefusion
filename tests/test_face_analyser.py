@@ -21,14 +21,15 @@ def before_all() -> None:
 
 @pytest.fixture(autouse = True)
 def before_each() -> None:
+	facefusion.globals.face_detector_score = 0.5
+	facefusion.globals.face_landmarker_score = 0.5
+	facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 	clear_face_analyser()
 
 
 def test_get_one_face_with_retinaface() -> None:
 	facefusion.globals.face_detector_model = 'retinaface'
 	facefusion.globals.face_detector_size = '320x320'
-	facefusion.globals.face_detector_score = 0.5
-	facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 
 	source_paths =\
 	[
@@ -47,8 +48,6 @@ def test_get_one_face_with_retinaface() -> None:
 def test_get_one_face_with_scrfd() -> None:
 	facefusion.globals.face_detector_model = 'scrfd'
 	facefusion.globals.face_detector_size = '640x640'
-	facefusion.globals.face_detector_score = 0.5
-	facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 
 	source_paths =\
 	[
@@ -67,8 +66,6 @@ def test_get_one_face_with_scrfd() -> None:
 def test_get_one_face_with_yoloface() -> None:
 	facefusion.globals.face_detector_model = 'yoloface'
 	facefusion.globals.face_detector_size = '640x640'
-	facefusion.globals.face_detector_score = 0.5
-	facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 
 	source_paths =\
 	[
@@ -87,8 +84,6 @@ def test_get_one_face_with_yoloface() -> None:
 def test_get_one_face_with_yunet() -> None:
 	facefusion.globals.face_detector_model = 'yunet'
 	facefusion.globals.face_detector_size = '640x640'
-	facefusion.globals.face_detector_score = 0.5
-	facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 
 	source_paths =\
 	[

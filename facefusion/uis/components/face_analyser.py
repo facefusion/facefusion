@@ -14,7 +14,7 @@ FACE_ANALYSER_GENDER_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_DETECTOR_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_DETECTOR_SIZE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_DETECTOR_SCORE_SLIDER : Optional[gradio.Slider] = None
-FACE_DETECTOR_TWEAKS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
+FACE_LANDMARKER_SCORE_SLIDER : Optional[gradio.Slider] = None
 
 
 def render() -> None:
@@ -24,7 +24,7 @@ def render() -> None:
 	global FACE_DETECTOR_MODEL_DROPDOWN
 	global FACE_DETECTOR_SIZE_DROPDOWN
 	global FACE_DETECTOR_SCORE_SLIDER
-	global FACE_DETECTOR_TWEAKS_CHECKBOX_GROUP
+	global FACE_LANDMARKER_SCORE_SLIDER
 
 	face_detector_size_dropdown_args : Dict[str, Any] =\
 	{
@@ -55,19 +55,28 @@ def render() -> None:
 		value = facefusion.globals.face_detector_model
 	)
 	FACE_DETECTOR_SIZE_DROPDOWN = gradio.Dropdown(**face_detector_size_dropdown_args)
-	FACE_DETECTOR_SCORE_SLIDER = gradio.Slider(
-		label = wording.get('uis.face_detector_score_slider'),
-		value = facefusion.globals.face_detector_score,
-		step = facefusion.choices.face_detector_score_range[1] - facefusion.choices.face_detector_score_range[0],
-		minimum = facefusion.choices.face_detector_score_range[0],
-		maximum = facefusion.choices.face_detector_score_range[-1]
-	)
+	with gradio.Row():
+		FACE_DETECTOR_SCORE_SLIDER = gradio.Slider(
+			label = wording.get('uis.face_detector_score_slider'),
+			value = facefusion.globals.face_detector_score,
+			step = facefusion.choices.face_detector_score_range[1] - facefusion.choices.face_detector_score_range[0],
+			minimum = facefusion.choices.face_detector_score_range[0],
+			maximum = facefusion.choices.face_detector_score_range[-1]
+		)
+		FACE_LANDMARKER_SCORE_SLIDER = gradio.Slider(
+			label = wording.get('uis.face_landmarker_score_slider'),
+			value = facefusion.globals.face_landmarker_score,
+			step = facefusion.choices.face_landmarker_score_range[1] - facefusion.choices.face_landmarker_score_range[0],
+			minimum = facefusion.choices.face_landmarker_score_range[0],
+			maximum = facefusion.choices.face_landmarker_score_range[-1]
+		)
 	register_ui_component('face_analyser_order_dropdown', FACE_ANALYSER_ORDER_DROPDOWN)
 	register_ui_component('face_analyser_age_dropdown', FACE_ANALYSER_AGE_DROPDOWN)
 	register_ui_component('face_analyser_gender_dropdown', FACE_ANALYSER_GENDER_DROPDOWN)
 	register_ui_component('face_detector_model_dropdown', FACE_DETECTOR_MODEL_DROPDOWN)
 	register_ui_component('face_detector_size_dropdown', FACE_DETECTOR_SIZE_DROPDOWN)
 	register_ui_component('face_detector_score_slider', FACE_DETECTOR_SCORE_SLIDER)
+	register_ui_component('face_landmarker_score_slider', FACE_LANDMARKER_SCORE_SLIDER)
 
 
 def listen() -> None:
@@ -77,6 +86,7 @@ def listen() -> None:
 	FACE_DETECTOR_MODEL_DROPDOWN.change(update_face_detector_model, inputs = FACE_DETECTOR_MODEL_DROPDOWN, outputs = FACE_DETECTOR_SIZE_DROPDOWN)
 	FACE_DETECTOR_SIZE_DROPDOWN.change(update_face_detector_size, inputs = FACE_DETECTOR_SIZE_DROPDOWN)
 	FACE_DETECTOR_SCORE_SLIDER.change(update_face_detector_score, inputs = FACE_DETECTOR_SCORE_SLIDER)
+	FACE_LANDMARKER_SCORE_SLIDER.change(update_face_landmarker_score, inputs = FACE_LANDMARKER_SCORE_SLIDER)
 
 
 def update_face_analyser_order(face_analyser_order : FaceAnalyserOrder) -> None:
@@ -105,3 +115,6 @@ def update_face_detector_size(face_detector_size : str) -> None:
 def update_face_detector_score(face_detector_score : float) -> None:
 	facefusion.globals.face_detector_score = face_detector_score
 
+
+def update_face_landmarker_score(face_landmarker_score : float) -> None:
+	facefusion.globals.face_landmarker_score = face_landmarker_score
