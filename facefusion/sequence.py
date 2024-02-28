@@ -1,24 +1,9 @@
+import argparse
 import json
 import os
-from filesystem import (
-    create_temp, 
-    clear_temp, 
-    list_directory, 
-    is_image
-)
-import numpy as np
+from filesystem import create_temp, clear_temp, list_directory, is_image
 
-def generate_sequence_json(target_folder, images_with_parameters):
-    sequence_data = {
-        "target_folder": target_folder,
-        "images": images_with_parameters
-    }
-
-    sequence_file_path = os.path.join(target_folder, 'sequence.json')
-    with open(sequence_file_path, 'w') as json_file:
-        json.dump(sequence_data, json_file, indent=4)
-
-def generate_sequence(target_folder, parameters={}):
+def generate_sequence_json(target_folder, parameters={}):
     # Prepare the temporary directory
     create_temp(target_folder)
 
@@ -31,29 +16,30 @@ def generate_sequence(target_folder, parameters={}):
     # Filter for image files
     image_files = [file for file in all_files if is_image(os.path.join(target_folder, file))]
     
-    # Assume parameters are provided; otherwise, use default parameters
     images_with_parameters = [
-        {
-            "filename": image_file,
-            "parameters": parameters  # Example: Default or specific parameters for each image
-        }
+        {"filename": image_file, "parameters": parameters}
         for image_file in image_files
     ]
 
-    # Generate sequence.json with the validated images and parameters
-    generate_sequence_json(target_folder, images_with_parameters)
+    sequence_data = {"target_folder": target_folder, "images": images_with_parameters}
+    sequence_file_path = os.path.join(target_folder, 'sequence.json')
+    with open(sequence_file_path, 'w') as json_file:
+        json.dump(sequence_data, json_file, indent=4)
 
-def clear_temp_directory(target_folder):
-    clear_temp(target_folder)
+def main():
+    parser = argparse.ArgumentParser(description='Generate a sequence for face swapping.')
+    parser.add_argument('target_folder', type=str, help='Path to the target folder containing images.')
+    parser.add_argument('--clear_temp', action='store_true', help='Clear temporary files after processing.')
+    args = parser.parse_args()
 
-# Example usage
+    # Example: Default parameters for image processing
+    parameters = {"model": "default", "quality": "high"}
+
+    generate_sequence_json(args.target_folder, parameters)
+
+    if args.clear_temp:
+        clear_temp(args.target_folder)
+        print("Temporary files cleared.")
+
 if __name__ == '__main__':
-    target_folder = 'path/to/img_swaps'
-    # Example parameters - adjust as needed based on actual parameters and choices.py
-    parameters = {
-        "model": "default",
-        "quality": "high"
-    }
-    generate_sequence(target_folder, parameters)
-    # Optionally, clear temp directory after operation
-    # clear_temp_directory(target_folder)
+    main()
