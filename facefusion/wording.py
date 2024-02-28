@@ -136,7 +136,7 @@ WORDING : Dict[str, Any] =\
 		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',
 		'face_detector_size_dropdown': 'FACE DETECTOR SIZE',
 		'face_detector_score_slider': 'FACE DETECTOR SCORE',
-		'face_landmarker_score_slider': 'FACE LANDMARK SCORE',
+		'face_landmarker_score_slider': 'FACE LANDMARKER SCORE',
 		# face masker
 		'face_mask_types_checkbox_group': 'FACE MASK TYPES',
 		'face_mask_blur_slider': 'FACE MASK BLUR',
