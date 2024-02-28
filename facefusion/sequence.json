@@ -1,0 +1,26 @@
+{
+  "target_folder": "user/facefusion/img_swaps",
+  "images": [
+    {
+      "filename": "image1.jpg",
+      "parameters": {
+        "model": "default",
+        "parameter1": "high"
+      }
+    },
+    {
+      "filename": "image2.jpg",
+      "parameters": {
+        "model": "default",
+        "parameter1": "medium"
+      }
+    },
+    {
+      "filename": "image3.jpg",
+      "parameters": {
+        "model": "default",
+        "parameter1": "low"
+      }
+    }
+  ]
+}
