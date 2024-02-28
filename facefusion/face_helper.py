@@ -1,12 +1,12 @@
-from typing import Any, Dict, Tuple, List
+from typing import Any, Tuple, List
 from cv2.typing import Size
 from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, Template, FaceAnalyserAge, FaceAnalyserGender
+from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceAnalyserAge, FaceAnalyserGender
 
-TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
+WARP_TEMPLATES : WarpTemplateSet =\
 {
 	'arcface_112_v1': numpy.array(
 	[
@@ -43,9 +43,9 @@ TEMPLATES : Dict[Template, numpy.ndarray[Any, Any]] =\
 }
 
 
-def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5, template : Template, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
-	normed_template = TEMPLATES.get(template) * crop_size
-	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
+def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
+	normed_warp_template = WARP_TEMPLATES.get(warp_template) * crop_size
+	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
 	return crop_vision_frame, affine_matrix
 

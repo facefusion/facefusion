@@ -7,17 +7,22 @@ FaceLandmark5 = numpy.ndarray[Any, Any]
 FaceLandmark68 = numpy.ndarray[Any, Any]
 FaceLandmarkSet = TypedDict('FaceLandmarkSet',
 {
-	'5' : FaceLandmark5, # type: ignore[valid-type]
-	'5/68' : FaceLandmark5, # type: ignore[valid-type]
-	'68' : FaceLandmark68 # type: ignore[valid-type]
+	'5' : FaceLandmark5,
+	'5/68' : FaceLandmark5,
+	'68' : FaceLandmark68
 })
 Score = float
+FaceScoreSet = TypedDict('FaceScoreSet',
+{
+	'detector' : Score,
+	'landmarker' : Score
+})
 Embedding = numpy.ndarray[Any, Any]
 Face = namedtuple('Face',
 [
 	'bounding_box',
-	'landmark',
-	'score',
+	'landmarks',
+	'scores',
 	'embedding',
 	'normed_embedding',
 	'gender',
@@ -29,6 +34,7 @@ FaceStore = TypedDict('FaceStore',
 	'static_faces' : FaceSet,
 	'reference_faces': FaceSet
 })
+
 VisionFrame = numpy.ndarray[Any, Any]
 Mask = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
@@ -52,7 +58,8 @@ QueuePayload = TypedDict('QueuePayload',
 UpdateProcess = Callable[[], None]
 ProcessFrames = Callable[[List[str], List[QueuePayload], UpdateProcess], None]
 
-Template = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
+WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
+WarpTemplateSet = Dict[WarpTemplate, numpy.ndarray[Any, Any]]
 ProcessMode = Literal['output', 'preview', 'stream']
 
 LogLevel = Literal['error', 'warn', 'info', 'debug']
@@ -76,3 +83,4 @@ OptionsWithModel = TypedDict('OptionsWithModel',
 {
 	'model' : ModelValue
 })
+

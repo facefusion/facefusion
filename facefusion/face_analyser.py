@@ -11,7 +11,7 @@ from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution_helper import apply_execution_provider_options
 from facefusion.download import conditional_download
 from facefusion.filesystem import resolve_relative_path
-from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, BoundingBox, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Score, Embedding
+from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, BoundingBox, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Score, FaceScoreSet, Embedding
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
@@ -306,23 +306,28 @@ def create_faces(vision_frame : VisionFrame, bounding_box_list : List[BoundingBo
 			bounding_box = bounding_box_list[index]
 			face_landmark_5_68 = face_landmark_5_list[index]
 			face_landmark_68 = None
+			face_landmark_68_score = None
 			if facefusion.globals.face_landmarker_score > 0:
 				face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box)
 				if face_landmark_68_score > facefusion.globals.face_landmarker_score:
 					face_landmark_5_68 = convert_face_landmark_68_to_5(face_landmark_68)
-			landmark : FaceLandmarkSet =\
+			landmarks : FaceLandmarkSet =\
 			{
 				'5': face_landmark_5_list[index],
 				'5/68': face_landmark_5_68,
 				'68': face_landmark_68
 			}
-			score = score_list[index]
-			embedding, normed_embedding = calc_embedding(vision_frame, landmark['5/68'])
+			scores : FaceScoreSet = \
+			{
+				'detector': score_list[index],
+				'landmarker': face_landmark_68_score
+			}
+			embedding, normed_embedding = calc_embedding(vision_frame, landmarks['5/68'])
 			gender, age = detect_gender_age(vision_frame, bounding_box)
 			faces.append(Face(
 				bounding_box = bounding_box,
-				landmark = landmark,
-				score = score,
+				landmarks = landmarks,
+				scores = scores,
 				embedding = embedding,
 				normed_embedding = normed_embedding,
 				gender = gender,
@@ -412,8 +417,8 @@ def get_average_face(vision_frames : List[VisionFrame], position : int = 0) -> O
 		first_face = get_first(faces)
 		average_face = Face(
 			bounding_box = first_face.bounding_box,
-			landmark = first_face.landmark,
-			score = first_face.score,
+			landmarks = first_face.landmarks,
+			scores = first_face.scores,
 			embedding = numpy.mean(embedding_list, axis = 0),
 			normed_embedding = numpy.mean(normed_embedding_list, axis = 0),
 			gender = first_face.gender,
@@ -507,9 +512,9 @@ def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:
 	if order == 'large-small':
 		return sorted(faces, key = lambda face: (face.bounding_box[2] - face.bounding_box[0]) * (face.bounding_box[3] - face.bounding_box[1]), reverse = True)
 	if order == 'best-worst':
-		return sorted(faces, key = lambda face: face.score, reverse = True)
+		return sorted(faces, key = lambda face: face.scores.get('detector'), reverse = True)
 	if order == 'worst-best':
-		return sorted(faces, key = lambda face: face.score)
+		return sorted(faces, key = lambda face: face.scores.get('detector'))
 	return faces
 
 
