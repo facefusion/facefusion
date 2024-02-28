@@ -5,7 +5,7 @@ import numpy
 from cv2.typing import Size
 
 from facefusion.typing import VisionFrame, Resolution
-from facefusion.choices import video_template_sizes
+from facefusion.choices import vision_template_sizes
 from facefusion.filesystem import is_image, is_video
 
 
@@ -93,7 +93,7 @@ def create_resolutions(resolution : Optional[Resolution]) -> List[str]:
 	if resolution:
 		width, height = resolution
 		temp_resolutions.append(normalize_resolution(resolution))
-		for template_size in video_template_sizes:
+		for template_size in vision_template_sizes:
 			if width > height:
 				temp_resolutions.append(normalize_resolution((template_size * width / height, template_size)))
 			else:
