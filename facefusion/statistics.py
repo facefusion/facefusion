@@ -12,6 +12,10 @@ def create_statistics(static_faces : FaceSet) -> Dict[str, Any]:
 	face_landmarker_score_list = []
 	statistics =\
 	{
+		'min_face_detector_score': 0,
+		'min_face_landmarker_score': 0,
+		'max_face_detector_score': 0,
+		'max_face_landmarker_score': 0,
 		'average_face_detector_score': 0,
 		'average_face_landmarker_score': 0,
 		'total_face_landmark_5_fallbacks': 0,
@@ -28,6 +32,10 @@ def create_statistics(static_faces : FaceSet) -> Dict[str, Any]:
 			if numpy.array_equal(face.landmarks.get('5'), face.landmarks.get('5/68')):
 				statistics['total_face_landmark_5_fallbacks'] = statistics.get('total_face_landmark_5_fallbacks') + 1
 
+	statistics['min_face_detector_score'] = round(min(face_detector_score_list), 2)
+	statistics['min_face_landmarker_score'] = round(min(face_landmarker_score_list), 2)
+	statistics['max_face_detector_score'] = round(max(face_detector_score_list), 2)
+	statistics['max_face_landmarker_score'] = round(max(face_landmarker_score_list), 2)
 	statistics['average_face_detector_score'] = round(numpy.mean(face_detector_score_list), 2)
 	statistics['average_face_landmarker_score'] = round(numpy.mean(face_landmarker_score_list), 2)
 	return statistics
