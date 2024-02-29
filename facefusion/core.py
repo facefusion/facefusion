@@ -23,6 +23,7 @@ from facefusion.common_helper import create_metavar, get_first
 from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
+from facefusion.statistics import conditional_log_statistics
 from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video, filter_audio_paths
 from facefusion.ffmpeg import extract_frames, merge_video, copy_image, compress_image, restore_audio, replace_audio
 from facefusion.vision import read_image, read_static_images, detect_image_resolution, get_video_frame, detect_video_resolution, detect_video_fps,create_resolutions, pack_resolution
@@ -287,6 +288,7 @@ def process_image(start_time : float) -> None:
 	if is_image(facefusion.globals.output_path):
 		seconds = '{:.2f}'.format((time.time() - start_time) % 60)
 		logger.info(wording.get('processing_image_succeed').format(seconds = seconds), __name__.upper())
+		conditional_log_statistics()
 	else:
 		logger.error(wording.get('processing_image_failed'), __name__.upper())
 	process_manager.end()
@@ -349,6 +351,7 @@ def process_video(start_time : float) -> None:
 	if is_video(facefusion.globals.output_path):
 		seconds = '{:.2f}'.format((time.time() - start_time))
 		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__.upper())
+		conditional_log_statistics()
 	else:
 		logger.error(wording.get('processing_video_failed'), __name__.upper())
 	process_manager.end()

@@ -73,7 +73,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	tertiary_color = (255, 255, 0)
 	bounding_box = target_face.bounding_box.astype(numpy.int32)
 	temp_vision_frame = temp_vision_frame.copy()
-	is_equal = numpy.array_equal(target_face.landmarks.get('5'), target_face.landmarks.get('5/68'))
+	has_face_landmark_5_fallback = numpy.array_equal(target_face.landmarks.get('5'), target_face.landmarks.get('5/68'))
 
 	if 'bounding-box' in frame_processors_globals.face_debugger_items:
 		cv2.rectangle(temp_vision_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), primary_color, 2)
@@ -97,7 +97,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		inverse_vision_frame = cv2.threshold(inverse_vision_frame, 100, 255, cv2.THRESH_BINARY)[1]
 		inverse_vision_frame[inverse_vision_frame > 0] = 255
 		inverse_contours = cv2.findContours(inverse_vision_frame, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
-		cv2.drawContours(temp_vision_frame, inverse_contours, -1, tertiary_color if is_equal else secondary_color, 2)
+		cv2.drawContours(temp_vision_frame, inverse_contours, -1, tertiary_color if has_face_landmark_5_fallback else secondary_color, 2)
 	if 'face-landmark-5' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmarks.get('5')):
 		face_landmark_5 = target_face.landmarks.get('5').astype(numpy.int32)
 		for index in range(face_landmark_5.shape[0]):
@@ -105,7 +105,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	if 'face-landmark-5/68' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmarks.get('5/68')):
 		face_landmark_5_68 = target_face.landmarks.get('5/68').astype(numpy.int32)
 		for index in range(face_landmark_5_68.shape[0]):
-			cv2.circle(temp_vision_frame, (face_landmark_5_68[index][0], face_landmark_5_68[index][1]), 3, tertiary_color if is_equal else secondary_color, -1)
+			cv2.circle(temp_vision_frame, (face_landmark_5_68[index][0], face_landmark_5_68[index][1]), 3, tertiary_color if has_face_landmark_5_fallback else secondary_color, -1)
 	if 'face-landmark-68' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmarks.get('68')):
 		face_landmark_68 = target_face.landmarks.get('68').astype(numpy.int32)
 		for index in range(face_landmark_68.shape[0]):
@@ -120,7 +120,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		if 'face-landmarker-score' in frame_processors_globals.face_debugger_items:
 			face_score_text = str(round(target_face.scores.get('landmarker'), 2))
 			top = top + 20
-			cv2.putText(temp_vision_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, tertiary_color if is_equal else secondary_color, 2)
+			cv2.putText(temp_vision_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, tertiary_color if has_face_landmark_5_fallback else secondary_color, 2)
 		if 'age' in frame_processors_globals.face_debugger_items:
 			face_age_text = categorize_age(target_face.age)
 			top = top + 20
