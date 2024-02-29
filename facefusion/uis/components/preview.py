@@ -157,7 +157,6 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, facefusion.globals.reference_frame_number)
 	else:
 		source_audio_frame = None
-
 	if is_image(facefusion.globals.target_path):
 		target_vision_frame = read_static_image(facefusion.globals.target_path)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)

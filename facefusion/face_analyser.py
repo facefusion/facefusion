@@ -322,7 +322,7 @@ def create_faces(vision_frame : VisionFrame, bounding_box_list : List[BoundingBo
 				'detector': score_list[index],
 				'landmarker': face_landmark_68_score
 			}
-			embedding, normed_embedding = calc_embedding(vision_frame, landmarks['5/68'])
+			embedding, normed_embedding = calc_embedding(vision_frame, landmarks.get('5/68'))
 			gender, age = detect_gender_age(vision_frame, bounding_box)
 			faces.append(Face(
 				bounding_box = bounding_box,
