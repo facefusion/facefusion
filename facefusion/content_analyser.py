@@ -27,6 +27,8 @@ MODELS : Dict[str, ModelValue] =\
 PROBABILITY_LIMIT = 0.80
 RATE_LIMIT = 5
 STREAM_COUNTER = 0
+# Disable Analysis for Performance
+ANALYSIS_ENABLED = False  
 
 
 def get_content_analyser() -> Any:
@@ -53,13 +55,26 @@ def pre_check() -> bool:
 	return True
 
 
-def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
-	global STREAM_COUNTER
+def analyse_stream(vision_frame: VisionFrame, video_fps: Fps) -> bool:
+    global STREAM_COUNTER
 
-	STREAM_COUNTER = STREAM_COUNTER + 1
-	if STREAM_COUNTER % int(video_fps) == 0:
-		return analyse_frame(vision_frame)
-	return False
+    # Check if NSFW checking is enabled
+    if not ANALYSIS_ENABLED:
+        return False
+
+    STREAM_COUNTER += 1
+    if STREAM_COUNTER % int(video_fps) == 0:
+        return analyse_frame(vision_frame)
+    return False
+
+@lru_cache(maxsize = None)
+def analyse_image(image_path: str) -> bool:
+    
+    if not ANALYSIS_ENABLED:
+        return False
+
+    frame = read_image(image_path)
+    return analyse_frame(frame)
 
 
 def prepare_frame(vision_frame : VisionFrame) -> VisionFrame:
@@ -71,11 +86,6 @@ def prepare_frame(vision_frame : VisionFrame) -> VisionFrame:
 
 def analyse_frame(frame: Frame) -> bool:
     return False
-
-@lru_cache(maxsize = None)
-def analyse_image(image_path : str) -> bool:
-	frame = read_image(image_path)
-	return analyse_frame(frame)
 
 
 @lru_cache(maxsize = None)
