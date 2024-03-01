@@ -59,7 +59,7 @@ def merge_video(target_path : str, video_resolution : str, video_fps : Fps) -> b
 
 
 def copy_image(target_path : str, output_path : str, image_resolution : str) -> bool:
-	commands = [ '-i', target_path, '-vf', 'scale=' + str(image_resolution), '-y', output_path ]
+	commands = [ '-i', target_path, '-q:v', '0', '-vf', 'scale=' + str(image_resolution), '-y', output_path ]
 	return run_ffmpeg(commands)
 
 
