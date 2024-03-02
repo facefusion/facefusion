@@ -159,5 +159,5 @@ def update_lip_syncer_model(lip_syncer_model : LipSyncerModel) -> gradio.Dropdow
 	lip_syncer_module.clear_frame_processor()
 	lip_syncer_module.set_options('model', lip_syncer_module.MODELS[lip_syncer_model])
 	if lip_syncer_module.pre_check():
-		return gradio.Dropdown(value = frame_processors_globals.lip_syncer_model )
+		return gradio.Dropdown(value = frame_processors_globals.lip_syncer_model)
 	return gradio.Dropdown()

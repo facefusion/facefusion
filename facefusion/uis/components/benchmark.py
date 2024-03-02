@@ -110,8 +110,8 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	for index in range(benchmark_cycles):
 		facefusion.globals.target_path = target_path
 		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_paths, facefusion.globals.target_path, tempfile.gettempdir())
-		target_video_resolution = detect_video_resolution(facefusion.globals.target_path)
-		facefusion.globals.output_video_resolution = pack_resolution(target_video_resolution)
+		output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
+		facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
 		facefusion.globals.output_video_fps = detect_video_fps(facefusion.globals.target_path)
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		start_time = time.perf_counter()

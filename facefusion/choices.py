@@ -22,7 +22,8 @@ temp_frame_formats : List[TempFrameFormat] = [ 'bmp', 'jpg', 'png' ]
 output_video_encoders : List[OutputVideoEncoder] = [ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc' ]
 output_video_presets : List[OutputVideoPreset] = [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow' ]
 
-vision_template_sizes : List[int] = [ 240, 360, 480, 540, 720, 1080, 1440, 2160, 4320 ]
+image_template_sizes : List[float] = [ 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 3.5, 4 ]
+video_template_sizes : List[int] = [ 240, 360, 480, 540, 720, 1080, 1440, 2160, 4320 ]
 
 execution_thread_count_range : List[int] = create_int_range(1, 128, 1)
 execution_queue_count_range : List[int] = create_int_range(1, 32, 1)

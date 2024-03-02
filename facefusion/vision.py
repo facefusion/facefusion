@@ -5,7 +5,7 @@ import numpy
 from cv2.typing import Size
 
 from facefusion.typing import VisionFrame, Resolution
-from facefusion.choices import vision_template_sizes
+from facefusion.choices import image_template_sizes, video_template_sizes
 from facefusion.filesystem import is_image, is_video
 
 
@@ -55,6 +55,21 @@ def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[Vision
 	return None
 
 
+def create_image_resolutions(resolution : Optional[Resolution]) -> List[str]:
+	resolutions = []
+	temp_resolutions = []
+
+	if resolution:
+		width, height = resolution
+		temp_resolutions.append(normalize_resolution(resolution))
+		for template_size in image_template_sizes:
+			temp_resolutions.append(normalize_resolution((width * template_size, height * template_size)))
+		temp_resolutions = sorted(set(temp_resolutions))
+		for temp_resolution in temp_resolutions:
+			resolutions.append(pack_resolution(temp_resolution))
+	return resolutions
+
+
 def count_video_frame_total(video_path : str) -> int:
 	if is_video(video_path):
 		video_capture = cv2.VideoCapture(video_path)
@@ -86,14 +101,14 @@ def detect_video_resolution(video_path : str) -> Optional[Resolution]:
 	return None
 
 
-def create_resolutions(resolution : Optional[Resolution]) -> List[str]:
+def create_video_resolutions(resolution : Optional[Resolution]) -> List[str]:
 	resolutions = []
 	temp_resolutions = []
 
 	if resolution:
 		width, height = resolution
 		temp_resolutions.append(normalize_resolution(resolution))
-		for template_size in vision_template_sizes:
+		for template_size in video_template_sizes:
 			if width > height:
 				temp_resolutions.append(normalize_resolution((template_size * width / height, template_size)))
 			else:

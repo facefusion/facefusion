@@ -26,7 +26,7 @@ from facefusion.memory import limit_system_memory
 from facefusion.statistics import conditional_log_statistics
 from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video, filter_audio_paths
 from facefusion.ffmpeg import extract_frames, merge_video, copy_image, compress_image, restore_audio, replace_audio
-from facefusion.vision import read_image, read_static_images, detect_image_resolution, get_video_frame, detect_video_resolution, detect_video_fps,create_resolutions, pack_resolution
+from facefusion.vision import read_image, read_static_images, detect_image_resolution, create_image_resolutions, get_video_frame, detect_video_resolution, detect_video_fps, create_video_resolutions, pack_resolution
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
@@ -156,22 +156,22 @@ def apply_args(program : ArgumentParser) -> None:
 	# output creation
 	facefusion.globals.output_image_quality = args.output_image_quality
 	if is_image(args.target_path):
-		target_image_resolution = detect_image_resolution(args.target_path)
-		target_image_resolutions = create_resolutions(target_image_resolution)
-		if args.output_image_resolution in target_image_resolutions:
+		output_image_resolution = detect_image_resolution(args.target_path)
+		output_image_resolutions = create_image_resolutions(output_image_resolution)
+		if args.output_image_resolution in output_image_resolutions:
 			facefusion.globals.output_image_resolution = args.output_image_resolution
 		else:
-			facefusion.globals.output_image_resolution = pack_resolution(target_image_resolution)
+			facefusion.globals.output_image_resolution = pack_resolution(output_image_resolution)
 	facefusion.globals.output_video_encoder = args.output_video_encoder
 	facefusion.globals.output_video_preset = args.output_video_preset
 	facefusion.globals.output_video_quality = args.output_video_quality
 	if is_video(args.target_path):
-		target_video_resolution = detect_video_resolution(args.target_path)
-		target_video_resolutions = create_resolutions(target_video_resolution)
-		if args.output_video_resolution in target_video_resolutions:
+		output_video_resolution = detect_video_resolution(args.target_path)
+		output_video_resolutions = create_video_resolutions(output_video_resolution)
+		if args.output_video_resolution in output_video_resolutions:
 			facefusion.globals.output_video_resolution = args.output_video_resolution
 		else:
-			facefusion.globals.output_video_resolution = pack_resolution(target_video_resolution)
+			facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
 	if args.output_video_fps or is_video(args.target_path):
 		facefusion.globals.output_video_fps = normalize_fps(args.output_video_fps) or detect_video_fps(args.target_path)
 	facefusion.globals.skip_audio = args.skip_audio
