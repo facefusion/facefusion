@@ -32,7 +32,7 @@ def update_frame_processors(frame_processors : List[str]) -> gradio.CheckboxGrou
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		if not frame_processor_module.pre_check():
 			return gradio.CheckboxGroup()
-	return gradio.CheckboxGroup(value = frame_processors, choices = sort_frame_processors(frame_processors))
+	return gradio.CheckboxGroup(value = facefusion.globals.frame_processors, choices = sort_frame_processors(facefusion.globals.frame_processors))
 
 
 def sort_frame_processors(frame_processors : List[str]) -> list[str]:

@@ -105,8 +105,8 @@ def update_face_detector_model(face_detector_model : FaceDetectorModel) -> gradi
 	facefusion.globals.face_detector_model = face_detector_model
 	facefusion.globals.face_detector_size = '640x640'
 	if facefusion.globals.face_detector_size in facefusion.choices.face_detector_set[face_detector_model]:
-		return gradio.Dropdown(value = '640x640', choices = facefusion.choices.face_detector_set[face_detector_model])
-	return gradio.Dropdown(value = '640x640', choices = [ '640x640' ])
+		return gradio.Dropdown(value = facefusion.globals.face_detector_size, choices = facefusion.choices.face_detector_set[face_detector_model])
+	return gradio.Dropdown(value = facefusion.globals.face_detector_size, choices = [ facefusion.globals.face_detector_size ])
 
 
 def update_face_detector_size(face_detector_size : str) -> None:
