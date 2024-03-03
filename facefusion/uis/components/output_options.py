@@ -1,5 +1,4 @@
 from typing import Optional, Tuple, List
-import tempfile
 import gradio
 
 import facefusion.globals
@@ -39,9 +38,10 @@ def render() -> None:
 	if is_video(facefusion.globals.target_path):
 		output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
 		output_video_resolutions = create_video_resolutions(output_video_resolution)
+	facefusion.globals.output_path = facefusion.globals.output_path or '.'
 	OUTPUT_PATH_TEXTBOX = gradio.Textbox(
 		label = wording.get('uis.output_path_textbox'),
-		value = facefusion.globals.output_path or tempfile.gettempdir(),
+		value = facefusion.globals.output_path,
 		max_lines = 1
 	)
 	OUTPUT_IMAGE_QUALITY_SLIDER = gradio.Slider(

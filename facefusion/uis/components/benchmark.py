@@ -11,7 +11,6 @@ from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total, detect_video_resolution, detect_video_fps, pack_resolution
 from facefusion.core import conditional_process
 from facefusion.memory import limit_system_memory
-from facefusion.normalizer import normalize_output_path
 from facefusion.filesystem import clear_temp
 from facefusion.uis.core import get_ui_component
 
@@ -78,6 +77,7 @@ def listen() -> None:
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
 	facefusion.globals.source_paths = [ '.assets/examples/source.jpg' ]
+	facefusion.globals.output_path = tempfile.gettempdir()
 	facefusion.globals.face_landmarker_score = 0
 	facefusion.globals.temp_frame_format = 'bmp'
 	facefusion.globals.output_video_preset = 'ultrafast'
@@ -106,14 +106,13 @@ def post_process() -> None:
 def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	process_times = []
 	total_fps = 0.0
+	facefusion.globals.target_path = target_path
+	video_frame_total = count_video_frame_total(facefusion.globals.target_path)
+	output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
+	facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
+	facefusion.globals.output_video_fps = detect_video_fps(facefusion.globals.target_path)
 
 	for index in range(benchmark_cycles):
-		facefusion.globals.target_path = target_path
-		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_paths, facefusion.globals.target_path, tempfile.gettempdir())
-		output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
-		facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
-		facefusion.globals.output_video_fps = detect_video_fps(facefusion.globals.target_path)
-		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		start_time = time.perf_counter()
 		conditional_process()
 		end_time = time.perf_counter()
