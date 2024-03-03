@@ -32,6 +32,9 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 					if is_file(download_file_path):
 						current = os.path.getsize(download_file_path)
 						progress.update(current - progress.n)
+		if not is_download_done(url, download_file_path):
+			os.remove(download_file_path)
+			conditional_download(download_directory_path, [ url] )
 
 
 @lru_cache(maxsize = None)
