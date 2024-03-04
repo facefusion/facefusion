@@ -306,7 +306,7 @@ def create_faces(vision_frame : VisionFrame, bounding_box_list : List[BoundingBo
 			bounding_box = bounding_box_list[index]
 			face_landmark_5_68 = face_landmark_5_list[index]
 			face_landmark_68 = None
-			face_landmark_68_score = 0
+			face_landmark_68_score = 0.0
 			if facefusion.globals.face_landmarker_score > 0:
 				face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box)
 				if face_landmark_68_score > facefusion.globals.face_landmarker_score:
