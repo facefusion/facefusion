@@ -4,12 +4,11 @@ os.environ['OMP_NUM_THREADS'] = '1'
 
 import signal
 import sys
-import time
 import warnings
 import shutil
 import numpy
 import onnxruntime
-from time import sleep
+from time import sleep, time
 from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
@@ -225,7 +224,7 @@ def pre_check() -> bool:
 
 
 def conditional_process() -> None:
-	start_time = time.time()
+	start_time = time()
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		while not frame_processor_module.post_check():
 			logger.disable()
@@ -286,7 +285,7 @@ def process_image(start_time : float) -> None:
 		logger.warn(wording.get('compressing_image_skipped'), __name__.upper())
 	# validate image
 	if is_image(normed_output_path):
-		seconds = '{:.2f}'.format((time.time() - start_time) % 60)
+		seconds = '{:.2f}'.format((time() - start_time) % 60)
 		logger.info(wording.get('processing_image_succeed').format(seconds = seconds), __name__.upper())
 		conditional_log_statistics()
 	else:
@@ -350,7 +349,7 @@ def process_video(start_time : float) -> None:
 	clear_temp(facefusion.globals.target_path)
 	# validate video
 	if is_video(normed_output_path):
-		seconds = '{:.2f}'.format((time.time() - start_time))
+		seconds = '{:.2f}'.format((time() - start_time))
 		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__.upper())
 		conditional_log_statistics()
 	else:
