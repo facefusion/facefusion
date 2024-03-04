@@ -19,8 +19,3 @@ def test_multiple_execution_providers() -> None:
 		})
 	]
 	assert apply_execution_provider_options([ 'CPUExecutionProvider', 'CUDAExecutionProvider' ]) == execution_provider_with_options
-
-
-def test_map_device() -> None:
-	assert map_torch_backend([ 'CPUExecutionProvider' ]) == 'cpu'
-	assert map_torch_backend([ 'CPUExecutionProvider', 'CUDAExecutionProvider' ]) == 'cuda'
