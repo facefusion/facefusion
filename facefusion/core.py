@@ -30,7 +30,6 @@ from facefusion.vision import read_image, read_static_images, detect_image_resol
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
-warnings.filterwarnings('ignore', category = UserWarning, module = 'torchvision')
 
 
 def cli() -> None:
