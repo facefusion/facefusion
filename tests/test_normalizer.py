@@ -6,7 +6,7 @@ from facefusion.normalizer import normalize_output_path, normalize_padding, norm
 def test_normalize_output_path() -> None:
 	if platform.system().lower() == 'linux' or platform.system().lower() == 'darwin':
 		assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/target-240p.mp4') == '.assets/examples/target-240p.mp4'
-		assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples').startswith('.assets/examples/')
+		assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples').startswith('.assets/examples/target-240p')
 		assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples').endswith('.mp4')
 		assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/output.mp4') == '.assets/examples/output.mp4'
 	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/invalid') is None
