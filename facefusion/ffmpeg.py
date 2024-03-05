@@ -1,6 +1,7 @@
 from typing import List, Optional
 import subprocess
 from time import sleep
+import filetype
 
 import facefusion.globals
 from facefusion import process_manager
@@ -60,7 +61,9 @@ def merge_video(target_path : str, video_resolution : str, video_fps : Fps) -> b
 
 
 def copy_image(target_path : str, output_path : str, image_resolution : str) -> bool:
-	commands = [ '-i', target_path, '-q:v', '0', '-vf', 'scale=' + str(image_resolution), '-y', output_path ]
+	is_webp = filetype.guess_mime(target_path) == 'image/webp'
+	output_image_compression = 100 if is_webp else 0
+	commands = [ '-i', target_path, '-q:v', str(output_image_compression), '-vf', 'scale=' + str(image_resolution), '-y', output_path ]
 	return run_ffmpeg(commands)
 
 
