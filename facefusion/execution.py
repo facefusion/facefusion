@@ -33,7 +33,7 @@ def apply_execution_provider_options(execution_providers: List[str]) -> List[Any
 
 
 def use_exhaustive() -> bool:
-	cuda_devices = detect_static_cuda_devices()
+	cuda_devices = detect_static_execution_devices()
 	product_names = [ 'GeForce GTX 1650', 'GeForce GTX 1660' ]
 
 	return any(cuda_device.get('product').get('name') in product_names for cuda_device in cuda_devices)
@@ -45,12 +45,12 @@ def run_nvidia_smi() -> subprocess.Popen[bytes]:
 
 
 @lru_cache(maxsize = None)
-def detect_static_cuda_devices() -> List[ExecutionDevice]:
-	return detect_cuda_devices()
+def detect_static_execution_devices() -> List[ExecutionDevice]:
+	return detect_execution_devices()
 
 
-def detect_cuda_devices() -> List[ExecutionDevice]:
-	cuda_devices : List[ExecutionDevice] = []
+def detect_execution_devices() -> List[ExecutionDevice]:
+	execution_devices : List[ExecutionDevice] = []
 	try:
 		output, _ = run_nvidia_smi().communicate()
 		root_element = ElementTree.fromstring(output)
@@ -58,7 +58,7 @@ def detect_cuda_devices() -> List[ExecutionDevice]:
 		root_element = ElementTree.Element('xml')
 
 	for gpu_element in root_element.findall('gpu'):
-		cuda_devices.append(
+		execution_devices.append(
 		{
 			'driver_version': root_element.find('.//driver_version').text,
 			'framework':
@@ -83,7 +83,7 @@ def detect_cuda_devices() -> List[ExecutionDevice]:
 				'memory': create_value_and_unit(gpu_element.find('utilization/memory_util').text)
 			}
 		})
-	return cuda_devices
+	return execution_devices
 
 
 def create_value_and_unit(text : str) -> ValueAndUnit:
