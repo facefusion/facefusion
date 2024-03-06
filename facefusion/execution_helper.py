@@ -31,6 +31,6 @@ def apply_execution_provider_options(execution_providers: List[str]) -> List[Any
 
 def use_exhaustive() -> bool:
 	cuda_devices = detect_static_cuda_devices()
-	product_names = [ 'geforce rtx 1650', 'geforce rtx 1660' ]
+	product_names = [ 'geforce gtx 1650', 'geforce gtx 1660' ]
 
 	return any(cuda_device.get('product').get('name') in product_names for cuda_device in cuda_devices)
