@@ -89,32 +89,32 @@ ValueAndUnit = TypedDict('ValueAndUnit',
 	'value' : str,
 	'unit' : str
 })
-GpuDeviceFramework = TypedDict('GpuDeviceFramework',
+ExecutionDeviceFramework = TypedDict('ExecutionDeviceFramework',
 {
 	'name' : str,
 	'version' : str
 })
-GpuDeviceProduct = TypedDict('GpuDeviceProduct',
+ExecutionDeviceProduct = TypedDict('ExecutionDeviceProduct',
 {
 	'vendor' : str,
 	'name' : str,
 	'architecture' : str,
 })
-GpuDeviceVideoMemory = TypedDict('GpuDeviceVideoMemory',
+ExecutionDeviceVideoMemory = TypedDict('ExecutionDeviceVideoMemory',
 {
 	'total' : ValueAndUnit,
 	'free' : ValueAndUnit
 })
-GpuDeviceUtilization = TypedDict('GpuDeviceUtilization',
+ExecutionDeviceUtilization = TypedDict('ExecutionDeviceUtilization',
 {
-	'gpu' : ValueAndUnit,
+	'Execution' : ValueAndUnit,
 	'memory' : ValueAndUnit
 })
-GpuDevice = TypedDict('GpuDevice',
+ExecutionDevice = TypedDict('ExecutionDevice',
 {
 	'driver_version' : str,
-	'framework' : GpuDeviceFramework,
-	'product' : GpuDeviceProduct,
-	'video_memory' : GpuDeviceVideoMemory,
-	'utilization' : GpuDeviceUtilization
+	'framework' : ExecutionDeviceFramework,
+	'product' : ExecutionDeviceProduct,
+	'video_memory' : ExecutionDeviceVideoMemory,
+	'utilization' : ExecutionDeviceUtilization
 })

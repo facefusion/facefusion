@@ -3,16 +3,16 @@ from functools import lru_cache
 import subprocess
 import xml.etree.ElementTree as ElementTree
 
-from facefusion.typing import GpuDevice, ValueAndUnit
+from facefusion.typing import ExecutionDevice, ValueAndUnit
 
 
 @lru_cache(maxsize = None)
-def detect_static_cuda_devices() -> List[GpuDevice]:
+def detect_static_cuda_devices() -> List[ExecutionDevice]:
 	return detect_cuda_devices()
 
 
-def detect_cuda_devices() -> List[GpuDevice]:
-	cuda_devices : List[GpuDevice] = []
+def detect_cuda_devices() -> List[ExecutionDevice]:
+	cuda_devices : List[ExecutionDevice] = []
 	try:
 		output, _ = run_nvidia_smi().communicate()
 		contents = ElementTree.fromstring(output)

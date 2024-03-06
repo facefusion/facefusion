@@ -1,7 +1,7 @@
 from typing import Any, List
 import onnxruntime
 
-from facefusion.devices import detect_static_cuda_devices
+from facefusion.execution import detect_static_cuda_devices
 
 
 def encode_execution_providers(execution_providers : List[str]) -> List[str]:
