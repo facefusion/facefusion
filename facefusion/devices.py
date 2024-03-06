@@ -16,16 +16,16 @@ def detect_cuda_devices() -> List[GpuDevice]:
 
 	try:
 		output = subprocess.check_output([ 'nvidia-smi', '--query', '--xml-format' ])
-		output = ElementTree.fromstring(output)
+		content = ElementTree.fromstring(output)
 
-		for gpu in output.findall('gpu'):
+		for gpu in content.findall('gpu'):
 			cuda_devices.append(
 			{
-				'driver_version': output.find('.//driver_version').text,
+				'driver_version': content.find('.//driver_version').text,
 				'framework':
 				{
 					'name': 'cuda',
-					'version': output.find('.//cuda_version').text,
+					'version': content.find('.//cuda_version').text,
 				},
 				'product':
 				{
