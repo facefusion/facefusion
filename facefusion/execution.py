@@ -63,7 +63,7 @@ def detect_cuda_devices() -> List[ExecutionDevice]:
 			'driver_version': root_element.find('.//driver_version').text,
 			'framework':
 			{
-				'name': 'cuda',
+				'name': 'CUDA',
 				'version': root_element.find('.//cuda_version').text,
 			},
 			'product':
