@@ -10,8 +10,8 @@ face_analyser_genders : List[FaceAnalyserGender] = [ 'female', 'male' ]
 face_detector_set : Dict[FaceDetectorModel, List[str]] =\
 {
 	'many': [ '640x640' ],
-	'retinaface':  [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
-	'scrfd':   [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
+	'retinaface': [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
+	'scrfd': [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
 	'yoloface': [ '640x640' ],
 	'yunet': [ '160x160', '320x320', '480x480', '512x512', '640x640', '768x768', '960x960', '1024x1024' ]
 }

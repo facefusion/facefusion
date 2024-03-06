@@ -11,7 +11,7 @@ from facefusion import config, process_manager, logger, wording
 from facefusion.face_analyser import get_many_faces, clear_face_analyser, find_similar_faces, get_one_face
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder
 from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
-from facefusion.execution_helper import apply_execution_provider_options
+from facefusion.execution import apply_execution_provider_options
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
 from facefusion.normalizer import normalize_output_path

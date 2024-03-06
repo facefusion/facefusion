@@ -19,7 +19,7 @@ from facefusion import face_analyser, face_masker, content_analyser, config, pro
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.common_helper import create_metavar, get_first
-from facefusion.execution_helper import encode_execution_providers, decode_execution_providers
+from facefusion.execution import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
 from facefusion.statistics import conditional_log_statistics

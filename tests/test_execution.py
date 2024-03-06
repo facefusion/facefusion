@@ -1,4 +1,4 @@
-from facefusion.execution_helper import encode_execution_providers, decode_execution_providers, apply_execution_provider_options
+from facefusion.execution import encode_execution_providers, decode_execution_providers, apply_execution_provider_options
 
 
 def test_encode_execution_providers() -> None:

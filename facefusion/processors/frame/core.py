@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion.typing import ProcessFrames, QueuePayload
-from facefusion.execution_helper import encode_execution_providers
+from facefusion.execution import encode_execution_providers
 from facefusion import logger, wording
 
 FRAME_PROCESSORS_MODULES : List[ModuleType] = []
