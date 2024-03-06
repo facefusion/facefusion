@@ -107,7 +107,7 @@ ExecutionDeviceVideoMemory = TypedDict('ExecutionDeviceVideoMemory',
 })
 ExecutionDeviceUtilization = TypedDict('ExecutionDeviceUtilization',
 {
-	'Execution' : ValueAndUnit,
+	'gpu' : ValueAndUnit,
 	'memory' : ValueAndUnit
 })
 ExecutionDevice = TypedDict('ExecutionDevice',
