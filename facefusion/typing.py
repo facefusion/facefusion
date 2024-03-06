@@ -84,3 +84,37 @@ OptionsWithModel = TypedDict('OptionsWithModel',
 	'model' : ModelValue
 })
 
+ValueAndUnit = TypedDict('ValueAndUnit',
+{
+	'value' : str,
+	'unit' : str
+})
+GpuDeviceFramework = TypedDict('GpuDeviceFramework',
+{
+	'name' : str,
+	'version' : str
+})
+GpuDeviceProduct = TypedDict('GpuDeviceProduct',
+{
+	'vendor' : str,
+	'name' : str,
+	'architecture' : str,
+})
+GpuDeviceVideoMemory = TypedDict('GpuDeviceVideoMemory',
+{
+	'total' : ValueAndUnit,
+	'free' : ValueAndUnit
+})
+GpuDeviceUtilization = TypedDict('GpuDeviceUtilization',
+{
+	'gpu' : ValueAndUnit,
+	'memory' : ValueAndUnit
+})
+GpuDevice = TypedDict('GpuDevice',
+{
+	'driver_version' : str,
+	'framework' : GpuDeviceFramework,
+	'product' : GpuDeviceProduct,
+	'video_memory' : GpuDeviceVideoMemory,
+	'utilization' : GpuDeviceUtilization
+})
