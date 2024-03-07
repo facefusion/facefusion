@@ -26,12 +26,12 @@ def render() -> None:
 	global PREVIEW_IMAGE
 	global PREVIEW_FRAME_SLIDER
 
-	preview_image_args: Dict[str, Any] =\
+	preview_image_args : Dict[str, Any] =\
 	{
 		'label': wording.get('uis.preview_image'),
 		'interactive': False
 	}
-	preview_frame_slider_args: Dict[str, Any] =\
+	preview_frame_slider_args : Dict[str, Any] =\
 	{
 		'label': wording.get('uis.preview_frame_slider'),
 		'step': 1,
