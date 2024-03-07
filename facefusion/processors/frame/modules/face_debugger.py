@@ -137,8 +137,8 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 
 
 def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
-	reference_faces = inputs['reference_faces']
-	target_vision_frame = inputs['target_vision_frame']
+	reference_faces = inputs.get('reference_faces')
+	target_vision_frame = inputs.get('target_vision_frame')
 
 	if facefusion.globals.face_selector_mode == 'many':
 		many_faces = get_many_faces(target_vision_frame)

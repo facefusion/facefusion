@@ -190,9 +190,9 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 
 
 def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
-	reference_faces = inputs['reference_faces']
-	source_audio_frame = inputs['source_audio_frame']
-	target_vision_frame = inputs['target_vision_frame']
+	reference_faces = inputs.get('reference_faces')
+	source_audio_frame = inputs.get('source_audio_frame')
+	target_vision_frame = inputs.get('target_vision_frame')
 
 	if facefusion.globals.face_selector_mode == 'many':
 		many_faces = get_many_faces(target_vision_frame)
@@ -236,7 +236,9 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
-	source_audio_frame = get_audio_frame(source_audio_path, 25)
+	source_audio_frame = get_audio_frame(source_audio_path, 0)
+	if not numpy.any(source_audio_frame):
+		source_audio_frame = create_empty_audio_frame()
 	target_vision_frame = read_static_image(target_path)
 	output_vision_frame = process_frame(
 	{

@@ -11,7 +11,9 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import logger, wording
+from facefusion.audio import create_empty_audio_frame
 from facefusion.content_analyser import analyse_stream
+from facefusion.filesystem import filter_image_paths
 from facefusion.typing import VisionFrame, Face, Fps
 from facefusion.face_analyser import get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
@@ -92,9 +94,11 @@ def listen() -> None:
 def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_analyser_order = 'large-small'
-	source_frames = read_static_images(facefusion.globals.source_paths)
+	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
+	source_frames = read_static_images(source_image_paths)
 	source_face = get_average_face(source_frames)
 	stream = None
+
 	if webcam_mode in [ 'udp', 'v4l2' ]:
 		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) # type: ignore[arg-type]
 	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
@@ -150,6 +154,7 @@ def stop() -> gradio.Image:
 
 
 def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) -> VisionFrame:
+	source_audio_frame = create_empty_audio_frame()
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		logger.disable()
 		if frame_processor_module.pre_process('stream'):
@@ -157,8 +162,7 @@ def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) 
 			target_vision_frame = frame_processor_module.process_frame(
 			{
 				'source_face': source_face,
-				'reference_faces': None,
-				'source_audio_frame': None,
+				'source_audio_frame': source_audio_frame,
 				'target_vision_frame': target_vision_frame
 			})
 	return target_vision_frame

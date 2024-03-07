@@ -181,7 +181,7 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 
 
 def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
-	target_vision_frame = inputs['target_vision_frame']
+	target_vision_frame = inputs.get('target_vision_frame')
 	return enhance_frame(target_vision_frame)
 
 

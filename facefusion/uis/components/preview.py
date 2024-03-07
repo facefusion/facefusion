@@ -2,10 +2,11 @@ from typing import Any, Dict, List, Optional
 from time import sleep
 import cv2
 import gradio
+import numpy
 
 import facefusion.globals
 from facefusion import wording, logger
-from facefusion.audio import get_audio_frame
+from facefusion.audio import get_audio_frame, create_empty_audio_frame
 from facefusion.common_helper import get_first
 from facefusion.core import conditional_append_reference_faces
 from facefusion.face_analyser import get_average_face, clear_face_analyser
@@ -46,6 +47,8 @@ def render() -> None:
 	source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
 	if source_audio_path and facefusion.globals.output_video_fps:
 		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, facefusion.globals.reference_frame_number)
+		if not numpy.any(source_audio_frame):
+			source_audio_frame = create_empty_audio_frame()
 	else:
 		source_audio_frame = None
 	if is_image(facefusion.globals.target_path):
@@ -160,6 +163,8 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		if facefusion.globals.trim_frame_start:
 			reference_audio_frame_number -= facefusion.globals.trim_frame_start
 		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, reference_audio_frame_number)
+		if not numpy.any(source_audio_frame):
+			source_audio_frame = create_empty_audio_frame()
 	else:
 		source_audio_frame = None
 	if is_image(facefusion.globals.target_path):
