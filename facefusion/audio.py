@@ -11,7 +11,7 @@ from facefusion.typing import Fps, Audio, Spectrogram, AudioFrame
 def get_audio_frame(audio_path : str, fps : Fps, frame_number : int = 0) -> Optional[AudioFrame]:
 	if is_audio(audio_path):
 		audio_frames = read_static_audio(audio_path, fps)
-		if frame_number < len(audio_frames):
+		if frame_number in range(len(audio_frames)):
 			return audio_frames[frame_number]
 	return None
 
