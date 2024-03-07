@@ -220,7 +220,7 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 		frame_number = queue_payload['frame_number']
 		target_vision_path = queue_payload['frame_path']
 		source_audio_frame = get_audio_frame(source_audio_path, target_video_fps, frame_number)
-		if source_audio_frame is None:
+		if not numpy.any(source_audio_frame):
 			source_audio_frame = create_empty_audio_frame()
 		target_vision_frame = read_image(target_vision_path)
 		output_vision_frame = process_frame(
