@@ -33,59 +33,17 @@ MODELS : ModelSet =\
 		'path': resolve_relative_path('../.assets/models/4xLSDIR_fp32.onnx'),
 		'size': (128, 8, 2)
 	},
-	'lsdir_compact_2_x4':
-	{
-		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRCompact/Version2/4xLSDIRCompact2_fp32.onnx',
-		'path': resolve_relative_path('../.assets/models/4xLSDIRCompact2_fp32.onnx'),
-		'size': (128, 8, 2)
-	},
-	'lsdir_compact_3_x4':
-	{
-		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRCompact/Version3/4xLSDIRCompact3_fp32.onnx',
-		'path': resolve_relative_path('../.assets/models/4xLSDIRCompact3_fp32.onnx'),
-		'size': (128, 8, 2)
-	},
-	'lsdir_plus_c_x4':
-	{
-		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRplus/4xLSDIRplusC_fp32.onnx',
-		'path': resolve_relative_path('../.assets/models/4xLSDIRplusC_fp32.onnx'),
-		'size': (128, 8, 2)
-	},
-	'lsdir_plus_n_x4':
-	{
-		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRplus/4xLSDIRplusN_fp32.onnx',
-		'path': resolve_relative_path('../.assets/models/4xLSDIRplusN_fp32.onnx'),
-		'size': (128, 8, 2)
-	},
-	'lsdir_plus_r_x4':
-	{
-		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIRplus/4xLSDIRplusR_fp32.onnx',
-		'path': resolve_relative_path('../.assets/models/4xLSDIRplusR_fp32.onnx'),
-		'size': (128, 8, 2)
-	},
 	'nomos8k_sc_4x':
 	{
 		'url': 'https://github.com/Phhofm/models/raw/main/4xNomos8kSC/4xNomos8kSC_fp32.onnx',
 		'path': resolve_relative_path('../.assets/models/4xNomos8kSC_fp32.onnx'),
 		'size': (128, 8, 2)
 	},
-	'parimg_compact_x2':
-	{
-		'url': 'https://github.com/Phhofm/models/raw/main/2xParimgCompact/2xParimgCompact_fp32.onnx',
-		'path': resolve_relative_path('../.assets/models/2xParimgCompact_fp32.onnx'),
-		'size': (128, 8, 2)
-	},
-	'real_esrgan_128':
+	'real_esrgan_4x':
 	{
 		'url': 'https://huggingface.co/facefusion/next/resolve/main/realesrgan_128x128.onnx',
 		'path': resolve_relative_path('../.assets/models/realesrgan_128x128.onnx'),
 		'size': (128, 8, 2)
-	},
-	'real_esrgan_256':
-	{
-		'url': 'https://huggingface.co/facefusion/next/resolve/main/realesrgan_256x256.onnx',
-		'path': resolve_relative_path('../.assets/models/realesrgan_256x256.onnx'),
-		'size': (256, 8, 2)
 	},
 	'span_kendata_4x':
 	{
@@ -131,7 +89,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'parimg_compact_x2'), choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'real_esrgan_4x'), choices = frame_processors_choices.frame_enhancer_models)
 	program.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.frame_enhancer_blend', '80'), choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
 
 
