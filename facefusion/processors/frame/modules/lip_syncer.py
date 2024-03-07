@@ -185,6 +185,11 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
+def create_silent_audio_frame() -> AudioFrame:
+	audio = numpy.zeros((80, 16), dtype = numpy.int16)
+	return audio
+
+
 def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	pass
 
@@ -193,20 +198,21 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 	reference_faces = inputs['reference_faces']
 	source_audio_frame = inputs['source_audio_frame']
 	target_vision_frame = inputs['target_vision_frame']
-	is_source_audio_frame = numpy.any(source_audio_frame)
+	if not numpy.any(source_audio_frame):
+		source_audio_frame = create_silent_audio_frame()
 
 	if facefusion.globals.face_selector_mode == 'many':
 		many_faces = get_many_faces(target_vision_frame)
-		if many_faces and is_source_audio_frame:
+		if many_faces:
 			for target_face in many_faces:
 				target_vision_frame = sync_lip(target_face, source_audio_frame, target_vision_frame)
 	if facefusion.globals.face_selector_mode == 'one':
 		target_face = get_one_face(target_vision_frame)
-		if target_face and is_source_audio_frame:
+		if target_face:
 			target_vision_frame = sync_lip(target_face, source_audio_frame, target_vision_frame)
 	if facefusion.globals.face_selector_mode == 'reference':
 		similar_faces = find_similar_faces(reference_faces, target_vision_frame, facefusion.globals.reference_face_distance)
-		if similar_faces and is_source_audio_frame:
+		if similar_faces:
 			for similar_face in similar_faces:
 				target_vision_frame = sync_lip(similar_face, source_audio_frame, target_vision_frame)
 	return target_vision_frame
