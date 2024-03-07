@@ -74,3 +74,8 @@ def extract_audio_frames(spectrogram : Spectrogram, filter_total : int, audio_fr
 	for index in indices:
 		audio_frames.append(spectrogram[:, max(0, index - audio_frame_step) : index])
 	return audio_frames
+
+
+def create_empty_audio_frame() -> AudioFrame:
+	audio = numpy.zeros((80, 16), dtype = numpy.int16)
+	return audio
