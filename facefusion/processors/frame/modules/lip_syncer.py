@@ -18,7 +18,7 @@ from facefusion.normalizer import normalize_output_path
 from facefusion.typing import Face, VisionFrame, UpdateProcess, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
 from facefusion.filesystem import is_file, has_audio, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
-from facefusion.audio import read_static_audio, get_audio_frame
+from facefusion.audio import read_static_audio, get_audio_frame, create_empty_audio_frame
 from facefusion.filesystem import is_image, is_video, filter_audio_paths
 from facefusion.common_helper import get_first
 from facefusion.vision import read_image, write_image, read_static_image
@@ -185,11 +185,6 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def create_silent_audio_frame() -> AudioFrame:
-	audio = numpy.zeros((80, 16), dtype = numpy.int16)
-	return audio
-
-
 def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	pass
 
@@ -198,8 +193,6 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 	reference_faces = inputs['reference_faces']
 	source_audio_frame = inputs['source_audio_frame']
 	target_vision_frame = inputs['target_vision_frame']
-	if not numpy.any(source_audio_frame):
-		source_audio_frame = create_silent_audio_frame()
 
 	if facefusion.globals.face_selector_mode == 'many':
 		many_faces = get_many_faces(target_vision_frame)
@@ -227,6 +220,8 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 		frame_number = queue_payload['frame_number']
 		target_vision_path = queue_payload['frame_path']
 		source_audio_frame = get_audio_frame(source_audio_path, target_video_fps, frame_number)
+		if source_audio_frame is None:
+			source_audio_frame = create_empty_audio_frame()
 		target_vision_frame = read_image(target_vision_path)
 		output_vision_frame = process_frame(
 		{
