@@ -97,6 +97,8 @@ def listen() -> None:
 		'face_debugger_items_checkbox_group',
 		'face_enhancer_blend_slider',
 		'frame_enhancer_blend_slider',
+		'trim_frame_start_slider',
+		'trim_frame_end_slider',
 		'face_selector_mode_dropdown',
 		'reference_face_distance_slider',
 		'face_mask_types_checkbox_group',
