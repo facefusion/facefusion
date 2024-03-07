@@ -235,10 +235,7 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
-	source_audio_path = get_first(filter_audio_paths(source_paths))
-	source_audio_frame = get_audio_frame(source_audio_path, 0)
-	if not numpy.any(source_audio_frame):
-		source_audio_frame = create_empty_audio_frame()
+	source_audio_frame = create_empty_audio_frame()
 	target_vision_frame = read_static_image(target_path)
 	output_vision_frame = process_frame(
 	{
