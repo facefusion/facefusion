@@ -33,10 +33,10 @@ def apply_execution_provider_options(execution_providers: List[str]) -> List[Any
 
 
 def use_exhaustive() -> bool:
-	cuda_devices = detect_static_execution_devices()
-	product_names = [ 'GeForce GTX 1650', 'GeForce GTX 1660' ]
+	execution_devices = detect_static_execution_devices()
+	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
 
-	return any(cuda_device.get('product').get('name') in product_names for cuda_device in cuda_devices)
+	return any(execution_device.get('product').get('name').startswith(product_names) for execution_device in execution_devices)
 
 
 def run_nvidia_smi() -> subprocess.Popen[bytes]:
