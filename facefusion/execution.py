@@ -60,11 +60,11 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 	for gpu_element in root_element.findall('gpu'):
 		execution_devices.append(
 		{
-			'driver_version': root_element.find('.//driver_version').text,
+			'driver_version': root_element.find('driver_version').text,
 			'framework':
 			{
 				'name': 'CUDA',
-				'version': root_element.find('.//cuda_version').text,
+				'version': root_element.find('cuda_version').text,
 			},
 			'product':
 			{
