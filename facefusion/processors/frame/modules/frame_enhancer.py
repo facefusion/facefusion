@@ -29,26 +29,26 @@ MODELS : ModelSet =\
 {
 	'lsdir_x4':
 	{
-		'url': 'https://github.com/Phhofm/models/raw/main/4xLSDIR/4xLSDIR_fp32.onnx',
-		'path': resolve_relative_path('../.assets/models/4xLSDIR_fp32.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/lsdir_x4.onnx',
+		'path': resolve_relative_path('../.assets/models/lsdir_x4.onnx'),
 		'size': (128, 8, 2)
 	},
-	'nomos8k_sc_4x':
+	'nomos8k_sc_x4':
 	{
-		'url': 'https://github.com/Phhofm/models/raw/main/4xNomos8kSC/4xNomos8kSC_fp32.onnx',
-		'path': resolve_relative_path('../.assets/models/4xNomos8kSC_fp32.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/nomos8k_sc_x4.onnx',
+		'path': resolve_relative_path('../.assets/models/nomos8k_sc_x4.onnx'),
 		'size': (128, 8, 2)
 	},
-	'real_esrgan_4x':
+	'real_esrgan_x4':
 	{
-		'url': 'https://huggingface.co/facefusion/next/resolve/main/realesrgan_128x128.onnx',
-		'path': resolve_relative_path('../.assets/models/realesrgan_128x128.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4.onnx',
+		'path': resolve_relative_path('../.assets/models/real_esrgan_x4.onnx'),
 		'size': (128, 8, 2)
 	},
-	'span_kendata_4x':
+	'span_kendata_x4':
 	{
-		'url': 'https://github.com/terrainer/AI-Upscaling-Models/raw/main/4xSPANkendata/4xSPANkendata_fp32.onnx',
-		'path': resolve_relative_path('../.assets/models/4xSPANkendata_fp32.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/span_kendata_x4.onnx',
+		'path': resolve_relative_path('../.assets/models/span_kendata_x4.onnx'),
 		'size': (256, 8, 2)
 	}
 }
@@ -89,7 +89,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'real_esrgan_4x'), choices = frame_processors_choices.frame_enhancer_models)
+	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'real_esrgan_x4'), choices = frame_processors_choices.frame_enhancer_models)
 	program.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.frame_enhancer_blend', '80'), choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
 
 
