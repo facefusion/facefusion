@@ -54,7 +54,7 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 	try:
 		output, _ = run_nvidia_smi().communicate()
 		root_element = ElementTree.fromstring(output)
-	except FileNotFoundError:
+	except Exception:
 		root_element = ElementTree.Element('xml')
 
 	for gpu_element in root_element.findall('gpu'):
