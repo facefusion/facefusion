@@ -367,7 +367,7 @@ def process_video(start_time : float) -> None:
 	process_manager.end()
 
 
-def is_process_stopping():
+def is_process_stopping() -> bool:
 	if process_manager.is_stopping():
 		process_manager.end()
 		logger.info(wording.get('processing_stopped'), __name__.upper())
