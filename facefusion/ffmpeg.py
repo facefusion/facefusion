@@ -58,7 +58,7 @@ def merge_video(target_path : str, video_fps : Fps) -> bool:
 		commands.extend([ '-cq', str(output_video_compression), '-preset', map_nvenc_preset(facefusion.globals.output_video_preset) ])
 	if facefusion.globals.output_video_encoder in [ 'h264_amf', 'hevc_amf' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
-		commands.extend([ '-rc', 'cqp', '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(facefusion.globals.output_video_preset) ])
+		commands.extend([ '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(facefusion.globals.output_video_preset) ])
 	commands.extend([ '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_output_video_path ])
 	return run_ffmpeg(commands)
 
