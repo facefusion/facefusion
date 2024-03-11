@@ -56,6 +56,9 @@ def merge_video(target_path : str, video_fps : Fps) -> bool:
 	if facefusion.globals.output_video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
 		commands.extend([ '-cq', str(output_video_compression), '-preset', map_nvenc_preset(facefusion.globals.output_video_preset) ])
+	if facefusion.globals.output_video_encoder in [ 'h264_amf', 'hevc_amf' ]:
+		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
+		commands.extend([ '-rc', 'cqp', '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(facefusion.globals.output_video_preset) ])
 	commands.extend([ '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_output_video_path ])
 	return run_ffmpeg(commands)
 
@@ -118,4 +121,14 @@ def map_nvenc_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
 		return 'p6'
 	if output_video_preset == 'veryslow':
 		return 'p7'
+	return None
+
+
+def map_amf_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
+	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast' ]:
+		return 'speed'
+	if output_video_preset in [ 'faster', 'fast', 'medium' ]:
+		return 'balanced'
+	if output_video_preset in [ 'slow', 'slower', 'veryslow' ]:
+		return 'quality'
 	return None
