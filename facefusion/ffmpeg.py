@@ -1,6 +1,5 @@
 from typing import List, Optional
 import subprocess
-from time import sleep
 import filetype
 
 import facefusion.globals
@@ -14,8 +13,11 @@ def run_ffmpeg(args : List[str]) -> bool:
 	commands.extend(args)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE)
 
-	while process_manager.is_processing() and process.poll() is None:
-		sleep(0.5)
+	while process_manager.is_processing():
+		try:
+			return process.wait(timeout = 0.5) == 0
+		except subprocess.TimeoutExpired:
+			continue
 	return process.returncode == 0
 
 
