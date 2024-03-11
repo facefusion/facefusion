@@ -214,12 +214,11 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProcess) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
-	target_video_fps = facefusion.globals.output_video_fps
 
 	for queue_payload in process_manager.manage(queue_payloads):
 		frame_number = queue_payload['frame_number']
 		target_vision_path = queue_payload['frame_path']
-		source_audio_frame = get_audio_frame(source_audio_path, target_video_fps, frame_number)
+		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, frame_number)
 		if not numpy.any(source_audio_frame):
 			source_audio_frame = create_empty_audio_frame()
 		target_vision_frame = read_image(target_vision_path)

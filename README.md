@@ -80,7 +80,7 @@ frame extraction:
 output creation:
   --output-image-quality [0-100]                                                                                         specify the image quality which translates to the compression factor
   --output-image-resolution OUTPUT_IMAGE_RESOLUTION                                                                      specify the image output resolution based on the target image
-  --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc,h264_amf,hevc_amf}                                              specify the encoder use for the video compression
+  --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc,h264_amf,hevc_amf}                            specify the encoder use for the video compression
   --output-video-preset {ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow}                           balance fast video processing and video file size
   --output-video-quality [0-100]                                                                                         specify the video quality which translates to the compression factor
   --output-video-resolution OUTPUT_VIDEO_RESOLUTION                                                                      specify the video output resolution based on the target video
