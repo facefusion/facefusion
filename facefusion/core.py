@@ -269,7 +269,7 @@ def process_image(start_time : float) -> None:
 	else:
 		logger.error(wording.get('copying_image_failed'), __name__.upper())
 		return
-	# process
+	# process image
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		logger.info(wording.get('processing'), frame_processor_module.NAME)
 		frame_processor_module.process_image(facefusion.globals.source_paths, normed_output_path, normed_output_path)
@@ -311,7 +311,7 @@ def process_video(start_time : float) -> None:
 			return
 		logger.error(wording.get('extracting_frames_failed'), __name__.upper())
 		return
-	# process
+	# process frames
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
 	if temp_frame_paths:
 		for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
@@ -371,5 +371,4 @@ def is_process_stopping() -> bool:
 	if process_manager.is_stopping():
 		process_manager.end()
 		logger.info(wording.get('processing_stopped'), __name__.upper())
-		return True
-	return False
+	return process_manager.is_pending()
