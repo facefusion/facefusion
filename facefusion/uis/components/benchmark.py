@@ -1,5 +1,5 @@
 from typing import Any, Optional, List, Dict, Generator
-import time
+from time import sleep, perf_counter
 import tempfile
 import statistics
 import gradio
@@ -113,9 +113,9 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	facefusion.globals.output_video_fps = detect_video_fps(facefusion.globals.target_path)
 
 	for index in range(benchmark_cycles):
-		start_time = time.perf_counter()
+		start_time = perf_counter()
 		conditional_process()
-		end_time = time.perf_counter()
+		end_time = perf_counter()
 		process_time = end_time - start_time
 		total_fps += video_frame_total / process_time
 		process_times.append(process_time)
@@ -136,7 +136,7 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 
 def clear() -> gradio.Dataframe:
 	while process_manager.is_processing():
-		time.sleep(0.5)
+		sleep(0.5)
 	if facefusion.globals.target_path:
 		clear_temp(facefusion.globals.target_path)
 	return gradio.Dataframe(value = None)
