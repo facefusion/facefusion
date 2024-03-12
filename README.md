@@ -74,7 +74,6 @@ frame extraction:
   --trim-frame-start TRIM_FRAME_START                                                                                    specify the the start frame of the target video
   --trim-frame-end TRIM_FRAME_END                                                                                        specify the the end frame of the target video
   --temp-frame-format {bmp,jpg,png}                                                                                      specify the temporary resources format
-  --temp-frame-quality [0-100]                                                                                           specify the temporary resources quality
   --keep-temp                                                                                                            keep the temporary resources after processing
 
 output creation:

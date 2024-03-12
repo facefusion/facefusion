@@ -90,7 +90,6 @@ WORDING : Dict[str, Any] =\
 		'trim_frame_start': 'specify the the start frame of the target video',
 		'trim_frame_end': 'specify the the end frame of the target video',
 		'temp_frame_format': 'specify the temporary resources format',
-		'temp_frame_quality': 'specify the temporary resources quality',
 		'keep_temp': 'keep the temporary resources after processing',
 		# output creation
 		'output_image_quality': 'specify the image quality which translates to the compression factor',
@@ -187,7 +186,6 @@ WORDING : Dict[str, Any] =\
 		'target_file': 'TARGET',
 		# temp frame
 		'temp_frame_format_dropdown': 'TEMP FRAME FORMAT',
-		'temp_frame_quality_slider': 'TEMP FRAME QUALITY',
 		# trim frame
 		'trim_frame_start_slider': 'TRIM FRAME START',
 		'trim_frame_end_slider': 'TRIM FRAME END',
