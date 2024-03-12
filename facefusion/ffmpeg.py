@@ -9,9 +9,9 @@ from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video
 
 
 def run_ffmpeg(args : List[str]) -> bool:
-	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
+	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'quiet' ]
 	commands.extend(args)
-	process = subprocess.Popen(commands, stderr = subprocess.PIPE)
+	process = subprocess.Popen(commands, stdout = subprocess.PIPE)
 
 	while process_manager.is_processing():
 		try:
@@ -22,7 +22,7 @@ def run_ffmpeg(args : List[str]) -> bool:
 
 
 def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
-	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
+	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'quiet' ]
 	commands.extend(args)
 	return subprocess.Popen(commands, stdout = subprocess.PIPE)
 
@@ -45,7 +45,7 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 	return run_ffmpeg(commands)
 
 
-def merge_video(target_path : str, output_video_resolution : str, output_video_fps: Fps) -> bool:
+def merge_video(target_path : str, output_video_resolution : str, output_video_fps : Fps) -> bool:
 	temp_output_video_path = get_temp_output_video_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
 	commands = [ '-hwaccel', 'auto', '-s', str(output_video_resolution), '-r', str(output_video_fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder]
