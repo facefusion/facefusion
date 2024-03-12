@@ -1,6 +1,5 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
-from cv2.typing import Size
 import threading
 import cv2
 import numpy
@@ -31,25 +30,29 @@ MODELS : ModelSet =\
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/lsdir_x4.onnx',
 		'path': resolve_relative_path('../.assets/models/lsdir_x4.onnx'),
-		'size': (128, 8, 2)
+		'size': (128, 8, 2),
+		'scale': 4
 	},
 	'nomos8k_sc_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/nomos8k_sc_x4.onnx',
 		'path': resolve_relative_path('../.assets/models/nomos8k_sc_x4.onnx'),
-		'size': (128, 8, 2)
+		'size': (128, 8, 2),
+		'scale': 4
 	},
 	'real_esrgan_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4.onnx',
 		'path': resolve_relative_path('../.assets/models/real_esrgan_x4.onnx'),
-		'size': (128, 8, 2)
+		'size': (128, 8, 2),
+		'scale': 4
 	},
 	'span_kendata_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/span_kendata_x4.onnx',
 		'path': resolve_relative_path('../.assets/models/span_kendata_x4.onnx'),
-		'size': (256, 8, 2)
+		'size': (256, 8, 2),
+		'scale': 4
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -141,6 +144,7 @@ def post_process() -> None:
 def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	size = get_options('model').get('size')
+	scale = get_options('model').get('scale')
 	temp_height, temp_width = temp_vision_frame.shape[:2]
 	tile_vision_frames, pad_width, pad_height = create_tile_frames(temp_vision_frame, size)
 
@@ -149,8 +153,8 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 		{
 			frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
 		})[0]
-		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame, size)
-	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width, temp_height, pad_width, pad_height, size)
+		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame)
+	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width * scale, temp_height * scale, pad_width * scale, pad_height * scale, (size[0] * scale, size[1] * scale, size[2] * scale))
 	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
 	return temp_vision_frame
 
@@ -162,10 +166,9 @@ def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
 	return vision_tile_frame
 
 
-def normalize_tile_frame(vision_tile_frame : VisionFrame, size : Size) -> VisionFrame:
+def normalize_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
 	vision_tile_frame = vision_tile_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
 	vision_tile_frame = vision_tile_frame.clip(0, 255).astype(numpy.uint8)[:,:,::-1]
-	vision_tile_frame = cv2.resize(vision_tile_frame, (size[0], size[0]))
 	return vision_tile_frame
 
 
