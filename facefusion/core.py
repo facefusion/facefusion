@@ -24,8 +24,8 @@ from facefusion.normalizer import normalize_output_path, normalize_padding, norm
 from facefusion.memory import limit_system_memory
 from facefusion.statistics import conditional_log_statistics
 from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video, filter_audio_paths
-from facefusion.ffmpeg import extract_frames, merge_video, copy_image, compress_image, restore_audio, replace_audio
-from facefusion.vision import read_image, read_static_images, detect_image_resolution, create_image_resolutions, get_video_frame, detect_video_resolution, detect_video_fps, create_video_resolutions, pack_resolution
+from facefusion.ffmpeg import extract_frames, merge_video, copy_image, finalize_image, restore_audio, replace_audio
+from facefusion.vision import read_image, read_static_images, detect_image_resolution, restrict_video_fps, create_image_resolutions, get_video_frame, detect_video_resolution, detect_video_fps, restrict_video_resolution, restrict_image_resolution, create_video_resolutions, pack_resolution, unpack_resolution
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
@@ -79,8 +79,7 @@ def cli() -> None:
 	group_frame_extraction = program.add_argument_group('frame extraction')
 	group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('help.trim_frame_start'), type = int, default = facefusion.config.get_int_value('frame_extraction.trim_frame_start'))
 	group_frame_extraction.add_argument('--trim-frame-end',	help = wording.get('help.trim_frame_end'), type = int, default = facefusion.config.get_int_value('frame_extraction.trim_frame_end'))
-	group_frame_extraction.add_argument('--temp-frame-format', help = wording.get('help.temp_frame_format'), default = config.get_str_value('frame_extraction.temp_frame_format', 'jpg'), choices = facefusion.choices.temp_frame_formats)
-	group_frame_extraction.add_argument('--temp-frame-quality', help = wording.get('help.temp_frame_quality'), type = int, default = config.get_int_value('frame_extraction.temp_frame_quality', '100'), choices = facefusion.choices.temp_frame_quality_range, metavar = create_metavar(facefusion.choices.temp_frame_quality_range))
+	group_frame_extraction.add_argument('--temp-frame-format', help = wording.get('help.temp_frame_format'), default = config.get_str_value('frame_extraction.temp_frame_format', 'png'), choices = facefusion.choices.temp_frame_formats)
 	group_frame_extraction.add_argument('--keep-temp', help = wording.get('help.keep_temp'), action = 'store_true',	default = config.get_bool_value('frame_extraction.keep_temp'))
 	# output creation
 	group_output_creation = program.add_argument_group('output creation')
@@ -149,7 +148,6 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.trim_frame_start = args.trim_frame_start
 	facefusion.globals.trim_frame_end = args.trim_frame_end
 	facefusion.globals.temp_frame_format = args.temp_frame_format
-	facefusion.globals.temp_frame_quality = args.temp_frame_quality
 	facefusion.globals.keep_temp = args.keep_temp
 	# output creation
 	facefusion.globals.output_image_quality = args.output_image_quality
@@ -262,9 +260,11 @@ def process_image(start_time : float) -> None:
 	normed_output_path = normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path)
 	if analyse_image(facefusion.globals.target_path):
 		return
-	process_manager.start()
 	# copy image
-	if copy_image(facefusion.globals.target_path, normed_output_path, facefusion.globals.output_image_resolution):
+	process_manager.start()
+	temp_image_resolution = pack_resolution(restrict_image_resolution(facefusion.globals.target_path, unpack_resolution(facefusion.globals.output_image_resolution)))
+	logger.info(wording.get('copying_image').format(resolution = temp_image_resolution), __name__.upper())
+	if copy_image(facefusion.globals.target_path, normed_output_path, temp_image_resolution):
 		logger.debug(wording.get('copying_image_succeed'), __name__.upper())
 	else:
 		logger.error(wording.get('copying_image_failed'), __name__.upper())
@@ -276,11 +276,12 @@ def process_image(start_time : float) -> None:
 		frame_processor_module.post_process()
 	if is_process_stopping():
 		return
-	# compress image
-	if compress_image(normed_output_path):
-		logger.debug(wording.get('compressing_image_succeed'), __name__.upper())
+	# finalize image
+	logger.info(wording.get('finalizing_image').format(resolution = facefusion.globals.output_image_resolution), __name__.upper())
+	if finalize_image(normed_output_path, facefusion.globals.output_image_resolution):
+		logger.debug(wording.get('finalizing_image_succeed'), __name__.upper())
 	else:
-		logger.warn(wording.get('compressing_image_skipped'), __name__.upper())
+		logger.warn(wording.get('finalizing_image_skipped'), __name__.upper())
 	# validate image
 	if is_image(normed_output_path):
 		seconds = '{:.2f}'.format((time() - start_time) % 60)
@@ -303,8 +304,10 @@ def process_video(start_time : float) -> None:
 	create_temp(facefusion.globals.target_path)
 	# extract frames
 	process_manager.start()
-	logger.info(wording.get('extracting_frames_fps').format(video_fps = facefusion.globals.output_video_fps), __name__.upper())
-	if extract_frames(facefusion.globals.target_path, facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps):
+	temp_video_resolution = pack_resolution(restrict_video_resolution(facefusion.globals.target_path, unpack_resolution(facefusion.globals.output_video_resolution)))
+	temp_video_fps = restrict_video_fps(facefusion.globals.target_path, facefusion.globals.output_video_fps)
+	logger.info(wording.get('extracting_frames').format(resolution = temp_video_resolution, fps = temp_video_fps), __name__.upper())
+	if extract_frames(facefusion.globals.target_path, temp_video_resolution, temp_video_fps):
 		logger.debug(wording.get('extracting_frames_succeed'), __name__.upper())
 	else:
 		if is_process_stopping():
@@ -324,8 +327,8 @@ def process_video(start_time : float) -> None:
 		logger.error(wording.get('temp_frames_not_found'), __name__.upper())
 		return
 	# merge video
-	logger.info(wording.get('merging_video_fps').format(video_fps = facefusion.globals.output_video_fps), __name__.upper())
-	if merge_video(facefusion.globals.target_path, facefusion.globals.output_video_fps):
+	logger.info(wording.get('merging_video').format(resolution = facefusion.globals.output_video_resolution, fps = facefusion.globals.output_video_fps), __name__.upper())
+	if merge_video(facefusion.globals.target_path, facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps):
 		logger.debug(wording.get('merging_video_succeed'), __name__.upper())
 	else:
 		if is_process_stopping():

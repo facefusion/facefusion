@@ -40,7 +40,6 @@ face_mask_regions : Optional[List[FaceMaskRegion]] = None
 trim_frame_start : Optional[int] = None
 trim_frame_end : Optional[int] = None
 temp_frame_format : Optional[TempFrameFormat] = None
-temp_frame_quality : Optional[int] = None
 keep_temp : Optional[bool] = None
 # output creation
 output_image_quality : Optional[int] = None
