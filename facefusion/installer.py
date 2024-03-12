@@ -16,7 +16,7 @@ if platform.system().lower() == 'darwin':
 else:
 	ONNXRUNTIMES['default'] = ('onnxruntime', '1.16.3')
 if platform.system().lower() == 'linux' or platform.system().lower() == 'windows':
-	ONNXRUNTIMES['cuda-12.1'] = ('onnxruntime-gpu', '1.17.1')
+	ONNXRUNTIMES['cuda-12.2'] = ('onnxruntime-gpu', '1.17.1')
 	ONNXRUNTIMES['cuda-11.8'] = ('onnxruntime-gpu', '1.16.3')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
 if platform.system().lower() == 'linux':
