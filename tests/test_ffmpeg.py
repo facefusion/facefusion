@@ -28,7 +28,6 @@ def before_all() -> None:
 def before_each() -> None:
 	facefusion.globals.trim_frame_start = None
 	facefusion.globals.trim_frame_end = None
-	facefusion.globals.temp_frame_quality = 80
 	facefusion.globals.temp_frame_format = 'jpg'
 
 
