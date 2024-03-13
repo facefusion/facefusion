@@ -51,7 +51,7 @@ MODELS : ModelSet =\
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/span_kendata_x4.onnx',
 		'path': resolve_relative_path('../.assets/models/span_kendata_x4.onnx'),
-		'size': (256, 8, 2),
+		'size': (128, 8, 2),
 		'scale': 4
 	}
 }
