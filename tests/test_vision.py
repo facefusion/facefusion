@@ -2,7 +2,7 @@ import subprocess
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.vision import detect_image_resolution, create_image_resolutions, get_video_frame, count_video_frame_total, detect_video_fps, detect_video_resolution, create_video_resolutions, normalize_resolution, pack_resolution, unpack_resolution
+from facefusion.vision import detect_image_resolution, restrict_image_resolution, create_image_resolutions, get_video_frame, count_video_frame_total, detect_video_fps, restrict_video_fps, detect_video_resolution, restrict_video_resolution, create_video_resolutions, normalize_resolution, pack_resolution, unpack_resolution
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -32,6 +32,12 @@ def test_detect_image_resolution() -> None:
 	assert detect_image_resolution('invalid') is None
 
 
+def test_restrict_image_resolution() -> None:
+	assert restrict_image_resolution('.assets/examples/target-1080p.jpg', (426, 226)) == (426, 226)
+	assert restrict_image_resolution('.assets/examples/target-1080p.jpg', (2048, 1080)) == (2048, 1080)
+	assert restrict_image_resolution('.assets/examples/target-1080p.jpg', (4096, 2160)) == (2048, 1080)
+
+
 def test_create_image_resolutions() -> None:
 	assert create_image_resolutions((426, 226)) == [ '106x56', '212x112', '320x170', '426x226', '640x340', '852x452', '1064x564', '1278x678', '1492x792', '1704x904' ]
 	assert create_image_resolutions((226, 426)) == [ '56x106', '112x212', '170x320', '226x426', '340x640', '452x852', '564x1064', '678x1278', '792x1492', '904x1704' ]
@@ -59,12 +65,24 @@ def test_detect_video_fps() -> None:
 	assert detect_video_fps('invalid') is None
 
 
+def test_restrict_video_fps() -> None:
+	assert restrict_video_fps('.assets/examples/target-1080p.mp4', 20.0) == 20.0
+	assert restrict_video_fps('.assets/examples/target-1080p.mp4', 25.0) == 25.0
+	assert restrict_video_fps('.assets/examples/target-1080p.mp4', 60.0) == 25.0
+
+
 def test_detect_video_resolution() -> None:
 	assert detect_video_resolution('.assets/examples/target-240p.mp4') == (426, 226)
 	assert detect_video_resolution('.assets/examples/target-240p-90deg.mp4') == (226, 426)
 	assert detect_video_resolution('.assets/examples/target-1080p.mp4') == (2048, 1080)
 	assert detect_video_resolution('.assets/examples/target-1080p-90deg.mp4') == (1080, 2048)
 	assert detect_video_resolution('invalid') is None
+
+
+def test_restrict_video_resolution() -> None:
+	assert restrict_video_resolution('.assets/examples/target-1080p.mp4', (426, 226)) == (426, 226)
+	assert restrict_video_resolution('.assets/examples/target-1080p.mp4', (2048, 1080)) == (2048, 1080)
+	assert restrict_video_resolution('.assets/examples/target-1080p.mp4', (4096, 2160)) == (2048, 1080)
 
 
 def test_create_video_resolutions() -> None:
