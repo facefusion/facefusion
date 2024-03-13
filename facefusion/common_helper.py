@@ -18,7 +18,7 @@ def get_first(__list__ : Any) -> Any:
 	return next(iter(__list__), None)
 
 
-def extract_major_version(version : str) -> tuple[int, int]:
+def extract_major_version(version : str) -> Tuple[int, int]:
 	versions = version.split('.')
 	if len(versions) > 1:
 		return int(versions[0]), int(versions[1])
