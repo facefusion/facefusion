@@ -31,7 +31,7 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
-	commands = [ '-hwaccel', 'auto', '-i', target_path ]
+	commands = [ '-hwaccel', 'auto', '-i', target_path, '-q:v', '0' ]
 
 	if trim_frame_start is not None and trim_frame_end is not None:
 		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',scale=' + str(temp_video_resolution) + ',fps=' + str(temp_video_fps) ])
