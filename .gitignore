@@ -1,3 +1,5 @@
 .assets
 .idea
 .vscode
+**/pycache/
+**/__pycache__/
