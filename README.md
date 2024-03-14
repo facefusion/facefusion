@@ -54,12 +54,13 @@ face analyser:
   --face-analyser-order {left-right,right-left,top-bottom,bottom-top,small-large,large-small,best-worst,worst-best}      specify the order in which the face analyser detects faces.
   --face-analyser-age {child,teen,adult,senior}                                                                          filter the detected faces based on their age
   --face-analyser-gender {female,male}                                                                                   filter the detected faces based on their gender
-  --face-detector-model {retinaface,yoloface,yunet}                                                                      choose the model responsible for detecting the face
+  --face-detector-model {many,retinaface,scrfd,yoloface,yunet}                                                           choose the model responsible for detecting the face
   --face-detector-size FACE_DETECTOR_SIZE                                                                                specify the size of the frame provided to the face detector
   --face-detector-score [0.0-1.0]                                                                                        filter the detected faces base on the confidence score
+  --face-landmarker-score [0.0-1.0]                                                                                      filter the detected landmarks base on the confidence score
 
 face selector:
-  --face-selector-mode {reference,one,many}                                                                              use reference based tracking with simple matching
+  --face-selector-mode {many,one,reference}                                                                              use reference based tracking or simple matching
   --reference-face-position REFERENCE_FACE_POSITION                                                                      specify the position used to create the reference face
   --reference-face-distance [0.0-1.5]                                                                                    specify the desired similarity between the reference face and target face
   --reference-frame-number REFERENCE_FRAME_NUMBER                                                                        specify the frame used to create the reference face
@@ -74,12 +75,12 @@ frame extraction:
   --trim-frame-start TRIM_FRAME_START                                                                                    specify the the start frame of the target video
   --trim-frame-end TRIM_FRAME_END                                                                                        specify the the end frame of the target video
   --temp-frame-format {bmp,jpg,png}                                                                                      specify the temporary resources format
-  --temp-frame-quality [0-100]                                                                                           specify the temporary resources quality
   --keep-temp                                                                                                            keep the temporary resources after processing
 
 output creation:
   --output-image-quality [0-100]                                                                                         specify the image quality which translates to the compression factor
-  --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc}                                              specify the encoder use for the video compression
+  --output-image-resolution OUTPUT_IMAGE_RESOLUTION                                                                      specify the image output resolution based on the target image
+  --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc,h264_amf,hevc_amf}                            specify the encoder use for the video compression
   --output-video-preset {ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow}                           balance fast video processing and video file size
   --output-video-quality [0-100]                                                                                         specify the video quality which translates to the compression factor
   --output-video-resolution OUTPUT_VIDEO_RESOLUTION                                                                      specify the video output resolution based on the target video
@@ -88,11 +89,11 @@ output creation:
 
 frame processors:
   --frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                                             load a single or multiple frame processors. (choices: face_debugger, face_enhancer, face_swapper, frame_enhancer, lip_syncer, ...)
-  --face-debugger-items FACE_DEBUGGER_ITEMS [FACE_DEBUGGER_ITEMS ...]                                                    load a single or multiple frame processors (choices: bounding-box, landmark-5, landmark-68, face-mask, score, age, gender)
+  --face-debugger-items FACE_DEBUGGER_ITEMS [FACE_DEBUGGER_ITEMS ...]                                                    load a single or multiple frame processors (choices: bounding-box, face-landmark-5, face-landmark-5/68, face-landmark-68, face-mask, face-detector-score, face-landmarker-score, age, gender)
   --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,restoreformer_plus_plus}  choose the model responsible for enhancing the face
   --face-enhancer-blend [0-100]                                                                                          blend the enhanced into the previous face
   --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial,uniface_256}   choose the model responsible for swapping the face
-  --frame-enhancer-model {real_esrgan_x2plus,real_esrgan_x4plus,real_esrnet_x4plus}                                      choose the model responsible for enhancing the frame
+  --frame-enhancer-model {lsdir_x4,nomos8k_sc_x4,real_esrgan_x4,span_kendata_x4}                                         choose the model responsible for enhancing the frame
   --frame-enhancer-blend [0-100]                                                                                         blend the enhanced into the previous frame
   --lip-syncer-model {wav2lip_gan}                                                                                       choose the model responsible for syncing the lips
 

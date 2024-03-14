@@ -1,4 +1,4 @@
-from facefusion.execution_helper import encode_execution_providers, decode_execution_providers, apply_execution_provider_options, map_torch_backend
+from facefusion.execution import encode_execution_providers, decode_execution_providers, apply_execution_provider_options
 
 
 def test_encode_execution_providers() -> None:
@@ -19,8 +19,3 @@ def test_multiple_execution_providers() -> None:
 		})
 	]
 	assert apply_execution_provider_options([ 'CPUExecutionProvider', 'CUDAExecutionProvider' ]) == execution_provider_with_options
-
-
-def test_map_device() -> None:
-	assert map_torch_backend([ 'CPUExecutionProvider' ]) == 'cpu'
-	assert map_torch_backend([ 'CPUExecutionProvider', 'CUDAExecutionProvider' ]) == 'cuda'

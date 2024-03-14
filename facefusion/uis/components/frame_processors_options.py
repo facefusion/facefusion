@@ -113,7 +113,7 @@ def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> gradi
 	face_enhancer_module.clear_frame_processor()
 	face_enhancer_module.set_options('model', face_enhancer_module.MODELS[face_enhancer_model])
 	if face_enhancer_module.pre_check():
-		return gradio.Dropdown(value = face_enhancer_model)
+		return gradio.Dropdown(value = frame_processors_globals.face_enhancer_model)
 	return gradio.Dropdown()
 
 
@@ -135,7 +135,7 @@ def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> gradio.D
 	face_swapper_module.clear_frame_processor()
 	face_swapper_module.set_options('model', face_swapper_module.MODELS[face_swapper_model])
 	if face_swapper_module.pre_check():
-		return gradio.Dropdown(value = face_swapper_model)
+		return gradio.Dropdown(value = frame_processors_globals.face_swapper_model)
 	return gradio.Dropdown()
 
 
@@ -145,7 +145,7 @@ def update_frame_enhancer_model(frame_enhancer_model : FrameEnhancerModel) -> gr
 	frame_enhancer_module.clear_frame_processor()
 	frame_enhancer_module.set_options('model', frame_enhancer_module.MODELS[frame_enhancer_model])
 	if frame_enhancer_module.pre_check():
-		return gradio.Dropdown(value = frame_enhancer_model)
+		return gradio.Dropdown(value = frame_processors_globals.frame_enhancer_model)
 	return gradio.Dropdown()
 
 
@@ -159,5 +159,5 @@ def update_lip_syncer_model(lip_syncer_model : LipSyncerModel) -> gradio.Dropdow
 	lip_syncer_module.clear_frame_processor()
 	lip_syncer_module.set_options('model', lip_syncer_module.MODELS[lip_syncer_model])
 	if lip_syncer_module.pre_check():
-		return gradio.Dropdown(value = lip_syncer_model)
+		return gradio.Dropdown(value = frame_processors_globals.lip_syncer_model)
 	return gradio.Dropdown()

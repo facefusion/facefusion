@@ -8,7 +8,7 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion.typing import FaceLandmark68, VisionFrame, Mask, Padding, FaceMaskRegion, ModelSet
-from facefusion.execution_helper import apply_execution_provider_options
+from facefusion.execution import apply_execution_provider_options
 from facefusion.filesystem import resolve_relative_path
 from facefusion.download import conditional_download
 

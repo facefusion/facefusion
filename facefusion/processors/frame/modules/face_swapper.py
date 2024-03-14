@@ -8,14 +8,16 @@ from onnx import numpy_helper
 
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, logger, wording
-from facefusion.execution_helper import apply_execution_provider_options
+from facefusion import config, process_manager, logger, wording
+from facefusion.execution import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
 from facefusion.face_store import get_reference_faces
+from facefusion.common_helper import extract_major_version
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, Embedding, VisionFrame, Update_Process, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
+from facefusion.normalizer import normalize_output_path
+from facefusion.typing import Face, Embedding, VisionFrame, UpdateProcess, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.filesystem import is_file, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
@@ -144,7 +146,8 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	if onnxruntime.__version__ == '1.17.0':
+	onnxruntime_version = extract_major_version(onnxruntime.__version__)
+	if onnxruntime_version > (1, 16):
 		face_swapper_model_fallback = 'inswapper_128'
 	else:
 		face_swapper_model_fallback = 'inswapper_128_fp16'
@@ -197,7 +200,7 @@ def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
 		logger.error(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not facefusion.globals.output_path:
+	if mode == 'output' and not normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path):
 		logger.error(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -218,7 +221,7 @@ def post_process() -> None:
 def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
-	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark['5/68'], model_template, model_size)
+	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmarks.get('5/68'), model_template, model_size)
 	crop_mask_list = []
 
 	if 'box' in facefusion.globals.face_mask_types:
@@ -259,9 +262,9 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 	model_type = get_options('model').get('type')
 	source_vision_frame = read_static_image(facefusion.globals.source_paths[0])
 	if model_type == 'blendswap':
-		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark['5/68'], 'arcface_112_v2', (112, 112))
+		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmarks.get('5/68'), 'arcface_112_v2', (112, 112))
 	if model_type == 'uniface':
-		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark['5/68'], 'ffhq_512', (256, 256))
+		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmarks.get('5/68'), 'ffhq_512', (256, 256))
 	source_vision_frame = source_vision_frame[:, :, ::-1] / 255.0
 	source_vision_frame = source_vision_frame.transpose(2, 0, 1)
 	source_vision_frame = numpy.expand_dims(source_vision_frame, axis = 0).astype(numpy.float32)
@@ -301,42 +304,42 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 
 
 def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
-	reference_faces = inputs['reference_faces']
-	source_face = inputs['source_face']
-	target_vision_frame = inputs['target_vision_frame']
+	reference_faces = inputs.get('reference_faces')
+	source_face = inputs.get('source_face')
+	target_vision_frame = inputs.get('target_vision_frame')
 
-	if 'reference' in facefusion.globals.face_selector_mode:
-		similar_faces = find_similar_faces(reference_faces, target_vision_frame, facefusion.globals.reference_face_distance)
-		if similar_faces:
-			for similar_face in similar_faces:
-				target_vision_frame = swap_face(source_face, similar_face, target_vision_frame)
-	if 'one' in facefusion.globals.face_selector_mode:
-		target_face = get_one_face(target_vision_frame)
-		if target_face:
-			target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
-	if 'many' in facefusion.globals.face_selector_mode:
+	if facefusion.globals.face_selector_mode == 'many':
 		many_faces = get_many_faces(target_vision_frame)
 		if many_faces:
 			for target_face in many_faces:
 				target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
+	if facefusion.globals.face_selector_mode == 'one':
+		target_face = get_one_face(target_vision_frame)
+		if target_face:
+			target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
+	if facefusion.globals.face_selector_mode == 'reference':
+		similar_faces = find_similar_faces(reference_faces, target_vision_frame, facefusion.globals.reference_face_distance)
+		if similar_faces:
+			for similar_face in similar_faces:
+				target_vision_frame = swap_face(source_face, similar_face, target_vision_frame)
 	return target_vision_frame
 
 
-def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : Update_Process) -> None:
+def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProcess) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_frames = read_static_images(source_paths)
 	source_face = get_average_face(source_frames)
 
-	for queue_payload in queue_payloads:
+	for queue_payload in process_manager.manage(queue_payloads):
 		target_vision_path = queue_payload['frame_path']
 		target_vision_frame = read_image(target_vision_path)
-		result_frame = process_frame(
+		output_vision_frame = process_frame(
 		{
 			'reference_faces': reference_faces,
 			'source_face': source_face,
 			'target_vision_frame': target_vision_frame
 		})
-		write_image(target_vision_path, result_frame)
+		write_image(target_vision_path, output_vision_frame)
 		update_progress()
 
 
@@ -345,13 +348,13 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 	source_frames = read_static_images(source_paths)
 	source_face = get_average_face(source_frames)
 	target_vision_frame = read_static_image(target_path)
-	result_frame = process_frame(
+	output_vision_frame = process_frame(
 	{
 		'reference_faces': reference_faces,
 		'source_face': source_face,
 		'target_vision_frame': target_vision_frame
 	})
-	write_image(output_path, result_frame)
+	write_image(output_path, output_vision_frame)
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:

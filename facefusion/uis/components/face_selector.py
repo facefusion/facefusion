@@ -23,7 +23,7 @@ def render() -> None:
 	global REFERENCE_FACE_POSITION_GALLERY
 	global REFERENCE_FACE_DISTANCE_SLIDER
 
-	reference_face_gallery_args: Dict[str, Any] =\
+	reference_face_gallery_args : Dict[str, Any] =\
 	{
 		'label': wording.get('uis.reference_face_gallery'),
 		'object_fit': 'cover',
@@ -85,7 +85,8 @@ def listen() -> None:
 	[
 		'face_detector_model_dropdown',
 		'face_detector_size_dropdown',
-		'face_detector_score_slider'
+		'face_detector_score_slider',
+		'face_landmarker_score_slider'
 	]
 	for component_name in change_two_component_names:
 		component = get_ui_component(component_name)
@@ -98,15 +99,15 @@ def listen() -> None:
 
 
 def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gradio.Gallery, gradio.Slider]:
-	if face_selector_mode == 'reference':
-		facefusion.globals.face_selector_mode = face_selector_mode
-		return gradio.Gallery(visible = True), gradio.Slider(visible = True)
-	if face_selector_mode == 'one':
-		facefusion.globals.face_selector_mode = face_selector_mode
-		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
 	if face_selector_mode == 'many':
 		facefusion.globals.face_selector_mode = face_selector_mode
 		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
+	if face_selector_mode == 'one':
+		facefusion.globals.face_selector_mode = face_selector_mode
+		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
+	if face_selector_mode == 'reference':
+		facefusion.globals.face_selector_mode = face_selector_mode
+		return gradio.Gallery(visible = True), gradio.Slider(visible = True)
 
 
 def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradio.Gallery:

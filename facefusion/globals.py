@@ -24,6 +24,7 @@ face_analyser_gender : Optional[FaceAnalyserGender] = None
 face_detector_model : Optional[FaceDetectorModel] = None
 face_detector_size : Optional[str] = None
 face_detector_score : Optional[float] = None
+face_landmarker_score : Optional[float] = None
 face_recognizer_model : Optional[FaceRecognizerModel] = None
 # face selector
 face_selector_mode : Optional[FaceSelectorMode] = None
@@ -39,10 +40,10 @@ face_mask_regions : Optional[List[FaceMaskRegion]] = None
 trim_frame_start : Optional[int] = None
 trim_frame_end : Optional[int] = None
 temp_frame_format : Optional[TempFrameFormat] = None
-temp_frame_quality : Optional[int] = None
 keep_temp : Optional[bool] = None
 # output creation
 output_image_quality : Optional[int] = None
+output_image_resolution : Optional[str] = None
 output_video_encoder : Optional[OutputVideoEncoder] = None
 output_video_preset : Optional[OutputVideoPreset] = None
 output_video_quality : Optional[int] = None

@@ -2,10 +2,11 @@ from typing import Any, Dict, List, Optional
 from time import sleep
 import cv2
 import gradio
+import numpy
 
 import facefusion.globals
 from facefusion import wording, logger
-from facefusion.audio import get_audio_frame
+from facefusion.audio import get_audio_frame, create_empty_audio_frame
 from facefusion.common_helper import get_first
 from facefusion.core import conditional_append_reference_faces
 from facefusion.face_analyser import get_average_face, clear_face_analyser
@@ -26,12 +27,12 @@ def render() -> None:
 	global PREVIEW_IMAGE
 	global PREVIEW_FRAME_SLIDER
 
-	preview_image_args: Dict[str, Any] =\
+	preview_image_args : Dict[str, Any] =\
 	{
 		'label': wording.get('uis.preview_image'),
 		'interactive': False
 	}
-	preview_frame_slider_args: Dict[str, Any] =\
+	preview_frame_slider_args : Dict[str, Any] =\
 	{
 		'label': wording.get('uis.preview_frame_slider'),
 		'step': 1,
@@ -46,6 +47,8 @@ def render() -> None:
 	source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
 	if source_audio_path and facefusion.globals.output_video_fps:
 		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, facefusion.globals.reference_frame_number)
+		if not numpy.any(source_audio_frame):
+			source_audio_frame = create_empty_audio_frame()
 	else:
 		source_audio_frame = None
 	if is_image(facefusion.globals.target_path):
@@ -97,6 +100,8 @@ def listen() -> None:
 		'face_debugger_items_checkbox_group',
 		'face_enhancer_blend_slider',
 		'frame_enhancer_blend_slider',
+		'trim_frame_start_slider',
+		'trim_frame_end_slider',
 		'face_selector_mode_dropdown',
 		'reference_face_distance_slider',
 		'face_mask_types_checkbox_group',
@@ -124,7 +129,8 @@ def listen() -> None:
 		'lip_syncer_model_dropdown',
 		'face_detector_model_dropdown',
 		'face_detector_size_dropdown',
-		'face_detector_score_slider'
+		'face_detector_score_slider',
+		'face_landmarker_score_slider'
 	]
 	for component_name in change_two_component_names:
 		component = get_ui_component(component_name)
@@ -153,10 +159,14 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	source_face = get_average_face(source_frames)
 	source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
 	if source_audio_path and facefusion.globals.output_video_fps:
-		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, facefusion.globals.reference_frame_number)
+		reference_audio_frame_number = facefusion.globals.reference_frame_number
+		if facefusion.globals.trim_frame_start:
+			reference_audio_frame_number -= facefusion.globals.trim_frame_start
+		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, reference_audio_frame_number)
+		if not numpy.any(source_audio_frame):
+			source_audio_frame = create_empty_audio_frame()
 	else:
 		source_audio_frame = None
-
 	if is_image(facefusion.globals.target_path):
 		target_vision_frame = read_static_image(facefusion.globals.target_path)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)
@@ -178,7 +188,7 @@ def update_preview_frame_slider() -> gradio.Slider:
 
 
 def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_audio_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:
-	target_vision_frame = resize_frame_resolution(target_vision_frame, 640, 640)
+	target_vision_frame = resize_frame_resolution(target_vision_frame, (640, 640))
 	if analyse_frame(target_vision_frame):
 		return cv2.GaussianBlur(target_vision_frame, (99, 99), 0)
 	for frame_processor in facefusion.globals.frame_processors:

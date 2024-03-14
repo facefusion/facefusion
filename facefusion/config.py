@@ -12,7 +12,7 @@ def get_config() -> ConfigParser:
 	if CONFIG is None:
 		config_path = resolve_relative_path('../facefusion.ini')
 		CONFIG = ConfigParser()
-		CONFIG.read(config_path)
+		CONFIG.read(config_path, encoding = 'utf-8')
 	return CONFIG
 
 

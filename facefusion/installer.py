@@ -9,26 +9,17 @@ from argparse import ArgumentParser, HelpFormatter
 
 from facefusion import metadata, wording
 
-TORCH : Dict[str, str] =\
-{
-	'default': 'default',
-	'cpu': 'cpu'
-}
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 
 if platform.system().lower() == 'darwin':
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.17.0')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.17.1')
 else:
 	ONNXRUNTIMES['default'] = ('onnxruntime', '1.16.3')
 if platform.system().lower() == 'linux' or platform.system().lower() == 'windows':
-	TORCH['cuda-12.1'] = 'cu121'
-	TORCH['cuda-11.8'] = 'cu118'
-	ONNXRUNTIMES['cuda-12.1'] = ('onnxruntime-gpu', '1.17.0')
+	ONNXRUNTIMES['cuda-12.2'] = ('onnxruntime-gpu', '1.17.1')
 	ONNXRUNTIMES['cuda-11.8'] = ('onnxruntime-gpu', '1.16.3')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
 if platform.system().lower() == 'linux':
-	TORCH['rocm-5.4.2'] = 'rocm5.4.2'
-	TORCH['rocm-5.6'] = 'rocm5.6'
 	ONNXRUNTIMES['rocm-5.4.2'] = ('onnxruntime-rocm', '1.16.3')
 	ONNXRUNTIMES['rocm-5.6'] = ('onnxruntime-rocm', '1.16.3')
 if platform.system().lower() == 'windows':
@@ -37,7 +28,6 @@ if platform.system().lower() == 'windows':
 
 def cli() -> None:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 130))
-	program.add_argument('--torch', help = wording.get('help.install_dependency').format(dependency = 'torch'), choices = TORCH.keys())
 	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys())
 	program.add_argument('--skip-venv', help = wording.get('help.skip_venv'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
@@ -52,29 +42,21 @@ def run(program : ArgumentParser) -> None:
 		os.environ['SYSTEM_VERSION_COMPAT'] = '0'
 	if not args.skip_venv:
 		os.environ['PIP_REQUIRE_VIRTUALENV'] = '1'
-	if args.torch and args.onnxruntime:
+	if args.onnxruntime:
 		answers =\
 		{
-			'torch': args.torch,
 			'onnxruntime': args.onnxruntime
 		}
 	else:
 		answers = inquirer.prompt(
 		[
-			inquirer.List('torch', message = wording.get('help.install_dependency').format(dependency = 'torch'), choices = list(TORCH.keys())),
 			inquirer.List('onnxruntime', message = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = list(ONNXRUNTIMES.keys()))
 		])
 	if answers:
-		torch = answers['torch']
-		torch_wheel = TORCH[torch]
 		onnxruntime = answers['onnxruntime']
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime]
 
-		subprocess.call([ 'pip', 'uninstall', 'torch', '-y', '-q' ])
-		if torch_wheel == 'default':
-			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--force-reinstall' ])
-		else:
-			subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--extra-index-url', 'https://download.pytorch.org/whl/' + torch_wheel, '--force-reinstall' ])
+		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--force-reinstall' ])
 		if onnxruntime == 'rocm-5.4.2' or onnxruntime == 'rocm-5.6':
 			if python_id in [ 'cp39', 'cp310', 'cp311' ]:
 				rocm_version = onnxruntime.replace('-', '')

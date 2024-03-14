@@ -100,12 +100,10 @@ def listen() -> None:
 
 
 def update_face_mask_type(face_mask_types : List[FaceMaskType]) -> Tuple[gradio.CheckboxGroup, gradio.Group, gradio.CheckboxGroup]:
-	if not face_mask_types:
-		face_mask_types = facefusion.choices.face_mask_types
-	facefusion.globals.face_mask_types = face_mask_types
+	facefusion.globals.face_mask_types = face_mask_types or facefusion.choices.face_mask_types
 	has_box_mask = 'box' in face_mask_types
 	has_region_mask = 'region' in face_mask_types
-	return gradio.CheckboxGroup(value = face_mask_types), gradio.Group(visible = has_box_mask), gradio.CheckboxGroup(visible = has_region_mask)
+	return gradio.CheckboxGroup(value = facefusion.globals.face_mask_types), gradio.Group(visible = has_box_mask), gradio.CheckboxGroup(visible = has_region_mask)
 
 
 def update_face_mask_blur(face_mask_blur : float) -> None:
@@ -117,7 +115,5 @@ def update_face_mask_padding(face_mask_padding_top : int, face_mask_padding_righ
 
 
 def update_face_mask_regions(face_mask_regions : List[FaceMaskRegion]) -> gradio.CheckboxGroup:
-	if not face_mask_regions:
-		face_mask_regions = facefusion.choices.face_mask_regions
-	facefusion.globals.face_mask_regions = face_mask_regions
-	return gradio.CheckboxGroup(value = face_mask_regions)
+	facefusion.globals.face_mask_regions = face_mask_regions or facefusion.choices.face_mask_regions
+	return gradio.CheckboxGroup(value = facefusion.globals.face_mask_regions)

@@ -1,17 +1,16 @@
 from typing import Any, Optional, List, Dict, Generator
-import time
+from time import sleep, perf_counter
 import tempfile
 import statistics
 import gradio
 
 import facefusion.globals
-from facefusion import wording
+from facefusion import process_manager, wording
 from facefusion.face_store import clear_static_faces
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total, detect_video_resolution, detect_video_fps, pack_resolution
 from facefusion.core import conditional_process
 from facefusion.memory import limit_system_memory
-from facefusion.normalizer import normalize_output_path
 from facefusion.filesystem import clear_temp
 from facefusion.uis.core import get_ui_component
 
@@ -70,6 +69,7 @@ def render() -> None:
 def listen() -> None:
 	benchmark_runs_checkbox_group = get_ui_component('benchmark_runs_checkbox_group')
 	benchmark_cycles_slider = get_ui_component('benchmark_cycles_slider')
+
 	if benchmark_runs_checkbox_group and benchmark_cycles_slider:
 		BENCHMARK_START_BUTTON.click(start, inputs = [ benchmark_runs_checkbox_group, benchmark_cycles_slider ], outputs = BENCHMARK_RESULTS_DATAFRAME)
 	BENCHMARK_CLEAR_BUTTON.click(clear, outputs = BENCHMARK_RESULTS_DATAFRAME)
@@ -77,10 +77,13 @@ def listen() -> None:
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
 	facefusion.globals.source_paths = [ '.assets/examples/source.jpg' ]
+	facefusion.globals.output_path = tempfile.gettempdir()
+	facefusion.globals.face_landmarker_score = 0
 	facefusion.globals.temp_frame_format = 'bmp'
 	facefusion.globals.output_video_preset = 'ultrafast'
-	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 	benchmark_results = []
+	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
+
 	if target_paths:
 		pre_process()
 		for target_path in target_paths:
@@ -103,16 +106,16 @@ def post_process() -> None:
 def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 	process_times = []
 	total_fps = 0.0
+	facefusion.globals.target_path = target_path
+	video_frame_total = count_video_frame_total(facefusion.globals.target_path)
+	output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
+	facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
+	facefusion.globals.output_video_fps = detect_video_fps(facefusion.globals.target_path)
+
 	for index in range(benchmark_cycles):
-		facefusion.globals.target_path = target_path
-		facefusion.globals.output_path = normalize_output_path(facefusion.globals.source_paths, facefusion.globals.target_path, tempfile.gettempdir())
-		target_video_resolution = detect_video_resolution(facefusion.globals.target_path)
-		facefusion.globals.output_video_resolution = pack_resolution(target_video_resolution)
-		facefusion.globals.output_video_fps = detect_video_fps(facefusion.globals.target_path)
-		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
-		start_time = time.perf_counter()
+		start_time = perf_counter()
 		conditional_process()
-		end_time = time.perf_counter()
+		end_time = perf_counter()
 		process_time = end_time - start_time
 		total_fps += video_frame_total / process_time
 		process_times.append(process_time)
@@ -132,6 +135,8 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 
 
 def clear() -> gradio.Dataframe:
+	while process_manager.is_processing():
+		sleep(0.5)
 	if facefusion.globals.target_path:
 		clear_temp(facefusion.globals.target_path)
 	return gradio.Dataframe(value = None)
