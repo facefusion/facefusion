@@ -20,12 +20,12 @@ BENCHMARK_CLEAR_BUTTON : Optional[gradio.Button] = None
 BENCHMARKS : Dict[str, str] =\
 {
 	'240p': '.assets/examples/target-240p.mp4',
-	#'360p': '.assets/examples/target-360p.mp4',
-	#'540p': '.assets/examples/target-540p.mp4',
-	#'720p': '.assets/examples/target-720p.mp4',
-	#'1080p': '.assets/examples/target-1080p.mp4',
-	#'1440p': '.assets/examples/target-1440p.mp4',
-	#'2160p': '.assets/examples/target-2160p.mp4'
+	'360p': '.assets/examples/target-360p.mp4',
+	'540p': '.assets/examples/target-540p.mp4',
+	'720p': '.assets/examples/target-720p.mp4',
+	'1080p': '.assets/examples/target-1080p.mp4',
+	'1440p': '.assets/examples/target-1440p.mp4',
+	'2160p': '.assets/examples/target-2160p.mp4'
 }
 
 
