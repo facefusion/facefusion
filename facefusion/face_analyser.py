@@ -301,7 +301,8 @@ def create_faces(vision_frame : VisionFrame, bounding_box_list : List[BoundingBo
 		bounding_box_list = [ bounding_box_list[index] for index in sort_indices ]
 		face_landmark_5_list = [face_landmark_5_list[index] for index in sort_indices]
 		score_list = [ score_list[index] for index in sort_indices ]
-		keep_indices = apply_nms(bounding_box_list, 0.4)
+		iou_threshold = 0.1 if facefusion.globals.face_detector_model == 'many' else 0.4
+		keep_indices = apply_nms(bounding_box_list, iou_threshold)
 		for index in keep_indices:
 			bounding_box = bounding_box_list[index]
 			face_landmark_5_68 = face_landmark_5_list[index]
