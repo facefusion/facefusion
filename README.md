@@ -93,7 +93,7 @@ frame processors:
   --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,restoreformer_plus_plus}  choose the model responsible for enhancing the face
   --face-enhancer-blend [0-100]                                                                                          blend the enhanced into the previous face
   --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial,uniface_256}   choose the model responsible for swapping the face
-  --frame-enhancer-model {lsdir_x4,nomos8k_sc_x4,real_esrgan_x4,span_kendata_x4}                                         choose the model responsible for enhancing the frame
+  --frame-enhancer-model {lsdir_x4,nomos8k_sc_x4,real_esrgan_x4,real_esrgan_x4_fp16,span_kendata_x4}                     choose the model responsible for enhancing the frame
   --frame-enhancer-blend [0-100]                                                                                         blend the enhanced into the previous frame
   --lip-syncer-model {wav2lip_gan}                                                                                       choose the model responsible for syncing the lips
 
