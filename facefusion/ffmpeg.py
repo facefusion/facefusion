@@ -24,7 +24,7 @@ def run_ffmpeg(args : List[str]) -> bool:
 def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'quiet' ]
 	commands.extend(args)
-	return subprocess.Popen(commands, stdout = subprocess.PIPE)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
 def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps) -> bool:
