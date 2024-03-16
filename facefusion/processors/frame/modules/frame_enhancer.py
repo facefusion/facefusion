@@ -55,6 +55,13 @@ MODELS : ModelSet =\
 		'size': (128, 8, 2),
 		'scale': 4
 	},
+	'real_hatgan_x4':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_hatgan_x4.onnx',
+		'path': resolve_relative_path('../.assets/models/real_hatgan_x4.onnx'),
+		'size': (256, 8, 2),
+		'scale': 4
+	},
 	'span_kendata_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/span_kendata_x4.onnx',
