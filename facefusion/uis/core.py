@@ -6,8 +6,12 @@ import gradio
 
 import facefusion.globals
 from facefusion import metadata, logger, wording
+from facefusion.uis import overrides
 from facefusion.uis.typing import Component, ComponentName
 from facefusion.filesystem import resolve_relative_path
+
+gradio.processing_utils.encode_pil_to_base64 = overrides.encode_pil_to_base64
+gradio.processing_utils.encode_array_to_base64 = overrides.encode_array_to_base64
 
 UI_COMPONENTS: Dict[ComponentName, Component] = {}
 UI_LAYOUT_MODULES : List[ModuleType] = []
