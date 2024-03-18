@@ -141,7 +141,7 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 	clear_face_analyser()
 	clear_reference_faces()
 	clear_static_faces()
-	sleep(1)
+	sleep(2)
 	while process_manager.is_checking():
 		sleep(0.5)
 	return update_preview_image(frame_number)
