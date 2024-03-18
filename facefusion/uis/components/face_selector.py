@@ -117,6 +117,7 @@ def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradi
 	sleep(1)
 	while process_manager.is_checking():
 		sleep(0.5)
+	update_reference_face_position(event.index)
 	return update_reference_position_gallery()
 
 
