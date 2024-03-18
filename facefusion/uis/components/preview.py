@@ -5,7 +5,7 @@ import gradio
 import numpy
 
 import facefusion.globals
-from facefusion import wording, logger
+from facefusion import face_analyser, wording, logger
 from facefusion.audio import get_audio_frame, create_empty_audio_frame
 from facefusion.common_helper import get_first
 from facefusion.core import conditional_append_reference_faces
@@ -142,6 +142,7 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 	clear_reference_faces()
 	clear_static_faces()
 	sleep(0.5)
+	face_analyser.pre_check()
 	return update_preview_image(frame_number)
 
 

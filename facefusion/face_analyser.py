@@ -121,17 +121,25 @@ def pre_check() -> bool:
 		download_directory_path = resolve_relative_path('../.assets/models')
 		model_urls =\
 		[
-			MODELS.get('face_detector_retinaface').get('url'),
-			MODELS.get('face_detector_scrfd').get('url'),
-			MODELS.get('face_detector_yoloface').get('url'),
-			MODELS.get('face_detector_yunet').get('url'),
-			MODELS.get('face_recognizer_arcface_blendswap').get('url'),
-			MODELS.get('face_recognizer_arcface_inswapper').get('url'),
-			MODELS.get('face_recognizer_arcface_simswap').get('url'),
-			MODELS.get('face_recognizer_arcface_uniface').get('url'),
 			MODELS.get('face_landmarker').get('url'),
-			MODELS.get('gender_age').get('url'),
+			MODELS.get('gender_age').get('url')
 		]
+		if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
+			model_urls.append(MODELS.get('face_detector_retinaface').get('url'))
+		if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
+			model_urls.append(MODELS.get('face_detector_scrfd').get('url'))
+		if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
+			model_urls.append(MODELS.get('face_detector_yoloface').get('url'))
+		if facefusion.globals.face_detector_model in [ 'yunet' ]:
+			model_urls.append(MODELS.get('face_detector_yunet').get('url'))
+		if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
+			model_urls.append(MODELS.get('face_recognizer_arcface_blendswap').get('url'))
+		if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
+			model_urls.append(MODELS.get('face_recognizer_arcface_inswapper').get('url'))
+		if facefusion.globals.face_recognizer_model == 'arcface_simswap':
+			model_urls.append(MODELS.get('face_recognizer_arcface_simswap').get('url'))
+		if facefusion.globals.face_recognizer_model == 'arcface_uniface':
+			model_urls.append(MODELS.get('face_recognizer_arcface_uniface').get('url'))
 		conditional_download(download_directory_path, model_urls)
 	return True
 
