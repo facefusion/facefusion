@@ -1,10 +1,11 @@
 from typing import List, Optional, Tuple, Any, Dict
+from time import sleep
 
 import gradio
 
 import facefusion.globals
 import facefusion.choices
-from facefusion import wording
+from facefusion import process_manager, wording
 from facefusion.face_store import clear_static_faces, clear_reference_faces
 from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color
 from facefusion.filesystem import is_image, is_video
@@ -113,7 +114,9 @@ def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gr
 def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradio.Gallery:
 	clear_reference_faces()
 	clear_static_faces()
-	update_reference_face_position(event.index)
+	sleep(1)
+	while process_manager.is_checking():
+		sleep(0.5)
 	return update_reference_position_gallery()
 
 
@@ -132,6 +135,9 @@ def update_reference_frame_number(reference_frame_number : int) -> None:
 def clear_and_update_reference_position_gallery() -> gradio.Gallery:
 	clear_reference_faces()
 	clear_static_faces()
+	sleep(1)
+	while process_manager.is_checking():
+		sleep(0.5)
 	return update_reference_position_gallery()
 
 

@@ -7,6 +7,7 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
+from facefusion import process_manager
 from facefusion.typing import FaceLandmark68, VisionFrame, Mask, Padding, FaceMaskRegion, ModelSet
 from facefusion.execution import apply_execution_provider_options
 from facefusion.filesystem import resolve_relative_path
@@ -83,7 +84,9 @@ def pre_check() -> bool:
 			MODELS.get('face_occluder').get('url'),
 			MODELS.get('face_parser').get('url'),
 		]
+		process_manager.check()
 		conditional_download(download_directory_path, model_urls)
+		process_manager.end()
 	return True
 
 

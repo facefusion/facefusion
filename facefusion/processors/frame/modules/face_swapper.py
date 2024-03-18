@@ -171,7 +171,9 @@ def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
 		model_url = get_options('model').get('url')
+		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
+		process_manager.end()
 	return True
 
 

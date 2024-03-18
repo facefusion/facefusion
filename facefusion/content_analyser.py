@@ -7,7 +7,7 @@ import onnxruntime
 from tqdm import tqdm
 
 import facefusion.globals
-from facefusion import wording
+from facefusion import process_manager, wording
 from facefusion.typing import VisionFrame, ModelValue, Fps
 from facefusion.execution import apply_execution_provider_options
 from facefusion.vision import get_video_frame, count_video_frame_total, read_image, detect_video_fps
@@ -49,7 +49,9 @@ def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
 		model_url = MODELS.get('open_nsfw').get('url')
+		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
+		process_manager.end()
 	return True
 
 

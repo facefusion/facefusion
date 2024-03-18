@@ -15,6 +15,10 @@ def set_process_state(process_state : ProcessState) -> None:
 	PROCESS_STATE = process_state
 
 
+def is_checking() -> bool:
+	return get_process_state() == 'checking'
+
+
 def is_processing() -> bool:
 	return get_process_state() == 'processing'
 
@@ -25,6 +29,10 @@ def is_stopping() -> bool:
 
 def is_pending() -> bool:
 	return get_process_state() == 'pending'
+
+
+def check() -> None:
+	set_process_state('checking')
 
 
 def start() -> None:

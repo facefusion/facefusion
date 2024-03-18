@@ -5,6 +5,7 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
+from facefusion import process_manager
 from facefusion.common_helper import get_first
 from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, apply_nms, categorize_age, categorize_gender
 from facefusion.face_store import get_static_faces, set_static_faces
@@ -124,6 +125,7 @@ def pre_check() -> bool:
 			MODELS.get('face_landmarker').get('url'),
 			MODELS.get('gender_age').get('url')
 		]
+
 		if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
 			model_urls.append(MODELS.get('face_detector_retinaface').get('url'))
 		if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
@@ -140,7 +142,9 @@ def pre_check() -> bool:
 			model_urls.append(MODELS.get('face_recognizer_arcface_simswap').get('url'))
 		if facefusion.globals.face_recognizer_model == 'arcface_uniface':
 			model_urls.append(MODELS.get('face_recognizer_arcface_uniface').get('url'))
+		process_manager.check()
 		conditional_download(download_directory_path, model_urls)
+		process_manager.end()
 	return True
 
 
