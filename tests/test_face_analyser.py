@@ -3,7 +3,7 @@ import pytest
 
 import facefusion.globals
 from facefusion.download import conditional_download
-from facefusion.face_analyser import clear_face_analyser, get_one_face
+from facefusion.face_analyser import pre_check, clear_face_analyser, get_one_face
 from facefusion.typing import Face
 from facefusion.vision import read_static_image
 
@@ -31,6 +31,7 @@ def test_get_one_face_with_retinaface() -> None:
 	facefusion.globals.face_detector_model = 'retinaface'
 	facefusion.globals.face_detector_size = '320x320'
 
+	pre_check()
 	source_paths =\
 	[
 		'.assets/examples/source.jpg',
@@ -49,6 +50,7 @@ def test_get_one_face_with_scrfd() -> None:
 	facefusion.globals.face_detector_model = 'scrfd'
 	facefusion.globals.face_detector_size = '640x640'
 
+	pre_check()
 	source_paths =\
 	[
 		'.assets/examples/source.jpg',
@@ -67,6 +69,7 @@ def test_get_one_face_with_yoloface() -> None:
 	facefusion.globals.face_detector_model = 'yoloface'
 	facefusion.globals.face_detector_size = '640x640'
 
+	pre_check()
 	source_paths =\
 	[
 		'.assets/examples/source.jpg',
@@ -85,6 +88,7 @@ def test_get_one_face_with_yunet() -> None:
 	facefusion.globals.face_detector_model = 'yunet'
 	facefusion.globals.face_detector_size = '640x640'
 
+	pre_check()
 	source_paths =\
 	[
 		'.assets/examples/source.jpg',
