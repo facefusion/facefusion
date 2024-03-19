@@ -115,9 +115,8 @@ def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradi
 	clear_reference_faces()
 	clear_static_faces()
 	update_reference_face_position(event.index)
-	sleep(2)
 	while process_manager.is_checking():
-		sleep(0.5)
+		sleep(1)
 	return update_reference_position_gallery()
 
 
@@ -136,9 +135,8 @@ def update_reference_frame_number(reference_frame_number : int) -> None:
 def clear_and_update_reference_position_gallery() -> gradio.Gallery:
 	clear_reference_faces()
 	clear_static_faces()
-	sleep(2)
 	while process_manager.is_checking():
-		sleep(0.5)
+		sleep(1)
 	return update_reference_position_gallery()
 
 
