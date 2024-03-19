@@ -1,11 +1,10 @@
 from typing import List, Optional, Tuple, Any, Dict
-from time import sleep
 
 import gradio
 
 import facefusion.globals
 import facefusion.choices
-from facefusion import process_manager, wording
+from facefusion import wording
 from facefusion.face_store import clear_static_faces, clear_reference_faces
 from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color
 from facefusion.filesystem import is_image, is_video
