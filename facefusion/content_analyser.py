@@ -1,5 +1,6 @@
 from typing import Any, Dict
 from functools import lru_cache
+from time import sleep
 import threading
 import cv2
 import numpy
@@ -33,6 +34,8 @@ def get_content_analyser() -> Any:
 	global CONTENT_ANALYSER
 
 	with THREAD_LOCK:
+		while process_manager.is_checking():
+			sleep(0.5)
 		if CONTENT_ANALYSER is None:
 			model_path = MODELS.get('open_nsfw').get('path')
 			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))

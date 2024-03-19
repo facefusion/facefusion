@@ -1,4 +1,5 @@
 from typing import Any, Optional, List, Tuple
+from time import sleep
 import threading
 import cv2
 import numpy
@@ -78,6 +79,8 @@ def get_face_analyser() -> Any:
 
 	face_detectors = {}
 	with THREAD_LOCK:
+		while process_manager.is_checking():
+			sleep(0.5)
 		if FACE_ANALYSER is None:
 			if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
 				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))

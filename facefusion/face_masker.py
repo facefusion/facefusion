@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 from cv2.typing import Size
 from functools import lru_cache
+from time import sleep
 import threading
 import cv2
 import numpy
@@ -58,6 +59,8 @@ def get_face_parser() -> Any:
 	global FACE_PARSER
 
 	with THREAD_LOCK:
+		while process_manager.is_checking():
+			sleep(0.5)
 		if FACE_PARSER is None:
 			model_path = MODELS.get('face_parser').get('path')
 			FACE_PARSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
