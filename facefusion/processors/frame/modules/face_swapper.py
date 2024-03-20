@@ -1,5 +1,6 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
+from time import sleep
 import threading
 import numpy
 import onnx
@@ -99,6 +100,8 @@ def get_frame_processor() -> Any:
 	global FRAME_PROCESSOR
 
 	with THREAD_LOCK:
+		while process_manager.is_checking():
+			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
 			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
@@ -115,6 +118,8 @@ def get_model_matrix() -> Any:
 	global MODEL_MATRIX
 
 	with THREAD_LOCK:
+		while process_manager.is_checking():
+			sleep(0.5)
 		if MODEL_MATRIX is None:
 			model_path = get_options('model').get('path')
 			model = onnx.load(model_path)
@@ -171,7 +176,9 @@ def pre_check() -> bool:
 	if not facefusion.globals.skip_download:
 		download_directory_path = resolve_relative_path('../.assets/models')
 		model_url = get_options('model').get('url')
+		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
+		process_manager.end()
 	return True
 
 

@@ -49,7 +49,7 @@ Fps = float
 Padding = Tuple[int, int, int, int]
 Resolution = Tuple[int, int]
 
-ProcessState = Literal['processing', 'stopping', 'pending']
+ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 QueuePayload = TypedDict('QueuePayload',
 {
 	'frame_number' : int,

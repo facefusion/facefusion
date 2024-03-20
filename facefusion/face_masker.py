@@ -1,12 +1,14 @@
 from typing import Any, Dict, List
 from cv2.typing import Size
 from functools import lru_cache
+from time import sleep
 import threading
 import cv2
 import numpy
 import onnxruntime
 
 import facefusion.globals
+from facefusion import process_manager
 from facefusion.typing import FaceLandmark68, VisionFrame, Mask, Padding, FaceMaskRegion, ModelSet
 from facefusion.execution import apply_execution_provider_options
 from facefusion.filesystem import resolve_relative_path
@@ -57,6 +59,8 @@ def get_face_parser() -> Any:
 	global FACE_PARSER
 
 	with THREAD_LOCK:
+		while process_manager.is_checking():
+			sleep(0.5)
 		if FACE_PARSER is None:
 			model_path = MODELS.get('face_parser').get('path')
 			FACE_PARSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
@@ -83,7 +87,9 @@ def pre_check() -> bool:
 			MODELS.get('face_occluder').get('url'),
 			MODELS.get('face_parser').get('url'),
 		]
+		process_manager.check()
 		conditional_download(download_directory_path, model_urls)
+		process_manager.end()
 	return True
 
 

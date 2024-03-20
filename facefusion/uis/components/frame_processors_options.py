@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple
 import gradio
 
 import facefusion.globals
-from facefusion import wording
+from facefusion import face_analyser, wording
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 from facefusion.processors.frame.typings import FaceDebuggerItem, FaceEnhancerModel, FaceSwapperModel, FrameEnhancerModel, LipSyncerModel
@@ -134,7 +134,7 @@ def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> gradio.D
 	face_swapper_module = load_frame_processor_module('face_swapper')
 	face_swapper_module.clear_frame_processor()
 	face_swapper_module.set_options('model', face_swapper_module.MODELS[face_swapper_model])
-	if face_swapper_module.pre_check():
+	if face_analyser.pre_check() and face_swapper_module.pre_check():
 		return gradio.Dropdown(value = frame_processors_globals.face_swapper_model)
 	return gradio.Dropdown()
 

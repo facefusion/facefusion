@@ -5,7 +5,7 @@ import gradio
 import numpy
 
 import facefusion.globals
-from facefusion import wording, logger
+from facefusion import logger, wording
 from facefusion.audio import get_audio_frame, create_empty_audio_frame
 from facefusion.common_helper import get_first
 from facefusion.core import conditional_append_reference_faces
@@ -45,12 +45,11 @@ def render() -> None:
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
 	source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
-	if source_audio_path and facefusion.globals.output_video_fps:
-		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, facefusion.globals.reference_frame_number)
-		if not numpy.any(source_audio_frame):
-			source_audio_frame = create_empty_audio_frame()
-	else:
-		source_audio_frame = None
+	source_audio_frame = create_empty_audio_frame()
+	if source_audio_path and facefusion.globals.output_video_fps and facefusion.globals.reference_frame_number:
+		temp_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, facefusion.globals.reference_frame_number)
+		if numpy.any(temp_audio_frame):
+			source_audio_frame = temp_audio_frame
 	if is_image(facefusion.globals.target_path):
 		target_vision_frame = read_static_image(facefusion.globals.target_path)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)
@@ -142,7 +141,6 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 	clear_face_analyser()
 	clear_reference_faces()
 	clear_static_faces()
-	sleep(0.5)
 	return update_preview_image(frame_number)
 
 
@@ -158,15 +156,14 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	source_frames = read_static_images(facefusion.globals.source_paths)
 	source_face = get_average_face(source_frames)
 	source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
-	if source_audio_path and facefusion.globals.output_video_fps:
+	source_audio_frame = create_empty_audio_frame()
+	if source_audio_path and facefusion.globals.output_video_fps and facefusion.globals.reference_frame_number:
 		reference_audio_frame_number = facefusion.globals.reference_frame_number
 		if facefusion.globals.trim_frame_start:
 			reference_audio_frame_number -= facefusion.globals.trim_frame_start
-		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, reference_audio_frame_number)
-		if not numpy.any(source_audio_frame):
-			source_audio_frame = create_empty_audio_frame()
-	else:
-		source_audio_frame = None
+		temp_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, reference_audio_frame_number)
+		if numpy.any(temp_audio_frame):
+			source_audio_frame = temp_audio_frame
 	if is_image(facefusion.globals.target_path):
 		target_vision_frame = read_static_image(facefusion.globals.target_path)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)
