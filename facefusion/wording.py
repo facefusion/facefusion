@@ -58,6 +58,7 @@ WORDING : Dict[str, Any] =\
 		'target': 'choose single target image or video',
 		'output': 'specify the output file or directory',
 		# misc
+		'force_download': 'force automate downloads and exit',
 		'skip_download': 'omit automate downloads and remote lookups',
 		'headless': 'run the program without a user interface',
 		'log_level': 'adjust the message severity displayed in the terminal',
@@ -66,10 +67,10 @@ WORDING : Dict[str, Any] =\
 		'execution_thread_count': 'specify the amount of parallel threads while processing',
 		'execution_queue_count': 'specify the amount of frames each thread is processing',
 		# memory
-		'video_memory_strategy': 'balance fast frame processing and low vram usage',
-		'system_memory_limit': 'limit the available ram that can be used while processing',
+		'video_memory_strategy': 'balance fast frame processing and low VRAM usage',
+		'system_memory_limit': 'limit the available RAM that can be used while processing',
 		# face analyser
-		'face_analyser_order': 'specify the order in which the face analyser detects faces.',
+		'face_analyser_order': 'specify the order in which the face analyser detects faces',
 		'face_analyser_age': 'filter the detected faces based on their age',
 		'face_analyser_gender': 'filter the detected faces based on their gender',
 		'face_detector_model': 'choose the model responsible for detecting the face',

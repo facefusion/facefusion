@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 from functools import lru_cache
 from time import sleep
 import threading
@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import process_manager, wording
-from facefusion.typing import VisionFrame, ModelValue, Fps
+from facefusion.typing import VisionFrame, ModelSet, Fps
 from facefusion.execution import apply_execution_provider_options
 from facefusion.vision import get_video_frame, count_video_frame_total, read_image, detect_video_fps
 from facefusion.filesystem import resolve_relative_path
@@ -17,7 +17,7 @@ from facefusion.download import conditional_download
 
 CONTENT_ANALYSER = None
 THREAD_LOCK : threading.Lock = threading.Lock()
-MODELS : Dict[str, ModelValue] =\
+MODELS : ModelSet =\
 {
 	'open_nsfw':
 	{

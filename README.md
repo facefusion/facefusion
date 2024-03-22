@@ -37,6 +37,7 @@ options:
   -v, --version                                                                                                          show program's version number and exit
 
 misc:
+  --force-download                                                                                                       force automate downloads and exit
   --skip-download                                                                                                        omit automate downloads and remote lookups
   --headless                                                                                                             run the program without a user interface
   --log-level {error,warn,info,debug}                                                                                    adjust the message severity displayed in the terminal
@@ -47,11 +48,11 @@ execution:
   --execution-queue-count [1-32]                                                                                         specify the amount of frames each thread is processing
 
 memory:
-  --video-memory-strategy {strict,moderate,tolerant}                                                                     balance fast frame processing and low vram usage
-  --system-memory-limit [0-128]                                                                                          limit the available ram that can be used while processing
+  --video-memory-strategy {strict,moderate,tolerant}                                                                     balance fast frame processing and low VRAM usage
+  --system-memory-limit [0-128]                                                                                          limit the available RAM that can be used while processing
 
 face analyser:
-  --face-analyser-order {left-right,right-left,top-bottom,bottom-top,small-large,large-small,best-worst,worst-best}      specify the order in which the face analyser detects faces.
+  --face-analyser-order {left-right,right-left,top-bottom,bottom-top,small-large,large-small,best-worst,worst-best}      specify the order in which the face analyser detects faces
   --face-analyser-age {child,teen,adult,senior}                                                                          filter the detected faces based on their age
   --face-analyser-gender {female,male}                                                                                   filter the detected faces based on their gender
   --face-detector-model {many,retinaface,scrfd,yoloface,yunet}                                                           choose the model responsible for detecting the face
@@ -93,7 +94,7 @@ frame processors:
   --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,restoreformer_plus_plus}  choose the model responsible for enhancing the face
   --face-enhancer-blend [0-100]                                                                                          blend the enhanced into the previous face
   --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial,uniface_256}   choose the model responsible for swapping the face
-  --frame-enhancer-model {lsdir_x4,nomos8k_sc_x4,real_esrgan_x4,real_esrgan_x4_fp16,span_kendata_x4}                     choose the model responsible for enhancing the frame
+  --frame-enhancer-model {lsdir_x4,nomos8k_sc_x4,real_esrgan_x4,real_esrgan_x4_fp16,real_hatgan_x4,span_kendata_x4}      choose the model responsible for enhancing the frame
   --frame-enhancer-blend [0-100]                                                                                         blend the enhanced into the previous frame
   --lip-syncer-model {wav2lip_gan}                                                                                       choose the model responsible for syncing the lips
 
