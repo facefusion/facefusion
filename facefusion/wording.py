@@ -193,7 +193,7 @@ WORDING : Dict[str, Any] =\
 		'webcam_image': 'WEBCAM',
 		# webcam options
 		'webcam_mode_radio': 'WEBCAM MODE',
-		'ip_camera_url_textbox': 'IP CAMERA URL',
+		'webcam_url_textbox': 'WEBCAM URL',
 		'webcam_resolution_dropdown': 'WEBCAM RESOLUTION',
 		'webcam_fps_slider': 'WEBCAM FPS'
 	}

@@ -42,10 +42,9 @@ ComponentName = Literal\
 	'benchmark_runs_checkbox_group',
 	'benchmark_cycles_slider',
 	'webcam_mode_radio',
-	'ip_camera_url_textbox',
 	'webcam_resolution_dropdown',
 	'webcam_fps_slider'
 ]
 
-WebcamMode = Literal['inline', 'udp', 'v4l2', 'ip_camera']
-StreamMode = Literal['udp', 'v4l2']
+WebcamMode = Literal['inline', 'rtsp', 'udp', 'v4l2']
+StreamMode = Literal['rtsp', 'udp', 'v4l2']
