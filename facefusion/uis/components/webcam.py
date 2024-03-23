@@ -8,6 +8,7 @@ from time import sleep
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
 from tqdm import tqdm
+from facefusion.uis.components.webcam_options import WEBCAM_URL_TEXTBOX
 
 import facefusion.globals
 from facefusion import logger, wording
@@ -22,26 +23,36 @@ from facefusion.vision import normalize_frame_color, read_static_images, unpack_
 from facefusion.uis.typing import StreamMode, WebcamMode, ComponentName
 from facefusion.uis.core import get_ui_component
 
+
 WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
 WEBCAM_STOP_BUTTON : Optional[gradio.Button] = None
 
-def get_webcam_capture(webcam_mode: WebcamMode = None) -> Optional[cv2.VideoCapture]:
+
+def get_local_webcam_capture() -> Optional[cv2.VideoCapture]:
 	global WEBCAM_CAPTURE
-	webcam_mode = get_ui_component('webcam_mode_radio')
-	webcam_url = get_ui_component('webcam_url_textbox')
+
 	if WEBCAM_CAPTURE is None:
 		if platform.system().lower() == 'windows':
 			webcam_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 		else:
 			webcam_capture = cv2.VideoCapture(0)
-		if webcam_mode == 'ip_camera':
-			webcam_capture = cv2.VideoCapture(webcam_url)
 		if webcam_capture and webcam_capture.isOpened():
 			WEBCAM_CAPTURE = webcam_capture
 	return WEBCAM_CAPTURE
 
+def get_remote_webcam_capture(webcam_url : str) -> Optional[cv2.VideoCapture]:
+	global WEBCAM_CAPTURE
+	global WEBCAM_URL_TEXTBOX
+	
+	if WEBCAM_CAPTURE is None and WEBCAM_URL_TEXTBOX is None:
+		webcam_url = WEBCAM_URL_TEXTBOX.get()
+		webcam_capture = cv2.VideoCapture(webcam_url)
+		if webcam_capture and webcam_capture.isOpened():
+			WEBCAM_CAPTURE = webcam_capture
+	return WEBCAM_CAPTURE
+    
 
 def clear_webcam_capture() -> None:
 	global WEBCAM_CAPTURE
@@ -71,13 +82,18 @@ def render() -> None:
 
 
 def listen() -> None:
+	global WEBCAM_URL_TEXTBOX
+    
 	start_event = None
 	webcam_mode_radio = get_ui_component('webcam_mode_radio')
 	webcam_resolution_dropdown = get_ui_component('webcam_resolution_dropdown')
 	webcam_fps_slider = get_ui_component('webcam_fps_slider')
-	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
-		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
-	WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
+	webcam_url = WEBCAM_URL_TEXTBOX.get() if WEBCAM_URL_TEXTBOX else None
+	if webcam_url:
+		start_event = WEBCAM_START_BUTTON.click(start, inputs=[webcam_mode_radio, webcam_url, webcam_resolution_dropdown, webcam_fps_slider], outputs=WEBCAM_IMAGE)
+	else:
+		start_event = WEBCAM_START_BUTTON.click(start, inputs=[webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider], outputs=WEBCAM_IMAGE)
+	WEBCAM_STOP_BUTTON.click(stop, cancels=start_event)
 	change_two_component_names : List[ComponentName] =\
 	[
 		'frame_processors_checkbox_group',
@@ -93,18 +109,23 @@ def listen() -> None:
 			component.change(update, cancels = start_event)
 
 
-def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
+def start(webcam_mode : WebcamMode, webcam_url : str, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_analyser_order = 'large-small'
 	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
 	source_frames = read_static_images(source_image_paths)
 	source_face = get_average_face(source_frames)
 	stream = None
-
+	global WEBCAM_URL_TEXTBOX
+ 
+	webcam_url = WEBCAM_URL_TEXTBOX if WEBCAM_URL_TEXTBOX else None # Update webcam_url with the current value of the textbox
 	if webcam_mode in ['rtsp', 'udp', 'v4l2']:
 		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) # type: ignore[arg-type]
 	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
-	webcam_capture = get_webcam_capture()
+	if webcam_mode == 'rtsp':
+		webcam_capture = get_remote_webcam_capture(webcam_url)
+	else:
+		webcam_capture = get_local_webcam_capture()
 	if webcam_capture and webcam_capture.isOpened():
 		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) # type: ignore[attr-defined]
 		webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
@@ -148,7 +169,14 @@ def update() -> None:
 			logger.disable()
 			sleep(0.5)
 		logger.enable()
-
+  
+def update_url_textbox_availability(webcam_mode: str) -> None:
+    global WEBCAM_URL_TEXTBOX
+    if WEBCAM_URL_TEXTBOX:
+        if webcam_mode == 'rtsp':
+            WEBCAM_URL_TEXTBOX.enable()
+        else:
+            WEBCAM_URL_TEXTBOX.disable()
 
 def stop() -> gradio.Image:
 	clear_webcam_capture()

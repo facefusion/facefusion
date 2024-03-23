@@ -22,7 +22,7 @@ def render() -> None:
 		value = 'inline'
 	)
 	WEBCAM_URL_TEXTBOX = gradio.Textbox(
-		label=wording.get('uis.webcam_url_textbox'),
+		label = wording.get('uis.webcam_url_textbox')
 	)
 	WEBCAM_RESOLUTION_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.webcam_resolution_dropdown'),
@@ -39,4 +39,3 @@ def render() -> None:
 	register_ui_component('webcam_mode_radio', WEBCAM_MODE_RADIO)
 	register_ui_component('webcam_resolution_dropdown', WEBCAM_RESOLUTION_DROPDOWN)
 	register_ui_component('webcam_fps_slider', WEBCAM_FPS_SLIDER)
-	register_ui_component('webcam_url_textbox', WEBCAM_URL_TEXTBOX)
