@@ -6,6 +6,7 @@ import facefusion.globals
 from facefusion import process_manager
 from facefusion.typing import OutputVideoPreset, Fps, AudioBuffer
 from facefusion.filesystem import get_temp_frames_pattern, get_temp_output_video_path
+from facefusion.vision import detect_video_fps
 
 
 def run_ffmpeg(args : List[str]) -> bool:
@@ -46,9 +47,10 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 
 
 def merge_video(target_path : str, output_video_resolution : str, output_video_fps : Fps) -> bool:
+	target_video_fps = detect_video_fps(target_path)
 	temp_output_video_path = get_temp_output_video_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
-	commands = [ '-hwaccel', 'auto', '-s', str(output_video_resolution), '-r', str(output_video_fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
+	commands = [ '-hwaccel', 'auto', '-s', str(output_video_resolution), '-r', str(target_video_fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
 
 	if facefusion.globals.output_video_encoder in [ 'libx264', 'libx265' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
@@ -62,7 +64,7 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	if facefusion.globals.output_video_encoder in [ 'h264_amf', 'hevc_amf' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
 		commands.extend([ '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(facefusion.globals.output_video_preset) ])
-	commands.extend([ '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_output_video_path ])
+	commands.extend([ '-vf', 'framerate=fps=' + str(output_video_fps), '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_output_video_path ])
 	return run_ffmpeg(commands)
 
 
