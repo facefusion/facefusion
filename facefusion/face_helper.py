@@ -116,13 +116,6 @@ def warp_face_by_translation(temp_vision_frame : VisionFrame, translation : Tran
 	return crop_vision_frame, affine_matrix
 
 
-def transform_face_landmark_5(face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, size : Size) -> FaceLandmark5:
-	normed_warp_template = WARP_TEMPLATES.get(warp_template) * size
-	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
-	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-	return face_landmark_5
-
-
 def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, crop_mask : Mask, affine_matrix : Matrix) -> VisionFrame:
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_size = temp_vision_frame.shape[:2][::-1]
