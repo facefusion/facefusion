@@ -20,8 +20,8 @@ MODELS : ModelSet =\
 {
 	'face_landmark_converter':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/5_to_68_landmark_converter.onnx',
-		'path': resolve_relative_path('../.assets/models/5_to_68_landmark_converter.onnx')
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_landmarker_5_68.onnx',
+		'path': resolve_relative_path('../.assets/models/face_landmarker_5_68.onnx')
 	}
 }
 
@@ -71,7 +71,7 @@ def get_face_landmark_converter() -> Any:
 			sleep(0.5)
 		if FACE_LANDMARK_CONVERTER is None:
 			model_path = MODELS.get('face_landmark_converter').get('path')
-			FACE_LANDMARK_CONVERTER = onnxruntime.InferenceSession(model_path, providers = ['CPUExecutionProvider'])
+			FACE_LANDMARK_CONVERTER = onnxruntime.InferenceSession(model_path, providers = [ 'CPUExecutionProvider' ])
 	return FACE_LANDMARK_CONVERTER
 
 
@@ -160,14 +160,14 @@ def distance_to_face_landmark_5(points : numpy.ndarray[Any, Any], distance : num
 	return face_landmark_5
 
 
-def convert_face_landmark_68_to_5(landmark_68 : FaceLandmark68) -> FaceLandmark5:
+def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLandmark5:
 	face_landmark_5 = numpy.array(
 	[
-		numpy.mean(landmark_68[36:42], axis = 0),
-		numpy.mean(landmark_68[42:48], axis = 0),
-		landmark_68[30],
-		landmark_68[48],
-		landmark_68[54]
+		numpy.mean(face_landmark_68[36:42], axis = 0),
+		numpy.mean(face_landmark_68[42:48], axis = 0),
+		face_landmark_68[30],
+		face_landmark_68[48],
+		face_landmark_68[54]
 	])
 	return face_landmark_5
 
@@ -178,7 +178,10 @@ def convert_face_landmark_5_to_68(face_landmark_5 : FaceLandmark5) -> FaceLandma
 	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
 	face_landmark_5 = face_landmark_5 / 512
-	face_landmark_68 = face_landmarker_converter.run(None, {"input": [face_landmark_5]})[0][0]
+	face_landmark_68 = face_landmarker_converter.run(None,
+	{
+		face_landmarker_converter.get_inputs()[0].name.get: [ face_landmark_5 ]
+	})[0][0]
 	face_landmark_68 = (face_landmark_68 * 512).reshape(68, 2)
 	face_landmark_68 = cv2.transform(face_landmark_68.reshape(1, -1, 2), cv2.invertAffineTransform(affine_matrix)).reshape(-1, 2)
 	return face_landmark_68
