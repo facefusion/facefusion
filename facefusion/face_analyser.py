@@ -8,7 +8,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, convert_face_landmark_5_to_68, apply_nms, categorize_age, categorize_gender
+from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, apply_nms, categorize_age, categorize_gender, WARP_TEMPLATES
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -61,10 +61,15 @@ MODELS : ModelSet =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
 		'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 	},
-	'face_landmarker':
+	'face_landmarker_68':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/2dfan4.onnx',
 		'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
+	},
+	'face_landmarker_68_5':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_landmarker_68_5.onnx',
+		'path': resolve_relative_path('../.assets/models/face_landmarker_68_5.onnx')
 	},
 	'gender_age':
 	{
@@ -78,22 +83,20 @@ def get_face_analyser() -> Any:
 	global FACE_ANALYSER
 
 	face_detectors = {}
+	face_landmarkers = {}
+
 	with THREAD_LOCK:
 		while process_manager.is_checking():
 			sleep(0.5)
 		if FACE_ANALYSER is None:
 			if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
-				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
-				face_detectors['retinaface'] = face_detector
+				face_detectors['retinaface'] = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
-				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_scrfd').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
-				face_detectors['scrfd'] = face_detector
+				face_detectors['scrfd'] = onnxruntime.InferenceSession(MODELS.get('face_detector_scrfd').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
-				face_detector = onnxruntime.InferenceSession(MODELS.get('face_detector_yoloface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
-				face_detectors['yoloface'] = face_detector
+				face_detectors['yoloface'] = onnxruntime.InferenceSession(MODELS.get('face_detector_yoloface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_detector_model in [ 'yunet' ]:
-				face_detector = cv2.FaceDetectorYN.create(MODELS.get('face_detector_yunet').get('path'), '', (0, 0))
-				face_detectors['yunet'] = face_detector
+				face_detectors['yunet'] = cv2.FaceDetectorYN.create(MODELS.get('face_detector_yunet').get('path'), '', (0, 0))
 			if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_blendswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
@@ -102,13 +105,14 @@ def get_face_analyser() -> Any:
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_uniface':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_uniface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
-			face_landmarker = onnxruntime.InferenceSession(MODELS.get('face_landmarker').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			face_landmarkers['68'] = onnxruntime.InferenceSession(MODELS.get('face_landmarker_68').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			face_landmarkers['68_5'] = onnxruntime.InferenceSession(MODELS.get('face_landmarker_68_5').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_providers))
 			FACE_ANALYSER =\
 			{
 				'face_detectors': face_detectors,
 				'face_recognizer': face_recognizer,
-				'face_landmarker': face_landmarker,
+				'face_landmarkers': face_landmarkers,
 				'gender_age': gender_age
 			}
 	return FACE_ANALYSER
@@ -125,7 +129,8 @@ def pre_check() -> bool:
 		download_directory_path = resolve_relative_path('../.assets/models')
 		model_urls =\
 		[
-			MODELS.get('face_landmarker').get('url'),
+			MODELS.get('face_landmarker_68').get('url'),
+			MODELS.get('face_landmarker_68_5').get('url'),
 			MODELS.get('gender_age').get('url')
 		]
 
@@ -321,7 +326,7 @@ def create_faces(vision_frame : VisionFrame, bounding_box_list : List[BoundingBo
 		for index in keep_indices:
 			bounding_box = bounding_box_list[index]
 			face_landmark_5_68 = face_landmark_5_list[index]
-			face_landmark_68_5 = convert_face_landmark_5_to_68(face_landmark_5_68)
+			face_landmark_68_5 = expand_face_landmark_68_from_5(face_landmark_5_68)
 			face_landmark_68 = face_landmark_68_5
 			face_landmark_68_score = 0.0
 			if facefusion.globals.face_landmarker_score > 0:
@@ -370,7 +375,7 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 
 
 def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[FaceLandmark68, Score]:
-	face_landmarker = get_face_analyser().get('face_landmarker')
+	face_landmarker = get_face_analyser().get('face_landmarkers').get('68')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max()
 	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
@@ -390,6 +395,21 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 	face_landmark_68_score = numpy.amax(face_heatmap, axis = (2, 3))
 	face_landmark_68_score = numpy.mean(face_landmark_68_score)
 	return face_landmark_68, face_landmark_68_score
+
+
+def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
+	face_landmarker = get_face_analyser().get('face_landmarkers').get('68_5')
+	normed_warp_template = WARP_TEMPLATES.get('ffhq_512') * 512
+	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
+	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+	face_landmark_5 = face_landmark_5 / 512
+	face_landmark_68_5 = face_landmarker.run(None,
+	{
+		face_landmarker.get_inputs()[0].name: [ face_landmark_5 ]
+	})[0][0]
+	face_landmark_68_5 = (face_landmark_68_5 * 512).reshape(68, 2)
+	face_landmark_68_5 = cv2.transform(face_landmark_68_5.reshape(1, -1, 2), cv2.invertAffineTransform(affine_matrix)).reshape(-1, 2)
+	return face_landmark_68_5
 
 
 def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[int, int]:

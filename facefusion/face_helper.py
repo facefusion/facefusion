@@ -1,30 +1,10 @@
-import threading
-from time import sleep
-
 from typing import Any, Tuple, List
 from cv2.typing import Size
 from functools import lru_cache
 import cv2
 import numpy
-import onnxruntime
 
-import facefusion.globals
-from facefusion import process_manager
-from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceAnalyserAge, FaceAnalyserGender, ModelSet
-from facefusion.filesystem import resolve_relative_path
-from facefusion.download import conditional_download
-
-FACE_LANDMARK_CONVERTER = None
-THREAD_LOCK : threading.Lock = threading.Lock()
-MODELS : ModelSet =\
-{
-	'face_landmark_converter':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_landmarker_5_68.onnx',
-		'path': resolve_relative_path('../.assets/models/face_landmarker_5_68.onnx')
-	}
-}
-
+from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceAnalyserAge, FaceAnalyserGender
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -61,34 +41,6 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.61150205, 0.72490465 ]
 	])
 }
-
-
-def get_face_landmark_converter() -> Any:
-	global FACE_LANDMARK_CONVERTER
-
-	with THREAD_LOCK:
-		while process_manager.is_checking():
-			sleep(0.5)
-		if FACE_LANDMARK_CONVERTER is None:
-			model_path = MODELS.get('face_landmark_converter').get('path')
-			FACE_LANDMARK_CONVERTER = onnxruntime.InferenceSession(model_path, providers = [ 'CPUExecutionProvider' ])
-	return FACE_LANDMARK_CONVERTER
-
-
-def clear_face_landmark_converter() -> None:
-	global FACE_LANDMARK_CONVERTER
-
-	FACE_LANDMARK_CONVERTER = None
-
-
-def pre_check() -> bool:
-	if not facefusion.globals.skip_download:
-		download_directory_path = resolve_relative_path('../.assets/models')
-		model_url = MODELS.get('face_landmark_converter').get('url')
-		process_manager.check()
-		conditional_download(download_directory_path, [ model_url ])
-		process_manager.end()
-	return True
 
 
 def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
@@ -170,21 +122,6 @@ def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLand
 		face_landmark_68[54]
 	])
 	return face_landmark_5
-
-
-def convert_face_landmark_5_to_68(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
-	face_landmarker_converter = get_face_landmark_converter()
-	normed_warp_template = WARP_TEMPLATES.get('ffhq_512') * 512
-	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
-	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-	face_landmark_5 = face_landmark_5 / 512
-	face_landmark_68 = face_landmarker_converter.run(None,
-	{
-		face_landmarker_converter.get_inputs()[0].name: [ face_landmark_5 ]
-	})[0][0]
-	face_landmark_68 = (face_landmark_68 * 512).reshape(68, 2)
-	face_landmark_68 = cv2.transform(face_landmark_68.reshape(1, -1, 2), cv2.invertAffineTransform(affine_matrix)).reshape(-1, 2)
-	return face_landmark_68
 
 
 def apply_nms(bounding_box_list : List[BoundingBox], iou_threshold : float) -> List[int]:
