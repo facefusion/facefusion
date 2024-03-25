@@ -180,7 +180,7 @@ def convert_face_landmark_5_to_68(face_landmark_5 : FaceLandmark5) -> FaceLandma
 	face_landmark_5 = face_landmark_5 / 512
 	face_landmark_68 = face_landmarker_converter.run(None,
 	{
-		face_landmarker_converter.get_inputs()[0].name.get: [ face_landmark_5 ]
+		face_landmarker_converter.get_inputs()[0].name: [ face_landmark_5 ]
 	})[0][0]
 	face_landmark_68 = (face_landmark_68 * 512).reshape(68, 2)
 	face_landmark_68 = cv2.transform(face_landmark_68.reshape(1, -1, 2), cv2.invertAffineTransform(affine_matrix)).reshape(-1, 2)

@@ -321,19 +321,19 @@ def create_faces(vision_frame : VisionFrame, bounding_box_list : List[BoundingBo
 		for index in keep_indices:
 			bounding_box = bounding_box_list[index]
 			face_landmark_5_68 = face_landmark_5_list[index]
-			face_landmark_68 = None
+			face_landmark_68_5 = convert_face_landmark_5_to_68(face_landmark_5_68)
+			face_landmark_68 = face_landmark_68_5
 			face_landmark_68_score = 0.0
 			if facefusion.globals.face_landmarker_score > 0:
 				face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box)
 				if face_landmark_68_score > facefusion.globals.face_landmarker_score:
 					face_landmark_5_68 = convert_face_landmark_68_to_5(face_landmark_68)
-			else:
-				face_landmark_68 = convert_face_landmark_5_to_68(face_landmark_5_68)
 			landmarks : FaceLandmarkSet =\
 			{
 				'5': face_landmark_5_list[index],
 				'5/68': face_landmark_5_68,
-				'68': face_landmark_68
+				'68': face_landmark_68,
+				'68/5': face_landmark_68_5
 			}
 			scores : FaceScoreSet = \
 			{

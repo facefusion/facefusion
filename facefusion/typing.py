@@ -9,7 +9,8 @@ FaceLandmarkSet = TypedDict('FaceLandmarkSet',
 {
 	'5' : FaceLandmark5, # type: ignore[valid-type]
 	'5/68' : FaceLandmark5, # type: ignore[valid-type]
-	'68' : FaceLandmark68 # type: ignore[valid-type]
+	'68' : FaceLandmark68, # type: ignore[valid-type]
+	'68/5' : FaceLandmark68 # type: ignore[valid-type]
 })
 Score = float
 FaceScoreSet = TypedDict('FaceScoreSet',
