@@ -8,7 +8,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, apply_nms, categorize_age, categorize_gender
+from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, convert_face_landmark_5_to_68, apply_nms, categorize_age, categorize_gender
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -327,6 +327,8 @@ def create_faces(vision_frame : VisionFrame, bounding_box_list : List[BoundingBo
 				face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box)
 				if face_landmark_68_score > facefusion.globals.face_landmarker_score:
 					face_landmark_5_68 = convert_face_landmark_68_to_5(face_landmark_68)
+			else:
+				face_landmark_68 = convert_face_landmark_5_to_68(face_landmark_5_68)
 			landmarks : FaceLandmarkSet =\
 			{
 				'5': face_landmark_5_list[index],
