@@ -399,14 +399,12 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 
 def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
 	face_landmarker = get_face_analyser().get('face_landmarkers').get('68_5')
-	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'ffhq_512', (512, 512))
+	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'ffhq_512', (1, 1))
 	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-	face_landmark_5 = face_landmark_5 / 512
 	face_landmark_68_5 = face_landmarker.run(None,
 	{
 		face_landmarker.get_inputs()[0].name: [ face_landmark_5 ]
 	})[0][0]
-	face_landmark_68_5 = (face_landmark_68_5 * 512).reshape(68, 2)
 	face_landmark_68_5 = cv2.transform(face_landmark_68_5.reshape(1, -1, 2), cv2.invertAffineTransform(affine_matrix)).reshape(-1, 2)
 	return face_landmark_68_5
 
