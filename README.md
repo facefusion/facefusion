@@ -42,6 +42,12 @@ python run.py
 
 ```
 
+---
+
+Documentation V2.4.1
+-------------
+
+Read the [documentation](https://docs.facefusion.io) for a deep dive.
 
 > Next generation face swapper and enhancer. V2.4.1
 
@@ -143,21 +149,12 @@ uis:
   --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                                               launch a single or multiple UI layouts (choices: benchmark, default, webcam, ...)
 ```
 
+---
 
-Documentation
+Documentation V2
 -------------
 
 Read the [documentation](https://docs.facefusion.io) for a deep dive.
-
-
-
-
-
-
-
-
-
-
 
 > Next generation face swapper and enhancer. V2
 
