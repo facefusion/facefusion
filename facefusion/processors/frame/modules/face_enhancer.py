@@ -73,6 +73,20 @@ MODELS : ModelSet =\
 		'template': 'ffhq_512',
 		'size': (512, 512)
 	},
+	'gpen_bfr_1024':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_1024.onnx',
+		'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.onnx'),
+		'template': 'ffhq_512',
+		'size': (1024, 1024)
+	},
+	'gpen_bfr_2048':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_2048.onnx',
+		'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.onnx'),
+		'template': 'ffhq_512',
+		'size': (2048, 2048)
+	},
 	'restoreformer_plus_plus':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/restoreformer_plus_plus.onnx',
