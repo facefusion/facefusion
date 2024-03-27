@@ -9,6 +9,7 @@ WORDING : Dict[str, Any] =\
 	'extracting_frames_succeed': 'Extracting frames succeed',
 	'extracting_frames_failed': 'Extracting frames failed',
 	'analysing': 'Analysing',
+	'executing_for': 'Executing for {path}',
 	'processing': 'Processing',
 	'downloading': 'Downloading',
 	'temp_frames_not_found': 'Temporary frames not found',
@@ -55,7 +56,9 @@ WORDING : Dict[str, Any] =\
 		'skip_venv': 'skip the virtual environment check',
 		# general
 		'source': 'choose single or multiple source images or audios',
+		'source_directory': 'choose directory containing source images',
 		'target': 'choose single target image or video',
+		'target_directory': 'choose directory containing target images or videos',
 		'output': 'specify the output file or directory',
 		# misc
 		'skip_download': 'omit automate downloads and remote lookups',

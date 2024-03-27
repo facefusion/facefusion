@@ -1,7 +1,7 @@
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.filesystem import is_file, is_directory, is_audio, has_audio, is_image, has_image, is_video, filter_audio_paths, filter_image_paths, list_directory
+from facefusion.filesystem import is_file, is_directory, is_audio, has_audio, is_image, has_image, is_video, filter_audio_paths, filter_image_paths, list_directory, list_directory_with_path
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -74,3 +74,8 @@ def test_list_directory() -> None:
 	assert list_directory('.assets/examples')
 	assert list_directory('.assets/examples/source.jpg') is None
 	assert list_directory('invalid') is None
+
+def test_list_directory_with_path() -> None:
+	assert list_directory_with_path('.assets/examples')
+	assert list_directory_with_path('.assets/examples/source.jpg') is None
+	assert list_directory_with_path('invalid') is None

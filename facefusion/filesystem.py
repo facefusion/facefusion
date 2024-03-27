@@ -107,3 +107,8 @@ def list_directory(directory_path : str) -> Optional[List[str]]:
 		files = os.listdir(directory_path)
 		return sorted([ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ])
 	return None
+
+def list_directory_with_path(directory_path : str) -> Optional[List[str]]:
+	if is_directory(directory_path):
+		return [f for f in glob.glob(directory_path + "/*") if not Path(f).stem.startswith(('.', '__'))]
+	return None
