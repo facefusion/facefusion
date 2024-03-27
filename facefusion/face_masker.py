@@ -49,6 +49,8 @@ def get_face_occluder() -> Any:
 	global FACE_OCCLUDER
 
 	with THREAD_LOCK:
+		while process_manager.is_checking():
+			sleep(0.5)
 		if FACE_OCCLUDER is None:
 			model_path = MODELS.get('face_occluder').get('path')
 			FACE_OCCLUDER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
