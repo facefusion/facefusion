@@ -87,7 +87,8 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 	if target_paths:
 		pre_process()
 		for target_path in target_paths:
-			benchmark_results.append(benchmark(target_path, benchmark_cycles))
+			facefusion.globals.target_path = target_path
+			benchmark_results.append(benchmark(benchmark_cycles))
 			yield benchmark_results
 		post_process()
 
@@ -103,10 +104,9 @@ def post_process() -> None:
 	clear_static_faces()
 
 
-def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
+def benchmark(benchmark_cycles : int) -> List[Any]:
 	process_times = []
 	total_fps = 0.0
-	facefusion.globals.target_path = target_path
 	video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 	output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
 	facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
