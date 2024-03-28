@@ -7,7 +7,10 @@ import subprocess
 import inquirer
 from argparse import ArgumentParser, HelpFormatter
 
-from facefusion import metadata, wording
+from facefusion import metadata, wording, logger
+
+if platform.system().lower() == 'darwin':
+	os.environ['SYSTEM_VERSION_COMPAT'] = '0'
 
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 
@@ -28,7 +31,7 @@ if platform.system().lower() == 'windows':
 def cli() -> None:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 130))
 	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys())
-	program.add_argument('--skip-venv', help = wording.get('help.skip_venv'), action = 'store_true')
+	program.add_argument('--skip-conda', help = wording.get('help.skip_conda'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	run(program)
 
@@ -37,10 +40,10 @@ def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
-	if platform.system().lower() == 'darwin':
-		os.environ['SYSTEM_VERSION_COMPAT'] = '0'
-	if not args.skip_venv:
-		os.environ['PIP_REQUIRE_VIRTUALENV'] = '1'
+	logger.init('info')
+	if not args.skip_conda and 'CONDA_PREFIX' not in os.environ:
+		logger.info(wording.get('conda_not_activated'), __name__.upper())
+		sys.exit(1)
 	if args.onnxruntime:
 		answers =\
 		{
