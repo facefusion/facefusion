@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional
 
 WORDING : Dict[str, Any] =\
 {
+	'conda_not_activated': 'Conda is not activated',
 	'python_not_supported': 'Python version is not supported, upgrade to {version} or higher',
 	'ffmpeg_not_installed': 'FFMpeg is not installed',
 	'creating_temp': 'Creating temporary resources',

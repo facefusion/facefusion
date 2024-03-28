@@ -41,6 +41,7 @@ def run(program : ArgumentParser) -> None:
 	python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
 	if not args.skip_conda and 'CONDA_PREFIX' not in os.environ:
+		sys.stdout.write(wording.get('conda_not_activated') + os.linesep)
 		sys.exit(1)
 	if args.onnxruntime:
 		answers =\
