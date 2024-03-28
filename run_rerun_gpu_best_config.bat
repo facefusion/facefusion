@@ -1,19 +1,18 @@
 python run.py ^
+-s "P:\_AI_DATASET\IMG" ^
+-t "I:\FILMORA\OUTPUT" ^
 -o "V:\facefusion-nsfw-result" ^
 --execution-provider cuda ^
 --execution-thread-count 12 ^
 --execution-queue-count 1 ^
 --face-detector-model retinaface ^
 --face-detector-size 640x640 ^
---face-selector-mode many ^
---face-mask-padding 30 30 30 30 ^
+--face-selector-mode reference ^
+--face-mask-padding 0 0 0 0 ^
 --temp-frame-format png ^
---temp-frame-quality 100 ^
 --output-video-encoder h264_nvenc ^
 --output-video-quality 100 ^
---keep-fps ^
 --frame-processors face_enhancer face_swapper ^
 --face-enhancer-model gfpgan_1.4 ^
 --face-enhancer-blend 100 ^
 --face-swapper-model inswapper_128 ^
---frame-enhancer-blend 100 ^
