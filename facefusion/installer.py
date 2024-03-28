@@ -7,7 +7,7 @@ import subprocess
 import inquirer
 from argparse import ArgumentParser, HelpFormatter
 
-from facefusion import metadata, wording, logger
+from facefusion import metadata, wording
 
 if platform.system().lower() == 'darwin':
 	os.environ['SYSTEM_VERSION_COMPAT'] = '0'
@@ -40,9 +40,7 @@ def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
-	logger.init('info')
 	if not args.skip_conda and 'CONDA_PREFIX' not in os.environ:
-		logger.info(wording.get('conda_not_activated'), __name__.upper())
 		sys.exit(1)
 	if args.onnxruntime:
 		answers =\
