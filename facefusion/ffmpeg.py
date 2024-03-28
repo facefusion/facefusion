@@ -31,7 +31,7 @@ def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
-def log_debug(process : subprocess.Popen) -> None:
+def log_debug(process : subprocess.Popen[bytes]) -> None:
 	_, stderr = process.communicate()
 	errors = stderr.decode().split(os.linesep)
 
