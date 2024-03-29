@@ -108,7 +108,7 @@ def listen() -> None:
 		component = get_ui_component(component_name)
 		if component:
 			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
-	release_one_component_names: List[ComponentName] = \
+	release_one_component_names : List[ComponentName] = \
 	[
 		'face_enhancer_blend_slider',
 		'frame_enhancer_blend_slider',
@@ -125,7 +125,7 @@ def listen() -> None:
 	for component_name in release_one_component_names:
 		component = get_ui_component(component_name)
 		if component:
-			component.release(update_preview_image, inputs=PREVIEW_FRAME_SLIDER, outputs=PREVIEW_IMAGE)
+			component.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 	change_two_component_names : List[ComponentName] =\
 	[
 		'frame_processors_checkbox_group',

@@ -90,7 +90,7 @@ def listen() -> None:
 		component = get_ui_component(component_name)
 		if component:
 			component.change(clear_and_update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
-	release_component_names: List[ComponentName] = \
+	release_component_names : List[ComponentName] = \
 	[
 		'face_detector_score_slider',
 		'face_landmarker_score_slider'
