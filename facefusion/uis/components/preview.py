@@ -97,28 +97,35 @@ def listen() -> None:
 	change_one_component_names : List[ComponentName] =\
 	[
 		'face_debugger_items_checkbox_group',
-		'face_enhancer_blend_slider',
-		'frame_enhancer_blend_slider',
-		'trim_frame_start_slider',
-		'trim_frame_end_slider',
 		'face_selector_mode_dropdown',
-		'reference_face_distance_slider',
 		'face_mask_types_checkbox_group',
-		'face_mask_blur_slider',
-		'face_mask_padding_top_slider',
-		'face_mask_padding_bottom_slider',
-		'face_mask_padding_left_slider',
-		'face_mask_padding_right_slider',
 		'face_mask_region_checkbox_group',
 		'face_analyser_order_dropdown',
 		'face_analyser_age_dropdown',
-		'face_analyser_gender_dropdown',
-		'output_video_fps_slider'
+		'face_analyser_gender_dropdown'
 	]
 	for component_name in change_one_component_names:
 		component = get_ui_component(component_name)
 		if component:
 			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	release_one_component_names: List[ComponentName] = \
+	[
+		'face_enhancer_blend_slider',
+		'frame_enhancer_blend_slider',
+		'trim_frame_start_slider',
+		'trim_frame_end_slider',
+		'reference_face_distance_slider',
+		'face_mask_blur_slider',
+		'face_mask_padding_top_slider',
+		'face_mask_padding_bottom_slider',
+		'face_mask_padding_left_slider',
+		'face_mask_padding_right_slider',
+		'output_video_fps_slider'
+	]
+	for component_name in release_one_component_names:
+		component = get_ui_component(component_name)
+		if component:
+			component.release(update_preview_image, inputs=PREVIEW_FRAME_SLIDER, outputs=PREVIEW_IMAGE)
 	change_two_component_names : List[ComponentName] =\
 	[
 		'frame_processors_checkbox_group',
@@ -127,14 +134,21 @@ def listen() -> None:
 		'frame_enhancer_model_dropdown',
 		'lip_syncer_model_dropdown',
 		'face_detector_model_dropdown',
-		'face_detector_size_dropdown',
-		'face_detector_score_slider',
-		'face_landmarker_score_slider'
+		'face_detector_size_dropdown'
 	]
 	for component_name in change_two_component_names:
 		component = get_ui_component(component_name)
 		if component:
 			component.change(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	release_two_component_names : List[ComponentName] =\
+	[
+		'face_detector_score_slider',
+		'face_landmarker_score_slider'
+	]
+	for component_name in release_two_component_names:
+		component = get_ui_component(component_name)
+		if component:
+			component.release(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
 
 def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:

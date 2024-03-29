@@ -84,14 +84,21 @@ def listen() -> None:
 	change_two_component_names : List[ComponentName] =\
 	[
 		'face_detector_model_dropdown',
-		'face_detector_size_dropdown',
-		'face_detector_score_slider',
-		'face_landmarker_score_slider'
+		'face_detector_size_dropdown'
 	]
 	for component_name in change_two_component_names:
 		component = get_ui_component(component_name)
 		if component:
 			component.change(clear_and_update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
+	release_component_names: List[ComponentName] = \
+	[
+		'face_detector_score_slider',
+		'face_landmarker_score_slider'
+	]
+	for component_name in release_component_names:
+		component = get_ui_component(component_name)
+		if component:
+			component.release(clear_and_update_reference_position_gallery, outputs=REFERENCE_FACE_POSITION_GALLERY)
 	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
 		preview_frame_slider.release(update_reference_frame_number, inputs = preview_frame_slider)
