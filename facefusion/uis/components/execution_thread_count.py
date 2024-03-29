@@ -21,7 +21,7 @@ def render() -> None:
 
 
 def listen() -> None:
-	EXECUTION_THREAD_COUNT_SLIDER.change(update_execution_thread_count, inputs = EXECUTION_THREAD_COUNT_SLIDER)
+	EXECUTION_THREAD_COUNT_SLIDER.release(update_execution_thread_count, inputs = EXECUTION_THREAD_COUNT_SLIDER)
 
 
 def update_execution_thread_count(execution_thread_count : int = 1) -> None:
