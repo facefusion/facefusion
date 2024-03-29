@@ -93,7 +93,7 @@ def listen() -> None:
 
 	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
-		preview_frame_slider.release(update_reference_frame_number, inputs = preview_frame_slider)
+		preview_frame_slider.change(update_reference_frame_number, inputs = preview_frame_slider)
 		preview_frame_slider.release(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
 
