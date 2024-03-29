@@ -59,7 +59,7 @@ def render() -> None:
 def listen() -> None:
 	FACE_SELECTOR_MODE_DROPDOWN.change(update_face_selector_mode, inputs = FACE_SELECTOR_MODE_DROPDOWN, outputs = [ REFERENCE_FACE_POSITION_GALLERY, REFERENCE_FACE_DISTANCE_SLIDER ])
 	REFERENCE_FACE_POSITION_GALLERY.select(clear_and_update_reference_face_position)
-	REFERENCE_FACE_DISTANCE_SLIDER.change(update_reference_face_distance, inputs = REFERENCE_FACE_DISTANCE_SLIDER)
+	REFERENCE_FACE_DISTANCE_SLIDER.release(update_reference_face_distance, inputs = REFERENCE_FACE_DISTANCE_SLIDER)
 	multi_component_names : List[ComponentName] =\
 	[
 		'target_image',
@@ -94,7 +94,7 @@ def listen() -> None:
 			component.change(clear_and_update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
-		preview_frame_slider.change(update_reference_frame_number, inputs = preview_frame_slider)
+		preview_frame_slider.release(update_reference_frame_number, inputs = preview_frame_slider)
 		preview_frame_slider.release(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
 
