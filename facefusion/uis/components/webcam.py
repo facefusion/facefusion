@@ -1,4 +1,4 @@
-from typing import Optional, Generator, Deque, List
+from typing import Optional, Generator, Deque
 import os
 import platform
 import subprocess
@@ -19,8 +19,8 @@ from facefusion.face_analyser import get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
-from facefusion.uis.typing import StreamMode, WebcamMode, ComponentName
-from facefusion.uis.core import get_ui_component
+from facefusion.uis.typing import StreamMode, WebcamMode
+from facefusion.uis.core import get_ui_component, get_ui_components
 
 WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None
@@ -76,7 +76,8 @@ def listen() -> None:
 	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 	WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
-	change_two_component_names : List[ComponentName] =\
+
+	for ui_component in get_ui_components(
 	[
 		'frame_processors_checkbox_group',
 		'face_swapper_model_dropdown',
@@ -84,11 +85,8 @@ def listen() -> None:
 		'frame_enhancer_model_dropdown',
 		'lip_syncer_model_dropdown',
 		'source_image'
-	]
-	for component_name in change_two_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			component.change(update, cancels = start_event)
+	]):
+		ui_component.change(update, cancels = start_event)
 
 
 def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
