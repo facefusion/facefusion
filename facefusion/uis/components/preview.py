@@ -105,6 +105,7 @@ def listen() -> None:
 	for ui_component in get_ui_components(
 	[
 		'face_enhancer_blend_slider',
+		'frame_colorizer_blend_slider',
 		'frame_enhancer_blend_slider',
 		'trim_frame_start_slider',
 		'trim_frame_end_slider',
@@ -123,6 +124,7 @@ def listen() -> None:
 		'frame_processors_checkbox_group',
 		'face_enhancer_model_dropdown',
 		'face_swapper_model_dropdown',
+		'frame_colorizer_model_dropdown',
 		'frame_enhancer_model_dropdown',
 		'lip_syncer_model_dropdown',
 		'face_detector_model_dropdown',

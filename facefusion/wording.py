@@ -162,6 +162,8 @@ WORDING : Dict[str, Any] =\
 		'face_enhancer_model_dropdown': 'FACE ENHANCER MODEL',
 		'face_enhancer_blend_slider': 'FACE ENHANCER BLEND',
 		'face_swapper_model_dropdown': 'FACE SWAPPER MODEL',
+		'frame_colorizer_model_dropdown': 'FRAME COLORIZER MODEL',
+		'frame_colorizer_blend_slider': 'FRAME COLORIZER BLEND',
 		'frame_enhancer_model_dropdown': 'FRAME ENHANCER MODEL',
 		'frame_enhancer_blend_slider': 'FRAME ENHANCER BLEND',
 		'lip_syncer_model_dropdown': 'LIP SYNCER MODEL',
