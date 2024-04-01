@@ -18,8 +18,8 @@ MODELS : ModelSet =\
 {
 	'voice_extractor':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/voice_extractor.onnx',
-		'path': resolve_relative_path('../.assets/models/voice_extractor.onnx')
+		'url': 'https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/Kim_Vocal_2.onnx',
+		'path': resolve_relative_path('../.assets/models/Kim_Vocal_2.onnx')
 	}
 }
 
