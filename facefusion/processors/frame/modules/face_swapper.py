@@ -188,11 +188,11 @@ def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if facefusion.globals.skip_download and not is_file(model_path):
-		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-		return False
-	if not is_download_done(model_url, model_path):
+	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+		return False
+	if not is_file(model_path):
+		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
 
