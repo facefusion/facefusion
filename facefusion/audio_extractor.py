@@ -69,9 +69,7 @@ def batch_extract_voice(audio : Audio, chunk_size : int, overlap_size : float) -
 
 def extract_voice(audio_chunk : AudioChunk) -> AudioChunk:
 	voice_extractor = get_voice_extractor()
-	print(voice_extractor)
 	extractor_shape = voice_extractor.get_inputs()[0].shape[1:]
-	print(extractor_shape)
 	hop_length = 1024
 	filter_size = 7680
 	trim_size = filter_size // 2
