@@ -27,8 +27,23 @@ THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
+	'ddcolor':
+	{
+		'type': 'ddcolor',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor.onnx',
+		'path': resolve_relative_path('../.assets/models/ddcolor.onnx'),
+		'size': (512, 512)
+	},
+	'ddcolor_artistic':
+	{
+		'type': 'ddcolor',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor_artistic.onnx',
+		'path': resolve_relative_path('../.assets/models/ddcolor_artistic.onnx'),
+		'size': (512, 512)
+	},
 	'deoldify':
 	{
+		'type': 'deoldify',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify.onnx',
 		'path': resolve_relative_path('../.assets/models/deoldify.onnx'),
 		'size': (256, 256)
@@ -73,7 +88,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-colorizer-model', help = wording.get('help.frame_colorizer_model'), default = config.get_str_value('frame_processors.frame_colorizer_model', 'deoldify'), choices = frame_processors_choices.frame_colorizer_models)
+	program.add_argument('--frame-colorizer-model', help = wording.get('help.frame_colorizer_model'), default = config.get_str_value('frame_processors.frame_colorizer_model', 'ddcolor'), choices = frame_processors_choices.frame_colorizer_models)
 	program.add_argument('--frame-colorizer-blend', help = wording.get('help.frame_colorizer_blend'), type = int, default = config.get_int_value('frame_processors.frame_colorizer_blend', '100'), choices = frame_processors_choices.frame_colorizer_blend_range, metavar = create_metavar(frame_processors_choices.frame_colorizer_blend_range))
 
 
@@ -137,8 +152,14 @@ def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_size = get_options('model').get('size')
+	model_type = get_options('model').get('type')
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2GRAY)
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_GRAY2RGB)
+	if model_type == 'ddcolor':
+		temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32)
+		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_RGB2LAB)[:, :, :1]
+		temp_vision_frame = numpy.dstack((temp_vision_frame, numpy.zeros_like(temp_vision_frame), numpy.zeros_like(temp_vision_frame)))
+		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_LAB2RGB)
 	temp_vision_frame = cv2.resize(temp_vision_frame, model_size)
 	temp_vision_frame = temp_vision_frame.transpose((2, 0, 1))
 	temp_vision_frame = numpy.expand_dims(temp_vision_frame, axis = 0).astype(numpy.float32)
@@ -146,14 +167,23 @@ def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def merge_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : VisionFrame) -> VisionFrame:
-	temp_luminance, _, _ = cv2.split(temp_vision_frame)
+	model_type = get_options('model').get('type')
 	color_vision_frame = color_vision_frame.transpose(1, 2, 0)
-	color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_BGR2RGB).astype(numpy.uint8)
-	color_vision_frame = cv2.resize(color_vision_frame, (temp_vision_frame.shape[1], temp_vision_frame.shape[0]))
-	color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_BGR2LAB)
-	_, color_channel_a, color_channel_b = cv2.split(color_vision_frame)
-	color_vision_frame = cv2.merge((temp_luminance, color_channel_a, color_channel_b))
-	color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_LAB2BGR)
+	if model_type == 'ddcolor':
+		temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32)
+		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2Lab)[:, :, :1]
+		color_vision_frame = cv2.resize(color_vision_frame, (temp_vision_frame.shape[1], temp_vision_frame.shape[0]))
+		color_vision_frame = numpy.dstack((temp_vision_frame, color_vision_frame))
+		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_LAB2BGR)
+		color_vision_frame = (color_vision_frame * 255.0).round().astype(numpy.uint8)
+	if model_type == 'deoldify':
+		temp_luminance, _, _ = cv2.split(temp_vision_frame)
+		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_BGR2RGB).astype(numpy.uint8)
+		color_vision_frame = cv2.resize(color_vision_frame, (temp_vision_frame.shape[1], temp_vision_frame.shape[0]))
+		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_BGR2LAB)
+		_, color_channel_a, color_channel_b = cv2.split(color_vision_frame)
+		color_vision_frame = cv2.merge((temp_luminance, color_channel_a, color_channel_b))
+		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_LAB2BGR)
 	return color_vision_frame
 
 
