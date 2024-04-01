@@ -46,7 +46,6 @@ def read_static_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]
 		audio = numpy.frombuffer(audio_buffer, dtype = numpy.int16).reshape(-1, 2)
 		audio = batch_extract_voice(audio, 1000000, 0.75)
 		audio = normalize_audio(audio)
-		scipy.io.wavfile.write("out_scipy.wav", 16000, audio.astype(numpy.float32))
 		audio = filter_audio(audio, -0.97)
 		spectrogram = create_spectrogram(audio, 16000, 80, 800, 55.0, 7600.0)
 		audio_frames = extract_audio_frames(spectrogram, 80, 16, fps)
