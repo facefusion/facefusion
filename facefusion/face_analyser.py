@@ -12,7 +12,7 @@ from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
-from facefusion.filesystem import resolve_relative_path
+from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, BoundingBox, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Score, FaceScoreSet, Embedding
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
@@ -125,35 +125,50 @@ def clear_face_analyser() -> Any:
 
 
 def pre_check() -> bool:
-	if not facefusion.globals.skip_download:
-		download_directory_path = resolve_relative_path('../.assets/models')
-		model_urls =\
-		[
-			MODELS.get('face_landmarker_68').get('url'),
-			MODELS.get('face_landmarker_68_5').get('url'),
-			MODELS.get('gender_age').get('url')
-		]
+	download_directory_path = resolve_relative_path('../.assets/models')
+	model_urls =\
+	[
+		MODELS.get('face_landmarker_68').get('url'),
+		MODELS.get('face_landmarker_68_5').get('url'),
+		MODELS.get('gender_age').get('url')
+	]
+	model_paths =\
+	[
+		MODELS.get('face_landmarker_68').get('path'),
+		MODELS.get('face_landmarker_68_5').get('path'),
+		MODELS.get('gender_age').get('path')
+	]
 
-		if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
-			model_urls.append(MODELS.get('face_detector_retinaface').get('url'))
-		if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
-			model_urls.append(MODELS.get('face_detector_scrfd').get('url'))
-		if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
-			model_urls.append(MODELS.get('face_detector_yoloface').get('url'))
-		if facefusion.globals.face_detector_model in [ 'yunet' ]:
-			model_urls.append(MODELS.get('face_detector_yunet').get('url'))
-		if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
-			model_urls.append(MODELS.get('face_recognizer_arcface_blendswap').get('url'))
-		if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
-			model_urls.append(MODELS.get('face_recognizer_arcface_inswapper').get('url'))
-		if facefusion.globals.face_recognizer_model == 'arcface_simswap':
-			model_urls.append(MODELS.get('face_recognizer_arcface_simswap').get('url'))
-		if facefusion.globals.face_recognizer_model == 'arcface_uniface':
-			model_urls.append(MODELS.get('face_recognizer_arcface_uniface').get('url'))
+	if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
+		model_urls.append(MODELS.get('face_detector_retinaface').get('url'))
+		model_paths.append(MODELS.get('face_detector_retinaface').get('path'))
+	if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
+		model_urls.append(MODELS.get('face_detector_scrfd').get('url'))
+		model_paths.append(MODELS.get('face_detector_scrfd').get('path'))
+	if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
+		model_urls.append(MODELS.get('face_detector_yoloface').get('url'))
+		model_paths.append(MODELS.get('face_detector_yoloface').get('path'))
+	if facefusion.globals.face_detector_model in [ 'yunet' ]:
+		model_urls.append(MODELS.get('face_detector_yunet').get('url'))
+		model_paths.append(MODELS.get('face_detector_yunet').get('path'))
+	if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
+		model_urls.append(MODELS.get('face_recognizer_arcface_blendswap').get('url'))
+		model_paths.append(MODELS.get('face_recognizer_arcface_blendswap').get('path'))
+	if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
+		model_urls.append(MODELS.get('face_recognizer_arcface_inswapper').get('url'))
+		model_paths.append(MODELS.get('face_recognizer_arcface_inswapper').get('path'))
+	if facefusion.globals.face_recognizer_model == 'arcface_simswap':
+		model_urls.append(MODELS.get('face_recognizer_arcface_simswap').get('url'))
+		model_paths.append(MODELS.get('face_recognizer_arcface_simswap').get('path'))
+	if facefusion.globals.face_recognizer_model == 'arcface_uniface':
+		model_urls.append(MODELS.get('face_recognizer_arcface_uniface').get('url'))
+		model_paths.append(MODELS.get('face_recognizer_arcface_uniface').get('path'))
+
+	if not facefusion.globals.skip_download:
 		process_manager.check()
 		conditional_download(download_directory_path, model_urls)
 		process_manager.end()
-	return True
+	return all(is_file(model_path) for model_path in model_paths)
 
 
 def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:

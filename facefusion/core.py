@@ -276,8 +276,8 @@ def force_download() -> None:
 	for frame_processor_module in get_frame_processors_modules(available_frame_processors):
 		if hasattr(frame_processor_module, 'MODELS'):
 			model_list.append(frame_processor_module.MODELS)
-	urls = [ models[model].get('url') for models in model_list for model in models ]
-	conditional_download(download_directory_path, urls)
+	model_urls = [ models[model].get('url') for models in model_list for model in models ]
+	conditional_download(download_directory_path, model_urls)
 
 
 def process_image(start_time : float) -> None:

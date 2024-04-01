@@ -11,7 +11,7 @@ import facefusion.globals
 from facefusion import process_manager
 from facefusion.typing import FaceLandmark68, VisionFrame, Mask, Padding, FaceMaskRegion, ModelSet
 from facefusion.execution import apply_execution_provider_options
-from facefusion.filesystem import resolve_relative_path
+from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.download import conditional_download
 
 FACE_OCCLUDER = None
@@ -82,17 +82,23 @@ def clear_face_parser() -> None:
 
 
 def pre_check() -> bool:
+	download_directory_path = resolve_relative_path('../.assets/models')
+	model_urls =\
+	[
+		MODELS.get('face_occluder').get('url'),
+		MODELS.get('face_parser').get('url')
+	]
+	model_paths =\
+	[
+		MODELS.get('face_occluder').get('path'),
+		MODELS.get('face_parser').get('path')
+	]
+
 	if not facefusion.globals.skip_download:
-		download_directory_path = resolve_relative_path('../.assets/models')
-		model_urls =\
-		[
-			MODELS.get('face_occluder').get('url'),
-			MODELS.get('face_parser').get('url'),
-		]
 		process_manager.check()
 		conditional_download(download_directory_path, model_urls)
 		process_manager.end()
-	return True
+	return all(is_file(model_path) for model_path in model_paths)
 
 
 @lru_cache(maxsize = None)
