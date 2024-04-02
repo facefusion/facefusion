@@ -64,8 +64,9 @@ def create_static_hanning_window(filter_size : int) -> Any:
 
 def batch_extract_voice(audio : Audio, chunk_size : int, overlap_size : float) -> Audio:
 	step_size = int(chunk_size * (1 - overlap_size))
-	audio_total = numpy.zeros((audio.shape[0], 2), dtype = numpy.float32)
-	audio_count = numpy.zeros((audio.shape[0], 2), dtype = numpy.float32)
+	audio_total = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
+	audio_count = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
+
 	for start in range(0, audio.shape[0], step_size):
 		end = min(start + chunk_size, audio.shape[0])
 		audio_total[start:end, ...] += extract_voice(audio[start:end, ...])
@@ -94,14 +95,19 @@ def extract_voice(audio_chunk : AudioChunk) -> AudioChunk:
 	return audio_chunk
 
 
-def prepare_audio_chunk(audio_chunk : AudioChunk, chunk_size : int, trim_size : int) -> Tuple[AudioChunk, int]:
+def prepare_audio_chunk(audio_chunk: AudioChunk, chunk_size: int, trim_size: int) -> Tuple[AudioChunk, int]:
 	audio_chunk = audio_chunk.T
 	step_size = chunk_size - 2 * trim_size
 	pad_size = step_size - audio_chunk.shape[1] % step_size
 	audio_chunk_size = audio_chunk.shape[1] + pad_size
 	audio_chunk = audio_chunk.astype(numpy.float32) / numpy.iinfo(numpy.int16).max
 	audio_chunk = numpy.pad(audio_chunk, ((0, 0), (trim_size, trim_size + pad_size)), mode = 'constant', constant_values = 0)
-	audio_chunk = numpy.concatenate([ audio_chunk[:,i:i + chunk_size ] for i in range(0, audio_chunk_size, step_size)], axis = 0)
+	temp_audio_chunks = []
+
+	for index in range(0, audio_chunk_size, step_size):
+		chunk = audio_chunk[:, index:index + chunk_size]
+		temp_audio_chunks.append(chunk)
+	audio_chunk = numpy.concatenate(temp_audio_chunks, axis = 0)
 	audio_chunk = audio_chunk.reshape((-1, chunk_size))
 	return audio_chunk, pad_size
 
