@@ -83,6 +83,7 @@ def create_static_mel_filter(sample_rate : int, filter_total : int, filter_size 
 	mel_filter = numpy.zeros((filter_total, filter_size // 2 + 1))
 	mel_bins = numpy.linspace(convert_hertz_to_mel(frequency_minimum), convert_hertz_to_mel(frequency_maximum), filter_total + 2)
 	indices = numpy.floor((filter_size + 1) * convert_mel_to_hertz(mel_bins) / sample_rate).astype(numpy.int16)
+
 	for index in range(filter_total):
 		mel_filter[index, indices[index]: indices[index + 1]] = scipy.signal.windows.triang(indices[index + 1] - indices[index])
 	return mel_filter
@@ -96,9 +97,10 @@ def create_spectrogram(audio : Audio, sample_rate : int, filter_total : int, fil
 
 
 def extract_audio_frames(spectrogram : Spectrogram, filter_total : int, audio_frame_step : int, fps : Fps) -> List[AudioFrame]:
+	audio_frames = []
 	indices = numpy.arange(0, spectrogram.shape[1], filter_total / fps).astype(numpy.int16)
 	indices = indices[indices >= audio_frame_step]
-	audio_frames = []
+
 	for index in indices:
 		audio_frames.append(spectrogram[:, max(0, index - audio_frame_step) : index])
 	return audio_frames

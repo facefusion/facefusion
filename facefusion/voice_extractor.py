@@ -100,8 +100,8 @@ def prepare_audio_chunk(audio_chunk : AudioChunk, chunk_size : int, trim_size : 
 	pad_size = step_size - audio_chunk.shape[1] % step_size
 	audio_chunk_size = audio_chunk.shape[1] + pad_size
 	audio_chunk = audio_chunk.astype(numpy.float32) / numpy.iinfo(numpy.int16).max
-	audio_chunk = numpy.pad(audio_chunk, ((0, 0), (trim_size, trim_size + pad_size)), mode='constant', constant_values = 0)
-	audio_chunk = numpy.concatenate([audio_chunk[:,i:i + chunk_size] for i in range(0, audio_chunk_size, step_size)], axis = 0)
+	audio_chunk = numpy.pad(audio_chunk, ((0, 0), (trim_size, trim_size + pad_size)), mode = 'constant', constant_values = 0)
+	audio_chunk = numpy.concatenate([ audio_chunk[:,i:i + chunk_size ] for i in range(0, audio_chunk_size, step_size)], axis = 0)
 	audio_chunk = audio_chunk.reshape((-1, chunk_size))
 	return audio_chunk, pad_size
 
