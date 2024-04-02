@@ -35,7 +35,7 @@ def read_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
 	if is_audio(audio_path):
 		audio_buffer = read_audio_buffer(audio_path, 16000, 2)
 		audio = numpy.frombuffer(audio_buffer, dtype = numpy.int16).reshape(-1, 2)
-		audio = batch_extract_voice(audio, 1000000, 0.75)
+		audio = batch_extract_voice(audio, 1024 ** 3, 0.75)
 		audio = normalize_audio(audio)
 		audio = filter_audio(audio, -0.97)
 		spectrogram = create_spectrogram(audio, 16000, 80, 800, 55.0, 7600.0)
