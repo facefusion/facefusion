@@ -95,7 +95,7 @@ def extract_voice(audio_chunk : AudioChunk) -> AudioChunk:
 	return audio_chunk
 
 
-def prepare_audio_chunk(audio_chunk: AudioChunk, chunk_size: int, trim_size: int) -> Tuple[AudioChunk, int]:
+def prepare_audio_chunk(audio_chunk : AudioChunk, chunk_size : int, trim_size : int) -> Tuple[AudioChunk, int]:
 	audio_chunk = audio_chunk.T
 	step_size = chunk_size - 2 * trim_size
 	pad_size = step_size - audio_chunk.shape[1] % step_size
