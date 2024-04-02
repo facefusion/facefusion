@@ -5,7 +5,7 @@ import scipy
 
 from facefusion.filesystem import is_audio
 from facefusion.ffmpeg import read_audio_buffer
-from facefusion.typing import Fps, Audio, Spectrogram, AudioFrame
+from facefusion.typing import Fps, Audio, AudioFrame, Spectrogram, MelFilter
 from facefusion.voice_extractor import batch_extract_voice
 
 
@@ -65,7 +65,7 @@ def normalize_audio(audio : numpy.ndarray[Any, Any]) -> Audio:
 
 
 def filter_audio(audio : Audio, filter_coefficient : float) -> Audio:
-	audio = scipy.signal.lfilter([ 1.0, filter_coefficient ], [1.0], audio)
+	audio = scipy.signal.lfilter([ 1.0, filter_coefficient ], [ 1.0 ], audio)
 	return audio
 
 
@@ -78,8 +78,7 @@ def convert_mel_to_hertz(mel : numpy.ndarray[Any, Any]) -> numpy.ndarray[Any, An
 
 
 @lru_cache(maxsize = None)
-def create_static_mel_filter(sample_rate : int, filter_total : int, filter_size : int, frequency_minimum : float, frequency_maximum : float) -> numpy.ndarray[Any, Any]:
-	frequency_maximum = min(sample_rate / 2, frequency_maximum)
+def create_static_mel_filter(sample_rate : int, filter_total : int, filter_size : int, frequency_minimum : float, frequency_maximum : float) -> MelFilter:
 	mel_filter = numpy.zeros((filter_total, filter_size // 2 + 1))
 	mel_bins = numpy.linspace(convert_hertz_to_mel(frequency_minimum), convert_hertz_to_mel(frequency_maximum), filter_total + 2)
 	indices = numpy.floor((filter_size + 1) * convert_mel_to_hertz(mel_bins) / sample_rate).astype(numpy.int16)
