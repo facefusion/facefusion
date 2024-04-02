@@ -19,11 +19,12 @@ from facefusion.normalizer import normalize_output_path
 from facefusion.typing import Face, VisionFrame, UpdateProcess, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
 from facefusion.filesystem import is_file, has_audio, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
-from facefusion.audio import read_static_audio, get_audio_frame, create_empty_audio_frame
+from facefusion.audio import read_static_voice, get_voice_frame, create_empty_audio_frame
 from facefusion.filesystem import is_image, is_video, filter_audio_paths
 from facefusion.common_helper import get_first
 from facefusion.vision import read_image, write_image, read_static_image
 from facefusion.processors.frame.typings import LipSyncerInputs
+from facefusion.audio_extractor import clear_voice_extractor
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
@@ -125,7 +126,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
-	read_static_audio.cache_clear()
+	read_static_voice.cache_clear()
 	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
 		clear_frame_processor()
 	if facefusion.globals.video_memory_strategy == 'strict':
@@ -133,6 +134,7 @@ def post_process() -> None:
 		clear_content_analyser()
 		clear_face_occluder()
 		clear_face_parser()
+		clear_voice_extractor()
 
 
 def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
@@ -222,7 +224,7 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 	for queue_payload in process_manager.manage(queue_payloads):
 		frame_number = queue_payload['frame_number']
 		target_vision_path = queue_payload['frame_path']
-		source_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, frame_number)
+		source_audio_frame = get_voice_frame(source_audio_path, facefusion.globals.output_video_fps, frame_number)
 		if not numpy.any(source_audio_frame):
 			source_audio_frame = create_empty_audio_frame()
 		target_vision_frame = read_image(target_vision_path)

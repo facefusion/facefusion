@@ -43,6 +43,7 @@ Translation = numpy.ndarray[Any, Any]
 
 AudioBuffer = bytes
 Audio = numpy.ndarray[Any, Any]
+AudioChunk = numpy.ndarray[Any, Any]
 AudioFrame = numpy.ndarray[Any, Any]
 Spectrogram = numpy.ndarray[Any, Any]
 

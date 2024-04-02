@@ -6,11 +6,20 @@ import scipy
 from facefusion.filesystem import is_audio
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.typing import Fps, Audio, Spectrogram, AudioFrame
+from facefusion.audio_extractor import batch_extract_voice
 
 
 def get_audio_frame(audio_path : str, fps : Fps, frame_number : int = 0) -> Optional[AudioFrame]:
 	if is_audio(audio_path):
 		audio_frames = read_static_audio(audio_path, fps)
+		if frame_number in range(len(audio_frames)):
+			return audio_frames[frame_number]
+	return None
+
+
+def get_voice_frame(audio_path : str, fps : Fps, frame_number : int = 0) -> Optional[AudioFrame]:
+	if is_audio(audio_path):
+		audio_frames = read_static_voice(audio_path, fps)
 		if frame_number in range(len(audio_frames)):
 			return audio_frames[frame_number]
 	return None
@@ -26,6 +35,20 @@ def read_static_audio(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]
 	if is_audio(audio_path):
 		audio_buffer = read_audio_buffer(audio_path, 16000, 2)
 		audio = numpy.frombuffer(audio_buffer, dtype = numpy.int16).reshape(-1, 2)
+		audio = normalize_audio(audio)
+		audio = filter_audio(audio, -0.97)
+		spectrogram = create_spectrogram(audio, 16000, 80, 800, 55.0, 7600.0)
+		audio_frames = extract_audio_frames(spectrogram, 80, 16, fps)
+		return audio_frames
+	return None
+
+
+@lru_cache(maxsize = None)
+def read_static_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
+	if is_audio(audio_path):
+		audio_buffer = read_audio_buffer(audio_path, 16000, 2)
+		audio = numpy.frombuffer(audio_buffer, dtype = numpy.int16).reshape(-1, 2)
+		audio = batch_extract_voice(audio, 1000000, 0.75)
 		audio = normalize_audio(audio)
 		audio = filter_audio(audio, -0.97)
 		spectrogram = create_spectrogram(audio, 16000, 80, 800, 55.0, 7600.0)
