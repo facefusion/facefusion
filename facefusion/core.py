@@ -15,7 +15,7 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
-from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, wording, audio_extractor
+from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, wording, voice_extractor
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.common_helper import create_metavar, get_first
@@ -193,7 +193,7 @@ def run(program : ArgumentParser) -> None:
 	if facefusion.globals.force_download:
 		force_download()
 		return
-	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not audio_extractor.pre_check():
+	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check():
 		return
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_check():
@@ -271,7 +271,7 @@ def force_download() -> None:
 		content_analyser.MODELS,
 		face_analyser.MODELS,
 		face_masker.MODELS,
-		audio_extractor.MODELS
+		voice_extractor.MODELS
 	]
 
 	for frame_processor_module in get_frame_processors_modules(available_frame_processors):

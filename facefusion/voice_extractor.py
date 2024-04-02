@@ -10,17 +10,18 @@ import facefusion.globals
 from facefusion import process_manager
 from facefusion.typing import ModelSet, AudioChunk, Audio
 from facefusion.execution import apply_execution_provider_options
-from facefusion.filesystem import resolve_relative_path
+from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.download import conditional_download
 
 VOICE_EXTRACTOR = None
+THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : ModelSet =\
 {
 	'voice_extractor':
 	{
-		'url': 'https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/Kim_Vocal_2.onnx',
-		'path': resolve_relative_path('../.assets/models/Kim_Vocal_2.onnx')
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/voice_extractor.onnx',
+		'path': resolve_relative_path('../.assets/models/voice_extractor.onnx')
 	}
 }
 
@@ -44,16 +45,15 @@ def clear_voice_extractor() -> None:
 
 
 def pre_check() -> bool:
+	download_directory_path = resolve_relative_path('../.assets/models')
+	model_url = MODELS.get('voice_extractor').get('url')
+	model_path = MODELS.get('voice_extractor').get('path')
+
 	if not facefusion.globals.skip_download:
-		download_directory_path = resolve_relative_path('../.assets/models')
-		model_urls =\
-		[
-			MODELS.get('voice_extractor').get('url'),
-		]
 		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
+		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
-	return True
+	return is_file(model_path)
 
 
 @lru_cache(maxsize = None)
@@ -84,10 +84,11 @@ def extract_voice(audio_chunk : AudioChunk) -> AudioChunk:
 	chunk_size = hop_length * (extractor_shape[2] - 1)
 	audio_chunk, pad_size = prepare_audio_chunk(audio_chunk, chunk_size, trim_size)
 	audio_chunk = decompose_audio_chunk(audio_chunk, filter_size, hop_length, frequency_bins, extractor_shape)
-	audio_chunk = voice_extractor.run(None,
-	{
-		voice_extractor.get_inputs()[0].name: audio_chunk
-	})[0]
+	with THREAD_SEMAPHORE:
+		audio_chunk = voice_extractor.run(None,
+		{
+			voice_extractor.get_inputs()[0].name: audio_chunk
+		})[0]
 	audio_chunk = compose_audio_chunk(audio_chunk, filter_size, hop_length, frequency_bins, extractor_shape)
 	audio_chunk = normalize_audio_chunk(audio_chunk, chunk_size, trim_size, pad_size)
 	return audio_chunk

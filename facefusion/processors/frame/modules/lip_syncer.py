@@ -24,7 +24,7 @@ from facefusion.filesystem import is_image, is_video, filter_audio_paths
 from facefusion.common_helper import get_first
 from facefusion.vision import read_image, write_image, read_static_image
 from facefusion.processors.frame.typings import LipSyncerInputs
-from facefusion.audio_extractor import clear_voice_extractor
+from facefusion.voice_extractor import clear_voice_extractor
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 

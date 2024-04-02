@@ -6,7 +6,7 @@ import scipy
 from facefusion.filesystem import is_audio
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.typing import Fps, Audio, Spectrogram, AudioFrame
-from facefusion.audio_extractor import batch_extract_voice
+from facefusion.voice_extractor import batch_extract_voice
 
 
 def get_audio_frame(audio_path : str, fps : Fps, frame_number : int = 0) -> Optional[AudioFrame]:
@@ -19,9 +19,9 @@ def get_audio_frame(audio_path : str, fps : Fps, frame_number : int = 0) -> Opti
 
 def get_voice_frame(audio_path : str, fps : Fps, frame_number : int = 0) -> Optional[AudioFrame]:
 	if is_audio(audio_path):
-		audio_frames = read_static_voice(audio_path, fps)
-		if frame_number in range(len(audio_frames)):
-			return audio_frames[frame_number]
+		voice_frames = read_static_voice(audio_path, fps)
+		if frame_number in range(len(voice_frames)):
+			return voice_frames[frame_number]
 	return None
 
 
