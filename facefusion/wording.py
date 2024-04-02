@@ -93,8 +93,6 @@ WORDING : Dict[str, Any] =\
 		'trim_frame_end': 'specify the the end frame of the target video',
 		'temp_frame_format': 'specify the temporary resources format',
 		'keep_temp': 'keep the temporary resources after processing',
-		# audio extraction
-		'audio_extract_voice': 'extract only the voice from the audio for processing',
 		# output creation
 		'output_image_quality': 'specify the image quality which translates to the compression factor',
 		'output_image_resolution': 'specify the image output resolution based on the target image',

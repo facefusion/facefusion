@@ -1,4 +1,5 @@
 from typing import Any, Tuple
+from functools import lru_cache
 from time import sleep
 import threading
 import scipy
@@ -55,6 +56,12 @@ def pre_check() -> bool:
 	return True
 
 
+@lru_cache(maxsize = None)
+def create_static_hanning_window(filter_size : int) -> Any:
+	window = scipy.signal.windows.hann(filter_size, sym = False)
+	return window
+
+
 def batch_extract_voice(audio : Audio, chunk_size : int, overlap_size : float) -> Audio:
 	step_size = int(chunk_size * (1 - overlap_size))
 	audio_total = numpy.zeros((audio.shape[0], 2), dtype = numpy.float32)
@@ -75,11 +82,13 @@ def extract_voice(audio_chunk : AudioChunk) -> AudioChunk:
 	trim_size = filter_size // 2
 	frequency_bins = trim_size + 1
 	chunk_size = hop_length * (extractor_shape[2] - 1)
-	window = scipy.signal.windows.hann(filter_size, sym = False)
 	audio_chunk, pad_size = prepare_audio_chunk(audio_chunk, chunk_size, trim_size)
-	audio_chunk = decompose_audio_chunk(audio_chunk, filter_size, hop_length, frequency_bins, window, extractor_shape)
-	audio_chunk = voice_extractor.run(None, {voice_extractor.get_inputs()[0].name: audio_chunk})[0]
-	audio_chunk = compose_audio_chunk(audio_chunk, filter_size, hop_length, frequency_bins, window, extractor_shape)
+	audio_chunk = decompose_audio_chunk(audio_chunk, filter_size, hop_length, frequency_bins, extractor_shape)
+	audio_chunk = voice_extractor.run(None,
+	{
+		voice_extractor.get_inputs()[0].name: audio_chunk
+	})[0]
+	audio_chunk = compose_audio_chunk(audio_chunk, filter_size, hop_length, frequency_bins, extractor_shape)
 	audio_chunk = normalize_audio_chunk(audio_chunk, chunk_size, trim_size, pad_size)
 	return audio_chunk
 
@@ -92,11 +101,12 @@ def prepare_audio_chunk(audio_chunk : AudioChunk, chunk_size : int, trim_size : 
 	audio_chunk = audio_chunk.astype(numpy.float32) / numpy.iinfo(numpy.int16).max
 	audio_chunk = numpy.pad(audio_chunk, ((0, 0), (trim_size, trim_size + pad_size)), mode='constant', constant_values = 0)
 	audio_chunk = numpy.concatenate([audio_chunk[:,i:i + chunk_size] for i in range(0, audio_chunk_size, step_size)], axis = 0)
-	audio_chunk = audio_chunk.reshape([-1, chunk_size])
+	audio_chunk = audio_chunk.reshape((-1, chunk_size))
 	return audio_chunk, pad_size
 
 
-def decompose_audio_chunk(audio_chunk : AudioChunk, filter_size : int, hop_length : int, frequency_bins : int, window : Any, extractor_shape : Tuple[int, int, int]) -> AudioChunk:
+def decompose_audio_chunk(audio_chunk : AudioChunk, filter_size : int, hop_length : int, frequency_bins : int, extractor_shape : Tuple[int, int, int]) -> AudioChunk:
+	window = create_static_hanning_window(filter_size)
 	audio_chunk = scipy.signal.stft(audio_chunk, nperseg = filter_size, noverlap = filter_size - hop_length, window = window, padded = False)[2]
 	audio_chunk = numpy.stack((numpy.real(audio_chunk), numpy.imag(audio_chunk)), axis = -1).transpose((0, 3, 1, 2))
 	audio_chunk = audio_chunk.reshape((-1, 2, 2, frequency_bins, extractor_shape[2])).reshape((-1, extractor_shape[0], frequency_bins, extractor_shape[2]))
@@ -105,7 +115,8 @@ def decompose_audio_chunk(audio_chunk : AudioChunk, filter_size : int, hop_lengt
 	return audio_chunk
 
 
-def compose_audio_chunk(audio_chunk : AudioChunk, filter_size : int, hop_length : int, frequency_bins : int, window : Any, extractor_shape : Tuple[int, int, int]) -> AudioChunk:
+def compose_audio_chunk(audio_chunk : AudioChunk, filter_size : int, hop_length : int, frequency_bins : int, extractor_shape : Tuple[int, int, int]) -> AudioChunk:
+	window = create_static_hanning_window(filter_size)
 	audio_chunk = numpy.pad(audio_chunk, ((0, 0), (0, 0), (0, frequency_bins - extractor_shape[1]), (0, 0)), mode = 'constant')
 	audio_chunk = audio_chunk.reshape(-1, 2, frequency_bins, extractor_shape[2]).transpose((0, 2, 3, 1))
 	audio_chunk = audio_chunk[:,:,:,0] + 1j * audio_chunk[:,:,:,1]
@@ -115,7 +126,7 @@ def compose_audio_chunk(audio_chunk : AudioChunk, filter_size : int, hop_length 
 
 
 def normalize_audio_chunk(audio_chunk : AudioChunk, chunk_size : int, trim_size : int, pad_size : int) -> AudioChunk:
-	audio_chunk = audio_chunk.reshape([-1, 2, chunk_size])
+	audio_chunk = audio_chunk.reshape((-1, 2, chunk_size))
 	audio_chunk = audio_chunk[:,:,trim_size:-trim_size].transpose(1, 0, 2)
 	audio_chunk = audio_chunk.reshape(2, -1)[:,:-pad_size].T
 	return audio_chunk

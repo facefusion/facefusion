@@ -15,7 +15,7 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
-from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, wording
+from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, wording, audio_extractor
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.common_helper import create_metavar, get_first
@@ -83,9 +83,6 @@ def cli() -> None:
 	group_frame_extraction.add_argument('--trim-frame-end',	help = wording.get('help.trim_frame_end'), type = int, default = facefusion.config.get_int_value('frame_extraction.trim_frame_end'))
 	group_frame_extraction.add_argument('--temp-frame-format', help = wording.get('help.temp_frame_format'), default = config.get_str_value('frame_extraction.temp_frame_format', 'png'), choices = facefusion.choices.temp_frame_formats)
 	group_frame_extraction.add_argument('--keep-temp', help = wording.get('help.keep_temp'), action = 'store_true',	default = config.get_bool_value('frame_extraction.keep_temp'))
-	# audio extraction
-	group_audio_extraction = program.add_argument_group('audio extraction')
-	group_audio_extraction.add_argument('--audio-extract-voice', help = wording.get('help.audio_extract_voice'), action = 'store_true',	default = config.get_bool_value('audio_extraction.audio_extract_voice'))
 	# output creation
 	group_output_creation = program.add_argument_group('output creation')
 	group_output_creation.add_argument('--output-image-quality', help = wording.get('help.output_image_quality'), type = int, default = config.get_int_value('output_creation.output_image_quality', '80'), choices = facefusion.choices.output_image_quality_range, metavar = create_metavar(facefusion.choices.output_image_quality_range))
@@ -155,8 +152,6 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.trim_frame_end = args.trim_frame_end
 	facefusion.globals.temp_frame_format = args.temp_frame_format
 	facefusion.globals.keep_temp = args.keep_temp
-	# audio extraction
-	facefusion.globals.audio_extract_voice = args.audio_extract_voice
 	# output creation
 	facefusion.globals.output_image_quality = args.output_image_quality
 	if is_image(args.target_path):
@@ -198,7 +193,7 @@ def run(program : ArgumentParser) -> None:
 	if facefusion.globals.force_download:
 		force_download()
 		return
-	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check():
+	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not audio_extractor.pre_check():
 		return
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_check():
@@ -275,7 +270,8 @@ def force_download() -> None:
 	[
 		content_analyser.MODELS,
 		face_analyser.MODELS,
-		face_masker.MODELS
+		face_masker.MODELS,
+		audio_extractor.MODELS
 	]
 
 	for frame_processor_module in get_frame_processors_modules(available_frame_processors):
