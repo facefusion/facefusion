@@ -106,7 +106,6 @@ def post_process() -> None:
 
 def benchmark(benchmark_cycles : int) -> List[Any]:
 	process_times = []
-	total_fps = 0.0
 	video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 	output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
 	facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
@@ -117,12 +116,12 @@ def benchmark(benchmark_cycles : int) -> List[Any]:
 		conditional_process()
 		end_time = perf_counter()
 		process_time = end_time - start_time
-		total_fps += video_frame_total / process_time
 		process_times.append(process_time)
 	average_run = round(statistics.mean(process_times), 2)
 	fastest_run = round(min(process_times), 2)
 	slowest_run = round(max(process_times), 2)
-	relative_fps = round(total_fps / benchmark_cycles, 2)
+	relative_fps = round(video_frame_total / average_run, 2)
+
 	return\
 	[
 		facefusion.globals.target_path,
