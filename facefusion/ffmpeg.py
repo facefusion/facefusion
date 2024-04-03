@@ -93,8 +93,8 @@ def finalize_image(output_path : str, output_image_resolution : str) -> bool:
 	return run_ffmpeg(commands)
 
 
-def read_audio_buffer(target_path : str, sample_rate : int, total_channel : int) -> Optional[AudioBuffer]:
-	commands = [ '-i', target_path, '-vn', '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', str(sample_rate), '-ac', str(total_channel), '-' ]
+def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int) -> Optional[AudioBuffer]:
+	commands = [ '-i', target_path, '-vn', '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', str(sample_rate), '-ac', str(channel_total), '-']
 	process = open_ffmpeg(commands)
 	audio_buffer, _ = process.communicate()
 	if process.returncode == 0:
