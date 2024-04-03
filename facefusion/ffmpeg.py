@@ -62,7 +62,7 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	target_video_fps = restrict_video_fps(target_path, output_video_fps)
 	temp_output_video_path = get_temp_output_video_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
-	commands = [ '-hwaccel', 'auto', '-s', str(output_video_resolution), '-r', str(target_video_fps ), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
+	commands = [ '-hwaccel', 'auto', '-s', str(output_video_resolution), '-r', str(target_video_fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
 
 	if facefusion.globals.output_video_encoder in [ 'libx264', 'libx265' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
