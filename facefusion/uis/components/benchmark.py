@@ -115,12 +115,11 @@ def benchmark(benchmark_cycles : int) -> List[Any]:
 		start_time = perf_counter()
 		conditional_process()
 		end_time = perf_counter()
-		process_time = end_time - start_time
-		process_times.append(process_time)
+		process_times.append(end_time - start_time)
 	average_run = round(statistics.mean(process_times), 2)
 	fastest_run = round(min(process_times), 2)
 	slowest_run = round(max(process_times), 2)
-	relative_fps = round(video_frame_total / average_run, 2)
+	relative_fps = round(video_frame_total * benchmark_cycles / sum(process_times), 2)
 
 	return\
 	[
