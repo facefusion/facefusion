@@ -219,7 +219,7 @@ def apply_enhance(crop_vision_frame : VisionFrame) -> VisionFrame:
 		if frame_processor_input.name == 'input':
 			frame_processor_inputs[frame_processor_input.name] = crop_vision_frame
 		if frame_processor_input.name == 'weight':
-			weight = numpy.array([ 1 ], dtype = numpy.double)
+			weight = numpy.array([ 1 ]).astype(numpy.double)
 			frame_processor_inputs[frame_processor_input.name] = weight
 	with THREAD_SEMAPHORE:
 		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]

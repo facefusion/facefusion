@@ -147,7 +147,7 @@ def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List
 
 def create_mouth_mask(face_landmark_68 : FaceLandmark68) -> Mask:
 	convex_hull = cv2.convexHull(face_landmark_68[numpy.r_[3:14, 31:36]].astype(numpy.int32))
-	mouth_mask : Mask = numpy.zeros((512, 512), dtype = numpy.float32)
+	mouth_mask : Mask = numpy.zeros((512, 512)).astype(numpy.float32)
 	mouth_mask = cv2.fillConvexPoly(mouth_mask, convex_hull, 1.0)
 	mouth_mask = cv2.erode(mouth_mask.clip(0, 1), numpy.ones((21, 3)))
 	mouth_mask = cv2.GaussianBlur(mouth_mask, (0, 0), sigmaX = 1, sigmaY = 15)
