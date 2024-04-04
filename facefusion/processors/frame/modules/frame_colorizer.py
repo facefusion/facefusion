@@ -24,6 +24,7 @@ from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
 THREAD_LOCK : threading.Lock = threading.Lock()
+THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
@@ -135,10 +136,12 @@ def post_process() -> None:
 
 def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
-	color_vision_frame = frame_processor.run(None,
-	{
-		frame_processor.get_inputs()[0].name: prepare_temp_frame(temp_vision_frame)
-	})[0][0]
+	prepare_vision_frame = prepare_temp_frame(temp_vision_frame)
+	with THREAD_SEMAPHORE:
+		color_vision_frame = frame_processor.run(None,
+		{
+			frame_processor.get_inputs()[0].name: prepare_vision_frame
+		})[0][0]
 	color_vision_frame = merge_color_frame(temp_vision_frame, color_vision_frame)
 	color_vision_frame = blend_frame(temp_vision_frame, color_vision_frame)
 	return color_vision_frame
