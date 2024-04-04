@@ -108,6 +108,8 @@ WORDING : Dict[str, Any] =\
 		'face_enhancer_model': 'choose the model responsible for enhancing the face',
 		'face_enhancer_blend': 'blend the enhanced into the previous face',
 		'face_swapper_model': 'choose the model responsible for swapping the face',
+		'frame_colorizer_model': 'choose the model responsible for colorizing the frame',
+		'frame_colorizer_blend': 'blend the colorized into the previous frame',
 		'frame_enhancer_model': 'choose the model responsible for enhancing the frame',
 		'frame_enhancer_blend': 'blend the enhanced into the previous frame',
 		'lip_syncer_model': 'choose the model responsible for syncing the lips',
