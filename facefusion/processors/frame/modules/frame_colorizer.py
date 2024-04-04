@@ -30,12 +30,14 @@ MODELS : ModelSet =\
 {
 	'ddcolor':
 	{
+		'type': 'ddcolor',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor.onnx',
 		'path': resolve_relative_path('../.assets/models/ddcolor.onnx'),
 		'size': (512, 512)
 	},
 	'ddcolor_artistic':
 	{
+		'type': 'ddcolor',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor_artistic.onnx',
 		'path': resolve_relative_path('../.assets/models/ddcolor_artistic.onnx'),
 		'size': (512, 512)
@@ -154,7 +156,7 @@ def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32)
 	temp_vision_frame = cv2.resize(temp_vision_frame, model_size)
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2Lab)[:, :, :1]
-	temp_vision_frame = numpy.concatenate((temp_vision_frame, numpy.zeros_like(temp_vision_frame), numpy.zeros_like(temp_vision_frame)), axis = -1)
+	temp_vision_frame = numpy.concatenate((temp_vision_frame, numpy.zeros_like(temp_vision_frame), numpy.zeros_like(temp_vision_frame)), axis=-1)
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_LAB2RGB)
 	temp_vision_frame = cv2.resize(temp_vision_frame, model_size)
 	temp_vision_frame = temp_vision_frame.transpose((2, 0, 1))
