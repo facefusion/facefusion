@@ -41,6 +41,20 @@ MODELS : ModelSet =\
 		'size': (128, 8, 2),
 		'scale': 4
 	},
+	'real_esrgan_x2':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x2.onnx',
+		'path': resolve_relative_path('../.assets/models/real_esrgan_x2.onnx'),
+		'size': (128, 8, 2),
+		'scale': 2
+	},
+	'real_esrgan_x2_fp16':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x2_fp16.onnx',
+		'path': resolve_relative_path('../.assets/models/real_esrgan_x2_fp16.onnx'),
+		'size': (128, 8, 2),
+		'scale': 2
+	},
 	'real_esrgan_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4.onnx',
