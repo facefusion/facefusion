@@ -30,14 +30,12 @@ MODELS : ModelSet =\
 {
 	'ddcolor':
 	{
-		'type': 'ddcolor',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor.onnx',
 		'path': resolve_relative_path('../.assets/models/ddcolor.onnx'),
 		'size': (512, 512)
 	},
 	'ddcolor_artistic':
 	{
-		'type': 'ddcolor',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor_artistic.onnx',
 		'path': resolve_relative_path('../.assets/models/ddcolor_artistic.onnx'),
 		'size': (512, 512)
