@@ -125,20 +125,12 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 
 
 def map_nvenc_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
-	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast' ]:
-		return 'p1'
-	if output_video_preset == 'faster':
-		return 'p2'
-	if output_video_preset == 'fast':
-		return 'p3'
+	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast' ]:
+		return 'fast'
 	if output_video_preset == 'medium':
-		return 'p4'
-	if output_video_preset == 'slow':
-		return 'p5'
-	if output_video_preset == 'slower':
-		return 'p6'
-	if output_video_preset == 'veryslow':
-		return 'p7'
+		return 'medium'
+	if output_video_preset in [ 'slow', 'slower', 'veryslow' ]:
+		return 'slow'
 	return None
 
 
