@@ -155,6 +155,7 @@ def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> gradio.D
 	if face_swapper_model == 'uniface_256':
 		facefusion.globals.face_recognizer_model = 'arcface_uniface'
 	face_swapper_module = load_frame_processor_module('face_swapper')
+	face_swapper_module.clear_model_initializer()
 	face_swapper_module.clear_frame_processor()
 	face_swapper_module.set_options('model', face_swapper_module.MODELS[face_swapper_model])
 	if face_analyser.pre_check() and face_swapper_module.pre_check():
