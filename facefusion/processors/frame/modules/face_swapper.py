@@ -284,9 +284,9 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_options('model').get('type')
 	if model_type == 'inswapper':
-		model_matrix = get_model_initializer()
+		model_initializer = get_model_initializer()
 		source_embedding = source_face.embedding.reshape((1, -1))
-		source_embedding = numpy.dot(source_embedding, model_matrix) / numpy.linalg.norm(source_embedding)
+		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
 	else:
 		source_embedding = source_face.normed_embedding.reshape(1, -1)
 	return source_embedding
