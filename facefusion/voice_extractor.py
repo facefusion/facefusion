@@ -63,14 +63,14 @@ def create_static_hanning_window(filter_size : int) -> Any:
 
 
 def batch_extract_voice(audio : Audio, chunk_size : int, step_size : int) -> Audio:
-	audio_total = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
-	chunk_total = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
+	audios = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
+	chunks = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
 
 	for start in range(0, audio.shape[0], step_size):
 		end = min(start + chunk_size, audio.shape[0])
-		audio_total[start:end, ...] += extract_voice(audio[start:end, ...])
-		chunk_total[start:end, ...] += 1
-	audio = audio_total / chunk_total
+		audios[start:end, ...] += extract_voice(audio[start:end, ...])
+		chunks[start:end, ...] += 1
+	audio = audios / chunks
 	return audio
 
 
@@ -133,6 +133,6 @@ def compose_audio_chunk(audio_chunk : AudioChunk, filter_size : int, hop_length 
 
 def normalize_audio_chunk(audio_chunk : AudioChunk, chunk_size : int, trim_size : int, pad_size : int) -> AudioChunk:
 	audio_chunk = audio_chunk.reshape((-1, 2, chunk_size))
-	audio_chunk = audio_chunk[:,:,trim_size:-trim_size].transpose(1, 0, 2)
-	audio_chunk = audio_chunk.reshape(2, -1)[:,:-pad_size].T
+	audio_chunk = audio_chunk[:, :, trim_size:-trim_size].transpose(1, 0, 2)
+	audio_chunk = audio_chunk.reshape(2, -1)[:, :-pad_size].T
 	return audio_chunk
