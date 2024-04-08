@@ -62,8 +62,7 @@ def create_static_hanning_window(filter_size : int) -> Any:
 	return window
 
 
-def batch_extract_voice(audio : Audio, chunk_size : int, overlap_size : float) -> Audio:
-	step_size = int(chunk_size * (1 - overlap_size))
+def batch_extract_voice(audio : Audio, chunk_size : int, step_size : int) -> Audio:
 	audio_total = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
 	chunk_total = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
 
@@ -117,7 +116,7 @@ def decompose_audio_chunk(audio_chunk : AudioChunk, filter_size : int, hop_lengt
 	audio_chunk = scipy.signal.stft(audio_chunk, nperseg = filter_size, noverlap = filter_size - hop_length, window = window, padded = False)[2]
 	audio_chunk = numpy.stack((numpy.real(audio_chunk), numpy.imag(audio_chunk)), axis = -1).transpose((0, 3, 1, 2))
 	audio_chunk = audio_chunk.reshape((-1, 2, 2, frequency_bins, extractor_shape[2])).reshape((-1, extractor_shape[0], frequency_bins, extractor_shape[2]))
-	audio_chunk = audio_chunk[:,:,:extractor_shape[1]]
+	audio_chunk = audio_chunk[:, :, :extractor_shape[1]]
 	audio_chunk /= numpy.sqrt(1.0 / window.sum() ** 2)
 	return audio_chunk
 
@@ -126,7 +125,7 @@ def compose_audio_chunk(audio_chunk : AudioChunk, filter_size : int, hop_length 
 	window = create_static_hanning_window(filter_size)
 	audio_chunk = numpy.pad(audio_chunk, ((0, 0), (0, 0), (0, frequency_bins - extractor_shape[1]), (0, 0)), mode = 'constant')
 	audio_chunk = audio_chunk.reshape(-1, 2, frequency_bins, extractor_shape[2]).transpose((0, 2, 3, 1))
-	audio_chunk = audio_chunk[:,:,:,0] + 1j * audio_chunk[:,:,:,1]
+	audio_chunk = audio_chunk[:, :, :, 0] + 1j * audio_chunk[:, :, :, 1]
 	audio_chunk = scipy.signal.istft(audio_chunk, nperseg = filter_size, noverlap = filter_size - hop_length, window = window)[1]
 	audio_chunk *= numpy.sqrt(1.0 / window.sum() ** 2)
 	return audio_chunk
