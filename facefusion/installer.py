@@ -9,26 +9,29 @@ from argparse import ArgumentParser, HelpFormatter
 
 from facefusion import metadata, wording
 
+if platform.system().lower() == 'darwin':
+	os.environ['SYSTEM_VERSION_COMPAT'] = '0'
+
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 
 if platform.system().lower() == 'darwin':
 	ONNXRUNTIMES['default'] = ('onnxruntime', '1.17.1')
 else:
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.16.3')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.17.1')
 	ONNXRUNTIMES['cuda-12.2'] = ('onnxruntime-gpu', '1.17.1')
-	ONNXRUNTIMES['cuda-11.8'] = ('onnxruntime-gpu', '1.16.3')
-	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.16.0')
+	ONNXRUNTIMES['cuda-11.8'] = ('onnxruntime-gpu', '1.17.1')
+	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.17.1')
 if platform.system().lower() == 'linux':
 	ONNXRUNTIMES['rocm-5.4.2'] = ('onnxruntime-rocm', '1.16.3')
 	ONNXRUNTIMES['rocm-5.6'] = ('onnxruntime-rocm', '1.16.3')
 if platform.system().lower() == 'windows':
-	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.16.0')
+	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.17.1')
 
 
 def cli() -> None:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 130))
 	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys())
-	program.add_argument('--skip-venv', help = wording.get('help.skip_venv'), action = 'store_true')
+	program.add_argument('--skip-conda', help = wording.get('help.skip_conda'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	run(program)
 
@@ -37,10 +40,9 @@ def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
-	if platform.system().lower() == 'darwin':
-		os.environ['SYSTEM_VERSION_COMPAT'] = '0'
-	if not args.skip_venv:
-		os.environ['PIP_REQUIRE_VIRTUALENV'] = '1'
+	if not args.skip_conda and 'CONDA_PREFIX' not in os.environ:
+		sys.stdout.write(wording.get('conda_not_activated') + os.linesep)
+		sys.exit(1)
 	if args.onnxruntime:
 		answers =\
 		{

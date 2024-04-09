@@ -17,71 +17,37 @@ from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, Mo
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, resolve_relative_path, is_image, is_video
 from facefusion.download import conditional_download, is_download_done
-from facefusion.vision import read_image, read_static_image, write_image, merge_tile_frames, create_tile_frames
-from facefusion.processors.frame.typings import FrameEnhancerInputs
+from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.processors.frame.typings import FrameColorizerInputs
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
 THREAD_LOCK : threading.Lock = threading.Lock()
+THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
-	'lsdir_x4':
+	'ddcolor':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/lsdir_x4.onnx',
-		'path': resolve_relative_path('../.assets/models/lsdir_x4.onnx'),
-		'size': (128, 8, 2),
-		'scale': 4
+		'type': 'ddcolor',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor.onnx',
+		'path': resolve_relative_path('../.assets/models/ddcolor.onnx'),
+		'size': (512, 512)
 	},
-	'nomos8k_sc_x4':
+	'ddcolor_artistic':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/nomos8k_sc_x4.onnx',
-		'path': resolve_relative_path('../.assets/models/nomos8k_sc_x4.onnx'),
-		'size': (128, 8, 2),
-		'scale': 4
+		'type': 'ddcolor',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor_artistic.onnx',
+		'path': resolve_relative_path('../.assets/models/ddcolor_artistic.onnx'),
+		'size': (512, 512)
 	},
-	'real_esrgan_x2':
+	'deoldify_artistic':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x2.onnx',
-		'path': resolve_relative_path('../.assets/models/real_esrgan_x2.onnx'),
-		'size': (128, 8, 2),
-		'scale': 2
-	},
-	'real_esrgan_x2_fp16':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x2_fp16.onnx',
-		'path': resolve_relative_path('../.assets/models/real_esrgan_x2_fp16.onnx'),
-		'size': (128, 8, 2),
-		'scale': 2
-	},
-	'real_esrgan_x4':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4.onnx',
-		'path': resolve_relative_path('../.assets/models/real_esrgan_x4.onnx'),
-		'size': (128, 8, 2),
-		'scale': 4
-	},
-	'real_esrgan_x4_fp16':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4_fp16.onnx',
-		'path': resolve_relative_path('../.assets/models/real_esrgan_x4_fp16.onnx'),
-		'size': (128, 8, 2),
-		'scale': 4
-	},
-	'real_hatgan_x4':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_hatgan_x4.onnx',
-		'path': resolve_relative_path('../.assets/models/real_hatgan_x4.onnx'),
-		'size': (256, 8, 2),
-		'scale': 4
-	},
-	'span_kendata_x4':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/span_kendata_x4.onnx',
-		'path': resolve_relative_path('../.assets/models/span_kendata_x4.onnx'),
-		'size': (128, 8, 2),
-		'scale': 4
+		'type': 'deoldify',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_artistic.onnx',
+		'path': resolve_relative_path('../.assets/models/deoldify_artistic.onnx'),
+		'size': (512, 512)
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -111,7 +77,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[frame_processors_globals.frame_enhancer_model]
+			'model': MODELS[frame_processors_globals.frame_colorizer_model]
 		}
 	return OPTIONS.get(key)
 
@@ -123,14 +89,14 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'span_kendata_x4'), choices = frame_processors_choices.frame_enhancer_models)
-	program.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.frame_enhancer_blend', '80'), choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
+	program.add_argument('--frame-colorizer-model', help = wording.get('help.frame_colorizer_model'), default = config.get_str_value('frame_processors.frame_colorizer_model', 'ddcolor'), choices = frame_processors_choices.frame_colorizer_models)
+	program.add_argument('--frame-colorizer-blend', help = wording.get('help.frame_colorizer_blend'), type = int, default = config.get_int_value('frame_processors.frame_colorizer_blend', '100'), choices = frame_processors_choices.frame_colorizer_blend_range, metavar = create_metavar(frame_processors_choices.frame_colorizer_blend_range))
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.frame_enhancer_model = args.frame_enhancer_model
-	frame_processors_globals.frame_enhancer_blend = args.frame_enhancer_blend
+	frame_processors_globals.frame_colorizer_model = args.frame_colorizer_model
+	frame_processors_globals.frame_colorizer_blend = args.frame_colorizer_blend
 
 
 def pre_check() -> bool:
@@ -177,41 +143,58 @@ def post_process() -> None:
 		clear_content_analyser()
 
 
-def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
+def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
-	size = get_options('model').get('size')
-	scale = get_options('model').get('scale')
-	temp_height, temp_width = temp_vision_frame.shape[:2]
-	tile_vision_frames, pad_width, pad_height = create_tile_frames(temp_vision_frame, size)
-
-	for index, tile_vision_frame in enumerate(tile_vision_frames):
-		tile_vision_frame = frame_processor.run(None,
+	prepare_vision_frame = prepare_temp_frame(temp_vision_frame)
+	with THREAD_SEMAPHORE:
+		color_vision_frame = frame_processor.run(None,
 		{
-			frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
-		})[0]
-		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame)
-	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width * scale, temp_height * scale, pad_width * scale, pad_height * scale, (size[0] * scale, size[1] * scale, size[2] * scale))
-	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
+			frame_processor.get_inputs()[0].name: prepare_vision_frame
+		})[0][0]
+	color_vision_frame = merge_color_frame(temp_vision_frame, color_vision_frame)
+	color_vision_frame = blend_frame(temp_vision_frame, color_vision_frame)
+	return color_vision_frame
+
+
+def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
+	model_size = get_options('model').get('size')
+	model_type = get_options('model').get('type')
+	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2GRAY)
+	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_GRAY2RGB)
+	if model_type == 'ddcolor':
+		temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32)
+		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_RGB2LAB)[:, :, :1]
+		temp_vision_frame = numpy.concatenate((temp_vision_frame, numpy.zeros_like(temp_vision_frame), numpy.zeros_like(temp_vision_frame)), axis = -1)
+		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_LAB2RGB)
+	temp_vision_frame = cv2.resize(temp_vision_frame, model_size)
+	temp_vision_frame = temp_vision_frame.transpose((2, 0, 1))
+	temp_vision_frame = numpy.expand_dims(temp_vision_frame, axis = 0).astype(numpy.float32)
 	return temp_vision_frame
 
 
-def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
-	vision_tile_frame = numpy.expand_dims(vision_tile_frame[:, :, ::-1], axis = 0)
-	vision_tile_frame = vision_tile_frame.transpose(0, 3, 1, 2)
-	vision_tile_frame = vision_tile_frame.astype(numpy.float32) / 255
-	return vision_tile_frame
+def merge_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : VisionFrame) -> VisionFrame:
+	model_type = get_options('model').get('type')
+	color_vision_frame = color_vision_frame.transpose(1, 2, 0)
+	color_vision_frame = cv2.resize(color_vision_frame, (temp_vision_frame.shape[1], temp_vision_frame.shape[0]))
+	if model_type == 'ddcolor':
+		temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32)
+		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2LAB)[:, :, :1]
+		color_vision_frame = numpy.concatenate((temp_vision_frame, color_vision_frame), axis = -1)
+		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_LAB2BGR)
+		color_vision_frame = (color_vision_frame * 255.0).round().astype(numpy.uint8)
+	if model_type == 'deoldify':
+		temp_blue_channel, _, _ = cv2.split(temp_vision_frame)
+		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_BGR2RGB).astype(numpy.uint8)
+		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_BGR2LAB)
+		_, color_green_channel, color_red_channel = cv2.split(color_vision_frame)
+		color_vision_frame = cv2.merge((temp_blue_channel, color_green_channel, color_red_channel))
+		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_LAB2BGR)
+	return color_vision_frame
 
 
-def normalize_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
-	vision_tile_frame = vision_tile_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
-	vision_tile_frame = vision_tile_frame.clip(0, 255).astype(numpy.uint8)[:, :, ::-1]
-	return vision_tile_frame
-
-
-def blend_frame(temp_vision_frame : VisionFrame, merge_vision_frame : VisionFrame) -> VisionFrame:
-	frame_enhancer_blend = 1 - (frame_processors_globals.frame_enhancer_blend / 100)
-	temp_vision_frame = cv2.resize(temp_vision_frame, (merge_vision_frame.shape[1], merge_vision_frame.shape[0]))
-	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_enhancer_blend, merge_vision_frame, 1 - frame_enhancer_blend, 0)
+def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
+	frame_colorizer_blend = 1 - (frame_processors_globals.frame_colorizer_blend / 100)
+	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_colorizer_blend, paste_vision_frame, 1 - frame_colorizer_blend, 0)
 	return temp_vision_frame
 
 
@@ -219,9 +202,9 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 	pass
 
 
-def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
+def process_frame(inputs : FrameColorizerInputs) -> VisionFrame:
 	target_vision_frame = inputs.get('target_vision_frame')
-	return enhance_frame(target_vision_frame)
+	return colorize_frame(target_vision_frame)
 
 
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:

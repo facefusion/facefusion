@@ -1,8 +1,8 @@
 filetype==1.2.0
 gradio==3.50.2
 numpy==1.26.4
-onnx==1.15.0
-onnxruntime==1.16.3
+onnx==1.16.0
+onnxruntime==1.17.1
 opencv-python==4.8.1.78
 psutil==5.9.8
 tqdm==4.66.2

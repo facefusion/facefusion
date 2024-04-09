@@ -47,8 +47,8 @@ def render() -> None:
 
 
 def listen() -> None:
-	TRIM_FRAME_START_SLIDER.change(update_trim_frame_start, inputs = TRIM_FRAME_START_SLIDER)
-	TRIM_FRAME_END_SLIDER.change(update_trim_frame_end, inputs = TRIM_FRAME_END_SLIDER)
+	TRIM_FRAME_START_SLIDER.release(update_trim_frame_start, inputs = TRIM_FRAME_START_SLIDER)
+	TRIM_FRAME_END_SLIDER.release(update_trim_frame_end, inputs = TRIM_FRAME_END_SLIDER)
 	target_video = get_ui_component('target_video')
 	if target_video:
 		for method in [ 'upload', 'change', 'clear' ]:

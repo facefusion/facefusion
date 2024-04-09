@@ -76,7 +76,7 @@ def listen() -> None:
 
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
-	facefusion.globals.source_paths = [ '.assets/examples/source.jpg' ]
+	facefusion.globals.source_paths = [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ]
 	facefusion.globals.output_path = tempfile.gettempdir()
 	facefusion.globals.face_landmarker_score = 0
 	facefusion.globals.temp_frame_format = 'bmp'
@@ -87,7 +87,8 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 	if target_paths:
 		pre_process()
 		for target_path in target_paths:
-			benchmark_results.append(benchmark(target_path, benchmark_cycles))
+			facefusion.globals.target_path = target_path
+			benchmark_results.append(benchmark(benchmark_cycles))
 			yield benchmark_results
 		post_process()
 
@@ -103,10 +104,8 @@ def post_process() -> None:
 	clear_static_faces()
 
 
-def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
+def benchmark(benchmark_cycles : int) -> List[Any]:
 	process_times = []
-	total_fps = 0.0
-	facefusion.globals.target_path = target_path
 	video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 	output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
 	facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
@@ -116,13 +115,12 @@ def benchmark(target_path : str, benchmark_cycles : int) -> List[Any]:
 		start_time = perf_counter()
 		conditional_process()
 		end_time = perf_counter()
-		process_time = end_time - start_time
-		total_fps += video_frame_total / process_time
-		process_times.append(process_time)
+		process_times.append(end_time - start_time)
 	average_run = round(statistics.mean(process_times), 2)
 	fastest_run = round(min(process_times), 2)
 	slowest_run = round(max(process_times), 2)
-	relative_fps = round(total_fps / benchmark_cycles, 2)
+	relative_fps = round(video_frame_total * benchmark_cycles / sum(process_times), 2)
+
 	return\
 	[
 		facefusion.globals.target_path,

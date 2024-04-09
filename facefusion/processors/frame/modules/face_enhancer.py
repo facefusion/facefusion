@@ -16,7 +16,7 @@ from facefusion.execution import apply_execution_provider_options
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
 from facefusion.normalizer import normalize_output_path
-from facefusion.typing import Face, VisionFrame, UpdateProcess, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
+from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, is_image, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
@@ -72,6 +72,20 @@ MODELS : ModelSet =\
 		'path': resolve_relative_path('../.assets/models/gpen_bfr_512.onnx'),
 		'template': 'ffhq_512',
 		'size': (512, 512)
+	},
+	'gpen_bfr_1024':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_1024.onnx',
+		'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.onnx'),
+		'template': 'ffhq_512',
+		'size': (1024, 1024)
+	},
+	'gpen_bfr_2048':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_2048.onnx',
+		'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.onnx'),
+		'template': 'ffhq_512',
+		'size': (2048, 2048)
 	},
 	'restoreformer_plus_plus':
 	{
@@ -131,22 +145,25 @@ def apply_args(program : ArgumentParser) -> None:
 
 
 def pre_check() -> bool:
+	download_directory_path = resolve_relative_path('../.assets/models')
+	model_url = get_options('model').get('url')
+	model_path = get_options('model').get('path')
+
 	if not facefusion.globals.skip_download:
-		download_directory_path = resolve_relative_path('../.assets/models')
-		model_url = get_options('model').get('url')
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
-	return True
+	return is_file(model_path)
 
 
 def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
+
 	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
-	elif not is_file(model_path):
+	if not is_file(model_path):
 		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -202,7 +219,7 @@ def apply_enhance(crop_vision_frame : VisionFrame) -> VisionFrame:
 		if frame_processor_input.name == 'input':
 			frame_processor_inputs[frame_processor_input.name] = crop_vision_frame
 		if frame_processor_input.name == 'weight':
-			weight = numpy.array([ 1 ], dtype = numpy.double)
+			weight = numpy.array([ 1 ]).astype(numpy.double)
 			frame_processor_inputs[frame_processor_input.name] = weight
 	with THREAD_SEMAPHORE:
 		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
@@ -256,7 +273,7 @@ def process_frame(inputs : FaceEnhancerInputs) -> VisionFrame:
 	return target_vision_frame
 
 
-def process_frames(source_path : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProcess) -> None:
+def process_frames(source_path : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 
 	for queue_payload in process_manager.manage(queue_payloads):
@@ -268,7 +285,7 @@ def process_frames(source_path : List[str], queue_payloads : List[QueuePayload],
 			'target_vision_frame': target_vision_frame
 		})
 		write_image(target_vision_path, output_vision_frame)
-		update_progress()
+		update_progress(1)
 
 
 def process_image(source_path : str, target_path : str, output_path : str) -> None:

@@ -10,8 +10,7 @@ from facefusion.vision import get_video_frame, read_static_image, normalize_fram
 from facefusion.filesystem import is_image, is_video
 from facefusion.face_analyser import get_many_faces
 from facefusion.typing import VisionFrame, FaceSelectorMode
-from facefusion.uis.core import get_ui_component, register_ui_component
-from facefusion.uis.typing import ComponentName
+from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 
 FACE_SELECTOR_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
 REFERENCE_FACE_POSITION_GALLERY : Optional[gradio.Gallery] = None
@@ -59,39 +58,39 @@ def render() -> None:
 def listen() -> None:
 	FACE_SELECTOR_MODE_DROPDOWN.change(update_face_selector_mode, inputs = FACE_SELECTOR_MODE_DROPDOWN, outputs = [ REFERENCE_FACE_POSITION_GALLERY, REFERENCE_FACE_DISTANCE_SLIDER ])
 	REFERENCE_FACE_POSITION_GALLERY.select(clear_and_update_reference_face_position)
-	REFERENCE_FACE_DISTANCE_SLIDER.change(update_reference_face_distance, inputs = REFERENCE_FACE_DISTANCE_SLIDER)
-	multi_component_names : List[ComponentName] =\
+	REFERENCE_FACE_DISTANCE_SLIDER.release(update_reference_face_distance, inputs = REFERENCE_FACE_DISTANCE_SLIDER)
+
+	for ui_component in get_ui_components(
 	[
 		'target_image',
 		'target_video'
-	]
-	for component_name in multi_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			for method in [ 'upload', 'change', 'clear' ]:
-				getattr(component, method)(update_reference_face_position)
-				getattr(component, method)(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
-	change_one_component_names : List[ComponentName] =\
+	]):
+		for method in [ 'upload', 'change', 'clear' ]:
+			getattr(ui_component, method)(update_reference_face_position)
+			getattr(ui_component, method)(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
+
+	for ui_component in get_ui_components(
 	[
 		'face_analyser_order_dropdown',
 		'face_analyser_age_dropdown',
 		'face_analyser_gender_dropdown'
-	]
-	for component_name in change_one_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			component.change(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
-	change_two_component_names : List[ComponentName] =\
+	]):
+		ui_component.change(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
+
+	for ui_component in get_ui_components(
 	[
 		'face_detector_model_dropdown',
-		'face_detector_size_dropdown',
+		'face_detector_size_dropdown'
+	]):
+		ui_component.change(clear_and_update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
+
+	for ui_component in get_ui_components(
+	[
 		'face_detector_score_slider',
 		'face_landmarker_score_slider'
-	]
-	for component_name in change_two_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			component.change(clear_and_update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
+	]):
+		ui_component.release(clear_and_update_reference_position_gallery, outputs=REFERENCE_FACE_POSITION_GALLERY)
+
 	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
 		preview_frame_slider.change(update_reference_frame_number, inputs = preview_frame_slider)

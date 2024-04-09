@@ -51,14 +51,24 @@ def get_ui_layouts_modules(ui_layouts : List[str]) -> List[ModuleType]:
 	return UI_LAYOUT_MODULES
 
 
-def get_ui_component(name : ComponentName) -> Optional[Component]:
-	if name in UI_COMPONENTS:
-		return UI_COMPONENTS[name]
+def get_ui_component(component_name : ComponentName) -> Optional[Component]:
+	if component_name in UI_COMPONENTS:
+		return UI_COMPONENTS[component_name]
 	return None
 
 
-def register_ui_component(name : ComponentName, component: Component) -> None:
-	UI_COMPONENTS[name] = component
+def get_ui_components(component_names : List[ComponentName]) -> Optional[List[Component]]:
+	ui_components = []
+
+	for component_name in component_names:
+		component = get_ui_component(component_name)
+		if component:
+			ui_components.append(component)
+	return ui_components
+
+
+def register_ui_component(component_name : ComponentName, component: Component) -> None:
+	UI_COMPONENTS[component_name] = component
 
 
 def launch() -> None:

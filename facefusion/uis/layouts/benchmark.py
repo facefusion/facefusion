@@ -11,6 +11,7 @@ def pre_check() -> bool:
 		conditional_download('.assets/examples',
 		[
 			'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
+			'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.mp3',
 			'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4',
 			'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-360p.mp4',
 			'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-540p.mp4',

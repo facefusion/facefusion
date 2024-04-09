@@ -34,6 +34,8 @@ ComponentName = Literal\
 	'face_enhancer_model_dropdown',
 	'face_enhancer_blend_slider',
 	'face_swapper_model_dropdown',
+	'frame_colorizer_model_dropdown',
+	'frame_colorizer_blend_slider',
 	'frame_enhancer_model_dropdown',
 	'frame_enhancer_blend_slider',
 	'lip_syncer_model_dropdown',
