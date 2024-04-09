@@ -196,7 +196,7 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
-	vision_tile_frame = numpy.expand_dims(vision_tile_frame[:,:,::-1], axis = 0)
+	vision_tile_frame = numpy.expand_dims(vision_tile_frame[:, :, ::-1], axis = 0)
 	vision_tile_frame = vision_tile_frame.transpose(0, 3, 1, 2)
 	vision_tile_frame = vision_tile_frame.astype(numpy.float32) / 255
 	return vision_tile_frame
@@ -204,7 +204,7 @@ def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
 
 def normalize_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
 	vision_tile_frame = vision_tile_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
-	vision_tile_frame = vision_tile_frame.clip(0, 255).astype(numpy.uint8)[:,:,::-1]
+	vision_tile_frame = vision_tile_frame.clip(0, 255).astype(numpy.uint8)[:, :, ::-1]
 	return vision_tile_frame
 
 

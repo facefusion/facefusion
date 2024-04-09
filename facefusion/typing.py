@@ -46,7 +46,7 @@ Audio = numpy.ndarray[Any, Any]
 AudioChunk = numpy.ndarray[Any, Any]
 AudioFrame = numpy.ndarray[Any, Any]
 Spectrogram = numpy.ndarray[Any, Any]
-MelFilter = numpy.ndarray[Any, Any]
+MelFilterBank = numpy.ndarray[Any, Any]
 
 Fps = float
 Padding = Tuple[int, int, int, int]
