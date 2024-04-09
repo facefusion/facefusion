@@ -56,27 +56,26 @@ def pre_check() -> bool:
 
 
 def batch_extract_voice(audio : Audio, chunk_size : int, step_size : int) -> Audio:
-	audios = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
-	chunks = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
+	temp_audio = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
+	temp_chunk = numpy.zeros((audio.shape[0], 2)).astype(numpy.float32)
 
 	for start in range(0, audio.shape[0], step_size):
 		end = min(start + chunk_size, audio.shape[0])
-		audios[start:end, ...] += extract_voice(audio[start:end, ...])
-		chunks[start:end, ...] += 1
-	audio = audios / chunks
+		temp_audio[start:end, ...] += extract_voice(audio[start:end, ...])
+		temp_chunk[start:end, ...] += 1
+	audio = temp_audio / temp_chunk
 	return audio
 
 
 def extract_voice(temp_audio_chunk : AudioChunk) -> AudioChunk:
 	voice_extractor = get_voice_extractor()
-	voice_extractor_shape = voice_extractor.get_inputs()[0].shape[1:]
-	chunk_size = 1024 * (voice_extractor_shape[2] - 1)
+	chunk_size = 1024 * (voice_extractor.get_inputs()[0].shape[3] - 1)
 	trim_size = 3840
 	temp_audio_chunk, pad_size = prepare_audio_chunk(temp_audio_chunk.T, chunk_size, trim_size)
 	temp_audio_chunk = decompose_audio_chunk(temp_audio_chunk, trim_size)
 	with THREAD_SEMAPHORE:
 		temp_audio_chunk = voice_extractor.run(None,
-											   {
+		{
 			voice_extractor.get_inputs()[0].name: temp_audio_chunk
 		})[0]
 	temp_audio_chunk = compose_audio_chunk(temp_audio_chunk, trim_size)
@@ -103,12 +102,12 @@ def prepare_audio_chunk(temp_audio_chunk : AudioChunk, chunk_size : int, trim_si
 def decompose_audio_chunk(temp_audio_chunk : AudioChunk, trim_size : int) -> AudioChunk:
 	frame_size = 7680
 	frame_overlap = 6656
-	voice_extractor_shape = get_voice_extractor().get_inputs()[0].shape[1:]
+	voice_extractor_shape = get_voice_extractor().get_inputs()[0].shape
 	window = scipy.signal.windows.hann(frame_size)
 	temp_audio_chunk = scipy.signal.stft(temp_audio_chunk, nperseg = frame_size, noverlap = frame_overlap, window = window)[2]
 	temp_audio_chunk = numpy.stack((numpy.real(temp_audio_chunk), numpy.imag(temp_audio_chunk)), axis = -1).transpose((0, 3, 1, 2))
-	temp_audio_chunk = temp_audio_chunk.reshape(-1, 2, 2, trim_size + 1, voice_extractor_shape[2]).reshape(-1, voice_extractor_shape[0], trim_size + 1, voice_extractor_shape[2])
-	temp_audio_chunk = temp_audio_chunk[:, :, :voice_extractor_shape[1]]
+	temp_audio_chunk = temp_audio_chunk.reshape(-1, 2, 2, trim_size + 1, voice_extractor_shape[3]).reshape(-1, voice_extractor_shape[1], trim_size + 1, voice_extractor_shape[3])
+	temp_audio_chunk = temp_audio_chunk[:, :, :voice_extractor_shape[2]]
 	temp_audio_chunk /= numpy.sqrt(1.0 / window.sum() ** 2)
 	return temp_audio_chunk
 
@@ -116,10 +115,10 @@ def decompose_audio_chunk(temp_audio_chunk : AudioChunk, trim_size : int) -> Aud
 def compose_audio_chunk(temp_audio_chunk : AudioChunk, trim_size : int) -> AudioChunk:
 	frame_size = 7680
 	frame_overlap = 6656
-	voice_extractor_shape = get_voice_extractor().get_inputs()[0].shape[1:]
+	voice_extractor_shape = get_voice_extractor().get_inputs()[0].shape
 	window = scipy.signal.windows.hann(frame_size)
-	temp_audio_chunk = numpy.pad(temp_audio_chunk, ((0, 0), (0, 0), (0, trim_size + 1 - voice_extractor_shape[1]), (0, 0)))
-	temp_audio_chunk = temp_audio_chunk.reshape(-1, 2, trim_size + 1, voice_extractor_shape[2]).transpose((0, 2, 3, 1))
+	temp_audio_chunk = numpy.pad(temp_audio_chunk, ((0, 0), (0, 0), (0, trim_size + 1 - voice_extractor_shape[2]), (0, 0)))
+	temp_audio_chunk = temp_audio_chunk.reshape(-1, 2, trim_size + 1, voice_extractor_shape[3]).transpose((0, 2, 3, 1))
 	temp_audio_chunk = temp_audio_chunk[:, :, :, 0] + 1j * temp_audio_chunk[:, :, :, 1]
 	temp_audio_chunk = scipy.signal.istft(temp_audio_chunk, nperseg = frame_size, noverlap = frame_overlap, window = window)[1]
 	temp_audio_chunk *= numpy.sqrt(1.0 / window.sum() ** 2)
