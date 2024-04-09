@@ -76,7 +76,7 @@ def listen() -> None:
 
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
-	facefusion.globals.source_paths = [ '.assets/examples/source.jpg', '.assets/examples/source.mp3'  ]
+	facefusion.globals.source_paths = [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ]
 	facefusion.globals.output_path = tempfile.gettempdir()
 	facefusion.globals.face_landmarker_score = 0
 	facefusion.globals.temp_frame_format = 'bmp'
