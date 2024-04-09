@@ -43,7 +43,7 @@ misc:
   --log-level {error,warn,info,debug}                                                                                                                   adjust the message severity displayed in the terminal
 
 execution:
-  --execution-providers EXECUTION_PROVIDERS [EXECUTION_PROVIDERS ...]                                                                                   accelerate the model inference using different providers (choices: tensorrt, cuda, azure, cpu, ...)
+  --execution-providers EXECUTION_PROVIDERS [EXECUTION_PROVIDERS ...]                                                                                   accelerate the model inference using different providers (choices: cpu, ...)
   --execution-thread-count [1-128]                                                                                                                      specify the amount of parallel threads while processing
   --execution-queue-count [1-32]                                                                                                                        specify the amount of frames each thread is processing
 
@@ -94,7 +94,7 @@ frame processors:
   --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,gpen_bfr_1024,gpen_bfr_2048,restoreformer_plus_plus}     choose the model responsible for enhancing the face
   --face-enhancer-blend [0-100]                                                                                                                         blend the enhanced into the previous face
   --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial,uniface_256}                                  choose the model responsible for swapping the face
-  --frame-colorizer-model {ddcolor,ddcolor_artistic}                                                                                                    choose the model responsible for colorizing the frame
+  --frame-colorizer-model {ddcolor,ddcolor_artistic,deoldify_artistic}                                                                                  choose the model responsible for colorizing the frame
   --frame-colorizer-blend [0-100]                                                                                                                       blend the colorized into the previous frame
   --frame-enhancer-model {lsdir_x4,nomos8k_sc_x4,real_esrgan_x2,real_esrgan_x2_fp16,real_esrgan_x4,real_esrgan_x4_fp16,real_hatgan_x4,span_kendata_x4}  choose the model responsible for enhancing the frame
   --frame-enhancer-blend [0-100]                                                                                                                        blend the enhanced into the previous frame
