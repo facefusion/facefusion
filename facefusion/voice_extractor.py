@@ -92,7 +92,7 @@ def prepare_audio_chunk(temp_audio_chunk : AudioChunk, chunk_size : int, trim_si
 	temp_audio_chunks = []
 
 	for index in range(0, audio_chunk_size, step_size):
-		temp_audio_chunks.append( temp_audio_chunk[:, index:index + chunk_size])
+		temp_audio_chunks.append(temp_audio_chunk[:, index:index + chunk_size])
 	temp_audio_chunk = numpy.concatenate(temp_audio_chunks, axis = 0)
 	temp_audio_chunk = temp_audio_chunk.reshape((-1, chunk_size))
 	return temp_audio_chunk, pad_size
