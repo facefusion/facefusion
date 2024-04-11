@@ -43,8 +43,7 @@ def read_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
 		audio_buffer = read_audio_buffer(audio_path, sample_rate, channel_total)
 		audio = numpy.frombuffer(audio_buffer, dtype = numpy.int16).reshape(-1, 2)
 		audio = batch_extract_voice(audio, chunk_size, step_size)
-		audio = resample_audio(audio, sample_rate, 16000)
-		audio = prepare_audio(audio)
+		audio = prepare_voice(audio)
 		spectrogram = create_spectrogram(audio)
 		audio_frames = extract_audio_frames(spectrogram, fps)
 		return audio_frames
@@ -74,17 +73,20 @@ def create_empty_audio_frame() -> AudioFrame:
 	return audio_frame
 
 
+def prepare_voice(audio : numpy.ndarray[Any, Any]) -> Audio:
+	sample_rate = 44100
+	resample_rate = 16000
+	ratio = (resample_rate / sample_rate)
+	audio = scipy.signal.resample(audio, int(len(audio) * ratio))
+	audio = prepare_audio(audio)
+	return audio
+
+
 def prepare_audio(audio : numpy.ndarray[Any, Any]) -> Audio:
 	if audio.ndim > 1:
 		audio = numpy.mean(audio, axis = 1)
 	audio = audio / numpy.max(numpy.abs(audio), axis = 0)
 	audio = scipy.signal.lfilter([ 1.0, -0.97 ], [ 1.0 ], audio)
-	return audio
-
-
-def resample_audio(audio : Audio, source_sample_rate : int, target_sample_rate : int) -> Audio:
-	ratio = (target_sample_rate / source_sample_rate)
-	audio = scipy.signal.resample(audio, int(len(audio) * ratio))
 	return audio
 
 
