@@ -36,8 +36,8 @@ def read_static_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]
 def read_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
 	sample_rate = 48000
 	channel_total = 2
-	chunk_size = 250000
-	step_size = 187500
+	chunk_size = 1024 * 240
+	step_size = 1024 * 180
 
 	if is_audio(audio_path):
 		audio_buffer = read_audio_buffer(audio_path, sample_rate, channel_total)
