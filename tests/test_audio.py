@@ -21,6 +21,6 @@ def test_get_audio_frame() -> None:
 
 
 def test_read_static_audio() -> None:
-	assert len(read_static_audio('.assets/examples/source.mp3', 25)) == 91
-	assert len(read_static_audio('.assets/examples/source.wav', 25)) == 91
+	assert len(read_static_audio('.assets/examples/source.mp3', 25)) == 280
+	assert len(read_static_audio('.assets/examples/source.wav', 25)) == 280
 	assert read_static_audio('invalid', 25) is None
