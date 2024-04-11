@@ -15,7 +15,7 @@ def read_static_audio(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]
 
 
 def read_audio(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
-	sample_rate = 16000
+	sample_rate = 48000
 	channel_total = 2
 
 	if is_audio(audio_path):
@@ -34,7 +34,7 @@ def read_static_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]
 
 
 def read_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
-	sample_rate = 44100
+	sample_rate = 48000
 	channel_total = 2
 	chunk_size = 1024 ** 2
 	step_size = chunk_size // 4
@@ -82,7 +82,7 @@ def prepare_audio(audio : numpy.ndarray[Any, Any]) -> Audio:
 
 
 def prepare_voice(audio : numpy.ndarray[Any, Any]) -> Audio:
-	sample_rate = 44100
+	sample_rate = 48000
 	resample_rate = 16000
 
 	audio = scipy.signal.resample(audio, int(len(audio) * resample_rate / sample_rate))
