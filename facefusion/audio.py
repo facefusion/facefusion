@@ -34,15 +34,16 @@ def read_static_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]
 
 
 def read_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
-	sample_rate = 16000
+	sample_rate = 44100
 	channel_total = 2
-	chunk_size = 1024 ** 3
+	chunk_size = 1024 ** 2
 	step_size = chunk_size // 4
 
 	if is_audio(audio_path):
 		audio_buffer = read_audio_buffer(audio_path, sample_rate, channel_total)
 		audio = numpy.frombuffer(audio_buffer, dtype = numpy.int16).reshape(-1, 2)
 		audio = batch_extract_voice(audio, chunk_size, step_size)
+		audio = resample_audio(audio, sample_rate, 16000)
 		audio = prepare_audio(audio)
 		spectrogram = create_spectrogram(audio)
 		audio_frames = extract_audio_frames(spectrogram, fps)
@@ -78,6 +79,12 @@ def prepare_audio(audio : numpy.ndarray[Any, Any]) -> Audio:
 		audio = numpy.mean(audio, axis = 1)
 	audio = audio / numpy.max(numpy.abs(audio), axis = 0)
 	audio = scipy.signal.lfilter([ 1.0, -0.97 ], [ 1.0 ], audio)
+	return audio
+
+
+def resample_audio(audio : Audio, source_sample_rate : int, target_sample_rate : int) -> Audio:
+	ratio = (target_sample_rate / source_sample_rate)
+	audio = scipy.signal.resample(audio, int(len(audio) * ratio))
 	return audio
 
 
