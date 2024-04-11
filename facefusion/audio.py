@@ -73,20 +73,20 @@ def create_empty_audio_frame() -> AudioFrame:
 	return audio_frame
 
 
-def prepare_voice(audio : numpy.ndarray[Any, Any]) -> Audio:
-	sample_rate = 44100
-	resample_rate = 16000
-	ratio = (resample_rate / sample_rate)
-	audio = scipy.signal.resample(audio, int(len(audio) * ratio))
-	audio = prepare_audio(audio)
-	return audio
-
-
 def prepare_audio(audio : numpy.ndarray[Any, Any]) -> Audio:
 	if audio.ndim > 1:
 		audio = numpy.mean(audio, axis = 1)
 	audio = audio / numpy.max(numpy.abs(audio), axis = 0)
 	audio = scipy.signal.lfilter([ 1.0, -0.97 ], [ 1.0 ], audio)
+	return audio
+
+
+def prepare_voice(audio : numpy.ndarray[Any, Any]) -> Audio:
+	sample_rate = 44100
+	resample_rate = 16000
+
+	audio = scipy.signal.resample(audio, int(len(audio) * resample_rate / sample_rate))
+	audio = prepare_audio(audio)
 	return audio
 
 
