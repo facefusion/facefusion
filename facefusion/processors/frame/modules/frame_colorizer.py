@@ -42,12 +42,26 @@ MODELS : ModelSet =\
 		'path': resolve_relative_path('../.assets/models/ddcolor_artistic.onnx'),
 		'size': (512, 512)
 	},
+	'deoldify':
+	{
+		'type': 'deoldify',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify.onnx',
+		'path': resolve_relative_path('../.assets/models/deoldify.onnx'),
+		'size': (256, 256)
+	},
 	'deoldify_artistic':
 	{
 		'type': 'deoldify',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_artistic.onnx',
 		'path': resolve_relative_path('../.assets/models/deoldify_artistic.onnx'),
-		'size': (512, 512)
+		'size': (256, 256)
+	},
+	'deoldify_stable':
+	{
+		'type': 'deoldify',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_stable.onnx',
+		'path': resolve_relative_path('../.assets/models/deoldify_stable.onnx'),
+		'size': (256, 256)
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None

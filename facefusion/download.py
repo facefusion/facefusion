@@ -4,7 +4,6 @@ import platform
 import ssl
 import urllib.request
 from typing import List
-from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from tqdm import tqdm
 
