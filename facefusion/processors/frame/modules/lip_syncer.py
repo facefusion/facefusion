@@ -253,4 +253,8 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
+	source_audio_paths = filter_audio_paths(facefusion.globals.source_paths)
+	temp_video_fps = restrict_video_fps(facefusion.globals.target_path, facefusion.globals.output_video_fps)
+	for source_audio_path in source_audio_paths:
+		read_static_voice(source_audio_path, temp_video_fps)
 	frame_processors.multi_process_frames(source_paths, temp_frame_paths, process_frames)

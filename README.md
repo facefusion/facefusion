@@ -70,7 +70,7 @@ face mask:
   --face-mask-types FACE_MASK_TYPES [FACE_MASK_TYPES ...]                                                                                               mix and match different face mask types (choices: box, occlusion, region)
   --face-mask-blur [0.0-1.0]                                                                                                                            specify the degree of blur applied the box mask
   --face-mask-padding FACE_MASK_PADDING [FACE_MASK_PADDING ...]                                                                                         apply top, right, bottom and left padding to the box mask
-  --face-mask-regions FACE_MASK_REGIONS [FACE_MASK_REGIONS ...]                                                                                         choose the facial features used for the region mask (choices: skin, left-eyebrow, right-eyebrow, left-eye, right-eye, eye-glasses, nose, mouth, upper-lip, lower-lip)
+  --face-mask-regions FACE_MASK_REGIONS [FACE_MASK_REGIONS ...]                                                                                         choose the facial features used for the region mask (choices: skin, left-eyebrow, right-eyebrow, left-eye, right-eye, glasses, nose, mouth, upper-lip, lower-lip)
 
 frame extraction:
   --trim-frame-start TRIM_FRAME_START                                                                                                                   specify the the start frame of the target video
@@ -94,7 +94,7 @@ frame processors:
   --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,gpen_bfr_1024,gpen_bfr_2048,restoreformer_plus_plus}     choose the model responsible for enhancing the face
   --face-enhancer-blend [0-100]                                                                                                                         blend the enhanced into the previous face
   --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial,uniface_256}                                  choose the model responsible for swapping the face
-  --frame-colorizer-model {ddcolor,ddcolor_artistic,deoldify_artistic}                                                                                  choose the model responsible for colorizing the frame
+  --frame-colorizer-model {ddcolor,ddcolor_artistic,deoldify,deoldify_artistic,deoldify_stable}                                                         choose the model responsible for colorizing the frame
   --frame-colorizer-blend [0-100]                                                                                                                       blend the colorized into the previous frame
   --frame-enhancer-model {lsdir_x4,nomos8k_sc_x4,real_esrgan_x2,real_esrgan_x2_fp16,real_esrgan_x4,real_esrgan_x4_fp16,real_hatgan_x4,span_kendata_x4}  choose the model responsible for enhancing the frame
   --frame-enhancer-blend [0-100]                                                                                                                        blend the enhanced into the previous frame

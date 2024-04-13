@@ -120,7 +120,7 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) 
 
 def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:
 	temp_output_path = get_temp_output_video_path(target_path)
-	commands = [ '-hwaccel', 'auto', '-i', temp_output_path, '-i', audio_path, '-c:v', 'copy', '-af', 'apad', '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ]
+	commands = [ '-hwaccel', 'auto', '-i', temp_output_path, '-i', audio_path, '-af', 'apad', '-shortest', '-y', output_path ]
 	return run_ffmpeg(commands)
 
 
