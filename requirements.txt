@@ -1,4 +1,2 @@
 filetype==1.2.0
-insightface>=0.7.3
 onnx==1.16.0
-tensorflow>=2.13.0
