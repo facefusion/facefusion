@@ -1,16 +1,10 @@
-FaceFusion
+FaceFusion 2.5.1! as a tab for Automatic1111
 ==========
-
-> Next generation face swapper and enhancer.
-
-[![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=master)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
-![License](https://img.shields.io/badge/license-MIT-green)
-
 
 Preview
 -------
 
-![Preview](https://raw.githubusercontent.com/facefusion/facefusion/master/.github/preview.png?sanitize=true)
+![Preview](https://github.com/sebaxakerhtc/sd-webui-facefusion/assets/32651506/706d4a2f-f2d1-44b8-89c2-1dd69d3054bb)
 
 
 Installation
