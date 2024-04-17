@@ -24,7 +24,7 @@ if not launch.is_installed("onnxruntime") and not launch.is_installed("onnxrunti
 
     if cuda.is_available():
         launch.run_pip('install "onnxruntime-gpu>=1.17.1" --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple --force-reinstall')
-		launch.run_pip("install protobuf==3.20.2")
+        launch.run_pip("install protobuf==3.20.2")
     else:
         launch.run_pip('install "onnxruntime>=1.17.1"')
 
