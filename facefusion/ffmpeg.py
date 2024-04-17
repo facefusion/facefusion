@@ -44,16 +44,16 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
-	commands = [ '-i', target_path, '-q:v', '0' ]
+	commands = [ '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0' ]
 
 	if trim_frame_start is not None and trim_frame_end is not None:
-		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',scale=' + str(temp_video_resolution) + ',fps=' + str(temp_video_fps) ])
+		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
 	elif trim_frame_start is not None:
-		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ',scale=' + str(temp_video_resolution) + ',fps=' + str(temp_video_fps) ])
+		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ',fps=' + str(temp_video_fps) ])
 	elif trim_frame_end is not None:
-		commands.extend([ '-vf', 'trim=end_frame=' + str(trim_frame_end) + ',scale=' + str(temp_video_resolution) + ',fps=' + str(temp_video_fps) ])
+		commands.extend([ '-vf', 'trim=end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
 	else:
-		commands.extend([ '-vf', 'scale=' + str(temp_video_resolution) + ',fps=' + str(temp_video_fps) ])
+		commands.extend([ '-vf', 'fps=' + str(temp_video_fps) ])
 	commands.extend([ '-vsync', '0', temp_frames_pattern ])
 	return run_ffmpeg(commands)
 
@@ -62,7 +62,7 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
 	temp_output_video_path = get_temp_output_video_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
-	commands = [ '-s', str(output_video_resolution), '-r', str(temp_video_fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
+	commands = [ '-i', temp_frames_pattern, '-s', str(output_video_resolution), '-r', str(temp_video_fps), '-c:v', facefusion.globals.output_video_encoder ]
 
 	if facefusion.globals.output_video_encoder in [ 'libx264', 'libx265' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
@@ -83,13 +83,13 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 def copy_image(target_path : str, output_path : str, temp_image_resolution : str) -> bool:
 	is_webp = filetype.guess_mime(target_path) == 'image/webp'
 	temp_image_compression = 100 if is_webp else 0
-	commands = [ '-i', target_path, '-q:v', str(temp_image_compression), '-vf', 'scale=' + str(temp_image_resolution), '-y', output_path ]
+	commands = [ '-i', target_path, '-s', str(temp_image_resolution), '-q:v', str(temp_image_compression), '-y', output_path ]
 	return run_ffmpeg(commands)
 
 
 def finalize_image(output_path : str, output_image_resolution : str) -> bool:
 	output_image_compression = round(31 - (facefusion.globals.output_image_quality * 0.31))
-	commands = [ '-i', output_path, '-q:v', str(output_image_compression), '-vf', 'scale=' + str(output_image_resolution), '-y', output_path ]
+	commands = [ '-i', output_path, '-s', str(output_image_resolution), '-q:v', str(output_image_compression), '-y', output_path ]
 	return run_ffmpeg(commands)
 
 
