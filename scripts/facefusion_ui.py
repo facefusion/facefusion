@@ -4,7 +4,7 @@ import gradio as gr
 from modules import script_callbacks
 
 import facefusion.globals
-from facefusion import logger
+from facefusion import logger, face_analyser, content_analyser
 from facefusion.core import apply_args, get_argument_parser, pre_check
 from facefusion.processors.frame.modules import (
     face_debugger,
@@ -26,6 +26,8 @@ def on_ui_tabs():
 
     if (
         not face_debugger.pre_check()
+        or not face_analyser.pre_check()
+        or not content_analyser.pre_check()
         or not face_enhancer.pre_check()
         or not face_swapper.pre_check()
         or not frame_colorizer.pre_check()
