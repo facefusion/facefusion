@@ -64,13 +64,12 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 			'framework':
 			{
 				'name': 'CUDA',
-				'version': root_element.find('cuda_version').text,
+				'version': root_element.find('cuda_version').text
 			},
 			'product':
 			{
 				'vendor': 'NVIDIA',
-				'name': gpu_element.find('product_name').text.replace('NVIDIA ', ''),
-				'architecture': gpu_element.find('product_architecture').text,
+				'name': gpu_element.find('product_name').text.replace('NVIDIA ', '')
 			},
 			'video_memory':
 			{
