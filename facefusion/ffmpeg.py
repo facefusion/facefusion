@@ -44,7 +44,7 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
-	commands = [ '-hwaccel', 'auto', '-i', target_path, '-q:v', '0' ]
+	commands = [ '-i', target_path, '-q:v', '0' ]
 
 	if trim_frame_start is not None and trim_frame_end is not None:
 		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',scale=' + str(temp_video_resolution) + ',fps=' + str(temp_video_fps) ])
@@ -62,7 +62,7 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
 	temp_output_video_path = get_temp_output_video_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
-	commands = [ '-hwaccel', 'auto', '-s', str(output_video_resolution), '-r', str(temp_video_fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
+	commands = [ '-s', str(output_video_resolution), '-r', str(temp_video_fps), '-i', temp_frames_pattern, '-c:v', facefusion.globals.output_video_encoder ]
 
 	if facefusion.globals.output_video_encoder in [ 'libx264', 'libx265' ]:
 		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
@@ -106,7 +106,7 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) 
 	trim_frame_start = facefusion.globals.trim_frame_start
 	trim_frame_end = facefusion.globals.trim_frame_end
 	temp_output_video_path = get_temp_output_video_path(target_path)
-	commands = [ '-hwaccel', 'auto', '-i', temp_output_video_path ]
+	commands = [ '-i', temp_output_video_path ]
 
 	if trim_frame_start is not None:
 		start_time = trim_frame_start / output_video_fps
@@ -120,7 +120,7 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) 
 
 def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:
 	temp_output_path = get_temp_output_video_path(target_path)
-	commands = [ '-hwaccel', 'auto', '-i', temp_output_path, '-i', audio_path, '-af', 'apad', '-shortest', '-y', output_path ]
+	commands = [ '-i', temp_output_path, '-i', audio_path, '-af', 'apad', '-shortest', '-y', output_path ]
 	return run_ffmpeg(commands)
 
 
