@@ -9,6 +9,7 @@ from facefusion.memory import limit_system_memory
 from facefusion.normalizer import normalize_output_path
 from facefusion.uis.core import get_ui_component
 from facefusion.filesystem import clear_temp, is_image, is_video
+from facefusion.uis.typing import Update
 
 OUTPUT_IMAGE : Optional[gradio.Image] = None
 OUTPUT_VIDEO : Optional[gradio.Video] = None
@@ -57,32 +58,32 @@ def listen() -> None:
 	OUTPUT_CLEAR_BUTTON.click(clear, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO ])
 
 
-def start() -> Tuple[gradio.Button, gradio.Button]:
+def start() -> Tuple[Update, Update]:
 	while not process_manager.is_processing():
 		sleep(0.5)
-	return gradio.Button(visible = False), gradio.Button(visible = True)
+	return gradio.update(visible = False), gradio.update(visible = True)
 
 
-def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
+def process() -> Tuple[Update, Update, Update, Update]:
 	normed_output_path = normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path)
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
 	conditional_process()
 	if is_image(normed_output_path):
-		return gradio.Image(value = normed_output_path, visible = True), gradio.Video(value = None, visible = False), gradio.Button(visible = True), gradio.Button(visible = False)
+		return gradio.update(value = normed_output_path, visible = True), gradio.update(value = None, visible = False), gradio.update(visible = True), gradio.update(visible = False)
 	if is_video(normed_output_path):
-		return gradio.Image(value = None, visible = False), gradio.Video(value = normed_output_path, visible = True), gradio.Button(visible = True), gradio.Button(visible = False)
-	return gradio.Image(value = None), gradio.Video(value = None), gradio.Button(visible = True), gradio.Button(visible = False)
+		return gradio.update(value = None, visible = False), gradio.update(value = normed_output_path, visible = True), gradio.update(visible = True), gradio.update(visible = False)
+	return gradio.update(value = None), gradio.update(value = None), gradio.update(visible = True), gradio.update(visible = False)
 
 
-def stop() -> Tuple[gradio.Button, gradio.Button]:
+def stop() -> Tuple[Update, Update]:
 	process_manager.stop()
-	return gradio.Button(visible = True), gradio.Button(visible = False)
+	return gradio.update(visible = True), gradio.update(visible = False)
 
 
-def clear() -> Tuple[gradio.Image, gradio.Video]:
+def clear() -> Tuple[Update, Update]:
 	while process_manager.is_processing():
 		sleep(0.5)
 	if facefusion.globals.target_path:
 		clear_temp(facefusion.globals.target_path)
-	return gradio.Image(value = None), gradio.Video(value = None)
+	return gradio.update(value = None), gradio.update(value = None)

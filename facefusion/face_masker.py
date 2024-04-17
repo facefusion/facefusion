@@ -1,9 +1,9 @@
 from typing import Any, Dict, List
-from cv2.typing import Size
 from functools import lru_cache
 from time import sleep
 import threading
 import cv2
+from cv2.typing import Size
 import numpy
 import onnxruntime
 

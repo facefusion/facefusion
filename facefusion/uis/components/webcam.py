@@ -19,7 +19,7 @@ from facefusion.face_analyser import get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
-from facefusion.uis.typing import StreamMode, WebcamMode
+from facefusion.uis.typing import StreamMode, WebcamMode, Update
 from facefusion.uis.core import get_ui_component, get_ui_components
 
 WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
@@ -146,9 +146,9 @@ def update() -> None:
 		logger.enable()
 
 
-def stop() -> gradio.Image:
+def stop() -> Update:
 	clear_webcam_capture()
-	return gradio.Image(value = None)
+	return gradio.update(value = None)
 
 
 def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) -> VisionFrame:

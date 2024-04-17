@@ -1,4 +1,4 @@
-from typing import Literal, Any, IO
+from typing import Literal, Any, Dict, IO
 import gradio
 
 File = IO[Any]
@@ -50,3 +50,4 @@ ComponentName = Literal\
 
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']
+Update = Dict[Any, Any]

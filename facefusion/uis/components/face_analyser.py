@@ -7,6 +7,7 @@ import facefusion.choices
 from facefusion import face_analyser, wording
 from facefusion.typing import FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorModel
 from facefusion.uis.core import register_ui_component
+from facefusion.uis.typing import Update
 
 FACE_ANALYSER_ORDER_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_ANALYSER_AGE_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -101,14 +102,14 @@ def update_face_analyser_gender(face_analyser_gender : FaceAnalyserGender) -> No
 	facefusion.globals.face_analyser_gender = face_analyser_gender if face_analyser_gender != 'none' else None
 
 
-def update_face_detector_model(face_detector_model : FaceDetectorModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
+def update_face_detector_model(face_detector_model : FaceDetectorModel) -> Tuple[Update, Update]:
 	facefusion.globals.face_detector_model = face_detector_model
 	update_face_detector_size('640x640')
 	if face_analyser.pre_check():
 		if facefusion.globals.face_detector_size in facefusion.choices.face_detector_set[face_detector_model]:
-			return gradio.Dropdown(value = facefusion.globals.face_detector_model), gradio.Dropdown(value = facefusion.globals.face_detector_size, choices = facefusion.choices.face_detector_set[face_detector_model])
-		return gradio.Dropdown(value = facefusion.globals.face_detector_model), gradio.Dropdown(value = facefusion.globals.face_detector_size, choices = [ facefusion.globals.face_detector_size ])
-	return gradio.Dropdown(), gradio.Dropdown()
+			return gradio.update(value = facefusion.globals.face_detector_model), gradio.update(value = facefusion.globals.face_detector_size, choices = facefusion.choices.face_detector_set[face_detector_model])
+		return gradio.update(value = facefusion.globals.face_detector_model), gradio.update(value = facefusion.globals.face_detector_size, choices = [ facefusion.globals.face_detector_size ])
+	return gradio.update(), gradio.update()
 
 
 def update_face_detector_size(face_detector_size : str) -> None:

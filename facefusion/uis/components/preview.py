@@ -17,6 +17,7 @@ from facefusion.filesystem import is_image, is_video, filter_audio_paths
 from facefusion.content_analyser import analyse_frame
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
+from facefusion.uis.typing import Update
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 PREVIEW_FRAME_SLIDER : Optional[gradio.Slider] = None
@@ -140,14 +141,14 @@ def listen() -> None:
 		ui_component.release(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
 
-def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
+def clear_and_update_preview_image(frame_number : int = 0) -> Update:
 	clear_face_analyser()
 	clear_reference_faces()
 	clear_static_faces()
 	return update_preview_image(frame_number)
 
 
-def update_preview_image(frame_number : int = 0) -> gradio.Image:
+def update_preview_image(frame_number : int = 0) -> Update:
 	for frame_processor in facefusion.globals.frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		while not frame_processor_module.post_check():
@@ -171,20 +172,20 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		target_vision_frame = read_static_image(facefusion.globals.target_path)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
-		return gradio.Image(value = preview_vision_frame)
+		return gradio.update(value = preview_vision_frame)
 	if is_video(facefusion.globals.target_path):
 		temp_vision_frame = get_video_frame(facefusion.globals.target_path, frame_number)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
-		return gradio.Image(value = preview_vision_frame)
-	return gradio.Image(value = None)
+		return gradio.update(value = preview_vision_frame)
+	return gradio.update(value = None)
 
 
-def update_preview_frame_slider() -> gradio.Slider:
+def update_preview_frame_slider() -> Update:
 	if is_video(facefusion.globals.target_path):
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
-		return gradio.Slider(maximum = video_frame_total, visible = True)
-	return gradio.Slider(value = None, maximum = None, visible = False)
+		return gradio.update(maximum = video_frame_total, visible = True)
+	return gradio.update(value = None, maximum = None, visible = False)
 
 
 def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_audio_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:

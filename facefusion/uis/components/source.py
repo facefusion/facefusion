@@ -7,6 +7,7 @@ from facefusion.uis.typing import File
 from facefusion.common_helper import get_first
 from facefusion.filesystem import has_audio, has_image, filter_audio_paths, filter_image_paths
 from facefusion.uis.core import register_ui_component
+from facefusion.uis.typing import Update
 
 SOURCE_FILE : Optional[gradio.File] = None
 SOURCE_AUDIO : Optional[gradio.Audio] = None
@@ -54,7 +55,7 @@ def listen() -> None:
 	SOURCE_FILE.change(update, inputs = SOURCE_FILE, outputs = [ SOURCE_AUDIO, SOURCE_IMAGE ])
 
 
-def update(files : List[File]) -> Tuple[gradio.Audio, gradio.Image]:
+def update(files : List[File]) -> Tuple[Update, Update]:
 	file_names = [ file.name for file in files ] if files else None
 	has_source_audio = has_audio(file_names)
 	has_source_image = has_image(file_names)
@@ -62,6 +63,6 @@ def update(files : List[File]) -> Tuple[gradio.Audio, gradio.Image]:
 		source_audio_path = get_first(filter_audio_paths(file_names))
 		source_image_path = get_first(filter_image_paths(file_names))
 		facefusion.globals.source_paths = file_names
-		return gradio.Audio(value = source_audio_path, visible = has_source_audio), gradio.Image(value = source_image_path, visible = has_source_image)
+		return gradio.update(value = source_audio_path, visible = has_source_audio), gradio.update(value = source_image_path, visible = has_source_image)
 	facefusion.globals.source_paths = None
-	return gradio.Audio(value = None, visible = False), gradio.Image(value = None, visible = False)
+	return gradio.update(value = None, visible = False), gradio.update(value = None, visible = False)

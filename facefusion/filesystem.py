@@ -100,10 +100,12 @@ def filter_image_paths(paths : List[str]) -> List[str]:
 
 def resolve_relative_path(path : str) -> str:
 	return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
-
+    
+_PROJECT_DIR = Path(__file__).absolute().parent.parent
 
 def list_directory(directory_path : str) -> Optional[List[str]]:
-	if is_directory(directory_path):
-		files = os.listdir(directory_path)
-		return sorted([ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ])
-	return None
+    directory_path = str(_PROJECT_DIR / directory_path)
+    if is_directory(directory_path):
+        files = os.listdir(directory_path)
+        return sorted([ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ])
+    return None

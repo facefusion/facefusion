@@ -7,6 +7,7 @@ from facefusion import wording
 from facefusion.typing import TempFrameFormat
 from facefusion.filesystem import is_video
 from facefusion.uis.core import get_ui_component
+from facefusion.uis.typing import Update
 
 TEMP_FRAME_FORMAT_DROPDOWN : Optional[gradio.Dropdown] = None
 
@@ -30,10 +31,10 @@ def listen() -> None:
 			getattr(target_video, method)(remote_update, outputs = TEMP_FRAME_FORMAT_DROPDOWN)
 
 
-def remote_update() -> gradio.Dropdown:
+def remote_update() -> Update:
 	if is_video(facefusion.globals.target_path):
-		return gradio.Dropdown(visible = True)
-	return gradio.Dropdown(visible = False)
+		return gradio.update(visible = True)
+	return gradio.update(visible = False)
 
 
 def update_temp_frame_format(temp_frame_format : TempFrameFormat) -> None:

@@ -12,6 +12,7 @@ from facefusion.vision import count_video_frame_total, detect_video_resolution, 
 from facefusion.core import conditional_process
 from facefusion.memory import limit_system_memory
 from facefusion.filesystem import clear_temp
+from facefusion.uis.typing import Update
 from facefusion.uis.core import get_ui_component
 
 BENCHMARK_RESULTS_DATAFRAME : Optional[gradio.Dataframe] = None
@@ -132,9 +133,9 @@ def benchmark(benchmark_cycles : int) -> List[Any]:
 	]
 
 
-def clear() -> gradio.Dataframe:
+def clear() -> Update:
 	while process_manager.is_processing():
 		sleep(0.5)
 	if facefusion.globals.target_path:
 		clear_temp(facefusion.globals.target_path)
-	return gradio.Dataframe(value = None)
+	return gradio.update(value = None)

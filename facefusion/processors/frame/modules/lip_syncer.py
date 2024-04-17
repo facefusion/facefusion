@@ -82,7 +82,7 @@ def register_args(program : ArgumentParser) -> None:
 
 
 def apply_args(program : ArgumentParser) -> None:
-	args = program.parse_args()
+	args = program.parse_args([])
 	frame_processors_globals.lip_syncer_model = args.lip_syncer_model
 
 

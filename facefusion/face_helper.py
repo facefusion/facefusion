@@ -1,7 +1,7 @@
 from typing import Any, Tuple, List
-from cv2.typing import Size
 from functools import lru_cache
 import cv2
+from cv2.typing import Size
 import numpy
 
 from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceAnalyserAge, FaceAnalyserGender

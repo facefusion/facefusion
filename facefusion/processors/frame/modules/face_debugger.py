@@ -40,7 +40,7 @@ def register_args(program : ArgumentParser) -> None:
 
 
 def apply_args(program : ArgumentParser) -> None:
-	args = program.parse_args()
+	args = program.parse_args([])
 	frame_processors_globals.face_debugger_items = args.face_debugger_items
 
 
