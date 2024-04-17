@@ -319,8 +319,9 @@ def process_image(start_time : float) -> None:
 
 def process_video(start_time : float) -> None:
 	normed_output_path = normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path)
-	if analyse_video(facefusion.globals.target_path, facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
-		return
+	print(normed_output_path)
+	# if analyse_video(facefusion.globals.target_path, facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
+	# 	return
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
 	clear_temp(facefusion.globals.target_path)
@@ -329,62 +330,66 @@ def process_video(start_time : float) -> None:
 	create_temp(facefusion.globals.target_path)
 	# extract frames
 	process_manager.start()
-	temp_video_resolution = pack_resolution(restrict_video_resolution(facefusion.globals.target_path, unpack_resolution(facefusion.globals.output_video_resolution)))
-	temp_video_fps = restrict_video_fps(facefusion.globals.target_path, facefusion.globals.output_video_fps)
-	logger.info(wording.get('extracting_frames').format(resolution = temp_video_resolution, fps = temp_video_fps), __name__.upper())
-	if extract_frames(facefusion.globals.target_path, temp_video_resolution, temp_video_fps):
-		logger.debug(wording.get('extracting_frames_succeed'), __name__.upper())
-	else:
-		if is_process_stopping():
-			return
-		logger.error(wording.get('extracting_frames_failed'), __name__.upper())
-		return
-	# process frames
-	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
-	if temp_frame_paths:
-		for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
-			logger.info(wording.get('processing'), frame_processor_module.NAME)
-			frame_processor_module.process_video(facefusion.globals.source_paths, temp_frame_paths)
-			frame_processor_module.post_process()
-		if is_process_stopping():
-			return
-	else:
-		logger.error(wording.get('temp_frames_not_found'), __name__.upper())
-		return
-	# merge video
-	logger.info(wording.get('merging_video').format(resolution = facefusion.globals.output_video_resolution, fps = facefusion.globals.output_video_fps), __name__.upper())
-	if merge_video(facefusion.globals.target_path, facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps):
-		logger.debug(wording.get('merging_video_succeed'), __name__.upper())
-	else:
-		if is_process_stopping():
-			return
-		logger.error(wording.get('merging_video_failed'), __name__.upper())
-		return
-	# handle audio
-	if facefusion.globals.skip_audio:
-		logger.info(wording.get('skipping_audio'), __name__.upper())
-		move_temp(facefusion.globals.target_path, normed_output_path)
-	else:
-		if 'lip_syncer' in facefusion.globals.frame_processors:
-			source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
-			if source_audio_path and replace_audio(facefusion.globals.target_path, source_audio_path, normed_output_path):
-				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
-			else:
-				if is_process_stopping():
-					return
-				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
-				move_temp(facefusion.globals.target_path, normed_output_path)
+	try:
+		temp_video_resolution = pack_resolution(restrict_video_resolution(facefusion.globals.target_path, unpack_resolution(facefusion.globals.output_video_resolution)))
+		temp_video_fps = restrict_video_fps(facefusion.globals.target_path, facefusion.globals.output_video_fps)
+		logger.info(wording.get('extracting_frames').format(resolution = temp_video_resolution, fps = temp_video_fps), __name__.upper())
+		if extract_frames(facefusion.globals.target_path, temp_video_resolution, temp_video_fps):
+			logger.debug(wording.get('extracting_frames_succeed'), __name__.upper())
 		else:
-			if restore_audio(facefusion.globals.target_path, normed_output_path, facefusion.globals.output_video_fps):
-				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
+			if is_process_stopping():
+				return
+			logger.error(wording.get('extracting_frames_failed'), __name__.upper())
+			return
+		# process frames
+		temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
+		if temp_frame_paths:
+			for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
+				logger.info(wording.get('processing'), frame_processor_module.NAME)
+				frame_processor_module.process_video(facefusion.globals.source_paths, temp_frame_paths)
+				frame_processor_module.post_process()
+			if is_process_stopping():
+				return
+		else:
+			logger.error(wording.get('temp_frames_not_found'), __name__.upper())
+			return
+		# merge video
+		logger.info(wording.get('merging_video').format(resolution = facefusion.globals.output_video_resolution, fps = facefusion.globals.output_video_fps), __name__.upper())
+		if merge_video(facefusion.globals.target_path, facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps):
+			logger.debug(wording.get('merging_video_succeed'), __name__.upper())
+		else:
+			if is_process_stopping():
+				return
+			logger.error(wording.get('merging_video_failed'), __name__.upper())
+			return
+		# handle audio
+		if facefusion.globals.skip_audio:
+			logger.info(wording.get('skipping_audio'), __name__.upper())
+			move_temp(facefusion.globals.target_path, normed_output_path)
+		else:
+			if 'lip_syncer' in facefusion.globals.frame_processors:
+				source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
+				if source_audio_path and replace_audio(facefusion.globals.target_path, source_audio_path, normed_output_path):
+					logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
+				else:
+					if is_process_stopping():
+						return
+					logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
+					move_temp(facefusion.globals.target_path, normed_output_path)
 			else:
-				if is_process_stopping():
-					return
-				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
-				move_temp(facefusion.globals.target_path, normed_output_path)
-	# clear temp
-	logger.debug(wording.get('clearing_temp'), __name__.upper())
-	clear_temp(facefusion.globals.target_path)
+				if restore_audio(facefusion.globals.target_path, normed_output_path, facefusion.globals.output_video_fps):
+					logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
+				else:
+					if is_process_stopping():
+						return
+					logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
+					move_temp(facefusion.globals.target_path, normed_output_path)
+		# clear temp
+		logger.debug(wording.get('clearing_temp'), __name__.upper())
+	except Exception as e:
+		raise e
+	finally:
+		clear_temp(facefusion.globals.target_path)
 	# validate video
 	if is_video(normed_output_path):
 		seconds = '{:.2f}'.format((time() - start_time))
