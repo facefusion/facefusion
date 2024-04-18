@@ -1,7 +1,7 @@
 import multiprocessing
 import gradio
 
-from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, webcam_options, source, webcam
+from facefusion.uis.components import frame_processors, frame_processors_options, execution, execution_thread_count, webcam_options, source, webcam
 
 
 def pre_check() -> bool:
@@ -16,8 +16,6 @@ def render() -> gradio.Blocks:
 	with gradio.Blocks() as layout:
 		with gradio.Row():
 			with gradio.Column(scale = 2):
-				with gradio.Blocks():
-					about.render()
 				with gradio.Blocks():
 					frame_processors.render()
 				with gradio.Blocks():
