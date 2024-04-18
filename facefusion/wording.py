@@ -44,11 +44,11 @@ WORDING : Dict[str, Any] =\
 	'ui_layout_not_loaded': '无法加载 UI 布局 {ui_layout}',
 	'ui_layout_not_implemented': 'UI 布局 {ui_layout} 未正确实现',
 	'stream_not_loaded': '无法加载流 {stream_mode}',
-	'point': '。',
-	'comma': '，',
-	'colon': '：',
-	'question_mark': '？',
-	'exclamation_mark': '！',
+	'point': '.',
+	'comma': ',',
+	'colon': ':',
+	'question_mark': '?',
+	'exclamation_mark': '!',
 	'help':
 	{
 		# installer
