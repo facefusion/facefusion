@@ -12,7 +12,7 @@ from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
 from facefusion.filesystem import resolve_relative_path, is_file
-from facefusion.thread_helper import thread_lock, thread_sempahore, conditional_thread_sempahore
+from facefusion.thread_helper import thread_lock, thread_semaphore, conditional_thread_semaphore
 from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, BoundingBox, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Score, FaceScoreSet, Embedding
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
@@ -183,7 +183,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 	score_list = []
 
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
-	with thread_sempahore():
+	with thread_semaphore():
 		detections = face_detector.run(None,
 		{
 			face_detector.get_inputs()[0].name: detect_vision_frame
@@ -225,7 +225,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 	score_list = []
 
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
-	with thread_sempahore():
+	with thread_semaphore():
 		detections = face_detector.run(None,
 		{
 			face_detector.get_inputs()[0].name: detect_vision_frame
@@ -264,7 +264,7 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 	score_list = []
 
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
-	with thread_sempahore():
+	with thread_semaphore():
 		detections = face_detector.run(None,
 		{
 			face_detector.get_inputs()[0].name: detect_vision_frame
@@ -302,7 +302,7 @@ def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> T
 
 	face_detector.setInputSize((temp_vision_frame.shape[1], temp_vision_frame.shape[0]))
 	face_detector.setScoreThreshold(facefusion.globals.face_detector_score)
-	with thread_sempahore():
+	with thread_semaphore():
 		_, detections = face_detector.detect(temp_vision_frame)
 	if numpy.any(detections):
 		for detection in detections:
@@ -378,7 +378,7 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 	crop_vision_frame = crop_vision_frame / 127.5 - 1
 	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
-	with conditional_thread_sempahore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore(facefusion.globals.execution_providers):
 		embedding = face_recognizer.run(None,
 		{
 			face_recognizer.get_inputs()[0].name: crop_vision_frame
@@ -398,7 +398,7 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 		crop_vision_frame[:, :, 0] = cv2.createCLAHE(clipLimit = 2).apply(crop_vision_frame[:, :, 0])
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_Lab2RGB)
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
-	with conditional_thread_sempahore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore(facefusion.globals.execution_providers):
 		face_landmark_68, face_heatmap = face_landmarker.run(None,
 		{
 			face_landmarker.get_inputs()[0].name: [ crop_vision_frame ]
@@ -416,7 +416,7 @@ def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandm
 	face_landmarker = get_face_analyser().get('face_landmarkers').get('68_5')
 	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'ffhq_512', (1, 1))
 	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-	with conditional_thread_sempahore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore(facefusion.globals.execution_providers):
 		face_landmark_68_5 = face_landmarker.run(None,
 		{
 			face_landmarker.get_inputs()[0].name: [ face_landmark_5 ]
@@ -433,7 +433,7 @@ def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBo
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (96, 96))
 	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
-	with conditional_thread_sempahore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore(facefusion.globals.execution_providers):
 		prediction = gender_age.run(None,
 		{
 			gender_age.get_inputs()[0].name: crop_vision_frame

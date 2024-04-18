@@ -17,7 +17,7 @@ from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.normalizer import normalize_output_path
-from facefusion.thread_helper import thread_lock, conditional_thread_sempahore
+from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, Embedding, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.filesystem import is_file, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
@@ -262,7 +262,7 @@ def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFra
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_vision_frame
-	with conditional_thread_sempahore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore(facefusion.globals.execution_providers):
 		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	return crop_vision_frame
 
