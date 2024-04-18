@@ -14,7 +14,7 @@ from facefusion.processors.frame.modules import (
     frame_colorizer,
     lip_syncer,
 )
-from facefusion.uis.layouts import default
+from facefusion.uis.layouts import default, benchmark, webcam
 
 
 def on_ui_tabs():
@@ -38,11 +38,26 @@ def on_ui_tabs():
 
     if not default.pre_check():
         return
+        
+    if not benchmark.pre_check():
+        return
+        
+    if not webcam.pre_check():
+        return
 
     with gr.Blocks() as block:
-        if default.pre_render():
-            default.render()
-            default.listen()
+        with gr.Tab("Default"):
+            if default.pre_render():
+                default.render()
+                default.listen()
+        with gr.Tab("Benchmark"):
+            if benchmark.pre_render():
+                benchmark.render()
+                benchmark.listen()
+        with gr.Tab("Webcam"):
+            if webcam.pre_render():
+                webcam.render()
+                webcam.listen()
 
         return ((block, "FaceFusion", "facefusion"),)
 
