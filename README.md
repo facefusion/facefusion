@@ -96,6 +96,7 @@ frame processors:
   --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial,uniface_256}                                  choose the model responsible for swapping the face
   --frame-colorizer-model {ddcolor,ddcolor_artistic,deoldify,deoldify_artistic,deoldify_stable}                                                         choose the model responsible for colorizing the frame
   --frame-colorizer-blend [0-100]                                                                                                                       blend the colorized into the previous frame
+  --frame-colorizer-size {192x192,256x256,384x384,512x512}                                                                                              specify the size of the frame provided to the frame colorizer
   --frame-enhancer-model {lsdir_x4,nomos8k_sc_x4,real_esrgan_x2,real_esrgan_x2_fp16,real_esrgan_x4,real_esrgan_x4_fp16,real_hatgan_x4,span_kendata_x4}  choose the model responsible for enhancing the frame
   --frame-enhancer-blend [0-100]                                                                                                                        blend the enhanced into the previous frame
   --lip-syncer-model {wav2lip_gan}                                                                                                                      choose the model responsible for syncing the lips
