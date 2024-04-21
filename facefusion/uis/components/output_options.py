@@ -10,6 +10,11 @@ from facefusion.uis.core import get_ui_components, register_ui_component
 from facefusion.vision import detect_image_resolution, create_image_resolutions, detect_video_fps, detect_video_resolution, create_video_resolutions, pack_resolution
 from facefusion.uis.typing import Update
 
+import os
+from modules.paths_internal import default_output_dir
+ff_out = os.path.join(default_output_dir, 'facefusion')
+os.makedirs(ff_out, exist_ok=True)
+
 OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
 OUTPUT_IMAGE_QUALITY_SLIDER : Optional[gradio.Slider] = None
 OUTPUT_IMAGE_RESOLUTION_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -38,7 +43,7 @@ def render() -> None:
 	if is_video(facefusion.globals.target_path):
 		output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
 		output_video_resolutions = create_video_resolutions(output_video_resolution)
-	facefusion.globals.output_path = facefusion.globals.output_path or '.'
+	facefusion.globals.output_path = facefusion.globals.output_path or ff_out
 	OUTPUT_PATH_TEXTBOX = gradio.Textbox(
 		label = wording.get('uis.output_path_textbox'),
 		value = facefusion.globals.output_path,
