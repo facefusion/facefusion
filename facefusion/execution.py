@@ -11,14 +11,14 @@ def encode_execution_providers(execution_providers : List[str]) -> List[str]:
 	return [ execution_provider.replace('ExecutionProvider', '').lower() for execution_provider in execution_providers ]
 
 
-def decode_execution_providers(execution_providers: List[str]) -> List[str]:
+def decode_execution_providers(execution_providers : List[str]) -> List[str]:
 	available_execution_providers = onnxruntime.get_available_providers()
 	encoded_execution_providers = encode_execution_providers(available_execution_providers)
 
 	return [ execution_provider for execution_provider, encoded_execution_provider in zip(available_execution_providers, encoded_execution_providers) if any(execution_provider in encoded_execution_provider for execution_provider in execution_providers) ]
 
 
-def apply_execution_provider_options(execution_providers: List[str]) -> List[Any]:
+def apply_execution_provider_options(execution_providers : List[str]) -> List[Any]:
 	execution_providers_with_options : List[Any] = []
 
 	for execution_provider in execution_providers:
@@ -64,13 +64,12 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 			'framework':
 			{
 				'name': 'CUDA',
-				'version': root_element.find('cuda_version').text,
+				'version': root_element.find('cuda_version').text
 			},
 			'product':
 			{
 				'vendor': 'NVIDIA',
-				'name': gpu_element.find('product_name').text.replace('NVIDIA ', ''),
-				'architecture': gpu_element.find('product_architecture').text,
+				'name': gpu_element.find('product_name').text.replace('NVIDIA ', '')
 			},
 			'video_memory':
 			{

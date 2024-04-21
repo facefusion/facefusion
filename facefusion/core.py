@@ -110,6 +110,19 @@ def get_argument_parser():
 def cli() -> None:
 	run(get_argument_parser())
 
+def validate_args(program : ArgumentParser) -> None:
+	try:
+		for action in program._actions:
+			if action.default:
+				if isinstance(action.default, list):
+					for default in action.default:
+						program._check_value(action, default)
+				else:
+					program._check_value(action, action.default)
+	except Exception as exception:
+		program.error(str(exception))
+
+
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args([])
 	# general
@@ -187,6 +200,7 @@ def apply_args(program : ArgumentParser) -> None:
 
 
 def run(program : ArgumentParser) -> None:
+	validate_args(program)
 	apply_args(program)
 	logger.init(facefusion.globals.log_level)
 

@@ -1,4 +1,4 @@
-FaceFusion 2.5.1! as a tab for Automatic1111
+FaceFusion 2.5.2! as a tab for Automatic1111
 ==========
 
 Preview
@@ -20,6 +20,7 @@ Before installing this you should install
 **During installation, ensure to select the Desktop Development with C++ package**
 
 Get started with the [installation](https://docs.facefusion.io/installation) guide.
+
 
 
 

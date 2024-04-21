@@ -2,7 +2,6 @@ from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 from time import sleep
 import cv2
-import threading
 import numpy
 import onnxruntime
 
@@ -16,6 +15,7 @@ from facefusion.execution import apply_execution_provider_options
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
 from facefusion.normalizer import normalize_output_path
+from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, is_image, is_video, resolve_relative_path
@@ -26,8 +26,6 @@ from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
-THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
-THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
@@ -101,7 +99,7 @@ OPTIONS : Optional[OptionsWithModel] = None
 def get_frame_processor() -> Any:
 	global FRAME_PROCESSOR
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
@@ -221,7 +219,7 @@ def apply_enhance(crop_vision_frame : VisionFrame) -> VisionFrame:
 		if frame_processor_input.name == 'weight':
 			weight = numpy.array([ 1 ]).astype(numpy.double)
 			frame_processor_inputs[frame_processor_input.name] = weight
-	with THREAD_SEMAPHORE:
+	with thread_semaphore():
 		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	return crop_vision_frame
 

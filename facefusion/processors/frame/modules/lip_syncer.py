@@ -1,7 +1,6 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 from time import sleep
-import threading
 import cv2
 import numpy
 import onnxruntime
@@ -16,6 +15,7 @@ from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_bo
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.normalizer import normalize_output_path
+from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
 from facefusion.filesystem import is_file, has_audio, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
@@ -29,7 +29,6 @@ from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
-THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
@@ -45,7 +44,7 @@ OPTIONS : Optional[OptionsWithModel] = None
 def get_frame_processor() -> Any:
 	global FRAME_PROCESSOR
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
@@ -155,11 +154,12 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 		crop_mask_list.append(occlusion_mask)
 	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, (96, 96))
 	close_vision_frame = prepare_crop_frame(close_vision_frame)
-	close_vision_frame = frame_processor.run(None,
-	{
-		'source': temp_audio_frame,
-		'target': close_vision_frame
-	})[0]
+	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+		close_vision_frame = frame_processor.run(None,
+		{
+			'source': temp_audio_frame,
+			'target': close_vision_frame
+		})[0]
 	crop_vision_frame = normalize_crop_frame(close_vision_frame)
 	crop_vision_frame = cv2.warpAffine(crop_vision_frame, cv2.invertAffineTransform(close_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
 	crop_mask = numpy.minimum.reduce(crop_mask_list)

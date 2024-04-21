@@ -1,7 +1,6 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 from time import sleep
-import threading
 import cv2
 import numpy
 import onnxruntime
@@ -13,6 +12,7 @@ from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution import apply_execution_provider_options
 from facefusion.normalizer import normalize_output_path
+from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, resolve_relative_path, is_image, is_video
@@ -23,7 +23,6 @@ from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
-THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
@@ -90,7 +89,7 @@ OPTIONS : Optional[OptionsWithModel] = None
 def get_frame_processor() -> Any:
 	global FRAME_PROCESSOR
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
@@ -185,10 +184,11 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	tile_vision_frames, pad_width, pad_height = create_tile_frames(temp_vision_frame, size)
 
 	for index, tile_vision_frame in enumerate(tile_vision_frames):
-		tile_vision_frame = frame_processor.run(None,
-		{
-			frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
-		})[0]
+		with conditional_thread_semaphore(facefusion.globals.execution_providers):
+			tile_vision_frame = frame_processor.run(None,
+			{
+				frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
+			})[0]
 		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame)
 	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width * scale, temp_height * scale, pad_width * scale, pad_height * scale, (size[0] * scale, size[1] * scale, size[2] * scale))
 	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)

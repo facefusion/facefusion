@@ -1,20 +1,18 @@
 from typing import Any, Tuple
 from time import sleep
-import threading
 import scipy
 import numpy
 import onnxruntime
 
 import facefusion.globals
 from facefusion import process_manager
+from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import ModelSet, AudioChunk, Audio
 from facefusion.execution import apply_execution_provider_options
 from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.download import conditional_download
 
 VOICE_EXTRACTOR = None
-THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
-THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : ModelSet =\
 {
 	'voice_extractor':
@@ -28,7 +26,7 @@ MODELS : ModelSet =\
 def get_voice_extractor() -> Any:
 	global VOICE_EXTRACTOR
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if VOICE_EXTRACTOR is None:
@@ -73,7 +71,7 @@ def extract_voice(temp_audio_chunk : AudioChunk) -> AudioChunk:
 	trim_size = 3840
 	temp_audio_chunk, pad_size = prepare_audio_chunk(temp_audio_chunk.T, chunk_size, trim_size)
 	temp_audio_chunk = decompose_audio_chunk(temp_audio_chunk, trim_size)
-	with THREAD_SEMAPHORE:
+	with thread_semaphore():
 		temp_audio_chunk = voice_extractor.run(None,
 		{
 			voice_extractor.get_inputs()[0].name: temp_audio_chunk
