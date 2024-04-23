@@ -61,7 +61,7 @@ def remote_update() -> Tuple[gradio.Slider, gradio.Slider]:
 		facefusion.globals.trim_frame_start = None
 		facefusion.globals.trim_frame_end = None
 		return gradio.Slider(value = 0, maximum = video_frame_total, visible = True), gradio.Slider(value = video_frame_total, maximum = video_frame_total, visible = True)
-	return gradio.Slider(value = None, maximum = None, visible = False), gradio.Slider(value = None, maximum = None, visible = False)
+	return gradio.Slider(visible = False), gradio.Slider(visible = False)
 
 
 def update_trim_frame_start(trim_frame_start : int) -> None:
