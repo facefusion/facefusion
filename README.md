@@ -12,7 +12,7 @@ Preview
 
 ![Preview](https://github.com/chuckkay/facefusion-QueueItUp/blob/88b080723e3d162ca170fe9197e217a86fc7abf2/IMG_0623.png?sanitize=true)
 
-
+read rhe Queue It Up Readme https://github.com/chuckkay/facefusion-QueueItUp/blob/99bc261c40ba4a3fb6fd7fb7e5e221bf1a6749de/QueueItUp-README.md
 Installation
 ------------
 
