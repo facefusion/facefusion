@@ -7,10 +7,9 @@
 ![Screenshot 2024-04-15 063227](https://github.com/chuckkay/QueueItUp/assets/10617746/971e2bd3-df87-412e-998a-9e93b7d19f63)
 
 This is it—at least until Henry releases the official queueing feature for Facefusion. I'm not a coder, but I think I did a pretty good job creating this simple one-file drop-in addon to fill the void until the official features are added.
-**How to Install:**
-1. Download QueueItUp.py.
-2. Drop it in your `facefusion\facefusion\uis\layouts` directory.
-3. In facefusion.ini, change the last line to `ui_layouts = QueueItUp`, or just run `python run.py --ui-layouts QueueItUp`.
+
+this fork of face fusion adds one file to the facefusion uis layouts directory called QueueItUp.py, and adds the filename to the uis entry in facefusion.ini. it also removes NSFW check and changes the output nameing to Source+Target+hash, thats is, follow facefusions installation instructions. 
+
 That’s it!
 QueueItUp is a self-contained add-on that keeps all its components in a folder called QueueItUp in your Facefusion root directory.
 **Features of QueueItUp:**
