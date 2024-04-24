@@ -35,6 +35,7 @@ options:
   -t TARGET_PATH, --target TARGET_PATH                                                                                                                  choose single target image or video
   -o OUTPUT_PATH, --output OUTPUT_PATH                                                                                                                  specify the output file or directory
   -v, --version                                                                                                                                         show program's version number and exit
+  -i INI_PATH, --ini INI_PATH                                                                                                                           specify ini file for launch configuration
 
 misc:
   --force-download                                                                                                                                      force automate downloads and exit
