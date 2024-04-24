@@ -10,7 +10,7 @@ FaceFusion with Queue It Up
 Preview
 -------
 
-![Preview](https://raw.githubusercontent.com/facefusion/facefusion/master/.github/preview.png?sanitize=true)
+![Preview](https://github.com/chuckkay/facefusion-QueueItUp/blob/88b080723e3d162ca170fe9197e217a86fc7abf2/IMG_0623.png?sanitize=true)
 
 
 Installation
