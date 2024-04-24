@@ -18,6 +18,9 @@ Installation
 
 Be aware, the installation needs technical skills and is not for beginners. Please do not open platform and installation related issues on GitHub. We have a very helpful [Discord](https://join.facefusion.io) community that will guide you to complete the installation.
 
+make sure when following the installation instructions to use this repo as the git clone
+
+
 Get started with the [installation](https://docs.facefusion.io/installation) guide.
 
 
