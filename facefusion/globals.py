@@ -6,6 +6,7 @@ from facefusion.typing import LogLevel, VideoMemoryStrategy, FaceSelectorMode, F
 source_paths : Optional[List[str]] = None
 target_path : Optional[str] = None
 output_path : Optional[str] = None
+ini_path: Optional[str] = None
 # misc
 force_download : Optional[bool] = None
 skip_download : Optional[bool] = None
