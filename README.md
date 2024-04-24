@@ -1,4 +1,4 @@
-FaceFusion
+FaceFusion with Queue It Up
 ==========
 
 > Next generation face swapper and enhancer.
