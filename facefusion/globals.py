@@ -3,10 +3,10 @@ from typing import List, Optional
 from facefusion.typing import LogLevel, VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceMaskType, FaceMaskRegion, OutputVideoEncoder, OutputVideoPreset, FaceDetectorModel, FaceRecognizerModel, TempFrameFormat, Padding
 
 # general
+config_path: Optional[str] = None
 source_paths : Optional[List[str]] = None
 target_path : Optional[str] = None
 output_path : Optional[str] = None
-ini_path: Optional[str] = None
 # misc
 force_download : Optional[bool] = None
 skip_download : Optional[bool] = None

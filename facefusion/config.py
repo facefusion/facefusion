@@ -1,34 +1,21 @@
 from configparser import ConfigParser
 from typing import Any, Optional, List
-import os.path 
-from facefusion.filesystem import resolve_relative_path
+
 import facefusion.globals
 
 CONFIG = None
 
+def get_config() -> ConfigParser:
+	global CONFIG
 
-def get_config(config_file_path: str = None) -> ConfigParser:
-    global CONFIG
-	
-    if CONFIG is None:  # Only read from file if CONFIG is not initialized
-        if config_file_path is not None:
-            resolved_path = config_file_path
-        else:
-            config_file_path = facefusion.globals.ini_path  
-            if config_file_path is not None:
-                if os.path.isabs(config_file_path):  
-                    resolved_path = config_file_path
-                else:
-                    resolved_path = resolve_relative_path(config_file_path)
-            else:
-                resolved_path = resolve_relative_path('../facefusion.ini')# Default path
-        CONFIG = ConfigParser()
-        CONFIG.read(resolved_path, encoding='utf-8')
-    return CONFIG  # Always return the CONFIG object
+	if CONFIG is None:
+		CONFIG = ConfigParser()
+		CONFIG.read(facefusion.globals.config_path, encoding = 'utf-8')
+	return CONFIG
+
 
 def clear_config() -> None:
 	global CONFIG
-	
 	CONFIG = None
 
 

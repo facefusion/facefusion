@@ -38,7 +38,7 @@ WORDING : Dict[str, Any] =\
 	'select_video_target': 'Select a video for target path',
 	'select_image_or_video_target': 'Select a image or video for target path',
 	'select_file_or_directory_output': 'Select a file or directory for output path',
-	'select_valid_ini_files': 'Select a valid ini file, like: example.ini',
+	'select_config_file': 'Select a config file',
 	'no_source_face_detected': 'No source face detected',
 	'frame_processor_not_loaded': 'Frame processor {frame_processor} could not be loaded',
 	'frame_processor_not_implemented': 'Frame processor {frame_processor} not implemented correctly',
@@ -56,10 +56,10 @@ WORDING : Dict[str, Any] =\
 		'install_dependency': 'select the variant of {dependency} to install',
 		'skip_conda': 'skip the conda environment check',
 		# general
+  		'config_path': 'specify the config file',
 		'source': 'choose single or multiple source images or audios',
 		'target': 'choose single target image or video',
 		'output': 'specify the output file or directory',
-		'ini': 'specify the .ini file used at launch',
 		# misc
 		'force_download': 'force automate downloads and exit',
 		'skip_download': 'omit automate downloads and remote lookups',

@@ -33,21 +33,16 @@ warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 
 
 def cli() -> None:
-	config.clear_config()
 	signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
-	program = ArgumentParser(formatter_class=lambda prog: HelpFormatter(prog, max_help_position=160), add_help=False)
-    
-    # ini
-	program.add_argument('-i', '--ini', help=wording.get('help.ini'), dest='ini_path')
+	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position=160), add_help = False)
+    # general
+	program.add_argument('-c', '--config_path', help = wording.get('help.config_path'), dest = 'config_path', default = 'facefusion.ini')
 	args = program.parse_args()
-	facefusion.globals.ini_path = args.ini_path
-	if is_file(args.ini_path) or args.ini_path is None:
-		if facefusion.globals.ini_path and facefusion.globals.ini_path[0]:  # Check if ini_path is not empty
-			config.get_config(args.ini_path)
-	else: 
-		logger.error(wording.get('select_valid_ini_files'), __name__.upper())
-		logger.error('Launching with default values from FaceFusion.ini', __name__.upper())
-	# general
+	facefusion.globals.config_path = args.config_path
+	if not is_file(args.config_path) and args.config_path is not None:
+		logger.error(wording.get('select_config_file'), __name__.upper())
+		logger.error('Launching with default values from facefusion.ini', __name__.upper())
+		facefusion.globals.config_path = 'facefusion.ini'
 	program.add_argument('-s', '--source', help = wording.get('help.source'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
 	program.add_argument('-t', '--target', help = wording.get('help.target'), dest = 'target_path', default = config.get_str_value('general.target_path'))
 	program.add_argument('-o', '--output', help = wording.get('help.output'), dest = 'output_path', default = config.get_str_value('general.output_path'))
