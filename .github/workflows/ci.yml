@@ -27,7 +27,7 @@ jobs:
   - name: Set up ffmpeg
     uses: FedericoCarboni/setup-ffmpeg@v3
     with:
-     architecture: ${{ env.RUNNER_ARCH }}
+     architecture: arm64
   - name: Set up Python 3.10
     uses: actions/setup-python@v5
     with:
