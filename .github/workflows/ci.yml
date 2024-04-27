@@ -19,15 +19,13 @@ jobs:
  test:
   strategy:
    matrix:
-    os: [ macos-latest, ubuntu-latest, windows-latest ]
+    os: [ macos-12, ubuntu-latest, windows-latest ]
   runs-on: ${{ matrix.os }}
   steps:
   - name: Checkout
     uses: actions/checkout@v4
   - name: Set up ffmpeg
     uses: FedericoCarboni/setup-ffmpeg@v3
-    with:
-     architecture: arm64
   - name: Set up Python 3.10
     uses: actions/setup-python@v5
     with:
