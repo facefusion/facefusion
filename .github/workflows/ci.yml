@@ -26,6 +26,8 @@ jobs:
     uses: actions/checkout@v4
   - name: Set up ffmpeg
     uses: FedericoCarboni/setup-ffmpeg@v3
+    with:
+     architecture: ${{ env.RUNNER_ARCH }}
   - name: Set up Python 3.10
     uses: actions/setup-python@v5
     with:
