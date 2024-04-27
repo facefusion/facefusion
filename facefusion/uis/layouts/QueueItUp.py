@@ -512,7 +512,7 @@ def execute_jobs():
         print(f"{BLUE}Starting Job #{GREEN} {CURRENT_JOB_NUMBER}{ENDC}\n\n")
         print(f"Job #{CURRENT_JOB_NUMBER} will be SWAPPING - {GREEN}{os.path.basename(current_run_job['sourcecache'])}{ENDC} to -> {GREEN}{os.path.basename(current_run_job['targetcache'])}{ENDC}\n\n")
         command_for_running = current_run_job['command'].replace('\\\\', '\\')
-        print(f"{BLUE}Executing Job # {CURRENT_JOB_NUMBER}{ENDC} - {YELLOW}{command_for_running}\n\n")
+        print(f"{BLUE}Executing Job # {CURRENT_JOB_NUMBER} of {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT}  {ENDC} - {YELLOW}{command_for_running}\n\n")
         job_history('Executing', command_for_running)
         
         process = subprocess.Popen(
@@ -620,6 +620,7 @@ image_references = {}
 def edit_queue():
     global root, frame
     EDIT_JOB_BUTTON = gradio.Button("Edit Queue")
+    
     jobs = load_jobs(jobs_queue_file)  # Load jobs when the program starts
     root = tkinter.Tk()
     root.geometry('1100x800')
@@ -634,37 +635,42 @@ def edit_queue():
     frame = Frame(canvas)
     canvas.create_window((0, 0), window=frame, anchor='nw')
     canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
-
-    close_button = tkinter.Button(root, text="Close Window", command=root.destroy)
+    custom_font = font.Font(family="Helvetica", size=12, weight="bold")
+    bold_font = font.Font(family="Helvetica", size=12, weight="bold")
+    
+    close_button = tkinter.Button(root, text="Close Window", command=root.destroy, font=custom_font)
     close_button.pack(pady=5)
 
-    refresh_button = tkinter.Button(root, text="Refresh View", command=lambda: update_job_listbox())
+    refresh_button = tkinter.Button(root, text="Refresh View", command=lambda: update_job_listbox(), font=custom_font)
     refresh_button.pack(pady=5)
-    
-    run_jobs_button = tkinter.Button(root, text="RUN JOBS", command=lambda: check_and_run_jobs())
+
+    run_jobs_button = tkinter.Button(root, text=f"RUN #{PENDING_JOBS_COUNT} JOBS", command=lambda: check_and_run_jobs(), font=custom_font)
     run_jobs_button.pack(pady=5)
 
-    # Create and pack buttons directly using the consolidated function
-    pending_jobs_button = tkinter.Button(root, text="Top Pending Jobs", command=lambda: index_filter('pending'))
+    executing_jobs_button = tkinter.Button(root, text="Top Executing Jobs", command=lambda: index_filter('executing'), font=custom_font)
+    executing_jobs_button.pack(pady=5)
+    
+    pending_jobs_button = tkinter.Button(root, text="Top Pending Jobs", command=lambda: index_filter('pending'), font=custom_font)
     pending_jobs_button.pack(pady=5)
+    
+    missing_jobs_button = tkinter.Button(root, text="Top missing Jobs", command=lambda: index_filter('missing'), font=custom_font)
+    missing_jobs_button.pack(pady=5)
 
-    failed_jobs_button = tkinter.Button(root, text="Top Failed Jobs", command=lambda: index_filter('failed'))
+    failed_jobs_button = tkinter.Button(root, text="Top Failed Jobs", command=lambda: index_filter('failed'), font=custom_font)
     failed_jobs_button.pack(pady=5)
 
-    executing_jobs_button = tkinter.Button(root, text="Top Executing Jobs", command=lambda: index_filter('executing'))
-    executing_jobs_button.pack(pady=5)
-
-    completed_jobs_button = tkinter.Button(root, text="Top Completed Jobs", command=lambda: index_filter('completed'))
+    completed_jobs_button = tkinter.Button(root, text="Top Completed Jobs", command=lambda: index_filter('completed'), font=custom_font)
     completed_jobs_button.pack(pady=5)
 
-    archived_jobs_button = tkinter.Button(root, text="Archived Jobs", command=lambda: index_filter('archived'))
+    archived_jobs_button = tkinter.Button(root, text="Archived Jobs", command=lambda: index_filter('archived'), font=custom_font)
     archived_jobs_button.pack(pady=5)
+
 
 
 
     def index_filter(status):
         #global jobs # Ensure we are modifying the global list
-        status_priority = {'editing': 0, 'pending': 1, 'failed': 2, 'executing': 3, 'completed': 4, 'archived': 5}
+        status_priority = {'editing': 0, 'executing': 1, 'pending': 2, 'failed': 3, 'missing': 4, 'completed': 5, 'archived': 6}
         jobs = load_jobs(jobs_queue_file)
 
         # First, sort the entire list by status priority
@@ -859,7 +865,8 @@ def edit_queue():
         file_path = job[source_or_target + 'cache']
         if not os.path.exists(file_path):
             if not job['status'] == 'failed':
-                job['status'] = 'missing'
+                if job['status'] == 'pending':
+                    job['status'] = 'missing'
             # Create a button as a placeholder for non-existing files that allows updating the file
             button = Button(parent, text=f"{source_or_target} file missing\n{os.path.basename(file_path)}\n Click to update", wraplength=100,  bg='white', fg='black',
                             command=lambda ft=source_or_target: select_file(parent, job, ft))
@@ -949,6 +956,7 @@ def edit_queue():
             
     def update_job_listbox():
         global image_references
+        count_existing_jobs()
         image_references.clear()
         for widget in frame.winfo_children():
             widget.destroy()
@@ -956,8 +964,6 @@ def edit_queue():
             source_thumb_exists = os.path.exists(job['sourcecache'])
             target_thumb_exists = os.path.exists(job['targetcache'])
             if job['status'] == 'failed':
-                bg_color = 'red'
-            if job['status'] == 'missing':
                 bg_color = 'red'
             if job['status'] == 'pending':
                 bg_color = 'SystemButtonFace'
@@ -1001,7 +1007,7 @@ def edit_queue():
             action_archive_frame = tkinter.Frame(job_frame)
             action_archive_frame.pack(side='left', fill='x', padx=5)
             
-            bold_font = font.Font(family="Helvetica", size=12, weight="bold")
+
             arrow_label = Label(action_archive_frame, text=f"{job['status']}\n\u27A1", font=bold_font)
             arrow_label.pack(side='top', padx=5)
             
