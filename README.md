@@ -18,10 +18,12 @@ Installation
 
 Be aware, the installation needs technical skills and is not for beginners. Please do not open platform and installation related issues on GitHub. We have a very helpful [Discord](https://join.facefusion.io) community that will guide you to complete the installation.
 
-make sure when following the installation instructions to use this repo as the git clone
+The only change to the Facefusion installation instructions ( Get started with the [installation](https://docs.facefusion.io/installation) guide.)
+is to use this repo as the git clone
 https://github.com/chuckkay/facefusion-QueueItUp.git
+and then cd facefusion-QueueItUp
 
-Get started with the [installation](https://docs.facefusion.io/installation) guide.
+
 
 
 Usage
