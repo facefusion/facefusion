@@ -39,6 +39,7 @@ WORDING : Dict[str, Any] =\
 	'select_image_or_video_target': 'Select a image or video for target path',
 	'select_file_or_directory_output': 'Select a file or directory for output path',
 	'select_config_file': 'Select a config file',
+	'using_default_config': 'Launching with default config values',
 	'no_source_face_detected': 'No source face detected',
 	'frame_processor_not_loaded': 'Frame processor {frame_processor} could not be loaded',
 	'frame_processor_not_implemented': 'Frame processor {frame_processor} not implemented correctly',
