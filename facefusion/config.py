@@ -5,9 +5,10 @@ import facefusion.globals
 
 CONFIG = None
 
+
 def get_config() -> ConfigParser:
 	global CONFIG
-
+	
 	if CONFIG is None:
 		CONFIG = ConfigParser()
 		CONFIG.read(facefusion.globals.config_path, encoding = 'utf-8')

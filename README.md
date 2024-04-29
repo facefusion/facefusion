@@ -30,7 +30,7 @@ Run the command:
 python run.py [options]
 
 options:
-  -c CONFIG_PATH, --config_path CONFIG_PATH                                                                                                             specify config file for launch configuration
+  -c CONFIG_PATH, --config-path CONFIG_PATH                                                                                                             specify config file for launch configuration
   -h, --help                                                                                                                                            show this help message and exit
   -s SOURCE_PATHS, --source SOURCE_PATHS                                                                                                                choose single or multiple source images or audios
   -t TARGET_PATH, --target TARGET_PATH                                                                                                                  choose single target image or video

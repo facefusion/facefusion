@@ -34,14 +34,14 @@ warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 
 def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
-	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position=160), add_help = False)
+	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 160), add_help = False)
     # general
 	program.add_argument('-c', '--config_path', help = wording.get('help.config_path'), dest = 'config_path', default = 'facefusion.ini')
 	args = program.parse_args()
 	facefusion.globals.config_path = args.config_path
 	if not is_file(args.config_path) and args.config_path is not None:
 		logger.error(wording.get('select_config_file'), __name__.upper())
-		logger.error('Launching with default values from facefusion.ini', __name__.upper())
+		logger.error(wording.get('using_default_config'), __name__.upper())
 		facefusion.globals.config_path = 'facefusion.ini'
 	program.add_argument('-s', '--source', help = wording.get('help.source'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
 	program.add_argument('-t', '--target', help = wording.get('help.target'), dest = 'target_path', default = config.get_str_value('general.target_path'))
