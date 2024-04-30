@@ -1,7 +1,6 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 from time import sleep
-import threading
 import cv2
 import numpy
 import onnxruntime
@@ -13,18 +12,17 @@ from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution import apply_execution_provider_options
 from facefusion.normalizer import normalize_output_path
+from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, resolve_relative_path, is_image, is_video
 from facefusion.download import conditional_download, is_download_done
-from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.vision import read_image, read_static_image, write_image, unpack_resolution
 from facefusion.processors.frame.typings import FrameColorizerInputs
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
-THREAD_LOCK : threading.Lock = threading.Lock()
-THREAD_SEMAPHORE : threading.Semaphore = threading.Semaphore()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
@@ -32,36 +30,31 @@ MODELS : ModelSet =\
 	{
 		'type': 'ddcolor',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor.onnx',
-		'path': resolve_relative_path('../.assets/models/ddcolor.onnx'),
-		'size': (512, 512)
+		'path': resolve_relative_path('../.assets/models/ddcolor.onnx')
 	},
 	'ddcolor_artistic':
 	{
 		'type': 'ddcolor',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor_artistic.onnx',
-		'path': resolve_relative_path('../.assets/models/ddcolor_artistic.onnx'),
-		'size': (512, 512)
+		'path': resolve_relative_path('../.assets/models/ddcolor_artistic.onnx')
 	},
 	'deoldify':
 	{
 		'type': 'deoldify',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify.onnx',
-		'path': resolve_relative_path('../.assets/models/deoldify.onnx'),
-		'size': (256, 256)
+		'path': resolve_relative_path('../.assets/models/deoldify.onnx')
 	},
 	'deoldify_artistic':
 	{
 		'type': 'deoldify',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_artistic.onnx',
-		'path': resolve_relative_path('../.assets/models/deoldify_artistic.onnx'),
-		'size': (256, 256)
+		'path': resolve_relative_path('../.assets/models/deoldify_artistic.onnx')
 	},
 	'deoldify_stable':
 	{
 		'type': 'deoldify',
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_stable.onnx',
-		'path': resolve_relative_path('../.assets/models/deoldify_stable.onnx'),
-		'size': (256, 256)
+		'path': resolve_relative_path('../.assets/models/deoldify_stable.onnx')
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
@@ -70,7 +63,7 @@ OPTIONS : Optional[OptionsWithModel] = None
 def get_frame_processor() -> Any:
 	global FRAME_PROCESSOR
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
@@ -105,12 +98,14 @@ def set_options(key : Literal['model'], value : Any) -> None:
 def register_args(program : ArgumentParser) -> None:
 	program.add_argument('--frame-colorizer-model', help = wording.get('help.frame_colorizer_model'), default = config.get_str_value('frame_processors.frame_colorizer_model', 'ddcolor'), choices = frame_processors_choices.frame_colorizer_models)
 	program.add_argument('--frame-colorizer-blend', help = wording.get('help.frame_colorizer_blend'), type = int, default = config.get_int_value('frame_processors.frame_colorizer_blend', '100'), choices = frame_processors_choices.frame_colorizer_blend_range, metavar = create_metavar(frame_processors_choices.frame_colorizer_blend_range))
+	program.add_argument('--frame-colorizer-size', help = wording.get('help.frame_colorizer_size'), type = str, default = config.get_str_value('frame_processors.frame_colorizer_size', '256x256'), choices = frame_processors_choices.frame_colorizer_sizes)
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.frame_colorizer_model = args.frame_colorizer_model
 	frame_processors_globals.frame_colorizer_blend = args.frame_colorizer_blend
+	frame_processors_globals.frame_colorizer_size = args.frame_colorizer_size
 
 
 def pre_check() -> bool:
@@ -160,7 +155,7 @@ def post_process() -> None:
 def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	prepare_vision_frame = prepare_temp_frame(temp_vision_frame)
-	with THREAD_SEMAPHORE:
+	with thread_semaphore():
 		color_vision_frame = frame_processor.run(None,
 		{
 			frame_processor.get_inputs()[0].name: prepare_vision_frame
@@ -171,7 +166,7 @@ def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_size = get_options('model').get('size')
+	model_size = unpack_resolution(frame_processors_globals.frame_colorizer_size)
 	model_type = get_options('model').get('type')
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2GRAY)
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_GRAY2RGB)

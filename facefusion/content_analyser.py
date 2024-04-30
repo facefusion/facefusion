@@ -1,7 +1,6 @@
 from typing import Any
 from functools import lru_cache
 from time import sleep
-import threading
 import cv2
 import numpy
 import onnxruntime
@@ -9,6 +8,7 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import process_manager, wording
+from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import VisionFrame, ModelSet, Fps
 from facefusion.execution import apply_execution_provider_options
 from facefusion.vision import get_video_frame, count_video_frame_total, read_image, detect_video_fps
@@ -16,7 +16,6 @@ from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.download import conditional_download
 
 CONTENT_ANALYSER = None
-THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : ModelSet =\
 {
 	'open_nsfw':
@@ -33,7 +32,7 @@ STREAM_COUNTER = 0
 def get_content_analyser() -> Any:
 	global CONTENT_ANALYSER
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if CONTENT_ANALYSER is None:
@@ -72,10 +71,11 @@ def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
 def analyse_frame(vision_frame : VisionFrame) -> bool:
 	content_analyser = get_content_analyser()
 	vision_frame = prepare_frame(vision_frame)
-	probability = content_analyser.run(None,
-	{
-		content_analyser.get_inputs()[0].name: vision_frame
-	})[0][0][1]
+	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+		probability = content_analyser.run(None,
+		{
+			content_analyser.get_inputs()[0].name: vision_frame
+		})[0][0][1]
 	return probability > PROBABILITY_LIMIT
 
 

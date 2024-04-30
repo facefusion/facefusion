@@ -93,6 +93,7 @@ def listen() -> None:
 	for ui_component in get_ui_components(
 	[
 		'face_debugger_items_checkbox_group',
+		'frame_colorizer_size_dropdown',
 		'face_selector_mode_dropdown',
 		'face_mask_types_checkbox_group',
 		'face_mask_region_checkbox_group',

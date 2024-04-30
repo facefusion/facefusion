@@ -2,13 +2,13 @@ from typing import Any, Dict, List
 from cv2.typing import Size
 from functools import lru_cache
 from time import sleep
-import threading
 import cv2
 import numpy
 import onnxruntime
 
 import facefusion.globals
 from facefusion import process_manager
+from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import FaceLandmark68, VisionFrame, Mask, Padding, FaceMaskRegion, ModelSet
 from facefusion.execution import apply_execution_provider_options
 from facefusion.filesystem import resolve_relative_path, is_file
@@ -16,7 +16,6 @@ from facefusion.download import conditional_download
 
 FACE_OCCLUDER = None
 FACE_PARSER = None
-THREAD_LOCK : threading.Lock = threading.Lock()
 MODELS : ModelSet =\
 {
 	'face_occluder':
@@ -48,7 +47,7 @@ FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
 def get_face_occluder() -> Any:
 	global FACE_OCCLUDER
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if FACE_OCCLUDER is None:
@@ -60,7 +59,7 @@ def get_face_occluder() -> Any:
 def get_face_parser() -> Any:
 	global FACE_PARSER
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if FACE_PARSER is None:
@@ -120,10 +119,11 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 	prepare_vision_frame = cv2.resize(crop_vision_frame, face_occluder.get_inputs()[0].shape[1:3][::-1])
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 1, 2, 3)
-	occlusion_mask : Mask = face_occluder.run(None,
-	{
-		face_occluder.get_inputs()[0].name: prepare_vision_frame
-	})[0][0]
+	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+		occlusion_mask : Mask = face_occluder.run(None,
+		{
+			face_occluder.get_inputs()[0].name: prepare_vision_frame
+		})[0][0]
 	occlusion_mask = occlusion_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
 	occlusion_mask = cv2.resize(occlusion_mask, crop_vision_frame.shape[:2][::-1])
 	occlusion_mask = (cv2.GaussianBlur(occlusion_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
@@ -135,10 +135,11 @@ def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List
 	prepare_vision_frame = cv2.flip(cv2.resize(crop_vision_frame, (512, 512)), 1)
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32)[:, :, ::-1] / 127.5 - 1
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 3, 1, 2)
-	region_mask : Mask = face_parser.run(None,
-	{
-		face_parser.get_inputs()[0].name: prepare_vision_frame
-	})[0][0]
+	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+		region_mask : Mask = face_parser.run(None,
+		{
+			face_parser.get_inputs()[0].name: prepare_vision_frame
+		})[0][0]
 	region_mask = numpy.isin(region_mask.argmax(0), [ FACE_MASK_REGIONS[region] for region in face_mask_regions ])
 	region_mask = cv2.resize(region_mask.astype(numpy.float32), crop_vision_frame.shape[:2][::-1])
 	region_mask = (cv2.GaussianBlur(region_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2

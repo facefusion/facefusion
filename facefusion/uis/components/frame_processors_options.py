@@ -14,6 +14,7 @@ FACE_ENHANCER_BLEND_SLIDER : Optional[gradio.Slider] = None
 FACE_SWAPPER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FRAME_COLORIZER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FRAME_COLORIZER_BLEND_SLIDER : Optional[gradio.Slider] = None
+FRAME_COLORIZER_SIZE_DROPDOWN : Optional[gradio.Dropdown] = None
 FRAME_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FRAME_ENHANCER_BLEND_SLIDER : Optional[gradio.Slider] = None
 LIP_SYNCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -26,6 +27,7 @@ def render() -> None:
 	global FACE_SWAPPER_MODEL_DROPDOWN
 	global FRAME_COLORIZER_MODEL_DROPDOWN
 	global FRAME_COLORIZER_BLEND_SLIDER
+	global FRAME_COLORIZER_SIZE_DROPDOWN
 	global FRAME_ENHANCER_MODEL_DROPDOWN
 	global FRAME_ENHANCER_BLEND_SLIDER
 	global LIP_SYNCER_MODEL_DROPDOWN
@@ -70,6 +72,12 @@ def render() -> None:
 		maximum = frame_processors_choices.frame_colorizer_blend_range[-1],
 		visible = 'frame_colorizer' in facefusion.globals.frame_processors
 	)
+	FRAME_COLORIZER_SIZE_DROPDOWN = gradio.Dropdown(
+		label = wording.get('uis.frame_colorizer_size_dropdown'),
+		choices = frame_processors_choices.frame_colorizer_sizes,
+		value = frame_processors_globals.frame_colorizer_size,
+		visible = 'frame_colorizer' in facefusion.globals.frame_processors
+	)
 	FRAME_ENHANCER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.frame_enhancer_model_dropdown'),
 		choices = frame_processors_choices.frame_enhancer_models,
@@ -96,6 +104,7 @@ def render() -> None:
 	register_ui_component('face_swapper_model_dropdown', FACE_SWAPPER_MODEL_DROPDOWN)
 	register_ui_component('frame_colorizer_model_dropdown', FRAME_COLORIZER_MODEL_DROPDOWN)
 	register_ui_component('frame_colorizer_blend_slider', FRAME_COLORIZER_BLEND_SLIDER)
+	register_ui_component('frame_colorizer_size_dropdown', FRAME_COLORIZER_SIZE_DROPDOWN)
 	register_ui_component('frame_enhancer_model_dropdown', FRAME_ENHANCER_MODEL_DROPDOWN)
 	register_ui_component('frame_enhancer_blend_slider', FRAME_ENHANCER_BLEND_SLIDER)
 	register_ui_component('lip_syncer_model_dropdown', LIP_SYNCER_MODEL_DROPDOWN)
@@ -108,22 +117,23 @@ def listen() -> None:
 	FACE_SWAPPER_MODEL_DROPDOWN.change(update_face_swapper_model, inputs = FACE_SWAPPER_MODEL_DROPDOWN, outputs = FACE_SWAPPER_MODEL_DROPDOWN)
 	FRAME_COLORIZER_MODEL_DROPDOWN.change(update_frame_colorizer_model, inputs = FRAME_COLORIZER_MODEL_DROPDOWN, outputs = FRAME_COLORIZER_MODEL_DROPDOWN)
 	FRAME_COLORIZER_BLEND_SLIDER.release(update_frame_colorizer_blend, inputs = FRAME_COLORIZER_BLEND_SLIDER)
+	FRAME_COLORIZER_SIZE_DROPDOWN.change(update_frame_colorizer_size, inputs = FRAME_COLORIZER_SIZE_DROPDOWN, outputs = FRAME_COLORIZER_SIZE_DROPDOWN)
 	FRAME_ENHANCER_MODEL_DROPDOWN.change(update_frame_enhancer_model, inputs = FRAME_ENHANCER_MODEL_DROPDOWN, outputs = FRAME_ENHANCER_MODEL_DROPDOWN)
 	FRAME_ENHANCER_BLEND_SLIDER.release(update_frame_enhancer_blend, inputs = FRAME_ENHANCER_BLEND_SLIDER)
 	LIP_SYNCER_MODEL_DROPDOWN.change(update_lip_syncer_model, inputs = LIP_SYNCER_MODEL_DROPDOWN, outputs = LIP_SYNCER_MODEL_DROPDOWN)
 	frame_processors_checkbox_group = get_ui_component('frame_processors_checkbox_group')
 	if frame_processors_checkbox_group:
-		frame_processors_checkbox_group.change(update_frame_processors, inputs = frame_processors_checkbox_group, outputs = [ FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP, FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER, FACE_SWAPPER_MODEL_DROPDOWN, FRAME_COLORIZER_MODEL_DROPDOWN, FRAME_COLORIZER_BLEND_SLIDER, FRAME_ENHANCER_MODEL_DROPDOWN, FRAME_ENHANCER_BLEND_SLIDER, LIP_SYNCER_MODEL_DROPDOWN ])
+		frame_processors_checkbox_group.change(update_frame_processors, inputs = frame_processors_checkbox_group, outputs = [ FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP, FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER, FACE_SWAPPER_MODEL_DROPDOWN, FRAME_COLORIZER_MODEL_DROPDOWN, FRAME_COLORIZER_BLEND_SLIDER, FRAME_COLORIZER_SIZE_DROPDOWN, FRAME_ENHANCER_MODEL_DROPDOWN, FRAME_ENHANCER_BLEND_SLIDER, LIP_SYNCER_MODEL_DROPDOWN ])
 
 
-def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.CheckboxGroup, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Slider, gradio.Dropdown]:
+def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.CheckboxGroup, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Dropdown]:
 	has_face_debugger = 'face_debugger' in frame_processors
 	has_face_enhancer = 'face_enhancer' in frame_processors
 	has_face_swapper = 'face_swapper' in frame_processors
 	has_frame_colorizer = 'frame_colorizer' in frame_processors
 	has_frame_enhancer = 'frame_enhancer' in frame_processors
 	has_lip_syncer = 'lip_syncer' in frame_processors
-	return gradio.CheckboxGroup(visible = has_face_debugger), gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_frame_colorizer), gradio.Slider(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_enhancer), gradio.Slider(visible = has_frame_enhancer), gradio.Dropdown(visible = has_lip_syncer)
+	return gradio.CheckboxGroup(visible = has_face_debugger), gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_frame_colorizer), gradio.Slider(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_enhancer), gradio.Slider(visible = has_frame_enhancer), gradio.Dropdown(visible = has_lip_syncer)
 
 
 def update_face_debugger_items(face_debugger_items : List[FaceDebuggerItem]) -> None:
@@ -175,6 +185,11 @@ def update_frame_colorizer_model(frame_colorizer_model : FrameColorizerModel) ->
 
 def update_frame_colorizer_blend(frame_colorizer_blend : int) -> None:
 	frame_processors_globals.frame_colorizer_blend = frame_colorizer_blend
+
+
+def update_frame_colorizer_size(frame_colorizer_size : str) -> gradio.Dropdown:
+	frame_processors_globals.frame_colorizer_size = frame_colorizer_size
+	return gradio.Dropdown(value = frame_processors_globals.frame_colorizer_size)
 
 
 def update_frame_enhancer_model(frame_enhancer_model : FrameEnhancerModel) -> gradio.Dropdown:

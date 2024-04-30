@@ -100,8 +100,7 @@ ExecutionDeviceFramework = TypedDict('ExecutionDeviceFramework',
 ExecutionDeviceProduct = TypedDict('ExecutionDeviceProduct',
 {
 	'vendor' : str,
-	'name' : str,
-	'architecture' : str,
+	'name' : str
 })
 ExecutionDeviceVideoMemory = TypedDict('ExecutionDeviceVideoMemory',
 {
