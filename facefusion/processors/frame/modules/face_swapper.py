@@ -159,7 +159,7 @@ def apply_args(program : ArgumentParser) -> None:
 		face_swapper_model_fallback = 'inswapper_128'
 	else:
 		face_swapper_model_fallback = 'inswapper_128_fp16'
-	frame_processors_globals.face_swapper_model = config.get_str_value('frame_processors.face_swapper_model', face_swapper_model_fallback)
+	frame_processors_globals.face_swapper_model = config.get_str_value('frame_processors.face_swapper_model', face_swapper_model_fallback) # type: ignore # type: Literal['blendswap_256', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_512_unofficial', 'uniface_256']
 	if args.face_swapper_model is not None:
 		frame_processors_globals.face_swapper_model = args.face_swapper_model
 	if frame_processors_globals.face_swapper_model == 'blendswap_256':

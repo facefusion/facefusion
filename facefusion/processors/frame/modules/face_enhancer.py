@@ -138,7 +138,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.face_enhancer_model = config.get_str_value('frame_processors.face_enhancer_model', 'gfpgan_1.4')
+	frame_processors_globals.face_enhancer_model = config.get_str_value('frame_processors.face_enhancer_model', 'gfpgan_1.4') # type: ignore # type: Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']
 	frame_processors_globals.face_enhancer_blend = config.get_int_value('frame_processors.face_enhancer_blend','82')
 	if args.face_enhancer_model is not None:
 		frame_processors_globals.face_enhancer_model = args.face_enhancer_model

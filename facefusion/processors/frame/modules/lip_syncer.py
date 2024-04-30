@@ -82,7 +82,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.lip_syncer_model = config.get_str_value('frame_processors.lip_syncer_model', 'wav2lip_gan')
+	frame_processors_globals.lip_syncer_model = config.get_str_value('frame_processors.lip_syncer_model', 'wav2lip_gan') # type: ignore # type: Literal['wav2lip_gan']
 	if args.lip_syncer_model is not None:
 		frame_processors_globals.lip_syncer_model = args.lip_syncer_model
 

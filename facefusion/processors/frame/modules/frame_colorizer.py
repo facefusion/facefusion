@@ -103,7 +103,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.frame_colorizer_model = config.get_str_value('frame_processors.frame_colorizer_model', 'ddcolor')
+	frame_processors_globals.frame_colorizer_model = config.get_str_value('frame_processors.frame_colorizer_model', 'ddcolor') # type: ignore # type: Literal['ddcolor', 'ddcolor_artistic', 'deoldify', 'deoldify_artistic', 'deoldify_stable']
 	frame_processors_globals.frame_colorizer_blend = config.get_int_value('frame_processors.frame_colorizer_blend', '100')
 	frame_processors_globals.frame_colorizer_size = config.get_str_value('frame_processors.frame_colorizer_size', '256x256')
 	if args.frame_colorizer_model is not None:

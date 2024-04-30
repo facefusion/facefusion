@@ -41,7 +41,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.face_debugger_items = config.get_str_list('frame_processors.face_debugger_items', 'face-landmark-5/68 face-mask')
+	frame_processors_globals.face_debugger_items = config.get_str_list('frame_processors.face_debugger_items', 'face-landmark-5/68 face-mask') # type: ignore # type: list[Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender']]
 	if args.face_debugger_items is not None:
 		frame_processors_globals.face_debugger_items = args.face_debugger_items
 
