@@ -158,18 +158,14 @@ def apply_args(program : ArgumentParser) -> None:
 				setattr(facefusion.globals, attribute, decode_execution_providers(getattr(args, attribute)))
 			elif attribute == 'face_mask_padding':
 				setattr(facefusion.globals, attribute, normalize_padding(getattr(args, attribute)))
-			elif attribute == 'output_image_quality':
-				setattr(facefusion.globals, attribute, getattr(args, attribute))
-				if is_image(args.target_path):
+			elif is_image(args.target_path):
 					output_image_resolution = detect_image_resolution(args.target_path)
 					output_image_resolutions = create_image_resolutions(output_image_resolution)
 					if args.output_image_resolution in output_image_resolutions:
 						facefusion.globals.output_image_resolution = args.output_image_resolution
 					else:
 						facefusion.globals.output_image_resolution = pack_resolution(output_image_resolution)
-			elif attribute == 'output_video_quality':
-				setattr(facefusion.globals, attribute, getattr(args, attribute))
-				if is_video(args.target_path):
+			elif is_video(args.target_path):
 					output_video_resolution = detect_video_resolution(args.target_path)
 					output_video_resolutions = create_video_resolutions(output_video_resolution)
 					if args.output_video_resolution in output_video_resolutions:
