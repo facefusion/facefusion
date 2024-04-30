@@ -128,7 +128,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.frame_enhancer_model = config.get_str_value('frame_processors.frame_enhancer_model', 'span_kendata_x4')
+	frame_processors_globals.frame_enhancer_model = config.get_str_value('frame_processors.frame_enhancer_model', 'span_kendata_x4') # type: ignore # type: Literal['lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_hatgan_x4', 'span_kendata_x4']
 	frame_processors_globals.frame_enhancer_blend = config.get_int_value('frame_processors.frame_enhancer_blend', '80')
 	if args.frame_enhancer_model is not None:
 		frame_processors_globals.frame_enhancer_model = args.frame_enhancer_model
