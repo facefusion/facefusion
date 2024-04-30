@@ -255,6 +255,7 @@ attribute_config_mapping = {
 	'ui_layouts': (config.get_str_list, 'uis.ui_layouts', 'default')
 	}
 
+
 def get(key : str) -> Optional[str]:
 	if '.' in key:
 		section, name = key.split('.')
