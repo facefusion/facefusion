@@ -15,7 +15,7 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
-from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, wording, voice_extractor
+from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, wording, voice_extractor, config_mapping
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.common_helper import create_metavar, get_first
@@ -129,7 +129,7 @@ def apply_config(program : ArgumentParser) -> None:
 		logger.error(wording.get('select_config_file'), __name__.upper())
 		logger.error(wording.get('using_default_config'), __name__.upper())
 		facefusion.globals.config_path = 'facefusion.ini'
-	for attribute, (config_function, config_path, default_value) in wording.attribute_config_mapping.items():
+	for attribute, (config_function, config_path, default_value) in config_mapping.attribute_config_mapping.items():
 		if default_value is not None:
 			setattr(facefusion.globals, attribute, config_function(config_path, default_value))
 		else:
@@ -148,7 +148,7 @@ def apply_config(program : ArgumentParser) -> None:
 	
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	for attribute, (config_function, config_path,default_value) in wording.attribute_config_mapping.items(): 
+	for attribute, (config_function, config_path,default_value) in config_mapping.attribute_config_mapping.items(): 
 		if hasattr(args, attribute) and getattr(args, attribute) is not None:
 			if attribute == 'face_detector_model':
 				setattr(facefusion.globals, attribute, getattr(args, attribute))
