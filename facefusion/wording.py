@@ -1,4 +1,6 @@
 from typing import Any, Dict, Optional
+from facefusion import config
+import facefusion.choices
 
 WORDING : Dict[str, Any] =\
 {
