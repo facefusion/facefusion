@@ -2,6 +2,8 @@ from configparser import ConfigParser
 from typing import Any, Optional, List
 
 import facefusion.globals
+from facefusion.filesystem import resolve_relative_path
+
 
 CONFIG = None
 
@@ -9,9 +11,12 @@ CONFIG = None
 def get_config() -> ConfigParser:
 	global CONFIG
 	
-	if CONFIG is None:
-		CONFIG = ConfigParser()
-		CONFIG.read(facefusion.globals.config_path, encoding = 'utf-8')
+	if facefusion.globals.config_path is None:
+		config_path = resolve_relative_path('../facefusion.ini')
+	else:
+		config_path = facefusion.globals.config_path
+	CONFIG = ConfigParser()
+	CONFIG.read(config_path, encoding = 'utf-8')
 	return CONFIG
 
 

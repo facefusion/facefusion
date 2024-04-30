@@ -37,12 +37,6 @@ def cli() -> None:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 160), add_help = False)
     # general
 	program.add_argument('-c', '--config_path', help = wording.get('help.config_path'), dest = 'config_path', default = 'facefusion.ini')
-	args = program.parse_args()
-	facefusion.globals.config_path = args.config_path
-	if not is_file(args.config_path) and args.config_path is not None:
-		logger.error(wording.get('select_config_file'), __name__.upper())
-		logger.error(wording.get('using_default_config'), __name__.upper())
-		facefusion.globals.config_path = 'facefusion.ini'
 	program.add_argument('-s', '--source', help = wording.get('help.source'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
 	program.add_argument('-t', '--target', help = wording.get('help.target'), dest = 'target_path', default = config.get_str_value('general.target_path'))
 	program.add_argument('-o', '--output', help = wording.get('help.output'), dest = 'output_path', default = config.get_str_value('general.output_path'))
@@ -130,78 +124,102 @@ def validate_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	# general
-	facefusion.globals.source_paths = args.source_paths
-	facefusion.globals.target_path = args.target_path
-	facefusion.globals.output_path = args.output_path
-	# misc
-	facefusion.globals.force_download = args.force_download
-	facefusion.globals.skip_download = args.skip_download
-	facefusion.globals.headless = args.headless
-	facefusion.globals.log_level = args.log_level
-	# execution
-	facefusion.globals.execution_providers = decode_execution_providers(args.execution_providers)
-	facefusion.globals.execution_thread_count = args.execution_thread_count
-	facefusion.globals.execution_queue_count = args.execution_queue_count
-	# memory
-	facefusion.globals.video_memory_strategy = args.video_memory_strategy
-	facefusion.globals.system_memory_limit = args.system_memory_limit
-	# face analyser
-	facefusion.globals.face_analyser_order = args.face_analyser_order
-	facefusion.globals.face_analyser_age = args.face_analyser_age
-	facefusion.globals.face_analyser_gender = args.face_analyser_gender
-	facefusion.globals.face_detector_model = args.face_detector_model
-	if args.face_detector_size in facefusion.choices.face_detector_set[args.face_detector_model]:
-		facefusion.globals.face_detector_size = args.face_detector_size
-	else:
-		facefusion.globals.face_detector_size = '640x640'
-	facefusion.globals.face_detector_score = args.face_detector_score
-	facefusion.globals.face_landmarker_score = args.face_landmarker_score
-	# face selector
-	facefusion.globals.face_selector_mode = args.face_selector_mode
-	facefusion.globals.reference_face_position = args.reference_face_position
-	facefusion.globals.reference_face_distance = args.reference_face_distance
-	facefusion.globals.reference_frame_number = args.reference_frame_number
-	# face mask
-	facefusion.globals.face_mask_types = args.face_mask_types
-	facefusion.globals.face_mask_blur = args.face_mask_blur
-	facefusion.globals.face_mask_padding = normalize_padding(args.face_mask_padding)
-	facefusion.globals.face_mask_regions = args.face_mask_regions
-	# frame extraction
-	facefusion.globals.trim_frame_start = args.trim_frame_start
-	facefusion.globals.trim_frame_end = args.trim_frame_end
-	facefusion.globals.temp_frame_format = args.temp_frame_format
-	facefusion.globals.keep_temp = args.keep_temp
-	# output creation
-	facefusion.globals.output_image_quality = args.output_image_quality
-	if is_image(args.target_path):
-		output_image_resolution = detect_image_resolution(args.target_path)
-		output_image_resolutions = create_image_resolutions(output_image_resolution)
-		if args.output_image_resolution in output_image_resolutions:
-			facefusion.globals.output_image_resolution = args.output_image_resolution
+	facefusion.globals.config_path = args.config_path
+	print('args.config_path '+ facefusion.globals.config_path)
+	if not is_file(args.config_path) and args.config_path is not None:
+		logger.error(wording.get('select_config_file'), __name__.upper())
+		logger.error(wording.get('using_default_config'), __name__.upper())
+		facefusion.globals.config_path = 'facefusion.ini'
+	attribute_config_mapping = {
+    'source_paths': (config.get_str_list, 'general.source_paths', None),
+    'target_path': (config.get_str_value, 'general.target_path', None),
+    'output_path': (config.get_str_value, 'general.output_path', None),
+    'force_download': (config.get_bool_value, 'misc.force_download', None),
+    'skip_download': (config.get_bool_value, 'misc.skip_download', None),
+    'headless': (config.get_bool_value, 'misc.headless', None),
+    'log_level': (config.get_str_value, 'misc.log_level', 'info'),
+    'execution_providers': (config.get_str_list, 'execution.execution_providers', 'cpu cuda'),
+    'execution_thread_count': (config.get_int_value, 'execution.execution_thread_count', '4'),
+    'execution_queue_count': (config.get_int_value, 'execution.execution_queue_count', '1'),
+    'video_memory_strategy': (config.get_str_value, 'memory.video_memory_strategy', 'strict'),
+    'system_memory_limit': (config.get_int_value, 'memory.system_memory_limit', '0'),
+    'face_analyser_order': (config.get_str_value, 'face_analyser.face_analyser_order', 'left-right'),
+    'face_analyser_age': (config.get_str_value, 'face_analyser.face_analyser_age', None),
+    'face_analyser_gender': (config.get_str_value, 'face_analyser.face_analyser_gender', None),
+    'face_detector_model': (config.get_str_value, 'face_analyser.face_detector_model', 'yoloface'),
+    'face_detector_size': (config.get_str_value, 'face_analyser.face_detector_size', '640x640'),
+    'face_detector_score': (config.get_float_value, 'face_analyser.face_detector_score', '0.5'),
+    'face_landmarker_score': (config.get_float_value, 'face_analyser.face_landmarker_score', '0.5'),
+    'face_selector_mode': (config.get_str_value, 'face_selector.face_selector_mode', 'reference'),
+    'reference_face_position': (config.get_int_value, 'face_selector.reference_face_position', '0'),    
+    'reference_face_distance': (config.get_float_value, 'face_selector.reference_face_distance', '0.6'),
+    'reference_frame_number': (config.get_int_value, 'face_selector.reference_frame_number', '0'),
+    'face_mask_types': (config.get_str_list, 'face_mask.face_mask_types', 'box'),
+    'face_mask_blur': (config.get_float_value, 'face_mask.face_mask_blur', '0.3'),
+    'face_mask_padding': (config.get_int_list, 'face_mask.face_mask_padding', '0 0 0 0'),
+    'face_mask_regions': (config.get_str_list, 'face_mask.face_mask_regions', ' '.join(facefusion.choices.face_mask_regions)),
+    'trim_frame_start': (config.get_int_value, 'frame_extraction.trim_frame_start', None),
+    'trim_frame_end': (config.get_int_value, 'frame_extraction.trim_frame_end', None),
+    'temp_frame_format': (config.get_str_value, 'frame_extraction.temp_frame_format', 'png'),
+    'keep_temp': (config.get_bool_value, 'frame_extraction.keep_temp', None),
+    'output_image_quality': (config.get_int_value, 'output_creation.output_image_quality', '80'),
+    'output_image_resolution': (config.get_str_value, 'output_creation.output_image_resolution', None),
+    'output_video_encoder': (config.get_str_value, 'output_creation.output_video_encoder', 'libx264'),
+    'output_video_preset': (config.get_str_value, 'output_creation.output_video_preset', 'veryfast'),
+    'output_video_quality': (config.get_int_value, 'output_creation.output_video_quality', '80'),
+    'output_video_resolution': (config.get_str_value, 'output_creation.output_video_resolution', None),
+    'output_video_fps': (config.get_float_value, 'output_creation.output_video_fps', None),
+    'skip_audio': (config.get_bool_value, 'output_creation.skip_audio', None),
+	}
+	# Loop through the attribute_config_mapping and set each global attribute
+	for attribute, (config_function, config_path, default_value) in attribute_config_mapping.items():
+		value = getattr(facefusion.globals, attribute)
+		print(attribute + str(value))  # Convert value to string before concatenating
+		if default_value is not None:
+			setattr(facefusion.globals, attribute, config_function(config_path, default_value))
 		else:
-			facefusion.globals.output_image_resolution = pack_resolution(output_image_resolution)
-	facefusion.globals.output_video_encoder = args.output_video_encoder
-	facefusion.globals.output_video_preset = args.output_video_preset
-	facefusion.globals.output_video_quality = args.output_video_quality
-	if is_video(args.target_path):
-		output_video_resolution = detect_video_resolution(args.target_path)
-		output_video_resolutions = create_video_resolutions(output_video_resolution)
-		if args.output_video_resolution in output_video_resolutions:
-			facefusion.globals.output_video_resolution = args.output_video_resolution
-		else:
-			facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
-	if args.output_video_fps or is_video(args.target_path):
-		facefusion.globals.output_video_fps = normalize_fps(args.output_video_fps) or detect_video_fps(args.target_path)
-	facefusion.globals.skip_audio = args.skip_audio
-	# frame processors
-	available_frame_processors = list_directory('facefusion/processors/frame/modules')
-	facefusion.globals.frame_processors = args.frame_processors
-	for frame_processor in available_frame_processors:
-		frame_processor_module = load_frame_processor_module(frame_processor)
-		frame_processor_module.apply_args(program)
-	# uis
-	facefusion.globals.ui_layouts = args.ui_layouts
+			setattr(facefusion.globals, attribute, config_function(config_path))
+		print(attribute + str(getattr(facefusion.globals, attribute)))  # Convert value to string before concatenating
+	
+	for attribute, (config_function, config_path, default_value) in attribute_config_mapping.items():
+    # Check if the attribute exists in args and if it's not None or empty
+		if hasattr(args, attribute) and getattr(args, attribute) is not None:
+			# Special handling for specific attributes
+			if attribute == 'face_detector_model':
+				setattr(facefusion.globals, attribute, getattr(args, attribute))
+				if args.face_detector_size in facefusion.choices.face_detector_set[args.face_detector_model]:
+					facefusion.globals.face_detector_size = args.face_detector_size
+				else:
+					facefusion.globals.face_detector_size = '640x640'
+			elif attribute == 'output_image_quality':
+				setattr(facefusion.globals, attribute, getattr(args, attribute))
+				if is_image(args.target_path):
+					output_image_resolution = detect_image_resolution(args.target_path)
+					output_image_resolutions = create_image_resolutions(output_image_resolution)
+					if args.output_image_resolution in output_image_resolutions:
+						facefusion.globals.output_image_resolution = args.output_image_resolution
+					else:
+						facefusion.globals.output_image_resolution = pack_resolution(output_image_resolution)
+			elif attribute == 'output_video_quality':
+				setattr(facefusion.globals, attribute, getattr(args, attribute))
+				if is_video(args.target_path):
+					output_video_resolution = detect_video_resolution(args.target_path)
+					output_video_resolutions = create_video_resolutions(output_video_resolution)
+					if args.output_video_resolution in output_video_resolutions:
+						facefusion.globals.output_video_resolution = args.output_video_resolution
+					else:
+						facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
+			elif attribute == 'output_video_fps':
+				setattr(facefusion.globals, attribute, normalize_fps(getattr(args, attribute)) or detect_video_fps(args.target_path) if args.output_video_fps or is_video(args.target_path) else None)
+			elif attribute == 'frame_processors':
+				available_frame_processors = list_directory('facefusion/processors/frame/modules')
+				setattr(facefusion.globals, attribute, args.frame_processors)
+				for frame_processor in available_frame_processors:
+					frame_processor_module = load_frame_processor_module(frame_processor)
+					frame_processor_module.apply_args(program)
+
+			else:
+				setattr(facefusion.globals, attribute, getattr(args, attribute))
 
 
 def run(program : ArgumentParser) -> None:
