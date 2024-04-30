@@ -132,14 +132,18 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--face-enhancer-model', help = wording.get('help.face_enhancer_model'), default = config.get_str_value('frame_processors.face_enhancer_model', 'gfpgan_1.4'), choices = frame_processors_choices.face_enhancer_models)
-	program.add_argument('--face-enhancer-blend', help = wording.get('help.face_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.face_enhancer_blend', '80'), choices = frame_processors_choices.face_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.face_enhancer_blend_range))
+	program.add_argument('--face-enhancer-model', help = wording.get('help.face_enhancer_model'), default = config.get_str_value('frame_processors.face_enhancer_model'), choices = frame_processors_choices.face_enhancer_models)
+	program.add_argument('--face-enhancer-blend', help = wording.get('help.face_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.face_enhancer_blend'), choices = frame_processors_choices.face_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.face_enhancer_blend_range))
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.face_enhancer_model = args.face_enhancer_model
-	frame_processors_globals.face_enhancer_blend = args.face_enhancer_blend
+	frame_processors_globals.face_enhancer_model = config.get_str_value('frame_processors.face_enhancer_model', 'gfpgan_1.4')
+	frame_processors_globals.face_enhancer_blend = config.get_int_value('frame_processors.face_enhancer_blend','82')
+	if args.face_enhancer_model is not None:
+		frame_processors_globals.face_enhancer_model = args.face_enhancer_model
+	if args.face_enhancer_blend is not None:
+		frame_processors_globals.face_enhancer_blend = args.face_enhancer_blend
 
 
 def pre_check() -> bool:

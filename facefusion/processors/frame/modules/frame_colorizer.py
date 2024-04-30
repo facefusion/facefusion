@@ -96,16 +96,22 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--frame-colorizer-model', help = wording.get('help.frame_colorizer_model'), default = config.get_str_value('frame_processors.frame_colorizer_model', 'ddcolor'), choices = frame_processors_choices.frame_colorizer_models)
-	program.add_argument('--frame-colorizer-blend', help = wording.get('help.frame_colorizer_blend'), type = int, default = config.get_int_value('frame_processors.frame_colorizer_blend', '100'), choices = frame_processors_choices.frame_colorizer_blend_range, metavar = create_metavar(frame_processors_choices.frame_colorizer_blend_range))
-	program.add_argument('--frame-colorizer-size', help = wording.get('help.frame_colorizer_size'), type = str, default = config.get_str_value('frame_processors.frame_colorizer_size', '256x256'), choices = frame_processors_choices.frame_colorizer_sizes)
+	program.add_argument('--frame-colorizer-model', help = wording.get('help.frame_colorizer_model'), default = config.get_str_value('frame_processors.frame_colorizer_model'), choices = frame_processors_choices.frame_colorizer_models)
+	program.add_argument('--frame-colorizer-blend', help = wording.get('help.frame_colorizer_blend'), type = int, default = config.get_int_value('frame_processors.frame_colorizer_blend'), choices = frame_processors_choices.frame_colorizer_blend_range, metavar = create_metavar(frame_processors_choices.frame_colorizer_blend_range))
+	program.add_argument('--frame-colorizer-size', help = wording.get('help.frame_colorizer_size'), type = str, default = config.get_str_value('frame_processors.frame_colorizer_size'), choices = frame_processors_choices.frame_colorizer_sizes)
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.frame_colorizer_model = args.frame_colorizer_model
-	frame_processors_globals.frame_colorizer_blend = args.frame_colorizer_blend
-	frame_processors_globals.frame_colorizer_size = args.frame_colorizer_size
+	frame_processors_globals.frame_colorizer_model = config.get_str_value('frame_processors.frame_colorizer_model', 'ddcolor')
+	frame_processors_globals.frame_colorizer_blend = config.get_int_value('frame_processors.frame_colorizer_blend', '100')
+	frame_processors_globals.frame_colorizer_size = config.get_str_value('frame_processors.frame_colorizer_size', '256x256')
+	if args.frame_colorizer_model is not None:
+		frame_processors_globals.frame_colorizer_model = args.frame_colorizer_model
+	if args.frame_colorizer_blend is not None:
+		frame_processors_globals.frame_colorizer_blend = args.frame_colorizer_blend
+	if args.frame_colorizer_size is not None:
+		frame_processors_globals.frame_colorizer_size = args.frame_colorizer_size
 
 
 def pre_check() -> bool:

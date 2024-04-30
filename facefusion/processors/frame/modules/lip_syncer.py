@@ -77,12 +77,14 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('frame_processors.lip_syncer_model', 'wav2lip_gan'), choices = frame_processors_choices.lip_syncer_models)
+	program.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('frame_processors.lip_syncer_model'), choices = frame_processors_choices.lip_syncer_models)
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.lip_syncer_model = args.lip_syncer_model
+	frame_processors_globals.lip_syncer_model = config.get_str_value('frame_processors.lip_syncer_model', 'wav2lip_gan')
+	if args.lip_syncer_model is not None:
+		frame_processors_globals.lip_syncer_model = args.lip_syncer_model
 
 
 def pre_check() -> bool:
