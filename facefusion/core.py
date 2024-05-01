@@ -200,6 +200,10 @@ def apply_args(program : ArgumentParser) -> None:
 				for frame_processor in available_frame_processors:
 					frame_processor_module = load_frame_processor_module(frame_processor)
 					frame_processor_module.apply_args(program)
+			elif isinstance(getattr(args, attribute),bool):
+				if getattr(facefusion.globals, attribute) is True:
+					continue
+				else: setattr(facefusion.globals, attribute, getattr(args, attribute))
 			else:
 				setattr(facefusion.globals, attribute, getattr(args, attribute))
 
@@ -208,7 +212,6 @@ def run(program : ArgumentParser) -> None:
 	validate_args(program)
 	apply_config(program)
 	apply_args(program)
-	
 	logger.init(facefusion.globals.log_level)
 
 	if facefusion.globals.system_memory_limit > 0:
