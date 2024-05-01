@@ -35,6 +35,10 @@ warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 160), add_help = False)
+	# config
+	group_config = program.add_argument_group('config')
+	group_config.add_argument('-c', '--config', help = wording.get('help.config'), dest = 'config_path', default = 'facefusion.ini')
+	apply_config(program)
 	# general
 	program.add_argument('-s', '--source', help = wording.get('help.source'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
 	program.add_argument('-t', '--target', help = wording.get('help.target'), dest = 'target_path', default = config.get_str_value('general.target_path'))
@@ -106,6 +110,11 @@ def cli() -> None:
 	group_uis = program.add_argument_group('uis')
 	group_uis.add_argument('--ui-layouts', help = wording.get('help.ui_layouts').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layouts', 'default'), nargs = '+')
 	run(program)
+
+
+def apply_config(program : ArgumentParser) -> None:
+	args = program.parse_args()
+	facefusion.globals.config_path = args.config_path
 
 
 def validate_args(program : ArgumentParser) -> None:
