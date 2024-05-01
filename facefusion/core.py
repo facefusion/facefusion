@@ -113,8 +113,8 @@ def cli() -> None:
 
 
 def apply_config(program : ArgumentParser) -> None:
-	args = program.parse_args()
-	facefusion.globals.config_path = args.config_path
+	args = program.parse_known_args()
+	facefusion.globals.config_path = get_first(args).config_path
 
 
 def validate_args(program : ArgumentParser) -> None:
