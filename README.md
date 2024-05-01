@@ -44,7 +44,7 @@ misc:
   --log-level {error,warn,info,debug}                                                                                                                   adjust the message severity displayed in the terminal
 
 execution:
-  --execution-providers EXECUTION_PROVIDERS [EXECUTION_PROVIDERS ...]                                                                                   accelerate the model inference using different providers (choices: tensorrt, cuda, azure, cpu, ...)
+  --execution-providers EXECUTION_PROVIDERS [EXECUTION_PROVIDERS ...]                                                                                   accelerate the model inference using different providers (choices: cpu, ...)
   --execution-thread-count [1-128]                                                                                                                      specify the amount of parallel threads while processing
   --execution-queue-count [1-32]                                                                                                                        specify the amount of frames each thread is processing
 
@@ -71,8 +71,7 @@ face mask:
   --face-mask-types FACE_MASK_TYPES [FACE_MASK_TYPES ...]                                                                                               mix and match different face mask types (choices: box, occlusion, region)
   --face-mask-blur [0.0-1.0]                                                                                                                            specify the degree of blur applied the box mask
   --face-mask-padding FACE_MASK_PADDING [FACE_MASK_PADDING ...]                                                                                         apply top, right, bottom and left padding to the box mask
-  --face-mask-regions FACE_MASK_REGIONS [FACE_MASK_REGIONS ...]                                                                                         choose the facial features used for the region mask (choices: skin, left-eyebrow, right-eyebrow, left-eye, right-eye, glasses, nose, mouth, upper-
-                                                                                                                                                        lip, lower-lip)
+  --face-mask-regions FACE_MASK_REGIONS [FACE_MASK_REGIONS ...]                                                                                         choose the facial features used for the region mask (choices: skin, left-eyebrow, right-eyebrow, left-eye, right-eye, glasses, nose, mouth, upper-lip, lower-lip)
 
 frame extraction:
   --trim-frame-start TRIM_FRAME_START                                                                                                                   specify the the start frame of the target video
@@ -92,8 +91,7 @@ output creation:
 
 frame processors:
   --frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                                                                            load a single or multiple frame processors. (choices: face_debugger, face_enhancer, face_swapper, frame_colorizer, frame_enhancer, lip_syncer, ...)
-  --face-debugger-items FACE_DEBUGGER_ITEMS [FACE_DEBUGGER_ITEMS ...]                                                                                   load a single or multiple frame processors (choices: bounding-box, face-landmark-5, face-landmark-5/68, face-landmark-68, face-landmark-68/5, face-
-                                                                                                                                                        mask, face-detector-score, face-landmarker-score, age, gender)
+  --face-debugger-items FACE_DEBUGGER_ITEMS [FACE_DEBUGGER_ITEMS ...]                                                                                   load a single or multiple frame processors (choices: bounding-box, face-landmark-5, face-landmark-5/68, face-landmark-68, face-landmark-68/5, face-mask, face-detector-score, face-landmarker-score, age, gender)
   --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,gpen_bfr_1024,gpen_bfr_2048,restoreformer_plus_plus}     choose the model responsible for enhancing the face
   --face-enhancer-blend [0-100]                                                                                                                         blend the enhanced into the previous face
   --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial,uniface_256}                                  choose the model responsible for swapping the face
