@@ -54,9 +54,8 @@ WORDING : Dict[str, Any] =\
 		# installer
 		'install_dependency': 'select the variant of {dependency} to install',
 		'skip_conda': 'skip the conda environment check',
-		# config
-		'config': 'choose the config file',
 		# general
+		'config': 'choose the config file',
 		'source': 'choose single or multiple source images or audios',
 		'target': 'choose single target image or video',
 		'output': 'specify the output file or directory',
