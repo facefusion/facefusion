@@ -15,7 +15,7 @@ CONFIG_SAVE_BUTTON: Optional[gradio.Button] = None
 CONFIG_SAVE_TEXTBOX: Optional[gradio.Textbox] = None
 
 
-def render():
+def render() -> None:
     global CONFIG_SAVE_TEXTBOX, CONFIG_SAVE_BUTTON
     CONFIG_SAVE_TEXTBOX = gradio.Textbox(label = 'SAVE CONFIG FILE',
                                          placeholder = facefusion.globals.config_path,
@@ -26,13 +26,13 @@ def render():
                                        size = 'sm')
     
 
-def listen():
+def listen() -> None:
     CONFIG_SAVE_BUTTON.click(create_new_config_file,inputs = CONFIG_SAVE_TEXTBOX)
     CONFIG_SAVE_BUTTON.click(fn=clear_text, outputs=CONFIG_SAVE_TEXTBOX)
     CONFIG_SAVE_TEXTBOX.select(fn=clear_text, outputs=CONFIG_SAVE_TEXTBOX)
 
 
-def clear_text():
+def clear_text() -> None:
     return gradio.update(value='')
 
 
