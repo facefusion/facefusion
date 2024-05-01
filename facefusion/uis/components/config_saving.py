@@ -1,9 +1,9 @@
-from typing import List, Tuple, Optional
+from typing import List, Optional
 import gradio
 from configparser import ConfigParser
 from types import ModuleType
 import os
-from facefusion.config import clear_config, get_config
+from facefusion.config import clear_config
 from facefusion.execution import encode_execution_providers
 import facefusion.globals
 import facefusion.choices
@@ -53,6 +53,7 @@ def create_new_config_file(filename: str) -> None:
         config.write(configfile)
     save_info(filepath)
 
+
 def new_config(modules: List[ModuleType]) -> ConfigParser:
     clear_config()
     config = ConfigParser()
@@ -75,6 +76,7 @@ def new_config(modules: List[ModuleType]) -> ConfigParser:
                 else:
                     config[section][key] = ''
     return config
+
 
 def format_value(value) -> str:
     if isinstance(value, list):
