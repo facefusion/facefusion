@@ -35,11 +35,9 @@ warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 160), add_help = False)
-	# config
-	group_config = program.add_argument_group('config')
-	group_config.add_argument('-c', '--config', help = wording.get('help.config'), dest = 'config_path', default = 'facefusion.ini')
-	apply_config(program)
 	# general
+	program.add_argument('-c', '--config', help = wording.get('help.config'), dest = 'config_path', default = 'facefusion.ini')
+	apply_config(program)
 	program.add_argument('-s', '--source', help = wording.get('help.source'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
 	program.add_argument('-t', '--target', help = wording.get('help.target'), dest = 'target_path', default = config.get_str_value('general.target_path'))
 	program.add_argument('-o', '--output', help = wording.get('help.output'), dest = 'output_path', default = config.get_str_value('general.output_path'))
@@ -113,8 +111,8 @@ def cli() -> None:
 
 
 def apply_config(program : ArgumentParser) -> None:
-	args = program.parse_known_args()
-	facefusion.globals.config_path = get_first(args).config_path
+	known_args = program.parse_known_args()
+	facefusion.globals.config_path = get_first(known_args).config_path
 
 
 def validate_args(program : ArgumentParser) -> None:
