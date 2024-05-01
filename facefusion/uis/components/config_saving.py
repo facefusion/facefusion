@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 import gradio
 from configparser import ConfigParser
 from types import ModuleType
@@ -78,7 +78,7 @@ def new_config(modules: List[ModuleType]) -> ConfigParser:
     return config
 
 
-def format_value(value) -> str:
+def format_value(value: Any) -> str:
     if isinstance(value, list):
         return ' '.join(map(str, value))
         
