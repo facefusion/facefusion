@@ -3,7 +3,7 @@ import gradio
 from configparser import ConfigParser
 from types import ModuleType
 import os
-from facefusion.config import clear_config
+from facefusion.config import get_config
 from facefusion.execution import encode_execution_providers
 import facefusion.globals
 import facefusion.choices
@@ -55,11 +55,8 @@ def create_new_config_file(filename: str) -> None:
 
 
 def new_config(modules: List[ModuleType]) -> ConfigParser:
-    clear_config()
-    config = ConfigParser()
-    config.read(facefusion.globals.config_path)
+    config = get_config()
     sections = {section: list(config[section].keys()) for section in config.sections()}
-
     for module in modules:
         for section, variables in sections.items():
             if section not in config:
@@ -79,10 +76,7 @@ def new_config(modules: List[ModuleType]) -> ConfigParser:
 
 
 def format_value(value: Any) -> str:
-    if isinstance(value, list):
-        return ' '.join(map(str, value))
-        
-    elif isinstance(value, tuple):
+    if isinstance(value, (list, tuple)):
         return ' '.join(map(str, value))
     else:
         return str(value)
