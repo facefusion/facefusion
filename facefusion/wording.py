@@ -44,6 +44,7 @@ WORDING : Dict[str, Any] =\
 	'ui_layout_not_loaded': 'UI layout {ui_layout} could not be loaded',
 	'ui_layout_not_implemented': 'UI layout {ui_layout} not implemented correctly',
 	'stream_not_loaded': 'Stream {stream_mode} could not be loaded',
+	'config_file_saved': 'New config file saved as {filepath}',
 	'point': '.',
 	'comma': ',',
 	'colon': ':',
