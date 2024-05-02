@@ -2,7 +2,6 @@ from typing import List, Optional, Any
 import gradio
 from configparser import ConfigParser
 from types import ModuleType
-import os
 from facefusion.config import get_config
 from facefusion.execution import encode_execution_providers
 import facefusion.globals
@@ -17,41 +16,30 @@ CONFIG_SAVE_TEXTBOX: Optional[gradio.Textbox] = None
 
 def render() -> None:
     global CONFIG_SAVE_TEXTBOX, CONFIG_SAVE_BUTTON
-    CONFIG_SAVE_TEXTBOX = gradio.Textbox(label = 'SAVE CONFIG FILE',
+    CONFIG_SAVE_TEXTBOX = gradio.Textbox(label = 'ACTIVE CONFIG FILE',
                                          placeholder = facefusion.globals.config_path,
-                                         max_lines = 1
+                                         max_lines = 1,
+                                         interactive= False
                                          )
-    CONFIG_SAVE_BUTTON = gradio.Button(value = 'SAVE',
+    CONFIG_SAVE_BUTTON = gradio.Button(value = 'SAVE PARAMETERS',
                                        variant = 'primary',
                                        size = 'sm')
     
 
 def listen() -> None:
-    CONFIG_SAVE_BUTTON.click(create_new_config_file,inputs = CONFIG_SAVE_TEXTBOX)
-    CONFIG_SAVE_BUTTON.click(fn=clear_text, outputs=CONFIG_SAVE_TEXTBOX)
-    CONFIG_SAVE_TEXTBOX.select(fn=clear_text, outputs=CONFIG_SAVE_TEXTBOX)
-
-
-def clear_text() -> None:
-    return gradio.update(value='')
+    CONFIG_SAVE_BUTTON.click(create_new_config_file)
 
 
 def save_info(filepath: str)-> None:
     gradio.Info(wording.get('config_file_saved').format(filepath = filepath))
 
 
-def create_new_config_file(filename: str) -> None:
-    if not filename:
-        filename = facefusion.globals.config_path
-    if not filename.endswith('.ini'):
-        filename = filename + '.ini'
+def create_new_config_file() -> None:
     modules = [facefusion.globals, facefusion.choices, frameglobals, framechoices]
-    main_dir = os.getcwd()
-    filepath = os.path.join(main_dir, filename)
     config = new_config(modules)
-    with open(filepath, 'w') as configfile:
+    with open(facefusion.globals.config_path, 'w') as configfile:
         config.write(configfile)
-    save_info(filepath)
+    save_info(facefusion.globals.config_path)
 
 
 def new_config(modules: List[ModuleType]) -> ConfigParser:
@@ -65,7 +53,7 @@ def new_config(modules: List[ModuleType]) -> ConfigParser:
                 try:
                     value = getattr(module, key)
                 except AttributeError:
-                    continue  # Skip attributes not found in the module
+                    continue
                 if value is not None:
                     if key == 'execution_providers':
                         value = ' '.join(encode_execution_providers(value))
