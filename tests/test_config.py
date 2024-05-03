@@ -102,13 +102,13 @@ def test_update_config() -> None:
     globals.config_path = 'facefusion.ini'
     globals.execution_thread_count = 22
     globals.execution_queue_count = 4
-    config_save.update_config()
+    config_save.save_config()
     new = config.get_config()
     assert new['execution']['execution_thread_count'] == '22'
     assert new['execution']['execution_queue_count'] == '4'
     globals.execution_thread_count = None
     globals.execution_queue_count = None
-    config_save.update_config()
+    config_save.save_config()
     old = config.get_config()
     assert old['execution']['execution_thread_count'] == ''
     assert old['execution']['execution_queue_count'] == ''
