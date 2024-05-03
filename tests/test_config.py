@@ -1,7 +1,8 @@
 from configparser import ConfigParser
 import pytest
 
-from facefusion import config
+from facefusion import config, globals
+from facefusion.uis.components import config as config_save
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -94,3 +95,20 @@ def test_get_float_list() -> None:
 	assert config.get_float_list('float_list.unset', '3.0 2.0 1.0') == [ 3.0, 2.0, 1.0 ]
 	assert config.get_float_list('float_list.unset') is None
 	assert config.get_float_list('float_list.invalid') is None
+
+
+def test_update_config() -> None:
+    config.CONFIG = None
+    globals.config_path = 'facefusion.ini'
+    globals.execution_thread_count = 22
+    globals.execution_queue_count = 4
+    config_save.update_config()
+    new = config.get_config()
+    assert new['execution']['execution_thread_count'] == '22'
+    assert new['execution']['execution_queue_count'] == '4'
+    globals.execution_thread_count = None
+    globals.execution_queue_count = None
+    config_save.update_config()
+    old = config.get_config()
+    assert old['execution']['execution_thread_count'] == ''
+    assert old['execution']['execution_queue_count'] == ''

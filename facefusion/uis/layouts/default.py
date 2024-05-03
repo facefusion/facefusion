@@ -1,7 +1,7 @@
 import multiprocessing
 import gradio
 
-from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, memory, temp_frame, output_options, common_options, source, target, output, preview, trim_frame, face_analyser, face_selector, face_masker, config_saving
+from facefusion.uis.components import about, config, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, memory, temp_frame, output_options, common_options, source, target, output, preview, trim_frame, face_analyser, face_selector, face_masker
 
 
 def pre_check() -> bool:
@@ -33,7 +33,7 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					output_options.render()
 				with gradio.Blocks():
-					config_saving.render()	
+					config.render()	
 			with gradio.Column(scale = 2):
 				with gradio.Blocks():
 					source.render()
@@ -69,7 +69,7 @@ def listen() -> None:
 	source.listen()
 	target.listen()
 	output.listen()
-	config_saving.listen()
+	config.listen()
 	preview.listen()
 	trim_frame.listen()
 	face_selector.listen()
