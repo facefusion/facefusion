@@ -55,4 +55,5 @@ skip_audio : Optional[bool] = None
 # frame processors
 frame_processors : List[str] = []
 # uis
+open_browser : Optional[bool] = None
 ui_layouts : List[str] = []

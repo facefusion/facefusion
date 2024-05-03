@@ -103,6 +103,7 @@ frame processors:
   --lip-syncer-model {wav2lip_gan}                                                                                                                      choose the model responsible for syncing the lips
 
 uis:
+  --open-browser                                                                                                                                        open the browser when ready
   --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                                                                              launch a single or multiple UI layouts (choices: benchmark, default, webcam, ...)
 ```
 
