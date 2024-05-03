@@ -80,10 +80,20 @@ Section 'Download Your Copy'
 	nsExec::Exec 'C:\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch next .'
 SectionEnd
 
+Section 'Create Environment Batch'
+	SetOutPath $INSTDIR
+
+	FileOpen $0 create-environment.bat w
+	FileWrite $0 'conda create --name facefusion python=3.10 --yes'
+	FileClose $0
+SectionEnd
+
 Section 'Setup Your Environment'
+	SetOutPath $INSTDIR
+
 	DetailPrint 'Setup Your Environment'
 	nsExec::Exec 'conda init --all'
-	nsExec::Exec 'conda create --name facefusion python=3.10 --yes'
+	nsExec::Exec 'create-environment.bat'
 SectionEnd
 
 Section 'Create Install Batch'
