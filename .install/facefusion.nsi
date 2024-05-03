@@ -3,7 +3,7 @@
 !include MUI2.nsh
 
 Name 'FaceFusion NEXT'
-OutFile 'FaceFusion_next.exe'
+OutFile 'FaceFusion_NEXT.exe'
 
 RequestExecutionLevel admin
 
@@ -126,20 +126,28 @@ SectionEnd
 Section 'Create Run Batch'
 	SetOutPath $INSTDIR
 	FileOpen $0 run.bat w
-	FileWrite $0 '@echo off && conda activate facefusion && python run.py'
+	FileWrite $0 '@echo off && conda activate facefusion && python run.py --open-browser'
 	FileClose $0
 SectionEnd
 
 Section 'Register The Application'
-	DetailPrint 'Install The Application'
+	DetailPrint 'Register The Application'
 	CreateDirectory $SMPROGRAMS\FaceFusion
 	CreateShortcut $SMPROGRAMS\FaceFusion\FaceFusion.lnk $INSTDIR\run.bat '' $INSTDIR\.install\facefusion.ico
 	WriteUninstaller $INSTDIR\Uninstall.exe
+
+	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion DisplayName 'FaceFusion'
+	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion DisplayVersion '2.5.2'
+	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion Publisher 'Henry Ruhs'
+	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion InstallLocation $INSTDIR
+	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion UninstallString $INSTDIR\uninstall.exe
 SectionEnd
 
 Section 'Uninstall'
 	RMDir /r $SMPROGRAMS\FaceFusion
 	RMDir /r $INSTDIR
+
+	DeleteRegKey HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion
 SectionEnd
 
 !insertmacro MUI_LANGUAGE English
