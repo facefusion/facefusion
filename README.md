@@ -32,7 +32,9 @@ python run.py [options]
 options:
   -h, --help                                                                                                                                            show this help message and exit
   -s SOURCE_PATHS, --source SOURCE_PATHS                                                                                                                choose single or multiple source images or audios
+  -sd SOURCE_DIR, --source_dir SOURCE_DIR                                                                                								choose a directory containing single or multiple source images or audios (only with script "run-multiple.sh" and "headless" mode)
   -t TARGET_PATH, --target TARGET_PATH                                                                                                                  choose single target image or video
+  -td TARGET_DIR, --target_dir TARGET_DIR                                                                                								choose a directory containing target images or videos (only with script "run-multiple.sh" and "headless" mode)
   -o OUTPUT_PATH, --output OUTPUT_PATH                                                                                                                  specify the output file or directory
   -v, --version                                                                                                                                         show program's version number and exit
 
@@ -105,6 +107,13 @@ uis:
   --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                                                                              launch a single or multiple UI layouts (choices: benchmark, default, webcam, ...)
 ```
 
+
+To run with source directory or target directory instead of source file and target file:
+Run this command:
+
+```
+bash run-multiple.sh --source_dir="/path/to/source/directory/with/multiple/files" --target_dir="/path/to/target/directory/with/multiple/files"  [others options]
+```
 
 Documentation
 -------------
