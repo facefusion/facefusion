@@ -54,10 +54,10 @@ FunctionEnd
 
 Section 'Prepare Your Platform'
 	DetailPrint 'Install GIT'
-	nsExec::Exec 'winget install -e --id Git.Git --override "/Dir=C:\Git /VERYSILENT" --force'
+	nsExec::Exec 'winget install -e --id Git.Git --silent --force'
 
 	DetailPrint 'Install Conda'
-	nsExec::Exec 'winget install -e --id Anaconda.Miniconda3 --override "/InstallationType=JustMe /AddToPath=1 /S /D=C:\Conda" --force'
+	nsExec::Exec 'winget install -e --id Anaconda.Miniconda3 --override "/InstallationType=JustMe /AddToPath=1 /S" --force'
 
 	DetailPrint 'Install FFmpeg'
 	nsExec::Exec 'winget install -e --id Gyan.FFmpeg --force'
@@ -71,15 +71,13 @@ Section 'Download Your Copy'
 
 	DetailPrint 'Download Your Copy'
 	RMDir /r $INSTDIR
-	nsExec::Exec 'C:\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch next .'
+	nsExec::Exec '$PROGRAMFILES64\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch next .'
 SectionEnd
 
 Section 'Setup Your Environment'
-	SetOutPath $INSTDIR
-
 	DetailPrint 'Setup Your Environment'
-	nsExec::Exec 'C:\Conda\Scripts\conda.exe init --all'
-	nsExec::Exec 'C:\Conda\Scripts\conda.exe create --name facefusion python=3.10 --yes'
+	nsExec::Exec '$PROFILE\miniconda3\Scripts\conda.exe init --all'
+	nsExec::Exec '$PROFILE\miniconda3\Scripts\conda.exe create --name facefusion python=3.10 --yes'
 SectionEnd
 
 Section 'Create Install Batch'
