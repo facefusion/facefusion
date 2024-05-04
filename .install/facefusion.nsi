@@ -63,7 +63,7 @@ Section 'Prepare Your Platform'
 	nsExec::Exec 'winget install -e --id Git.Git --override "/Dir=C:\Git /VERYSILENT" --force'
 
 	DetailPrint 'Install Conda'
-	nsExec::Exec 'winget install -e --id Anaconda.Miniconda3 --override "/InstallationType=JustMe /AddToPath=1 /S" --force'
+	nsExec::Exec 'winget install -e --id Anaconda.Miniconda3 --override "/InstallationType=JustMe /AddToPath=1 /S /Dir=C:\Conda" --force'
 
 	DetailPrint 'Install FFmpeg'
 	nsExec::Exec 'winget install -e --id Gyan.FFmpeg --force'
@@ -92,7 +92,7 @@ Section 'Setup Your Environment'
 	SetOutPath $INSTDIR
 
 	DetailPrint 'Setup Your Environment'
-	nsExec::Exec 'conda init --all'
+	nsExec::Exec 'C:\Conda\Scripts\conda.exe init --all'
 	nsExec::Exec 'create-environment.bat'
 SectionEnd
 
