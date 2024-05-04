@@ -53,17 +53,11 @@ Function PostInstallPage
 FunctionEnd
 
 Section 'Prepare Your Platform'
-	DetailPrint 'Install Python'
-	nsExec::Exec 'winget install -e --id Python.Python.3.10 --silent --force'
-
-	DetailPrint 'Install PIP'
-	nsExec::Exec 'python -m ensurepip'
-
 	DetailPrint 'Install GIT'
 	nsExec::Exec 'winget install -e --id Git.Git --override "/Dir=C:\Git /VERYSILENT" --force'
 
 	DetailPrint 'Install Conda'
-	nsExec::Exec 'winget install -e --id Anaconda.Miniconda3 --override "/InstallationType=JustMe /AddToPath=1 /S /Dir=C:\Conda" --force'
+	nsExec::Exec 'winget install -e --id Anaconda.Miniconda3 --override "/InstallationType=JustMe /AddToPath=1 /S /D=C:\Conda" --force'
 
 	DetailPrint 'Install FFmpeg'
 	nsExec::Exec 'winget install -e --id Gyan.FFmpeg --force'
@@ -80,20 +74,12 @@ Section 'Download Your Copy'
 	nsExec::Exec 'C:\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch next .'
 SectionEnd
 
-Section 'Create Environment Batch'
-	SetOutPath $INSTDIR
-
-	FileOpen $0 create-environment.bat w
-	FileWrite $0 'conda create --name facefusion python=3.10 --yes'
-	FileClose $0
-SectionEnd
-
 Section 'Setup Your Environment'
 	SetOutPath $INSTDIR
 
 	DetailPrint 'Setup Your Environment'
 	nsExec::Exec 'C:\Conda\Scripts\conda.exe init --all'
-	nsExec::Exec 'create-environment.bat'
+	nsExec::Exec 'C:\Conda\Scripts\conda.exe create --name facefusion python=3.10 --yes'
 SectionEnd
 
 Section 'Create Install Batch'
