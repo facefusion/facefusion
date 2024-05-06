@@ -1,17 +1,17 @@
+!include MUI2.nsh
 !include nsDialogs.nsh
 !include LogicLib.nsh
-!include MUI2.nsh
+
+RequestExecutionLevel admin
 
 Name 'FaceFusion NEXT'
 OutFile 'FaceFusion_NEXT.exe'
 
-RequestExecutionLevel admin
-
 !define MUI_ICON 'facefusion.ico'
 !insertmacro MUI_PAGE_DIRECTORY
-
 Page custom InstallPage PostInstallPage
-Page InstFiles
+!insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_LANGUAGE English
 
 UninstPage uninstConfirm
 UninstPage InstFiles
@@ -27,6 +27,7 @@ FunctionEnd
 
 Function InstallPage
 	nsDialogs::Create 1018
+	!insertmacro MUI_HEADER_TEXT 'Choose Your Accelerator' 'Choose your accelerator based on the graphics card.'
 
 	${NSD_CreateRadioButton} 0 40u 100% 10u 'Default'
 	Pop $UseDefault
@@ -104,14 +105,14 @@ Section 'Create Install Batch'
 		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime default'
 	${EndIf}
 	${If} $UseCuda == 1
-		FileWrite $0 '@echo off && conda activate facefusion && conda install cudatoolkit=11.8 cudnn=8.9.2.26 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi'
+		FileWrite $0 '@echo off && conda activate facefusion && conda install cudatoolkit=11.8 cudnn=8.9.2.26 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
 		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda-11.8'
 	${EndIf}
 	${If} $UseDirectMl == 1
 		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime directml'
 	${EndIf}
 	${If} $UseOpenVino == 1
-		FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::openvino=2024.1.0'
+		FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::openvino=2024.1.0 --yes'
 		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime openvino'
 	${EndIf}
 	FileClose $0
@@ -143,6 +144,7 @@ Section 'Register The Application'
 	DetailPrint 'Register The Application'
 	CreateDirectory $SMPROGRAMS\FaceFusion
 	CreateShortcut $SMPROGRAMS\FaceFusion\FaceFusion.lnk $INSTDIR\run.bat '' $INSTDIR\.install\facefusion.ico
+	CreateShortcut $DESKTOP\FaceFusion.lnk $INSTDIR\run.bat '' $INSTDIR\.install\facefusion.ico
 	WriteUninstaller $INSTDIR\Uninstall.exe
 
 	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion DisplayName 'FaceFusion'
@@ -158,5 +160,3 @@ Section 'Uninstall'
 
 	DeleteRegKey HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion
 SectionEnd
-
-!insertmacro MUI_LANGUAGE English
