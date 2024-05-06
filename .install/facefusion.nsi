@@ -53,13 +53,20 @@ Function PostInstallPage
 FunctionEnd
 
 Section 'Prepare Your Platform'
+	DetailPrint 'Install Microsoft.VCLibs'
+	ExecWait 'powershell -WindowStyle Hidden -Command Start-BitsTransfer -Source https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -Destination $TEMP\Microsoft.VCLibs.appx'
+	ExecWait 'powershell -WindowStyle Hidden -Command Add-AppxPackage $TEMP\Microsoft.VCLibs.appx'
+	Delete '$TEMP\Microsoft.VCLibs.appx'
+
+	DetailPrint 'Install Microsoft.UI.Xaml'
+	ExecWait 'powershell -WindowStyle Hidden -Command Start-BitsTransfer -Source https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx -Destination $TEMP\Microsoft.UI.Xaml.appx'
+	ExecWait 'powershell -WindowStyle Hidden -Command Add-AppxPackage $TEMP\Microsoft.UI.Xaml.appx'
+	Delete '$TEMP\Microsoft.UI.Xaml.appx'
+
 	DetailPrint 'Install WinGet'
-	ExecWait 'powershell -WindowStyle Hidden -Command Start-BitsTransfer -Source https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -Destination Microsoft.VCLibs.appx'
-	ExecWait 'powershell -WindowStyle Hidden -Command Start-BitsTransfer -Source https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx -Destination Microsoft.UI.Xaml.appx'
-	ExecWait 'powershell -WindowStyle Hidden -Command Start-BitsTransfer -Source https://aka.ms/getwinget -Destination WinGet.msixbundle'
-	ExecWait 'powershell -WindowStyle Hidden -Command Add-AppxPackage Microsoft.VCLibs.appx'
-	ExecWait 'powershell -WindowStyle Hidden -Command Add-AppxPackage Microsoft.UI.Xaml.appx'
-	ExecWait 'powershell -WindowStyle Hidden -Command Add-AppxPackage WinGet.msixbundle'
+	ExecWait 'powershell -WindowStyle Hidden -Command Start-BitsTransfer -Source https://aka.ms/getwinget -Destination $TEMP\WinGet.msixbundle'
+	ExecWait 'powershell -WindowStyle Hidden -Command Add-AppxPackage $TEMP\WinGet.msixbundle'
+	Delete '$TEMP\WinGet.msixbundle'
 
 	DetailPrint 'Install GIT'
 	nsExec::Exec 'winget install -e --id Git.Git --silent --accept-source-agreements --force'
