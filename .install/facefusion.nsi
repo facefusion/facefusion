@@ -69,16 +69,16 @@ Section 'Prepare Your Platform'
 	Delete '$TEMP\WinGet.msixbundle'
 
 	DetailPrint 'Install GIT'
-	nsExec::Exec 'winget install -e --id Git.Git --silent --accept-source-agreements --force'
+	nsExec::Exec '$LOCALAPPDATA\Microsoft\WindowsApps\winget.exe install -e --id Git.Git --silent --accept-source-agreements --force'
 
 	DetailPrint 'Install Conda'
-	nsExec::Exec 'winget install -e --id Anaconda.Miniconda3 --override "/InstallationType=JustMe /AddToPath=1 /S" --accept-source-agreements --force'
+	nsExec::Exec '$LOCALAPPDATA\Microsoft\WindowsApps\winget.exe install -e --id Anaconda.Miniconda3 --override "/InstallationType=JustMe /AddToPath=1 /S" --accept-source-agreements --force'
 
 	DetailPrint 'Install FFmpeg'
-	nsExec::Exec 'winget install -e --id Gyan.FFmpeg --accept-source-agreements --force'
+	nsExec::Exec '$LOCALAPPDATA\Microsoft\WindowsApps\winget.exe install -e --id Gyan.FFmpeg --accept-source-agreements --force'
 
 	DetailPrint 'Install Codec'
-	nsExec::Exec 'winget install -e --id CodecGuide.K-LiteCodecPack.Basic --silent --accept-source-agreements --force'
+	nsExec::Exec '$LOCALAPPDATA\Microsoft\WindowsApps\winget.exe install -e --id CodecGuide.K-LiteCodecPack.Basic --silent --accept-source-agreements --force'
 SectionEnd
 
 Section 'Download Your Copy'
