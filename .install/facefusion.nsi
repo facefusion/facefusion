@@ -8,9 +8,13 @@ Name 'FaceFusion NEXT'
 OutFile 'FaceFusion_NEXT.exe'
 
 !define MUI_ICON 'facefusion.ico'
+!define MUI_FINISHPAGE_RUN $INSTDIR\run.bat
+!define MUI_FINISHPAGE_RUN_NOTCHECKED
+
 !insertmacro MUI_PAGE_DIRECTORY
 Page custom InstallPage PostInstallPage
 !insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_LANGUAGE English
 
 UninstPage uninstConfirm
@@ -123,7 +127,7 @@ Section 'Install Your Accelerator'
 	SetOutPath $INSTDIR
 
 	DetailPrint 'Install Your Accelerator'
-	nsExec::Exec 'install-accelerator.bat'
+	nsExec::ExecToLog 'install-accelerator.bat'
 SectionEnd
 
 Section 'Install The Application'
