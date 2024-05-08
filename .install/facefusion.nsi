@@ -99,19 +99,16 @@ Section 'Create Install Batch'
 
 	FileOpen $0 install-accelerator.bat w
 	FileOpen $1 install-application.bat w
-	${If} $UseDefault == 1
-		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime default'
-	${EndIf}
 	${If} $UseCuda == 1
 		FileWrite $0 '@echo off && conda activate facefusion && conda install cudatoolkit=11.8 cudnn=8.9.2.26 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
 		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda-11.8'
-	${EndIf}
-	${If} $UseDirectMl == 1
+	${ElseIf} $UseDirectMl == 1
 		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime directml'
-	${EndIf}
-	${If} $UseOpenVino == 1
+	${ElseIf} $UseOpenVino == 1
 		FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::openvino=2024.1.0 --yes'
 		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime openvino'
+	${Else}
+		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime default'
 	${EndIf}
 	FileClose $0
 	FileClose $1
