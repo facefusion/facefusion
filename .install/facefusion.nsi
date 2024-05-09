@@ -72,7 +72,7 @@ Section 'Prepare Your Platform'
 
 	DetailPrint 'Uninstall Conda'
 	ExecWait '$PROFILE\miniconda3\Uninstall-Miniconda3.exe /S _?=$PROFILE\miniconda3'
-	Delete '$PROFILE\miniconda3\Uninstall-Miniconda3.exe'
+	RMDir /r '$PROFILE\miniconda3'
 
 	DetailPrint 'Install Conda'
 	inetc::get 'https://repo.anaconda.com/miniconda/Miniconda3-py310_24.3.0-0-Windows-x86_64.exe' '$TEMP\Miniconda3.exe'
