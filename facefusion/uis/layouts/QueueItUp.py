@@ -780,12 +780,37 @@ def edit_queue():
 
         
         job['status'] = 'editing'
-        job['job_args']['headless'] = 'None'
-        print(job['status'])
+        # job['job_args']['headless'] = 'None'
+        # print(job['status'])
+        # save_jobs(jobs_queue_file, jobs)
+        # update_job_listbox()
+        # custom_print(job['status'])
+        # edit_command(job['job_args'])
+        
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()
-        custom_print(job['status'])
-        edit_command(job['job_args'])
+        print (job['status'])
+
+        top = Toplevel()
+        top.title("Please Wait")
+        message_label = tkinter.Label(top, text="Please wait while the job loads back into FaceFusion...", padx=20, pady=20)
+        message_label.pack()
+        print (job['status'])
+        if isinstance(job['sourcecache'], list):
+            arg_source_paths = ' '.join(f'-s "{p}"' for p in job['sourcecache'])
+        else:
+            arg_source_paths = f"-s \"{job['sourcecache']}\""
+
+        python_cmd = f"python run.py {arg_source_paths} -t \"{job['targetcache']}\" -o \"{job['output_path']}\" --ui-layouts QueueItUp"
+        print(python_cmd)
+        subprocess.Popen(python_cmd)
+
+        top.after(1000, close_window)
+        top.update_idletasks()
+        x = (top.winfo_screenwidth() // 2) - (top.winfo_reqwidth() // 2)
+        y = (top.winfo_screenheight() // 2) - (top.winfo_reqheight() // 2)
+        top.geometry("+{}+{}".format(x, y))
+        top.after(7000, top.destroy)
 
     def output_path_job(job):
         # Open a dialog to select a directory
@@ -1140,10 +1165,10 @@ def edit_queue():
             argument_frame = tkinter.Frame(job_frame)
             argument_frame.pack(side='left', fill='x', padx=5)
 
-            # custom_font = font.Font(family="Helvetica", size=12, weight="bold")
-            # facefusion_button = tkinter.Button(argument_frame, text=f"UN-Queue It Up\n\n --EDIT ARGUMENTS", font=bold_font, justify='center')
-            # facefusion_button.pack(side='top', padx=5, fill='x', expand=False)
-            # facefusion_button.bind("<Button-1>", lambda event, j=job: reload_job_in_facefusion_edit(j))
+            custom_font = font.Font(family="Helvetica", size=12, weight="bold")
+            facefusion_button = tkinter.Button(argument_frame, text=f"UN-Queue It Up\n\n --EDIT ARGUMENTS", font=bold_font, justify='center')
+            facefusion_button.pack(side='top', padx=5, fill='x', expand=False)
+            facefusion_button.bind("<Button-1>", lambda event, j=job: reload_job_in_facefusion_edit(j))
 
 
             custom_font = font.Font(family="Helvetica", size=10, weight="bold")
@@ -1234,8 +1259,4 @@ def run(ui: gradio.Blocks) -> None:
     concurrency_count = min(8, multiprocessing.cpu_count())
     ui.queue(concurrency_count=concurrency_count).launch(show_api=False, inbrowser=True, quiet=False)
 
-<<<<<<< HEAD
-    
-=======
-    
->>>>>>> a268a8013417d86c53221a63f1a4616bed24c6fc
+
