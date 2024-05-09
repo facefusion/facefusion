@@ -375,15 +375,7 @@ def listen() -> None:
     # core.apply_args(program)
     # after_values = get_values_from_globals("after_load_apply_args")
 
-def run_job_args(job): ###figure out if core.run is correct
-    before_values = get_values_from_globals("before_job_command")
-    setup_globals_from_job_args(job)
-    program = ArgumentParser()
-    program.set_defaults(**job)
-    core.validate_args(program)
-    core.run(program)
-    #core.conditional_process()
-    after_values = get_values_from_globals("after_job_command")
+
 
 # def edit_command(job):   #figure it out how tol load it back to webui without executing
     # # Setup global variables from job arguments
@@ -405,6 +397,15 @@ def run_job_args(job): ###figure out if core.run is correct
 
 
 
+def run_job_args(job): ###figure out if core.run is correct
+    before_values = get_values_from_globals("before_job_command")
+    setup_globals_from_job_args(job)
+    program = ArgumentParser()
+    program.set_defaults(**job)
+    core.validate_args(program)
+    core.run(program)
+    #core.conditional_process()
+    after_values = get_values_from_globals("after_job_command")
 
 def assemble_queue():
     global RUN_JOBS_BUTTON, ADD_JOB_BUTTON, jobs_queue_file
@@ -665,24 +666,7 @@ def edit_queue():
 
     completed_jobs_button = tkinter.Button(root, text="Delete Completed", command=lambda: delete_completed_jobs(), font=custom_font)
     completed_jobs_button.pack(pady=5)
-                
-    # def test_run_job_command(job):
-        # # job['job_args']['headless'] = 'None'
-        # save_jobs(jobs_queue_file, jobs)
-        # root.destroy()
-        # multiprocess_execute_jobs()
-        # job['status'] = 'pending'
-
-    # def test_apply_args(job):
-        # # job['job_args']['headless'] = 'None'
-        # load_apply_args(job['job_args'])
-        # job['status'] = 'pending'
-
-    # def test_validate_args(job):
-        # # job['job_args']['headless'] = 'None'
-        # load_validate_args(job['job_args'])
-        # job['status'] = 'pending'
-
+               
 
     def refresh_frame_listbox():
         global jobs # Ensure we are modifying the global list
@@ -694,34 +678,33 @@ def edit_queue():
 
         # Save the newly sorted list back to the file
         save_jobs(jobs_queue_file, jobs)
-        root.destroy()
-        edit_queue()
+        update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
+        # root.destroy()
+        # edit_queue()
     
     def close_window():
         root.destroy()
         save_jobs(jobs_queue_file, jobs)
 
-    # def check_and_run_jobs():
-        # root.destroy()
-        # save_jobs(jobs_queue_file, jobs)
-        # execute_jobs()    
-
     def delete_pending_jobs():
         jobs = load_jobs(jobs_queue_file)
         jobs = [job for job in jobs if job['status'] != 'pending']
         save_jobs(jobs_queue_file, jobs)
+        update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
         refresh_frame_listbox()
-
+        
     def delete_completed_jobs():
         jobs = load_jobs(jobs_queue_file)
         jobs = [job for job in jobs if job['status'] != 'completed']
         save_jobs(jobs_queue_file, jobs)
+        update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
         refresh_frame_listbox()
 
     def delete_failed_jobs():
         jobs = load_jobs(jobs_queue_file)
         jobs = [job for job in jobs if job['status'] != 'failed']        
         save_jobs(jobs_queue_file, jobs)
+        update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
         refresh_frame_listbox()
 
         
@@ -729,16 +712,15 @@ def edit_queue():
         jobs = load_jobs(jobs_queue_file)
         jobs = [job for job in jobs if job['status'] != 'missing']
         save_jobs(jobs_queue_file, jobs)
+        update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
         refresh_frame_listbox()
-
 
     def archive_job(job, source_or_target):
         # Update the job status to 'archived'
         job['status'] = 'archived'
         save_jobs(jobs_queue_file, jobs) 
-        refresh_frame_listbox()        
-        # root.destroy()
-        # edit_queue()
+        update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
+        refresh_frame_listbox()
 
     def delete_archived_jobs(): 
         jobs = load_jobs(jobs_queue_file)
@@ -749,6 +731,7 @@ def edit_queue():
         # Filter out jobs with the status 'archived'
         jobs = [job for job in jobs if job['status'] != 'archived']
         save_jobs(jobs_queue_file, jobs)
+        update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
         refresh_frame_listbox()
 
     def reload_job_in_facefusion_edit(job):
@@ -821,15 +804,17 @@ def edit_queue():
             update_paths(job,'output', formatted_path)
         save_jobs(jobs_queue_file, jobs)  # Save the updated jobs to the JSON file
         update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
+        refresh_frame_listbox()
 
     def delete_job(job, source_or_target):
         job['status'] = ('deleting')
         source_or_target='both'
         check_if_needed(job, 'both')
-
         jobs.remove(job)
         save_jobs(jobs_queue_file, jobs)
-        update_job_listbox()
+        update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
+        refresh_frame_listbox()
+
 
     def move_job_up(index):
         if index > 0:
