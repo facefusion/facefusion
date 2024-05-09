@@ -1,9 +1,11 @@
 import multiprocessing
+from multiprocessing import Process
 import gradio
 import os
 import re
 import sys
 import time
+import math
 import json
 import ctypes
 import shutil
@@ -11,7 +13,7 @@ import logging
 import tkinter
 import datetime
 import platform
-# import threading
+import threading
 import subprocess
 import configparser
 from tkinter.filedialog import askdirectory
@@ -26,7 +28,6 @@ from facefusion.processors.frame import globals as frame_processors_globals#, ch
 from facefusion.processors.frame.modules import face_debugger, face_enhancer, face_swapper, frame_colorizer, frame_enhancer, lip_syncer
 from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, memory, temp_frame, output_options, common_options, source, target, output, preview, trim_frame, face_analyser, face_selector, face_masker
 
-global server
 
 def pre_check() -> bool:
     return True
@@ -43,11 +44,13 @@ base_dir = os.path.dirname(os.path.dirname(os.path.dirname(script_root)))
 user_dir = "QueueItUp"
 working_dir = os.path.normpath(os.path.join(base_dir, user_dir))
 media_cache_dir = os.path.normpath(os.path.join(working_dir, "mediacache"))
+thumbnail_dir = os.path.normpath(os.path.join(media_cache_dir, "thumbnails"))
 jobs_queue_file = os.path.normpath(os.path.join(working_dir, "jobs_queue.json"))
 
-debugging = False
-system_logs= False
-keep_completed_jobs = False
+debugging = True
+system_logs= True
+history_logs= True
+keep_completed_jobs = True
 ADD_JOB_BUTTON = gradio.Button("Add Job ", variant="primary")
 RUN_JOBS_BUTTON = gradio.Button("Run Jobs", variant="primary")
 EDIT_JOB_BUTTON = gradio.Button("Edit Jobs")
@@ -66,9 +69,9 @@ BLUE = '\033[94m'     #use this
 ENDC = '\033[0m'       #use this    Resets color to default
 
 
-def custom_print(*args):
+def custom_print(*msgs):
     # Join all arguments into a single message string
-    message = " ".join(str(arg) for arg in args)
+    message = " ".join(str(msg) for msg in msgs)
 
     # ANSI Color Codes
     RED = '\033[91m'
@@ -89,7 +92,6 @@ def custom_print(*args):
     print(message)  # Print to terminal with ANSI coloring
 
 
-
 custom_print("Working Directory:", working_dir)
 custom_print("Media Cache Directory:", media_cache_dir)
 custom_print("Jobs Queue File:", jobs_queue_file)
@@ -103,7 +105,7 @@ def get_values_from_globals(state_name):
     state_dict = {}
     for module in modules:
         for attr in dir(module):
-            if not attr.startswith("__"):
+            if not attr.startswith("__") and not callable(getattr(module, attr)):
                 value = getattr(module, attr)
                 try:
                     json.dumps(value) 
@@ -137,12 +139,13 @@ def create_and_verify_json(file_path):
 def load_jobs(file_path):
     with open(file_path, 'r') as file:
         jobs = json.load(file)
-    return (jobs)
+    return jobs
 
 def save_jobs(file_path, jobs):
     with open(file_path, 'w') as file:
-        json.dump(jobs, file, indent=4, separators=(',', ': '))
-
+        json.dump(jobs, file, indent=4)
+      
+        
 def count_existing_jobs():
     global PENDING_JOBS_COUNT
     jobs = load_jobs(jobs_queue_file)
@@ -187,7 +190,6 @@ def copy_to_media_cache(file_paths):
     cached_paths = []
     for file_path in file_paths:
         file_name = os.path.basename(file_path)
-        custom_print(f"Debug: copy_to_media_cache.") ###DEBUG
         file_size = os.path.getsize(file_path)
         base_name, ext = os.path.splitext(file_name)
         counter = 0
@@ -219,7 +221,6 @@ def check_for_unneeded_media_cache():
     needed_files = set()
     for job in jobs:
         if job['status'] in {'pending', 'failed', 'missing', 'editing', 'executing'}:
-            custom_print(f"DEBUG:check_for_unneeded_media_cache.") ###DEBUG
             source_basename = os.path.basename(job['sourcecache'])
             target_basename = os.path.basename(job['targetcache'])
             needed_files.add(source_basename)
@@ -234,7 +235,7 @@ def check_if_needed(job, source_or_target):
     with open(jobs_queue_file, 'r') as file:
         jobs = json.load(file)
 
-    relevant_statuses = {'pending', 'executing', 'failed', 'missing', 'editing'}
+    relevant_statuses = {'pending', 'executing', 'failed', 'missing', 'editing', 'archived'}
     file_usage_counts = {}
 
     # Create an index list for all jobs with relevant statuses and count file paths
@@ -357,30 +358,56 @@ def listen() -> None:
     face_masker.listen()
     face_analyser.listen()
     common_options.listen()
-    
-def edit_command(job):
-    # Setup global variables from job arguments
-    setup_globals_from_job_args(job)
-    program = ArgumentParser()
-    program.set_defaults(**job)
-    core.validate_args(program)
-    core.apply_args(program)
-    #core.run(program)
-    #core.conditional_process()
 
-def job_command(job):
+# def load_validate_args(job):
+    # before_values = get_values_from_globals("before_load_validate_args")
+    # setup_globals_from_job_args(job)
+    # program = ArgumentParser()
+    # program.set_defaults(**job)
+    # core.validate_args(program)
+    # after_values = get_values_from_globals("after_load_validate_args")
+    
+# def load_apply_args(job):
+    # before_values = get_values_from_globals("before_load_apply_args")
+    # setup_globals_from_job_args(job)
+    # program = ArgumentParser()
+    # program.set_defaults(**job)
+    # core.apply_args(program)
+    # after_values = get_values_from_globals("after_load_apply_args")
+
+def run_job_args(job): ###figure out if core.run is correct
+    before_values = get_values_from_globals("before_job_command")
     setup_globals_from_job_args(job)
     program = ArgumentParser()
     program.set_defaults(**job)
-#   No good loading this line from cli messing things up  program.add_argument('-s', '--source', help = wording.get('help.source'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
-    # misc
     core.validate_args(program)
-    core.apply_args(program)
     core.run(program)
     #core.conditional_process()
+    after_values = get_values_from_globals("after_job_command")
+
+# def edit_command(job):   #figure it out how tol load it back to webui without executing
+    # # Setup global variables from job arguments
+    # setup_globals_from_job_args(job)
+    # program = ArgumentParser()
+    # program.set_defaults(**job)
+    # core.validate_args(program)
+    # core.apply_args(program)
+    # subprocess.Popen(
+            # "python facefusion\\uis\\layouts\\QueueItUp.py", 
+            # shell=True, 
+            # stdout=subprocess.PIPE, 
+            # stderr=subprocess.STDOUT, 
+            # text=True, 
+            # bufsize=1
+        # ) 
+    # #core.run(program)
+    # #core.conditional_process()
+
+
+
 
 def assemble_queue():
-    global RUN_JOBS_BUTTON, ADD_JOB_BUTTON
+    global RUN_JOBS_BUTTON, ADD_JOB_BUTTON, jobs_queue_file
     # default_values are already initialized, do not call for new default values
     job_args = get_values_from_globals('job_args')
     current_values = get_values_from_globals('current_values')
@@ -434,7 +461,7 @@ def assemble_queue():
 
     job_args['source_paths'] = cache_source_paths
     job_args['target_path'] = cache_target_path
-    job_args['headless'] = 'true'
+    job_args['headless'] = 'None'
     current_values['source_paths'] = cache_source_paths
     current_values['target_path'] = cache_target_path
     
@@ -445,18 +472,20 @@ def assemble_queue():
         "targetcache": (cache_target_path),
         "output_path": (output_path),
     }
-
     if debugging:
         with open(os.path.join(working_dir, f"job_args.txt"), "w") as file:
             for key, val in job_args.items():
                 file.write(f"{key}: {val}\n")
+
+                
+                
         custom_print("job_args.txt re-created")
     if debugging:
         with open(os.path.join(working_dir, f"current_values.txt"), "w") as file:
             for key, val in current_values.items():
                 file.write(f"{key}: {val}\n")
         custom_print("current_values.txt re-created")
-
+        
     if found_editing:
         if not (oldeditjob['sourcecache'] == new_job['sourcecache'] or oldeditjob['sourcecache'] == new_job['targetcache']):
             check_if_needed(oldeditjob, 'source')
@@ -466,7 +495,8 @@ def assemble_queue():
         job.update(new_job)
         save_jobs(jobs_queue_file, jobs)
         custom_print(f"{GREEN}You have successfully returned the Edited job back to the job Queue, it is now a Pending Job {ENDC}")
-        refresh_frame_listbox()
+
+
 
     if not found_editing:
         jobs.append(new_job)
@@ -478,9 +508,15 @@ def assemble_queue():
     else:
         custom_print(f"{BLUE}Your Job was Added to the queue,{ENDC} there are a total of {GREEN}#{PENDING_JOBS_COUNT} Job(s){ENDC} in the queue,  Add More Jobs, Edit the Queue, or Click Run Queue to Execute all the queued jobs")
 
+    
+# def multiprocess_execute_jobs():
+    # # Start the job command as a process with the given job arguments
+    # job_process = Process(target=execute_jobs)
+    # job_process.start()
+    # job_process.join()  # Optional: wait for the process to complete
 
 def execute_jobs():
-    global JOB_IS_RUNNING, JOB_IS_EXECUTING,CURRENT_JOB_NUMBER
+    global JOB_IS_RUNNING, JOB_IS_EXECUTING,CURRENT_JOB_NUMBER,jobs_queue_file
     count_existing_jobs()
     if not PENDING_JOBS_COUNT + JOB_IS_RUNNING > 0:
         custom_print(f"Whoops!!!, There are {PENDING_JOBS_COUNT} Job(s) queued.  Add a job to the queue before pressing Run Queue.\n\n")
@@ -521,10 +557,8 @@ def execute_jobs():
 
         custom_print(f"Job #{CURRENT_JOB_NUMBER} will be SWAPPING - {GREEN}{source_basenames}{ENDC} to -> {GREEN}{os.path.basename(current_run_job['targetcache'])}{ENDC}\n\n")
 
+        run_job_args(current_run_job['job_args'])
 
-        prevent_sleep()
-        job_command(current_run_job['job_args'])
-        
         JOB_IS_EXECUTING = 0  # Reset the job execution flag
         
         custom_print(f"{BLUE}Job {CURRENT_JOB_NUMBER} completed pausing 5 seconds.{ENDC}\n")
@@ -533,12 +567,10 @@ def execute_jobs():
 
         
         ### fix this so status isnt always completed
-        # current_run_job_result =
-        # current_run_job['job_args']['PROCESS_STATE'] = current_run_job_result
+
         current_run_job['status'] = 'completed'
         time.sleep(5)
 
-        allow_sleep()
         
         if current_run_job['status'] == 'completed':
             custom_print(f"{BLUE}Job {CURRENT_JOB_NUMBER} completed successfully.{ENDC}\n")
@@ -577,8 +609,9 @@ def execute_jobs():
     save_jobs(jobs_queue_file, jobs)
     check_for_unneeded_media_cache()
 
+
 def edit_queue():
-    global root, frame, output_text
+    global root, frame, output_text, jobs_queue_file
     EDIT_JOB_BUTTON = gradio.Button("Edit Queue")
     jobs = load_jobs(jobs_queue_file)  
     root = tkinter.Tk()
@@ -587,20 +620,21 @@ def edit_queue():
     root.lift()
     root.attributes('-topmost', True)
     root.after_idle(root.attributes, '-topmost', False)
-    output_text = Text(root, height=10, width=100)
-    output_text.pack()
-    output_text.insert(tkinter.END, "Initialization successful\n") 
-    output_text.tag_configure('red', foreground='red')
-    output_text.tag_configure('green', foreground='green')
-    output_text.tag_configure('yellow', foreground='yellow')
-    output_text.tag_configure('blue', foreground='blue')
-    scrollbar = Scrollbar(root, command=output_text.yview)
+    # output_text = Text(root, height=10, width=100)
+    # output_text.pack()
+    # output_text.insert(tkinter.END, "Initialization successful\n") 
+    # output_text.tag_configure('red', foreground='red')
+    # output_text.tag_configure('green', foreground='green')
+    # output_text.tag_configure('yellow', foreground='yellow')
+    # output_text.tag_configure('blue', foreground='blue')
+    #scrollbar = Scrollbar(root, command=output_text.yview)
+    scrollbar = Scrollbar(root)
     scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
     canvas = tkinter.Canvas(root, scrollregion=(0, 0, 0, 7000))
     canvas.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
     frame = Frame(canvas)
     canvas.create_window((0, 0), window=frame, anchor='nw')
-    output_text.config(yscrollcommand=scrollbar.set)
+    #output_text.config(yscrollcommand=scrollbar.set)
     canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
     custom_font = font.Font(family="Helvetica", size=12, weight="bold")
     bold_font = font.Font(family="Helvetica", size=12, weight="bold")
@@ -611,8 +645,8 @@ def edit_queue():
     refresh_button = tkinter.Button(root, text="Refresh View", command=lambda: refresh_frame_listbox(), font=custom_font)
     refresh_button.pack(pady=5)
 
-    run_jobs_button = tkinter.Button(root, text=f"RUN {PENDING_JOBS_COUNT} JOBS", command=lambda: check_and_run_jobs(), font=custom_font)
-    run_jobs_button.pack(pady=5)
+    # run_jobs_button = tkinter.Button(root, text=f"RUN {PENDING_JOBS_COUNT} JOBS", command=lambda: check_and_run_jobs(), font=custom_font)
+    # run_jobs_button.pack(pady=5)
 
 
     pending_jobs_button = tkinter.Button(root, text=f"Delete {PENDING_JOBS_COUNT} Pending Jobs", command=lambda: delete_pending_jobs(), font=custom_font)
@@ -620,29 +654,43 @@ def edit_queue():
     
     missing_jobs_button = tkinter.Button(root, text="Delete Missing ", command=lambda: delete_missing_media_jobs(), font=custom_font)
     missing_jobs_button.pack(pady=5)
+    
+    archived_jobs_button = tkinter.Button(root, text="Delete archived ", command=lambda: delete_archived_jobs(), font=custom_font)
+    archived_jobs_button.pack(pady=5)
+    
+    
 
     failed_jobs_button = tkinter.Button(root, text="Delete Failed", command=lambda: delete_failed_jobs(), font=custom_font)
     failed_jobs_button.pack(pady=5)
 
     completed_jobs_button = tkinter.Button(root, text="Delete Completed", command=lambda: delete_completed_jobs(), font=custom_font)
     completed_jobs_button.pack(pady=5)
-    
                 
-    def TEST_RUN(job):
-        job['status'] = 'test_run'
-        job['job_args']['headless'] = 'true'
+    # def test_run_job_command(job):
+        # # job['job_args']['headless'] = 'None'
+        # save_jobs(jobs_queue_file, jobs)
+        # root.destroy()
+        # multiprocess_execute_jobs()
+        # job['status'] = 'pending'
 
-        job_command(job['job_args'])
-        
-        job['status'] = 'completed'
+    # def test_apply_args(job):
+        # # job['job_args']['headless'] = 'None'
+        # load_apply_args(job['job_args'])
+        # job['status'] = 'pending'
+
+    # def test_validate_args(job):
+        # # job['job_args']['headless'] = 'None'
+        # load_validate_args(job['job_args'])
+        # job['status'] = 'pending'
+
 
     def refresh_frame_listbox():
-        #global jobs # Ensure we are modifying the global list
-        # status_priority = {'editing': 0, 'executing': 1, 'pending': 2, 'failed': 3, 'missing': 4, 'completed': 5, 'archived': 6}
-        # jobs = load_jobs(jobs_queue_file)
+        global jobs # Ensure we are modifying the global list
+        status_priority = {'editing': 0, 'executing': 1, 'pending': 2, 'failed': 3, 'missing': 4, 'completed': 5, 'archived': 6}
+        jobs = load_jobs(jobs_queue_file)
 
         # # First, sort the entire list by status priority
-        # jobs.sort(key=lambda x: status_priority.get(x['status'], 6))
+        jobs.sort(key=lambda x: status_priority.get(x['status'], 6))
 
         # Save the newly sorted list back to the file
         save_jobs(jobs_queue_file, jobs)
@@ -653,10 +701,10 @@ def edit_queue():
         root.destroy()
         save_jobs(jobs_queue_file, jobs)
 
-    def check_and_run_jobs():
-        root.destroy()
-        save_jobs(jobs_queue_file, jobs)
-        execute_jobs()    
+    # def check_and_run_jobs():
+        # root.destroy()
+        # save_jobs(jobs_queue_file, jobs)
+        # execute_jobs()    
 
     def delete_pending_jobs():
         jobs = load_jobs(jobs_queue_file)
@@ -669,8 +717,6 @@ def edit_queue():
         jobs = [job for job in jobs if job['status'] != 'completed']
         save_jobs(jobs_queue_file, jobs)
         refresh_frame_listbox()
-
-
 
     def delete_failed_jobs():
         jobs = load_jobs(jobs_queue_file)
@@ -687,14 +733,23 @@ def edit_queue():
 
 
     def archive_job(job, source_or_target):
-
         # Update the job status to 'archived'
         job['status'] = 'archived'
-        source_or_target='both'
-        check_if_needed(job, 'both', jobs_queue_file)
-        save_jobs(jobs_queue_file, jobs)  # Save the updated list of active jobs
-        # Refresh the job list to show the updated list
-        update_job_listbox()
+        save_jobs(jobs_queue_file, jobs) 
+        refresh_frame_listbox()        
+        # root.destroy()
+        # edit_queue()
+
+    def delete_archived_jobs(): 
+        jobs = load_jobs(jobs_queue_file)
+        # Loop through jobs and process archived jobs
+        for job in jobs:
+            if job['status'] == 'archived':
+                check_if_needed(job, 'both')
+        # Filter out jobs with the status 'archived'
+        jobs = [job for job in jobs if job['status'] != 'archived']
+        save_jobs(jobs_queue_file, jobs)
+        refresh_frame_listbox()
 
     def reload_job_in_facefusion_edit(job):
         # Check if sourcecache and targetcache files exist
@@ -725,11 +780,10 @@ def edit_queue():
 
         
         job['status'] = 'editing'
-        job['job_args']['headless'] = 'false'
+        job['job_args']['headless'] = 'None'
         print(job['status'])
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()
-        # restart_ui 
         custom_print(job['status'])
         edit_command(job['job_args'])
 
@@ -775,63 +829,156 @@ def edit_queue():
             jobs.append(jobs.pop(index))
             save_jobs(jobs_queue_file, jobs)
             update_job_listbox()
-
+            
     def create_job_thumbnail(parent, job, source_or_target):
+        print("create_job_thumbnail called")
         button = None
-        size=(200, 200)
-        file_paths = job[source_or_target + 'cache']  # Get the source or target paths
-        first_file_path = file_paths[0] if isinstance(file_paths, list) else file_paths  # Get the first path if multiple
-        if not os.path.exists(first_file_path):
-            if not job['status'] == 'failed':
-                if job['status'] == 'pending':
-                    job['status'] = 'missing'
-            # Create a button as a placeholder for non-existing files that allows updating the file
-            if source_or_target == 'source':
-                cache_type = 'Source'
+        file_paths = job[source_or_target + 'cache']
+        file_paths = file_paths if isinstance(file_paths, list) else [file_paths]
+
+        # Ensure thumbnail directory exists
+        if not os.path.exists(thumbnail_dir):
+            os.makedirs(thumbnail_dir)
+
+        num_images = len(file_paths)
+        grid_size = math.ceil(math.sqrt(num_images))  # Number of rows and columns
+        thumb_size = 200 // grid_size  # Size of each thumbnail to fit the grid
+
+        print(f"Grid size: {grid_size}x{grid_size}, Thumbnail size: {thumb_size}x{thumb_size}")
+
+        thumbnail_files = []
+        for idx, file_path in enumerate(file_paths):
+            thumbnail_path = os.path.join(thumbnail_dir, f"{source_or_target}_thumb_{idx}.png")
+            if file_path.lower().endswith(('.mp3', '.wav', '.aac', '.flac')):
+                audio_icon_path = os.path.join(working_dir, 'audioicon.png')
+                cmd = [
+                    'ffmpeg', '-i', audio_icon_path,
+                    '-vf', f'scale={thumb_size}:{thumb_size}',
+                    '-vframes', '1',
+                    '-y', thumbnail_path
+                ]
             else:
-                cache_type = 'Target'
-            button = Button(parent, text=f"{cache_type} file missing\n{os.path.basename(first_file_path)}\n Click to update", wraplength=100,  bg='white', fg='black',
-                            command=lambda ft=source_or_target: select_job_file(parent, job, ft))
-            button.pack(pady=2, fill='y', expand=True)
-            save_jobs(jobs_queue_file, jobs)
-        else:
-            try:
-                if first_file_path.lower().endswith(('.mp4', '.mov', '.avi', '.mkv')):
-                    # Create a thumbnail for video files
-                    cmd = [
-                        'ffmpeg', '-i', first_file_path,
-                        '-ss', '00:00:01',  # Take a snapshot at the 1-second mark
-                        '-vframes', '1',    # Only take one frame (the snapshot)
-                        '-vf', f'scale={size[0]}:{size[1]}',  # Scale the image to the given size
-                        '-f', 'image2pipe', '-c:v', 'png', 'pipe:1'
-                    ]
-                    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    image_data = BytesIO(result.stdout)
-                    photo_image = PhotoImage(data=image_data.read())
-                else:
-                    # Create a thumbnail for image files
-                    # Use FFmpeg to ensure uniform handling of image resizing and maintain aspect ratio
-                    cmd = [
-                        'ffmpeg', '-i', first_file_path,
-                        '-vf', f'scale={size[0]}:{size[1]}',  # Scale the image to the given size
-                        '-f', 'image2pipe', '-c:v', 'png', 'pipe:1'
-                    ]
-                    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    image_data = BytesIO(result.stdout)
-                    photo_image = PhotoImage(data=image_data.read())
-                # Create a button to display the thumbnail
-                button = Button(parent, image=photo_image, command=lambda ft=source_or_target: select_job_file(parent, job, ft))
-                button.image = photo_image  # keep a reference!
-                button.pack(side='left', padx=5)
-            except Exception as e:
-                custom_print(f"{RED}Error creating thumbnail for {first_file_path}:{ENDC} {e}")
+                cmd = [
+                    'ffmpeg', '-i', file_path,
+                    '-vf', f'scale={thumb_size}:{thumb_size}',
+                    '-vframes', '1',
+                    '-y', thumbnail_path
+                ]
+            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            thumbnail_files.append(thumbnail_path)
+
+        list_file_path = os.path.join(thumbnail_dir, 'input_list.txt')
+        with open(list_file_path, 'w') as file:
+            for thumb in thumbnail_files:
+                file.write(f"file '{thumb}'\n")
+
+        grid_path = os.path.join(thumbnail_dir, f"{source_or_target}_grid.png")
+        grid_cmd = [
+            'ffmpeg',
+            '-loglevel', 'error',
+            '-f', 'concat', '-safe', '0', '-i', list_file_path,
+            '-filter_complex', f'tile={grid_size}x{grid_size}:padding=2',
+            '-y', grid_path
+        ]
+        grid_result = subprocess.run(grid_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if grid_result.returncode != 0:
+            print(f"Error creating grid: {grid_result.stderr.decode()}")
+            return None
+
+        try:
+            with open(grid_path, 'rb') as f:
+                grid_image_data = BytesIO(f.read())
+            grid_photo_image = PhotoImage(data=grid_image_data.read())
+            button = Button(parent, image=grid_photo_image, command=lambda ft=source_or_target: select_job_file(parent, job, ft))
+            button.image = grid_photo_image  # keep a reference!
+            button.pack(side='left', padx=5)
+        except Exception as e:
+            print(f"Failed to open grid image: {e}")
+            
+        # Clean up thumbnail directory
+        # for file in os.listdir(thumbnail_dir):
+            # os.remove(os.path.join(thumbnail_dir, file))
         return button
 
+
+
+
+
+    def edit_arguments_text(job):
+        edit_window = tkinter.Toplevel()
+        edit_window.title("Edit Job Arguments")
+        edit_window.geometry("600x400")
+
+        canvas = tkinter.Canvas(edit_window)
+        scrollbar = tkinter.Scrollbar(edit_window, orient="vertical", command=canvas.yview)
+        scrollable_frame = tkinter.Frame(canvas)
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
+        entries = {}
+
+        excluded_keys = {
+            "FACE_MASK_REGION_GROUP", "MODELS", "PROBABILITY_LIMIT", "PROCESS_STATE",
+            "RATE_LIMIT", "STREAM_COUNTER", "VOICE_EXTRACTOR", "execution_providers",
+            "face_debugger_items", "face_mask_padding", "face_mask_regions",
+            "face_recognizer_model", "video_template_sizes", "ui_layouts", "force_download", "image_template_sizes"
+        }
+
+        def add_entry(key, value, parent_frame):
+            if key in excluded_keys:
+                return
+
+            frame = tkinter.Frame(parent_frame)
+            frame.pack(fill='x', expand=True)
+
+            label = tkinter.Label(frame, text=str(key) + ":")
+            label.pack(side='left', padx=5)
+
+            if isinstance(value, list):
+                entry_frame = tkinter.Frame(frame)
+                entry_frame.pack(side='right', fill='x', expand=True)
+                entry = tkinter.Entry(entry_frame, width=50)
+                entry.insert(0, ", ".join(str(x) for x in value))
+                entry.pack(fill='x', expand=True)
+                entries[key] = entry
+            else:
+                entry = tkinter.Entry(frame)
+                entry.insert(0, str(value))
+                entry.pack(side='right', fill='x', expand=True)
+                entries[key] = entry
+
+        for key, value in job['job_args'].items():
+            add_entry(key, value, scrollable_frame)
+
+        def save_changes():
+            for key, entry in entries.items():
+                if isinstance(job['job_args'][key], list):
+                    job['job_args'][key] = [x.strip() for x in entry.get().split(',')]
+                else:
+                    job['job_args'][key] = entry.get()
+            edit_window.destroy()
+
+        ok_button = tkinter.Button(edit_window, text="OK", command=save_changes)
+        ok_button.pack(pady=5)
+
+        cancel_button = tkinter.Button(edit_window, text="Cancel", command=edit_window.destroy)
+        cancel_button.pack(pady=5)
+
+        # Ensure the scroll region is updated
+        scrollable_frame.update_idletasks()
+        canvas.configure(scrollregion=canvas.bbox("all"))
+
+        edit_window.mainloop()
+
+        
     def select_job_file(parent, job, source_or_target):
         # Determine the allowed file types based on the source_or_target and current file extension
         file_types = []
         if source_or_target == 'source':
-            file_types = [('Image files', '*.jpg *.jpeg *.png')]
+            file_types = [('source files', '*.jpg *.jpeg *.png *.mp3 *.wav *.aac')]
         elif source_or_target == 'target':
             # Get current extension
             current_extension = job['targetcache'].lower().rsplit('.', 1)[-1]
@@ -915,19 +1062,19 @@ def edit_queue():
             bg_color = 'SystemButtonFace'  # Default color
             if job['status'] == 'failed':
                 bg_color = 'red'
-            elif job['status'] == 'executing':
+            if job['status'] == 'executing':
                 bg_color = 'black'
-            elif job['status'] == 'completed':
+            if job['status'] == 'completed':
                 bg_color = 'grey'
-            elif job['status'] == 'editing':
+            if job['status'] == 'editing':
                 bg_color = 'green'
-            elif job['status'] == 'archived':
-                bg_color = 'brown'
-            elif job['status'] == 'pending':
-                bg_color = 'SystemButtonFace'
 
+            if job['status'] == 'pending':
+                bg_color = 'SystemButtonFace'
             if not source_thumb_exists or not target_thumb_exists:
                 bg_color = 'red'  # Highlight missing files in red
+            if job['status'] == 'archived':
+                bg_color = 'brown'
             # Create job frame with updated background color
             job_frame = tkinter.Frame(frame, borderwidth=2, relief='groove', background=bg_color)
             job_frame.pack(fill='x', expand=True, padx=5, pady=5)
@@ -950,7 +1097,10 @@ def edit_queue():
             source_frame = tkinter.Frame(job_frame)
             source_frame.pack(side='left', fill='x', padx=5)
             source_button = create_job_thumbnail(job_frame, job, 'source')
-            source_button.pack(side='left', padx=5)
+            if source_button:
+                source_button.pack(side='left', padx=5)
+            else:
+                print("Failed to create source button.")
 
             # Frame to hold the arrow label and archive button
             action_archive_frame = tkinter.Frame(job_frame)
@@ -967,31 +1117,42 @@ def edit_queue():
             delete_button.pack(side='top', padx=2)
             archive_button = tkinter.Button(action_archive_frame, text="Archive",command=lambda j=job: archive_job(j, 'both'))
             archive_button.pack(side='top', padx=2)
-            runittest_button = tkinter.Button(action_archive_frame, text="TEST_RUN",command=lambda j=job: TEST_RUN(j))
-            runittest_button.pack(side='top', padx=2)
+            
+            # test_job_command_button = tkinter.Button(action_archive_frame, text="run_job_args",command=lambda j=job: test_run_job_command(j))
+            # test_job_command_button.pack(side='top', padx=2)
+
+            # test_apply_args_button = tkinter.Button(action_archive_frame, text="apply_args",command=lambda j=job: test_apply_args(j))
+            # test_apply_args_button.pack(side='top', padx=2)
+
+            # test_validate_args_button = tkinter.Button(action_archive_frame, text="validate_args",command=lambda j=job: test_validate_args(j))
+            # test_validate_args_button.pack(side='top', padx=2)
 
             target_frame = tkinter.Frame(job_frame)
             target_frame.pack(side='left', fill='x', padx=5)
             target_button = create_job_thumbnail(job_frame, job, 'target')
-            target_button.pack(side='left', padx=5)
+            if target_button:
+                target_button.pack(side='left', padx=5)
+            else:
+                print("Failed to create target button.")
+    
 
             # frame for the Command Arguments
             argument_frame = tkinter.Frame(job_frame)
             argument_frame.pack(side='left', fill='x', padx=5)
 
-            custom_font = font.Font(family="Helvetica", size=12, weight="bold")
-            facefusion_button = tkinter.Button(argument_frame, text=f"UN-Queue It Up\n\n --EDIT ARGUMENTS", font=bold_font, justify='center')
-            facefusion_button.pack(side='top', padx=5, fill='x', expand=False)
-            facefusion_button.bind("<Button-1>", lambda event, j=job: reload_job_in_facefusion_edit(j))
+            # custom_font = font.Font(family="Helvetica", size=12, weight="bold")
+            # facefusion_button = tkinter.Button(argument_frame, text=f"UN-Queue It Up\n\n --EDIT ARGUMENTS", font=bold_font, justify='center')
+            # facefusion_button.pack(side='top', padx=5, fill='x', expand=False)
+            # facefusion_button.bind("<Button-1>", lambda event, j=job: reload_job_in_facefusion_edit(j))
 
 
             custom_font = font.Font(family="Helvetica", size=10, weight="bold")
             argument_button = tkinter.Button(argument_frame, text=f" {job['job_args']['frame_processors']} ", wraplength=325, justify='center')
             argument_button.pack(side='bottom', padx=5, fill='x', expand=False)
-            argument_button.bind("<Button-2>", lambda event, j=job: edit_arguments_text(j))
-
+            argument_button.bind("<Button-1>", lambda event, j=job: edit_arguments_text(j))
     
-    root.after(1000, update_job_listbox)  
+    
+    root.after(1000, update_job_listbox)
     root.mainloop()
     if __name__ == '__main__':
         edit_queue()
@@ -1001,22 +1162,15 @@ def setup_globals_from_job_args(job_args):
     """
     Set global values in facefusion.globals based on the argument parser values from the job.
     """
-    # Store the current state of the globals
-    before_values = get_values_from_globals("before_values")
-    
-    # Set all current global values to None
-    for key in before_values:
-        setattr(facefusion.globals, key, None)
+    ### maybe dont do not sure of bad effects - Set all current global values to None
+    # for key in before_values:
+        # setattr(facefusion.globals, key, None)
 
     # Update the globals with new values from job_args
     for key, value in job_args.items():
         setattr(facefusion.globals, key, value)
 
-    # Optionally, retrieve the new state of the globals to verify changes
-    after_values = get_values_from_globals("after_values")
-    # how to set this setup_globals_from_job_args(job['job_args'])
-
-    return before_values, after_values
+    return
 
 
 
@@ -1035,57 +1189,49 @@ check_for_completed_failed_or_aborted_jobs()
 custom_print(f"{GREEN}STATUS CHECK COMPLETED. {BLUE}You are now ready to QUEUE IT UP!{ENDC}")
 print_existing_jobs()
 
-# Constants for Windows Power Management
-ES_CONTINUOUS = 0x80000000
-ES_SYSTEM_REQUIRED = 0x00000001
+# # Constants for Windows Power Management
+# ES_CONTINUOUS = 0x80000000
+# ES_SYSTEM_REQUIRED = 0x00000001
 
-def prevent_sleep():
-    """Prevent the system from going to sleep."""
-    os_type = platform.system()
-    if os_type == 'Windows':
-        ctypes.windll.kernel32.SetThreadExecutionState(
-            ES_CONTINUOUS | ES_SYSTEM_REQUIRED
-        )
-    elif os_type == 'Darwin':  # macOS
-        # Start a subprocess that uses caffeinate to prevent sleep
-        global caffeinate_process
-        caffeinate_process = subprocess.Popen("caffeinate")
-        custom_print("Prevented sleep on macOS using caffeinate.")
-    elif os_type == 'Linux':
-        # Start a subprocess that uses systemd-inhibit to prevent sleep
-        global inhibit_process
-        inhibit_process = subprocess.Popen(["systemd-inhibit", "--what=idle", "sleep infinity"],
-                                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        custom_print("Prevented sleep on Linux using systemd-inhibit.")
+# def prevent_sleep():
+    # """Prevent the system from going to sleep."""
+    # os_type = platform.system()
+    # if os_type == 'Windows':
+        # ctypes.windll.kernel32.SetThreadExecutionState(
+            # ES_CONTINUOUS | ES_SYSTEM_REQUIRED
+        # )
+    # elif os_type == 'Darwin':  # macOS
+        # # Start a subprocess that uses caffeinate to prevent sleep
+        # global caffeinate_process
+        # caffeinate_process = subprocess.Popen("caffeinate")
+        # custom_print("Prevented sleep on macOS using caffeinate.")
+    # elif os_type == 'Linux':
+        # # Start a subprocess that uses systemd-inhibit to prevent sleep
+        # global inhibit_process
+        # inhibit_process = subprocess.Popen(["systemd-inhibit", "--what=idle", "sleep infinity"],
+                                           # stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # custom_print("Prevented sleep on Linux using systemd-inhibit.")
 
-def allow_sleep():
-    """Allow the system to go to sleep again."""
-    os_type = platform.system()
-    if os_type == 'Windows':
-        ctypes.windll.kernel32.SetThreadExecutionState(
-            ES_CONTINUOUS
-        )
-    elif os_type == 'Darwin':  # macOS
-        if 'caffeinate_process' in globals():
-            caffeinate_process.terminate()  # Terminate the caffeinate process
-            custom_print("Allowed sleep on macOS by terminating caffeinate.")
-    elif os_type == 'Linux':
-        if 'inhibit_process' in globals():
-            inhibit_process.terminate()  # Terminate the systemd-inhibit process
-            custom_print("Allowed sleep on Linux by terminating systemd-inhibit.")
+# def allow_sleep():
+    # """Allow the system to go to sleep again."""
+    # os_type = platform.system()
+    # if os_type == 'Windows':
+        # ctypes.windll.kernel32.SetThreadExecutionState(
+            # ES_CONTINUOUS
+        # )
+    # elif os_type == 'Darwin':  # macOS
+        # if 'caffeinate_process' in globals():
+            # caffeinate_process.terminate()  # Terminate the caffeinate process
+            # custom_print("Allowed sleep on macOS by terminating caffeinate.")
+    # elif os_type == 'Linux':
+        # if 'inhibit_process' in globals():
+            # inhibit_process.terminate()  # Terminate the systemd-inhibit process
+            # custom_print("Allowed sleep on Linux by terminating systemd-inhibit.")
 
-def restart_ui():
-    global server
-    if server is not None:
-        server.close()  # Stop the current Gradio server
-    run(render())  # Relaunch the UI
 
 def run(ui: gradio.Blocks) -> None:
     global server
     concurrency_count = min(8, multiprocessing.cpu_count())
-    server = ui.queue(concurrency_count=concurrency_count).launch(show_api=False, inbrowser=True, quiet=False)
+    ui.queue(concurrency_count=concurrency_count).launch(show_api=False, inbrowser=True, quiet=False)
 
-if __name__ == "__main__":
-    ui = render()
-    run(ui)
     
