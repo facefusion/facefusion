@@ -51,33 +51,38 @@ Function PostInstallPage
 	${NSD_GetState} $UseOpenVino $UseOpenVino
 FunctionEnd
 
+Function Destroy
+	${If} ${Silent}
+		Quit
+	${Else}
+		Abort
+	${EndIf}
+FunctionEnd
+
 Section 'Prepare Your Platform'
-	DetailPrint 'Install Microsoft.VCLibs'
-	ExecWait 'powershell -WindowStyle Hidden -Command Start-BitsTransfer -Source https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -Destination $TEMP\Microsoft.VCLibs.appx'
-	ExecWait 'powershell -WindowStyle Hidden -Command Add-AppxPackage $TEMP\Microsoft.VCLibs.appx'
-	Delete '$TEMP\Microsoft.VCLibs.appx'
-
-	DetailPrint 'Install Microsoft.UI.Xaml'
-	ExecWait 'powershell -WindowStyle Hidden -Command Start-BitsTransfer -Source https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx -Destination $TEMP\Microsoft.UI.Xaml.appx'
-	ExecWait 'powershell -WindowStyle Hidden -Command Add-AppxPackage $TEMP\Microsoft.UI.Xaml.appx'
-	Delete '$TEMP\Microsoft.UI.Xaml.appx'
-
-	DetailPrint 'Install WinGet'
-	ExecWait 'powershell -WindowStyle Hidden -Command Start-BitsTransfer -Source https://aka.ms/getwinget -Destination $TEMP\WinGet.msixbundle'
-	ExecWait 'powershell -WindowStyle Hidden -Command Add-AppxPackage $TEMP\WinGet.msixbundle'
-	Delete '$TEMP\WinGet.msixbundle'
-
 	DetailPrint 'Install GIT'
-	nsExec::Exec '$LOCALAPPDATA\Microsoft\WindowsApps\winget.exe install -e --id Git.Git --silent --accept-source-agreements --force'
+	inetc::get 'https://github.com/git-for-windows/git/releases/download/v2.45.0.windows.1/Git-2.45.0-64-bit.exe' '$TEMP\Git.exe'
+	ExecWait '$TEMP\Git.exe /VERYSILENT' $0
+	Delete '$TEMP\Git.exe'
+
+	${If} $0 > 0
+		DetailPrint 'Git installation aborted with error code $0'
+		Call Destroy
+	${EndIf}
+
+	DetailPrint 'Uninstall Conda'
+	ExecWait '$PROFILE\miniconda3\Uninstall-Miniconda3.exe /S _?=$PROFILE\miniconda3'
+	Delete '$PROFILE\miniconda3\Uninstall-Miniconda3.exe'
 
 	DetailPrint 'Install Conda'
-	nsExec::Exec '$LOCALAPPDATA\Microsoft\WindowsApps\winget.exe install -e --id Anaconda.Miniconda3 --override "/InstallationType=JustMe /AddToPath=1 /S" --accept-source-agreements --force'
+	inetc::get 'https://repo.anaconda.com/miniconda/Miniconda3-py310_24.3.0-0-Windows-x86_64.exe' '$TEMP\Miniconda3.exe'
+	ExecWait '$TEMP\Miniconda3.exe /InstallationType=JustMe /AddToPath=1 /S' $1
+	Delete '$TEMP\Miniconda3.exe'
 
-	DetailPrint 'Install FFmpeg'
-	nsExec::Exec '$LOCALAPPDATA\Microsoft\WindowsApps\winget.exe install -e --id Gyan.FFmpeg --accept-source-agreements --force'
-
-	DetailPrint 'Install Codec'
-	nsExec::Exec '$LOCALAPPDATA\Microsoft\WindowsApps\winget.exe install -e --id CodecGuide.K-LiteCodecPack.Basic --silent --accept-source-agreements --force'
+	${If} $1 > 0
+		DetailPrint 'Conda installation aborted with error code $1'
+		Call Destroy
+	${EndIf}
 SectionEnd
 
 Section 'Download Your Copy'
@@ -97,21 +102,33 @@ SectionEnd
 Section 'Create Install Batch'
 	SetOutPath $INSTDIR
 
-	FileOpen $0 install-accelerator.bat w
-	FileOpen $1 install-application.bat w
+	FileOpen $0 install-ffmpeg.bat w
+	FileOpen $1 install-accelerator.bat w
+	FileOpen $2 install-application.bat w
+
+	FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::ffmpeg=7.0.0 --yes'
 	${If} $UseCuda == 1
-		FileWrite $0 '@echo off && conda activate facefusion && conda install cudatoolkit=11.8 cudnn=8.9.2.26 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
-		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda-11.8'
+		FileWrite $1 '@echo off && conda activate facefusion && conda install cudatoolkit=11.8 cudnn=8.9.2.26 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
+		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda-11.8'
 	${ElseIf} $UseDirectMl == 1
-		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime directml'
+		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime directml'
 	${ElseIf} $UseOpenVino == 1
-		FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::openvino=2024.1.0 --yes'
-		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime openvino'
+		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::openvino=2024.1.0 --yes'
+		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime openvino'
 	${Else}
-		FileWrite $1 '@echo off && conda activate facefusion && python install.py --onnxruntime default'
+		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime default'
 	${EndIf}
+
 	FileClose $0
 	FileClose $1
+	FileClose $2
+SectionEnd
+
+Section 'Install Your FFmpeg'
+	SetOutPath $INSTDIR
+
+	DetailPrint 'Install Your FFmpeg'
+	nsExec::ExecToLog 'install-ffmpeg.bat'
 SectionEnd
 
 Section 'Install Your Accelerator'
