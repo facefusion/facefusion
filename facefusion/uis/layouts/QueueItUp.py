@@ -1,5 +1,4 @@
 import multiprocessing
-from multiprocessing import Process
 import gradio
 import os
 import re
@@ -7,7 +6,7 @@ import sys
 import time
 import math
 import json
-import ctypes
+import tempfile
 import shutil
 import logging
 import tkinter
@@ -23,7 +22,7 @@ from io import BytesIO
 import facefusion.globals
 from facefusion import core
 #import facefusion.core as core
-from facefusion import core, audio, content_analyser, config, download, execution, face_analyser, face_helper, face_masker, face_store, ffmpeg, filesystem, installer, logger, memory, metadata, normalizer, process_manager, statistics, typing, thread_helper, vision, voice_extractor, wording
+from facefusion import core, audio, content_analyser, config, download, execution, face_analyser, face_helper, face_masker, face_store, ffmpeg, filesystem, logger, memory, metadata, normalizer, process_manager, statistics, typing, thread_helper, vision, voice_extractor, wording
 from facefusion.processors.frame import globals as frame_processors_globals#, choices as frame_processors_choices, core as frame_core, typings as frame_typings
 from facefusion.processors.frame.modules import face_debugger, face_enhancer, face_swapper, frame_colorizer, frame_enhancer, lip_syncer
 from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, memory, temp_frame, output_options, common_options, source, target, output, preview, trim_frame, face_analyser, face_selector, face_masker
@@ -44,7 +43,7 @@ base_dir = os.path.dirname(os.path.dirname(os.path.dirname(script_root)))
 user_dir = "QueueItUp"
 working_dir = os.path.normpath(os.path.join(base_dir, user_dir))
 media_cache_dir = os.path.normpath(os.path.join(working_dir, "mediacache"))
-thumbnail_dir = os.path.normpath(os.path.join(media_cache_dir, "thumbnails"))
+thumbnail_dir = os.path.normpath(os.path.join(working_dir, "thumbnails"))
 jobs_queue_file = os.path.normpath(os.path.join(working_dir, "jobs_queue.json"))
 
 debugging = True
@@ -396,7 +395,6 @@ def listen() -> None:
     # #core.conditional_process()
 
 
-
 def run_job_args(job): ###figure out if core.run is correct
     before_values = get_values_from_globals("before_job_command")
     setup_globals_from_job_args(job)
@@ -408,7 +406,7 @@ def run_job_args(job): ###figure out if core.run is correct
     after_values = get_values_from_globals("after_job_command")
 
 def assemble_queue():
-    global RUN_JOBS_BUTTON, ADD_JOB_BUTTON, jobs_queue_file
+    global RUN_JOBS_BUTTON, ADD_JOB_BUTTON, jobs_queue_file, jobs
     # default_values are already initialized, do not call for new default values
     job_args = get_values_from_globals('job_args')
     current_values = get_values_from_globals('current_values')
@@ -503,7 +501,7 @@ def assemble_queue():
         jobs.append(new_job)
         save_jobs(jobs_queue_file, jobs)
     count_existing_jobs()
-
+    edit_queue.refresh_frame_listbox()
     if JOB_IS_RUNNING:
         custom_print(f"{BLUE}job # {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT} was added {ENDC} - and is in line to be Processed - Click Add Job to Queue more Jobs")
     else:
@@ -517,7 +515,7 @@ def assemble_queue():
     # job_process.join()  # Optional: wait for the process to complete
 
 def execute_jobs():
-    global JOB_IS_RUNNING, JOB_IS_EXECUTING,CURRENT_JOB_NUMBER,jobs_queue_file
+    global JOB_IS_RUNNING, JOB_IS_EXECUTING,CURRENT_JOB_NUMBER,jobs_queue_file, jobs
     count_existing_jobs()
     if not PENDING_JOBS_COUNT + JOB_IS_RUNNING > 0:
         custom_print(f"Whoops!!!, There are {PENDING_JOBS_COUNT} Job(s) queued.  Add a job to the queue before pressing Run Queue.\n\n")
@@ -612,7 +610,7 @@ def execute_jobs():
 
 
 def edit_queue():
-    global root, frame, output_text, jobs_queue_file
+    global root, frame, output_text, jobs_queue_file, jobs
     EDIT_JOB_BUTTON = gradio.Button("Edit Queue")
     jobs = load_jobs(jobs_queue_file)  
     root = tkinter.Tk()
@@ -666,7 +664,6 @@ def edit_queue():
 
     completed_jobs_button = tkinter.Button(root, text="Delete Completed", command=lambda: delete_completed_jobs(), font=custom_font)
     completed_jobs_button.pack(pady=5)
-               
 
     def refresh_frame_listbox():
         global jobs # Ensure we are modifying the global list
@@ -841,7 +838,7 @@ def edit_queue():
             update_job_listbox()
             
     def create_job_thumbnail(parent, job, source_or_target):
-        print("create_job_thumbnail called")
+
         button = None
         file_paths = job[source_or_target + 'cache']
         file_paths = file_paths if isinstance(file_paths, list) else [file_paths]
@@ -853,8 +850,6 @@ def edit_queue():
         num_images = len(file_paths)
         grid_size = math.ceil(math.sqrt(num_images))  # Number of rows and columns
         thumb_size = 200 // grid_size  # Size of each thumbnail to fit the grid
-
-        print(f"Grid size: {grid_size}x{grid_size}, Thumbnail size: {thumb_size}x{thumb_size}")
 
         thumbnail_files = []
         for idx, file_path in enumerate(file_paths):
@@ -1161,11 +1156,13 @@ def edit_queue():
             argument_button.pack(side='bottom', padx=5, fill='x', expand=False)
             argument_button.bind("<Button-1>", lambda event, j=job: edit_arguments_text(j))
     
-    
+    edit_queue.refresh_frame_listbox = refresh_frame_listbox
     root.after(1000, update_job_listbox)
     root.mainloop()
     if __name__ == '__main__':
         edit_queue()
+    # Call the nested function using the attribute
+    edit_queue.refresh_frame_listbox()
 
 
 def setup_globals_from_job_args(job_args):
@@ -1199,44 +1196,6 @@ check_for_completed_failed_or_aborted_jobs()
 custom_print(f"{GREEN}STATUS CHECK COMPLETED. {BLUE}You are now ready to QUEUE IT UP!{ENDC}")
 print_existing_jobs()
 
-# # Constants for Windows Power Management
-# ES_CONTINUOUS = 0x80000000
-# ES_SYSTEM_REQUIRED = 0x00000001
-
-# def prevent_sleep():
-    # """Prevent the system from going to sleep."""
-    # os_type = platform.system()
-    # if os_type == 'Windows':
-        # ctypes.windll.kernel32.SetThreadExecutionState(
-            # ES_CONTINUOUS | ES_SYSTEM_REQUIRED
-        # )
-    # elif os_type == 'Darwin':  # macOS
-        # # Start a subprocess that uses caffeinate to prevent sleep
-        # global caffeinate_process
-        # caffeinate_process = subprocess.Popen("caffeinate")
-        # custom_print("Prevented sleep on macOS using caffeinate.")
-    # elif os_type == 'Linux':
-        # # Start a subprocess that uses systemd-inhibit to prevent sleep
-        # global inhibit_process
-        # inhibit_process = subprocess.Popen(["systemd-inhibit", "--what=idle", "sleep infinity"],
-                                           # stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # custom_print("Prevented sleep on Linux using systemd-inhibit.")
-
-# def allow_sleep():
-    # """Allow the system to go to sleep again."""
-    # os_type = platform.system()
-    # if os_type == 'Windows':
-        # ctypes.windll.kernel32.SetThreadExecutionState(
-            # ES_CONTINUOUS
-        # )
-    # elif os_type == 'Darwin':  # macOS
-        # if 'caffeinate_process' in globals():
-            # caffeinate_process.terminate()  # Terminate the caffeinate process
-            # custom_print("Allowed sleep on macOS by terminating caffeinate.")
-    # elif os_type == 'Linux':
-        # if 'inhibit_process' in globals():
-            # inhibit_process.terminate()  # Terminate the systemd-inhibit process
-            # custom_print("Allowed sleep on Linux by terminating systemd-inhibit.")
 
 
 def run(ui: gradio.Blocks) -> None:
