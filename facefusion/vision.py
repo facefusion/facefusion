@@ -17,13 +17,12 @@ def get_short_path(full_path : str) -> str:
 	buffer_size = 0
 
 	while True:
-		buffer = ctypes.create_unicode_buffer(buffer_size)
-		threshold = ctypes.windll.kernel32.GetShortPathNameW(full_path, buffer, buffer_size) #type:ignore[attr-defined]
+		unicode_buffer = ctypes.create_unicode_buffer(buffer_size)
+		buffer_threshold = ctypes.windll.kernel32.GetShortPathNameW(full_path, unicode_buffer, buffer_size) #type:ignore[attr-defined]
 
-		if buffer_size >= threshold:
-			return buffer.value
-		else:
-			buffer_size = threshold
+		if buffer_size > buffer_threshold:
+			return unicode_buffer.value
+		buffer_size = buffer_threshold
 
 
 @lru_cache(maxsize = 128)
