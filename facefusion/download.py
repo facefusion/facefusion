@@ -1,6 +1,5 @@
 import os
 import subprocess
-import platform
 import ssl
 import urllib.request
 from typing import List
@@ -9,9 +8,10 @@ from tqdm import tqdm
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.common_helper import is_macos
 from facefusion.filesystem import is_file
 
-if platform.system().lower() == 'darwin':
+if is_macos():
 	ssl._create_default_https_context = ssl._create_unverified_context
 
 

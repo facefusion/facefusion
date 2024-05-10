@@ -1,6 +1,5 @@
 from typing import Optional, Generator, Deque
 import os
-import platform
 import subprocess
 import cv2
 import gradio
@@ -12,6 +11,7 @@ from tqdm import tqdm
 import facefusion.globals
 from facefusion import logger, wording
 from facefusion.audio import create_empty_audio_frame
+from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream
 from facefusion.filesystem import filter_image_paths
 from facefusion.typing import VisionFrame, Face, Fps
@@ -32,7 +32,7 @@ def get_webcam_capture() -> Optional[cv2.VideoCapture]:
 	global WEBCAM_CAPTURE
 
 	if WEBCAM_CAPTURE is None:
-		if platform.system().lower() == 'windows':
+		if is_windows():
 			webcam_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 		else:
 			webcam_capture = cv2.VideoCapture(0)
@@ -98,11 +98,11 @@ def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -
 	stream = None
 
 	if webcam_mode in [ 'udp', 'v4l2' ]:
-		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) # type: ignore[arg-type]
+		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) #type:ignore[arg-type]
 	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
 	webcam_capture = get_webcam_capture()
 	if webcam_capture and webcam_capture.isOpened():
-		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) # type: ignore[attr-defined]
+		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) #type:ignore[attr-defined]
 		webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
 		webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
 		webcam_capture.set(cv2.CAP_PROP_FPS, webcam_fps)
