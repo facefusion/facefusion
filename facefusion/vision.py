@@ -18,7 +18,7 @@ def get_short_path(full_path : str) -> str:
 
 	while True:
 		buffer = ctypes.create_unicode_buffer(buffer_size)
-		threshold = ctypes.windll.kernel32.GetShortPathNameW(full_path, buffer, buffer_size)
+		threshold = ctypes.windll.kernel32.GetShortPathNameW(full_path, buffer, buffer_size) #type:ignore[attr-defined]
 
 		if buffer_size >= threshold:
 			return buffer.value
