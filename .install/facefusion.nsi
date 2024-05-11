@@ -167,7 +167,7 @@ Section 'Register The Application'
 SectionEnd
 
 Section 'Uninstall'
-	nsExec::Exec '$PROFILE\miniconda3\Scripts\conda.exe remove --name facefusion'
+	nsExec::Exec '$PROFILE\miniconda3\Scripts\conda.exe env remove --name facefusion --yes'
 
 	Delete $DESKTOP\FaceFusion.lnk
 	RMDir /r $SMPROGRAMS\FaceFusion
