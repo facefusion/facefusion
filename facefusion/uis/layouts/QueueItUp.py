@@ -36,8 +36,8 @@ def pre_render() -> bool:
 
 
 #Globals and toggles
+
 script_root = os.path.dirname(os.path.abspath(__file__))
-print("Script Root:", script_root)
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(script_root)))
 # Appending 'QueueItUp' to the adjusted base directory
 user_dir = "QueueItUp"
@@ -46,9 +46,7 @@ media_cache_dir = os.path.normpath(os.path.join(working_dir, "mediacache"))
 thumbnail_dir = os.path.normpath(os.path.join(working_dir, "thumbnails"))
 jobs_queue_file = os.path.normpath(os.path.join(working_dir, "jobs_queue.json"))
 
-debugging = True
-system_logs= True
-history_logs= True
+debugging = False
 keep_completed_jobs = True
 ADD_JOB_BUTTON = gradio.Button("Add Job ", variant="primary")
 RUN_JOBS_BUTTON = gradio.Button("Run Jobs", variant="primary")
@@ -59,6 +57,7 @@ JOB_IS_RUNNING = 0
 JOB_IS_EXECUTING = 0
 PENDING_JOBS_COUNT = 0
 CURRENT_JOB_NUMBER = 0
+edit_window = 0
 image_references = {}
     # ANSI Color Codes     
 RED = '\033[91m'     #use this  
@@ -228,7 +227,8 @@ def check_for_unneeded_media_cache():
     for cache_file in cache_files:
         if cache_file not in needed_files:
             os.remove(os.path.join(media_cache_dir, cache_file))
-            custom_print(f"{GREEN}Deleted unneeded file: {cache_file}{ENDC}")
+            if debugging:
+                custom_print(f"{GREEN}Deleted unneeded file: {cache_file}{ENDC}")
 
 def check_if_needed(job, source_or_target):
     with open(jobs_queue_file, 'r') as file:
@@ -255,13 +255,17 @@ def check_if_needed(job, source_or_target):
                 if os.path.exists(normalized_source_path):
                     try:
                         os.remove(normalized_source_path)
-                        custom_print(f"Successfully deleted the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it is no longer needed by any other jobs\n\n")
+                        if debugging:
+                            custom_print(f"Successfully deleted the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it is no longer needed by any other jobs\n\n")
                     except Exception as e:
-                        custom_print(f"{RED}Failed to delete {YELLOW}{os.path.basename(normalized_source_path)}{ENDC}: {e}\n\n")
+                        if debugging:
+                            custom_print(f"{RED}Failed to delete {YELLOW}{os.path.basename(normalized_source_path)}{ENDC}: {e}\n\n")
                 else:
-                    custom_print(f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it does not exist.\n\n")
+                    if debugging:
+                        custom_print(f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it does not exist.\n\n")
             else:
-                custom_print(f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it's needed by another job.\n\n")
+                if debugging:
+                    custom_print(f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it's needed by another job.\n\n")
 
     # Check and handle targetcache path
     if source_or_target in ['both', 'target']:
@@ -273,13 +277,17 @@ def check_if_needed(job, source_or_target):
             if os.path.exists(normalized_target_path):
                 try:
                     os.remove(normalized_target_path)
-                    custom_print(f"Successfully deleted the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it is no longer needed by any other jobs\n\n")
+                    if debugging:
+                        custom_print(f"Successfully deleted the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it is no longer needed by any other jobs\n\n")
                 except Exception as e:
-                    custom_print(f"{RED}Failed to delete {YELLOW}{os.path.basename(normalized_target_path)}{ENDC}: {e}\n\n")
+                    if debugging:
+                        custom_print(f"{RED}Failed to delete {YELLOW}{os.path.basename(normalized_target_path)}{ENDC}: {e}\n\n")
             else:
-                custom_print(f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it does not exist.\n\n")
+                if debugging:
+                    custom_print(f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it does not exist.\n\n")
         else:
-            custom_print(f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it's needed by another job.\n\n")
+            if debugging:
+                custom_print(f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it's needed by another job.\n\n")
 
 def render() -> gradio.Blocks:
     global ADD_JOB_BUTTON, RUN_JOBS_BUTTON, status_window
@@ -430,13 +438,16 @@ def assemble_queue():
     while True:
         if JOB_IS_RUNNING:
             if JOB_IS_EXECUTING:
-                custom_print("Job is executing.")
+                if debugging:
+                    custom_print("Job is executing.")
                 break  # Exit the loop if the job is executing
             else:
-                custom_print("Job is running but not executing. Stuck in loop.\n")
+                if debugging:
+                    custom_print("Job is running but not executing. Stuck in loop.\n")
                 time.sleep(1)  # Wait for 1 second to reduce CPU usage, continue checking
         else:
-            custom_print("Job is not running.")
+            if debugging:
+                custom_print("Job is not running.")
             break  # Exit the loop if the job is not running
 
     oldeditjob = None
@@ -451,9 +462,11 @@ def assemble_queue():
 
     cache_source_paths = copy_to_media_cache(source_paths)
     source_basenames = [os.path.basename(path) for path in cache_source_paths] if isinstance(cache_source_paths, list) else os.path.basename(cache_source_paths)
-    custom_print(f"{GREEN}Source file{ENDC} copied to Media Cache folder: {GREEN}{source_basenames}{ENDC}\n\n")
+    if debugging:
+        custom_print(f"{GREEN}Source file{ENDC} copied to Media Cache folder: {GREEN}{source_basenames}{ENDC}\n\n")
     cache_target_path = copy_to_media_cache(target_path)
-    custom_print(f"{GREEN}Target file{ENDC} copied to Media Cache folder: {GREEN}{os.path.basename(cache_target_path)}{ENDC}\n\n")
+    if debugging:
+        custom_print(f"{GREEN}Target file{ENDC} copied to Media Cache folder: {GREEN}{os.path.basename(cache_target_path)}{ENDC}\n\n")
     
     if isinstance(cache_source_paths, str):
         cache_source_paths = [cache_source_paths]  # Convert to list if it's a single string
@@ -475,9 +488,6 @@ def assemble_queue():
         with open(os.path.join(working_dir, f"job_args.txt"), "w") as file:
             for key, val in job_args.items():
                 file.write(f"{key}: {val}\n")
-
-                
-                
         custom_print("job_args.txt re-created")
     if debugging:
         with open(os.path.join(working_dir, f"current_values.txt"), "w") as file:
@@ -500,30 +510,31 @@ def assemble_queue():
     if not found_editing:
         jobs.append(new_job)
         save_jobs(jobs_queue_file, jobs)
-    count_existing_jobs()
+    
     edit_queue.refresh_frame_listbox()
     if JOB_IS_RUNNING:
-        custom_print(f"{BLUE}job # {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT} was added {ENDC} - and is in line to be Processed - Click Add Job to Queue more Jobs")
+        custom_print(f"{BLUE}job # {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT} was added {ENDC}\n\n")
     else:
         custom_print(f"{BLUE}Your Job was Added to the queue,{ENDC} there are a total of {GREEN}#{PENDING_JOBS_COUNT} Job(s){ENDC} in the queue,  Add More Jobs, Edit the Queue, or Click Run Queue to Execute all the queued jobs")
 
-    
-# def multiprocess_execute_jobs():
-    # # Start the job command as a process with the given job arguments
-    # job_process = Process(target=execute_jobs)
-    # job_process.start()
-    # job_process.join()  # Optional: wait for the process to complete
+    if edit_window.get() == first_check_value:
+        time.sleep(2)  # Wait 2 seconds
+        # Check edit_window if value is greater than first_check_value
+        if edit_window.get() > first_check_value:
+                edit_queue.refresh_frame_listbox()
+    count_existing_jobs()
 
 def execute_jobs():
     global JOB_IS_RUNNING, JOB_IS_EXECUTING,CURRENT_JOB_NUMBER,jobs_queue_file, jobs
     count_existing_jobs()
     if not PENDING_JOBS_COUNT + JOB_IS_RUNNING > 0:
         custom_print(f"Whoops!!!, There are {PENDING_JOBS_COUNT} Job(s) queued.  Add a job to the queue before pressing Run Queue.\n\n")
-        
+        return
 
     if PENDING_JOBS_COUNT + JOB_IS_RUNNING > 0 and JOB_IS_RUNNING:
         custom_print(f"Whoops a Jobs is already executing, with {PENDING_JOBS_COUNT} more job(s) waiting to be processed.\n\n You don't want more then one job running at the same time your GPU cant handle that,\n\nYou just need to click add job if jobs are already running, and thie job will be placed in line for execution. you can edit the job order with Edit Queue button\n\n")
-
+        return
+        
     jobs = load_jobs(jobs_queue_file)
     JOB_IS_RUNNING = 1
     CURRENT_JOB_NUMBER = 0
@@ -543,7 +554,7 @@ def execute_jobs():
         count_existing_jobs()
         JOB_IS_EXECUTING = 1
         CURRENT_JOB_NUMBER += 1
-        custom_print(f"{PENDING_JOBS_COUNT} jobs remaining:{ENDC}\n\n\n\n")
+        custom_print(f"{GREEN}{PENDING_JOBS_COUNT} jobs remaining:{ENDC}\n\n\n\n")
         custom_print(f"{BLUE}Starting Job #{GREEN} {CURRENT_JOB_NUMBER}{ENDC}\n\n")
 
         printjobtype = current_run_job['job_args']['frame_processors']
@@ -560,7 +571,7 @@ def execute_jobs():
 
         JOB_IS_EXECUTING = 0  # Reset the job execution flag
         
-        custom_print(f"{BLUE}Job {CURRENT_JOB_NUMBER} completed pausing 5 seconds.{ENDC}\n")
+        custom_print(f"{BLUE}Job {CURRENT_JOB_NUMBER} completed. {GREEN} {PENDING_JOBS_COUNT} jobs remaining, pausing 5 seconds before starting next job  {ENDC}\n")
 
 
 
@@ -610,7 +621,7 @@ def execute_jobs():
 
 
 def edit_queue():
-    global root, frame, output_text, jobs_queue_file, jobs
+    global root, frame, output_text, edit_window, jobs_queue_file, jobs
     EDIT_JOB_BUTTON = gradio.Button("Edit Queue")
     jobs = load_jobs(jobs_queue_file)  
     root = tkinter.Tk()
@@ -669,6 +680,7 @@ def edit_queue():
         global jobs # Ensure we are modifying the global list
         status_priority = {'editing': 0, 'executing': 1, 'pending': 2, 'failed': 3, 'missing': 4, 'completed': 5, 'archived': 6}
         jobs = load_jobs(jobs_queue_file)
+        edit_window = 0
 
         # # First, sort the entire list by status priority
         jobs.sort(key=lambda x: status_priority.get(x['status'], 6))
@@ -712,7 +724,7 @@ def edit_queue():
         update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
         refresh_frame_listbox()
 
-    def archive_job(job, source_or_target):
+    def archive_job(job):
         # Update the job status to 'archived'
         job['status'] = 'archived'
         save_jobs(jobs_queue_file, jobs) 
@@ -803,7 +815,7 @@ def edit_queue():
         update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
         refresh_frame_listbox()
 
-    def delete_job(job, source_or_target):
+    def delete_job(job):
         job['status'] = ('deleting')
         source_or_target='both'
         check_if_needed(job, 'both')
@@ -836,75 +848,6 @@ def edit_queue():
             jobs.append(jobs.pop(index))
             save_jobs(jobs_queue_file, jobs)
             update_job_listbox()
-            
-    def create_job_thumbnail(parent, job, source_or_target):
-
-        button = None
-        file_paths = job[source_or_target + 'cache']
-        file_paths = file_paths if isinstance(file_paths, list) else [file_paths]
-
-        # Ensure thumbnail directory exists
-        if not os.path.exists(thumbnail_dir):
-            os.makedirs(thumbnail_dir)
-
-        num_images = len(file_paths)
-        grid_size = math.ceil(math.sqrt(num_images))  # Number of rows and columns
-        thumb_size = 200 // grid_size  # Size of each thumbnail to fit the grid
-
-        thumbnail_files = []
-        for idx, file_path in enumerate(file_paths):
-            thumbnail_path = os.path.join(thumbnail_dir, f"{source_or_target}_thumb_{idx}.png")
-            if file_path.lower().endswith(('.mp3', '.wav', '.aac', '.flac')):
-                audio_icon_path = os.path.join(working_dir, 'audioicon.png')
-                cmd = [
-                    'ffmpeg', '-i', audio_icon_path,
-                    '-vf', f'scale={thumb_size}:{thumb_size}',
-                    '-vframes', '1',
-                    '-y', thumbnail_path
-                ]
-            else:
-                cmd = [
-                    'ffmpeg', '-i', file_path,
-                    '-vf', f'scale={thumb_size}:{thumb_size}',
-                    '-vframes', '1',
-                    '-y', thumbnail_path
-                ]
-            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            thumbnail_files.append(thumbnail_path)
-
-        list_file_path = os.path.join(thumbnail_dir, 'input_list.txt')
-        with open(list_file_path, 'w') as file:
-            for thumb in thumbnail_files:
-                file.write(f"file '{thumb}'\n")
-
-        grid_path = os.path.join(thumbnail_dir, f"{source_or_target}_grid.png")
-        grid_cmd = [
-            'ffmpeg',
-            '-loglevel', 'error',
-            '-f', 'concat', '-safe', '0', '-i', list_file_path,
-            '-filter_complex', f'tile={grid_size}x{grid_size}:padding=2',
-            '-y', grid_path
-        ]
-        grid_result = subprocess.run(grid_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if grid_result.returncode != 0:
-            print(f"Error creating grid: {grid_result.stderr.decode()}")
-            return None
-
-        try:
-            with open(grid_path, 'rb') as f:
-                grid_image_data = BytesIO(f.read())
-            grid_photo_image = PhotoImage(data=grid_image_data.read())
-            button = Button(parent, image=grid_photo_image, command=lambda ft=source_or_target: select_job_file(parent, job, ft))
-            button.image = grid_photo_image  # keep a reference!
-            button.pack(side='left', padx=5)
-        except Exception as e:
-            print(f"Failed to open grid image: {e}")
-            
-        # Clean up thumbnail directory
-        # for file in os.listdir(thumbnail_dir):
-            # os.remove(os.path.join(thumbnail_dir, file))
-        return button
-
 
 
 
@@ -980,11 +923,16 @@ def edit_queue():
 
         
     def select_job_file(parent, job, source_or_target):
+        print(source_or_target)
+
         # Determine the allowed file types based on the source_or_target and current file extension
         file_types = []
         if source_or_target == 'source':
+            print(source_or_target)
             file_types = [('source files', '*.jpg *.jpeg *.png *.mp3 *.wav *.aac')]
         elif source_or_target == 'target':
+            print(source_or_target)
+
             # Get current extension
             current_extension = job['targetcache'].lower().rsplit('.', 1)[-1]
             if current_extension in ['jpg', 'jpeg', 'png']:
@@ -994,8 +942,12 @@ def edit_queue():
 
         # Open file dialog with the appropriate filters
         if source_or_target == 'source':
+            print(source_or_target)
+
             selected_paths = filedialog.askopenfilenames(title=f"Select {source_or_target.capitalize()} File(s)", filetypes=file_types)
         else:
+            print(source_or_target)
+
             selected_path = filedialog.askopenfilename(title=f"Select {source_or_target.capitalize()} File", filetypes=file_types)
             selected_paths = [selected_path] if selected_path else []
 
@@ -1003,28 +955,104 @@ def edit_queue():
         if selected_paths:
             check_if_needed(job, source_or_target)
             # Update job command with the selected path(s)
-            update_paths(job, source_or_target, selected_paths)
+            #print(source_or_target)
+            update_paths(job, selected_paths, source_or_target)
 
             # Check if all source cache files exist
             if isinstance(job['sourcecache'], list):
                 source_cache_exists = all(os.path.exists(cache) for cache in job['sourcecache'])
             else:
                 source_cache_exists = os.path.exists(job['sourcecache'])
-            # job['status'] = 'checking'
-            
             
             if source_cache_exists and os.path.exists(job['targetcache']):
                 job['status'] = 'pending'
             else:
                 job['status'] = 'missing'
-     
+
             save_jobs(jobs_queue_file, jobs)
             update_job_listbox()
+            
+    def create_job_thumbnail(parent, job, source_or_target):
 
-    def update_paths(job, source_or_target_or_output, path):
-        custom_print(f"source_or_target_or_output : {source_or_target_or_output}")
+        file_paths = job[source_or_target + 'cache']
+        file_paths = file_paths if isinstance(file_paths, list) else [file_paths]
 
-        if source_or_target_or_output == 'source':
+        # Check each file path and handle missing files
+        for file_path in file_paths:
+            if not os.path.exists(file_path):
+                # Create a button as a placeholder for non-existing files
+                button = Button(parent, text=f"File not found:\n\n {file_path}\nClick to update", bg='white', fg='black',
+                                command=lambda: select_job_file(parent, job, source_or_target))
+                button.pack(pady=2, fill='x', expand=True)
+                return button  # Return after the first missing file is found
+
+            
+        # Ensure thumbnail directory exists
+        if not os.path.exists(thumbnail_dir):
+            os.makedirs(thumbnail_dir)
+
+        num_images = len(file_paths)
+        grid_size = math.ceil(math.sqrt(num_images))  # Number of rows and columns
+        thumb_size = 200 // grid_size  # Size of each thumbnail to fit the grid
+
+        thumbnail_files = []
+        for idx, file_path in enumerate(file_paths):
+            thumbnail_path = os.path.join(thumbnail_dir, f"{source_or_target}_thumb_{idx}.png")
+            if file_path.lower().endswith(('.mp3', '.wav', '.aac', '.flac')):
+                audio_icon_path = os.path.join(working_dir, 'audioicon.png')
+                cmd = [
+                    'ffmpeg', '-i', audio_icon_path,
+                    '-vf', f'scale={thumb_size}:{thumb_size}',
+                    '-vframes', '1',
+                    '-y', thumbnail_path
+                ]
+            else:
+                cmd = [
+                    'ffmpeg', '-i', file_path,
+                    '-vf', f'scale={thumb_size}:{thumb_size}',
+                    '-vframes', '1',
+                    '-y', thumbnail_path
+                ]
+            subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            thumbnail_files.append(thumbnail_path)
+
+        list_file_path = os.path.join(thumbnail_dir, 'input_list.txt')
+        with open(list_file_path, 'w') as file:
+            for thumb in thumbnail_files:
+                file.write(f"file '{thumb}'\n")
+
+        grid_path = os.path.join(thumbnail_dir, f"{source_or_target}_grid.png")
+        grid_cmd = [
+            'ffmpeg',
+            '-loglevel', 'error',
+            '-f', 'concat', '-safe', '0', '-i', list_file_path,
+            '-filter_complex', f'tile={grid_size}x{grid_size}:padding=2',
+            '-y', grid_path
+        ]
+        grid_result = subprocess.run(grid_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if grid_result.returncode != 0:
+            print(f"Error creating grid: {grid_result.stderr.decode()}")
+            return None
+
+        try:
+            with open(grid_path, 'rb') as f:
+                grid_image_data = BytesIO(f.read())
+            grid_photo_image = PhotoImage(data=grid_image_data.read())
+            button = Button(parent, image=grid_photo_image, command=lambda ft=source_or_target: select_job_file(parent, job, ft))
+            button.image = grid_photo_image  # keep a reference!
+            button.pack(side='left', padx=5)
+        except Exception as e:
+            print(f"Failed to open grid image: {e}")
+            
+        # Clean up thumbnail directory
+        for file in os.listdir(thumbnail_dir):
+            os.remove(os.path.join(thumbnail_dir, file))
+        return button
+
+
+    def update_paths(job, path, source_or_target):
+        custom_print(f"source_or_target : {source_or_target}")
+        if source_or_target == 'source':
             cache_path = copy_to_media_cache(path)
             if not isinstance(cache_path, list):
                 cache_path = [cache_path]  # Ensure cache_path is a list
@@ -1033,18 +1061,20 @@ def edit_queue():
             job[cache_key] = cache_path
 
 
-        if source_or_target_or_output == 'target':
+        if source_or_target == 'target':
             cache_path = copy_to_media_cache(path)
             path_key = 'target_path'
             cache_key = 'targetcache'
             job[cache_key] = cache_path
             
-        if source_or_target_or_output == 'output':
+        if source_or_target == 'output':
             path_key = 'output_path'
             cache_key = 'output_path'
             cache_path = job['output_path']   
             
         job['job_args'][path_key] = cache_path
+        job[cache_key] = cache_path
+
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()
 
@@ -1101,7 +1131,7 @@ def edit_queue():
             
             source_frame = tkinter.Frame(job_frame)
             source_frame.pack(side='left', fill='x', padx=5)
-            source_button = create_job_thumbnail(job_frame, job, 'source')
+            source_button = create_job_thumbnail(job_frame, job, source_or_target = 'source')
             if source_button:
                 source_button.pack(side='left', padx=5)
             else:
@@ -1118,9 +1148,10 @@ def edit_queue():
             output_path_button = tkinter.Button(action_archive_frame, text="Output Path", command=lambda j=job: output_path_job(j))
             output_path_button.pack(side='top', padx=2)
                         
-            delete_button = tkinter.Button(action_archive_frame, text=" Delete ", command=lambda j=job: delete_job(j, 'both'))
+            delete_button = tkinter.Button(action_archive_frame, text=" Delete ", command=lambda j=job: delete_job(j))
             delete_button.pack(side='top', padx=2)
-            archive_button = tkinter.Button(action_archive_frame, text="Archive",command=lambda j=job: archive_job(j, 'both'))
+            
+            archive_button = tkinter.Button(action_archive_frame, text="Archive",command=lambda j=job: archive_job(j))
             archive_button.pack(side='top', padx=2)
             
             # test_job_command_button = tkinter.Button(action_archive_frame, text="run_job_args",command=lambda j=job: test_run_job_command(j))
@@ -1134,7 +1165,7 @@ def edit_queue():
 
             target_frame = tkinter.Frame(job_frame)
             target_frame.pack(side='left', fill='x', padx=5)
-            target_button = create_job_thumbnail(job_frame, job, 'target')
+            target_button = create_job_thumbnail(job_frame, job,source_or_target = 'target')
             if target_button:
                 target_button.pack(side='left', padx=5)
             else:
@@ -1157,12 +1188,13 @@ def edit_queue():
             argument_button.bind("<Button-1>", lambda event, j=job: edit_arguments_text(j))
     
     edit_queue.refresh_frame_listbox = refresh_frame_listbox
-    root.after(1000, update_job_listbox)
+    edit_window += 1
+    root.after(1000, update_job_listbox)  #add a counter named edit_window increase by 1 every 1000  
     root.mainloop()
     if __name__ == '__main__':
         edit_queue()
     # Call the nested function using the attribute
-    edit_queue.refresh_frame_listbox()
+    # edit_queue.refresh_frame_listbox()
 
 
 def setup_globals_from_job_args(job_args):
