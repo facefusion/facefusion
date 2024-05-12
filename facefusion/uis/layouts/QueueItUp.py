@@ -8,6 +8,7 @@ import math
 import json
 import tempfile
 import shutil
+import shlex
 import logging
 import tkinter
 import datetime
@@ -17,14 +18,10 @@ import subprocess
 import configparser
 from tkinter.filedialog import askdirectory
 from tkinter import filedialog, Text, font, Toplevel, messagebox, PhotoImage, Tk, Canvas, Scrollbar, Frame, Label, Button
-from argparse import ArgumentParser
 from io import BytesIO
 import facefusion.globals
 from facefusion import core
-#import facefusion.core as core
-from facefusion import core, audio, content_analyser, config, download, execution, face_analyser, face_helper, face_masker, face_store, ffmpeg, filesystem, logger, memory, metadata, normalizer, process_manager, statistics, typing, thread_helper, vision, voice_extractor, wording
-from facefusion.processors.frame import globals as frame_processors_globals#, choices as frame_processors_choices, core as frame_core, typings as frame_typings
-from facefusion.processors.frame.modules import face_debugger, face_enhancer, face_swapper, frame_colorizer, frame_enhancer, lip_syncer
+import facefusion.core as core
 from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, memory, temp_frame, output_options, common_options, source, target, output, preview, trim_frame, face_analyser, face_selector, face_masker
 
 
@@ -35,259 +32,6 @@ def pre_render() -> bool:
     return True
 
 
-#Globals and toggles
-
-script_root = os.path.dirname(os.path.abspath(__file__))
-base_dir = os.path.dirname(os.path.dirname(os.path.dirname(script_root)))
-# Appending 'QueueItUp' to the adjusted base directory
-user_dir = "QueueItUp"
-working_dir = os.path.normpath(os.path.join(base_dir, user_dir))
-media_cache_dir = os.path.normpath(os.path.join(working_dir, "mediacache"))
-thumbnail_dir = os.path.normpath(os.path.join(working_dir, "thumbnails"))
-jobs_queue_file = os.path.normpath(os.path.join(working_dir, "jobs_queue.json"))
-
-debugging = False
-keep_completed_jobs = True
-ADD_JOB_BUTTON = gradio.Button("Add Job ", variant="primary")
-RUN_JOBS_BUTTON = gradio.Button("Run Jobs", variant="primary")
-EDIT_JOB_BUTTON = gradio.Button("Edit Jobs")
-#status_priority = {'editing': 0, 'pending': 1, 'failed': 2, 'executing': 3, 'completed': 4}
-create_and_verify_json = 0
-JOB_IS_RUNNING = 0
-JOB_IS_EXECUTING = 0
-PENDING_JOBS_COUNT = 0
-CURRENT_JOB_NUMBER = 0
-edit_window = 0
-image_references = {}
-    # ANSI Color Codes     
-RED = '\033[91m'     #use this  
-GREEN = '\033[92m'     #use this  
-YELLOW = '\033[93m'     #use this  
-BLUE = '\033[94m'     #use this  
-ENDC = '\033[0m'       #use this    Resets color to default
-
-
-def custom_print(*msgs):
-    # Join all arguments into a single message string
-    message = " ".join(str(msg) for msg in msgs)
-
-    # ANSI Color Codes
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    ENDC = '\033[0m'
-
-    # Mapping of ANSI codes to tkinter text widget tags
-    ansi_to_tag = {
-        RED: 'red',
-        GREEN: 'green',
-        YELLOW: 'yellow',
-        BLUE: 'blue',
-        ENDC: 'end'
-    }
-
-    print(message)  # Print to terminal with ANSI coloring
-
-
-custom_print("Working Directory:", working_dir)
-custom_print("Media Cache Directory:", media_cache_dir)
-custom_print("Jobs Queue File:", jobs_queue_file)
-
-def get_values_from_globals(state_name):
-   # List all modules which states we want to capture
-
-    modules = [
-        facefusion.globals, core, audio, content_analyser, config, execution, face_analyser, face_helper, face_masker, face_store, normalizer, process_manager, thread_helper, vision, voice_extractor,frame_processors_globals, common_options, execution_queue_count, execution_thread_count, face_selector, frame_processors, frame_processors_options, memory, output, output_options, preview, source, target, typing, temp_frame, trim_frame
-    ]
-    state_dict = {}
-    for module in modules:
-        for attr in dir(module):
-            if not attr.startswith("__") and not callable(getattr(module, attr)):
-                value = getattr(module, attr)
-                try:
-                    json.dumps(value) 
-                    state_dict[attr] = value 
-                except TypeError:
-                    continue 
-    if debugging:
-        with open(os.path.join(working_dir, f"{state_name}.txt"), "w") as file:
-            for key, val in state_dict.items():
-                file.write(f"{key}: {val}\n")
-        custom_print(f"{state_name}.txt created")
-    return state_dict
-
-def create_and_verify_json(file_path):
-    if os.path.exists(file_path):
-        try:
-            with open(file_path, "r") as json_file:  
-                json.load(json_file)
-        except json.JSONDecodeError:
-            backup_path = file_path + ".bak"
-            shutil.copy(file_path, backup_path)
-            custom_print(f"Backup of corrupt JSON file saved as '{backup_path}'. Please check it for salvageable data.\n\n")
-            with open(file_path, "w") as json_file:
-                json.dump([], json_file)
-            custom_print(f"Original JSON file '{file_path}' was corrupt and has been reset to an empty list.\n\n")
-    else:
-        with open(file_path, "w") as json_file:
-            json.dump([], json_file)
-        custom_print(f"JSON file '{file_path}' did not exist and has been created.")
-
-def load_jobs(file_path):
-    with open(file_path, 'r') as file:
-        jobs = json.load(file)
-    return jobs
-
-def save_jobs(file_path, jobs):
-    with open(file_path, 'w') as file:
-        json.dump(jobs, file, indent=4)
-      
-        
-def count_existing_jobs():
-    global PENDING_JOBS_COUNT
-    jobs = load_jobs(jobs_queue_file)
-    PENDING_JOBS_COUNT = len([job for job in jobs if job['status'] in ['pending', 'editing']])
-    return PENDING_JOBS_COUNT
-
-def print_existing_jobs():
-
-    count_existing_jobs()
-    if JOB_IS_RUNNING:
-        message = f"There is {PENDING_JOBS_COUNT + JOB_IS_RUNNING} job(s) being Processed - Click Add Job to Queue more Jobs"
-    else:
-        if PENDING_JOBS_COUNT > 0:
-            message = f"There is {PENDING_JOBS_COUNT + JOB_IS_RUNNING} job(s) in the queue - Click Run Queue to Execute Them, or continue adding more jobs to the queue"
-        else:
-            message = f"There is 0 job(s) in the queue - Click Add Job instead of Start"
-    custom_print(message + "\n\n")
-    
-
-def check_for_completed_failed_or_aborted_jobs():
-    count_existing_jobs()
-    jobs = load_jobs(jobs_queue_file)
-    for job in jobs:
-        if job['status'] == 'executing':
-            job['status'] = 'pending'
-            custom_print(f"{RED}A probable crash or aborted job execution was detected from your last use.... checking on status of unfinished jobs..{ENDC}\n\n")
-            if isinstance(job['sourcecache'], list):
-                source_basenames = [os.path.basename(path) for path in job['sourcecache']]
-            else:
-                source_basenames = os.path.basename(job['sourcecache'])
-
-                custom_print(f"{GREEN}A job {GREEN}{source_basenames}{ENDC} to -> {GREEN}{os.path.basename(job['targetcache'])} was found that terminated early it will be moved back to the pending jobs queue - you have a Total of {PENDING_JOBS_COUNT + JOB_IS_RUNNING} in the Queue\n\n")
-            save_jobs(jobs_queue_file, jobs)
-    if not keep_completed_jobs:
-        jobs = [job for job in jobs if job['status'] != 'completed']
-        save_jobs(jobs_queue_file, jobs)
-        custom_print(f"{BLUE}All completed jobs have been removed, if you would like to keep completed jobs change the setting to True{ENDC}\n\n")
-
-def copy_to_media_cache(file_paths):
-    if isinstance(file_paths, str):
-        file_paths = [file_paths]  # Convert single file path to list
-    cached_paths = []
-    for file_path in file_paths:
-        file_name = os.path.basename(file_path)
-        file_size = os.path.getsize(file_path)
-        base_name, ext = os.path.splitext(file_name)
-        counter = 0
-        while True:
-            new_name = f"{base_name}_{counter}{ext}" if counter > 0 else file_name
-            cache_path = os.path.join(media_cache_dir, new_name)
-            if not os.path.exists(cache_path):
-                shutil.copy(file_path, cache_path)
-                cached_paths.append(cache_path)
-                break
-            else:
-                cache_size = os.path.getsize(cache_path)
-                if file_size == cache_size:
-                    cached_paths.append(cache_path)  # If size matches, assume it's the same file
-                    break
-            counter += 1
-
-    # Ensure target_path is treated as a single path
-    if isinstance(cached_paths, list) and len(cached_paths) == 1:
-        return cached_paths[0]  # Return the single path
-    else:
-        return cached_paths  # Return the list of paths
-
-def check_for_unneeded_media_cache():
-    # List all files in the media cache directory
-    cache_files = os.listdir(media_cache_dir)
-    jobs = load_jobs(jobs_queue_file)
-    # Create a set to store all needed filenames from the jobs
-    needed_files = set()
-    for job in jobs:
-        if job['status'] in {'pending', 'failed', 'missing', 'editing', 'executing'}:
-            source_basename = os.path.basename(job['sourcecache'])
-            target_basename = os.path.basename(job['targetcache'])
-            needed_files.add(source_basename)
-            needed_files.add(target_basename)
-    # Delete files that are not needed
-    for cache_file in cache_files:
-        if cache_file not in needed_files:
-            os.remove(os.path.join(media_cache_dir, cache_file))
-            if debugging:
-                custom_print(f"{GREEN}Deleted unneeded file: {cache_file}{ENDC}")
-
-def check_if_needed(job, source_or_target):
-    with open(jobs_queue_file, 'r') as file:
-        jobs = json.load(file)
-
-    relevant_statuses = {'pending', 'executing', 'failed', 'missing', 'editing', 'archived'}
-    file_usage_counts = {}
-
-    # Create an index list for all jobs with relevant statuses and count file paths
-    for other_job in jobs:
-        if other_job['status'] in relevant_statuses:
-            for key in ['sourcecache', 'targetcache']:
-                paths = other_job[key] if isinstance(other_job[key], list) else [other_job[key]]
-                for path in paths:
-                    normalized_path = os.path.normpath(path)
-                    file_usage_counts[normalized_path] = file_usage_counts.get(normalized_path, 0) + 1
-
-    # Check and handle sourcecache paths
-    if source_or_target in ['both', 'source']:
-        source_paths = job['sourcecache'] if isinstance(job['sourcecache'], list) else [job['sourcecache']]
-        for source_path in source_paths:
-            normalized_source_path = os.path.normpath(source_path)
-            if file_usage_counts.get(normalized_source_path, 0) < 2:
-                if os.path.exists(normalized_source_path):
-                    try:
-                        os.remove(normalized_source_path)
-                        if debugging:
-                            custom_print(f"Successfully deleted the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it is no longer needed by any other jobs\n\n")
-                    except Exception as e:
-                        if debugging:
-                            custom_print(f"{RED}Failed to delete {YELLOW}{os.path.basename(normalized_source_path)}{ENDC}: {e}\n\n")
-                else:
-                    if debugging:
-                        custom_print(f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it does not exist.\n\n")
-            else:
-                if debugging:
-                    custom_print(f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it's needed by another job.\n\n")
-
-    # Check and handle targetcache path
-    if source_or_target in ['both', 'target']:
-        target_cache_path = job['targetcache']
-        if isinstance(target_cache_path, list):
-            target_cache_path = target_cache_path[0]  # Assuming the first element if it's erroneously a list
-        normalized_target_path = os.path.normpath(target_cache_path)
-        if file_usage_counts.get(normalized_target_path, 0) < 2:
-            if os.path.exists(normalized_target_path):
-                try:
-                    os.remove(normalized_target_path)
-                    if debugging:
-                        custom_print(f"Successfully deleted the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it is no longer needed by any other jobs\n\n")
-                except Exception as e:
-                    if debugging:
-                        custom_print(f"{RED}Failed to delete {YELLOW}{os.path.basename(normalized_target_path)}{ENDC}: {e}\n\n")
-            else:
-                if debugging:
-                    custom_print(f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it does not exist.\n\n")
-        else:
-            if debugging:
-                custom_print(f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it's needed by another job.\n\n")
 
 def render() -> gradio.Blocks:
     global ADD_JOB_BUTTON, RUN_JOBS_BUTTON, status_window
@@ -366,71 +110,62 @@ def listen() -> None:
     face_analyser.listen()
     common_options.listen()
 
-# def load_validate_args(job):
-    # before_values = get_values_from_globals("before_load_validate_args")
-    # setup_globals_from_job_args(job)
-    # program = ArgumentParser()
-    # program.set_defaults(**job)
-    # core.validate_args(program)
-    # after_values = get_values_from_globals("after_load_validate_args")
-    
-# def load_apply_args(job):
-    # before_values = get_values_from_globals("before_load_apply_args")
-    # setup_globals_from_job_args(job)
-    # program = ArgumentParser()
-    # program.set_defaults(**job)
-    # core.apply_args(program)
-    # after_values = get_values_from_globals("after_load_apply_args")
 
-
-
-# def edit_command(job):   #figure it out how tol load it back to webui without executing
-    # # Setup global variables from job arguments
-    # setup_globals_from_job_args(job)
-    # program = ArgumentParser()
-    # program.set_defaults(**job)
-    # core.validate_args(program)
-    # core.apply_args(program)
-    # subprocess.Popen(
-            # "python facefusion\\uis\\layouts\\QueueItUp.py", 
-            # shell=True, 
-            # stdout=subprocess.PIPE, 
-            # stderr=subprocess.STDOUT, 
-            # text=True, 
-            # bufsize=1
-        # ) 
-    # #core.run(program)
-    # #core.conditional_process()
-
-
-def run_job_args(job): ###figure out if core.run is correct
-    before_values = get_values_from_globals("before_job_command")
-    setup_globals_from_job_args(job)
-    program = ArgumentParser()
-    program.set_defaults(**job)
-    core.validate_args(program)
-    core.run(program)
-    #core.conditional_process()
-    after_values = get_values_from_globals("after_job_command")
 
 def assemble_queue():
     global RUN_JOBS_BUTTON, ADD_JOB_BUTTON, jobs_queue_file, jobs
     # default_values are already initialized, do not call for new default values
-    job_args = get_values_from_globals('job_args')
     current_values = get_values_from_globals('current_values')
+    differences = {}
+    dicts = [current_values, default_values]  # Ensure these are defined or passed to this function appropriately
 
-    if "execution_providers" in job_args:
-        new_providers = []
-        for provider in job_args["execution_providers"]:
-            if provider == "CUDAExecutionProvider":
-                new_providers.append('cuda')
-            elif provider == "CPUExecutionProvider":
-                new_providers.append('cpu')
-            elif provider == "CoreMLExecutionProvider":
-                new_providers.append('coreml')
-            else:
-                new_providers.append(provider)
-        job_args["execution_providers"] = new_providers
+    for d in dicts:
+        if "execution_providers" in d:
+            new_providers = []
+            for provider in d["execution_providers"]:
+                if provider == "CUDAExecutionProvider":
+                    new_providers.append('cuda')
+                elif provider == "CPUExecutionProvider":
+                    new_providers.append('cpu')
+                elif provider == "CoreMLExecutionProvider":
+                    new_providers.append('coreml')
+                else:
+                    new_providers.append(provider)  # keep original if no match
+            d["execution_providers"] = new_providers  # Update the list with the modified values
+
+    keys_to_skip = ["source_paths", "target_path", "output_path", "ui_layouts", "face_recognizer_model"]
+    # Check if "frame-processors" includes "face-enhancer" or "frame-enhancer"
+    if "frame-processors" in current_values:
+        frame_processors = current_values["frame-processors"]
+        if "face-enhancer" not in frame_processors:
+            keys_to_skip.append("face-enhancer-model")
+        if "frame-enhancer" not in frame_processors:
+            keys_to_skip.append("frame-enhancer-model")
+        if "face-swapper" not in frame_processors:
+            keys_to_skip.append("face_swapper_model")
+
+    # Compare current_values against default_values and record only changed current values
+    for key, current_value in current_values.items():
+        if key in keys_to_skip:
+            continue  # Skip these keys
+
+        default_value = default_values.get(key)
+        if default_value is None or current_value != default_value:
+            if current_value is None:
+                continue  # Skip if the resulting value would be None
+
+            # Format the output based on type
+            formatted_value = current_value
+            if isinstance(current_value, list):
+                # Convert list to space-separated string
+                formatted_value = ' '.join(map(str, current_value))
+            elif isinstance(current_value, tuple):
+                # Convert tuple to space-separated string without parentheses
+                formatted_value = ' '.join(map(str, current_value))
+
+            differences[key] = formatted_value
+
+
     source_paths = current_values.get("source_paths", [])
     target_path = current_values.get("target_path", "")
     output_path = current_values.get("output_path", "")
@@ -465,36 +200,43 @@ def assemble_queue():
     if debugging:
         custom_print(f"{GREEN}Source file{ENDC} copied to Media Cache folder: {GREEN}{source_basenames}{ENDC}\n\n")
     cache_target_path = copy_to_media_cache(target_path)
+    custom_print(f"{GREEN}Target file{ENDC} copied to Media Cache folder: {GREEN}{os.path.basename(cache_target_path)}{ENDC}\n\n")
+     
+    # # Convert list of paths to a single string with space separators
+    # if isinstance(cache_source_paths, list):
+        # string_cache_source_paths = ' '.join(f'-s "{path}"' for path in cache_source_paths)
+    # else:
+        # string_cache_source_paths = f'-s "{cache_source_paths}"'
+
+    # # Replace commas with space separators between multiple paths
+    # string_cache_source_paths = string_cache_source_paths.replace(",", " ")
+
+
+    # Construct the arguments string
+    arguments = " ".join(f"--{key.replace('_', '-')} {value}" for key, value in differences.items() if value)
     if debugging:
-        custom_print(f"{GREEN}Target file{ENDC} copied to Media Cache folder: {GREEN}{os.path.basename(cache_target_path)}{ENDC}\n\n")
+        with open(os.path.join(working_dir, "arguments.txt"), "w") as file:
+            file.write(json.dumps(arguments) + "\n")
+    job_args = f" {arguments}"
+
+    custom_print(f"{GREEN}Target file{ENDC} copied to Media Cache folder: {GREEN}{os.path.basename(cache_target_path)}{ENDC}\n\n")
     
     if isinstance(cache_source_paths, str):
         cache_source_paths = [cache_source_paths]  # Convert to list if it's a single string
 
-    job_args['source_paths'] = cache_source_paths
-    job_args['target_path'] = cache_target_path
-    job_args['headless'] = 'None'
-    current_values['source_paths'] = cache_source_paths
-    current_values['target_path'] = cache_target_path
-    
     new_job = {
         "job_args": job_args,
         "status": "pending",
+        "headless": "--headless",       
         "sourcecache": (cache_source_paths),
         "targetcache": (cache_target_path),
         "output_path": (output_path),
     }
     if debugging:
         with open(os.path.join(working_dir, f"job_args.txt"), "w") as file:
-            for key, val in job_args.items():
-                file.write(f"{key}: {val}\n")
-        custom_print("job_args.txt re-created")
-    if debugging:
-        with open(os.path.join(working_dir, f"current_values.txt"), "w") as file:
             for key, val in current_values.items():
                 file.write(f"{key}: {val}\n")
-        custom_print("current_values.txt re-created")
-        
+        custom_print("job_args.txt created")
     if found_editing:
         if not (oldeditjob['sourcecache'] == new_job['sourcecache'] or oldeditjob['sourcecache'] == new_job['targetcache']):
             check_if_needed(oldeditjob, 'source')
@@ -505,24 +247,46 @@ def assemble_queue():
         save_jobs(jobs_queue_file, jobs)
         custom_print(f"{GREEN}You have successfully returned the Edited job back to the job Queue, it is now a Pending Job {ENDC}")
 
-
-
     if not found_editing:
         jobs.append(new_job)
         save_jobs(jobs_queue_file, jobs)
     
-    edit_queue.refresh_frame_listbox()
+    # edit_queue.refresh_frame_listbox()
     if JOB_IS_RUNNING:
         custom_print(f"{BLUE}job # {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT} was added {ENDC}\n\n")
     else:
         custom_print(f"{BLUE}Your Job was Added to the queue,{ENDC} there are a total of {GREEN}#{PENDING_JOBS_COUNT} Job(s){ENDC} in the queue,  Add More Jobs, Edit the Queue, or Click Run Queue to Execute all the queued jobs")
 
-    if edit_window.get() == first_check_value:
-        time.sleep(2)  # Wait 2 seconds
-        # Check edit_window if value is greater than first_check_value
-        if edit_window.get() > first_check_value:
-                edit_queue.refresh_frame_listbox()
+
+    if isinstance(edit_window, tkinter.Entry):  # Replace tkinter.Entry with the specific widget type if different
+        if edit_window.get() == first_check_value:
+            time.sleep(2)  # Wait 2 seconds
+            # Check edit_window if value is greater than first_check_value
+            if edit_window.get() > first_check_value:
+                if hasattr(edit_queue, 'refresh_frame_listbox'):
+                    edit_queue.refresh_frame_listbox()
+                else:
+                    print("Error: edit_queue does not have a method 'refresh_frame_listbox'.")
     count_existing_jobs()
+    
+def run_job_args(current_run_job):
+
+    if isinstance(current_run_job['sourcecache'], list):
+        arg_source_paths = ' '.join(f'-s "{p}"' for p in current_run_job['sourcecache'])
+    else:
+        arg_source_paths = f"-s \"{current_run_job['sourcecache']}\""
+        
+    arg_target_path = f"-t \"{current_run_job['targetcache']}\""
+    arg_output_path = f"-o \"{current_run_job['output_path']}\""
+
+    simulated_args = f"{arg_source_paths} {arg_target_path} {arg_output_path} {current_run_job['headless']} {current_run_job['job_args']}"
+    simulated_cmd = simulated_args.replace('\\\\', '\\')
+
+    simulated_cmd = f"{simulated_args}"
+    print(simulated_cmd)
+
+    result = subprocess.run(f"python run.py {simulated_cmd}")
+
 
 def execute_jobs():
     global JOB_IS_RUNNING, JOB_IS_EXECUTING,CURRENT_JOB_NUMBER,jobs_queue_file, jobs
@@ -538,7 +302,7 @@ def execute_jobs():
     jobs = load_jobs(jobs_queue_file)
     JOB_IS_RUNNING = 1
     CURRENT_JOB_NUMBER = 0
-    current_run_job = {}
+    # current_run_job = {}
     first_pending_job = next((job for job in jobs if job['status'] == 'pending'), None)
     # Remove the first pending job from jobs by keeping jobs that are not the first_pending_job
     jobs = [job for job in jobs if job != first_pending_job]
@@ -554,10 +318,9 @@ def execute_jobs():
         count_existing_jobs()
         JOB_IS_EXECUTING = 1
         CURRENT_JOB_NUMBER += 1
-        custom_print(f"{GREEN}{PENDING_JOBS_COUNT} jobs remaining:{ENDC}\n\n\n\n")
         custom_print(f"{BLUE}Starting Job #{GREEN} {CURRENT_JOB_NUMBER}{ENDC}\n\n")
 
-        printjobtype = current_run_job['job_args']['frame_processors']
+        printjobtype = current_run_job['job_args']
         custom_print(f"{BLUE}Executing Job # {CURRENT_JOB_NUMBER} of {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT}  {ENDC} - {YELLOW}{printjobtype}\n\n")
 
         if isinstance(current_run_job['sourcecache'], list):
@@ -567,30 +330,30 @@ def execute_jobs():
 
         custom_print(f"Job #{CURRENT_JOB_NUMBER} will be SWAPPING - {GREEN}{source_basenames}{ENDC} to -> {GREEN}{os.path.basename(current_run_job['targetcache'])}{ENDC}\n\n")
 
-        run_job_args(current_run_job['job_args'])
+#######################################
+        if isinstance(current_run_job['sourcecache'], list):
+            arg_source_paths = ' '.join(f'-s "{p}"' for p in current_run_job['sourcecache'])
+        else:
+            arg_source_paths = f"-s \"{current_run_job['sourcecache']}\""
+            
+        arg_target_path = f"-t \"{current_run_job['targetcache']}\""
+        arg_output_path = f"-o \"{current_run_job['output_path']}\""
+
+        simulated_args = f"{arg_source_paths} {arg_target_path} {arg_output_path} {current_run_job['headless']} {current_run_job['job_args']}"
+        simulated_cmd = simulated_args.replace('\\\\', '\\')
+        print(simulated_cmd)
+        result = subprocess.run(f"python run.py {simulated_cmd}")
+#######################################
+        current_run_job['status'] = 'completed'
+
+        if current_run_job['status'] == 'completed':
+            custom_print(f"{BLUE}Job # {CURRENT_JOB_NUMBER} {GREEN} completed successfully {BLUE}{PENDING_JOBS_COUNT} jobs remaining, pausing 5 seconds before starting next job{ENDC}\n")
+        else:
+            source_basenames = [os.path.basename(path) for path in current_run_job['sourcecache']] if isinstance(current_run_job['sourcecache'], list) else [os.path.basename(current_run_job['sourcecache'])]
+            custom_print(f"{BLUE}Job # {CURRENT_JOB_NUMBER} {RED} failed. Please check the validity of {source_basenames} and {RED}{os.path.basename(current_run_job['targetcache'])}.{BLUE}{PENDING_JOBS_COUNT} jobs remaining, pausing 5 seconds before starting next job{ENDC}\n")
 
         JOB_IS_EXECUTING = 0  # Reset the job execution flag
-        
-        custom_print(f"{BLUE}Job {CURRENT_JOB_NUMBER} completed. {GREEN} {PENDING_JOBS_COUNT} jobs remaining, pausing 5 seconds before starting next job  {ENDC}\n")
-
-
-
-        
-        ### fix this so status isnt always completed
-
-        current_run_job['status'] = 'completed'
         time.sleep(5)
-
-        
-        if current_run_job['status'] == 'completed':
-            custom_print(f"{BLUE}Job {CURRENT_JOB_NUMBER} completed successfully.{ENDC}\n")
-        else: 
-            current_run_job['status'] = 'failed'
-            if isinstance(current_run_job['sourcecache'], list):
-                source_basenames = [os.path.basename(path) for path in current_run_job['sourcecache']]
-            else:
-                source_basenames = os.path.basename(current_run_job['sourcecache'])
-            custom_print(f"{RED}Job {CURRENT_JOB_NUMBER} failed.{ENDC} Please check the validity of {RED}{source_basenames}{ENDC} and {RED}{os.path.basename(current_run_job['targetcache'])}.{ENDC}")
         jobs = load_jobs(jobs_queue_file)
         jobs = [job for job in jobs if job['status'] != 'executing']
         jobs.append(current_run_job)
@@ -630,21 +393,12 @@ def edit_queue():
     root.lift()
     root.attributes('-topmost', True)
     root.after_idle(root.attributes, '-topmost', False)
-    # output_text = Text(root, height=10, width=100)
-    # output_text.pack()
-    # output_text.insert(tkinter.END, "Initialization successful\n") 
-    # output_text.tag_configure('red', foreground='red')
-    # output_text.tag_configure('green', foreground='green')
-    # output_text.tag_configure('yellow', foreground='yellow')
-    # output_text.tag_configure('blue', foreground='blue')
-    #scrollbar = Scrollbar(root, command=output_text.yview)
     scrollbar = Scrollbar(root)
     scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
     canvas = tkinter.Canvas(root, scrollregion=(0, 0, 0, 7000))
     canvas.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
     frame = Frame(canvas)
     canvas.create_window((0, 0), window=frame, anchor='nw')
-    #output_text.config(yscrollcommand=scrollbar.set)
     canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
     custom_font = font.Font(family="Helvetica", size=12, weight="bold")
     bold_font = font.Font(family="Helvetica", size=12, weight="bold")
@@ -654,10 +408,6 @@ def edit_queue():
 
     refresh_button = tkinter.Button(root, text="Refresh View", command=lambda: refresh_frame_listbox(), font=custom_font)
     refresh_button.pack(pady=5)
-
-    # run_jobs_button = tkinter.Button(root, text=f"RUN {PENDING_JOBS_COUNT} JOBS", command=lambda: check_and_run_jobs(), font=custom_font)
-    # run_jobs_button.pack(pady=5)
-
 
     pending_jobs_button = tkinter.Button(root, text=f"Delete {PENDING_JOBS_COUNT} Pending Jobs", command=lambda: delete_pending_jobs(), font=custom_font)
     pending_jobs_button.pack(pady=5)
@@ -770,14 +520,9 @@ def edit_queue():
             # If user clicks 'No', exit the function
             return
 
-        
+        # Update job status and turn off headless
+        job['headless'] = Null
         job['status'] = 'editing'
-        # job['job_args']['headless'] = 'None'
-        # print(job['status'])
-        # save_jobs(jobs_queue_file, jobs)
-        # update_job_listbox()
-        # custom_print(job['status'])
-        # edit_command(job['job_args'])
         
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()
@@ -788,15 +533,7 @@ def edit_queue():
         message_label = tkinter.Label(top, text="Please wait while the job loads back into FaceFusion...", padx=20, pady=20)
         message_label.pack()
         print (job['status'])
-        if isinstance(job['sourcecache'], list):
-            arg_source_paths = ' '.join(f'-s "{p}"' for p in job['sourcecache'])
-        else:
-            arg_source_paths = f"-s \"{job['sourcecache']}\""
-
-        python_cmd = f"python run.py {arg_source_paths} -t \"{job['targetcache']}\" -o \"{job['output_path']}\" --ui-layouts QueueItUp"
-        print(python_cmd)
-        subprocess.Popen(python_cmd)
-
+        run_job_args(job)
         top.after(1000, close_window)
         top.update_idletasks()
         x = (top.winfo_screenwidth() // 2) - (top.winfo_reqwidth() // 2)
@@ -805,12 +542,11 @@ def edit_queue():
         top.after(7000, top.destroy)
 
     def output_path_job(job):
-        # Open a dialog to select a directory
         selected_path = askdirectory(title="Select A New Output Path for this Job")
         if selected_path:
             formatted_path = selected_path.replace('/', '\\')  # Replace single forward slashes with backslashes
             job['output_path'] = formatted_path
-            update_paths(job,'output', formatted_path)
+            update_paths(job, formatted_path,'output')
         save_jobs(jobs_queue_file, jobs)  # Save the updated jobs to the JSON file
         update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
         refresh_frame_listbox()
@@ -848,9 +584,6 @@ def edit_queue():
             jobs.append(jobs.pop(index))
             save_jobs(jobs_queue_file, jobs)
             update_job_listbox()
-
-
-
 
     def edit_arguments_text(job):
         edit_window = tkinter.Toplevel()
@@ -904,9 +637,9 @@ def edit_queue():
         def save_changes():
             for key, entry in entries.items():
                 if isinstance(job['job_args'][key], list):
-                    job['job_args'][key] = [x.strip() for x in entry.get().split(',')]
+                    job[key] = [x.strip() for x in entry.get().split(',')]
                 else:
-                    job['job_args'][key] = entry.get()
+                    job[key] = entry.get()
             edit_window.destroy()
 
         ok_button = tkinter.Button(edit_window, text="OK", command=save_changes)
@@ -914,25 +647,15 @@ def edit_queue():
 
         cancel_button = tkinter.Button(edit_window, text="Cancel", command=edit_window.destroy)
         cancel_button.pack(pady=5)
-
-        # Ensure the scroll region is updated
         scrollable_frame.update_idletasks()
         canvas.configure(scrollregion=canvas.bbox("all"))
-
         edit_window.mainloop()
-
         
     def select_job_file(parent, job, source_or_target):
-        print(source_or_target)
-
-        # Determine the allowed file types based on the source_or_target and current file extension
         file_types = []
         if source_or_target == 'source':
-            print(source_or_target)
             file_types = [('source files', '*.jpg *.jpeg *.png *.mp3 *.wav *.aac')]
         elif source_or_target == 'target':
-            print(source_or_target)
-
             # Get current extension
             current_extension = job['targetcache'].lower().rsplit('.', 1)[-1]
             if current_extension in ['jpg', 'jpeg', 'png']:
@@ -940,25 +663,16 @@ def edit_queue():
             elif current_extension in ['mp4', 'mov', 'avi', 'mkv']:
                 file_types = [('Video files', '*.mp4 *.avi *.mov *.mkv')]
 
-        # Open file dialog with the appropriate filters
         if source_or_target == 'source':
-            print(source_or_target)
-
             selected_paths = filedialog.askopenfilenames(title=f"Select {source_or_target.capitalize()} File(s)", filetypes=file_types)
         else:
-            print(source_or_target)
-
             selected_path = filedialog.askopenfilename(title=f"Select {source_or_target.capitalize()} File", filetypes=file_types)
             selected_paths = [selected_path] if selected_path else []
 
 
         if selected_paths:
             check_if_needed(job, source_or_target)
-            # Update job command with the selected path(s)
-            #print(source_or_target)
             update_paths(job, selected_paths, source_or_target)
-
-            # Check if all source cache files exist
             if isinstance(job['sourcecache'], list):
                 source_cache_exists = all(os.path.exists(cache) for cache in job['sourcecache'])
             else:
@@ -986,8 +700,6 @@ def edit_queue():
                 button.pack(pady=2, fill='x', expand=True)
                 return button  # Return after the first missing file is found
 
-            
-        # Ensure thumbnail directory exists
         if not os.path.exists(thumbnail_dir):
             os.makedirs(thumbnail_dir)
 
@@ -1051,40 +763,43 @@ def edit_queue():
 
 
     def update_paths(job, path, source_or_target):
-        custom_print(f"source_or_target : {source_or_target}")
         if source_or_target == 'source':
             cache_path = copy_to_media_cache(path)
             if not isinstance(cache_path, list):
                 cache_path = [cache_path]  # Ensure cache_path is a list
-            path_key = 'source_paths'
             cache_key = 'sourcecache'
             job[cache_key] = cache_path
 
 
         if source_or_target == 'target':
             cache_path = copy_to_media_cache(path)
-            path_key = 'target_path'
             cache_key = 'targetcache'
             job[cache_key] = cache_path
             
         if source_or_target == 'output':
-            path_key = 'output_path'
             cache_key = 'output_path'
             cache_path = job['output_path']   
-            
-        job['job_args'][path_key] = cache_path
         job[cache_key] = cache_path
 
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()
 
     def update_job_listbox():
-        global image_references
-        count_existing_jobs()
-        image_references.clear()
-        for widget in frame.winfo_children():
-            widget.destroy()
+        global image_references, frame
+        try:
+            if frame.winfo_exists():  # Check if the frame still exists
+                count_existing_jobs()
+                image_references.clear()
+                for widget in frame.winfo_children():
+                    widget.destroy()
 
+                bg_color = "white"  # Example background color
+                job_frame = tkinter.Frame(frame, borderwidth=2, relief='groove', background=bg_color)
+                job_frame.pack()  # You would add proper packing or grid placement here
+
+        except tkinter.TclError as e:
+            print("Failed to update the job listbox because the Tkinter application or the frame has been destroyed.")
+            print(e)
         for index, job in enumerate(jobs):
             # Ensure sourcecache is always a list for consistency
             source_paths = job['sourcecache'] if isinstance(job['sourcecache'], list) else [job['sourcecache']]
@@ -1103,7 +818,6 @@ def edit_queue():
                 bg_color = 'grey'
             if job['status'] == 'editing':
                 bg_color = 'green'
-
             if job['status'] == 'pending':
                 bg_color = 'SystemButtonFace'
             if not source_thumb_exists or not target_thumb_exists:
@@ -1153,15 +867,6 @@ def edit_queue():
             
             archive_button = tkinter.Button(action_archive_frame, text="Archive",command=lambda j=job: archive_job(j))
             archive_button.pack(side='top', padx=2)
-            
-            # test_job_command_button = tkinter.Button(action_archive_frame, text="run_job_args",command=lambda j=job: test_run_job_command(j))
-            # test_job_command_button.pack(side='top', padx=2)
-
-            # test_apply_args_button = tkinter.Button(action_archive_frame, text="apply_args",command=lambda j=job: test_apply_args(j))
-            # test_apply_args_button.pack(side='top', padx=2)
-
-            # test_validate_args_button = tkinter.Button(action_archive_frame, text="validate_args",command=lambda j=job: test_validate_args(j))
-            # test_validate_args_button.pack(side='top', padx=2)
 
             target_frame = tkinter.Frame(job_frame)
             target_frame.pack(side='left', fill='x', padx=5)
@@ -1183,39 +888,280 @@ def edit_queue():
 
 
             custom_font = font.Font(family="Helvetica", size=10, weight="bold")
-            argument_button = tkinter.Button(argument_frame, text=f" {job['job_args']['frame_processors']} ", wraplength=325, justify='center')
+            argument_button = tkinter.Button(argument_frame, text=f" {job['job_args']} ", wraplength=325, justify='center')
             argument_button.pack(side='bottom', padx=5, fill='x', expand=False)
             argument_button.bind("<Button-1>", lambda event, j=job: edit_arguments_text(j))
     
     edit_queue.refresh_frame_listbox = refresh_frame_listbox
     edit_window += 1
-    root.after(1000, update_job_listbox)  #add a counter named edit_window increase by 1 every 1000  
+    root.after(1000, update_job_listbox) 
     root.mainloop()
     if __name__ == '__main__':
         edit_queue()
     # Call the nested function using the attribute
-    # edit_queue.refresh_frame_listbox()
+    edit_queue.refresh_frame_listbox()
+
+    
+
+def get_values_from_globals(state_name):
+    state_dict = {}
+    
+    from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
+
+    modules = [facefusion.globals, frame_processors_globals]  # List of modules to extract values from
+
+    for module in modules:
+        for attr in dir(module):
+            if not attr.startswith("__"):
+                value = getattr(module, attr)
+                try:
+                    json.dumps(value)  # Check if the value is JSON serializable
+                    state_dict[attr] = value  # Store or update the value in the dictionary
+                except TypeError:
+                    continue  # Skip values that are not JSON serializable
+
+    if debugging:
+        with open(os.path.join(working_dir, f"{state_name}.txt"), "w") as file:
+            for key, val in state_dict.items():
+                file.write(f"{key}: {val}\n")
+        custom_print(f"{state_name}.txt created")
+    return state_dict
 
 
-def setup_globals_from_job_args(job_args):
-    """
-    Set global values in facefusion.globals based on the argument parser values from the job.
-    """
-    ### maybe dont do not sure of bad effects - Set all current global values to None
-    # for key in before_values:
-        # setattr(facefusion.globals, key, None)
+def custom_print(*msgs):
+    # Join all arguments into a single message string
+    message = " ".join(str(msg) for msg in msgs)
 
-    # Update the globals with new values from job_args
-    for key, value in job_args.items():
-        setattr(facefusion.globals, key, value)
+    # ANSI Color Codes
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    ENDC = '\033[0m'
 
-    return
+    # Mapping of ANSI codes to tkinter text widget tags
+    ansi_to_tag = {
+        RED: 'red',
+        GREEN: 'green',
+        YELLOW: 'yellow',
+        BLUE: 'blue',
+        ENDC: 'end'
+    }
 
+    print(message)  # Print to terminal with ANSI coloring
+
+
+
+
+def create_and_verify_json(file_path):
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "r") as json_file:  
+                json.load(json_file)
+        except json.JSONDecodeError:
+            backup_path = file_path + ".bak"
+            shutil.copy(file_path, backup_path)
+            custom_print(f"Backup of corrupt JSON file saved as '{backup_path}'. Please check it for salvageable data.\n\n")
+            with open(file_path, "w") as json_file:
+                json.dump([], json_file)
+            custom_print(f"Original JSON file '{file_path}' was corrupt and has been reset to an empty list.\n\n")
+    else:
+        with open(file_path, "w") as json_file:
+            json.dump([], json_file)
+        custom_print(f"JSON file '{file_path}' did not exist and has been created.")
+
+def load_jobs(file_path):
+    with open(file_path, 'r') as file:
+        jobs = json.load(file)
+    return jobs
+
+def save_jobs(file_path, jobs):
+    with open(file_path, 'w') as file:
+        json.dump(jobs, file, indent=4)
+      
+        
+def count_existing_jobs():
+    global PENDING_JOBS_COUNT
+    jobs = load_jobs(jobs_queue_file)
+    PENDING_JOBS_COUNT = len([job for job in jobs if job['status'] in ['pending', 'editing']])
+    return PENDING_JOBS_COUNT
+
+def print_existing_jobs():
+
+    count_existing_jobs()
+    if JOB_IS_RUNNING:
+        message = f"There is {PENDING_JOBS_COUNT + JOB_IS_RUNNING} job(s) being Processed - Click Add Job to Queue more Jobs"
+    else:
+        if PENDING_JOBS_COUNT > 0:
+            message = f"There is {PENDING_JOBS_COUNT + JOB_IS_RUNNING} job(s) in the queue - Click Run Queue to Execute Them, or continue adding more jobs to the queue"
+        else:
+            message = f"There is 0 job(s) in the queue - Click Add Job instead of Start"
+    custom_print(message + "\n\n")
+    
+
+def check_for_completed_failed_or_aborted_jobs():
+    count_existing_jobs()
+    jobs = load_jobs(jobs_queue_file)
+    for job in jobs:
+        if job['status'] == 'executing':
+            job['status'] = 'pending'
+            custom_print(f"{RED}A probable crash or aborted job execution was detected from your last use.... checking on status of unfinished jobs..{ENDC}\n\n")
+            if isinstance(job['sourcecache'], list):
+                source_basenames = [os.path.basename(path) for path in job['sourcecache']]
+            else:
+                source_basenames = os.path.basename(job['sourcecache'])
+
+                custom_print(f"{GREEN}A job {GREEN}{source_basenames}{ENDC} to -> {GREEN}{os.path.basename(job['targetcache'])} was found that terminated early it will be moved back to the pending jobs queue - you have a Total of {PENDING_JOBS_COUNT + JOB_IS_RUNNING} in the Queue\n\n")
+            save_jobs(jobs_queue_file, jobs)
+    if not keep_completed_jobs:
+        jobs = [job for job in jobs if job['status'] != 'completed']
+        save_jobs(jobs_queue_file, jobs)
+        custom_print(f"{BLUE}All completed jobs have been removed, if you would like to keep completed jobs change the setting to True{ENDC}\n\n")
+
+def copy_to_media_cache(file_paths):
+    if isinstance(file_paths, str):
+        file_paths = [file_paths]  # Convert single file path to list
+    cached_paths = []
+    for file_path in file_paths:
+        file_name = os.path.basename(file_path)
+        file_size = os.path.getsize(file_path)
+        base_name, ext = os.path.splitext(file_name)
+        counter = 0
+        while True:
+            new_name = f"{base_name}_{counter}{ext}" if counter > 0 else file_name
+            cache_path = os.path.join(media_cache_dir, new_name)
+            if not os.path.exists(cache_path):
+                shutil.copy(file_path, cache_path)
+                cached_paths.append(cache_path)
+                break
+            else:
+                cache_size = os.path.getsize(cache_path)
+                if file_size == cache_size:
+                    cached_paths.append(cache_path)  # If size matches, assume it's the same file
+                    break
+            counter += 1
+
+    # Ensure target_path is treated as a single path
+    if isinstance(cached_paths, list) and len(cached_paths) == 1:
+        return cached_paths[0]  # Return the single path
+    else:
+        return cached_paths  # Return the list of paths
+
+def check_for_unneeded_media_cache():
+    # List all files in the media cache directory
+    cache_files = os.listdir(media_cache_dir)
+    jobs = load_jobs(jobs_queue_file)
+    # Create a set to store all needed filenames from the jobs
+    needed_files = set()
+    for job in jobs:
+        if job['status'] in {'pending', 'failed', 'missing', 'editing', 'executing'}:
+            # Now handle sourcecache as a list
+            for source_path in job['sourcecache']:
+                source_basename = os.path.basename(source_path)
+                needed_files.add(source_basename)
+            target_basename = os.path.basename(job['targetcache'])
+            needed_files.add(target_basename)
+    # Delete files that are not needed
+    for cache_file in cache_files:
+        if cache_file not in needed_files:
+            os.remove(os.path.join(media_cache_dir, cache_file))
+            if debugging:
+                custom_print(f"{GREEN}Deleted unneeded file: {cache_file}{ENDC}")
+
+def check_if_needed(job, source_or_target):
+    with open(jobs_queue_file, 'r') as file:
+        jobs = json.load(file)
+
+    relevant_statuses = {'pending', 'executing', 'failed', 'missing', 'editing', 'archived'}
+    file_usage_counts = {}
+
+    # Create an index list for all jobs with relevant statuses and count file paths
+    for other_job in jobs:
+        if other_job['status'] in relevant_statuses:
+            for key in ['sourcecache', 'targetcache']:
+                paths = other_job[key] if isinstance(other_job[key], list) else [other_job[key]]
+                for path in paths:
+                    normalized_path = os.path.normpath(path)
+                    file_usage_counts[normalized_path] = file_usage_counts.get(normalized_path, 0) + 1
+
+    # Check and handle sourcecache paths
+    if source_or_target in ['both', 'source']:
+        source_paths = job['sourcecache'] if isinstance(job['sourcecache'], list) else [job['sourcecache']]
+        for source_path in source_paths:
+            normalized_source_path = os.path.normpath(source_path)
+            file_use_count = file_usage_counts.get(normalized_source_path, 0)
+            if file_use_count < 2:
+                if os.path.exists(normalized_source_path):
+                    try:
+                        os.remove(normalized_source_path)
+                        action_message = f"Successfully deleted the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it is no longer needed by any other jobs"
+                    except Exception as e:
+                        action_message = f"{RED}Failed to delete {YELLOW}{os.path.basename(normalized_source_path)}{ENDC}: {e}"
+                else:
+                    action_message = f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it does not exist."
+            else:
+                action_message = f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it's needed by another job."
+            if debugging:
+                custom_print(f"{action_message}\n\n")
+
+    # Check and handle targetcache path
+    if source_or_target in ['both', 'target']:
+        target_cache_path = job['targetcache']
+        if isinstance(target_cache_path, list):
+            target_cache_path = target_cache_path[0]  # Assuming the first element if it's erroneously a list
+        normalized_target_path = os.path.normpath(target_cache_path)
+        if file_usage_counts.get(normalized_target_path, 0) < 2:
+            if os.path.exists(normalized_target_path):
+                try:
+                    os.remove(normalized_target_path)
+                    if debugging:
+                        custom_print(f"Successfully deleted the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it is no longer needed by any other jobs\n\n")
+                except Exception as e:
+                    if debugging:
+                        custom_print(f"{RED}Failed to delete {YELLOW}{os.path.basename(normalized_target_path)}{ENDC}: {e}\n\n")
+            else:
+                if debugging:
+                    custom_print(f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it does not exist.\n\n")
+        else:
+            if debugging:
+                custom_print(f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it's needed by another job.\n\n")
 
 
 ##################################
 #startup_init_checks_and_cleanup     
 ##################################
+#Globals and toggles
+
+script_root = os.path.dirname(os.path.abspath(__file__))
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(script_root)))
+# Appending 'QueueItUp' to the adjusted base directory
+user_dir = "QueueItUp"
+working_dir = os.path.normpath(os.path.join(base_dir, user_dir))
+media_cache_dir = os.path.normpath(os.path.join(working_dir, "mediacache"))
+thumbnail_dir = os.path.normpath(os.path.join(working_dir, "thumbnails"))
+jobs_queue_file = os.path.normpath(os.path.join(working_dir, "jobs_queue.json"))
+
+debugging = True
+keep_completed_jobs = False
+ADD_JOB_BUTTON = gradio.Button("Add Job ", variant="primary")
+RUN_JOBS_BUTTON = gradio.Button("Run Jobs", variant="primary")
+EDIT_JOB_BUTTON = gradio.Button("Edit Jobs")
+#status_priority = {'editing': 0, 'pending': 1, 'failed': 2, 'executing': 3, 'completed': 4}
+JOB_IS_RUNNING = 0
+JOB_IS_EXECUTING = 0
+PENDING_JOBS_COUNT = 0
+CURRENT_JOB_NUMBER = 0
+edit_window = 0
+image_references = {}
+    # ANSI Color Codes     
+RED = '\033[91m'     #use this  
+GREEN = '\033[92m'     #use this  
+YELLOW = '\033[93m'     #use this  
+BLUE = '\033[94m'     #use this  
+ENDC = '\033[0m'       #use this    Resets color to default
+custom_print("Working Directory:", working_dir)
+custom_print("Media Cache Directory:", media_cache_dir)
+custom_print("Jobs Queue File:", jobs_queue_file)
 custom_print(f"{BLUE}Welcome Back To FaceFusion Queueing Addon\n\n")
 custom_print(f"Checking Status{ENDC}\n\n")
 if not os.path.exists(working_dir):
@@ -1227,8 +1173,6 @@ create_and_verify_json(jobs_queue_file)
 check_for_completed_failed_or_aborted_jobs()
 custom_print(f"{GREEN}STATUS CHECK COMPLETED. {BLUE}You are now ready to QUEUE IT UP!{ENDC}")
 print_existing_jobs()
-
-
 
 def run(ui: gradio.Blocks) -> None:
     global server
