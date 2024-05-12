@@ -1,5 +1,5 @@
 import multiprocessing
-import gradio
+import gradio as gr
 import os
 import re
 import sys
@@ -8,9 +8,10 @@ import math
 import json
 import tempfile
 import shutil
+import socket
 import shlex
 import logging
-import tkinter
+import tkinter as tk
 import datetime
 import platform
 import threading
@@ -33,54 +34,54 @@ def pre_render() -> bool:
 
 
 
-def render() -> gradio.Blocks:
+def render() -> gr.Blocks:
     global ADD_JOB_BUTTON, RUN_JOBS_BUTTON, status_window
-    with gradio.Blocks() as layout:
-        with gradio.Row():
-            with gradio.Column(scale = 2):
-                with gradio.Blocks():
+    with gr.Blocks() as layout:
+        with gr.Row():
+            with gr.Column(scale = 2):
+                with gr.Blocks():
                     about.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     frame_processors.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     frame_processors_options.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     execution.render()
                     execution_thread_count.render()
                     execution_queue_count.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     memory.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     temp_frame.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     output_options.render()
-            with gradio.Column(scale = 2):
-                with gradio.Blocks():
+            with gr.Column(scale = 2):
+                with gr.Blocks():
                     source.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     target.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     output.render()
-                # with gradio.Blocks():
+                # with gr.Blocks():
                     # status_window.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     ADD_JOB_BUTTON.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     RUN_JOBS_BUTTON.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     EDIT_JOB_BUTTON.render()
-            with gradio.Column(scale = 3):
-                with gradio.Blocks():
+            with gr.Column(scale = 3):
+                with gr.Blocks():
                     preview.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     trim_frame.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     face_selector.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     face_masker.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     face_analyser.render()
-                with gradio.Blocks():
+                with gr.Blocks():
                     common_options.render()
     return layout
 
@@ -201,15 +202,6 @@ def assemble_queue():
         custom_print(f"{GREEN}Source file{ENDC} copied to Media Cache folder: {GREEN}{source_basenames}{ENDC}\n\n")
     cache_target_path = copy_to_media_cache(target_path)
     custom_print(f"{GREEN}Target file{ENDC} copied to Media Cache folder: {GREEN}{os.path.basename(cache_target_path)}{ENDC}\n\n")
-     
-    # # Convert list of paths to a single string with space separators
-    # if isinstance(cache_source_paths, list):
-        # string_cache_source_paths = ' '.join(f'-s "{path}"' for path in cache_source_paths)
-    # else:
-        # string_cache_source_paths = f'-s "{cache_source_paths}"'
-
-    # # Replace commas with space separators between multiple paths
-    # string_cache_source_paths = string_cache_source_paths.replace(",", " ")
 
 
     # Construct the arguments string
@@ -227,7 +219,8 @@ def assemble_queue():
     new_job = {
         "job_args": job_args,
         "status": "pending",
-        "headless": "--headless",       
+        "headless": "--headless",
+        "frame_processors": ['face_swapper', 'face_enhancer'],
         "sourcecache": (cache_source_paths),
         "targetcache": (cache_target_path),
         "output_path": (output_path),
@@ -236,7 +229,7 @@ def assemble_queue():
         with open(os.path.join(working_dir, f"job_args.txt"), "w") as file:
             for key, val in current_values.items():
                 file.write(f"{key}: {val}\n")
-        custom_print("job_args.txt created")
+
     if found_editing:
         if not (oldeditjob['sourcecache'] == new_job['sourcecache'] or oldeditjob['sourcecache'] == new_job['targetcache']):
             check_if_needed(oldeditjob, 'source')
@@ -251,24 +244,19 @@ def assemble_queue():
         jobs.append(new_job)
         save_jobs(jobs_queue_file, jobs)
     
+
+    if edit_queue_window > 0:
+        print("edit queue windows is open")
+        count_existing_jobs()
+        edit_queue.destroy()
+
+    count_existing_jobs()
     # edit_queue.refresh_frame_listbox()
     if JOB_IS_RUNNING:
-        custom_print(f"{BLUE}job # {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT} was added {ENDC}\n\n")
+        custom_print(f"{BLUE}job # {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT + 1} was added {ENDC}\n\n")
     else:
-        custom_print(f"{BLUE}Your Job was Added to the queue,{ENDC} there are a total of {GREEN}#{PENDING_JOBS_COUNT} Job(s){ENDC} in the queue,  Add More Jobs, Edit the Queue, or Click Run Queue to Execute all the queued jobs")
+        custom_print(f"{BLUE}Your Job was Added to the queue,{ENDC} there are a total of {GREEN}#{PENDING_JOBS_COUNT} Job(s){ENDC} in the queue,  Add More Jobs, Edit the Queue,\n\n or Click Run Queue to Execute all the queued jobs\n\n")
 
-
-    if isinstance(edit_window, tkinter.Entry):  # Replace tkinter.Entry with the specific widget type if different
-        if edit_window.get() == first_check_value:
-            time.sleep(2)  # Wait 2 seconds
-            # Check edit_window if value is greater than first_check_value
-            if edit_window.get() > first_check_value:
-                if hasattr(edit_queue, 'refresh_frame_listbox'):
-                    edit_queue.refresh_frame_listbox()
-                else:
-                    print("Error: edit_queue does not have a method 'refresh_frame_listbox'.")
-    count_existing_jobs()
-    
 def run_job_args(current_run_job):
 
     if isinstance(current_run_job['sourcecache'], list):
@@ -281,10 +269,6 @@ def run_job_args(current_run_job):
 
     simulated_args = f"{arg_source_paths} {arg_target_path} {arg_output_path} {current_run_job['headless']} {current_run_job['job_args']}"
     simulated_cmd = simulated_args.replace('\\\\', '\\')
-
-    simulated_cmd = f"{simulated_args}"
-    print(simulated_cmd)
-
     result = subprocess.run(f"python run.py {simulated_cmd}")
 
 
@@ -320,30 +304,19 @@ def execute_jobs():
         CURRENT_JOB_NUMBER += 1
         custom_print(f"{BLUE}Starting Job #{GREEN} {CURRENT_JOB_NUMBER}{ENDC}\n\n")
 
-        printjobtype = current_run_job['job_args']
-        custom_print(f"{BLUE}Executing Job # {CURRENT_JOB_NUMBER} of {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT}  {ENDC} - {YELLOW}{printjobtype}\n\n")
+        printjobtype = current_run_job['frame-processors']
+        custom_print(f"{BLUE}Executing Job # {CURRENT_JOB_NUMBER} of {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT}  {ENDC}\n\n")
 
         if isinstance(current_run_job['sourcecache'], list):
             source_basenames = [os.path.basename(path) for path in current_run_job['sourcecache']]
         else:
             source_basenames = os.path.basename(current_run_job['sourcecache'])
 
-        custom_print(f"Job #{CURRENT_JOB_NUMBER} will be SWAPPING - {GREEN}{source_basenames}{ENDC} to -> {GREEN}{os.path.basename(current_run_job['targetcache'])}{ENDC}\n\n")
+        custom_print(f"{BLUE}Job #{CURRENT_JOB_NUMBER} will be doing {YELLOW}{printjobtype}{ENDC} - with source {GREEN}{source_basenames}{ENDC} to -> target {GREEN}{os.path.basename(current_run_job['targetcache'])}{ENDC}\n\n")
 
 #######################################
-        if isinstance(current_run_job['sourcecache'], list):
-            arg_source_paths = ' '.join(f'-s "{p}"' for p in current_run_job['sourcecache'])
-        else:
-            arg_source_paths = f"-s \"{current_run_job['sourcecache']}\""
-            
-        arg_target_path = f"-t \"{current_run_job['targetcache']}\""
-        arg_output_path = f"-o \"{current_run_job['output_path']}\""
-
-        simulated_args = f"{arg_source_paths} {arg_target_path} {arg_output_path} {current_run_job['headless']} {current_run_job['job_args']}"
-        simulated_cmd = simulated_args.replace('\\\\', '\\')
-        print(simulated_cmd)
-        result = subprocess.run(f"python run.py {simulated_cmd}")
-#######################################
+        run_job_args(current_run_job)
+ #######################################
         current_run_job['status'] = 'completed'
 
         if current_run_job['status'] == 'completed':
@@ -384,53 +357,54 @@ def execute_jobs():
 
 
 def edit_queue():
-    global root, frame, output_text, edit_window, jobs_queue_file, jobs
-    EDIT_JOB_BUTTON = gradio.Button("Edit Queue")
+    global root, frame, output_text, edit_queue_window, jobs_queue_file, jobs
+    EDIT_JOB_BUTTON = gr.Button("Edit Queue")
     jobs = load_jobs(jobs_queue_file)  
-    root = tkinter.Tk()
+    root = tk.Tk()
     root.geometry('1200x800')
     root.title("Edit Queued Jobs")
     root.lift()
     root.attributes('-topmost', True)
     root.after_idle(root.attributes, '-topmost', False)
     scrollbar = Scrollbar(root)
-    scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
-    canvas = tkinter.Canvas(root, scrollregion=(0, 0, 0, 7000))
-    canvas.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    canvas = tk.Canvas(root, scrollregion=(0, 0, 0, 7000))
+    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     frame = Frame(canvas)
     canvas.create_window((0, 0), window=frame, anchor='nw')
     canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
     custom_font = font.Font(family="Helvetica", size=12, weight="bold")
     bold_font = font.Font(family="Helvetica", size=12, weight="bold")
     
-    close_button = tkinter.Button(root, text="Close Window", command=root.destroy, font=custom_font)
+    close_button = tk.Button(root, text="Close Window", command=root.destroy, font=custom_font)
     close_button.pack(pady=5)
 
-    refresh_button = tkinter.Button(root, text="Refresh View", command=lambda: refresh_frame_listbox(), font=custom_font)
+    refresh_button = tk.Button(root, text="Refresh View", command=lambda: refresh_frame_listbox(), font=custom_font)
     refresh_button.pack(pady=5)
 
-    pending_jobs_button = tkinter.Button(root, text=f"Delete {PENDING_JOBS_COUNT} Pending Jobs", command=lambda: delete_pending_jobs(), font=custom_font)
+    pending_jobs_button = tk.Button(root, text=f"Delete {PENDING_JOBS_COUNT} Pending Jobs", command=lambda: delete_pending_jobs(), font=custom_font)
     pending_jobs_button.pack(pady=5)
     
-    missing_jobs_button = tkinter.Button(root, text="Delete Missing ", command=lambda: delete_missing_media_jobs(), font=custom_font)
+    missing_jobs_button = tk.Button(root, text="Delete Missing ", command=lambda: delete_missing_media_jobs(), font=custom_font)
     missing_jobs_button.pack(pady=5)
     
-    archived_jobs_button = tkinter.Button(root, text="Delete archived ", command=lambda: delete_archived_jobs(), font=custom_font)
+    archived_jobs_button = tk.Button(root, text="Delete archived ", command=lambda: delete_archived_jobs(), font=custom_font)
     archived_jobs_button.pack(pady=5)
     
     
 
-    failed_jobs_button = tkinter.Button(root, text="Delete Failed", command=lambda: delete_failed_jobs(), font=custom_font)
+    failed_jobs_button = tk.Button(root, text="Delete Failed", command=lambda: delete_failed_jobs(), font=custom_font)
     failed_jobs_button.pack(pady=5)
 
-    completed_jobs_button = tkinter.Button(root, text="Delete Completed", command=lambda: delete_completed_jobs(), font=custom_font)
+    completed_jobs_button = tk.Button(root, text="Delete Completed", command=lambda: delete_completed_jobs(), font=custom_font)
     completed_jobs_button.pack(pady=5)
+
+
 
     def refresh_frame_listbox():
         global jobs # Ensure we are modifying the global list
         status_priority = {'editing': 0, 'executing': 1, 'pending': 2, 'failed': 3, 'missing': 4, 'completed': 5, 'archived': 6}
         jobs = load_jobs(jobs_queue_file)
-        edit_window = 0
 
         # # First, sort the entire list by status priority
         jobs.sort(key=lambda x: status_priority.get(x['status'], 6))
@@ -438,11 +412,10 @@ def edit_queue():
         # Save the newly sorted list back to the file
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
-        # root.destroy()
-        # edit_queue()
+
     
     def close_window():
-        root.destroy()
+        root.destroy
         save_jobs(jobs_queue_file, jobs)
 
     def delete_pending_jobs():
@@ -521,25 +494,24 @@ def edit_queue():
             return
 
         # Update job status and turn off headless
-        job['headless'] = Null
+        job['headless'] = '--ui-layouts QueueItUp'
         job['status'] = 'editing'
         
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()
-        print (job['status'])
+
 
         top = Toplevel()
         top.title("Please Wait")
-        message_label = tkinter.Label(top, text="Please wait while the job loads back into FaceFusion...", padx=20, pady=20)
+        message_label = tk.Label(top, text="Please wait while the job loads back into FaceFusion...", padx=20, pady=20)
         message_label.pack()
-        print (job['status'])
-        run_job_args(job)
+
+
         top.after(1000, close_window)
-        top.update_idletasks()
-        x = (top.winfo_screenwidth() // 2) - (top.winfo_reqwidth() // 2)
-        y = (top.winfo_screenheight() // 2) - (top.winfo_reqheight() // 2)
-        top.geometry("+{}+{}".format(x, y))
-        top.after(7000, top.destroy)
+        top.after(2000, top.destroy)
+        root.destroy()
+
+        run_job_args(job)
 
     def output_path_job(job):
         selected_path = askdirectory(title="Select A New Output Path for this Job")
@@ -585,71 +557,71 @@ def edit_queue():
             save_jobs(jobs_queue_file, jobs)
             update_job_listbox()
 
-    def edit_arguments_text(job):
-        edit_window = tkinter.Toplevel()
-        edit_window.title("Edit Job Arguments")
-        edit_window.geometry("600x400")
+    # def edit_arguments_text(job):
+        # edit_arg_window = tk.Toplevel()
+        # edit_arg_window.title("Edit Job Arguments")
+        # edit_arg_window.geometry("600x400")
 
-        canvas = tkinter.Canvas(edit_window)
-        scrollbar = tkinter.Scrollbar(edit_window, orient="vertical", command=canvas.yview)
-        scrollable_frame = tkinter.Frame(canvas)
+        # canvas = tk.Canvas(edit_arg_window)
+        # scrollbar = tk.Scrollbar(edit_arg_window, orient="vertical", command=canvas.yview)
+        # scrollable_frame = tk.Frame(canvas)
 
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        scrollbar.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True)
-        canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
-        entries = {}
+        # canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        # canvas.configure(yscrollcommand=scrollbar.set)
+        # scrollbar.pack(side="right", fill="y")
+        # canvas.pack(side="left", fill="both", expand=True)
+        # canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
+        # entries = {}
 
-        excluded_keys = {
-            "FACE_MASK_REGION_GROUP", "MODELS", "PROBABILITY_LIMIT", "PROCESS_STATE",
-            "RATE_LIMIT", "STREAM_COUNTER", "VOICE_EXTRACTOR", "execution_providers",
-            "face_debugger_items", "face_mask_padding", "face_mask_regions",
-            "face_recognizer_model", "video_template_sizes", "ui_layouts", "force_download", "image_template_sizes"
-        }
+        # excluded_keys = {
+            # "FACE_MASK_REGION_GROUP", "MODELS", "PROBABILITY_LIMIT", "PROCESS_STATE",
+            # "RATE_LIMIT", "STREAM_COUNTER", "VOICE_EXTRACTOR", "execution_providers",
+            # "face_debugger_items", "face_mask_padding", "face_mask_regions",
+            # "face_recognizer_model", "video_template_sizes", "ui_layouts", "force_download", "image_template_sizes"
+        # }
 
-        def add_entry(key, value, parent_frame):
-            if key in excluded_keys:
-                return
+        # def add_entry(key, value, parent_frame):
+            # if key in excluded_keys:
+                # return
 
-            frame = tkinter.Frame(parent_frame)
-            frame.pack(fill='x', expand=True)
+            # frame = tk.Frame(parent_frame)
+            # frame.pack(fill='x', expand=True)
 
-            label = tkinter.Label(frame, text=str(key) + ":")
-            label.pack(side='left', padx=5)
+            # label = tk.Label(frame, text=str(key) + ":")
+            # label.pack(side='left', padx=5)
 
-            if isinstance(value, list):
-                entry_frame = tkinter.Frame(frame)
-                entry_frame.pack(side='right', fill='x', expand=True)
-                entry = tkinter.Entry(entry_frame, width=50)
-                entry.insert(0, ", ".join(str(x) for x in value))
-                entry.pack(fill='x', expand=True)
-                entries[key] = entry
-            else:
-                entry = tkinter.Entry(frame)
-                entry.insert(0, str(value))
-                entry.pack(side='right', fill='x', expand=True)
-                entries[key] = entry
+            # if isinstance(value, list):
+                # entry_frame = tk.Frame(frame)
+                # entry_frame.pack(side='right', fill='x', expand=True)
+                # entry = tk.Entry(entry_frame, width=50)
+                # entry.insert(0, ", ".join(str(x) for x in value))
+                # entry.pack(fill='x', expand=True)
+                # entries[key] = entry
+            # else:
+                # entry = tk.Entry(frame)
+                # entry.insert(0, str(value))
+                # entry.pack(side='right', fill='x', expand=True)
+                # entries[key] = entry
 
-        for key, value in job['job_args'].items():
-            add_entry(key, value, scrollable_frame)
+        # for key, value in job['job_args'].items():
+            # add_entry(key, value, scrollable_frame)
 
-        def save_changes():
-            for key, entry in entries.items():
-                if isinstance(job['job_args'][key], list):
-                    job[key] = [x.strip() for x in entry.get().split(',')]
-                else:
-                    job[key] = entry.get()
-            edit_window.destroy()
+        # def save_changes():
+            # for key, entry in entries.items():
+                # if isinstance(job['job_args'][key], list):
+                    # job[key] = [x.strip() for x in entry.get().split(',')]
+                # else:
+                    # job[key] = entry.get()
+            # edit_arg_window.destroy()
 
-        ok_button = tkinter.Button(edit_window, text="OK", command=save_changes)
-        ok_button.pack(pady=5)
+        # ok_button = tk.Button(edit_arg_window, text="OK", command=save_changes)
+        # ok_button.pack(pady=5)
 
-        cancel_button = tkinter.Button(edit_window, text="Cancel", command=edit_window.destroy)
-        cancel_button.pack(pady=5)
-        scrollable_frame.update_idletasks()
-        canvas.configure(scrollregion=canvas.bbox("all"))
-        edit_window.mainloop()
+        # cancel_button = tk.Button(edit_arg_window, text="Cancel", command=edit_arg_window.destroy)
+        # cancel_button.pack(pady=5)
+        # scrollable_frame.update_idletasks()
+        # canvas.configure(scrollregion=canvas.bbox("all"))
+        # edit_arg_window.mainloop()
         
     def select_job_file(parent, job, source_or_target):
         file_types = []
@@ -786,6 +758,7 @@ def edit_queue():
 
     def update_job_listbox():
         global image_references, frame
+
         try:
             if frame.winfo_exists():  # Check if the frame still exists
                 count_existing_jobs()
@@ -794,10 +767,10 @@ def edit_queue():
                     widget.destroy()
 
                 bg_color = "white"  # Example background color
-                job_frame = tkinter.Frame(frame, borderwidth=2, relief='groove', background=bg_color)
+                job_frame = tk.Frame(frame, borderwidth=2, relief='groove', background=bg_color)
                 job_frame.pack()  # You would add proper packing or grid placement here
 
-        except tkinter.TclError as e:
+        except tk.TclError as e:
             print("Failed to update the job listbox because the Tkinter application or the frame has been destroyed.")
             print(e)
         for index, job in enumerate(jobs):
@@ -825,25 +798,25 @@ def edit_queue():
             if job['status'] == 'archived':
                 bg_color = 'brown'
             # Create job frame with updated background color
-            job_frame = tkinter.Frame(frame, borderwidth=2, relief='groove', background=bg_color)
+            job_frame = tk.Frame(frame, borderwidth=2, relief='groove', background=bg_color)
             job_frame.pack(fill='x', expand=True, padx=5, pady=5)
 
             # Move job frame for the move buttons
-            move_job_frame = tkinter.Frame(job_frame)
+            move_job_frame = tk.Frame(job_frame)
             move_job_frame.pack(side='left', fill='x', padx=5)
             # Move up button
-            move_top_button = tkinter.Button(move_job_frame, text="   Top   ", command=lambda idx=index: move_job_to_top(idx))
+            move_top_button = tk.Button(move_job_frame, text="   Top   ", command=lambda idx=index: move_job_to_top(idx))
             move_top_button.pack(side='top', fill='y')
-            move_up_button = tkinter.Button(move_job_frame, text="   Up   ", command=lambda idx=index: move_job_up(idx))
+            move_up_button = tk.Button(move_job_frame, text="   Up   ", command=lambda idx=index: move_job_up(idx))
             move_up_button.pack(side='top', fill='y')
             # Move down button
-            move_down_button = tkinter.Button(move_job_frame, text=" Down ", command=lambda idx=index: move_job_down(idx))
+            move_down_button = tk.Button(move_job_frame, text=" Down ", command=lambda idx=index: move_job_down(idx))
             move_down_button.pack(side='top', fill='y')
             # Move bottom button
-            move_bottom_button = tkinter.Button(move_job_frame, text="Bottom", command=lambda idx=index: move_job_to_bottom(idx))
+            move_bottom_button = tk.Button(move_job_frame, text="Bottom", command=lambda idx=index: move_job_to_bottom(idx))
             move_bottom_button.pack(side='top', fill='y')
             
-            source_frame = tkinter.Frame(job_frame)
+            source_frame = tk.Frame(job_frame)
             source_frame.pack(side='left', fill='x', padx=5)
             source_button = create_job_thumbnail(job_frame, job, source_or_target = 'source')
             if source_button:
@@ -852,23 +825,23 @@ def edit_queue():
                 print("Failed to create source button.")
 
             # Frame to hold the arrow label and archive button
-            action_archive_frame = tkinter.Frame(job_frame)
+            action_archive_frame = tk.Frame(job_frame)
             action_archive_frame.pack(side='left', fill='x', padx=5)
             
 
             arrow_label = Label(action_archive_frame, text=f"{job['status']}\n\u27A1", font=bold_font)
             arrow_label.pack(side='top', padx=5)
             
-            output_path_button = tkinter.Button(action_archive_frame, text="Output Path", command=lambda j=job: output_path_job(j))
+            output_path_button = tk.Button(action_archive_frame, text="Output Path", command=lambda j=job: output_path_job(j))
             output_path_button.pack(side='top', padx=2)
                         
-            delete_button = tkinter.Button(action_archive_frame, text=" Delete ", command=lambda j=job: delete_job(j))
+            delete_button = tk.Button(action_archive_frame, text=" Delete ", command=lambda j=job: delete_job(j))
             delete_button.pack(side='top', padx=2)
             
-            archive_button = tkinter.Button(action_archive_frame, text="Archive",command=lambda j=job: archive_job(j))
+            archive_button = tk.Button(action_archive_frame, text="Archive",command=lambda j=job: archive_job(j))
             archive_button.pack(side='top', padx=2)
 
-            target_frame = tkinter.Frame(job_frame)
+            target_frame = tk.Frame(job_frame)
             target_frame.pack(side='left', fill='x', padx=5)
             target_button = create_job_thumbnail(job_frame, job,source_or_target = 'target')
             if target_button:
@@ -878,28 +851,32 @@ def edit_queue():
     
 
             # frame for the Command Arguments
-            argument_frame = tkinter.Frame(job_frame)
+            argument_frame = tk.Frame(job_frame)
             argument_frame.pack(side='left', fill='x', padx=5)
 
             custom_font = font.Font(family="Helvetica", size=12, weight="bold")
-            facefusion_button = tkinter.Button(argument_frame, text=f"UN-Queue It Up\n\n --EDIT ARGUMENTS", font=bold_font, justify='center')
+            facefusion_button = tk.Button(argument_frame, text=f"UN-Queue It Up\n\n --EDIT ARGUMENTS", font=bold_font, justify='center')
             facefusion_button.pack(side='top', padx=5, fill='x', expand=False)
             facefusion_button.bind("<Button-1>", lambda event, j=job: reload_job_in_facefusion_edit(j))
 
 
-            custom_font = font.Font(family="Helvetica", size=10, weight="bold")
-            argument_button = tkinter.Button(argument_frame, text=f" {job['job_args']} ", wraplength=325, justify='center')
-            argument_button.pack(side='bottom', padx=5, fill='x', expand=False)
-            argument_button.bind("<Button-1>", lambda event, j=job: edit_arguments_text(j))
-    
-    edit_queue.refresh_frame_listbox = refresh_frame_listbox
-    edit_window += 1
+            # custom_font = font.Font(family="Helvetica", size=10, weight="bold")
+            # argument_button = tk.Button(argument_frame, text=f" {job['job_args']} ", wraplength=325, justify='center')
+            # argument_button.pack(side='bottom', padx=5, fill='x', expand=False)
+            # argument_button.bind("<Button-1>", lambda event, j=job: edit_arguments_text(j))
+    update_job_listbox
+    #edit_queue.refresh_frame_listbox = refresh_frame_listbox
+    edit_queue.update_job_listbox = update_job_listbox
+    edit_queue_window += 1
     root.after(1000, update_job_listbox) 
+    #refresh_frame_listbox
     root.mainloop()
+    edit_queue_window = 0
+    return root
     if __name__ == '__main__':
         edit_queue()
     # Call the nested function using the attribute
-    edit_queue.refresh_frame_listbox()
+    #edit_queue.refresh_frame_listbox()
 
     
 
@@ -1131,7 +1108,7 @@ def check_if_needed(job, source_or_target):
 #startup_init_checks_and_cleanup     
 ##################################
 #Globals and toggles
-
+# for Automatic1111 use this line for base_dir = tempfile.gettempdir()
 script_root = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(script_root)))
 # Appending 'QueueItUp' to the adjusted base directory
@@ -1141,17 +1118,17 @@ media_cache_dir = os.path.normpath(os.path.join(working_dir, "mediacache"))
 thumbnail_dir = os.path.normpath(os.path.join(working_dir, "thumbnails"))
 jobs_queue_file = os.path.normpath(os.path.join(working_dir, "jobs_queue.json"))
 
-debugging = True
+debugging = False
 keep_completed_jobs = False
-ADD_JOB_BUTTON = gradio.Button("Add Job ", variant="primary")
-RUN_JOBS_BUTTON = gradio.Button("Run Jobs", variant="primary")
-EDIT_JOB_BUTTON = gradio.Button("Edit Jobs")
+ADD_JOB_BUTTON = gr.Button("Add Job ", variant="primary")
+RUN_JOBS_BUTTON = gr.Button("Run Jobs", variant="primary")
+EDIT_JOB_BUTTON = gr.Button("Edit Jobs")
 #status_priority = {'editing': 0, 'pending': 1, 'failed': 2, 'executing': 3, 'completed': 4}
 JOB_IS_RUNNING = 0
 JOB_IS_EXECUTING = 0
 PENDING_JOBS_COUNT = 0
 CURRENT_JOB_NUMBER = 0
-edit_window = 0
+edit_queue_window = 0
 image_references = {}
     # ANSI Color Codes     
 RED = '\033[91m'     #use this  
@@ -1174,9 +1151,7 @@ check_for_completed_failed_or_aborted_jobs()
 custom_print(f"{GREEN}STATUS CHECK COMPLETED. {BLUE}You are now ready to QUEUE IT UP!{ENDC}")
 print_existing_jobs()
 
-def run(ui: gradio.Blocks) -> None:
+def run(ui: gr.Blocks) -> None:
     global server
     concurrency_count = min(8, multiprocessing.cpu_count())
     ui.queue(concurrency_count=concurrency_count).launch(show_api=False, inbrowser=True, quiet=False)
-
-
