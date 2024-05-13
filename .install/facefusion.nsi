@@ -62,7 +62,7 @@ FunctionEnd
 Section 'Prepare Your Platform'
 	DetailPrint 'Install GIT'
 	inetc::get 'https://github.com/git-for-windows/git/releases/download/v2.45.0.windows.1/Git-2.45.0-64-bit.exe' '$TEMP\Git.exe'
-	ExecWait '$TEMP\Git.exe /VERYSILENT' $0
+	ExecWait '$TEMP\Git.exe /CURRENTUSER /VERYSILENT /DIR=$LOCALAPPDATA\Programs\Git' $0
 	Delete '$TEMP\Git.exe'
 
 	${If} $0 > 0
@@ -71,12 +71,12 @@ Section 'Prepare Your Platform'
 	${EndIf}
 
 	DetailPrint 'Uninstall Conda'
-	ExecWait '$PROFILE\miniconda3\Uninstall-Miniconda3.exe /S _?=$PROFILE\miniconda3'
-	RMDir /r '$PROFILE\miniconda3'
+	ExecWait '$LOCALAPPDATA\Programs\Miniconda3\Uninstall-Miniconda3.exe /S _?=$LOCALAPPDATA\Programs\Miniconda3'
+	RMDir /r '$LOCALAPPDATA\Programs\Miniconda3'
 
 	DetailPrint 'Install Conda'
 	inetc::get 'https://repo.anaconda.com/miniconda/Miniconda3-py310_24.3.0-0-Windows-x86_64.exe' '$TEMP\Miniconda3.exe'
-	ExecWait '$TEMP\Miniconda3.exe /InstallationType=JustMe /AddToPath=1 /S' $1
+	ExecWait '$TEMP\Miniconda3.exe /InstallationType=JustMe /AddToPath=1 /S /D=$LOCALAPPDATA\Programs\Miniconda3' $1
 	Delete '$TEMP\Miniconda3.exe'
 
 	${If} $1 > 0
@@ -90,13 +90,13 @@ Section 'Download Your Copy'
 
 	DetailPrint 'Download Your Copy'
 	RMDir /r $INSTDIR
-	nsExec::Exec '$PROGRAMFILES64\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch next .'
+	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch next .'
 SectionEnd
 
 Section 'Setup Your Environment'
 	DetailPrint 'Setup Your Environment'
-	nsExec::Exec '$PROFILE\miniconda3\Scripts\conda.exe init --all'
-	nsExec::Exec '$PROFILE\miniconda3\Scripts\conda.exe create --name facefusion python=3.10 --yes'
+	nsExec::Exec '$LOCALAPPDATA\Programs\Miniconda3\Scripts\conda.exe init --all'
+	nsExec::Exec '$LOCALAPPDATA\Programs\Miniconda3\Scripts\conda.exe create --name facefusion python=3.10 --yes'
 SectionEnd
 
 Section 'Create Install Batch'
@@ -167,7 +167,7 @@ Section 'Register The Application'
 SectionEnd
 
 Section 'Uninstall'
-	nsExec::Exec '$PROFILE\miniconda3\Scripts\conda.exe env remove --name facefusion --yes'
+	nsExec::Exec '$LOCALAPPDATA\Programs\Miniconda3\Scripts\conda.exe env remove --name facefusion --yes'
 
 	Delete $DESKTOP\FaceFusion.lnk
 	RMDir /r $SMPROGRAMS\FaceFusion
