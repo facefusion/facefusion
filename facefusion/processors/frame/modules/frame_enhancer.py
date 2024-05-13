@@ -81,6 +81,13 @@ MODELS : ModelSet =\
 		'path': resolve_relative_path('../.assets/models/span_kendata_x4.onnx'),
 		'size': (128, 8, 2),
 		'scale': 4
+	},
+	'ultra_sharp_x4':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ultra_sharp_x4.onnx',
+		'path': resolve_relative_path('../.assets/models/ultra_sharp_x4.onnx'),
+		'size': (128, 8, 2),
+		'scale': 4
 	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
