@@ -26,6 +26,13 @@ FRAME_PROCESSOR = None
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
+	'clear_reality_x4':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/clear_reality_x4.onnx',
+		'path': resolve_relative_path('../.assets/models/clear_reality_x4.onnx'),
+		'size': (128, 8, 2),
+		'scale': 4
+	},
 	'lsdir_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/lsdir_x4.onnx',
