@@ -1,5 +1,5 @@
 import multiprocessing
-import gradio as gr
+import gradio
 import os
 import re
 import sys
@@ -34,54 +34,54 @@ def pre_render() -> bool:
 
 
 
-def render() -> gr.Blocks:
+def render() -> gradio.Blocks:
     global ADD_JOB_BUTTON, RUN_JOBS_BUTTON, status_window
-    with gr.Blocks() as layout:
-        with gr.Row():
-            with gr.Column(scale = 2):
-                with gr.Blocks():
+    with gradio.Blocks() as layout:
+        with gradio.Row():
+            with gradio.Column(scale = 2):
+                with gradio.Blocks():
                     about.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     frame_processors.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     frame_processors_options.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     execution.render()
                     execution_thread_count.render()
                     execution_queue_count.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     memory.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     temp_frame.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     output_options.render()
-            with gr.Column(scale = 2):
-                with gr.Blocks():
+            with gradio.Column(scale = 2):
+                with gradio.Blocks():
                     source.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     target.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     output.render()
-                # with gr.Blocks():
+                # with gradio.Blocks():
                     # status_window.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     ADD_JOB_BUTTON.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     RUN_JOBS_BUTTON.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     EDIT_JOB_BUTTON.render()
-            with gr.Column(scale = 3):
-                with gr.Blocks():
+            with gradio.Column(scale = 3):
+                with gradio.Blocks():
                     preview.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     trim_frame.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     face_selector.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     face_masker.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     face_analyser.render()
-                with gr.Blocks():
+                with gradio.Blocks():
                     common_options.render()
     return layout
 
@@ -117,22 +117,11 @@ def assemble_queue():
     global RUN_JOBS_BUTTON, ADD_JOB_BUTTON, jobs_queue_file, jobs
     # default_values are already initialized, do not call for new default values
     current_values = get_values_from_globals('current_values')
+
+
     differences = {}
     dicts = [current_values, default_values]  # Ensure these are defined or passed to this function appropriately
 
-    for d in dicts:
-        if "execution_providers" in d:
-            new_providers = []
-            for provider in d["execution_providers"]:
-                if provider == "CUDAExecutionProvider":
-                    new_providers.append('cuda')
-                elif provider == "CPUExecutionProvider":
-                    new_providers.append('cpu')
-                elif provider == "CoreMLExecutionProvider":
-                    new_providers.append('coreml')
-                else:
-                    new_providers.append(provider)  # keep original if no match
-            d["execution_providers"] = new_providers  # Update the list with the modified values
 
     keys_to_skip = ["source_paths", "target_path", "output_path", "ui_layouts", "face_recognizer_model"]
     # Check if "frame-processors" includes "face-enhancer" or "frame-enhancer"
@@ -244,21 +233,19 @@ def assemble_queue():
         jobs.append(new_job)
         save_jobs(jobs_queue_file, jobs)
     
-
     if edit_queue_window > 0:
         print("edit queue windows is open")
         count_existing_jobs()
-        edit_queue.destroy()
+        edit_queue.refresh_frame_listbox()
+
 
     count_existing_jobs()
-    # edit_queue.refresh_frame_listbox()
     if JOB_IS_RUNNING:
         custom_print(f"{BLUE}job # {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT + 1} was added {ENDC}\n\n")
     else:
         custom_print(f"{BLUE}Your Job was Added to the queue,{ENDC} there are a total of {GREEN}#{PENDING_JOBS_COUNT} Job(s){ENDC} in the queue,  Add More Jobs, Edit the Queue,\n\n or Click Run Queue to Execute all the queued jobs\n\n")
 
 def run_job_args(current_run_job):
-
     if isinstance(current_run_job['sourcecache'], list):
         arg_source_paths = ' '.join(f'-s "{p}"' for p in current_run_job['sourcecache'])
     else:
@@ -270,7 +257,13 @@ def run_job_args(current_run_job):
     simulated_args = f"{arg_source_paths} {arg_target_path} {arg_output_path} {current_run_job['headless']} {current_run_job['job_args']}"
     simulated_cmd = simulated_args.replace('\\\\', '\\')
     result = subprocess.run(f"python run.py {simulated_cmd}")
+    return_code = result.wait()
+    if return_code == 0:
+        current_run_job['status'] = 'completed'
+    else:
+        current_run_job['status'] = 'failed'
 
+    return return_code
 
 def execute_jobs():
     global JOB_IS_RUNNING, JOB_IS_EXECUTING,CURRENT_JOB_NUMBER,jobs_queue_file, jobs
@@ -303,8 +296,7 @@ def execute_jobs():
         JOB_IS_EXECUTING = 1
         CURRENT_JOB_NUMBER += 1
         custom_print(f"{BLUE}Starting Job #{GREEN} {CURRENT_JOB_NUMBER}{ENDC}\n\n")
-
-        printjobtype = current_run_job['frame-processors']
+        printjobtype = current_run_job['frame_processors']
         custom_print(f"{BLUE}Executing Job # {CURRENT_JOB_NUMBER} of {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT}  {ENDC}\n\n")
 
         if isinstance(current_run_job['sourcecache'], list):
@@ -314,10 +306,10 @@ def execute_jobs():
 
         custom_print(f"{BLUE}Job #{CURRENT_JOB_NUMBER} will be doing {YELLOW}{printjobtype}{ENDC} - with source {GREEN}{source_basenames}{ENDC} to -> target {GREEN}{os.path.basename(current_run_job['targetcache'])}{ENDC}\n\n")
 
-#######################################
+########
         run_job_args(current_run_job)
- #######################################
-        current_run_job['status'] = 'completed'
+########
+
 
         if current_run_job['status'] == 'completed':
             custom_print(f"{BLUE}Job # {CURRENT_JOB_NUMBER} {GREEN} completed successfully {BLUE}{PENDING_JOBS_COUNT} jobs remaining, pausing 5 seconds before starting next job{ENDC}\n")
@@ -357,8 +349,8 @@ def execute_jobs():
 
 
 def edit_queue():
-    global root, frame, output_text, edit_queue_window, jobs_queue_file, jobs
-    EDIT_JOB_BUTTON = gr.Button("Edit Queue")
+    global root, frame, output_text, edit_queue_window, jobs_queue_file, jobs, job
+    EDIT_JOB_BUTTON = gradio.Button("Edit Queue")
     jobs = load_jobs(jobs_queue_file)  
     root = tk.Tk()
     root.geometry('1200x800')
@@ -492,25 +484,18 @@ def edit_queue():
         if not response:
             # If user clicks 'No', exit the function
             return
-
         # Update job status and turn off headless
         job['headless'] = '--ui-layouts QueueItUp'
         job['status'] = 'editing'
-        
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()
-
-
         top = Toplevel()
         top.title("Please Wait")
         message_label = tk.Label(top, text="Please wait while the job loads back into FaceFusion...", padx=20, pady=20)
         message_label.pack()
-
-
         top.after(1000, close_window)
         top.after(2000, top.destroy)
         root.destroy()
-
         run_job_args(job)
 
     def output_path_job(job):
@@ -531,7 +516,6 @@ def edit_queue():
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()  # Refresh the job list to show the new thumbnail or placeholder
         refresh_frame_listbox()
-
 
     def move_job_up(index):
         if index > 0:
@@ -557,72 +541,97 @@ def edit_queue():
             save_jobs(jobs_queue_file, jobs)
             update_job_listbox()
 
-    # def edit_arguments_text(job):
-        # edit_arg_window = tk.Toplevel()
-        # edit_arg_window.title("Edit Job Arguments")
-        # edit_arg_window.geometry("600x400")
+###########################
+    def edit_job_arguments_text(job):
+        job_args = job.get('job_args', '')
+        preprocessed_defaults = preprocess_execution_providers(default_values)
 
-        # canvas = tk.Canvas(edit_arg_window)
-        # scrollbar = tk.Scrollbar(edit_arg_window, orient="vertical", command=canvas.yview)
-        # scrollable_frame = tk.Frame(canvas)
+        edit_arg_window = tk.Toplevel()
+        edit_arg_window.title("Edit Job Arguments")
+        edit_arg_window.geometry("1050x500")
 
-        # canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        # canvas.configure(yscrollcommand=scrollbar.set)
-        # scrollbar.pack(side="right", fill="y")
-        # canvas.pack(side="left", fill="both", expand=True)
-        # canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
-        # entries = {}
+        canvas = tk.Canvas(edit_arg_window)
+        scrollable_frame = tk.Frame(canvas)
 
-        # excluded_keys = {
-            # "FACE_MASK_REGION_GROUP", "MODELS", "PROBABILITY_LIMIT", "PROCESS_STATE",
-            # "RATE_LIMIT", "STREAM_COUNTER", "VOICE_EXTRACTOR", "execution_providers",
-            # "face_debugger_items", "face_mask_padding", "face_mask_regions",
-            # "face_recognizer_model", "video_template_sizes", "ui_layouts", "force_download", "image_template_sizes"
-        # }
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.pack(side="left", fill="both", expand=True)
 
-        # def add_entry(key, value, parent_frame):
-            # if key in excluded_keys:
-                # return
+        entries = {}
+        checkboxes = {}
+        row = 0
+        col = 0
 
-            # frame = tk.Frame(parent_frame)
-            # frame.pack(fill='x', expand=True)
+        args_pattern = r'(--[\w-]+)\s+((?:.(?! --))+.)'
+        iter_args = re.finditer(args_pattern, job_args)
+        job_args_dict = {}
+        for match in iter_args:
+            arg, value = match.groups()
+            value = ' '.join(value.split())  # Normalize spaces
+            job_args_dict[arg] = value
+     # List of keys to skip
+        skip_keys = ['--source-paths', '--target-path', '--output-path', '--ui-layouts']
 
-            # label = tk.Label(frame, text=str(key) + ":")
-            # label.pack(side='left', padx=5)
+        for arg, default_value in default_values.items():
+            cli_arg = '--' + arg.replace('_', '-')
+            if cli_arg in skip_keys:
+                continue  # Skip the creation of GUI elements for these keys
 
-            # if isinstance(value, list):
-                # entry_frame = tk.Frame(frame)
-                # entry_frame.pack(side='right', fill='x', expand=True)
-                # entry = tk.Entry(entry_frame, width=50)
-                # entry.insert(0, ", ".join(str(x) for x in value))
-                # entry.pack(fill='x', expand=True)
-                # entries[key] = entry
-            # else:
-                # entry = tk.Entry(frame)
-                # entry.insert(0, str(value))
-                # entry.pack(side='right', fill='x', expand=True)
-                # entries[key] = entry
+            formatted_default_value = format_cli_value(default_value)
+            current_value = job_args_dict.get(cli_arg, formatted_default_value)
+            is_checked = cli_arg in job_args_dict
+            
+            var = tk.BooleanVar(value=is_checked)
+            chk = tk.Checkbutton(scrollable_frame, text=cli_arg, variable=var)
+            chk.grid(row=row, column=col*3, padx=5, pady=2, sticky="w")
 
-        # for key, value in job['job_args'].items():
-            # add_entry(key, value, scrollable_frame)
+            entry = tk.Entry(scrollable_frame)
+            entry.insert(0, str(current_value if current_value else default_value))
+            entry.grid(row=row, column=col*3+1, padx=5, pady=2, sticky="w")
+            entry.config(state='normal' if is_checked else 'disabled')
 
-        # def save_changes():
-            # for key, entry in entries.items():
-                # if isinstance(job['job_args'][key], list):
-                    # job[key] = [x.strip() for x in entry.get().split(',')]
-                # else:
-                    # job[key] = entry.get()
-            # edit_arg_window.destroy()
+            entries[cli_arg] = entry
+            checkboxes[cli_arg] = var
 
-        # ok_button = tk.Button(edit_arg_window, text="OK", command=save_changes)
-        # ok_button.pack(pady=5)
+            var.trace_add("write", lambda *args, var=var, entry=entry, value=current_value: update_entry(var, entry, value))
 
-        # cancel_button = tk.Button(edit_arg_window, text="Cancel", command=edit_arg_window.destroy)
-        # cancel_button.pack(pady=5)
-        # scrollable_frame.update_idletasks()
-        # canvas.configure(scrollregion=canvas.bbox("all"))
-        # edit_arg_window.mainloop()
-        
+            row += 1
+            if row >= 16:
+                row = 0
+                col += 1
+
+        def update_entry(var, entry, value):
+            if var.get():
+                entry.config(state=tk.NORMAL)
+                entry.delete(0, tk.END)
+                entry.insert(0, value)
+            else:
+                entry.config(state=tk.DISABLED)
+                entry.delete(0, tk.END)
+
+        def save_changes():
+            new_job_args = []
+            for arg, var in checkboxes.items():
+                if var.get():
+                    entry_text = entries[arg].get().strip()
+                    if entry_text:
+                        new_job_args.append(f"{arg} {entry_text}")
+
+            job['job_args'] = ' '.join(new_job_args)
+            print("Updated Job Args:", job['job_args'])
+            save_jobs(jobs_queue_file, jobs)
+            edit_arg_window.destroy()
+
+        ok_button = tk.Button(edit_arg_window, text="OK", command=save_changes)
+        ok_button.pack(pady=5, padx=5, side=tk.RIGHT)
+
+        cancel_button = tk.Button(edit_arg_window, text="Cancel", command=edit_arg_window.destroy)
+        cancel_button.pack(pady=5, padx=5, side=tk.RIGHT)
+
+        scrollable_frame.update_idletasks()
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        edit_arg_window.mainloop()
+
+############################
     def select_job_file(parent, job, source_or_target):
         file_types = []
         if source_or_target == 'source':
@@ -855,28 +864,27 @@ def edit_queue():
             argument_frame.pack(side='left', fill='x', padx=5)
 
             custom_font = font.Font(family="Helvetica", size=12, weight="bold")
-            facefusion_button = tk.Button(argument_frame, text=f"UN-Queue It Up\n\n --EDIT ARGUMENTS", font=bold_font, justify='center')
+            facefusion_button = tk.Button(argument_frame, text=f"UN-Queue It Up", font=bold_font, justify='center')
             facefusion_button.pack(side='top', padx=5, fill='x', expand=False)
             facefusion_button.bind("<Button-1>", lambda event, j=job: reload_job_in_facefusion_edit(j))
 
 
-            # custom_font = font.Font(family="Helvetica", size=10, weight="bold")
-            # argument_button = tk.Button(argument_frame, text=f" {job['job_args']} ", wraplength=325, justify='center')
-            # argument_button.pack(side='bottom', padx=5, fill='x', expand=False)
-            # argument_button.bind("<Button-1>", lambda event, j=job: edit_arguments_text(j))
+            custom_font = font.Font(family="Helvetica", size=10, weight="bold")
+            argument_button = tk.Button(argument_frame, text=f"EDIT JOB ARGUMENTS", wraplength=325, justify='center')
+            argument_button.pack(side='bottom', padx=5, fill='x', expand=False)
+            argument_button.bind("<Button-1>", lambda event, j=job: edit_job_arguments_text(j))
+            
     update_job_listbox
-    #edit_queue.refresh_frame_listbox = refresh_frame_listbox
-    edit_queue.update_job_listbox = update_job_listbox
+    edit_queue.refresh_frame_listbox = refresh_frame_listbox
+
     edit_queue_window += 1
     root.after(1000, update_job_listbox) 
-    #refresh_frame_listbox
+    root.after(5000, refresh_frame_listbox)
     root.mainloop()
     edit_queue_window = 0
-    return root
     if __name__ == '__main__':
         edit_queue()
-    # Call the nested function using the attribute
-    #edit_queue.refresh_frame_listbox()
+
 
     
 
@@ -885,7 +893,7 @@ def get_values_from_globals(state_name):
     
     from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
-    modules = [facefusion.globals, frame_processors_globals]  # List of modules to extract values from
+    modules = [facefusion.globals, frame_processors_globals]  
 
     for module in modules:
         for attr in dir(module):
@@ -897,6 +905,7 @@ def get_values_from_globals(state_name):
                 except TypeError:
                     continue  # Skip values that are not JSON serializable
 
+    state_dict = preprocess_execution_providers(state_dict)
     if debugging:
         with open(os.path.join(working_dir, f"{state_name}.txt"), "w") as file:
             for key, val in state_dict.items():
@@ -962,6 +971,13 @@ def count_existing_jobs():
     jobs = load_jobs(jobs_queue_file)
     PENDING_JOBS_COUNT = len([job for job in jobs if job['status'] in ['pending', 'editing']])
     return PENDING_JOBS_COUNT
+
+def format_cli_value(value):
+    if isinstance(value, list) or isinstance(value, tuple):
+        return ' '.join(map(str, value))  # Convert list or tuple to space-separated string
+    if value is None:
+        return 'None'
+    return str(value)
 
 def print_existing_jobs():
 
@@ -1103,12 +1119,28 @@ def check_if_needed(job, source_or_target):
             if debugging:
                 custom_print(f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it's needed by another job.\n\n")
 
+def preprocess_execution_providers(data):
+    new_data = data.copy()  # Make a copy of the original data to avoid mutating the input directly
+    for key, value in new_data.items():
+        if key == "execution_providers":
+            new_providers = []
+            for provider in value:
+                if provider == "CUDAExecutionProvider":
+                    new_providers.append('cuda')
+                elif provider == "CPUExecutionProvider":
+                    new_providers.append('cpu')
+                elif provider == "CoreMLExecutionProvider":
+                    new_providers.append('coreml')
+                # Assuming you don't want to keep original values that don't match, skip the else clause
+            new_data[key] = new_providers  # Replace the old list with the new one
+    return new_data
 
+    
 ##################################
 #startup_init_checks_and_cleanup     
 ##################################
 #Globals and toggles
-# for Automatic1111 use this line for base_dir = tempfile.gettempdir()
+#base_dir = tempfile.gettempdir()
 script_root = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(script_root)))
 # Appending 'QueueItUp' to the adjusted base directory
@@ -1118,11 +1150,11 @@ media_cache_dir = os.path.normpath(os.path.join(working_dir, "mediacache"))
 thumbnail_dir = os.path.normpath(os.path.join(working_dir, "thumbnails"))
 jobs_queue_file = os.path.normpath(os.path.join(working_dir, "jobs_queue.json"))
 
-debugging = False
+debugging = True
 keep_completed_jobs = False
-ADD_JOB_BUTTON = gr.Button("Add Job ", variant="primary")
-RUN_JOBS_BUTTON = gr.Button("Run Jobs", variant="primary")
-EDIT_JOB_BUTTON = gr.Button("Edit Jobs")
+ADD_JOB_BUTTON = gradio.Button("Add Job ", variant="primary")
+RUN_JOBS_BUTTON = gradio.Button("Run Jobs", variant="primary")
+EDIT_JOB_BUTTON = gradio.Button("Edit Jobs")
 #status_priority = {'editing': 0, 'pending': 1, 'failed': 2, 'executing': 3, 'completed': 4}
 JOB_IS_RUNNING = 0
 JOB_IS_EXECUTING = 0
@@ -1136,6 +1168,7 @@ GREEN = '\033[92m'     #use this
 YELLOW = '\033[93m'     #use this  
 BLUE = '\033[94m'     #use this  
 ENDC = '\033[0m'       #use this    Resets color to default
+custom_print("Base Directory:", base_dir)
 custom_print("Working Directory:", working_dir)
 custom_print("Media Cache Directory:", media_cache_dir)
 custom_print("Jobs Queue File:", jobs_queue_file)
@@ -1151,7 +1184,7 @@ check_for_completed_failed_or_aborted_jobs()
 custom_print(f"{GREEN}STATUS CHECK COMPLETED. {BLUE}You are now ready to QUEUE IT UP!{ENDC}")
 print_existing_jobs()
 
-def run(ui: gr.Blocks) -> None:
+def run(ui: gradio.Blocks) -> None:
     global server
     concurrency_count = min(8, multiprocessing.cpu_count())
     ui.queue(concurrency_count=concurrency_count).launch(show_api=False, inbrowser=True, quiet=False)
