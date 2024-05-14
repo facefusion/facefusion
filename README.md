@@ -1,4 +1,5 @@
-FaceFusion with Queue It Up
+FaceFusion QueueItUp fork 2.5.3.9** Now with added BatchItUp feature
+
 ==========
 
 > Next generation face swapper and enhancer.
