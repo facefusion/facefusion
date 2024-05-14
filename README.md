@@ -1,118 +1,37 @@
-FaceFusion QueueItUp fork 2.5.3.9** Now with added BatchItUp feature
-
-==========
-
-> Next generation face swapper and enhancer.
-
-[![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=master)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
-![License](https://img.shields.io/badge/license-MIT-green)
-
-
-Preview
--------
-
-![Preview](https://github.com/chuckkay/facefusion-QueueItUp/blob/88b080723e3d162ca170fe9197e217a86fc7abf2/IMG_0623.png?sanitize=true)
-
-read rhe Queue It Up Readme https://github.com/chuckkay/facefusion-QueueItUp/blob/99bc261c40ba4a3fb6fd7fb7e5e221bf1a6749de/QueueItUp-README.md
-Installation
-------------
-
-Be aware, the installation needs technical skills and is not for beginners. Please do not open platform and installation related issues on GitHub. We have a very helpful [Discord](https://join.facefusion.io) community that will guide you to complete the installation.
-
-The only change to the Facefusion installation instructions ( Get started with the [installation](https://docs.facefusion.io/installation) guide.)
-is to use this repo as the git clone
-https://github.com/chuckkay/facefusion-QueueItUp.git
-and then cd facefusion-QueueItUp
+ **QueueItUp 2.5.3.9** Now with added BatchItUp feature
+ 
+<img width="1679" alt="Screenshot 2024-05-09 110834" src="https://github.com/chuckkay/QueueItUp/assets/10617746/ebf49e9b-04f6-4373-9c33-636dd43e23da">
 
 
 
+![Screenshot 2024-04-15 063227](https://github.com/chuckkay/QueueItUp/assets/10617746/971e2bd3-df87-412e-998a-9e93b7d19f63)
 
-Usage
------
+This is it—at least until Henry releases the official queueing feature for Facefusion. I'm not a coder, but I think I did a pretty good job creating this simple one-file drop-in addon to fill the void until the official features are added.
+**How to Install:**
+Use regular Facefusion [instructions](https://docs.facefusion.io/installation) only change is is to use this repo when doing the  git clone https://github.com/chuckkay/facefusion-QueueItUp.git 
+and change cd facefusion dir to cd facefusion-QueueItUp dir
 
-Run the command:
-
-```
-python run.py [options]
-
-options:
-  -h, --help                                                                                                                                            show this help message and exit
-  -s SOURCE_PATHS, --source SOURCE_PATHS                                                                                                                choose single or multiple source images or audios
-  -t TARGET_PATH, --target TARGET_PATH                                                                                                                  choose single target image or video
-  -o OUTPUT_PATH, --output OUTPUT_PATH                                                                                                                  specify the output file or directory
-  -v, --version                                                                                                                                         show program's version number and exit
-
-misc:
-  --force-download                                                                                                                                      force automate downloads and exit
-  --skip-download                                                                                                                                       omit automate downloads and remote lookups
-  --headless                                                                                                                                            run the program without a user interface
-  --log-level {error,warn,info,debug}                                                                                                                   adjust the message severity displayed in the terminal
-
-execution:
-  --execution-providers EXECUTION_PROVIDERS [EXECUTION_PROVIDERS ...]                                                                                   accelerate the model inference using different providers (choices: cpu, ...)
-  --execution-thread-count [1-128]                                                                                                                      specify the amount of parallel threads while processing
-  --execution-queue-count [1-32]                                                                                                                        specify the amount of frames each thread is processing
-
-memory:
-  --video-memory-strategy {strict,moderate,tolerant}                                                                                                    balance fast frame processing and low VRAM usage
-  --system-memory-limit [0-128]                                                                                                                         limit the available RAM that can be used while processing
-
-face analyser:
-  --face-analyser-order {left-right,right-left,top-bottom,bottom-top,small-large,large-small,best-worst,worst-best}                                     specify the order in which the face analyser detects faces
-  --face-analyser-age {child,teen,adult,senior}                                                                                                         filter the detected faces based on their age
-  --face-analyser-gender {female,male}                                                                                                                  filter the detected faces based on their gender
-  --face-detector-model {many,retinaface,scrfd,yoloface,yunet}                                                                                          choose the model responsible for detecting the face
-  --face-detector-size FACE_DETECTOR_SIZE                                                                                                               specify the size of the frame provided to the face detector
-  --face-detector-score [0.0-1.0]                                                                                                                       filter the detected faces base on the confidence score
-  --face-landmarker-score [0.0-1.0]                                                                                                                     filter the detected landmarks base on the confidence score
-
-face selector:
-  --face-selector-mode {many,one,reference}                                                                                                             use reference based tracking or simple matching
-  --reference-face-position REFERENCE_FACE_POSITION                                                                                                     specify the position used to create the reference face
-  --reference-face-distance [0.0-1.5]                                                                                                                   specify the desired similarity between the reference face and target face
-  --reference-frame-number REFERENCE_FRAME_NUMBER                                                                                                       specify the frame used to create the reference face
-
-face mask:
-  --face-mask-types FACE_MASK_TYPES [FACE_MASK_TYPES ...]                                                                                               mix and match different face mask types (choices: box, occlusion, region)
-  --face-mask-blur [0.0-1.0]                                                                                                                            specify the degree of blur applied the box mask
-  --face-mask-padding FACE_MASK_PADDING [FACE_MASK_PADDING ...]                                                                                         apply top, right, bottom and left padding to the box mask
-  --face-mask-regions FACE_MASK_REGIONS [FACE_MASK_REGIONS ...]                                                                                         choose the facial features used for the region mask (choices: skin, left-eyebrow, right-eyebrow, left-eye, right-eye, glasses, nose, mouth, upper-lip, lower-lip)
-
-frame extraction:
-  --trim-frame-start TRIM_FRAME_START                                                                                                                   specify the the start frame of the target video
-  --trim-frame-end TRIM_FRAME_END                                                                                                                       specify the the end frame of the target video
-  --temp-frame-format {bmp,jpg,png}                                                                                                                     specify the temporary resources format
-  --keep-temp                                                                                                                                           keep the temporary resources after processing
-
-output creation:
-  --output-image-quality [0-100]                                                                                                                        specify the image quality which translates to the compression factor
-  --output-image-resolution OUTPUT_IMAGE_RESOLUTION                                                                                                     specify the image output resolution based on the target image
-  --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc,h264_amf,hevc_amf}                                                           specify the encoder use for the video compression
-  --output-video-preset {ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow}                                                          balance fast video processing and video file size
-  --output-video-quality [0-100]                                                                                                                        specify the video quality which translates to the compression factor
-  --output-video-resolution OUTPUT_VIDEO_RESOLUTION                                                                                                     specify the video output resolution based on the target video
-  --output-video-fps OUTPUT_VIDEO_FPS                                                                                                                   specify the video output fps based on the target video
-  --skip-audio                                                                                                                                          omit the audio from the target video
-
-frame processors:
-  --frame-processors FRAME_PROCESSORS [FRAME_PROCESSORS ...]                                                                                            load a single or multiple frame processors. (choices: face_debugger, face_enhancer, face_swapper, frame_colorizer, frame_enhancer, lip_syncer, ...)
-  --face-debugger-items FACE_DEBUGGER_ITEMS [FACE_DEBUGGER_ITEMS ...]                                                                                   load a single or multiple frame processors (choices: bounding-box, face-landmark-5, face-landmark-5/68, face-landmark-68, face-landmark-68/5, face-mask, face-detector-score, face-landmarker-score, age, gender)
-  --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,gpen_bfr_1024,gpen_bfr_2048,restoreformer_plus_plus}     choose the model responsible for enhancing the face
-  --face-enhancer-blend [0-100]                                                                                                                         blend the enhanced into the previous face
-  --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial,uniface_256}                                  choose the model responsible for swapping the face
-  --frame-colorizer-model {ddcolor,ddcolor_artistic,deoldify,deoldify_artistic,deoldify_stable}                                                         choose the model responsible for colorizing the frame
-  --frame-colorizer-blend [0-100]                                                                                                                       blend the colorized into the previous frame
-  --frame-colorizer-size {192x192,256x256,384x384,512x512}                                                                                              specify the size of the frame provided to the frame colorizer
-  --frame-enhancer-model {lsdir_x4,nomos8k_sc_x4,real_esrgan_x2,real_esrgan_x2_fp16,real_esrgan_x4,real_esrgan_x4_fp16,real_hatgan_x4,span_kendata_x4}  choose the model responsible for enhancing the frame
-  --frame-enhancer-blend [0-100]                                                                                                                        blend the enhanced into the previous frame
-  --lip-syncer-model {wav2lip_gan}                                                                                                                      choose the model responsible for syncing the lips
-
-uis:
-  --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                                                                              launch a single or multiple UI layouts (choices: benchmark, default, webcam, ...)
-```
+alternativly follow these [instructions](https://docs.facefusion.io/installation) and then just:
+1. Download QueueItUp.py from this repo and Drop it in your `facefusion\facefusion\uis\layouts` directory.
+2. edit the last line of facefusion.ini to `ui_layouts = QueueItUp`, or just run `python run.py --ui-layouts QueueItUp`.
+3. That’s it!   optional (you can also grab from this repo content_analyser.py a more efficient and faster processing hack of NSFW blocker and normalizer.py to change the output file naminging logic to combine source and target names instead of just target name.
 
 
-Documentation
--------------
+QueueItUp is a self-contained add-on that keeps all its components in a folder called QueueItUp in your Facefusion root directory.
+**Features of QueueItUp:**
+- **Job Queueing:** Below the normal start button in the Facefusion web UI, you will find a queue status box and three buttons: ADD JOB, RUN QUEUE, and EDIT QUEUE. They do exactly what they say. Although the ADD JOB and RUN QUEUE might seem redundant and could be removed in future versions, they currently serve a purpose. Once you've added some jobs and clicked RUN QUEUE, it will start processing all the swaps in order, but you're not stuck waiting. Build more jobs, and when you click ADD JOB, if the queue is still processing other jobs, any additional jobs will be added to the back of the queue and will execute when their turn comes. This was a huge addition I made, as I could launch a bunch of jobs, work on some more, add them to the back of the line and go to bed. In the morning, they are all done—LOL.
+- **Edit Queue:** If you want to change a job's position in the queue or quickly change a source or target image, just click on the image button, and a file dialog will pop up allowing you to select a replacement source or target. This is a convenient tool, and you will soon discover it has a bunch of other benefits. Changing a target video isn't out of the question, but due to the complexity of face finding in videos and other needed tweaks, I wouldn't recommend it for all scenarios. It will work but just using the previous settings... wait, did I say settings? I meant arguments. And what about those amazing things—who can remember what to type when you manually try to change one? Well, now you don't have to! No need to open JSONs and poke around (although feel free), but wouldn’t it be so much better if you could go back in time to change that one setting you wish you had changed? Well, get ready for Un-QueueitUp, the latest "hack" I added to QueueItUp 2.5.3. In the edit queue window, just click on the button , and like magic, the job will be loaded back into Facefusion's Web UI where you can re-edit every aspect, and when done, add it back to the queue or even run it with the standard start button. But don't try clicking start if something's already running, unless you've got two RTX 4090s in your arsenal. and also take note you are actually creating a new gradio webui at a different port  and using about 3MB each time, so a good restart is in order if you use the magic UN-QueueItup Button.... untill i figure out a better way to do it..
+- 
+**Quirks:**
+DONE ~~1. I haven’t implemented multiple source faces yet. Not as easy as you might think, at least not for me and the structure I used when creating this script.~~
+DONE ~~2. Not sure about lip sync colorization face debugging; haven’t had the time to explore making them work or even if they do already by some lucky chance.~~
+DONE ~~3. Something about Henry's code has me baffeled, so unfortunaitly when it comes to face swapper modles, inswapper_128_fp16 and simswap_512_unofficial are not assignable in the ui, if you select them they will not be used, and it will revert to the default...   if you really want to use one of those models as your default you can set it in the facefusion.ini, or manually edit the job in the json file...   the same goes for Face Enhancer and Frame Enhancer, except with those you are stuck with the default or whatever is set in your ini...  until i can figure out how to capture those settings when changed in the webui.~~
+4. Gradio oh Gradio... So, have you noticed Gradio doesn’t actually use your source or target files? It copies them to a `user\temp\gradio` directory with an undecipherable hash, maybe for security, I don’t know... But!!! How can you use a queuing program when you don't have the original source paths or target paths, only some temp folder? And what happens if you don’t have time to finish all the items in your queue? Oh wait, I just realized this belongs in the features section. That's right, you can crash, abort, unplug, do whatever—QueueItUp 2.5.3 has your back and can resume from the last job! Awesome... But this wouldn’t be possible if QueueItUp relied on Gradio’s temp directory which periodically gets wiped clean by other programs like Automatic 1111 and even Facefusion... So goodbye source and targets, and although you can fix that in Edit Queue by finding the files again if you remember where they are. But you don’t have to, BECAUSE QueueItUp 2.5.3 one-ups Gradio and makes its own media cache directory the second Gradio absconds with your media. QueueItUp 2. 5.2 steals it right back and stores it for safekeeping and tracking where every job has a record of which files to use, and even when jobs are completed which cache files to delete, so long as there are no other pending jobs that might need that specific file. Nice, right? I thought so—a nice and tidy media cache directory that only cleans out the cache when there are no jobs that need it.
 
-Read the [documentation](https://docs.facefusion.io) for a deep dive.
+- **BatchItUp:**
+added a BATCH Maker called BatchItup, a button is located on every job in the edit queue window, an example of what you can do with an existing job is,  you can select multiple target videos or images, using a single source and it will create a job for each source, or or vica versa, you can select multiple sorce faces and a pply it to 1 image or video to make multiple version of the target image or video,  
+
+
+Speaking of cache, yes, please feel free to donate... and enjoy QueueItUp 2.5.3! 😊
+
+
