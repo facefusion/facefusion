@@ -22,11 +22,7 @@ from tkinter import filedialog, Text, font, Toplevel, messagebox, PhotoImage, Tk
 from io import BytesIO
 import facefusion.globals
 from facefusion import core
-from facefusion import core2
-
 import facefusion.core as core
-import facefusion.core2 as core2
-
 from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, memory, temp_frame, output_options, common_options, source, target, output, preview, trim_frame, face_analyser, face_selector, face_masker
 
 
@@ -145,7 +141,7 @@ def get_default_values_from_ini():
 def assemble_queue():
     global RUN_JOBS_BUTTON, ADD_JOB_BUTTON, jobs_queue_file, jobs, default_values, current_values
     # default_values are already initialized, do not call for new default except if sd-webui version
-    default_values = get_default_values_from_ini()
+    #default_values = get_default_values_from_ini()
 
     current_values = get_values_from_globals('current_values')
 
@@ -181,16 +177,13 @@ def assemble_queue():
     while True:
         if JOB_IS_RUNNING:
             if JOB_IS_EXECUTING:
-                if debugging:
-                    custom_print("Job is executing.")
+                debug_print("Job is executing.")
                 break
             else:
-                if debugging:
-                    custom_print("Job is running but not executing. Stuck in loop.\n")
+                debug_print("Job is running but not executing. Stuck in loop.\n")
                 time.sleep(1)
         else:
-            if debugging:
-                custom_print("Job is not running.")
+            debug_print("Job is not running.")
             break
     oldeditjob = None
     found_editing = False
@@ -204,10 +197,9 @@ def assemble_queue():
 
     cache_source_paths = copy_to_media_cache(source_paths)
     source_basenames = [os.path.basename(path) for path in cache_source_paths] if isinstance(cache_source_paths, list) else os.path.basename(cache_source_paths)
-    if debugging:
-        custom_print(f"{GREEN}Source file{ENDC} copied to Media Cache folder: {GREEN}{source_basenames}{ENDC}\n\n")
+    debug_print(f"{GREEN}Source file{ENDC} copied to Media Cache folder: {GREEN}{source_basenames}{ENDC}\n\n")
     cache_target_path = copy_to_media_cache(target_path)
-    custom_print(f"{GREEN}Target file{ENDC} copied to Media Cache folder: {GREEN}{os.path.basename(cache_target_path)}{ENDC}\n\n")
+    debug_print(f"{GREEN}Target file{ENDC} copied to Media Cache folder: {GREEN}{os.path.basename(cache_target_path)}{ENDC}\n\n")
 
     # Construct the arguments string
     arguments = " ".join(f"--{key.replace('_', '-')} {value}" for key, value in differences.items() if value)
@@ -215,7 +207,7 @@ def assemble_queue():
         with open(os.path.join(working_dir, "arguments.txt"), "w") as file:
             file.write(json.dumps(arguments) + "\n")
     job_args = f"{arguments}"
-    custom_print(f"{GREEN}Target file{ENDC} copied to Media Cache folder: {GREEN}{os.path.basename(cache_target_path)}{ENDC}\n\n")
+    debug_print(f"{GREEN}Target file{ENDC} copied to Media Cache folder: {GREEN}{os.path.basename(cache_target_path)}{ENDC}\n\n")
 
     if isinstance(cache_source_paths, str):
         cache_source_paths = [cache_source_paths]
@@ -274,10 +266,10 @@ def run_job_args(current_run_job):
     setattr(facefusion.globals, ui_layouts, ['QueueItUp'])
 
     # Run the command
-    #result = subprocess.run(f"python run.py {simulated_cmd}", shell=True)
-
-    result = subprocess.run(f"{venv_python} {base_dir}\\run2.py {simulated_cmd}", shell=True)
-
+    result = subprocess.run(f"python run.py {simulated_cmd}", shell=True)
+    
+    #result = subprocess.run(f"{venv_python} {base_dir}\\run2.py {simulated_cmd}", shell=True)
+    
     #result = subprocess.run(f"python run2.py {simulated_cmd}", shell=True)
     # Check the return code
     return_code = result.returncode
@@ -394,7 +386,7 @@ def edit_queue():
     close_button = tk.Button(root, text="Close Window", command=root.destroy, font=custom_font)
     close_button.pack(pady=5)
 
-    refresh_button = tk.Button(root, text="Refresh View", command=lambda: refresh_frame_listbox(), font=custom_font)
+    refresh_button = tk.Button(root, text="Refresh View", command=lambda: refresh_buttonclick(), font=custom_font)
     refresh_button.pack(pady=5)
 
     pending_jobs_button = tk.Button(root, text=f"Delete {PENDING_JOBS_COUNT} Pending Jobs", command=lambda: delete_pending_jobs(), font=custom_font)
@@ -414,6 +406,10 @@ def edit_queue():
     completed_jobs_button = tk.Button(root, text="Delete Completed", command=lambda: delete_completed_jobs(), font=custom_font)
     completed_jobs_button.pack(pady=5)
 
+    def refresh_buttonclick():
+        count_existing_jobs()
+        edit_queue.refresh_frame_listbox()
+        refresh_frame_listbox()
 
 
     def refresh_frame_listbox():
@@ -640,7 +636,7 @@ def edit_queue():
                         new_job_args.append(f"{arg} {entry_text}")
 
             job['job_args'] = ' '.join(new_job_args)
-            print("Updated Job Args:", job['job_args'])
+            debug_print("Updated Job Args:", job['job_args'])
             save_jobs(jobs_queue_file, jobs)
             edit_arg_window.destroy()
 
@@ -992,7 +988,7 @@ def edit_queue():
             argument_frame.pack(side='left', fill='x', padx=5)
 
             custom_font = font.Font(family="Helvetica", size=12, weight="bold")
-            facefusion_button = tk.Button(argument_frame, text=f"UNDER CUNSTRUCTION", font=bold_font, justify='center')
+            facefusion_button = tk.Button(argument_frame, text=f"UN-Queue It Up", font=bold_font, justify='center')
             facefusion_button.pack(side='top', padx=5, fill='x', expand=False)
             facefusion_button.bind("<Button-1>", lambda event, j=job: reload_job_in_facefusion_edit(j))
 
@@ -1038,8 +1034,13 @@ def get_values_from_globals(state_name):
         with open(os.path.join(working_dir, f"{state_name}.txt"), "w") as file:
             for key, val in state_dict.items():
                 file.write(f"{key}: {val}\n")
-        custom_print(f"{state_name}.txt created")
+        debug_print(f"{state_name}.txt created")
     return state_dict
+
+def debug_print (*msgs):
+    if debugging:
+        custom_print(*msgs)
+
 
 
 def custom_print(*msgs):
@@ -1075,14 +1076,14 @@ def create_and_verify_json(file_path):
         except json.JSONDecodeError:
             backup_path = file_path + ".bak"
             shutil.copy(file_path, backup_path)
-            custom_print(f"Backup of corrupt JSON file saved as '{backup_path}'. Please check it for salvageable data.\n\n")
+            debug_print(f"Backup of corrupt JSON file saved as '{backup_path}'. Please check it for salvageable data.\n\n")
             with open(file_path, "w") as json_file:
                 json.dump([], json_file)
-            custom_print(f"Original JSON file '{file_path}' was corrupt and has been reset to an empty list.\n\n")
+            debug_print(f"Original JSON file '{file_path}' was corrupt and has been reset to an empty list.\n\n")
     else:
         with open(file_path, "w") as json_file:
             json.dump([], json_file)
-        custom_print(f"JSON file '{file_path}' did not exist and has been created.")
+        debug_print(f"JSON file '{file_path}' did not exist and has been created.")
 
 def load_jobs(file_path):
     with open(file_path, 'r') as file:
@@ -1186,8 +1187,7 @@ def check_for_unneeded_media_cache():
     for cache_file in cache_files:
         if cache_file not in needed_files:
             os.remove(os.path.join(media_cache_dir, cache_file))
-            if debugging:
-                custom_print(f"{GREEN}Deleted unneeded file: {cache_file}{ENDC}")
+            debug_print(f"{GREEN}Deleted unneeded file: {cache_file}{ENDC}")
 
 def check_if_needed(job, source_or_target):
     with open(jobs_queue_file, 'r') as file:
@@ -1222,8 +1222,7 @@ def check_if_needed(job, source_or_target):
                     action_message = f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it does not exist."
             else:
                 action_message = f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_source_path)}{ENDC} as it's needed by another job."
-            if debugging:
-                custom_print(f"{action_message}\n\n")
+            debug_print(f"{action_message}\n\n")
 
     # Check and handle targetcache path
     if source_or_target in ['both', 'target']:
@@ -1235,17 +1234,13 @@ def check_if_needed(job, source_or_target):
             if os.path.exists(normalized_target_path):
                 try:
                     os.remove(normalized_target_path)
-                    if debugging:
-                        custom_print(f"Successfully deleted the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it is no longer needed by any other jobs\n\n")
+                    debug_print(f"Successfully deleted the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it is no longer needed by any other jobs\n\n")
                 except Exception as e:
-                    if debugging:
-                        custom_print(f"{RED}Failed to delete {YELLOW}{os.path.basename(normalized_target_path)}{ENDC}: {e}\n\n")
+                    debug_print(f"{RED}Failed to delete {YELLOW}{os.path.basename(normalized_target_path)}{ENDC}: {e}\n\n")
             else:
-                if debugging:
-                    custom_print(f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it does not exist.\n\n")
+                debug_print(f"{BLUE}No need to delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it does not exist.\n\n")
         else:
-            if debugging:
-                custom_print(f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it's needed by another job.\n\n")
+            debug_print(f"{BLUE}Did not delete the file: {GREEN}{os.path.basename(normalized_target_path)}{ENDC} as it's needed by another job.\n\n")
 
 def preprocess_execution_providers(data):
     new_data = data.copy()
@@ -1270,7 +1265,7 @@ def preprocess_execution_providers(data):
 #Globals and toggles
 script_root = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(script_root)))
-venv_python = os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(base_dir)), 'venv', 'scripts', 'python.exe'))
+#venv_python = os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(base_dir)), 'venv', 'scripts', 'python.exe'))
 # Appending 'QueueItUp' to the adjusted base directory
 user_dir = "QueueItUp"
 working_dir = os.path.normpath(os.path.join(base_dir, user_dir))
@@ -1297,21 +1292,20 @@ GREEN = '\033[92m'     #use this
 YELLOW = '\033[93m'     #use this  
 BLUE = '\033[94m'     #use this  
 ENDC = '\033[0m'       #use this    Resets color to default
-custom_print("Base Directory:", base_dir)
-custom_print("Venv Python Path:", venv_python)
-custom_print("Working Directory:", working_dir)
-custom_print("Media Cache Directory:", media_cache_dir)
-custom_print("Jobs Queue File:", jobs_queue_file)
-custom_print(f"{BLUE}Welcome Back To FaceFusion Queueing Addon\n\n")
-custom_print(f"Checking Status{ENDC}\n\n")
+debug_print("Base Directory:", base_dir)
+debug_print("Working Directory:", working_dir)
+debug_print("Media Cache Directory:", media_cache_dir)
+debug_print("Jobs Queue File:", jobs_queue_file)
+debug_print(f"{BLUE}Welcome Back To FaceFusion Queueing Addon\n\n")
+debug_print(f"Checking Status{ENDC}\n\n")
 if not os.path.exists(working_dir):
     os.makedirs(working_dir)
 if not os.path.exists(media_cache_dir):
     os.makedirs(media_cache_dir)
-#default_values = get_values_from_globals("default_values")
+default_values = get_values_from_globals("default_values")
 create_and_verify_json(jobs_queue_file)
 check_for_completed_failed_or_aborted_jobs()
-custom_print(f"{GREEN}STATUS CHECK COMPLETED. {BLUE}You are now ready to QUEUE IT UP!{ENDC}")
+debug_print(f"{GREEN}STATUS CHECK COMPLETED. {BLUE}You are now ready to QUEUE IT UP!{ENDC}")
 print_existing_jobs()
 
 def run(ui: gradio.Blocks) -> None:
