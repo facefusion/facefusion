@@ -3,6 +3,7 @@ import gradio
 import os
 import re
 import sys
+import ast
 import time
 import math
 import json
@@ -141,7 +142,8 @@ def get_default_values_from_ini():
 def assemble_queue():
     global RUN_JOBS_BUTTON, ADD_JOB_BUTTON, jobs_queue_file, jobs, default_values, current_values
     # default_values are already initialized, do not call for new default except if sd-webui version
-    #default_values = get_default_values_from_ini()
+    if automatic1111:
+        default_values = get_default_values_from_ini()
 
     current_values = get_values_from_globals('current_values')
 
@@ -265,14 +267,13 @@ def run_job_args(current_run_job):
     ui_layouts = 'ui_layouts'
     setattr(facefusion.globals, ui_layouts, ['QueueItUp'])
 
-    # Run the command
-    result = subprocess.run(f"python run.py {simulated_cmd}", shell=True)
-    
-    #result = subprocess.run(f"{venv_python} {base_dir}\\run2.py {simulated_cmd}", shell=True)
-    
-    #result = subprocess.run(f"python run2.py {simulated_cmd}", shell=True)
-    # Check the return code
-    return_code = result.returncode
+    if automatic1111:
+        result = subprocess.Popen(f"{venv_python} {base_dir}\\run2.py {simulated_cmd}", shell=True)
+        result.wait()
+        return_code = result.returncode
+    else:
+        process = subprocess.run(f"python run.py {simulated_cmd}", shell=True)
+        return_code = process.returncode
     if return_code == 0:
         current_run_job['status'] = 'completed'
     else:
@@ -493,7 +494,7 @@ def edit_queue():
                 messagebox.showerror("Error", f"Cannot edit job. The source file '{os.path.basename(sourcecache_path)}' does not exist.")
                 return
 
-        # Checking single targetcache path
+        # Checking  targetcache path
         if not os.path.exists(targetcache_path):
             messagebox.showerror("Error", f"Cannot edit job. The target file '{os.path.basename(targetcache_path)}' does not exist.")
             return
@@ -666,7 +667,6 @@ def edit_queue():
         # Ensure sourcecache is always a list
         if isinstance(job['sourcecache'], str):
             job['sourcecache'] = [job['sourcecache']]
-
         current_extension = job['targetcache'].lower().rsplit('.', 1)[-1]
         if current_extension in ['jpg', 'jpeg', 'png']:
             target_filetype = 'Image'
@@ -705,13 +705,13 @@ def edit_queue():
             selected_paths = []
             if source_or_target == 'source':
                 selected_paths = filedialog.askopenfilenames(
-                    title="Select Multiple targets for BatchItUp to make multiple cloned job using each File",
+                    title="Select Multiple targets for BatchItUp to make multiple cloned jobs using each File",
                     filetypes=[('Image files', '*.jpg *.jpeg *.png')]
                 )
             elif source_or_target == 'target':
                 file_types = [('Image files', '*.jpg *.jpeg *.png')] if target_filetype == 'Image' else [('Video files', '*.mp4 *.avi *.mov *.mkv')]
                 selected_paths = filedialog.askopenfilenames(
-                    title="Select Multiple sources for BatchItUp to make multiple cloned job using each File",
+                    title="Select Multiple sources for BatchItUp to make multiple cloned jobs using each File",
                     filetypes=file_types
                 )
             if selected_paths:
@@ -1098,7 +1098,7 @@ def save_jobs(file_path, jobs):
 def count_existing_jobs():
     global PENDING_JOBS_COUNT
     jobs = load_jobs(jobs_queue_file)
-    PENDING_JOBS_COUNT = len([job for job in jobs if job['status'] in ['pending', 'editing']])
+    PENDING_JOBS_COUNT = len([job for job in jobs if job['status'] in ['pending']])
     return PENDING_JOBS_COUNT
 
 def format_cli_value(value):
@@ -1257,7 +1257,6 @@ def preprocess_execution_providers(data):
                 # Assuming you don't want to keep original values that don't match, skip the else clause
             new_data[key] = new_providers  # Replace the old list with the new one
     return new_data
-
     
 ##################################
 #startup_init_checks_and_cleanup     
@@ -1265,13 +1264,19 @@ def preprocess_execution_providers(data):
 #Globals and toggles
 script_root = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(script_root)))
-#venv_python = os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(base_dir)), 'venv', 'scripts', 'python.exe'))
+
 # Appending 'QueueItUp' to the adjusted base directory
 user_dir = "QueueItUp"
 working_dir = os.path.normpath(os.path.join(base_dir, user_dir))
 media_cache_dir = os.path.normpath(os.path.join(working_dir, "mediacache"))
 thumbnail_dir = os.path.normpath(os.path.join(working_dir, "thumbnails"))
 jobs_queue_file = os.path.normpath(os.path.join(working_dir, "jobs_queue.json"))
+#code to determin if running inside atutomatic1111
+automatic1111 = os.path.isfile(os.path.join(base_dir, "README.md")) and "automatic1111" in open(os.path.join(base_dir, "README.md")).readline().strip()
+if automatic1111:
+    from facefusion import core2
+    import facefusion.core2 as core2
+if automatic1111: venv_python = os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(base_dir)), 'venv', 'scripts', 'python.exe'))
 
 debugging = True
 keep_completed_jobs = False
@@ -1286,6 +1291,7 @@ CURRENT_JOB_NUMBER = 0
 edit_queue_window = 0
 image_references = {}
 default_values = {}
+automatic1111 = os.path.isfile(os.path.join(base_dir, "README.md")) and "automatic1111" in open(os.path.join(base_dir, "README.md")).readline().strip()
     # ANSI Color Codes     
 RED = '\033[91m'     #use this  
 GREEN = '\033[92m'     #use this  
@@ -1293,6 +1299,7 @@ YELLOW = '\033[93m'     #use this
 BLUE = '\033[94m'     #use this  
 ENDC = '\033[0m'       #use this    Resets color to default
 debug_print("Base Directory:", base_dir)
+if automatic1111: debug_print("Venv Python Path:", venv_python)
 debug_print("Working Directory:", working_dir)
 debug_print("Media Cache Directory:", media_cache_dir)
 debug_print("Jobs Queue File:", jobs_queue_file)
@@ -1302,7 +1309,7 @@ if not os.path.exists(working_dir):
     os.makedirs(working_dir)
 if not os.path.exists(media_cache_dir):
     os.makedirs(media_cache_dir)
-default_values = get_values_from_globals("default_values")
+if not automatic1111: default_values = get_values_from_globals("default_values")
 create_and_verify_json(jobs_queue_file)
 check_for_completed_failed_or_aborted_jobs()
 debug_print(f"{GREEN}STATUS CHECK COMPLETED. {BLUE}You are now ready to QUEUE IT UP!{ENDC}")
