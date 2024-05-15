@@ -1277,7 +1277,7 @@ if automatic1111:
     import facefusion.core2 as core2
 if automatic1111: venv_python = os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(base_dir)), 'venv', 'scripts', 'python.exe'))
 
-debugging = True
+debugging = False
 keep_completed_jobs = False
 ADD_JOB_BUTTON = gradio.Button("Add Job ", variant="primary")
 RUN_JOBS_BUTTON = gradio.Button("Run Jobs", variant="primary")
