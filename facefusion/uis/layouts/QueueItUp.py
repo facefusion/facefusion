@@ -13,7 +13,6 @@ import socket
 import shlex
 import logging
 import tkinter as tk
-import datetime
 import platform
 import threading
 import subprocess
