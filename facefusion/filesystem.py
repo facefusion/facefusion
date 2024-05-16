@@ -54,6 +54,12 @@ def clear_temp(target_path : str) -> None:
 		os.rmdir(parent_directory_path)
 
 
+def get_file_size(file_path : str) -> int:
+	if is_file(file_path):
+		return os.path.getsize(file_path)
+	return 0
+
+
 def is_file(file_path : str) -> bool:
 	return bool(file_path and os.path.isfile(file_path))
 
