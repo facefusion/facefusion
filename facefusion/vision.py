@@ -70,21 +70,6 @@ def restrict_image_resolution(image_path : str, resolution : Resolution) -> Reso
 	return resolution
 
 
-def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
-	if is_video(video_path):
-		if is_windows():
-			video_path = get_short_path(video_path)
-		video_capture = cv2.VideoCapture(video_path)
-		if video_capture.isOpened():
-			frame_total = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
-			video_capture.set(cv2.CAP_PROP_POS_FRAMES, min(frame_total, frame_number - 1))
-			has_vision_frame, vision_frame = video_capture.read()
-			video_capture.release()
-			if has_vision_frame:
-				return vision_frame
-	return None
-
-
 def create_image_resolutions(resolution : Resolution) -> List[str]:
 	resolutions = []
 	temp_resolutions = []
@@ -98,6 +83,21 @@ def create_image_resolutions(resolution : Resolution) -> List[str]:
 		for temp_resolution in temp_resolutions:
 			resolutions.append(pack_resolution(temp_resolution))
 	return resolutions
+
+
+def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
+	if is_video(video_path):
+		if is_windows():
+			video_path = get_short_path(video_path)
+		video_capture = cv2.VideoCapture(video_path)
+		if video_capture.isOpened():
+			frame_total = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
+			video_capture.set(cv2.CAP_PROP_POS_FRAMES, min(frame_total, frame_number - 1))
+			has_vision_frame, vision_frame = video_capture.read()
+			video_capture.release()
+			if has_vision_frame:
+				return vision_frame
+	return None
 
 
 def count_video_frame_total(video_path : str) -> int:
