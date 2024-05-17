@@ -3,6 +3,7 @@ import gradio
 
 import facefusion.globals
 from facefusion import wording
+from facefusion.face_store import clear_static_faces
 from facefusion.vision import count_video_frame_total
 from facefusion.filesystem import is_video
 from facefusion.uis.core import get_ui_component, register_ui_component
@@ -65,9 +66,11 @@ def remote_update() -> Tuple[gradio.Slider, gradio.Slider]:
 
 
 def update_trim_frame_start(trim_frame_start : int) -> None:
+	clear_static_faces()
 	facefusion.globals.trim_frame_start = trim_frame_start if trim_frame_start > 0 else None
 
 
 def update_trim_frame_end(trim_frame_end : int) -> None:
+	clear_static_faces()
 	video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 	facefusion.globals.trim_frame_end = trim_frame_end if trim_frame_end < video_frame_total else None
