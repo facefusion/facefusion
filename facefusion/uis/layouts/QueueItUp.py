@@ -702,13 +702,6 @@ def edit_queue():
         target_filetype = None
         source_or_target = None
 
-        if 'sourcecache' not in job:
-            messagebox.showerror("Error", "Job does not contain 'sourcecache'.")
-            return
-
-        if 'targetcache' not in job:
-            messagebox.showerror("Error", "Job does not contain 'targetcache'.")
-            return
 
         if isinstance(job['sourcecache'], str):
             job['sourcecache'] = [job['sourcecache']]
@@ -760,7 +753,7 @@ def edit_queue():
                     filetypes=file_types
                 )
             if selected_paths:
-                copy_to_media_cache(selected_paths)
+                selected_paths = copy_to_media_cache(selected_paths)
                 for path in selected_paths:
                     add_new_job = job.copy()  # Copy the existing job to preserve other attributes
                     add_new_job[source_or_target + 'cache'] = path
@@ -944,6 +937,7 @@ def edit_queue():
 
     def update_job_listbox():
         global image_references, frame
+        update_counters()
 
         try:
             if frame.winfo_exists():
@@ -1050,7 +1044,6 @@ def count_existing_jobs():
     global PENDING_JOBS_COUNT
     jobs = load_jobs(jobs_queue_file)
     PENDING_JOBS_COUNT = len([job for job in jobs if job['status'] in ['pending']])
-    update_counters()
     return PENDING_JOBS_COUNT
 
 def update_counters():
@@ -1344,6 +1337,7 @@ default_values = {}
 #code to determin if running inside atutomatic1111
 automatic1111 = os.path.isfile(os.path.join(base_dir, "flavor.txt")) and "automatic1111" in open(os.path.join(base_dir, "flavor.txt")).readline().strip()
 if automatic1111:
+    print("automatic1111")
     from facefusion import core2
     import facefusion.core2 as core2
 if automatic1111: venv_python = os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(base_dir)), 'venv', 'scripts', 'python.exe'))
