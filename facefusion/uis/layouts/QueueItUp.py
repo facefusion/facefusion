@@ -252,8 +252,9 @@ def assemble_queue():
         custom_print(f"{BLUE}job # {CURRENT_JOB_NUMBER + PENDING_JOBS_COUNT + 1} was added {ENDC}\n\n")
     else:
         custom_print(f"{BLUE}Your Job was Added to the queue,{ENDC} there are a total of {GREEN}#{PENDING_JOBS_COUNT} Job(s){ENDC} in the queue,  Add More Jobs, Edit the Queue,\n\n or Click Run Queue to Execute all the queued jobs\n\n")
-
 def run_job_args(current_run_job):
+    global CURRENT_JOB_NUMBER
+
     if isinstance(current_run_job['sourcecache'], list):
         arg_source_paths = ' '.join(f'-s "{p}"' for p in current_run_job['sourcecache'])
     else:
@@ -268,19 +269,73 @@ def run_job_args(current_run_job):
     setattr(facefusion.globals, ui_layouts, ['QueueItUp'])
 
     if automatic1111:
-        result = subprocess.Popen(f"{venv_python} {base_dir}\\run2.py {simulated_cmd}", shell=True)
-        result.wait()
-        return_code = result.returncode
+        process = subprocess.Popen(
+            f"{venv_python} {base_dir}\\run2.py {simulated_cmd}",
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1  # Line-buffered
+        )
     else:
-        process = subprocess.run(f"python run.py {simulated_cmd}", shell=True)
-        return_code = process.returncode
-    if return_code == 0:
+        process = subprocess.Popen(
+            f"python run.py {simulated_cmd}",
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1  # Line-buffered
+        )
+
+    stdout_lines = []
+    stderr_lines = []
+
+    def handle_output(stream, lines, is_stdout):
+        previous_line_was_progress = False
+        while True:
+            line = stream.readline()
+            if line == '' and process.poll() is not None:
+                break
+            if line:
+                lines.append(line)
+                label = f"{BLUE}job# {CURRENT_JOB_NUMBER}{ENDC}"
+                if line.startswith("Processing:") or line.startswith("Analysing:"):
+                    print(f"\r{label} - {GREEN}{line.strip()[:100]}{ENDC}", end='', flush=True)
+                    previous_line_was_progress = True
+                else:
+                    if previous_line_was_progress:
+                        print()  # Move to the next line before printing a new non-progress message
+                        previous_line_was_progress = False
+                    if "error" in line.lower():
+                        print(f"{label}: {RED}{line.strip()[:100]}{ENDC}")
+                    else:
+                        print(f"{label}: {YELLOW}{line.strip()[:100]}{ENDC}")
+
+
+    stdout_thread = threading.Thread(target=handle_output, args=(process.stdout, stdout_lines, True))
+    stderr_thread = threading.Thread(target=handle_output, args=(process.stderr, stderr_lines, False))
+
+    stdout_thread.start()
+    stderr_thread.start()
+
+    stdout_thread.join()
+    stderr_thread.join()
+
+    return_code = process.poll()
+
+    stdout = ''.join(stdout_lines)
+    stderr = ''.join(stderr_lines)
+
+    # Check for errors in the output
+    if "error" in stdout.lower() or "error" in stderr.lower():
+        current_run_job['status'] = 'failed'
+        return_code = 1
+    elif return_code == 0:
         current_run_job['status'] = 'completed'
     else:
         current_run_job['status'] = 'failed'
 
     return return_code
-
 def execute_jobs():
     global JOB_IS_RUNNING, JOB_IS_EXECUTING,CURRENT_JOB_NUMBER,jobs_queue_file, jobs
     count_existing_jobs()
@@ -307,6 +362,7 @@ def execute_jobs():
         if not first_pending_job['status'] == 'executing':
             break
         current_run_job = first_pending_job
+        current_run_job['headless'] = '--headless'
         count_existing_jobs()
         JOB_IS_EXECUTING = 1
         CURRENT_JOB_NUMBER += 1
@@ -352,6 +408,7 @@ def execute_jobs():
             current_run_job['status'] = 'executing'
             jobs.append(current_run_job)
             first_pending_job = current_run_job
+            
             save_jobs(jobs_queue_file, jobs)
         else:#no more pending jobs
             custom_print(f"{BLUE}a total of {CURRENT_JOB_NUMBER} Jobs have completed processing,{ENDC}...... {GREEN}the Queue is now empty, {BLUE}Feel Free to QueueItUp some more..{ENDC}")
@@ -361,14 +418,14 @@ def execute_jobs():
     JOB_IS_RUNNING = 0
     save_jobs(jobs_queue_file, jobs)
     check_for_unneeded_media_cache()
-    
+
 def edit_queue():
     global root, frame, output_text, edit_queue_window, default_values, jobs_queue_file, jobs, job, image_references, thumbnail_dir, working_dir, PENDING_JOBS_COUNT, pending_jobs_var
 
+    root = tk.Tk()
     jobs = load_jobs(jobs_queue_file)
     PENDING_JOBS_COUNT = count_existing_jobs()
 
-    root = tk.Tk()
     root.geometry('1200x800')
     root.title("Edit Queued Jobs")
     root.lift()
@@ -947,7 +1004,7 @@ def edit_queue():
                     archive_button = tk.Button(action_frame, text="Archive", command=lambda j=job: archive_job(j))
                     archive_button.pack(side='top', padx=2)
                     
-                    batch_button = tk.Button(action_frame, text="BatchItUp", command=lambda j=job: Batch_job(j))
+                    batch_button = tk.Button(action_frame, text="BatchItUp", command=lambda j=job: batch_job(j))
                     batch_button.pack(side='top', padx=2)
                     
                     target_frame = tk.Frame(job_frame)
@@ -973,8 +1030,8 @@ def edit_queue():
                 canvas.config(scrollregion=canvas.bbox("all"))
 
         except tk.TclError as e:
-            print("Failed to update the job listbox because the Tkinter application or the frame has been destroyed.")
-            print(e)
+            pass
+            
     edit_queue.update_job_listbox = update_job_listbox
     edit_queue.refresh_frame_listbox = refresh_frame_listbox
     edit_queue_window += 1
@@ -986,6 +1043,17 @@ def edit_queue():
         edit_queue()
     update_job_listbox()
 
+def count_existing_jobs():
+    global PENDING_JOBS_COUNT
+    jobs = load_jobs(jobs_queue_file)
+    PENDING_JOBS_COUNT = len([job for job in jobs if job['status'] in ['pending']])
+    update_counters()
+    return PENDING_JOBS_COUNT
+
+def update_counters():
+    global root, pending_jobs_var
+    if pending_jobs_var:
+        root.after(0, lambda: pending_jobs_var.set(f"Delete {PENDING_JOBS_COUNT} Pending Jobs"))
 
 def get_values_from_globals(state_name):
     state_dict = {}
@@ -1078,20 +1146,6 @@ def save_jobs(file_path, jobs):
     with open(file_path, 'w') as file:
         json.dump(jobs, file, indent=4)
       
-def count_existing_jobs():
-    global PENDING_JOBS_COUNT
-    jobs = load_jobs(jobs_queue_file)
-    PENDING_JOBS_COUNT = len([job for job in jobs if job['status'] in ['pending']])
-    update_counters()
-    return PENDING_JOBS_COUNT
-
-
-def update_counters():
-    global pending_jobs_var
-    if pending_jobs_var:
-        pending_jobs_var.set(f"Delete {PENDING_JOBS_COUNT} Pending Jobs")
-    # Add other counter updates here if needed
-
 
 def format_cli_value(value):
     if isinstance(value, list) or isinstance(value, tuple):
@@ -1281,7 +1335,9 @@ JOB_IS_EXECUTING = 0
 PENDING_JOBS_COUNT = 0
 CURRENT_JOB_NUMBER = 0
 edit_queue_window = 0
+root = None
 pending_jobs_var = None
+PENDING_JOBS_COUNT = 0
 image_references = {}
 default_values = {}
 automatic1111 = os.path.isfile(os.path.join(base_dir, "README.md")) and "automatic1111" in open(os.path.join(base_dir, "README.md")).readline().strip()
