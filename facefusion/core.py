@@ -24,7 +24,7 @@ from facefusion.normalizer import normalize_output_path, normalize_padding, norm
 from facefusion.memory import limit_system_memory
 from facefusion.statistics import conditional_log_statistics
 from facefusion.download import conditional_download
-from facefusion.filesystem import list_directory, get_temp_frame_paths, create_temp, move_temp, clear_temp, is_image, is_video, filter_audio_paths, resolve_relative_path
+from facefusion.filesystem import get_temp_frame_paths, get_temp_file_path, create_temp, move_temp, clear_temp, is_image, is_video, filter_audio_paths, resolve_relative_path, list_directory
 from facefusion.ffmpeg import extract_frames, merge_video, copy_image, finalize_image, restore_audio, replace_audio
 from facefusion.vision import read_image, read_static_images, detect_image_resolution, restrict_video_fps, create_image_resolutions, get_video_frame, detect_video_resolution, detect_video_fps, restrict_video_resolution, restrict_image_resolution, create_video_resolutions, pack_resolution, unpack_resolution
 
@@ -308,28 +308,38 @@ def process_image(start_time : float) -> None:
 	normed_output_path = normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path)
 	if analyse_image(facefusion.globals.target_path):
 		return
+	# clear temp
+	logger.debug(wording.get('clearing_temp'), __name__.upper())
+	clear_temp(facefusion.globals.target_path)
+	# create temp
+	logger.debug(wording.get('creating_temp'), __name__.upper())
+	create_temp(facefusion.globals.target_path)
 	# copy image
 	process_manager.start()
 	temp_image_resolution = pack_resolution(restrict_image_resolution(facefusion.globals.target_path, unpack_resolution(facefusion.globals.output_image_resolution)))
 	logger.info(wording.get('copying_image').format(resolution = temp_image_resolution), __name__.upper())
-	if copy_image(facefusion.globals.target_path, normed_output_path, temp_image_resolution):
+	if copy_image(facefusion.globals.target_path, temp_image_resolution):
 		logger.debug(wording.get('copying_image_succeed'), __name__.upper())
 	else:
 		logger.error(wording.get('copying_image_failed'), __name__.upper())
 		return
 	# process image
+	temp_file_path = get_temp_file_path(facefusion.globals.target_path)
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		logger.info(wording.get('processing'), frame_processor_module.NAME)
-		frame_processor_module.process_image(facefusion.globals.source_paths, normed_output_path, normed_output_path)
+		frame_processor_module.process_image(facefusion.globals.source_paths, temp_file_path, temp_file_path)
 		frame_processor_module.post_process()
 	if is_process_stopping():
 		return
 	# finalize image
 	logger.info(wording.get('finalizing_image').format(resolution = facefusion.globals.output_image_resolution), __name__.upper())
-	if finalize_image(normed_output_path, facefusion.globals.output_image_resolution):
+	if finalize_image(facefusion.globals.target_path, normed_output_path, facefusion.globals.output_image_resolution):
 		logger.debug(wording.get('finalizing_image_succeed'), __name__.upper())
 	else:
 		logger.warn(wording.get('finalizing_image_skipped'), __name__.upper())
+	# clear temp
+	logger.debug(wording.get('clearing_temp'), __name__.upper())
+	clear_temp(facefusion.globals.target_path)
 	# validate image
 	if is_image(normed_output_path):
 		seconds = '{:.2f}'.format((time() - start_time) % 60)
