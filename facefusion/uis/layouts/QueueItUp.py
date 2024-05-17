@@ -1317,13 +1317,6 @@ working_dir = os.path.normpath(os.path.join(base_dir, user_dir))
 media_cache_dir = os.path.normpath(os.path.join(working_dir, "mediacache"))
 thumbnail_dir = os.path.normpath(os.path.join(working_dir, "thumbnails"))
 jobs_queue_file = os.path.normpath(os.path.join(working_dir, "jobs_queue.json"))
-#code to determin if running inside atutomatic1111
-automatic1111 = os.path.isfile(os.path.join(base_dir, "README.md")) and "automatic1111" in open(os.path.join(base_dir, "README.md")).readline().strip()
-if automatic1111:
-    from facefusion import core2
-    import facefusion.core2 as core2
-if automatic1111: venv_python = os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(base_dir)), 'venv', 'scripts', 'python.exe'))
-
 debugging = True
 keep_completed_jobs = False
 ADD_JOB_BUTTON = gradio.Button("Add Job ", variant="primary")
@@ -1340,7 +1333,14 @@ pending_jobs_var = None
 PENDING_JOBS_COUNT = 0
 image_references = {}
 default_values = {}
-automatic1111 = os.path.isfile(os.path.join(base_dir, "README.md")) and "automatic1111" in open(os.path.join(base_dir, "README.md")).readline().strip()
+#code to determin if running inside atutomatic1111
+automatic1111 = os.path.isfile(os.path.join(base_dir, "flavor.txt")) and "automatic1111" in open(os.path.join(base_dir, "flavor.txt")).readline().strip()
+if automatic1111:
+    from facefusion import core2
+    import facefusion.core2 as core2
+if automatic1111: venv_python = os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(base_dir)), 'venv', 'scripts', 'python.exe'))
+if automatic1111: debug_print("Venv Python Path:", venv_python)
+if not automatic1111: default_values = get_values_from_globals("default_values")
     # ANSI Color Codes     
 RED = '\033[91m'     #use this  
 GREEN = '\033[92m'     #use this  
@@ -1348,7 +1348,6 @@ YELLOW = '\033[93m'     #use this
 BLUE = '\033[94m'     #use this  
 ENDC = '\033[0m'       #use this    Resets color to default
 debug_print("Base Directory:", base_dir)
-if automatic1111: debug_print("Venv Python Path:", venv_python)
 debug_print("Working Directory:", working_dir)
 debug_print("Media Cache Directory:", media_cache_dir)
 debug_print("Jobs Queue File:", jobs_queue_file)
@@ -1358,7 +1357,6 @@ if not os.path.exists(working_dir):
     os.makedirs(working_dir)
 if not os.path.exists(media_cache_dir):
     os.makedirs(media_cache_dir)
-if not automatic1111: default_values = get_values_from_globals("default_values")
 create_and_verify_json(jobs_queue_file)
 check_for_completed_failed_or_aborted_jobs()
 debug_print(f"{GREEN}STATUS CHECK COMPLETED. {BLUE}You are now ready to QUEUE IT UP!{ENDC}")
