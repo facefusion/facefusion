@@ -306,10 +306,10 @@ def run_job_args(current_run_job):
                     if previous_line_was_progress:
                         print()  # Move to the next line before printing a new non-progress message
                         previous_line_was_progress = False
-                    if "error" in line.lower():
-                        print(f"{label}: {RED}{line.strip()[:100]}{ENDC}")
+                    if "error" in line.lower() or "failed" in line.lower():
+                        print(f"{label}: {RED}{line.strip()}{ENDC}")
                     else:
-                        print(f"{label}: {YELLOW}{line.strip()[:100]}{ENDC}")
+                        print(f"{label}: {YELLOW}{line.strip()}{ENDC}")
 
 
     stdout_thread = threading.Thread(target=handle_output, args=(process.stdout, stdout_lines, True))
@@ -327,7 +327,7 @@ def run_job_args(current_run_job):
     stderr = ''.join(stderr_lines)
 
     # Check for errors in the output
-    if "error" in stdout.lower() or "error" in stderr.lower():
+    if "error" in stdout.lower() or "error" in stderr.lower() or "failed" in stdout.lower() or "failed" in stderr.lower():
         current_run_job['status'] = 'failed'
         return_code = 1
     elif return_code == 0:
@@ -552,19 +552,20 @@ def edit_queue():
         job['headless'] = '--ui-layouts QueueItUp'
         job['status'] = 'editing'
         save_jobs(jobs_queue_file, jobs)
-        update_job_listbox()
         top = Toplevel()
         top.title("Please Wait")
         message_label = tk.Label(top, text="Please wait while the job loads back into FaceFusion...", padx=20, pady=20)
         message_label.pack()
         top.after(1000, close_window)
         top.after(2000, top.destroy)
+        custom_print(f"{GREEN} PLEASE WAIT WHILE THE Jobs IS RELOADED IN FACEFUSION{ENDC}...... {YELLOW}THIS WILL CREATE AN ADDITIONAL PYTHON PROCESS AND YOU SHOULD CONSIDER RESTARTING FACEFUSION AFTER DOING THIS MOR THEN 3 TIMES{ENDC}")
+
         root.destroy()
         run_job_args(job)
 
     def output_path_job(job):
         selected_path = filedialog.askdirectory(title="Select A New Output Path for this Job")
-###gptchangedthis  selected_path = askdirectory(title="Select A New Output Path for this Job")
+        ###old error selected_path = askdirectory(title="Select A New Output Path for this Job")
 
         if selected_path:
             formatted_path = selected_path.replace('/', '\\')  
@@ -926,16 +927,18 @@ def edit_queue():
             cache_key = 'sourcecache'
             job[cache_key] = cache_path
 
+
         if source_or_target == 'target':
             cache_path = copy_to_media_cache(path)
             cache_key = 'targetcache'
             job[cache_key] = cache_path
+            copy_to_media_cache(path)
+
             
         if source_or_target == 'output':
             cache_key = 'output_path'
             cache_path = job['output_path']
         job[cache_key] = cache_path
-
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()
 
@@ -949,8 +952,8 @@ def edit_queue():
                     widget.destroy()
 
                 for index, job in enumerate(jobs):
-                    source_paths = job['sourcecache'] if isinstance(job['sourcecache'], list) else [job['sourcecache']]
-                    source_thumb_exists = all(os.path.exists(os.path.normpath(source)) for source in source_paths)
+                    source_cache_path = job['sourcecache'] if isinstance(job['sourcecache'], list) else [job['sourcecache']]
+                    source_thumb_exists = all(os.path.exists(os.path.normpath(source)) for source in source_cache_path)
                     target_cache_path = job['targetcache'] if isinstance(job['targetcache'], str) else job['targetcache'][0]
                     target_thumb_exists = os.path.exists(os.path.normpath(target_cache_path))
                     bg_color = 'SystemButtonFace'
@@ -1032,16 +1035,16 @@ def edit_queue():
         except tk.TclError as e:
             pass
             
-    edit_queue.update_job_listbox = update_job_listbox
+    # edit_queue.update_job_listbox = update_job_listbox
     edit_queue.refresh_frame_listbox = refresh_frame_listbox
     edit_queue_window += 1
-    root.after(1000, update_job_listbox)
-    root.after(5000, refresh_frame_listbox)
+    # root.after(1000, update_job_listbox)
+    root.after(1000, refresh_frame_listbox)
     root.mainloop()
     edit_queue_window = 0
     if __name__ == '__main__':
         edit_queue()
-    update_job_listbox()
+    # update_job_listbox()
 
 def count_existing_jobs():
     global PENDING_JOBS_COUNT
@@ -1186,17 +1189,23 @@ def check_for_completed_failed_or_aborted_jobs():
         save_jobs(jobs_queue_file, jobs)
         custom_print(f"{BLUE}All completed jobs have been removed, if you would like to keep completed jobs change the setting to True{ENDC}\n\n")
 
+def sanitize_filename(filename):
+    valid_chars = "-_.()abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    sanitized = ''.join(c if c in valid_chars else '_' for c in filename)
+    return sanitized
+
 def copy_to_media_cache(file_paths):
     if isinstance(file_paths, str):
         file_paths = [file_paths]  # Convert single file path to list
     cached_paths = []
     for file_path in file_paths:
         file_name = os.path.basename(file_path)
+        sanitized_name = sanitize_filename(file_name)  # Sanitize the filename
         file_size = os.path.getsize(file_path)
-        base_name, ext = os.path.splitext(file_name)
+        base_name, ext = os.path.splitext(sanitized_name)
         counter = 0
         while True:
-            new_name = f"{base_name}_{counter}{ext}" if counter > 0 else file_name
+            new_name = f"{base_name}_{counter}{ext}" if counter > 0 else sanitized_name
             cache_path = os.path.join(media_cache_dir, new_name)
             if not os.path.exists(cache_path):
                 shutil.copy(file_path, cache_path)
@@ -1214,7 +1223,6 @@ def copy_to_media_cache(file_paths):
         return cached_paths[0]  # Return the single path
     else:
         return cached_paths  # Return the list of paths
-
 def check_for_unneeded_media_cache():
     # List all files in the media cache directory
     cache_files = os.listdir(media_cache_dir)
@@ -1224,8 +1232,8 @@ def check_for_unneeded_media_cache():
     for job in jobs:
         if job['status'] in {'pending', 'failed', 'missing', 'editing', 'executing'}:
             # Now handle sourcecache as a list
-            for source_path in job['sourcecache']:
-                source_basename = os.path.basename(source_path)
+            for source_cache_path in job['sourcecache']:
+                source_basename = os.path.basename(source_cache_path)
                 needed_files.add(source_basename)
             target_basename = os.path.basename(job['targetcache'])
             needed_files.add(target_basename)
@@ -1253,9 +1261,9 @@ def check_if_needed(job, source_or_target):
 
     # Check and handle sourcecache paths
     if source_or_target in ['both', 'source']:
-        source_paths = job['sourcecache'] if isinstance(job['sourcecache'], list) else [job['sourcecache']]
-        for source_path in source_paths:
-            normalized_source_path = os.path.normpath(source_path)
+        source_cache_paths = job['sourcecache'] if isinstance(job['sourcecache'], list) else [job['sourcecache']]
+        for source_cache_path in source_cache_paths:
+            normalized_source_path = os.path.normpath(source_cache_path)
             file_use_count = file_usage_counts.get(normalized_source_path, 0)
             if file_use_count < 2:
                 if os.path.exists(normalized_source_path):
