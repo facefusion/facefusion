@@ -3,27 +3,25 @@ import gradio
 import os
 import re
 import sys
-#import ast
+###import ast
 import uuid
 import time
 import math
 import json
-# import tempfile
+###import tempfile
 import shutil
-#import socket
-#import shlex
-# import logging
+###import socket
+###import shlex
+###import logging
 import tkinter as tk
-# import platform
+###import platform
 import threading
 import subprocess
-#import configparser
-#from tkinter.filedialog import askdirectory
-from tkinter import filedialog, font, Toplevel, messagebox, PhotoImage, Scrollbar, Button#, Frame, Label, Text, Tk, Canvas
+###import configparser
+###from tkinter.filedialog import askdirectory
+from tkinter import filedialog, font, Toplevel, messagebox, PhotoImage, Scrollbar, Button###, Frame, Label, Text, Tk, Canvas
 from io import BytesIO
 import facefusion.globals
-from facefusion import core
-#import facefusion.core as core
 from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, memory, temp_frame, output_options, common_options, source, target, output, preview, trim_frame, face_analyser, face_selector, face_masker
 
 
@@ -135,7 +133,7 @@ def get_default_values_from_ini():
                         except ValueError:
                             parsed_val = val
             default_values[key] = parsed_val
-    with open(os.path.join(working_dir, f"default_values.txt"), "w") as file:
+    with open(os.path.join(working_dir, "default_values.txt"), "w") as file:
         for key, val in default_values.items():
             file.write(f"{key}: {val}\n")
     return default_values
@@ -150,7 +148,7 @@ def assemble_queue():
     current_values = get_values_from_globals('current_values')
 
     differences = {}
-#    keys_to_skip = ["source_paths", "target_path", "output_path", "ui_layouts", "face_recognizer_model"]
+    ###keys_to_skip = ["source_paths", "target_path", "output_path", "ui_layouts", "face_recognizer_model"]
     keys_to_skip = ["source_paths", "target_path"]
     if "frame-processors" in current_values:
         frame_processors = current_values["frame-processors"]
@@ -227,7 +225,7 @@ def assemble_queue():
         "output_path": (output_path),
     }
     if debugging:
-        with open(os.path.join(working_dir, f"job_args.txt"), "w") as file:
+        with open(os.path.join(working_dir, "job_args.txt"), "w") as file:
             for key, val in current_values.items():
                 file.write(f"{key}: {val}\n")
 
@@ -479,7 +477,6 @@ def edit_queue():
         update_job_listbox()
         refresh_frame_listbox()
 
-
     def refresh_frame_listbox():
         global jobs
         status_priority = {'editing': 0, 'executing': 1, 'pending': 2, 'failed': 3, 'missing': 4, 'completed': 5, 'archived': 6}
@@ -488,11 +485,9 @@ def edit_queue():
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()
 
-
     def close_window():
         save_jobs(jobs_queue_file, jobs)
         root.destroy
-
 
     def delete_pending_jobs():
         jobs = load_jobs(jobs_queue_file)
@@ -500,13 +495,11 @@ def edit_queue():
         save_jobs(jobs_queue_file, jobs)
         refresh_frame_listbox()
         
-        
     def delete_completed_jobs():
         jobs = load_jobs(jobs_queue_file)
         jobs = [job for job in jobs if job['status'] != 'completed']
         save_jobs(jobs_queue_file, jobs)
         refresh_frame_listbox()
-
 
     def delete_failed_jobs():
         jobs = load_jobs(jobs_queue_file)
@@ -514,19 +507,16 @@ def edit_queue():
         save_jobs(jobs_queue_file, jobs)
         refresh_frame_listbox()
 
-        
     def delete_missing_media_jobs(): 
         jobs = load_jobs(jobs_queue_file)
         jobs = [job for job in jobs if job['status'] != 'missing']
         save_jobs(jobs_queue_file, jobs)
         refresh_frame_listbox()
 
-
     def archive_job(job):
         job['status'] = 'archived'
         save_jobs(jobs_queue_file, jobs) 
         refresh_frame_listbox()
-
 
     def delete_archived_jobs(): 
         jobs = load_jobs(jobs_queue_file)
@@ -536,7 +526,6 @@ def edit_queue():
         jobs = [job for job in jobs if job['status'] != 'archived']
         save_jobs(jobs_queue_file, jobs)
         refresh_frame_listbox()
-
 
     def reload_job_in_facefusion_edit(job):
         sourcecache_path = job.get('sourcecache')
@@ -569,10 +558,8 @@ def edit_queue():
         top.after(1000, close_window)
         top.after(2000, top.destroy)
         custom_print(f"{GREEN} PLEASE WAIT WHILE THE Jobs IS RELOADED IN FACEFUSION{ENDC}...... {YELLOW}THIS WILL CREATE AN ADDITIONAL PYTHON PROCESS AND YOU SHOULD CONSIDER RESTARTING FACEFUSION AFTER DOING THIS MOR THEN 3 TIMES{ENDC}")
-
         root.destroy()
         run_job_args(job)
-
 
     def output_path_job(job):
         selected_path = filedialog.askdirectory(title="Select A New Output Path for this Job")
@@ -585,7 +572,6 @@ def edit_queue():
         update_job_listbox()  
         refresh_frame_listbox()
 
-
     def delete_job(job):
         job['status'] = ('deleting')
         source_or_target='both'
@@ -595,13 +581,11 @@ def edit_queue():
         update_job_listbox()  
         refresh_frame_listbox()
 
-
     def move_job_up(index):
         if index > 0:
             jobs.insert(index - 1, jobs.pop(index))
             save_jobs(jobs_queue_file, jobs)
             update_job_listbox()
-
 
     def move_job_down(index):
         if index < len(jobs) - 1:
@@ -609,20 +593,17 @@ def edit_queue():
             save_jobs(jobs_queue_file, jobs)
             update_job_listbox()
 
-
     def move_job_to_top(index):
         if index > 0:
             jobs.insert(0, jobs.pop(index))
             save_jobs(jobs_queue_file, jobs)
             update_job_listbox()
 
-
     def move_job_to_bottom(index):
         if index < len(jobs) - 1:
             jobs.append(jobs.pop(index))
             save_jobs(jobs_queue_file, jobs)
             update_job_listbox()
-
 
     def edit_job_arguments_text(job):
         global default_values
@@ -706,9 +687,7 @@ def edit_queue():
         canvas.configure(scrollregion=canvas.bbox("all"))
         edit_arg_window.mainloop()
 
-
     def batch_job(job):
-        file_types = []
         target_filetype = None
         source_or_target = None
         if isinstance(job['sourcecache'], str):
@@ -937,7 +916,6 @@ def edit_queue():
         save_jobs(jobs_queue_file, jobs)
         update_job_listbox()
 
-
     def update_job_listbox():
         global image_references, frame
         update_counters()
@@ -1015,10 +993,10 @@ def edit_queue():
                         print("Failed to create target button.")
                     argument_frame = tk.Frame(job_frame)
                     argument_frame.pack(side='left', fill='x', padx=5)
-                    facefusion_button = tk.Button(argument_frame, text=f"UN-Queue It Up", font=bold_font, justify='center')
+                    facefusion_button = tk.Button(argument_frame, text="UN-Queue It Up", font=bold_font, justify='center')
                     facefusion_button.pack(side='top', padx=5, fill='x', expand=False)
                     facefusion_button.bind("<Button-1>", lambda event, j=job: reload_job_in_facefusion_edit(j))
-                    argument_button = tk.Button(argument_frame, text=f"EDIT JOB ARGUMENTS", wraplength=325, justify='center')
+                    argument_button = tk.Button(argument_frame, text="EDIT JOB ARGUMENTS", wraplength=325, justify='center')
                     argument_button.pack(side='bottom', padx=5, fill='x', expand=False)
                     argument_button.bind("<Button-1>", lambda event, j=job: edit_job_arguments_text(j))
                 frame.update_idletasks()
@@ -1053,7 +1031,7 @@ def update_counters():
 def get_values_from_globals(state_name):
     state_dict = {}
     
-    from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
+    from facefusion.processors.frame import globals as frame_processors_globals###, choices as frame_processors_choices
 
     modules = [facefusion.globals, frame_processors_globals]  
 
@@ -1075,6 +1053,7 @@ def get_values_from_globals(state_name):
         debug_print(f"{state_name}.txt created")
     return state_dict
 
+
 def debug_print (*msgs):
     if debugging:
         custom_print(*msgs)
@@ -1090,16 +1069,6 @@ def custom_print(*msgs):
     YELLOW = '\033[93m'
     BLUE = '\033[94m'
     ENDC = '\033[0m'
-
-    # Mapping of ANSI codes to tkinter text widget tags
-    ansi_to_tag = {
-        RED: 'red',
-        GREEN: 'green',
-        YELLOW: 'yellow',
-        BLUE: 'blue',
-        ENDC: 'end'
-    }
-
     print(message)  # Print to terminal with ANSI coloring
 
 
@@ -1142,6 +1111,7 @@ def format_cli_value(value):
         return 'None'
     return str(value)
 
+
 def print_existing_jobs():
 
     count_existing_jobs()
@@ -1151,7 +1121,7 @@ def print_existing_jobs():
         if PENDING_JOBS_COUNT > 0:
             message = f"There is {PENDING_JOBS_COUNT + JOB_IS_RUNNING} job(s) in the queue - Click Run Queue to Execute Them, or continue adding more jobs to the queue"
         else:
-            message = f"There is 0 job(s) in the queue - Click Add Job instead of Start"
+            message = "There is 0 job(s) in the queue - Click Add Job instead of Start"
     custom_print(message + "\n\n")
     
 
@@ -1173,6 +1143,7 @@ def check_for_completed_failed_or_aborted_jobs():
         jobs = [job for job in jobs if job['status'] != 'completed']
         save_jobs(jobs_queue_file, jobs)
         custom_print(f"{BLUE}All completed jobs have been removed, if you would like to keep completed jobs change the setting to True{ENDC}\n\n")
+
 
 def sanitize_filename(filename):
     valid_chars = "-_.()abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -1301,7 +1272,8 @@ def preprocess_execution_providers(data):
                 # Assuming you don't want to keep original values that don't match, skip the else clause
             new_data[key] = new_providers  # Replace the old list with the new one
     return new_data
-    
+   
+   
 ##################################
 #startup_init_checks_and_cleanup     
 ##################################
@@ -1390,6 +1362,7 @@ def check_and_install_ffmpeg():
     except Exception as general_error:
         raise RuntimeError(f"Unexpected error: {general_error}")
 
+
 # Call the function to check and install ffmpeg
 try:
     if not check_and_install_ffmpeg():
@@ -1397,9 +1370,6 @@ try:
 except Exception as e:
     sys.exit(e)
     
-
-
-
 
 def run(ui: gradio.Blocks) -> None:
     global server
