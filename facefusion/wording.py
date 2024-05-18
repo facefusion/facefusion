@@ -65,6 +65,7 @@ WORDING : Dict[str, Any] =\
 		'headless': 'run the program without a user interface',
 		'log_level': 'adjust the message severity displayed in the terminal',
 		# execution
+		'execution_device_id': 'specify the device used for processing',
 		'execution_providers': 'accelerate the model inference using different providers (choices: {choices}, ...)',
 		'execution_thread_count': 'specify the amount of parallel threads while processing',
 		'execution_queue_count': 'specify the amount of frames each thread is processing',

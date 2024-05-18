@@ -42,6 +42,7 @@ misc:
   --log-level {error,warn,info,debug}                                                                                                                                                   adjust the message severity displayed in the terminal
 
 execution:
+  --execution-device-id EXECUTION_DEVICE_ID                                                                                                                                             specify the device used for processing
   --execution-providers EXECUTION_PROVIDERS [EXECUTION_PROVIDERS ...]                                                                                                                   accelerate the model inference using different providers (choices: cpu, ...)
   --execution-thread-count [1-128]                                                                                                                                                      specify the amount of parallel threads while processing
   --execution-queue-count [1-32]                                                                                                                                                        specify the amount of frames each thread is processing
