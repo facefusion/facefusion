@@ -121,7 +121,7 @@ def list_directory(directory_path : str) -> Optional[List[str]]:
 	return None
 
 
-def sanitize_path_for_windows(full_path : str) -> str:
+def sanitize_path_for_windows(full_path : str) -> Optional[str]:
 	buffer_size = 0
 
 	while True:
@@ -130,4 +130,6 @@ def sanitize_path_for_windows(full_path : str) -> str:
 
 		if buffer_size > buffer_threshold:
 			return unicode_buffer.value
+		if buffer_threshold == 0:
+			return None
 		buffer_size = buffer_threshold

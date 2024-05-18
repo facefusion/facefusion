@@ -1,3 +1,4 @@
+import shutil
 import pytest
 
 from facefusion.common_helper import is_windows
@@ -13,6 +14,7 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.mp3',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
 	])
+	shutil.copyfile('.assets/examples/source.jpg', '.assets/examples/söurce.jpg')
 
 
 def test_get_file_size() -> None:
@@ -84,4 +86,5 @@ def test_list_directory() -> None:
 
 def test_sanitize_path_for_windows() -> None:
 	if is_windows():
-		assert sanitize_path_for_windows('.assets/examples/source.jpg').endswith('SOURCE~1.JPG')
+		assert sanitize_path_for_windows('.assets/examples/söurce.jpg') == 'ASSETS~1/examples/SURCE~1.JPG'
+		assert sanitize_path_for_windows('invalid') is None
