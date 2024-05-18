@@ -20,7 +20,7 @@ else:
 	ONNXRUNTIMES['default'] = ('onnxruntime', '1.17.3')
 	ONNXRUNTIMES['cuda-12.2'] = ('onnxruntime-gpu', '1.17.1')
 	ONNXRUNTIMES['cuda-11.8'] = ('onnxruntime-gpu', '1.17.1')
-	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.17.1')
+	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.15.0')
 if is_linux():
 	ONNXRUNTIMES['rocm-5.4.2'] = ('onnxruntime-rocm', '1.16.3')
 	ONNXRUNTIMES['rocm-5.6'] = ('onnxruntime-rocm', '1.16.3')

@@ -113,7 +113,7 @@ Section 'Create Install Batch'
 	${ElseIf} $UseDirectMl == 1
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime directml'
 	${ElseIf} $UseOpenVino == 1
-		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::openvino=2023.3.0 --yes'
+		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::openvino=2023.1.0 --yes'
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime openvino'
 	${Else}
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime default'

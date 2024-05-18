@@ -28,10 +28,16 @@ def apply_execution_provider_options(execution_device_id : str, execution_provid
 				'device_id': execution_device_id,
 				'cudnn_conv_algo_search': 'EXHAUSTIVE' if use_exhaustive() else 'DEFAULT'
 			}))
-		elif execution_provider in [ 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'ROCMExecutionProvider' ]:
+		elif execution_provider == 'OpenVINOExecutionProvider':
 			execution_providers_with_options.append((execution_provider,
 			{
 				'device_id': execution_device_id,
+				'device_type': execution_device_id + '_FP32'
+			}))
+		elif execution_provider in [ 'DmlExecutionProvider', 'ROCMExecutionProvider' ]:
+			execution_providers_with_options.append((execution_provider,
+			{
+				'device_id': execution_device_id
 			}))
 		else:
 			execution_providers_with_options.append(execution_provider)
