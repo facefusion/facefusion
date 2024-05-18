@@ -7,6 +7,10 @@ import filetype
 from pathlib import Path
 
 import facefusion.globals
+from facefusion.common_helper import is_windows
+
+if is_windows():
+	import ctypes
 
 
 def get_temp_frame_paths(target_path : str) -> List[str]:
@@ -115,3 +119,15 @@ def list_directory(directory_path : str) -> Optional[List[str]]:
 		files = [ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ]
 		return sorted(files)
 	return None
+
+
+def sanitize_path_for_windows(full_path : str) -> str:
+	buffer_size = 0
+
+	while True:
+		unicode_buffer = ctypes.create_unicode_buffer(buffer_size)
+		buffer_threshold = ctypes.windll.kernel32.GetShortPathNameW(full_path, unicode_buffer, buffer_size) #type:ignore[attr-defined]
+
+		if buffer_size > buffer_threshold:
+			return unicode_buffer.value
+		buffer_size = buffer_threshold

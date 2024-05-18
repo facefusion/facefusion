@@ -1,7 +1,8 @@
 import pytest
 
+from facefusion.common_helper import is_windows
 from facefusion.download import conditional_download
-from facefusion.filesystem import get_file_size, is_file, is_directory, is_audio, has_audio, is_image, has_image, is_video, filter_audio_paths, filter_image_paths, list_directory
+from facefusion.filesystem import get_file_size, is_file, is_directory, is_audio, has_audio, is_image, has_image, is_video, filter_audio_paths, filter_image_paths, list_directory, sanitize_path_for_windows
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -79,3 +80,8 @@ def test_list_directory() -> None:
 	assert list_directory('.assets/examples')
 	assert list_directory('.assets/examples/source.jpg') is None
 	assert list_directory('invalid') is None
+
+
+def test_sanitize_path_for_windows() -> None:
+	if is_windows():
+		assert sanitize_path_for_windows('.assets/examples/source.jpg').endswith('SOURCE~1.JPG')
