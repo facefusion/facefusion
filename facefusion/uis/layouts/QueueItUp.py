@@ -757,7 +757,7 @@ def edit_queue():
                     add_new_job = job.copy()  # Copy the existing job to preserve other attributes
                     path = copy_to_media_cache(path)
                     add_new_job[source_or_target + 'cache'] = path
-                    print(f"{source_or_target} - {add_new_job[source_or_target + 'cache']} copied to temp media cache dir")
+                    debug_print(f"{YELLOW}{source_or_target} - {GREEN}{add_new_job[source_or_target + 'cache']}{YELLOW} copied to temp media cache dir{ENDC}")
                     jobs.append(add_new_job)
                 save_jobs(jobs_queue_file, jobs)
                 update_job_listbox()
