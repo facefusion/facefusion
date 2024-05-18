@@ -23,7 +23,7 @@ def normalize_output_path(target_path : Optional[str], output_path : Optional[st
 
 def normalize_padding(padding : Optional[List[int]]) -> Optional[Padding]:
 	if padding and len(padding) == 1:
-		return tuple([padding[0]] * 4) #type:ignore[return-value]
+		return tuple([ padding[0] ] * 4) #type:ignore[return-value]
 	if padding and len(padding) == 2:
 		return tuple([ padding[0], padding[1], padding[0], padding[1] ]) #type:ignore[return-value]
 	if padding and len(padding) == 3:
