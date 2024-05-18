@@ -4,7 +4,6 @@ import subprocess
 import xml.etree.ElementTree as ElementTree
 import onnxruntime
 
-import facefusion.globals
 from facefusion.typing import ExecutionDevice, ValueAndUnit
 
 
