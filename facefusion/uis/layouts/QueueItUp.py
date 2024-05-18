@@ -8,13 +8,13 @@ import uuid
 import time
 import math
 import json
-import tempfile
+# import tempfile
 import shutil
-import socket
-import shlex
-import logging
+#import socket
+#import shlex
+# import logging
 import tkinter as tk
-import platform
+# import platform
 import threading
 import subprocess
 import configparser
@@ -148,7 +148,8 @@ def assemble_queue():
     current_values = get_values_from_globals('current_values')
 
     differences = {}
-    keys_to_skip = ["source_paths", "target_path", "output_path", "ui_layouts", "face_recognizer_model"]
+#    keys_to_skip = ["source_paths", "target_path", "output_path", "ui_layouts", "face_recognizer_model"]
+    keys_to_skip = ["source_paths", "target_path"]
     if "frame-processors" in current_values:
         frame_processors = current_values["frame-processors"]
         if "face-enhancer" not in frame_processors:
@@ -565,7 +566,6 @@ def edit_queue():
 
     def output_path_job(job):
         selected_path = filedialog.askdirectory(title="Select A New Output Path for this Job")
-        ###old error selected_path = askdirectory(title="Select A New Output Path for this Job")
 
         if selected_path:
             formatted_path = selected_path.replace('/', '\\')  
@@ -836,8 +836,7 @@ def edit_queue():
 
         for file_path in file_paths:
             if not os.path.exists(file_path):
-                button = Button(parent, text=f"File not found:\n\n {os.path.basename(file_path)}\nClick to update", bg='white', fg='black',
-                                command=lambda: select_job_file(parent, job, source_or_target))
+                button = Button(parent, text=f"File not found:\n\n {os.path.basename(file_path)}\nClick to update", bg='white', fg='black', command=lambda: select_job_file(parent, job, source_or_target))
                 button.pack(pady=2, fill='x', expand=False)
                 return button
 
@@ -1365,7 +1364,49 @@ check_for_completed_failed_or_aborted_jobs()
 debug_print(f"{GREEN}STATUS CHECK COMPLETED. {BLUE}You are now ready to QUEUE IT UP!{ENDC}")
 print_existing_jobs()
 
+import subprocess
+import sys
+
+def check_and_install_ffmpeg():
+    """Check if ffmpeg is installed and install it if not."""
+    try:
+        subprocess.run(['ffmpeg', '-version'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return True  # FFmpeg is already installed
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass  # FFmpeg is not installed
+
+    try:
+        if sys.platform.startswith('linux'):
+            subprocess.run(['sudo', 'apt-get', 'update'], check=True)
+            subprocess.run(['sudo', 'apt-get', 'install', '-y', 'ffmpeg'], check=True)
+        elif sys.platform == 'darwin':  # macOS
+            subprocess.run(['/bin/bash', '-c', '$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)'], check=True)
+            subprocess.run(['brew', 'install', 'ffmpeg'], check=True)
+        elif sys.platform.startswith('win'):
+            raise OSError("Windows users must manually install FFmpeg from https://ffmpeg.org/download.html and add it to the system PATH.")
+        else:
+            raise OSError("Unsupported operating system")
+
+        # Verify installation
+        subprocess.run(['ffmpeg', '-version'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return True  # FFmpeg installed successfully
+    except subprocess.CalledProcessError as install_error:
+        raise RuntimeError(f"Error during FFmpeg installation: {install_error}")
+    except Exception as general_error:
+        raise RuntimeError(f"Unexpected error: {general_error}")
+
+# Call the function to check and install ffmpeg
+try:
+    if not check_and_install_ffmpeg():
+        raise RuntimeError("Failed to install FFmpeg. Please install it manually.")
+except Exception as e:
+    sys.exit(e)
+    
+
+
+
+
 def run(ui: gradio.Blocks) -> None:
     global server
     concurrency_count = min(8, multiprocessing.cpu_count())
-    ui.queue(concurrency_count=concurrency_count).launch(show_api=False, inbrowser=True, quiet=False)
+    ui.queue(concurrency_count=concurrency_count).launch(show_api=False, inbrowser=True, quiet=False, share=True)
