@@ -18,6 +18,10 @@ def decode_execution_providers(execution_providers : List[str]) -> List[str]:
 	return [ execution_provider for execution_provider, encoded_execution_provider in zip(available_execution_providers, encoded_execution_providers) if any(execution_provider in encoded_execution_provider for execution_provider in execution_providers) ]
 
 
+def has_execution_provider(execution_provider : str) -> bool:
+	return execution_provider in onnxruntime.get_available_providers()
+
+
 def apply_execution_provider_options(execution_device_id : str, execution_providers : List[str]) -> List[Any]:
 	execution_providers_with_options : List[Any] = []
 
