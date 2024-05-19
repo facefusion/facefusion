@@ -29,7 +29,7 @@ python run.py [options]
 
 options:
   -h, --help                                                                                                                                                                            show this help message and exit
-  -c CONFIG_PATH, --config CONFIG_PATH                                                                                                                                                  choose the config file
+  -c CONFIG_PATH, --config CONFIG_PATH                                                                                                                                                  choose the config file to override defaults
   -s SOURCE_PATHS, --source SOURCE_PATHS                                                                                                                                                choose single or multiple source images or audios
   -t TARGET_PATH, --target TARGET_PATH                                                                                                                                                  choose single target image or video
   -o OUTPUT_PATH, --output OUTPUT_PATH                                                                                                                                                  specify the output file or directory
@@ -102,7 +102,7 @@ frame processors:
   --lip-syncer-model {wav2lip_gan}                                                                                                                                                      choose the model responsible for syncing the lips
 
 uis:
-  --open-browser                                                                                                                                                                        open the browser when ready
+  --open-browser                                                                                                                                                                        open the browser once the program is ready
   --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                                                                                                              launch a single or multiple UI layouts (choices: benchmark, default, webcam, ...)
 ```
 
