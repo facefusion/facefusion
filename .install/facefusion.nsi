@@ -61,7 +61,7 @@ FunctionEnd
 
 Section 'Prepare Your Platform'
 	DetailPrint 'Install GIT'
-	inetc::get 'https://github.com/git-for-windows/git/releases/download/v2.45.1.windows.1/Git-2.45.0-64-bit.exe' '$TEMP\Git.exe'
+	inetc::get 'https://github.com/git-for-windows/git/releases/download/v2.45.1.windows.1/Git-2.45.1-64-bit.exe' '$TEMP\Git.exe'
 	ExecWait '$TEMP\Git.exe /CURRENTUSER /VERYSILENT /DIR=$LOCALAPPDATA\Programs\Git' $0
 	Delete '$TEMP\Git.exe'
 
