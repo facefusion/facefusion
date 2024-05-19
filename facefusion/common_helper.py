@@ -22,7 +22,7 @@ def create_float_range(start : float, end : float, step : float) -> List[float]:
 
 	while current <= end:
 		float_range.append(round(current, 2))
-		current += step
+		current = round(current + step, 2)
 	return float_range
 
 
