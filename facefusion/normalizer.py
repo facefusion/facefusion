@@ -23,21 +23,17 @@ def normalize_output_path(target_path : Optional[str], output_path : Optional[st
 
 def normalize_padding(padding : Optional[List[int]]) -> Optional[Padding]:
 	if padding and len(padding) == 1:
-		return tuple([ padding[0], padding[0], padding[0], padding[0] ]) # type: ignore[return-value]
+		return tuple([ padding[0] ] * 4) #type:ignore[return-value]
 	if padding and len(padding) == 2:
-		return tuple([ padding[0], padding[1], padding[0], padding[1] ]) # type: ignore[return-value]
+		return tuple([ padding[0], padding[1], padding[0], padding[1] ]) #type:ignore[return-value]
 	if padding and len(padding) == 3:
-		return tuple([ padding[0], padding[1], padding[2], padding[1] ]) # type: ignore[return-value]
+		return tuple([ padding[0], padding[1], padding[2], padding[1] ]) #type:ignore[return-value]
 	if padding and len(padding) == 4:
-		return tuple(padding) # type: ignore[return-value]
+		return tuple(padding) #type:ignore[return-value]
 	return None
 
 
 def normalize_fps(fps : Optional[float]) -> Optional[Fps]:
 	if fps is not None:
-		if fps < 1.0:
-			return 1.0
-		if fps > 60.0:
-			return 60.0
-		return fps
+		return max(1.0, min(fps, 60.0))
 	return None

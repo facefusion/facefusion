@@ -8,7 +8,7 @@ face_enhancer_models : List[FaceEnhancerModel] = [ 'codeformer', 'gfpgan_1.2', '
 face_swapper_models : List[FaceSwapperModel] = [ 'blendswap_256', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_512_unofficial', 'uniface_256' ]
 frame_colorizer_models : List[FrameColorizerModel] = [ 'ddcolor', 'ddcolor_artistic', 'deoldify', 'deoldify_artistic', 'deoldify_stable' ]
 frame_colorizer_sizes : List[str] = [ '192x192', '256x256', '384x384', '512x512' ]
-frame_enhancer_models : List[FrameEnhancerModel] = [ 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_hatgan_x4', 'span_kendata_x4' ]
+frame_enhancer_models : List[FrameEnhancerModel] = [ 'clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_hatgan_x4', 'span_kendata_x4', 'ultra_sharp_x4' ]
 lip_syncer_models : List[LipSyncerModel] = [ 'wav2lip_gan' ]
 
 face_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
