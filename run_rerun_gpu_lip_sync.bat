@@ -1,7 +1,8 @@
 python run.py ^
--s "P:\_AI_DATASET\IMG" ^
+-s "W:\_AI_DATASET\IMG" ^
 -t "I:\FILMORA\OUTPUT" ^
 -o "V:\facefusion-nsfw-result" ^
+--execution-device-id 1 ^
 --execution-provider cuda ^
 --execution-thread-count 12 ^
 --execution-queue-count 1 ^

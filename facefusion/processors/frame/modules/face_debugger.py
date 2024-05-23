@@ -11,7 +11,7 @@ from facefusion.face_masker import create_static_box_mask, create_occlusion_mask
 from facefusion.face_helper import warp_face_by_face_landmark_5, categorize_age, categorize_gender
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.typing import Face, VisionFrame, UpdateProcess, ProcessMode, QueuePayload
+from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, QueuePayload
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame.typings import FaceDebuggerInputs
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
@@ -74,6 +74,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	bounding_box = target_face.bounding_box.astype(numpy.int32)
 	temp_vision_frame = temp_vision_frame.copy()
 	has_face_landmark_5_fallback = numpy.array_equal(target_face.landmarks.get('5'), target_face.landmarks.get('5/68'))
+	has_face_landmark_68_fallback = numpy.array_equal(target_face.landmarks.get('68'), target_face.landmarks.get('68/5'))
 
 	if 'bounding-box' in frame_processors_globals.face_debugger_items:
 		cv2.rectangle(temp_vision_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), primary_color, 2)
@@ -109,7 +110,11 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	if 'face-landmark-68' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmarks.get('68')):
 		face_landmark_68 = target_face.landmarks.get('68').astype(numpy.int32)
 		for index in range(face_landmark_68.shape[0]):
-			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, secondary_color, -1)
+			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, tertiary_color if has_face_landmark_68_fallback else secondary_color, -1)
+	if 'face-landmark-68/5' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmarks.get('68')):
+		face_landmark_68 = target_face.landmarks.get('68/5').astype(numpy.int32)
+		for index in range(face_landmark_68.shape[0]):
+			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, primary_color, -1)
 	if bounding_box[3] - bounding_box[1] > 50 and bounding_box[2] - bounding_box[0] > 50:
 		top = bounding_box[1]
 		left = bounding_box[0] - 20
@@ -157,7 +162,7 @@ def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
 	return target_vision_frame
 
 
-def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProcess) -> None:
+def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 
 	for queue_payload in process_manager.manage(queue_payloads):
@@ -169,7 +174,7 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 			'target_vision_frame': target_vision_frame
 		})
 		write_image(target_vision_path, output_vision_frame)
-		update_progress()
+		update_progress(1)
 
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:

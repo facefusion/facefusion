@@ -1,7 +1,6 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 from time import sleep
-import threading
 import cv2
 import numpy
 import onnxruntime
@@ -13,7 +12,8 @@ from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution import apply_execution_provider_options
 from facefusion.normalizer import normalize_output_path
-from facefusion.typing import Face, VisionFrame, UpdateProcess, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
+from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
+from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, resolve_relative_path, is_image, is_video
 from facefusion.download import conditional_download, is_download_done
@@ -23,43 +23,77 @@ from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
-THREAD_LOCK : threading.Lock = threading.Lock()
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
+	'clear_reality_x4':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/clear_reality_x4.onnx',
+		'path': resolve_relative_path('../.assets/models/clear_reality_x4.onnx'),
+		'size': (128, 8, 4),
+		'scale': 4
+	},
 	'lsdir_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/lsdir_x4.onnx',
 		'path': resolve_relative_path('../.assets/models/lsdir_x4.onnx'),
-		'size': (128, 8, 2),
+		'size': (128, 8, 4),
 		'scale': 4
 	},
 	'nomos8k_sc_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/nomos8k_sc_x4.onnx',
 		'path': resolve_relative_path('../.assets/models/nomos8k_sc_x4.onnx'),
-		'size': (128, 8, 2),
+		'size': (128, 8, 4),
 		'scale': 4
+	},
+	'real_esrgan_x2':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x2.onnx',
+		'path': resolve_relative_path('../.assets/models/real_esrgan_x2.onnx'),
+		'size': (256, 16, 8),
+		'scale': 2
+	},
+	'real_esrgan_x2_fp16':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x2_fp16.onnx',
+		'path': resolve_relative_path('../.assets/models/real_esrgan_x2_fp16.onnx'),
+		'size': (256, 16, 8),
+		'scale': 2
 	},
 	'real_esrgan_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4.onnx',
 		'path': resolve_relative_path('../.assets/models/real_esrgan_x4.onnx'),
-		'size': (128, 8, 2),
+		'size': (256, 16, 8),
 		'scale': 4
 	},
 	'real_esrgan_x4_fp16':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x4_fp16.onnx',
 		'path': resolve_relative_path('../.assets/models/real_esrgan_x4_fp16.onnx'),
-		'size': (128, 8, 2),
+		'size': (256, 16, 8),
+		'scale': 4
+	},
+	'real_hatgan_x4':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_hatgan_x4.onnx',
+		'path': resolve_relative_path('../.assets/models/real_hatgan_x4.onnx'),
+		'size': (256, 16, 8),
 		'scale': 4
 	},
 	'span_kendata_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/span_kendata_x4.onnx',
 		'path': resolve_relative_path('../.assets/models/span_kendata_x4.onnx'),
-		'size': (128, 8, 2),
+		'size': (128, 8, 4),
+		'scale': 4
+	},
+	'ultra_sharp_x4':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ultra_sharp_x4.onnx',
+		'path': resolve_relative_path('../.assets/models/ultra_sharp_x4.onnx'),
+		'size': (128, 8, 4),
 		'scale': 4
 	}
 }
@@ -69,12 +103,12 @@ OPTIONS : Optional[OptionsWithModel] = None
 def get_frame_processor() -> Any:
 	global FRAME_PROCESSOR
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
 	return FRAME_PROCESSOR
 
 
@@ -113,22 +147,25 @@ def apply_args(program : ArgumentParser) -> None:
 
 
 def pre_check() -> bool:
+	download_directory_path = resolve_relative_path('../.assets/models')
+	model_url = get_options('model').get('url')
+	model_path = get_options('model').get('path')
+
 	if not facefusion.globals.skip_download:
-		download_directory_path = resolve_relative_path('../.assets/models')
-		model_url = get_options('model').get('url')
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
-	return True
+	return is_file(model_path)
 
 
 def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
+
 	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
-	elif not is_file(model_path):
+	if not is_file(model_path):
 		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -161,10 +198,11 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	tile_vision_frames, pad_width, pad_height = create_tile_frames(temp_vision_frame, size)
 
 	for index, tile_vision_frame in enumerate(tile_vision_frames):
-		tile_vision_frame = frame_processor.run(None,
-		{
-			frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
-		})[0]
+		with conditional_thread_semaphore(facefusion.globals.execution_providers):
+			tile_vision_frame = frame_processor.run(None,
+			{
+				frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
+			})[0]
 		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame)
 	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width * scale, temp_height * scale, pad_width * scale, pad_height * scale, (size[0] * scale, size[1] * scale, size[2] * scale))
 	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
@@ -172,7 +210,7 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
-	vision_tile_frame = numpy.expand_dims(vision_tile_frame[:,:,::-1], axis = 0)
+	vision_tile_frame = numpy.expand_dims(vision_tile_frame[:, :, ::-1], axis = 0)
 	vision_tile_frame = vision_tile_frame.transpose(0, 3, 1, 2)
 	vision_tile_frame = vision_tile_frame.astype(numpy.float32) / 255
 	return vision_tile_frame
@@ -180,14 +218,14 @@ def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
 
 def normalize_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
 	vision_tile_frame = vision_tile_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
-	vision_tile_frame = vision_tile_frame.clip(0, 255).astype(numpy.uint8)[:,:,::-1]
+	vision_tile_frame = vision_tile_frame.clip(0, 255).astype(numpy.uint8)[:, :, ::-1]
 	return vision_tile_frame
 
 
-def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
+def blend_frame(temp_vision_frame : VisionFrame, merge_vision_frame : VisionFrame) -> VisionFrame:
 	frame_enhancer_blend = 1 - (frame_processors_globals.frame_enhancer_blend / 100)
-	temp_vision_frame = cv2.resize(temp_vision_frame, (paste_vision_frame.shape[1], paste_vision_frame.shape[0]))
-	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_enhancer_blend, paste_vision_frame, 1 - frame_enhancer_blend, 0)
+	temp_vision_frame = cv2.resize(temp_vision_frame, (merge_vision_frame.shape[1], merge_vision_frame.shape[0]))
+	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_enhancer_blend, merge_vision_frame, 1 - frame_enhancer_blend, 0)
 	return temp_vision_frame
 
 
@@ -200,7 +238,7 @@ def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
 	return enhance_frame(target_vision_frame)
 
 
-def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProcess) -> None:
+def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
 	for queue_payload in process_manager.manage(queue_payloads):
 		target_vision_path = queue_payload['frame_path']
 		target_vision_frame = read_image(target_vision_path)
@@ -209,7 +247,7 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 			'target_vision_frame': target_vision_frame
 		})
 		write_image(target_vision_path, output_vision_frame)
-		update_progress()
+		update_progress(1)
 
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:

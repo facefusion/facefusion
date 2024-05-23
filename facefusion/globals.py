@@ -3,14 +3,17 @@ from typing import List, Optional
 from facefusion.typing import LogLevel, VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceMaskType, FaceMaskRegion, OutputVideoEncoder, OutputVideoPreset, FaceDetectorModel, FaceRecognizerModel, TempFrameFormat, Padding
 
 # general
+config_path : Optional[str] = None
 source_paths : Optional[List[str]] = None
 target_path : Optional[str] = None
 output_path : Optional[str] = None
 # misc
+force_download : Optional[bool] = None
 skip_download : Optional[bool] = None
 headless : Optional[bool] = None
 log_level : Optional[LogLevel] = None
 # execution
+execution_device_id : Optional[str] = None
 execution_providers : List[str] = []
 execution_thread_count : Optional[int] = None
 execution_queue_count : Optional[int] = None
@@ -53,4 +56,5 @@ skip_audio : Optional[bool] = None
 # frame processors
 frame_processors : List[str] = []
 # uis
+open_browser : Optional[bool] = None
 ui_layouts : List[str] = []

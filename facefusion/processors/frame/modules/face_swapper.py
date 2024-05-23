@@ -1,7 +1,6 @@
 from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 from time import sleep
-import threading
 import numpy
 import onnx
 import onnxruntime
@@ -10,15 +9,15 @@ from onnx import numpy_helper
 import facefusion.globals
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, logger, wording
-from facefusion.execution import apply_execution_provider_options
+from facefusion.execution import has_execution_provider, apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
 from facefusion.face_store import get_reference_faces
-from facefusion.common_helper import extract_major_version
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.normalizer import normalize_output_path
-from facefusion.typing import Face, Embedding, VisionFrame, UpdateProcess, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
+from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
+from facefusion.typing import Face, Embedding, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.filesystem import is_file, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image
@@ -27,8 +26,7 @@ from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
-MODEL_MATRIX = None
-THREAD_LOCK : threading.Lock = threading.Lock()
+MODEL_INITIALIZER = None
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
@@ -99,12 +97,12 @@ OPTIONS : Optional[OptionsWithModel] = None
 def get_frame_processor() -> Any:
 	global FRAME_PROCESSOR
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
 	return FRAME_PROCESSOR
 
 
@@ -114,23 +112,23 @@ def clear_frame_processor() -> None:
 	FRAME_PROCESSOR = None
 
 
-def get_model_matrix() -> Any:
-	global MODEL_MATRIX
+def get_model_initializer() -> Any:
+	global MODEL_INITIALIZER
 
-	with THREAD_LOCK:
+	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if MODEL_MATRIX is None:
+		if MODEL_INITIALIZER is None:
 			model_path = get_options('model').get('path')
 			model = onnx.load(model_path)
-			MODEL_MATRIX = numpy_helper.to_array(model.graph.initializer[-1])
-	return MODEL_MATRIX
+			MODEL_INITIALIZER = numpy_helper.to_array(model.graph.initializer[-1])
+	return MODEL_INITIALIZER
 
 
-def clear_model_matrix() -> None:
-	global MODEL_MATRIX
+def clear_model_initializer() -> None:
+	global MODEL_INITIALIZER
 
-	MODEL_MATRIX = None
+	MODEL_INITIALIZER = None
 
 
 def get_options(key : Literal['model']) -> Any:
@@ -151,8 +149,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	onnxruntime_version = extract_major_version(onnxruntime.__version__)
-	if onnxruntime_version > (1, 16):
+	if has_execution_provider('CoreMLExecutionProvider') or has_execution_provider('OpenVINOExecutionProvider'):
 		face_swapper_model_fallback = 'inswapper_128'
 	else:
 		face_swapper_model_fallback = 'inswapper_128_fp16'
@@ -173,22 +170,25 @@ def apply_args(program : ArgumentParser) -> None:
 
 
 def pre_check() -> bool:
+	download_directory_path = resolve_relative_path('../.assets/models')
+	model_url = get_options('model').get('url')
+	model_path = get_options('model').get('path')
+
 	if not facefusion.globals.skip_download:
-		download_directory_path = resolve_relative_path('../.assets/models')
-		model_url = get_options('model').get('url')
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
-	return True
+	return is_file(model_path)
 
 
 def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
+
 	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
-	elif not is_file(model_path):
+	if not is_file(model_path):
 		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -216,8 +216,8 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
+		clear_model_initializer()
 		clear_frame_processor()
-		clear_model_matrix()
 	if facefusion.globals.video_memory_strategy == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
@@ -261,7 +261,8 @@ def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFra
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_vision_frame
-	crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
+	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	return crop_vision_frame
 
 
@@ -281,9 +282,9 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_options('model').get('type')
 	if model_type == 'inswapper':
-		model_matrix = get_model_matrix()
+		model_initializer = get_model_initializer()
 		source_embedding = source_face.embedding.reshape((1, -1))
-		source_embedding = numpy.dot(source_embedding, model_matrix) / numpy.linalg.norm(source_embedding)
+		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
 	else:
 		source_embedding = source_face.normed_embedding.reshape(1, -1)
 	return source_embedding
@@ -332,7 +333,7 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 	return target_vision_frame
 
 
-def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProcess) -> None:
+def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_frames = read_static_images(source_paths)
 	source_face = get_average_face(source_frames)
@@ -347,7 +348,7 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 			'target_vision_frame': target_vision_frame
 		})
 		write_image(target_vision_path, output_vision_frame)
-		update_progress()
+		update_progress(1)
 
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:

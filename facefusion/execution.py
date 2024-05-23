@@ -11,21 +11,37 @@ def encode_execution_providers(execution_providers : List[str]) -> List[str]:
 	return [ execution_provider.replace('ExecutionProvider', '').lower() for execution_provider in execution_providers ]
 
 
-def decode_execution_providers(execution_providers: List[str]) -> List[str]:
+def decode_execution_providers(execution_providers : List[str]) -> List[str]:
 	available_execution_providers = onnxruntime.get_available_providers()
 	encoded_execution_providers = encode_execution_providers(available_execution_providers)
 
 	return [ execution_provider for execution_provider, encoded_execution_provider in zip(available_execution_providers, encoded_execution_providers) if any(execution_provider in encoded_execution_provider for execution_provider in execution_providers) ]
 
 
-def apply_execution_provider_options(execution_providers: List[str]) -> List[Any]:
+def has_execution_provider(execution_provider : str) -> bool:
+	return execution_provider in onnxruntime.get_available_providers()
+
+
+def apply_execution_provider_options(execution_device_id : str, execution_providers : List[str]) -> List[Any]:
 	execution_providers_with_options : List[Any] = []
 
 	for execution_provider in execution_providers:
 		if execution_provider == 'CUDAExecutionProvider':
 			execution_providers_with_options.append((execution_provider,
 			{
+				'device_id': execution_device_id,
 				'cudnn_conv_algo_search': 'EXHAUSTIVE' if use_exhaustive() else 'DEFAULT'
+			}))
+		elif execution_provider == 'OpenVINOExecutionProvider':
+			execution_providers_with_options.append((execution_provider,
+			{
+				'device_id': execution_device_id,
+				'device_type': execution_device_id + '_FP32'
+			}))
+		elif execution_provider in [ 'DmlExecutionProvider', 'ROCMExecutionProvider' ]:
+			execution_providers_with_options.append((execution_provider,
+			{
+				'device_id': execution_device_id
 			}))
 		else:
 			execution_providers_with_options.append(execution_provider)
@@ -64,13 +80,12 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 			'framework':
 			{
 				'name': 'CUDA',
-				'version': root_element.find('cuda_version').text,
+				'version': root_element.find('cuda_version').text
 			},
 			'product':
 			{
 				'vendor': 'NVIDIA',
-				'name': gpu_element.find('product_name').text.replace('NVIDIA ', ''),
-				'architecture': gpu_element.find('product_architecture').text,
+				'name': gpu_element.find('product_name').text.replace('NVIDIA ', '')
 			},
 			'video_memory':
 			{

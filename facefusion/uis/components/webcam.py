@@ -1,6 +1,5 @@
-from typing import Optional, Generator, Deque, List
+from typing import Optional, Generator, Deque
 import os
-import platform
 import subprocess
 import cv2
 import gradio
@@ -12,6 +11,7 @@ from tqdm import tqdm
 import facefusion.globals
 from facefusion import logger, wording
 from facefusion.audio import create_empty_audio_frame
+from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream
 from facefusion.filesystem import filter_image_paths
 from facefusion.typing import VisionFrame, Face, Fps
@@ -19,8 +19,8 @@ from facefusion.face_analyser import get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
-from facefusion.uis.typing import StreamMode, WebcamMode, ComponentName
-from facefusion.uis.core import get_ui_component
+from facefusion.uis.typing import StreamMode, WebcamMode
+from facefusion.uis.core import get_ui_component, get_ui_components
 
 WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None
@@ -32,7 +32,7 @@ def get_webcam_capture() -> Optional[cv2.VideoCapture]:
 	global WEBCAM_CAPTURE
 
 	if WEBCAM_CAPTURE is None:
-		if platform.system().lower() == 'windows':
+		if is_windows():
 			webcam_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 		else:
 			webcam_capture = cv2.VideoCapture(0)
@@ -76,7 +76,8 @@ def listen() -> None:
 	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 	WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
-	change_two_component_names : List[ComponentName] =\
+
+	for ui_component in get_ui_components(
 	[
 		'frame_processors_checkbox_group',
 		'face_swapper_model_dropdown',
@@ -84,11 +85,8 @@ def listen() -> None:
 		'frame_enhancer_model_dropdown',
 		'lip_syncer_model_dropdown',
 		'source_image'
-	]
-	for component_name in change_two_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			component.change(update, cancels = start_event)
+	]):
+		ui_component.change(update, cancels = start_event)
 
 
 def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
@@ -100,11 +98,11 @@ def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -
 	stream = None
 
 	if webcam_mode in [ 'udp', 'v4l2' ]:
-		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) # type: ignore[arg-type]
+		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) #type:ignore[arg-type]
 	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
 	webcam_capture = get_webcam_capture()
 	if webcam_capture and webcam_capture.isOpened():
-		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) # type: ignore[attr-defined]
+		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) #type:ignore[attr-defined]
 		webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
 		webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
 		webcam_capture.set(cv2.CAP_PROP_FPS, webcam_fps)

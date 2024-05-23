@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from time import sleep
 import cv2
 import gradio
@@ -16,8 +16,7 @@ from facefusion.vision import get_video_frame, count_video_frame_total, normaliz
 from facefusion.filesystem import is_image, is_video, filter_audio_paths
 from facefusion.content_analyser import analyse_frame
 from facefusion.processors.frame.core import load_frame_processor_module
-from facefusion.uis.typing import ComponentName
-from facefusion.uis.core import get_ui_component, register_ui_component
+from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 PREVIEW_FRAME_SLIDER : Optional[gradio.Slider] = None
@@ -72,69 +71,74 @@ def listen() -> None:
 	reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
 	if reference_face_position_gallery:
 		reference_face_position_gallery.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
-	multi_one_component_names : List[ComponentName] =\
+
+	for ui_component in get_ui_components(
 	[
 		'source_audio',
 		'source_image',
 		'target_image',
 		'target_video'
-	]
-	for component_name in multi_one_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			for method in [ 'upload', 'change', 'clear' ]:
-				getattr(component, method)(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
-	multi_two_component_names : List[ComponentName] =\
+	]):
+		for method in [ 'upload', 'change', 'clear' ]:
+			getattr(ui_component, method)(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+
+	for ui_component in get_ui_components(
 	[
 		'target_image',
 		'target_video'
-	]
-	for component_name in multi_two_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			for method in [ 'upload', 'change', 'clear' ]:
-				getattr(component, method)(update_preview_frame_slider, outputs = PREVIEW_FRAME_SLIDER)
-	change_one_component_names : List[ComponentName] =\
+	]):
+		for method in [ 'upload', 'change', 'clear' ]:
+			getattr(ui_component, method)(update_preview_frame_slider, outputs = PREVIEW_FRAME_SLIDER)
+
+	for ui_component in get_ui_components(
 	[
 		'face_debugger_items_checkbox_group',
+		'frame_colorizer_size_dropdown',
+		'face_selector_mode_dropdown',
+		'face_mask_types_checkbox_group',
+		'face_mask_region_checkbox_group',
+		'face_analyser_order_dropdown',
+		'face_analyser_age_dropdown',
+		'face_analyser_gender_dropdown'
+	]):
+		ui_component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+
+	for ui_component in get_ui_components(
+	[
 		'face_enhancer_blend_slider',
+		'frame_colorizer_blend_slider',
 		'frame_enhancer_blend_slider',
 		'trim_frame_start_slider',
 		'trim_frame_end_slider',
-		'face_selector_mode_dropdown',
 		'reference_face_distance_slider',
-		'face_mask_types_checkbox_group',
 		'face_mask_blur_slider',
 		'face_mask_padding_top_slider',
 		'face_mask_padding_bottom_slider',
 		'face_mask_padding_left_slider',
 		'face_mask_padding_right_slider',
-		'face_mask_region_checkbox_group',
-		'face_analyser_order_dropdown',
-		'face_analyser_age_dropdown',
-		'face_analyser_gender_dropdown',
 		'output_video_fps_slider'
-	]
-	for component_name in change_one_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
-	change_two_component_names : List[ComponentName] =\
+	]):
+		ui_component.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+
+	for ui_component in get_ui_components(
 	[
 		'frame_processors_checkbox_group',
 		'face_enhancer_model_dropdown',
 		'face_swapper_model_dropdown',
+		'frame_colorizer_model_dropdown',
 		'frame_enhancer_model_dropdown',
 		'lip_syncer_model_dropdown',
 		'face_detector_model_dropdown',
-		'face_detector_size_dropdown',
+		'face_detector_size_dropdown'
+	]):
+		ui_component.change(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+
+	for ui_component in get_ui_components(
+	[
 		'face_detector_score_slider',
 		'face_landmarker_score_slider'
-	]
-	for component_name in change_two_component_names:
-		component = get_ui_component(component_name)
-		if component:
-			component.change(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	]):
+		ui_component.release(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
 
 def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:

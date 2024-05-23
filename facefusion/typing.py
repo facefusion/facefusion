@@ -7,9 +7,10 @@ FaceLandmark5 = numpy.ndarray[Any, Any]
 FaceLandmark68 = numpy.ndarray[Any, Any]
 FaceLandmarkSet = TypedDict('FaceLandmarkSet',
 {
-	'5' : FaceLandmark5, # type: ignore[valid-type]
-	'5/68' : FaceLandmark5, # type: ignore[valid-type]
-	'68' : FaceLandmark68 # type: ignore[valid-type]
+	'5' : FaceLandmark5, #type:ignore[valid-type]
+	'5/68' : FaceLandmark5, #type:ignore[valid-type]
+	'68' : FaceLandmark68, #type:ignore[valid-type]
+	'68/5' : FaceLandmark68 #type:ignore[valid-type]
 })
 Score = float
 FaceScoreSet = TypedDict('FaceScoreSet',
@@ -42,8 +43,10 @@ Translation = numpy.ndarray[Any, Any]
 
 AudioBuffer = bytes
 Audio = numpy.ndarray[Any, Any]
+AudioChunk = numpy.ndarray[Any, Any]
 AudioFrame = numpy.ndarray[Any, Any]
 Spectrogram = numpy.ndarray[Any, Any]
+MelFilterBank = numpy.ndarray[Any, Any]
 
 Fps = float
 Padding = Tuple[int, int, int, int]
@@ -55,8 +58,8 @@ QueuePayload = TypedDict('QueuePayload',
 	'frame_number' : int,
 	'frame_path' : str
 })
-UpdateProcess = Callable[[], None]
-ProcessFrames = Callable[[List[str], List[QueuePayload], UpdateProcess], None]
+UpdateProgress = Callable[[int], None]
+ProcessFrames = Callable[[List[str], List[QueuePayload], UpdateProgress], None]
 
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
 WarpTemplateSet = Dict[WarpTemplate, numpy.ndarray[Any, Any]]
@@ -72,7 +75,7 @@ FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yoloface', 'yunet']
 FaceDetectorTweak = Literal['low-luminance', 'high-luminance']
 FaceRecognizerModel = Literal['arcface_blendswap', 'arcface_inswapper', 'arcface_simswap', 'arcface_uniface']
 FaceMaskType = Literal['box', 'occlusion', 'region']
-FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'eye-glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip']
+FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip']
 TempFrameFormat = Literal['jpg', 'png', 'bmp']
 OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf']
 OutputVideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
@@ -97,8 +100,7 @@ ExecutionDeviceFramework = TypedDict('ExecutionDeviceFramework',
 ExecutionDeviceProduct = TypedDict('ExecutionDeviceProduct',
 {
 	'vendor' : str,
-	'name' : str,
-	'architecture' : str,
+	'name' : str
 })
 ExecutionDeviceVideoMemory = TypedDict('ExecutionDeviceVideoMemory',
 {

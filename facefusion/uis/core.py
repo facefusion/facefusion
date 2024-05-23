@@ -1,5 +1,6 @@
 from typing import Dict, Optional, Any, List
 from types import ModuleType
+import os
 import importlib
 import sys
 import gradio
@@ -9,6 +10,8 @@ from facefusion.uis import overrides
 from facefusion import metadata, logger, wording
 from facefusion.uis.typing import Component, ComponentName
 from facefusion.filesystem import resolve_relative_path
+
+os.environ['GRADIO_ANALYTICS_ENABLED'] = '0'
 
 gradio.processing_utils.encode_array_to_base64 = overrides.encode_array_to_base64
 gradio.processing_utils.encode_pil_to_base64 = overrides.encode_pil_to_base64
@@ -51,14 +54,24 @@ def get_ui_layouts_modules(ui_layouts : List[str]) -> List[ModuleType]:
 	return UI_LAYOUT_MODULES
 
 
-def get_ui_component(name : ComponentName) -> Optional[Component]:
-	if name in UI_COMPONENTS:
-		return UI_COMPONENTS[name]
+def get_ui_component(component_name : ComponentName) -> Optional[Component]:
+	if component_name in UI_COMPONENTS:
+		return UI_COMPONENTS[component_name]
 	return None
 
 
-def register_ui_component(name : ComponentName, component: Component) -> None:
-	UI_COMPONENTS[name] = component
+def get_ui_components(component_names : List[ComponentName]) -> Optional[List[Component]]:
+	ui_components = []
+
+	for component_name in component_names:
+		component = get_ui_component(component_name)
+		if component:
+			ui_components.append(component)
+	return ui_components
+
+
+def register_ui_component(component_name : ComponentName, component: Component) -> None:
+	UI_COMPONENTS[component_name] = component
 
 
 def launch() -> None:
