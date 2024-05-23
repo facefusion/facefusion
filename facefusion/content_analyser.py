@@ -31,13 +31,17 @@ STREAM_COUNTER = 0
 
 def get_content_analyser() -> Any:
 	global CONTENT_ANALYSER
-
-	with thread_lock():
-		while process_manager.is_checking():
-			sleep(0.5)
-		if CONTENT_ANALYSER is None:
-			model_path = MODELS.get('open_nsfw').get('path')
-			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+	# ------------FREEDOM DONT BE EVIL
+	# with thread_lock():
+	# 	while process_manager.is_checking():
+	# 		sleep(0.5)
+	# 	if CONTENT_ANALYSER is None:
+	# 		model_path = MODELS.get('open_nsfw').get('path')
+	# 		CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+	# return CONTENT_ANALYSER
+	# ------------FREEDOM DONT BE EVIL
+	CONTENT_ANALYSER = None	
+	
 	return CONTENT_ANALYSER
 
 
@@ -48,15 +52,19 @@ def clear_content_analyser() -> None:
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
-	model_url = MODELS.get('open_nsfw').get('url')
-	model_path = MODELS.get('open_nsfw').get('path')
+    # ------------FREEDOM DONT BE EVIL
+	# download_directory_path = resolve_relative_path('../.assets/models')
+	# model_url = MODELS.get('open_nsfw').get('url')
+	# model_path = MODELS.get('open_nsfw').get('path')
 
-	if not facefusion.globals.skip_download:
-		process_manager.check()
-		conditional_download(download_directory_path, [ model_url ])
-		process_manager.end()
-	return is_file(model_path)
+	# if not facefusion.globals.skip_download:
+	# 	process_manager.check()
+	# 	conditional_download(download_directory_path, [ model_url ])
+	# 	process_manager.end()
+			
+	# return is_file(model_path)
+    # ------------FREEDOM DONT BE EVIL
+	return True
 
 
 def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
@@ -69,14 +77,17 @@ def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
 
 
 def analyse_frame(vision_frame : VisionFrame) -> bool:
-	content_analyser = get_content_analyser()
-	vision_frame = prepare_frame(vision_frame)
-	with conditional_thread_semaphore(facefusion.globals.execution_providers):
-		probability = content_analyser.run(None,
-		{
-			content_analyser.get_inputs()[0].name: vision_frame
-		})[0][0][1]
-	return probability > PROBABILITY_LIMIT
+	# ------------FREEDOM DONT BE EVIL
+	# content_analyser = get_content_analyser()
+	# vision_frame = prepare_frame(vision_frame)
+	# with conditional_thread_semaphore(facefusion.globals.execution_providers):
+	# 	probability = content_analyser.run(None,
+	# 	{
+	# 		content_analyser.get_inputs()[0].name: vision_frame
+	# 	})[0][0][1]
+	# return probability > PROBABILITY_LIMIT
+	# ------------FREEDOM DONT BE EVIL
+	return False
 
 
 def prepare_frame(vision_frame : VisionFrame) -> VisionFrame:
