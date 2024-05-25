@@ -13,7 +13,7 @@ from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, QueuePayload
 from facefusion.vision import read_image, read_static_image, write_image
-from facefusion.processors.frame.typings import FaceDebuggerInputs
+from facefusion.processors.frame.typing import FaceDebuggerInputs
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 
 NAME = __name__.upper()

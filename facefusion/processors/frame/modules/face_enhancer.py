@@ -21,7 +21,7 @@ from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, is_image, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
-from facefusion.processors.frame.typings import FaceEnhancerInputs
+from facefusion.processors.frame.typing import FaceEnhancerInputs
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
