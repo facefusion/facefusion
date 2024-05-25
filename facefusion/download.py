@@ -4,6 +4,7 @@ import ssl
 import urllib.request
 from typing import List
 from functools import lru_cache
+from urllib.parse import urlparse
 from tqdm import tqdm
 
 import facefusion.globals
@@ -17,7 +18,7 @@ if is_macos():
 
 def conditional_download(download_directory_path : str, urls : List[str]) -> None:
 	for url in urls:
-		download_file_path = os.path.join(download_directory_path, os.path.basename(url))
+		download_file_path = os.path.join(download_directory_path, os.path.basename(urlparse(url).path))
 		initial_size = get_file_size(download_file_path)
 		download_size = get_download_size(url)
 		if initial_size < download_size:

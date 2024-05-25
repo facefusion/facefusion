@@ -18,7 +18,7 @@ from facefusion.common_helper import create_metavar
 from facefusion.filesystem import is_file, resolve_relative_path, is_image, is_video
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image, merge_tile_frames, create_tile_frames
-from facefusion.processors.frame.typings import FrameEnhancerInputs
+from facefusion.processors.frame.typing import FrameEnhancerInputs
 from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
