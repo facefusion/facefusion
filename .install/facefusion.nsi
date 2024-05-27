@@ -3,8 +3,6 @@
 !include LogicLib.nsh
 
 RequestExecutionLevel admin
-
-# Set the installer is DPI-aware so the text is never blurry. For NSIS version v3.0a0+
 ManifestDPIAware true
 
 Name 'FaceFusion 2.6.0'
