@@ -82,17 +82,23 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 
 def copy_image(target_path : str, temp_image_resolution : str) -> bool:
 	temp_file_path = get_temp_file_path(target_path)
-	is_webp = filetype.guess_mime(target_path) == 'image/webp'
-	temp_image_compression = 100 if is_webp else 0
+	temp_image_compression = calc_image_compression(target_path, 100)
 	commands = [ '-i', target_path, '-s', str(temp_image_resolution), '-q:v', str(temp_image_compression), '-y', temp_file_path ]
 	return run_ffmpeg(commands)
 
 
 def finalize_image(target_path : str, output_path : str, output_image_resolution : str) -> bool:
 	temp_file_path = get_temp_file_path(target_path)
-	output_image_compression = round(31 - (facefusion.globals.output_image_quality * 0.31))
+	output_image_compression = calc_image_compression(target_path, facefusion.globals.output_image_quality)
 	commands = [ '-i', temp_file_path, '-s', str(output_image_resolution), '-q:v', str(output_image_compression), '-y', output_path ]
 	return run_ffmpeg(commands)
+
+
+def calc_image_compression(image_path : str, image_quality : int):
+	is_webp = filetype.guess_mime(image_path) == 'image/webp'
+	if is_webp:
+		image_quality = 100 - image_quality
+	return round(31 - (image_quality * 0.31))
 
 
 def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int) -> Optional[AudioBuffer]:
