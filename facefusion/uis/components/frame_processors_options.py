@@ -1,4 +1,5 @@
 from typing import List, Optional, Tuple
+import os
 import gradio
 
 import facefusion.globals
@@ -65,7 +66,7 @@ def render() -> None:
 		label = wording.get('uis.face_swapper_pixel_boost_dropdown'),
 		choices = frame_processors_choices.face_swapper_set.get(frame_processors_globals.face_swapper_model),
 		value = frame_processors_globals.face_swapper_pixel_boost,
-		visible = 'face_swapper' in facefusion.globals.frame_processors
+		visible = os.environ.get('FEATURE_FLAG') == 'PIXEL_BOOST' and 'face_swapper' in facefusion.globals.frame_processors
 	)
 	FRAME_COLORIZER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.frame_colorizer_model_dropdown'),
