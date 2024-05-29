@@ -6,6 +6,7 @@ face_debugger_items : Optional[List[FaceDebuggerItem]] = None
 face_enhancer_model : Optional[FaceEnhancerModel] = None
 face_enhancer_blend : Optional[int] = None
 face_swapper_model : Optional[FaceSwapperModel] = None
+face_swapper_pixel_boost : Optional[str] = None
 frame_colorizer_model : Optional[FrameColorizerModel] = None
 frame_colorizer_blend : Optional[int] = None
 frame_colorizer_size : Optional[str] = None
