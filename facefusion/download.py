@@ -38,8 +38,9 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 def get_download_size(url : str) -> int:
 	try:
 		response = urllib.request.urlopen(url, timeout = 10)
-		return int(response.getheader('Content-Length'))
-	except (OSError, ValueError):
+		content_length = response.headers.get('Content-Length')
+		return int(content_length)
+	except (OSError, TypeError, ValueError):
 		return 0
 
 
