@@ -33,7 +33,7 @@ def render() -> None:
 		label = wording.get('uis.source_file'),
 		value = facefusion.globals.source_paths if has_source_audio or has_source_image else None
 	)
-	source_file_names = [ source_file_value['name'] for source_file_value in SOURCE_FILE.value ] if SOURCE_FILE.value else None
+	source_file_names = [ source_file_value.get('path') for source_file_value in SOURCE_FILE.value ] if SOURCE_FILE.value else None
 	source_audio_path = get_first(filter_audio_paths(source_file_names))
 	source_image_path = get_first(filter_image_paths(source_file_names))
 	SOURCE_AUDIO = gradio.Audio(
