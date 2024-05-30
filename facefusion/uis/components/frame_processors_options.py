@@ -162,8 +162,8 @@ def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> gradi
 	return gradio.Dropdown()
 
 
-def update_face_enhancer_blend(face_enhancer_blend : int) -> None:
-	frame_processors_globals.face_enhancer_blend = face_enhancer_blend
+def update_face_enhancer_blend(face_enhancer_blend : float) -> None:
+	frame_processors_globals.face_enhancer_blend = int(face_enhancer_blend)
 
 
 def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
@@ -200,8 +200,8 @@ def update_frame_colorizer_model(frame_colorizer_model : FrameColorizerModel) ->
 	return gradio.Dropdown()
 
 
-def update_frame_colorizer_blend(frame_colorizer_blend : int) -> None:
-	frame_processors_globals.frame_colorizer_blend = frame_colorizer_blend
+def update_frame_colorizer_blend(frame_colorizer_blend : float) -> None:
+	frame_processors_globals.frame_colorizer_blend = int(frame_colorizer_blend)
 
 
 def update_frame_colorizer_size(frame_colorizer_size : str) -> gradio.Dropdown:
@@ -219,8 +219,8 @@ def update_frame_enhancer_model(frame_enhancer_model : FrameEnhancerModel) -> gr
 	return gradio.Dropdown()
 
 
-def update_frame_enhancer_blend(frame_enhancer_blend : int) -> None:
-	frame_processors_globals.frame_enhancer_blend = frame_enhancer_blend
+def update_frame_enhancer_blend(frame_enhancer_blend : float) -> None:
+	frame_processors_globals.frame_enhancer_blend = int(frame_enhancer_blend)
 
 
 def update_lip_syncer_model(lip_syncer_model : LipSyncerModel) -> gradio.Dropdown:

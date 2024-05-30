@@ -24,5 +24,5 @@ def listen() -> None:
 	EXECUTION_QUEUE_COUNT_SLIDER.release(update_execution_queue_count, inputs = EXECUTION_QUEUE_COUNT_SLIDER)
 
 
-def update_execution_queue_count(execution_queue_count : int = 1) -> None:
-	facefusion.globals.execution_queue_count = execution_queue_count
+def update_execution_queue_count(execution_queue_count : float) -> None:
+	facefusion.globals.execution_queue_count = int(execution_queue_count)
