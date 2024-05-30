@@ -33,7 +33,7 @@
 
 :root:root:root .boundedheight
 {
-	max-height: 70%;
+	max-height: 75%;
 }
 
 :root:root:root .feather-upload
@@ -47,7 +47,7 @@
 	border-bottom: 0.125rem solid transparent;
 	font-size: 1.125em;
 	margin: 0.5rem 1rem;
-	padding: 0;
+	padding: unset;
 }
 
 :root:root:root .tab-nav > button.selected

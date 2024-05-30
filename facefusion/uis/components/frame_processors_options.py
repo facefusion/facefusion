@@ -145,7 +145,7 @@ def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.Checkb
 	has_frame_colorizer = 'frame_colorizer' in frame_processors
 	has_frame_enhancer = 'frame_enhancer' in frame_processors
 	has_lip_syncer = 'lip_syncer' in frame_processors
-	return gradio.CheckboxGroup(visible = has_face_debugger), gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_frame_colorizer), gradio.Slider(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_enhancer), gradio.Slider(visible = has_frame_enhancer), gradio.Dropdown(visible = has_lip_syncer)
+	return gradio.CheckboxGroup(visible = has_face_debugger), gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = os.environ.get('FEATURE_FLAG') == 'PIXEL_BOOST' and has_face_swapper), gradio.Dropdown(visible = has_frame_colorizer), gradio.Slider(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_enhancer), gradio.Slider(visible = has_frame_enhancer), gradio.Dropdown(visible = has_lip_syncer)
 
 
 def update_face_debugger_items(face_debugger_items : List[FaceDebuggerItem]) -> None:
