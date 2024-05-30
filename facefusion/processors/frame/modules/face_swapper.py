@@ -247,13 +247,13 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_mask_list.append(occlusion_mask)
 
-	pixel_boost_vision_frames = implode_pixel_boost(crop_vision_frame, model_size, pixel_boost_total)
+	pixel_boost_vision_frames = implode_pixel_boost(crop_vision_frame, pixel_boost_total, model_size)
 	for pixel_boost_vision_frame in pixel_boost_vision_frames:
 		pixel_boost_vision_frame = prepare_crop_frame(pixel_boost_vision_frame)
 		pixel_boost_vision_frame = apply_swap(source_face, pixel_boost_vision_frame)
 		pixel_boost_vision_frame = normalize_crop_frame(pixel_boost_vision_frame)
 		temp_vision_frames.append(pixel_boost_vision_frame)
-	crop_vision_frame = explode_pixel_boost(temp_vision_frames, model_size, pixel_boost_total, pixel_boost_size)
+	crop_vision_frame = explode_pixel_boost(temp_vision_frames, pixel_boost_total, model_size, pixel_boost_size)
 
 	if 'region' in facefusion.globals.face_mask_types:
 		region_mask = create_region_mask(crop_vision_frame, facefusion.globals.face_mask_regions)
