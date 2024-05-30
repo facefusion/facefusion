@@ -47,7 +47,7 @@ def render() -> None:
 		'visible': False
 	}
 	if is_target_image:
-		target_image_args['value'] = TARGET_FILE.value['name']
+		target_image_args['value'] = TARGET_FILE.value.get('path')
 		target_image_args['visible'] = True
 	if is_target_video:
 		if get_file_size(facefusion.globals.target_path) > FILE_SIZE_LIMIT:
@@ -55,7 +55,7 @@ def render() -> None:
 			target_image_args['value'] = preview_vision_frame
 			target_image_args['visible'] = True
 		else:
-			target_video_args['value'] = TARGET_FILE.value['name']
+			target_video_args['value'] = TARGET_FILE.value.get('path')
 			target_video_args['visible'] = True
 	TARGET_IMAGE = gradio.Image(**target_image_args)
 	TARGET_VIDEO = gradio.Video(**target_video_args)
