@@ -37,5 +37,5 @@ def update_video_memory_strategy(video_memory_strategy : VideoMemoryStrategy) ->
 	facefusion.globals.video_memory_strategy = video_memory_strategy
 
 
-def update_system_memory_limit(system_memory_limit : int) -> None:
-	facefusion.globals.system_memory_limit = system_memory_limit
+def update_system_memory_limit(system_memory_limit : float) -> None:
+	facefusion.globals.system_memory_limit = int(system_memory_limit)

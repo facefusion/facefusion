@@ -133,8 +133,8 @@ def update_output_path(output_path : str) -> None:
 	facefusion.globals.output_path = output_path
 
 
-def update_output_image_quality(output_image_quality : int) -> None:
-	facefusion.globals.output_image_quality = output_image_quality
+def update_output_image_quality(output_image_quality : float) -> None:
+	facefusion.globals.output_image_quality = int(output_image_quality)
 
 
 def update_output_image_resolution(output_image_resolution : str) -> None:
@@ -149,8 +149,8 @@ def update_output_video_preset(output_video_preset : OutputVideoPreset) -> None:
 	facefusion.globals.output_video_preset = output_video_preset
 
 
-def update_output_video_quality(output_video_quality : int) -> None:
-	facefusion.globals.output_video_quality = output_video_quality
+def update_output_video_quality(output_video_quality : float) -> None:
+	facefusion.globals.output_video_quality = int(output_video_quality)
 
 
 def update_output_video_resolution(output_video_resolution : str) -> None:
