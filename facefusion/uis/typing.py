@@ -10,8 +10,6 @@ ComponentName = Literal\
 	'target_image',
 	'target_video',
 	'preview_frame_slider',
-	'trim_frame_start_slider',
-	'trim_frame_end_slider',
 	'face_selector_mode_dropdown',
 	'reference_face_position_gallery',
 	'reference_face_distance_slider',
