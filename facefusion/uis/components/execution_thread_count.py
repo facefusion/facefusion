@@ -24,6 +24,6 @@ def listen() -> None:
 	EXECUTION_THREAD_COUNT_SLIDER.release(update_execution_thread_count, inputs = EXECUTION_THREAD_COUNT_SLIDER)
 
 
-def update_execution_thread_count(execution_thread_count : int = 1) -> None:
-	facefusion.globals.execution_thread_count = execution_thread_count
+def update_execution_thread_count(execution_thread_count : float) -> None:
+	facefusion.globals.execution_thread_count = int(execution_thread_count)
 
