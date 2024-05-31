@@ -67,7 +67,7 @@ def render() -> None:
 
 
 def listen() -> None:
-	PREVIEW_FRAME_SLIDER.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	PREVIEW_FRAME_SLIDER.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE, show_progress = 'hidden')
 	reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
 	if reference_face_position_gallery:
 		reference_face_position_gallery.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
@@ -186,7 +186,7 @@ def update_preview_frame_slider() -> gradio.Slider:
 	if is_video(facefusion.globals.target_path):
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
 		return gradio.Slider(maximum = video_frame_total, visible = True)
-	return gradio.Slider(visible = False)
+	return gradio.Slider(value = 0, visible = False)
 
 
 def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_audio_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:
