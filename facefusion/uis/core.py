@@ -2,10 +2,10 @@ from typing import Dict, Optional, Any, List
 from types import ModuleType
 import os
 import importlib
-import sys
 import gradio
 
 import facefusion.globals
+from facefusion.exit_helper import hard_exit
 from facefusion.uis import overrides
 from facefusion import metadata, logger, wording
 from facefusion.uis.typing import Component, ComponentName
@@ -37,10 +37,10 @@ def load_ui_layout_module(ui_layout : str) -> Any:
 	except ModuleNotFoundError as exception:
 		logger.error(wording.get('ui_layout_not_loaded').format(ui_layout = ui_layout), __name__.upper())
 		logger.debug(exception.msg, __name__.upper())
-		sys.exit(1)
+		hard_exit(1)
 	except NotImplementedError:
 		logger.error(wording.get('ui_layout_not_implemented').format(ui_layout = ui_layout), __name__.upper())
-		sys.exit(1)
+		hard_exit(1)
 	return ui_layout_module
 
 
