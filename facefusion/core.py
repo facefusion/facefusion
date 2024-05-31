@@ -1,5 +1,7 @@
 import os
 
+from facefusion.exit_helper import conditional_exit, graceful_exit
+
 os.environ['OMP_NUM_THREADS'] = '1'
 
 import signal
@@ -33,7 +35,7 @@ warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 
 
 def cli() -> None:
-	signal.signal(signal.SIGINT, lambda signal_number, frame: destroy(0))
+	signal.signal(signal.SIGINT, lambda signal_number, frame: graceful_exit(0))
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 200), add_help = False)
 	# general
 	program.add_argument('-c', '--config', help = wording.get('help.config'), dest = 'config_path', default = 'facefusion.ini')
@@ -216,12 +218,12 @@ def run(program : ArgumentParser) -> None:
 		limit_system_memory(facefusion.globals.system_memory_limit)
 	if facefusion.globals.force_download:
 		force_download()
-		return abort(0)
+		return conditional_exit(0)
 	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check():
-		return abort(2)
+		return conditional_exit(2)
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_check():
-			return abort(2)
+			return conditional_exit(2)
 	if facefusion.globals.headless:
 		conditional_process()
 	else:
@@ -229,22 +231,8 @@ def run(program : ArgumentParser) -> None:
 
 		for ui_layout in ui.get_ui_layouts_modules(facefusion.globals.ui_layouts):
 			if not ui_layout.pre_check():
-				return abort(2)
+				return conditional_exit(2)
 		ui.launch()
-
-
-def abort(error_code : int) -> None:
-	if facefusion.globals.headless:
-		sys.exit(error_code)
-
-
-def destroy(error_code : int) -> None:
-	process_manager.stop()
-	while process_manager.is_processing():
-		sleep(0.5)
-	if facefusion.globals.target_path:
-		clear_temp(facefusion.globals.target_path)
-	sys.exit(error_code)
 
 
 def pre_check() -> bool:
@@ -265,7 +253,7 @@ def conditional_process() -> None:
 			sleep(0.5)
 		logger.enable()
 		if not frame_processor_module.pre_process('output'):
-			return abort(2)
+			return conditional_exit(2)
 	conditional_append_reference_faces()
 	if is_image(facefusion.globals.target_path):
 		process_image(start_time)
@@ -313,7 +301,7 @@ def force_download() -> None:
 def process_image(start_time : float) -> None:
 	normed_output_path = normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path)
 	if analyse_image(facefusion.globals.target_path):
-		return abort(3)
+		return conditional_exit(3)
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
 	clear_temp(facefusion.globals.target_path)
@@ -328,7 +316,7 @@ def process_image(start_time : float) -> None:
 		logger.debug(wording.get('copying_image_succeed'), __name__.upper())
 	else:
 		logger.error(wording.get('copying_image_failed'), __name__.upper())
-		return abort(1)
+		return conditional_exit(1)
 	# process image
 	temp_file_path = get_temp_file_path(facefusion.globals.target_path)
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
@@ -336,7 +324,7 @@ def process_image(start_time : float) -> None:
 		frame_processor_module.process_image(facefusion.globals.source_paths, temp_file_path, temp_file_path)
 		frame_processor_module.post_process()
 	if is_process_stopping():
-		return abort(4)
+		return conditional_exit(4)
 	# finalize image
 	logger.info(wording.get('finalizing_image').format(resolution = facefusion.globals.output_image_resolution), __name__.upper())
 	if finalize_image(facefusion.globals.target_path, normed_output_path, facefusion.globals.output_image_resolution):
@@ -359,7 +347,7 @@ def process_image(start_time : float) -> None:
 def process_video(start_time : float) -> None:
 	normed_output_path = normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path)
 	if analyse_video(facefusion.globals.target_path, facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
-		return abort(3)
+		return conditional_exit(3)
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
 	clear_temp(facefusion.globals.target_path)
@@ -375,9 +363,9 @@ def process_video(start_time : float) -> None:
 		logger.debug(wording.get('extracting_frames_succeed'), __name__.upper())
 	else:
 		if is_process_stopping():
-			return abort(4)
+			return conditional_exit(4)
 		logger.error(wording.get('extracting_frames_failed'), __name__.upper())
-		return abort(1)
+		return conditional_exit(1)
 	# process frames
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
 	if temp_frame_paths:
@@ -386,19 +374,19 @@ def process_video(start_time : float) -> None:
 			frame_processor_module.process_video(facefusion.globals.source_paths, temp_frame_paths)
 			frame_processor_module.post_process()
 		if is_process_stopping():
-			return abort(4)
+			return conditional_exit(4)
 	else:
 		logger.error(wording.get('temp_frames_not_found'), __name__.upper())
-		return abort(1)
+		return conditional_exit(1)
 	# merge video
 	logger.info(wording.get('merging_video').format(resolution = facefusion.globals.output_video_resolution, fps = facefusion.globals.output_video_fps), __name__.upper())
 	if merge_video(facefusion.globals.target_path, facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps):
 		logger.debug(wording.get('merging_video_succeed'), __name__.upper())
 	else:
 		if is_process_stopping():
-			return abort(4)
+			return conditional_exit(4)
 		logger.error(wording.get('merging_video_failed'), __name__.upper())
-		return abort(1)
+		return conditional_exit(1)
 	# handle audio
 	if facefusion.globals.skip_audio:
 		logger.info(wording.get('skipping_audio'), __name__.upper())
@@ -410,7 +398,7 @@ def process_video(start_time : float) -> None:
 				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
 			else:
 				if is_process_stopping():
-					return abort(4)
+					return conditional_exit(4)
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
 				move_temp(facefusion.globals.target_path, normed_output_path)
 		else:
@@ -418,7 +406,7 @@ def process_video(start_time : float) -> None:
 				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
 			else:
 				if is_process_stopping():
-					return abort(4)
+					return conditional_exit(4)
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
 				move_temp(facefusion.globals.target_path, normed_output_path)
 	# clear temp
