@@ -331,9 +331,9 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 	faces = []
 	if facefusion.globals.face_detector_score > 0:
 		sort_indices = numpy.argsort(-numpy.array(face_scores))
-		bounding_boxes : List[BoundingBox] = [ bounding_boxes[index] for index in sort_indices ]
-		face_landmarks_5 : List[FaceLandmark5] = [ face_landmarks_5[index] for index in sort_indices ]
-		face_scores : List[Score] = [face_scores[index] for index in sort_indices]
+		bounding_boxes = [ bounding_boxes[index] for index in sort_indices ]
+		face_landmarks_5 = [ face_landmarks_5[index] for index in sort_indices ]
+		face_scores = [ face_scores[index] for index in sort_indices ]
 		iou_threshold = 0.1 if facefusion.globals.face_detector_model == 'many' else 0.4
 		keep_indices = apply_nms(bounding_boxes, iou_threshold)
 		for index in keep_indices:
