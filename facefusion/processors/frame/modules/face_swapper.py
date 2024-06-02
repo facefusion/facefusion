@@ -237,16 +237,15 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	pixel_boost_size = unpack_resolution(frame_processors_globals.face_swapper_pixel_boost)
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmarks.get('5/68'), model_template, pixel_boost_size)
-	crop_mask_list = []
+	crop_masks = []
 	temp_vision_frames = []
 
 	if 'box' in facefusion.globals.face_mask_types:
 		box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
-		crop_mask_list.append(box_mask)
+		crop_masks.append(box_mask)
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
-		crop_mask_list.append(occlusion_mask)
-
+		crop_masks.append(occlusion_mask)
 	pixel_boost_vision_frames = implode_pixel_boost(crop_vision_frame, pixel_boost_total, model_size)
 	for pixel_boost_vision_frame in pixel_boost_vision_frames:
 		pixel_boost_vision_frame = prepare_crop_frame(pixel_boost_vision_frame)
@@ -254,11 +253,10 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 		pixel_boost_vision_frame = normalize_crop_frame(pixel_boost_vision_frame)
 		temp_vision_frames.append(pixel_boost_vision_frame)
 	crop_vision_frame = explode_pixel_boost(temp_vision_frames, pixel_boost_total, model_size, pixel_boost_size)
-
 	if 'region' in facefusion.globals.face_mask_types:
 		region_mask = create_region_mask(crop_vision_frame, facefusion.globals.face_mask_regions)
-		crop_mask_list.append(region_mask)
-	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
+		crop_masks.append(region_mask)
+	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
