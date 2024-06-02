@@ -82,17 +82,17 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmarks.get('5/68'), 'arcface_128_v2', (512, 512))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_size = temp_vision_frame.shape[:2][::-1]
-		crop_mask_list = []
+		crop_masks = []
 		if 'box' in facefusion.globals.face_mask_types:
 			box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], 0, facefusion.globals.face_mask_padding)
-			crop_mask_list.append(box_mask)
+			crop_masks.append(box_mask)
 		if 'occlusion' in facefusion.globals.face_mask_types:
 			occlusion_mask = create_occlusion_mask(crop_vision_frame)
-			crop_mask_list.append(occlusion_mask)
+			crop_masks.append(occlusion_mask)
 		if 'region' in facefusion.globals.face_mask_types:
 			region_mask = create_region_mask(crop_vision_frame, facefusion.globals.face_mask_regions)
-			crop_mask_list.append(region_mask)
-		crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
+			crop_masks.append(region_mask)
+		crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 		crop_mask = (crop_mask * 255).astype(numpy.uint8)
 		inverse_vision_frame = cv2.warpAffine(crop_mask, inverse_matrix, temp_size)
 		inverse_vision_frame = cv2.threshold(inverse_vision_frame, 100, 255, cv2.THRESH_BINARY)[1]

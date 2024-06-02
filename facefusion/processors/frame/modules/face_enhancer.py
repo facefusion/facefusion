@@ -192,18 +192,18 @@ def enhance_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFr
 	model_size = get_options('model').get('size')
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmarks.get('5/68'), model_template, model_size)
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, (0, 0, 0, 0))
-	crop_mask_list =\
+	crop_masks =\
 	[
 		box_mask
 	]
 
 	if 'occlusion' in facefusion.globals.face_mask_types:
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
-		crop_mask_list.append(occlusion_mask)
+		crop_masks.append(occlusion_mask)
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
 	crop_vision_frame = apply_enhance(crop_vision_frame)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
-	crop_mask = numpy.minimum.reduce(crop_mask_list).clip(0, 1)
+	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame)
 	return temp_vision_frame
