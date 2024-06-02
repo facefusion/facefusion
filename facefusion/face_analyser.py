@@ -330,9 +330,9 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score]) -> List[Face]:
 	faces = []
 	sort_indices = numpy.argsort(-numpy.array(face_scores))
-	bounding_boxes : List[BoundingBox] = [ bounding_boxes[index] for index in sort_indices ]
-	face_landmarks_5 : List[FaceLandmark5] = [ face_landmarks_5[index] for index in sort_indices ]
-	face_scores : List[Score] = [face_scores[index] for index in sort_indices]
+	bounding_boxes = [ bounding_boxes[index] for index in sort_indices ]
+	face_landmarks_5 = [ face_landmarks_5[index] for index in sort_indices ]
+	face_scores = [ face_scores[index] for index in sort_indices ]
 	iou_threshold = 0.1 if facefusion.globals.face_detector_model == 'many' else 0.4
 	keep_indices = apply_nms(bounding_boxes, iou_threshold)
 
@@ -480,18 +480,18 @@ def get_average_face(vision_frames : List[VisionFrame], position : int = 0) -> O
 	return None
 
 
-def get_many_faces(vision_frame : VisionFrame) -> List[Face]:
+def get_many_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 	if numpy.any(vision_frame):
-		faces_cache = get_static_faces(vision_frame)
-		if faces_cache:
-			faces = faces_cache
+		static_faces = get_static_faces(vision_frame)
+		if static_faces:
+			faces = static_faces
 		else:
 			faces = []
 			bounding_boxes = []
 			face_landmarks_5 = []
 			face_scores = []
 
-			if facefusion.globals.face_detector_model in [ 'many', 'retinaface']:
+			if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
 				bounding_boxes_retinaface, face_landmarks_5_retinaface, face_scores_retinaface = detect_with_retinaface(vision_frame, facefusion.globals.face_detector_size)
 				bounding_boxes.extend(bounding_boxes_retinaface)
 				face_landmarks_5.extend(face_landmarks_5_retinaface)
@@ -523,6 +523,7 @@ def get_many_faces(vision_frame : VisionFrame) -> List[Face]:
 			if facefusion.globals.face_analyser_gender:
 				faces = filter_by_gender(faces, facefusion.globals.face_analyser_gender)
 		return faces
+	return None
 
 
 def find_similar_faces(reference_faces : FaceSet, vision_frame : VisionFrame, face_distance : float) -> List[Face]:
