@@ -565,7 +565,7 @@ def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:
 	if order == 'large-small':
 		return sorted(faces, key = lambda face: (face.bounding_box[2] - face.bounding_box[0]) * (face.bounding_box[3] - face.bounding_box[1]), reverse = True)
 	if order == 'best-worst':
-		return sorted(faces, key = lambda face: face.scores.get('detector'), reverse = True)
+		return sorted(faces, key = lambda face: face.score_set.get('detector'), reverse = True)
 	if order == 'worst-best':
 		return sorted(faces, key = lambda face: face.score_set.get('detector'))
 	return faces
