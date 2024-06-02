@@ -190,7 +190,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 		})
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
-		if keep_indices.any():
+		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
 			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
@@ -232,7 +232,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 		})
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
-		if keep_indices.any():
+		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
 			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
@@ -272,7 +272,7 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 	detections = numpy.squeeze(detections).T
 	bounding_box_raw, score_raw, face_landmark_5_raw = numpy.split(detections, [ 4, 5 ], axis = 1)
 	keep_indices = numpy.where(score_raw > facefusion.globals.face_detector_score)[0]
-	if keep_indices.any():
+	if numpy.any(keep_indices):
 		bounding_box_raw, face_landmark_5_raw, score_raw = bounding_box_raw[keep_indices], face_landmark_5_raw[keep_indices], score_raw[keep_indices]
 		for bounding_box in bounding_box_raw:
 			bounding_boxes.append(numpy.array(
@@ -470,8 +470,8 @@ def get_average_face(vision_frames : List[VisionFrame], position : int = 0) -> O
 		first_face = get_first(faces)
 		return Face(
 			bounding_box = first_face.bounding_box,
-			landmark_set = first_face.landmarks,
-			score_set = first_face.scores,
+			landmark_set = first_face.landmark_set,
+			score_set = first_face.score_set,
 			embedding = numpy.mean(embeddings, axis = 0),
 			normed_embedding = numpy.mean(normed_embeddings, axis = 0),
 			gender = first_face.gender,
@@ -566,7 +566,7 @@ def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:
 	if order == 'best-worst':
 		return sorted(faces, key = lambda face: face.scores.get('detector'), reverse = True)
 	if order == 'worst-best':
-		return sorted(faces, key = lambda face: face.scores.get('detector'))
+		return sorted(faces, key = lambda face: face.score_set.get('detector'))
 	return faces
 
 
