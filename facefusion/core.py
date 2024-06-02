@@ -282,7 +282,7 @@ def conditional_append_reference_faces() -> None:
 def force_download() -> None:
 	download_directory_path = resolve_relative_path('../.assets/models')
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')
-	model_list =\
+	models =\
 	[
 		content_analyser.MODELS,
 		face_analyser.MODELS,
@@ -292,8 +292,8 @@ def force_download() -> None:
 
 	for frame_processor_module in get_frame_processors_modules(available_frame_processors):
 		if hasattr(frame_processor_module, 'MODELS'):
-			model_list.append(frame_processor_module.MODELS)
-	model_urls = [ models[model].get('url') for models in model_list for model in models ]
+			models.append(frame_processor_module.MODELS)
+	model_urls = [ models[model].get('url') for models in models for model in models ]
 	conditional_download(download_directory_path, model_urls)
 
 
