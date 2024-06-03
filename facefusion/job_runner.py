@@ -1,7 +1,7 @@
 import os
 import shutil
 from typing import Dict
-from facefusion.ffmpeg import concatenate_videos
+from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import is_video, create_temp, get_temp_file_path, is_directory, is_file
 from facefusion import logger, wording
 from facefusion.job_manager import read_job_file, set_step_status, move_job_file, get_job_ids, get_total_steps, get_step_status
@@ -58,7 +58,7 @@ def apply_merge_action(job_id : str) -> bool:
 			if not move_file(temp_output_paths[0], output_path):
 				return False
 		elif all(map(is_video, temp_output_paths)):
-			if not concatenate_videos(temp_output_paths, output_path):
+			if not concat_video(temp_output_paths, output_path):
 				return False
 		else: # TODO: Behaviour for image output path? numbered copy or overwrite?
 			for temp_output_path in temp_output_paths:
