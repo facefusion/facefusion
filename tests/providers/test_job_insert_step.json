@@ -1,0 +1,17 @@
+{
+	"version": "1",
+	"date_created": "2024-01-01T00:00:00+0000",
+	"date_updated": null,
+	"steps":
+	[
+		{
+			"action": "process",
+			"args": {
+				"source_paths": ["source.jpg"],
+				"target_path": "target.jpg",
+				"output_path": "./output"
+			},
+			"status": "queued"
+		}
+	]
+}

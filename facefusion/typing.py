@@ -1,4 +1,4 @@
-from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict
+from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict, Optional
 from collections import namedtuple
 import numpy
 
@@ -60,6 +60,7 @@ QueuePayload = TypedDict('QueuePayload',
 })
 UpdateProgress = Callable[[int], None]
 ProcessFrames = Callable[[List[str], List[QueuePayload], UpdateProgress], None]
+HandleStep = Callable[[Dict[str, Any]], bool]
 
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
 WarpTemplateSet = Dict[WarpTemplate, numpy.ndarray[Any, Any]]
@@ -119,4 +120,21 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'product' : ExecutionDeviceProduct,
 	'video_memory' : ExecutionDeviceVideoMemory,
 	'utilization' : ExecutionDeviceUtilization
+})
+JobArgs = Dict[str, Any]
+JobStepAction = Literal['process', 'remix']
+JobStatus = Literal['queued', 'completed', 'failed']
+JobStepStatus = Literal['queued', 'completed', 'failed']
+JobStep = TypedDict('JobStep',
+{
+	'action' : JobStepAction,
+	'args' : JobArgs,
+	'status' : JobStepStatus
+})
+Job = TypedDict('Job',
+{
+	'version' : str,
+	'date_created' : str,
+	'date_updated' : Optional[str],
+	'steps' : list[JobStep]
 })
