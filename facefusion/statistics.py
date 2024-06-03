@@ -27,9 +27,9 @@ def create_statistics(static_faces : FaceSet) -> Dict[str, Any]:
 		statistics['total_frames_with_faces'] = statistics.get('total_frames_with_faces') + 1
 		for face in faces:
 			statistics['total_faces'] = statistics.get('total_faces') + 1
-			face_detector_scores.append(face.scores.get('detector'))
-			face_landmarker_scores.append(face.scores.get('landmarker'))
-			if numpy.array_equal(face.landmarks.get('5'), face.landmarks.get('5/68')):
+			face_detector_scores.append(face.score_set.get('detector'))
+			face_landmarker_scores.append(face.score_set.get('landmarker'))
+			if numpy.array_equal(face.landmark_set.get('5'), face.landmark_set.get('5/68')):
 				statistics['total_face_landmark_5_fallbacks'] = statistics.get('total_face_landmark_5_fallbacks') + 1
 
 	if face_detector_scores:

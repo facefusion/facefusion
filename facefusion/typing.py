@@ -22,8 +22,8 @@ Embedding = numpy.ndarray[Any, Any]
 Face = namedtuple('Face',
 [
 	'bounding_box',
-	'landmarks',
-	'scores',
+	'landmark_set',
+	'score_set',
 	'embedding',
 	'normed_embedding',
 	'gender',

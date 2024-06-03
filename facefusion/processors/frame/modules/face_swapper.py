@@ -236,7 +236,7 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	model_size = get_options('model').get('size')
 	pixel_boost_size = unpack_resolution(frame_processors_globals.face_swapper_pixel_boost)
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
-	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmarks.get('5/68'), model_template, pixel_boost_size)
+	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, pixel_boost_size)
 	crop_masks = []
 	temp_vision_frames = []
 
@@ -274,6 +274,7 @@ def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFra
 				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_vision_frame
+
 	with conditional_thread_semaphore(facefusion.globals.execution_providers):
 		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	return crop_vision_frame
@@ -283,9 +284,9 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 	model_type = get_options('model').get('type')
 	source_vision_frame = read_static_image(facefusion.globals.source_paths[0])
 	if model_type == 'blendswap':
-		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmarks.get('5/68'), 'arcface_112_v2', (112, 112))
+		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark_set.get('5/68'), 'arcface_112_v2', (112, 112))
 	if model_type == 'uniface':
-		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmarks.get('5/68'), 'ffhq_512', (256, 256))
+		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark_set.get('5/68'), 'ffhq_512', (256, 256))
 	source_vision_frame = source_vision_frame[:, :, ::-1] / 255.0
 	source_vision_frame = source_vision_frame.transpose(2, 0, 1)
 	source_vision_frame = numpy.expand_dims(source_vision_frame, axis = 0).astype(numpy.float32)
