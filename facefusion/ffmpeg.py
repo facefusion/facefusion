@@ -81,6 +81,17 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	return run_ffmpeg(commands)
 
 
+def concat_video(target_paths : List[str], output_path : str) -> bool:
+	with tempfile.NamedTemporaryFile(delete = True, mode = 'w') as temp_file:
+		for target_path in target_paths:
+			temp_file.write("file '{}'\n".format(os.path.abspath(target_path)))
+		temp_file.flush()
+		commands = [ '-f', 'concat', '-safe', '0', '-i', temp_file.name, '-c', 'copy', '-y', output_path ]
+		process = open_ffmpeg(commands)
+		process.communicate()
+		return process.returncode == 0
+
+
 def copy_image(target_path : str, temp_image_resolution : str) -> bool:
 	temp_file_path = get_temp_file_path(target_path)
 	temp_image_compression = calc_image_compression(target_path, 100)
@@ -151,15 +162,3 @@ def map_amf_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
 	if output_video_preset in [ 'slow', 'slower', 'veryslow' ]:
 		return 'quality'
 	return None
-
-
-def concatenate_videos(target_paths : List[str], output_path : str) -> bool:
-	with tempfile.NamedTemporaryFile(delete = True, mode = 'w') as temp_file:
-		for target_path in target_paths:
-			temp_file.write( "file '{}'\n".format(os.path.abspath(target_path)) )
-		temp_file.flush()
-		commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
-		commands.extend([ '-f', 'concat', '-safe', '0', '-i', temp_file.name, '-c', 'copy', '-y', os.path.abspath(output_path) ])
-		process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-		process.communicate()
-		return process.returncode == 0
