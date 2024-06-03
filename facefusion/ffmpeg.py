@@ -84,9 +84,9 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 def concat_video(target_paths : List[str], output_path : str) -> bool:
 	with tempfile.NamedTemporaryFile(mode = 'w') as concat_video_file:
 		for target_path in target_paths:
-			concat_video_file.write('file ' + target_path + os.linesep)
+			concat_video_file.write('file ' + os.path.abspath(target_path) + os.linesep)
 		concat_video_file.flush()
-		commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c', 'copy', '-y', output_path ]
+		commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c', 'copy', '-y', os.path.abspath(output_path) ]
 		process = open_ffmpeg(commands)
 		process.communicate()
 		return process.returncode == 0
@@ -114,7 +114,7 @@ def calc_image_compression(image_path : str, image_quality : int) -> int:
 
 
 def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int) -> Optional[AudioBuffer]:
-	commands = [ '-i', target_path, '-vn', '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', str(sample_rate), '-ac', str(channel_total), '-']
+	commands = [ '-i', target_path, '-vn', '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', str(sample_rate), '-ac', str(channel_total), '-' ]
 	process = open_ffmpeg(commands)
 	audio_buffer, _ = process.communicate()
 	if process.returncode == 0:
