@@ -16,7 +16,7 @@ def before_all() -> None:
 
 
 def test_swap_face_to_image() -> None:
-	commands = [ sys.executable, 'run.py', '--frame-processors', 'face_swapper', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-240p.jpg', '-o', '.assets/examples/test_swap_face_to_image.jpg', '--headless' ]
+	commands = [ sys.executable, 'run.py', '--frame-processors', 'face_swapper', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-240p.jpg', '-o', '.assets/examples/test-swap-face-to-image.jpg', '--headless' ]
 	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
 	assert run.returncode == 0
@@ -24,7 +24,7 @@ def test_swap_face_to_image() -> None:
 
 
 def test_swap_face_to_video() -> None:
-	commands = [ sys.executable, 'run.py', '--frame-processors', 'face_swapper', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-240p.mp4', '-o', '.assets/examples/test_swap_face_to_video.mp4', '--trim-frame-end', '10', '--headless' ]
+	commands = [ sys.executable, 'run.py', '--frame-processors', 'face_swapper', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-240p.mp4', '-o', '.assets/examples/test-swap-face-to-video.mp4', '--trim-frame-end', '10', '--headless' ]
 	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
 	assert run.returncode == 0
