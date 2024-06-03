@@ -4,7 +4,7 @@ from typing import Dict
 from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import is_video, create_temp, get_temp_file_path, is_directory, is_file
 from facefusion import logger, wording
-from facefusion.job_manager import read_job_file, set_step_status, move_job_file, get_job_ids, get_total_steps, get_step_status
+from facefusion.job_manager import read_job_file, set_step_status, move_job_file, get_job_ids, get_step_total, get_step_status
 from facefusion.typing import JobStep, HandleStep
 
 
@@ -13,14 +13,14 @@ def run_jobs(handle_step : HandleStep) -> None:
 
 	for job_id in job_queued_ids:
 		run_job(job_id, handle_step)
-		total_steps = get_total_steps(job_id)
+		step_total = get_step_total(job_id)
 		completed_steps = 0
 
-		for step_index in range(total_steps):
+		for step_index in range(step_total):
 			if get_step_status(job_id, step_index) == 'completed':
 				completed_steps += 1
 		# TODO: logger break
-		logger.info(wording.get('job_processed').format(completed_steps = completed_steps, total_steps = total_steps, job_id = job_id), __name__.upper())
+		logger.info(wording.get('job_processed').format(completed_steps = completed_steps, total_steps = step_total, job_id = job_id), __name__.upper())
 
 
 def run_job(job_id : str, handle_step : HandleStep) -> bool:

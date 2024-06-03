@@ -237,10 +237,13 @@ def get_job_status(job_id : str) -> Optional[JobStatus]:
 	return None
 
 
-def get_total_steps(job_id : str) -> int:
+def get_step_total(job_id : str) -> int:
 	job = read_job_file(job_id)
-	steps = job.get('steps')
-	return len(steps)
+
+	if job:
+		steps = job.get('steps')
+		return len(steps)
+	return 0
 
 
 def filter_action_args(program : ArgumentParser) -> JobArgs:
