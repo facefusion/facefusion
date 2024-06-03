@@ -171,7 +171,7 @@ def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2GRAY)
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_GRAY2RGB)
 	if model_type == 'ddcolor':
-		temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32)
+		temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32) #type:ignore[operator]
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_RGB2LAB)[:, :, :1]
 		temp_vision_frame = numpy.concatenate((temp_vision_frame, numpy.zeros_like(temp_vision_frame), numpy.zeros_like(temp_vision_frame)), axis = -1)
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_LAB2RGB)
@@ -190,7 +190,7 @@ def merge_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2LAB)[:, :, :1]
 		color_vision_frame = numpy.concatenate((temp_vision_frame, color_vision_frame), axis = -1)
 		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_LAB2BGR)
-		color_vision_frame = (color_vision_frame * 255.0).round().astype(numpy.uint8)
+		color_vision_frame = (color_vision_frame * 255.0).round().astype(numpy.uint8) #type:ignore[operator]
 	if model_type == 'deoldify':
 		temp_blue_channel, _, _ = cv2.split(temp_vision_frame)
 		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_BGR2RGB).astype(numpy.uint8)
