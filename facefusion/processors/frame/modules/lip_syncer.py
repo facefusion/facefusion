@@ -139,8 +139,8 @@ def post_process() -> None:
 def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	temp_audio_frame = prepare_audio_frame(temp_audio_frame)
-	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmarks.get('5/68'), 'ffhq_512', (512, 512))
-	face_landmark_68 = cv2.transform(target_face.landmarks.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'ffhq_512', (512, 512))
+	face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
 	bounding_box = create_bounding_box_from_face_landmark_68(face_landmark_68)
 	bounding_box[1] -= numpy.abs(bounding_box[3] - bounding_box[1]) * 0.125
 	mouth_mask = create_mouth_mask(face_landmark_68)
@@ -156,6 +156,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 		crop_masks.append(occlusion_mask)
 	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, (96, 96))
 	close_vision_frame = prepare_crop_frame(close_vision_frame)
+
 	with conditional_thread_semaphore(facefusion.globals.execution_providers):
 		close_vision_frame = frame_processor.run(None,
 		{
