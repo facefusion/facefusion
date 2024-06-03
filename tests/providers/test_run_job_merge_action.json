@@ -1,0 +1,30 @@
+{
+	"version": "1",
+	"date_created": "2024-01-01T00:00:00+0000",
+	"date_updated": null,
+	"steps":
+	[
+		{
+			"action": "process",
+			"args": {
+				"source_paths": [".assets/examples/source.jpg"],
+				"target_path": ".assets/examples/target-240p.mp4",
+				"output_path": ".assets/examples/test_swap_face_to_video.mp4",
+				"trim_frame_start": 5,
+				"trim_frame_end": 10
+			},
+			"status": "queued"
+		},
+		{
+			"action": "process",
+			"args": {
+				"source_paths": [".assets/examples/source.jpg"],
+				"target_path": ".assets/examples/target-240p.mp4",
+				"output_path": ".assets/examples/test_swap_face_to_video.mp4",
+				"trim_frame_start": 11,
+				"trim_frame_end": 15
+			},
+			"status": "queued"
+		}
+	]
+}

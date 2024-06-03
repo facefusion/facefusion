@@ -1,11 +1,12 @@
 from typing import Any, List, Literal, Optional
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from time import sleep
 import cv2
 import numpy
 import onnxruntime
 
 import facefusion.globals
+import facefusion.job_manager
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, logger, wording
 from facefusion.face_analyser import clear_face_analyser
@@ -99,10 +100,10 @@ def register_args(program : ArgumentParser) -> None:
 	program.add_argument('--frame-colorizer-model', help = wording.get('help.frame_colorizer_model'), default = config.get_str_value('frame_processors.frame_colorizer_model', 'ddcolor'), choices = frame_processors_choices.frame_colorizer_models)
 	program.add_argument('--frame-colorizer-blend', help = wording.get('help.frame_colorizer_blend'), type = int, default = config.get_int_value('frame_processors.frame_colorizer_blend', '100'), choices = frame_processors_choices.frame_colorizer_blend_range, metavar = create_metavar(frame_processors_choices.frame_colorizer_blend_range))
 	program.add_argument('--frame-colorizer-size', help = wording.get('help.frame_colorizer_size'), type = str, default = config.get_str_value('frame_processors.frame_colorizer_size', '256x256'), choices = frame_processors_choices.frame_colorizer_sizes)
+	facefusion.job_manager.register_action_args([ '--frame-colorizer-model', '--frame-colorizer-blend', '--frame-colorizer-size' ])
 
 
-def apply_args(program : ArgumentParser) -> None:
-	args = program.parse_args()
+def apply_args(args : Namespace) -> None:
 	frame_processors_globals.frame_colorizer_model = args.frame_colorizer_model
 	frame_processors_globals.frame_colorizer_blend = args.frame_colorizer_blend
 	frame_processors_globals.frame_colorizer_size = args.frame_colorizer_size

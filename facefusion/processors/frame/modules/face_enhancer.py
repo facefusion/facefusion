@@ -1,11 +1,12 @@
 from typing import Any, List, Literal, Optional
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from time import sleep
 import cv2
 import numpy
 import onnxruntime
 
 import facefusion.globals
+import facefusion.job_manager
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, logger, wording
 from facefusion.face_analyser import get_many_faces, clear_face_analyser, find_similar_faces, get_one_face
@@ -134,10 +135,10 @@ def set_options(key : Literal['model'], value : Any) -> None:
 def register_args(program : ArgumentParser) -> None:
 	program.add_argument('--face-enhancer-model', help = wording.get('help.face_enhancer_model'), default = config.get_str_value('frame_processors.face_enhancer_model', 'gfpgan_1.4'), choices = frame_processors_choices.face_enhancer_models)
 	program.add_argument('--face-enhancer-blend', help = wording.get('help.face_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.face_enhancer_blend', '80'), choices = frame_processors_choices.face_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.face_enhancer_blend_range))
+	facefusion.job_manager.register_action_args([ '--face-enhancer-model', '--face-enhancer-blend' ])
 
 
-def apply_args(program : ArgumentParser) -> None:
-	args = program.parse_args()
+def apply_args(args : Namespace) -> None:
 	frame_processors_globals.face_enhancer_model = args.face_enhancer_model
 	frame_processors_globals.face_enhancer_blend = args.face_enhancer_blend
 

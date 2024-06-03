@@ -1,4 +1,5 @@
 from typing import List, Any, Optional
+from argparse import ArgumentParser
 import platform
 import sys
 
@@ -52,3 +53,18 @@ def get_argument_value(argument : str) -> Optional[str]:
 
 def get_first(__list__ : Any) -> Any:
 	return next(iter(__list__), None)
+
+
+def has_argument(argument : str) -> bool:
+	return any(argv == argument for argv in sys.argv)
+
+
+def has_job_action() -> bool:
+	return any(argv.startswith('--job') for argv in sys.argv)
+
+
+def get_key_by_argument(program : ArgumentParser, argument : str) -> Optional[str]:
+	for action in program._actions:
+		if argument in action.option_strings:
+			return action.dest
+	return None

@@ -1,5 +1,5 @@
 from typing import Any, List, Literal, Optional
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from time import sleep
 import numpy
 import onnx
@@ -7,6 +7,7 @@ import onnxruntime
 from onnx import numpy_helper
 
 import facefusion.globals
+import facefusion.job_manager
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, logger, wording
 from facefusion.execution import has_execution_provider, apply_execution_provider_options
@@ -159,10 +160,10 @@ def register_args(program : ArgumentParser) -> None:
 	face_swapper_pixel_boost_choices = frame_processors_choices.face_swapper_set.get(face_swapper_model) #type:ignore[call-overload]
 	program.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', face_swapper_model_fallback), choices = frame_processors_choices.face_swapper_set.keys())
 	program.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('frame_processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
+	facefusion.job_manager.register_action_args([ '--face-swapper-model', '--face-swapper-pixel-boost' ])
 
 
-def apply_args(program : ArgumentParser) -> None:
-	args = program.parse_args()
+def apply_args(args : Namespace) -> None:
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
 	frame_processors_globals.face_swapper_pixel_boost = args.face_swapper_pixel_boost
 	if args.face_swapper_model == 'blendswap_256':
