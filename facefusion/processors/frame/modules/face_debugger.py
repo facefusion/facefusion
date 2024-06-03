@@ -96,7 +96,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		crop_mask = (crop_mask * 255).astype(numpy.uint8)
 		inverse_vision_frame = cv2.warpAffine(crop_mask, inverse_matrix, temp_size)
 		inverse_vision_frame = cv2.threshold(inverse_vision_frame, 100, 255, cv2.THRESH_BINARY)[1]
-		inverse_vision_frame[inverse_vision_frame > 0] = 255
+		inverse_vision_frame[inverse_vision_frame > 0] = 255 #type:ignore[operator]
 		inverse_contours = cv2.findContours(inverse_vision_frame, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
 		cv2.drawContours(temp_vision_frame, inverse_contours, -1, tertiary_color if has_face_landmark_5_fallback else secondary_color, 2)
 	if 'face-landmark-5' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('5')):

@@ -395,7 +395,7 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_RGB2Lab)
-	if numpy.mean(crop_vision_frame[:, :, 0]) < 30:
+	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: #type:ignore[arg-type]
 		crop_vision_frame[:, :, 0] = cv2.createCLAHE(clipLimit = 2).apply(crop_vision_frame[:, :, 0])
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_Lab2RGB)
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
