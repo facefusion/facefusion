@@ -6,7 +6,7 @@ import facefusion.globals
 from facefusion import process_manager
 from facefusion.filesystem import get_temp_directory_path, create_temp, clear_temp
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import extract_frames, read_audio_buffer
+from facefusion.ffmpeg import extract_frames, concat_video, read_audio_buffer
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -51,14 +51,14 @@ def test_extract_frames() -> None:
 
 def test_extract_frames_with_trim_start() -> None:
 	facefusion.globals.trim_frame_start = 224
-	data_provider =\
+	providers =\
 	[
 		('.assets/examples/target-240p-25fps.mp4', 55),
 		('.assets/examples/target-240p-30fps.mp4', 100),
 		('.assets/examples/target-240p-60fps.mp4', 212)
 	]
 
-	for target_path, frame_total in data_provider:
+	for target_path, frame_total in providers:
 		temp_directory_path = get_temp_directory_path(target_path)
 		create_temp(target_path)
 
@@ -71,14 +71,14 @@ def test_extract_frames_with_trim_start() -> None:
 def test_extract_frames_with_trim_start_and_trim_end() -> None:
 	facefusion.globals.trim_frame_start = 124
 	facefusion.globals.trim_frame_end = 224
-	data_provider =\
+	providers =\
 	[
 		('.assets/examples/target-240p-25fps.mp4', 120),
 		('.assets/examples/target-240p-30fps.mp4', 100),
 		('.assets/examples/target-240p-60fps.mp4', 50)
 	]
 
-	for target_path, frame_total in data_provider:
+	for target_path, frame_total in providers:
 		temp_directory_path = get_temp_directory_path(target_path)
 		create_temp(target_path)
 
@@ -90,14 +90,14 @@ def test_extract_frames_with_trim_start_and_trim_end() -> None:
 
 def test_extract_frames_with_trim_end() -> None:
 	facefusion.globals.trim_frame_end = 100
-	data_provider =\
+	providers =\
 	[
 		('.assets/examples/target-240p-25fps.mp4', 120),
 		('.assets/examples/target-240p-30fps.mp4', 100),
 		('.assets/examples/target-240p-60fps.mp4', 50)
 	]
 
-	for target_path, frame_total in data_provider:
+	for target_path, frame_total in providers:
 		temp_directory_path = get_temp_directory_path(target_path)
 		create_temp(target_path)
 
@@ -105,6 +105,17 @@ def test_extract_frames_with_trim_end() -> None:
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == frame_total
 
 		clear_temp(target_path)
+
+
+def test_concat_video() -> None:
+	target_paths =\
+	[
+		'.assets/examples/target-240p.mp4',
+		'.assets/examples/target-240p.mp4'
+	]
+	output_path = '.assets/examples/test-concat-video.mp4'
+
+	assert concat_video(target_paths, output_path) is True
 
 
 def test_read_audio_buffer() -> None:
