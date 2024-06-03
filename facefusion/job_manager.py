@@ -72,8 +72,8 @@ def resolve_job_path(job_id : str) -> str:
 def create_step(args : JobArgs) -> JobStep:
 	step : JobStep =\
 	{
-		'action' : 'process',
-		'args' : args,
+		'action': 'process',
+		'args': args,
 		'status': 'queued'
 	}
 	return step
@@ -82,10 +82,10 @@ def create_step(args : JobArgs) -> JobStep:
 def create_job(job_id : str) -> bool:
 	job : Job =\
 	{
-		'version' : '1',
-		'date_created' : get_current_datetime(),
-		'date_updated' : None,
-		'steps' : []
+		'version': '1',
+		'date_created': get_current_datetime(),
+		'date_updated': None,
+		'steps': []
 	}
 	job_path = resolve_job_path(job_id)
 	if not is_file(job_path):
