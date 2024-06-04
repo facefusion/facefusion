@@ -388,21 +388,21 @@ def handle_job_action(program : ArgumentParser) -> None:
 			logger.error(wording.get('job_remix_step_not_added'), __name__.upper())
 
 	if has_argument('--job-insert-step'):
-		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[0])
+		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[1])
 		if facefusion.job_manager.insert_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_step_inserted'), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_inserted'), __name__.upper())
 
 	if has_argument('--job-remove-step'):
-		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[0])
+		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[1])
 		if facefusion.job_manager.remove_step(job_id, step_index):
 			logger.info(wording.get('job_step_removed'), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_removed'), __name__.upper())
 
 	if has_argument('--job-update-step'):
-		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[0])
+		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[1])
 		if facefusion.job_manager.remove_step(job_id, step_index) and facefusion.job_manager.insert_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_step_updated'), __name__.upper())
 		else:
