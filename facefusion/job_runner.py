@@ -1,6 +1,6 @@
 import os
 import shutil
-from typing import Dict
+from typing import Dict, List
 from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import is_video, create_temp, get_temp_file_path, is_directory, is_file
 from facefusion import logger, wording
@@ -32,7 +32,7 @@ def run_job(job_id : str, handle_step : HandleStep) -> bool:
 	return move_job_file(job_id, 'failed')
 
 
-def run_steps(job_id : str, steps : list[JobStep], handle_step : HandleStep) -> bool:
+def run_steps(job_id : str, steps : List[JobStep], handle_step : HandleStep) -> bool:
 	for step_index, step in enumerate(steps):
 		step_args = step.get('args')
 		output_path = step_args.get('output_path')
@@ -67,10 +67,10 @@ def apply_merge_action(job_id : str) -> bool:
 	return True
 
 
-def extract_output_paths(job_id : str) -> Dict[str, list[str]]:
+def extract_output_paths(job_id : str) -> Dict[str, List[str]]:
 	job = read_job_file(job_id)
 	steps = job.get('steps')
-	output_path_dict : Dict[str, list[str]] = {}
+	output_path_dict : Dict[str, List[str]] = {}
 
 	for step_index, step in enumerate(steps):
 		output_path = step.get('args').get('output_path')

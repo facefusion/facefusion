@@ -1,18 +1,18 @@
+from typing import Optional, List
 import json
 import sys
 import os
 import shutil
 from argparse import ArgumentParser
 from datetime import datetime
-from typing import Optional
 
 from facefusion.filesystem import is_file, is_directory
 from facefusion.typing import JobStep, Job, JobArgs, JobStepStatus, JobStepAction, JobStatus
 from facefusion.common_helper import get_key_by_argument
 
 JOBS_PATH : Optional[str] = None
-ARGS_ACTION_REGISTRY : Optional[list[str]] = None
-ARGS_RUN_REGISTRY : Optional[list[str]] = None
+ARGS_ACTION_REGISTRY : Optional[List[str]] = None
+ARGS_RUN_REGISTRY : Optional[List[str]] = None
 
 
 def get_current_datetime() -> str:
@@ -24,22 +24,24 @@ def init_jobs(jobs_path : str) -> bool:
 	global JOBS_PATH
 
 	JOBS_PATH = jobs_path
-	os.makedirs(JOBS_PATH, exist_ok = True)
-	queued_path = os.path.join(JOBS_PATH, 'queued')
-	os.makedirs(queued_path, exist_ok=True)
-	completed_path = os.path.join(JOBS_PATH, 'completed')
-	os.makedirs(completed_path, exist_ok=True)
-	failed_path = os.path.join(JOBS_PATH, 'failed')
-	os.makedirs(failed_path, exist_ok=True)
-	return is_directory(JOBS_PATH) and is_directory(queued_path) and is_directory(completed_path) and is_directory(failed_path)
+	job_status_paths =\
+	[
+		os.path.join(JOBS_PATH, 'queued'),
+		os.path.join(JOBS_PATH, 'completed'),
+		os.path.join(JOBS_PATH, 'failed')
+	]
+
+	for job_status_path in job_status_paths:
+		os.makedirs(job_status_path, exist_ok = True)
+	return all(is_directory(status_path) for status_path in job_status_paths)
 
 
 def clear_jobs(jobs_path : str) -> None:
-	if os.path.exists(jobs_path):
+	if is_directory(jobs_path):
 		shutil.rmtree(jobs_path)
 
 
-def register_action_args(args : list[str]) -> None:
+def register_action_args(args : List[str]) -> None:
 	global ARGS_ACTION_REGISTRY
 
 	if ARGS_ACTION_REGISTRY is None:
@@ -49,7 +51,7 @@ def register_action_args(args : list[str]) -> None:
 		ARGS_ACTION_REGISTRY.append(arg)
 
 
-def register_run_args(args : list[str]) -> None:
+def register_run_args(args : List[str]) -> None:
 	global ARGS_RUN_REGISTRY
 
 	if ARGS_RUN_REGISTRY is None:
@@ -155,7 +157,7 @@ def get_step_status(job_id : str, step_index : int) -> Optional[JobStepStatus]:
 	job = read_job_file(job_id)
 
 	if job:
-		steps : list[JobStep] = job.get('steps')
+		steps : List[JobStep] = job.get('steps')
 		if step_index in range(len(steps)):
 			return steps[step_index].get('status')
 	return None
@@ -211,15 +213,18 @@ def delete_job_file(job_id : str) -> bool:
 	return False
 
 
-def get_all_job_ids() -> list[Optional[str]]:
-	job_ids = []
-	job_ids.extend(get_job_ids('queued'))
-	job_ids.extend(get_job_ids('failed'))
-	job_ids.extend(get_job_ids('completed'))
+def get_all_job_ids() -> List[Optional[str]]:
+	job_ids =\
+	[
+		get_job_ids('queued'),
+		get_job_ids('failed'),
+		get_job_ids('completed')
+	]
+
 	return job_ids
 
 
-def get_job_ids(job_status : JobStatus) -> list[Optional[str]]:
+def get_job_ids(job_status : JobStatus) -> List[Optional[str]]:
 	job_ids = []
 	job_file_names = os.listdir(os.path.join(JOBS_PATH, job_status))
 
@@ -230,7 +235,7 @@ def get_job_ids(job_status : JobStatus) -> list[Optional[str]]:
 
 
 def get_job_status(job_id : str) -> Optional[JobStatus]:
-	job_statuses : list[JobStatus] = [ 'queued', 'failed', 'completed' ]
+	job_statuses : List[JobStatus] = [ 'queued', 'failed', 'completed' ]
 	for job_status in job_statuses:
 		if job_id in get_job_ids(job_status):
 			return job_status

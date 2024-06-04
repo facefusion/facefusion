@@ -12,9 +12,8 @@ from facefusion.job_runner import run_job
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	jobs_path = './.jobs'
-	clear_jobs(jobs_path)
-	init_jobs(jobs_path)
+	clear_jobs('.jobs')
+	init_jobs('.jobs')
 	conditional_download('.assets/examples',
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
