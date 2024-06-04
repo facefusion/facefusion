@@ -160,7 +160,7 @@ def register_args(program : ArgumentParser) -> None:
 	face_swapper_pixel_boost_choices = frame_processors_choices.face_swapper_set.get(face_swapper_model) #type:ignore[call-overload]
 	program.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', face_swapper_model_fallback), choices = frame_processors_choices.face_swapper_set.keys())
 	program.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('frame_processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
-	facefusion.job_manager.register_action_args([ '--face-swapper-model', '--face-swapper-pixel-boost' ])
+	facefusion.job_manager.register_step_args([ '--face-swapper-model', '--face-swapper-pixel-boost' ])
 
 
 def apply_args(program : ArgumentParser) -> None:
