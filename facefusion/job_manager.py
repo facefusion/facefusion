@@ -213,7 +213,7 @@ def delete_job_file(job_id : str) -> bool:
 	return False
 
 
-def get_all_job_ids() -> List[Optional[str]]:
+def get_all_job_ids() -> List[List[str]]:
 	job_ids =\
 	[
 		get_job_ids('queued'),
@@ -224,7 +224,7 @@ def get_all_job_ids() -> List[Optional[str]]:
 	return job_ids
 
 
-def get_job_ids(job_status : JobStatus) -> List[Optional[str]]:
+def get_job_ids(job_status : JobStatus) -> List[str]:
 	job_ids = []
 	job_file_names = os.listdir(os.path.join(JOBS_PATH, job_status))
 
