@@ -9,7 +9,7 @@ from facefusion.job_manager import clear_jobs
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	clear_jobs('./.jobs')
+	clear_jobs('.jobs')
 	conditional_download('.assets/examples',
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
