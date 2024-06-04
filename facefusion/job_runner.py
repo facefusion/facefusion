@@ -11,7 +11,7 @@ def run_job(job_id : str, handle_step : HandleStep) -> bool:
 	job = read_job_file(job_id)
 	steps = job.get('steps')
 
-	if run_steps(job_id, steps, handle_step) and apply_merge_action(job_id):
+	if run_steps(job_id, steps, handle_step) and merge_steps(job_id):
 		return move_job_file(job_id, 'completed')
 	return move_job_file(job_id, 'failed')
 
@@ -36,44 +36,38 @@ def run_steps(job_id : str, steps : List[JobStep], handle_step : HandleStep) -> 
 		if step.get('action') == 'remix':
 			step_args['target_path'] = get_temp_output_path(target_path, job_id, step_index - 1)
 		if handle_step(step_args):
-			set_step_status(job_id, step_index, 'completed')
-		else:
-			set_step_status(job_id, step_index, 'failed')
-			return False
+			return set_step_status(job_id, step_index, 'completed')
+		return set_step_status(job_id, step_index, 'failed')
 	return True
 
 
-def apply_merge_action(job_id : str) -> bool:
-	output_path_dict = extract_output_paths(job_id)
+def merge_steps(job_id : str) -> bool:
+	merge_set = collect_merge_set(job_id)
 
-	for output_path, temp_output_paths in output_path_dict.items():
-		if len(temp_output_paths) == 1:
-			if not move_file(temp_output_paths[0], output_path):
-				return False
-		elif all(map(is_video, temp_output_paths)):
+	for output_path, temp_output_paths in merge_set.items():
+		if all(map(is_video, temp_output_paths)):
 			if not concat_video(temp_output_paths, output_path):
 				return False
-		else: # TODO: Behaviour for image output path? numbered copy or overwrite?
-			for temp_output_path in temp_output_paths:
-				if not move_file(temp_output_path, output_path):
-					return False
+		for temp_output_path in temp_output_paths:
+			if not move_file(temp_output_path, output_path):
+				return False
 	return True
 
 
-def extract_output_paths(job_id : str) -> Dict[str, List[str]]:
+def collect_merge_set(job_id : str) -> Dict[str, List[str]]:
 	job = read_job_file(job_id)
 	steps = job.get('steps')
-	output_path_dict : Dict[str, List[str]] = {}
+	merge_set : Dict[str, List[str]] = {}
 
 	for step_index, step in enumerate(steps):
 		output_path = step.get('args').get('output_path')
 		if not is_directory(output_path):
 			temp_output_path = get_temp_output_path(output_path, job_id, step_index)
-			if output_path not in output_path_dict.keys():
-				output_path_dict[output_path] = [temp_output_path]
+			if output_path not in merge_set.keys():
+				merge_set[output_path] = [ temp_output_path ]
 			else:
-				output_path_dict[output_path].append(temp_output_path)
-	return output_path_dict
+				merge_set[output_path].append(temp_output_path)
+	return merge_set
 
 
 def get_temp_output_path(output_path : str, job_id : str, step_index : int) -> str: # TODO: refactor
