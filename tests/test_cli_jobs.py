@@ -10,16 +10,17 @@ from facefusion.job_manager import clear_jobs
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	clear_jobs('./.jobs')
-	# conditional_download('.assets/examples',
-	# [
-	# 	'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
-	# 	'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
-	# ])
-	# subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vframes', '1', '.assets/examples/target-240p.jpg' ])
+	conditional_download('.assets/examples',
+	[
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
+	])
+	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vframes', '1', '.assets/examples/target-240p.jpg' ])
 
 
 def run_command(commands : list[str]) -> Any:
 	return subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
 
 @pytest.mark.skip() # TODO : Fix
 def test_job() -> None:
