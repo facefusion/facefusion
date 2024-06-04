@@ -21,9 +21,9 @@ from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module, clear_frame_processors_modules
 from facefusion.exit_helper import conditional_exit, graceful_exit
-from facefusion.common_helper import create_metavar, get_first, get_argument_value, has_argument, has_job_action
+from facefusion.common_helper import create_metavar, get_first, get_argument_value, has_argument
 from facefusion.execution import encode_execution_providers, decode_execution_providers
-from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps, normalize_job_argument
+from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
 from facefusion.statistics import conditional_log_statistics
 from facefusion.download import conditional_download
@@ -330,7 +330,7 @@ def run(program : ArgumentParser) -> None:
 	init_jobs('./.jobs')
 	logger.init(facefusion.globals.log_level)
 
-	if has_job_action() and not has_argument('--job-run') and not has_argument('--job-run-all'):
+	if facefusion.job_manager.has_job_action() and not has_argument('--job-run') and not has_argument('--job-run-all'):
 		handle_job_action(program)
 		return conditional_exit(0)
 	if facefusion.globals.system_memory_limit > 0:
@@ -388,21 +388,21 @@ def handle_job_action(program : ArgumentParser) -> None:
 			logger.error(wording.get('job_remix_step_not_added'), __name__.upper())
 
 	if has_argument('--job-insert-step'):
-		job_id, step_index = normalize_job_argument(args.job_insert_step)
+		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[0])
 		if facefusion.job_manager.insert_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_step_inserted'), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_inserted'), __name__.upper())
 
 	if has_argument('--job-remove-step'):
-		job_id, step_index = normalize_job_argument(args.job_remove_step)
+		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[0])
 		if facefusion.job_manager.remove_step(job_id, step_index):
 			logger.info(wording.get('job_step_removed'), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_removed'), __name__.upper())
 
 	if has_argument('--job-update-step'):
-		job_id, step_index = normalize_job_argument(args.job_update_step)
+		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[0])
 		if facefusion.job_manager.remove_step(job_id, step_index) and facefusion.job_manager.insert_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_step_updated'), __name__.upper())
 		else:
