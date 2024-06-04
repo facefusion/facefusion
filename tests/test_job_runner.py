@@ -20,12 +20,8 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vframes', '1', '.assets/examples/target-240p.jpg' ])
 
 
-def copy_json(source_path : str, destination_path : str) -> None:
-	shutil.copyfile(source_path, destination_path)
-
-
 def test_run_job() -> None:
-	copy_json('tests/providers/test_run_job.json', '.jobs/queued/test_run_job.json')
+	shutil.copyfile('tests/providers/test_run_job.json', '.jobs/queued/test_run_job.json')
 
 	assert run_job('test_run_job', facefusion.core.handle_step)
 	assert get_job_status('test_run_job') == 'completed'
@@ -33,7 +29,7 @@ def test_run_job() -> None:
 
 @pytest.mark.skip()
 def test_run_job_with_merge() -> None:
-	copy_json('tests/providers/test_run_job_merge.json', '.jobs/queued/test_run_job_merge.json')
+	shutil.copyfile('tests/providers/test_run_job_merge.json', '.jobs/queued/test_run_job_merge.json')
 
 	assert run_job('test_run_job_merge_action', facefusion.core.handle_step)
 	assert get_job_status('test_run_job_merge_action') == 'completed'
@@ -41,7 +37,7 @@ def test_run_job_with_merge() -> None:
 
 @pytest.mark.skip()
 def test_run_job_with_remix() -> None:
-	copy_json('tests/providers/test_run_job_remix.json', '.jobs/queued/test_run_job_remix.json')
+	shutil.copyfile('tests/providers/test_run_job_remix.json', '.jobs/queued/test_run_job_remix.json')
 
 	assert run_job('test_run_job_remix_action', facefusion.core.handle_step)
 	assert get_job_status('test_run_job_remix_action') == 'completed'

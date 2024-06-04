@@ -19,10 +19,6 @@ def read_json(path : str) -> Any:
 		return json.load(json_file)
 
 
-def copy_json(source_path : str, destination_path : str) -> None:
-	shutil.copyfile(source_path, destination_path)
-
-
 def test_create_job() -> None:
 	create_job('test_create_job')
 
@@ -37,7 +33,8 @@ def test_create_job() -> None:
 
 
 def test_add_step() -> None:
-	copy_json('tests/providers/test_job_add_step.json', '.jobs/queued/test_job_add_step.json')
+	shutil.copyfile('tests/providers/test_job_add_step.json', '.jobs/queued/test_job_add_step.json')
+
 	assert get_step_total('test_job_add_step') == 0
 	assert add_step('test_job_add_step', {
 		'source_paths': ['a.jpg', 'b.jpg'],
@@ -48,7 +45,8 @@ def test_add_step() -> None:
 
 
 def test_insert_step() -> None:
-	copy_json('tests/providers/test_job_insert_step.json', '.jobs/queued/test_job_insert_step.json')
+	shutil.copyfile('tests/providers/test_job_insert_step.json', '.jobs/queued/test_job_insert_step.json')
+
 	assert get_step_total('test_job_insert_step') == 1
 
 	step =\
@@ -59,7 +57,9 @@ def test_insert_step() -> None:
 	}
 	assert insert_step('test_job_insert_step', 0, step)
 	assert get_step_total('test_job_insert_step') == 2
+
 	job = read_json('.jobs/queued/test_job_insert_step.json')
+
 	assert job.get('steps')[0].get('args') == step
 
 	step =\
@@ -70,17 +70,21 @@ def test_insert_step() -> None:
 	}
 	assert insert_step('test_job_insert_step', -1, step)
 	assert get_step_total('test_job_insert_step') == 3
+
 	job = read_json('.jobs/queued/test_job_insert_step.json')
+
 	assert job.get('steps')[-1].get('args') == step
 
 
 def test_remove_step() -> None:
-	copy_json('tests/providers/test_job_remove_step.json', '.jobs/queued/test_job_remove_step.json')
-	assert get_step_total('test_job_remove_step') == 3
+	shutil.copyfile('tests/providers/test_job_remove_step.json', '.jobs/queued/test_job_remove_step.json')
 
+	assert get_step_total('test_job_remove_step') == 3
 	assert remove_step('test_job_remove_step', 0)
 	assert get_step_total('test_job_remove_step') == 2
+
 	job = read_json('.jobs/queued/test_job_remove_step.json')
+
 	assert (job.get('steps')[0].get('args') ==\
 	{
 		'source_paths': ['123.jpg'],
@@ -90,7 +94,9 @@ def test_remove_step() -> None:
 
 	assert remove_step('test_job_remove_step', -1)
 	assert get_step_total('test_job_remove_step') == 1
+
 	job = read_json('.jobs/queued/test_job_remove_step.json')
+
 	assert job.get('steps')[0].get('args') ==\
 	{
 		'source_paths': ['123.jpg'],
@@ -100,7 +106,7 @@ def test_remove_step() -> None:
 
 
 def test_move_job() -> None:
-	copy_json('tests/providers/test_move_job.json', '.jobs/queued/test_move_job.json')
+	shutil.copyfile('tests/providers/test_move_job.json', '.jobs/queued/test_move_job.json')
 
 	assert move_job_file('test_move_job', 'failed')
 	assert get_job_status('test_move_job') == 'failed'
@@ -111,5 +117,5 @@ def test_move_job() -> None:
 
 
 def test_delete_job() -> None:
-	copy_json('tests/providers/test_delete_job.json', '.jobs/queued/test_delete_job.json')
+	shutil.copyfile('tests/providers/test_delete_job.json', '.jobs/queued/test_delete_job.json')
 	assert delete_job_file('test_delete_job')
