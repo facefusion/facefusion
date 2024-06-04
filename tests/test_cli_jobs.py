@@ -2,7 +2,6 @@ import subprocess
 import sys
 import pytest
 
-from typing import Any
 from facefusion.download import conditional_download
 from facefusion.job_manager import clear_jobs
 
@@ -18,42 +17,86 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vframes', '1', '.assets/examples/target-240p.jpg' ])
 
 
-def run_command(commands : list[str]) -> Any:
-	return subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+def test_job_create() -> None:
+	commands = [ sys.executable, 'run.py', '--job-create', 'job-one' ]
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
-
-@pytest.mark.skip() # TODO : Fix
-def test_job() -> None:
-	commands = [ sys.executable, 'run.py', '--job-create', 'job0' ]
-	run = run_command(commands)
 	assert run.returncode == 0
 	assert 'Job created' in run.stdout.decode()
 
-	run = run_command(commands)
-	assert run.returncode == 0
+
+def test_job_create_invalid() -> None:
+	commands = [ sys.executable, 'run.py', '--job-create', 'job-one' ]
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+	# assert run.returncode == 1 # todo: error code should be 1
 	assert 'Job not created' in run.stdout.decode()
 
-	commands = [ sys.executable, 'run.py', '--frame-processors', 'face_swapper', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-240p.jpg', '-o', '.assets/examples/test_cli_jobs.jpg', '--job-add-step', 'job0' ]
-	run = run_command(commands)
+
+def test_job_add_step() -> None:
+	commands = [ sys.executable, 'run.py', '--job-add-step', 'job-one', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-240p.jpg', '-o', '.' ]
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
 	assert run.returncode == 0
 	assert 'Job step added' in run.stdout.decode()
 
-	commands = [ sys.executable, 'run.py', '--job-add-step', 'invalid' ]
-	run = run_command(commands)
-	assert run.returncode == 0
+
+@pytest.mark.skip()
+def test_job_add_step_no_args() -> None:
+	commands = [ sys.executable, 'run.py', '--job-add-step', 'job-one' ]
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+	# assert run.returncode == 1 # todo: error code should be 1
 	assert 'Job step not added' in run.stdout.decode()
 
-	commands = [ sys.executable, 'run.py', '--job-insert-step', 'job0', '-1' ]
-	run = run_command(commands)
+
+def test_job_add_step_invalid() -> None:
+	commands = [ sys.executable, 'run.py', '--job-add-step', 'job-invalid' ]
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+	# assert run.returncode == 1 # todo: error code should be 1
+	assert 'Job step not added' in run.stdout.decode()
+
+
+def test_job_insert_step() -> None:
+	commands = [ sys.executable, 'run.py', '--job-insert-step', 'job-one', '-1', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-240p.jpg', '-o', '.' ]
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
 	assert run.returncode == 0
 	assert 'Job step inserted' in run.stdout.decode()
 
-	commands = [ sys.executable, 'run.py', '--job-remove-step', 'job0', '-1' ]
-	run = run_command(commands)
+
+@pytest.mark.skip()
+def test_job_insert_step_no_args() -> None:
+	commands = [ sys.executable, 'run.py', '--job-insert-step', 'job-one', '-1' ]
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+	# assert run.returncode == 1 # todo: error code should be 1
+	assert 'Job step not inserted' in run.stdout.decode()
+
+
+@pytest.mark.skip()
+def test_job_insert_step_invalid() -> None:
+	commands = [ sys.executable, 'run.py', '--job-insert-step', 'job-invalid', '-1' ]
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
+	# assert run.returncode == 1 # todo: error code should be 1
+	assert 'Job step not inserted' in run.stdout.decode()
+
+
+@pytest.mark.skip()
+def test_job_remove_step() -> None:
+	commands = [ sys.executable, 'run.py', '--job-remove-step', 'job-one', '-1' ]
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
 	assert run.returncode == 0
 	assert 'Job step removed' in run.stdout.decode()
 
-	commands = [ sys.executable, 'run.py', '--job-run', 'job0' ]
-	run = run_command(commands)
+
+@pytest.mark.skip()
+def test_job_run() -> None:
+	commands = [ sys.executable, 'run.py', '--job-run', 'job-one' ]
+	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+
 	assert run.returncode == 0
-	assert '1 of 1 steps processed in job0' in run.stdout.decode()
+	assert '1 of 1 steps processed in job-one' in run.stdout.decode()
