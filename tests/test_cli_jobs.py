@@ -33,6 +33,16 @@ def test_job_create_invalid() -> None:
 	assert 'Job not created' in run.stdout.decode()
 
 
+@pytest.mark.skip()
+def test_job_delete() -> None:
+	pass
+
+
+@pytest.mark.skip()
+def test_job_delete_invalid() -> None:
+	pass
+
+
 def test_job_add_step() -> None:
 	commands = [ sys.executable, 'run.py', '--job-add-step', 'job-one', '-s', '.assets/examples/source.jpg', '-t', '.assets/examples/target-240p.jpg', '-o', '.' ]
 	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
@@ -41,21 +51,22 @@ def test_job_add_step() -> None:
 	assert 'Job step added' in run.stdout.decode()
 
 
-@pytest.mark.skip()
-def test_job_add_step_no_args() -> None:
-	commands = [ sys.executable, 'run.py', '--job-add-step', 'job-one' ]
-	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
-
-	# assert run.returncode == 1 # todo: error code should be 1
-	assert 'Job step not added' in run.stdout.decode()
-
-
 def test_job_add_step_invalid() -> None:
 	commands = [ sys.executable, 'run.py', '--job-add-step', 'job-invalid' ]
 	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
-	# assert run.returncode == 1 # todo: error code should be 1
+	#assert run.returncode == 1 # todo: error code should be 1
 	assert 'Job step not added' in run.stdout.decode()
+
+
+@pytest.mark.skip()
+def test_job_remix() -> None:
+	pass
+
+
+@pytest.mark.skip()
+def test_job_remix_invalid() -> None:
+	pass
 
 
 def test_job_insert_step() -> None:
@@ -67,20 +78,11 @@ def test_job_insert_step() -> None:
 
 
 @pytest.mark.skip()
-def test_job_insert_step_no_args() -> None:
-	commands = [ sys.executable, 'run.py', '--job-insert-step', 'job-one', '-1' ]
-	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
-
-	# assert run.returncode == 1 # todo: error code should be 1
-	assert 'Job step not inserted' in run.stdout.decode()
-
-
-@pytest.mark.skip()
 def test_job_insert_step_invalid() -> None:
 	commands = [ sys.executable, 'run.py', '--job-insert-step', 'job-invalid', '-1' ]
 	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
 
-	# assert run.returncode == 1 # todo: error code should be 1
+	assert run.returncode == 1
 	assert 'Job step not inserted' in run.stdout.decode()
 
 
@@ -100,3 +102,18 @@ def test_job_run() -> None:
 
 	assert run.returncode == 0
 	assert '1 of 1 steps processed in job-one' in run.stdout.decode()
+
+
+@pytest.mark.skip()
+def test_job_run_invalid() -> None:
+	pass
+
+
+@pytest.mark.skip()
+def test_job_run_all() -> None:
+	pass
+
+
+@pytest.mark.skip()
+def test_job_run_all_invalid() -> None:
+	pass

@@ -66,6 +66,7 @@ WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ff
 WarpTemplateSet = Dict[WarpTemplate, numpy.ndarray[Any, Any]]
 ProcessMode = Literal['output', 'preview', 'stream']
 
+ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 FaceSelectorMode = Literal['many', 'one', 'reference']
