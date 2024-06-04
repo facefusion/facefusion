@@ -1,5 +1,5 @@
 from typing import Any, List, Literal, Optional
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from time import sleep
 import cv2
 import numpy
@@ -138,7 +138,8 @@ def register_args(program : ArgumentParser) -> None:
 	facefusion.job_manager.register_action_args([ '--face-enhancer-model', '--face-enhancer-blend' ])
 
 
-def apply_args(args : Namespace) -> None:
+def apply_args(program : ArgumentParser) -> None:
+	args = program.parse_args()
 	frame_processors_globals.face_enhancer_model = args.face_enhancer_model
 	frame_processors_globals.face_enhancer_blend = args.face_enhancer_blend
 

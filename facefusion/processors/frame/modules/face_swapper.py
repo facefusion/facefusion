@@ -1,5 +1,5 @@
 from typing import Any, List, Literal, Optional
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from time import sleep
 import numpy
 import onnx
@@ -163,7 +163,8 @@ def register_args(program : ArgumentParser) -> None:
 	facefusion.job_manager.register_action_args([ '--face-swapper-model', '--face-swapper-pixel-boost' ])
 
 
-def apply_args(args : Namespace) -> None:
+def apply_args(program : ArgumentParser) -> None:
+	args = program.parse_args()
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
 	frame_processors_globals.face_swapper_pixel_boost = args.face_swapper_pixel_boost
 	if args.face_swapper_model == 'blendswap_256':

@@ -44,6 +44,13 @@ def to_lower_case(__string__ : Any) -> str:
 	return str(__string__).lower()
 
 
+def get_argument_key(program : ArgumentParser, argument : str) -> Optional[str]:
+	for action in program._actions:
+		if argument in action.option_strings:
+			return action.dest
+	return None
+
+
 def get_argument_value(argument : str) -> Optional[str]:
 	try:
 		return sys.argv[sys.argv.index(argument) + 1]
@@ -61,10 +68,3 @@ def has_argument(argument : str) -> bool:
 
 def has_job_action() -> bool:
 	return any(argv.startswith('--job') for argv in sys.argv)
-
-
-def get_key_by_argument(program : ArgumentParser, argument : str) -> Optional[str]:
-	for action in program._actions:
-		if argument in action.option_strings:
-			return action.dest
-	return None

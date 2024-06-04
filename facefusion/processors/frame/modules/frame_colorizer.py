@@ -1,5 +1,5 @@
 from typing import Any, List, Literal, Optional
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from time import sleep
 import cv2
 import numpy
@@ -103,7 +103,8 @@ def register_args(program : ArgumentParser) -> None:
 	facefusion.job_manager.register_action_args([ '--frame-colorizer-model', '--frame-colorizer-blend', '--frame-colorizer-size' ])
 
 
-def apply_args(args : Namespace) -> None:
+def apply_args(program : ArgumentParser) -> None:
+	args = program.parse_args()
 	frame_processors_globals.frame_colorizer_model = args.frame_colorizer_model
 	frame_processors_globals.frame_colorizer_blend = args.frame_colorizer_blend
 	frame_processors_globals.frame_colorizer_size = args.frame_colorizer_size

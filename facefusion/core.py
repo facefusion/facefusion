@@ -4,17 +4,17 @@ os.environ['OMP_NUM_THREADS'] = '1'
 
 import signal
 import sys
-import copy
 import warnings
 import shutil
 import numpy
 import onnxruntime
 from time import sleep, time
-from argparse import ArgumentParser, HelpFormatter, Namespace
+from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
 import facefusion.globals
 import facefusion.job_manager
+import facefusion.processors.frame.globals as frame_processor_globals
 from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, wording, voice_extractor
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
@@ -159,7 +159,8 @@ def validate_args(program : ArgumentParser) -> None:
 		program.error(str(exception))
 
 
-def apply_args(args : Namespace) -> None:
+def apply_args(program : ArgumentParser) -> None:
+	args = program.parse_args()
 	# general
 	facefusion.globals.source_paths = args.source_paths
 	facefusion.globals.target_path = args.target_path
@@ -227,37 +228,105 @@ def apply_args(args : Namespace) -> None:
 	facefusion.globals.frame_processors = args.frame_processors
 	for frame_processor in available_frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
-		frame_processor_module.apply_args(args)
+		frame_processor_module.apply_args(program)
 	# uis
 	facefusion.globals.open_browser = args.open_browser
 	facefusion.globals.ui_layouts = args.ui_layouts
 
 
+def apply_step_args(step_args : JobArgs) -> None:
+	# general
+	facefusion.globals.source_paths = step_args.get('source_paths')
+	facefusion.globals.target_path = step_args.get('target_path')
+	facefusion.globals.output_path = step_args.get('output_path')
+	# face analyser
+	facefusion.globals.face_analyser_order = step_args.get('face_analyser_order')
+	facefusion.globals.face_analyser_age = step_args.get('face_analyser_age')
+	facefusion.globals.face_analyser_gender = step_args.get('face_analyser_gender')
+	facefusion.globals.face_detector_model = step_args.get('face_detector_model')
+	facefusion.globals.face_detector_size = step_args.get('face_detector_size')
+	facefusion.globals.face_detector_score = step_args.get('face_detector_score')
+	facefusion.globals.face_landmarker_score = step_args.get('face_landmarker_score')
+	# face selector
+	facefusion.globals.face_selector_mode = step_args.get('face_selector_mode')
+	facefusion.globals.reference_face_position = step_args.get('reference_face_position')
+	facefusion.globals.reference_face_distance = step_args.get('reference_face_distance')
+	facefusion.globals.reference_frame_number = step_args.get('reference_frame_number')
+	# face mask
+	facefusion.globals.face_mask_types = step_args.get('face_mask_types')
+	facefusion.globals.face_mask_blur = step_args.get('face_mask_blur')
+	facefusion.globals.face_mask_padding = normalize_padding(step_args.get('face_mask_padding'))
+	facefusion.globals.face_mask_regions = step_args.get('face_mask_regions')
+	# frame extraction
+	facefusion.globals.trim_frame_start = step_args.get('trim_frame_start')
+	facefusion.globals.trim_frame_end = step_args.get('trim_frame_end')
+	facefusion.globals.temp_frame_format = step_args.get('temp_frame_format')
+	facefusion.globals.keep_temp = step_args.get('keep_temp')
+	# output creation
+	facefusion.globals.output_image_quality = step_args.get('output_image_quality')
+	if is_image(step_args.get('target_path')):
+		output_image_resolution = detect_image_resolution(step_args.get('target_path'))
+		output_image_resolutions = create_image_resolutions(output_image_resolution)
+		if step_args.get('output_image_resolution') in output_image_resolutions:
+			facefusion.globals.output_image_resolution = step_args.get('output_image_resolution')
+		else:
+			facefusion.globals.output_image_resolution = pack_resolution(output_image_resolution)
+	facefusion.globals.output_video_encoder = step_args.get('output_video_encoder')
+	facefusion.globals.output_video_preset = step_args.get('output_video_preset')
+	facefusion.globals.output_video_quality = step_args.get('output_video_quality')
+	if is_video(step_args.get('target_path')):
+		output_video_resolution = detect_video_resolution(step_args.get('target_path'))
+		output_video_resolutions = create_video_resolutions(output_video_resolution)
+		if step_args.get('output_video_resolution') in output_video_resolutions:
+			facefusion.globals.output_video_resolution = step_args.get('output_video_resolution')
+		else:
+			facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
+	if step_args.get('output_video_fps') or is_video(step_args.get('target_path')):
+		facefusion.globals.output_video_fps = normalize_fps(step_args.get('output_video_fps')) or detect_video_fps(step_args.get('target_path'))
+	facefusion.globals.skip_audio = step_args.get('skip_audio')
+	# frame processors
+	facefusion.globals.frame_processors = step_args.get('frame_processors')
+	frame_processor_globals.face_swapper_model = step_args.get('face_swapper_model')
+	frame_processor_globals.face_swapper_pixel_boost = step_args.get('face_swapper_pixel_boost')
+	if step_args.get('face_swapper_model') == 'blendswap_256':
+		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
+	if step_args.get('face_swapper_model') == 'inswapper_128' or step_args.get('face_swapper_model') == 'inswapper_128_fp16':
+		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
+	if step_args.get('face_swapper_model') == 'simswap_256' or step_args.get('face_swapper_model') == 'simswap_512_unofficial':
+		facefusion.globals.face_recognizer_model = 'arcface_simswap'
+	if step_args.get('face_swapper_model') == 'uniface_256':
+		facefusion.globals.face_recognizer_model = 'arcface_uniface'
+	frame_processor_globals.face_enhancer_model = step_args.get('face_enhancer_model')
+	frame_processor_globals.face_enhancer_blend = step_args.get('face_enhancer_blend')
+	frame_processor_globals.frame_colorizer_model = step_args.get('frame_colorizer_model')
+	frame_processor_globals.frame_colorizer_blend = step_args.get('frame_colorizer_blend')
+	frame_processor_globals.frame_colorizer_size = step_args.get('frame_colorizer_size')
+	frame_processor_globals.frame_enhancer_model = step_args.get('frame_enhancer_model')
+	frame_processor_globals.frame_enhancer_blend = step_args.get('frame_enhancer_blend')
+	frame_processor_globals.lip_syncer_model = step_args.get('lip_syncer_model')
+
+
 def pre_check_frame_processor_modules() -> bool:
-	clear_frame_processors_modules() # TODO: fix me, why this needed?
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_check():
 			return False
 	return True
 
 
-def handle_step(default_args : Namespace, step_args : JobArgs) -> bool:
-	args = copy.copy(default_args)
-	for key, value in step_args.items():
-		setattr(args, key, value)
-	apply_args(args)
+def handle_step(step_args : JobArgs) -> bool:
+	apply_step_args(step_args)
 	if not pre_check_frame_processor_modules():
 		return False
-	try: # TODO: Henry, please help remove try block
+	try: # TODO: Henry, please help remove try block, make conditional_process return exit_code
 		conditional_process()
+		clear_frame_processors_modules() # TODO: fix me, why this needed?
 		return True
 	except SystemExit:
 		return False
 
 
 def run(program : ArgumentParser) -> None:
-	args = program.parse_args()
-	apply_args(args)
+	apply_args(program)
 	init_jobs('./.jobs')
 	logger.init(facefusion.globals.log_level)
 
@@ -273,9 +342,10 @@ def run(program : ArgumentParser) -> None:
 		return conditional_exit(2)
 
 	if has_argument('--job-run'):
-		run_job(args.job_run, lambda step_args: (handle_step(args, step_args)))
+		args = program.parse_args()
+		run_job(args.job_run, handle_step)
 	elif has_argument('--job-run-all'):
-		run_jobs(lambda step_args: (handle_step(args, step_args)))
+		run_jobs(handle_step)
 	elif facefusion.globals.headless:
 		if not pre_check_frame_processor_modules():
 			return conditional_exit(2)
@@ -291,7 +361,7 @@ def run(program : ArgumentParser) -> None:
 
 def handle_job_action(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	action_args = facefusion.job_manager.filter_action_args(program)
+	step_args = facefusion.job_manager.filter_step_args(program)
 
 	if has_argument('--job-create'):
 		if facefusion.job_manager.create_job(args.job_create):
@@ -306,20 +376,20 @@ def handle_job_action(program : ArgumentParser) -> None:
 			logger.error(wording.get('job_not_deleted'), __name__.upper())
 
 	if has_argument('--job-add-step'):
-		if facefusion.job_manager.add_step(args.job_add_step, action_args):
+		if facefusion.job_manager.add_step(args.job_add_step, step_args):
 			logger.info(wording.get('job_step_added'), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_added'), __name__.upper())
 
 	if has_argument('--job-remix-step'):
-		if facefusion.job_manager.remix_step(args.job_remix_step, action_args):
+		if facefusion.job_manager.remix_step(args.job_remix_step, step_args):
 			logger.info(wording.get('job_remix_step_added'), __name__.upper())
 		else:
 			logger.error(wording.get('job_remix_step_not_added'), __name__.upper())
 
 	if has_argument('--job-insert-step'):
 		job_id, step_index = normalize_job_argument(args.job_insert_step)
-		if facefusion.job_manager.insert_step(job_id, step_index, action_args):
+		if facefusion.job_manager.insert_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_step_inserted'), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_inserted'), __name__.upper())
@@ -333,7 +403,7 @@ def handle_job_action(program : ArgumentParser) -> None:
 
 	if has_argument('--job-update-step'):
 		job_id, step_index = normalize_job_argument(args.job_update_step)
-		if facefusion.job_manager.remove_step(job_id, step_index) and facefusion.job_manager.insert_step(job_id, step_index, action_args):
+		if facefusion.job_manager.remove_step(job_id, step_index) and facefusion.job_manager.insert_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_step_updated'), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_updated'), __name__.upper())
