@@ -7,7 +7,6 @@ from datetime import datetime
 
 from facefusion.filesystem import is_file, is_directory
 from facefusion.typing import JobStep, Job, JobArgs, JobStepStatus, JobStepAction, JobStatus
-from facefusion.common_helper import get_argument_key
 
 JOBS_PATH : Optional[str] = None
 JOB_STATUSES : List[JobStatus] = [ 'queued', 'completed', 'failed' ]
@@ -234,9 +233,16 @@ def get_step_total(job_id : str) -> int:
 	return 0
 
 
+def get_action_name(program : ArgumentParser, argument : str) -> Optional[str]:
+	for action in program._actions:
+		if argument in action.option_strings:
+			return action.dest
+	return None
+
+
 def filter_step_args(program : ArgumentParser) -> JobArgs:
 	args = program.parse_args()
-	step_args_keys = { get_argument_key(program, arg) for arg in ARGS_ACTION_REGISTRY }
+	step_args_keys = { get_action_name(program, arg) for arg in ARGS_ACTION_REGISTRY }
 	step_args = {}
 
 	for key, value in vars(args).items():

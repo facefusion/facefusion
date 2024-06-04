@@ -46,8 +46,7 @@ def merge_steps(job_id : str) -> bool:
 
 	for output_path, temp_output_paths in merge_set.items():
 		if all(map(is_video, temp_output_paths)):
-			if not concat_video(temp_output_paths, output_path):
-				return False
+			return concat_video(temp_output_paths, output_path)
 		for temp_output_path in temp_output_paths:
 			if not move_file(temp_output_path, output_path):
 				return False
@@ -63,6 +62,7 @@ def collect_merge_set(job_id : str) -> Dict[str, List[str]]:
 		output_path = step.get('args').get('output_path')
 		if not is_directory(output_path):
 			temp_output_path = get_temp_output_path(output_path, job_id, step_index)
+
 			if output_path not in merge_set.keys():
 				merge_set[output_path] = [ temp_output_path ]
 			else:
