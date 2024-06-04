@@ -331,6 +331,7 @@ def run(program : ArgumentParser) -> None:
 	logger.init(facefusion.globals.log_level)
 
 	if facefusion.job_manager.has_job_action() and not has_argument('--job-run') and not has_argument('--job-run-all'):
+		# todo: add exit code
 		handle_job_action(program)
 		return conditional_exit(0)
 	if facefusion.globals.system_memory_limit > 0:
