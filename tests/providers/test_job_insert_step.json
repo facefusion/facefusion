@@ -6,10 +6,14 @@
 	[
 		{
 			"action": "process",
-			"args": {
-				"source_paths": ["source.jpg"],
+			"args":
+			{
+				"source_paths":
+				[
+					"source.jpg"
+				],
 				"target_path": "target.jpg",
-				"output_path": "./output"
+				"output_path": "output"
 			},
 			"status": "queued"
 		}
