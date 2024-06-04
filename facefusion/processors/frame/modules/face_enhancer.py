@@ -135,7 +135,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 def register_args(program : ArgumentParser) -> None:
 	program.add_argument('--face-enhancer-model', help = wording.get('help.face_enhancer_model'), default = config.get_str_value('frame_processors.face_enhancer_model', 'gfpgan_1.4'), choices = frame_processors_choices.face_enhancer_models)
 	program.add_argument('--face-enhancer-blend', help = wording.get('help.face_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.face_enhancer_blend', '80'), choices = frame_processors_choices.face_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.face_enhancer_blend_range))
-	facefusion.job_manager.register_action_args([ '--face-enhancer-model', '--face-enhancer-blend' ])
+	facefusion.job_manager.register_step_args([ '--face-enhancer-model', '--face-enhancer-blend' ])
 
 
 def apply_args(program : ArgumentParser) -> None:

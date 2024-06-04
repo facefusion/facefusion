@@ -35,7 +35,7 @@ def clear_jobs(jobs_path : str) -> None:
 		shutil.rmtree(jobs_path)
 
 
-def register_action_args(args : List[str]) -> None:
+def register_step_args(args : List[str]) -> None:
 	global ARGS_ACTION_REGISTRY
 
 	if ARGS_ACTION_REGISTRY is None:
@@ -45,7 +45,7 @@ def register_action_args(args : List[str]) -> None:
 		ARGS_ACTION_REGISTRY.append(arg)
 
 
-def register_run_args(args : List[str]) -> None:
+def register_job_args(args : List[str]) -> None:
 	global ARGS_RUN_REGISTRY
 
 	if ARGS_RUN_REGISTRY is None:
@@ -83,6 +83,7 @@ def create_job(job_id : str) -> bool:
 		'steps': []
 	}
 	job_path = resolve_job_path(job_id)
+
 	if not is_file(job_path):
 		return write_job_file(job_id, job)
 	return False
