@@ -1,5 +1,4 @@
 from typing import Optional, List
-import sys
 import json
 import os
 import shutil
