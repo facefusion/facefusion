@@ -1,5 +1,5 @@
 from typing import Any, List, Literal, Optional
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from time import sleep
 import cv2
 import numpy
@@ -82,7 +82,8 @@ def register_args(program : ArgumentParser) -> None:
 	facefusion.job_manager.register_action_args([ '--lip-syncer-model' ])
 
 
-def apply_args(args : Namespace) -> None:
+def apply_args(program : ArgumentParser) -> None:
+	args = program.parse_args()
 	frame_processors_globals.lip_syncer_model = args.lip_syncer_model
 
 

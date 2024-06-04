@@ -1,6 +1,5 @@
 from typing import Optional, List
 import json
-import sys
 import os
 import shutil
 from argparse import ArgumentParser
@@ -8,7 +7,7 @@ from datetime import datetime
 
 from facefusion.filesystem import is_file, is_directory
 from facefusion.typing import JobStep, Job, JobArgs, JobStepStatus, JobStepAction, JobStatus
-from facefusion.common_helper import get_key_by_argument
+from facefusion.common_helper import get_argument_key
 
 JOBS_PATH : Optional[str] = None
 JOB_STATUSES : List[JobStatus] = [ 'queued', 'completed', 'failed' ]
@@ -234,23 +233,12 @@ def get_step_total(job_id : str) -> int:
 	return 0
 
 
-def filter_action_args(program : ArgumentParser) -> JobArgs:
+def filter_step_args(program : ArgumentParser) -> JobArgs:
 	args = program.parse_args()
+	step_args_keys = { get_argument_key(program, arg) for arg in ARGS_ACTION_REGISTRY }
+	step_args = {}
 
-	action_args = {}
-	for arg in sys.argv:
-		key = get_key_by_argument(program, arg)
-		if key and arg in ARGS_ACTION_REGISTRY:
-			action_args[key] = getattr(args, key)
-	return action_args
-
-
-def filter_run_args(program : ArgumentParser) -> JobArgs:
-	args = program.parse_args()
-
-	run_args = {}
-	for arg in sys.argv:
-		key = get_key_by_argument(program, arg)
-		if key and arg in ARGS_RUN_REGISTRY:
-			run_args[key] = getattr(args, key)
-	return run_args
+	for key, value in vars(args).items():
+		if key in step_args_keys:
+			step_args[key] = value
+	return step_args

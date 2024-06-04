@@ -1,5 +1,5 @@
 from typing import Any, List, Literal
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 import cv2
 import numpy
 
@@ -41,7 +41,8 @@ def register_args(program : ArgumentParser) -> None:
 	facefusion.job_manager.register_action_args([ '--face-debugger-items' ])
 
 
-def apply_args(args : Namespace) -> None:
+def apply_args(program : ArgumentParser) -> None:
+	args = program.parse_args()
 	frame_processors_globals.face_debugger_items = args.face_debugger_items
 
 

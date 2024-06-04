@@ -9,7 +9,69 @@
 			"args": {
 				"source_paths": [".assets/examples/source.jpg"],
 				"target_path": ".assets/examples/target-240p.jpg",
-				"output_path": ".assets/examples/test_swap_face_to_image.jpg"
+				"output_path": ".assets/examples/test_run_job.jpg",
+				"face_analyser_order": "left-right",
+                "face_analyser_age": null,
+                "face_analyser_gender": null,
+                "face_detector_model": "yoloface",
+                "face_detector_size": "640x640",
+                "face_detector_score": 0.5,
+                "face_landmarker_score": 0.5,
+                "face_selector_mode": "reference",
+                "reference_face_position": 0,
+                "reference_face_distance": 0.6,
+                "reference_frame_number": 0,
+                "face_mask_types": [
+                    "box"
+                ],
+                "face_mask_blur": 0.3,
+                "face_mask_padding": [
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "face_mask_regions": [
+                    "skin",
+                    "left-eyebrow",
+                    "right-eyebrow",
+                    "left-eye",
+                    "right-eye",
+                    "glasses",
+                    "nose",
+                    "mouth",
+                    "upper-lip",
+                    "lower-lip"
+                ],
+                "trim_frame_start": null,
+                "trim_frame_end": null,
+                "temp_frame_format": "png",
+                "keep_temp": null,
+                "output_image_quality": 80,
+                "output_image_resolution": null,
+                "output_video_encoder": "libx264",
+                "output_video_preset": "veryfast",
+                "output_video_quality": 80,
+                "output_video_resolution": null,
+                "output_video_fps": null,
+                "skip_audio": null,
+                "frame_processors": [
+                    "face_swapper"
+                ],
+                "face_debugger_items": [
+                    "face-landmark-5/68",
+                    "face-mask"
+                ],
+                "face_enhancer_model": "gfpgan_1.4",
+                "face_enhancer_blend": 80,
+                "face_swapper_model": "inswapper_128_fp16",
+                "face_swapper_pixel_boost": "128x128",
+                "frame_colorizer_model": "ddcolor",
+                "frame_colorizer_blend": 100,
+                "frame_colorizer_size": "256x256",
+                "frame_enhancer_model": "span_kendata_x4",
+                "frame_enhancer_blend": 80,
+                "lip_syncer_model": "wav2lip_gan"
 			},
 			"status": "queued"
 		}
