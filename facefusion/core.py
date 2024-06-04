@@ -32,7 +32,7 @@ from facefusion.ffmpeg import extract_frames, merge_video, copy_image, finalize_
 from facefusion.vision import read_image, read_static_images, detect_image_resolution, restrict_video_fps, create_image_resolutions, get_video_frame, detect_video_resolution, detect_video_fps, restrict_video_resolution, restrict_image_resolution, create_video_resolutions, pack_resolution, unpack_resolution
 from facefusion.job_runner import run_job, run_jobs
 from facefusion.job_manager import init_jobs
-from facefusion.typing import JobArgs
+from facefusion.typing import ErrorCode, JobArgs
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
@@ -127,8 +127,8 @@ def cli() -> None:
 	group_uis = program.add_argument_group('uis')
 	group_uis.add_argument('--open-browser', help=wording.get('help.open_browser'), action = 'store_true', default = config.get_bool_value('uis.open_browser'))
 	group_uis.add_argument('--ui-layouts', help = wording.get('help.ui_layouts').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layouts', 'default'), nargs = '+')
-	# jobs
-	group_jobs = program.add_argument_group('jobs')
+	# job actions
+	group_jobs = program.add_argument_group('job actions')
 	group_jobs.add_argument('--job-run', help = wording.get('help.job_run'), type = str)
 	group_jobs.add_argument('--job-run-all', help = wording.get('help.job_run_all'), action = 'store_true')
 	group_jobs.add_argument('--job-create', help = wording.get('help.job_create'), type = str)
@@ -137,7 +137,6 @@ def cli() -> None:
 	group_jobs.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), type = str)
 	group_jobs.add_argument('--job-insert-step', help=wording.get('help.job_insert_step'), type = str, nargs = 2)
 	group_jobs.add_argument('--job-remove-step', help = wording.get('help.job_remove_step'), type = str, nargs = 2)
-	group_jobs.add_argument('--job-update-step', help = wording.get('help.job_update_step'), type = str, nargs = 2)
 	run(program)
 
 
@@ -327,30 +326,29 @@ def handle_step(step_args : JobArgs) -> bool:
 
 def run(program : ArgumentParser) -> None:
 	apply_args(program)
-	init_jobs('./.jobs')
 	logger.init(facefusion.globals.log_level)
 
-	if facefusion.job_manager.has_job_action() and not has_argument('--job-run') and not has_argument('--job-run-all'):
-		# todo: add exit code
-		handle_job_action(program)
-		return conditional_exit(0)
-	if facefusion.globals.system_memory_limit > 0:
-		limit_system_memory(facefusion.globals.system_memory_limit)
+	if has_argument('--job-create') or has_argument('--job-delete') or has_argument('--job-add-step') or has_argument('--job-remix-step') or has_argument('--job-insert-step') or has_argument('--job-remove-step'):
+		init_jobs('.jobs')
+		error_code = handle_job_action(program)
+		return conditional_exit(error_code)
 	if facefusion.globals.force_download:
 		force_download()
 		return conditional_exit(0)
 	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check():
 		return conditional_exit(2)
-
-	if has_argument('--job-run'):
-		args = program.parse_args()
-		run_job(args.job_run, handle_step)
-	elif has_argument('--job-run-all'):
-		run_jobs(handle_step)
-	elif facefusion.globals.headless:
+	if facefusion.globals.system_memory_limit > 0:
+		limit_system_memory(facefusion.globals.system_memory_limit)
+	if facefusion.globals.headless:
 		if not pre_check_frame_processor_modules():
 			return conditional_exit(2)
-		conditional_process()
+		if has_argument('--job-run'):
+			args = program.parse_args()
+			run_job(args.job_run, handle_step)
+		elif has_argument('--job-run-all'):
+			run_jobs(handle_step)
+		else:
+			conditional_process()
 	else:
 		import facefusion.uis.core as ui
 
@@ -360,54 +358,53 @@ def run(program : ArgumentParser) -> None:
 		ui.launch()
 
 
-def handle_job_action(program : ArgumentParser) -> None:
+def handle_job_action(program : ArgumentParser) -> ErrorCode:
 	args = program.parse_args()
 	step_args = facefusion.job_manager.filter_step_args(program)
 
 	if has_argument('--job-create'):
 		if facefusion.job_manager.create_job(args.job_create):
 			logger.info(wording.get('job_created'), __name__.upper())
-		else:
-			logger.error(wording.get('job_not_created'), __name__.upper())
-
+			return 0
+		logger.error(wording.get('job_not_created'), __name__.upper())
+		return 1
 	if has_argument('--job-delete'):
 		if facefusion.job_manager.delete_job_file(args.job_delete):
 			logger.info(wording.get('job_deleted'), __name__.upper())
-		else:
-			logger.error(wording.get('job_not_deleted'), __name__.upper())
-
+			return 0
+		logger.error(wording.get('job_not_deleted'), __name__.upper())
+		return 1
 	if has_argument('--job-add-step'):
 		if facefusion.job_manager.add_step(args.job_add_step, step_args):
 			logger.info(wording.get('job_step_added'), __name__.upper())
-		else:
-			logger.error(wording.get('job_step_not_added'), __name__.upper())
-
+			return 0
+		logger.error(wording.get('job_step_not_added'), __name__.upper())
+		return 1
 	if has_argument('--job-remix-step'):
 		if facefusion.job_manager.remix_step(args.job_remix_step, step_args):
 			logger.info(wording.get('job_remix_step_added'), __name__.upper())
-		else:
-			logger.error(wording.get('job_remix_step_not_added'), __name__.upper())
-
+			return 0
+		logger.error(wording.get('job_remix_step_not_added'), __name__.upper())
+		return 1
 	if has_argument('--job-insert-step'):
-		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[1])
+		job_id, step_index = args.job_insert_step
+		step_index = int(step_index)
+
 		if facefusion.job_manager.insert_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_step_inserted'), __name__.upper())
-		else:
-			logger.error(wording.get('job_step_not_inserted'), __name__.upper())
-
+			return 0
+		logger.error(wording.get('job_step_not_inserted'), __name__.upper())
+		return 1
 	if has_argument('--job-remove-step'):
-		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[1])
+		job_id, step_index = args.job_remove_step
+		step_index = int(step_index)
+
 		if facefusion.job_manager.remove_step(job_id, step_index):
 			logger.info(wording.get('job_step_removed'), __name__.upper())
-		else:
-			logger.error(wording.get('job_step_not_removed'), __name__.upper())
-
-	if has_argument('--job-update-step'):
-		job_id, step_index = args.job_insert_step[0], int(args.job_insert_step[1])
-		if facefusion.job_manager.remove_step(job_id, step_index) and facefusion.job_manager.insert_step(job_id, step_index, step_args):
-			logger.info(wording.get('job_step_updated'), __name__.upper())
-		else:
-			logger.error(wording.get('job_step_not_updated'), __name__.upper())
+			return 0
+		logger.error(wording.get('job_step_not_removed'), __name__.upper())
+		return 1
+	return 1
 
 
 def pre_check() -> bool:
