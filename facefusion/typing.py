@@ -136,5 +136,5 @@ Job = TypedDict('Job',
 	'version' : str,
 	'date_created' : str,
 	'date_updated' : Optional[str],
-	'steps' : list[JobStep]
+	'steps' : List[JobStep]
 })
