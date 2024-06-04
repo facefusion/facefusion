@@ -11,25 +11,20 @@ from facefusion.typing import JobStep, Job, JobArgs, JobStepStatus, JobStepActio
 from facefusion.common_helper import get_key_by_argument
 
 JOBS_PATH : Optional[str] = None
+JOB_STATUSES : List[JobStatus] = [ 'queued', 'completed', 'failed' ]
 ARGS_ACTION_REGISTRY : Optional[List[str]] = None
 ARGS_RUN_REGISTRY : Optional[List[str]] = None
 
 
 def get_current_datetime() -> str:
-	date_time = datetime.now().astimezone().strftime('%Y-%m-%dT%H:%M:%S%z')
-	return date_time
+	return datetime.now().astimezone().isoformat()
 
 
 def init_jobs(jobs_path : str) -> bool:
 	global JOBS_PATH
 
 	JOBS_PATH = jobs_path
-	job_status_paths =\
-	[
-		os.path.join(JOBS_PATH, 'queued'),
-		os.path.join(JOBS_PATH, 'completed'),
-		os.path.join(JOBS_PATH, 'failed')
-	]
+	job_status_paths = [ os.path.join(JOBS_PATH, job_status) for job_status in JOB_STATUSES ]
 
 	for job_status_path in job_status_paths:
 		os.makedirs(job_status_path, exist_ok = True)
@@ -63,9 +58,8 @@ def register_run_args(args : List[str]) -> None:
 
 def resolve_job_path(job_id : str) -> str:
 	job_file_name = job_id + '.json'
-	job_statuses = [ 'queued', 'failed', 'completed' ]
 
-	for job_status in job_statuses:
+	for job_status in JOB_STATUSES:
 		if job_file_name in os.listdir(os.path.join(JOBS_PATH, job_status)):
 			return os.path.join(JOBS_PATH, job_status, job_file_name)
 	return os.path.join(JOBS_PATH, 'queued', job_file_name)
@@ -185,6 +179,7 @@ def read_job_file(job_id : str) -> Optional[Job]:
 
 def write_job_file(job_id : str, job : Job) -> bool:
 	job_path = resolve_job_path(job_id)
+
 	with open(job_path, 'w') as job_file:
 		json.dump(job, job_file, indent = 4)
 	return is_file(job_path)
@@ -213,17 +208,6 @@ def delete_job_file(job_id : str) -> bool:
 	return False
 
 
-def get_all_job_ids() -> List[List[str]]:
-	job_ids =\
-	[
-		get_job_ids('queued'),
-		get_job_ids('failed'),
-		get_job_ids('completed')
-	]
-
-	return job_ids
-
-
 def get_job_ids(job_status : JobStatus) -> List[str]:
 	job_ids = []
 	job_file_names = os.listdir(os.path.join(JOBS_PATH, job_status))
@@ -235,8 +219,7 @@ def get_job_ids(job_status : JobStatus) -> List[str]:
 
 
 def get_job_status(job_id : str) -> Optional[JobStatus]:
-	job_statuses : List[JobStatus] = [ 'queued', 'failed', 'completed' ]
-	for job_status in job_statuses:
+	for job_status in JOB_STATUSES:
 		if job_id in get_job_ids(job_status):
 			return job_status
 	return None
