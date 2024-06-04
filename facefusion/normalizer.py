@@ -37,9 +37,3 @@ def normalize_fps(fps : Optional[float]) -> Optional[Fps]:
 	if fps is not None:
 		return max(1.0, min(fps, 60.0))
 	return None
-
-
-def normalize_job_argument(argument : Optional[List[str]]) -> Optional[Tuple[str, int]]:
-	if argument and len(argument) == 2:
-		return argument[0], int(argument[1])
-	return None

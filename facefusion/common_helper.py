@@ -64,7 +64,3 @@ def get_first(__list__ : Any) -> Any:
 
 def has_argument(argument : str) -> bool:
 	return any(argv == argument for argv in sys.argv)
-
-
-def has_job_action() -> bool:
-	return any(argv.startswith('--job') for argv in sys.argv)

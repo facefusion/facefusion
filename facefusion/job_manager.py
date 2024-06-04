@@ -1,4 +1,5 @@
 from typing import Optional, List
+import sys
 import json
 import os
 import shutil
@@ -242,3 +243,7 @@ def filter_step_args(program : ArgumentParser) -> JobArgs:
 		if key in step_args_keys:
 			step_args[key] = value
 	return step_args
+
+
+def has_job_action() -> bool:
+	return any(argv.startswith('--job') for argv in sys.argv)
