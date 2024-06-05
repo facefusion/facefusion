@@ -4,8 +4,8 @@ import os
 import shutil
 
 from facefusion.common_helper import get_current_datetime
-from facefusion.filesystem import is_file, is_directory
-from facefusion.typing import JobStep, Job, Args, JobStatus, JobStepStatus, JobStepAction
+from facefusion.filesystem import is_file, is_directory, move_file
+from facefusion.typing import Args, Job, JobStatus, JobStep,  JobStepStatus, JobStepAction
 
 JOBS_PATH : Optional[str] = None
 JOB_STATUSES : List[JobStatus] = [ 'queued', 'completed', 'failed' ]
@@ -62,9 +62,14 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 
 def add_step(job_id : str, step_args : Args) -> bool:
 	job = read_job_file(job_id)
+	step : JobStep =\
+	{
+		'action': 'process',
+		'args': step_args,
+		'status': 'queued'
+	}
 
 	if job:
-		step = create_step(step_args)
 		job.get('steps').append(step)
 		return update_job_file(job_id, job)
 	return False
@@ -82,9 +87,14 @@ def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	job = read_job_file(job_id)
+	step : JobStep =\
+	{
+		'action': 'process',
+		'args': step_args,
+		'status': 'queued'
+	}
 
 	if job:
-		step = create_step(step_args)
 		job.get('steps').insert(step_index, step)
 		return update_job_file(job_id, job)
 	return False
@@ -99,32 +109,12 @@ def remove_step(job_id : str, step_index : int) -> bool:
 	return False
 
 
-def get_step(job_id : str, step_index : int) -> Optional[JobStep]:
-	steps = get_steps(job_id)
-
-	for index, step in enumerate(steps):
-		if index == step_index:
-			return step
-	return None
-
-
 def get_steps(job_id : str) -> Optional[List[JobStep]]:
 	job = read_job_file(job_id)
 
 	if job:
 		return job.get('steps')
 	return None
-
-
-def create_step(args : Args) -> JobStep:
-	step : JobStep =\
-	{
-		'action': 'process',
-		'args': args,
-		'status': 'queued'
-	}
-
-	return step
 
 
 def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus) -> bool:
@@ -183,8 +173,8 @@ def move_job_file(job_id : str, job_status : JobStatus) -> bool:
 	job_path = resolve_job_path(job_id)
 
 	if is_file(job_path):
-		job_file_path_moved = shutil.move(job_path, os.path.join(JOBS_PATH, job_status))
-		return is_file(job_file_path_moved)
+		job_move_path = os.path.join(JOBS_PATH, job_status)
+		return move_file(job_path, job_move_path)
 	return False
 
 

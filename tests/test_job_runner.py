@@ -17,3 +17,18 @@ def test_run_job() -> None:
 @pytest.mark.skip()
 def test_run_all_job() -> None:
 	pass
+
+
+@pytest.mark.skip()
+def test_run_steps() -> None:
+	pass
+
+
+@pytest.mark.skip()
+def test_merge_steps() -> None:
+	pass
+
+
+@pytest.mark.skip()
+def test_collect_merge_set() -> None:
+	pass

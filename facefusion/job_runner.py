@@ -2,7 +2,7 @@ import os
 
 from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import is_video, is_directory, move_file
-from facefusion.temp_helper import get_temp_file_path, create_temp
+from facefusion.temp_helper import get_temp_file_path
 from facefusion.job_manager import find_job_ids, get_steps, set_step_status, move_job_file
 from facefusion.typing import ProcessStep, JobMergeSet
 

@@ -18,14 +18,14 @@ def validate_args(program : ArgumentParser) -> None:
 		program.error(str(exception))
 
 
-def reduce_args(program : ArgumentParser, action_keys : List[str]) -> ArgumentParser:
+def reduce_args(program : ArgumentParser, keys : List[str]) -> ArgumentParser:
 	program = copy(program)
-	keep_actions : List[Action] = []
+	actions : List[Action] = []
 
 	for action in program._actions:
-		if action.dest in action_keys:
-			keep_actions.append(action)
-	program._actions = keep_actions
+		if action.dest in keys:
+			actions.append(action)
+	program._actions = actions
 	return program
 
 
