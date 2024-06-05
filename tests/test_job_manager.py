@@ -14,8 +14,8 @@ def before_all() -> None:
 	init_jobs(jobs_path)
 
 
-def read_json(path : str) -> Any:
-	with open(path, 'r') as json_file:
+def read_json(json_path : str) -> Any:
+	with open(json_path, 'r') as json_file:
 		return json.load(json_file)
 
 
@@ -36,9 +36,14 @@ def test_add_step() -> None:
 	shutil.copyfile('tests/providers/test_job_add_step.json', '.jobs/queued/test_job_add_step.json')
 
 	assert get_step_total('test_job_add_step') == 0
-	assert add_step('test_job_add_step', {
-		'source_paths': ['a.jpg', 'b.jpg'],
-		'target': 'c.jpg',
+	assert add_step('test_job_add_step',
+	{
+		'source_paths':
+		[
+			'source-a.jpg',
+			'source-b.jpg'
+		],
+		'target': 'target-a.jpg',
 		'output_path': 'output'
 	})
 	assert get_step_total('test_job_add_step') == 1
