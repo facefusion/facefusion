@@ -71,6 +71,7 @@ def extract_voice(temp_audio_chunk : AudioChunk) -> AudioChunk:
 	trim_size = 3840
 	temp_audio_chunk, pad_size = prepare_audio_chunk(temp_audio_chunk.T, chunk_size, trim_size)
 	temp_audio_chunk = decompose_audio_chunk(temp_audio_chunk, trim_size)
+
 	with thread_semaphore():
 		temp_audio_chunk = voice_extractor.run(None,
 		{

@@ -275,7 +275,7 @@ def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFra
 		if frame_processor_input.name == 'target':
 			frame_processor_inputs[frame_processor_input.name] = crop_vision_frame
 
-	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore():
 		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 	return crop_vision_frame
 

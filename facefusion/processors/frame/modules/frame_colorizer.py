@@ -155,6 +155,7 @@ def post_process() -> None:
 def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	prepare_vision_frame = prepare_temp_frame(temp_vision_frame)
+
 	with thread_semaphore():
 		color_vision_frame = frame_processor.run(None,
 		{

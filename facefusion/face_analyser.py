@@ -379,7 +379,7 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
 
-	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore():
 		embedding = face_recognizer.run(None,
 		{
 			face_recognizer.get_inputs()[0].name: crop_vision_frame
@@ -400,7 +400,7 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_Lab2RGB)
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 
-	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore():
 		face_landmark_68, face_heatmap = face_landmarker.run(None,
 		{
 			face_landmarker.get_inputs()[0].name: [ crop_vision_frame ]
@@ -419,7 +419,7 @@ def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandm
 	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'ffhq_512', (1, 1))
 	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
 
-	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore():
 		face_landmark_68_5 = face_landmarker.run(None,
 		{
 			face_landmarker.get_inputs()[0].name: [ face_landmark_5 ]
@@ -437,7 +437,7 @@ def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBo
 	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
 
-	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore():
 		prediction = gender_age.run(None,
 		{
 			gender_age.get_inputs()[0].name: crop_vision_frame
