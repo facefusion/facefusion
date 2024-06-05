@@ -3,19 +3,18 @@ import json
 import os
 import shutil
 from argparse import ArgumentParser
-from datetime import datetime
 
+from facefusion.common_helper import get_current_datetime
 from facefusion.filesystem import is_file, is_directory
-from facefusion.typing import JobStep, Job, JobArgs, JobStepStatus, JobStepAction, JobStatus
+from facefusion.typing import JobStep, Job, JobArgs, JobArgsRegistry, JobStatus, JobStepStatus, JobStepAction
 
 JOBS_PATH : Optional[str] = None
 JOB_STATUSES : List[JobStatus] = [ 'queued', 'completed', 'failed' ]
-ARGS_ACTION_REGISTRY : Optional[List[str]] = None
-ARGS_RUN_REGISTRY : Optional[List[str]] = None
-
-
-def get_current_datetime() -> str:
-	return datetime.now().astimezone().isoformat()
+ARGS_REGISTRY : JobArgsRegistry =\
+{
+	'job': [],
+	'step': []
+}
 
 
 def init_jobs(jobs_path : str) -> bool:
@@ -34,24 +33,14 @@ def clear_jobs(jobs_path : str) -> None:
 		shutil.rmtree(jobs_path)
 
 
-def register_step_args(args : List[str]) -> None:
-	global ARGS_ACTION_REGISTRY
-
-	if ARGS_ACTION_REGISTRY is None:
-		ARGS_ACTION_REGISTRY = []
-
-	for arg in args:
-		ARGS_ACTION_REGISTRY.append(arg)
+def register_job_args(step_args : List[str]) -> None:
+	for step_arg in step_args:
+		ARGS_REGISTRY['step'].append(step_arg)
 
 
-def register_job_args(args : List[str]) -> None:
-	global ARGS_RUN_REGISTRY
-
-	if ARGS_RUN_REGISTRY is None:
-		ARGS_RUN_REGISTRY = []
-
-	for arg in args:
-		ARGS_RUN_REGISTRY.append(arg)
+def register_step_args(job_args : List[str]) -> None:
+	for job_arg in job_args:
+		ARGS_REGISTRY['job'].append(job_arg)
 
 
 def resolve_job_path(job_id : str) -> str:
@@ -135,6 +124,16 @@ def remove_step(job_id : str, step_index : int) -> bool:
 	return False
 
 
+def get_step_status(job_id : str, step_index : int) -> Optional[JobStepStatus]:
+	job = read_job_file(job_id)
+
+	if job:
+		steps : List[JobStep] = job.get('steps')
+		if step_index in range(len(steps)):
+			return steps[step_index].get('status')
+	return None
+
+
 def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus) -> bool:
 	job = read_job_file(job_id)
 
@@ -144,16 +143,6 @@ def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus)
 			job.get('steps')[step_index]['status'] = step_status
 			return update_job_file(job_id, job)
 	return False
-
-
-def get_step_status(job_id : str, step_index : int) -> Optional[JobStepStatus]:
-	job = read_job_file(job_id)
-
-	if job:
-		steps : List[JobStep] = job.get('steps')
-		if step_index in range(len(steps)):
-			return steps[step_index].get('status')
-	return None
 
 
 def set_step_action(job_id : str, step_index : int, action : JobStepAction) -> bool:
@@ -240,9 +229,20 @@ def get_action_name(program : ArgumentParser, argument : str) -> Optional[str]:
 	return None
 
 
+def filter_job_args(program : ArgumentParser) -> JobArgs:
+	args = program.parse_args()
+	step_args_keys = { get_action_name(program, arg) for arg in ARGS_REGISTRY['job'] }
+	step_args = {}
+
+	for key, value in vars(args).items():
+		if key in step_args_keys:
+			step_args[key] = value
+	return step_args
+
+
 def filter_step_args(program : ArgumentParser) -> JobArgs:
 	args = program.parse_args()
-	step_args_keys = { get_action_name(program, arg) for arg in ARGS_ACTION_REGISTRY }
+	step_args_keys = { get_action_name(program, arg) for arg in ARGS_REGISTRY['step'] }
 	step_args = {}
 
 	for key, value in vars(args).items():

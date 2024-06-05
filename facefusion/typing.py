@@ -68,6 +68,7 @@ ProcessMode = Literal['output', 'preview', 'stream']
 
 ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
+
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceAnalyserOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
@@ -122,10 +123,16 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'video_memory' : ExecutionDeviceVideoMemory,
 	'utilization' : ExecutionDeviceUtilization
 })
+
 JobArgs = Dict[str, Any]
+JobArgsRegistry = TypedDict('JobArgsRegistry',
+{
+	'job' : List[str],
+	'step' : List[str]
+})
 JobStepAction = Literal['process', 'remix']
-JobStatus = Literal['queued', 'completed', 'failed']
-JobStepStatus = Literal['queued', 'completed', 'failed']
+JobStatus = JobStepStatus = Literal['queued', 'completed', 'failed']
+
 JobStep = TypedDict('JobStep',
 {
 	'action' : JobStepAction,

@@ -55,7 +55,7 @@ def cli() -> None:
 	group_misc.add_argument('--skip-download', help = wording.get('help.skip_download'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
 	group_misc.add_argument('--headless', help = wording.get('help.headless'), action = 'store_true', default = config.get_bool_value('misc.headless'))
 	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
-	facefusion.job_manager.register_job_args([ '--force-download', '--skip-download', '--log-level' ])
+	facefusion.job_manager.register_job_args([ '--log-level' ])
 	# execution
 	execution_providers = encode_execution_providers(onnxruntime.get_available_providers())
 	group_execution = program.add_argument_group('execution')
