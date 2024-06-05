@@ -77,6 +77,7 @@ def extract_voice(temp_audio_chunk : AudioChunk) -> AudioChunk:
 		{
 			voice_extractor.get_inputs()[0].name: temp_audio_chunk
 		})[0]
+
 	temp_audio_chunk = compose_audio_chunk(temp_audio_chunk, trim_size)
 	temp_audio_chunk = normalize_audio_chunk(temp_audio_chunk, chunk_size, trim_size, pad_size)
 	return temp_audio_chunk
