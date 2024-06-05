@@ -131,7 +131,8 @@ JobArgsRegistry = TypedDict('JobArgsRegistry',
 	'step' : List[str]
 })
 JobStepAction = Literal['process', 'remix']
-JobStatus = JobStepStatus = Literal['queued', 'completed', 'failed']
+JobStatus = Literal['queued', 'completed', 'failed']
+JobStepStatus = Literal['queued', 'completed', 'failed']
 
 JobStep = TypedDict('JobStep',
 {
