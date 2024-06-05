@@ -157,7 +157,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, (96, 96))
 	close_vision_frame = prepare_crop_frame(close_vision_frame)
 
-	with conditional_thread_semaphore(facefusion.globals.execution_providers):
+	with conditional_thread_semaphore():
 		close_vision_frame = frame_processor.run(None,
 		{
 			'source': temp_audio_frame,
