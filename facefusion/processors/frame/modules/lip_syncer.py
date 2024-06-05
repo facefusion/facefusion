@@ -163,6 +163,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 			'source': temp_audio_frame,
 			'target': close_vision_frame
 		})[0]
+
 	crop_vision_frame = normalize_crop_frame(close_vision_frame)
 	crop_vision_frame = cv2.warpAffine(crop_vision_frame, cv2.invertAffineTransform(close_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
 	crop_mask = numpy.minimum.reduce(crop_masks)

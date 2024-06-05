@@ -188,6 +188,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 		{
 			face_detector.get_inputs()[0].name: detect_vision_frame
 		})
+
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
 		if numpy.any(keep_indices):
@@ -230,6 +231,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 		{
 			face_detector.get_inputs()[0].name: detect_vision_frame
 		})
+
 	for index, feature_stride in enumerate(feature_strides):
 		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
 		if numpy.any(keep_indices):
@@ -269,6 +271,7 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 		{
 			face_detector.get_inputs()[0].name: detect_vision_frame
 		})
+
 	detections = numpy.squeeze(detections).T
 	bounding_box_raw, score_raw, face_landmark_5_raw = numpy.split(detections, [ 4, 5 ], axis = 1)
 	keep_indices = numpy.where(score_raw > facefusion.globals.face_detector_score)[0]
@@ -302,8 +305,10 @@ def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> T
 
 	face_detector.setInputSize((temp_vision_frame.shape[1], temp_vision_frame.shape[0]))
 	face_detector.setScoreThreshold(facefusion.globals.face_detector_score)
+
 	with thread_semaphore():
 		_, detections = face_detector.detect(temp_vision_frame)
+
 	if numpy.any(detections):
 		for detection in detections:
 			bounding_boxes.append(numpy.array(
@@ -384,6 +389,7 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 		{
 			face_recognizer.get_inputs()[0].name: crop_vision_frame
 		})[0]
+
 	embedding = embedding.ravel()
 	normed_embedding = embedding / numpy.linalg.norm(embedding)
 	return embedding, normed_embedding
@@ -405,6 +411,7 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 		{
 			face_landmarker.get_inputs()[0].name: [ crop_vision_frame ]
 		})
+
 	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64
 	face_landmark_68 = face_landmark_68.reshape(1, -1, 2) * 256
 	face_landmark_68 = cv2.transform(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
@@ -424,6 +431,7 @@ def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandm
 		{
 			face_landmarker.get_inputs()[0].name: [ face_landmark_5 ]
 		})[0][0]
+
 	face_landmark_68_5 = cv2.transform(face_landmark_68_5.reshape(1, -1, 2), cv2.invertAffineTransform(affine_matrix)).reshape(-1, 2)
 	return face_landmark_68_5
 
@@ -442,6 +450,7 @@ def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBo
 		{
 			gender_age.get_inputs()[0].name: crop_vision_frame
 		})[0][0]
+
 	gender = int(numpy.argmax(prediction[:2]))
 	age = int(numpy.round(prediction[2] * 100))
 	return gender, age

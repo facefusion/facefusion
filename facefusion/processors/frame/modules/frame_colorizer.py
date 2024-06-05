@@ -161,6 +161,7 @@ def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 		{
 			frame_processor.get_inputs()[0].name: prepare_vision_frame
 		})[0][0]
+
 	color_vision_frame = merge_color_frame(temp_vision_frame, color_vision_frame)
 	color_vision_frame = blend_frame(temp_vision_frame, color_vision_frame)
 	return color_vision_frame
