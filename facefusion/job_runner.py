@@ -4,7 +4,7 @@ from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import is_video, is_directory, move_file
 from facefusion.temp_helper import get_temp_file_path, create_temp
 from facefusion.job_manager import read_job_file, set_step_status, move_job_file, get_job_ids
-from facefusion.typing import JobStep, HandleStep
+from facefusion.typing import JobStep, HandleStep, JobMergeSet
 
 
 def run_job(job_id : str, handle_step : HandleStep) -> bool:
@@ -46,27 +46,25 @@ def merge_steps(job_id : str) -> bool:
 
 	for output_path, temp_output_paths in merge_set.items():
 		if all(map(is_video, temp_output_paths)):
-			return concat_video(temp_output_paths, output_path)
+			if not concat_video(temp_output_paths, output_path):
+				return False
 		for temp_output_path in temp_output_paths:
 			if not move_file(temp_output_path, output_path):
 				return False
 	return True
 
 
-def collect_merge_set(job_id : str) -> Dict[str, List[str]]:
+def collect_merge_set(job_id : str) -> JobMergeSet:
 	job = read_job_file(job_id)
 	steps = job.get('steps')
-	merge_set : Dict[str, List[str]] = {}
+	merge_set : JobMergeSet = {}
 
 	for step_index, step in enumerate(steps):
 		output_path = step.get('args').get('output_path')
+
 		if not is_directory(output_path):
 			temp_output_path = get_temp_output_path(output_path, job_id, step_index)
-
-			if output_path not in merge_set.keys():
-				merge_set[output_path] = [ temp_output_path ]
-			else:
-				merge_set[output_path].append(temp_output_path)
+			merge_set.setdefault(output_path, []).append(temp_output_path)
 	return merge_set
 
 

@@ -124,6 +124,7 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'utilization' : ExecutionDeviceUtilization
 })
 
+JobMergeSet = Dict[str, List[str]]
 JobArgs = Dict[str, Any]
 JobArgsRegistry = TypedDict('JobArgsRegistry',
 {
