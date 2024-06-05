@@ -1,7 +1,7 @@
 from typing import List, Dict
 
 from facefusion.typing import VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorModel, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputVideoEncoder, OutputVideoPreset
-from facefusion.common_helper import create_int_range, create_float_range
+from facefusion.common_helper import create_int_range, create_float_range, get_cpu_thread_count
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
 face_analyser_orders : List[FaceAnalyserOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
@@ -25,7 +25,7 @@ output_video_presets : List[OutputVideoPreset] = [ 'ultrafast', 'superfast', 've
 image_template_sizes : List[float] = [ 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 3.5, 4 ]
 video_template_sizes : List[int] = [ 240, 360, 480, 540, 720, 1080, 1440, 2160, 4320 ]
 
-execution_thread_count_range : List[int] = create_int_range(1, 128, 1)
+execution_thread_count_range : List[int] = create_int_range(1, get_cpu_thread_count(), 1)
 execution_queue_count_range : List[int] = create_int_range(1, 32, 1)
 system_memory_limit_range : List[int] = create_int_range(0, 128, 1)
 face_detector_score_range : List[float] = create_float_range(0.0, 1.0, 0.05)
