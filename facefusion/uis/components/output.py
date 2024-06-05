@@ -8,7 +8,8 @@ from facefusion.core import conditional_process
 from facefusion.memory import limit_system_memory
 from facefusion.normalizer import normalize_output_path
 from facefusion.uis.core import get_ui_component
-from facefusion.filesystem import clear_temp, is_image, is_video
+from facefusion.filesystem import is_image, is_video
+from facefusion.temp_helper import clear_temp
 
 OUTPUT_IMAGE : Optional[gradio.Image] = None
 OUTPUT_VIDEO : Optional[gradio.Video] = None

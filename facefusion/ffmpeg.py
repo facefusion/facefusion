@@ -7,7 +7,7 @@ import tempfile
 import facefusion.globals
 from facefusion import logger, process_manager
 from facefusion.typing import OutputVideoPreset, Fps, AudioBuffer
-from facefusion.filesystem import get_temp_frames_pattern, get_temp_file_path
+from facefusion.temp_helper import get_temp_frames_pattern, get_temp_file_path
 from facefusion.vision import restrict_video_fps
 
 

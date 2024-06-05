@@ -3,7 +3,7 @@ from time import sleep
 
 from facefusion.typing import ErrorCode
 from facefusion import process_manager
-from facefusion.filesystem import clear_temp
+from facefusion.temp_helper import clear_temp
 import facefusion.globals
 
 

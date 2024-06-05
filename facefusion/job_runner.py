@@ -1,8 +1,8 @@
 import os
-import shutil
 from typing import Dict, List
 from facefusion.ffmpeg import concat_video
-from facefusion.filesystem import is_video, create_temp, get_temp_file_path, is_directory, is_file
+from facefusion.filesystem import is_video, is_directory, move_file
+from facefusion.temp_helper import get_temp_file_path, create_temp
 from facefusion.job_manager import read_job_file, set_step_status, move_job_file, get_job_ids
 from facefusion.typing import JobStep, HandleStep
 
@@ -75,10 +75,3 @@ def get_temp_output_path(output_path : str, job_id : str, step_index : int) -> s
 	temp_output_path = get_temp_file_path(output_file_name)
 	create_temp(output_file_name)
 	return temp_output_path
-
-
-def move_file(input_path : str, output_path : str) -> bool: # TODO: refactor
-	if is_file(input_path):
-		shutil.move(input_path, output_path)
-		return is_file(output_path)
-	return False

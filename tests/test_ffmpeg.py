@@ -4,7 +4,7 @@ import pytest
 
 import facefusion.globals
 from facefusion import process_manager
-from facefusion.filesystem import get_temp_directory_path, create_temp, clear_temp
+from facefusion.temp_helper import get_temp_directory_path, create_temp, clear_temp
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import extract_frames, concat_video, read_audio_buffer
 
