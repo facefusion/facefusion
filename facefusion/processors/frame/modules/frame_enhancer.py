@@ -198,7 +198,7 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	tile_vision_frames, pad_width, pad_height = create_tile_frames(temp_vision_frame, size)
 
 	for index, tile_vision_frame in enumerate(tile_vision_frames):
-		with conditional_thread_semaphore(facefusion.globals.execution_providers):
+		with conditional_thread_semaphore():
 			tile_vision_frame = frame_processor.run(None,
 			{
 				frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
