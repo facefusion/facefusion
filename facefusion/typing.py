@@ -61,6 +61,7 @@ QueuePayload = TypedDict('QueuePayload',
 UpdateProgress = Callable[[int], None]
 ProcessFrames = Callable[[List[str], List[QueuePayload], UpdateProgress], None]
 ProcessStep = Callable[[Dict[str, Any]], bool]
+Args = Dict[str, Any]
 
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
 WarpTemplateSet = Dict[WarpTemplate, numpy.ndarray[Any, Any]]
@@ -124,13 +125,12 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'utilization' : ExecutionDeviceUtilization
 })
 
-JobMergeSet = Dict[str, List[str]]
-JobArgs = Dict[str, Any]
-JobArgsRegistry = TypedDict('JobArgsRegistry',
+JobArgsStore = TypedDict('JobArgsStore',
 {
 	'job' : List[str],
 	'step' : List[str]
 })
+JobMergeSet = Dict[str, List[str]]
 JobStepAction = Literal['process', 'remix']
 JobStatus = Literal['queued', 'completed', 'failed']
 JobStepStatus = Literal['queued', 'completed', 'failed']
@@ -138,7 +138,7 @@ JobStepStatus = Literal['queued', 'completed', 'failed']
 JobStep = TypedDict('JobStep',
 {
 	'action' : JobStepAction,
-	'args' : JobArgs,
+	'args' : Args,
 	'status' : JobStepStatus
 })
 Job = TypedDict('Job',

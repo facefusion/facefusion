@@ -1,6 +1,7 @@
 import os
 
 import facefusion.job_store
+from facefusion.program_helper import reduce_args, update_args
 
 os.environ['OMP_NUM_THREADS'] = '1'
 
@@ -16,12 +17,11 @@ from argparse import ArgumentParser, HelpFormatter
 import facefusion.choices
 import facefusion.globals
 import facefusion.job_manager
-import facefusion.processors.frame.globals as frame_processor_globals
-from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, wording, voice_extractor
+from facefusion import face_analyser, face_masker, content_analyser, config, job_store, process_manager, metadata, logger, wording, voice_extractor
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.content_analyser import analyse_image, analyse_video
-from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module, clear_frame_processors_modules
+from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.exit_helper import conditional_exit, graceful_exit
 from facefusion.common_helper import create_metavar, get_first, get_argument_value, has_argument
 from facefusion.execution import encode_execution_providers, decode_execution_providers
@@ -35,7 +35,7 @@ from facefusion.ffmpeg import extract_frames, merge_video, copy_image, finalize_
 from facefusion.vision import read_image, read_static_images, detect_image_resolution, restrict_video_fps, create_image_resolutions, get_video_frame, detect_video_resolution, detect_video_fps, restrict_video_resolution, restrict_image_resolution, create_video_resolutions, pack_resolution, unpack_resolution
 from facefusion.job_runner import run_job, run_all_jobs
 from facefusion.job_manager import init_jobs
-from facefusion.typing import ErrorCode, JobArgs
+from facefusion.typing import ErrorCode, Args
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
@@ -43,6 +43,11 @@ warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 
 def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: graceful_exit(0))
+	program = create_program()
+	run(program)
+
+
+def create_program() -> ArgumentParser:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 200), add_help = False)
 	# general
 	program.add_argument('-c', '--config', help = wording.get('help.config'), dest = 'config_path', default = 'facefusion.ini')
@@ -140,25 +145,12 @@ def cli() -> None:
 	group_jobs.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), type = str, nargs = 2)
 	group_jobs.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), type = str, nargs = 2)
 	group_jobs.add_argument('--job-remove-step', help = wording.get('help.job_remove_step'), type = str, nargs = 2)
-	run(program)
+	return program
 
 
 def apply_config(program : ArgumentParser) -> None:
 	known_args = program.parse_known_args()
 	facefusion.globals.config_path = get_first(known_args).config_path
-
-
-def validate_args(program : ArgumentParser) -> None:
-	try:
-		for action in program._actions:
-			if action.default:
-				if isinstance(action.default, list):
-					for default in action.default:
-						program._check_value(action, default)
-				else:
-					program._check_value(action, action.default)
-	except Exception as exception:
-		program.error(str(exception))
 
 
 def apply_args(program : ArgumentParser) -> None:
@@ -236,78 +228,6 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.ui_layouts = args.ui_layouts
 
 
-def apply_step_args(step_args : JobArgs) -> None:
-	# general
-	facefusion.globals.source_paths = step_args.get('source_paths')
-	facefusion.globals.target_path = step_args.get('target_path')
-	facefusion.globals.output_path = step_args.get('output_path')
-	# face analyser
-	facefusion.globals.face_analyser_order = step_args.get('face_analyser_order')
-	facefusion.globals.face_analyser_age = step_args.get('face_analyser_age')
-	facefusion.globals.face_analyser_gender = step_args.get('face_analyser_gender')
-	facefusion.globals.face_detector_model = step_args.get('face_detector_model')
-	facefusion.globals.face_detector_size = step_args.get('face_detector_size')
-	facefusion.globals.face_detector_score = step_args.get('face_detector_score')
-	facefusion.globals.face_landmarker_score = step_args.get('face_landmarker_score')
-	# face selector
-	facefusion.globals.face_selector_mode = step_args.get('face_selector_mode')
-	facefusion.globals.reference_face_position = step_args.get('reference_face_position')
-	facefusion.globals.reference_face_distance = step_args.get('reference_face_distance')
-	facefusion.globals.reference_frame_number = step_args.get('reference_frame_number')
-	# face mask
-	facefusion.globals.face_mask_types = step_args.get('face_mask_types')
-	facefusion.globals.face_mask_blur = step_args.get('face_mask_blur')
-	facefusion.globals.face_mask_padding = normalize_padding(step_args.get('face_mask_padding'))
-	facefusion.globals.face_mask_regions = step_args.get('face_mask_regions')
-	# frame extraction
-	facefusion.globals.trim_frame_start = step_args.get('trim_frame_start')
-	facefusion.globals.trim_frame_end = step_args.get('trim_frame_end')
-	facefusion.globals.temp_frame_format = step_args.get('temp_frame_format')
-	facefusion.globals.keep_temp = step_args.get('keep_temp')
-	# output creation
-	facefusion.globals.output_image_quality = step_args.get('output_image_quality')
-	if is_image(step_args.get('target_path')):
-		output_image_resolution = detect_image_resolution(step_args.get('target_path'))
-		output_image_resolutions = create_image_resolutions(output_image_resolution)
-		if step_args.get('output_image_resolution') in output_image_resolutions:
-			facefusion.globals.output_image_resolution = step_args.get('output_image_resolution')
-		else:
-			facefusion.globals.output_image_resolution = pack_resolution(output_image_resolution)
-	facefusion.globals.output_video_encoder = step_args.get('output_video_encoder')
-	facefusion.globals.output_video_preset = step_args.get('output_video_preset')
-	facefusion.globals.output_video_quality = step_args.get('output_video_quality')
-	if is_video(step_args.get('target_path')):
-		output_video_resolution = detect_video_resolution(step_args.get('target_path'))
-		output_video_resolutions = create_video_resolutions(output_video_resolution)
-		if step_args.get('output_video_resolution') in output_video_resolutions:
-			facefusion.globals.output_video_resolution = step_args.get('output_video_resolution')
-		else:
-			facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
-	if step_args.get('output_video_fps') or is_video(step_args.get('target_path')):
-		facefusion.globals.output_video_fps = normalize_fps(step_args.get('output_video_fps')) or detect_video_fps(step_args.get('target_path'))
-	facefusion.globals.skip_audio = step_args.get('skip_audio')
-	# frame processors
-	facefusion.globals.frame_processors = step_args.get('frame_processors')
-	frame_processor_globals.face_swapper_model = step_args.get('face_swapper_model')
-	frame_processor_globals.face_swapper_pixel_boost = step_args.get('face_swapper_pixel_boost')
-	if step_args.get('face_swapper_model') == 'blendswap_256':
-		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
-	if step_args.get('face_swapper_model') == 'inswapper_128' or step_args.get('face_swapper_model') == 'inswapper_128_fp16':
-		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
-	if step_args.get('face_swapper_model') == 'simswap_256' or step_args.get('face_swapper_model') == 'simswap_512_unofficial':
-		facefusion.globals.face_recognizer_model = 'arcface_simswap'
-	if step_args.get('face_swapper_model') == 'uniface_256':
-		facefusion.globals.face_recognizer_model = 'arcface_uniface'
-	frame_processor_globals.face_enhancer_model = step_args.get('face_enhancer_model')
-	frame_processor_globals.face_enhancer_blend = step_args.get('face_enhancer_blend')
-	frame_processor_globals.frame_colorizer_model = step_args.get('frame_colorizer_model')
-	frame_processor_globals.frame_colorizer_blend = step_args.get('frame_colorizer_blend')
-	frame_processor_globals.frame_colorizer_size = step_args.get('frame_colorizer_size')
-	frame_processor_globals.frame_enhancer_model = step_args.get('frame_enhancer_model')
-	frame_processor_globals.frame_enhancer_blend = step_args.get('frame_enhancer_blend')
-	frame_processor_globals.lip_syncer_model = step_args.get('lip_syncer_model')
-
-
 def run(program : ArgumentParser) -> None:
 	apply_args(program)
 	logger.init(facefusion.globals.log_level)
@@ -350,8 +270,10 @@ def run(program : ArgumentParser) -> None:
 		ui.launch()
 
 
-def process_step(step_args : JobArgs) -> bool:
-	apply_step_args(step_args)
+def process_step(step_args : Args) -> bool:
+	program = create_program()
+	program = update_args(program, step_args)
+	apply_args(program)
 	error_code = conditional_process()
 	conditional_exit(error_code)
 	return error_code == 0
@@ -359,7 +281,8 @@ def process_step(step_args : JobArgs) -> bool:
 
 def route_job_action(program : ArgumentParser) -> ErrorCode:
 	args = program.parse_args()
-	step_args = facefusion.job_store.filter_step_args(program)
+	step_program = reduce_args(program, job_store.get_step_args())
+	step_args = vars(step_program.parse_args())
 
 	if has_argument('--job-create'):
 		if facefusion.job_manager.create_job(args.job_create):

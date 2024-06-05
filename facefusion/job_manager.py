@@ -5,7 +5,7 @@ import shutil
 
 from facefusion.common_helper import get_current_datetime
 from facefusion.filesystem import is_file, is_directory
-from facefusion.typing import JobStep, Job, JobArgs, JobStatus, JobStepStatus, JobStepAction
+from facefusion.typing import JobStep, Job, Args, JobStatus, JobStepStatus, JobStepAction
 
 JOBS_PATH : Optional[str] = None
 JOB_STATUSES : List[JobStatus] = [ 'queued', 'completed', 'failed' ]
@@ -60,7 +60,7 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 	return job_ids
 
 
-def add_step(job_id : str, step_args : JobArgs) -> bool:
+def add_step(job_id : str, step_args : Args) -> bool:
 	job = read_job_file(job_id)
 
 	if job:
@@ -70,7 +70,7 @@ def add_step(job_id : str, step_args : JobArgs) -> bool:
 	return False
 
 
-def remix_step(job_id : str, step_index : int, step_args : JobArgs) -> bool:
+def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	steps = get_steps(job_id)
 	output_path = steps[step_index].get('args').get('output_path')
 
@@ -80,7 +80,7 @@ def remix_step(job_id : str, step_index : int, step_args : JobArgs) -> bool:
 	return False
 
 
-def insert_step(job_id : str, step_index : int, step_args : JobArgs) -> bool:
+def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	job = read_job_file(job_id)
 
 	if job:
@@ -116,7 +116,7 @@ def get_steps(job_id : str) -> Optional[List[JobStep]]:
 	return None
 
 
-def create_step(args : JobArgs) -> JobStep:
+def create_step(args : Args) -> JobStep:
 	step : JobStep =\
 	{
 		'action': 'process',
@@ -144,7 +144,7 @@ def set_step_action(job_id : str, step_index : int, step_action : JobStepAction)
 
 	for index, step in enumerate(steps):
 		if index == step_index:
-			job.get('steps')[index]['status'] = step_action
+			job.get('steps')[index]['action'] = step_action
 			return update_job_file(job_id, job)
 	return False
 
