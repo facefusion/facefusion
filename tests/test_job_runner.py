@@ -23,7 +23,7 @@ def before_all() -> None:
 def test_run_job() -> None:
 	shutil.copyfile('tests/providers/test_run_job.json', '.jobs/queued/test_run_job.json')
 
-	assert run_job('test_run_job', facefusion.core.handle_step)
+	assert run_job('test_run_job', facefusion.core.process_step)
 	assert get_job_status('test_run_job') == 'completed'
 
 
@@ -31,7 +31,7 @@ def test_run_job() -> None:
 def test_run_job_with_merge() -> None:
 	shutil.copyfile('tests/providers/test_run_job_merge.json', '.jobs/queued/test_run_job_merge.json')
 
-	assert run_job('test_run_job_merge_action', facefusion.core.handle_step)
+	assert run_job('test_run_job_merge_action', facefusion.core.process_step)
 	assert get_job_status('test_run_job_merge_action') == 'completed'
 
 
@@ -39,5 +39,5 @@ def test_run_job_with_merge() -> None:
 def test_run_job_with_remix() -> None:
 	shutil.copyfile('tests/providers/test_run_job_remix.json', '.jobs/queued/test_run_job_remix.json')
 
-	assert run_job('test_run_job_remix_action', facefusion.core.handle_step)
+	assert run_job('test_run_job_remix_action', facefusion.core.process_step)
 	assert get_job_status('test_run_job_remix_action') == 'completed'

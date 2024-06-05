@@ -4,14 +4,13 @@ import json
 import pytest
 
 from typing import Any
-from facefusion.job_manager import init_jobs, clear_jobs, create_job, add_step, remove_step, get_step_total, insert_step, move_job_file, delete_job_file, get_job_status
+from facefusion.job_manager import init_jobs, clear_jobs, create_job, add_step, remove_step, insert_step, move_job_file, delete_job_file, get_job_status, get_steps
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	jobs_path = '.jobs'
-	clear_jobs(jobs_path)
-	init_jobs(jobs_path)
+	clear_jobs('.jobs')
+	init_jobs('.jobs')
 
 
 def read_json(json_path : str) -> Any:
@@ -29,13 +28,13 @@ def test_create_job() -> None:
 	assert job_actual.get('date_created')
 	assert job_actual.get('date_updated') is None
 	assert job_actual.get('steps') == job_expect.get('steps')
-	assert get_step_total('test_create_job') == 0
+	assert len(get_steps('test_create_job')) == 0
 
 
 def test_add_step() -> None:
 	shutil.copyfile('tests/providers/test_job_add_step.json', '.jobs/queued/test_job_add_step.json')
 
-	assert get_step_total('test_job_add_step') == 0
+	assert len(get_steps('test_job_add_step')) == 0
 	assert add_step('test_job_add_step',
 	{
 		'source_paths':
@@ -46,13 +45,13 @@ def test_add_step() -> None:
 		'target': 'target-a.jpg',
 		'output_path': 'output'
 	})
-	assert get_step_total('test_job_add_step') == 1
+	assert len(get_steps('test_job_add_step')) == 1
 
 
 def test_insert_step() -> None:
 	shutil.copyfile('tests/providers/test_job_insert_step.json', '.jobs/queued/test_job_insert_step.json')
 
-	assert get_step_total('test_job_insert_step') == 1
+	assert len(get_steps('test_job_insert_step')) == 1
 
 	step =\
 	{
@@ -61,7 +60,7 @@ def test_insert_step() -> None:
 		'output_path': 'output'
 	}
 	assert insert_step('test_job_insert_step', 0, step)
-	assert get_step_total('test_job_insert_step') == 2
+	assert len(get_steps('test_job_insert_step')) == 2
 
 	job = read_json('.jobs/queued/test_job_insert_step.json')
 
@@ -74,7 +73,7 @@ def test_insert_step() -> None:
 		'output_path': 'output'
 	}
 	assert insert_step('test_job_insert_step', -1, step)
-	assert get_step_total('test_job_insert_step') == 3
+	assert len(get_steps('test_job_insert_step')) == 3
 
 	job = read_json('.jobs/queued/test_job_insert_step.json')
 
@@ -84,9 +83,9 @@ def test_insert_step() -> None:
 def test_remove_step() -> None:
 	shutil.copyfile('tests/providers/test_job_remove_step.json', '.jobs/queued/test_job_remove_step.json')
 
-	assert get_step_total('test_job_remove_step') == 3
+	assert len(get_steps('test_job_remove_step')) == 3
 	assert remove_step('test_job_remove_step', 0)
-	assert get_step_total('test_job_remove_step') == 2
+	assert len(get_steps('test_job_remove_step')) == 2
 
 	job = read_json('.jobs/queued/test_job_remove_step.json')
 
@@ -98,7 +97,7 @@ def test_remove_step() -> None:
 	})
 
 	assert remove_step('test_job_remove_step', -1)
-	assert get_step_total('test_job_remove_step') == 1
+	assert len(get_steps('test_job_remove_step')) == 1
 
 	job = read_json('.jobs/queued/test_job_remove_step.json')
 

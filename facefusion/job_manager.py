@@ -2,19 +2,13 @@ from typing import Optional, List
 import json
 import os
 import shutil
-from argparse import ArgumentParser
 
 from facefusion.common_helper import get_current_datetime
 from facefusion.filesystem import is_file, is_directory
-from facefusion.typing import JobStep, Job, JobArgs, JobArgsRegistry, JobStatus, JobStepStatus, JobStepAction
+from facefusion.typing import JobStep, Job, JobArgs, JobStatus, JobStepStatus, JobStepAction
 
 JOBS_PATH : Optional[str] = None
 JOB_STATUSES : List[JobStatus] = [ 'queued', 'completed', 'failed' ]
-ARGS_REGISTRY : JobArgsRegistry =\
-{
-	'job': [],
-	'step': []
-}
 
 
 def init_jobs(jobs_path : str) -> bool:
@@ -33,35 +27,6 @@ def clear_jobs(jobs_path : str) -> None:
 		shutil.rmtree(jobs_path)
 
 
-def register_job_args(step_args : List[str]) -> None:
-	for step_arg in step_args:
-		ARGS_REGISTRY['step'].append(step_arg)
-
-
-def register_step_args(job_args : List[str]) -> None:
-	for job_arg in job_args:
-		ARGS_REGISTRY['job'].append(job_arg)
-
-
-def resolve_job_path(job_id : str) -> str:
-	job_file_name = job_id + '.json'
-
-	for job_status in JOB_STATUSES:
-		if job_file_name in os.listdir(os.path.join(JOBS_PATH, job_status)):
-			return os.path.join(JOBS_PATH, job_status, job_file_name)
-	return os.path.join(JOBS_PATH, 'queued', job_file_name)
-
-
-def create_step(args : JobArgs) -> JobStep:
-	step : JobStep =\
-	{
-		'action': 'process',
-		'args': args,
-		'status': 'queued'
-	}
-	return step
-
-
 def create_job(job_id : str) -> bool:
 	job : Job =\
 	{
@@ -70,43 +35,56 @@ def create_job(job_id : str) -> bool:
 		'date_updated': None,
 		'steps': []
 	}
-	job_path = resolve_job_path(job_id)
 
-	if not is_file(job_path):
-		return write_job_file(job_id, job)
-	return False
+	return create_job_file(job_id, job)
 
 
-def add_step(job_id : str, args : JobArgs) -> bool:
+def delete_job(job_id : str) -> bool:
+	return delete_job_file(job_id)
+
+
+def get_job_status(job_id : str) -> Optional[JobStatus]:
+	for job_status in JOB_STATUSES:
+		if job_id in find_job_ids(job_status):
+			return job_status
+	return None
+
+
+def find_job_ids(job_status : JobStatus) -> List[str]:
+	job_ids = []
+	job_file_names = os.listdir(os.path.join(JOBS_PATH, job_status))
+
+	for job_file_name in job_file_names:
+		if is_file(os.path.join(JOBS_PATH, job_status, job_file_name)):
+			job_ids.append(os.path.splitext(job_file_name)[0])
+	return job_ids
+
+
+def add_step(job_id : str, step_args : JobArgs) -> bool:
 	job = read_job_file(job_id)
 
 	if job:
-		step = create_step(args)
+		step = create_step(step_args)
 		job.get('steps').append(step)
 		return update_job_file(job_id, job)
 	return False
 
 
-def remix_step(job_id : str, args : JobArgs) -> bool:
-	job = read_job_file(job_id)
+def remix_step(job_id : str, step_index : int, step_args : JobArgs) -> bool:
+	steps = get_steps(job_id)
+	output_path = steps[step_index].get('args').get('output_path')
 
-	if job:
-		steps = job.get('steps')
-		if steps:
-			previous_output_path = steps[-1].get('args').get('output_path')
-			if not is_directory(previous_output_path):
-				args['target_path'] = previous_output_path
-				return add_step(job_id, args) and set_step_action(job_id, len(steps), 'remix')
+	if not is_directory(output_path):
+		step_args['target_path'] = output_path
+		return add_step(job_id, step_args) and set_step_action(job_id, step_index + 1, 'remix')
 	return False
 
 
-def insert_step(job_id : str, step_index : int, args : JobArgs) -> bool:
+def insert_step(job_id : str, step_index : int, step_args : JobArgs) -> bool:
 	job = read_job_file(job_id)
 
 	if job:
-		step = create_step(args)
-		if step_index < 0:
-			step_index = len(job.get('steps')) + step_index + 1
+		step = create_step(step_args)
 		job.get('steps').insert(step_index, step)
 		return update_job_file(job_id, job)
 	return False
@@ -116,42 +94,57 @@ def remove_step(job_id : str, step_index : int) -> bool:
 	job = read_job_file(job_id)
 
 	if job:
-		steps = job.get('steps')
-		step_length = len(steps)
-		if step_index in range(-step_length, step_length):
-			job.get('steps').pop(step_index)
-			return update_job_file(job_id, job)
+		job.get('steps').pop(step_index)
+		return update_job_file(job_id, job)
 	return False
 
 
-def get_step_status(job_id : str, step_index : int) -> Optional[JobStepStatus]:
+def get_step(job_id : str, step_index : int) -> Optional[JobStep]:
+	steps = get_steps(job_id)
+
+	for index, step in enumerate(steps):
+		if index == step_index:
+			return step
+	return None
+
+
+def get_steps(job_id : str) -> Optional[List[JobStep]]:
 	job = read_job_file(job_id)
 
 	if job:
-		steps : List[JobStep] = job.get('steps')
-		if step_index in range(len(steps)):
-			return steps[step_index].get('status')
+		return job.get('steps')
 	return None
+
+
+def create_step(args : JobArgs) -> JobStep:
+	step : JobStep =\
+	{
+		'action': 'process',
+		'args': args,
+		'status': 'queued'
+	}
+
+	return step
 
 
 def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus) -> bool:
 	job = read_job_file(job_id)
+	steps = job.get('steps')
 
-	if job:
-		steps = job.get('steps')
-		if step_index in range(len(steps)):
-			job.get('steps')[step_index]['status'] = step_status
+	for index, step in enumerate(steps):
+		if index == step_index:
+			job.get('steps')[index]['status'] = step_status
 			return update_job_file(job_id, job)
 	return False
 
 
-def set_step_action(job_id : str, step_index : int, action : JobStepAction) -> bool:
+def set_step_action(job_id : str, step_index : int, step_action : JobStepAction) -> bool:
 	job = read_job_file(job_id)
+	steps = job.get('steps')
 
-	if job:
-		steps = job.get('steps')
-		if step_index in range(len(steps)):
-			job.get('steps')[step_index]['action'] = action
+	for index, step in enumerate(steps):
+		if index == step_index:
+			job.get('steps')[index]['status'] = step_action
 			return update_job_file(job_id, job)
 	return False
 
@@ -165,17 +158,25 @@ def read_job_file(job_id : str) -> Optional[Job]:
 	return None
 
 
-def write_job_file(job_id : str, job : Job) -> bool:
-	job_path = resolve_job_path(job_id)
+def create_job_file(job_id : str, job : Job) -> bool:
+	job_path = suggest_job_path(job_id)
 
-	with open(job_path, 'w') as job_file:
-		json.dump(job, job_file, indent = 4)
-	return is_file(job_path)
+	if is_file(job_path):
+		with open(job_path, 'w') as job_file:
+			json.dump(job, job_file, indent = 4)
+		return is_file(job_path)
+	return False
 
 
 def update_job_file(job_id : str, job : Job) -> bool:
-	job['date_updated'] = get_current_datetime()
-	return write_job_file(job_id, job)
+	job_path = resolve_job_path(job_id)
+
+	if is_file(job_path):
+		with open(job_path, 'w') as job_file:
+			job['date_updated'] = get_current_datetime()
+			json.dump(job, job_file, indent = 4)
+		return is_file(job_path)
+	return False
 
 
 def move_job_file(job_id : str, job_status : JobStatus) -> bool:
@@ -192,60 +193,23 @@ def delete_job_file(job_id : str) -> bool:
 
 	if is_file(job_path):
 		os.remove(job_path)
-		return True
+		return not is_file(job_path)
 	return False
 
 
-def get_job_ids(job_status : JobStatus) -> List[str]:
-	job_ids = []
-	job_file_names = os.listdir(os.path.join(JOBS_PATH, job_status))
+def suggest_job_path(job_id : str) -> Optional[str]:
+	job_file_name = job_id + '.json'
+	job_path = os.path.join(JOBS_PATH, 'queued', job_file_name)
 
-	for job_file_name in job_file_names:
-		if is_file(os.path.join(JOBS_PATH, job_status, job_file_name)):
-			job_ids.append(os.path.splitext(job_file_name)[0])
-	return job_ids
+	if not is_file(job_path):
+		return job_path
+	return None
 
 
-def get_job_status(job_id : str) -> Optional[JobStatus]:
+def resolve_job_path(job_id : str) -> Optional[str]:
+	job_file_name = job_id + '.json'
+
 	for job_status in JOB_STATUSES:
-		if job_id in get_job_ids(job_status):
-			return job_status
+		if job_file_name in os.listdir(os.path.join(JOBS_PATH, job_status)):
+			return os.path.join(JOBS_PATH, job_status, job_file_name)
 	return None
-
-
-def get_step_total(job_id : str) -> int:
-	job = read_job_file(job_id)
-
-	if job:
-		steps = job.get('steps')
-		return len(steps)
-	return 0
-
-
-def get_action_name(program : ArgumentParser, argument : str) -> Optional[str]:
-	for action in program._actions:
-		if argument in action.option_strings:
-			return action.dest
-	return None
-
-
-def filter_job_args(program : ArgumentParser) -> JobArgs:
-	args = program.parse_args()
-	step_args_keys = { get_action_name(program, arg) for arg in ARGS_REGISTRY['job'] }
-	step_args = {}
-
-	for key, value in vars(args).items():
-		if key in step_args_keys:
-			step_args[key] = value
-	return step_args
-
-
-def filter_step_args(program : ArgumentParser) -> JobArgs:
-	args = program.parse_args()
-	step_args_keys = { get_action_name(program, arg) for arg in ARGS_REGISTRY['step'] }
-	step_args = {}
-
-	for key, value in vars(args).items():
-		if key in step_args_keys:
-			step_args[key] = value
-	return step_args
