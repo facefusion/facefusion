@@ -204,6 +204,7 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 				frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
 			})[0]
 		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame)
+
 	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width * scale, temp_height * scale, pad_width * scale, pad_height * scale, (size[0] * scale, size[1] * scale, size[2] * scale))
 	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
 	return temp_vision_frame
