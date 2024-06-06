@@ -1,4 +1,5 @@
 from typing import Optional, List
+import glob
 import json
 import os
 import shutil
@@ -43,21 +44,14 @@ def delete_job(job_id : str) -> bool:
 	return delete_job_file(job_id)
 
 
-def get_job_status(job_id : str) -> Optional[JobStatus]:
-	for job_status in JOB_STATUSES:
-		if job_id in find_job_ids(job_status):
-			return job_status
-	return None
-
-
 def find_job_ids(job_status : JobStatus) -> List[str]:
+	job_pattern = os.path.join(JOBS_PATH, job_status, '*.json')
 	job_ids = []
-	job_file_names = os.listdir(os.path.join(JOBS_PATH, job_status))
 
-	for job_file_name in job_file_names:
-		if is_file(os.path.join(JOBS_PATH, job_status, job_file_name)):
-			job_ids.append(os.path.splitext(job_file_name)[0])
-	return job_ids
+	for job_file in glob.glob(job_pattern):
+		job_id, _ = os.path.splitext(os.path.basename(job_file))
+		job_ids.append(job_id)
+	return sorted(job_ids)
 
 
 def add_step(job_id : str, step_args : Args) -> bool:
@@ -151,7 +145,7 @@ def read_job_file(job_id : str) -> Optional[Job]:
 def create_job_file(job_id : str, job : Job) -> bool:
 	job_path = suggest_job_path(job_id)
 
-	if is_file(job_path):
+	if not is_file(job_path):
 		with open(job_path, 'w') as job_file:
 			json.dump(job, job_file, indent = 4)
 		return is_file(job_path)
@@ -189,17 +183,16 @@ def delete_job_file(job_id : str) -> bool:
 
 def suggest_job_path(job_id : str) -> Optional[str]:
 	job_file_name = job_id + '.json'
-	job_path = os.path.join(JOBS_PATH, 'queued', job_file_name)
-
-	if not is_file(job_path):
-		return job_path
-	return None
+	return os.path.join(JOBS_PATH, 'queued', job_file_name)
 
 
 def resolve_job_path(job_id : str) -> Optional[str]:
 	job_file_name = job_id + '.json'
 
 	for job_status in JOB_STATUSES:
-		if job_file_name in os.listdir(os.path.join(JOBS_PATH, job_status)):
-			return os.path.join(JOBS_PATH, job_status, job_file_name)
+		job_pattern = os.path.join(JOBS_PATH, job_status, job_file_name)
+		job_files = glob.glob(job_pattern)
+
+		for job_file in job_files:
+			return job_file
 	return None
