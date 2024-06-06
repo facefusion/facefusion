@@ -1,6 +1,6 @@
 import pytest
 
-from facefusion.job_manager import init_jobs, clear_jobs, create_job, delete_job, find_job_ids, move_job_file
+from facefusion.job_manager import init_jobs, clear_jobs, create_job, delete_job, find_job_ids, move_job_file, add_step, get_steps
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -51,9 +51,33 @@ def test_find_job_ids() -> None:
 	assert find_job_ids('failed') == [ 'job-test-find-job-ids-2' ]
 
 
-@pytest.mark.skip()
 def test_add_step() -> None:
-	pass
+	step_args_1 =\
+	{
+		'source': '.assets/examples/source-1.jpg'
+	}
+	step_args_2 =\
+	{
+		'source': '.assets/examples/source-2.jpg'
+	}
+	step_args_3 = \
+	{
+		'source': '.assets/examples/source-3.jpg'
+	}
+
+	assert add_step('job-test-add-step', step_args_1) is False
+
+	create_job('job-test-add-step')
+
+	assert add_step('job-test-add-step', step_args_1) is True
+	assert add_step('job-test-add-step', step_args_2) is True
+	assert add_step('job-test-add-step', step_args_2) is True
+	assert add_step('job-test-add-step', step_args_3) is True
+
+	steps = get_steps('job-test-add-step')
+
+	for index, step_args in enumerate([ step_args_1, step_args_2, step_args_2, step_args_3 ]):
+		assert steps[index].get('args') == step_args
 
 
 @pytest.mark.skip()
