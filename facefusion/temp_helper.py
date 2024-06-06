@@ -9,16 +9,6 @@ import facefusion.globals
 from facefusion.filesystem import is_file, is_directory
 
 
-def get_temp_frame_paths(target_path : str) -> List[str]:
-	temp_frames_pattern = get_temp_frames_pattern(target_path, '*')
-	return sorted(glob.glob(temp_frames_pattern))
-
-
-def get_temp_frames_pattern(target_path : str, temp_frame_prefix : str) -> str:
-	temp_directory_path = get_temp_directory_path(target_path)
-	return os.path.join(temp_directory_path, temp_frame_prefix + '.' + facefusion.globals.temp_frame_format)
-
-
 def get_temp_file_path(target_path : str) -> str:
 	_, target_extension = os.path.splitext(os.path.basename(target_path))
 	temp_directory_path = get_temp_directory_path(target_path)
@@ -29,6 +19,16 @@ def get_temp_directory_path(target_path : str) -> str:
 	target_name, _ = os.path.splitext(os.path.basename(target_path))
 	temp_directory_path = os.path.join(tempfile.gettempdir(), 'facefusion')
 	return os.path.join(temp_directory_path, target_name)
+
+
+def get_temp_frame_paths(target_path : str) -> List[str]:
+	temp_frames_pattern = get_temp_frames_pattern(target_path, '*')
+	return sorted(glob.glob(temp_frames_pattern))
+
+
+def get_temp_frames_pattern(target_path : str, temp_frame_prefix : str) -> str:
+	temp_directory_path = get_temp_directory_path(target_path)
+	return os.path.join(temp_directory_path, temp_frame_prefix + '.' + facefusion.globals.temp_frame_format)
 
 
 def create_temp(target_path : str) -> None:
