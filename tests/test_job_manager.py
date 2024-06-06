@@ -84,7 +84,7 @@ def test_remix_step() -> None:
 	{
 		'source_path': '.assets/examples/source-1.jpg',
 		'target_path': '.assets/examples/target-1.jpg',
-		'output_path': '.assets/examples/output-1.jpg'
+		'output_path': os.path.join('.assets', 'examples', 'output-1.jpg')
 	}
 	args_2 =\
 	{

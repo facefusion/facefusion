@@ -1,13 +1,12 @@
-from facefusion.common_helper import is_linux, is_macos
+import os
+
 from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
 
 
 def test_normalize_output_path() -> None:
-	if is_linux() or is_macos():
-		assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/target-240p.mp4') == '.assets/examples/target-240p.mp4'
-		assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples').startswith('.assets/examples/target-240p')
-		assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples').endswith('.mp4')
-		assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/output.mp4') == '.assets/examples/output.mp4'
+	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/target-240p.mp4') == os.path.join('.assets', 'examples', 'target-240p.mp4')
+	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples') == os.path.join('.assets', 'examples', 'target-240p-caf648bd.mp4')
+	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/output.mp4') == os.path.join('.assets', 'examples', 'output.mp4')
 	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/invalid') is None
 	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/invalid/output.mp4') is None
 	assert normalize_output_path('.assets/examples/target-240p.mp4', 'invalid') is None
