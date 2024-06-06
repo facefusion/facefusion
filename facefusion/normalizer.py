@@ -2,7 +2,6 @@ from typing import List, Optional
 import hashlib
 import os
 
-import facefusion.globals
 from facefusion.filesystem import is_directory
 from facefusion.typing import Padding, Fps
 
@@ -11,7 +10,7 @@ def normalize_output_path(target_path : Optional[str], output_path : Optional[st
 	if target_path and output_path:
 		target_name, target_extension = os.path.splitext(os.path.basename(target_path))
 		if is_directory(output_path):
-			output_hash = hashlib.sha1(str(facefusion.globals.__dict__).encode('utf-8')).hexdigest()[:8]
+			output_hash = hashlib.sha1(output_path.encode('utf-8')).hexdigest()[:8]
 			output_name = target_name + '-' + output_hash
 			return os.path.join(output_path, output_name + target_extension)
 		output_name, output_extension = os.path.splitext(os.path.basename(output_path))

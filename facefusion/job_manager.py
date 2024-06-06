@@ -1,4 +1,5 @@
 from typing import Optional, List
+from copy import copy
 import glob
 import json
 import os
@@ -6,6 +7,7 @@ import shutil
 
 from facefusion.common_helper import get_current_datetime
 from facefusion.filesystem import is_file, is_directory, move_file
+from facefusion.normalizer import normalize_output_path
 from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : Optional[str] = None
@@ -70,11 +72,14 @@ def add_step(job_id : str, step_args : Args) -> bool:
 
 def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	steps = get_steps(job_id)
-	output_path = steps[step_index].get('args').get('output_path')
+	step_args = copy(step_args)
 
-	if not is_directory(output_path):
-		step_args['target_path'] = output_path
-		return add_step(job_id, step_args)
+	for index, step in enumerate(steps):
+		if index == step_index:
+			target_path = steps[step_index].get('args').get('target_path')
+			output_path = steps[step_index].get('args').get('output_path')
+			step_args['target_path'] = normalize_output_path(target_path, output_path)
+			return add_step(job_id, step_args)
 	return False
 
 
@@ -101,12 +106,12 @@ def remove_step(job_id : str, step_index : int) -> bool:
 	return False
 
 
-def get_steps(job_id : str) -> Optional[List[JobStep]]:
+def get_steps(job_id : str) -> List[JobStep]:
 	job = read_job_file(job_id)
 
 	if job:
 		return job.get('steps')
-	return None
+	return []
 
 
 def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus) -> bool:
