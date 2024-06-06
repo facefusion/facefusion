@@ -103,8 +103,3 @@ def test_get_steps() -> None:
 @pytest.mark.skip()
 def test_set_step_status() -> None:
 	pass
-
-
-@pytest.mark.skip()
-def test_set_step_action() -> None:
-	pass

@@ -6,7 +6,7 @@ import shutil
 
 from facefusion.common_helper import get_current_datetime
 from facefusion.filesystem import is_file, is_directory, move_file
-from facefusion.typing import Args, Job, JobStatus, JobStep,  JobStepStatus, JobStepAction
+from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : Optional[str] = None
 JOB_STATUSES : List[JobStatus] = [ 'queued', 'completed', 'failed' ]
@@ -58,7 +58,6 @@ def add_step(job_id : str, step_args : Args) -> bool:
 	job = read_job_file(job_id)
 	step : JobStep =\
 	{
-		'action': 'process',
 		'args': step_args,
 		'status': 'queued'
 	}
@@ -75,7 +74,7 @@ def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 	if not is_directory(output_path):
 		step_args['target_path'] = output_path
-		return add_step(job_id, step_args) and set_step_action(job_id, step_index + 1, 'remix')
+		return add_step(job_id, step_args)
 	return False
 
 
@@ -83,7 +82,6 @@ def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	job = read_job_file(job_id)
 	step : JobStep =\
 	{
-		'action': 'process',
 		'args': step_args,
 		'status': 'queued'
 	}
@@ -118,17 +116,6 @@ def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus)
 	for index, step in enumerate(steps):
 		if index == step_index:
 			job.get('steps')[index]['status'] = step_status
-			return update_job_file(job_id, job)
-	return False
-
-
-def set_step_action(job_id : str, step_index : int, step_action : JobStepAction) -> bool:
-	job = read_job_file(job_id)
-	steps = job.get('steps')
-
-	for index, step in enumerate(steps):
-		if index == step_index:
-			job.get('steps')[index]['action'] = step_action
 			return update_job_file(job_id, job)
 	return False
 
