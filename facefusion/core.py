@@ -149,8 +149,8 @@ def create_program() -> ArgumentParser:
 
 
 def apply_config(program : ArgumentParser) -> None:
-	known_args = program.parse_known_args()
-	facefusion.globals.config_path = get_first(known_args).config_path
+	known_args, _ = program.parse_known_args()
+	facefusion.globals.config_path = known_args.config_path
 
 
 def apply_args(program : ArgumentParser) -> None:

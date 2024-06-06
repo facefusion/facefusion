@@ -23,7 +23,7 @@ def reduce_args(program : ArgumentParser, keys : List[str]) -> ArgumentParser:
 	actions : List[Action] = []
 
 	for action in program._actions:
-		if action.dest in keys:
+		if any(option_string in keys for option_string in action.option_strings):
 			actions.append(action)
 	program._actions = actions
 	return program
@@ -34,5 +34,5 @@ def update_args(program : ArgumentParser, args : Args) -> ArgumentParser:
 
 	for action in program._actions:
 		if action.dest in args:
-			setattr(program, action.dest, args[action.dest])
+			action.default = args[action.dest]
 	return program
