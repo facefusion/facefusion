@@ -1,3 +1,4 @@
+import os
 import pytest
 
 from facefusion.job_manager import init_jobs, clear_jobs, create_job, delete_job, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status
@@ -109,7 +110,7 @@ def test_remix_step() -> None:
 	assert steps[2].get('args').get('target_path') == args_1.get('output_path')
 	assert steps[2].get('args').get('output_path') == args_1.get('output_path')
 	assert steps[3].get('args').get('source_path') == args_2.get('source_path')
-	assert steps[3].get('args').get('target_path') == '.assets/examples/target-2-caf648bd.jpg'
+	assert steps[3].get('args').get('target_path') == os.path.join('.assets', 'examples', 'target-2-caf648bd.jpg')
 	assert steps[3].get('args').get('output_path') == args_2.get('output_path')
 
 
