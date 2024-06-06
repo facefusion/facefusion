@@ -116,12 +116,14 @@ def get_steps(job_id : str) -> List[JobStep]:
 
 def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus) -> bool:
 	job = read_job_file(job_id)
-	steps = job.get('steps')
 
-	for index, step in enumerate(steps):
-		if index == step_index:
-			job.get('steps')[index]['status'] = step_status
-			return update_job_file(job_id, job)
+	if job:
+		steps = job.get('steps')
+
+		for index, step in enumerate(steps):
+			if index == step_index:
+				job.get('steps')[index]['status'] = step_status
+				return update_job_file(job_id, job)
 	return False
 
 
