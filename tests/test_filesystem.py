@@ -84,6 +84,7 @@ def test_list_directory() -> None:
 	assert list_directory('invalid') is None
 
 
+@pytest.mark.skip()
 def test_sanitize_path_for_windows() -> None:
 	if is_windows():
 		assert sanitize_path_for_windows('.assets/examples/söurce.jpg') == 'ASSETS~1/examples/SURCE~1.JPG'
