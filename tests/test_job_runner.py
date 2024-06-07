@@ -1,12 +1,13 @@
 import pytest
 
 from facefusion.job_manager import init_jobs, clear_jobs
+from .helper import get_test_jobs_directory
 
 
-@pytest.fixture(scope = 'module', autouse = True)
-def before_all() -> None:
-	clear_jobs('.jobs')
-	init_jobs('.jobs')
+@pytest.fixture(scope = 'function', autouse = True)
+def before_each() -> None:
+	clear_jobs(get_test_jobs_directory())
+	init_jobs(get_test_jobs_directory())
 
 
 @pytest.mark.skip()

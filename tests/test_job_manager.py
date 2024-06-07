@@ -2,12 +2,13 @@ import os
 import pytest
 
 from facefusion.job_manager import init_jobs, clear_jobs, create_job, delete_job, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status
+from .helper import get_test_jobs_directory
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	clear_jobs('.jobs')
-	init_jobs('.jobs')
+	clear_jobs(get_test_jobs_directory())
+	init_jobs(get_test_jobs_directory())
 
 
 def test_create_job() -> None:
