@@ -1,9 +1,8 @@
 import os
 
 from facefusion.ffmpeg import concat_video
-from facefusion.filesystem import is_video, move_file
+from facefusion.filesystem import is_video, move_file, is_directory
 from facefusion.job_manager import find_job_ids, get_steps, set_step_status, move_job_file
-from facefusion.temp_helper import get_temp_file_path
 from facefusion.typing import ProcessStep, JobMergeSet
 
 
@@ -28,10 +27,10 @@ def run_steps(job_id : str, process_step : ProcessStep) -> bool:
 	for index, step in enumerate(steps):
 		step_args = step.get('args')
 		output_path = step_args.get('output_path')
-		temp_output_path = get_temp_output_path(job_id, index, output_path)
+		step_output_path = get_step_output_path(job_id, index, output_path)
 
-		if temp_output_path:
-			step_args['output_path'] = temp_output_path
+		if step_output_path:
+			step_args['output_path'] = step_output_path
 		if process_step(step_args):
 			return set_step_status(job_id, index, 'completed')
 		return set_step_status(job_id, index, 'failed')
@@ -57,13 +56,19 @@ def collect_merge_set(job_id : str) -> JobMergeSet:
 
 	for index, step in enumerate(steps):
 		output_path = step.get('args').get('output_path')
-		temp_output_path = get_temp_output_path(job_id, index, output_path)
+		step_output_path = get_step_output_path(job_id, index, output_path)
 
-		if temp_output_path:
-			merge_set.setdefault(output_path, []).append(temp_output_path)
+		if step_output_path:
+			merge_set.setdefault(output_path, []).append(step_output_path)
 	return merge_set
 
 
-def get_temp_output_path(job_id : str, step_index : int, output_path : str) -> str:
-	output_path = os.path.join(job_id, str(step_index), output_path)
-	return get_temp_file_path(output_path)
+def get_step_output_path(job_id : str, step_index : int, output_path : str) -> str:
+	if is_directory(output_path):
+		output_directory_path, _ = os.path.split(output_path)
+		output_directory_name = os.path.basename(output_directory_path)
+		return os.path.join(output_directory_path, output_directory_name + '-' + job_id + '-' + str(step_index))
+
+	output_directory_path, file_name_with_extension = os.path.split(output_path)
+	output_file_name, output_file_extension = os.path.splitext(file_name_with_extension)
+	return os.path.join(output_directory_path, output_file_name + '-' + job_id + '-' + str(step_index) + output_file_extension)
