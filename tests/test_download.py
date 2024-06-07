@@ -1,11 +1,12 @@
 import pytest
 
 from facefusion.download import conditional_download, get_download_size, is_download_done
+from .helper import get_test_examples_directory, get_test_example_file
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	conditional_download('.assets/examples',
+	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
 	])
@@ -18,6 +19,6 @@ def test_get_download_size() -> None:
 
 
 def test_is_download_done() -> None:
-	assert is_download_done('https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4', '.assets/examples/target-240p.mp4') is True
+	assert is_download_done('https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4', get_test_example_file('target-240p.mp4')) is True
 	assert is_download_done('https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4', 'invalid') is False
 	assert is_download_done('invalid', 'invalid') is False
