@@ -18,7 +18,7 @@ def get_test_outputs_directory() -> str:
 
 
 def prepare_test_output_directory() -> None:
-	shutil.rmtree(get_test_outputs_directory())
+	shutil.rmtree(get_test_outputs_directory(), ignore_errors = True)
 	os.mkdir(get_test_outputs_directory())
 
 
