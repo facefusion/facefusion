@@ -1,13 +1,15 @@
 import os
 import pytest
 
+from facefusion.filesystem import is_directory
 from facefusion.job_manager import init_jobs, clear_jobs, create_job, delete_job, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status
 from .helper import get_test_jobs_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	os.mkdir('.assets/examples')
+	if not is_directory('.assets/examples'):
+		os.mkdir('.assets/examples')
 
 
 @pytest.fixture(scope = 'function', autouse = True)

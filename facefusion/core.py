@@ -33,7 +33,7 @@ from facefusion.filesystem import is_image, is_video, filter_audio_paths, resolv
 from facefusion.temp_helper import get_temp_frame_paths, get_temp_file_path, create_temp, move_temp, clear_temp
 from facefusion.ffmpeg import extract_frames, merge_video, copy_image, finalize_image, restore_audio, replace_audio
 from facefusion.vision import read_image, read_static_images, detect_image_resolution, restrict_video_fps, create_image_resolutions, get_video_frame, detect_video_resolution, detect_video_fps, restrict_video_resolution, restrict_image_resolution, create_video_resolutions, pack_resolution, unpack_resolution
-from facefusion.job_runner import run_job, run_all_jobs
+from facefusion.job_runner import run_job, run_jobs
 from facefusion.job_manager import init_jobs
 from facefusion.typing import ErrorCode, Args
 
@@ -254,7 +254,7 @@ def run(program : ArgumentParser) -> None:
 			else:
 				conditional_exit(1)
 		elif has_argument('--job-run-all'):
-			if run_all_jobs(process_step):
+			if run_jobs(process_step):
 				conditional_exit(0)
 			else:
 				conditional_exit(1)

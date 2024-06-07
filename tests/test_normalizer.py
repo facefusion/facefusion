@@ -1,12 +1,14 @@
 import os
 import pytest
 
+from facefusion.filesystem import is_directory
 from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	os.mkdir('.assets/examples')
+	if not is_directory('.assets/examples'):
+		os.mkdir('.assets/examples')
 
 
 def test_normalize_output_path() -> None:
