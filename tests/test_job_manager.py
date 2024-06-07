@@ -5,6 +5,11 @@ from facefusion.job_manager import init_jobs, clear_jobs, create_job, delete_job
 from .helper import get_test_jobs_directory
 
 
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
+	os.mkdir('.assets/examples')
+
+
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	clear_jobs(get_test_jobs_directory())

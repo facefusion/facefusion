@@ -30,7 +30,7 @@ def test_is_file() -> None:
 
 
 def test_is_directory() -> None:
-	assert is_directory('.assets/examples') is True
+	assert is_directory(get_test_examples_directory()) is True
 	assert is_directory(get_test_example_file('source.jpg')) is False
 	assert is_directory('invalid') is False
 
