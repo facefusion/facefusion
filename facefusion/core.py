@@ -25,7 +25,7 @@ from facefusion.processors.frame.core import get_frame_processors_modules, load_
 from facefusion.exit_helper import conditional_exit, graceful_exit
 from facefusion.common_helper import create_metavar, get_first, get_argument_value, has_argument
 from facefusion.execution import encode_execution_providers, decode_execution_providers
-from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
+from facefusion.normalizer import normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
 from facefusion.statistics import conditional_log_statistics
 from facefusion.download import conditional_download
@@ -397,7 +397,6 @@ def force_download() -> None:
 
 
 def process_image(start_time : float) -> ErrorCode:
-	normed_output_path = normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path)
 	if analyse_image(facefusion.globals.target_path):
 		return 3
 	# clear temp
@@ -425,7 +424,7 @@ def process_image(start_time : float) -> ErrorCode:
 		return 4
 	# finalize image
 	logger.info(wording.get('finalizing_image').format(resolution = facefusion.globals.output_image_resolution), __name__.upper())
-	if finalize_image(facefusion.globals.target_path, normed_output_path, facefusion.globals.output_image_resolution):
+	if finalize_image(facefusion.globals.target_path, facefusion.globals.output_path, facefusion.globals.output_image_resolution):
 		logger.debug(wording.get('finalizing_image_succeed'), __name__.upper())
 	else:
 		logger.warn(wording.get('finalizing_image_skipped'), __name__.upper())
@@ -433,7 +432,7 @@ def process_image(start_time : float) -> ErrorCode:
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
 	clear_temp(facefusion.globals.target_path)
 	# validate image
-	if is_image(normed_output_path):
+	if is_image(facefusion.globals.output_path):
 		seconds = '{:.2f}'.format((time() - start_time) % 60)
 		logger.info(wording.get('processing_image_succeed').format(seconds = seconds), __name__.upper())
 		conditional_log_statistics()
@@ -444,7 +443,6 @@ def process_image(start_time : float) -> ErrorCode:
 
 
 def process_video(start_time : float) -> ErrorCode:
-	normed_output_path = normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path)
 	if analyse_video(facefusion.globals.target_path, facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
 		return 3
 	# clear temp
@@ -489,30 +487,30 @@ def process_video(start_time : float) -> ErrorCode:
 	# handle audio
 	if facefusion.globals.skip_audio:
 		logger.info(wording.get('skipping_audio'), __name__.upper())
-		move_temp(facefusion.globals.target_path, normed_output_path)
+		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
 		if 'lip_syncer' in facefusion.globals.frame_processors:
 			source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
-			if source_audio_path and replace_audio(facefusion.globals.target_path, source_audio_path, normed_output_path):
+			if source_audio_path and replace_audio(facefusion.globals.target_path, source_audio_path, facefusion.globals.output_path):
 				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
 			else:
 				if is_process_stopping():
 					return 4
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
-				move_temp(facefusion.globals.target_path, normed_output_path)
+				move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 		else:
-			if restore_audio(facefusion.globals.target_path, normed_output_path, facefusion.globals.output_video_fps):
+			if restore_audio(facefusion.globals.target_path, facefusion.globals.output_path, facefusion.globals.output_video_fps):
 				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
 			else:
 				if is_process_stopping():
 					return 4
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
-				move_temp(facefusion.globals.target_path, normed_output_path)
+				move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
 	clear_temp(facefusion.globals.target_path)
 	# validate video
-	if is_video(normed_output_path):
+	if is_video(facefusion.globals.output_path):
 		seconds = '{:.2f}'.format((time() - start_time))
 		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__.upper())
 		conditional_log_statistics()

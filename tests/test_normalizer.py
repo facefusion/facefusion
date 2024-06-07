@@ -1,25 +1,4 @@
-import os
-import pytest
-
-from facefusion.filesystem import is_directory
-from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
-
-
-@pytest.fixture(scope = 'module', autouse = True)
-def before_all() -> None:
-	if not is_directory('.assets/examples'):
-		os.mkdir('.assets/examples')
-
-
-def test_normalize_output_path() -> None:
-	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/target-240p.mp4') == os.path.join('.assets', 'examples', 'target-240p.mp4')
-	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples') == os.path.join('.assets', 'examples', 'target-240p-caf648bd.mp4')
-	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/output.mp4') == os.path.join('.assets', 'examples', 'output.mp4')
-	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/examples/invalid') is None
-	assert normalize_output_path('.assets/examples/target-240p.mp4', '.assets/invalid/output.mp4') is None
-	assert normalize_output_path('.assets/examples/target-240p.mp4', 'invalid') is None
-	assert normalize_output_path('.assets/examples/target-240p.mp4', None) is None
-	assert normalize_output_path(None, '.assets/examples/output.mp4') is None
+from facefusion.normalizer import normalize_padding, normalize_fps
 
 
 def test_normalize_padding() -> None:

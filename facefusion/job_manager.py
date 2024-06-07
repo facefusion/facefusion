@@ -7,7 +7,6 @@ import shutil
 
 from facefusion.common_helper import get_current_datetime
 from facefusion.filesystem import is_file, is_directory, move_file
-from facefusion.normalizer import normalize_output_path
 from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : Optional[str] = None
@@ -76,9 +75,8 @@ def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 	for index, step in enumerate(steps):
 		if index == step_index:
-			target_path = steps[step_index].get('args').get('target_path')
 			output_path = steps[step_index].get('args').get('output_path')
-			step_args['target_path'] = normalize_output_path(target_path, output_path)
+			step_args['target_path'] = output_path
 			return add_step(job_id, step_args)
 	return False
 

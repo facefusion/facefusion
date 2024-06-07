@@ -16,11 +16,10 @@ from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
 from facefusion.execution import apply_execution_provider_options
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
-from facefusion.normalizer import normalize_output_path
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
-from facefusion.filesystem import is_file, is_image, is_video, resolve_relative_path
+from facefusion.filesystem import same_file_extension, is_file, in_directory, is_image, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame.typing import FaceEnhancerInputs
@@ -172,10 +171,13 @@ def post_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
-		logger.error(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path):
-		logger.error(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
+	if mode == 'output' and not in_directory(facefusion.globals.output_path):
+		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
+		return False
+	if mode == 'output' and not same_file_extension([ facefusion.globals.target_path, facefusion.globals.output_path ]):
+		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
 

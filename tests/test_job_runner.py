@@ -126,18 +126,11 @@ def test_collect_merge_set() -> None:
 		'target_path': get_test_example_file('target-240p.jpg'),
 		'output_path': get_test_example_file('output.jpg')
 	}
-	args_4 =\
-	{
-		'source_path': get_test_example_file('source.jpg'),
-		'target_path': get_test_example_file('target-1080p.jpg'),
-		'output_path': get_test_outputs_directory()
-	}
 
 	create_job('job-collect-merge-set')
 	add_step('job-collect-merge-set', args_1)
 	add_step('job-collect-merge-set', args_2)
 	add_step('job-collect-merge-set', args_3)
-	add_step('job-collect-merge-set', args_4)
 
 	merge_set =\
 	{
@@ -149,10 +142,6 @@ def test_collect_merge_set() -> None:
 		get_test_example_file('output.jpg'):
 		[
 			os.path.join(tempfile.gettempdir(), 'test-examples', 'output-job-collect-merge-set-2.jpg')
-		],
-		get_test_outputs_directory():
-		[
-			os.path.join(tempfile.gettempdir(), 'test-outputs', 'job-collect-merge-set-3')
 		]
 	}
 

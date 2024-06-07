@@ -33,11 +33,12 @@ WORDING : Dict[str, Any] =\
 	'processing_video_failed': 'Processing to video failed',
 	'model_download_not_done': 'Download of the model is not done',
 	'model_file_not_present': 'File of the model is not present',
-	'select_image_source': 'Select a image for source path',
-	'select_audio_source': 'Select a audio for source path',
-	'select_video_target': 'Select a video for target path',
-	'select_image_or_video_target': 'Select a image or video for target path',
-	'select_file_or_directory_output': 'Select a file or directory for output path',
+	'choose_image_source': 'Choose a image for the source',
+	'choose_audio_source': 'Choose a audio for the source',
+	'choose_video_target': 'Choose a video for the target',
+	'choose_image_or_video_target': 'Choose a image or video for the target',
+	'specify_image_or_video_output': 'Specify the output image or video within a directory',
+	'match_target_and_output_extension': 'Match the target and output extension',
 	'no_source_face_detected': 'No source face detected',
 	'frame_processor_not_loaded': 'Frame processor {frame_processor} could not be loaded',
 	'frame_processor_not_implemented': 'Frame processor {frame_processor} not implemented correctly',
@@ -66,13 +67,13 @@ WORDING : Dict[str, Any] =\
 	'help':
 	{
 		# installer
-		'install_dependency': 'select the variant of {dependency} to install',
+		'install_dependency': 'choose the variant of {dependency} to install',
 		'skip_conda': 'skip the conda environment check',
 		# general
 		'config': 'choose the config file to override defaults',
 		'source': 'choose single or multiple source images or audios',
 		'target': 'choose single target image or video',
-		'output': 'specify the output file or directory',
+		'output': 'specify the output image or video within a directory',
 		# misc
 		'force_download': 'force automate downloads and exit',
 		'skip_download': 'omit automate downloads and remote lookups',

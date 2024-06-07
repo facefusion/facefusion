@@ -16,12 +16,30 @@ def get_file_size(file_path : str) -> int:
 	return 0
 
 
+def same_file_extension(file_paths : List[str]) -> bool:
+	file_extensions : List[str] = []
+
+	for file_path in file_paths:
+		_, file_extension = os.path.splitext(file_path)
+
+		if file_extensions and file_extension not in file_extensions:
+			return False
+		file_extensions.append(file_extension)
+	return True
+
+
 def is_file(file_path : str) -> bool:
 	return bool(file_path and os.path.isfile(file_path))
 
 
 def is_directory(directory_path : str) -> bool:
 	return bool(directory_path and os.path.isdir(directory_path))
+
+
+def in_directory(file_path : str) -> bool:
+	if not is_directory(file_path):
+		return is_directory(os.path.dirname(file_path))
+	return False
 
 
 def is_audio(audio_path : str) -> bool:

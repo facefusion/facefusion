@@ -1,15 +1,8 @@
-import os
 import pytest
 
-from facefusion.filesystem import is_directory
+
 from facefusion.job_manager import init_jobs, clear_jobs, create_job, delete_job, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status
 from .helper import get_test_jobs_directory
-
-
-@pytest.fixture(scope = 'module', autouse = True)
-def before_all() -> None:
-	if not is_directory('.assets/examples'):
-		os.mkdir('.assets/examples')
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -63,15 +56,15 @@ def test_find_job_ids() -> None:
 def test_add_step() -> None:
 	args_1 =\
 	{
-		'source_path': '.assets/examples/source-1.jpg',
-		'target_path': '.assets/examples/target-1.jpg',
-		'output_path': '.assets/examples/output-1.jpg'
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
 	}
 	args_2 =\
 	{
-		'source_path': '.assets/examples/source-2.jpg',
-		'target_path': '.assets/examples/target-2.jpg',
-		'output_path': '.assets/examples/output-2.jpg'
+		'source_path': 'source-2.jpg',
+		'target_path': 'target-2.jpg',
+		'output_path': 'output-2.jpg'
 	}
 
 	assert add_step('job-test-add-step', args_1) is False
@@ -90,15 +83,15 @@ def test_add_step() -> None:
 def test_remix_step() -> None:
 	args_1 =\
 	{
-		'source_path': '.assets/examples/source-1.jpg',
-		'target_path': '.assets/examples/target-1.jpg',
-		'output_path': os.path.join('.assets', 'examples', 'output-1.jpg')
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
 	}
 	args_2 =\
 	{
-		'source_path': '.assets/examples/source-2.jpg',
-		'target_path': '.assets/examples/target-2.jpg',
-		'output_path': '.assets/examples'
+		'source_path': 'source-2.jpg',
+		'target_path': 'target-2.jpg',
+		'output_path': 'output-2.jpg'
 	}
 
 	assert remix_step('job-test-remix-step', 0, args_1) is False
@@ -107,33 +100,29 @@ def test_remix_step() -> None:
 	add_step('job-test-remix-step', args_1)
 	add_step('job-test-remix-step', args_2)
 
-	assert remix_step('job-test-remix-step', 0, args_1) is True
-	assert remix_step('job-test-remix-step', 1, args_2) is True
+	assert remix_step('job-test-remix-step', 0, args_2) is True
 
 	steps = get_steps('job-test-remix-step')
 
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_2
-	assert steps[2].get('args').get('source_path') == args_1.get('source_path')
+	assert steps[2].get('args').get('source_path') == args_2.get('source_path')
 	assert steps[2].get('args').get('target_path') == args_1.get('output_path')
-	assert steps[2].get('args').get('output_path') == args_1.get('output_path')
-	assert steps[3].get('args').get('source_path') == args_2.get('source_path')
-	assert steps[3].get('args').get('target_path') == os.path.join('.assets', 'examples', 'target-2-caf648bd.jpg')
-	assert steps[3].get('args').get('output_path') == args_2.get('output_path')
+	assert steps[2].get('args').get('output_path') == args_2.get('output_path')
 
 
 def test_insert_step() -> None:
 	args_1 =\
 	{
-		'source_path': '.assets/examples/source-1.jpg',
-		'target_path': '.assets/examples/target-1.jpg',
-		'output_path': '.assets/examples/output-1.jpg'
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
 	}
 	args_2 =\
 	{
-		'source_path': '.assets/examples/source-2.jpg',
-		'target_path': '.assets/examples/target-2.jpg',
-		'output_path': '.assets/examples/output-2.jpg'
+		'source_path': 'source-2.jpg',
+		'target_path': 'target-2.jpg',
+		'output_path': 'output-2.jpg'
 	}
 
 	assert insert_step('job-test-insert-step', 0, args_1) is False
@@ -154,15 +143,15 @@ def test_insert_step() -> None:
 def test_remove_step() -> None:
 	args_1 =\
 	{
-		'source_path': '.assets/examples/source-1.jpg',
-		'target_path': '.assets/examples/target-1.jpg',
-		'output_path': '.assets/examples/output-1.jpg'
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
 	}
 	args_2 =\
 	{
-		'source_path': '.assets/examples/source-2.jpg',
-		'target_path': '.assets/examples/target-2.jpg',
-		'output_path': '.assets/examples/output-2.jpg'
+		'source_path': 'source-2.jpg',
+		'target_path': 'target-2.jpg',
+		'output_path': 'output-2.jpg'
 	}
 
 	assert remove_step('job-test-insert-step', 0) is False
@@ -183,15 +172,15 @@ def test_remove_step() -> None:
 def test_get_steps() -> None:
 	args_1 =\
 	{
-		'source_path': '.assets/examples/source-1.jpg',
-		'target_path': '.assets/examples/target-1.jpg',
-		'output_path': '.assets/examples/output-1.jpg'
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
 	}
 	args_2 =\
 	{
-		'source_path': '.assets/examples/source-2.jpg',
-		'target_path': '.assets/examples/target-2.jpg',
-		'output_path': '.assets/examples/output-2.jpg'
+		'source_path': 'source-2.jpg',
+		'target_path': 'target-2.jpg',
+		'output_path': 'output-2.jpg'
 	}
 
 	assert get_steps('job-test-get-steps') == []
@@ -208,15 +197,15 @@ def test_get_steps() -> None:
 def test_set_step_status() -> None:
 	args_1 =\
 	{
-		'source_path': '.assets/examples/source-1.jpg',
-		'target_path': '.assets/examples/target-1.jpg',
-		'output_path': '.assets/examples/output-1.jpg'
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
 	}
 	args_2 =\
 	{
-		'source_path': '.assets/examples/source-2.jpg',
-		'target_path': '.assets/examples/target-2.jpg',
-		'output_path': '.assets/examples/output-2.jpg'
+		'source_path': 'source-2.jpg',
+		'target_path': 'target-2.jpg',
+		'output_path': 'output-2.jpg'
 	}
 
 	assert set_step_status('job-test-set-step-status', 0, 'completed') is False
