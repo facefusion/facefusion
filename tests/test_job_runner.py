@@ -8,7 +8,7 @@ from facefusion.typing import Args
 from facefusion.download import conditional_download
 from facefusion.job_manager import init_jobs, clear_jobs, create_job, add_step
 from facefusion.job_runner import run_job, run_jobs, collect_merge_set
-from .helper import get_test_jobs_directory, get_test_examples_directory, get_test_example_file, get_test_output_file
+from .helper import get_test_jobs_directory, get_test_examples_directory, get_test_example_file, get_test_outputs_directory, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -27,6 +27,7 @@ def before_all() -> None:
 def before_each() -> None:
 	clear_jobs(get_test_jobs_directory())
 	init_jobs(get_test_jobs_directory())
+	prepare_test_output_directory()
 
 
 def process_step(step_args : Args) -> bool:
@@ -129,7 +130,7 @@ def test_collect_merge_set() -> None:
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-1080p.jpg'),
-		'output_path': get_test_example_file('output')
+		'output_path': get_test_outputs_directory()
 	}
 
 	create_job('job-collect-merge-set')
@@ -149,9 +150,9 @@ def test_collect_merge_set() -> None:
 		[
 			os.path.join(tempfile.gettempdir(), 'test-examples', 'output-job-collect-merge-set-2.jpg')
 		],
-		os.path.join(get_test_examples_directory(), 'output'):
+		get_test_outputs_directory():
 		[
-			os.path.join(get_test_examples_directory(), 'output-job-collect-merge-set-3')
+			os.path.join(tempfile.gettempdir(), 'test-outputs', 'job-collect-merge-set-3')
 		]
 	}
 
