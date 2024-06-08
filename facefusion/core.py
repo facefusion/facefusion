@@ -238,7 +238,8 @@ def run(program : ArgumentParser) -> None:
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
 	if known_args.job_create or known_args.job_delete or known_args.job_add_step or known_args.job_remix_step or known_args.job_insert_step or known_args.job_remove_step:
-		init_jobs(facefusion.globals.jobs_path)
+		if not init_jobs(facefusion.globals.jobs_path):
+			return conditional_exit(1)
 		error_code = route_job_action(program)
 		return conditional_exit(error_code)
 	if facefusion.globals.force_download:

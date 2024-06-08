@@ -34,7 +34,7 @@ def process_step(step_args : Args) -> bool:
 	return 'source_path' in step_args and 'target_path' in step_args and 'output_path' in step_args
 
 
-def test_run_jobs() -> None:
+def test_run_job() -> None:
 	args_1 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
