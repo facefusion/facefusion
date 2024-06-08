@@ -7,7 +7,7 @@ import pytest
 from facefusion.typing import Args
 from facefusion.download import conditional_download
 from facefusion.job_manager import init_jobs, clear_jobs, create_job, add_step
-from facefusion.job_runner import run_job, run_jobs, finalize_steps, collect_merge_set
+from facefusion.job_runner import run_job, run_jobs, run_steps, finalize_steps, collect_merge_set
 from .helper import get_test_jobs_directory, get_test_examples_directory, get_test_example_file, prepare_test_output_directory
 
 
@@ -97,9 +97,34 @@ def test_run_all_job() -> None:
 	assert run_jobs(process_step) is True
 
 
-@pytest.mark.skip()
 def test_run_steps() -> None:
-	pass
+	args_1 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_example_file('output.mp4')
+	}
+	args_2 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_example_file('output.mp4')
+	}
+	args_3 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.jpg'),
+		'output_path': get_test_example_file('output.jpg')
+	}
+
+	assert run_steps('job-run-steps', process_step) is False
+
+	create_job('job-run-steps')
+	add_step('job-run-steps', args_1)
+	add_step('job-run-steps', args_2)
+	add_step('job-run-steps', args_3)
+
+	assert run_steps('job-run-steps', process_step) is True
 
 
 def test_finalize_steps() -> None:
