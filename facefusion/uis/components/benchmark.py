@@ -11,7 +11,7 @@ from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total, detect_video_resolution, detect_video_fps, pack_resolution
 from facefusion.core import conditional_process
 from facefusion.memory import limit_system_memory
-from facefusion.filesystem import clear_temp
+from facefusion.temp_helper import clear_temp
 from facefusion.uis.core import get_ui_component
 
 BENCHMARK_RESULTS_DATAFRAME : Optional[gradio.Dataframe] = None
