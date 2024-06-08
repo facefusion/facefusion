@@ -137,12 +137,13 @@ def read_job_file(job_id : str) -> Optional[Job]:
 
 
 def create_job_file(job_id : str, job : Job) -> bool:
-	job_path = suggest_job_path(job_id, 'queued')
+	job_path = resolve_job_path(job_id)
 
 	if not is_file(job_path):
-		with open(job_path, 'w') as job_file:
+		job_create_path = suggest_job_path(job_id, 'queued')
+		with open(job_create_path, 'w') as job_file:
 			json.dump(job, job_file, indent = 4)
-		return is_file(job_path)
+		return is_file(job_create_path)
 	return False
 
 
