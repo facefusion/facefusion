@@ -7,8 +7,8 @@ import pytest
 from facefusion.typing import Args
 from facefusion.download import conditional_download
 from facefusion.job_manager import init_jobs, clear_jobs, create_job, add_step
-from facefusion.job_runner import run_job, run_jobs, collect_merge_set
-from .helper import get_test_jobs_directory, get_test_examples_directory, get_test_example_file, get_test_outputs_directory, prepare_test_output_directory
+from facefusion.job_runner import run_job, run_jobs, finalize_steps, collect_merge_set
+from .helper import get_test_jobs_directory, get_test_examples_directory, get_test_example_file, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -102,9 +102,32 @@ def test_run_steps() -> None:
 	pass
 
 
-@pytest.mark.skip()
 def test_finalize_steps() -> None:
-	pass
+	args_1 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_example_file('output.mp4')
+	}
+	args_2 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_example_file('output.mp4')
+	}
+	args_3 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.jpg'),
+		'output_path': get_test_example_file('output.jpg')
+	}
+
+	create_job('job-finalize-steps')
+	add_step('job-finalize-steps', args_1)
+	add_step('job-finalize-steps', args_2)
+	add_step('job-finalize-steps', args_3)
+
+	assert finalize_steps('job-finalize-steps') is True
 
 
 def test_collect_merge_set() -> None:

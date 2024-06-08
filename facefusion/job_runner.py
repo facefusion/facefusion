@@ -1,5 +1,5 @@
 from facefusion.ffmpeg import concat_video
-from facefusion.filesystem import is_video, move_file
+from facefusion.filesystem import is_image, is_video, move_file
 from facefusion.job_helper import get_step_output_path
 from facefusion.job_manager import find_job_ids, get_steps, set_step_status, move_job_file
 from facefusion.typing import ProcessStep, JobMergeSet
@@ -40,12 +40,12 @@ def finalize_steps(job_id : str) -> bool:
 	merge_set = collect_merge_set(job_id)
 
 	for output_path, temp_output_paths in merge_set.items():
+		if any(map(is_image, temp_output_paths)):
+			for temp_output_path in temp_output_paths:
+				if not move_file(temp_output_path, output_path):
+					return False
 		if all(map(is_video, temp_output_paths)):
-			if not concat_video(temp_output_paths, output_path):
-				return False
-		for temp_output_path in temp_output_paths:
-			if not move_file(temp_output_path, output_path):
-				return False
+			return concat_video(temp_output_paths, output_path)
 	return True
 
 
