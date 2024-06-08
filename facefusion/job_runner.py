@@ -14,10 +14,12 @@ def run_job(job_id : str, process_step : ProcessStep) -> bool:
 def run_jobs(process_step : ProcessStep) -> bool:
 	job_queued_ids = find_job_ids('queued')
 
-	for job_id in job_queued_ids:
-		if not run_job(job_id, process_step):
-			return False
-	return True
+	if job_queued_ids:
+		for job_queued_id in job_queued_ids:
+			if not run_job(job_queued_id, process_step):
+				return False
+		return True
+	return False
 
 
 def run_step(job_id : str, step_index : int, step : JobStep, process_step : ProcessStep) -> bool:

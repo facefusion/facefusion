@@ -34,7 +34,6 @@ def process_step(step_args : Args) -> bool:
 	return 'source_path' in step_args and 'target_path' in step_args and 'output_path' in step_args
 
 
-@pytest.mark.skip()
 def test_run_jobs() -> None:
 	args_1 =\
 	{
@@ -55,7 +54,7 @@ def test_run_jobs() -> None:
 		'output_path': get_test_example_file('output.jpg')
 	}
 
-	assert run_jobs(process_step) is False
+	assert run_job('job-test-run-job', process_step) is False
 
 	create_job('job-test-run-job')
 	add_step('job-test-run-job', args_1)
@@ -65,8 +64,7 @@ def test_run_jobs() -> None:
 	assert run_job('job-test-run-job', process_step) is True
 
 
-@pytest.mark.skip()
-def test_run_all_job() -> None:
+def test_run_jobs() -> None:
 	args_1 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),

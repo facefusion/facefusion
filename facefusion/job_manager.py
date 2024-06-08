@@ -6,7 +6,7 @@ import os
 import shutil
 
 from facefusion.common_helper import get_current_datetime
-from facefusion.filesystem import is_file, is_directory, move_file
+from facefusion.filesystem import is_file, is_directory, move_file, remove_file
 from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : Optional[str] = None
@@ -137,7 +137,7 @@ def read_job_file(job_id : str) -> Optional[Job]:
 
 
 def create_job_file(job_id : str, job : Job) -> bool:
-	job_path = suggest_job_path(job_id)
+	job_path = suggest_job_path(job_id, 'queued')
 
 	if not is_file(job_path):
 		with open(job_path, 'w') as job_file:
@@ -161,23 +161,19 @@ def move_job_file(job_id : str, job_status : JobStatus) -> bool:
 	job_path = resolve_job_path(job_id)
 
 	if is_file(job_path):
-		job_move_path = os.path.join(JOBS_PATH, job_status)
+		job_move_path = suggest_job_path(job_id, job_status)
 		return move_file(job_path, job_move_path)
 	return False
 
 
 def delete_job_file(job_id : str) -> bool:
 	job_path = resolve_job_path(job_id)
-
-	if is_file(job_path):
-		os.remove(job_path)
-		return not is_file(job_path)
-	return False
+	return remove_file(job_path)
 
 
-def suggest_job_path(job_id : str) -> Optional[str]:
+def suggest_job_path(job_id : str, job_status : JobStatus) -> Optional[str]:
 	job_file_name = job_id + '.json'
-	return os.path.join(JOBS_PATH, 'queued', job_file_name)
+	return os.path.join(JOBS_PATH, job_status, job_file_name)
 
 
 def resolve_job_path(job_id : str) -> Optional[str]:

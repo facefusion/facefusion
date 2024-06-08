@@ -107,5 +107,12 @@ def sanitize_path_for_windows(full_path : str) -> Optional[str]:
 def move_file(file_path : str, move_path : str) -> bool:
 	if is_file(file_path):
 		shutil.move(file_path, move_path)
-		return is_file(move_path)
+		return not is_file(file_path)
+	return False
+
+
+def remove_file(file_path : str) -> bool:
+	if is_file(file_path):
+		os.remove(file_path)
+		return not is_file(file_path)
 	return False
