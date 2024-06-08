@@ -48,10 +48,6 @@ def to_lower_case(__string__ : Any) -> str:
 	return str(__string__).lower()
 
 
-def has_argument(argument : str) -> bool:
-	return any(argv == argument for argv in sys.argv)
-
-
 def get_argument_value(argument : str) -> Optional[str]:
 	try:
 		index = sys.argv.index(argument) + 1

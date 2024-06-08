@@ -23,7 +23,7 @@ from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.exit_helper import conditional_exit, graceful_exit
-from facefusion.common_helper import create_metavar, get_first, get_argument_value, has_argument
+from facefusion.common_helper import create_metavar, get_first, get_argument_value
 from facefusion.execution import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
@@ -50,20 +50,21 @@ def cli() -> None:
 def create_program() -> ArgumentParser:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 200), add_help = False)
 	# general
-	program.add_argument('-c', '--config', help = wording.get('help.config'), dest = 'config_path', default = 'facefusion.ini')
-	apply_config(program)
-	program.add_argument('-s', '--source', help = wording.get('help.source'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
-	program.add_argument('-t', '--target', help = wording.get('help.target'), dest = 'target_path', default = config.get_str_value('general.target_path'))
-	program.add_argument('-o', '--output', help = wording.get('help.output'), dest = 'output_path', default = config.get_str_value('general.output_path'))
+	program.add_argument('-c', '--config-path', help = wording.get('help.config'), dest = 'config_path', default = 'facefusion.ini')
+	apply_config_path(program)
+	program.add_argument('-s', '--source_paths', help = wording.get('help.source_paths'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
+	program.add_argument('-t', '--target_path', help = wording.get('help.target_path'), dest = 'target_path', default = config.get_str_value('general.target_path'))
+	program.add_argument('-o', '--output_path', help = wording.get('help.output_path'), dest = 'output_path', default = config.get_str_value('general.output_path'))
+	program.add_argument('-j', '--jobs_path', help = wording.get('help.jobs_path'), default = config.get_str_value('misc.log_level', '.jobs'))
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
-	facefusion.job_store.register_step_args([ '--source', '--target', '--output' ])
+	facefusion.job_store.register_step_args([ 'source_paths', 'target_path', 'output_path' ])
 	# misc
 	group_misc = program.add_argument_group('misc')
 	group_misc.add_argument('--force-download', help = wording.get('help.force_download'), action = 'store_true', default = config.get_bool_value('misc.force_download'))
 	group_misc.add_argument('--skip-download', help = wording.get('help.skip_download'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
 	group_misc.add_argument('--headless', help = wording.get('help.headless'), action = 'store_true', default = config.get_bool_value('misc.headless'))
 	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
-	facefusion.job_store.register_job_args([ '--log-level' ])
+	facefusion.job_store.register_job_args([ 'log_level' ])
 	# execution
 	execution_providers = encode_execution_providers(onnxruntime.get_available_providers())
 	group_execution = program.add_argument_group('execution')
@@ -71,12 +72,12 @@ def create_program() -> ArgumentParser:
 	group_execution.add_argument('--execution-providers', help = wording.get('help.execution_providers').format(choices = ', '.join(execution_providers)), default = config.get_str_list('execution.execution_providers', 'cpu'), choices = execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
 	group_execution.add_argument('--execution-thread-count', help = wording.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution.execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_metavar(facefusion.choices.execution_thread_count_range))
 	group_execution.add_argument('--execution-queue-count', help = wording.get('help.execution_queue_count'), type = int, default = config.get_int_value('execution.execution_queue_count', '1'), choices = facefusion.choices.execution_queue_count_range, metavar = create_metavar(facefusion.choices.execution_queue_count_range))
-	facefusion.job_store.register_job_args([ '--execution-device-id', '--execution-providers', '--execution-thread-count', '--execution-queue-count' ])
+	facefusion.job_store.register_job_args([ 'execution_device_id', 'execution_providers', 'execution_thread-count', 'execution_queue_count' ])
 	# memory
 	group_memory = program.add_argument_group('memory')
 	group_memory.add_argument('--video-memory-strategy', help = wording.get('help.video_memory_strategy'), default = config.get_str_value('memory.video_memory_strategy', 'strict'), choices = facefusion.choices.video_memory_strategies)
 	group_memory.add_argument('--system-memory-limit', help = wording.get('help.system_memory_limit'), type = int, default = config.get_int_value('memory.system_memory_limit', '0'), choices = facefusion.choices.system_memory_limit_range, metavar = create_metavar(facefusion.choices.system_memory_limit_range))
-	facefusion.job_store.register_job_args([ '--video-memory-strategy', '--system-memory-limit' ])
+	facefusion.job_store.register_job_args([ 'video_memory_strategy', 'system_memory_limit' ])
 	# face analyser
 	face_detector_model = get_argument_value('--face-detector-model') or 'yoloface'
 	face_detector_size_choices = facefusion.choices.face_detector_set.get(face_detector_model) #type:ignore[call-overload]
@@ -88,28 +89,28 @@ def create_program() -> ArgumentParser:
 	group_face_analyser.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_analyser.face_detector_size', '640x640'), choices = face_detector_size_choices)
 	group_face_analyser.add_argument('--face-detector-score', help = wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_analyser.face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_metavar(facefusion.choices.face_detector_score_range))
 	group_face_analyser.add_argument('--face-landmarker-score', help = wording.get('help.face_landmarker_score'), type = float, default = config.get_float_value('face_analyser.face_landmarker_score', '0.5'), choices = facefusion.choices.face_landmarker_score_range, metavar = create_metavar(facefusion.choices.face_landmarker_score_range))
-	facefusion.job_store.register_step_args([ '--face-analyser-order', '--face-analyser-age', '--face-analyser-gender', '--face-detector-model', '--face-detector-size', '--face-detector-score', '--face-landmarker-score' ])
+	facefusion.job_store.register_step_args([ 'face_analyser_order', 'face_analyser_age', 'face_analyser_gender', 'face_detector_model', 'face_detector_size', 'face_detector_score', 'face_landmarker_score' ])
 	# face selector
 	group_face_selector = program.add_argument_group('face selector')
 	group_face_selector.add_argument('--face-selector-mode', help = wording.get('help.face_selector_mode'), default = config.get_str_value('face_selector.face_selector_mode', 'reference'), choices = facefusion.choices.face_selector_modes)
 	group_face_selector.add_argument('--reference-face-position', help = wording.get('help.reference_face_position'), type = int, default = config.get_int_value('face_selector.reference_face_position', '0'))
 	group_face_selector.add_argument('--reference-face-distance', help = wording.get('help.reference_face_distance'), type = float, default = config.get_float_value('face_selector.reference_face_distance', '0.6'), choices = facefusion.choices.reference_face_distance_range, metavar = create_metavar(facefusion.choices.reference_face_distance_range))
 	group_face_selector.add_argument('--reference-frame-number', help = wording.get('help.reference_frame_number'), type = int, default = config.get_int_value('face_selector.reference_frame_number', '0'))
-	facefusion.job_store.register_step_args([ '--face-selector-mode', '--reference-face-position', '--reference-face-distance', '--reference-frame-number' ])
+	facefusion.job_store.register_step_args([ 'face_selector_mode', 'reference_face_position', 'reference_face_distance', 'reference_frame_number' ])
 	# face mask
 	group_face_mask = program.add_argument_group('face mask')
 	group_face_mask.add_argument('--face-mask-types', help = wording.get('help.face_mask_types').format(choices = ', '.join(facefusion.choices.face_mask_types)), default = config.get_str_list('face_mask.face_mask_types', 'box'), choices = facefusion.choices.face_mask_types, nargs = '+', metavar = 'FACE_MASK_TYPES')
 	group_face_mask.add_argument('--face-mask-blur', help = wording.get('help.face_mask_blur'), type = float, default = config.get_float_value('face_mask.face_mask_blur', '0.3'), choices = facefusion.choices.face_mask_blur_range, metavar = create_metavar(facefusion.choices.face_mask_blur_range))
 	group_face_mask.add_argument('--face-mask-padding', help = wording.get('help.face_mask_padding'), type = int, default = config.get_int_list('face_mask.face_mask_padding', '0 0 0 0'), nargs = '+')
 	group_face_mask.add_argument('--face-mask-regions', help = wording.get('help.face_mask_regions').format(choices = ', '.join(facefusion.choices.face_mask_regions)), default = config.get_str_list('face_mask.face_mask_regions', ' '.join(facefusion.choices.face_mask_regions)), choices = facefusion.choices.face_mask_regions, nargs = '+', metavar = 'FACE_MASK_REGIONS')
-	facefusion.job_store.register_step_args([ '--face-mask-types', '--face-mask-blur', '--face-mask-padding', '--face-mask-regions' ])
+	facefusion.job_store.register_step_args([ 'face_mask_types', 'face_mask_blur', 'face_mask_padding', 'face_mask_regions' ])
 	# frame extraction
 	group_frame_extraction = program.add_argument_group('frame extraction')
 	group_frame_extraction.add_argument('--trim-frame-start', help = wording.get('help.trim_frame_start'), type = int, default = facefusion.config.get_int_value('frame_extraction.trim_frame_start'))
 	group_frame_extraction.add_argument('--trim-frame-end',	help = wording.get('help.trim_frame_end'), type = int, default = facefusion.config.get_int_value('frame_extraction.trim_frame_end'))
 	group_frame_extraction.add_argument('--temp-frame-format', help = wording.get('help.temp_frame_format'), default = config.get_str_value('frame_extraction.temp_frame_format', 'png'), choices = facefusion.choices.temp_frame_formats)
 	group_frame_extraction.add_argument('--keep-temp', help = wording.get('help.keep_temp'), action = 'store_true',	default = config.get_bool_value('frame_extraction.keep_temp'))
-	facefusion.job_store.register_step_args([ '--trim-frame-start', '--trim-frame-end', '--temp-frame-format', '--keep-temp' ])
+	facefusion.job_store.register_step_args([ 'trim_frame_start', 'trim_frame_end', 'temp_frame_format', 'keep_temp' ])
 	# output creation
 	group_output_creation = program.add_argument_group('output creation')
 	group_output_creation.add_argument('--output-image-quality', help = wording.get('help.output_image_quality'), type = int, default = config.get_int_value('output_creation.output_image_quality', '80'), choices = facefusion.choices.output_image_quality_range, metavar = create_metavar(facefusion.choices.output_image_quality_range))
@@ -120,35 +121,35 @@ def create_program() -> ArgumentParser:
 	group_output_creation.add_argument('--output-video-resolution', help = wording.get('help.output_video_resolution'), default = config.get_str_value('output_creation.output_video_resolution'))
 	group_output_creation.add_argument('--output-video-fps', help = wording.get('help.output_video_fps'), type = float, default = config.get_str_value('output_creation.output_video_fps'))
 	group_output_creation.add_argument('--skip-audio', help = wording.get('help.skip_audio'), action = 'store_true', default = config.get_bool_value('output_creation.skip_audio'))
-	facefusion.job_store.register_step_args([ '--output-image-quality', '--output-image-resolution', '--output-video-encoder', '--output-video-preset', '--output-video-quality', '--output-video-resolution', '--output-video-fps', '--skip-audio' ])
+	facefusion.job_store.register_step_args([ 'output_image_quality', 'output_image_resolution', 'output_video_encoder', 'output_video_preset', 'output_video_quality', 'output_video_resolution', 'output_video_fps', 'skip_audio' ])
 	# frame processors
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')
 	program = ArgumentParser(parents = [ program ], formatter_class = program.formatter_class, add_help = True)
 	group_frame_processors = program.add_argument_group('frame processors')
 	group_frame_processors.add_argument('--frame-processors', help = wording.get('help.frame_processors').format(choices = ', '.join(available_frame_processors)), default = config.get_str_list('frame_processors.frame_processors', 'face_swapper'), nargs = '+')
-	facefusion.job_store.register_step_args([ '--frame-processors' ])
+	facefusion.job_store.register_step_args([ 'frame_processors' ])
 	for frame_processor in available_frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		frame_processor_module.register_args(group_frame_processors)
 	# uis
 	available_ui_layouts = list_directory('facefusion/uis/layouts')
 	group_uis = program.add_argument_group('uis')
-	group_uis.add_argument('--open-browser', help=wording.get('help.open_browser'), action = 'store_true', default = config.get_bool_value('uis.open_browser'))
+	group_uis.add_argument('--open-browser', help = wording.get('help.open_browser'), action = 'store_true', default = config.get_bool_value('uis.open_browser'))
 	group_uis.add_argument('--ui-layouts', help = wording.get('help.ui_layouts').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layouts', 'default'), nargs = '+')
 	# job actions
 	group_jobs = program.add_argument_group('job actions')
-	group_jobs.add_argument('--job-run', help = wording.get('help.job_run'), type = str)
+	group_jobs.add_argument('--job-run', help = wording.get('help.job_run'))
 	group_jobs.add_argument('--job-run-all', help = wording.get('help.job_run_all'), action = 'store_true')
-	group_jobs.add_argument('--job-create', help = wording.get('help.job_create'), type = str)
-	group_jobs.add_argument('--job-delete', help = wording.get('help.job_delete'), type = str)
-	group_jobs.add_argument('--job-add-step', help = wording.get('help.job_add_step'), type = str)
-	group_jobs.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), type = str, nargs = 2)
-	group_jobs.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), type = str, nargs = 2)
-	group_jobs.add_argument('--job-remove-step', help = wording.get('help.job_remove_step'), type = str, nargs = 2)
+	group_jobs.add_argument('--job-create', help = wording.get('help.job_create'))
+	group_jobs.add_argument('--job-delete', help = wording.get('help.job_delete'))
+	group_jobs.add_argument('--job-add-step', help = wording.get('help.job_add_step'))
+	group_jobs.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), nargs = 2)
+	group_jobs.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), nargs = 2)
+	group_jobs.add_argument('--job-remove-step', help = wording.get('help.job_remove_step'), nargs = 2)
 	return program
 
 
-def apply_config(program : ArgumentParser) -> None:
+def apply_config_path(program : ArgumentParser) -> None:
 	known_args, _ = program.parse_known_args()
 	facefusion.globals.config_path = known_args.config_path
 
@@ -159,6 +160,7 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.source_paths = args.source_paths
 	facefusion.globals.target_path = args.target_path
 	facefusion.globals.output_path = args.output_path
+	facefusion.globals.jobs_path = args.jobs_path
 	# misc
 	facefusion.globals.force_download = args.force_download
 	facefusion.globals.skip_download = args.skip_download
@@ -231,11 +233,12 @@ def apply_args(program : ArgumentParser) -> None:
 def run(program : ArgumentParser) -> None:
 	apply_args(program)
 	logger.init(facefusion.globals.log_level)
+	known_args, _ = program.parse_known_args()
 
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
-	if has_argument('--job-create') or has_argument('--job-delete') or has_argument('--job-add-step') or has_argument('--job-remix-step') or has_argument('--job-insert-step') or has_argument('--job-remove-step'):
-		init_jobs('.jobs')
+	if known_args.job_create or known_args.job_delete or known_args.job_add_step or known_args.job_remix_step or known_args.job_insert_step or known_args.job_remove_step:
+		init_jobs(facefusion.globals.jobs_path)
 		error_code = route_job_action(program)
 		return conditional_exit(error_code)
 	if facefusion.globals.force_download:
@@ -247,13 +250,12 @@ def run(program : ArgumentParser) -> None:
 		if not frame_processor_module.pre_check():
 			return conditional_exit(2)
 	if facefusion.globals.headless:
-		if has_argument('--job-run'):
-			args = program.parse_args()
-			if run_job(args.job_run, process_step):
+		if known_args.job_run:
+			if run_job(known_args.job_run, process_step):
 				conditional_exit(0)
 			else:
 				conditional_exit(1)
-		elif has_argument('--job-run-all'):
+		elif known_args.job_run_all:
 			if run_jobs(process_step):
 				conditional_exit(0)
 			else:
@@ -284,25 +286,25 @@ def route_job_action(program : ArgumentParser) -> ErrorCode:
 	step_program = reduce_args(program, job_store.get_step_args())
 	step_args = vars(step_program.parse_args())
 
-	if has_argument('--job-create'):
+	if args.job_create:
 		if facefusion.job_manager.create_job(args.job_create):
 			logger.info(wording.get('job_created'), __name__.upper())
 			return 0
 		logger.error(wording.get('job_not_created'), __name__.upper())
 		return 1
-	if has_argument('--job-delete'):
+	if args.job_delete:
 		if facefusion.job_manager.delete_job(args.job_delete):
 			logger.info(wording.get('job_deleted'), __name__.upper())
 			return 0
 		logger.error(wording.get('job_not_deleted'), __name__.upper())
 		return 1
-	if has_argument('--job-add-step'):
+	if args.job_add_step:
 		if facefusion.job_manager.add_step(args.job_add_step, step_args):
 			logger.info(wording.get('job_step_added'), __name__.upper())
 			return 0
 		logger.error(wording.get('job_step_not_added'), __name__.upper())
 		return 1
-	if has_argument('--job-remix-step'):
+	if args.job_remix_step:
 		job_id, step_index = args.job_remix_step
 		step_index = int(step_index)
 
@@ -311,7 +313,7 @@ def route_job_action(program : ArgumentParser) -> ErrorCode:
 			return 0
 		logger.error(wording.get('job_remix_step_not_added'), __name__.upper())
 		return 1
-	if has_argument('--job-insert-step'):
+	if args.job_insert_step:
 		job_id, step_index = args.job_insert_step
 		step_index = int(step_index)
 
@@ -320,7 +322,7 @@ def route_job_action(program : ArgumentParser) -> ErrorCode:
 			return 0
 		logger.error(wording.get('job_step_not_inserted'), __name__.upper())
 		return 1
-	if has_argument('--job-remove-step'):
+	if args.job_remove_step:
 		job_id, step_index = args.job_remove_step
 		step_index = int(step_index)
 

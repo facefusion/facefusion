@@ -12,7 +12,7 @@ def test_reduce_args() -> None:
 	program.add_argument('--test-5', default = 'test_5')
 	program.add_argument('--test-6', default = 'test_6')
 
-	program = reduce_args(program, [ '--test-1', '-t3', '--test-5' ])
+	program = reduce_args(program, [ 'test_1', 'test_3', 'test_5' ])
 	known_args, _ = program.parse_known_args()
 
 	assert known_args.test_1 == 'test_1'
