@@ -233,11 +233,11 @@ def apply_args(program : ArgumentParser) -> None:
 def run(program : ArgumentParser) -> None:
 	apply_args(program)
 	logger.init(facefusion.globals.log_level)
-	known_args, _ = program.parse_known_args()
+	args = program.parse_args()
 
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
-	if known_args.job_create or known_args.job_delete or known_args.job_add_step or known_args.job_remix_step or known_args.job_insert_step or known_args.job_remove_step:
+	if args.job_create or args.job_delete or args.job_add_step or args.job_remix_step or args.job_insert_step or args.job_remove_step:
 		if not init_jobs(facefusion.globals.jobs_path):
 			return conditional_exit(1)
 		error_code = route_job_action(program)
@@ -250,20 +250,20 @@ def run(program : ArgumentParser) -> None:
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		if not frame_processor_module.pre_check():
 			return conditional_exit(2)
-	if facefusion.globals.headless:
-		if known_args.job_run:
-			if run_job(known_args.job_run, process_step):
-				conditional_exit(0)
-			else:
-				conditional_exit(1)
-		elif known_args.job_run_all:
-			if run_jobs(process_step):
-				conditional_exit(0)
-			else:
-				conditional_exit(1)
+
+	if args.job_run:
+		if init_jobs(facefusion.globals.jobs_path) and run_job(args.job_run, process_step):
+			conditional_exit(0)
 		else:
-			error_code = conditional_process()
-			conditional_exit(error_code)
+			conditional_exit(1)
+	elif args.job_run_all:
+		if init_jobs(facefusion.globals.jobs_path) and run_jobs(process_step):
+			conditional_exit(0)
+		else:
+			conditional_exit(1)
+	elif facefusion.globals.headless:
+		error_code = conditional_process()
+		conditional_exit(error_code)
 	else:
 		import facefusion.uis.core as ui
 
