@@ -4,7 +4,7 @@ import numpy
 
 from facefusion.typing import VisionFrame, Face, FaceStore, FaceSet
 
-FACE_STORE: FaceStore =\
+FACE_STORE : FaceStore =\
 {
 	'static_faces': {},
 	'reference_faces': {}

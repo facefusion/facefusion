@@ -7,6 +7,8 @@ import onnxruntime
 from onnx import numpy_helper
 
 import facefusion.globals
+import facefusion.job_manager
+import facefusion.job_store
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, logger, wording
 from facefusion.execution import has_execution_provider, apply_execution_provider_options
@@ -16,11 +18,10 @@ from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
 from facefusion.face_store import get_reference_faces
 from facefusion.common_helper import get_argument_value, get_first
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.normalizer import normalize_output_path
 from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, Embedding, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
-from facefusion.filesystem import is_file, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
+from facefusion.filesystem import same_file_extension, is_file, in_directory, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image, unpack_resolution
 from facefusion.processors.frame.typing import FaceSwapperInputs
@@ -159,6 +160,7 @@ def register_args(program : ArgumentParser) -> None:
 	face_swapper_pixel_boost_choices = frame_processors_choices.face_swapper_set.get(face_swapper_model) #type:ignore[call-overload]
 	program.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', face_swapper_model_fallback), choices = frame_processors_choices.face_swapper_set.keys())
 	program.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('frame_processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
+	facefusion.job_store.register_step_args([ 'face_swapper_model', 'face_swapper_pixel_boost' ])
 
 
 def apply_args(program : ArgumentParser) -> None:
@@ -202,7 +204,7 @@ def post_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if not has_image(facefusion.globals.source_paths):
-		logger.error(wording.get('select_image_source') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('choose_image_source') + wording.get('exclamation_mark'), NAME)
 		return False
 	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
 	source_frames = read_static_images(source_image_paths)
@@ -211,10 +213,13 @@ def pre_process(mode : ProcessMode) -> bool:
 			logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
 			return False
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
-		logger.error(wording.get('select_image_or_video_target') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path):
-		logger.error(wording.get('select_file_or_directory_output') + wording.get('exclamation_mark'), NAME)
+	if mode == 'output' and not in_directory(facefusion.globals.output_path):
+		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
+		return False
+	if mode == 'output' and not same_file_extension([ facefusion.globals.target_path, facefusion.globals.output_path ]):
+		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
 

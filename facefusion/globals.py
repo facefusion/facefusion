@@ -7,6 +7,7 @@ config_path : Optional[str] = None
 source_paths : Optional[List[str]] = None
 target_path : Optional[str] = None
 output_path : Optional[str] = None
+jobs_path : Optional[str] = None
 # misc
 force_download : Optional[bool] = None
 skip_download : Optional[bool] = None

@@ -4,6 +4,8 @@ import cv2
 import numpy
 
 import facefusion.globals
+import facefusion.job_manager
+import facefusion.job_store
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, wording
 from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
@@ -37,6 +39,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 def register_args(program : ArgumentParser) -> None:
 	program.add_argument('--face-debugger-items', help = wording.get('help.face_debugger_items').format(choices = ', '.join(frame_processors_choices.face_debugger_items)), default = config.get_str_list('frame_processors.face_debugger_items', 'face-landmark-5/68 face-mask'), choices = frame_processors_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
+	facefusion.job_store.register_step_args([ 'face_debugger_items' ])
 
 
 def apply_args(program : ArgumentParser) -> None:

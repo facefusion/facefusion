@@ -3,30 +3,36 @@ import sys
 import pytest
 
 from facefusion.download import conditional_download
+from .helper import get_test_examples_directory, prepare_test_output_directory, get_test_example_file, get_test_output_file, is_test_output_file
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	conditional_download('.assets/examples',
+	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
 	])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vframes', '1', '-vf', 'hue=s=0', '.assets/examples/target-240p-0sat.jpg' ])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'hue=s=0', '.assets/examples/target-240p-0sat.mp4' ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', '-vf', 'hue=s=0', get_test_example_file('target-240p-0sat.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'hue=s=0', get_test_example_file('target-240p-0sat.mp4') ])
+
+
+@pytest.fixture(scope = 'function', autouse = True)
+def before_each() -> None:
+	prepare_test_output_directory()
 
 
 def test_colorize_frame_to_image() -> None:
-	commands = [ sys.executable, 'run.py', '--frame-processors', 'frame_colorizer', '-t', '.assets/examples/target-240p-0sat.jpg', '-o', '.assets/examples/test_colorize_frame_to_image.jpg', '--headless' ]
-	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+	commands = [ sys.executable, 'run.py', '--frame-processors', 'frame_colorizer', '-t', get_test_example_file('target-240p-0sat.jpg'), '-o', get_test_output_file('test_colorize-frame-to-image.jpg'), '--headless' ]
+	run = subprocess.run(commands)
 
 	assert run.returncode == 0
-	assert 'image succeed' in run.stdout.decode()
+	assert is_test_output_file('test_colorize-frame-to-image.jpg') is True
 
 
 def test_colorize_frame_to_video() -> None:
-	commands = [ sys.executable, 'run.py', '--frame-processors', 'frame_colorizer', '-t', '.assets/examples/target-240p-0sat.mp4', '-o', '.assets/examples/test_colorize_frame_to_video.mp4', '--trim-frame-end', '10', '--headless' ]
-	run = subprocess.run(commands, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+	commands = [ sys.executable, 'run.py', '--frame-processors', 'frame_colorizer', '-t', get_test_example_file('target-240p-0sat.mp4'), '-o', get_test_output_file('test-colorize-frame-to-video.mp4'), '--trim-frame-end', '10', '--headless' ]
+	run = subprocess.run(commands)
 
 	assert run.returncode == 0
-	assert 'video succeed' in run.stdout.decode()
+	assert is_test_output_file('test-colorize-frame-to-video.mp4') is True

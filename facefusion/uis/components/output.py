@@ -6,9 +6,9 @@ import facefusion.globals
 from facefusion import process_manager, wording
 from facefusion.core import conditional_process
 from facefusion.memory import limit_system_memory
-from facefusion.normalizer import normalize_output_path
 from facefusion.uis.core import get_ui_component
-from facefusion.filesystem import clear_temp, is_image, is_video
+from facefusion.filesystem import is_image, is_video
+from facefusion.temp_helper import clear_temp
 
 OUTPUT_IMAGE : Optional[gradio.Image] = None
 OUTPUT_VIDEO : Optional[gradio.Video] = None
@@ -64,14 +64,13 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 
 def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
-	normed_output_path = normalize_output_path(facefusion.globals.target_path, facefusion.globals.output_path)
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
 	conditional_process()
-	if is_image(normed_output_path):
-		return gradio.Image(value = normed_output_path, visible = True), gradio.Video(value = None, visible = False), gradio.Button(visible = True), gradio.Button(visible = False)
-	if is_video(normed_output_path):
-		return gradio.Image(value = None, visible = False), gradio.Video(value = normed_output_path, visible = True), gradio.Button(visible = True), gradio.Button(visible = False)
+	if is_image(facefusion.globals.output_path):
+		return gradio.Image(value = facefusion.globals.output_path, visible = True), gradio.Video(value = None, visible = False), gradio.Button(visible = True), gradio.Button(visible = False)
+	if is_video(facefusion.globals.output_path):
+		return gradio.Image(value = None, visible = False), gradio.Video(value = facefusion.globals.output_path, visible = True), gradio.Button(visible = True), gradio.Button(visible = False)
 	return gradio.Image(value = None), gradio.Video(value = None), gradio.Button(visible = True), gradio.Button(visible = False)
 
 

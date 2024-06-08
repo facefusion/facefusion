@@ -1,4 +1,4 @@
-from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict
+from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict, Optional
 from collections import namedtuple
 import numpy
 
@@ -60,12 +60,16 @@ QueuePayload = TypedDict('QueuePayload',
 })
 UpdateProgress = Callable[[int], None]
 ProcessFrames = Callable[[List[str], List[QueuePayload], UpdateProgress], None]
+ProcessStep = Callable[[Dict[str, Any]], bool]
+Args = Dict[str, Any]
 
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
 WarpTemplateSet = Dict[WarpTemplate, numpy.ndarray[Any, Any]]
 ProcessMode = Literal['output', 'preview', 'stream']
 
+ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
+
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceAnalyserOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
@@ -119,4 +123,26 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'product' : ExecutionDeviceProduct,
 	'video_memory' : ExecutionDeviceVideoMemory,
 	'utilization' : ExecutionDeviceUtilization
+})
+
+JobArgsStore = TypedDict('JobArgsStore',
+{
+	'job' : List[str],
+	'step' : List[str]
+})
+JobMergeSet = Dict[str, List[str]]
+JobStatus = Literal['queued', 'completed', 'failed']
+JobStepStatus = Literal['queued', 'completed', 'failed']
+
+JobStep = TypedDict('JobStep',
+{
+	'args' : Args,
+	'status' : JobStepStatus
+})
+Job = TypedDict('Job',
+{
+	'version' : str,
+	'date_created' : str,
+	'date_updated' : Optional[str],
+	'steps' : List[JobStep]
 })
