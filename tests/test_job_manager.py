@@ -78,6 +78,7 @@ def test_add_step() -> None:
 
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_2
+	assert len(steps) == 2
 
 
 def test_remix_step() -> None:
@@ -109,6 +110,7 @@ def test_remix_step() -> None:
 	assert steps[2].get('args').get('source_path') == args_2.get('source_path')
 	assert steps[2].get('args').get('target_path') == args_1.get('output_path')
 	assert steps[2].get('args').get('output_path') == args_2.get('output_path')
+	assert len(steps) == 3
 
 
 def test_insert_step() -> None:
@@ -124,6 +126,12 @@ def test_insert_step() -> None:
 		'target_path': 'target-2.jpg',
 		'output_path': 'output-2.jpg'
 	}
+	args_3 =\
+	{
+		'source_path': 'source-3.jpg',
+		'target_path': 'target-3.jpg',
+		'output_path': 'output-3.jpg'
+	}
 
 	assert insert_step('job-test-insert-step', 0, args_1) is False
 
@@ -132,12 +140,15 @@ def test_insert_step() -> None:
 	add_step('job-test-insert-step', args_1)
 
 	assert insert_step('job-test-insert-step', 1, args_2) is True
+	assert insert_step('job-test-insert-step', -1, args_3) is True
 
 	steps = get_steps('job-test-insert-step')
 
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_2
 	assert steps[2].get('args') == args_1
+	assert steps[3].get('args') == args_3
+	assert len(steps) == 4
 
 
 def test_remove_step() -> None:
@@ -153,6 +164,12 @@ def test_remove_step() -> None:
 		'target_path': 'target-2.jpg',
 		'output_path': 'output-2.jpg'
 	}
+	args_3 =\
+	{
+		'source_path': 'source-3.jpg',
+		'target_path': 'target-3.jpg',
+		'output_path': 'output-3.jpg'
+	}
 
 	assert remove_step('job-test-insert-step', 0) is False
 
@@ -160,13 +177,16 @@ def test_remove_step() -> None:
 	add_step('job-test-remove-step', args_1)
 	add_step('job-test-remove-step', args_2)
 	add_step('job-test-remove-step', args_1)
+	add_step('job-test-remove-step', args_3)
 
 	assert remove_step('job-test-remove-step', 1) is True
+	assert remove_step('job-test-remove-step', -1) is True
 
 	steps = get_steps('job-test-remove-step')
 
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_1
+	assert len(steps) == 2
 
 
 def test_get_steps() -> None:
@@ -192,6 +212,7 @@ def test_get_steps() -> None:
 
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_2
+	assert len(steps) == 2
 
 
 def test_set_step_status() -> None:
@@ -221,3 +242,4 @@ def test_set_step_status() -> None:
 
 	assert steps[0].get('status') == 'completed'
 	assert steps[1].get('status') == 'failed'
+	assert len(steps) == 2

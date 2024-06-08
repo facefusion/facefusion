@@ -90,6 +90,8 @@ def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	}
 
 	if job:
+		if step_index == -1:
+			return add_step(job_id, step_args)
 		job.get('steps').insert(step_index, step)
 		return update_job_file(job_id, job)
 	return False
