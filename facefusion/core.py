@@ -33,7 +33,7 @@ from facefusion.filesystem import is_image, is_video, filter_audio_paths, resolv
 from facefusion.temp_helper import get_temp_frame_paths, get_temp_file_path, create_temp, move_temp, clear_temp
 from facefusion.ffmpeg import extract_frames, merge_video, copy_image, finalize_image, restore_audio, replace_audio
 from facefusion.vision import read_image, read_static_images, detect_image_resolution, restrict_video_fps, create_image_resolutions, get_video_frame, detect_video_resolution, detect_video_fps, restrict_video_resolution, restrict_image_resolution, create_video_resolutions, pack_resolution, unpack_resolution
-from facefusion.job_runner import run_job, run_jobs
+from facefusion.job_runner import run_job, run_jobs, retry_job, retry_jobs
 from facefusion.job_manager import init_jobs
 from facefusion.typing import ErrorCode, Args
 
@@ -136,16 +136,21 @@ def create_program() -> ArgumentParser:
 	group_uis = program.add_argument_group('uis')
 	group_uis.add_argument('--open-browser', help = wording.get('help.open_browser'), action = 'store_true', default = config.get_bool_value('uis.open_browser'))
 	group_uis.add_argument('--ui-layouts', help = wording.get('help.ui_layouts').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layouts', 'default'), nargs = '+')
-	# job actions
-	group_jobs = program.add_argument_group('job actions')
-	group_jobs.add_argument('--job-run', help = wording.get('help.job_run'))
-	group_jobs.add_argument('--job-run-all', help = wording.get('help.job_run_all'), action = 'store_true')
-	group_jobs.add_argument('--job-create', help = wording.get('help.job_create'))
-	group_jobs.add_argument('--job-delete', help = wording.get('help.job_delete'))
-	group_jobs.add_argument('--job-add-step', help = wording.get('help.job_add_step'))
-	group_jobs.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), nargs = 2)
-	group_jobs.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), nargs = 2)
-	group_jobs.add_argument('--job-remove-step', help = wording.get('help.job_remove_step'), nargs = 2)
+	# job manager
+	group_job_manager = program.add_argument_group('job manager')
+	group_job_manager.add_argument('--job-create', help = wording.get('help.job_create'))
+	group_job_manager.add_argument('--job-delete', help = wording.get('help.job_delete'))
+	group_job_manager.add_argument('--job-delete-all', help=wording.get('help.job_delete_all'), action = 'store_true')
+	group_job_manager.add_argument('--job-add-step', help = wording.get('help.job_add_step'))
+	group_job_manager.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), nargs = 2)
+	group_job_manager.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), nargs = 2)
+	group_job_manager.add_argument('--job-remove-step', help = wording.get('help.job_remove_step'), nargs = 2)
+	# job runner
+	group_job_runner = program.add_argument_group('job runner')
+	group_job_runner.add_argument('--job-run', help = wording.get('help.job_run'))
+	group_job_runner.add_argument('--job-run-all', help = wording.get('help.job_run_all'), action = 'store_true')
+	group_job_runner.add_argument('--job-retry', help = wording.get('help.job_retry'))
+	group_job_runner.add_argument('--job-retry-all', help = wording.get('help.job_retry_all'), action = 'store_true')
 	return program
 
 
@@ -237,10 +242,10 @@ def run(program : ArgumentParser) -> None:
 
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
-	if args.job_create or args.job_delete or args.job_add_step or args.job_remix_step or args.job_insert_step or args.job_remove_step:
+	if args.job_create or args.job_delete or args.job_delete_all or args.job_add_step or args.job_remix_step or args.job_insert_step or args.job_remove_step:
 		if not init_jobs(facefusion.globals.jobs_path):
 			return conditional_exit(1)
-		error_code = route_job_action(program)
+		error_code = route_job_manager(program)
 		return conditional_exit(error_code)
 	if facefusion.globals.force_download:
 		force_download()
@@ -251,19 +256,14 @@ def run(program : ArgumentParser) -> None:
 		if not frame_processor_module.pre_check():
 			return conditional_exit(2)
 
-	if args.job_run:
-		if init_jobs(facefusion.globals.jobs_path) and run_job(args.job_run, process_step):
-			conditional_exit(0)
-		else:
-			conditional_exit(1)
-	elif args.job_run_all:
-		if init_jobs(facefusion.globals.jobs_path) and run_jobs(process_step):
-			conditional_exit(0)
-		else:
-			conditional_exit(1)
+	if args.job_run or args.job_run_all or args.job_retry or args.job_retry_all:
+		if not init_jobs(facefusion.globals.jobs_path):
+			return conditional_exit(1)
+		error_code = route_job_runner(program)
+		return conditional_exit(error_code)
 	elif facefusion.globals.headless:
 		error_code = conditional_process()
-		conditional_exit(error_code)
+		return conditional_exit(error_code)
 	else:
 		import facefusion.uis.core as ui
 
@@ -271,68 +271,6 @@ def run(program : ArgumentParser) -> None:
 			if not ui_layout.pre_check():
 				return conditional_exit(2)
 		ui.launch()
-
-
-def process_step(step_args : Args) -> bool:
-	program = create_program()
-	program = update_args(program, step_args)
-	apply_args(program)
-	error_code = conditional_process()
-	conditional_exit(error_code)
-	return error_code == 0
-
-
-def route_job_action(program : ArgumentParser) -> ErrorCode:
-	args = program.parse_args()
-	step_program = reduce_args(program, job_store.get_step_args())
-	step_args = vars(step_program.parse_args())
-
-	if args.job_create:
-		if facefusion.job_manager.create_job(args.job_create):
-			logger.info(wording.get('job_created'), __name__.upper())
-			return 0
-		logger.error(wording.get('job_not_created'), __name__.upper())
-		return 1
-	if args.job_delete:
-		if facefusion.job_manager.delete_job(args.job_delete):
-			logger.info(wording.get('job_deleted'), __name__.upper())
-			return 0
-		logger.error(wording.get('job_not_deleted'), __name__.upper())
-		return 1
-	if args.job_add_step:
-		if facefusion.job_manager.add_step(args.job_add_step, step_args):
-			logger.info(wording.get('job_step_added'), __name__.upper())
-			return 0
-		logger.error(wording.get('job_step_not_added'), __name__.upper())
-		return 1
-	if args.job_remix_step:
-		job_id, step_index = args.job_remix_step
-		step_index = int(step_index)
-
-		if facefusion.job_manager.remix_step(job_id, step_index, step_args):
-			logger.info(wording.get('job_remix_step_added'), __name__.upper())
-			return 0
-		logger.error(wording.get('job_remix_step_not_added'), __name__.upper())
-		return 1
-	if args.job_insert_step:
-		job_id, step_index = args.job_insert_step
-		step_index = int(step_index)
-
-		if facefusion.job_manager.insert_step(job_id, step_index, step_args):
-			logger.info(wording.get('job_step_inserted'), __name__.upper())
-			return 0
-		logger.error(wording.get('job_step_not_inserted'), __name__.upper())
-		return 1
-	if args.job_remove_step:
-		job_id, step_index = args.job_remove_step
-		step_index = int(step_index)
-
-		if facefusion.job_manager.remove_step(job_id, step_index):
-			logger.info(wording.get('job_step_removed'), __name__.upper())
-			return 0
-		logger.error(wording.get('job_step_not_removed'), __name__.upper())
-		return 1
-	return 1
 
 
 def pre_check() -> bool:
@@ -397,6 +335,108 @@ def force_download() -> None:
 			models.append(frame_processor_module.MODELS)
 	model_urls = [ models[model].get('url') for models in models for model in models ]
 	conditional_download(download_directory_path, model_urls)
+
+
+def route_job_manager(program : ArgumentParser) -> ErrorCode:
+	args = program.parse_args()
+	step_program = reduce_args(program, job_store.get_step_args())
+	step_args = vars(step_program.parse_args())
+
+	if args.job_create:
+		if facefusion.job_manager.create_job(args.job_create):
+			logger.info(wording.get('job_created').format(job_id = args.job_create), __name__.upper())
+			return 0
+		logger.error(wording.get('job_not_created').format(job_id = args.job_create), __name__.upper())
+		return 1
+	if args.job_delete:
+		if facefusion.job_manager.delete_job(args.job_delete):
+			logger.info(wording.get('job_deleted').format(job_id = args.job_delete), __name__.upper())
+			return 0
+		logger.error(wording.get('job_not_deleted').format(job_id = args.job_delete), __name__.upper())
+		return 1
+	if args.job_delete_all:
+		if facefusion.job_manager.delete_jobs():
+			logger.info(wording.get('job_deleted_all'), __name__.upper())
+			return 0
+		logger.error(wording.get('job_not_deleted'), __name__.upper())
+		return 1
+	if args.job_add_step:
+		if facefusion.job_manager.add_step(args.job_add_step, step_args):
+			logger.info(wording.get('job_step_added').format(job_id = args.job_add_step), __name__.upper())
+			return 0
+		logger.error(wording.get('job_step_not_added').format(job_id = args.job_add_step), __name__.upper())
+		return 1
+	if args.job_remix_step:
+		job_id, step_index = args.job_remix_step
+		step_index = int(step_index)
+
+		if facefusion.job_manager.remix_step(job_id, step_index, step_args):
+			logger.info(wording.get('job_remix_step_added').format(job_id = job_id, step_index = step_index), __name__.upper())
+			return 0
+		logger.error(wording.get('job_remix_step_not_added').format(job_id = job_id, step_index = step_index), __name__.upper())
+		return 1
+	if args.job_insert_step:
+		job_id, step_index = args.job_insert_step
+		step_index = int(step_index)
+
+		if facefusion.job_manager.insert_step(job_id, step_index, step_args):
+			logger.info(wording.get('job_step_inserted').format(job_id = job_id, step_index = step_index), __name__.upper())
+			return 0
+		logger.error(wording.get('job_step_not_inserted').format(job_id = job_id, step_index = step_index), __name__.upper())
+		return 1
+	if args.job_remove_step:
+		job_id, step_index = args.job_remove_step
+		step_index = int(step_index)
+
+		if facefusion.job_manager.remove_step(job_id, step_index):
+			logger.info(wording.get('job_step_removed').format(job_id = job_id, step_index = step_index), __name__.upper())
+			return 0
+		logger.error(wording.get('job_step_not_removed').format(job_id = job_id, step_index = step_index), __name__.upper())
+		return 1
+	return 1
+
+
+def route_job_runner(program : ArgumentParser) -> ErrorCode:
+	args = program.parse_args()
+
+	if args.job_run:
+		logger.info(wording.get('running_job').format(job_id = args.job_run), __name__.upper())
+		if run_job(args.job_run, process_step):
+			logger.info(wording.get('processing_job_succeed').format(job_id = args.job_run), __name__.upper())
+			return 0
+		logger.info(wording.get('processing_job_failed').format(job_id = args.job_run), __name__.upper())
+		return 1
+	if args.job_run_all:
+		logger.info(wording.get('running_jobs'), __name__.upper())
+		if run_jobs(process_step):
+			logger.info(wording.get('processing_jobs_succeed'), __name__.upper())
+			return 0
+		logger.info(wording.get('processing_jobs_failed'), __name__.upper())
+		return 1
+	if args.job_retry:
+		logger.info(wording.get('retrying_job').format(job_id = args.job_retry), __name__.upper())
+		if retry_job(args.job_retry, process_step):
+			logger.info(wording.get('processing_job_succeed').format(job_id = args.job_retry), __name__.upper())
+			return 0
+		logger.info(wording.get('processing_job_failed').format(job_id = args.job_retry), __name__.upper())
+		return 1
+	if args.job_retry_all:
+		logger.info(wording.get('retrying_jobs'), __name__.upper())
+		if retry_jobs(process_step):
+			logger.info(wording.get('processing_jobs_succeed'), __name__.upper())
+			return 0
+		logger.info(wording.get('processing_jobs_failed'), __name__.upper())
+		return 1
+	return 2
+
+
+def process_step(step_args : Args) -> bool:
+	program = create_program()
+	program = update_args(program, step_args)
+	apply_args(program)
+	error_code = conditional_process()
+	conditional_exit(error_code)
+	return error_code == 0
 
 
 def process_image(start_time : float) -> ErrorCode:
