@@ -45,6 +45,15 @@ def delete_job(job_id : str) -> bool:
 	return delete_job_file(job_id)
 
 
+def delete_jobs() -> bool:
+	job_ids = find_job_ids('queued') + find_job_ids('failed') + find_job_ids('completed')
+
+	for job_id in job_ids:
+		if not delete_job(job_id):
+			return False
+	return True
+
+
 def find_job_ids(job_status : JobStatus) -> List[str]:
 	job_pattern = os.path.join(JOBS_PATH, job_status, '*.json')
 	job_ids = []
@@ -128,7 +137,7 @@ def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus)
 
 
 def read_job_file(job_id : str) -> Optional[Job]:
-	job_path = resolve_job_path(job_id)
+	job_path = find_job_path(job_id)
 
 	if is_file(job_path):
 		with open(job_path, 'r') as job_file:
@@ -137,7 +146,7 @@ def read_job_file(job_id : str) -> Optional[Job]:
 
 
 def create_job_file(job_id : str, job : Job) -> bool:
-	job_path = resolve_job_path(job_id)
+	job_path = find_job_path(job_id)
 
 	if not is_file(job_path):
 		job_create_path = suggest_job_path(job_id, 'queued')
@@ -148,7 +157,7 @@ def create_job_file(job_id : str, job : Job) -> bool:
 
 
 def update_job_file(job_id : str, job : Job) -> bool:
-	job_path = resolve_job_path(job_id)
+	job_path = find_job_path(job_id)
 
 	if is_file(job_path):
 		with open(job_path, 'w') as job_file:
@@ -159,16 +168,13 @@ def update_job_file(job_id : str, job : Job) -> bool:
 
 
 def move_job_file(job_id : str, job_status : JobStatus) -> bool:
-	job_path = resolve_job_path(job_id)
-
-	if is_file(job_path):
-		job_move_path = suggest_job_path(job_id, job_status)
-		return move_file(job_path, job_move_path)
-	return False
+	job_path = find_job_path(job_id)
+	job_move_path = suggest_job_path(job_id, job_status)
+	return move_file(job_path, job_move_path)
 
 
 def delete_job_file(job_id : str) -> bool:
-	job_path = resolve_job_path(job_id)
+	job_path = find_job_path(job_id)
 	return remove_file(job_path)
 
 
@@ -177,7 +183,7 @@ def suggest_job_path(job_id : str, job_status : JobStatus) -> Optional[str]:
 	return os.path.join(JOBS_PATH, job_status, job_file_name)
 
 
-def resolve_job_path(job_id : str) -> Optional[str]:
+def find_job_path(job_id : str) -> Optional[str]:
 	job_file_name = job_id + '.json'
 
 	for job_status in JOB_STATUSES:
