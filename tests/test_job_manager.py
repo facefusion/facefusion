@@ -1,7 +1,7 @@
 import pytest
 
 
-from facefusion.job_manager import init_jobs, clear_jobs, create_job, delete_job, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status
+from facefusion.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, delete_job, delete_jobs, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status
 from .helper import get_test_jobs_directory
 
 
@@ -16,6 +16,23 @@ def test_create_job() -> None:
 	assert create_job('job-test-create-job') is False
 
 
+def test_submit_job() -> None:
+	assert submit_job('job-test-submit-job') is False
+
+	create_job('job-test-submit-job')
+
+	assert submit_job('job-test-submit-job') is True
+
+
+def test_submit_jobs() -> None:
+	assert submit_jobs() is False
+
+	create_job('job-test-submit-jobs-1')
+	create_job('job-test-submit-jobs-2')
+
+	assert submit_jobs() is True
+
+
 def test_delete_job() -> None:
 	assert delete_job('job-test-delete-job') is False
 
@@ -23,6 +40,15 @@ def test_delete_job() -> None:
 
 	assert delete_job('job-test-delete-job') is True
 	assert delete_job('job-test-delete-job') is False
+
+
+def test_delete_jobs() -> None:
+	assert delete_jobs() is False
+
+	create_job('job-test-delete-jobs-1')
+	create_job('job-test-delete-jobs-2')
+
+	assert delete_jobs() is True
 
 
 def test_find_job_ids() -> None:
