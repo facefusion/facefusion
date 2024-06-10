@@ -139,8 +139,10 @@ def create_program() -> ArgumentParser:
 	# job manager
 	group_job_manager = program.add_argument_group('job manager')
 	group_job_manager.add_argument('--job-create', help = wording.get('help.job_create'))
+	group_job_manager.add_argument('--job-submit', help = wording.get('help.job_submit'))
+	group_job_manager.add_argument('--job-submit-all', help = wording.get('help.job_submit_all'), action = 'store_true')
 	group_job_manager.add_argument('--job-delete', help = wording.get('help.job_delete'))
-	group_job_manager.add_argument('--job-delete-all', help=wording.get('help.job_delete_all'), action = 'store_true')
+	group_job_manager.add_argument('--job-delete-all', help = wording.get('help.job_delete_all'), action = 'store_true')
 	group_job_manager.add_argument('--job-add-step', help = wording.get('help.job_add_step'))
 	group_job_manager.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), nargs = 2)
 	group_job_manager.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), nargs = 2)

@@ -144,18 +144,21 @@ WORDING : Dict[str, Any] =\
 		# uis
 		'open_browser': 'open the browser once the program is ready',
 		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)',
-		# job actions
+		# job manager
+		'job_create': 'create a drafted job',
+		'job_submit': 'submit a drafted job to become a queued job',
+		'job_submit_all': 'submit all drafted jobs to become a queued jobs',
+		'job_delete': 'delete a drafted, queued, failed or completed job',
+		'job_delete_all': 'delete all drafted, queued, failed and completed jobs',
+		'job_add_step': 'add a step to a drafted job',
+		'job_remix_step': 'remix a previous step from a drafted job',
+		'job_insert_step': 'insert a step to a drafted job',
+		'job_remove_step': 'remove a step from a drafted job',
+		# job runner
 		'job_run': 'run a queued job',
 		'job_run_all': 'run all queued jobs',
 		'job_retry': 'retry a failed job',
-		'job_retry_all': 'retry all failed jobs',
-		'job_create': 'create a queued job',
-		'job_delete': 'delete a queued, failed or completed job',
-		'job_delete_all': 'delete all queued, failed and completed jobs',
-		'job_add_step': 'add a step to a queued job',
-		'job_remix_step': 'remix a previous step from a queued job',
-		'job_insert_step': 'insert a step to a queued job',
-		'job_remove_step': 'remove a step from a queued job'
+		'job_retry_all': 'retry all failed jobs'
 	},
 	'uis':
 	{
