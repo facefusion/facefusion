@@ -44,9 +44,8 @@ def create_job(job_id : str) -> bool:
 def submit_job(job_id : str) -> bool:
 	job_drafted_ids = find_job_ids('drafted')
 
-	for job_drafted_id in job_drafted_ids:
-		if job_drafted_id == job_id:
-			return move_job_file(job_drafted_id, 'queued')
+	if job_id in job_drafted_ids:
+		return set_steps_status(job_id, 'queued') and move_job_file(job_id, 'queued')
 	return False
 
 
@@ -153,8 +152,18 @@ def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus)
 
 		for index, step in enumerate(steps):
 			if index == step_index:
-				job.get('steps')[index]['status'] = step_status
+				steps[index]['status'] = step_status
 				return update_job_file(job_id, job)
+	return False
+
+
+def set_steps_status(job_id : str, step_status : JobStepStatus) -> bool:
+	job = read_job_file(job_id)
+
+	if job:
+		for step in job.get('steps'):
+			step['status'] = step_status
+		return update_job_file(job_id, job)
 	return False
 
 

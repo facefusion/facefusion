@@ -1,18 +1,17 @@
 from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import is_image, is_video, move_file
 from facefusion.job_helper import get_step_output_path
-from facefusion.job_manager import find_job_ids, get_steps, set_step_status, move_job_file
+from facefusion.job_manager import find_job_ids, get_steps, set_step_status, set_steps_status, move_job_file
 from facefusion.typing import JobStep, ProcessStep, JobMergeSet
 
 
 def run_job(job_id : str, process_step : ProcessStep) -> bool:
 	job_queued_ids = find_job_ids('queued')
 
-	for job_queued_id in job_queued_ids:
-		if job_queued_id == job_id:
-			if run_steps(job_queued_id, process_step) and finalize_steps(job_queued_id):
-				return move_job_file(job_id, 'completed')
-			return move_job_file(job_id, 'failed')
+	if job_id in job_queued_ids:
+		if run_steps(job_id, process_step) and finalize_steps(job_id):
+			return move_job_file(job_id, 'completed')
+		return move_job_file(job_id, 'failed')
 	return False
 
 
@@ -30,9 +29,8 @@ def run_jobs(process_step : ProcessStep) -> bool:
 def retry_job(job_id : str, process_step : ProcessStep) -> bool:
 	job_failed_ids = find_job_ids('failed')
 
-	for job_failed_id in job_failed_ids:
-		if job_failed_id == job_id:
-			return move_job_file(job_failed_id, 'queued') and run_job(job_id, process_step)
+	if job_id in job_failed_ids:
+		return set_steps_status(job_id, 'queued') and move_job_file(job_id, 'queued') and run_job(job_id, process_step)
 	return False
 
 
@@ -54,8 +52,7 @@ def run_step(job_id : str, step_index : int, step : JobStep, process_step : Proc
 
 	if step_output_path:
 		step_args['output_path'] = step_output_path
-	set_step_status(job_id, step_index, 'started')
-	if process_step(step_args):
+	if set_step_status(job_id, step_index, 'started') and process_step(step_args):
 		return set_step_status(job_id, step_index, 'completed')
 	return set_step_status(job_id, step_index, 'failed')
 

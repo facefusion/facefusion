@@ -1,7 +1,6 @@
 import pytest
 
-
-from facefusion.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, delete_job, delete_jobs, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status
+from facefusion.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, delete_job, delete_jobs, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status, set_steps_status
 from .helper import get_test_jobs_directory
 
 
@@ -290,3 +289,8 @@ def test_set_step_status() -> None:
 	assert steps[0].get('status') == 'completed'
 	assert steps[1].get('status') == 'failed'
 	assert len(steps) == 2
+
+
+@pytest.mark.skip()
+def test_set_steps_status() -> None:
+	pass
