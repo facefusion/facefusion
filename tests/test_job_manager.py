@@ -30,25 +30,38 @@ def test_find_job_ids() -> None:
 	create_job('job-test-find-job-ids-2')
 	create_job('job-test-find-job-ids-3')
 
+	assert find_job_ids('drafted') == [ 'job-test-find-job-ids-1', 'job-test-find-job-ids-2', 'job-test-find-job-ids-3' ]
+	assert find_job_ids('queued') == []
+	assert find_job_ids('completed') == []
+	assert find_job_ids('failed') == []
+
+	move_job_file('job-test-find-job-ids-1', 'queued')
+	move_job_file('job-test-find-job-ids-2', 'queued')
+	move_job_file('job-test-find-job-ids-3', 'queued')
+
+	assert find_job_ids('drafted') == []
 	assert find_job_ids('queued') == [ 'job-test-find-job-ids-1', 'job-test-find-job-ids-2', 'job-test-find-job-ids-3' ]
 	assert find_job_ids('completed') == []
 	assert find_job_ids('failed') == []
 
 	move_job_file('job-test-find-job-ids-1', 'completed')
 
+	assert find_job_ids('drafted') == []
 	assert find_job_ids('queued') == [ 'job-test-find-job-ids-2', 'job-test-find-job-ids-3' ]
 	assert find_job_ids('completed') == [ 'job-test-find-job-ids-1' ]
 	assert find_job_ids('failed') == []
 
 	move_job_file('job-test-find-job-ids-2', 'failed')
 
+	assert find_job_ids('drafted') == []
 	assert find_job_ids('queued') == [ 'job-test-find-job-ids-3' ]
 	assert find_job_ids('completed') == [ 'job-test-find-job-ids-1' ]
 	assert find_job_ids('failed') == [ 'job-test-find-job-ids-2' ]
 
 	move_job_file('job-test-find-job-ids-3', 'completed')
 
-	assert find_job_ids('queued') == [ ]
+	assert find_job_ids('drafted') == []
+	assert find_job_ids('queued') == []
 	assert find_job_ids('completed') == [ 'job-test-find-job-ids-1', 'job-test-find-job-ids-3' ]
 	assert find_job_ids('failed') == [ 'job-test-find-job-ids-2' ]
 

@@ -28,7 +28,7 @@ def test_job_create() -> None:
 	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-create' ]
 
 	assert subprocess.run(commands).returncode == 0
-	assert is_test_job_file('test-job-create.json', 'queued') is True
+	assert is_test_job_file('test-job-create.json', 'drafted') is True
 
 	commands = [sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-create']
 
@@ -46,7 +46,7 @@ def test_job_delete() -> None:
 	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-delete', 'test-job-delete' ]
 
 	assert subprocess.run(commands).returncode == 0
-	assert not is_test_job_file('test-job-delete.json', 'queued') is True
+	assert not is_test_job_file('test-job-delete.json', 'drafted') is True
 
 
 def test_job_add_step() -> None:

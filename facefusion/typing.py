@@ -132,7 +132,7 @@ JobArgsStore = TypedDict('JobArgsStore',
 })
 JobMergeSet = Dict[str, List[str]]
 JobStatus = Literal['drafted', 'queued', 'completed', 'failed']
-JobStepStatus = Literal['drafted', 'queued', 'completed', 'failed']
+JobStepStatus = Literal['drafted', 'queued', 'started', 'completed', 'failed']
 
 JobStep = TypedDict('JobStep',
 {
