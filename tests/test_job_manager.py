@@ -12,16 +12,23 @@ def before_each() -> None:
 
 
 def test_create_job() -> None:
-	assert create_job('job-test-create-job') is True
-	assert create_job('job-test-create-job') is False
+	assert create_job('job-test-create-job-1') is True
+	assert create_job('job-test-create-job-1') is False
+
+	submit_job('job-test-create-job-1')
+	submit_job('job-test-create-job-2')
+
+	assert create_job('job-test-create-job-1') is False
 
 
 def test_submit_job() -> None:
-	assert submit_job('job-test-submit-job') is False
+	assert submit_job('job-test-submit-job-1') is False
 
-	create_job('job-test-submit-job')
+	create_job('job-test-submit-job-1')
+	create_job('job-test-submit-job-2')
 
-	assert submit_job('job-test-submit-job') is True
+	assert submit_job('job-test-submit-job-1') is True
+	assert submit_job('job-test-submit-job-1') is False
 
 
 def test_submit_jobs() -> None:
@@ -34,12 +41,13 @@ def test_submit_jobs() -> None:
 
 
 def test_delete_job() -> None:
-	assert delete_job('job-test-delete-job') is False
+	assert delete_job('job-test-delete-job-1') is False
 
-	create_job('job-test-delete-job')
+	create_job('job-test-delete-job-1')
+	create_job('job-test-delete-job-2')
 
-	assert delete_job('job-test-delete-job') is True
-	assert delete_job('job-test-delete-job') is False
+	assert delete_job('job-test-delete-job-1') is True
+	assert delete_job('job-test-delete-job-1') is False
 
 
 def test_delete_jobs() -> None:

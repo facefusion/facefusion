@@ -1,7 +1,6 @@
 import os
 import subprocess
 import tempfile
-
 import pytest
 
 from facefusion.typing import Args
@@ -101,6 +100,16 @@ def test_run_jobs() -> None:
 	submit_jobs()
 
 	assert run_jobs(process_step) is True
+
+
+@pytest.mark.skip()
+def test_retry_job() -> None:
+	pass
+
+
+@pytest.mark.skip()
+def test_retry_jobs() -> None:
+	pass
 
 
 def test_run_steps() -> None:

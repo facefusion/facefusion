@@ -42,14 +42,19 @@ def create_job(job_id : str) -> bool:
 
 
 def submit_job(job_id : str) -> bool:
-	return move_job_file(job_id, 'queued')
+	job_drafted_ids = find_job_ids('drafted')
+
+	for job_drafted_id in job_drafted_ids:
+		if job_drafted_id == job_id:
+			return move_job_file(job_drafted_id, 'queued')
+	return False
 
 
 def submit_jobs() -> bool:
-	job_ids = find_job_ids('drafted')
+	job_drafted_ids = find_job_ids('drafted')
 
-	if job_ids:
-		for job_id in job_ids:
+	if job_drafted_ids:
+		for job_id in job_drafted_ids:
 			if not submit_job(job_id):
 				return False
 		return True
