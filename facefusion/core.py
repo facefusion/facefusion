@@ -15,7 +15,7 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.typing import ErrorCode, Args
 from facefusion import face_analyser, face_masker, content_analyser, config, job_manager, job_runner, job_store, process_manager, metadata, logger, voice_extractor, wording
-from facefusion.program_helper import reduce_args, update_args
+from facefusion.program_helper import validate_args, reduce_args, update_args
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.content_analyser import analyse_image, analyse_video
@@ -39,7 +39,8 @@ warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: graceful_exit(0))
 	program = create_program()
-	run(program)
+	if validate_args(program):
+		run(program)
 
 
 def create_program() -> ArgumentParser:
@@ -442,10 +443,11 @@ def route_job_runner(program : ArgumentParser) -> ErrorCode:
 def process_step(step_args : Args) -> bool:
 	program = create_program()
 	program = update_args(program, step_args)
-	apply_args(program)
-	error_code = conditional_process()
-	conditional_exit(error_code)
-	return error_code == 0
+	if validate_args(program):
+		apply_args(program)
+		error_code = conditional_process()
+		return error_code == 0
+	return False
 
 
 def process_image(start_time : float) -> ErrorCode:

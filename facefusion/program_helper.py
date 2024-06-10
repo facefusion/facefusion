@@ -5,17 +5,15 @@ from typing import List
 from facefusion.typing import Args
 
 
-def validate_args(program : ArgumentParser) -> None:
-	try:
-		for action in program._actions:
-			if action.default:
-				if isinstance(action.default, list):
-					for default in action.default:
-						program._check_value(action, default)
-				else:
-					program._check_value(action, action.default)
-	except Exception as exception:
-		program.error(str(exception))
+def validate_args(program : ArgumentParser) -> bool:
+	for action in program._actions:
+		if action.default and action.choices:
+			if isinstance(action.default, list):
+				if any(default not in action.choices for default in action.default):
+					return False
+			elif action.default not in action.choices:
+				return False
+	return True
 
 
 def reduce_args(program : ArgumentParser, keys : List[str]) -> ArgumentParser:
