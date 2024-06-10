@@ -26,20 +26,40 @@ def before_each() -> None:
 
 def test_job_create() -> None:
 	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-create' ]
-	run = subprocess.run(commands)
 
-	assert run.returncode == 0
+	assert subprocess.run(commands).returncode == 0
 	assert is_test_job_file('test-job-create.json', 'queued') is True
 
+	commands = [sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-create']
 
-@pytest.mark.skip()
+	assert subprocess.run(commands).returncode == 1
+
+
 def test_job_delete() -> None:
-	pass
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-delete', 'test-job-delete' ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-delete' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-delete', 'test-job-delete' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert not is_test_job_file('test-job-delete.json', 'queued') is True
 
 
-@pytest.mark.skip()
 def test_job_add_step() -> None:
-	pass
+	commands = [sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-add-step']
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-add-step' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-add-step' ]
+
+	assert subprocess.run(commands).returncode == 0
 
 
 @pytest.mark.skip()

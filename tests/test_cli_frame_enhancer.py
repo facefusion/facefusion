@@ -23,15 +23,13 @@ def before_each() -> None:
 
 def test_enhance_frame_to_image() -> None:
 	commands = [ sys.executable, 'run.py', '--frame-processors', 'frame_enhancer', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-enhance-frame-to-image.jpg'), '--headless' ]
-	run = subprocess.run(commands)
 
-	assert run.returncode == 0
+	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test-enhance-frame-to-image.jpg') is True
 
 
 def test_enhance_frame_to_video() -> None:
 	commands = [ sys.executable, 'run.py', '--frame-processors', 'frame_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-enhance-frame-to-video.mp4'), '--trim-frame-end', '10', '--headless' ]
-	run = subprocess.run(commands)
 
-	assert run.returncode == 0
+	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test-enhance-frame-to-video.mp4') is True
