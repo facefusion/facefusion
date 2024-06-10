@@ -48,6 +48,7 @@ def run_step(job_id : str, step_index : int, step : JobStep, process_step : Proc
 
 	if step_output_path:
 		step_args['output_path'] = step_output_path
+	set_step_status(job_id, step_index, 'started')
 	if process_step(step_args):
 		return set_step_status(job_id, step_index, 'completed')
 	return set_step_status(job_id, step_index, 'failed')

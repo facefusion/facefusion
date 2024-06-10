@@ -42,7 +42,7 @@ def create_job(job_id : str) -> bool:
 
 
 def submit_job(job_id : str) -> bool:
-	return move_job_file(job_id)
+	return move_job_file(job_id, 'queued')
 
 
 def submit_jobs() -> bool:
