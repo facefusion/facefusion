@@ -9,9 +9,10 @@ def run_job(job_id : str, process_step : ProcessStep) -> bool:
 	job_queued_ids = find_job_ids('queued')
 
 	for job_queued_id in job_queued_ids:
-		if run_steps(job_queued_id, process_step) and finalize_steps(job_queued_id):
-			return move_job_file(job_id, 'completed')
-		return move_job_file(job_id, 'failed')
+		if job_queued_id == job_id:
+			if run_steps(job_queued_id, process_step) and finalize_steps(job_queued_id):
+				return move_job_file(job_id, 'completed')
+			return move_job_file(job_id, 'failed')
 	return False
 
 
@@ -27,7 +28,12 @@ def run_jobs(process_step : ProcessStep) -> bool:
 
 
 def retry_job(job_id : str, process_step : ProcessStep) -> bool:
-	return move_job_file(job_id, 'queued') and run_job(job_id, process_step)
+	job_failed_ids = find_job_ids('failed')
+
+	for job_failed_id in job_failed_ids:
+		if job_failed_id == job_id:
+			return move_job_file(job_failed_id, 'queued') and run_job(job_id, process_step)
+	return False
 
 
 def retry_jobs(process_step : ProcessStep) -> bool:
