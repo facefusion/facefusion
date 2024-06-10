@@ -22,7 +22,7 @@ from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
-from facefusion.exit_helper import conditional_exit, graceful_exit
+from facefusion.exit_helper import hard_exit, conditional_exit, graceful_exit
 from facefusion.common_helper import create_metavar, get_first, get_argument_value
 from facefusion.execution import encode_execution_providers, decode_execution_providers
 from facefusion.normalizer import normalize_padding, normalize_fps
@@ -244,9 +244,9 @@ def run(program : ArgumentParser) -> None:
 		limit_system_memory(facefusion.globals.system_memory_limit)
 	if args.job_create or args.job_delete or args.job_delete_all or args.job_add_step or args.job_remix_step or args.job_insert_step or args.job_remove_step:
 		if not init_jobs(facefusion.globals.jobs_path):
-			return conditional_exit(1)
+			hard_exit(1)
 		error_code = route_job_manager(program)
-		return conditional_exit(error_code)
+		hard_exit(error_code)
 	if facefusion.globals.force_download:
 		force_download()
 		return conditional_exit(0)
@@ -258,9 +258,9 @@ def run(program : ArgumentParser) -> None:
 
 	if args.job_run or args.job_run_all or args.job_retry or args.job_retry_all:
 		if not init_jobs(facefusion.globals.jobs_path):
-			return conditional_exit(1)
+			hard_exit(1)
 		error_code = route_job_runner(program)
-		return conditional_exit(error_code)
+		hard_exit(error_code)
 	elif facefusion.globals.headless:
 		error_code = conditional_process()
 		return conditional_exit(error_code)
