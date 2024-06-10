@@ -1,6 +1,29 @@
 from argparse import ArgumentParser
 
-from facefusion.program_helper import reduce_args, update_args
+from facefusion.program_helper import validate_args, reduce_args, update_args
+
+
+def test_validate_args() -> None:
+	program = ArgumentParser()
+	program.add_argument('--test-1', default = 'test_1', choices = [ 'test_1', 'test_2' ])
+	program.add_argument('--test-2', default = 'test_2', choices= [ 'test_1', 'test_2' ], nargs = '+')
+
+	assert validate_args(program) is True
+
+	update_args(program,
+	{
+		'test_1': 'test_3'
+	})
+
+	assert validate_args(program) is False
+
+	update_args(program,
+	{
+		'test_1': 'test_2',
+		'test_2': [ 'test_1', 'test_3' ]
+	})
+
+	assert validate_args(program) is False
 
 
 def test_reduce_args() -> None:
