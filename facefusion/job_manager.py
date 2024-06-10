@@ -10,7 +10,7 @@ from facefusion.filesystem import is_file, is_directory, move_file, remove_file
 from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : Optional[str] = None
-JOB_STATUSES : List[JobStatus] = [ 'queued', 'completed', 'failed' ]
+JOB_STATUSES : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 
 
 def init_jobs(jobs_path : str) -> bool:
@@ -41,12 +41,25 @@ def create_job(job_id : str) -> bool:
 	return create_job_file(job_id, job)
 
 
+def submit_job(job_id : str) -> bool:
+	return move_job_file(job_id)
+
+
+def submit_jobs() -> bool:
+	job_ids = find_job_ids('drafted')
+
+	for job_id in job_ids:
+		if not submit_job(job_id):
+			return False
+	return True
+
+
 def delete_job(job_id : str) -> bool:
 	return delete_job_file(job_id)
 
 
 def delete_jobs() -> bool:
-	job_ids = find_job_ids('queued') + find_job_ids('failed') + find_job_ids('completed')
+	job_ids = find_job_ids('drafted') + find_job_ids('queued') + find_job_ids('failed') + find_job_ids('completed')
 
 	for job_id in job_ids:
 		if not delete_job(job_id):
@@ -69,7 +82,7 @@ def add_step(job_id : str, step_args : Args) -> bool:
 	step : JobStep =\
 	{
 		'args': step_args,
-		'status': 'queued'
+		'status': 'drafted'
 	}
 
 	if job:
@@ -95,7 +108,7 @@ def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step : JobStep =\
 	{
 		'args': step_args,
-		'status': 'queued'
+		'status': 'drafted'
 	}
 
 	if job:
@@ -149,7 +162,7 @@ def create_job_file(job_id : str, job : Job) -> bool:
 	job_path = find_job_path(job_id)
 
 	if not is_file(job_path):
-		job_create_path = suggest_job_path(job_id, 'queued')
+		job_create_path = suggest_job_path(job_id, 'drafted')
 		with open(job_create_path, 'w') as job_file:
 			json.dump(job, job_file, indent = 4)
 		return is_file(job_create_path)
