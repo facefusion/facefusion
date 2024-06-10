@@ -48,10 +48,12 @@ def submit_job(job_id : str) -> bool:
 def submit_jobs() -> bool:
 	job_ids = find_job_ids('drafted')
 
-	for job_id in job_ids:
-		if not submit_job(job_id):
-			return False
-	return True
+	if job_ids:
+		for job_id in job_ids:
+			if not submit_job(job_id):
+				return False
+		return True
+	return False
 
 
 def delete_job(job_id : str) -> bool:
@@ -61,10 +63,12 @@ def delete_job(job_id : str) -> bool:
 def delete_jobs() -> bool:
 	job_ids = find_job_ids('drafted') + find_job_ids('queued') + find_job_ids('failed') + find_job_ids('completed')
 
-	for job_id in job_ids:
-		if not delete_job(job_id):
-			return False
-	return True
+	if job_ids:
+		for job_id in job_ids:
+			if not delete_job(job_id):
+				return False
+		return True
+	return False
 
 
 def find_job_ids(job_status : JobStatus) -> List[str]:
