@@ -40,6 +40,8 @@ def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: graceful_exit(0))
 	program = create_program()
 	if validate_args(program):
+		apply_args(program)
+		logger.init(facefusion.globals.log_level)
 		run(program)
 
 
@@ -234,8 +236,6 @@ def apply_args(program : ArgumentParser) -> None:
 
 
 def run(program : ArgumentParser) -> None:
-	apply_args(program)
-	logger.init(facefusion.globals.log_level)
 	args = program.parse_args()
 
 	if facefusion.globals.system_memory_limit > 0:
