@@ -3,7 +3,7 @@ import sys
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.job_manager import clear_jobs, init_jobs
+from facefusion.job_manager import clear_jobs, init_jobs, count_step_total
 from .helper import get_test_jobs_directory, get_test_examples_directory, prepare_test_output_directory, get_test_example_file, is_test_job_file
 
 
@@ -30,7 +30,7 @@ def test_job_create() -> None:
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_job_file('test-job-create.json', 'drafted') is True
 
-	commands = [sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-create']
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-create' ]
 
 	assert subprocess.run(commands).returncode == 1
 
@@ -50,9 +50,10 @@ def test_job_delete() -> None:
 
 
 def test_job_add_step() -> None:
-	commands = [sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-add-step']
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-add-step' ]
 
 	assert subprocess.run(commands).returncode == 1
+	assert count_step_total('test-job-add-step') == 0
 
 	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-add-step' ]
 	subprocess.run(commands)
@@ -60,16 +61,53 @@ def test_job_add_step() -> None:
 	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-add-step' ]
 
 	assert subprocess.run(commands).returncode == 0
+	assert count_step_total('test-job-add-step') == 1
 
 
-@pytest.mark.skip()
 def test_job_remix() -> None:
-	pass
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-remix-step', 'test-job-remix-step', '0' ]
+
+	assert subprocess.run(commands).returncode == 1
+	assert count_step_total('test-job-remix-step') == 0
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-remix-step' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-remix-step', '-o', 'output.mp4' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-remix-step', 'test-job-remix-step', '0' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert count_step_total('test-job-remix-step') == 2
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-remix-step', 'test-job-remix-step', '-1' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert count_step_total('test-job-remix-step') == 3
 
 
-@pytest.mark.skip()
 def test_job_insert_step() -> None:
-	pass
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-insert-step', 'test-job-insert-step', '0' ]
+
+	assert subprocess.run(commands).returncode == 1
+	assert count_step_total('test-job-insert-step') == 0
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-insert-step' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-insert-step', '-o', 'output.mp4' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-insert-step', 'test-job-insert-step', '0' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert count_step_total('test-job-insert-step') == 2
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-insert-step', 'test-job-insert-step', '-1' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert count_step_total('test-job-insert-step') == 3
 
 
 @pytest.mark.skip()
