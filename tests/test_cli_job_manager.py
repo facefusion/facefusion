@@ -23,14 +23,51 @@ def test_job_create() -> None:
 	assert subprocess.run(commands).returncode == 1
 
 
-@pytest.mark.skip()
 def test_job_submit() -> None:
-	pass
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-submit', 'test-job-submit' ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-submit' ]
+	subprocess.run(commands)
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-submit' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-submit', 'test-job-submit' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert is_test_job_file('test-job-submit.json', 'queued') is True
+	assert subprocess.run(commands).returncode == 1
 
 
-@pytest.mark.skip()
 def test_submit_all() -> None:
-	pass
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-submit-all' ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-submit-all-1' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-submit-all-2' ]
+	subprocess.run(commands)
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-submit-all-1' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-submit-all-2' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-submit-all' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert is_test_job_file('test-job-submit-all-1.json', 'queued') is True
+	assert is_test_job_file('test-job-submit-all-2.json', 'queued') is True
+	assert subprocess.run(commands).returncode == 1
 
 
 def test_job_delete() -> None:
@@ -48,9 +85,23 @@ def test_job_delete() -> None:
 	assert subprocess.run(commands).returncode == 1
 
 
-@pytest.mark.skip()
 def test_job_delete_all() -> None:
-	pass
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-delete-all' ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-delete-all-1' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-delete-all-2' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-delete-all' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert is_test_job_file('test-job-delete-all-1.json', 'drafted') is False
+	assert is_test_job_file('test-job-delete-all-2.json', 'drafted') is False
+	assert subprocess.run(commands).returncode == 1
 
 
 def test_job_add_step() -> None:
