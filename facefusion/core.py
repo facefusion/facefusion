@@ -19,7 +19,7 @@ from facefusion.program_helper import validate_args, reduce_args, update_args
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.content_analyser import analyse_image, analyse_video
-from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
+from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules, load_frame_processor_module
 from facefusion.exit_helper import hard_exit, conditional_exit, graceful_exit
 from facefusion.common_helper import create_metavar, get_first, get_argument_value
 from facefusion.execution import encode_execution_providers, decode_execution_providers
@@ -445,6 +445,7 @@ def process_step(step_args : Args) -> bool:
 	program = update_args(program, step_args)
 	if validate_args(program):
 		apply_args(program)
+		clear_frame_processors_modules()
 		error_code = conditional_process()
 		return error_code == 0
 	return False
