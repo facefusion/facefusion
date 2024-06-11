@@ -30,6 +30,7 @@ def render() -> None:
 		[
 			'.png',
 			'.jpg',
+			'.jpeg',
 			'.webp',
 			'.webm',
 			'.mp4'

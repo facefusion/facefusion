@@ -28,6 +28,7 @@ def render() -> None:
 			'.wav',
 			'.png',
 			'.jpg',
+			'.jpeg',
 			'.webp'
 		],
 		label = wording.get('uis.source_file'),
