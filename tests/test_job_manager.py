@@ -1,6 +1,6 @@
 import pytest
 
-from facefusion.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, delete_job, delete_jobs, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status
+from facefusion.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, delete_job, delete_jobs, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status, set_steps_status
 from .helper import get_test_jobs_directory
 
 
@@ -291,6 +291,30 @@ def test_set_step_status() -> None:
 	assert len(steps) == 2
 
 
-@pytest.mark.skip()
 def test_set_steps_status() -> None:
-	pass
+	args_1 =\
+	{
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
+	}
+	args_2 =\
+	{
+		'source_path': 'source-2.jpg',
+		'target_path': 'target-2.jpg',
+		'output_path': 'output-2.jpg'
+	}
+
+	assert set_steps_status('job-test-set-steps-status', 'queued') is False
+
+	create_job('job-test-set-steps-status')
+	add_step('job-test-set-steps-status', args_1)
+	add_step('job-test-set-steps-status', args_2)
+
+	assert set_steps_status('job-test-set-steps-status', 'queued') is True
+
+	steps = get_steps('job-test-set-steps-status')
+
+	assert steps[0].get('status') == 'queued'
+	assert steps[1].get('status') == 'queued'
+	assert len(steps) == 2
