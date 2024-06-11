@@ -44,7 +44,7 @@ def create_job(job_id : str) -> bool:
 def submit_job(job_id : str) -> bool:
 	job_drafted_ids = find_job_ids('drafted')
 
-	if job_id in job_drafted_ids:
+	if job_id in job_drafted_ids and count_step_total(job_id):
 		return set_steps_status(job_id, 'queued') and move_job_file(job_id, 'queued')
 	return False
 

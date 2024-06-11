@@ -11,42 +11,77 @@ def before_each() -> None:
 
 
 def test_create_job() -> None:
-	assert create_job('job-test-create-job-1') is True
-	assert create_job('job-test-create-job-1') is False
+	args_1 =\
+	{
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
+	}
 
-	submit_job('job-test-create-job-1')
-	submit_job('job-test-create-job-2')
+	assert create_job('job-test-create-job') is True
+	assert create_job('job-test-create-job') is False
 
-	assert create_job('job-test-create-job-1') is False
+	add_step('job-test-submit-job', args_1)
+	submit_job('job-test-create-job')
+
+	assert create_job('job-test-create-job') is False
 
 
 def test_submit_job() -> None:
-	assert submit_job('job-test-submit-job-1') is False
+	args_1 =\
+	{
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
+	}
 
-	create_job('job-test-submit-job-1')
-	create_job('job-test-submit-job-2')
+	assert submit_job('job-test-submit-job') is False
 
-	assert submit_job('job-test-submit-job-1') is True
-	assert submit_job('job-test-submit-job-1') is False
+	create_job('job-test-submit-job')
+
+	assert submit_job('job-test-submit-job') is False
+
+	add_step('job-test-submit-job', args_1)
+
+	assert submit_job('job-test-submit-job') is True
+	assert submit_job('job-test-submit-job') is False
 
 
 def test_submit_jobs() -> None:
+	args_1 =\
+	{
+		'source_path': 'source-1.jpg',
+		'target_path': 'target-1.jpg',
+		'output_path': 'output-1.jpg'
+	}
+	args_2 =\
+	{
+		'source_path': 'source-2.jpg',
+		'target_path': 'target-2.jpg',
+		'output_path': 'output-2.jpg'
+	}
+
 	assert submit_jobs() is False
 
 	create_job('job-test-submit-jobs-1')
 	create_job('job-test-submit-jobs-2')
 
+	assert submit_jobs() is False
+
+	add_step('job-test-submit-jobs-1', args_1)
+	add_step('job-test-submit-jobs-2', args_2)
+
 	assert submit_jobs() is True
+	assert submit_jobs() is False
 
 
 def test_delete_job() -> None:
-	assert delete_job('job-test-delete-job-1') is False
+	assert delete_job('job-test-delete-job') is False
 
-	create_job('job-test-delete-job-1')
-	create_job('job-test-delete-job-2')
+	create_job('job-test-delete-job')
 
-	assert delete_job('job-test-delete-job-1') is True
-	assert delete_job('job-test-delete-job-1') is False
+	assert delete_job('job-test-delete-job') is True
+	assert delete_job('job-test-delete-job') is False
 
 
 def test_delete_jobs() -> None:
