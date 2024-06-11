@@ -103,25 +103,29 @@ def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	steps = get_steps(job_id)
 	step_args = copy(step_args)
 
+	if step_index < 0:
+		step_index = count_step_total(job_id) - 1
+
 	for index, step in enumerate(steps):
 		if index == step_index:
-			output_path = steps[step_index].get('args').get('output_path')
-			step_args['target_path'] = output_path
+			step_args['target_path'] = steps[step_index].get('args').get('output_path')
 			return add_step(job_id, step_args)
 	return False
 
 
 def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	job = read_job_file(job_id)
+	step_args = copy(step_args)
 	step : JobStep =\
 	{
 		'args': step_args,
 		'status': 'drafted'
 	}
 
+	if step_index < 0:
+		step_index = count_step_total(job_id)
+
 	if job:
-		if step_index < 0:
-			return add_step(job_id, step_args)
 		job.get('steps').insert(step_index, step)
 		return update_job_file(job_id, job)
 	return False
@@ -129,6 +133,9 @@ def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 def remove_step(job_id : str, step_index : int) -> bool:
 	job = read_job_file(job_id)
+
+	if step_index < 0:
+		step_index = count_step_total(job_id) - 1
 
 	if job:
 		job.get('steps').pop(step_index)
@@ -142,6 +149,14 @@ def get_steps(job_id : str) -> List[JobStep]:
 	if job:
 		return job.get('steps')
 	return []
+
+
+def count_step_total(job_id : str) -> int:
+	steps = get_steps(job_id)
+
+	if steps:
+		return len(steps)
+	return 0
 
 
 def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus) -> bool:

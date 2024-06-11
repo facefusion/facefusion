@@ -1,6 +1,6 @@
 import pytest
 
-from facefusion.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, delete_job, delete_jobs, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, set_step_status, set_steps_status
+from facefusion.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, delete_job, delete_jobs, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, count_step_total, set_step_status, set_steps_status
 from .helper import get_test_jobs_directory
 
 
@@ -124,7 +124,7 @@ def test_add_step() -> None:
 
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_2
-	assert len(steps) == 2
+	assert count_step_total('job-test-add-step') == 2
 
 
 def test_remix_step() -> None:
@@ -156,7 +156,7 @@ def test_remix_step() -> None:
 	assert steps[2].get('args').get('source_path') == args_2.get('source_path')
 	assert steps[2].get('args').get('target_path') == args_1.get('output_path')
 	assert steps[2].get('args').get('output_path') == args_2.get('output_path')
-	assert len(steps) == 3
+	assert count_step_total('job-test-remix-step') == 3
 
 
 def test_insert_step() -> None:
@@ -194,7 +194,7 @@ def test_insert_step() -> None:
 	assert steps[1].get('args') == args_2
 	assert steps[2].get('args') == args_1
 	assert steps[3].get('args') == args_3
-	assert len(steps) == 4
+	assert count_step_total('job-test-insert-step') == 4
 
 
 def test_remove_step() -> None:
@@ -232,7 +232,7 @@ def test_remove_step() -> None:
 
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_1
-	assert len(steps) == 2
+	assert count_step_total('job-test-remove-step') == 2
 
 
 def test_get_steps() -> None:
@@ -258,7 +258,7 @@ def test_get_steps() -> None:
 
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_2
-	assert len(steps) == 2
+	assert count_step_total('job-test-get-steps') == 2
 
 
 def test_set_step_status() -> None:
@@ -288,7 +288,7 @@ def test_set_step_status() -> None:
 
 	assert steps[0].get('status') == 'completed'
 	assert steps[1].get('status') == 'failed'
-	assert len(steps) == 2
+	assert count_step_total('job-test-set-step-status') == 2
 
 
 def test_set_steps_status() -> None:
@@ -317,4 +317,4 @@ def test_set_steps_status() -> None:
 
 	assert steps[0].get('status') == 'queued'
 	assert steps[1].get('status') == 'queued'
-	assert len(steps) == 2
+	assert count_step_total('job-test-set-steps-status') == 2
