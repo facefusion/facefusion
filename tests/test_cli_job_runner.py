@@ -3,8 +3,8 @@ import sys
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.job_manager import clear_jobs, init_jobs, count_step_total
-from .helper import get_test_jobs_directory, get_test_examples_directory, prepare_test_output_directory, is_test_job_file, get_test_example_file, get_test_output_file, is_test_output_file
+from facefusion.job_manager import clear_jobs, init_jobs
+from .helper import get_test_jobs_directory, get_test_examples_directory, prepare_test_output_directory, get_test_example_file, get_test_output_file, is_test_output_file
 
 
 @pytest.fixture(scope = 'module', autouse = True)
