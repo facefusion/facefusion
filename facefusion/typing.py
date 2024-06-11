@@ -125,10 +125,10 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'utilization' : ExecutionDeviceUtilization
 })
 
-JobArgsStore = TypedDict('JobArgsStore',
+JobStore = TypedDict('JobStore',
 {
-	'job' : List[str],
-	'step' : List[str]
+	'job_keys' : List[str],
+	'step_keys' : List[str]
 })
 JobMergeSet = Dict[str, List[str]]
 JobStatus = Literal['drafted', 'queued', 'completed', 'failed']

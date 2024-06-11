@@ -1,27 +1,27 @@
 from typing import List
 
-from facefusion.typing import JobArgsStore
+from facefusion.typing import JobStore
 
-ARGS_STORE : JobArgsStore =\
+JOB_STORE : JobStore =\
 {
-	'job': [],
-	'step': []
+	'job_keys': [],
+	'step_keys': []
 }
 
 
-def get_job_args() -> List[str]:
-	return ARGS_STORE.get('job')
+def get_job_keys() -> List[str]:
+	return JOB_STORE.get('job_keys')
 
 
-def get_step_args() -> List[str]:
-	return ARGS_STORE.get('step')
+def get_step_keys() -> List[str]:
+	return JOB_STORE.get('step_keys')
 
 
-def register_job_args(step_args : List[str]) -> None:
-	for step_arg in step_args:
-		ARGS_STORE['job'].append(step_arg)
+def register_job_keys(step_keys : List[str]) -> None:
+	for step_key in step_keys:
+		JOB_STORE['job_keys'].append(step_key)
 
 
-def register_step_args(job_args : List[str]) -> None:
-	for job_arg in job_args:
-		ARGS_STORE['step'].append(job_arg)
+def register_step_keys(job_keys : List[str]) -> None:
+	for job_key in job_keys:
+		JOB_STORE['step_keys'].append(job_key)
