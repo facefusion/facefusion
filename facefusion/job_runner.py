@@ -48,13 +48,15 @@ def retry_jobs(process_step : ProcessStep) -> bool:
 def run_step(job_id : str, step_index : int, step : JobStep, process_step : ProcessStep) -> bool:
 	step_args = step.get('args')
 	output_path = step_args.get('output_path')
-	step_output_path = get_step_output_path(job_id, step_index, output_path)
 
-	if step_output_path:
+	if output_path:
+		step_output_path = get_step_output_path(job_id, step_index, output_path)
 		step_args['output_path'] = step_output_path
 	if set_step_status(job_id, step_index, 'started') and process_step(step_args):
-		return set_step_status(job_id, step_index, 'completed')
-	return set_step_status(job_id, step_index, 'failed')
+		set_step_status(job_id, step_index, 'completed')
+		return True
+	set_step_status(job_id, step_index, 'failed')
+	return False
 
 
 def run_steps(job_id : str, process_step : ProcessStep) -> bool:
@@ -86,9 +88,9 @@ def collect_merge_set(job_id : str) -> JobMergeSet:
 	merge_set : JobMergeSet = {}
 
 	for index, step in enumerate(steps):
-		output_path = step.get('args').get('output_path')
-		step_output_path = get_step_output_path(job_id, index, output_path)
 
-		if step_output_path:
+		output_path = step.get('args').get('output_path')
+		if output_path:
+			step_output_path = get_step_output_path(job_id, index, output_path)
 			merge_set.setdefault(output_path, []).append(step_output_path)
 	return merge_set
