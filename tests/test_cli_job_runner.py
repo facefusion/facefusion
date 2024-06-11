@@ -49,9 +49,39 @@ def test_job_run() -> None:
 	assert is_test_output_file('test-job-run.jpg') is True
 
 
-@pytest.mark.skip()
 def test_job_run_all() -> None:
-	pass
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-run-all' ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-run-all-1' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-run-all-2' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run-all-1', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-run-all-1.jpg') ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run-all-2', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-end', '10' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run-all-2', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-start', '10', '--trim-frame-start', '20' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-run-all' ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-submit-all' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-run-all' ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert subprocess.run(commands).returncode == 1
+	assert is_test_output_file('test-job-run-all-1.jpg') is True
+	assert is_test_output_file('test-job-run-all-2.mp4') is True
 
 
 @pytest.mark.skip()
