@@ -16,7 +16,7 @@ def render() -> None:
 
 	trim_frame_range_slider_args : Dict[str, Any] =\
 	{
-		'label': wording.get('uis.trim_frame_start_slider'),
+		'label': wording.get('uis.trim_frame_slider'),
 		'minimum': 0,
 		'step': 1,
 		'visible': False
