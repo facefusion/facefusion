@@ -22,7 +22,7 @@ from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules, load_frame_processor_module
 from facefusion.exit_helper import hard_exit, conditional_exit, graceful_exit
 from facefusion.common_helper import create_metavar, get_first, get_argument_value
-from facefusion.execution import encode_execution_providers, decode_execution_providers
+from facefusion.execution import get_execution_provider_choices
 from facefusion.normalizer import normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
 from facefusion.statistics import conditional_log_statistics
@@ -65,7 +65,7 @@ def create_program() -> ArgumentParser:
 	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
 	job_store.register_job_keys([ 'skip_download', 'log_level' ])
 	# execution
-	execution_providers = encode_execution_providers(onnxruntime.get_available_providers())
+	execution_providers = get_execution_provider_choices()
 	group_execution = program.add_argument_group('execution')
 	group_execution.add_argument('--execution-device-id', help = wording.get('help.execution_device_id'), default = config.get_str_value('execution.face_detector_size', '0'))
 	group_execution.add_argument('--execution-providers', help = wording.get('help.execution_providers').format(choices = ', '.join(execution_providers)), default = config.get_str_list('execution.execution_providers', 'cpu'), choices = execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
@@ -174,7 +174,7 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.log_level = args.log_level
 	# execution
 	facefusion.globals.execution_device_id = args.execution_device_id
-	facefusion.globals.execution_providers = decode_execution_providers(args.execution_providers)
+	facefusion.globals.execution_providers = args.execution_providers
 	facefusion.globals.execution_thread_count = args.execution_thread_count
 	facefusion.globals.execution_queue_count = args.execution_queue_count
 	# memory
@@ -445,13 +445,9 @@ def process_step(step_args : Args) -> bool:
 	program = update_args(program, step_args)
 
 	for job_key in job_store.get_job_keys():
-		job_value = getattr(facefusion.globals, job_key)
-
-		if job_key == 'execution_providers':
-			job_value = encode_execution_providers(job_value)
 		program = update_args(program,
 		{
-			job_key: job_value
+			job_key: getattr(facefusion.globals, job_key)
 		})
 
 	if validate_args(program):

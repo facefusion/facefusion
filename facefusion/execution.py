@@ -4,25 +4,34 @@ import subprocess
 import xml.etree.ElementTree as ElementTree
 import onnxruntime
 
-from facefusion.typing import ExecutionDevice, ValueAndUnit
+from facefusion.typing import ExecutionProviderSet, ExecutionProviderKey, ExecutionProviderValue, ExecutionDevice, ValueAndUnit
+from facefusion.choices import execution_provider_set
 
 
-def encode_execution_providers(execution_providers : List[str]) -> List[str]:
-	return [ execution_provider.replace('ExecutionProvider', '').lower() for execution_provider in execution_providers ]
+def get_execution_provider_choices() -> List[ExecutionProviderKey]:
+	return list(get_available_execution_provider_set().keys())
 
 
-def decode_execution_providers(execution_providers : List[str]) -> List[str]:
+def has_execution_provider(execution_provider_key : ExecutionProviderKey) -> bool:
+	return execution_provider_key in get_execution_provider_choices()
+
+
+def get_available_execution_provider_set() -> ExecutionProviderSet:
 	available_execution_providers = onnxruntime.get_available_providers()
-	encoded_execution_providers = encode_execution_providers(available_execution_providers)
+	available_execution_provider_set : ExecutionProviderSet = {}
 
-	return [ execution_provider for execution_provider, encoded_execution_provider in zip(available_execution_providers, encoded_execution_providers) if any(execution_provider in encoded_execution_provider for execution_provider in execution_providers) ]
+	for execution_provider_key, execution_provider_value in execution_provider_set.items():
+		if execution_provider_value in available_execution_providers:
+			available_execution_provider_set[execution_provider_key] = execution_provider_value
+	return available_execution_provider_set
 
 
-def has_execution_provider(execution_provider : str) -> bool:
-	return execution_provider in onnxruntime.get_available_providers()
+def extract_execution_providers(execution_provider_keys : List[ExecutionProviderKey]) -> List[ExecutionProviderValue]:
+	return [ execution_provider_set[execution_provider_key] for execution_provider_key in execution_provider_keys if execution_provider_key in execution_provider_set ]
 
 
-def apply_execution_provider_options(execution_device_id : str, execution_providers : List[str]) -> List[Any]:
+def apply_execution_provider_options(execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> List[Any]:
+	execution_providers = extract_execution_providers(execution_provider_keys)
 	execution_providers_with_options : List[Any] = []
 
 	for execution_provider in execution_providers:
@@ -38,7 +47,7 @@ def apply_execution_provider_options(execution_device_id : str, execution_provid
 				'device_id': execution_device_id,
 				'device_type': execution_device_id + '_FP32'
 			}))
-		elif execution_provider in [ 'DmlExecutionProvider', 'ROCMExecutionProvider' ]:
+		elif execution_provider in [ 'DmlExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider' ]:
 			execution_providers_with_options.append((execution_provider,
 			{
 				'device_id': execution_device_id
@@ -67,6 +76,7 @@ def detect_static_execution_devices() -> List[ExecutionDevice]:
 
 def detect_execution_devices() -> List[ExecutionDevice]:
 	execution_devices : List[ExecutionDevice] = []
+
 	try:
 		output, _ = run_nvidia_smi().communicate()
 		root_element = ElementTree.fromstring(output)

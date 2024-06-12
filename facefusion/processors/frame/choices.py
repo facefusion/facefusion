@@ -1,10 +1,10 @@
-from typing import Dict, List
+from typing import List
 from facefusion.common_helper import create_int_range
-from facefusion.processors.frame.typing import FaceDebuggerItem, FaceEnhancerModel, FaceSwapperModel, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
+from facefusion.processors.frame.typing import FaceDebuggerItem, FaceEnhancerModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender' ]
 face_enhancer_models : List[FaceEnhancerModel] = [ 'codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus' ]
-face_swapper_set : Dict[FaceSwapperModel, List[str]] =\
+face_swapper_set : FaceSwapperSet =\
 {
 	'blendswap_256': [ '256x256', '384x384', '512x512', '768x768', '1024x1024' ],
 	'inswapper_128': [ '128x128', '256x256', '384x384', '512x512', '768x768', '1024x1024' ],

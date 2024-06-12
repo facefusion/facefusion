@@ -76,6 +76,7 @@ FaceAnalyserOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-to
 FaceAnalyserAge = Literal['child', 'teen', 'adult', 'senior']
 FaceAnalyserGender = Literal['female', 'male']
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yoloface', 'yunet']
+FaceDetectorSet = Dict[FaceDetectorModel, List[str]]
 FaceDetectorTweak = Literal['low-luminance', 'high-luminance']
 FaceRecognizerModel = Literal['arcface_blendswap', 'arcface_inswapper', 'arcface_simswap', 'arcface_uniface']
 FaceMaskType = Literal['box', 'occlusion', 'region']
@@ -91,6 +92,9 @@ OptionsWithModel = TypedDict('OptionsWithModel',
 	'model' : ModelValue
 })
 
+ExecutionProviderKey = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 'rocm', 'tensorrt']
+ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
+ExecutionProviderSet = Dict[ExecutionProviderKey, ExecutionProviderValue]
 ValueAndUnit = TypedDict('ValueAndUnit',
 {
 	'value' : str,
@@ -133,7 +137,6 @@ JobStore = TypedDict('JobStore',
 JobMergeSet = Dict[str, List[str]]
 JobStatus = Literal['drafted', 'queued', 'completed', 'failed']
 JobStepStatus = Literal['drafted', 'queued', 'started', 'completed', 'failed']
-
 JobStep = TypedDict('JobStep',
 {
 	'args' : Args,
