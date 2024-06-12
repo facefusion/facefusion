@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from facefusion.typing import LogLevel, VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceMaskType, FaceMaskRegion, OutputVideoEncoder, OutputVideoPreset, FaceDetectorModel, FaceRecognizerModel, TempFrameFormat, Padding
+from facefusion.typing import LogLevel, ExecutionProviderKey, VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceMaskType, FaceMaskRegion, OutputVideoEncoder, OutputVideoPreset, FaceDetectorModel, FaceRecognizerModel, TempFrameFormat, Padding
 
 # general
 config_path : Optional[str] = None
@@ -15,7 +15,7 @@ headless : Optional[bool] = None
 log_level : Optional[LogLevel] = None
 # execution
 execution_device_id : Optional[str] = None
-execution_providers : List[str] = []
+execution_providers : List[ExecutionProviderKey] = []
 execution_thread_count : Optional[int] = None
 execution_queue_count : Optional[int] = None
 # memory

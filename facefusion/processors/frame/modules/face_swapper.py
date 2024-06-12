@@ -152,7 +152,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	if has_execution_provider('CoreMLExecutionProvider') or has_execution_provider('OpenVINOExecutionProvider'):
+	if has_execution_provider('coreml') or has_execution_provider('openvino'):
 		face_swapper_model_fallback = 'inswapper_128'
 	else:
 		face_swapper_model_fallback = 'inswapper_128_fp16'

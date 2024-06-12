@@ -1,13 +1,13 @@
 from typing import List, Dict
 
-from facefusion.typing import VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorModel, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputVideoEncoder, OutputVideoPreset
+from facefusion.typing import VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorSet, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputVideoEncoder, OutputVideoPreset, ExecutionProviderKey, ExecutionProviderSet
 from facefusion.common_helper import create_int_range, create_float_range
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
 face_analyser_orders : List[FaceAnalyserOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
 face_analyser_ages : List[FaceAnalyserAge] = [ 'child', 'teen', 'adult', 'senior' ]
 face_analyser_genders : List[FaceAnalyserGender] = [ 'female', 'male' ]
-face_detector_set : Dict[FaceDetectorModel, List[str]] =\
+face_detector_set : FaceDetectorSet =\
 {
 	'many': [ '640x640' ],
 	'retinaface': [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
@@ -24,6 +24,17 @@ output_video_presets : List[OutputVideoPreset] = [ 'ultrafast', 'superfast', 've
 
 image_template_sizes : List[float] = [ 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 3.5, 4 ]
 video_template_sizes : List[int] = [ 240, 360, 480, 540, 720, 1080, 1440, 2160, 4320 ]
+
+execution_provider_set : ExecutionProviderSet =\
+{
+	'cpu': 'CPUExecutionProvider',
+	'coreml': 'CoreMLExecutionProvider',
+	'cuda': 'CUDAExecutionProvider',
+	'directml': 'DmlExecutionProvider',
+	'openvino': 'OpenVINOExecutionProvider',
+	'rocm': 'ROCMExecutionProvider',
+	'tensorrt': 'TensorrtExecutionProvider'
+}
 
 execution_thread_count_range : List[int] = create_int_range(1, 128, 1)
 execution_queue_count_range : List[int] = create_int_range(1, 32, 1)

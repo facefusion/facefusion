@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict
+from typing import Dict, List, Literal, TypedDict
 
 from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame
 
@@ -8,6 +8,8 @@ FaceSwapperModel = Literal['blendswap_256', 'inswapper_128', 'inswapper_128_fp16
 FrameColorizerModel = Literal['ddcolor', 'ddcolor_artistic', 'deoldify', 'deoldify_artistic', 'deoldify_stable']
 FrameEnhancerModel = Literal['clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_hatgan_x4', 'span_kendata_x4', 'ultra_sharp_x4']
 LipSyncerModel = Literal['wav2lip_gan']
+
+FaceSwapperSet = Dict[FaceSwapperModel, List[str]]
 
 FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',
 {
