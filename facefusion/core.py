@@ -14,7 +14,8 @@ from argparse import ArgumentParser, HelpFormatter
 import facefusion.choices
 import facefusion.globals
 from facefusion.typing import ErrorCode, Args
-from facefusion import face_analyser, face_masker, content_analyser, config, job_manager, job_runner, job_store, process_manager, metadata, logger, voice_extractor, wording
+from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, voice_extractor, wording
+from facefusion.jobs import job_manager, job_runner, job_store
 from facefusion.program_helper import validate_args, reduce_args, update_args
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
