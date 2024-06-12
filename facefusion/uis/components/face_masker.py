@@ -10,7 +10,6 @@ from facefusion.uis.core import register_ui_component
 FACE_MASK_TYPES_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 FACE_MASK_BLUR_SLIDER : Optional[gradio.Slider] = None
 FACE_MASK_BOX_GROUP : Optional[gradio.Group] = None
-FACE_MASK_REGION_GROUP : Optional[gradio.Group] = None
 FACE_MASK_PADDING_TOP_SLIDER : Optional[gradio.Slider] = None
 FACE_MASK_PADDING_RIGHT_SLIDER : Optional[gradio.Slider] = None
 FACE_MASK_PADDING_BOTTOM_SLIDER : Optional[gradio.Slider] = None
@@ -22,7 +21,6 @@ def render() -> None:
 	global FACE_MASK_TYPES_CHECKBOX_GROUP
 	global FACE_MASK_BLUR_SLIDER
 	global FACE_MASK_BOX_GROUP
-	global FACE_MASK_REGION_GROUP
 	global FACE_MASK_PADDING_TOP_SLIDER
 	global FACE_MASK_PADDING_RIGHT_SLIDER
 	global FACE_MASK_PADDING_BOTTOM_SLIDER
