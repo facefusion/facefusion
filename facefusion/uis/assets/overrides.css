@@ -11,9 +11,11 @@
 	width: 1.125rem;
 }
 
-:root:root:root input[type="range"]
+:root:root:root input[type="range"],
+:root:root:root .range-slider div
 {
 	height: 0.5rem;
+	border-radius: 0.5rem;
 }
 
 :root:root:root input[type="range"]::-moz-range-thumb,
@@ -29,6 +31,19 @@
 :root:root:root input[type="range"]::-webkit-slider-thumb
 {
 	margin-top: 0.375rem;
+}
+
+:root:root:root .range-slider input[type="range"]::-webkit-slider-thumb
+{
+	margin-top: 0.125rem;
+}
+
+:root:root:root .range-slider div,
+:root:root:root .range-slider input[type="range"]
+{
+	bottom: 50%;
+    margin-top: -0.25rem;
+	top: 50%;
 }
 
 :root:root:root .grid-wrap.fixed-height

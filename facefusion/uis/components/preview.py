@@ -109,8 +109,6 @@ def listen() -> None:
 		'face_enhancer_blend_slider',
 		'frame_colorizer_blend_slider',
 		'frame_enhancer_blend_slider',
-		'trim_frame_start_slider',
-		'trim_frame_end_slider',
 		'reference_face_distance_slider',
 		'face_mask_blur_slider',
 		'face_mask_padding_top_slider',
