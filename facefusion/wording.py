@@ -243,8 +243,7 @@ WORDING : Dict[str, Any] =\
 		# temp frame
 		'temp_frame_format_dropdown': 'TEMP FRAME FORMAT',
 		# trim frame
-		'trim_frame_start_slider': 'TRIM FRAME START',
-		'trim_frame_end_slider': 'TRIM FRAME END',
+		'trim_frame_slider': 'TRIM FRAME',
 		# webcam
 		'webcam_image': 'WEBCAM',
 		# webcam options
