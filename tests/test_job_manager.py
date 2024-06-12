@@ -1,6 +1,6 @@
 import pytest
 
-from facefusion.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, delete_job, delete_jobs, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, count_step_total, set_step_status, set_steps_status
+from facefusion.jobs.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, delete_job, delete_jobs, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, count_step_total, set_step_status, set_steps_status
 from .helper import get_test_jobs_directory
 
 

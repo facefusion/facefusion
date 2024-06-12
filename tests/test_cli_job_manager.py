@@ -2,7 +2,7 @@ import subprocess
 import sys
 import pytest
 
-from facefusion.job_manager import clear_jobs, init_jobs, count_step_total
+from facefusion.jobs.job_manager import clear_jobs, init_jobs, count_step_total
 from .helper import get_test_jobs_directory, is_test_job_file
 
 

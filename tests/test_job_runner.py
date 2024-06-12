@@ -5,8 +5,8 @@ import pytest
 
 from facefusion.typing import Args
 from facefusion.download import conditional_download
-from facefusion.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, add_step
-from facefusion.job_runner import run_job, run_jobs, run_steps, finalize_steps, collect_merge_set
+from facefusion.jobs.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, add_step
+from facefusion.jobs.job_runner import run_job, run_jobs, run_steps, finalize_steps, collect_merge_set
 from .helper import get_test_jobs_directory, get_test_examples_directory, get_test_example_file, prepare_test_output_directory
 
 
