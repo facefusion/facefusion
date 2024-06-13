@@ -23,6 +23,7 @@ def run_ffmpeg(args : List[str]) -> bool:
 			return process.wait(timeout = 0.5) == 0
 		except subprocess.TimeoutExpired:
 			continue
+	process.communicate()
 	return process.returncode == 0
 
 
