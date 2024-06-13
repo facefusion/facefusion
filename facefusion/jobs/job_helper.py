@@ -9,4 +9,4 @@ def get_step_output_path(job_id : str, step_index : int, output_path : str) -> s
 
 
 def suggest_job_id(job_prefix : str = 'job') -> str:
-	return job_prefix + '-' + datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+	return job_prefix + '-' + datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
