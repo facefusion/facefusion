@@ -2,7 +2,7 @@ from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import is_image, is_video, move_file
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.jobs.job_manager import find_job_ids, get_steps, set_step_status, set_steps_status, move_job_file
-from facefusion.typing import JobStep, ProcessStep, JobMergeSet
+from facefusion.typing import JobStep, ProcessStep, JobOutputSet
 
 
 def run_job(job_id : str, process_step : ProcessStep) -> bool:
@@ -71,11 +71,12 @@ def run_steps(job_id : str, process_step : ProcessStep) -> bool:
 
 
 def finalize_steps(job_id : str) -> bool:
-	merge_set = collect_merge_set(job_id)
+	output_set = collect_output_set(job_id)
 
-	for output_path, temp_output_paths in merge_set.items():
+	for output_path, temp_output_paths in output_set.items():
 		if all(map(is_video, temp_output_paths)):
-			return concat_video(temp_output_paths, output_path)
+			if not concat_video(output_path, temp_output_paths):
+				return False
 		if any(map(is_image, temp_output_paths)):
 			for temp_output_path in temp_output_paths:
 				if not move_file(temp_output_path, output_path):
@@ -83,14 +84,13 @@ def finalize_steps(job_id : str) -> bool:
 	return True
 
 
-def collect_merge_set(job_id : str) -> JobMergeSet:
+def collect_output_set(job_id : str) -> JobOutputSet:
 	steps = get_steps(job_id)
-	merge_set : JobMergeSet = {}
+	output_set : JobOutputSet = {}
 
 	for index, step in enumerate(steps):
-
 		output_path = step.get('args').get('output_path')
 		if output_path:
 			step_output_path = get_step_output_path(job_id, index, output_path)
-			merge_set.setdefault(output_path, []).append(step_output_path)
-	return merge_set
+			output_set.setdefault(output_path, []).append(step_output_path)
+	return output_set

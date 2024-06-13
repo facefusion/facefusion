@@ -508,6 +508,7 @@ def process_image(start_time : float) -> ErrorCode:
 		conditional_log_statistics()
 	else:
 		logger.error(wording.get('processing_image_failed'), __name__.upper())
+		return 1
 	process_manager.end()
 	return 0
 
@@ -586,6 +587,7 @@ def process_video(start_time : float) -> ErrorCode:
 		conditional_log_statistics()
 	else:
 		logger.error(wording.get('processing_video_failed'), __name__.upper())
+		return 1
 	process_manager.end()
 	return 0
 

@@ -110,14 +110,14 @@ def test_extract_frames_with_trim_end() -> None:
 
 
 def test_concat_video() -> None:
-	target_paths =\
+	output_path = get_test_output_file('test-concat-video.mp4')
+	temp_output_paths =\
 	[
 		get_test_example_file('target-240p.mp4'),
 		get_test_example_file('target-240p.mp4')
 	]
-	output_path = get_test_output_file('test-concat-video.mp4')
 
-	assert concat_video(target_paths, output_path) is True
+	assert concat_video(output_path, temp_output_paths) is True
 
 
 def test_read_audio_buffer() -> None:
