@@ -81,10 +81,10 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	return run_ffmpeg(commands)
 
 
-def concat_video(target_paths : List[str], output_path : str) -> bool:
+def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	with tempfile.NamedTemporaryFile(mode = 'w', delete = False) as concat_video_file:
-		for target_path in target_paths:
-			concat_video_file.write('file \'' + os.path.abspath(target_path) + '\'' + os.linesep)
+		for temp_output_path in temp_output_paths:
+			concat_video_file.write('file \'' + os.path.abspath(temp_output_path) + '\'' + os.linesep)
 	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c', 'copy', '-y', os.path.abspath(output_path) ]
 	return run_ffmpeg(commands)
 
