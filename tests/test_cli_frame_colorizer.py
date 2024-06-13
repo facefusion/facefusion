@@ -2,8 +2,9 @@ import subprocess
 import sys
 import pytest
 
+import facefusion.globals
 from facefusion.download import conditional_download
-from .helper import get_test_examples_directory, prepare_test_output_directory, get_test_example_file, get_test_output_file, is_test_output_file
+from .helper import get_test_jobs_directory, get_test_examples_directory, prepare_test_output_directory, get_test_example_file, get_test_output_file, is_test_output_file
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -15,6 +16,7 @@ def before_all() -> None:
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', '-vf', 'hue=s=0', get_test_example_file('target-240p-0sat.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'hue=s=0', get_test_example_file('target-240p-0sat.mp4') ])
+	facefusion.globals.jobs_path = get_test_jobs_directory()
 
 
 @pytest.fixture(scope = 'function', autouse = True)
