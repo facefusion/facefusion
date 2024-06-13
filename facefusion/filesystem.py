@@ -37,7 +37,7 @@ def is_directory(directory_path : str) -> bool:
 
 
 def in_directory(file_path : str) -> bool:
-	if not is_directory(file_path):
+	if file_path and not is_directory(file_path):
 		return is_directory(os.path.dirname(file_path))
 	return False
 

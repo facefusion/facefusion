@@ -15,8 +15,8 @@ import facefusion.choices
 import facefusion.globals
 from facefusion.typing import ErrorCode, Args
 from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, voice_extractor, wording
-from facefusion.jobs import job_manager, job_runner, job_store
-from facefusion.program_helper import validate_args, reduce_args, update_args
+from facefusion.jobs import job_manager, job_runner, job_store, job_helper
+from facefusion.program_helper import validate_args, reduce_args, update_args, import_globals
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.content_analyser import analyse_image, analyse_video
@@ -261,8 +261,10 @@ def run(program : ArgumentParser) -> None:
 		error_code = route_job_runner(program)
 		hard_exit(error_code)
 	elif facefusion.globals.headless:
-		error_code = conditional_process()
-		return conditional_exit(error_code)
+		if not job_manager.init_jobs(facefusion.globals.jobs_path):
+			hard_exit(1)
+		error_core = process_headless(program)
+		hard_exit(error_core)
 	else:
 		import facefusion.uis.core as ui
 
@@ -444,12 +446,7 @@ def route_job_runner(program : ArgumentParser) -> ErrorCode:
 def process_step(step_args : Args) -> bool:
 	program = create_program()
 	program = update_args(program, step_args)
-
-	for job_key in job_store.get_job_keys():
-		program = update_args(program,
-		{
-			job_key: getattr(facefusion.globals, job_key)
-		})
+	program = import_globals(program, job_store.get_job_keys())
 
 	if validate_args(program):
 		apply_args(program)
@@ -457,6 +454,16 @@ def process_step(step_args : Args) -> bool:
 		error_code = conditional_process()
 		return error_code == 0
 	return False
+
+
+def process_headless(program : ArgumentParser) -> ErrorCode:
+	job_id = job_helper.suggest_job_id('headless')
+	step_program = reduce_args(program, job_store.get_step_keys())
+	step_args = vars(step_program.parse_args())
+
+	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
+		return 0
+	return 1
 
 
 def process_image(start_time : float) -> ErrorCode:

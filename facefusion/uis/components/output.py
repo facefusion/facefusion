@@ -4,8 +4,10 @@ import gradio
 
 import facefusion.globals
 from facefusion import process_manager, wording
-from facefusion.core import conditional_process
+from facefusion.core import process_step, create_program
 from facefusion.memory import limit_system_memory
+from facefusion.jobs import job_manager, job_runner, job_store, job_helper
+from facefusion.program_helper import reduce_args, import_globals
 from facefusion.uis.core import get_ui_component
 from facefusion.filesystem import is_image, is_video
 from facefusion.temp_helper import clear_temp
@@ -66,12 +68,23 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
-	conditional_process()
+	if job_manager.init_jobs(facefusion.globals.jobs_path):
+		create_and_run_job()
 	if is_image(facefusion.globals.output_path):
 		return gradio.Image(value = facefusion.globals.output_path, visible = True), gradio.Video(value = None, visible = False), gradio.Button(visible = True), gradio.Button(visible = False)
 	if is_video(facefusion.globals.output_path):
 		return gradio.Image(value = None, visible = False), gradio.Video(value = facefusion.globals.output_path, visible = True), gradio.Button(visible = True), gradio.Button(visible = False)
 	return gradio.Image(value = None), gradio.Video(value = None), gradio.Button(visible = True), gradio.Button(visible = False)
+
+
+def create_and_run_job() -> bool:
+	job_id = job_helper.suggest_job_id('ui')
+	step_program = create_program()
+	step_program = import_globals(step_program, job_store.get_step_keys())
+	step_program = reduce_args(step_program, job_store.get_step_keys())
+	step_args = vars(step_program.parse_args())
+
+	return job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step)
 
 
 def stop() -> Tuple[gradio.Button, gradio.Button]:
