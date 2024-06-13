@@ -16,6 +16,6 @@ def normalize_padding(padding : Optional[List[int]]) -> Optional[Padding]:
 
 
 def normalize_fps(fps : Optional[float]) -> Optional[Fps]:
-	if fps is not None:
+	if isinstance(fps, float):
 		return max(1.0, min(fps, 60.0))
 	return None
