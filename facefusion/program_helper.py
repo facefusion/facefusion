@@ -1,8 +1,8 @@
 from argparse import ArgumentParser, Action
 from copy import copy
 from typing import List
+from types import ModuleType
 
-import facefusion.globals
 from facefusion.typing import Args
 
 
@@ -37,13 +37,14 @@ def update_args(program : ArgumentParser, args : Args) -> ArgumentParser:
 	return program
 
 
-def import_globals(program : ArgumentParser, keys : List[str]) -> ArgumentParser:
+def import_globals(program : ArgumentParser, keys : List[str], modules : List[ModuleType]) -> ArgumentParser:
 	program = copy(program)
 
-	for key in keys:
-		if hasattr(facefusion.globals, key):
-			program = update_args(program,
-			{
-				key: getattr(facefusion.globals, key)
-			})
+	for module in modules:
+		for key in keys:
+			if hasattr(module.globals, key):
+				program = update_args(program,
+				{
+					key: getattr(module.globals, key)
+				})
 	return program

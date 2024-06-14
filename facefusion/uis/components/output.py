@@ -11,6 +11,7 @@ from facefusion.program_helper import reduce_args, import_globals
 from facefusion.uis.core import get_ui_component
 from facefusion.filesystem import is_image, is_video
 from facefusion.temp_helper import clear_temp
+import facefusion.processors.frame
 
 OUTPUT_IMAGE : Optional[gradio.Image] = None
 OUTPUT_VIDEO : Optional[gradio.Video] = None
@@ -80,7 +81,7 @@ def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]
 def create_and_run_job() -> bool:
 	job_id = job_helper.suggest_job_id('ui')
 	step_program = create_program()
-	step_program = import_globals(step_program, job_store.get_step_keys())
+	step_program = import_globals(step_program, job_store.get_step_keys(), [ facefusion, facefusion.processors.frame ])
 	step_program = reduce_args(step_program, job_store.get_step_keys())
 	step_args = vars(step_program.parse_args())
 
