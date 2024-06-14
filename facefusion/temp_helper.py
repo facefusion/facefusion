@@ -9,16 +9,20 @@ import facefusion.globals
 from facefusion.filesystem import is_file, is_directory
 
 
-def get_temp_file_path(target_path : str) -> str:
-	_, target_extension = os.path.splitext(os.path.basename(target_path))
-	temp_directory_path = get_temp_directory_path(target_path)
-	return os.path.join(temp_directory_path, 'temp' + target_extension)
+def get_temp_base_path() -> str:
+	return os.path.join(tempfile.gettempdir(), 'facefusion')
 
 
 def get_temp_directory_path(target_path : str) -> str:
 	target_name, _ = os.path.splitext(os.path.basename(target_path))
-	temp_directory_path = os.path.join(tempfile.gettempdir(), 'facefusion')
-	return os.path.join(temp_directory_path, target_name)
+	temp_base_path = get_temp_base_path()
+	return os.path.join(temp_base_path, target_name)
+
+
+def get_temp_file_path(target_path : str) -> str:
+	_, target_extension = os.path.splitext(os.path.basename(target_path))
+	temp_directory_path = get_temp_directory_path(target_path)
+	return os.path.join(temp_directory_path, 'temp' + target_extension)
 
 
 def get_temp_frame_paths(target_path : str) -> List[str]:
