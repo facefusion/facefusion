@@ -47,14 +47,11 @@ def retry_jobs(process_step : ProcessStep) -> bool:
 
 def run_step(job_id : str, step_index : int, step : JobStep, process_step : ProcessStep) -> bool:
 	step_args = step.get('args')
-	output_path = step_args.get('output_path')
 
-	if output_path:
-		step_output_path = get_step_output_path(job_id, step_index, output_path)
-		step_args['output_path'] = step_output_path
 	if set_step_status(job_id, step_index, 'started') and process_step(step_args):
-		set_step_status(job_id, step_index, 'completed')
-		return True
+		output_path = step_args.get('output_path')
+		step_output_path = get_step_output_path(job_id, step_index, output_path)
+		return move_file(output_path, step_output_path) and set_step_status(job_id, step_index, 'completed')
 	set_step_status(job_id, step_index, 'failed')
 	return False
 
