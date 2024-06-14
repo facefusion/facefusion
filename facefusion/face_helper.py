@@ -129,7 +129,7 @@ def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLand
 	return face_landmark_5
 
 
-def apply_nms(bounding_boxes : List[BoundingBox], iou_threshold : float) -> List[int]:
+def apply_nms(bounding_boxes : List[BoundingBox], iou_limit : float) -> List[int]:
 	keep_indices = []
 	dimensions = numpy.reshape(bounding_boxes, (-1, 4))
 	x1 = dimensions[:, 0]
@@ -150,7 +150,7 @@ def apply_nms(bounding_boxes : List[BoundingBox], iou_threshold : float) -> List
 		width = numpy.maximum(0, xx2 - xx1 + 1)
 		height = numpy.maximum(0, yy2 - yy1 + 1)
 		iou = width * height / (areas[index] + areas[remain_indices] - width * height)
-		indices = indices[numpy.where(iou <= iou_threshold)[0] + 1]
+		indices = indices[numpy.where(iou <= iou_limit)[0] + 1]
 	return keep_indices
 
 

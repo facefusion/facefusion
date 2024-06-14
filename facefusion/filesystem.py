@@ -95,13 +95,13 @@ def sanitize_path_for_windows(full_path : str) -> Optional[str]:
 
 	while True:
 		unicode_buffer = ctypes.create_unicode_buffer(buffer_size)
-		buffer_threshold = ctypes.windll.kernel32.GetShortPathNameW(full_path, unicode_buffer, buffer_size) #type:ignore[attr-defined]
+		buffer_limit = ctypes.windll.kernel32.GetShortPathNameW(full_path, unicode_buffer, buffer_size) #type:ignore[attr-defined]
 
-		if buffer_size > buffer_threshold:
+		if buffer_size > buffer_limit:
 			return unicode_buffer.value
-		if buffer_threshold == 0:
+		if buffer_limit == 0:
 			return None
-		buffer_size = buffer_threshold
+		buffer_size = buffer_limit
 
 
 def move_file(file_path : str, move_path : str) -> bool:
