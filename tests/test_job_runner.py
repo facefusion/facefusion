@@ -27,7 +27,7 @@ def before_each() -> None:
 
 
 def process_step(step_args : Args) -> bool:
-	return 'source_path' in step_args and 'target_path' in step_args and 'output_path' in step_args
+	return shutil.copy(step_args.get('target_path'), step_args.get('output_path'))
 
 
 def test_run_job() -> None:
