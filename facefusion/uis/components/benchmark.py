@@ -1,5 +1,7 @@
 from typing import Any, Optional, List, Dict, Generator
 from time import sleep, perf_counter
+import os
+import hashlib
 import tempfile
 import statistics
 import gradio
@@ -7,6 +9,7 @@ import gradio
 import facefusion.globals
 from facefusion import process_manager, wording
 from facefusion.face_store import clear_static_faces
+from facefusion.filesystem import is_video
 from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.vision import count_video_frame_total, detect_video_resolution, detect_video_fps, pack_resolution
 from facefusion.core import conditional_process
@@ -27,6 +30,13 @@ BENCHMARKS : Dict[str, str] =\
 	'1440p': '.assets/examples/target-1440p.mp4',
 	'2160p': '.assets/examples/target-2160p.mp4'
 }
+
+
+def suggest_output_path(target_path : str) -> Optional[str]:
+	if is_video(target_path):
+		_, target_extension = os.path.splitext(target_path)
+		return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_extension)
+	return None
 
 
 def render() -> None:
@@ -77,7 +87,6 @@ def listen() -> None:
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
 	facefusion.globals.source_paths = [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ]
-	facefusion.globals.output_path = tempfile.gettempdir()
 	facefusion.globals.face_landmarker_score = 0
 	facefusion.globals.temp_frame_format = 'bmp'
 	facefusion.globals.output_video_preset = 'ultrafast'
@@ -88,6 +97,7 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 		pre_process()
 		for target_path in target_paths:
 			facefusion.globals.target_path = target_path
+			facefusion.globals.output_path = suggest_output_path(target_path)
 			benchmark_results.append(benchmark(benchmark_cycles))
 			yield benchmark_results
 		post_process()
