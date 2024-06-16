@@ -5,8 +5,8 @@
 RequestExecutionLevel admin
 ManifestDPIAware true
 
-Name 'FaceFusion 2.6.0'
-OutFile 'FaceFusion_2.6.0.exe'
+Name 'FaceFusion 2.6.1'
+OutFile 'FaceFusion_2.6.1.exe'
 
 !define MUI_ICON 'facefusion.ico'
 
@@ -91,7 +91,7 @@ Section 'Download Your Copy'
 
 	DetailPrint 'Download Your Copy'
 	RMDir /r $INSTDIR
-	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch 2.6.0 .'
+	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch 2.6.1 .'
 SectionEnd
 
 Section 'Setup Your Environment'
