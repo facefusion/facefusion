@@ -11,7 +11,7 @@ def run_job(job_id : str, process_step : ProcessStep) -> bool:
 	if job_id in job_queued_ids:
 		if run_steps(job_id, process_step) and finalize_steps(job_id):
 			return move_job_file(job_id, 'completed')
-		return move_job_file(job_id, 'failed')
+		move_job_file(job_id, 'failed')
 	return False
 
 

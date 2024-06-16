@@ -7,7 +7,7 @@ import tempfile
 import facefusion.globals
 from facefusion import logger, process_manager
 from facefusion.typing import OutputVideoPreset, Fps, AudioBuffer
-from facefusion.temp_helper import get_temp_base_path, get_temp_file_path, get_temp_frames_pattern
+from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.vision import restrict_video_fps
 
 
@@ -83,13 +83,14 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 
 
 def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
-	with tempfile.NamedTemporaryFile(mode = 'w', delete = False) as concat_video_file:
+	with tempfile.NamedTemporaryFile(mode = 'w') as concat_video_file:
 		for temp_output_path in temp_output_paths:
 			concat_video_file.write('file \'' + temp_output_path + '\'' + os.linesep)
-	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', 'aac', '-y', output_path ]
-	process = run_ffmpeg(commands)
-	process.communicate()
-	return process.returncode == 0
+		concat_video_file.flush()
+		commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', 'aac', '-y', output_path ]
+		process = run_ffmpeg(commands)
+		process.communicate()
+		return process.returncode == 0
 
 
 def copy_image(target_path : str, temp_image_resolution : str) -> bool:
