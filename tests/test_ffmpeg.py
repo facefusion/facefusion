@@ -30,6 +30,7 @@ def before_each() -> None:
 	facefusion.globals.trim_frame_start = None
 	facefusion.globals.trim_frame_end = None
 	facefusion.globals.temp_frame_format = 'jpg'
+	facefusion.globals.output_audio_encoder = 'aac'
 	prepare_test_output_directory()
 
 
