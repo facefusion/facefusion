@@ -7,7 +7,7 @@ import tempfile
 import facefusion.globals
 from facefusion import logger, process_manager
 from facefusion.typing import OutputVideoPreset, Fps, AudioBuffer
-from facefusion.temp_helper import get_temp_base_path, get_temp_file_path, get_temp_frames_pattern
+from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.vision import restrict_video_fps
 
 
@@ -83,14 +83,14 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 
 
 def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
-	concat_video_path = tempfile.mktemp(dir = get_temp_base_path())
+	concat_video_path = tempfile.mktemp()
 
 	with open(concat_video_path, 'w') as concat_video_file:
 		for temp_output_path in temp_output_paths:
 			concat_video_file.write('file \'' + temp_output_path + '\'' + os.linesep)
 		concat_video_file.flush()
 		concat_video_file.close()
-	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', 'aac', '-y', output_path ]
+	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', facefusion.globals.output_audio_encoder, '-y', output_path ]
 	process = run_ffmpeg(commands)
 	process.communicate()
 	os.remove(concat_video_path)
@@ -139,13 +139,13 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) 
 	if isinstance(trim_frame_end, int):
 		end_time = trim_frame_end / output_video_fps
 		commands.extend([ '-to', str(end_time) ])
-	commands.extend([ '-i', target_path, '-c', 'copy', '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ])
+	commands.extend([ '-i', target_path, '-c:v', 'copy', '-c:a', facefusion.globals.output_audio_encoder, '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ])
 	return run_ffmpeg(commands).returncode == 0
 
 
 def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:
 	temp_file_path = get_temp_file_path(target_path)
-	commands = [ '-i', temp_file_path, '-i', audio_path, '-af', 'apad', '-shortest', '-y', output_path ]
+	commands = [ '-i', temp_file_path, '-i', audio_path, '-c:a', facefusion.globals.output_audio_encoder, '-af', 'apad', '-shortest', '-y', output_path ]
 	return run_ffmpeg(commands).returncode == 0
 
 
