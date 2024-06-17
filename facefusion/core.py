@@ -51,7 +51,7 @@ def cli() -> None:
 def create_program() -> ArgumentParser:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 200), add_help = False)
 	# general
-	program.add_argument('-c', '--config-path', help = wording.get('help.config'), dest = 'config_path', default = 'facefusion.ini')
+	program.add_argument('-c', '--config-path', help = wording.get('help.config_path'), dest = 'config_path', default = 'facefusion.ini')
 	apply_config_path(program)
 	program.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
 	program.add_argument('-t', '--target-path', help = wording.get('help.target_path'), dest = 'target_path', default = config.get_str_value('general.target_path'))
@@ -87,7 +87,7 @@ def create_program() -> ArgumentParser:
 	group_face_analyser.add_argument('--face-analyser-age', help = wording.get('help.face_analyser_age'), default = config.get_str_value('face_analyser.face_analyser_age'), choices = facefusion.choices.face_analyser_ages)
 	group_face_analyser.add_argument('--face-analyser-gender', help = wording.get('help.face_analyser_gender'), default = config.get_str_value('face_analyser.face_analyser_gender'), choices = facefusion.choices.face_analyser_genders)
 	group_face_analyser.add_argument('--face-detector-model', help = wording.get('help.face_detector_model'), default = config.get_str_value('face_analyser.face_detector_model', 'yoloface'), choices = facefusion.choices.face_detector_set.keys())
-	group_face_analyser.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_analyser.face_detector_size', '640x640'), choices = face_detector_size_choices)
+	group_face_analyser.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_analyser.face_detector_size', '640x640'), choices = face_detector_size_choices, metavar = 'FACE_DETECTOR_SIZE')
 	group_face_analyser.add_argument('--face-detector-score', help = wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_analyser.face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_metavar(facefusion.choices.face_detector_score_range))
 	group_face_analyser.add_argument('--face-landmarker-score', help = wording.get('help.face_landmarker_score'), type = float, default = config.get_float_value('face_analyser.face_landmarker_score', '0.5'), choices = facefusion.choices.face_landmarker_score_range, metavar = create_metavar(facefusion.choices.face_landmarker_score_range))
 	job_store.register_step_keys([ 'face_analyser_order', 'face_analyser_age', 'face_analyser_gender', 'face_detector_model', 'face_detector_size', 'face_detector_score', 'face_landmarker_score' ])
@@ -140,20 +140,20 @@ def create_program() -> ArgumentParser:
 	group_uis.add_argument('--ui-layouts', help = wording.get('help.ui_layouts').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layouts', 'default'), nargs = '+')
 	# job manager
 	group_job_manager = program.add_argument_group('job manager')
-	group_job_manager.add_argument('--job-create', help = wording.get('help.job_create'))
-	group_job_manager.add_argument('--job-submit', help = wording.get('help.job_submit'))
+	group_job_manager.add_argument('--job-create', help = wording.get('help.job_create'), metavar = 'JOB_ID')
+	group_job_manager.add_argument('--job-submit', help = wording.get('help.job_submit'), metavar = 'JOB_ID')
 	group_job_manager.add_argument('--job-submit-all', help = wording.get('help.job_submit_all'), action = 'store_true')
-	group_job_manager.add_argument('--job-delete', help = wording.get('help.job_delete'))
+	group_job_manager.add_argument('--job-delete', help = wording.get('help.job_delete'), metavar = 'JOB_ID')
 	group_job_manager.add_argument('--job-delete-all', help = wording.get('help.job_delete_all'), action = 'store_true')
-	group_job_manager.add_argument('--job-add-step', help = wording.get('help.job_add_step'))
-	group_job_manager.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), nargs = 2)
-	group_job_manager.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), nargs = 2)
-	group_job_manager.add_argument('--job-remove-step', help = wording.get('help.job_remove_step'), nargs = 2)
+	group_job_manager.add_argument('--job-add-step', help = wording.get('help.job_add_step'), metavar = 'JOB_ID')
+	group_job_manager.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
+	group_job_manager.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
+	group_job_manager.add_argument('--job-remove-step', help = wording.get('help.job_remove_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
 	# job runner
 	group_job_runner = program.add_argument_group('job runner')
-	group_job_runner.add_argument('--job-run', help = wording.get('help.job_run'))
+	group_job_runner.add_argument('--job-run', help = wording.get('help.job_run'), metavar = 'JOB_ID')
 	group_job_runner.add_argument('--job-run-all', help = wording.get('help.job_run_all'), action = 'store_true')
-	group_job_runner.add_argument('--job-retry', help = wording.get('help.job_retry'))
+	group_job_runner.add_argument('--job-retry', help = wording.get('help.job_retry'), metavar = 'JOB_ID')
 	group_job_runner.add_argument('--job-retry-all', help = wording.get('help.job_retry_all'), action = 'store_true')
 	return program
 

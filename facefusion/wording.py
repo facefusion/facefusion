@@ -126,8 +126,8 @@ WORDING : Dict[str, Any] =\
 		# output creation
 		'output_image_quality': 'specify the image quality which translates to the compression factor',
 		'output_image_resolution': 'specify the image output resolution based on the target image',
-		'output_audio_encoder': 'specify the audio encoder used for the output',
-		'output_video_encoder': 'specify the video encoder used for the output',
+		'output_audio_encoder': 'specify the encoder used for the audio output',
+		'output_video_encoder': 'specify the encoder used for the video output',
 		'output_video_preset': 'balance fast video processing and video file size',
 		'output_video_quality': 'specify the video quality which translates to the compression factor',
 		'output_video_resolution': 'specify the video output resolution based on the target video',
