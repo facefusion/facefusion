@@ -30,10 +30,11 @@ python run.py [options]
 
 options:
   -h, --help                                                                                                                                                                            show this help message and exit
-  -c CONFIG_PATH, --config CONFIG_PATH                                                                                                                                                  choose the config file to override defaults
-  -s SOURCE_PATHS, --source SOURCE_PATHS                                                                                                                                                choose single or multiple source images or audios
-  -t TARGET_PATH, --target TARGET_PATH                                                                                                                                                  choose single target image or video
-  -o OUTPUT_PATH, --output OUTPUT_PATH                                                                                                                                                  specify the output file or directory
+  -c CONFIG_PATH, --config-path CONFIG_PATH                                                                                                                                             choose the config file to override defaults
+  -s SOURCE_PATHS, --source-paths SOURCE_PATHS                                                                                                                                          choose single or multiple source images or audios
+  -t TARGET_PATH, --target-path TARGET_PATH                                                                                                                                             choose single target image or video
+  -o OUTPUT_PATH, --output-path OUTPUT_PATH                                                                                                                                             specify the output image or video within a directory
+  -j JOBS_PATH, --jobs-path JOBS_PATH                                                                                                                                                   specify the directory to store jobs
   -v, --version                                                                                                                                                                         show program's version number and exit
 
 misc:
@@ -58,18 +59,18 @@ face analyser:
   --face-analyser-gender {female,male}                                                                                                                                                  filter the detected faces based on their gender
   --face-detector-model {many,retinaface,scrfd,yoloface,yunet}                                                                                                                          choose the model responsible for detecting the face
   --face-detector-size FACE_DETECTOR_SIZE                                                                                                                                               specify the size of the frame provided to the face detector
-  --face-detector-score [0.0-0.95]                                                                                                                                                      filter the detected faces base on the confidence score
-  --face-landmarker-score [0.0-0.95]                                                                                                                                                    filter the detected landmarks base on the confidence score
+  --face-detector-score [0.0-1.0]                                                                                                                                                       filter the detected faces base on the confidence score
+  --face-landmarker-score [0.0-1.0]                                                                                                                                                     filter the detected landmarks base on the confidence score
 
 face selector:
   --face-selector-mode {many,one,reference}                                                                                                                                             use reference based tracking or simple matching
   --reference-face-position REFERENCE_FACE_POSITION                                                                                                                                     specify the position used to create the reference face
-  --reference-face-distance [0.0-1.45]                                                                                                                                                  specify the desired similarity between the reference face and target face
+  --reference-face-distance [0.0-1.5]                                                                                                                                                   specify the desired similarity between the reference face and target face
   --reference-frame-number REFERENCE_FRAME_NUMBER                                                                                                                                       specify the frame used to create the reference face
 
 face mask:
   --face-mask-types FACE_MASK_TYPES [FACE_MASK_TYPES ...]                                                                                                                               mix and match different face mask types (choices: box, occlusion, region)
-  --face-mask-blur [0.0-0.95]                                                                                                                                                           specify the degree of blur applied the box mask
+  --face-mask-blur [0.0-1.0]                                                                                                                                                            specify the degree of blur applied the box mask
   --face-mask-padding FACE_MASK_PADDING [FACE_MASK_PADDING ...]                                                                                                                         apply top, right, bottom and left padding to the box mask
   --face-mask-regions FACE_MASK_REGIONS [FACE_MASK_REGIONS ...]                                                                                                                         choose the facial features used for the region mask (choices: skin, left-eyebrow, right-eyebrow, left-eye, right-eye, glasses, nose, mouth, upper-lip, lower-lip)
 
@@ -82,7 +83,8 @@ frame extraction:
 output creation:
   --output-image-quality [0-100]                                                                                                                                                        specify the image quality which translates to the compression factor
   --output-image-resolution OUTPUT_IMAGE_RESOLUTION                                                                                                                                     specify the image output resolution based on the target image
-  --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc,h264_amf,hevc_amf}                                                                                           specify the encoder use for the video compression
+  --output-audio-encoder {aac,libmp3lame,libopus,libvorbis}                                                                                                                             specify the encoder used for the audio output
+  --output-video-encoder {libx264,libx265,libvpx-vp9,h264_nvenc,hevc_nvenc,h264_amf,hevc_amf}                                                                                           specify the encoder used for the video output
   --output-video-preset {ultrafast,superfast,veryfast,faster,fast,medium,slow,slower,veryslow}                                                                                          balance fast video processing and video file size
   --output-video-quality [0-100]                                                                                                                                                        specify the video quality which translates to the compression factor
   --output-video-resolution OUTPUT_VIDEO_RESOLUTION                                                                                                                                     specify the video output resolution based on the target video
@@ -95,6 +97,7 @@ frame processors:
   --face-enhancer-model {codeformer,gfpgan_1.2,gfpgan_1.3,gfpgan_1.4,gpen_bfr_256,gpen_bfr_512,gpen_bfr_1024,gpen_bfr_2048,restoreformer_plus_plus}                                     choose the model responsible for enhancing the face
   --face-enhancer-blend [0-100]                                                                                                                                                         blend the enhanced into the previous face
   --face-swapper-model {blendswap_256,inswapper_128,inswapper_128_fp16,simswap_256,simswap_512_unofficial,uniface_256}                                                                  choose the model responsible for swapping the face
+  --face-swapper-pixel-boost {128x128,256x256,384x384,512x512,768x768,1024x1024}                                                                                                        choose pixel boost resolution for the face swapper
   --frame-colorizer-model {ddcolor,ddcolor_artistic,deoldify,deoldify_artistic,deoldify_stable}                                                                                         choose the model responsible for colorizing the frame
   --frame-colorizer-blend [0-100]                                                                                                                                                       blend the colorized into the previous frame
   --frame-colorizer-size {192x192,256x256,384x384,512x512}                                                                                                                              specify the size of the frame provided to the frame colorizer
@@ -105,6 +108,23 @@ frame processors:
 uis:
   --open-browser                                                                                                                                                                        open the browser once the program is ready
   --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                                                                                                              launch a single or multiple UI layouts (choices: benchmark, default, webcam, ...)
+
+job manager:
+  --job-create JOB_ID                                                                                                                                                                   create a drafted job
+  --job-submit JOB_ID                                                                                                                                                                   submit a drafted job to become a queued job
+  --job-submit-all                                                                                                                                                                      submit all drafted jobs to become a queued jobs
+  --job-delete JOB_ID                                                                                                                                                                   delete a drafted, queued, failed or completed job
+  --job-delete-all                                                                                                                                                                      delete all drafted, queued, failed and completed jobs
+  --job-add-step JOB_ID                                                                                                                                                                 add a step to a drafted job
+  --job-remix-step JOB_ID STEP_INDEX                                                                                                                                                    remix a previous step from a drafted job
+  --job-insert-step JOB_ID STEP_INDEX                                                                                                                                                   insert a step to a drafted job
+  --job-remove-step JOB_ID STEP_INDEX                                                                                                                                                   remove a step from a drafted job
+
+job runner:
+  --job-run JOB_ID                                                                                                                                                                      run a queued job
+  --job-run-all                                                                                                                                                                         run all queued jobs
+  --job-retry JOB_ID                                                                                                                                                                    retry a failed job
+  --job-retry-all                                                                                                                                                                       retry all failed jobs
 ```
 
 
