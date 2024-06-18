@@ -56,7 +56,7 @@ def create_program() -> ArgumentParser:
 	program.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
 	program.add_argument('-t', '--target-path', help = wording.get('help.target_path'), dest = 'target_path', default = config.get_str_value('general.target_path'))
 	program.add_argument('-o', '--output-path', help = wording.get('help.output_path'), dest = 'output_path', default = config.get_str_value('general.output_path'))
-	program.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('misc.log_level', '.jobs'))
+	program.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('general.jobs_path', '.jobs'))
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
 	# misc

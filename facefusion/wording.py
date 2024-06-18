@@ -139,7 +139,7 @@ WORDING : Dict[str, Any] =\
 		'face_enhancer_model': 'choose the model responsible for enhancing the face',
 		'face_enhancer_blend': 'blend the enhanced into the previous face',
 		'face_swapper_model': 'choose the model responsible for swapping the face',
-		'face_swapper_pixel_boost': 'choose pixel boost resolution for the face swapper',
+		'face_swapper_pixel_boost': 'choose the pixel boost resolution for the face swapper',
 		'frame_colorizer_model': 'choose the model responsible for colorizing the frame',
 		'frame_colorizer_blend': 'blend the colorized into the previous frame',
 		'frame_colorizer_size': 'specify the size of the frame provided to the frame colorizer',
