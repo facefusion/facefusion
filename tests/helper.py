@@ -5,32 +5,32 @@ from facefusion.typing import JobStatus
 from facefusion.filesystem import is_file, is_directory, remove_directory, create_directory
 
 
-def is_test_job_file(file : str, job_status : JobStatus) -> bool:
-	return is_file(get_test_job_file(file, job_status))
+def is_test_job_file(file_path : str, job_status : JobStatus) -> bool:
+	return is_file(get_test_job_file(file_path, job_status))
 
 
-def get_test_job_file(file : str, job_status : JobStatus) -> str:
-	return os.path.join(get_test_jobs_directory(), job_status, file)
+def get_test_job_file(file_path : str, job_status : JobStatus) -> str:
+	return os.path.join(get_test_jobs_directory(), job_status, file_path)
 
 
 def get_test_jobs_directory() -> str:
 	return os.path.join(get_base_directory_path(), 'test-jobs')
 
 
-def get_test_example_file(file : str) -> str:
-	return os.path.join(get_test_examples_directory(), file)
+def get_test_example_file(file_path : str) -> str:
+	return os.path.join(get_test_examples_directory(), file_path)
 
 
 def get_test_examples_directory() -> str:
 	return os.path.join(get_base_directory_path(), 'test-examples')
 
 
-def is_test_output_file(file : str) -> bool:
-	return is_file(get_test_output_file(file))
+def is_test_output_file(file_path : str) -> bool:
+	return is_file(get_test_output_file(file_path))
 
 
-def get_test_output_file(file : str) -> str:
-	return os.path.join(get_test_outputs_directory(), file)
+def get_test_output_file(file_path : str) -> str:
+	return os.path.join(get_test_outputs_directory(), file_path)
 
 
 def get_test_outputs_directory() -> str:
