@@ -10,7 +10,7 @@ from tqdm import tqdm
 import facefusion.globals
 from facefusion import wording
 from facefusion.common_helper import is_macos
-from facefusion.filesystem import get_file_size, is_file
+from facefusion.filesystem import get_file_size, is_file, remove_file
 
 if is_macos():
 	ssl._create_default_https_context = ssl._create_unverified_context
@@ -30,7 +30,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 						current_size = get_file_size(download_file_path)
 						progress.update(current_size - progress.n)
 		if download_size and not is_download_done(url, download_file_path):
-			os.remove(download_file_path)
+			remove_file(download_file_path)
 			conditional_download(download_directory_path, [ url ])
 
 

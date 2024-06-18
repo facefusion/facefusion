@@ -6,6 +6,7 @@ import tempfile
 
 import facefusion.globals
 from facefusion import logger, process_manager
+from facefusion.filesystem import remove_file
 from facefusion.typing import OutputVideoPreset, Fps, AudioBuffer
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.vision import restrict_video_fps
@@ -93,7 +94,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', facefusion.globals.output_audio_encoder, '-y', output_path ]
 	process = run_ffmpeg(commands)
 	process.communicate()
-	os.remove(concat_video_path)
+	remove_file(concat_video_path)
 	return process.returncode == 0
 
 

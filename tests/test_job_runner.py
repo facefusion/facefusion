@@ -1,9 +1,10 @@
 import subprocess
-import shutil
 import pytest
 
+import facefusion.globals
 from facefusion.typing import Args
 from facefusion.download import conditional_download
+from facefusion.filesystem import copy_file
 from facefusion.jobs.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, add_step
 from facefusion.jobs.job_runner import run_job, run_jobs, run_steps, finalize_steps, collect_output_set
 from .helper import get_test_jobs_directory, get_test_examples_directory, get_test_example_file, get_test_output_file, prepare_test_output_directory, is_test_output_file
@@ -17,6 +18,7 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
+	facefusion.globals.output_audio_encoder = 'aac'
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -27,7 +29,7 @@ def before_each() -> None:
 
 
 def process_step(step_args : Args) -> bool:
-	return shutil.copy(step_args.get('target_path'), step_args.get('output_path'))
+	return copy_file(step_args.get('target_path'), step_args.get('output_path'))
 
 
 def test_run_job() -> None:
@@ -168,10 +170,10 @@ def test_finalize_steps() -> None:
 	add_step('job-finalize-steps', args_2)
 	add_step('job-finalize-steps', args_3)
 
-	shutil.copy(args_1.get('target_path'), get_test_output_file('output-1-job-finalize-steps-0.mp4'))
-	shutil.copy(args_1.get('target_path'), get_test_output_file('output-1-job-finalize-steps-1.mp4'))
-	shutil.copy(args_2.get('target_path'), get_test_output_file('output-2-job-finalize-steps-2.mp4'))
-	shutil.copy(args_3.get('target_path'), get_test_output_file('output-1-job-finalize-steps-3.jpg'))
+	copy_file(args_1.get('target_path'), get_test_output_file('output-1-job-finalize-steps-0.mp4'))
+	copy_file(args_1.get('target_path'), get_test_output_file('output-1-job-finalize-steps-1.mp4'))
+	copy_file(args_2.get('target_path'), get_test_output_file('output-2-job-finalize-steps-2.mp4'))
+	copy_file(args_3.get('target_path'), get_test_output_file('output-1-job-finalize-steps-3.jpg'))
 
 	assert finalize_steps('job-finalize-steps') is True
 	assert is_test_output_file('output-1.mp4') is True
