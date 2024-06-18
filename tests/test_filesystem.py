@@ -1,10 +1,11 @@
-import shutil
+import os.path
+
 import pytest
 
 from facefusion.common_helper import is_windows
 from facefusion.download import conditional_download
-from facefusion.filesystem import get_file_size, same_file_extension, is_file, is_directory, in_directory, is_audio, has_audio, is_image, has_image, is_video, filter_audio_paths, filter_image_paths, list_directory, sanitize_path_for_windows
-from .helper import get_test_examples_directory, get_test_example_file
+from facefusion.filesystem import get_file_size, same_file_extension, is_file, is_directory, in_directory, is_audio, has_audio, is_image, has_image, is_video, filter_audio_paths, filter_image_paths, sanitize_path_for_windows, copy_file, create_directory, list_directory, remove_directory
+from .helper import get_test_examples_directory, get_test_example_file, get_test_outputs_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -15,7 +16,7 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.mp3',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
 	])
-	shutil.copyfile(get_test_example_file('source.jpg'), get_test_example_file('söurce.jpg'))
+	copy_file(get_test_example_file('source.jpg'), get_test_example_file('söurce.jpg'))
 
 
 def test_get_file_size() -> None:
@@ -90,14 +91,30 @@ def test_filter_image_paths() -> None:
 	assert filter_audio_paths([ 'invalid' ]) == []
 
 
+@pytest.mark.skip()
+def test_sanitize_path_for_windows() -> None:
+	if is_windows():
+		assert sanitize_path_for_windows(get_test_example_file('söurce.jpg')).endswith('SURCE~1.JPG')
+		assert sanitize_path_for_windows('invalid') is None
+
+
+def test_create_directory() -> None:
+	create_directory_path = os.path.join(get_test_outputs_directory(), 'create_directory')
+
+	assert create_directory(create_directory_path) is True
+	assert create_directory(get_test_example_file('source.jpg')) is False
+
+
 def test_list_directory() -> None:
 	assert list_directory(get_test_examples_directory())
 	assert list_directory(get_test_example_file('source.jpg')) is None
 	assert list_directory('invalid') is None
 
 
-@pytest.mark.skip()
-def test_sanitize_path_for_windows() -> None:
-	if is_windows():
-		assert sanitize_path_for_windows(get_test_example_file('söurce.jpg')).endswith('SURCE~1.JPG')
-		assert sanitize_path_for_windows('invalid') is None
+def test_remove_directory() -> None:
+	remove_directory_path = os.path.join(get_test_outputs_directory(), 'remove_directory')
+	create_directory(remove_directory_path)
+
+	assert remove_directory(remove_directory_path) is True
+	assert remove_directory(get_test_example_file('source.jpg')) is False
+	assert remove_directory('invalid') is False

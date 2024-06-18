@@ -1,5 +1,5 @@
 from facefusion.ffmpeg import concat_video
-from facefusion.filesystem import is_image, is_video, move_file
+from facefusion.filesystem import is_image, is_video, move_file, remove_file
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.jobs.job_manager import find_job_ids, get_steps, set_step_status, set_steps_status, move_job_file
 from facefusion.typing import JobStep, ProcessStep, JobOutputSet
@@ -10,7 +10,9 @@ def run_job(job_id : str, process_step : ProcessStep) -> bool:
 
 	if job_id in job_queued_ids:
 		if run_steps(job_id, process_step) and finalize_steps(job_id):
+			clean_steps(job_id)
 			return move_job_file(job_id, 'completed')
+		clean_steps(job_id)
 		move_job_file(job_id, 'failed')
 	return False
 
@@ -78,6 +80,16 @@ def finalize_steps(job_id : str) -> bool:
 			for temp_output_path in temp_output_paths:
 				if not move_file(temp_output_path, output_path):
 					return False
+	return True
+
+
+def clean_steps(job_id: str) -> bool:
+	output_set = collect_output_set(job_id)
+
+	for temp_output_paths in output_set.values():
+		for temp_output_path in temp_output_paths:
+			if not remove_file(temp_output_path):
+				return False
 	return True
 
 

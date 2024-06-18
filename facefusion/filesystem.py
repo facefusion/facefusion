@@ -82,14 +82,6 @@ def resolve_relative_path(path : str) -> str:
 	return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
 
 
-def list_directory(directory_path : str) -> Optional[List[str]]:
-	if is_directory(directory_path):
-		files = os.listdir(directory_path)
-		files = [ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ]
-		return sorted(files)
-	return None
-
-
 def sanitize_path_for_windows(full_path : str) -> Optional[str]:
 	buffer_size = 0
 
@@ -104,10 +96,17 @@ def sanitize_path_for_windows(full_path : str) -> Optional[str]:
 		buffer_size = buffer_limit
 
 
+def copy_file(file_path : str, move_path : str) -> bool:
+	if is_file(file_path):
+		shutil.copy(file_path, move_path)
+		return is_file(move_path)
+	return False
+
+
 def move_file(file_path : str, move_path : str) -> bool:
 	if is_file(file_path):
 		shutil.move(file_path, move_path)
-		return not is_file(file_path)
+		return not is_file(file_path) and is_file(move_path)
 	return False
 
 
@@ -115,4 +114,26 @@ def remove_file(file_path : str) -> bool:
 	if is_file(file_path):
 		os.remove(file_path)
 		return not is_file(file_path)
+	return False
+
+
+def create_directory(directory_path : str) -> bool:
+	if directory_path and not is_file(directory_path):
+		Path(directory_path).mkdir(parents = True, exist_ok = True)
+		return is_directory(directory_path)
+	return False
+
+
+def list_directory(directory_path : str) -> Optional[List[str]]:
+	if is_directory(directory_path):
+		files = os.listdir(directory_path)
+		files = [ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ]
+		return sorted(files)
+	return None
+
+
+def remove_directory(directory_path : str) -> bool:
+	if is_directory(directory_path):
+		shutil.rmtree(directory_path, ignore_errors = True)
+		return not is_directory(directory_path)
 	return False

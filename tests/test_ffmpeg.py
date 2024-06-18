@@ -4,7 +4,7 @@ import pytest
 
 import facefusion.globals
 from facefusion import process_manager
-from facefusion.temp_helper import get_temp_directory_path, create_temp, clear_temp
+from facefusion.temp_helper import get_temp_directory_path, create_temp_directory, clear_temp_directory
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import extract_frames, concat_video, read_audio_buffer
 from .helper import get_test_examples_directory, prepare_test_output_directory, get_test_example_file, get_test_output_file
@@ -44,12 +44,12 @@ def test_extract_frames() -> None:
 
 	for target_path in target_paths:
 		temp_directory_path = get_temp_directory_path(target_path)
-		create_temp(target_path)
+		create_temp_directory(target_path)
 
 		assert extract_frames(target_path, '452x240', 30.0) is True
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == 324
 
-		clear_temp(target_path)
+		clear_temp_directory(target_path)
 
 
 def test_extract_frames_with_trim_start() -> None:
@@ -63,12 +63,12 @@ def test_extract_frames_with_trim_start() -> None:
 
 	for target_path, frame_total in providers:
 		temp_directory_path = get_temp_directory_path(target_path)
-		create_temp(target_path)
+		create_temp_directory(target_path)
 
 		assert extract_frames(target_path, '452x240', 30.0) is True
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == frame_total
 
-		clear_temp(target_path)
+		clear_temp_directory(target_path)
 
 
 def test_extract_frames_with_trim_start_and_trim_end() -> None:
@@ -83,12 +83,12 @@ def test_extract_frames_with_trim_start_and_trim_end() -> None:
 
 	for target_path, frame_total in providers:
 		temp_directory_path = get_temp_directory_path(target_path)
-		create_temp(target_path)
+		create_temp_directory(target_path)
 
 		assert extract_frames(target_path, '452x240', 30.0) is True
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == frame_total
 
-		clear_temp(target_path)
+		clear_temp_directory(target_path)
 
 
 def test_extract_frames_with_trim_end() -> None:
@@ -102,12 +102,12 @@ def test_extract_frames_with_trim_end() -> None:
 
 	for target_path, frame_total in providers:
 		temp_directory_path = get_temp_directory_path(target_path)
-		create_temp(target_path)
+		create_temp_directory(target_path)
 
 		assert extract_frames(target_path, '426x240', 30.0) is True
 		assert len(glob.glob1(temp_directory_path, '*.jpg')) == frame_total
 
-		clear_temp(target_path)
+		clear_temp_directory(target_path)
 
 
 def test_concat_video() -> None:

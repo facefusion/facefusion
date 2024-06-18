@@ -3,7 +3,7 @@ from time import sleep
 
 from facefusion.typing import ErrorCode
 from facefusion import process_manager
-from facefusion.temp_helper import clear_temp
+from facefusion.temp_helper import clear_temp_directory
 import facefusion.globals
 
 
@@ -21,5 +21,5 @@ def graceful_exit(error_code : ErrorCode) -> None:
 	while process_manager.is_processing():
 		sleep(0.5)
 	if facefusion.globals.target_path:
-		clear_temp(facefusion.globals.target_path)
+		clear_temp_directory(facefusion.globals.target_path)
 	hard_exit(error_code)

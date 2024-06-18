@@ -3,10 +3,10 @@ from copy import copy
 import glob
 import json
 import os
-import shutil
 
 from facefusion.common_helper import get_current_datetime
-from facefusion.filesystem import is_file, is_directory, move_file, remove_file
+from facefusion.filesystem import is_file, is_directory, move_file, remove_file, create_directory, remove_directory
+from facefusion.temp_helper import create_base_directory
 from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : Optional[str] = None
@@ -19,14 +19,14 @@ def init_jobs(jobs_path : str) -> bool:
 	JOBS_PATH = jobs_path
 	job_status_paths = [ os.path.join(JOBS_PATH, job_status) for job_status in JOB_STATUSES ]
 
+	create_base_directory()
 	for job_status_path in job_status_paths:
-		os.makedirs(job_status_path, exist_ok = True)
+		create_directory(job_status_path)
 	return all(is_directory(status_path) for status_path in job_status_paths)
 
 
-def clear_jobs(jobs_path : str) -> None:
-	if is_directory(jobs_path):
-		shutil.rmtree(jobs_path)
+def clear_jobs(jobs_path : str) -> bool:
+	return remove_directory(jobs_path)
 
 
 def create_job(job_id : str) -> bool:
