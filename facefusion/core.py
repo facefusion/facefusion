@@ -29,7 +29,7 @@ from facefusion.memory import limit_system_memory
 from facefusion.statistics import conditional_log_statistics
 from facefusion.download import conditional_download
 from facefusion.filesystem import is_image, is_video, filter_audio_paths, resolve_relative_path, list_directory
-from facefusion.temp_helper import get_temp_frame_paths, get_temp_file_path, create_temp, move_temp, clear_temp
+from facefusion.temp_helper import get_temp_frame_paths, get_temp_file_path, create_temp_directory, move_temp_file, clear_temp_directory
 from facefusion.ffmpeg import extract_frames, merge_video, copy_image, finalize_image, restore_audio, replace_audio
 from facefusion.vision import read_image, read_static_images, detect_image_resolution, restrict_video_fps, create_image_resolutions, get_video_frame, detect_video_resolution, detect_video_fps, restrict_video_resolution, restrict_image_resolution, create_video_resolutions, pack_resolution, unpack_resolution
 import facefusion.processors.frame
@@ -474,10 +474,10 @@ def process_image(start_time : float) -> ErrorCode:
 		return 3
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
-	clear_temp(facefusion.globals.target_path)
+	clear_temp_directory(facefusion.globals.target_path)
 	# create temp
 	logger.debug(wording.get('creating_temp'), __name__.upper())
-	create_temp(facefusion.globals.target_path)
+	create_temp_directory(facefusion.globals.target_path)
 	# copy image
 	process_manager.start()
 	temp_image_resolution = pack_resolution(restrict_image_resolution(facefusion.globals.target_path, unpack_resolution(facefusion.globals.output_image_resolution)))
@@ -503,7 +503,7 @@ def process_image(start_time : float) -> ErrorCode:
 		logger.warn(wording.get('finalizing_image_skipped'), __name__.upper())
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
-	clear_temp(facefusion.globals.target_path)
+	clear_temp_directory(facefusion.globals.target_path)
 	# validate image
 	if is_image(facefusion.globals.output_path):
 		seconds = '{:.2f}'.format((time() - start_time) % 60)
@@ -521,10 +521,10 @@ def process_video(start_time : float) -> ErrorCode:
 		return 3
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
-	clear_temp(facefusion.globals.target_path)
+	clear_temp_directory(facefusion.globals.target_path)
 	# create temp
 	logger.debug(wording.get('creating_temp'), __name__.upper())
-	create_temp(facefusion.globals.target_path)
+	create_temp_directory(facefusion.globals.target_path)
 	# extract frames
 	process_manager.start()
 	temp_video_resolution = pack_resolution(restrict_video_resolution(facefusion.globals.target_path, unpack_resolution(facefusion.globals.output_video_resolution)))
@@ -561,7 +561,7 @@ def process_video(start_time : float) -> ErrorCode:
 	# handle audio
 	if facefusion.globals.skip_audio:
 		logger.info(wording.get('skipping_audio'), __name__.upper())
-		move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
+		move_temp_file(facefusion.globals.target_path, facefusion.globals.output_path)
 	else:
 		if 'lip_syncer' in facefusion.globals.frame_processors:
 			source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
@@ -571,7 +571,7 @@ def process_video(start_time : float) -> ErrorCode:
 				if is_process_stopping():
 					return 4
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
-				move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
+				move_temp_file(facefusion.globals.target_path, facefusion.globals.output_path)
 		else:
 			if restore_audio(facefusion.globals.target_path, facefusion.globals.output_path, facefusion.globals.output_video_fps):
 				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
@@ -579,10 +579,10 @@ def process_video(start_time : float) -> ErrorCode:
 				if is_process_stopping():
 					return 4
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
-				move_temp(facefusion.globals.target_path, facefusion.globals.output_path)
+				move_temp_file(facefusion.globals.target_path, facefusion.globals.output_path)
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
-	clear_temp(facefusion.globals.target_path)
+	clear_temp_directory(facefusion.globals.target_path)
 	# validate video
 	if is_video(facefusion.globals.output_path):
 		seconds = '{:.2f}'.format((time() - start_time))

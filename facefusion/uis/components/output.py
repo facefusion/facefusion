@@ -10,7 +10,7 @@ from facefusion.jobs import job_manager, job_runner, job_store, job_helper
 from facefusion.program_helper import reduce_args, import_globals
 from facefusion.uis.core import get_ui_component
 from facefusion.filesystem import is_image, is_video
-from facefusion.temp_helper import clear_temp
+from facefusion.temp_helper import clear_temp_directory
 import facefusion.processors.frame
 
 OUTPUT_IMAGE : Optional[gradio.Image] = None
@@ -97,5 +97,5 @@ def clear() -> Tuple[gradio.Image, gradio.Video]:
 	while process_manager.is_processing():
 		sleep(0.5)
 	if facefusion.globals.target_path:
-		clear_temp(facefusion.globals.target_path)
+		clear_temp_directory(facefusion.globals.target_path)
 	return gradio.Image(value = None), gradio.Video(value = None)
