@@ -1,5 +1,4 @@
 from typing import List, Optional, Tuple
-import os
 import gradio
 
 import facefusion.globals
@@ -66,7 +65,7 @@ def render() -> None:
 		label = wording.get('uis.face_swapper_pixel_boost_dropdown'),
 		choices = frame_processors_choices.face_swapper_set.get(frame_processors_globals.face_swapper_model),
 		value = frame_processors_globals.face_swapper_pixel_boost,
-		visible = os.environ.get('FEATURE_FLAG') == 'PIXEL_BOOST' and 'face_swapper' in facefusion.globals.frame_processors
+		visible = 'face_swapper' in facefusion.globals.frame_processors
 	)
 	FRAME_COLORIZER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.frame_colorizer_model_dropdown'),
@@ -145,7 +144,7 @@ def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.Checkb
 	has_frame_colorizer = 'frame_colorizer' in frame_processors
 	has_frame_enhancer = 'frame_enhancer' in frame_processors
 	has_lip_syncer = 'lip_syncer' in frame_processors
-	return gradio.CheckboxGroup(visible = has_face_debugger), gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = os.environ.get('FEATURE_FLAG') == 'PIXEL_BOOST' and has_face_swapper), gradio.Dropdown(visible = has_frame_colorizer), gradio.Slider(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_enhancer), gradio.Slider(visible = has_frame_enhancer), gradio.Dropdown(visible = has_lip_syncer)
+	return gradio.CheckboxGroup(visible = has_face_debugger), gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_frame_colorizer), gradio.Slider(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_enhancer), gradio.Slider(visible = has_frame_enhancer), gradio.Dropdown(visible = has_lip_syncer)
 
 
 def update_face_debugger_items(face_debugger_items : List[FaceDebuggerItem]) -> None:
@@ -170,6 +169,8 @@ def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gr
 	frame_processors_globals.face_swapper_model = face_swapper_model
 	if face_swapper_model == 'blendswap_256':
 		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
+	if face_swapper_model in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
+		facefusion.globals.face_recognizer_model = 'arcface_ghost'
 	if face_swapper_model in [ 'inswapper_128', 'inswapper_128_fp16' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 	if face_swapper_model in [ 'simswap_256', 'simswap_512_unofficial' ]:

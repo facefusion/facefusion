@@ -44,6 +44,11 @@ MODELS : ModelSet =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
 		'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 	},
+	'face_recognizer_arcface_ghost':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_ghost.onnx',
+		'path': resolve_relative_path('../.assets/models/arcface_ghost.onnx')
+	},
 	'face_recognizer_arcface_inswapper':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
@@ -97,6 +102,8 @@ def get_face_analyser() -> Any:
 				face_detectors['yunet'] = cv2.FaceDetectorYN.create(MODELS.get('face_detector_yunet').get('path'), '', (0, 0))
 			if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_blendswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+			if facefusion.globals.face_recognizer_model == 'arcface_ghost':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_ghost').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
@@ -152,6 +159,9 @@ def pre_check() -> bool:
 	if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
 		model_urls.append(MODELS.get('face_recognizer_arcface_blendswap').get('url'))
 		model_paths.append(MODELS.get('face_recognizer_arcface_blendswap').get('path'))
+	if facefusion.globals.face_recognizer_model == 'arcface_ghost':
+		model_urls.append(MODELS.get('face_recognizer_arcface_ghost').get('url'))
+		model_paths.append(MODELS.get('face_recognizer_arcface_ghost').get('path'))
 	if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
 		model_urls.append(MODELS.get('face_recognizer_arcface_inswapper').get('url'))
 		model_paths.append(MODELS.get('face_recognizer_arcface_inswapper').get('path'))
