@@ -43,6 +43,36 @@ MODELS : ModelSet =\
 		'mean': [ 0.0, 0.0, 0.0 ],
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
 	},
+	'ghost_256_unet_1':
+	{
+		'type': 'ghost',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_1.onnx',
+		'path': resolve_relative_path('../.assets/models/ghost_256_unet_1.onnx'),
+		'template': 'arcface_112_v1',
+		'size': (256, 256),
+		'mean': [ 0.0, 0.0, 0.0 ],
+		'standard_deviation': [ 1.0, 1.0, 1.0 ]
+	},
+	'ghost_256_unet_2':
+	{
+		'type': 'ghost',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_2.onnx',
+		'path': resolve_relative_path('../.assets/models/ghost_256_unet_2.onnx'),
+		'template': 'arcface_112_v1',
+		'size': (256, 256),
+		'mean': [ 0.0, 0.0, 0.0 ],
+		'standard_deviation': [ 1.0, 1.0, 1.0 ]
+	},
+	'ghost_256_unet_3':
+	{
+		'type': 'ghost',
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_3.onnx',
+		'path': resolve_relative_path('../.assets/models/ghost_256_unet_3.onnx'),
+		'template': 'arcface_112_v1',
+		'size': (256, 256),
+		'mean': [ 0.0, 0.0, 0.0 ],
+		'standard_deviation': [ 1.0, 1.0, 1.0 ]
+	},
 	'inswapper_128':
 	{
 		'type': 'inswapper',
@@ -169,6 +199,8 @@ def apply_args(program : ArgumentParser) -> None:
 	frame_processors_globals.face_swapper_pixel_boost = args.face_swapper_pixel_boost
 	if args.face_swapper_model == 'blendswap_256':
 		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
+	if args.face_swapper_model in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
+		facefusion.globals.face_recognizer_model = 'arcface_ghost'
 	if args.face_swapper_model in [ 'inswapper_128', 'inswapper_128_fp16' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
 	if args.face_swapper_model in [ 'simswap_256', 'simswap_512_unofficial' ]:
@@ -289,6 +321,7 @@ def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFra
 def prepare_source_frame(source_face : Face) -> VisionFrame:
 	model_type = get_options('model').get('type')
 	source_vision_frame = read_static_image(facefusion.globals.source_paths[0])
+
 	if model_type == 'blendswap':
 		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark_set.get('5/68'), 'arcface_112_v2', (112, 112))
 	if model_type == 'uniface':
@@ -301,7 +334,10 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 
 def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_options('model').get('type')
-	if model_type == 'inswapper':
+
+	if model_type == 'ghost':
+		source_embedding = source_face.embedding.reshape(1, -1)
+	elif model_type == 'inswapper':
 		model_initializer = get_model_initializer()
 		source_embedding = source_face.embedding.reshape((1, -1))
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
@@ -311,9 +347,14 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
+	model_type = get_options('model').get('type')
 	model_mean = get_options('model').get('mean')
 	model_standard_deviation = get_options('model').get('standard_deviation')
-	crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
+
+	if model_type == 'ghost':
+		crop_vision_frame = crop_vision_frame[:, :, ::-1] / 127.5 - 1
+	else:
+		crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
 	crop_vision_frame = (crop_vision_frame - model_mean) / model_standard_deviation
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1)
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0).astype(numpy.float32)
@@ -321,8 +362,13 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
+	model_template = get_options('model').get('type')
 	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
-	crop_vision_frame = (crop_vision_frame * 255.0).round()
+
+	if model_template == 'ghost':
+		crop_vision_frame = (crop_vision_frame * 127.5 + 127.5).round()
+	else:
+		crop_vision_frame = (crop_vision_frame * 255.0).round()
 	crop_vision_frame = crop_vision_frame[:, :, ::-1]
 	return crop_vision_frame
 
