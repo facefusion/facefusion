@@ -16,9 +16,10 @@ from facefusion.face_analyser import get_one_face, get_average_face, get_many_fa
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
 from facefusion.face_store import get_reference_faces
-from facefusion.common_helper import get_argument_value, get_first
+from facefusion.common_helper import get_first
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode_pixel_boost
+from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, Embedding, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.filesystem import same_file_extension, is_file, in_directory, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
@@ -186,17 +187,19 @@ def register_args(program : ArgumentParser) -> None:
 		face_swapper_model_fallback = 'inswapper_128'
 	else:
 		face_swapper_model_fallback = 'inswapper_128_fp16'
-	face_swapper_model = get_argument_value('--face-swapper-model') or face_swapper_model_fallback
-	face_swapper_pixel_boost_choices = frame_processors_choices.face_swapper_set.get(face_swapper_model) #type:ignore[call-overload]
-	program.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', face_swapper_model_fallback), choices = frame_processors_choices.face_swapper_set.keys())
-	program.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('frame_processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
-	facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost' ])
+	group_frame_processors = find_argument_group(program, 'frame processors')
+	if group_frame_processors:
+		group_frame_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', face_swapper_model_fallback), choices = frame_processors_choices.face_swapper_set.keys())
+		face_swapper_pixel_boost_choices = suggest_face_swapper_pixel_boost_choices(program)
+		group_frame_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('frame_processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
+		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost' ])
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	frame_processors_globals.face_swapper_model = args.face_swapper_model
 	frame_processors_globals.face_swapper_pixel_boost = args.face_swapper_pixel_boost
+
 	if args.face_swapper_model == 'blendswap_256':
 		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
 	if args.face_swapper_model in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
