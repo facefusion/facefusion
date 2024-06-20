@@ -499,13 +499,14 @@ def get_average_face(vision_frames : List[VisionFrame], position : int = 0) -> O
 	return None
 
 
-def get_many_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
+def get_many_faces(vision_frame : VisionFrame) -> List[Face]:
+	faces = []
+
 	if numpy.any(vision_frame):
 		static_faces = get_static_faces(vision_frame)
 		if static_faces:
 			faces = static_faces
 		else:
-			faces = []
 			bounding_boxes = []
 			face_landmarks_5 = []
 			face_scores = []
@@ -534,15 +535,15 @@ def get_many_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 				faces = create_faces(vision_frame, bounding_boxes, face_landmarks_5, face_scores)
 			if faces:
 				set_static_faces(vision_frame, faces)
-		if faces:
-			if facefusion.globals.face_analyser_order:
-				faces = sort_by_order(faces, facefusion.globals.face_analyser_order)
-			if facefusion.globals.face_analyser_age:
-				faces = filter_by_age(faces, facefusion.globals.face_analyser_age)
-			if facefusion.globals.face_analyser_gender:
-				faces = filter_by_gender(faces, facefusion.globals.face_analyser_gender)
-		return faces
-	return None
+
+	if faces:
+		if facefusion.globals.face_analyser_order:
+			faces = sort_by_order(faces, facefusion.globals.face_analyser_order)
+		if facefusion.globals.face_analyser_age:
+			faces = filter_by_age(faces, facefusion.globals.face_analyser_age)
+		if facefusion.globals.face_analyser_gender:
+			faces = filter_by_gender(faces, facefusion.globals.face_analyser_gender)
+	return faces
 
 
 def find_similar_faces(reference_faces : FaceSet, vision_frame : VisionFrame, face_distance : float) -> List[Face]:
