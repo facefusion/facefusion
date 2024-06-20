@@ -4,20 +4,20 @@ import glob
 import json
 import os
 
+from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus, JobSet
+from facefusion.choices import job_statuses
 from facefusion.common_helper import get_current_datetime
 from facefusion.filesystem import is_file, is_directory, move_file, remove_file, create_directory, remove_directory
 from facefusion.temp_helper import create_base_directory
-from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : Optional[str] = None
-JOB_STATUSES : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 
 
 def init_jobs(jobs_path : str) -> bool:
 	global JOBS_PATH
 
 	JOBS_PATH = jobs_path
-	job_status_paths = [ os.path.join(JOBS_PATH, job_status) for job_status in JOB_STATUSES ]
+	job_status_paths = [ os.path.join(JOBS_PATH, job_status) for job_status in job_statuses ]
 
 	create_base_directory()
 	for job_status_path in job_status_paths:
@@ -73,6 +73,15 @@ def delete_jobs() -> bool:
 				return False
 		return True
 	return False
+
+
+def find_jobs(job_status : JobStatus) -> JobSet:
+	job_ids = find_job_ids(job_status)
+	jobs : JobSet = {}
+
+	for job_id in job_ids:
+		jobs[job_id] = read_job_file(job_id)
+	return jobs
 
 
 def find_job_ids(job_status : JobStatus) -> List[str]:
@@ -232,7 +241,7 @@ def suggest_job_path(job_id : str, job_status : JobStatus) -> Optional[str]:
 def find_job_path(job_id : str) -> Optional[str]:
 	job_file_name = job_id + '.json'
 
-	for job_status in JOB_STATUSES:
+	for job_status in job_statuses:
 		job_pattern = os.path.join(JOBS_PATH, job_status, job_file_name)
 		job_files = glob.glob(job_pattern)
 

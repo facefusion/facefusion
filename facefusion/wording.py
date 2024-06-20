@@ -155,6 +155,7 @@ WORDING : Dict[str, Any] =\
 		'job_submit_all': 'submit all drafted jobs to become a queued jobs',
 		'job_delete': 'delete a drafted, queued, failed or completed job',
 		'job_delete_all': 'delete all drafted, queued, failed and completed jobs',
+		'job_list': 'list jobs by status',
 		'job_add_step': 'add a step to a drafted job',
 		'job_remix_step': 'remix a previous step from a drafted job',
 		'job_insert_step': 'insert a step to a drafted job',

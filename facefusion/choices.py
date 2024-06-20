@@ -1,6 +1,6 @@
 from typing import List
 
-from facefusion.typing import VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorSet, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, ExecutionProviderSet
+from facefusion.typing import VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorSet, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, ExecutionProviderSet, JobStatus
 from facefusion.common_helper import create_int_range, create_float_range
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
@@ -36,6 +36,8 @@ execution_provider_set : ExecutionProviderSet =\
 	'rocm': 'ROCMExecutionProvider',
 	'tensorrt': 'TensorrtExecutionProvider'
 }
+
+job_statuses : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 
 execution_thread_count_range : List[int] = create_int_range(1, 128, 1)
 execution_queue_count_range : List[int] = create_int_range(1, 32, 1)

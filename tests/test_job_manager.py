@@ -93,6 +93,11 @@ def test_delete_jobs() -> None:
 	assert delete_jobs() is True
 
 
+@pytest.mark.skip()
+def test_find_jobs() -> None:
+	pass
+
+
 def test_find_job_ids() -> None:
 	create_job('job-test-find-job-ids-1')
 	create_job('job-test-find-job-ids-2')
