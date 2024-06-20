@@ -18,13 +18,16 @@ def run_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
 	while process_manager.is_processing():
-		if facefusion.globals.log_level == 'debug':
-			log_debug(process)
 		try:
+			if facefusion.globals.log_level == 'debug':
+				log_debug(process)
 			process.wait(timeout = 0.5)
 		except subprocess.TimeoutExpired:
 			continue
 		return process
+
+	if process_manager.is_stopping():
+		process.terminate()
 	return process
 
 
