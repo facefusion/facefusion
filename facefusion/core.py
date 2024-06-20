@@ -16,13 +16,13 @@ import facefusion.globals
 from facefusion.typing import ErrorCode, Args
 from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, voice_extractor, wording
 from facefusion.jobs import job_manager, job_runner, job_store, job_helper
-from facefusion.program_helper import validate_args, reduce_args, update_args, import_globals
+from facefusion.program_helper import validate_args, reduce_args, update_args, import_globals, suggest_face_detector_choices
 from facefusion.face_analyser import get_one_face, get_average_face
 from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules, load_frame_processor_module
 from facefusion.exit_helper import hard_exit, conditional_exit, graceful_exit
-from facefusion.common_helper import create_metavar, get_first, get_argument_value
+from facefusion.common_helper import create_metavar, get_first
 from facefusion.execution import get_execution_provider_choices
 from facefusion.normalizer import normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
@@ -80,14 +80,12 @@ def create_program() -> ArgumentParser:
 	group_memory.add_argument('--system-memory-limit', help = wording.get('help.system_memory_limit'), type = int, default = config.get_int_value('memory.system_memory_limit', '0'), choices = facefusion.choices.system_memory_limit_range, metavar = create_metavar(facefusion.choices.system_memory_limit_range))
 	job_store.register_job_keys([ 'video_memory_strategy', 'system_memory_limit' ])
 	# face analyser
-	face_detector_model = get_argument_value('--face-detector-model') or 'yoloface'
-	face_detector_size_choices = facefusion.choices.face_detector_set.get(face_detector_model) #type:ignore[call-overload]
 	group_face_analyser = program.add_argument_group('face analyser')
 	group_face_analyser.add_argument('--face-analyser-order', help = wording.get('help.face_analyser_order'), default = config.get_str_value('face_analyser.face_analyser_order', 'left-right'), choices = facefusion.choices.face_analyser_orders)
 	group_face_analyser.add_argument('--face-analyser-age', help = wording.get('help.face_analyser_age'), default = config.get_str_value('face_analyser.face_analyser_age'), choices = facefusion.choices.face_analyser_ages)
 	group_face_analyser.add_argument('--face-analyser-gender', help = wording.get('help.face_analyser_gender'), default = config.get_str_value('face_analyser.face_analyser_gender'), choices = facefusion.choices.face_analyser_genders)
 	group_face_analyser.add_argument('--face-detector-model', help = wording.get('help.face_detector_model'), default = config.get_str_value('face_analyser.face_detector_model', 'yoloface'), choices = facefusion.choices.face_detector_set.keys())
-	group_face_analyser.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_analyser.face_detector_size', '640x640'), choices = face_detector_size_choices, metavar = 'FACE_DETECTOR_SIZE')
+	group_face_analyser.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_analyser.face_detector_size', '640x640'), choices = suggest_face_detector_choices(program))
 	group_face_analyser.add_argument('--face-detector-score', help = wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_analyser.face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_metavar(facefusion.choices.face_detector_score_range))
 	group_face_analyser.add_argument('--face-landmarker-score', help = wording.get('help.face_landmarker_score'), type = float, default = config.get_float_value('face_analyser.face_landmarker_score', '0.5'), choices = facefusion.choices.face_landmarker_score_range, metavar = create_metavar(facefusion.choices.face_landmarker_score_range))
 	job_store.register_step_keys([ 'face_analyser_order', 'face_analyser_age', 'face_analyser_gender', 'face_detector_model', 'face_detector_size', 'face_detector_score', 'face_landmarker_score' ])
@@ -126,13 +124,12 @@ def create_program() -> ArgumentParser:
 	job_store.register_step_keys([ 'output_image_quality', 'output_image_resolution', 'output_audio_encoder', 'output_video_encoder', 'output_video_preset', 'output_video_quality', 'output_video_resolution', 'output_video_fps', 'skip_audio' ])
 	# frame processors
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')
-	program = ArgumentParser(parents = [ program ], formatter_class = program.formatter_class, add_help = True)
 	group_frame_processors = program.add_argument_group('frame processors')
 	group_frame_processors.add_argument('--frame-processors', help = wording.get('help.frame_processors').format(choices = ', '.join(available_frame_processors)), default = config.get_str_list('frame_processors.frame_processors', 'face_swapper'), nargs = '+')
 	job_store.register_step_keys([ 'frame_processors' ])
 	for frame_processor in available_frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
-		frame_processor_module.register_args(group_frame_processors)
+		frame_processor_module.register_args(program)
 	# uis
 	available_ui_layouts = list_directory('facefusion/uis/layouts')
 	group_uis = program.add_argument_group('uis')
@@ -156,7 +153,7 @@ def create_program() -> ArgumentParser:
 	group_job_runner.add_argument('--job-run-all', help = wording.get('help.job_run_all'), action = 'store_true')
 	group_job_runner.add_argument('--job-retry', help = wording.get('help.job_retry'), metavar = 'JOB_ID')
 	group_job_runner.add_argument('--job-retry-all', help = wording.get('help.job_retry_all'), action = 'store_true')
-	return program
+	return ArgumentParser(parents = [ program ], formatter_class = program.formatter_class, add_help = True)
 
 
 def apply_config_path(program : ArgumentParser) -> None:

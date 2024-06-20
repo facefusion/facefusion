@@ -16,6 +16,7 @@ from facefusion.face_masker import create_static_box_mask, create_occlusion_mask
 from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_bounding_box, paste_back, create_bounding_box_from_face_landmark_68
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
+from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
 from facefusion.filesystem import same_file_extension, is_file, in_directory, has_audio, resolve_relative_path
@@ -78,8 +79,10 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	program.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('frame_processors.lip_syncer_model', 'wav2lip_gan'), choices = frame_processors_choices.lip_syncer_models)
-	facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model' ])
+	group_frame_processors = find_argument_group(program, 'frame processors')
+	if group_frame_processors:
+		group_frame_processors.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('frame_processors.lip_syncer_model', 'wav2lip_gan'), choices = frame_processors_choices.lip_syncer_models)
+		facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model' ])
 
 
 def apply_args(program : ArgumentParser) -> None:

@@ -3,11 +3,11 @@ import gradio
 
 import facefusion.globals
 from facefusion import face_analyser, wording
+from facefusion.common_helper import get_first
 from facefusion.processors.frame.core import load_frame_processor_module
+from facefusion.uis.core import get_ui_component, register_ui_component
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 from facefusion.processors.frame.typing import FaceDebuggerItem, FaceEnhancerModel, FaceSwapperModel, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
-from facefusion.common_helper import get_first
-from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 FACE_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
