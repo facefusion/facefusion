@@ -70,6 +70,9 @@ ProcessMode = Literal['output', 'preview', 'stream']
 ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
 
+TableHeaders = List[str]
+TableContents = List[List[int | float | str]]
+
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceAnalyserOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
@@ -150,3 +153,4 @@ Job = TypedDict('Job',
 	'date_updated' : Optional[str],
 	'steps' : List[JobStep]
 })
+JobSet = Dict[str, Job]

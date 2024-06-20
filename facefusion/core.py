@@ -149,6 +149,7 @@ def create_program() -> ArgumentParser:
 	group_job_manager.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
 	group_job_manager.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
 	group_job_manager.add_argument('--job-remove-step', help = wording.get('help.job_remove_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
+	group_job_manager.add_argument('--job-list', help = wording.get('help.job_list'), choices = facefusion.choices.job_statuses)
 	# job runner
 	group_job_runner = program.add_argument_group('job runner')
 	group_job_runner.add_argument('--job-run', help = wording.get('help.job_run'), metavar = 'JOB_ID')
@@ -245,7 +246,7 @@ def run(program : ArgumentParser) -> None:
 
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
-	if args.job_create or args.job_submit or args.job_submit_all or args.job_delete or args.job_delete_all or args.job_add_step or args.job_remix_step or args.job_insert_step or args.job_remove_step:
+	if args.job_create or args.job_submit or args.job_submit_all or args.job_delete or args.job_delete_all or args.job_add_step or args.job_remix_step or args.job_insert_step or args.job_remove_step or args.job_list:
 		if not job_manager.init_jobs(facefusion.globals.jobs_path):
 			hard_exit(1)
 		error_code = route_job_manager(program)
@@ -375,6 +376,20 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 			logger.info(wording.get('job_all_deleted'), __name__.upper())
 			return 0
 		logger.error(wording.get('job_all_not_deleted'), __name__.upper())
+		return 1
+	if args.job_list:
+		job_headers = [ 'job id', 'steps', 'date created', 'date updated', 'job status' ]
+		jobs = job_manager.find_jobs(args.job_list)
+		job_contents = []
+
+		for index, job_id in enumerate(jobs):
+			job = jobs[job_id]
+			step_total = job_manager.count_step_total(job_id)
+			job_contents.append([ job_id, step_total, job.get('date_created'), job.get('date_updated'), args.job_list ])
+
+		if job_contents:
+			logger.table(job_headers, job_contents)
+			return 0
 		return 1
 	if args.job_add_step:
 		if job_manager.add_step(args.job_add_step, step_args):
