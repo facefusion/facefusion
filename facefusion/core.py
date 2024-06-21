@@ -318,11 +318,11 @@ def conditional_append_reference_faces() -> None:
 
 		if source_face and reference_face:
 			for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
-				reference_frame = frame_processor_module.get_reference_frame(source_face, reference_face, reference_frame)
-				if numpy.any(reference_frame):
-					reference_faces = sort_and_filter_faces(get_many_faces([ reference_frame]))
-					reference_face = get_one_face(reference_faces, facefusion.globals.reference_face_position)
-					append_reference_face(frame_processor_module.__name__, reference_face)
+				abstract_reference_frame = frame_processor_module.get_reference_frame(source_face, reference_face, reference_frame)
+				if numpy.any(abstract_reference_frame):
+					abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame]))
+					abstract_reference_face = get_one_face(abstract_reference_faces, facefusion.globals.reference_face_position)
+					append_reference_face(frame_processor_module.__name__, abstract_reference_face)
 
 
 def force_download() -> None:
