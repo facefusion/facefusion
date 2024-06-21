@@ -9,7 +9,7 @@ from facefusion import logger, wording
 from facefusion.audio import get_audio_frame, create_empty_audio_frame
 from facefusion.common_helper import get_first
 from facefusion.core import conditional_append_reference_faces
-from facefusion.face_analyser import get_average_face, clear_face_analyser
+from facefusion.face_analyser import get_average_face, clear_face_analyser, get_many_faces
 from facefusion.face_store import clear_static_faces, get_reference_faces, clear_reference_faces
 from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame
 from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_resolution, read_static_image, read_static_images
@@ -42,7 +42,8 @@ def render() -> None:
 	conditional_append_reference_faces()
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_frames = read_static_images(facefusion.globals.source_paths)
-	source_face = get_average_face(source_frames)
+	source_faces = get_many_faces(source_frames)
+	source_face = get_average_face(source_faces)
 	source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
 	source_audio_frame = create_empty_audio_frame()
 	if source_audio_path and facefusion.globals.output_video_fps and facefusion.globals.reference_frame_number:
@@ -96,11 +97,11 @@ def listen() -> None:
 		'face_debugger_items_checkbox_group',
 		'frame_colorizer_size_dropdown',
 		'face_selector_mode_dropdown',
+		'face_selector_order_dropdown',
+		'face_selector_age_dropdown',
+		'face_selector_gender_dropdown',
 		'face_mask_types_checkbox_group',
-		'face_mask_region_checkbox_group',
-		'face_analyser_order_dropdown',
-		'face_analyser_age_dropdown',
-		'face_analyser_gender_dropdown'
+		'face_mask_region_checkbox_group'
 	]):
 		ui_component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
@@ -158,7 +159,8 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	conditional_append_reference_faces()
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_frames = read_static_images(facefusion.globals.source_paths)
-	source_face = get_average_face(source_frames)
+	source_faces = get_many_faces(source_frames)
+	source_face = get_average_face(source_faces)
 	source_audio_path = get_first(filter_audio_paths(facefusion.globals.source_paths))
 	source_audio_frame = create_empty_audio_frame()
 	if source_audio_path and facefusion.globals.output_video_fps and facefusion.globals.reference_frame_number:

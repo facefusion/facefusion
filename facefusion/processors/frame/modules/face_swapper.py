@@ -12,7 +12,8 @@ import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, logger, wording
 from facefusion.execution import has_execution_provider, apply_execution_provider_options
-from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, find_similar_faces, clear_face_analyser
+from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, clear_face_analyser
+from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
 from facefusion.face_store import get_reference_faces
@@ -243,10 +244,10 @@ def pre_process(mode : ProcessMode) -> bool:
 		return False
 	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
 	source_frames = read_static_images(source_image_paths)
-	for source_frame in source_frames:
-		if not get_one_face(source_frame):
-			logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
-			return False
+	source_faces = get_many_faces(source_frames)
+	if not get_one_face(source_faces):
+		logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
+		return False
 	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
@@ -384,18 +385,18 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 	reference_faces = inputs.get('reference_faces')
 	source_face = inputs.get('source_face')
 	target_vision_frame = inputs.get('target_vision_frame')
+	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
 	if facefusion.globals.face_selector_mode == 'many':
-		many_faces = get_many_faces(target_vision_frame)
 		if many_faces:
 			for target_face in many_faces:
 				target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
 	if facefusion.globals.face_selector_mode == 'one':
-		target_face = get_one_face(target_vision_frame)
+		target_face = get_one_face(many_faces)
 		if target_face:
 			target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
 	if facefusion.globals.face_selector_mode == 'reference':
-		similar_faces = find_similar_faces(reference_faces, target_vision_frame, facefusion.globals.reference_face_distance)
+		similar_faces = find_similar_faces(many_faces, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
 				target_vision_frame = swap_face(source_face, similar_face, target_vision_frame)
@@ -405,7 +406,8 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_frames = read_static_images(source_paths)
-	source_face = get_average_face(source_frames)
+	source_faces = get_many_faces(source_frames)
+	source_face = get_average_face(source_faces)
 
 	for queue_payload in process_manager.manage(queue_payloads):
 		target_vision_path = queue_payload['frame_path']
@@ -423,7 +425,8 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_frames = read_static_images(source_paths)
-	source_face = get_average_face(source_frames)
+	source_faces = get_many_faces(source_frames)
+	source_face = get_average_face(source_faces)
 	target_vision_frame = read_static_image(target_path)
 	output_vision_frame = process_frame(
 	{
