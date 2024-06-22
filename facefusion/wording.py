@@ -260,8 +260,8 @@ WORDING : Dict[str, Any] =\
 def get(key : str) -> Optional[str]:
 	if '.' in key:
 		section, name = key.split('.')
-		if section in WORDING and name in WORDING[section]:
-			return WORDING[section][name]
+		if section in WORDING and name in WORDING.get(section):
+			return WORDING.get(section).get(name)
 	if key in WORDING:
-		return WORDING[key]
+		return WORDING.get(key)
 	return None

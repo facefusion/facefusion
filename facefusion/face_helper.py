@@ -103,7 +103,7 @@ def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68)
 
 def convert_to_rotated_bounding_box(bounding_box : BoundingBox, angle : float) -> RotatedBoundingBox:
 	x1, y1, x2, y2 = bounding_box
-	center = (x1, y1)
+	center = x1, y1
 	size = int(x2 - x1), int(y2 - y1)
 	return center, size, angle
 
