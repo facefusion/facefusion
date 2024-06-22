@@ -1,10 +1,10 @@
-from typing import Any, Tuple, List
+from typing import Any, Tuple, List, Sequence
 from cv2.typing import Size
 from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceSelectorAge, FaceSelectorGender
+from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceSelectorAge, FaceSelectorGender, Score, RotatedRectangle
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -136,28 +136,14 @@ def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLand
 	return face_landmark_5
 
 
-def apply_nms(bounding_boxes : List[BoundingBox], iou_limit : float) -> List[int]:
-	keep_indices = []
-	dimensions = numpy.reshape(bounding_boxes, (-1, 5))
-	x1 = dimensions[:, 0]
-	y1 = dimensions[:, 1]
-	x2 = dimensions[:, 2]
-	y2 = dimensions[:, 3]
-	areas = (x2 - x1 + 1) * (y2 - y1 + 1)
-	indices = numpy.arange(len(bounding_boxes))
+def convert_bounding_box_to_rotated_rectangle(bounding_box : BoundingBox) -> RotatedRectangle:
+	x1, y1, x2, y2, angle = bounding_box
+	return ( x1, y1 ), ( int(x2 - x1), int(y2 - y1) ), angle
 
-	while indices.size > 0:
-		index = indices[0]
-		remain_indices = indices[1:]
-		keep_indices.append(index)
-		xx1 = numpy.maximum(x1[index], x1[remain_indices])
-		yy1 = numpy.maximum(y1[index], y1[remain_indices])
-		xx2 = numpy.minimum(x2[index], x2[remain_indices])
-		yy2 = numpy.minimum(y2[index], y2[remain_indices])
-		width = numpy.maximum(0, xx2 - xx1 + 1)
-		height = numpy.maximum(0, yy2 - yy1 + 1)
-		iou = width * height / (areas[index] + areas[remain_indices] - width * height)
-		indices = indices[numpy.where(iou <= iou_limit)[0] + 1]
+
+def apply_nms(bounding_boxes : List[BoundingBox], face_scores : List[Score], score_threshold : float,  nms_threshold : float) -> Sequence[int]:
+	rotated_rectangles = list(map(convert_bounding_box_to_rotated_rectangle, bounding_boxes))
+	keep_indices = cv2.dnn.NMSBoxesRotated(rotated_rectangles, face_scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
 	return keep_indices
 
 

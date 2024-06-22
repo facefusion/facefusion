@@ -1,10 +1,13 @@
-from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict, Optional
+from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict, Optional, Sequence
+from numpy.typing import NDArray
+from cv2.typing import Size
 from collections import namedtuple
 import numpy
 
-BoundingBox = numpy.ndarray[Any, Any]
+BoundingBox = NDArray[numpy.float32]
 FaceLandmark5 = numpy.ndarray[Any, Any]
 FaceLandmark68 = numpy.ndarray[Any, Any]
+RotatedRectangle = Tuple[Sequence[float], Size, float]
 FaceLandmarkSet = TypedDict('FaceLandmarkSet',
 {
 	'5' : FaceLandmark5, #type:ignore[valid-type]
