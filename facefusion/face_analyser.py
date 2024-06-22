@@ -375,7 +375,7 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 	faces = []
 	nms_threshold = 0.1 if facefusion.globals.face_detector_model == 'many' else 0.4
 	rotated_bounding_boxes = [ convert_bounding_box_to_rotated_bounding_box(bounding_box, 0) for bounding_box in bounding_boxes ]
-	keep_indices = cv2.dnn.NMSBoxesRotated(rotated_bounding_boxes, face_scores, score_threshold =  facefusion.globals.face_detector_score, nms_threshold = nms_threshold)
+	keep_indices = cv2.dnn.NMSBoxesRotated(rotated_bounding_boxes, face_scores, score_threshold = facefusion.globals.face_detector_score, nms_threshold = nms_threshold)
 
 	for index in keep_indices:
 		bounding_box = bounding_boxes[index]
