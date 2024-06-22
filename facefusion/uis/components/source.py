@@ -24,12 +24,8 @@ def render() -> None:
 		file_count = 'multiple',
 		file_types =
 		[
-			'.mp3',
-			'.wav',
-			'.png',
-			'.jpg',
-			'.jpeg',
-			'.webp'
+			'audio',
+			'image'
 		],
 		label = wording.get('uis.source_file'),
 		value = facefusion.globals.source_paths if has_source_audio or has_source_image else None
