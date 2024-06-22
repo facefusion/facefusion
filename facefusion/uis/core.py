@@ -98,7 +98,7 @@ def get_theme() -> gradio.Theme:
 	return gradio.themes.Base(
 		primary_hue = gradio.themes.colors.red,
 		secondary_hue = gradio.themes.colors.neutral,
-		font = gradio.themes.GoogleFont('Open Sans')
+		font = gradio.themes.GoogleFont('Inter')
 	).set(
 		background_fill_primary = '*neutral_100',
 		block_background_fill = 'white',
@@ -108,14 +108,15 @@ def get_theme() -> gradio.Theme:
 		block_label_border_width = 'none',
 		block_label_margin = '0.5rem',
 		block_label_radius = '*radius_md',
-		block_label_text_color = '*neutral_800',
+		block_label_text_color = '*neutral_700',
+		block_label_text_size = '*text_sm',
 		block_label_text_color_dark = 'white',
 		block_label_text_weight = '600',
 		block_title_background_fill = '*neutral_100',
 		block_title_background_fill_dark = '*primary_600',
 		block_title_padding = '*block_label_padding',
 		block_title_radius = '*block_label_radius',
-		block_title_text_color = '*neutral_800',
+		block_title_text_color = '*neutral_700',
 		block_title_text_size = '*text_sm',
 		block_title_text_weight = '600',
 		block_padding = '0.5rem',
