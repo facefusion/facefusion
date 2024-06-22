@@ -31,7 +31,7 @@ def get_voice_extractor() -> Any:
 			sleep(0.5)
 		if VOICE_EXTRACTOR is None:
 			model_path = MODELS.get('voice_extractor').get('path')
-			VOICE_EXTRACTOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			VOICE_EXTRACTOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
 	return VOICE_EXTRACTOR
 
 

@@ -7,9 +7,9 @@ jobs:
   runs-on: ubuntu-latest
   steps:
   - name: Checkout
-    uses: actions/checkout@v2
+    uses: actions/checkout@v4
   - name: Set up Python 3.10
-    uses: actions/setup-python@v2
+    uses: actions/setup-python@v5
     with:
      python-version: '3.10'
   - run: pip install flake8
@@ -19,15 +19,15 @@ jobs:
  test:
   strategy:
    matrix:
-    os: [ macos-latest, ubuntu-latest, windows-latest ]
+    os: [ macos-13, ubuntu-latest, windows-latest ]
   runs-on: ${{ matrix.os }}
   steps:
   - name: Checkout
-    uses: actions/checkout@v2
-  - name: Set up ffmpeg
-    uses: FedericoCarboni/setup-ffmpeg@v2
+    uses: actions/checkout@v4
+  - name: Set up FFMpeg
+    uses: FedericoCarboni/setup-ffmpeg@v3
   - name: Set up Python 3.10
-    uses: actions/setup-python@v2
+    uses: actions/setup-python@v5
     with:
      python-version: '3.10'
   - run: python install.py --onnxruntime default --skip-conda

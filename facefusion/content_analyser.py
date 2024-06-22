@@ -37,7 +37,7 @@ def get_content_analyser() -> Any:
 			sleep(0.5)
 		if CONTENT_ANALYSER is None:
 			model_path = MODELS.get('open_nsfw').get('path')
-			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_providers))
+			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
 	return CONTENT_ANALYSER
 
 

@@ -1,35 +1,35 @@
 from typing import Dict, Tuple
 import sys
 import os
-import platform
 import tempfile
 import subprocess
 import inquirer
 from argparse import ArgumentParser, HelpFormatter
 
 from facefusion import metadata, wording
+from facefusion.common_helper import is_linux, is_macos, is_windows
 
-if platform.system().lower() == 'darwin':
+if is_macos():
 	os.environ['SYSTEM_VERSION_COMPAT'] = '0'
 
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 
-if platform.system().lower() == 'darwin':
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.17.1')
+if is_macos():
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.17.3')
 else:
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.17.1')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.17.3')
 	ONNXRUNTIMES['cuda-12.2'] = ('onnxruntime-gpu', '1.17.1')
 	ONNXRUNTIMES['cuda-11.8'] = ('onnxruntime-gpu', '1.17.1')
-	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.17.1')
-if platform.system().lower() == 'linux':
+	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.15.0')
+if is_linux():
 	ONNXRUNTIMES['rocm-5.4.2'] = ('onnxruntime-rocm', '1.16.3')
 	ONNXRUNTIMES['rocm-5.6'] = ('onnxruntime-rocm', '1.16.3')
-if platform.system().lower() == 'windows':
-	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.17.1')
+if is_windows():
+	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.17.3')
 
 
 def cli() -> None:
-	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 130))
+	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 200))
 	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys())
 	program.add_argument('--skip-conda', help = wording.get('help.skip_conda'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
@@ -75,3 +75,4 @@ def run(program : ArgumentParser) -> None:
 				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--extra-index-url', 'https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple', '--force-reinstall' ])
 			else:
 				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
+		subprocess.call([ 'pip', 'install', 'numpy==1.26.4', '--force-reinstall' ])
