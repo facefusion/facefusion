@@ -7,7 +7,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, apply_nms
+from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, apply_nms, normalize_bounding_box
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -213,7 +213,8 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 					bounding_box[0] * ratio_width,
 					bounding_box[1] * ratio_height,
 					bounding_box[2] * ratio_width,
-					bounding_box[3] * ratio_height
+					bounding_box[3] * ratio_height,
+					0
 				]))
 			for face_landmark_5 in distance_to_face_landmark_5(anchors, face_landmark_5_raw)[keep_indices]:
 				face_landmarks_5.append(face_landmark_5 * [ ratio_width, ratio_height ])
@@ -256,7 +257,8 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 					bounding_box[0] * ratio_width,
 					bounding_box[1] * ratio_height,
 					bounding_box[2] * ratio_width,
-					bounding_box[3] * ratio_height
+					bounding_box[3] * ratio_height,
+					0
 				]))
 			for face_landmark_5 in distance_to_face_landmark_5(anchors, face_landmark_5_raw)[keep_indices]:
 				face_landmarks_5.append(face_landmark_5 * [ ratio_width, ratio_height ])
@@ -293,7 +295,8 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 				(bounding_box[0] - bounding_box[2] / 2) * ratio_width,
 				(bounding_box[1] - bounding_box[3] / 2) * ratio_height,
 				(bounding_box[0] + bounding_box[2] / 2) * ratio_width,
-				(bounding_box[1] + bounding_box[3] / 2) * ratio_height
+				(bounding_box[1] + bounding_box[3] / 2) * ratio_height,
+				0
 			]))
 		face_landmark_5_raw[:, 0::3] = (face_landmark_5_raw[:, 0::3]) * ratio_width
 		face_landmark_5_raw[:, 1::3] = (face_landmark_5_raw[:, 1::3]) * ratio_height
@@ -326,10 +329,40 @@ def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> T
 				detection[0] * ratio_width,
 				detection[1] * ratio_height,
 				(detection[0] + detection[2]) * ratio_width,
-				(detection[1] + detection[3]) * ratio_height
+				(detection[1] + detection[3]) * ratio_height,
+				0
 			]))
 			face_landmarks_5.append(detection[4:14].reshape((5, 2)) * [ ratio_width, ratio_height ])
 			face_scores.append(detection[14])
+	return bounding_boxes, face_landmarks_5, face_scores
+
+
+def detect_faces(vision_frame: VisionFrame) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
+	bounding_boxes = []
+	face_landmarks_5 = []
+	face_scores = []
+
+	if facefusion.globals.face_detector_model in ['many', 'retinaface']:
+		bounding_boxes_retinaface, face_landmarks_5_retinaface, face_scores_retinaface = detect_with_retinaface(vision_frame, facefusion.globals.face_detector_size)
+		bounding_boxes.extend(bounding_boxes_retinaface)
+		face_landmarks_5.extend(face_landmarks_5_retinaface)
+		face_scores.extend(face_scores_retinaface)
+	if facefusion.globals.face_detector_model in ['many', 'scrfd']:
+		bounding_boxes_scrfd, face_landmarks_5_scrfd, face_scores_scrfd = detect_with_scrfd(vision_frame, facefusion.globals.face_detector_size)
+		bounding_boxes.extend(bounding_boxes_scrfd)
+		face_landmarks_5.extend(face_landmarks_5_scrfd)
+		face_scores.extend(face_scores_scrfd)
+	if facefusion.globals.face_detector_model in ['many', 'yoloface']:
+		bounding_boxes_yoloface, face_landmarks_5_yoloface, face_scores_yoloface = detect_with_yoloface(vision_frame, facefusion.globals.face_detector_size)
+		bounding_boxes.extend(bounding_boxes_yoloface)
+		face_landmarks_5.extend(face_landmarks_5_yoloface)
+		face_scores.extend(face_scores_yoloface)
+	if facefusion.globals.face_detector_model in ['yunet']:
+		bounding_boxes_yunet, face_landmarks_5_yunet, face_scores_yunet = detect_with_yunet(vision_frame, facefusion.globals.face_detector_size)
+		bounding_boxes.extend(bounding_boxes_yunet)
+		face_landmarks_5.extend(face_landmarks_5_yunet)
+		face_scores.extend(face_scores_yunet)
+	bounding_boxes = [ normalize_bounding_box(bounding_box) for bounding_box in bounding_boxes ]
 	return bounding_boxes, face_landmarks_5, face_scores
 
 
@@ -407,8 +440,8 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 
 def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[FaceLandmark68, Score]:
 	face_landmarker = get_face_analyser().get('face_landmarkers').get('68')
-	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max()
-	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
+	scale = 195 / numpy.subtract(bounding_box[2:4], bounding_box[:2]).max()
+	translation = (256 - numpy.add(bounding_box[2:4], bounding_box[:2]) * scale) * 0.5
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_RGB2Lab)
 	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: #type:ignore[arg-type]
@@ -448,7 +481,7 @@ def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandm
 
 def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[int, int]:
 	gender_age = get_face_analyser().get('gender_age')
-	bounding_box = bounding_box.reshape(2, -1)
+	bounding_box = bounding_box[:4].reshape(2, -1)
 	scale = 64 / numpy.subtract(*bounding_box[::-1]).max()
 	translation = 48 - bounding_box.sum(axis = 0) * scale * 0.5
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (96, 96))
@@ -505,30 +538,7 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 			if static_faces:
 				faces = static_faces
 			else:
-				bounding_boxes = []
-				face_landmarks_5 = []
-				face_scores = []
-
-				if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
-					bounding_boxes_retinaface, face_landmarks_5_retinaface, face_scores_retinaface = detect_with_retinaface(vision_frame, facefusion.globals.face_detector_size)
-					bounding_boxes.extend(bounding_boxes_retinaface)
-					face_landmarks_5.extend(face_landmarks_5_retinaface)
-					face_scores.extend(face_scores_retinaface)
-				if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
-					bounding_boxes_scrfd, face_landmarks_5_scrfd, face_scores_scrfd = detect_with_scrfd(vision_frame, facefusion.globals.face_detector_size)
-					bounding_boxes.extend(bounding_boxes_scrfd)
-					face_landmarks_5.extend(face_landmarks_5_scrfd)
-					face_scores.extend(face_scores_scrfd)
-				if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
-					bounding_boxes_yoloface, face_landmarks_5_yoloface, face_scores_yoloface = detect_with_yoloface(vision_frame, facefusion.globals.face_detector_size)
-					bounding_boxes.extend(bounding_boxes_yoloface)
-					face_landmarks_5.extend(face_landmarks_5_yoloface)
-					face_scores.extend(face_scores_yoloface)
-				if facefusion.globals.face_detector_model in [ 'yunet' ]:
-					bounding_boxes_yunet, face_landmarks_5_yunet, face_scores_yunet = detect_with_yunet(vision_frame, facefusion.globals.face_detector_size)
-					bounding_boxes.extend(bounding_boxes_yunet)
-					face_landmarks_5.extend(face_landmarks_5_yunet)
-					face_scores.extend(face_scores_yunet)
+				bounding_boxes, face_landmarks_5, face_scores = detect_faces(vision_frame)
 				if bounding_boxes and face_landmarks_5 and face_scores and facefusion.globals.face_detector_score > 0:
 					faces = create_faces(vision_frame, bounding_boxes, face_landmarks_5, face_scores)
 				if faces:

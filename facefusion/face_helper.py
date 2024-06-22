@@ -43,6 +43,13 @@ WARP_TEMPLATES : WarpTemplateSet =\
 }
 
 
+def normalize_bounding_box(bounding_box: BoundingBox) -> BoundingBox:
+	x1, y1, x2, y2, angle = bounding_box
+	x1, x2 = sorted([ x1, x2 ])
+	y1, y2 = sorted([ y1, y2 ])
+	return numpy.array([ x1, y1, x2, y2, angle ], dtype = numpy.float32)
+
+
 def estimate_matrix_by_face_landmark_5(face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Matrix:
 	normed_warp_template = WARP_TEMPLATES.get(warp_template) * crop_size
 	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
@@ -97,7 +104,7 @@ def create_static_anchors(feature_stride : int, anchor_total : int, stride_heigh
 def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68) -> BoundingBox:
 	min_x, min_y = numpy.min(face_landmark_68, axis = 0)
 	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
-	bounding_box = numpy.array([ min_x, min_y, max_x, max_y ]).astype(numpy.int16)
+	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y, 0 ]))
 	return bounding_box
 
 
@@ -131,7 +138,7 @@ def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLand
 
 def apply_nms(bounding_boxes : List[BoundingBox], iou_limit : float) -> List[int]:
 	keep_indices = []
-	dimensions = numpy.reshape(bounding_boxes, (-1, 4))
+	dimensions = numpy.reshape(bounding_boxes, (-1, 5))
 	x1 = dimensions[:, 0]
 	y1 = dimensions[:, 1]
 	x2 = dimensions[:, 2]
