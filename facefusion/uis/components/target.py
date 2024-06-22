@@ -28,12 +28,8 @@ def render() -> None:
 		file_count = 'single',
 		file_types =
 		[
-			'.png',
-			'.jpg',
-			'.jpeg',
-			'.webp',
-			'.webm',
-			'.mp4'
+			'image',
+			'video'
 		],
 		value = facefusion.globals.target_path if is_target_image or is_target_video else None
 	)
