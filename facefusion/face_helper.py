@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceSelectorAge, FaceSelectorGender, RotatedBoundingBox
+from facefusion.typing import BoundingBox, RotatedBoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -101,6 +101,13 @@ def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68)
 	return bounding_box
 
 
+def convert_to_rotated_bounding_box(bounding_box : BoundingBox, angle : float) -> RotatedBoundingBox:
+	x1, y1, x2, y2 = bounding_box
+	center = (x1, y1)
+	size = int(x2 - x1), int(y2 - y1)
+	return center, size, angle
+
+
 def normalize_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
 	x1, y1, x2, y2 = bounding_box
 	x1, x2 = sorted([ x1, x2 ])
@@ -124,7 +131,7 @@ def distance_to_face_landmark_5(points : numpy.ndarray[Any, Any], distance : num
 	return face_landmark_5
 
 
-def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLandmark5:
+def convert_to_face_landmark_5(face_landmark_68 : FaceLandmark68) -> FaceLandmark5:
 	face_landmark_5 = numpy.array(
 	[
 		numpy.mean(face_landmark_68[36:42], axis = 0),
@@ -134,26 +141,3 @@ def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLand
 		face_landmark_68[54]
 	])
 	return face_landmark_5
-
-
-def convert_bounding_box_to_rotated_bounding_box(bounding_box : BoundingBox, angle : float) -> RotatedBoundingBox:
-	x1, y1, x2, y2 = bounding_box
-	center = ( x1, y1 )
-	size = ( int(x2 - x1), int(y2 - y1) )
-	return center, size, angle
-
-
-def categorize_age(age : int) -> FaceSelectorAge:
-	if age < 13:
-		return 'child'
-	elif age < 19:
-		return 'teen'
-	elif age < 60:
-		return 'adult'
-	return 'senior'
-
-
-def categorize_gender(gender : int) -> FaceSelectorGender:
-	if gender == 0:
-		return 'female'
-	return 'male'

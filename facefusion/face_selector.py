@@ -4,7 +4,6 @@ import numpy
 
 import facefusion.globals
 from facefusion.typing import Face, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender, FaceSet
-from facefusion.face_helper import categorize_gender, categorize_age
 
 
 def find_similar_faces(faces : List[Face], reference_faces : FaceSet, face_distance : float) -> List[Face]:
@@ -78,3 +77,19 @@ def filter_by_gender(faces : List[Face], gender : FaceSelectorGender) -> List[Fa
 		if categorize_gender(face.gender) == gender:
 			filter_faces.append(face)
 	return filter_faces
+
+
+def categorize_age(age : int) -> FaceSelectorAge:
+	if age < 13:
+		return 'child'
+	elif age < 19:
+		return 'teen'
+	elif age < 60:
+		return 'adult'
+	return 'senior'
+
+
+def categorize_gender(gender : int) -> FaceSelectorGender:
+	if gender == 0:
+		return 'female'
+	return 'male'

@@ -7,7 +7,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, normalize_bounding_box, convert_bounding_box_to_rotated_bounding_box
+from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, convert_to_rotated_bounding_box
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -374,7 +374,7 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score]) -> List[Face]:
 	faces = []
 	nms_threshold = 0.1 if facefusion.globals.face_detector_model == 'many' else 0.4
-	rotated_bounding_boxes = [ convert_bounding_box_to_rotated_bounding_box(bounding_box, 0) for bounding_box in bounding_boxes ]
+	rotated_bounding_boxes = [ convert_to_rotated_bounding_box(bounding_box, 0) for bounding_box in bounding_boxes ]
 	keep_indices = cv2.dnn.NMSBoxesRotated(rotated_bounding_boxes, face_scores, score_threshold = facefusion.globals.face_detector_score, nms_threshold = nms_threshold)
 
 	for index in keep_indices:
@@ -387,7 +387,7 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 		if facefusion.globals.face_landmarker_score > 0:
 			face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box)
 			if face_landmark_68_score > facefusion.globals.face_landmarker_score:
-				face_landmark_5_68 = convert_face_landmark_68_to_5(face_landmark_68)
+				face_landmark_5_68 = convert_to_face_landmark_5(face_landmark_68)
 		face_landmark_set : FaceLandmarkSet =\
 		{
 			'5': face_landmarks_5[index],
