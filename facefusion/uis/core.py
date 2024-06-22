@@ -98,7 +98,7 @@ def get_theme() -> gradio.Theme:
 	return gradio.themes.Base(
 		primary_hue = gradio.themes.colors.red,
 		secondary_hue = gradio.themes.colors.neutral,
-		font = gradio.themes.GoogleFont('Inter')
+		font = gradio.themes.GoogleFont('Open Sans')
 	).set(
 		background_fill_primary = '*neutral_100',
 		block_background_fill = 'white',
