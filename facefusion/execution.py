@@ -52,8 +52,8 @@ def apply_execution_provider_options(execution_device_id : str, execution_provid
 			{
 				'device_id': execution_device_id
 			}))
-		else:
-			execution_providers_with_options.append(execution_provider)
+	execution_providers_with_options.append('CPUExecutionProvider')
+
 	return execution_providers_with_options
 
 
