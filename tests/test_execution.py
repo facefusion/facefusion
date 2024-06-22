@@ -13,12 +13,12 @@ def test_has_execution_provider() -> None:
 def test_multiple_execution_providers() -> None:
 	execution_provider_with_options =\
 	[
-		'CPUExecutionProvider',
 		('CUDAExecutionProvider',
 		{
 			'device_id': '1',
 			'cudnn_conv_algo_search': 'DEFAULT'
-		})
+		}),
+		'CPUExecutionProvider'
 	]
 
 	assert apply_execution_provider_options('1', [ 'cpu', 'cuda' ]) == execution_provider_with_options
