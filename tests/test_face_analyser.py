@@ -3,7 +3,7 @@ import pytest
 
 import facefusion.globals
 from facefusion.download import conditional_download
-from facefusion.face_analyser import pre_check, clear_face_analyser, get_one_face
+from facefusion.face_analyser import pre_check, clear_face_analyser, get_one_face, get_many_faces
 from facefusion.typing import Face
 from facefusion.vision import read_static_image
 from .helper import get_test_examples_directory, get_test_example_file
@@ -42,7 +42,8 @@ def test_get_one_face_with_retinaface() -> None:
 	]
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		face = get_one_face(source_frame)
+		many_faces = get_many_faces([ source_frame ])
+		face = get_one_face(many_faces)
 
 		assert isinstance(face, Face)
 
@@ -61,7 +62,8 @@ def test_get_one_face_with_scrfd() -> None:
 	]
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		face = get_one_face(source_frame)
+		many_faces = get_many_faces([ source_frame ])
+		face = get_one_face(many_faces)
 
 		assert isinstance(face, Face)
 
@@ -80,7 +82,8 @@ def test_get_one_face_with_yoloface() -> None:
 	]
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		face = get_one_face(source_frame)
+		many_faces = get_many_faces([ source_frame ])
+		face = get_one_face(many_faces)
 
 		assert isinstance(face, Face)
 
@@ -99,6 +102,7 @@ def test_get_one_face_with_yunet() -> None:
 	]
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		face = get_one_face(source_frame)
+		many_faces = get_many_faces([ source_frame ])
+		face = get_one_face(many_faces)
 
 		assert isinstance(face, Face)

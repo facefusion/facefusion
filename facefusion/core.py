@@ -17,7 +17,8 @@ from facefusion.typing import ErrorCode, Args
 from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, voice_extractor, wording
 from facefusion.jobs import job_manager, job_runner, job_store, job_helper
 from facefusion.program_helper import validate_args, reduce_args, update_args, import_globals, suggest_face_detector_choices
-from facefusion.face_analyser import get_one_face, get_average_face
+from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces
+from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules, load_frame_processor_module
@@ -81,21 +82,21 @@ def create_program() -> ArgumentParser:
 	job_store.register_job_keys([ 'video_memory_strategy', 'system_memory_limit' ])
 	# face analyser
 	group_face_analyser = program.add_argument_group('face analyser')
-	group_face_analyser.add_argument('--face-analyser-order', help = wording.get('help.face_analyser_order'), default = config.get_str_value('face_analyser.face_analyser_order', 'left-right'), choices = facefusion.choices.face_analyser_orders)
-	group_face_analyser.add_argument('--face-analyser-age', help = wording.get('help.face_analyser_age'), default = config.get_str_value('face_analyser.face_analyser_age'), choices = facefusion.choices.face_analyser_ages)
-	group_face_analyser.add_argument('--face-analyser-gender', help = wording.get('help.face_analyser_gender'), default = config.get_str_value('face_analyser.face_analyser_gender'), choices = facefusion.choices.face_analyser_genders)
 	group_face_analyser.add_argument('--face-detector-model', help = wording.get('help.face_detector_model'), default = config.get_str_value('face_analyser.face_detector_model', 'yoloface'), choices = facefusion.choices.face_detector_set.keys())
 	group_face_analyser.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_analyser.face_detector_size', '640x640'), choices = suggest_face_detector_choices(program))
 	group_face_analyser.add_argument('--face-detector-score', help = wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_analyser.face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_metavar(facefusion.choices.face_detector_score_range))
 	group_face_analyser.add_argument('--face-landmarker-score', help = wording.get('help.face_landmarker_score'), type = float, default = config.get_float_value('face_analyser.face_landmarker_score', '0.5'), choices = facefusion.choices.face_landmarker_score_range, metavar = create_metavar(facefusion.choices.face_landmarker_score_range))
-	job_store.register_step_keys([ 'face_analyser_order', 'face_analyser_age', 'face_analyser_gender', 'face_detector_model', 'face_detector_size', 'face_detector_score', 'face_landmarker_score' ])
+	job_store.register_step_keys([ 'face_detector_model', 'face_detector_size', 'face_detector_score', 'face_landmarker_score' ])
 	# face selector
 	group_face_selector = program.add_argument_group('face selector')
 	group_face_selector.add_argument('--face-selector-mode', help = wording.get('help.face_selector_mode'), default = config.get_str_value('face_selector.face_selector_mode', 'reference'), choices = facefusion.choices.face_selector_modes)
+	group_face_analyser.add_argument('--face-selector-order', help = wording.get('help.face_selector_order'), default = config.get_str_value('face_analyser.face_selector_order', 'left-right'), choices = facefusion.choices.face_selector_orders)
+	group_face_analyser.add_argument('--face-selector-age', help = wording.get('help.face_selector_age'), default = config.get_str_value('face_analyser.face_selector_age'), choices = facefusion.choices.face_selector_ages)
+	group_face_analyser.add_argument('--face-selector-gender', help = wording.get('help.face_selector_gender'), default = config.get_str_value('face_analyser.face_selector_gender'), choices = facefusion.choices.face_selector_genders)
 	group_face_selector.add_argument('--reference-face-position', help = wording.get('help.reference_face_position'), type = int, default = config.get_int_value('face_selector.reference_face_position', '0'))
 	group_face_selector.add_argument('--reference-face-distance', help = wording.get('help.reference_face_distance'), type = float, default = config.get_float_value('face_selector.reference_face_distance', '0.6'), choices = facefusion.choices.reference_face_distance_range, metavar = create_metavar(facefusion.choices.reference_face_distance_range))
 	group_face_selector.add_argument('--reference-frame-number', help = wording.get('help.reference_frame_number'), type = int, default = config.get_int_value('face_selector.reference_frame_number', '0'))
-	job_store.register_step_keys([ 'face_selector_mode', 'reference_face_position', 'reference_face_distance', 'reference_frame_number' ])
+	job_store.register_step_keys([ 'face_selector_mode', 'face_selector_order', 'face_selector_age', 'face_selector_gender', 'reference_face_position', 'reference_face_distance', 'reference_frame_number' ])
 	# face mask
 	group_face_mask = program.add_argument_group('face mask')
 	group_face_mask.add_argument('--face-mask-types', help = wording.get('help.face_mask_types').format(choices = ', '.join(facefusion.choices.face_mask_types)), default = config.get_str_list('face_mask.face_mask_types', 'box'), choices = facefusion.choices.face_mask_types, nargs = '+', metavar = 'FACE_MASK_TYPES')
@@ -182,15 +183,15 @@ def apply_args(program : ArgumentParser) -> None:
 	facefusion.globals.video_memory_strategy = args.video_memory_strategy
 	facefusion.globals.system_memory_limit = args.system_memory_limit
 	# face analyser
-	facefusion.globals.face_analyser_order = args.face_analyser_order
-	facefusion.globals.face_analyser_age = args.face_analyser_age
-	facefusion.globals.face_analyser_gender = args.face_analyser_gender
 	facefusion.globals.face_detector_model = args.face_detector_model
 	facefusion.globals.face_detector_size = args.face_detector_size
 	facefusion.globals.face_detector_score = args.face_detector_score
 	facefusion.globals.face_landmarker_score = args.face_landmarker_score
 	# face selector
 	facefusion.globals.face_selector_mode = args.face_selector_mode
+	facefusion.globals.face_selector_order = args.face_selector_order
+	facefusion.globals.face_selector_age = args.face_selector_age
+	facefusion.globals.face_selector_gender = args.face_selector_gender
 	facefusion.globals.reference_face_position = args.reference_face_position
 	facefusion.globals.reference_face_distance = args.reference_face_distance
 	facefusion.globals.reference_frame_number = args.reference_frame_number
@@ -305,20 +306,23 @@ def conditional_process() -> ErrorCode:
 def conditional_append_reference_faces() -> None:
 	if 'reference' in facefusion.globals.face_selector_mode and not get_reference_faces():
 		source_frames = read_static_images(facefusion.globals.source_paths)
-		source_face = get_average_face(source_frames)
+		source_faces = get_many_faces(source_frames)
+		source_face = get_average_face(source_faces)
 		if is_video(facefusion.globals.target_path):
 			reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
 		else:
 			reference_frame = read_image(facefusion.globals.target_path)
-		reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
+		reference_faces = sort_and_filter_faces(get_many_faces([ reference_frame ]))
+		reference_face = get_one_face(reference_faces, facefusion.globals.reference_face_position)
 		append_reference_face('origin', reference_face)
+
 		if source_face and reference_face:
 			for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 				abstract_reference_frame = frame_processor_module.get_reference_frame(source_face, reference_face, reference_frame)
 				if numpy.any(abstract_reference_frame):
-					reference_frame = abstract_reference_frame
-					reference_face = get_one_face(reference_frame, facefusion.globals.reference_face_position)
-					append_reference_face(frame_processor_module.__name__, reference_face)
+					abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame]))
+					abstract_reference_face = get_one_face(abstract_reference_faces, facefusion.globals.reference_face_position)
+					append_reference_face(frame_processor_module.__name__, abstract_reference_face)
 
 
 def force_download() -> None:

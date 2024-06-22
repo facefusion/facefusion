@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceAnalyserAge, FaceAnalyserGender
+from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceSelectorAge, FaceSelectorGender
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -154,7 +154,7 @@ def apply_nms(bounding_boxes : List[BoundingBox], iou_limit : float) -> List[int
 	return keep_indices
 
 
-def categorize_age(age : int) -> FaceAnalyserAge:
+def categorize_age(age : int) -> FaceSelectorAge:
 	if age < 13:
 		return 'child'
 	elif age < 19:
@@ -164,7 +164,7 @@ def categorize_age(age : int) -> FaceAnalyserAge:
 	return 'senior'
 
 
-def categorize_gender(gender : int) -> FaceAnalyserGender:
+def categorize_gender(gender : int) -> FaceSelectorGender:
 	if gender == 0:
 		return 'female'
 	return 'male'

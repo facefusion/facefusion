@@ -10,7 +10,8 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, logger, wording
-from facefusion.face_analyser import get_many_faces, clear_face_analyser, find_similar_faces, get_one_face
+from facefusion.face_analyser import get_many_faces, clear_face_analyser, get_one_face
+from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder
 from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
 from facefusion.execution import apply_execution_provider_options
@@ -263,18 +264,18 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 def process_frame(inputs : FaceEnhancerInputs) -> VisionFrame:
 	reference_faces = inputs.get('reference_faces')
 	target_vision_frame = inputs.get('target_vision_frame')
+	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
 	if facefusion.globals.face_selector_mode == 'many':
-		many_faces = get_many_faces(target_vision_frame)
 		if many_faces:
 			for target_face in many_faces:
 				target_vision_frame = enhance_face(target_face, target_vision_frame)
 	if facefusion.globals.face_selector_mode == 'one':
-		target_face = get_one_face(target_vision_frame)
+		target_face = get_one_face(many_faces)
 		if target_face:
 			target_vision_frame = enhance_face(target_face, target_vision_frame)
 	if facefusion.globals.face_selector_mode == 'reference':
-		similar_faces = find_similar_faces(reference_faces, target_vision_frame, facefusion.globals.reference_face_distance)
+		similar_faces = find_similar_faces(many_faces, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
 				target_vision_frame = enhance_face(similar_face, target_vision_frame)
