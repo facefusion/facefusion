@@ -1,10 +1,10 @@
-from typing import Any, Tuple, List, Sequence
+from typing import Any, Tuple
 from cv2.typing import Size
 from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceSelectorAge, FaceSelectorGender, Score, RotatedRectangle
+from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceSelectorAge, FaceSelectorGender, RotatedBoundingBox
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -97,15 +97,15 @@ def create_static_anchors(feature_stride : int, anchor_total : int, stride_heigh
 def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68) -> BoundingBox:
 	min_x, min_y = numpy.min(face_landmark_68, axis = 0)
 	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
-	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y, 0 ]))
+	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y ]))
 	return bounding_box
 
 
 def normalize_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
-	x1, y1, x2, y2, angle = bounding_box
+	x1, y1, x2, y2 = bounding_box
 	x1, x2 = sorted([ x1, x2 ])
 	y1, y2 = sorted([ y1, y2 ])
-	return numpy.array([ x1, y1, x2, y2, angle ])
+	return numpy.array([ x1, y1, x2, y2 ])
 
 
 def distance_to_bounding_box(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> BoundingBox:
@@ -136,15 +136,11 @@ def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLand
 	return face_landmark_5
 
 
-def convert_bounding_box_to_rotated_rectangle(bounding_box : BoundingBox) -> RotatedRectangle:
-	x1, y1, x2, y2, angle = bounding_box
-	return ( x1, y1 ), ( int(x2 - x1), int(y2 - y1) ), angle
-
-
-def apply_nms(bounding_boxes : List[BoundingBox], face_scores : List[Score], score_threshold : float,  nms_threshold : float) -> Sequence[int]:
-	rotated_rectangles = list(map(convert_bounding_box_to_rotated_rectangle, bounding_boxes))
-	keep_indices = cv2.dnn.NMSBoxesRotated(rotated_rectangles, face_scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
-	return keep_indices
+def convert_bounding_box_to_rotated_bounding_box(bounding_box : BoundingBox, angle : float) -> RotatedBoundingBox:
+	x1, y1, x2, y2 = bounding_box
+	center = ( x1, y1 )
+	size = ( int(x2 - x1), int(y2 - y1) )
+	return center, size, angle
 
 
 def categorize_age(age : int) -> FaceSelectorAge:

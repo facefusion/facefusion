@@ -5,9 +5,9 @@ from collections import namedtuple
 import numpy
 
 BoundingBox = NDArray[numpy.float32]
+RotatedBoundingBox = Tuple[Sequence[float], Size, float]
 FaceLandmark5 = numpy.ndarray[Any, Any]
 FaceLandmark68 = numpy.ndarray[Any, Any]
-RotatedRectangle = Tuple[Sequence[float], Size, float]
 FaceLandmarkSet = TypedDict('FaceLandmarkSet',
 {
 	'5' : FaceLandmark5, #type:ignore[valid-type]
@@ -25,6 +25,7 @@ Embedding = numpy.ndarray[Any, Any]
 Face = namedtuple('Face',
 [
 	'bounding_box',
+	'rotated_bounding_box',
 	'landmark_set',
 	'score_set',
 	'embedding',
