@@ -1,10 +1,10 @@
-from typing import Any, Tuple, List
+from typing import Any, Tuple
 from cv2.typing import Size
 from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceSelectorAge, FaceSelectorGender
+from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceSelectorAge, FaceSelectorGender, RotatedBoundingBox
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -97,15 +97,15 @@ def create_static_anchors(feature_stride : int, anchor_total : int, stride_heigh
 def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68) -> BoundingBox:
 	min_x, min_y = numpy.min(face_landmark_68, axis = 0)
 	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
-	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y, 0 ]))
+	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y ]))
 	return bounding_box
 
 
 def normalize_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
-	x1, y1, x2, y2, angle = bounding_box
+	x1, y1, x2, y2 = bounding_box
 	x1, x2 = sorted([ x1, x2 ])
 	y1, y2 = sorted([ y1, y2 ])
-	return numpy.array([ x1, y1, x2, y2, angle ])
+	return numpy.array([ x1, y1, x2, y2 ])
 
 
 def distance_to_bounding_box(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> BoundingBox:
@@ -136,29 +136,11 @@ def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLand
 	return face_landmark_5
 
 
-def apply_nms(bounding_boxes : List[BoundingBox], iou_limit : float) -> List[int]:
-	keep_indices = []
-	dimensions = numpy.reshape(bounding_boxes, (-1, 5))
-	x1 = dimensions[:, 0]
-	y1 = dimensions[:, 1]
-	x2 = dimensions[:, 2]
-	y2 = dimensions[:, 3]
-	areas = (x2 - x1 + 1) * (y2 - y1 + 1)
-	indices = numpy.arange(len(bounding_boxes))
-
-	while indices.size > 0:
-		index = indices[0]
-		remain_indices = indices[1:]
-		keep_indices.append(index)
-		xx1 = numpy.maximum(x1[index], x1[remain_indices])
-		yy1 = numpy.maximum(y1[index], y1[remain_indices])
-		xx2 = numpy.minimum(x2[index], x2[remain_indices])
-		yy2 = numpy.minimum(y2[index], y2[remain_indices])
-		width = numpy.maximum(0, xx2 - xx1 + 1)
-		height = numpy.maximum(0, yy2 - yy1 + 1)
-		iou = width * height / (areas[index] + areas[remain_indices] - width * height)
-		indices = indices[numpy.where(iou <= iou_limit)[0] + 1]
-	return keep_indices
+def convert_bounding_box_to_rotated_bounding_box(bounding_box : BoundingBox, angle : float) -> RotatedBoundingBox:
+	x1, y1, x2, y2 = bounding_box
+	center = ( x1, y1 )
+	size = ( int(x2 - x1), int(y2 - y1) )
+	return center, size, angle
 
 
 def categorize_age(age : int) -> FaceSelectorAge:

@@ -7,7 +7,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, apply_nms, normalize_bounding_box
+from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, normalize_bounding_box, convert_bounding_box_to_rotated_bounding_box
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -214,7 +214,6 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 					bounding_box[1] * ratio_height,
 					bounding_box[2] * ratio_width,
 					bounding_box[3] * ratio_height,
-					0
 				]))
 			for face_landmark_5 in distance_to_face_landmark_5(anchors, face_landmark_5_raw)[keep_indices]:
 				face_landmarks_5.append(face_landmark_5 * [ ratio_width, ratio_height ])
@@ -258,7 +257,6 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 					bounding_box[1] * ratio_height,
 					bounding_box[2] * ratio_width,
 					bounding_box[3] * ratio_height,
-					0
 				]))
 			for face_landmark_5 in distance_to_face_landmark_5(anchors, face_landmark_5_raw)[keep_indices]:
 				face_landmarks_5.append(face_landmark_5 * [ ratio_width, ratio_height ])
@@ -296,7 +294,6 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 				(bounding_box[1] - bounding_box[3] / 2) * ratio_height,
 				(bounding_box[0] + bounding_box[2] / 2) * ratio_width,
 				(bounding_box[1] + bounding_box[3] / 2) * ratio_height,
-				0
 			]))
 		face_landmark_5_raw[:, 0::3] = (face_landmark_5_raw[:, 0::3]) * ratio_width
 		face_landmark_5_raw[:, 1::3] = (face_landmark_5_raw[:, 1::3]) * ratio_height
@@ -330,7 +327,6 @@ def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> T
 				detection[1] * ratio_height,
 				(detection[0] + detection[2]) * ratio_width,
 				(detection[1] + detection[3]) * ratio_height,
-				0
 			]))
 			face_landmarks_5.append(detection[4:14].reshape((5, 2)) * [ ratio_width, ratio_height ])
 			face_scores.append(detection[14])
@@ -377,15 +373,13 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 
 def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score]) -> List[Face]:
 	faces = []
-	sort_indices = numpy.argsort(-numpy.array(face_scores))
-	bounding_boxes = [ bounding_boxes[index] for index in sort_indices ]
-	face_landmarks_5 = [ face_landmarks_5[index] for index in sort_indices ]
-	face_scores = [ face_scores[index] for index in sort_indices ]
-	iou_limit = 0.1 if facefusion.globals.face_detector_model == 'many' else 0.4
-	keep_indices = apply_nms(bounding_boxes, iou_limit)
+	nms_threshold = 0.1 if facefusion.globals.face_detector_model == 'many' else 0.4
+	rotated_bounding_boxes = [ convert_bounding_box_to_rotated_bounding_box(bounding_box, 0) for bounding_box in bounding_boxes ]
+	keep_indices = cv2.dnn.NMSBoxesRotated(rotated_bounding_boxes, face_scores, score_threshold = facefusion.globals.face_detector_score, nms_threshold = nms_threshold)
 
 	for index in keep_indices:
 		bounding_box = bounding_boxes[index]
+		rotated_bounding_box = rotated_bounding_boxes[index]
 		face_landmark_5_68 = face_landmarks_5[index]
 		face_landmark_68_5 = expand_face_landmark_68_from_5(face_landmark_5_68)
 		face_landmark_68 = face_landmark_68_5
@@ -410,6 +404,7 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 		gender, age = detect_gender_age(vision_frame, bounding_box)
 		faces.append(Face(
 			bounding_box = bounding_box,
+			rotated_bounding_box = rotated_bounding_box,
 			landmark_set = face_landmark_set,
 			score_set = face_score_set,
 			embedding = embedding,
@@ -440,8 +435,8 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 
 def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[FaceLandmark68, Score]:
 	face_landmarker = get_face_analyser().get('face_landmarkers').get('68')
-	scale = 195 / numpy.subtract(bounding_box[2:4], bounding_box[:2]).max()
-	translation = (256 - numpy.add(bounding_box[2:4], bounding_box[:2]) * scale) * 0.5
+	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max()
+	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_RGB2Lab)
 	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: #type:ignore[arg-type]
@@ -481,7 +476,7 @@ def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandm
 
 def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[int, int]:
 	gender_age = get_face_analyser().get('gender_age')
-	bounding_box = bounding_box[:4].reshape(2, -1)
+	bounding_box = bounding_box.reshape(2, -1)
 	scale = 64 / numpy.subtract(*bounding_box[::-1]).max()
 	translation = 48 - bounding_box.sum(axis = 0) * scale * 0.5
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (96, 96))
@@ -519,6 +514,7 @@ def get_average_face(faces : List[Face]) -> Optional[Face]:
 
 		return Face(
 			bounding_box = first_face.bounding_box,
+			rotated_bounding_box = first_face.rotated_bounding_box,
 			landmark_set = first_face.landmark_set,
 			score_set = first_face.score_set,
 			embedding = numpy.mean(embeddings, axis = 0),

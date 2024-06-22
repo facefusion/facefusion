@@ -187,7 +187,7 @@ def extract_gallery_frames(temp_vision_frame : VisionFrame) -> List[VisionFrame]
 	faces = get_many_faces([ temp_vision_frame ])
 
 	for face in faces:
-		start_x, start_y, end_x, end_y, _ = map(int, face.bounding_box)
+		start_x, start_y, end_x, end_y = map(int, face.bounding_box)
 		padding_x = int((end_x - start_x) * 0.25)
 		padding_y = int((end_y - start_y) * 0.25)
 		start_x = max(0, start_x - padding_x)
