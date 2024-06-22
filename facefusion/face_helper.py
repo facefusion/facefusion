@@ -43,13 +43,6 @@ WARP_TEMPLATES : WarpTemplateSet =\
 }
 
 
-def normalize_bounding_box(bounding_box: BoundingBox) -> BoundingBox:
-	x1, y1, x2, y2, angle = bounding_box
-	x1, x2 = sorted([ x1, x2 ])
-	y1, y2 = sorted([ y1, y2 ])
-	return numpy.array([ x1, y1, x2, y2, angle ], dtype = numpy.float32)
-
-
 def estimate_matrix_by_face_landmark_5(face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Matrix:
 	normed_warp_template = WARP_TEMPLATES.get(warp_template) * crop_size
 	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
@@ -106,6 +99,13 @@ def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68)
 	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
 	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y, 0 ]))
 	return bounding_box
+
+
+def normalize_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
+	x1, y1, x2, y2, angle = bounding_box
+	x1, x2 = sorted([ x1, x2 ])
+	y1, y2 = sorted([ y1, y2 ])
+	return numpy.array([ x1, y1, x2, y2, angle ])
 
 
 def distance_to_bounding_box(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> BoundingBox:

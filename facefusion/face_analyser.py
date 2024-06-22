@@ -342,22 +342,22 @@ def detect_faces(vision_frame: VisionFrame) -> Tuple[List[BoundingBox], List[Fac
 	face_landmarks_5 = []
 	face_scores = []
 
-	if facefusion.globals.face_detector_model in ['many', 'retinaface']:
+	if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
 		bounding_boxes_retinaface, face_landmarks_5_retinaface, face_scores_retinaface = detect_with_retinaface(vision_frame, facefusion.globals.face_detector_size)
 		bounding_boxes.extend(bounding_boxes_retinaface)
 		face_landmarks_5.extend(face_landmarks_5_retinaface)
 		face_scores.extend(face_scores_retinaface)
-	if facefusion.globals.face_detector_model in ['many', 'scrfd']:
+	if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
 		bounding_boxes_scrfd, face_landmarks_5_scrfd, face_scores_scrfd = detect_with_scrfd(vision_frame, facefusion.globals.face_detector_size)
 		bounding_boxes.extend(bounding_boxes_scrfd)
 		face_landmarks_5.extend(face_landmarks_5_scrfd)
 		face_scores.extend(face_scores_scrfd)
-	if facefusion.globals.face_detector_model in ['many', 'yoloface']:
+	if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
 		bounding_boxes_yoloface, face_landmarks_5_yoloface, face_scores_yoloface = detect_with_yoloface(vision_frame, facefusion.globals.face_detector_size)
 		bounding_boxes.extend(bounding_boxes_yoloface)
 		face_landmarks_5.extend(face_landmarks_5_yoloface)
 		face_scores.extend(face_scores_yoloface)
-	if facefusion.globals.face_detector_model in ['yunet']:
+	if facefusion.globals.face_detector_model in [ 'yunet' ]:
 		bounding_boxes_yunet, face_landmarks_5_yunet, face_scores_yunet = detect_with_yunet(vision_frame, facefusion.globals.face_detector_size)
 		bounding_boxes.extend(bounding_boxes_yunet)
 		face_landmarks_5.extend(face_landmarks_5_yunet)
