@@ -101,15 +101,15 @@ WORDING : Dict[str, Any] =\
 		'video_memory_strategy': 'balance fast frame processing and low VRAM usage',
 		'system_memory_limit': 'limit the available RAM that can be used while processing',
 		# face analyser
-		'face_analyser_order': 'specify the order in which the face analyser detects faces',
-		'face_analyser_age': 'filter the detected faces based on their age',
-		'face_analyser_gender': 'filter the detected faces based on their gender',
 		'face_detector_model': 'choose the model responsible for detecting the face',
 		'face_detector_size': 'specify the size of the frame provided to the face detector',
 		'face_detector_score': 'filter the detected faces base on the confidence score',
 		'face_landmarker_score': 'filter the detected landmarks base on the confidence score',
 		# face selector
 		'face_selector_mode': 'use reference based tracking or simple matching',
+		'face_selector_order': 'specify the order of the detected faces',
+		'face_selector_age': 'filter the detected faces based on their age',
+		'face_selector_gender': 'filter the detected faces based on their gender',
 		'reference_face_position': 'specify the position used to create the reference face',
 		'reference_face_distance': 'specify the desired similarity between the reference face and target face',
 		'reference_frame_number': 'specify the frame used to create the reference face',
@@ -188,9 +188,6 @@ WORDING : Dict[str, Any] =\
 		# execution thread count
 		'execution_thread_count_slider': 'EXECUTION THREAD COUNT',
 		# face analyser
-		'face_analyser_order_dropdown': 'FACE ANALYSER ORDER',
-		'face_analyser_age_dropdown': 'FACE ANALYSER AGE',
-		'face_analyser_gender_dropdown': 'FACE ANALYSER GENDER',
 		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',
 		'face_detector_size_dropdown': 'FACE DETECTOR SIZE',
 		'face_detector_score_slider': 'FACE DETECTOR SCORE',
@@ -205,6 +202,9 @@ WORDING : Dict[str, Any] =\
 		'face_mask_region_checkbox_group': 'FACE MASK REGIONS',
 		# face selector
 		'face_selector_mode_dropdown': 'FACE SELECTOR MODE',
+		'face_selector_order_dropdown': 'FACE SELECTOR ORDER',
+		'face_selector_age_dropdown': 'FACE SELECTOR AGE',
+		'face_selector_gender_dropdown': 'FACE SELECTOR GENDER',
 		'reference_face_gallery': 'REFERENCE FACE',
 		'reference_face_distance_slider': 'REFERENCE FACE DISTANCE',
 		# frame processors

@@ -7,13 +7,13 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, apply_nms, categorize_age, categorize_gender
+from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_face_landmark_68_to_5, apply_nms
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
 from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.thread_helper import thread_lock, thread_semaphore, conditional_thread_semaphore
-from facefusion.typing import VisionFrame, Face, FaceSet, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, ModelSet, BoundingBox, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Score, FaceScoreSet, Embedding
+from facefusion.typing import VisionFrame, Face, ModelSet, BoundingBox, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Score, FaceScoreSet, Embedding
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
@@ -466,27 +466,24 @@ def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBo
 	return gender, age
 
 
-def get_one_face(vision_frame : VisionFrame, position : int = 0) -> Optional[Face]:
-	many_faces = get_many_faces(vision_frame)
-	if many_faces:
-		position = min(position, len(many_faces) - 1)
-		return many_faces[position]
+def get_one_face(faces : List[Face], position : int = 0) -> Optional[Face]:
+	if faces:
+		position = min(position, len(faces) - 1)
+		return faces[position]
 	return None
 
 
-def get_average_face(vision_frames : List[VisionFrame], position : int = 0) -> Optional[Face]:
-	faces = []
+def get_average_face(faces : List[Face]) -> Optional[Face]:
 	embeddings = []
 	normed_embeddings = []
 
-	for vision_frame in vision_frames:
-		face = get_one_face(vision_frame, position)
-		if face:
-			faces.append(face)
-			embeddings.append(face.embedding)
-			normed_embeddings.append(face.normed_embedding)
 	if faces:
 		first_face = get_first(faces)
+
+		for face in faces:
+			embeddings.append(face.embedding)
+			normed_embeddings.append(face.normed_embedding)
+
 		return Face(
 			bounding_box = first_face.bounding_box,
 			landmark_set = first_face.landmark_set,
@@ -499,109 +496,41 @@ def get_average_face(vision_frames : List[VisionFrame], position : int = 0) -> O
 	return None
 
 
-def get_many_faces(vision_frame : VisionFrame) -> List[Face]:
-	faces = []
+def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
+	faces : List[Face] = []
 
-	if numpy.any(vision_frame):
-		static_faces = get_static_faces(vision_frame)
-		if static_faces:
-			faces = static_faces
-		else:
-			bounding_boxes = []
-			face_landmarks_5 = []
-			face_scores = []
+	for vision_frame in vision_frames:
+		if numpy.any(vision_frame):
+			static_faces = get_static_faces(vision_frame)
+			if static_faces:
+				faces = static_faces
+			else:
+				bounding_boxes = []
+				face_landmarks_5 = []
+				face_scores = []
 
-			if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
-				bounding_boxes_retinaface, face_landmarks_5_retinaface, face_scores_retinaface = detect_with_retinaface(vision_frame, facefusion.globals.face_detector_size)
-				bounding_boxes.extend(bounding_boxes_retinaface)
-				face_landmarks_5.extend(face_landmarks_5_retinaface)
-				face_scores.extend(face_scores_retinaface)
-			if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
-				bounding_boxes_scrfd, face_landmarks_5_scrfd, face_scores_scrfd = detect_with_scrfd(vision_frame, facefusion.globals.face_detector_size)
-				bounding_boxes.extend(bounding_boxes_scrfd)
-				face_landmarks_5.extend(face_landmarks_5_scrfd)
-				face_scores.extend(face_scores_scrfd)
-			if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
-				bounding_boxes_yoloface, face_landmarks_5_yoloface, face_scores_yoloface = detect_with_yoloface(vision_frame, facefusion.globals.face_detector_size)
-				bounding_boxes.extend(bounding_boxes_yoloface)
-				face_landmarks_5.extend(face_landmarks_5_yoloface)
-				face_scores.extend(face_scores_yoloface)
-			if facefusion.globals.face_detector_model in [ 'yunet' ]:
-				bounding_boxes_yunet, face_landmarks_5_yunet, face_scores_yunet = detect_with_yunet(vision_frame, facefusion.globals.face_detector_size)
-				bounding_boxes.extend(bounding_boxes_yunet)
-				face_landmarks_5.extend(face_landmarks_5_yunet)
-				face_scores.extend(face_scores_yunet)
-			if bounding_boxes and face_landmarks_5 and face_scores and facefusion.globals.face_detector_score > 0:
-				faces = create_faces(vision_frame, bounding_boxes, face_landmarks_5, face_scores)
-			if faces:
-				set_static_faces(vision_frame, faces)
-
-	if faces:
-		if facefusion.globals.face_analyser_order:
-			faces = sort_by_order(faces, facefusion.globals.face_analyser_order)
-		if facefusion.globals.face_analyser_age:
-			faces = filter_by_age(faces, facefusion.globals.face_analyser_age)
-		if facefusion.globals.face_analyser_gender:
-			faces = filter_by_gender(faces, facefusion.globals.face_analyser_gender)
+				if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
+					bounding_boxes_retinaface, face_landmarks_5_retinaface, face_scores_retinaface = detect_with_retinaface(vision_frame, facefusion.globals.face_detector_size)
+					bounding_boxes.extend(bounding_boxes_retinaface)
+					face_landmarks_5.extend(face_landmarks_5_retinaface)
+					face_scores.extend(face_scores_retinaface)
+				if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
+					bounding_boxes_scrfd, face_landmarks_5_scrfd, face_scores_scrfd = detect_with_scrfd(vision_frame, facefusion.globals.face_detector_size)
+					bounding_boxes.extend(bounding_boxes_scrfd)
+					face_landmarks_5.extend(face_landmarks_5_scrfd)
+					face_scores.extend(face_scores_scrfd)
+				if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
+					bounding_boxes_yoloface, face_landmarks_5_yoloface, face_scores_yoloface = detect_with_yoloface(vision_frame, facefusion.globals.face_detector_size)
+					bounding_boxes.extend(bounding_boxes_yoloface)
+					face_landmarks_5.extend(face_landmarks_5_yoloface)
+					face_scores.extend(face_scores_yoloface)
+				if facefusion.globals.face_detector_model in [ 'yunet' ]:
+					bounding_boxes_yunet, face_landmarks_5_yunet, face_scores_yunet = detect_with_yunet(vision_frame, facefusion.globals.face_detector_size)
+					bounding_boxes.extend(bounding_boxes_yunet)
+					face_landmarks_5.extend(face_landmarks_5_yunet)
+					face_scores.extend(face_scores_yunet)
+				if bounding_boxes and face_landmarks_5 and face_scores and facefusion.globals.face_detector_score > 0:
+					faces = create_faces(vision_frame, bounding_boxes, face_landmarks_5, face_scores)
+				if faces:
+					set_static_faces(vision_frame, faces)
 	return faces
-
-
-def find_similar_faces(reference_faces : FaceSet, vision_frame : VisionFrame, face_distance : float) -> List[Face]:
-	similar_faces : List[Face] = []
-	many_faces = get_many_faces(vision_frame)
-
-	if reference_faces:
-		for reference_set in reference_faces:
-			if not similar_faces:
-				for reference_face in reference_faces[reference_set]:
-					for face in many_faces:
-						if compare_faces(face, reference_face, face_distance):
-							similar_faces.append(face)
-	return similar_faces
-
-
-def compare_faces(face : Face, reference_face : Face, face_distance : float) -> bool:
-	current_face_distance = calc_face_distance(face, reference_face)
-	return current_face_distance < face_distance
-
-
-def calc_face_distance(face : Face, reference_face : Face) -> float:
-	if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
-		return 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
-	return 0
-
-
-def sort_by_order(faces : List[Face], order : FaceAnalyserOrder) -> List[Face]:
-	if order == 'left-right':
-		return sorted(faces, key = lambda face: face.bounding_box[0])
-	if order == 'right-left':
-		return sorted(faces, key = lambda face: face.bounding_box[0], reverse = True)
-	if order == 'top-bottom':
-		return sorted(faces, key = lambda face: face.bounding_box[1])
-	if order == 'bottom-top':
-		return sorted(faces, key = lambda face: face.bounding_box[1], reverse = True)
-	if order == 'small-large':
-		return sorted(faces, key = lambda face: (face.bounding_box[2] - face.bounding_box[0]) * (face.bounding_box[3] - face.bounding_box[1]))
-	if order == 'large-small':
-		return sorted(faces, key = lambda face: (face.bounding_box[2] - face.bounding_box[0]) * (face.bounding_box[3] - face.bounding_box[1]), reverse = True)
-	if order == 'best-worst':
-		return sorted(faces, key = lambda face: face.score_set.get('detector'), reverse = True)
-	if order == 'worst-best':
-		return sorted(faces, key = lambda face: face.score_set.get('detector'))
-	return faces
-
-
-def filter_by_age(faces : List[Face], age : FaceAnalyserAge) -> List[Face]:
-	filter_faces = []
-	for face in faces:
-		if categorize_age(face.age) == age:
-			filter_faces.append(face)
-	return filter_faces
-
-
-def filter_by_gender(faces : List[Face], gender : FaceAnalyserGender) -> List[Face]:
-	filter_faces = []
-	for face in faces:
-		if categorize_gender(face.gender) == gender:
-			filter_faces.append(face)
-	return filter_faces

@@ -15,7 +15,7 @@ from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream
 from facefusion.filesystem import filter_image_paths
 from facefusion.typing import VisionFrame, Face, Fps
-from facefusion.face_analyser import get_average_face
+from facefusion.face_analyser import get_average_face, get_many_faces
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
@@ -91,10 +91,11 @@ def listen() -> None:
 
 def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
-	facefusion.globals.face_analyser_order = 'large-small'
+	facefusion.globals.face_selector_order = 'large-small'
 	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
 	source_frames = read_static_images(source_image_paths)
-	source_face = get_average_face(source_frames)
+	source_faces = get_many_faces(source_frames)
+	source_face = get_average_face(source_faces)
 	stream = None
 
 	if webcam_mode in [ 'udp', 'v4l2' ]:

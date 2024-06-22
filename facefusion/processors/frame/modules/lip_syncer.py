@@ -11,7 +11,8 @@ import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, logger, wording
 from facefusion.execution import apply_execution_provider_options
-from facefusion.face_analyser import get_one_face, get_many_faces, find_similar_faces, clear_face_analyser
+from facefusion.face_analyser import get_one_face, get_many_faces, clear_face_analyser
+from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_mouth_mask, clear_face_occluder, clear_face_parser
 from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_bounding_box, paste_back, create_bounding_box_from_face_landmark_68
 from facefusion.face_store import get_reference_faces
@@ -211,18 +212,18 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 	reference_faces = inputs.get('reference_faces')
 	source_audio_frame = inputs.get('source_audio_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
+	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
 	if facefusion.globals.face_selector_mode == 'many':
-		many_faces = get_many_faces(target_vision_frame)
 		if many_faces:
 			for target_face in many_faces:
 				target_vision_frame = sync_lip(target_face, source_audio_frame, target_vision_frame)
 	if facefusion.globals.face_selector_mode == 'one':
-		target_face = get_one_face(target_vision_frame)
+		target_face = get_one_face(many_faces)
 		if target_face:
 			target_vision_frame = sync_lip(target_face, source_audio_frame, target_vision_frame)
 	if facefusion.globals.face_selector_mode == 'reference':
-		similar_faces = find_similar_faces(reference_faces, target_vision_frame, facefusion.globals.reference_face_distance)
+		similar_faces = find_similar_faces(many_faces, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
 				target_vision_frame = sync_lip(similar_face, source_audio_frame, target_vision_frame)

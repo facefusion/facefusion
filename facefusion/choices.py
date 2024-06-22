@@ -1,12 +1,9 @@
 from typing import List
 
-from facefusion.typing import VideoMemoryStrategy, FaceSelectorMode, FaceAnalyserOrder, FaceAnalyserAge, FaceAnalyserGender, FaceDetectorSet, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, ExecutionProviderSet, JobStatus
+from facefusion.typing import VideoMemoryStrategy, FaceSelectorMode, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender, FaceDetectorSet, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, ExecutionProviderSet, JobStatus
 from facefusion.common_helper import create_int_range, create_float_range
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
-face_analyser_orders : List[FaceAnalyserOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
-face_analyser_ages : List[FaceAnalyserAge] = [ 'child', 'teen', 'adult', 'senior' ]
-face_analyser_genders : List[FaceAnalyserGender] = [ 'female', 'male' ]
 face_detector_set : FaceDetectorSet =\
 {
 	'many': [ '640x640' ],
@@ -16,6 +13,9 @@ face_detector_set : FaceDetectorSet =\
 	'yunet': [ '160x160', '320x320', '480x480', '512x512', '640x640', '768x768', '960x960', '1024x1024' ]
 }
 face_selector_modes : List[FaceSelectorMode] = [ 'many', 'one', 'reference' ]
+face_selector_orders : List[FaceSelectorOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
+face_selector_ages : List[FaceSelectorAge] = [ 'child', 'teen', 'adult', 'senior' ]
+face_selector_genders : List[FaceSelectorGender] = [ 'female', 'male' ]
 face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'region' ]
 face_mask_regions : List[FaceMaskRegion] = [ 'skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip' ]
 temp_frame_formats : List[TempFrameFormat] = [ 'bmp', 'jpg', 'png' ]
