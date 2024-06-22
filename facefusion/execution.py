@@ -52,10 +52,11 @@ def apply_execution_provider_options(execution_device_id : str, execution_provid
 			{
 				'device_id': execution_device_id
 			}))
-
-	for execution_provider in [ 'CoreMLExecutionProvider', 'CPUExecutionProvider' ]:
-		if execution_provider in execution_providers:
+		elif execution_provider == 'CoreMLExecutionProvider':
 			execution_providers_with_options.append(execution_provider)
+
+	if 'CPUExecutionProvider' in execution_providers:
+		execution_providers_with_options.append('CPUExecutionProvider')
 
 	return execution_providers_with_options
 
