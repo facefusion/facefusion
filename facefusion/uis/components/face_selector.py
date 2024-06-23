@@ -6,6 +6,7 @@ import facefusion.globals
 import facefusion.choices
 from facefusion import wording
 from facefusion.typing import VisionFrame, FaceSelectorMode, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender
+from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import clear_static_faces, clear_reference_faces
 from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color
 from facefusion.filesystem import is_image, is_video
@@ -184,7 +185,7 @@ def update_reference_position_gallery() -> gradio.Gallery:
 
 def extract_gallery_frames(temp_vision_frame : VisionFrame) -> List[VisionFrame]:
 	gallery_vision_frames = []
-	faces = get_many_faces([ temp_vision_frame ])
+	faces = sort_and_filter_faces(get_many_faces([ temp_vision_frame ]))
 
 	for face in faces:
 		start_x, start_y, end_x, end_y = map(int, face.bounding_box)

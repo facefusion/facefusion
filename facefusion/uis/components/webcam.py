@@ -15,7 +15,7 @@ from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream
 from facefusion.filesystem import filter_image_paths
 from facefusion.typing import VisionFrame, Face, Fps
-from facefusion.face_analyser import get_average_face, get_many_faces
+from facefusion.face_analyser import get_many_faces, get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
