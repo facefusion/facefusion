@@ -7,12 +7,13 @@ import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, wording
+from facefusion import config, process_manager, logger, wording
 from facefusion.face_analyser import get_one_face, get_many_faces, clear_face_analyser
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces, categorize_age, categorize_gender
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_store import get_reference_faces
+from facefusion.filesystem import in_directory, same_file_extension
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.program_helper import find_argument_group
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, QueuePayload
@@ -60,6 +61,12 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
+	if mode == 'output' and not in_directory(facefusion.globals.output_path):
+		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
+		return False
+	if mode == 'output' and not same_file_extension([ facefusion.globals.target_path, facefusion.globals.output_path ]):
+		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
+		return False
 	return True
 
 
