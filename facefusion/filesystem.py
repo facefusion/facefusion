@@ -20,7 +20,7 @@ def same_file_extension(file_paths : List[str]) -> bool:
 	file_extensions : List[str] = []
 
 	for file_path in file_paths:
-		_, file_extension = os.path.splitext(file_path)
+		_, file_extension = os.path.splitext(file_path.lower())
 
 		if file_extensions and file_extension not in file_extensions:
 			return False
