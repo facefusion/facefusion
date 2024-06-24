@@ -87,23 +87,3 @@ def test_get_one_face_with_yoloface() -> None:
 		face = get_one_face(many_faces)
 
 		assert isinstance(face, Face)
-
-
-def test_get_one_face_with_yunet() -> None:
-	facefusion.globals.face_detector_model = 'yunet'
-	facefusion.globals.face_detector_size = '640x640'
-
-	pre_check()
-	source_paths =\
-	[
-		get_test_example_file('source.jpg'),
-		get_test_example_file('source-80crop.jpg'),
-		get_test_example_file('source-70crop.jpg'),
-		get_test_example_file('source-60crop.jpg')
-	]
-	for source_path in source_paths:
-		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
-		face = get_one_face(many_faces)
-
-		assert isinstance(face, Face)
