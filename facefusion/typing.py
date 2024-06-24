@@ -80,7 +80,7 @@ TableHeaders = List[str]
 TableContents = List[List[int | float | str]]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
-FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yoloface', 'yunet']
+FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yoloface']
 FaceDetectorSet = Dict[FaceDetectorModel, List[str]]
 FaceRecognizerModel = Literal['arcface_blendswap', 'arcface_ghost', 'arcface_inswapper', 'arcface_simswap', 'arcface_uniface']
 FaceSelectorMode = Literal['many', 'one', 'reference']

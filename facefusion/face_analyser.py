@@ -34,11 +34,6 @@ MODELS : ModelSet =\
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yoloface_8n.onnx',
 		'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
 	},
-	'face_detector_yunet':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yunet_2023mar.onnx',
-		'path': resolve_relative_path('../.assets/models/yunet_2023mar.onnx')
-	},
 	'face_recognizer_arcface_blendswap':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
@@ -98,8 +93,6 @@ def get_face_analyser() -> Any:
 				face_detectors['scrfd'] = onnxruntime.InferenceSession(MODELS.get('face_detector_scrfd').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
 			if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
 				face_detectors['yoloface'] = onnxruntime.InferenceSession(MODELS.get('face_detector_yoloface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			if facefusion.globals.face_detector_model in [ 'yunet' ]:
-				face_detectors['yunet'] = cv2.FaceDetectorYN.create(MODELS.get('face_detector_yunet').get('path'), '', (0, 0))
 			if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
 				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_blendswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
 			if facefusion.globals.face_recognizer_model == 'arcface_ghost':
@@ -153,9 +146,6 @@ def pre_check() -> bool:
 	if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
 		model_urls.append(MODELS.get('face_detector_yoloface').get('url'))
 		model_paths.append(MODELS.get('face_detector_yoloface').get('path'))
-	if facefusion.globals.face_detector_model in [ 'yunet' ]:
-		model_urls.append(MODELS.get('face_detector_yunet').get('url'))
-		model_paths.append(MODELS.get('face_detector_yunet').get('path'))
 	if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
 		model_urls.append(MODELS.get('face_recognizer_arcface_blendswap').get('url'))
 		model_paths.append(MODELS.get('face_recognizer_arcface_blendswap').get('path'))
@@ -303,36 +293,6 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 	return bounding_boxes, face_landmarks_5, face_scores
 
 
-def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
-	face_detector = get_face_analyser().get('face_detectors').get('yunet')
-	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
-	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
-	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
-	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
-	bounding_boxes = []
-	face_landmarks_5 = []
-	face_scores = []
-
-	face_detector.setInputSize((temp_vision_frame.shape[1], temp_vision_frame.shape[0]))
-	face_detector.setScoreThreshold(facefusion.globals.face_detector_score)
-
-	with thread_semaphore():
-		_, detections = face_detector.detect(temp_vision_frame)
-
-	if numpy.any(detections):
-		for detection in detections:
-			bounding_boxes.append(numpy.array(
-			[
-				detection[0] * ratio_width,
-				detection[1] * ratio_height,
-				(detection[0] + detection[2]) * ratio_width,
-				(detection[1] + detection[3]) * ratio_height,
-			]))
-			face_landmarks_5.append(detection[4:14].reshape((5, 2)) * [ ratio_width, ratio_height ])
-			face_scores.append(detection[14])
-	return bounding_boxes, face_landmarks_5, face_scores
-
-
 def detect_faces(vision_frame: VisionFrame) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
 	bounding_boxes = []
 	face_landmarks_5 = []
@@ -353,11 +313,6 @@ def detect_faces(vision_frame: VisionFrame) -> Tuple[List[BoundingBox], List[Fac
 		bounding_boxes.extend(bounding_boxes_yoloface)
 		face_landmarks_5.extend(face_landmarks_5_yoloface)
 		face_scores.extend(face_scores_yoloface)
-	if facefusion.globals.face_detector_model in [ 'yunet' ]:
-		bounding_boxes_yunet, face_landmarks_5_yunet, face_scores_yunet = detect_with_yunet(vision_frame, facefusion.globals.face_detector_size)
-		bounding_boxes.extend(bounding_boxes_yunet)
-		face_landmarks_5.extend(face_landmarks_5_yunet)
-		face_scores.extend(face_scores_yunet)
 	bounding_boxes = [ normalize_bounding_box(bounding_box) for bounding_box in bounding_boxes ]
 	return bounding_boxes, face_landmarks_5, face_scores
 

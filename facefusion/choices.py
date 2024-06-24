@@ -9,8 +9,7 @@ face_detector_set : FaceDetectorSet =\
 	'many': [ '640x640' ],
 	'retinaface': [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
 	'scrfd': [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
-	'yoloface': [ '640x640' ],
-	'yunet': [ '160x160', '320x320', '480x480', '512x512', '640x640', '768x768', '960x960', '1024x1024' ]
+	'yoloface': [ '640x640' ]
 }
 face_selector_modes : List[FaceSelectorMode] = [ 'many', 'one', 'reference' ]
 face_selector_orders : List[FaceSelectorOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
