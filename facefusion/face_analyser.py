@@ -7,7 +7,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, convert_to_rotated_bounding_box, create_rotation_matrix_with_size, transform_bounding_box, transform_points
+from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, convert_to_rotated_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -363,12 +363,12 @@ def detect_faces(vision_frame: VisionFrame) -> Tuple[List[BoundingBox], List[Fac
 
 
 def detect_faces_with_rotation(vision_frame : VisionFrame, angle : Angle) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
-	rotation_matrix, rotated_size = create_rotation_matrix_with_size(angle, vision_frame.shape[:2][::-1])
-	rotated_vision_frame = cv2.warpAffine(vision_frame, rotation_matrix, rotated_size)
-	inverse_rotation_matrix = cv2.invertAffineTransform(rotation_matrix)
+	rotated_matrix, rotated_size = create_rotated_matrix_and_size(angle, vision_frame.shape[:2][::-1])
+	rotated_vision_frame = cv2.warpAffine(vision_frame, rotated_matrix, rotated_size)
+	inverse_rotated_matrix = cv2.invertAffineTransform(rotated_matrix)
 	bounding_boxes, face_landmarks_5, face_scores = detect_faces(rotated_vision_frame)
-	bounding_boxes = [ transform_bounding_box(bounding_box, inverse_rotation_matrix) for bounding_box in bounding_boxes ]
-	face_landmarks_5 = [ transform_points(face_landmark_5, inverse_rotation_matrix) for face_landmark_5 in face_landmarks_5 ]
+	bounding_boxes = [ transform_bounding_box(bounding_box, inverse_rotated_matrix) for bounding_box in bounding_boxes ]
+	face_landmarks_5 = [ transform_points(face_landmark_5, inverse_rotated_matrix) for face_landmark_5 in face_landmarks_5 ]
 	return bounding_boxes, face_landmarks_5, face_scores
 
 
