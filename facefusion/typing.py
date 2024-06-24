@@ -44,6 +44,8 @@ FaceStore = TypedDict('FaceStore',
 
 VisionFrame = numpy.ndarray[Any, Any]
 Mask = numpy.ndarray[Any, Any]
+Points = numpy.ndarray[Any, Any]
+Distance = numpy.ndarray[Any, Any]
 Matrix = numpy.ndarray[Any, Any]
 Translation = numpy.ndarray[Any, Any]
 

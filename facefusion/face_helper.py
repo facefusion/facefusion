@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Angle, BoundingBox, RotatedBoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet
+from facefusion.typing import Angle, BoundingBox, RotatedBoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Points, Distance, Matrix, Translation, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -123,7 +123,7 @@ def normalize_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
 	return numpy.array([ x1, y1, x2, y2 ])
 
 
-def transform_points(points : numpy.ndarray[Any, Any], matrix : Matrix) -> numpy.ndarray[Any, Any]:
+def transform_points(points : Points, matrix : Matrix) -> Points:
 	points = points.reshape(-1, 1, 2)
 	points = cv2.transform(points, matrix) # type:ignore[assignment]
 	points = points.reshape(-1, 2)
@@ -144,7 +144,7 @@ def transform_bounding_box(bounding_box : BoundingBox, matrix : Matrix) -> Bound
 	return normalize_bounding_box(numpy.array([ x1, y1, x2, y2 ]))
 
 
-def distance_to_bounding_box(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> BoundingBox:
+def distance_to_bounding_box(points : Points, distance : Distance) -> BoundingBox:
 	x1 = points[:, 0] - distance[:, 0]
 	y1 = points[:, 1] - distance[:, 1]
 	x2 = points[:, 0] + distance[:, 2]
@@ -153,7 +153,7 @@ def distance_to_bounding_box(points : numpy.ndarray[Any, Any], distance : numpy.
 	return bounding_box
 
 
-def distance_to_face_landmark_5(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> FaceLandmark5:
+def distance_to_face_landmark_5(points : Points, distance : Distance) -> FaceLandmark5:
 	x = points[:, 0::2] + distance[:, 0::2]
 	y = points[:, 1::2] + distance[:, 1::2]
 	face_landmark_5 = numpy.stack((x, y), axis = -1)
