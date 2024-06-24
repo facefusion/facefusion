@@ -4,8 +4,11 @@ from cv2.typing import Size
 from collections import namedtuple
 import numpy
 
+Score = float
+Angle = int
+
 BoundingBox = NDArray[numpy.float32]
-RotatedBoundingBox = Tuple[Sequence[float], Size, float]
+RotatedBoundingBox = Tuple[Sequence[float], Size, Angle]
 FaceLandmark5 = numpy.ndarray[Any, Any]
 FaceLandmark68 = numpy.ndarray[Any, Any]
 FaceLandmarkSet = TypedDict('FaceLandmarkSet',
@@ -15,7 +18,6 @@ FaceLandmarkSet = TypedDict('FaceLandmarkSet',
 	'68' : FaceLandmark68, #type:ignore[valid-type]
 	'68/5' : FaceLandmark68 #type:ignore[valid-type]
 })
-Score = float
 FaceScoreSet = TypedDict('FaceScoreSet',
 {
 	'detector' : Score,

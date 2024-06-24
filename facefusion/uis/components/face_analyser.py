@@ -5,7 +5,7 @@ import gradio
 import facefusion.globals
 import facefusion.choices
 from facefusion import face_analyser, wording
-from facefusion.typing import FaceDetectorModel
+from facefusion.typing import Score, FaceDetectorModel
 from facefusion.uis.core import register_ui_component
 
 FACE_DETECTOR_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -75,9 +75,9 @@ def update_face_detector_size(face_detector_size : str) -> None:
 	facefusion.globals.face_detector_size = face_detector_size
 
 
-def update_face_detector_score(face_detector_score : float) -> None:
+def update_face_detector_score(face_detector_score : Score) -> None:
 	facefusion.globals.face_detector_score = face_detector_score
 
 
-def update_face_landmarker_score(face_landmarker_score : float) -> None:
+def update_face_landmarker_score(face_landmarker_score : Score) -> None:
 	facefusion.globals.face_landmarker_score = face_landmarker_score

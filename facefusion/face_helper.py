@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import BoundingBox, RotatedBoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet
+from facefusion.typing import Angle, BoundingBox, RotatedBoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -101,7 +101,7 @@ def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68)
 	return bounding_box
 
 
-def create_rotation_matrix_with_size(angle : float, size : Size) -> Tuple[Matrix, Size]:
+def create_rotation_matrix_with_size(angle : Angle, size : Size) -> Tuple[Matrix, Size]:
 	rotation_matrix = cv2.getRotationMatrix2D((size[0] / 2, size[1] / 2), angle, 1)
 	rotated_size = numpy.dot(numpy.abs(rotation_matrix[:, :2]), size)
 	rotation_matrix[:, -1] += (rotated_size - size) * 0.5 # type:ignore[misc]
@@ -109,7 +109,7 @@ def create_rotation_matrix_with_size(angle : float, size : Size) -> Tuple[Matrix
 	return rotation_matrix, rotated_size
 
 
-def convert_to_rotated_bounding_box(bounding_box : BoundingBox, angle : float) -> RotatedBoundingBox:
+def convert_to_rotated_bounding_box(bounding_box : BoundingBox, angle : Angle) -> RotatedBoundingBox:
 	x1, y1, x2, y2 = bounding_box
 	center = x1, y1
 	size = int(x2 - x1), int(y2 - y1)

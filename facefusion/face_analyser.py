@@ -13,7 +13,7 @@ from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
 from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.thread_helper import thread_lock, thread_semaphore, conditional_thread_semaphore
-from facefusion.typing import VisionFrame, Face, ModelSet, BoundingBox, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Score, FaceScoreSet, Embedding, RotatedBoundingBox
+from facefusion.typing import Angle, Score, BoundingBox, RotatedBoundingBox, Face, FaceScoreSet, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Embedding, ModelSet, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
@@ -362,7 +362,7 @@ def detect_faces(vision_frame: VisionFrame) -> Tuple[List[BoundingBox], List[Fac
 	return bounding_boxes, face_landmarks_5, face_scores
 
 
-def detect_faces_with_rotation(vision_frame : VisionFrame, angle : float) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
+def detect_faces_with_rotation(vision_frame : VisionFrame, angle : Angle) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
 	rotation_matrix, rotated_size = create_rotation_matrix_with_size(angle, vision_frame.shape[:2][::-1])
 	rotated_vision_frame = cv2.warpAffine(vision_frame, rotation_matrix, rotated_size)
 	inverse_rotation_matrix = cv2.invertAffineTransform(rotation_matrix)
