@@ -101,10 +101,10 @@ WORDING : Dict[str, Any] =\
 		'video_memory_strategy': 'balance fast frame processing and low VRAM usage',
 		'system_memory_limit': 'limit the available RAM that can be used while processing',
 		# face analyser
-		'face_detector_model': 'choose the model responsible for detecting the face',
+		'face_detector_model': 'choose the model responsible for detecting the faces',
+		'face_detector_angles': 'specify the angles to rotate the frame before detecting faces',
 		'face_detector_size': 'specify the size of the frame provided to the face detector',
 		'face_detector_score': 'filter the detected faces base on the confidence score',
-		'face_detector_angles': 'specify angles of the frame provided to the face detector',
 		'face_landmarker_score': 'filter the detected landmarks base on the confidence score',
 		# face selector
 		'face_selector_mode': 'use reference based tracking or simple matching',

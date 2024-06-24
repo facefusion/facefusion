@@ -83,11 +83,11 @@ def create_program() -> ArgumentParser:
 	# face analyser
 	group_face_analyser = program.add_argument_group('face analyser')
 	group_face_analyser.add_argument('--face-detector-model', help = wording.get('help.face_detector_model'), default = config.get_str_value('face_analyser.face_detector_model', 'yoloface'), choices = facefusion.choices.face_detector_set.keys())
+	group_face_analyser.add_argument('--face-detector-angles', help = wording.get('help.face_detector_angles'), type = float, default = config.get_float_list('face_analyser.face_detector_angles', '0.0'), choices = facefusion.choices.face_detector_angles, nargs = '+')
 	group_face_analyser.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_analyser.face_detector_size', '640x640'), choices = suggest_face_detector_choices(program))
 	group_face_analyser.add_argument('--face-detector-score', help = wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_analyser.face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_metavar(facefusion.choices.face_detector_score_range))
-	group_face_analyser.add_argument('--face-detector-angles', help = wording.get('help.face_detector_angles'), type = float, default = config.get_float_list('face_analyser.face_detector_angles', '0.0'), choices = facefusion.choices.face_detector_angles, nargs = '+')
 	group_face_analyser.add_argument('--face-landmarker-score', help = wording.get('help.face_landmarker_score'), type = float, default = config.get_float_value('face_analyser.face_landmarker_score', '0.5'), choices = facefusion.choices.face_landmarker_score_range, metavar = create_metavar(facefusion.choices.face_landmarker_score_range))
-	job_store.register_step_keys([ 'face_detector_model', 'face_detector_size', 'face_detector_score', 'face_detector_angles', 'face_landmarker_score' ])
+	job_store.register_step_keys([ 'face_detector_model', 'face_detector_angles', 'face_detector_size', 'face_detector_score', 'face_landmarker_score' ])
 	# face selector
 	group_face_selector = program.add_argument_group('face selector')
 	group_face_selector.add_argument('--face-selector-mode', help = wording.get('help.face_selector_mode'), default = config.get_str_value('face_selector.face_selector_mode', 'reference'), choices = facefusion.choices.face_selector_modes)
