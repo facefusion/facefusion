@@ -498,10 +498,10 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 			if static_faces:
 				faces = static_faces
 			else:
-				bounding_boxes_all = []
-				rotated_bounding_boxes_all = []
-				face_landmarks_5_all = []
-				face_scores_all = []
+				all_bounding_boxes = []
+				all_rotated_bounding_boxes = []
+				all_face_landmarks_5 = []
+				all_face_scores = []
 
 				for angle in facefusion.globals.face_detector_angles:
 					if angle == 0:
@@ -509,12 +509,13 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 					else:
 						bounding_boxes, face_landmarks_5, face_scores = detect_rotated_faces(vision_frame, angle)
 					rotated_bounding_boxes = [ convert_to_rotated_bounding_box(bounding_box, angle) for bounding_box in bounding_boxes ]
-					bounding_boxes_all.extend(bounding_boxes)
-					rotated_bounding_boxes_all.extend(rotated_bounding_boxes)
-					face_landmarks_5_all.extend(face_landmarks_5)
-					face_scores_all.extend(face_scores)
-				if bounding_boxes_all and face_landmarks_5_all and face_scores_all and facefusion.globals.face_detector_score > 0:
-					faces = create_faces(vision_frame, bounding_boxes_all, rotated_bounding_boxes_all, face_landmarks_5_all, face_scores_all)
+					all_bounding_boxes.extend(bounding_boxes)
+					all_rotated_bounding_boxes.extend(rotated_bounding_boxes)
+					all_face_landmarks_5.extend(face_landmarks_5)
+					all_face_scores.extend(face_scores)
+
+				if all_bounding_boxes and all_face_landmarks_5 and all_face_scores and facefusion.globals.face_detector_score > 0:
+					faces = create_faces(vision_frame, all_bounding_boxes, all_rotated_bounding_boxes, all_face_landmarks_5, all_face_scores)
 				if faces:
 					set_static_faces(vision_frame, faces)
 	return faces
