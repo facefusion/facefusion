@@ -25,6 +25,7 @@ system_memory_limit : Optional[int] = None
 face_detector_model : Optional[FaceDetectorModel] = None
 face_detector_size : Optional[str] = None
 face_detector_score : Optional[float] = None
+face_detector_angles : Optional[List[float]] = None
 face_landmarker_score : Optional[float] = None
 face_recognizer_model : Optional[FaceRecognizerModel] = None
 # face selector

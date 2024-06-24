@@ -7,13 +7,13 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, convert_to_rotated_bounding_box
+from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, convert_to_rotated_bounding_box, create_rotation_matrix_with_size, transform_bounding_box, transform_points
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
 from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.thread_helper import thread_lock, thread_semaphore, conditional_thread_semaphore
-from facefusion.typing import VisionFrame, Face, ModelSet, BoundingBox, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Score, FaceScoreSet, Embedding
+from facefusion.typing import VisionFrame, Face, ModelSet, BoundingBox, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Score, FaceScoreSet, Embedding, RotatedBoundingBox
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
@@ -362,6 +362,16 @@ def detect_faces(vision_frame: VisionFrame) -> Tuple[List[BoundingBox], List[Fac
 	return bounding_boxes, face_landmarks_5, face_scores
 
 
+def detect_faces_with_rotation(vision_frame : VisionFrame, angle : float) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
+	rotation_matrix, rotated_size = create_rotation_matrix_with_size(angle, vision_frame.shape[:2][::-1])
+	rotated_vision_frame = cv2.warpAffine(vision_frame, rotation_matrix, rotated_size)
+	inverse_rotation_matrix = cv2.invertAffineTransform(rotation_matrix)
+	bounding_boxes, face_landmarks_5, face_scores = detect_faces(rotated_vision_frame)
+	bounding_boxes = [ transform_bounding_box(bounding_box, inverse_rotation_matrix) for bounding_box in bounding_boxes ]
+	face_landmarks_5 = [ transform_points(face_landmark_5, inverse_rotation_matrix) for face_landmark_5 in face_landmarks_5 ]
+	return bounding_boxes, face_landmarks_5, face_scores
+
+
 def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : str) -> VisionFrame:
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	detect_vision_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
@@ -371,10 +381,9 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 	return detect_vision_frame
 
 
-def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score]) -> List[Face]:
+def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], rotated_bounding_boxes : List[RotatedBoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score]) -> List[Face]:
 	faces = []
 	nms_threshold = 0.1 if facefusion.globals.face_detector_model == 'many' else 0.4
-	rotated_bounding_boxes = [ convert_to_rotated_bounding_box(bounding_box, 0) for bounding_box in bounding_boxes ]
 	keep_indices = cv2.dnn.NMSBoxesRotated(rotated_bounding_boxes, face_scores, score_threshold = facefusion.globals.face_detector_score, nms_threshold = nms_threshold)
 
 	for index in keep_indices:
@@ -534,9 +543,23 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 			if static_faces:
 				faces = static_faces
 			else:
-				bounding_boxes, face_landmarks_5, face_scores = detect_faces(vision_frame)
-				if bounding_boxes and face_landmarks_5 and face_scores and facefusion.globals.face_detector_score > 0:
-					faces = create_faces(vision_frame, bounding_boxes, face_landmarks_5, face_scores)
+				bounding_boxes_all = []
+				rotated_bounding_boxes_all = []
+				face_landmarks_5_all = []
+				face_scores_all = []
+
+				for angle in facefusion.globals.face_detector_angles:
+					if angle == 0:
+						bounding_boxes, face_landmarks_5, face_scores = detect_faces(vision_frame)
+					else:
+						bounding_boxes, face_landmarks_5, face_scores = detect_faces_with_rotation(vision_frame, angle)
+					rotated_bounding_boxes = [ convert_to_rotated_bounding_box(bounding_box, angle) for bounding_box in bounding_boxes ]
+					bounding_boxes_all.extend(bounding_boxes)
+					rotated_bounding_boxes_all.extend(rotated_bounding_boxes)
+					face_landmarks_5_all.extend(face_landmarks_5)
+					face_scores_all.extend(face_scores)
+				if bounding_boxes_all and face_landmarks_5_all and face_scores_all and facefusion.globals.face_detector_score > 0:
+					faces = create_faces(vision_frame, bounding_boxes_all, rotated_bounding_boxes_all, face_landmarks_5_all, face_scores_all)
 				if faces:
 					set_static_faces(vision_frame, faces)
 	return faces
