@@ -30,8 +30,7 @@ def render() -> None:
 
 
 def listen() -> None:
-	for method in [ 'change', 'release' ]:
-		getattr(TRIM_FRAME_RANGE_SLIDER, method)(update_trim_frame, inputs = TRIM_FRAME_RANGE_SLIDER)
+	TRIM_FRAME_RANGE_SLIDER.release(update_trim_frame, inputs = TRIM_FRAME_RANGE_SLIDER)
 	for ui_component in get_ui_components(
 	[
 		'target_image',
