@@ -101,6 +101,14 @@ def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68)
 	return bounding_box
 
 
+def create_rotation_matrix_with_size(angle : float, size : Size) -> Tuple[Matrix, Size]:
+	rotation_matrix = cv2.getRotationMatrix2D((size[0] / 2, size[1] / 2), angle, 1)
+	rotated_size = numpy.dot(numpy.abs(rotation_matrix[:, :2]), size)
+	rotation_matrix[:, -1] += (rotated_size - size) * 0.5 # type:ignore[misc]
+	rotated_size = int(rotated_size[0]), int(rotated_size[1])
+	return rotation_matrix, rotated_size
+
+
 def convert_to_rotated_bounding_box(bounding_box : BoundingBox, angle : float) -> RotatedBoundingBox:
 	x1, y1, x2, y2 = bounding_box
 	center = x1, y1
@@ -113,6 +121,28 @@ def normalize_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
 	x1, x2 = sorted([ x1, x2 ])
 	y1, y2 = sorted([ y1, y2 ])
 	return numpy.array([ x1, y1, x2, y2 ])
+
+
+def transform_points(points : numpy.ndarray[Any, Any], matrix : Matrix) -> numpy.ndarray[Any, Any]:
+	points = points.reshape(-1, 1, 2)
+	points = cv2.transform(points, matrix) # type:ignore[assignment]
+	points = points.reshape(-1, 2)
+	return points
+
+
+def transform_bounding_box(bounding_box : BoundingBox, matrix : Matrix) -> BoundingBox:
+	points = numpy.array(
+	[
+		[ bounding_box[0], bounding_box[1] ],
+		[ bounding_box[2], bounding_box[1] ],
+		[ bounding_box[2], bounding_box[3] ],
+		[ bounding_box[0], bounding_box[3] ]
+	]
+	).astype(numpy.float32)
+	points = transform_points(points, matrix)
+	x1, y1 = numpy.min(points, axis = 0)
+	x2, y2 = numpy.max(points, axis = 0)
+	return normalize_bounding_box(numpy.array([ x1, y1, x2, y2 ]))
 
 
 def distance_to_bounding_box(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> BoundingBox:
