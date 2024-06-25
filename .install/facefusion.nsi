@@ -2,7 +2,7 @@
 !include nsDialogs.nsh
 !include LogicLib.nsh
 
-RequestExecutionLevel admin
+RequestExecutionLevel user
 ManifestDPIAware true
 
 Name 'FaceFusion NEXT'
