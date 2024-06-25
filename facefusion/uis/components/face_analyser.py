@@ -88,7 +88,7 @@ def update_face_detector_size(face_detector_size : str) -> None:
 def update_face_detector_angles(face_detector_angles : List[Angle]) -> gradio.CheckboxGroup:
 	clear_reference_faces()
 	clear_static_faces()
-	face_detector_angles = face_detector_angles or facefusion.choices.face_detector_angles
+	face_detector_angles = face_detector_angles or [ 0 ]
 	facefusion.globals.face_detector_angles = face_detector_angles
 	return gradio.CheckboxGroup(value = face_detector_angles)
 
