@@ -1,4 +1,7 @@
 from typing import Tuple, Optional
+import hashlib
+import os
+import tempfile
 from time import sleep
 import gradio
 
@@ -8,11 +11,12 @@ from facefusion.core import process_step, create_program
 from facefusion.memory import limit_system_memory
 from facefusion.jobs import job_manager, job_runner, job_store, job_helper
 from facefusion.program_helper import reduce_args, import_globals
-from facefusion.uis.core import get_ui_component
-from facefusion.filesystem import is_image, is_video
+from facefusion.filesystem import is_image, is_video, is_directory
 from facefusion.temp_helper import clear_temp_directory
 import facefusion.processors.frame
+from facefusion.uis.core import get_ui_components
 
+OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
 OUTPUT_IMAGE : Optional[gradio.Image] = None
 OUTPUT_VIDEO : Optional[gradio.Video] = None
 OUTPUT_START_BUTTON : Optional[gradio.Button] = None
@@ -21,12 +25,19 @@ OUTPUT_STOP_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
+	global OUTPUT_PATH_TEXTBOX
 	global OUTPUT_IMAGE
 	global OUTPUT_VIDEO
 	global OUTPUT_START_BUTTON
 	global OUTPUT_STOP_BUTTON
 	global OUTPUT_CLEAR_BUTTON
 
+	facefusion.globals.output_path = facefusion.globals.output_path or tempfile.gettempdir()
+	OUTPUT_PATH_TEXTBOX = gradio.Textbox(
+		label = wording.get('uis.output_path_textbox'),
+		value = facefusion.globals.output_path,
+		max_lines = 1
+	)
 	OUTPUT_IMAGE = gradio.Image(
 		label = wording.get('uis.output_image_or_video'),
 		visible = False
@@ -52,12 +63,19 @@ def render() -> None:
 
 
 def listen() -> None:
-	output_path_textbox = get_ui_component('output_path_textbox')
-	if output_path_textbox:
-		OUTPUT_START_BUTTON.click(start, outputs = [ OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
-		OUTPUT_START_BUTTON.click(process, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO, OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
+	OUTPUT_PATH_TEXTBOX.change(update_output_path, inputs = OUTPUT_PATH_TEXTBOX)
+	OUTPUT_START_BUTTON.click(start, outputs = [ OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
+	OUTPUT_START_BUTTON.click(process, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO, OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
 	OUTPUT_STOP_BUTTON.click(stop, outputs = [ OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
 	OUTPUT_CLEAR_BUTTON.click(clear, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO ])
+
+	for ui_component in get_ui_components(
+	[
+		'target_image',
+		'target_video'
+	]):
+		for method in [ 'upload', 'change', 'clear' ]:
+			getattr(ui_component, method)(update_output_path, inputs = OUTPUT_PATH_TEXTBOX)
 
 
 def start() -> Tuple[gradio.Button, gradio.Button]:
@@ -69,6 +87,8 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
+	if is_directory(facefusion.globals.output_path):
+		facefusion.globals.output_path = suggest_output_path(facefusion.globals.output_path, facefusion.globals.target_path)
 	if job_manager.init_jobs(facefusion.globals.jobs_path):
 		create_and_run_job()
 	if is_image(facefusion.globals.output_path):
@@ -76,6 +96,13 @@ def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]
 	if is_video(facefusion.globals.output_path):
 		return gradio.Image(value = None, visible = False), gradio.Video(value = facefusion.globals.output_path, visible = True), gradio.Button(visible = True), gradio.Button(visible = False)
 	return gradio.Image(value = None), gradio.Video(value = None), gradio.Button(visible = True), gradio.Button(visible = False)
+
+
+def suggest_output_path(output_directory_path : str, target_path : str) -> Optional[str]:
+	if is_image(target_path) or is_video(target_path):
+		_, target_extension = os.path.splitext(target_path)
+		return os.path.join(output_directory_path, hashlib.sha1(target_path.encode()).hexdigest()[:8] + target_extension)
+	return None
 
 
 def create_and_run_job() -> bool:
@@ -99,3 +126,7 @@ def clear() -> Tuple[gradio.Image, gradio.Video]:
 	if facefusion.globals.target_path:
 		clear_temp_directory(facefusion.globals.target_path)
 	return gradio.Image(value = None), gradio.Video(value = None)
+
+
+def update_output_path(output_path : str) -> None:
+	facefusion.globals.output_path = output_path
