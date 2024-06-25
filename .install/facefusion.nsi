@@ -91,6 +91,8 @@ Section 'Download Your Copy'
 
 	DetailPrint 'Download Your Copy'
 	RMDir /r $INSTDIR
+
+	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe config http.sslVerify false'
 	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch 2.6.1 .'
 SectionEnd
 
@@ -110,7 +112,7 @@ Section 'Create Install Batch'
 	FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::ffmpeg=7.0.1 --yes'
 	${If} $UseCuda == 1
 		FileWrite $1 '@echo off && conda activate facefusion && conda install cudatoolkit=12.4 cudnn=8.9.2.26 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
-		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda-11.8'
+		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda-12.4'
 	${ElseIf} $UseDirectMl == 1
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime directml'
 	${ElseIf} $UseOpenVino == 1
