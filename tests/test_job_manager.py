@@ -1,5 +1,6 @@
 import pytest
 
+from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.jobs.job_manager import init_jobs, clear_jobs, create_job, submit_job, submit_jobs, delete_job, delete_jobs, find_job_ids, move_job_file, add_step, remix_step, insert_step, remove_step, get_steps, count_step_total, set_step_status, set_steps_status
 from .helper import get_test_jobs_directory
 
@@ -194,7 +195,7 @@ def test_remix_step() -> None:
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_2
 	assert steps[2].get('args').get('source_path') == args_2.get('source_path')
-	assert steps[2].get('args').get('target_path') == args_1.get('output_path')
+	assert steps[2].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 0, args_1.get('output_path'))
 	assert steps[2].get('args').get('output_path') == args_2.get('output_path')
 	assert count_step_total('job-test-remix-step') == 3
 

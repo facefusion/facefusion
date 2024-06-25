@@ -4,6 +4,7 @@ import glob
 import json
 import os
 
+from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus, JobSet
 from facefusion.choices import job_statuses
 from facefusion.common_helper import get_current_datetime
@@ -117,7 +118,8 @@ def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 	for index, step in enumerate(steps):
 		if index == step_index:
-			step_args['target_path'] = steps[step_index].get('args').get('output_path')
+			output_path = steps[step_index].get('args').get('output_path')
+			step_args['target_path'] = get_step_output_path(job_id, step_index, output_path)
 			return add_step(job_id, step_args)
 	return False
 
