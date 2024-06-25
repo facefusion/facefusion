@@ -12,6 +12,7 @@ ComponentName = Literal\
 	'preview_frame_slider',
 	'face_detector_model_dropdown',
 	'face_detector_size_dropdown',
+	'face_detector_angles_checkbox_group',
 	'face_detector_score_slider',
 	'face_landmarker_score_slider',
 	'face_selector_mode_dropdown',
