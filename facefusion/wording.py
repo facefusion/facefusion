@@ -102,8 +102,8 @@ WORDING : Dict[str, Any] =\
 		'system_memory_limit': 'limit the available RAM that can be used while processing',
 		# face analyser
 		'face_detector_model': 'choose the model responsible for detecting the faces',
-		'face_detector_angles': 'specify the angles to rotate the frame before detecting faces',
 		'face_detector_size': 'specify the size of the frame provided to the face detector',
+		'face_detector_angles': 'specify the angles to rotate the frame before detecting faces',
 		'face_detector_score': 'filter the detected faces base on the confidence score',
 		'face_landmarker_score': 'filter the detected landmarks base on the confidence score',
 		# face selector

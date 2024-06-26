@@ -30,12 +30,13 @@ def render() -> None:
 	}
 	if facefusion.globals.face_detector_size in facefusion.choices.face_detector_set[facefusion.globals.face_detector_model]:
 		face_detector_size_dropdown_args['choices'] = facefusion.choices.face_detector_set[facefusion.globals.face_detector_model]
-	FACE_DETECTOR_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.face_detector_model_dropdown'),
-		choices = facefusion.choices.face_detector_set.keys(),
-		value = facefusion.globals.face_detector_model
-	)
-	FACE_DETECTOR_SIZE_DROPDOWN = gradio.Dropdown(**face_detector_size_dropdown_args)
+	with gradio.Row():
+		FACE_DETECTOR_MODEL_DROPDOWN = gradio.Dropdown(
+			label = wording.get('uis.face_detector_model_dropdown'),
+			choices = facefusion.choices.face_detector_set.keys(),
+			value = facefusion.globals.face_detector_model
+		)
+		FACE_DETECTOR_SIZE_DROPDOWN = gradio.Dropdown(**face_detector_size_dropdown_args)
 	FACE_DETECTOR_ANGLES_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.face_detector_angles_checkbox_group'),
 		choices = facefusion.choices.face_detector_angles,
