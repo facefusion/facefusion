@@ -91,10 +91,10 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 
 	with open(concat_video_path, 'w') as concat_video_file:
 		for temp_output_path in temp_output_paths:
-			concat_video_file.write('file \'' + temp_output_path + '\'' + os.linesep)
+			concat_video_file.write('file \'' + os.path.abspath(temp_output_path) + '\'' + os.linesep)
 		concat_video_file.flush()
 		concat_video_file.close()
-	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', facefusion.globals.output_audio_encoder, '-y', output_path ]
+	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', facefusion.globals.output_audio_encoder, '-y', os.path.abspath(output_path) ]
 	process = run_ffmpeg(commands)
 	process.communicate()
 	remove_file(concat_video_path)
