@@ -504,6 +504,7 @@ def process_image(start_time : float) -> ErrorCode:
 		logger.debug(wording.get('copying_image_succeed'), __name__.upper())
 	else:
 		logger.error(wording.get('copying_image_failed'), __name__.upper())
+		process_manager.end()
 		return 1
 	# process image
 	temp_file_path = get_temp_file_path(facefusion.globals.target_path)
@@ -512,6 +513,7 @@ def process_image(start_time : float) -> ErrorCode:
 		frame_processor_module.process_image(facefusion.globals.source_paths, temp_file_path, temp_file_path)
 		frame_processor_module.post_process()
 	if is_process_stopping():
+		process_manager.end()
 		return 4
 	# finalize image
 	logger.info(wording.get('finalizing_image').format(resolution = facefusion.globals.output_image_resolution), __name__.upper())
@@ -529,6 +531,7 @@ def process_image(start_time : float) -> ErrorCode:
 		conditional_log_statistics()
 	else:
 		logger.error(wording.get('processing_image_failed'), __name__.upper())
+		process_manager.end()
 		return 1
 	process_manager.end()
 	return 0
@@ -552,8 +555,10 @@ def process_video(start_time : float) -> ErrorCode:
 		logger.debug(wording.get('extracting_frames_succeed'), __name__.upper())
 	else:
 		if is_process_stopping():
+			process_manager.end()
 			return 4
 		logger.error(wording.get('extracting_frames_failed'), __name__.upper())
+		process_manager.end()
 		return 1
 	# process frames
 	temp_frame_paths = get_temp_frame_paths(facefusion.globals.target_path)
@@ -566,6 +571,7 @@ def process_video(start_time : float) -> ErrorCode:
 			return 4
 	else:
 		logger.error(wording.get('temp_frames_not_found'), __name__.upper())
+		process_manager.end()
 		return 1
 	# merge video
 	logger.info(wording.get('merging_video').format(resolution = facefusion.globals.output_video_resolution, fps = facefusion.globals.output_video_fps), __name__.upper())
@@ -573,8 +579,10 @@ def process_video(start_time : float) -> ErrorCode:
 		logger.debug(wording.get('merging_video_succeed'), __name__.upper())
 	else:
 		if is_process_stopping():
+			process_manager.end()
 			return 4
 		logger.error(wording.get('merging_video_failed'), __name__.upper())
+		process_manager.end()
 		return 1
 	# handle audio
 	if facefusion.globals.skip_audio:
@@ -587,6 +595,7 @@ def process_video(start_time : float) -> ErrorCode:
 				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
 			else:
 				if is_process_stopping():
+					process_manager.end()
 					return 4
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
 				move_temp_file(facefusion.globals.target_path, facefusion.globals.output_path)
@@ -595,6 +604,7 @@ def process_video(start_time : float) -> ErrorCode:
 				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
 			else:
 				if is_process_stopping():
+					process_manager.end()
 					return 4
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
 				move_temp_file(facefusion.globals.target_path, facefusion.globals.output_path)
@@ -608,6 +618,7 @@ def process_video(start_time : float) -> ErrorCode:
 		conditional_log_statistics()
 	else:
 		logger.error(wording.get('processing_video_failed'), __name__.upper())
+		process_manager.end()
 		return 1
 	process_manager.end()
 	return 0
