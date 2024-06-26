@@ -83,6 +83,7 @@ def post_process() -> None:
 
 def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	primary_color = (0, 0, 255)
+	primary_light_color = (100, 100, 255)
 	secondary_color = (0, 255, 0)
 	tertiary_color = (255, 255, 0)
 	bounding_box = target_face.bounding_box.astype(numpy.int32)
@@ -91,22 +92,24 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	has_face_landmark_68_fallback = numpy.array_equal(target_face.landmark_set.get('68'), target_face.landmark_set.get('68/5'))
 
 	if 'bounding-box' in frame_processors_globals.face_debugger_items:
-		edge_color = (102, 102, 255)
 		x1, y1, x2, y2 = bounding_box
 		cv2.rectangle(temp_vision_frame, (x1, y1), (x2, y2), primary_color, 2)
+
 		if target_face.angle == 0:
-			cv2.line(temp_vision_frame, (x1, y1), (x2, y1), edge_color, 3)
+			cv2.line(temp_vision_frame, (x1, y1), (x2, y1), primary_light_color, 3)
 		elif target_face.angle == 180:
-			cv2.line(temp_vision_frame, (x1, y2), (x2, y2), edge_color, 3)
+			cv2.line(temp_vision_frame, (x1, y2), (x2, y2), primary_light_color, 3)
 		elif target_face.angle == 90:
-			cv2.line(temp_vision_frame, (x2, y1), (x2, y2), edge_color, 3)
+			cv2.line(temp_vision_frame, (x2, y1), (x2, y2), primary_light_color, 3)
 		elif target_face.angle == 270:
-			cv2.line(temp_vision_frame, (x1, y1), (x1, y2), edge_color, 3)
+			cv2.line(temp_vision_frame, (x1, y1), (x1, y2), primary_light_color, 3)
+
 	if 'face-mask' in frame_processors_globals.face_debugger_items:
 		crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'arcface_128_v2', (512, 512))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_size = temp_vision_frame.shape[:2][::-1]
 		crop_masks = []
+
 		if 'box' in facefusion.globals.face_mask_types:
 			box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], 0, facefusion.globals.face_mask_padding)
 			crop_masks.append(box_mask)
@@ -116,6 +119,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		if 'region' in facefusion.globals.face_mask_types:
 			region_mask = create_region_mask(crop_vision_frame, facefusion.globals.face_mask_regions)
 			crop_masks.append(region_mask)
+
 		crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 		crop_mask = (crop_mask * 255).astype(numpy.uint8)
 		inverse_vision_frame = cv2.warpAffine(crop_mask, inverse_matrix, temp_size)
@@ -123,25 +127,31 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		inverse_vision_frame[inverse_vision_frame > 0] = 255 #type:ignore[operator]
 		inverse_contours = cv2.findContours(inverse_vision_frame, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
 		cv2.drawContours(temp_vision_frame, inverse_contours, -1, tertiary_color if has_face_landmark_5_fallback else secondary_color, 2)
+
 	if 'face-landmark-5' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('5')):
 		face_landmark_5 = target_face.landmark_set.get('5').astype(numpy.int32)
 		for index in range(face_landmark_5.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_5[index][0], face_landmark_5[index][1]), 3, primary_color, -1)
+
 	if 'face-landmark-5/68' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('5/68')):
 		face_landmark_5_68 = target_face.landmark_set.get('5/68').astype(numpy.int32)
 		for index in range(face_landmark_5_68.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_5_68[index][0], face_landmark_5_68[index][1]), 3, tertiary_color if has_face_landmark_5_fallback else secondary_color, -1)
+
 	if 'face-landmark-68' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
 		face_landmark_68 = target_face.landmark_set.get('68').astype(numpy.int32)
 		for index in range(face_landmark_68.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, tertiary_color if has_face_landmark_68_fallback else secondary_color, -1)
+
 	if 'face-landmark-68/5' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
 		face_landmark_68 = target_face.landmark_set.get('68/5').astype(numpy.int32)
 		for index in range(face_landmark_68.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, primary_color, -1)
+
 	if bounding_box[3] - bounding_box[1] > 50 and bounding_box[2] - bounding_box[0] > 50:
 		top = bounding_box[1]
 		left = bounding_box[0] - 20
+
 		if 'face-detector-score' in frame_processors_globals.face_debugger_items:
 			face_score_text = str(round(target_face.score_set.get('detector'), 2))
 			top = top + 20
@@ -158,6 +168,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 			face_gender_text = categorize_gender(target_face.gender)
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_gender_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
+
 	return temp_vision_frame
 
 
