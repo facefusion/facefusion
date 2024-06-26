@@ -397,11 +397,11 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 	return embedding, normed_embedding
 
 
-def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, angle : Angle) -> Tuple[FaceLandmark68, Score]:
+def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
 	face_landmarker = get_face_analyser().get('face_landmarkers').get('68')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
-	rotated_matrix, rotated_size = create_rotated_matrix_and_size(angle, (256, 256))
+	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, (256, 256))
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
 	crop_vision_frame = cv2.warpAffine(crop_vision_frame, rotated_matrix, rotated_size)
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_RGB2Lab)
