@@ -91,7 +91,17 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	has_face_landmark_68_fallback = numpy.array_equal(target_face.landmark_set.get('68'), target_face.landmark_set.get('68/5'))
 
 	if 'bounding-box' in frame_processors_globals.face_debugger_items:
-		cv2.rectangle(temp_vision_frame, (bounding_box[0], bounding_box[1]), (bounding_box[2], bounding_box[3]), primary_color, 2)
+		edge_color = (102, 102, 255)
+		x1, y1, x2, y2 = bounding_box
+		cv2.rectangle(temp_vision_frame, (x1, y1), (x2, y2), primary_color, 2)
+		if target_face.angle == 0:
+			cv2.line(temp_vision_frame, (x1, y1), (x2, y1), edge_color, 3)
+		elif target_face.angle == 180:
+			cv2.line(temp_vision_frame, (x1, y2), (x2, y2), edge_color, 3)
+		elif target_face.angle == 90:
+			cv2.line(temp_vision_frame, (x2, y1), (x2, y2), edge_color, 3)
+		elif target_face.angle == 270:
+			cv2.line(temp_vision_frame, (x1, y1), (x1, y2), edge_color, 3)
 	if 'face-mask' in frame_processors_globals.face_debugger_items:
 		crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'arcface_128_v2', (512, 512))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
