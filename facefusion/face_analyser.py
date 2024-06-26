@@ -491,13 +491,13 @@ def get_average_face(faces : List[Face]) -> Optional[Face]:
 
 
 def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
-	faces : List[Face] = []
+	many_faces : List[Face] = []
 
 	for vision_frame in vision_frames:
 		if numpy.any(vision_frame):
 			static_faces = get_static_faces(vision_frame)
 			if static_faces:
-				faces = static_faces
+				many_faces.extend(static_faces)
 			else:
 				all_bounding_boxes = []
 				all_face_landmarks_5 = []
@@ -517,6 +517,8 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 
 				if all_bounding_boxes and all_face_landmarks_5 and all_face_scores and facefusion.globals.face_detector_score > 0:
 					faces = create_faces(vision_frame, all_bounding_boxes, all_face_landmarks_5, all_face_scores, all_face_angles)
-				if faces:
-					set_static_faces(vision_frame, faces)
-	return faces
+
+					if faces:
+						many_faces.extend(faces)
+						set_static_faces(vision_frame, faces)
+	return many_faces
