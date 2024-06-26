@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Angle, BoundingBox, RotatedBoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Points, Distance, Matrix, Translation, WarpTemplate, WarpTemplateSet
+from facefusion.typing import Angle, BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Points, Distance, Matrix, Translation, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -107,13 +107,6 @@ def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68)
 	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
 	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y ]))
 	return bounding_box
-
-
-def convert_to_rotated_bounding_box(bounding_box : BoundingBox, angle : Angle) -> RotatedBoundingBox:
-	x1, y1, x2, y2 = bounding_box
-	center = x1, y1
-	size = int(x2 - x1), int(y2 - y1)
-	return center, size, angle
 
 
 def normalize_bounding_box(bounding_box : BoundingBox) -> BoundingBox:

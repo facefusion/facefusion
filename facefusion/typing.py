@@ -1,6 +1,5 @@
-from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict, Optional, Sequence
+from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict, Optional
 from numpy.typing import NDArray
-from cv2.typing import Size
 from collections import namedtuple
 import numpy
 
@@ -8,7 +7,6 @@ Score = float
 Angle = int
 
 BoundingBox = NDArray[numpy.float32]
-RotatedBoundingBox = Tuple[Sequence[float], Size, Angle]
 FaceLandmark5 = numpy.ndarray[Any, Any]
 FaceLandmark68 = numpy.ndarray[Any, Any]
 FaceLandmarkSet = TypedDict('FaceLandmarkSet',
@@ -27,9 +25,9 @@ Embedding = numpy.ndarray[Any, Any]
 Face = namedtuple('Face',
 [
 	'bounding_box',
-	'rotated_bounding_box',
 	'landmark_set',
 	'score_set',
+	'angle',
 	'embedding',
 	'normed_embedding',
 	'gender',

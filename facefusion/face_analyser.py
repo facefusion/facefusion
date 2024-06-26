@@ -7,13 +7,13 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, convert_to_rotated_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points
+from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
 from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.thread_helper import thread_lock, thread_semaphore, conditional_thread_semaphore
-from facefusion.typing import Angle, Score, BoundingBox, RotatedBoundingBox, Face, FaceScoreSet, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Embedding, ModelSet, VisionFrame
+from facefusion.typing import Angle, Score, BoundingBox, Face, FaceScoreSet, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Embedding, ModelSet, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
@@ -336,20 +336,20 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 	return detect_vision_frame
 
 
-def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], rotated_bounding_boxes : List[RotatedBoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score]) -> List[Face]:
+def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score], face_angles : List[Angle]) -> List[Face]:
 	faces = []
 	nms_threshold = 0.1 if facefusion.globals.face_detector_model == 'many' else 0.4
-	keep_indices = cv2.dnn.NMSBoxesRotated(rotated_bounding_boxes, face_scores, score_threshold = facefusion.globals.face_detector_score, nms_threshold = nms_threshold)
+	keep_indices = cv2.dnn.NMSBoxes(bounding_boxes, face_scores, score_threshold = facefusion.globals.face_detector_score, nms_threshold = nms_threshold)
 
 	for index in keep_indices:
 		bounding_box = bounding_boxes[index]
-		rotated_bounding_box = rotated_bounding_boxes[index]
 		face_landmark_5_68 = face_landmarks_5[index]
 		face_landmark_68_5 = expand_face_landmark_68_from_5(face_landmark_5_68)
 		face_landmark_68 = face_landmark_68_5
 		face_landmark_68_score = 0.0
+		face_angle = face_angles[index]
 		if facefusion.globals.face_landmarker_score > 0:
-			face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box)
+			face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box, face_angle)
 			if face_landmark_68_score > facefusion.globals.face_landmarker_score:
 				face_landmark_5_68 = convert_to_face_landmark_5(face_landmark_68)
 		face_landmark_set : FaceLandmarkSet =\
@@ -368,9 +368,9 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 		gender, age = detect_gender_age(vision_frame, bounding_box)
 		faces.append(Face(
 			bounding_box = bounding_box,
-			rotated_bounding_box = rotated_bounding_box,
 			landmark_set = face_landmark_set,
 			score_set = face_score_set,
+			angle = face_angle,
 			embedding = embedding,
 			normed_embedding = normed_embedding,
 			gender = gender,
@@ -397,11 +397,13 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 	return embedding, normed_embedding
 
 
-def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[FaceLandmark68, Score]:
+def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, angle : Angle) -> Tuple[FaceLandmark68, Score]:
 	face_landmarker = get_face_analyser().get('face_landmarkers').get('68')
-	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max()
+	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
+	rotated_matrix, rotated_size = create_rotated_matrix_and_size(angle, (256, 256))
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
+	crop_vision_frame = cv2.warpAffine(crop_vision_frame, rotated_matrix, rotated_size)
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_RGB2Lab)
 	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: #type:ignore[arg-type]
 		crop_vision_frame[:, :, 0] = cv2.createCLAHE(clipLimit = 2).apply(crop_vision_frame[:, :, 0])
@@ -414,10 +416,9 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 			face_landmarker.get_inputs()[0].name: [ crop_vision_frame ]
 		})
 
-	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64
-	face_landmark_68 = face_landmark_68.reshape(1, -1, 2) * 256
-	face_landmark_68 = cv2.transform(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
-	face_landmark_68 = face_landmark_68.reshape(-1, 2)
+	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64 * 256
+	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(rotated_matrix))
+	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_68_score = numpy.amax(face_heatmap, axis = (2, 3))
 	face_landmark_68_score = numpy.mean(face_landmark_68_score)
 	return face_landmark_68, face_landmark_68_score
@@ -478,9 +479,9 @@ def get_average_face(faces : List[Face]) -> Optional[Face]:
 
 		return Face(
 			bounding_box = first_face.bounding_box,
-			rotated_bounding_box = first_face.rotated_bounding_box,
 			landmark_set = first_face.landmark_set,
 			score_set = first_face.score_set,
+			angle = first_face.angle,
 			embedding = numpy.mean(embeddings, axis = 0),
 			normed_embedding = numpy.mean(normed_embeddings, axis = 0),
 			gender = first_face.gender,
@@ -499,23 +500,23 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 				faces = static_faces
 			else:
 				all_bounding_boxes = []
-				all_rotated_bounding_boxes = []
 				all_face_landmarks_5 = []
 				all_face_scores = []
+				all_face_angles = []
 
 				for angle in facefusion.globals.face_detector_angles:
 					if angle == 0:
 						bounding_boxes, face_landmarks_5, face_scores = detect_faces(vision_frame)
 					else:
 						bounding_boxes, face_landmarks_5, face_scores = detect_rotated_faces(vision_frame, angle)
-					rotated_bounding_boxes = [ convert_to_rotated_bounding_box(bounding_box, angle) for bounding_box in bounding_boxes ]
+					face_angles = [ angle ] * len(bounding_boxes)
 					all_bounding_boxes.extend(bounding_boxes)
-					all_rotated_bounding_boxes.extend(rotated_bounding_boxes)
 					all_face_landmarks_5.extend(face_landmarks_5)
 					all_face_scores.extend(face_scores)
+					all_face_angles.extend(face_angles)
 
 				if all_bounding_boxes and all_face_landmarks_5 and all_face_scores and facefusion.globals.face_detector_score > 0:
-					faces = create_faces(vision_frame, all_bounding_boxes, all_rotated_bounding_boxes, all_face_landmarks_5, all_face_scores)
+					faces = create_faces(vision_frame, all_bounding_boxes, all_face_landmarks_5, all_face_scores, all_face_angles)
 				if faces:
 					set_static_faces(vision_frame, faces)
 	return faces
