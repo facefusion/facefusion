@@ -68,6 +68,7 @@ def render() -> None:
 
 
 def listen() -> None:
+	PREVIEW_FRAME_SLIDER.change(update_partial_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE, show_progress = 'hidden')
 	PREVIEW_FRAME_SLIDER.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE, show_progress = 'hidden')
 	reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
 	if reference_face_position_gallery:
@@ -179,6 +180,13 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		temp_vision_frame = get_video_frame(facefusion.globals.target_path, frame_number)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
+		return gradio.Image(value = preview_vision_frame)
+	return gradio.Image(value = None)
+
+
+def update_partial_preview_image(frame_number : int = 0) -> gradio.Image:
+	if is_video(facefusion.globals.target_path):
+		preview_vision_frame = normalize_frame_color(get_video_frame(facefusion.globals.target_path, frame_number))
 		return gradio.Image(value = preview_vision_frame)
 	return gradio.Image(value = None)
 
