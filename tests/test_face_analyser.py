@@ -87,3 +87,13 @@ def test_get_one_face_with_yoloface() -> None:
 		face = get_one_face(many_faces)
 
 		assert isinstance(face, Face)
+
+
+def test_get_many_faces() -> None:
+	source_path = get_test_example_file('source.jpg')
+	source_frame = read_static_image(source_path)
+	many_faces = get_many_faces([ source_frame, source_frame, source_frame ])
+
+	assert isinstance(many_faces[0], Face)
+	assert isinstance(many_faces[1], Face)
+	assert isinstance(many_faces[2], Face)
