@@ -339,6 +339,12 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 def get_nms_limit() -> float:
 	if facefusion.globals.face_detector_model == 'many':
 		return 0.1
+	if len(facefusion.globals.face_detector_angles) == 2:
+		return 0.3
+	if len(facefusion.globals.face_detector_angles) == 3:
+		return 0.2
+	if len(facefusion.globals.face_detector_angles) == 4:
+		return 0.1
 	return 0.4
 
 
