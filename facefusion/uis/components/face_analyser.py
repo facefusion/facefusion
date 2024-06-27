@@ -88,8 +88,8 @@ def update_face_detector_size(face_detector_size : str) -> None:
 
 
 def update_face_detector_angles(face_detector_angles : List[Angle]) -> gradio.CheckboxGroup:
-	facefusion.globals.face_detector_angles = face_detector_angles or [ 0 ]
-	return gradio.CheckboxGroup(value = face_detector_angles)
+	facefusion.globals.face_detector_angles = face_detector_angles or facefusion.choices.face_detector_angles
+	return gradio.CheckboxGroup(value = facefusion.globals.face_detector_angles)
 
 
 def update_face_detector_score(face_detector_score : Score) -> None:
