@@ -165,11 +165,12 @@ def convert_to_face_landmark_5(face_landmark_68 : FaceLandmark68) -> FaceLandmar
 	return face_landmark_5
 
 
-def approximate_rotation(face_landmark_68: FaceLandmark68) -> Angle:
+def estimate_face_angle_from_face_landmark_68(face_landmark_68 : FaceLandmark68) -> Angle:
 	x1, y1 = face_landmark_68[0]
 	x2, y2 = face_landmark_68[16]
 	theta = numpy.arctan2(y2 - y1, x2 - x1)
 	theta = numpy.degrees(theta) % 360
 	angles = numpy.linspace(0, 360, 5)
-	closest_angle = angles[ numpy.argmin(numpy.abs(angles - theta)) ] % 360
-	return int(closest_angle)
+	index = numpy.argmin(numpy.abs(angles - theta))
+	face_angle = int(angles[index] % 360)
+	return face_angle

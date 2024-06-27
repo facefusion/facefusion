@@ -7,7 +7,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points, approximate_rotation
+from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points, estimate_face_angle_from_face_landmark_68
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -358,7 +358,7 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 		face_landmark_68_5 = expand_face_landmark_68_from_5(face_landmark_5_68)
 		face_landmark_68 = face_landmark_68_5
 		face_landmark_68_score = 0.0
-		face_angle = approximate_rotation(face_landmark_68_5)
+		face_angle = estimate_face_angle_from_face_landmark_68(face_landmark_68_5)
 		if facefusion.globals.face_landmarker_score > 0:
 			face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box, face_angle)
 			if face_landmark_68_score > facefusion.globals.face_landmarker_score:
