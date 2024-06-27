@@ -15,7 +15,7 @@ from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution import apply_execution_provider_options, has_execution_provider
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
+from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, ExecutionProviderKey, QueuePayload
 from facefusion.common_helper import create_metavar
 from facefusion.filesystem import same_file_extension, is_file, in_directory, resolve_relative_path, is_image, is_video
 from facefusion.download import conditional_download, is_download_done
@@ -70,7 +70,7 @@ def get_frame_processor() -> Any:
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			execution_providers = 'cpu' if has_execution_provider('coreml') else facefusion.globals.execution_providers
+			execution_providers : List[ExecutionProviderKey] = [ 'cpu' ] if has_execution_provider('coreml') else facefusion.globals.execution_providers
 			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, execution_providers))
 	return FRAME_PROCESSOR
 
