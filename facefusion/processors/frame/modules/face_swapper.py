@@ -169,9 +169,7 @@ def clear_model_initializer() -> None:
 def get_options(key : Literal['model']) -> Any:
 	global OPTIONS
 
-	use_fallback = has_execution_provider('coreml') or has_execution_provider('openvino')
-	face_swapper_model = 'inswapper_128' if use_fallback and frame_processors_globals.face_swapper_model == 'inswapper_128_fp16' else frame_processors_globals.face_swapper_model
-
+	face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') or has_execution_provider('openvino') and frame_processors_globals.face_swapper_model == 'inswapper_128_fp16' else frame_processors_globals.face_swapper_model
 	if OPTIONS is None:
 		OPTIONS =\
 		{
