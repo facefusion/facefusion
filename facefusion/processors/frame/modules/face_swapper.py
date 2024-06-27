@@ -169,10 +169,13 @@ def clear_model_initializer() -> None:
 def get_options(key : Literal['model']) -> Any:
 	global OPTIONS
 
+	use_fallback = has_execution_provider('coreml') or has_execution_provider('openvino')
+	face_swapper_model = 'inswapper_128' if use_fallback and frame_processors_globals.face_swapper_model == 'inswapper_128_fp16' else frame_processors_globals.face_swapper_model
+
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[frame_processors_globals.face_swapper_model]
+			'model': MODELS[face_swapper_model]
 		}
 	return OPTIONS.get(key)
 
@@ -184,13 +187,9 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	if has_execution_provider('coreml') or has_execution_provider('openvino'):
-		face_swapper_model_fallback = 'inswapper_128'
-	else:
-		face_swapper_model_fallback = 'inswapper_128_fp16'
 	group_frame_processors = find_argument_group(program, 'frame processors')
 	if group_frame_processors:
-		group_frame_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', face_swapper_model_fallback), choices = frame_processors_choices.face_swapper_set.keys())
+		group_frame_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', 'inswapper_128_fp16'), choices = frame_processors_choices.face_swapper_set.keys())
 		face_swapper_pixel_boost_choices = suggest_face_swapper_pixel_boost_choices(program)
 		group_frame_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('frame_processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
 		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost' ])
