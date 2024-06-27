@@ -9,7 +9,7 @@ from facefusion import logger, wording
 from facefusion.audio import get_audio_frame, create_empty_audio_frame
 from facefusion.common_helper import get_first
 from facefusion.core import conditional_append_reference_faces
-from facefusion.face_analyser import get_many_faces, get_average_face, clear_face_analyser
+from facefusion.face_analyser import get_many_faces, get_average_face
 from facefusion.face_store import clear_static_faces, get_reference_faces, clear_reference_faces
 from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame
 from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_resolution, read_static_image, read_static_images
