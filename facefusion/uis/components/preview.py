@@ -94,7 +94,6 @@ def listen() -> None:
 
 	for ui_component in get_ui_components(
 	[
-		'face_detector_angles_checkbox_group',
 		'face_debugger_items_checkbox_group',
 		'frame_colorizer_size_dropdown',
 		'face_selector_mode_dropdown',
@@ -131,7 +130,8 @@ def listen() -> None:
 		'frame_enhancer_model_dropdown',
 		'lip_syncer_model_dropdown',
 		'face_detector_model_dropdown',
-		'face_detector_size_dropdown'
+		'face_detector_size_dropdown',
+		'face_detector_angles_checkbox_group'
 	]):
 		ui_component.change(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
@@ -144,7 +144,6 @@ def listen() -> None:
 
 
 def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
-	clear_face_analyser()
 	clear_reference_faces()
 	clear_static_faces()
 	return update_preview_image(frame_number)

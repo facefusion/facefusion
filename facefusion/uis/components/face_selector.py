@@ -101,7 +101,8 @@ def listen() -> None:
 	for ui_component in get_ui_components(
 	[
 		'face_detector_model_dropdown',
-		'face_detector_size_dropdown'
+		'face_detector_size_dropdown',
+		'face_detector_angles_checkbox_group'
 	]):
 		ui_component.change(clear_and_update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
@@ -114,7 +115,7 @@ def listen() -> None:
 
 	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
-		preview_frame_slider.change(update_reference_frame_number, inputs = preview_frame_slider)
+		preview_frame_slider.release(update_reference_frame_number, inputs = preview_frame_slider)
 		preview_frame_slider.release(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
 

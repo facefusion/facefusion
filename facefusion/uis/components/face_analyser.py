@@ -5,7 +5,7 @@ import gradio
 import facefusion.globals
 import facefusion.choices
 from facefusion import face_analyser, wording
-from facefusion.face_store import clear_static_faces, clear_reference_faces
+from facefusion.face_analyser import clear_face_analyser
 from facefusion.typing import Score, FaceDetectorModel, Angle
 from facefusion.uis.core import register_ui_component
 
@@ -75,6 +75,7 @@ def listen() -> None:
 def update_face_detector_model(face_detector_model : FaceDetectorModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
 	facefusion.globals.face_detector_model = face_detector_model
 	update_face_detector_size('640x640')
+	clear_face_analyser()
 	if face_analyser.pre_check():
 		if facefusion.globals.face_detector_size in facefusion.choices.face_detector_set[face_detector_model]:
 			return gradio.Dropdown(value = facefusion.globals.face_detector_model), gradio.Dropdown(value = facefusion.globals.face_detector_size, choices = facefusion.choices.face_detector_set[face_detector_model])
@@ -87,8 +88,6 @@ def update_face_detector_size(face_detector_size : str) -> None:
 
 
 def update_face_detector_angles(face_detector_angles : List[Angle]) -> gradio.CheckboxGroup:
-	clear_reference_faces()
-	clear_static_faces()
 	facefusion.globals.face_detector_angles = face_detector_angles or [ 0 ]
 	return gradio.CheckboxGroup(value = face_detector_angles)
 
