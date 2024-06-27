@@ -336,10 +336,15 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 	return detect_vision_frame
 
 
+def get_nms_limit() -> float:
+	if facefusion.globals.face_detector_model == 'many':
+		return 0.1
+	return 0.4
+
+
 def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score], face_angles : List[Angle]) -> List[Face]:
 	faces = []
-	nms_threshold = 0.1 if facefusion.globals.face_detector_model == 'many' else 0.4
-	keep_indices = cv2.dnn.NMSBoxes(bounding_boxes, face_scores, score_threshold = facefusion.globals.face_detector_score, nms_threshold = nms_threshold)
+	keep_indices = cv2.dnn.NMSBoxes(bounding_boxes, face_scores, score_threshold = facefusion.globals.face_detector_score, nms_threshold = get_nms_limit())
 
 	for index in keep_indices:
 		bounding_box = bounding_boxes[index]
