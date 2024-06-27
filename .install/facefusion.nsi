@@ -111,7 +111,7 @@ Section 'Create Install Batch'
 
 	FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::ffmpeg=7.0.1 --yes'
 	${If} $UseCuda == 1
-		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::cuda-toolkit=12.4.1 cudnn=8.9.2.26 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
+		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::cuda-runtime=12.4.1 cudnn=8.9.2.26 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda-12.4'
 	${ElseIf} $UseDirectMl == 1
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime directml'
