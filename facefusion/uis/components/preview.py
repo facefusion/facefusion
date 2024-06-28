@@ -96,10 +96,6 @@ def listen() -> None:
 	[
 		'face_debugger_items_checkbox_group',
 		'frame_colorizer_size_dropdown',
-		'face_selector_mode_dropdown',
-		'face_selector_order_dropdown',
-		'face_selector_age_dropdown',
-		'face_selector_gender_dropdown',
 		'face_mask_types_checkbox_group',
 		'face_mask_region_checkbox_group'
 	]):
@@ -129,6 +125,10 @@ def listen() -> None:
 		'frame_colorizer_model_dropdown',
 		'frame_enhancer_model_dropdown',
 		'lip_syncer_model_dropdown',
+		'face_selector_mode_dropdown',
+		'face_selector_order_dropdown',
+		'face_selector_age_dropdown',
+		'face_selector_gender_dropdown',
 		'face_detector_model_dropdown',
 		'face_detector_size_dropdown',
 		'face_detector_angles_checkbox_group'
