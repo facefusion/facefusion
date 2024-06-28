@@ -13,7 +13,6 @@ from facefusion.jobs import job_manager, job_runner, job_store, job_helper
 from facefusion.program_helper import reduce_args, import_globals
 from facefusion.filesystem import is_image, is_video, is_directory
 from facefusion.temp_helper import clear_temp_directory
-from facefusion.uis.core import get_ui_components
 import facefusion.processors.frame
 
 OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
@@ -69,14 +68,6 @@ def listen() -> None:
 	OUTPUT_STOP_BUTTON.click(stop, outputs = [ OUTPUT_START_BUTTON, OUTPUT_STOP_BUTTON ])
 	OUTPUT_CLEAR_BUTTON.click(clear, outputs = [ OUTPUT_IMAGE, OUTPUT_VIDEO ])
 
-	for ui_component in get_ui_components(
-	[
-		'target_image',
-		'target_video'
-	]):
-		for method in [ 'upload', 'change', 'clear' ]:
-			getattr(ui_component, method)(update_output_path, inputs = OUTPUT_PATH_TEXTBOX)
-
 
 def start() -> Tuple[gradio.Button, gradio.Button]:
 	while not process_manager.is_processing():
@@ -87,12 +78,10 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
-
 	if is_directory(facefusion.globals.output_path):
 		facefusion.globals.output_path = suggest_output_path(facefusion.globals.output_path, facefusion.globals.target_path)
 	if job_manager.init_jobs(facefusion.globals.jobs_path):
 		create_and_run_job()
-
 	if is_image(facefusion.globals.output_path):
 		return gradio.Image(value = facefusion.globals.output_path, visible = True), gradio.Video(value = None, visible = False), gradio.Button(visible = True), gradio.Button(visible = False)
 	if is_video(facefusion.globals.output_path):

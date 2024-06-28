@@ -32,13 +32,6 @@ BENCHMARKS : Dict[str, str] =\
 }
 
 
-def suggest_output_path(target_path : str) -> Optional[str]:
-	if is_video(target_path):
-		_, target_extension = os.path.splitext(target_path)
-		return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_extension)
-	return None
-
-
 def render() -> None:
 	global BENCHMARK_RESULTS_DATAFRAME
 	global BENCHMARK_START_BUTTON
@@ -83,6 +76,13 @@ def listen() -> None:
 	if benchmark_runs_checkbox_group and benchmark_cycles_slider:
 		BENCHMARK_START_BUTTON.click(start, inputs = [ benchmark_runs_checkbox_group, benchmark_cycles_slider ], outputs = BENCHMARK_RESULTS_DATAFRAME)
 	BENCHMARK_CLEAR_BUTTON.click(clear, outputs = BENCHMARK_RESULTS_DATAFRAME)
+
+
+def suggest_output_path(target_path : str) -> Optional[str]:
+	if is_video(target_path):
+		_, target_extension = os.path.splitext(target_path)
+		return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_extension)
+	return None
 
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
