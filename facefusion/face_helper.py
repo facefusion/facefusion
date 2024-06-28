@@ -1,10 +1,10 @@
-from typing import Any, Tuple
+from typing import Any, Tuple, List, Sequence
 from cv2.typing import Size
 from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Angle, BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Points, Distance, Matrix, Translation, WarpTemplate, WarpTemplateSet
+from facefusion.typing import Angle, Score, BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Points, Distance, Matrix, Translation, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -174,3 +174,12 @@ def estimate_face_angle_from_face_landmark_68(face_landmark_68 : FaceLandmark68)
 	index = numpy.argmin(numpy.abs(angles - theta))
 	face_angle = int(angles[index] % 360)
 	return face_angle
+
+
+def apply_nms(bounding_boxes : List[BoundingBox], face_scores : List[Score], score_threshold : float, nms_threshold : float) -> Sequence[int]:
+	bounding_boxes_converted = []
+	for bounding_box in bounding_boxes:
+		x1, y1, x2, y2 = bounding_box
+		bounding_boxes_converted.append((x1, y1, x2 - x1, y2 - y1))
+	keep_indices = cv2.dnn.NMSBoxes(bounding_boxes_converted, face_scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
+	return keep_indices

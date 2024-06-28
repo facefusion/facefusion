@@ -7,7 +7,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points, estimate_face_angle_from_face_landmark_68
+from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points, estimate_face_angle_from_face_landmark_68, apply_nms
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -350,7 +350,7 @@ def get_nms_limit() -> float:
 
 def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score]) -> List[Face]:
 	faces = []
-	keep_indices = cv2.dnn.NMSBoxes(bounding_boxes, face_scores, score_threshold = facefusion.globals.face_detector_score, nms_threshold = get_nms_limit())
+	keep_indices = apply_nms(bounding_boxes, face_scores, facefusion.globals.face_detector_score, get_nms_limit())
 
 	for index in keep_indices:
 		bounding_box = bounding_boxes[index]
