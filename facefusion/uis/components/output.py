@@ -85,12 +85,14 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 
 def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
+	output_path = facefusion.globals.output_path
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
 	if is_directory(facefusion.globals.output_path):
 		facefusion.globals.output_path = suggest_output_path(facefusion.globals.output_path, facefusion.globals.target_path)
 	if job_manager.init_jobs(facefusion.globals.jobs_path):
 		create_and_run_job()
+	facefusion.globals.output_path = output_path
 	if is_image(facefusion.globals.output_path):
 		return gradio.Image(value = facefusion.globals.output_path, visible = True), gradio.Video(value = None, visible = False), gradio.Button(visible = True), gradio.Button(visible = False)
 	if is_video(facefusion.globals.output_path):
@@ -101,7 +103,8 @@ def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]
 def suggest_output_path(output_directory_path : str, target_path : str) -> Optional[str]:
 	if is_image(target_path) or is_video(target_path):
 		_, target_extension = os.path.splitext(target_path)
-		return os.path.join(output_directory_path, hashlib.sha1(target_path.encode()).hexdigest()[:8] + target_extension)
+		output_name = hashlib.sha1(str(facefusion.globals.__dict__).encode('utf-8')).hexdigest()[:8]
+		return os.path.join(output_directory_path, output_name + target_extension)
 	return None
 
 
