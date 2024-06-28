@@ -1,3 +1,4 @@
+import sys
 from typing import List, Any
 from datetime import datetime
 import platform
@@ -49,3 +50,7 @@ def to_lower_case(__string__ : Any) -> str:
 
 def get_first(__list__ : Any) -> Any:
 	return next(iter(__list__), None)
+
+
+def flush_argv() -> None:
+	sys.argv = sys.argv[:1]

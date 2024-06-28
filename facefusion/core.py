@@ -23,7 +23,7 @@ from facefusion.face_store import get_reference_faces, append_reference_face
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules, load_frame_processor_module
 from facefusion.exit_helper import hard_exit, conditional_exit, graceful_exit
-from facefusion.common_helper import create_metavar, get_first
+from facefusion.common_helper import create_metavar, get_first, flush_argv
 from facefusion.execution import get_execution_provider_choices
 from facefusion.normalizer import normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
@@ -275,6 +275,7 @@ def run(program : ArgumentParser) -> None:
 		for ui_layout in ui.get_ui_layouts_modules(facefusion.globals.ui_layouts):
 			if not ui_layout.pre_check():
 				return conditional_exit(2)
+		flush_argv()
 		ui.launch()
 
 
