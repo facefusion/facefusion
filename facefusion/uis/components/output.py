@@ -84,7 +84,8 @@ def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]
 	if is_directory(output_path):
 		output_path = suggest_output_path(output_path, facefusion.globals.target_path)
 	if job_manager.init_jobs(facefusion.globals.jobs_path):
-		create_and_run_job(output_path)
+		facefusion.globals.output_path = output_path
+		create_and_run_job()
 		facefusion.globals.output_path = stored_output_path
 	if is_image(output_path):
 		return gradio.Image(value = output_path, visible = True), gradio.Video(value = None, visible = False), gradio.Button(visible = True), gradio.Button(visible = False)
@@ -101,13 +102,12 @@ def suggest_output_path(output_directory_path : str, target_path : str) -> Optio
 	return None
 
 
-def create_and_run_job(output_path : str) -> bool:
+def create_and_run_job() -> bool:
 	job_id = job_helper.suggest_job_id('ui')
 	program = create_program()
 	program = import_globals(program, job_store.get_step_keys(), [ facefusion, facefusion.processors.frame ])
 	program = reduce_args(program, job_store.get_step_keys())
 	step_args = vars(program.parse_args())
-	step_args['output_path'] = output_path
 
 	return job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step)
 
