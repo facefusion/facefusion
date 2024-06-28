@@ -52,14 +52,15 @@ def update_args(program : ArgumentParser, args : Args) -> ArgumentParser:
 
 def import_globals(program : ArgumentParser, keys : List[str], modules : List[ModuleType]) -> ArgumentParser:
 	program = copy(program)
+	args : Args = {}
 
 	for module in modules:
 		for key in keys:
 			if hasattr(module.globals, key):
-				program = update_args(program,
-				{
-					key: getattr(module.globals, key)
-				})
+				args[key] = getattr(module.globals, key)
+
+	if args:
+		return update_args(program, args)
 	return program
 
 
