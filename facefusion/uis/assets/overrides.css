@@ -51,7 +51,8 @@
 	min-height: unset;
 }
 
-:root:root:root .generating
+:root:root:root .generating,
+:root:root:root .thumbnail-item
 {
 	border: unset;
 }
@@ -64,13 +65,8 @@
 :root:root:root .tab-nav > button
 {
 	border: unset;
-	border-bottom: 0.125rem solid transparent;
+	box-shadow: 0 0.125rem;
 	font-size: 1.125em;
-	margin: 0.5rem 1rem;
+	margin: 0.5rem 0.75rem;
 	padding: unset;
-}
-
-:root:root:root .tab-nav > button.selected
-{
-	border-bottom: 0.125rem solid;
 }
