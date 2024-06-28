@@ -4,7 +4,7 @@ from functools import lru_cache
 import cv2
 import numpy
 
-from facefusion.typing import Angle, Score, BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Points, Distance, Matrix, Translation, WarpTemplate, WarpTemplateSet
+from facefusion.typing import Angle, Score, BoundingBox, FaceLandmark5, FaceLandmark68, FaceDetectorModel, VisionFrame, Mask, Points, Distance, Matrix, Translation, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -177,9 +177,18 @@ def estimate_face_angle_from_face_landmark_68(face_landmark_68 : FaceLandmark68)
 
 
 def apply_nms(bounding_boxes : List[BoundingBox], face_scores : List[Score], score_threshold : float, nms_threshold : float) -> Sequence[int]:
-	bounding_boxes_converted = []
-	for bounding_box in bounding_boxes:
-		x1, y1, x2, y2 = bounding_box
-		bounding_boxes_converted.append((x1, y1, x2 - x1, y2 - y1))
-	keep_indices = cv2.dnn.NMSBoxes(bounding_boxes_converted, face_scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
+	bounding_boxes = [ (x1, y1, x2 - x1, y2 - y1) for (x1, y1, x2, y2) in bounding_boxes ]
+	keep_indices = cv2.dnn.NMSBoxes(bounding_boxes, face_scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
 	return keep_indices
+
+
+def get_nms_threshold(face_detector_model : FaceDetectorModel, face_detector_angles : List[Angle]) -> float:
+	if face_detector_model == 'many':
+		return 0.1
+	if len(face_detector_angles) == 2:
+		return 0.3
+	if len(face_detector_angles) == 3:
+		return 0.2
+	if len(face_detector_angles) == 4:
+		return 0.1
+	return 0.4

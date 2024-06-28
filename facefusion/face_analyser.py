@@ -7,7 +7,7 @@ import onnxruntime
 import facefusion.globals
 from facefusion import process_manager
 from facefusion.common_helper import get_first
-from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points, estimate_face_angle_from_face_landmark_68, apply_nms
+from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points, estimate_face_angle_from_face_landmark_68, apply_nms, get_nms_threshold
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
@@ -336,21 +336,10 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 	return detect_vision_frame
 
 
-def get_nms_limit() -> float:
-	if facefusion.globals.face_detector_model == 'many':
-		return 0.1
-	if len(facefusion.globals.face_detector_angles) == 2:
-		return 0.3
-	if len(facefusion.globals.face_detector_angles) == 3:
-		return 0.2
-	if len(facefusion.globals.face_detector_angles) == 4:
-		return 0.1
-	return 0.4
-
-
 def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score]) -> List[Face]:
 	faces = []
-	keep_indices = apply_nms(bounding_boxes, face_scores, facefusion.globals.face_detector_score, get_nms_limit())
+	nms_threshold = get_nms_threshold(facefusion.globals.face_detector_model, facefusion.globals.face_detector_angles)
+	keep_indices = apply_nms(bounding_boxes, face_scores, facefusion.globals.face_detector_score, nms_threshold)
 
 	for index in keep_indices:
 		bounding_box = bounding_boxes[index]
