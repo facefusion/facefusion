@@ -14,6 +14,7 @@ from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution import apply_execution_provider_options, has_execution_provider
 from facefusion.program_helper import find_argument_group
+from facefusion.state_manager import init_state_item, get_state_item
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, ExecutionProviderKey, QueuePayload
 from facefusion.common_helper import create_metavar
@@ -21,7 +22,6 @@ from facefusion.filesystem import same_file_extension, is_file, in_directory, re
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image, unpack_resolution
 from facefusion.processors.frame.typing import FrameColorizerInputs
-from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
@@ -87,7 +87,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[frame_processors_globals.frame_colorizer_model]
+			'model': MODELS[get_state_item('frame_colorizer_model')]
 		}
 	return OPTIONS.get(key)
 
@@ -109,9 +109,9 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.frame_colorizer_model = args.frame_colorizer_model
-	frame_processors_globals.frame_colorizer_blend = args.frame_colorizer_blend
-	frame_processors_globals.frame_colorizer_size = args.frame_colorizer_size
+	init_state_item('frame_colorizer_model', args.frame_colorizer_model)
+	init_state_item('frame_colorizer_blend', args.frame_colorizer_blend)
+	init_state_item('frame_colorizer_size', args.frame_colorizer_size)
 
 
 def pre_check() -> bool:
@@ -177,15 +177,17 @@ def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_size = unpack_resolution(frame_processors_globals.frame_colorizer_size)
+	model_size = unpack_resolution(get_state_item('frame_colorizer_size'))
 	model_type = get_options('model').get('type')
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2GRAY)
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_GRAY2RGB)
+
 	if model_type == 'ddcolor':
 		temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32) #type:ignore[operator]
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_RGB2LAB)[:, :, :1]
 		temp_vision_frame = numpy.concatenate((temp_vision_frame, numpy.zeros_like(temp_vision_frame), numpy.zeros_like(temp_vision_frame)), axis = -1)
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_LAB2RGB)
+
 	temp_vision_frame = cv2.resize(temp_vision_frame, model_size)
 	temp_vision_frame = temp_vision_frame.transpose((2, 0, 1))
 	temp_vision_frame = numpy.expand_dims(temp_vision_frame, axis = 0).astype(numpy.float32)
@@ -196,12 +198,14 @@ def merge_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 	model_type = get_options('model').get('type')
 	color_vision_frame = color_vision_frame.transpose(1, 2, 0)
 	color_vision_frame = cv2.resize(color_vision_frame, (temp_vision_frame.shape[1], temp_vision_frame.shape[0]))
+
 	if model_type == 'ddcolor':
 		temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32)
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2LAB)[:, :, :1]
 		color_vision_frame = numpy.concatenate((temp_vision_frame, color_vision_frame), axis = -1)
 		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_LAB2BGR)
 		color_vision_frame = (color_vision_frame * 255.0).round().astype(numpy.uint8) #type:ignore[operator]
+
 	if model_type == 'deoldify':
 		temp_blue_channel, _, _ = cv2.split(temp_vision_frame)
 		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_BGR2RGB).astype(numpy.uint8)
@@ -213,7 +217,7 @@ def merge_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 
 
 def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
-	frame_colorizer_blend = 1 - (frame_processors_globals.frame_colorizer_blend / 100)
+	frame_colorizer_blend = 1 - (get_state_item('frame_colorizer_blend') / 100)
 	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_colorizer_blend, paste_vision_frame, 1 - frame_colorizer_blend, 0)
 	return temp_vision_frame
 
