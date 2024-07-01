@@ -6,13 +6,14 @@ from facefusion.processors.frame.typing import FrameProcessorState, FrameProcess
 
 STATES : Union[StateSet, FrameProcessorState] =\
 {
-	'core': {}, #type:ignore
-	'uis': {} #type:ignore
+	'core': {}, #type:ignore[typeddict-item]
+	'uis': {} #type:ignore[typeddict-item]
 }
+
 
 def get_state() -> Union[State, FrameProcessorState]:
 	state_context = detect_state_context()
-	return STATES[state_context] #type:ignore
+	return STATES.get(state_context) #type:ignore
 
 
 def init_state_item(key : Union[StateKey, FrameProcessorStateKey], value : Any) -> None:
