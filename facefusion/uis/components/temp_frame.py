@@ -4,6 +4,7 @@ import gradio
 import facefusion.globals
 import facefusion.choices
 from facefusion import wording
+from facefusion.state_manager import get_state_item
 from facefusion.typing import TempFrameFormat
 from facefusion.filesystem import is_video
 from facefusion.uis.core import get_ui_component
@@ -18,7 +19,7 @@ def render() -> None:
 		label = wording.get('uis.temp_frame_format_dropdown'),
 		choices = facefusion.choices.temp_frame_formats,
 		value = facefusion.globals.temp_frame_format,
-		visible = is_video(facefusion.globals.target_path)
+		visible = is_video(get_state_item('target_path'))
 	)
 
 
@@ -31,7 +32,7 @@ def listen() -> None:
 
 
 def remote_update() -> gradio.Dropdown:
-	if is_video(facefusion.globals.target_path):
+	if is_video(get_state_item('target_path')):
 		return gradio.Dropdown(visible = True)
 	return gradio.Dropdown(visible = False)
 

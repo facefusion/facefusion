@@ -162,9 +162,13 @@ JobSet = Dict[str, Job]
 
 
 StateContext = Literal['core', 'uis']
-StateKey = Literal['output_path']
+StateKey = Literal['config_path', 'source_paths', 'target_path', 'output_path', 'jobs_path']
 State = TypedDict('State',
 {
-	'output_path' : str
+	'config_path': str,
+	'source_paths': List[str],
+	'target_path': str,
+	'output_path': str,
+	'jobs_path': str
 })
 StateSet = Dict[StateContext, State]

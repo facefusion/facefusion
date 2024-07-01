@@ -117,16 +117,16 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if not has_audio(facefusion.globals.source_paths):
+	if not has_audio(get_state_item('source_paths')):
 		logger.error(wording.get('choose_audio_source') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
+	if mode in [ 'output', 'preview' ] and not is_image(get_state_item('target_path')) and not is_video(get_state_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not in_directory(facefusion.globals.output_path):
+	if mode == 'output' and not in_directory(get_state_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not same_file_extension([ facefusion.globals.target_path, facefusion.globals.output_path ]):
+	if mode == 'output' and not same_file_extension([ get_state_item('target_path'), get_state_item('output_path') ]):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -233,7 +233,7 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
-	temp_video_fps = restrict_video_fps(facefusion.globals.target_path, facefusion.globals.output_video_fps)
+	temp_video_fps = restrict_video_fps(get_state_item('target_path'), facefusion.globals.output_video_fps)
 
 	for queue_payload in process_manager.manage(queue_payloads):
 		frame_number = queue_payload['frame_number']
@@ -266,8 +266,8 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	source_audio_paths = filter_audio_paths(facefusion.globals.source_paths)
-	temp_video_fps = restrict_video_fps(facefusion.globals.target_path, facefusion.globals.output_video_fps)
+	source_audio_paths = filter_audio_paths(get_state_item('source_paths'))
+	temp_video_fps = restrict_video_fps(get_state_item('target_path'), facefusion.globals.output_video_fps)
 	for source_audio_path in source_audio_paths:
 		read_static_voice(source_audio_path, temp_video_fps)
 	frame_processors.multi_process_frames(source_paths, temp_frame_paths, process_frames)

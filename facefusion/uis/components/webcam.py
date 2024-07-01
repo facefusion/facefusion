@@ -14,6 +14,7 @@ from facefusion.audio import create_empty_audio_frame
 from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream
 from facefusion.filesystem import filter_image_paths
+from facefusion.state_manager import get_state_item
 from facefusion.typing import VisionFrame, Face, Fps
 from facefusion.face_analyser import get_many_faces, get_average_face
 from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
@@ -92,7 +93,7 @@ def listen() -> None:
 def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_selector_order = 'large-small'
-	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
+	source_image_paths = filter_image_paths(get_state_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_frames)
 	source_face = get_average_face(source_faces)

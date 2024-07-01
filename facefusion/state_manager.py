@@ -4,28 +4,20 @@ import inspect
 from facefusion.typing import State, StateSet, StateContext, StateKey
 from facefusion.processors.frame.typing import FrameProcessorState, FrameProcessorStateKey
 
-STATE : Union[StateSet, FrameProcessorState] =\
+STATES : Union[StateSet, FrameProcessorState] =\
 {
 	'core': {}, #type:ignore
 	'uis': {} #type:ignore
 }
 
-
-def init_state(state : Union[State, FrameProcessorState]) -> None:
-	global STATE
-
-	STATE['core'] = state #type:ignore
-	STATE['uis'] = state #type:ignore
-
-
 def get_state() -> Union[State, FrameProcessorState]:
 	state_context = detect_state_context()
-	return STATE[state_context] #type:ignore
+	return STATES[state_context] #type:ignore
 
 
 def init_state_item(key : Union[StateKey, FrameProcessorStateKey], value : Any) -> None:
-	STATE['core'][key] = value #type:ignore
-	STATE['uis'][key] = value #type:ignore
+	STATES['core'][key] = value #type:ignore
+	STATES['uis'][key] = value #type:ignore
 
 
 def get_state_item(key : Union[StateKey, FrameProcessorStateKey]) -> Any:
@@ -34,7 +26,11 @@ def get_state_item(key : Union[StateKey, FrameProcessorStateKey]) -> Any:
 
 def set_state_item(key : Union[StateKey, FrameProcessorStateKey], value : Any) -> None:
 	state_context = detect_state_context()
-	STATE[state_context][key] = value #type:ignore
+	STATES[state_context][key] = value #type:ignore
+
+
+def clear_state_item(key : Union[StateKey, FrameProcessorStateKey]) -> None:
+	set_state_item(key, None)
 
 
 def detect_state_context() -> StateContext:

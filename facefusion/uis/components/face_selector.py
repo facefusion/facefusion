@@ -5,6 +5,7 @@ import gradio
 import facefusion.globals
 import facefusion.choices
 from facefusion import wording
+from facefusion.state_manager import get_state_item
 from facefusion.typing import VisionFrame, FaceSelectorMode, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import clear_static_faces, clear_reference_faces
@@ -37,11 +38,11 @@ def render() -> None:
 		'allow_preview': False,
 		'visible': 'reference' in facefusion.globals.face_selector_mode
 	}
-	if is_image(facefusion.globals.target_path):
-		reference_frame = read_static_image(facefusion.globals.target_path)
+	if is_image(get_state_item('target_path')):
+		reference_frame = read_static_image(get_state_item('target_path'))
 		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
-	if is_video(facefusion.globals.target_path):
-		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+	if is_video(get_state_item('target_path')):
+		reference_frame = get_video_frame(get_state_item('target_path'), facefusion.globals.reference_frame_number)
 		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_selector_mode_dropdown'),
@@ -173,11 +174,11 @@ def clear_and_update_reference_position_gallery() -> gradio.Gallery:
 
 def update_reference_position_gallery() -> gradio.Gallery:
 	gallery_vision_frames = []
-	if is_image(facefusion.globals.target_path):
-		temp_vision_frame = read_static_image(facefusion.globals.target_path)
+	if is_image(get_state_item('target_path')):
+		temp_vision_frame = read_static_image(get_state_item('target_path'))
 		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
-	if is_video(facefusion.globals.target_path):
-		temp_vision_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+	if is_video(get_state_item('target_path')):
+		temp_vision_frame = get_video_frame(get_state_item('target_path'), facefusion.globals.reference_frame_number)
 		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
 	if gallery_vision_frames:
 		return gradio.Gallery(value = gallery_vision_frames)

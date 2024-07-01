@@ -236,22 +236,22 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if not has_image(facefusion.globals.source_paths):
+	if not has_image(get_state_item('source_paths')):
 		logger.error(wording.get('choose_image_source') + wording.get('exclamation_mark'), NAME)
 		return False
-	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
+	source_image_paths = filter_image_paths(get_state_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_frames)
 	if not get_one_face(source_faces):
 		logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
+	if mode in [ 'output', 'preview' ] and not is_image(get_state_item('target_path')) and not is_video(get_state_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not in_directory(facefusion.globals.output_path):
+	if mode == 'output' and not in_directory(get_state_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not same_file_extension([ facefusion.globals.target_path, facefusion.globals.output_path ]):
+	if mode == 'output' and not same_file_extension([ get_state_item('target_path'), get_state_item('output_path') ]):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -321,7 +321,7 @@ def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFra
 
 def prepare_source_frame(source_face : Face) -> VisionFrame:
 	model_type = get_options('model').get('type')
-	source_vision_frame = read_static_image(facefusion.globals.source_paths[0])
+	source_vision_frame = read_static_image(get_first(get_state_item('source_paths')))
 
 	if model_type == 'blendswap':
 		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark_set.get('5/68'), 'arcface_112_v2', (112, 112))

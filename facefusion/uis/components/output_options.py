@@ -4,6 +4,7 @@ import gradio
 import facefusion.globals
 import facefusion.choices
 from facefusion import wording
+from facefusion.state_manager import get_state_item
 from facefusion.typing import OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Fps
 from facefusion.filesystem import is_image, is_video
 from facefusion.uis.core import get_ui_components, register_ui_component
@@ -31,11 +32,11 @@ def render() -> None:
 
 	output_image_resolutions = []
 	output_video_resolutions = []
-	if is_image(facefusion.globals.target_path):
-		output_image_resolution = detect_image_resolution(facefusion.globals.target_path)
+	if is_image(get_state_item('target_path')):
+		output_image_resolution = detect_image_resolution(get_state_item('target_path'))
 		output_image_resolutions = create_image_resolutions(output_image_resolution)
-	if is_video(facefusion.globals.target_path):
-		output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
+	if is_video(get_state_item('target_path')):
+		output_video_resolution = detect_video_resolution(get_state_item('target_path'))
 		output_video_resolutions = create_video_resolutions(output_video_resolution)
 	OUTPUT_IMAGE_QUALITY_SLIDER = gradio.Slider(
 		label = wording.get('uis.output_image_quality_slider'),
@@ -43,31 +44,31 @@ def render() -> None:
 		step = facefusion.choices.output_image_quality_range[1] - facefusion.choices.output_image_quality_range[0],
 		minimum = facefusion.choices.output_image_quality_range[0],
 		maximum = facefusion.choices.output_image_quality_range[-1],
-		visible = is_image(facefusion.globals.target_path)
+		visible = is_image(get_state_item('target_path'))
 	)
 	OUTPUT_IMAGE_RESOLUTION_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.output_image_resolution_dropdown'),
 		choices = output_image_resolutions,
 		value = facefusion.globals.output_image_resolution,
-		visible = is_image(facefusion.globals.target_path)
+		visible = is_image(get_state_item('target_path'))
 	)
 	OUTPUT_AUDIO_ENCODER_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.output_audio_encoder_dropdown'),
 		choices = facefusion.choices.output_audio_encoders,
 		value = facefusion.globals.output_audio_encoder,
-		visible = is_video(facefusion.globals.target_path)
+		visible = is_video(get_state_item('target_path'))
 	)
 	OUTPUT_VIDEO_ENCODER_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.output_video_encoder_dropdown'),
 		choices = facefusion.choices.output_video_encoders,
 		value = facefusion.globals.output_video_encoder,
-		visible = is_video(facefusion.globals.target_path)
+		visible = is_video(get_state_item('target_path'))
 	)
 	OUTPUT_VIDEO_PRESET_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.output_video_preset_dropdown'),
 		choices = facefusion.choices.output_video_presets,
 		value = facefusion.globals.output_video_preset,
-		visible = is_video(facefusion.globals.target_path)
+		visible = is_video(get_state_item('target_path'))
 	)
 	OUTPUT_VIDEO_QUALITY_SLIDER = gradio.Slider(
 		label = wording.get('uis.output_video_quality_slider'),
@@ -75,13 +76,13 @@ def render() -> None:
 		step = facefusion.choices.output_video_quality_range[1] - facefusion.choices.output_video_quality_range[0],
 		minimum = facefusion.choices.output_video_quality_range[0],
 		maximum = facefusion.choices.output_video_quality_range[-1],
-		visible = is_video(facefusion.globals.target_path)
+		visible = is_video(get_state_item('target_path'))
 	)
 	OUTPUT_VIDEO_RESOLUTION_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.output_video_resolution_dropdown'),
 		choices = output_video_resolutions,
 		value = facefusion.globals.output_video_resolution,
-		visible = is_video(facefusion.globals.target_path)
+		visible = is_video(get_state_item('target_path'))
 	)
 	OUTPUT_VIDEO_FPS_SLIDER = gradio.Slider(
 		label = wording.get('uis.output_video_fps_slider'),
@@ -89,7 +90,7 @@ def render() -> None:
 		step = 0.01,
 		minimum = 1,
 		maximum = 60,
-		visible = is_video(facefusion.globals.target_path)
+		visible = is_video(get_state_item('target_path'))
 	)
 	register_ui_component('output_video_fps_slider', OUTPUT_VIDEO_FPS_SLIDER)
 
@@ -114,16 +115,16 @@ def listen() -> None:
 
 
 def remote_update() -> Tuple[gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Slider]:
-	if is_image(facefusion.globals.target_path):
-		output_image_resolution = detect_image_resolution(facefusion.globals.target_path)
+	if is_image(get_state_item('target_path')):
+		output_image_resolution = detect_image_resolution(get_state_item('target_path'))
 		output_image_resolutions = create_image_resolutions(output_image_resolution)
 		facefusion.globals.output_image_resolution = pack_resolution(output_image_resolution)
 		return gradio.Slider(visible = True), gradio.Dropdown(visible = True, value = facefusion.globals.output_image_resolution, choices = output_image_resolutions), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Dropdown(visible = False, value = None, choices = None), gradio.Slider(visible = False, value = None)
-	if is_video(facefusion.globals.target_path):
-		output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
+	if is_video(get_state_item('target_path')):
+		output_video_resolution = detect_video_resolution(get_state_item('target_path'))
 		output_video_resolutions = create_video_resolutions(output_video_resolution)
 		facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
-		facefusion.globals.output_video_fps = detect_video_fps(facefusion.globals.target_path)
+		facefusion.globals.output_video_fps = detect_video_fps(get_state_item('target_path'))
 		return gradio.Slider(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = True), gradio.Dropdown(visible = True), gradio.Dropdown(visible = True), gradio.Slider(visible = True), gradio.Dropdown(visible = True, value = facefusion.globals.output_video_resolution, choices = output_video_resolutions), gradio.Slider(visible = True, value = facefusion.globals.output_video_fps)
 	return gradio.Slider(visible = False), gradio.Dropdown(visible = False, value = None, choices = None), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Dropdown(visible = False, value = None, choices = None), gradio.Slider(visible = False, value = None)
 
