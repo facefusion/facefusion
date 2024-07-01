@@ -468,7 +468,7 @@ def route_job_runner(program : ArgumentParser) -> ErrorCode:
 def process_step(step_args : Args) -> bool:
 	program = create_program()
 	program = update_args(program, step_args)
-	program = import_globals(program, job_store.get_job_keys(), [ facefusion, facefusion.processors.frame ])
+	program = import_globals(program, job_store.get_job_keys(), [ facefusion ])
 	program = import_state(program, job_store.get_job_keys(), state_manager.get_state())
 
 	if validate_args(program):

@@ -14,6 +14,7 @@ from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution import apply_execution_provider_options
 from facefusion.program_helper import find_argument_group
+from facefusion.state_manager import init_state_item, get_state_item
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
@@ -21,7 +22,6 @@ from facefusion.filesystem import same_file_extension, is_file, in_directory,res
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image, merge_tile_frames, create_tile_frames
 from facefusion.processors.frame.typing import FrameEnhancerInputs
-from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
@@ -126,7 +126,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[frame_processors_globals.frame_enhancer_model]
+			'model': MODELS[get_state_item('frame_enhancer_model')]
 		}
 	return OPTIONS.get(key)
 
@@ -147,8 +147,8 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.frame_enhancer_model = args.frame_enhancer_model
-	frame_processors_globals.frame_enhancer_blend = args.frame_enhancer_blend
+	init_state_item('frame_enhancer_model', args.frame_enhancer_model)
+	init_state_item('frame_enhancer_blend', args.frame_enhancer_blend)
 
 
 def pre_check() -> bool:
@@ -232,7 +232,7 @@ def normalize_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
 
 
 def blend_frame(temp_vision_frame : VisionFrame, merge_vision_frame : VisionFrame) -> VisionFrame:
-	frame_enhancer_blend = 1 - (frame_processors_globals.frame_enhancer_blend / 100)
+	frame_enhancer_blend = 1 - (get_state_item('frame_enhancer_blend') / 100)
 	temp_vision_frame = cv2.resize(temp_vision_frame, (merge_vision_frame.shape[1], merge_vision_frame.shape[0]))
 	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_enhancer_blend, merge_vision_frame, 1 - frame_enhancer_blend, 0)
 	return temp_vision_frame

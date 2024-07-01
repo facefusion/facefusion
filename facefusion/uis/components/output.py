@@ -12,8 +12,8 @@ from facefusion.memory import limit_system_memory
 from facefusion.jobs import job_manager, job_runner, job_store, job_helper
 from facefusion.program_helper import reduce_args, import_globals, import_state
 from facefusion.filesystem import is_image, is_video, is_directory
+from facefusion.state_manager import get_state
 from facefusion.temp_helper import clear_temp_directory
-from facefusion.processors.frame import globals as frame_processors_globals
 
 OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
 OUTPUT_IMAGE : Optional[gradio.Image] = None
@@ -97,7 +97,7 @@ def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]
 def suggest_output_path(output_directory_path : str, target_path : str) -> Optional[str]:
 	if is_image(target_path) or is_video(target_path):
 		_, target_extension = os.path.splitext(target_path)
-		output_name = hashlib.sha1(str([ facefusion.globals.__dict__, frame_processors_globals.__dict__ ]).encode('utf-8')).hexdigest()[:8]
+		output_name = hashlib.sha1(str(get_state()).encode('utf-8')).hexdigest()[:8]
 		return os.path.join(output_directory_path, output_name + target_extension)
 	return None
 
@@ -105,7 +105,7 @@ def suggest_output_path(output_directory_path : str, target_path : str) -> Optio
 def create_and_run_job() -> bool:
 	job_id = job_helper.suggest_job_id('ui')
 	program = create_program()
-	program = import_globals(program, job_store.get_step_keys(), [ facefusion, facefusion.processors.frame ])
+	program = import_globals(program, job_store.get_step_keys(), [ facefusion ])
 	program = import_state(program, job_store.get_step_keys(), state_manager.get_state())
 	program = reduce_args(program, job_store.get_step_keys())
 	step_args = vars(program.parse_args())

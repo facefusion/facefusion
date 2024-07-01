@@ -18,6 +18,7 @@ from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_bo
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.program_helper import find_argument_group
+from facefusion.state_manager import init_state_item, get_state_item
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
 from facefusion.filesystem import same_file_extension, is_file, in_directory, has_audio, resolve_relative_path
@@ -28,7 +29,6 @@ from facefusion.common_helper import get_first
 from facefusion.vision import read_image, read_static_image, write_image, restrict_video_fps
 from facefusion.processors.frame.typing import LipSyncerInputs
 from facefusion.voice_extractor import clear_voice_extractor
-from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
@@ -68,7 +68,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[frame_processors_globals.lip_syncer_model]
+			'model': MODELS[get_state_item('lip_syncer_model')]
 		}
 	return OPTIONS.get(key)
 
@@ -88,7 +88,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.lip_syncer_model = args.lip_syncer_model
+	init_state_item('lip_syncer_model', args.lip_syncer_model)
 
 
 def pre_check() -> bool:

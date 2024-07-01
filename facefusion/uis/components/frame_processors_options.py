@@ -7,7 +7,7 @@ from facefusion.common_helper import get_first
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.state_manager import get_state_item, set_state_item
 from facefusion.uis.core import get_ui_component, register_ui_component
-from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
+from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.typing import FaceDebuggerItem, FaceEnhancerModel, FaceSwapperModel, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
@@ -91,12 +91,12 @@ def render() -> None:
 	FRAME_ENHANCER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.frame_enhancer_model_dropdown'),
 		choices = frame_processors_choices.frame_enhancer_models,
-		value = frame_processors_globals.frame_enhancer_model,
+		value = get_state_item('frame_enhancer_model'),
 		visible = 'frame_enhancer' in facefusion.globals.frame_processors
 	)
 	FRAME_ENHANCER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('uis.frame_enhancer_blend_slider'),
-		value = frame_processors_globals.frame_enhancer_blend,
+		value = get_state_item('frame_enhancer_blend'),
 		step = frame_processors_choices.frame_enhancer_blend_range[1] - frame_processors_choices.frame_enhancer_blend_range[0],
 		minimum = frame_processors_choices.frame_enhancer_blend_range[0],
 		maximum = frame_processors_choices.frame_enhancer_blend_range[-1],
@@ -105,7 +105,7 @@ def render() -> None:
 	LIP_SYNCER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.lip_syncer_model_dropdown'),
 		choices = frame_processors_choices.lip_syncer_models,
-		value = frame_processors_globals.lip_syncer_model,
+		value = get_state_item('lip_syncer_model'),
 		visible = 'lip_syncer' in facefusion.globals.frame_processors
 	)
 	register_ui_component('face_debugger_items_checkbox_group', FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
@@ -211,24 +211,24 @@ def update_frame_colorizer_size(frame_colorizer_size : str) -> None:
 
 
 def update_frame_enhancer_model(frame_enhancer_model : FrameEnhancerModel) -> gradio.Dropdown:
-	frame_processors_globals.frame_enhancer_model = frame_enhancer_model
+	set_state_item('frame_enhancer_model', frame_enhancer_model)
 	frame_enhancer_module = load_frame_processor_module('frame_enhancer')
 	frame_enhancer_module.clear_frame_processor()
-	frame_enhancer_module.set_options('model', frame_enhancer_module.MODELS[frame_enhancer_model])
+	frame_enhancer_module.set_options('model', frame_enhancer_module.MODELS[get_state_item('frame_enhancer_model')])
 	if frame_enhancer_module.pre_check():
-		return gradio.Dropdown(value = frame_processors_globals.frame_enhancer_model)
+		return gradio.Dropdown(value = get_state_item('frame_enhancer_model'))
 	return gradio.Dropdown()
 
 
 def update_frame_enhancer_blend(frame_enhancer_blend : float) -> None:
-	frame_processors_globals.frame_enhancer_blend = int(frame_enhancer_blend)
+	set_state_item('frame_enhancer_blend', int(frame_enhancer_blend))
 
 
 def update_lip_syncer_model(lip_syncer_model : LipSyncerModel) -> gradio.Dropdown:
-	frame_processors_globals.lip_syncer_model = lip_syncer_model
+	set_state_item('lip_syncer_model', lip_syncer_model)
 	lip_syncer_module = load_frame_processor_module('lip_syncer')
 	lip_syncer_module.clear_frame_processor()
-	lip_syncer_module.set_options('model', lip_syncer_module.MODELS[lip_syncer_model])
+	lip_syncer_module.set_options('model', lip_syncer_module.MODELS[get_state_item('lip_syncer_model')])
 	if lip_syncer_module.pre_check():
-		return gradio.Dropdown(value = frame_processors_globals.lip_syncer_model)
+		return gradio.Dropdown(value = get_state_item('lip_syncer_model'))
 	return gradio.Dropdown()
