@@ -71,7 +71,7 @@ def import_state(program : ArgumentParser, keys : List[str], state : Union[State
 
 	for key in keys:
 		if key in state:
-			args[key] = state[key]
+			args[key] = state[key] #type:ignore[literal-required]
 
 	if args:
 		return update_args(program, args)
