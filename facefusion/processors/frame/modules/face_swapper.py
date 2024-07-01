@@ -21,13 +21,13 @@ from facefusion.common_helper import get_first
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
+from facefusion.state_manager import init_state_item, get_state_item
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, Embedding, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.filesystem import same_file_extension, is_file, in_directory, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image, unpack_resolution
 from facefusion.processors.frame.typing import FaceSwapperInputs
-from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
@@ -169,8 +169,8 @@ def clear_model_initializer() -> None:
 def get_options(key : Literal['model']) -> Any:
 	global OPTIONS
 
-	face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') or has_execution_provider('openvino') and frame_processors_globals.face_swapper_model == 'inswapper_128_fp16' else frame_processors_globals.face_swapper_model
 	if OPTIONS is None:
+		face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') or has_execution_provider('openvino') and get_state_item('face_swapper_model') == 'inswapper_128_fp16' else get_state_item('face_swapper_model')
 		OPTIONS =\
 		{
 			'model': MODELS[face_swapper_model]
@@ -195,18 +195,18 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.face_swapper_model = args.face_swapper_model
-	frame_processors_globals.face_swapper_pixel_boost = args.face_swapper_pixel_boost
+	init_state_item('face_swapper_model', args.face_swapper_model)
+	init_state_item('face_swapper_pixel_boost', args.face_swapper_pixel_boost)
 
-	if args.face_swapper_model == 'blendswap_256':
+	if get_state_item('face_swapper_model') == 'blendswap_256':
 		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
-	if args.face_swapper_model in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
+	if get_state_item('face_swapper_model') in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_ghost'
-	if args.face_swapper_model in [ 'inswapper_128', 'inswapper_128_fp16' ]:
+	if get_state_item('face_swapper_model') in [ 'inswapper_128', 'inswapper_128_fp16' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
-	if args.face_swapper_model in [ 'simswap_256', 'simswap_512_unofficial' ]:
+	if get_state_item('face_swapper_model') in [ 'simswap_256', 'simswap_512_unofficial' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_simswap'
-	if args.face_swapper_model == 'uniface_256':
+	if get_state_item('face_swapper_model') == 'uniface_256':
 		facefusion.globals.face_recognizer_model = 'arcface_uniface'
 
 
@@ -272,7 +272,7 @@ def post_process() -> None:
 def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
-	pixel_boost_size = unpack_resolution(frame_processors_globals.face_swapper_pixel_boost)
+	pixel_boost_size = unpack_resolution(get_state_item('face_swapper_pixel_boost'))
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, pixel_boost_size)
 	crop_masks = []

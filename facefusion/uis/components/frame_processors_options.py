@@ -59,13 +59,13 @@ def render() -> None:
 	FACE_SWAPPER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_swapper_model_dropdown'),
 		choices = frame_processors_choices.face_swapper_set.keys(),
-		value = frame_processors_globals.face_swapper_model,
+		value = get_state_item('face_swapper_model'),
 		visible = 'face_swapper' in facefusion.globals.frame_processors
 	)
 	FACE_SWAPPER_PIXEL_BOOST_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_swapper_pixel_boost_dropdown'),
-		choices = frame_processors_choices.face_swapper_set.get(frame_processors_globals.face_swapper_model),
-		value = frame_processors_globals.face_swapper_pixel_boost,
+		choices = frame_processors_choices.face_swapper_set.get(get_state_item('face_swapper_model')),
+		value = get_state_item('face_swapper_pixel_boost'),
 		visible = 'face_swapper' in facefusion.globals.frame_processors
 	)
 	FRAME_COLORIZER_MODEL_DROPDOWN = gradio.Dropdown(
@@ -167,29 +167,29 @@ def update_face_enhancer_blend(face_enhancer_blend : float) -> None:
 
 
 def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
-	frame_processors_globals.face_swapper_model = face_swapper_model
-	if face_swapper_model == 'blendswap_256':
+	set_state_item('face_swapper_model', face_swapper_model)
+	if get_state_item('face_swapper_model') == 'blendswap_256':
 		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
-	if face_swapper_model in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
+	if get_state_item('face_swapper_model') in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_ghost'
-	if face_swapper_model in [ 'inswapper_128', 'inswapper_128_fp16' ]:
+	if get_state_item('face_swapper_model') in [ 'inswapper_128', 'inswapper_128_fp16' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
-	if face_swapper_model in [ 'simswap_256', 'simswap_512_unofficial' ]:
+	if get_state_item('face_swapper_model') in [ 'simswap_256', 'simswap_512_unofficial' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_simswap'
-	if face_swapper_model == 'uniface_256':
+	if get_state_item('face_swapper_model') == 'uniface_256':
 		facefusion.globals.face_recognizer_model = 'arcface_uniface'
 	face_swapper_module = load_frame_processor_module('face_swapper')
 	face_swapper_module.clear_model_initializer()
 	face_swapper_module.clear_frame_processor()
-	face_swapper_module.set_options('model', face_swapper_module.MODELS[face_swapper_model])
+	face_swapper_module.set_options('model', face_swapper_module.MODELS[get_state_item('face_swapper_model')])
 	if face_analyser.pre_check() and face_swapper_module.pre_check():
-		face_swapper_pixel_boost_choices = frame_processors_choices.face_swapper_set.get(frame_processors_globals.face_swapper_model)
-		return gradio.Dropdown(value = frame_processors_globals.face_swapper_model), gradio.Dropdown(choices = face_swapper_pixel_boost_choices, value = get_first(face_swapper_pixel_boost_choices))
+		face_swapper_pixel_boost_choices = frame_processors_choices.face_swapper_set.get(get_state_item('face_swapper_model'))
+		return gradio.Dropdown(value = get_state_item('face_swapper_model')), gradio.Dropdown(choices = face_swapper_pixel_boost_choices, value = get_first(face_swapper_pixel_boost_choices))
 	return gradio.Dropdown(), gradio.Dropdown()
 
 
 def update_face_swapper_pixel_boost(face_swapper_pixel_boost : str) -> None:
-	frame_processors_globals.face_swapper_pixel_boost = face_swapper_pixel_boost
+	set_state_item('face_swapper_pixel_boost', face_swapper_pixel_boost)
 
 
 def update_frame_colorizer_model(frame_colorizer_model : FrameColorizerModel) -> gradio.Dropdown:

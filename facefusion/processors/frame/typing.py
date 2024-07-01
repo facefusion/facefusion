@@ -42,7 +42,7 @@ LipSyncerInputs = TypedDict('LipSyncerInputs',
 	'target_vision_frame' : VisionFrame
 })
 
-FrameProcessorStateKey = Literal['face_debugger_items', 'face_enhancer_model', 'face_enhancer_blend']
+FrameProcessorStateKey = Literal['face_debugger_items', 'face_enhancer_model', 'face_enhancer_blend', 'face_swapper_model', 'face_swapper_pixel_boost']
 FrameProcessorState = TypedDict('FrameProcessorState',
 {
 	'face_debugger_items' : List[FaceDebuggerItem],
