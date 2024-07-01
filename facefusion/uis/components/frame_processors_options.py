@@ -5,6 +5,7 @@ import facefusion.globals
 from facefusion import face_analyser, wording
 from facefusion.common_helper import get_first
 from facefusion.processors.frame.core import load_frame_processor_module
+from facefusion.state_manager import get_state_item, set_state_item
 from facefusion.uis.core import get_ui_component, register_ui_component
 from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
 from facefusion.processors.frame.typing import FaceDebuggerItem, FaceEnhancerModel, FaceSwapperModel, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
@@ -38,18 +39,18 @@ def render() -> None:
 	FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.face_debugger_items_checkbox_group'),
 		choices = frame_processors_choices.face_debugger_items,
-		value = frame_processors_globals.face_debugger_items,
+		value = get_state_item('face_debugger_items'),
 		visible = 'face_debugger' in facefusion.globals.frame_processors
 	)
 	FACE_ENHANCER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_enhancer_model_dropdown'),
 		choices = frame_processors_choices.face_enhancer_models,
-		value = frame_processors_globals.face_enhancer_model,
+		value = get_state_item('face_enhancer_model'),
 		visible = 'face_enhancer' in facefusion.globals.frame_processors
 	)
 	FACE_ENHANCER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_enhancer_blend_slider'),
-		value = frame_processors_globals.face_enhancer_blend,
+		value = get_state_item('face_enhancer_blend'),
 		step = frame_processors_choices.face_enhancer_blend_range[1] - frame_processors_choices.face_enhancer_blend_range[0],
 		minimum = frame_processors_choices.face_enhancer_blend_range[0],
 		maximum = frame_processors_choices.face_enhancer_blend_range[-1],
@@ -148,21 +149,21 @@ def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.Checkb
 
 
 def update_face_debugger_items(face_debugger_items : List[FaceDebuggerItem]) -> None:
-	frame_processors_globals.face_debugger_items = face_debugger_items
+	set_state_item('face_debugger_items', face_debugger_items)
 
 
 def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> gradio.Dropdown:
-	frame_processors_globals.face_enhancer_model = face_enhancer_model
+	set_state_item('face_enhancer_model', face_enhancer_model)
 	face_enhancer_module = load_frame_processor_module('face_enhancer')
 	face_enhancer_module.clear_frame_processor()
-	face_enhancer_module.set_options('model', face_enhancer_module.MODELS[face_enhancer_model])
+	face_enhancer_module.set_options('model', face_enhancer_module.MODELS[get_state_item('face_enhancer_model')])
 	if face_enhancer_module.pre_check():
-		return gradio.Dropdown(value = frame_processors_globals.face_enhancer_model)
+		return gradio.Dropdown(value = get_state_item('face_enhancer_model'))
 	return gradio.Dropdown()
 
 
 def update_face_enhancer_blend(face_enhancer_blend : float) -> None:
-	frame_processors_globals.face_enhancer_blend = int(face_enhancer_blend)
+	set_state_item('face_enhancer_blend', int(face_enhancer_blend))
 
 
 def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:

@@ -159,3 +159,12 @@ Job = TypedDict('Job',
 	'steps' : List[JobStep]
 })
 JobSet = Dict[str, Job]
+
+
+StateContext = Literal['core', 'uis']
+StateKey = Literal['output_path']
+State = TypedDict('State',
+{
+	'output_path' : str
+})
+StateSet = Dict[StateContext, State]

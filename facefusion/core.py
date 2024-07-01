@@ -14,9 +14,9 @@ from argparse import ArgumentParser, HelpFormatter
 import facefusion.choices
 import facefusion.globals
 from facefusion.typing import ErrorCode, Args
-from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, metadata, logger, voice_extractor, wording
+from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, state_manager, metadata, logger, voice_extractor, wording
 from facefusion.jobs import job_manager, job_runner, job_store, job_helper
-from facefusion.program_helper import validate_args, reduce_args, update_args, import_globals, suggest_face_detector_choices
+from facefusion.program_helper import validate_args, reduce_args, update_args, import_globals, suggest_face_detector_choices, import_state
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import get_reference_faces, append_reference_face
@@ -469,6 +469,7 @@ def process_step(step_args : Args) -> bool:
 	program = create_program()
 	program = update_args(program, step_args)
 	program = import_globals(program, job_store.get_job_keys(), [ facefusion, facefusion.processors.frame ])
+	program = import_state(program, job_store.get_job_keys(), state_manager.get_state())
 
 	if validate_args(program):
 		apply_args(program)

@@ -18,6 +18,7 @@ from facefusion.execution import apply_execution_provider_options
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
 from facefusion.program_helper import find_argument_group
+from facefusion.state_manager import init_state_item, get_state_item
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
@@ -25,7 +26,6 @@ from facefusion.filesystem import same_file_extension, is_file, in_directory, is
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame.typing import FaceEnhancerInputs
-from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
@@ -123,7 +123,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[frame_processors_globals.face_enhancer_model]
+			'model': MODELS[get_state_item('face_enhancer_model')]
 		}
 	return OPTIONS.get(key)
 
@@ -144,8 +144,8 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.face_enhancer_model = args.face_enhancer_model
-	frame_processors_globals.face_enhancer_blend = args.face_enhancer_blend
+	init_state_item('face_enhancer_model', args.face_enhancer_model)
+	init_state_item('face_enhancer_blend', args.face_enhancer_blend)
 
 
 def pre_check() -> bool:
@@ -252,7 +252,7 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
-	face_enhancer_blend = 1 - (frame_processors_globals.face_enhancer_blend / 100)
+	face_enhancer_blend = 1 - (get_state_item('face_enhancer_blend') / 100)
 	temp_vision_frame = cv2.addWeighted(temp_vision_frame, face_enhancer_blend, paste_vision_frame, 1 - face_enhancer_blend, 0)
 	return temp_vision_frame
 

@@ -16,10 +16,11 @@ from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, same_file_extension
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.program_helper import find_argument_group
+from facefusion.state_manager import get_state_item, init_state_item
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, QueuePayload
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame.typing import FaceDebuggerInputs
-from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
+from facefusion.processors.frame import choices as frame_processors_choices
 
 NAME = __name__.upper()
 
@@ -49,7 +50,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.face_debugger_items = args.face_debugger_items
+	init_state_item('face_debugger_items', args.face_debugger_items)
 
 
 def pre_check() -> bool:
@@ -90,8 +91,9 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	temp_vision_frame = temp_vision_frame.copy()
 	has_face_landmark_5_fallback = numpy.array_equal(target_face.landmark_set.get('5'), target_face.landmark_set.get('5/68'))
 	has_face_landmark_68_fallback = numpy.array_equal(target_face.landmark_set.get('68'), target_face.landmark_set.get('68/5'))
+	face_debugger_items = get_state_item('face_debugger_items')
 
-	if 'bounding-box' in frame_processors_globals.face_debugger_items:
+	if 'bounding-box' in face_debugger_items:
 		x1, y1, x2, y2 = bounding_box
 		cv2.rectangle(temp_vision_frame, (x1, y1), (x2, y2), primary_color, 2)
 
@@ -104,7 +106,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		elif target_face.angle == 270:
 			cv2.line(temp_vision_frame, (x1, y1), (x1, y2), primary_light_color, 3)
 
-	if 'face-mask' in frame_processors_globals.face_debugger_items:
+	if 'face-mask' in face_debugger_items:
 		crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'arcface_128_v2', (512, 512))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_size = temp_vision_frame.shape[:2][::-1]
@@ -128,22 +130,22 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		inverse_contours = cv2.findContours(inverse_vision_frame, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
 		cv2.drawContours(temp_vision_frame, inverse_contours, -1, tertiary_color if has_face_landmark_5_fallback else secondary_color, 2)
 
-	if 'face-landmark-5' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('5')):
+	if 'face-landmark-5' in face_debugger_items and numpy.any(target_face.landmark_set.get('5')):
 		face_landmark_5 = target_face.landmark_set.get('5').astype(numpy.int32)
 		for index in range(face_landmark_5.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_5[index][0], face_landmark_5[index][1]), 3, primary_color, -1)
 
-	if 'face-landmark-5/68' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('5/68')):
+	if 'face-landmark-5/68' in face_debugger_items and numpy.any(target_face.landmark_set.get('5/68')):
 		face_landmark_5_68 = target_face.landmark_set.get('5/68').astype(numpy.int32)
 		for index in range(face_landmark_5_68.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_5_68[index][0], face_landmark_5_68[index][1]), 3, tertiary_color if has_face_landmark_5_fallback else secondary_color, -1)
 
-	if 'face-landmark-68' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
+	if 'face-landmark-68' in face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
 		face_landmark_68 = target_face.landmark_set.get('68').astype(numpy.int32)
 		for index in range(face_landmark_68.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, tertiary_color if has_face_landmark_68_fallback else secondary_color, -1)
 
-	if 'face-landmark-68/5' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
+	if 'face-landmark-68/5' in face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
 		face_landmark_68 = target_face.landmark_set.get('68/5').astype(numpy.int32)
 		for index in range(face_landmark_68.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, primary_color, -1)
@@ -152,19 +154,19 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		top = bounding_box[1]
 		left = bounding_box[0] - 20
 
-		if 'face-detector-score' in frame_processors_globals.face_debugger_items:
+		if 'face-detector-score' in face_debugger_items:
 			face_score_text = str(round(target_face.score_set.get('detector'), 2))
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
-		if 'face-landmarker-score' in frame_processors_globals.face_debugger_items:
+		if 'face-landmarker-score' in face_debugger_items:
 			face_score_text = str(round(target_face.score_set.get('landmarker'), 2))
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, tertiary_color if has_face_landmark_5_fallback else secondary_color, 2)
-		if 'age' in frame_processors_globals.face_debugger_items:
+		if 'age' in face_debugger_items:
 			face_age_text = categorize_age(target_face.age)
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_age_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
-		if 'gender' in frame_processors_globals.face_debugger_items:
+		if 'gender' in face_debugger_items:
 			face_gender_text = categorize_gender(target_face.gender)
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_gender_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)

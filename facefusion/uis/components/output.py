@@ -6,11 +6,11 @@ from time import sleep
 import gradio
 
 import facefusion.globals
-from facefusion import process_manager, wording
+from facefusion import process_manager, state_manager, wording
 from facefusion.core import process_step, create_program
 from facefusion.memory import limit_system_memory
 from facefusion.jobs import job_manager, job_runner, job_store, job_helper
-from facefusion.program_helper import reduce_args, import_globals
+from facefusion.program_helper import reduce_args, import_globals, import_state
 from facefusion.filesystem import is_image, is_video, is_directory
 from facefusion.temp_helper import clear_temp_directory
 from facefusion.processors.frame import globals as frame_processors_globals
@@ -106,6 +106,7 @@ def create_and_run_job() -> bool:
 	job_id = job_helper.suggest_job_id('ui')
 	program = create_program()
 	program = import_globals(program, job_store.get_step_keys(), [ facefusion, facefusion.processors.frame ])
+	program = import_state(program, job_store.get_step_keys(), state_manager.get_state())
 	program = reduce_args(program, job_store.get_step_keys())
 	step_args = vars(program.parse_args())
 

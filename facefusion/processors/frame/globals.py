@@ -1,9 +1,7 @@
-from typing import List, Optional
+from typing import Optional
 
-from facefusion.processors.frame.typing import FaceDebuggerItem, FaceEnhancerModel, FaceSwapperModel, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
+from facefusion.processors.frame.typing import FaceSwapperModel, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
-face_debugger_items : Optional[List[FaceDebuggerItem]] = None
-face_enhancer_model : Optional[FaceEnhancerModel] = None
 face_enhancer_blend : Optional[int] = None
 face_swapper_model : Optional[FaceSwapperModel] = None
 face_swapper_pixel_boost : Optional[str] = None
