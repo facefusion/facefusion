@@ -23,8 +23,10 @@ def render() -> None:
 	}
 	if is_video(facefusion.globals.target_path):
 		video_frame_total = count_video_frame_total(facefusion.globals.target_path)
+		trim_frame_start = facefusion.globals.trim_frame_start or 0
+		trim_frame_end = facefusion.globals.trim_frame_end or video_frame_total
 		trim_frame_range_slider_args['maximum'] = video_frame_total
-		trim_frame_range_slider_args['value'] = (0, video_frame_total)
+		trim_frame_range_slider_args['value'] = (trim_frame_start, trim_frame_end)
 		trim_frame_range_slider_args['visible'] = True
 	TRIM_FRAME_RANGE_SLIDER = RangeSlider(**trim_frame_range_slider_args)
 
