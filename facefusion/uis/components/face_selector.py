@@ -41,7 +41,7 @@ def render() -> None:
 		reference_frame = read_static_image(state_manager.get_item('target_path'))
 		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
 	if is_video(state_manager.get_item('target_path')):
-		reference_frame = get_video_frame(state_manager.get_item('target_path'), facefusion.globals.reference_frame_number)
+		reference_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_selector_mode_dropdown'),
@@ -67,7 +67,7 @@ def render() -> None:
 		)
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
 		label = wording.get('uis.reference_face_distance_slider'),
-		value = facefusion.globals.reference_face_distance,
+		value = state_manager.get_item('reference_face_distance'),
 		step = facefusion.choices.reference_face_distance_range[1] - facefusion.choices.reference_face_distance_range[0],
 		minimum = facefusion.choices.reference_face_distance_range[0],
 		maximum = facefusion.choices.reference_face_distance_range[-1],
@@ -155,15 +155,15 @@ def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradi
 
 
 def update_reference_face_position(reference_face_position : int = 0) -> None:
-	facefusion.globals.reference_face_position = reference_face_position
+	state_manager.set_item('reference_face_position', reference_face_position)
 
 
 def update_reference_face_distance(reference_face_distance : float) -> None:
-	facefusion.globals.reference_face_distance = reference_face_distance
+	state_manager.set_item('reference_face_distance', reference_face_distance)
 
 
 def update_reference_frame_number(reference_frame_number : int) -> None:
-	facefusion.globals.reference_frame_number = reference_frame_number
+	state_manager.set_item('reference_frame_number', reference_frame_number)
 
 
 def clear_and_update_reference_position_gallery() -> gradio.Gallery:
@@ -178,7 +178,7 @@ def update_reference_position_gallery() -> gradio.Gallery:
 		temp_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
 	if is_video(state_manager.get_item('target_path')):
-		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), facefusion.globals.reference_frame_number)
+		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
 	if gallery_vision_frames:
 		return gradio.Gallery(value = gallery_vision_frames)

@@ -194,9 +194,9 @@ def apply_args(program : ArgumentParser) -> None:
 	state_manager.init_item('face_selector_order', args.face_selector_order)
 	state_manager.init_item('face_selector_age', args.face_selector_age)
 	state_manager.init_item('face_selector_gender', args.face_selector_gender)
-	facefusion.globals.reference_face_position = args.reference_face_position
-	facefusion.globals.reference_face_distance = args.reference_face_distance
-	facefusion.globals.reference_frame_number = args.reference_frame_number
+	state_manager.init_item('reference_face_position', args.reference_face_position)
+	state_manager.init_item('reference_face_distance', args.reference_face_distance)
+	state_manager.init_item('reference_frame_number', args.reference_frame_number)
 	# face mask
 	facefusion.globals.face_mask_types = args.face_mask_types
 	facefusion.globals.face_mask_blur = args.face_mask_blur
@@ -312,11 +312,11 @@ def conditional_append_reference_faces() -> None:
 		source_faces = get_many_faces(source_frames)
 		source_face = get_average_face(source_faces)
 		if is_video(state_manager.get_item('target_path')):
-			reference_frame = get_video_frame(state_manager.get_item('target_path'), facefusion.globals.reference_frame_number)
+			reference_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		else:
 			reference_frame = read_image(state_manager.get_item('target_path'))
 		reference_faces = sort_and_filter_faces(get_many_faces([ reference_frame ]))
-		reference_face = get_one_face(reference_faces, facefusion.globals.reference_face_position)
+		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
 		append_reference_face('origin', reference_face)
 
 		if source_face and reference_face:
@@ -324,7 +324,7 @@ def conditional_append_reference_faces() -> None:
 				abstract_reference_frame = frame_processor_module.get_reference_frame(source_face, reference_face, reference_frame)
 				if numpy.any(abstract_reference_frame):
 					abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame]))
-					abstract_reference_face = get_one_face(abstract_reference_faces, facefusion.globals.reference_face_position)
+					abstract_reference_face = get_one_face(abstract_reference_faces, state_manager.get_item('reference_face_position'))
 					append_reference_face(frame_processor_module.__name__, abstract_reference_face)
 
 

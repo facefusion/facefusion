@@ -222,7 +222,7 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 		if target_face:
 			target_vision_frame = sync_lip(target_face, source_audio_frame, target_vision_frame)
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		similar_faces = find_similar_faces(many_faces, reference_faces, facefusion.globals.reference_face_distance)
+		similar_faces = find_similar_faces(many_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if similar_faces:
 			for similar_face in similar_faces:
 				target_vision_frame = sync_lip(similar_face, source_audio_frame, target_vision_frame)

@@ -162,7 +162,7 @@ JobSet = Dict[str, Job]
 
 
 StateContext = Literal['core', 'uis']
-StateKey = Literal['config_path', 'source_paths', 'target_path', 'output_path', 'jobs_path', 'force_download', 'skip_download', 'headless', 'log_level', 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count', 'video_memory_strategy', 'system_memory_limit', 'face_detector_model', 'face_detector_size', 'face_detector_angles', 'face_detector_score', 'face_landmarker_score', 'face_recognizer_model', 'face_selector_mode', 'face_selector_order', 'face_selector_age', 'face_selector_gender']
+StateKey = Literal['config_path', 'source_paths', 'target_path', 'output_path', 'jobs_path', 'force_download', 'skip_download', 'headless', 'log_level', 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count', 'video_memory_strategy', 'system_memory_limit', 'face_detector_model', 'face_detector_size', 'face_detector_angles', 'face_detector_score', 'face_landmarker_score', 'face_recognizer_model', 'face_selector_mode', 'face_selector_order', 'face_selector_age', 'face_selector_gender', 'reference_face_position', 'reference_face_distance', 'reference_frame_number']
 State = TypedDict('State',
 {
 	'config_path' : str,
@@ -189,6 +189,9 @@ State = TypedDict('State',
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
 	'face_selector_age' : FaceSelectorAge,
-	'face_selector_gender' : FaceSelectorGender
+	'face_selector_gender' : FaceSelectorGender,
+	'reference_face_position' : int,
+	'reference_face_distance' : float,
+	'reference_frame_number' : int
 })
 StateSet = Dict[StateContext, State]

@@ -2,10 +2,6 @@ from typing import List, Optional
 
 from facefusion.typing import FaceMaskType, FaceMaskRegion, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, TempFrameFormat, Padding
 
-# face selector
-reference_face_position : Optional[int] = None
-reference_face_distance : Optional[float] = None
-reference_frame_number : Optional[int] = None
 # face mask
 face_mask_types : Optional[List[FaceMaskType]] = None
 face_mask_blur : Optional[float] = None
