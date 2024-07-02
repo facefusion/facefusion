@@ -8,7 +8,6 @@ from concurrent.futures import ThreadPoolExecutor
 from collections import deque
 from tqdm import tqdm
 
-import facefusion.globals
 from facefusion import state_manager, logger, wording
 from facefusion.audio import create_empty_audio_frame
 from facefusion.common_helper import is_windows
@@ -142,7 +141,7 @@ def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture,
 
 
 def update() -> None:
-	for frame_processor in facefusion.globals.frame_processors:
+	for frame_processor in state_manager.get_item('frame_processors'):
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		while not frame_processor_module.post_check():
 			logger.disable()
@@ -157,7 +156,7 @@ def stop() -> gradio.Image:
 
 def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) -> VisionFrame:
 	source_audio_frame = create_empty_audio_frame()
-	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
+	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
 		logger.disable()
 		if frame_processor_module.pre_process('stream'):
 			logger.enable()

@@ -157,7 +157,7 @@ def slide_preview_image(frame_number : int = 0) -> gradio.Image:
 
 
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
-	for frame_processor in facefusion.globals.frame_processors:
+	for frame_processor in state_manager.get_item('frame_processors'):
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		while not frame_processor_module.post_check():
 			logger.disable()
@@ -201,7 +201,7 @@ def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_
 	target_vision_frame = resize_frame_resolution(target_vision_frame, (640, 640))
 	if analyse_frame(target_vision_frame):
 		return cv2.GaussianBlur(target_vision_frame, (99, 99), 0)
-	for frame_processor in facefusion.globals.frame_processors:
+	for frame_processor in state_manager.get_item('frame_processors'):
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		logger.disable()
 		if frame_processor_module.pre_process('preview'):

@@ -6,7 +6,6 @@ from types import ModuleType
 from typing import Any, List
 from tqdm import tqdm
 
-import facefusion.globals
 from facefusion import state_manager, logger, wording
 from facefusion.exit_helper import hard_exit
 from facefusion.typing import ProcessFrames, QueuePayload
@@ -61,7 +60,7 @@ def get_frame_processors_modules(frame_processors : List[str]) -> List[ModuleTyp
 def clear_frame_processors_modules() -> None:
 	global FRAME_PROCESSORS_MODULES
 
-	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
+	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
 		frame_processor_module.clear_frame_processor()
 	FRAME_PROCESSORS_MODULES = []
 

@@ -1,7 +1,6 @@
 from typing import List, Optional, Tuple
 import gradio
 
-import facefusion.globals
 from facefusion import face_analyser, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.processors.frame.core import load_frame_processor_module
@@ -39,13 +38,13 @@ def render() -> None:
 		label = wording.get('uis.face_debugger_items_checkbox_group'),
 		choices = frame_processors_choices.face_debugger_items,
 		value = state_manager.get_item('face_debugger_items'),
-		visible = 'face_debugger' in facefusion.globals.frame_processors
+		visible = 'face_debugger' in state_manager.get_item('frame_processors')
 	)
 	FACE_ENHANCER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_enhancer_model_dropdown'),
 		choices = frame_processors_choices.face_enhancer_models,
 		value = state_manager.get_item('face_enhancer_model'),
-		visible = 'face_enhancer' in facefusion.globals.frame_processors
+		visible = 'face_enhancer' in state_manager.get_item('frame_processors')
 	)
 	FACE_ENHANCER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_enhancer_blend_slider'),
@@ -53,25 +52,25 @@ def render() -> None:
 		step = frame_processors_choices.face_enhancer_blend_range[1] - frame_processors_choices.face_enhancer_blend_range[0],
 		minimum = frame_processors_choices.face_enhancer_blend_range[0],
 		maximum = frame_processors_choices.face_enhancer_blend_range[-1],
-		visible = 'face_enhancer' in facefusion.globals.frame_processors
+		visible = 'face_enhancer' in state_manager.get_item('frame_processors')
 	)
 	FACE_SWAPPER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_swapper_model_dropdown'),
 		choices = frame_processors_choices.face_swapper_set.keys(),
 		value = state_manager.get_item('face_swapper_model'),
-		visible = 'face_swapper' in facefusion.globals.frame_processors
+		visible = 'face_swapper' in state_manager.get_item('frame_processors')
 	)
 	FACE_SWAPPER_PIXEL_BOOST_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_swapper_pixel_boost_dropdown'),
 		choices = frame_processors_choices.face_swapper_set.get(state_manager.get_item('face_swapper_model')),
 		value = state_manager.get_item('face_swapper_pixel_boost'),
-		visible = 'face_swapper' in facefusion.globals.frame_processors
+		visible = 'face_swapper' in state_manager.get_item('frame_processors')
 	)
 	FRAME_COLORIZER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.frame_colorizer_model_dropdown'),
 		choices = frame_processors_choices.frame_colorizer_models,
 		value = state_manager.get_item('frame_colorizer_model'),
-		visible = 'frame_colorizer' in facefusion.globals.frame_processors
+		visible = 'frame_colorizer' in state_manager.get_item('frame_processors')
 	)
 	FRAME_COLORIZER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('uis.frame_colorizer_blend_slider'),
@@ -79,19 +78,19 @@ def render() -> None:
 		step = frame_processors_choices.frame_colorizer_blend_range[1] - frame_processors_choices.frame_colorizer_blend_range[0],
 		minimum = frame_processors_choices.frame_colorizer_blend_range[0],
 		maximum = frame_processors_choices.frame_colorizer_blend_range[-1],
-		visible = 'frame_colorizer' in facefusion.globals.frame_processors
+		visible = 'frame_colorizer' in state_manager.get_item('frame_processors')
 	)
 	FRAME_COLORIZER_SIZE_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.frame_colorizer_size_dropdown'),
 		choices = frame_processors_choices.frame_colorizer_sizes,
 		value = state_manager.get_item('frame_colorizer_size'),
-		visible = 'frame_colorizer' in facefusion.globals.frame_processors
+		visible = 'frame_colorizer' in state_manager.get_item('frame_processors')
 	)
 	FRAME_ENHANCER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.frame_enhancer_model_dropdown'),
 		choices = frame_processors_choices.frame_enhancer_models,
 		value = state_manager.get_item('frame_enhancer_model'),
-		visible = 'frame_enhancer' in facefusion.globals.frame_processors
+		visible = 'frame_enhancer' in state_manager.get_item('frame_processors')
 	)
 	FRAME_ENHANCER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('uis.frame_enhancer_blend_slider'),
@@ -99,13 +98,13 @@ def render() -> None:
 		step = frame_processors_choices.frame_enhancer_blend_range[1] - frame_processors_choices.frame_enhancer_blend_range[0],
 		minimum = frame_processors_choices.frame_enhancer_blend_range[0],
 		maximum = frame_processors_choices.frame_enhancer_blend_range[-1],
-		visible = 'frame_enhancer' in facefusion.globals.frame_processors
+		visible = 'frame_enhancer' in state_manager.get_item('frame_processors')
 	)
 	LIP_SYNCER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.lip_syncer_model_dropdown'),
 		choices = frame_processors_choices.lip_syncer_models,
 		value = state_manager.get_item('lip_syncer_model'),
-		visible = 'lip_syncer' in facefusion.globals.frame_processors
+		visible = 'lip_syncer' in state_manager.get_item('frame_processors')
 	)
 	register_ui_component('face_debugger_items_checkbox_group', FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
 	register_ui_component('face_enhancer_model_dropdown', FACE_ENHANCER_MODEL_DROPDOWN)
