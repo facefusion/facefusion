@@ -104,8 +104,8 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 
 
 def pre_process() -> None:
-	if facefusion.globals.system_memory_limit > 0:
-		limit_system_memory(facefusion.globals.system_memory_limit)
+	if state_manager.get_item('system_memory_limit') > 0:
+		limit_system_memory(state_manager.get_item('system_memory_limit'))
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		frame_processor_module.get_frame_processor()
 

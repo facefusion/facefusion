@@ -181,8 +181,8 @@ def apply_args(program : ArgumentParser) -> None:
 	state_manager.init_item('execution_thread_count', args.execution_thread_count)
 	state_manager.init_item('execution_queue_count', args.execution_queue_count)
 	# memory
-	facefusion.globals.video_memory_strategy = args.video_memory_strategy
-	facefusion.globals.system_memory_limit = args.system_memory_limit
+	state_manager.init_item('video_memory_strategy', args.video_memory_strategy)
+	state_manager.init_item('system_memory_limit', args.system_memory_limit)
 	# face analyser
 	facefusion.globals.face_detector_model = args.face_detector_model
 	facefusion.globals.face_detector_size = args.face_detector_size
@@ -244,8 +244,8 @@ def apply_args(program : ArgumentParser) -> None:
 def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 
-	if facefusion.globals.system_memory_limit > 0:
-		limit_system_memory(facefusion.globals.system_memory_limit)
+	if state_manager.get_item('system_memory_limit') > 0:
+		limit_system_memory(state_manager.get_item('system_memory_limit'))
 	if args.job_create or args.job_submit or args.job_submit_all or args.job_delete or args.job_delete_all or args.job_add_step or args.job_remix_step or args.job_insert_step or args.job_remove_step or args.job_list:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)

@@ -79,8 +79,8 @@ def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]
 	output_path = state_manager.get_item('output_path')
 	stored_output_path = state_manager.get_item('output_path')
 
-	if facefusion.globals.system_memory_limit > 0:
-		limit_system_memory(facefusion.globals.system_memory_limit)
+	if state_manager.get_item('system_memory_limit') > 0:
+		limit_system_memory(state_manager.get_item('system_memory_limit'))
 	if is_directory(output_path):
 		output_path = suggest_output_path(output_path, state_manager.get_item('target_path'))
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
