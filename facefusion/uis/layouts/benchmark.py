@@ -1,6 +1,5 @@
 import gradio
 
-import facefusion.globals
 from facefusion import state_manager
 from facefusion.download import conditional_download
 from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, memory, benchmark_options, benchmark
@@ -63,4 +62,4 @@ def listen() -> None:
 
 
 def run(ui : gradio.Blocks) -> None:
-	ui.launch(show_api = False, inbrowser = facefusion.globals.open_browser)
+	ui.launch(show_api = False, inbrowser = state_manager.get_item('open_browser'))

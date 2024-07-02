@@ -162,7 +162,7 @@ JobSet = Dict[str, Job]
 
 
 StateContext = Literal['core', 'uis']
-StateKey = Literal['config_path', 'source_paths', 'target_path', 'output_path', 'jobs_path', 'force_download', 'skip_download', 'headless', 'log_level', 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count', 'video_memory_strategy', 'system_memory_limit', 'face_detector_model', 'face_detector_size', 'face_detector_angles', 'face_detector_score', 'face_landmarker_score', 'face_recognizer_model', 'face_selector_mode', 'face_selector_order', 'face_selector_age', 'face_selector_gender', 'reference_face_position', 'reference_face_distance', 'reference_frame_number', 'face_mask_types', 'face_mask_blur', 'face_mask_padding', 'face_mask_regions', 'trim_frame_start', 'trim_frame_end', 'temp_frame_format', 'keep_temp']
+StateKey = Literal['config_path', 'source_paths', 'target_path', 'output_path', 'jobs_path', 'force_download', 'skip_download', 'headless', 'log_level', 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count', 'video_memory_strategy', 'system_memory_limit', 'face_detector_model', 'face_detector_size', 'face_detector_angles', 'face_detector_score', 'face_landmarker_score', 'face_recognizer_model', 'face_selector_mode', 'face_selector_order', 'face_selector_age', 'face_selector_gender', 'reference_face_position', 'reference_face_distance', 'reference_frame_number', 'face_mask_types', 'face_mask_blur', 'face_mask_padding', 'face_mask_regions', 'trim_frame_start', 'trim_frame_end', 'temp_frame_format', 'keep_temp', 'output_image_quality', 'output_image_resolution', 'output_audio_encoder', 'output_video_encoder', 'output_video_preset', 'output_video_quality', 'output_video_resolution', 'output_video_fps', 'skip_audio', 'frame_processors', 'open_browser', 'ui_layouts']
 State = TypedDict('State',
 {
 	'config_path' : str,
@@ -200,6 +200,18 @@ State = TypedDict('State',
 	'trim_frame_start' : int,
 	'trim_frame_end' : int,
 	'temp_frame_format' : TempFrameFormat,
-	'keep_temp' : bool
+	'keep_temp' : bool,
+	'output_image_quality': int,
+	'output_image_resolution': str,
+	'output_audio_encoder': OutputAudioEncoder,
+	'output_video_encoder': OutputVideoEncoder,
+	'output_video_preset': OutputVideoPreset,
+	'output_video_quality': int,
+	'output_video_resolution': str,
+	'output_video_fps': float,
+	'skip_audio': bool,
+	'frame_processors': List[str],
+	'open_browser': bool,
+	'ui_layouts': List[str]
 })
 StateSet = Dict[StateContext, State]

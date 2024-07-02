@@ -237,8 +237,8 @@ def apply_args(program : ArgumentParser) -> None:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		frame_processor_module.apply_args(program)
 	# uis
-	facefusion.globals.open_browser = args.open_browser
-	facefusion.globals.ui_layouts = args.ui_layouts
+	state_manager.init_item('open_browser', args.open_browser)
+	state_manager.init_item('ui_layouts', args.ui_layouts)
 
 
 def run(program : ArgumentParser) -> None:
@@ -272,7 +272,7 @@ def run(program : ArgumentParser) -> None:
 	else:
 		import facefusion.uis.core as ui
 
-		for ui_layout in ui.get_ui_layouts_modules(facefusion.globals.ui_layouts):
+		for ui_layout in ui.get_ui_layouts_modules(state_manager.get_item('ui_layouts')):
 			if not ui_layout.pre_check():
 				return conditional_exit(2)
 		flush_argv()
