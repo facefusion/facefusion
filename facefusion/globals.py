@@ -1,12 +1,7 @@
 from typing import List, Optional
 
-from facefusion.typing import Angle, Score, ExecutionProviderKey, VideoMemoryStrategy, FaceSelectorMode, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender, FaceMaskType, FaceMaskRegion, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, FaceDetectorModel, FaceRecognizerModel, TempFrameFormat, Padding
+from facefusion.typing import Angle, Score, VideoMemoryStrategy, FaceSelectorMode, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender, FaceMaskType, FaceMaskRegion, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, FaceDetectorModel, FaceRecognizerModel, TempFrameFormat, Padding
 
-# execution
-execution_device_id : Optional[str] = None
-execution_providers : List[ExecutionProviderKey] = []
-execution_thread_count : Optional[int] = None
-execution_queue_count : Optional[int] = None
 # memory
 video_memory_strategy : Optional[VideoMemoryStrategy] = None
 system_memory_limit : Optional[int] = None

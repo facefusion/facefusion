@@ -176,10 +176,10 @@ def apply_args(program : ArgumentParser) -> None:
 	state_manager.init_item('headless', args.headless)
 	state_manager.init_item('log_level', args.log_level)
 	# execution
-	facefusion.globals.execution_device_id = args.execution_device_id
-	facefusion.globals.execution_providers = args.execution_providers
-	facefusion.globals.execution_thread_count = args.execution_thread_count
-	facefusion.globals.execution_queue_count = args.execution_queue_count
+	state_manager.init_item('execution_device_id', args.execution_device_id)
+	state_manager.init_item('execution_providers', args.execution_providers)
+	state_manager.init_item('execution_thread_count', args.execution_thread_count)
+	state_manager.init_item('execution_queue_count', args.execution_queue_count)
 	# memory
 	facefusion.globals.video_memory_strategy = args.video_memory_strategy
 	facefusion.globals.system_memory_limit = args.system_memory_limit

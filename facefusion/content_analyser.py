@@ -6,7 +6,6 @@ import numpy
 import onnxruntime
 from tqdm import tqdm
 
-import facefusion.globals
 from facefusion import process_manager, state_manager, wording
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import VisionFrame, ModelSet, Fps
@@ -37,7 +36,7 @@ def get_content_analyser() -> Any:
 			sleep(0.5)
 		if CONTENT_ANALYSER is None:
 			model_path = MODELS.get('open_nsfw').get('path')
-			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
 	return CONTENT_ANALYSER
 
 

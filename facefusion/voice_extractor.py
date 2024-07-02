@@ -4,7 +4,6 @@ import scipy
 import numpy
 import onnxruntime
 
-import facefusion.globals
 from facefusion import process_manager, state_manager
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import ModelSet, AudioChunk, Audio
@@ -31,7 +30,7 @@ def get_voice_extractor() -> Any:
 			sleep(0.5)
 		if VOICE_EXTRACTOR is None:
 			model_path = MODELS.get('voice_extractor').get('path')
-			VOICE_EXTRACTOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+			VOICE_EXTRACTOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
 	return VOICE_EXTRACTOR
 
 

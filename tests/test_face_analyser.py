@@ -2,6 +2,7 @@ import subprocess
 import pytest
 
 import facefusion.globals
+from facefusion import state_manager
 from facefusion.download import conditional_download
 from facefusion.face_analyser import pre_check, clear_face_analyser, get_one_face, get_many_faces
 from facefusion.typing import Face
@@ -18,14 +19,15 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.8:ih*0.8', get_test_example_file('source-80crop.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.7:ih*0.7', get_test_example_file('source-70crop.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.6:ih*0.6', get_test_example_file('source-60crop.jpg') ])
-
-
-@pytest.fixture(autouse = True)
-def before_each() -> None:
+	state_manager.init_item('execution_providers', [ 'cpu' ])
 	facefusion.globals.face_detector_score = 0.5
 	facefusion.globals.face_detector_angles = [ 0 ]
 	facefusion.globals.face_landmarker_score = 0.5
 	facefusion.globals.face_recognizer_model = 'arcface_inswapper'
+
+
+@pytest.fixture(autouse = True)
+def before_each() -> None:
 	clear_face_analyser()
 
 

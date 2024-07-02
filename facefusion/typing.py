@@ -162,7 +162,7 @@ JobSet = Dict[str, Job]
 
 
 StateContext = Literal['core', 'uis']
-StateKey = Literal['config_path', 'source_paths', 'target_path', 'output_path', 'jobs_path', 'force_download', 'skip_download', 'headless', 'log_level']
+StateKey = Literal['config_path', 'source_paths', 'target_path', 'output_path', 'jobs_path', 'force_download', 'skip_download', 'headless', 'log_level', 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count']
 State = TypedDict('State',
 {
 	'config_path' : str,
@@ -173,6 +173,10 @@ State = TypedDict('State',
 	'force_download' : bool,
 	'skip_download' : bool,
 	'headless' : bool,
-	'log_level': LogLevel
+	'log_level': LogLevel,
+	'execution_device_id' : str,
+	'execution_providers' : List[ExecutionProviderKey],
+	'execution_thread_count' : int,
+	'execution_queue_count' : int
 })
 StateSet = Dict[StateContext, State]

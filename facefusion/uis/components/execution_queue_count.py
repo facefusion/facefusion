@@ -3,7 +3,7 @@ import gradio
 
 import facefusion.globals
 import facefusion.choices
-from facefusion import wording
+from facefusion import state_manager, wording
 
 EXECUTION_QUEUE_COUNT_SLIDER : Optional[gradio.Slider] = None
 
@@ -13,7 +13,7 @@ def render() -> None:
 
 	EXECUTION_QUEUE_COUNT_SLIDER = gradio.Slider(
 		label = wording.get('uis.execution_queue_count_slider'),
-		value = facefusion.globals.execution_queue_count,
+		value = state_manager.get_item('execution_queue_count'),
 		step = facefusion.choices.execution_queue_count_range[1] - facefusion.choices.execution_queue_count_range[0],
 		minimum = facefusion.choices.execution_queue_count_range[0],
 		maximum = facefusion.choices.execution_queue_count_range[-1]
@@ -25,4 +25,4 @@ def listen() -> None:
 
 
 def update_execution_queue_count(execution_queue_count : float) -> None:
-	facefusion.globals.execution_queue_count = int(execution_queue_count)
+	state_manager.set_item('execution_queue_count', int(execution_queue_count))
