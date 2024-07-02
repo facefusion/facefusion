@@ -7,6 +7,7 @@ import tempfile
 import facefusion.globals
 from facefusion import logger, process_manager
 from facefusion.filesystem import remove_file
+from facefusion.state_manager import get_state_item
 from facefusion.typing import OutputVideoPreset, Fps, AudioBuffer
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.vision import restrict_video_fps
@@ -19,7 +20,7 @@ def run_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 
 	while process_manager.is_processing():
 		try:
-			if facefusion.globals.log_level == 'debug':
+			if get_state_item('log_level')== 'debug':
 				log_debug(process)
 			process.wait(timeout = 0.5)
 		except subprocess.TimeoutExpired:

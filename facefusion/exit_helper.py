@@ -5,7 +5,6 @@ from facefusion.typing import ErrorCode
 from facefusion.state_manager import get_state_item
 from facefusion import process_manager
 from facefusion.temp_helper import clear_temp_directory
-import facefusion.globals
 
 
 def hard_exit(error_code : ErrorCode) -> None:
@@ -13,7 +12,7 @@ def hard_exit(error_code : ErrorCode) -> None:
 
 
 def conditional_exit(error_code : ErrorCode) -> None:
-	if facefusion.globals.headless:
+	if get_state_item('headless'):
 		hard_exit(error_code)
 
 

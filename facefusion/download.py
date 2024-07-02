@@ -7,10 +7,10 @@ from functools import lru_cache
 from urllib.parse import urlparse
 from tqdm import tqdm
 
-import facefusion.globals
 from facefusion import wording
 from facefusion.common_helper import is_macos
 from facefusion.filesystem import get_file_size, is_file, remove_file
+from facefusion.state_manager import get_state_item
 
 if is_macos():
 	ssl._create_default_https_context = ssl._create_unverified_context
@@ -22,7 +22,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		initial_size = get_file_size(download_file_path)
 		download_size = get_download_size(url)
 		if initial_size < download_size:
-			with tqdm(total = download_size, initial = initial_size, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
+			with tqdm(total = download_size, initial = initial_size, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = get_state_item('log_level') in [ 'warn', 'error' ]) as progress:
 				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])
 				current_size = initial_size
 				while current_size < download_size:

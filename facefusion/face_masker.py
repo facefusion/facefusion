@@ -8,6 +8,7 @@ import onnxruntime
 
 import facefusion.globals
 from facefusion import process_manager
+from facefusion.state_manager import get_state_item
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import FaceLandmark68, VisionFrame, Mask, Padding, FaceMaskRegion, ModelSet
 from facefusion.execution import apply_execution_provider_options
@@ -93,7 +94,7 @@ def pre_check() -> bool:
 		MODELS.get('face_parser').get('path')
 	]
 
-	if not facefusion.globals.skip_download:
+	if not get_state_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, model_urls)
 		process_manager.end()

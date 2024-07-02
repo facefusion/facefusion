@@ -46,7 +46,7 @@ def cli() -> None:
 
 	if validate_args(program):
 		apply_args(program)
-		logger.init(facefusion.globals.log_level)
+		logger.init(get_state_item('log_level'))
 		run(program)
 
 
@@ -172,10 +172,10 @@ def apply_args(program : ArgumentParser) -> None:
 	init_state_item('output_path', args.output_path)
 	init_state_item('jobs_path', args.jobs_path)
 	# misc
-	facefusion.globals.force_download = args.force_download
-	facefusion.globals.skip_download = args.skip_download
-	facefusion.globals.headless = args.headless
-	facefusion.globals.log_level = args.log_level
+	init_state_item('force_download', args.force_download)
+	init_state_item('skip_download', args.skip_download)
+	init_state_item('headless', args.headless)
+	init_state_item('log_level', args.log_level)
 	# execution
 	facefusion.globals.execution_device_id = args.execution_device_id
 	facefusion.globals.execution_providers = args.execution_providers
@@ -252,7 +252,7 @@ def run(program : ArgumentParser) -> None:
 			hard_exit(1)
 		error_code = route_job_manager(program)
 		hard_exit(error_code)
-	if facefusion.globals.force_download:
+	if get_state_item('force_download'):
 		force_download()
 		return conditional_exit(0)
 	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check():
@@ -265,7 +265,7 @@ def run(program : ArgumentParser) -> None:
 			hard_exit(1)
 		error_code = route_job_runner(program)
 		hard_exit(error_code)
-	elif facefusion.globals.headless:
+	elif get_state_item('headless'):
 		if not job_manager.init_jobs(get_state_item('jobs_path')):
 			hard_exit(1)
 		error_core = process_headless(program)

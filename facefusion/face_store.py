@@ -11,6 +11,10 @@ FACE_STORE : FaceStore =\
 }
 
 
+def get_face_store() -> FaceStore:
+	return FACE_STORE
+
+
 def get_static_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 	frame_hash = create_frame_hash(vision_frame)
 	if frame_hash in FACE_STORE['static_faces']:
