@@ -3,7 +3,6 @@ from argparse import ArgumentParser
 import cv2
 import numpy
 
-import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors

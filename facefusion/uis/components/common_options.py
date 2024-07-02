@@ -1,7 +1,6 @@
 from typing import Optional, List
 import gradio
 
-import facefusion.globals
 from facefusion import state_manager, wording
 from facefusion.uis import choices as uis_choices
 
@@ -17,7 +16,7 @@ def render() -> None:
 		common_options.append('skip-download')
 	if state_manager.get_item('keep_temp'):
 		common_options.append('keep-temp')
-	if facefusion.globals.skip_audio:
+	if state_manager.get_item('skip_audio'):
 		common_options.append('skip-audio')
 
 	COMMON_OPTIONS_CHECKBOX_GROUP = gradio.Checkboxgroup(
@@ -34,6 +33,7 @@ def listen() -> None:
 def update(common_options : List[str]) -> None:
 	skip_temp = 'skip-download' in common_options
 	keep_temp = 'keep-temp' in common_options
+	skip_audio = 'skip-audio' in common_options
 	state_manager.set_item('skip_download', skip_temp)
 	state_manager.set_item('keep_temp', keep_temp)
-	facefusion.globals.skip_audio = 'skip-audio' in common_options
+	state_manager.set_item('skip_audio', skip_audio)

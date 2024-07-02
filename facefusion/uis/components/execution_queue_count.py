@@ -1,7 +1,6 @@
 from typing import Optional
 import gradio
 
-import facefusion.globals
 import facefusion.choices
 from facefusion import state_manager, wording
 

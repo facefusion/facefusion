@@ -4,7 +4,6 @@ import cv2
 import gradio
 import numpy
 
-import facefusion.globals
 from facefusion import state_manager, logger, wording
 from facefusion.audio import get_audio_frame, create_empty_audio_frame
 from facefusion.common_helper import get_first
@@ -46,8 +45,8 @@ def render() -> None:
 	source_face = get_average_face(source_faces)
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()
-	if source_audio_path and facefusion.globals.output_video_fps and state_manager.get_item('reference_frame_number'):
-		temp_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, state_manager.get_item('reference_frame_number'))
+	if source_audio_path and state_manager.get_item('output_video_fps') and state_manager.get_item('reference_frame_number'):
+		temp_audio_frame = get_audio_frame(source_audio_path, state_manager.get_item('output_video_fps'), state_manager.get_item('reference_frame_number'))
 		if numpy.any(temp_audio_frame):
 			source_audio_frame = temp_audio_frame
 	if is_image(state_manager.get_item('target_path')):
@@ -170,11 +169,11 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	source_face = get_average_face(source_faces)
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()
-	if source_audio_path and facefusion.globals.output_video_fps and state_manager.get_item('reference_frame_number'):
+	if source_audio_path and state_manager.get_item('output_video_fps')and state_manager.get_item('reference_frame_number'):
 		reference_audio_frame_number = state_manager.get_item('reference_frame_number')
 		if state_manager.get_item('trim_frame_start'):
 			reference_audio_frame_number -= state_manager.get_item('trim_frame_start')
-		temp_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, reference_audio_frame_number)
+		temp_audio_frame = get_audio_frame(source_audio_path, state_manager.get_item('output_video_fps'), reference_audio_frame_number)
 		if numpy.any(temp_audio_frame):
 			source_audio_frame = temp_audio_frame
 	if is_image(state_manager.get_item('target_path')):

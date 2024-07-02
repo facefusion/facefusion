@@ -1,5 +1,4 @@
 from typing import List, Optional, Union
-from types import ModuleType
 from argparse import ArgumentParser, Action, _ArgumentGroup
 from copy import copy
 
@@ -48,20 +47,6 @@ def update_args(program : ArgumentParser, args : Args) -> ArgumentParser:
 			if action.dest == 'face_swapper_pixel_boost':
 				action.choices = suggest_face_swapper_pixel_boost_choices(program)
 			action.default = args[action.dest]
-	return program
-
-
-def import_globals(program : ArgumentParser, keys : List[str], modules : List[ModuleType]) -> ArgumentParser:
-	program = copy(program)
-	args : Args = {}
-
-	for module in modules:
-		for key in keys:
-			if hasattr(module.globals, key):
-				args[key] = getattr(module.globals, key)
-
-	if args:
-		return update_args(program, args)
 	return program
 
 

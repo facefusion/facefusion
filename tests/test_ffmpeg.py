@@ -2,7 +2,6 @@ import glob
 import subprocess
 import pytest
 
-import facefusion.globals
 from facefusion import process_manager, state_manager
 from facefusion.temp_helper import get_temp_directory_path, create_temp_directory, clear_temp_directory
 from facefusion.download import conditional_download
@@ -23,14 +22,14 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
+	state_manager.init_item('temp_frame_format', 'jpg')
+	state_manager.init_item('output_audio_encoder', 'aac')
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	state_manager.clear_item('trim_frame_start')
 	state_manager.clear_item('trim_frame_end')
-	state_manager.init_item('temp_frame_format', 'jpg')
-	facefusion.globals.output_audio_encoder = 'aac'
 	prepare_test_output_directory()
 
 

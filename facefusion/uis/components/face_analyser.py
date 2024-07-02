@@ -2,7 +2,6 @@ from typing import Optional, Dict, Any, Tuple, List
 
 import gradio
 
-import facefusion.globals
 import facefusion.choices
 from facefusion import face_analyser, state_manager, wording
 from facefusion.face_analyser import clear_face_analyser

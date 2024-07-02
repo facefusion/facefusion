@@ -6,7 +6,6 @@ import tempfile
 import statistics
 import gradio
 
-import facefusion.globals
 from facefusion import process_manager, state_manager, wording
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import is_video
@@ -89,7 +88,7 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 	state_manager.set_item('source_paths', [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ])
 	state_manager.set_item('face_landmarker_score', 0)
 	state_manager.set_item('temp_frame_format', 'bmp')
-	facefusion.globals.output_video_preset = 'ultrafast'
+	state_manager.set_item('output_video_preset', 'ultrafast')
 	benchmark_results = []
 	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 
@@ -118,8 +117,8 @@ def benchmark(benchmark_cycles : int) -> List[Any]:
 	process_times = []
 	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
-	facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
-	facefusion.globals.output_video_fps = detect_video_fps(state_manager.get_item('target_path'))
+	state_manager.set_item('output_video_resolution', pack_resolution(output_video_resolution))
+	state_manager.set_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
 
 	for index in range(benchmark_cycles):
 		start_time = perf_counter()

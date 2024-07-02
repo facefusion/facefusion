@@ -1,7 +1,6 @@
 from typing import Optional, Tuple, List
 import gradio
 
-import facefusion.globals
 import facefusion.choices
 from facefusion import wording, state_manager
 from facefusion.typing import FaceMaskType, FaceMaskRegion

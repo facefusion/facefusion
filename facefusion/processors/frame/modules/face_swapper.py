@@ -6,7 +6,6 @@ import onnx
 import onnxruntime
 from onnx import numpy_helper
 
-import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
