@@ -5,13 +5,12 @@ import gradio
 import numpy
 
 import facefusion.globals
-from facefusion import logger, wording
+from facefusion import logger, state_manager, wording
 from facefusion.audio import get_audio_frame, create_empty_audio_frame
 from facefusion.common_helper import get_first
 from facefusion.core import conditional_append_reference_faces
 from facefusion.face_analyser import get_many_faces, get_average_face
 from facefusion.face_store import clear_static_faces, get_reference_faces, clear_reference_faces
-from facefusion.state_manager import get_state_item
 from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame
 from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_resolution, read_static_image, read_static_images
 from facefusion.filesystem import is_image, is_video, filter_audio_paths
@@ -42,26 +41,26 @@ def render() -> None:
 	}
 	conditional_append_reference_faces()
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
-	source_frames = read_static_images(get_state_item('source_paths'))
+	source_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_faces = get_many_faces(source_frames)
 	source_face = get_average_face(source_faces)
-	source_audio_path = get_first(filter_audio_paths(get_state_item('source_paths')))
+	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()
 	if source_audio_path and facefusion.globals.output_video_fps and facefusion.globals.reference_frame_number:
 		temp_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, facefusion.globals.reference_frame_number)
 		if numpy.any(temp_audio_frame):
 			source_audio_frame = temp_audio_frame
-	if is_image(get_state_item('target_path')):
-		target_vision_frame = read_static_image(get_state_item('target_path'))
+	if is_image(state_manager.get_item('target_path')):
+		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)
 		preview_image_args['value'] = normalize_frame_color(preview_vision_frame)
-	if is_video(get_state_item('target_path')):
-		temp_vision_frame = get_video_frame(get_state_item('target_path'), facefusion.globals.reference_frame_number)
+	if is_video(state_manager.get_item('target_path')):
+		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), facefusion.globals.reference_frame_number)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
 		preview_image_args['value'] = normalize_frame_color(preview_vision_frame)
 		preview_image_args['visible'] = True
 		preview_frame_slider_args['value'] = facefusion.globals.reference_frame_number
-		preview_frame_slider_args['maximum'] = count_video_frame_total(get_state_item('target_path'))
+		preview_frame_slider_args['maximum'] = count_video_frame_total(state_manager.get_item('target_path'))
 		preview_frame_slider_args['visible'] = True
 	PREVIEW_IMAGE = gradio.Image(**preview_image_args)
 	PREVIEW_FRAME_SLIDER = gradio.Slider(**preview_frame_slider_args)
@@ -151,8 +150,8 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 
 
 def slide_preview_image(frame_number : int = 0) -> gradio.Image:
-	if is_video(get_state_item('target_path')):
-		preview_vision_frame = normalize_frame_color(get_video_frame(get_state_item('target_path'), frame_number))
+	if is_video(state_manager.get_item('target_path')):
+		preview_vision_frame = normalize_frame_color(get_video_frame(state_manager.get_item('target_path'), frame_number))
 		return gradio.Image(value = preview_vision_frame)
 	return gradio.Image(value = None)
 
@@ -166,10 +165,10 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		logger.enable()
 	conditional_append_reference_faces()
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
-	source_frames = read_static_images(get_state_item('source_paths'))
+	source_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_faces = get_many_faces(source_frames)
 	source_face = get_average_face(source_faces)
-	source_audio_path = get_first(filter_audio_paths(get_state_item('source_paths')))
+	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()
 	if source_audio_path and facefusion.globals.output_video_fps and facefusion.globals.reference_frame_number:
 		reference_audio_frame_number = facefusion.globals.reference_frame_number
@@ -178,13 +177,13 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		temp_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, reference_audio_frame_number)
 		if numpy.any(temp_audio_frame):
 			source_audio_frame = temp_audio_frame
-	if is_image(get_state_item('target_path')):
-		target_vision_frame = read_static_image(get_state_item('target_path'))
+	if is_image(state_manager.get_item('target_path')):
+		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
 		return gradio.Image(value = preview_vision_frame)
-	if is_video(get_state_item('target_path')):
-		temp_vision_frame = get_video_frame(get_state_item('target_path'), frame_number)
+	if is_video(state_manager.get_item('target_path')):
+		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), frame_number)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
 		return gradio.Image(value = preview_vision_frame)
@@ -192,8 +191,8 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 
 
 def update_preview_frame_slider() -> gradio.Slider:
-	if is_video(get_state_item('target_path')):
-		video_frame_total = count_video_frame_total(get_state_item('target_path'))
+	if is_video(state_manager.get_item('target_path')):
+		video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 		return gradio.Slider(maximum = video_frame_total, visible = True)
 	return gradio.Slider(value = 0, visible = False)
 

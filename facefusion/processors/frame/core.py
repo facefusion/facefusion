@@ -7,10 +7,9 @@ from typing import Any, List
 from tqdm import tqdm
 
 import facefusion.globals
+from facefusion import state_manager, logger, wording
 from facefusion.exit_helper import hard_exit
-from facefusion.state_manager import get_state_item
 from facefusion.typing import ProcessFrames, QueuePayload
-from facefusion import logger, wording
 
 FRAME_PROCESSORS_MODULES : List[ModuleType] = []
 FRAME_PROCESSORS_METHODS =\
@@ -69,7 +68,7 @@ def clear_frame_processors_modules() -> None:
 
 def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str], process_frames : ProcessFrames) -> None:
 	queue_payloads = create_queue_payloads(temp_frame_paths)
-	with tqdm(total = len(queue_payloads), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = get_state_item('log_level') in [ 'warn', 'error' ]) as progress:
+	with tqdm(total = len(queue_payloads), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		progress.set_postfix(
 		{
 			'execution_providers': facefusion.globals.execution_providers,

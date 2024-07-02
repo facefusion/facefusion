@@ -5,14 +5,13 @@ import numpy
 import onnxruntime
 
 import facefusion.globals
-from facefusion import process_manager
+from facefusion import process_manager, state_manager
 from facefusion.common_helper import get_first
 from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points, estimate_face_angle_from_face_landmark_68, apply_nms, get_nms_threshold
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.execution import apply_execution_provider_options
 from facefusion.download import conditional_download
 from facefusion.filesystem import resolve_relative_path, is_file
-from facefusion.state_manager import get_state_item
 from facefusion.thread_helper import thread_lock, thread_semaphore, conditional_thread_semaphore
 from facefusion.typing import Angle, Score, BoundingBox, Face, FaceScoreSet, FaceLandmarkSet, FaceLandmark5, FaceLandmark68, Embedding, ModelSet, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
@@ -163,7 +162,7 @@ def pre_check() -> bool:
 		model_urls.append(MODELS.get('face_recognizer_arcface_uniface').get('url'))
 		model_paths.append(MODELS.get('face_recognizer_arcface_uniface').get('path'))
 
-	if not get_state_item('skip_download'):
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, model_urls)
 		process_manager.end()

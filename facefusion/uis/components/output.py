@@ -12,7 +12,6 @@ from facefusion.memory import limit_system_memory
 from facefusion.jobs import job_manager, job_runner, job_store, job_helper
 from facefusion.program_helper import reduce_args, import_globals, import_state
 from facefusion.filesystem import is_image, is_video, is_directory
-from facefusion.state_manager import get_state, get_state_item, set_state_item
 from facefusion.temp_helper import clear_temp_directory
 
 OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
@@ -31,11 +30,11 @@ def render() -> None:
 	global OUTPUT_STOP_BUTTON
 	global OUTPUT_CLEAR_BUTTON
 
-	if not get_state_item('output_path'):
-		set_state_item('output_path', tempfile.gettempdir())
+	if not state_manager.get_item('output_path'):
+		state_manager.set_item('output_path', tempfile.gettempdir())
 	OUTPUT_PATH_TEXTBOX = gradio.Textbox(
 		label = wording.get('uis.output_path_textbox'),
-		value = get_state_item('output_path'),
+		value = state_manager.get_item('output_path'),
 		max_lines = 1
 	)
 	OUTPUT_IMAGE = gradio.Image(
@@ -77,17 +76,17 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 
 def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]:
-	output_path = get_state_item('output_path')
-	stored_output_path = get_state_item('output_path')
+	output_path = state_manager.get_item('output_path')
+	stored_output_path = state_manager.get_item('output_path')
 
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
 	if is_directory(output_path):
-		output_path = suggest_output_path(output_path, get_state_item('target_path'))
-	if job_manager.init_jobs(get_state_item('jobs_path')):
-		set_state_item('output_path', output_path)
+		output_path = suggest_output_path(output_path, state_manager.get_item('target_path'))
+	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
+		state_manager.set_item('output_path', output_path)
 		create_and_run_job()
-		set_state_item('output_path', stored_output_path)
+		state_manager.set_item('output_path', stored_output_path)
 	if is_image(output_path):
 		return gradio.Image(value = output_path, visible = True), gradio.Video(value = None, visible = False), gradio.Button(visible = True), gradio.Button(visible = False)
 	if is_video(output_path):
@@ -98,7 +97,7 @@ def process() -> Tuple[gradio.Image, gradio.Video, gradio.Button, gradio.Button]
 def suggest_output_path(output_directory_path : str, target_path : str) -> Optional[str]:
 	if is_image(target_path) or is_video(target_path):
 		_, target_extension = os.path.splitext(target_path)
-		output_name = hashlib.sha1(str(get_state()).encode('utf-8')).hexdigest()[:8]
+		output_name = hashlib.sha1(str(state_manager.get_state()).encode('utf-8')).hexdigest()[:8]
 		return os.path.join(output_directory_path, output_name + target_extension)
 	return None
 
@@ -122,10 +121,10 @@ def stop() -> Tuple[gradio.Button, gradio.Button]:
 def clear() -> Tuple[gradio.Image, gradio.Video]:
 	while process_manager.is_processing():
 		sleep(0.5)
-	if get_state_item('target_path'):
-		clear_temp_directory(get_state_item('target_path'))
+	if state_manager.get_item('target_path'):
+		clear_temp_directory(state_manager.get_item('target_path'))
 	return gradio.Image(value = None), gradio.Video(value = None)
 
 
 def update_output_path(output_path : str) -> None:
-	set_state_item('output_path', output_path)
+	state_manager.set_item('output_path', output_path)

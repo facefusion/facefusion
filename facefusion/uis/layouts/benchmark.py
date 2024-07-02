@@ -1,13 +1,13 @@
 import gradio
 
 import facefusion.globals
+from facefusion import state_manager
 from facefusion.download import conditional_download
-from facefusion.state_manager import get_state_item
 from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, memory, benchmark_options, benchmark
 
 
 def pre_check() -> bool:
-	if not get_state_item('skip_download'):
+	if not state_manager.get_item('skip_download'):
 		conditional_download('.assets/examples',
 		[
 			'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',

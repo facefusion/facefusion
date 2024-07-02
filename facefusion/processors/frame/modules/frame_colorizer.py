@@ -9,12 +9,11 @@ import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, logger, wording
+from facefusion import config, process_manager, state_manager, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution import apply_execution_provider_options, has_execution_provider
 from facefusion.program_helper import find_argument_group
-from facefusion.state_manager import init_state_item, get_state_item
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, ExecutionProviderKey, QueuePayload
 from facefusion.common_helper import create_metavar
@@ -87,7 +86,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[get_state_item('frame_colorizer_model')]
+			'model': MODELS[state_manager.get_item('frame_colorizer_model')]
 		}
 	return OPTIONS.get(key)
 
@@ -109,9 +108,9 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	init_state_item('frame_colorizer_model', args.frame_colorizer_model)
-	init_state_item('frame_colorizer_blend', args.frame_colorizer_blend)
-	init_state_item('frame_colorizer_size', args.frame_colorizer_size)
+	state_manager.init_item('frame_colorizer_model', args.frame_colorizer_model)
+	state_manager.init_item('frame_colorizer_blend', args.frame_colorizer_blend)
+	state_manager.init_item('frame_colorizer_size', args.frame_colorizer_size)
 
 
 def pre_check() -> bool:
@@ -119,7 +118,7 @@ def pre_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not get_state_item('skip_download'):
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
@@ -130,7 +129,7 @@ def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not get_state_item('skip_download') and not is_download_done(model_url, model_path):
+	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
 	if not is_file(model_path):
@@ -140,13 +139,13 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if mode in [ 'output', 'preview' ] and not is_image(get_state_item('target_path')) and not is_video(get_state_item('target_path')):
+	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not in_directory(get_state_item('output_path')):
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not same_file_extension([ get_state_item('target_path'), get_state_item('output_path') ]):
+	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -177,7 +176,7 @@ def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_size = unpack_resolution(get_state_item('frame_colorizer_size'))
+	model_size = unpack_resolution(state_manager.get_item('frame_colorizer_size'))
 	model_type = get_options('model').get('type')
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2GRAY)
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_GRAY2RGB)
@@ -217,7 +216,7 @@ def merge_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 
 
 def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
-	frame_colorizer_blend = 1 - (get_state_item('frame_colorizer_blend') / 100)
+	frame_colorizer_blend = 1 - (state_manager.get_item('frame_colorizer_blend') / 100)
 	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_colorizer_blend, paste_vision_frame, 1 - frame_colorizer_blend, 0)
 	return temp_vision_frame
 

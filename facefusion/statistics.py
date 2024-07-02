@@ -1,10 +1,9 @@
 from typing import Any, Dict
 import numpy
 
+from facefusion import logger, state_manager
 from facefusion.face_store import get_face_store
-from facefusion.state_manager import get_state_item
 from facefusion.typing import FaceSet
-from facefusion import logger
 
 
 def create_statistics(static_faces : FaceSet) -> Dict[str, Any]:
@@ -44,7 +43,7 @@ def create_statistics(static_faces : FaceSet) -> Dict[str, Any]:
 
 
 def conditional_log_statistics() -> None:
-	if get_state_item('log_level') == 'debug':
+	if state_manager.get_item('log_level') == 'debug':
 		statistics = create_statistics(get_face_store().get('static_faces'))
 
 		for name, value in statistics.items():

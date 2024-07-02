@@ -9,7 +9,7 @@ import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, logger, wording
+from facefusion import config, process_manager, state_manager, logger, wording
 from facefusion.execution import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_many_faces, clear_face_analyser
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
@@ -18,7 +18,6 @@ from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_bo
 from facefusion.face_store import get_reference_faces
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.program_helper import find_argument_group
-from facefusion.state_manager import init_state_item, get_state_item
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
 from facefusion.filesystem import same_file_extension, is_file, in_directory, has_audio, resolve_relative_path
@@ -68,7 +67,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[get_state_item('lip_syncer_model')]
+			'model': MODELS[state_manager.get_item('lip_syncer_model')]
 		}
 	return OPTIONS.get(key)
 
@@ -88,7 +87,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	init_state_item('lip_syncer_model', args.lip_syncer_model)
+	state_manager.init_item('lip_syncer_model', args.lip_syncer_model)
 
 
 def pre_check() -> bool:
@@ -96,7 +95,7 @@ def pre_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not get_state_item('skip_download'):
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
@@ -107,7 +106,7 @@ def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not get_state_item('skip_download') and not is_download_done(model_url, model_path):
+	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
 	if not is_file(model_path):
@@ -117,16 +116,16 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if not has_audio(get_state_item('source_paths')):
+	if not has_audio(state_manager.get_item('source_paths')):
 		logger.error(wording.get('choose_audio_source') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode in [ 'output', 'preview' ] and not is_image(get_state_item('target_path')) and not is_video(get_state_item('target_path')):
+	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not in_directory(get_state_item('output_path')):
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not same_file_extension([ get_state_item('target_path'), get_state_item('output_path') ]):
+	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -233,7 +232,7 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
 	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
-	temp_video_fps = restrict_video_fps(get_state_item('target_path'), facefusion.globals.output_video_fps)
+	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), facefusion.globals.output_video_fps)
 
 	for queue_payload in process_manager.manage(queue_payloads):
 		frame_number = queue_payload['frame_number']
@@ -266,8 +265,8 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	source_audio_paths = filter_audio_paths(get_state_item('source_paths'))
-	temp_video_fps = restrict_video_fps(get_state_item('target_path'), facefusion.globals.output_video_fps)
+	source_audio_paths = filter_audio_paths(state_manager.get_item('source_paths'))
+	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), facefusion.globals.output_video_fps)
 	for source_audio_path in source_audio_paths:
 		read_static_voice(source_audio_path, temp_video_fps)
 	frame_processors.multi_process_frames(source_paths, temp_frame_paths, process_frames)

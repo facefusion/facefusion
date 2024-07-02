@@ -10,7 +10,7 @@ import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, logger, wording
+from facefusion import config, process_manager, state_manager, logger, wording
 from facefusion.execution import has_execution_provider, apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, clear_face_analyser
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
@@ -21,7 +21,6 @@ from facefusion.common_helper import get_first
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
-from facefusion.state_manager import init_state_item, get_state_item
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import Face, Embedding, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.filesystem import same_file_extension, is_file, in_directory, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
@@ -170,7 +169,7 @@ def get_options(key : Literal['model']) -> Any:
 	global OPTIONS
 
 	if OPTIONS is None:
-		face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') or has_execution_provider('openvino') and get_state_item('face_swapper_model') == 'inswapper_128_fp16' else get_state_item('face_swapper_model')
+		face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') or has_execution_provider('openvino') and state_manager.get_item('face_swapper_model') == 'inswapper_128_fp16' else state_manager.get_item('face_swapper_model')
 		OPTIONS =\
 		{
 			'model': MODELS[face_swapper_model]
@@ -195,18 +194,18 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	init_state_item('face_swapper_model', args.face_swapper_model)
-	init_state_item('face_swapper_pixel_boost', args.face_swapper_pixel_boost)
+	state_manager.init_item('face_swapper_model', args.face_swapper_model)
+	state_manager.init_item('face_swapper_pixel_boost', args.face_swapper_pixel_boost)
 
-	if get_state_item('face_swapper_model') == 'blendswap_256':
+	if state_manager.get_item('face_swapper_model') == 'blendswap_256':
 		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
-	if get_state_item('face_swapper_model') in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
+	if state_manager.get_item('face_swapper_model') in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_ghost'
-	if get_state_item('face_swapper_model') in [ 'inswapper_128', 'inswapper_128_fp16' ]:
+	if state_manager.get_item('face_swapper_model') in [ 'inswapper_128', 'inswapper_128_fp16' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
-	if get_state_item('face_swapper_model') in [ 'simswap_256', 'simswap_512_unofficial' ]:
+	if state_manager.get_item('face_swapper_model') in [ 'simswap_256', 'simswap_512_unofficial' ]:
 		facefusion.globals.face_recognizer_model = 'arcface_simswap'
-	if get_state_item('face_swapper_model') == 'uniface_256':
+	if state_manager.get_item('face_swapper_model') == 'uniface_256':
 		facefusion.globals.face_recognizer_model = 'arcface_uniface'
 
 
@@ -215,7 +214,7 @@ def pre_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not get_state_item('skip_download'):
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
@@ -226,7 +225,7 @@ def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not get_state_item('skip_download') and not is_download_done(model_url, model_path):
+	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
 	if not is_file(model_path):
@@ -236,22 +235,22 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if not has_image(get_state_item('source_paths')):
+	if not has_image(state_manager.get_item('source_paths')):
 		logger.error(wording.get('choose_image_source') + wording.get('exclamation_mark'), NAME)
 		return False
-	source_image_paths = filter_image_paths(get_state_item('source_paths'))
+	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_frames)
 	if not get_one_face(source_faces):
 		logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode in [ 'output', 'preview' ] and not is_image(get_state_item('target_path')) and not is_video(get_state_item('target_path')):
+	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not in_directory(get_state_item('output_path')):
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not same_file_extension([ get_state_item('target_path'), get_state_item('output_path') ]):
+	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -272,7 +271,7 @@ def post_process() -> None:
 def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
-	pixel_boost_size = unpack_resolution(get_state_item('face_swapper_pixel_boost'))
+	pixel_boost_size = unpack_resolution(state_manager.get_item('face_swapper_pixel_boost'))
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, pixel_boost_size)
 	crop_masks = []
@@ -321,7 +320,7 @@ def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFra
 
 def prepare_source_frame(source_face : Face) -> VisionFrame:
 	model_type = get_options('model').get('type')
-	source_vision_frame = read_static_image(get_first(get_state_item('source_paths')))
+	source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
 
 	if model_type == 'blendswap':
 		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark_set.get('5/68'), 'arcface_112_v2', (112, 112))

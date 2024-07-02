@@ -2,9 +2,8 @@ from typing import Any, Dict, Tuple, Optional
 from gradio_rangeslider import RangeSlider
 
 import facefusion.globals
-from facefusion import wording
+from facefusion import state_manager, wording
 from facefusion.face_store import clear_static_faces
-from facefusion.state_manager import get_state_item
 from facefusion.vision import count_video_frame_total
 from facefusion.filesystem import is_video
 from facefusion.uis.core import get_ui_components
@@ -22,8 +21,8 @@ def render() -> None:
 		'step': 1,
 		'visible': False
 	}
-	if is_video(get_state_item('target_path')):
-		video_frame_total = count_video_frame_total(get_state_item('target_path'))
+	if is_video(state_manager.get_item('target_path')):
+		video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 		trim_frame_start = facefusion.globals.trim_frame_start or 0
 		trim_frame_end = facefusion.globals.trim_frame_end or video_frame_total
 		trim_frame_range_slider_args['maximum'] = video_frame_total
@@ -44,8 +43,8 @@ def listen() -> None:
 
 
 def remote_update() -> RangeSlider:
-	if is_video(get_state_item('target_path')):
-		video_frame_total = count_video_frame_total(get_state_item('target_path'))
+	if is_video(state_manager.get_item('target_path')):
+		video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 		facefusion.globals.trim_frame_start = None
 		facefusion.globals.trim_frame_end = None
 		return RangeSlider(value = (0, video_frame_total), maximum = video_frame_total, visible = True)
@@ -56,6 +55,6 @@ def update_trim_frame(trim_frame : Tuple[float, float]) -> None:
 	clear_static_faces()
 	trim_frame_start = int(trim_frame[0])
 	trim_frame_end = int(trim_frame[1])
-	video_frame_total = count_video_frame_total(get_state_item('target_path'))
+	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 	facefusion.globals.trim_frame_start = trim_frame_start if trim_frame_start > 0 else None
 	facefusion.globals.trim_frame_end = trim_frame_end if trim_frame_end < video_frame_total else None

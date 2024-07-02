@@ -15,7 +15,6 @@ import facefusion.choices
 import facefusion.globals
 from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, state_manager, metadata, logger, voice_extractor, wording
 from facefusion.typing import ErrorCode, Args
-from facefusion.state_manager import init_state_item, get_state_item
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import get_reference_faces, append_reference_face
@@ -46,7 +45,7 @@ def cli() -> None:
 
 	if validate_args(program):
 		apply_args(program)
-		logger.init(get_state_item('log_level'))
+		logger.init(state_manager.get_item('log_level'))
 		run(program)
 
 
@@ -161,21 +160,21 @@ def create_program() -> ArgumentParser:
 
 def apply_config_path(program : ArgumentParser) -> None:
 	known_args, _ = program.parse_known_args()
-	init_state_item('config_path', known_args.config_path)
+	state_manager.init_item('config_path', known_args.config_path)
 
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	# general
-	init_state_item('source_paths', args.source_paths)
-	init_state_item('target_path', args.target_path)
-	init_state_item('output_path', args.output_path)
-	init_state_item('jobs_path', args.jobs_path)
+	state_manager.init_item('source_paths', args.source_paths)
+	state_manager.init_item('target_path', args.target_path)
+	state_manager.init_item('output_path', args.output_path)
+	state_manager.init_item('jobs_path', args.jobs_path)
 	# misc
-	init_state_item('force_download', args.force_download)
-	init_state_item('skip_download', args.skip_download)
-	init_state_item('headless', args.headless)
-	init_state_item('log_level', args.log_level)
+	state_manager.init_item('force_download', args.force_download)
+	state_manager.init_item('skip_download', args.skip_download)
+	state_manager.init_item('headless', args.headless)
+	state_manager.init_item('log_level', args.log_level)
 	# execution
 	facefusion.globals.execution_device_id = args.execution_device_id
 	facefusion.globals.execution_providers = args.execution_providers
@@ -248,11 +247,11 @@ def run(program : ArgumentParser) -> None:
 	if facefusion.globals.system_memory_limit > 0:
 		limit_system_memory(facefusion.globals.system_memory_limit)
 	if args.job_create or args.job_submit or args.job_submit_all or args.job_delete or args.job_delete_all or args.job_add_step or args.job_remix_step or args.job_insert_step or args.job_remove_step or args.job_list:
-		if not job_manager.init_jobs(get_state_item('jobs_path')):
+		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_code = route_job_manager(program)
 		hard_exit(error_code)
-	if get_state_item('force_download'):
+	if state_manager.get_item('force_download'):
 		force_download()
 		return conditional_exit(0)
 	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check():
@@ -261,12 +260,12 @@ def run(program : ArgumentParser) -> None:
 		if not frame_processor_module.pre_check():
 			return conditional_exit(2)
 	if args.job_run or args.job_run_all or args.job_retry or args.job_retry_all:
-		if not job_manager.init_jobs(get_state_item('jobs_path')):
+		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_code = route_job_runner(program)
 		hard_exit(error_code)
-	elif get_state_item('headless'):
-		if not job_manager.init_jobs(get_state_item('jobs_path')):
+	elif state_manager.get_item('headless'):
+		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_core = process_headless(program)
 		hard_exit(error_core)
@@ -300,22 +299,22 @@ def conditional_process() -> ErrorCode:
 		if not frame_processor_module.pre_process('output'):
 			return 2
 	conditional_append_reference_faces()
-	if is_image(get_state_item('target_path')):
+	if is_image(state_manager.get_item('target_path')):
 		return process_image(start_time)
-	if is_video(get_state_item('target_path')):
+	if is_video(state_manager.get_item('target_path')):
 		return process_video(start_time)
 	return 0
 
 
 def conditional_append_reference_faces() -> None:
 	if 'reference' in facefusion.globals.face_selector_mode and not get_reference_faces():
-		source_frames = read_static_images(get_state_item('source_paths'))
+		source_frames = read_static_images(state_manager.get_item('source_paths'))
 		source_faces = get_many_faces(source_frames)
 		source_face = get_average_face(source_faces)
-		if is_video(get_state_item('target_path')):
-			reference_frame = get_video_frame(get_state_item('target_path'), facefusion.globals.reference_frame_number)
+		if is_video(state_manager.get_item('target_path')):
+			reference_frame = get_video_frame(state_manager.get_item('target_path'), facefusion.globals.reference_frame_number)
 		else:
-			reference_frame = read_image(get_state_item('target_path'))
+			reference_frame = read_image(state_manager.get_item('target_path'))
 		reference_faces = sort_and_filter_faces(get_many_faces([ reference_frame ]))
 		reference_face = get_one_face(reference_faces, facefusion.globals.reference_face_position)
 		append_reference_face('origin', reference_face)
@@ -491,44 +490,44 @@ def process_headless(program : ArgumentParser) -> ErrorCode:
 
 
 def process_image(start_time : float) -> ErrorCode:
-	if analyse_image(get_state_item('target_path')):
+	if analyse_image(state_manager.get_item('target_path')):
 		return 3
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
-	clear_temp_directory(get_state_item('target_path'))
+	clear_temp_directory(state_manager.get_item('target_path'))
 	# create temp
 	logger.debug(wording.get('creating_temp'), __name__.upper())
-	create_temp_directory(get_state_item('target_path'))
+	create_temp_directory(state_manager.get_item('target_path'))
 	# copy image
 	process_manager.start()
-	temp_image_resolution = pack_resolution(restrict_image_resolution(get_state_item('target_path'), unpack_resolution(facefusion.globals.output_image_resolution)))
+	temp_image_resolution = pack_resolution(restrict_image_resolution(state_manager.get_item('target_path'), unpack_resolution(facefusion.globals.output_image_resolution)))
 	logger.info(wording.get('copying_image').format(resolution = temp_image_resolution), __name__.upper())
-	if copy_image(get_state_item('target_path'), temp_image_resolution):
+	if copy_image(state_manager.get_item('target_path'), temp_image_resolution):
 		logger.debug(wording.get('copying_image_succeed'), __name__.upper())
 	else:
 		logger.error(wording.get('copying_image_failed'), __name__.upper())
 		process_manager.end()
 		return 1
 	# process image
-	temp_file_path = get_temp_file_path(get_state_item('target_path'))
+	temp_file_path = get_temp_file_path(state_manager.get_item('target_path'))
 	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 		logger.info(wording.get('processing'), frame_processor_module.NAME)
-		frame_processor_module.process_image(get_state_item('source_paths'), temp_file_path, temp_file_path)
+		frame_processor_module.process_image(state_manager.get_item('source_paths'), temp_file_path, temp_file_path)
 		frame_processor_module.post_process()
 	if is_process_stopping():
 		process_manager.end()
 		return 4
 	# finalize image
 	logger.info(wording.get('finalizing_image').format(resolution = facefusion.globals.output_image_resolution), __name__.upper())
-	if finalize_image(get_state_item('target_path'), get_state_item('output_path'), facefusion.globals.output_image_resolution):
+	if finalize_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), facefusion.globals.output_image_resolution):
 		logger.debug(wording.get('finalizing_image_succeed'), __name__.upper())
 	else:
 		logger.warn(wording.get('finalizing_image_skipped'), __name__.upper())
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
-	clear_temp_directory(get_state_item('target_path'))
+	clear_temp_directory(state_manager.get_item('target_path'))
 	# validate image
-	if is_image(get_state_item('output_path')):
+	if is_image(state_manager.get_item('output_path')):
 		seconds = '{:.2f}'.format((time() - start_time) % 60)
 		logger.info(wording.get('processing_image_succeed').format(seconds = seconds), __name__.upper())
 		conditional_log_statistics()
@@ -541,20 +540,20 @@ def process_image(start_time : float) -> ErrorCode:
 
 
 def process_video(start_time : float) -> ErrorCode:
-	if analyse_video(get_state_item('target_path'), facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
+	if analyse_video(state_manager.get_item('target_path'), facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
 		return 3
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
-	clear_temp_directory(get_state_item('target_path'))
+	clear_temp_directory(state_manager.get_item('target_path'))
 	# create temp
 	logger.debug(wording.get('creating_temp'), __name__.upper())
-	create_temp_directory(get_state_item('target_path'))
+	create_temp_directory(state_manager.get_item('target_path'))
 	# extract frames
 	process_manager.start()
-	temp_video_resolution = pack_resolution(restrict_video_resolution(get_state_item('target_path'), unpack_resolution(facefusion.globals.output_video_resolution)))
-	temp_video_fps = restrict_video_fps(get_state_item('target_path'), facefusion.globals.output_video_fps)
+	temp_video_resolution = pack_resolution(restrict_video_resolution(state_manager.get_item('target_path'), unpack_resolution(facefusion.globals.output_video_resolution)))
+	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), facefusion.globals.output_video_fps)
 	logger.info(wording.get('extracting_frames').format(resolution = temp_video_resolution, fps = temp_video_fps), __name__.upper())
-	if extract_frames(get_state_item('target_path'), temp_video_resolution, temp_video_fps):
+	if extract_frames(state_manager.get_item('target_path'), temp_video_resolution, temp_video_fps):
 		logger.debug(wording.get('extracting_frames_succeed'), __name__.upper())
 	else:
 		if is_process_stopping():
@@ -564,11 +563,11 @@ def process_video(start_time : float) -> ErrorCode:
 		process_manager.end()
 		return 1
 	# process frames
-	temp_frame_paths = get_temp_frame_paths(get_state_item('target_path'))
+	temp_frame_paths = get_temp_frame_paths(state_manager.get_item('target_path'))
 	if temp_frame_paths:
 		for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
 			logger.info(wording.get('processing'), frame_processor_module.NAME)
-			frame_processor_module.process_video(get_state_item('source_paths'), temp_frame_paths)
+			frame_processor_module.process_video(state_manager.get_item('source_paths'), temp_frame_paths)
 			frame_processor_module.post_process()
 		if is_process_stopping():
 			return 4
@@ -578,7 +577,7 @@ def process_video(start_time : float) -> ErrorCode:
 		return 1
 	# merge video
 	logger.info(wording.get('merging_video').format(resolution = facefusion.globals.output_video_resolution, fps = facefusion.globals.output_video_fps), __name__.upper())
-	if merge_video(get_state_item('target_path'), facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps):
+	if merge_video(state_manager.get_item('target_path'), facefusion.globals.output_video_resolution, facefusion.globals.output_video_fps):
 		logger.debug(wording.get('merging_video_succeed'), __name__.upper())
 	else:
 		if is_process_stopping():
@@ -590,32 +589,32 @@ def process_video(start_time : float) -> ErrorCode:
 	# handle audio
 	if facefusion.globals.skip_audio:
 		logger.info(wording.get('skipping_audio'), __name__.upper())
-		move_temp_file(get_state_item('target_path'), get_state_item('output_path'))
+		move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 	else:
 		if 'lip_syncer' in facefusion.globals.frame_processors:
-			source_audio_path = get_first(filter_audio_paths(get_state_item('source_paths')))
-			if source_audio_path and replace_audio(get_state_item('target_path'), source_audio_path, get_state_item('output_path')):
+			source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+			if source_audio_path and replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
 				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
 			else:
 				if is_process_stopping():
 					process_manager.end()
 					return 4
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
-				move_temp_file(get_state_item('target_path'), get_state_item('output_path'))
+				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 		else:
-			if restore_audio(get_state_item('target_path'), get_state_item('output_path'), facefusion.globals.output_video_fps):
+			if restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), facefusion.globals.output_video_fps):
 				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())
 			else:
 				if is_process_stopping():
 					process_manager.end()
 					return 4
 				logger.warn(wording.get('restoring_audio_skipped'), __name__.upper())
-				move_temp_file(get_state_item('target_path'), get_state_item('output_path'))
+				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())
-	clear_temp_directory(get_state_item('target_path'))
+	clear_temp_directory(state_manager.get_item('target_path'))
 	# validate video
-	if is_video(get_state_item('output_path')):
+	if is_video(state_manager.get_item('output_path')):
 		seconds = '{:.2f}'.format((time() - start_time))
 		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__.upper())
 		conditional_log_statistics()

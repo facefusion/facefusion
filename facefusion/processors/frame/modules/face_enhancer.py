@@ -9,7 +9,7 @@ import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, logger, wording
+from facefusion import config, process_manager, state_manager, logger, wording
 from facefusion.face_analyser import get_many_faces, clear_face_analyser, get_one_face
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder
@@ -18,7 +18,6 @@ from facefusion.execution import apply_execution_provider_options
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_store import get_reference_faces
 from facefusion.program_helper import find_argument_group
-from facefusion.state_manager import init_state_item, get_state_item
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
 from facefusion.common_helper import create_metavar
@@ -123,7 +122,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[get_state_item('face_enhancer_model')]
+			'model': MODELS[state_manager.get_item('face_enhancer_model')]
 		}
 	return OPTIONS.get(key)
 
@@ -144,8 +143,8 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	init_state_item('face_enhancer_model', args.face_enhancer_model)
-	init_state_item('face_enhancer_blend', args.face_enhancer_blend)
+	state_manager.init_item('face_enhancer_model', args.face_enhancer_model)
+	state_manager.init_item('face_enhancer_blend', args.face_enhancer_blend)
 
 
 def pre_check() -> bool:
@@ -153,7 +152,7 @@ def pre_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not get_state_item('skip_download'):
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
@@ -164,7 +163,7 @@ def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not get_state_item('skip_download') and not is_download_done(model_url, model_path):
+	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
 	if not is_file(model_path):
@@ -174,13 +173,13 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if mode in [ 'output', 'preview' ] and not is_image(get_state_item('target_path')) and not is_video(get_state_item('target_path')):
+	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not in_directory(get_state_item('output_path')):
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not same_file_extension([ get_state_item('target_path'), get_state_item('output_path') ]):
+	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -252,7 +251,7 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
-	face_enhancer_blend = 1 - (get_state_item('face_enhancer_blend') / 100)
+	face_enhancer_blend = 1 - (state_manager.get_item('face_enhancer_blend') / 100)
 	temp_vision_frame = cv2.addWeighted(temp_vision_frame, face_enhancer_blend, paste_vision_frame, 1 - face_enhancer_blend, 0)
 	return temp_vision_frame
 
