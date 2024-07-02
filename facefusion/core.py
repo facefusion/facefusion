@@ -203,10 +203,10 @@ def apply_args(program : ArgumentParser) -> None:
 	state_manager.init_item('face_mask_padding', normalize_padding(args.face_mask_padding))
 	state_manager.init_item('face_mask_regions', args.face_mask_regions)
 	# frame extraction
-	facefusion.globals.trim_frame_start = args.trim_frame_start
-	facefusion.globals.trim_frame_end = args.trim_frame_end
-	facefusion.globals.temp_frame_format = args.temp_frame_format
-	facefusion.globals.keep_temp = args.keep_temp
+	state_manager.init_item('trim_frame_start', args.trim_frame_start)
+	state_manager.init_item('trim_frame_end', args.trim_frame_end)
+	state_manager.init_item('temp_frame_format', args.temp_frame_format)
+	state_manager.init_item('keep_temp', args.keep_temp)
 	# output creation
 	facefusion.globals.output_image_quality = args.output_image_quality
 	if is_image(args.target_path):
@@ -540,7 +540,7 @@ def process_image(start_time : float) -> ErrorCode:
 
 
 def process_video(start_time : float) -> ErrorCode:
-	if analyse_video(state_manager.get_item('target_path'), facefusion.globals.trim_frame_start, facefusion.globals.trim_frame_end):
+	if analyse_video(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end')):
 		return 3
 	# clear temp
 	logger.debug(wording.get('clearing_temp'), __name__.upper())

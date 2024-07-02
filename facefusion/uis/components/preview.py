@@ -172,8 +172,8 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	source_audio_frame = create_empty_audio_frame()
 	if source_audio_path and facefusion.globals.output_video_fps and state_manager.get_item('reference_frame_number'):
 		reference_audio_frame_number = state_manager.get_item('reference_frame_number')
-		if facefusion.globals.trim_frame_start:
-			reference_audio_frame_number -= facefusion.globals.trim_frame_start
+		if state_manager.get_item('trim_frame_start'):
+			reference_audio_frame_number -= state_manager.get_item('trim_frame_start')
 		temp_audio_frame = get_audio_frame(source_audio_path, facefusion.globals.output_video_fps, reference_audio_frame_number)
 		if numpy.any(temp_audio_frame):
 			source_audio_frame = temp_audio_frame

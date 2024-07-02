@@ -19,7 +19,7 @@ def run_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 
 	while process_manager.is_processing():
 		try:
-			if state_manager.get_item('log_level')== 'debug':
+			if state_manager.get_item('log_level') == 'debug':
 				log_debug(process)
 			process.wait(timeout = 0.5)
 		except subprocess.TimeoutExpired:
@@ -47,8 +47,8 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 
 
 def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps) -> bool:
-	trim_frame_start = facefusion.globals.trim_frame_start
-	trim_frame_end = facefusion.globals.trim_frame_end
+	trim_frame_start = state_manager.get_item('trim_frame_start')
+	trim_frame_end = state_manager.get_item('trim_frame_end')
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
 	commands = [ '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0' ]
 
@@ -132,8 +132,8 @@ def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int)
 
 
 def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) -> bool:
-	trim_frame_start = facefusion.globals.trim_frame_start
-	trim_frame_end = facefusion.globals.trim_frame_end
+	trim_frame_start = state_manager.get_item('trim_frame_start')
+	trim_frame_end = state_manager.get_item('trim_frame_end')
 	temp_file_path = get_temp_file_path(target_path)
 	commands = [ '-i', temp_file_path ]
 

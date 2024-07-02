@@ -17,7 +17,7 @@ def render() -> None:
 	TEMP_FRAME_FORMAT_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.temp_frame_format_dropdown'),
 		choices = facefusion.choices.temp_frame_formats,
-		value = facefusion.globals.temp_frame_format,
+		value = state_manager.get_item('temp_frame_format'),
 		visible = is_video(state_manager.get_item('target_path'))
 	)
 
@@ -37,5 +37,5 @@ def remote_update() -> gradio.Dropdown:
 
 
 def update_temp_frame_format(temp_frame_format : TempFrameFormat) -> None:
-	facefusion.globals.temp_frame_format = temp_frame_format
+	state_manager.set_item('temp_frame_format', temp_frame_format)
 

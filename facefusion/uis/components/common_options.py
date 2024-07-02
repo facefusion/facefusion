@@ -15,7 +15,7 @@ def render() -> None:
 
 	if state_manager.get_item('skip_download'):
 		common_options.append('skip-download')
-	if facefusion.globals.keep_temp:
+	if state_manager.get_item('keep_temp'):
 		common_options.append('keep-temp')
 	if facefusion.globals.skip_audio:
 		common_options.append('skip-audio')
@@ -32,6 +32,8 @@ def listen() -> None:
 
 
 def update(common_options : List[str]) -> None:
-	state_manager.set_item('skip_download', 'skip-download' in common_options)
-	facefusion.globals.keep_temp = 'keep-temp' in common_options
+	skip_temp = 'skip-download' in common_options
+	keep_temp = 'keep-temp' in common_options
+	state_manager.set_item('skip_download', skip_temp)
+	state_manager.set_item('keep_temp', keep_temp)
 	facefusion.globals.skip_audio = 'skip-audio' in common_options

@@ -3,7 +3,7 @@ import glob
 import os
 import tempfile
 
-import facefusion.globals
+from facefusion import state_manager
 from facefusion.filesystem import remove_directory, move_file, create_directory
 
 
@@ -25,7 +25,7 @@ def get_temp_frame_paths(target_path : str) -> List[str]:
 
 def get_temp_frames_pattern(target_path : str, temp_frame_prefix : str) -> str:
 	temp_directory_path = get_temp_directory_path(target_path)
-	return os.path.join(temp_directory_path, temp_frame_prefix + '.' + facefusion.globals.temp_frame_format)
+	return os.path.join(temp_directory_path, temp_frame_prefix + '.' + state_manager.get_item('temp_frame_format'))
 
 
 def get_base_directory_path() -> str:
@@ -54,5 +54,7 @@ def create_temp_directory(file_path : str) -> bool:
 
 
 def clear_temp_directory(file_path : str) -> bool:
-	temp_directory_path = get_temp_directory_path(file_path)
-	return remove_directory(temp_directory_path)
+	if not state_manager.get_item('keep_temp'):
+		temp_directory_path = get_temp_directory_path(file_path)
+		return remove_directory(temp_directory_path)
+	return True
