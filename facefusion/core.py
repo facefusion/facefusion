@@ -192,8 +192,8 @@ def apply_args(program : ArgumentParser) -> None:
 	# face selector
 	state_manager.init_item('face_selector_mode', args.face_selector_mode)
 	state_manager.init_item('face_selector_order', args.face_selector_order)
-	facefusion.globals.face_selector_age = args.face_selector_age
-	facefusion.globals.face_selector_gender = args.face_selector_gender
+	state_manager.init_item('face_selector_age', args.face_selector_age)
+	state_manager.init_item('face_selector_gender', args.face_selector_gender)
 	facefusion.globals.reference_face_position = args.reference_face_position
 	facefusion.globals.reference_face_distance = args.reference_face_distance
 	facefusion.globals.reference_frame_number = args.reference_frame_number

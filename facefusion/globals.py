@@ -1,12 +1,8 @@
 from typing import List, Optional
 
-from facefusion.typing import FaceSelectorMode, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender, FaceMaskType, FaceMaskRegion, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, TempFrameFormat, Padding
+from facefusion.typing import FaceMaskType, FaceMaskRegion, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, TempFrameFormat, Padding
 
 # face selector
-face_selector_mode : Optional[FaceSelectorMode] = None
-face_selector_order : Optional[FaceSelectorOrder] = None
-face_selector_age : Optional[FaceSelectorAge] = None
-face_selector_gender : Optional[FaceSelectorGender] = None
 reference_face_position : Optional[int] = None
 reference_face_distance : Optional[float] = None
 reference_frame_number : Optional[int] = None
