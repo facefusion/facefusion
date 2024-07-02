@@ -1,11 +1,10 @@
 import subprocess
 import pytest
 
-import facefusion.globals
 from facefusion import state_manager
+from facefusion.typing import Face
 from facefusion.download import conditional_download
 from facefusion.face_analyser import pre_check, clear_face_analyser, get_one_face, get_many_faces
-from facefusion.typing import Face
 from facefusion.vision import read_static_image
 from .helper import get_test_examples_directory, get_test_example_file
 
@@ -20,10 +19,10 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.7:ih*0.7', get_test_example_file('source-70crop.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.6:ih*0.6', get_test_example_file('source-60crop.jpg') ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
-	facefusion.globals.face_detector_score = 0.5
-	facefusion.globals.face_detector_angles = [ 0 ]
-	facefusion.globals.face_landmarker_score = 0.5
-	facefusion.globals.face_recognizer_model = 'arcface_inswapper'
+	state_manager.init_item('face_detector_angles', [ 0 ])
+	state_manager.init_item('face_detector_score', 0.5)
+	state_manager.init_item('face_landmarker_score', 0.5)
+	state_manager.init_item('face_recognizer_model', 'arcface_inswapper')
 
 
 @pytest.fixture(autouse = True)
@@ -32,8 +31,8 @@ def before_each() -> None:
 
 
 def test_get_one_face_with_retinaface() -> None:
-	facefusion.globals.face_detector_model = 'retinaface'
-	facefusion.globals.face_detector_size = '320x320'
+	state_manager.set_item('face_detector_model', 'retinaface')
+	state_manager.set_item('face_detector_size', '320x320')
 
 	pre_check()
 	source_paths =\
@@ -52,8 +51,8 @@ def test_get_one_face_with_retinaface() -> None:
 
 
 def test_get_one_face_with_scrfd() -> None:
-	facefusion.globals.face_detector_model = 'scrfd'
-	facefusion.globals.face_detector_size = '640x640'
+	state_manager.set_item('face_detector_model', 'scrfd')
+	state_manager.set_item('face_detector_size', '640x640')
 
 	pre_check()
 	source_paths =\
@@ -72,8 +71,8 @@ def test_get_one_face_with_scrfd() -> None:
 
 
 def test_get_one_face_with_yoloface() -> None:
-	facefusion.globals.face_detector_model = 'yoloface'
-	facefusion.globals.face_detector_size = '640x640'
+	state_manager.set_item('face_detector_model', 'yoloface')
+	state_manager.set_item('face_detector_size', '640x640')
 
 	pre_check()
 	source_paths =\

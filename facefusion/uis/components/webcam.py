@@ -9,7 +9,7 @@ from collections import deque
 from tqdm import tqdm
 
 import facefusion.globals
-from facefusion import logger, state_manager, wording
+from facefusion import state_manager, logger, wording
 from facefusion.audio import create_empty_audio_frame
 from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream

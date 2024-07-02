@@ -80,9 +80,9 @@ def import_state(program : ArgumentParser, keys : List[str], state : Union[State
 
 def suggest_face_detector_choices(program : ArgumentParser) -> List[str]:
 	known_args, _ = program.parse_known_args()
-	return facefusion.choices.face_detector_set.get(known_args.face_detector_model)  # type:ignore[call-overload]
+	return facefusion.choices.face_detector_set.get(known_args.face_detector_model) #type:ignore[call-overload]
 
 
 def suggest_face_swapper_pixel_boost_choices(program : ArgumentParser) -> List[str]:
 	known_args, _ = program.parse_known_args()
-	return frame_processors_choices.face_swapper_set.get(known_args.face_swapper_model)  # type:ignore[call-overload]
+	return frame_processors_choices.face_swapper_set.get(known_args.face_swapper_model) #type:ignore[call-overload]

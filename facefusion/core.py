@@ -144,7 +144,7 @@ def create_program() -> ArgumentParser:
 	group_job_manager.add_argument('--job-submit-all', help = wording.get('help.job_submit_all'), action = 'store_true')
 	group_job_manager.add_argument('--job-delete', help = wording.get('help.job_delete'), metavar = 'JOB_ID')
 	group_job_manager.add_argument('--job-delete-all', help = wording.get('help.job_delete_all'), action = 'store_true')
-	group_job_manager.add_argument('--job-list', help = wording.get('help.job_list'),  choices = facefusion.choices.job_statuses)
+	group_job_manager.add_argument('--job-list', help = wording.get('help.job_list'), choices = facefusion.choices.job_statuses)
 	group_job_manager.add_argument('--job-add-step', help = wording.get('help.job_add_step'), metavar = 'JOB_ID')
 	group_job_manager.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
 	group_job_manager.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
@@ -184,11 +184,11 @@ def apply_args(program : ArgumentParser) -> None:
 	state_manager.init_item('video_memory_strategy', args.video_memory_strategy)
 	state_manager.init_item('system_memory_limit', args.system_memory_limit)
 	# face analyser
-	facefusion.globals.face_detector_model = args.face_detector_model
-	facefusion.globals.face_detector_size = args.face_detector_size
-	facefusion.globals.face_detector_angles = args.face_detector_angles
-	facefusion.globals.face_detector_score = args.face_detector_score
-	facefusion.globals.face_landmarker_score = args.face_landmarker_score
+	state_manager.init_item('face_detector_model', args.face_detector_model)
+	state_manager.init_item('face_detector_size', args.face_detector_size)
+	state_manager.init_item('face_detector_angles', args.face_detector_angles)
+	state_manager.init_item('face_detector_score', args.face_detector_score)
+	state_manager.init_item('face_landmarker_score', args.face_landmarker_score)
 	# face selector
 	facefusion.globals.face_selector_mode = args.face_selector_mode
 	facefusion.globals.face_selector_order = args.face_selector_order

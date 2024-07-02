@@ -162,7 +162,7 @@ JobSet = Dict[str, Job]
 
 
 StateContext = Literal['core', 'uis']
-StateKey = Literal['config_path', 'source_paths', 'target_path', 'output_path', 'jobs_path', 'force_download', 'skip_download', 'headless', 'log_level', 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count', 'video_memory_strategy', 'system_memory_limit']
+StateKey = Literal['config_path', 'source_paths', 'target_path', 'output_path', 'jobs_path', 'force_download', 'skip_download', 'headless', 'log_level', 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count', 'video_memory_strategy', 'system_memory_limit', 'face_detector_model', 'face_detector_size', 'face_detector_angles', 'face_detector_score', 'face_landmarker_score', 'face_recognizer_model']
 State = TypedDict('State',
 {
 	'config_path' : str,
@@ -179,6 +179,12 @@ State = TypedDict('State',
 	'execution_thread_count' : int,
 	'execution_queue_count' : int,
 	'video_memory_strategy' : VideoMemoryStrategy,
-	'system_memory_limit' : int
+	'system_memory_limit' : int,
+	'face_detector_model' : FaceDetectorModel,
+	'face_detector_size' : str,
+	'face_detector_angles' : List[Angle],
+	'face_detector_score' : Score,
+	'face_landmarker_score' : Score,
+	'face_recognizer_model' : FaceRecognizerModel
 })
 StateSet = Dict[StateContext, State]

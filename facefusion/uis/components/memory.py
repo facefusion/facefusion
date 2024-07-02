@@ -2,8 +2,8 @@ from typing import Optional
 import gradio
 
 import facefusion.choices
+from facefusion import state_manager, wording
 from facefusion.typing import VideoMemoryStrategy
-from facefusion import wording, state_manager
 
 VIDEO_MEMORY_STRATEGY_DROPDOWN : Optional[gradio.Dropdown] = None
 SYSTEM_MEMORY_LIMIT_SLIDER : Optional[gradio.Slider] = None

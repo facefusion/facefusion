@@ -87,7 +87,7 @@ def suggest_output_path(target_path : str) -> Optional[str]:
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
 	state_manager.set_item('source_paths', [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ])
-	facefusion.globals.face_landmarker_score = 0
+	state_manager.set_item('face_landmarker_score', 0)
 	facefusion.globals.temp_frame_format = 'bmp'
 	facefusion.globals.output_video_preset = 'ultrafast'
 	benchmark_results = []

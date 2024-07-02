@@ -168,15 +168,15 @@ def update_face_enhancer_blend(face_enhancer_blend : float) -> None:
 def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
 	state_manager.set_item('face_swapper_model', face_swapper_model)
 	if state_manager.get_item('face_swapper_model') == 'blendswap_256':
-		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
+		state_manager.set_item('face_recognizer_model', 'arcface_blendswap')
 	if state_manager.get_item('face_swapper_model') in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
-		facefusion.globals.face_recognizer_model = 'arcface_ghost'
+		state_manager.set_item('face_recognizer_model', 'arcface_ghost')
 	if state_manager.get_item('face_swapper_model') in [ 'inswapper_128', 'inswapper_128_fp16' ]:
-		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
+		state_manager.set_item('face_recognizer_model', 'arcface_inswapper')
 	if state_manager.get_item('face_swapper_model') in [ 'simswap_256', 'simswap_512_unofficial' ]:
-		facefusion.globals.face_recognizer_model = 'arcface_simswap'
+		state_manager.set_item('face_recognizer_model', 'arcface_simswap')
 	if state_manager.get_item('face_swapper_model') == 'uniface_256':
-		facefusion.globals.face_recognizer_model = 'arcface_uniface'
+		state_manager.set_item('face_recognizer_model', 'arcface_uniface')
 	face_swapper_module = load_frame_processor_module('face_swapper')
 	face_swapper_module.clear_model_initializer()
 	face_swapper_module.clear_frame_processor()

@@ -5,7 +5,7 @@ import gradio
 import numpy
 
 import facefusion.globals
-from facefusion import logger, state_manager, wording
+from facefusion import state_manager, logger, wording
 from facefusion.audio import get_audio_frame, create_empty_audio_frame
 from facefusion.common_helper import get_first
 from facefusion.core import conditional_append_reference_faces
