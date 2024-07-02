@@ -35,7 +35,7 @@ def render() -> None:
 		'object_fit': 'cover',
 		'columns': 8,
 		'allow_preview': False,
-		'visible': 'reference' in facefusion.globals.face_selector_mode
+		'visible': 'reference' in state_manager.get_item('face_selector_mode')
 	}
 	if is_image(state_manager.get_item('target_path')):
 		reference_frame = read_static_image(state_manager.get_item('target_path'))
@@ -46,14 +46,14 @@ def render() -> None:
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_selector_mode_dropdown'),
 		choices = facefusion.choices.face_selector_modes,
-		value = facefusion.globals.face_selector_mode
+		value = state_manager.get_item('face_selector_mode')
 	)
 	REFERENCE_FACE_POSITION_GALLERY = gradio.Gallery(**reference_face_gallery_args)
 	with gradio.Row():
 		FACE_SELECTOR_ORDER_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.face_selector_order_dropdown'),
 			choices = facefusion.choices.face_selector_orders,
-			value = facefusion.globals.face_selector_order
+			value = state_manager.get_item('face_selector_order')
 		)
 		FACE_SELECTOR_AGE_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.face_selector_age_dropdown'),
@@ -71,7 +71,7 @@ def render() -> None:
 		step = facefusion.choices.reference_face_distance_range[1] - facefusion.choices.reference_face_distance_range[0],
 		minimum = facefusion.choices.reference_face_distance_range[0],
 		maximum = facefusion.choices.reference_face_distance_range[-1],
-		visible = 'reference' in facefusion.globals.face_selector_mode
+		visible = 'reference' in state_manager.get_item('face_selector_mode')
 	)
 	register_ui_component('face_selector_mode_dropdown', FACE_SELECTOR_MODE_DROPDOWN)
 	register_ui_component('face_selector_order_dropdown', FACE_SELECTOR_ORDER_DROPDOWN)
@@ -120,19 +120,18 @@ def listen() -> None:
 
 
 def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gradio.Gallery, gradio.Slider]:
+	state_manager.set_item('face_selector_mode', face_selector_mode)
 	if face_selector_mode == 'many':
-		facefusion.globals.face_selector_mode = face_selector_mode
 		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
 	if face_selector_mode == 'one':
-		facefusion.globals.face_selector_mode = face_selector_mode
 		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
 	if face_selector_mode == 'reference':
-		facefusion.globals.face_selector_mode = face_selector_mode
 		return gradio.Gallery(visible = True), gradio.Slider(visible = True)
 
 
 def update_face_selector_order(face_analyser_order : FaceSelectorOrder) -> gradio.Gallery:
-	facefusion.globals.face_selector_order = face_analyser_order if face_analyser_order != 'none' else None
+	face_selector_order = face_analyser_order if face_analyser_order != 'none' else None
+	state_manager.set_item('face_selector_order', face_selector_order)
 	return update_reference_position_gallery()
 
 

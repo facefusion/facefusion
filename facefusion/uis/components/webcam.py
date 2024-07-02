@@ -90,8 +90,8 @@ def listen() -> None:
 
 
 def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
-	facefusion.globals.face_selector_mode = 'one'
-	facefusion.globals.face_selector_order = 'large-small'
+	state_manager.set_item('face_selector_mode', 'ony')
+	state_manager.set_item('face_selector_order', 'large-small')
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_frames)

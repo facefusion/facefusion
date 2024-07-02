@@ -190,8 +190,8 @@ def apply_args(program : ArgumentParser) -> None:
 	state_manager.init_item('face_detector_score', args.face_detector_score)
 	state_manager.init_item('face_landmarker_score', args.face_landmarker_score)
 	# face selector
-	facefusion.globals.face_selector_mode = args.face_selector_mode
-	facefusion.globals.face_selector_order = args.face_selector_order
+	state_manager.init_item('face_selector_mode', args.face_selector_mode)
+	state_manager.init_item('face_selector_order', args.face_selector_order)
 	facefusion.globals.face_selector_age = args.face_selector_age
 	facefusion.globals.face_selector_gender = args.face_selector_gender
 	facefusion.globals.reference_face_position = args.reference_face_position
@@ -307,7 +307,7 @@ def conditional_process() -> ErrorCode:
 
 
 def conditional_append_reference_faces() -> None:
-	if 'reference' in facefusion.globals.face_selector_mode and not get_reference_faces():
+	if 'reference' in state_manager.get_item('face_selector_mode') and not get_reference_faces():
 		source_frames = read_static_images(state_manager.get_item('source_paths'))
 		source_faces = get_many_faces(source_frames)
 		source_face = get_average_face(source_faces)

@@ -40,7 +40,7 @@ def render() -> None:
 		'visible': False
 	}
 	conditional_append_reference_faces()
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_faces = get_many_faces(source_frames)
 	source_face = get_average_face(source_faces)
@@ -164,7 +164,7 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 			sleep(0.5)
 		logger.enable()
 	conditional_append_reference_faces()
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_faces = get_many_faces(source_frames)
 	source_face = get_average_face(source_faces)

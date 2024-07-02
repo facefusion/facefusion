@@ -213,15 +213,15 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 	target_vision_frame = inputs.get('target_vision_frame')
 	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
-	if facefusion.globals.face_selector_mode == 'many':
+	if state_manager.get_item('face_selector_mode') == 'many':
 		if many_faces:
 			for target_face in many_faces:
 				target_vision_frame = sync_lip(target_face, source_audio_frame, target_vision_frame)
-	if facefusion.globals.face_selector_mode == 'one':
+	if state_manager.get_item('face_selector_mode') == 'one':
 		target_face = get_one_face(many_faces)
 		if target_face:
 			target_vision_frame = sync_lip(target_face, source_audio_frame, target_vision_frame)
-	if facefusion.globals.face_selector_mode == 'reference':
+	if state_manager.get_item('face_selector_mode') == 'reference':
 		similar_faces = find_similar_faces(many_faces, reference_faces, facefusion.globals.reference_face_distance)
 		if similar_faces:
 			for similar_face in similar_faces:
@@ -230,7 +230,7 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 
 
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), facefusion.globals.output_video_fps)
 
@@ -252,7 +252,7 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_audio_frame = create_empty_audio_frame()
 	target_vision_frame = read_static_image(target_path)
 	output_vision_frame = process_frame(
