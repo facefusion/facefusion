@@ -1,9 +1,7 @@
 import os.path
 import tempfile
-
 import pytest
 
-import facefusion.globals
 from facefusion import state_manager
 from facefusion.download import conditional_download
 from facefusion.temp_helper import get_temp_file_path, get_temp_directory_path, get_temp_frames_pattern

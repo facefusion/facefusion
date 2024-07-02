@@ -1,5 +1,4 @@
 import os.path
-
 import pytest
 
 from facefusion.common_helper import is_windows
