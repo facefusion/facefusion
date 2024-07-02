@@ -152,14 +152,14 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 	bounding_box = create_bounding_box_from_face_landmark_68(face_landmark_68)
 	bounding_box[1] -= numpy.abs(bounding_box[3] - bounding_box[1]) * 0.125
 	mouth_mask = create_mouth_mask(face_landmark_68)
-	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
+	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 	crop_masks =\
 	[
 		mouth_mask,
 		box_mask
 	]
 
-	if 'occlusion' in facefusion.globals.face_mask_types:
+	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, (96, 96))

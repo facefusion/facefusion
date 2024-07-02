@@ -197,11 +197,11 @@ def apply_args(program : ArgumentParser) -> None:
 	state_manager.init_item('reference_face_position', args.reference_face_position)
 	state_manager.init_item('reference_face_distance', args.reference_face_distance)
 	state_manager.init_item('reference_frame_number', args.reference_frame_number)
-	# face mask
-	facefusion.globals.face_mask_types = args.face_mask_types
-	facefusion.globals.face_mask_blur = args.face_mask_blur
-	facefusion.globals.face_mask_padding = normalize_padding(args.face_mask_padding)
-	facefusion.globals.face_mask_regions = args.face_mask_regions
+	# face masker
+	state_manager.init_item('face_mask_types', args.face_mask_types)
+	state_manager.init_item('face_mask_blur', args.face_mask_blur)
+	state_manager.init_item('face_mask_padding', normalize_padding(args.face_mask_padding))
+	state_manager.init_item('face_mask_regions', args.face_mask_regions)
 	# frame extraction
 	facefusion.globals.trim_frame_start = args.trim_frame_start
 	facefusion.globals.trim_frame_end = args.trim_frame_end
