@@ -1,9 +1,8 @@
 from typing import List, Optional
 import gradio
 
-import facefusion.globals
 from facefusion.typing import ExecutionProviderKey
-from facefusion import wording
+from facefusion import state_manager, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.processors.frame.core import clear_frame_processors_modules
 from facefusion.execution import get_execution_provider_choices
@@ -17,7 +16,7 @@ def render() -> None:
 	EXECUTION_PROVIDERS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.execution_providers_checkbox_group'),
 		choices = get_execution_provider_choices(),
-		value = facefusion.globals.execution_providers
+		value = state_manager.get_item('execution_providers')
 	)
 
 
@@ -29,5 +28,5 @@ def update_execution_providers(execution_providers : List[ExecutionProviderKey])
 	clear_face_analyser()
 	clear_frame_processors_modules()
 	execution_providers = execution_providers or get_execution_provider_choices()
-	facefusion.globals.execution_providers = execution_providers
-	return gradio.CheckboxGroup(value = execution_providers)
+	state_manager.set_item('execution_providers', execution_providers)
+	return gradio.CheckboxGroup(value = state_manager.get_item('execution_providers'))

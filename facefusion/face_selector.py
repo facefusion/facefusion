@@ -1,8 +1,7 @@
 from typing import List
-
 import numpy
 
-import facefusion.globals
+from facefusion import state_manager
 from facefusion.typing import Face, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender, FaceSet
 
 
@@ -32,12 +31,12 @@ def calc_face_distance(face : Face, reference_face : Face) -> float:
 
 def sort_and_filter_faces(faces : List[Face]) -> List[Face]:
 	if faces:
-		if facefusion.globals.face_selector_order:
-			faces = sort_by_order(faces, facefusion.globals.face_selector_order)
-		if facefusion.globals.face_selector_age:
-			faces = filter_by_age(faces, facefusion.globals.face_selector_age)
-		if facefusion.globals.face_selector_gender:
-			faces = filter_by_gender(faces, facefusion.globals.face_selector_gender)
+		if state_manager.get_item('face_selector_order'):
+			faces = sort_by_order(faces, state_manager.get_item('face_selector_order'))
+		if state_manager.get_item('face_selector_age'):
+			faces = filter_by_age(faces, state_manager.get_item('face_selector_age'))
+		if state_manager.get_item('face_selector_gender'):
+			faces = filter_by_gender(faces, state_manager.get_item('face_selector_gender'))
 	return faces
 
 

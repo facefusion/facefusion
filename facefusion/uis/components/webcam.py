@@ -8,8 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from collections import deque
 from tqdm import tqdm
 
-import facefusion.globals
-from facefusion import logger, wording
+from facefusion import state_manager, logger, wording
 from facefusion.audio import create_empty_audio_frame
 from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream
@@ -90,9 +89,9 @@ def listen() -> None:
 
 
 def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
-	facefusion.globals.face_selector_mode = 'one'
-	facefusion.globals.face_selector_order = 'large-small'
-	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
+	state_manager.set_item('face_selector_mode', 'ony')
+	state_manager.set_item('face_selector_order', 'large-small')
+	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_frames)
 	source_face = get_average_face(source_faces)
@@ -119,27 +118,30 @@ def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -
 
 
 def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
-	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
-		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
+	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+		with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 			futures = []
 			deque_capture_frames : Deque[VisionFrame] = deque()
+
 			while webcam_capture and webcam_capture.isOpened():
 				_, capture_frame = webcam_capture.read()
 				if analyse_stream(capture_frame, webcam_fps):
 					return
 				future = executor.submit(process_stream_frame, source_face, capture_frame)
 				futures.append(future)
+
 				for future_done in [ future for future in futures if future.done() ]:
 					capture_frame = future_done.result()
 					deque_capture_frames.append(capture_frame)
 					futures.remove(future_done)
+
 				while deque_capture_frames:
 					progress.update()
 					yield deque_capture_frames.popleft()
 
 
 def update() -> None:
-	for frame_processor in facefusion.globals.frame_processors:
+	for frame_processor in state_manager.get_item('frame_processors'):
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		while not frame_processor_module.post_check():
 			logger.disable()
@@ -154,7 +156,7 @@ def stop() -> gradio.Image:
 
 def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) -> VisionFrame:
 	source_audio_frame = create_empty_audio_frame()
-	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
+	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
 		logger.disable()
 		if frame_processor_module.pre_process('stream'):
 			logger.enable()

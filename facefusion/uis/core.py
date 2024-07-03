@@ -4,10 +4,9 @@ import os
 import importlib
 import gradio
 
-import facefusion.globals
 from facefusion.exit_helper import hard_exit
 from facefusion.uis import overrides
-from facefusion import metadata, logger, wording
+from facefusion import state_manager, metadata, logger, wording
 from facefusion.uis.typing import Component, ComponentName
 from facefusion.filesystem import resolve_relative_path
 
@@ -76,9 +75,9 @@ def register_ui_component(component_name : ComponentName, component: Component) 
 
 
 def launch() -> None:
-	ui_layouts_total = len(facefusion.globals.ui_layouts)
+	ui_layouts_total = len(state_manager.get_item('ui_layouts'))
 	with gradio.Blocks(theme = get_theme(), css = get_css(), title = metadata.get('name') + ' ' + metadata.get('version')) as ui:
-		for ui_layout in facefusion.globals.ui_layouts:
+		for ui_layout in state_manager.get_item('ui_layouts'):
 			ui_layout_module = load_ui_layout_module(ui_layout)
 			if ui_layout_module.pre_render():
 				if ui_layouts_total > 1:
@@ -89,7 +88,7 @@ def launch() -> None:
 					ui_layout_module.render()
 					ui_layout_module.listen()
 
-	for ui_layout in facefusion.globals.ui_layouts:
+	for ui_layout in state_manager.get_item('ui_layouts'):
 		ui_layout_module = load_ui_layout_module(ui_layout)
 		ui_layout_module.run(ui)
 

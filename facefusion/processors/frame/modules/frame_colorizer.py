@@ -5,11 +5,10 @@ import cv2
 import numpy
 import onnxruntime
 
-import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, logger, wording
+from facefusion import config, process_manager, state_manager, logger, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.execution import apply_execution_provider_options, has_execution_provider
@@ -21,7 +20,6 @@ from facefusion.filesystem import same_file_extension, is_file, in_directory, re
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image, unpack_resolution
 from facefusion.processors.frame.typing import FrameColorizerInputs
-from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
@@ -70,8 +68,8 @@ def get_frame_processor() -> Any:
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			execution_providers : List[ExecutionProviderKey] = [ 'cpu' ] if has_execution_provider('coreml') else facefusion.globals.execution_providers
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, execution_providers))
+			execution_providers : List[ExecutionProviderKey] = [ 'cpu' ] if has_execution_provider('coreml') else state_manager.get_item('execution_providers')
+			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), execution_providers))
 	return FRAME_PROCESSOR
 
 
@@ -87,7 +85,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[frame_processors_globals.frame_colorizer_model]
+			'model': MODELS[state_manager.get_item('frame_colorizer_model')]
 		}
 	return OPTIONS.get(key)
 
@@ -109,9 +107,9 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.frame_colorizer_model = args.frame_colorizer_model
-	frame_processors_globals.frame_colorizer_blend = args.frame_colorizer_blend
-	frame_processors_globals.frame_colorizer_size = args.frame_colorizer_size
+	state_manager.init_item('frame_colorizer_model', args.frame_colorizer_model)
+	state_manager.init_item('frame_colorizer_blend', args.frame_colorizer_blend)
+	state_manager.init_item('frame_colorizer_size', args.frame_colorizer_size)
 
 
 def pre_check() -> bool:
@@ -119,7 +117,7 @@ def pre_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not facefusion.globals.skip_download:
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
@@ -130,7 +128,7 @@ def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
+	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
 	if not is_file(model_path):
@@ -140,13 +138,13 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
+	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not in_directory(facefusion.globals.output_path):
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not same_file_extension([ facefusion.globals.target_path, facefusion.globals.output_path ]):
+	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -154,9 +152,9 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
-	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
+	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_frame_processor()
-	if facefusion.globals.video_memory_strategy == 'strict':
+	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
 
@@ -177,15 +175,17 @@ def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_size = unpack_resolution(frame_processors_globals.frame_colorizer_size)
+	model_size = unpack_resolution(state_manager.get_item('frame_colorizer_size'))
 	model_type = get_options('model').get('type')
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2GRAY)
 	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_GRAY2RGB)
+
 	if model_type == 'ddcolor':
 		temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32) #type:ignore[operator]
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_RGB2LAB)[:, :, :1]
 		temp_vision_frame = numpy.concatenate((temp_vision_frame, numpy.zeros_like(temp_vision_frame), numpy.zeros_like(temp_vision_frame)), axis = -1)
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_LAB2RGB)
+
 	temp_vision_frame = cv2.resize(temp_vision_frame, model_size)
 	temp_vision_frame = temp_vision_frame.transpose((2, 0, 1))
 	temp_vision_frame = numpy.expand_dims(temp_vision_frame, axis = 0).astype(numpy.float32)
@@ -196,12 +196,14 @@ def merge_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 	model_type = get_options('model').get('type')
 	color_vision_frame = color_vision_frame.transpose(1, 2, 0)
 	color_vision_frame = cv2.resize(color_vision_frame, (temp_vision_frame.shape[1], temp_vision_frame.shape[0]))
+
 	if model_type == 'ddcolor':
 		temp_vision_frame = (temp_vision_frame / 255.0).astype(numpy.float32)
 		temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2LAB)[:, :, :1]
 		color_vision_frame = numpy.concatenate((temp_vision_frame, color_vision_frame), axis = -1)
 		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_LAB2BGR)
 		color_vision_frame = (color_vision_frame * 255.0).round().astype(numpy.uint8) #type:ignore[operator]
+
 	if model_type == 'deoldify':
 		temp_blue_channel, _, _ = cv2.split(temp_vision_frame)
 		color_vision_frame = cv2.cvtColor(color_vision_frame, cv2.COLOR_BGR2RGB).astype(numpy.uint8)
@@ -213,7 +215,7 @@ def merge_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 
 
 def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
-	frame_colorizer_blend = 1 - (frame_processors_globals.frame_colorizer_blend / 100)
+	frame_colorizer_blend = 1 - (state_manager.get_item('frame_colorizer_blend') / 100)
 	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_colorizer_blend, paste_vision_frame, 1 - frame_colorizer_blend, 0)
 	return temp_vision_frame
 

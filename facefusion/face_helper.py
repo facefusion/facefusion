@@ -97,7 +97,7 @@ def create_static_anchors(feature_stride : int, anchor_total : int, stride_heigh
 def create_rotated_matrix_and_size(angle : Angle, size : Size) -> Tuple[Matrix, Size]:
 	rotated_matrix = cv2.getRotationMatrix2D((size[0] / 2, size[1] / 2), angle, 1)
 	rotated_size = numpy.dot(numpy.abs(rotated_matrix[:, :2]), size)
-	rotated_matrix[:, -1] += (rotated_size - size) * 0.5 # type:ignore[misc]
+	rotated_matrix[:, -1] += (rotated_size - size) * 0.5 #type:ignore[misc]
 	rotated_size = int(rotated_size[0]), int(rotated_size[1])
 	return rotated_matrix, rotated_size
 
@@ -118,7 +118,7 @@ def normalize_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
 
 def transform_points(points : Points, matrix : Matrix) -> Points:
 	points = points.reshape(-1, 1, 2)
-	points = cv2.transform(points, matrix) # type:ignore[assignment]
+	points = cv2.transform(points, matrix) #type:ignore[assignment]
 	points = points.reshape(-1, 2)
 	return points
 

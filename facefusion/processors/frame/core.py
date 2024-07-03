@@ -6,10 +6,9 @@ from types import ModuleType
 from typing import Any, List
 from tqdm import tqdm
 
-import facefusion.globals
+from facefusion import state_manager, logger, wording
 from facefusion.exit_helper import hard_exit
 from facefusion.typing import ProcessFrames, QueuePayload
-from facefusion import logger, wording
 
 FRAME_PROCESSORS_MODULES : List[ModuleType] = []
 FRAME_PROCESSORS_METHODS =\
@@ -61,27 +60,29 @@ def get_frame_processors_modules(frame_processors : List[str]) -> List[ModuleTyp
 def clear_frame_processors_modules() -> None:
 	global FRAME_PROCESSORS_MODULES
 
-	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
+	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
 		frame_processor_module.clear_frame_processor()
 	FRAME_PROCESSORS_MODULES = []
 
 
 def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str], process_frames : ProcessFrames) -> None:
 	queue_payloads = create_queue_payloads(temp_frame_paths)
-	with tqdm(total = len(queue_payloads), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
+	with tqdm(total = len(queue_payloads), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		progress.set_postfix(
 		{
-			'execution_providers': facefusion.globals.execution_providers,
-			'execution_thread_count': facefusion.globals.execution_thread_count,
-			'execution_queue_count': facefusion.globals.execution_queue_count
+			'execution_providers': state_manager.get_item('execution_providers'),
+			'execution_thread_count': state_manager.get_item('execution_thread_count'),
+			'execution_queue_count': state_manager.get_item('execution_queue_count')
 		})
-		with ThreadPoolExecutor(max_workers = facefusion.globals.execution_thread_count) as executor:
+		with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 			futures = []
 			queue : Queue[QueuePayload] = create_queue(queue_payloads)
-			queue_per_future = max(len(queue_payloads) // facefusion.globals.execution_thread_count * facefusion.globals.execution_queue_count, 1)
+			queue_per_future = max(len(queue_payloads) // state_manager.get_item('execution_thread_count') * state_manager.get_item('execution_queue_count'), 1)
+
 			while not queue.empty():
 				future = executor.submit(process_frames, source_paths, pick_queue(queue, queue_per_future), progress.update)
 				futures.append(future)
+
 			for future_done in as_completed(futures):
 				future_done.result()
 

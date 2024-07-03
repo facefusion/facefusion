@@ -6,8 +6,7 @@ import numpy
 import onnxruntime
 from tqdm import tqdm
 
-import facefusion.globals
-from facefusion import process_manager, wording
+from facefusion import process_manager, state_manager, wording
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import VisionFrame, ModelSet, Fps
 from facefusion.execution import apply_execution_provider_options
@@ -37,7 +36,7 @@ def get_content_analyser() -> Any:
 			sleep(0.5)
 		if CONTENT_ANALYSER is None:
 			model_path = MODELS.get('open_nsfw').get('path')
-			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
 	return CONTENT_ANALYSER
 
 
@@ -52,7 +51,7 @@ def pre_check() -> bool:
 	model_url = MODELS.get('open_nsfw').get('url')
 	model_path = MODELS.get('open_nsfw').get('path')
 
-	if not facefusion.globals.skip_download:
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
@@ -102,7 +101,7 @@ def analyse_video(video_path : str, start_frame : int, end_frame : int) -> bool:
 	rate = 0.0
 	counter = 0
 
-	with tqdm(total = len(frame_range), desc = wording.get('analysing'), unit = 'frame', ascii = ' =', disable = facefusion.globals.log_level in [ 'warn', 'error' ]) as progress:
+	with tqdm(total = len(frame_range), desc = wording.get('analysing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		for frame_number in frame_range:
 			if frame_number % int(video_fps) == 0:
 				frame = get_video_frame(video_path, frame_number)

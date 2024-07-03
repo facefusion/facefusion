@@ -1,10 +1,10 @@
+from typing import List, Optional, Union
 from argparse import ArgumentParser, Action, _ArgumentGroup
 from copy import copy
-from typing import List, Optional
-from types import ModuleType
 
 import facefusion.choices
-from facefusion.typing import Args
+from facefusion.processors.frame.typing import FrameProcessorState
+from facefusion.typing import Args, State
 from facefusion.processors.frame import choices as frame_processors_choices
 
 
@@ -50,14 +50,13 @@ def update_args(program : ArgumentParser, args : Args) -> ArgumentParser:
 	return program
 
 
-def import_globals(program : ArgumentParser, keys : List[str], modules : List[ModuleType]) -> ArgumentParser:
+def import_state(program : ArgumentParser, keys : List[str], state : Union[State, FrameProcessorState]) -> ArgumentParser:
 	program = copy(program)
 	args : Args = {}
 
-	for module in modules:
-		for key in keys:
-			if hasattr(module.globals, key):
-				args[key] = getattr(module.globals, key)
+	for key in keys:
+		if key in state:
+			args[key] = state[key] #type:ignore[literal-required]
 
 	if args:
 		return update_args(program, args)
@@ -66,9 +65,9 @@ def import_globals(program : ArgumentParser, keys : List[str], modules : List[Mo
 
 def suggest_face_detector_choices(program : ArgumentParser) -> List[str]:
 	known_args, _ = program.parse_known_args()
-	return facefusion.choices.face_detector_set.get(known_args.face_detector_model)  # type:ignore[call-overload]
+	return facefusion.choices.face_detector_set.get(known_args.face_detector_model) #type:ignore[call-overload]
 
 
 def suggest_face_swapper_pixel_boost_choices(program : ArgumentParser) -> List[str]:
 	known_args, _ = program.parse_known_args()
-	return frame_processors_choices.face_swapper_set.get(known_args.face_swapper_model)  # type:ignore[call-overload]
+	return frame_processors_choices.face_swapper_set.get(known_args.face_swapper_model) #type:ignore[call-overload]

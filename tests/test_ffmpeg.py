@@ -2,8 +2,7 @@ import glob
 import subprocess
 import pytest
 
-import facefusion.globals
-from facefusion import process_manager
+from facefusion import process_manager, state_manager
 from facefusion.temp_helper import get_temp_directory_path, create_temp_directory, clear_temp_directory
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import extract_frames, concat_video, read_audio_buffer
@@ -23,14 +22,14 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
+	state_manager.init_item('temp_frame_format', 'jpg')
+	state_manager.init_item('output_audio_encoder', 'aac')
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	facefusion.globals.trim_frame_start = None
-	facefusion.globals.trim_frame_end = None
-	facefusion.globals.temp_frame_format = 'jpg'
-	facefusion.globals.output_audio_encoder = 'aac'
+	state_manager.clear_item('trim_frame_start')
+	state_manager.clear_item('trim_frame_end')
 	prepare_test_output_directory()
 
 
@@ -53,7 +52,7 @@ def test_extract_frames() -> None:
 
 
 def test_extract_frames_with_trim_start() -> None:
-	facefusion.globals.trim_frame_start = 224
+	state_manager.init_item('trim_frame_start', 224)
 	providers =\
 	[
 		(get_test_example_file('target-240p-25fps.mp4'), 55),
@@ -72,8 +71,8 @@ def test_extract_frames_with_trim_start() -> None:
 
 
 def test_extract_frames_with_trim_start_and_trim_end() -> None:
-	facefusion.globals.trim_frame_start = 124
-	facefusion.globals.trim_frame_end = 224
+	state_manager.init_item('trim_frame_start', 124)
+	state_manager.init_item('trim_frame_end', 224)
 	providers =\
 	[
 		(get_test_example_file('target-240p-25fps.mp4'), 120),
@@ -92,7 +91,7 @@ def test_extract_frames_with_trim_start_and_trim_end() -> None:
 
 
 def test_extract_frames_with_trim_end() -> None:
-	facefusion.globals.trim_frame_end = 100
+	state_manager.init_item('trim_frame_end', 100)
 	providers =\
 	[
 		(get_test_example_file('target-240p-25fps.mp4'), 120),

@@ -6,8 +6,7 @@ import cv2
 import numpy
 import onnxruntime
 
-import facefusion.globals
-from facefusion import process_manager
+from facefusion import process_manager, state_manager
 from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
 from facefusion.typing import FaceLandmark68, VisionFrame, Mask, Padding, FaceMaskRegion, ModelSet
 from facefusion.execution import apply_execution_provider_options
@@ -52,7 +51,7 @@ def get_face_occluder() -> Any:
 			sleep(0.5)
 		if FACE_OCCLUDER is None:
 			model_path = MODELS.get('face_occluder').get('path')
-			FACE_OCCLUDER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+			FACE_OCCLUDER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
 	return FACE_OCCLUDER
 
 
@@ -64,7 +63,7 @@ def get_face_parser() -> Any:
 			sleep(0.5)
 		if FACE_PARSER is None:
 			model_path = MODELS.get('face_parser').get('path')
-			FACE_PARSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+			FACE_PARSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
 	return FACE_PARSER
 
 
@@ -93,7 +92,7 @@ def pre_check() -> bool:
 		MODELS.get('face_parser').get('path')
 	]
 
-	if not facefusion.globals.skip_download:
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, model_urls)
 		process_manager.end()

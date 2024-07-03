@@ -6,11 +6,10 @@ import onnx
 import onnxruntime
 from onnx import numpy_helper
 
-import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, logger, wording
+from facefusion import config, process_manager, state_manager, logger, wording
 from facefusion.execution import has_execution_provider, apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, clear_face_analyser
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
@@ -27,7 +26,6 @@ from facefusion.filesystem import same_file_extension, is_file, in_directory, is
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, read_static_images, write_image, unpack_resolution
 from facefusion.processors.frame.typing import FaceSwapperInputs
-from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
@@ -137,7 +135,7 @@ def get_frame_processor() -> Any:
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
 	return FRAME_PROCESSOR
 
 
@@ -169,8 +167,8 @@ def clear_model_initializer() -> None:
 def get_options(key : Literal['model']) -> Any:
 	global OPTIONS
 
-	face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') or has_execution_provider('openvino') and frame_processors_globals.face_swapper_model == 'inswapper_128_fp16' else frame_processors_globals.face_swapper_model
 	if OPTIONS is None:
+		face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') or has_execution_provider('openvino') and state_manager.get_item('face_swapper_model') == 'inswapper_128_fp16' else state_manager.get_item('face_swapper_model')
 		OPTIONS =\
 		{
 			'model': MODELS[face_swapper_model]
@@ -195,19 +193,19 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.face_swapper_model = args.face_swapper_model
-	frame_processors_globals.face_swapper_pixel_boost = args.face_swapper_pixel_boost
+	state_manager.init_item('face_swapper_model', args.face_swapper_model)
+	state_manager.init_item('face_swapper_pixel_boost', args.face_swapper_pixel_boost)
 
-	if args.face_swapper_model == 'blendswap_256':
-		facefusion.globals.face_recognizer_model = 'arcface_blendswap'
-	if args.face_swapper_model in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
-		facefusion.globals.face_recognizer_model = 'arcface_ghost'
-	if args.face_swapper_model in [ 'inswapper_128', 'inswapper_128_fp16' ]:
-		facefusion.globals.face_recognizer_model = 'arcface_inswapper'
-	if args.face_swapper_model in [ 'simswap_256', 'simswap_512_unofficial' ]:
-		facefusion.globals.face_recognizer_model = 'arcface_simswap'
-	if args.face_swapper_model == 'uniface_256':
-		facefusion.globals.face_recognizer_model = 'arcface_uniface'
+	if state_manager.get_item('face_swapper_model') == 'blendswap_256':
+		state_manager.init_item('face_recognizer_model', 'arcface_blendswap')
+	if state_manager.get_item('face_swapper_model') in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
+		state_manager.init_item('face_recognizer_model', 'arcface_ghost')
+	if state_manager.get_item('face_swapper_model') in [ 'inswapper_128', 'inswapper_128_fp16' ]:
+		state_manager.init_item('face_recognizer_model', 'arcface_inswapper')
+	if state_manager.get_item('face_swapper_model') in [ 'simswap_256', 'simswap_512_unofficial' ]:
+		state_manager.init_item('face_recognizer_model', 'arcface_simswap')
+	if state_manager.get_item('face_swapper_model') == 'uniface_256':
+		state_manager.init_item('face_recognizer_model', 'arcface_uniface')
 
 
 def pre_check() -> bool:
@@ -215,7 +213,7 @@ def pre_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not facefusion.globals.skip_download:
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
@@ -226,7 +224,7 @@ def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
+	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
 	if not is_file(model_path):
@@ -236,22 +234,22 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if not has_image(facefusion.globals.source_paths):
+	if not has_image(state_manager.get_item('source_paths')):
 		logger.error(wording.get('choose_image_source') + wording.get('exclamation_mark'), NAME)
 		return False
-	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
+	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_frames)
 	if not get_one_face(source_faces):
 		logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
+	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not in_directory(facefusion.globals.output_path):
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not same_file_extension([ facefusion.globals.target_path, facefusion.globals.output_path ]):
+	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -259,10 +257,10 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
-	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
+	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_model_initializer()
 		clear_frame_processor()
-	if facefusion.globals.video_memory_strategy == 'strict':
+	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
 		clear_face_occluder()
@@ -272,16 +270,16 @@ def post_process() -> None:
 def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
-	pixel_boost_size = unpack_resolution(frame_processors_globals.face_swapper_pixel_boost)
+	pixel_boost_size = unpack_resolution(state_manager.get_item('face_swapper_pixel_boost'))
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, pixel_boost_size)
 	crop_masks = []
 	temp_vision_frames = []
 
-	if 'box' in facefusion.globals.face_mask_types:
-		box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
+	if 'box' in state_manager.get_item('face_mask_types'):
+		box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 		crop_masks.append(box_mask)
-	if 'occlusion' in facefusion.globals.face_mask_types:
+	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 	pixel_boost_vision_frames = implode_pixel_boost(crop_vision_frame, pixel_boost_total, model_size)
@@ -291,8 +289,8 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 		pixel_boost_vision_frame = normalize_crop_frame(pixel_boost_vision_frame)
 		temp_vision_frames.append(pixel_boost_vision_frame)
 	crop_vision_frame = explode_pixel_boost(temp_vision_frames, pixel_boost_total, model_size, pixel_boost_size)
-	if 'region' in facefusion.globals.face_mask_types:
-		region_mask = create_region_mask(crop_vision_frame, facefusion.globals.face_mask_regions)
+	if 'region' in state_manager.get_item('face_mask_types'):
+		region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))
 		crop_masks.append(region_mask)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
@@ -321,7 +319,7 @@ def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFra
 
 def prepare_source_frame(source_face : Face) -> VisionFrame:
 	model_type = get_options('model').get('type')
-	source_vision_frame = read_static_image(facefusion.globals.source_paths[0])
+	source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
 
 	if model_type == 'blendswap':
 		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark_set.get('5/68'), 'arcface_112_v2', (112, 112))
@@ -384,16 +382,16 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 	target_vision_frame = inputs.get('target_vision_frame')
 	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
-	if facefusion.globals.face_selector_mode == 'many':
+	if state_manager.get_item('face_selector_mode') == 'many':
 		if many_faces:
 			for target_face in many_faces:
 				target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
-	if facefusion.globals.face_selector_mode == 'one':
+	if state_manager.get_item('face_selector_mode') == 'one':
 		target_face = get_one_face(many_faces)
 		if target_face:
 			target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
-	if facefusion.globals.face_selector_mode == 'reference':
-		similar_faces = find_similar_faces(many_faces, reference_faces, facefusion.globals.reference_face_distance)
+	if state_manager.get_item('face_selector_mode') == 'reference':
+		similar_faces = find_similar_faces(many_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if similar_faces:
 			for similar_face in similar_faces:
 				target_vision_frame = swap_face(source_face, similar_face, target_vision_frame)
@@ -401,7 +399,7 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 
 
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_frames = read_static_images(source_paths)
 	source_faces = get_many_faces(source_frames)
 	source_face = get_average_face(source_faces)
@@ -420,7 +418,7 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_frames = read_static_images(source_paths)
 	source_faces = get_many_faces(source_frames)
 	source_face = get_average_face(source_faces)

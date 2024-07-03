@@ -3,11 +3,10 @@ from argparse import ArgumentParser
 import cv2
 import numpy
 
-import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, logger, wording
+from facefusion import config, process_manager, state_manager, logger, wording
 from facefusion.face_analyser import get_one_face, get_many_faces, clear_face_analyser
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces, categorize_age, categorize_gender
 from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
@@ -19,7 +18,7 @@ from facefusion.program_helper import find_argument_group
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, QueuePayload
 from facefusion.vision import read_image, read_static_image, write_image
 from facefusion.processors.frame.typing import FaceDebuggerInputs
-from facefusion.processors.frame import globals as frame_processors_globals, choices as frame_processors_choices
+from facefusion.processors.frame import choices as frame_processors_choices
 
 NAME = __name__.upper()
 
@@ -49,7 +48,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.face_debugger_items = args.face_debugger_items
+	state_manager.init_item('face_debugger_items', args.face_debugger_items)
 
 
 def pre_check() -> bool:
@@ -61,10 +60,10 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if mode == 'output' and not in_directory(facefusion.globals.output_path):
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not same_file_extension([ facefusion.globals.target_path, facefusion.globals.output_path ]):
+	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -72,9 +71,9 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
-	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
+	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_frame_processor()
-	if facefusion.globals.video_memory_strategy == 'strict':
+	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
 		clear_face_occluder()
@@ -90,8 +89,9 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	temp_vision_frame = temp_vision_frame.copy()
 	has_face_landmark_5_fallback = numpy.array_equal(target_face.landmark_set.get('5'), target_face.landmark_set.get('5/68'))
 	has_face_landmark_68_fallback = numpy.array_equal(target_face.landmark_set.get('68'), target_face.landmark_set.get('68/5'))
+	face_debugger_items = state_manager.get_item('face_debugger_items')
 
-	if 'bounding-box' in frame_processors_globals.face_debugger_items:
+	if 'bounding-box' in face_debugger_items:
 		x1, y1, x2, y2 = bounding_box
 		cv2.rectangle(temp_vision_frame, (x1, y1), (x2, y2), primary_color, 2)
 
@@ -104,20 +104,20 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		elif target_face.angle == 270:
 			cv2.line(temp_vision_frame, (x1, y1), (x1, y2), primary_light_color, 3)
 
-	if 'face-mask' in frame_processors_globals.face_debugger_items:
+	if 'face-mask' in face_debugger_items:
 		crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'arcface_128_v2', (512, 512))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_size = temp_vision_frame.shape[:2][::-1]
 		crop_masks = []
 
-		if 'box' in facefusion.globals.face_mask_types:
-			box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], 0, facefusion.globals.face_mask_padding)
+		if 'box' in state_manager.get_item('face_mask_types'):
+			box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], 0, state_manager.get_item('face_mask_padding'))
 			crop_masks.append(box_mask)
-		if 'occlusion' in facefusion.globals.face_mask_types:
+		if 'occlusion' in state_manager.get_item('face_mask_types'):
 			occlusion_mask = create_occlusion_mask(crop_vision_frame)
 			crop_masks.append(occlusion_mask)
-		if 'region' in facefusion.globals.face_mask_types:
-			region_mask = create_region_mask(crop_vision_frame, facefusion.globals.face_mask_regions)
+		if 'region' in state_manager.get_item('face_mask_types'):
+			region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))
 			crop_masks.append(region_mask)
 
 		crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
@@ -128,22 +128,22 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		inverse_contours = cv2.findContours(inverse_vision_frame, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
 		cv2.drawContours(temp_vision_frame, inverse_contours, -1, tertiary_color if has_face_landmark_5_fallback else secondary_color, 2)
 
-	if 'face-landmark-5' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('5')):
+	if 'face-landmark-5' in face_debugger_items and numpy.any(target_face.landmark_set.get('5')):
 		face_landmark_5 = target_face.landmark_set.get('5').astype(numpy.int32)
 		for index in range(face_landmark_5.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_5[index][0], face_landmark_5[index][1]), 3, primary_color, -1)
 
-	if 'face-landmark-5/68' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('5/68')):
+	if 'face-landmark-5/68' in face_debugger_items and numpy.any(target_face.landmark_set.get('5/68')):
 		face_landmark_5_68 = target_face.landmark_set.get('5/68').astype(numpy.int32)
 		for index in range(face_landmark_5_68.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_5_68[index][0], face_landmark_5_68[index][1]), 3, tertiary_color if has_face_landmark_5_fallback else secondary_color, -1)
 
-	if 'face-landmark-68' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
+	if 'face-landmark-68' in face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
 		face_landmark_68 = target_face.landmark_set.get('68').astype(numpy.int32)
 		for index in range(face_landmark_68.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, tertiary_color if has_face_landmark_68_fallback else secondary_color, -1)
 
-	if 'face-landmark-68/5' in frame_processors_globals.face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
+	if 'face-landmark-68/5' in face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
 		face_landmark_68 = target_face.landmark_set.get('68/5').astype(numpy.int32)
 		for index in range(face_landmark_68.shape[0]):
 			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, primary_color, -1)
@@ -152,19 +152,19 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		top = bounding_box[1]
 		left = bounding_box[0] - 20
 
-		if 'face-detector-score' in frame_processors_globals.face_debugger_items:
+		if 'face-detector-score' in face_debugger_items:
 			face_score_text = str(round(target_face.score_set.get('detector'), 2))
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
-		if 'face-landmarker-score' in frame_processors_globals.face_debugger_items:
+		if 'face-landmarker-score' in face_debugger_items:
 			face_score_text = str(round(target_face.score_set.get('landmarker'), 2))
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, tertiary_color if has_face_landmark_5_fallback else secondary_color, 2)
-		if 'age' in frame_processors_globals.face_debugger_items:
+		if 'age' in face_debugger_items:
 			face_age_text = categorize_age(target_face.age)
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_age_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
-		if 'gender' in frame_processors_globals.face_debugger_items:
+		if 'gender' in face_debugger_items:
 			face_gender_text = categorize_gender(target_face.gender)
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_gender_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
@@ -181,16 +181,16 @@ def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
 	target_vision_frame = inputs.get('target_vision_frame')
 	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
-	if facefusion.globals.face_selector_mode == 'many':
+	if state_manager.get_item('face_selector_mode') == 'many':
 		if many_faces:
 			for target_face in many_faces:
 				target_vision_frame = debug_face(target_face, target_vision_frame)
-	if facefusion.globals.face_selector_mode == 'one':
+	if state_manager.get_item('face_selector_mode') == 'one':
 		target_face = get_one_face(many_faces)
 		if target_face:
 			target_vision_frame = debug_face(target_face, target_vision_frame)
-	if facefusion.globals.face_selector_mode == 'reference':
-		similar_faces = find_similar_faces(many_faces, reference_faces, facefusion.globals.reference_face_distance)
+	if state_manager.get_item('face_selector_mode') == 'reference':
+		similar_faces = find_similar_faces(many_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if similar_faces:
 			for similar_face in similar_faces:
 				target_vision_frame = debug_face(similar_face, target_vision_frame)
@@ -198,7 +198,7 @@ def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
 
 
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 
 	for queue_payload in process_manager.manage(queue_payloads):
 		target_vision_path = queue_payload['frame_path']
@@ -213,7 +213,7 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	target_vision_frame = read_static_image(target_path)
 	output_vision_frame = process_frame(
 	{

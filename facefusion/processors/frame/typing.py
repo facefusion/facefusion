@@ -1,6 +1,6 @@
 from typing import Dict, List, Literal, TypedDict
 
-from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame
+from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame, StateContext
 
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender']
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']
@@ -41,3 +41,20 @@ LipSyncerInputs = TypedDict('LipSyncerInputs',
 	'source_audio_frame' : AudioFrame,
 	'target_vision_frame' : VisionFrame
 })
+
+FrameProcessorStateKey = Literal['face_debugger_items', 'face_enhancer_model', 'face_enhancer_blend', 'face_swapper_model', 'face_swapper_pixel_boost', 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size', 'frame_enhancer_model', 'frame_enhancer_blend', 'lip_syncer_model']
+FrameProcessorState = TypedDict('FrameProcessorState',
+{
+	'face_debugger_items' : List[FaceDebuggerItem],
+	'face_enhancer_model' : FaceEnhancerModel,
+	'face_enhancer_blend' : int,
+	'face_swapper_model' : FaceSwapperModel,
+	'face_swapper_pixel_boost' : str,
+	'frame_colorizer_model' : FrameColorizerModel,
+	'frame_colorizer_blend' : int,
+	'frame_colorizer_size' : str,
+	'frame_enhancer_model' : FrameEnhancerModel,
+	'frame_enhancer_blend' : int,
+	'lip_syncer_model' : LipSyncerModel
+})
+FrameProcessorStateSet = Dict[StateContext, FrameProcessorState]

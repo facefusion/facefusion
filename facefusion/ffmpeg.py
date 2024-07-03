@@ -4,8 +4,7 @@ import subprocess
 import filetype
 import tempfile
 
-import facefusion.globals
-from facefusion import logger, process_manager
+from facefusion import logger, process_manager, state_manager
 from facefusion.filesystem import remove_file
 from facefusion.typing import OutputVideoPreset, Fps, AudioBuffer
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
@@ -19,7 +18,7 @@ def run_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 
 	while process_manager.is_processing():
 		try:
-			if facefusion.globals.log_level == 'debug':
+			if state_manager.get_item('log_level') == 'debug':
 				log_debug(process)
 			process.wait(timeout = 0.5)
 		except subprocess.TimeoutExpired:
@@ -47,8 +46,8 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 
 
 def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps) -> bool:
-	trim_frame_start = facefusion.globals.trim_frame_start
-	trim_frame_end = facefusion.globals.trim_frame_end
+	trim_frame_start = state_manager.get_item('trim_frame_start')
+	trim_frame_end = state_manager.get_item('trim_frame_end')
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
 	commands = [ '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0' ]
 
@@ -68,20 +67,20 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
 	temp_file_path = get_temp_file_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
-	commands = [ '-r', str(temp_video_fps), '-i', temp_frames_pattern, '-s', str(output_video_resolution), '-c:v', facefusion.globals.output_video_encoder ]
+	commands = [ '-r', str(temp_video_fps), '-i', temp_frames_pattern, '-s', str(output_video_resolution), '-c:v', state_manager.get_item('output_video_encoder') ]
 
-	if facefusion.globals.output_video_encoder in [ 'libx264', 'libx265' ]:
-		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
-		commands.extend([ '-crf', str(output_video_compression), '-preset', facefusion.globals.output_video_preset ])
-	if facefusion.globals.output_video_encoder in [ 'libvpx-vp9' ]:
-		output_video_compression = round(63 - (facefusion.globals.output_video_quality * 0.63))
+	if state_manager.get_item('output_video_encoder') in [ 'libx264', 'libx265' ]:
+		output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
+		commands.extend([ '-crf', str(output_video_compression), '-preset', state_manager.get_item('output_video_preset') ])
+	if state_manager.get_item('output_video_encoder') in [ 'libvpx-vp9' ]:
+		output_video_compression = round(63 - (state_manager.get_item('output_video_quality') * 0.63))
 		commands.extend([ '-crf', str(output_video_compression) ])
-	if facefusion.globals.output_video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
-		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
-		commands.extend([ '-cq', str(output_video_compression), '-preset', map_nvenc_preset(facefusion.globals.output_video_preset) ])
-	if facefusion.globals.output_video_encoder in [ 'h264_amf', 'hevc_amf' ]:
-		output_video_compression = round(51 - (facefusion.globals.output_video_quality * 0.51))
-		commands.extend([ '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(facefusion.globals.output_video_preset) ])
+	if state_manager.get_item('output_video_encoder') in [ 'h264_nvenc', 'hevc_nvenc' ]:
+		output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
+		commands.extend([ '-cq', str(output_video_compression), '-preset', map_nvenc_preset(state_manager.get_item('output_video_preset')) ])
+	if state_manager.get_item('output_video_encoder') in [ 'h264_amf', 'hevc_amf' ]:
+		output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
+		commands.extend([ '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(state_manager.get_item('output_video_preset')) ])
 	commands.extend([ '-vf', 'framerate=fps=' + str(output_video_fps), '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_file_path ])
 	return run_ffmpeg(commands).returncode == 0
 
@@ -94,7 +93,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 			concat_video_file.write('file \'' + os.path.abspath(temp_output_path) + '\'' + os.linesep)
 		concat_video_file.flush()
 		concat_video_file.close()
-	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', facefusion.globals.output_audio_encoder, '-y', os.path.abspath(output_path) ]
+	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', state_manager.get_item('output_audio_encoder'), '-y', os.path.abspath(output_path) ]
 	process = run_ffmpeg(commands)
 	process.communicate()
 	remove_file(concat_video_path)
@@ -110,7 +109,7 @@ def copy_image(target_path : str, temp_image_resolution : str) -> bool:
 
 def finalize_image(target_path : str, output_path : str, output_image_resolution : str) -> bool:
 	temp_file_path = get_temp_file_path(target_path)
-	output_image_compression = calc_image_compression(target_path, facefusion.globals.output_image_quality)
+	output_image_compression = calc_image_compression(target_path, state_manager.get_item('output_image_quality'))
 	commands = [ '-i', temp_file_path, '-s', str(output_image_resolution), '-q:v', str(output_image_compression), '-y', output_path ]
 	return run_ffmpeg(commands).returncode == 0
 
@@ -132,8 +131,8 @@ def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int)
 
 
 def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) -> bool:
-	trim_frame_start = facefusion.globals.trim_frame_start
-	trim_frame_end = facefusion.globals.trim_frame_end
+	trim_frame_start = state_manager.get_item('trim_frame_start')
+	trim_frame_end = state_manager.get_item('trim_frame_end')
 	temp_file_path = get_temp_file_path(target_path)
 	commands = [ '-i', temp_file_path ]
 
@@ -143,13 +142,13 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) 
 	if isinstance(trim_frame_end, int):
 		end_time = trim_frame_end / output_video_fps
 		commands.extend([ '-to', str(end_time) ])
-	commands.extend([ '-i', target_path, '-c:v', 'copy', '-c:a', facefusion.globals.output_audio_encoder, '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ])
+	commands.extend([ '-i', target_path, '-c:v', 'copy', '-c:a', state_manager.get_item('output_audio_encoder'), '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ])
 	return run_ffmpeg(commands).returncode == 0
 
 
 def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:
 	temp_file_path = get_temp_file_path(target_path)
-	commands = [ '-i', temp_file_path, '-i', audio_path, '-c:a', facefusion.globals.output_audio_encoder, '-af', 'apad', '-shortest', '-y', output_path ]
+	commands = [ '-i', temp_file_path, '-i', audio_path, '-c:a', state_manager.get_item('output_audio_encoder'), '-af', 'apad', '-shortest', '-y', output_path ]
 	return run_ffmpeg(commands).returncode == 0
 
 

@@ -1,8 +1,7 @@
 from typing import List, Optional
 import gradio
 
-import facefusion.globals
-from facefusion import wording
+from facefusion import state_manager, wording
 from facefusion.processors.frame.core import load_frame_processor_module, clear_frame_processors_modules
 from facefusion.filesystem import list_directory
 from facefusion.uis.core import register_ui_component
@@ -15,8 +14,8 @@ def render() -> None:
 
 	FRAME_PROCESSORS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.frame_processors_checkbox_group'),
-		choices = sort_frame_processors(facefusion.globals.frame_processors),
-		value = facefusion.globals.frame_processors
+		choices = sort_frame_processors(state_manager.get_item('frame_processors')),
+		value = state_manager.get_item('frame_processors')
 	)
 	register_ui_component('frame_processors_checkbox_group', FRAME_PROCESSORS_CHECKBOX_GROUP)
 
@@ -26,13 +25,13 @@ def listen() -> None:
 
 
 def update_frame_processors(frame_processors : List[str]) -> gradio.CheckboxGroup:
-	facefusion.globals.frame_processors = frame_processors
+	state_manager.set_item('frame_processors', frame_processors)
 	clear_frame_processors_modules()
-	for frame_processor in frame_processors:
+	for frame_processor in state_manager.get_item('frame_processors'):
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		if not frame_processor_module.pre_check():
 			return gradio.CheckboxGroup()
-	return gradio.CheckboxGroup(value = facefusion.globals.frame_processors, choices = sort_frame_processors(facefusion.globals.frame_processors))
+	return gradio.CheckboxGroup(value = state_manager.get_item('frame_processors'), choices = sort_frame_processors(state_manager.get_item('frame_processors')))
 
 
 def sort_frame_processors(frame_processors : List[str]) -> List[str]:

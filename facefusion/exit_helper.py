@@ -2,9 +2,8 @@ import sys
 from time import sleep
 
 from facefusion.typing import ErrorCode
-from facefusion import process_manager
+from facefusion import process_manager, state_manager
 from facefusion.temp_helper import clear_temp_directory
-import facefusion.globals
 
 
 def hard_exit(error_code : ErrorCode) -> None:
@@ -12,7 +11,7 @@ def hard_exit(error_code : ErrorCode) -> None:
 
 
 def conditional_exit(error_code : ErrorCode) -> None:
-	if facefusion.globals.headless:
+	if state_manager.get_item('headless'):
 		hard_exit(error_code)
 
 
@@ -20,6 +19,6 @@ def graceful_exit(error_code : ErrorCode) -> None:
 	process_manager.stop()
 	while process_manager.is_processing():
 		sleep(0.5)
-	if facefusion.globals.target_path:
-		clear_temp_directory(facefusion.globals.target_path)
+	if state_manager.get_item('target_path'):
+		clear_temp_directory(state_manager.get_item('target_path'))
 	hard_exit(error_code)

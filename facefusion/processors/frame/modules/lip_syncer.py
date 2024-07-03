@@ -5,11 +5,10 @@ import cv2
 import numpy
 import onnxruntime
 
-import facefusion.globals
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, logger, wording
+from facefusion import config, process_manager, state_manager, logger, wording
 from facefusion.execution import apply_execution_provider_options
 from facefusion.face_analyser import get_one_face, get_many_faces, clear_face_analyser
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
@@ -28,7 +27,6 @@ from facefusion.common_helper import get_first
 from facefusion.vision import read_image, read_static_image, write_image, restrict_video_fps
 from facefusion.processors.frame.typing import LipSyncerInputs
 from facefusion.voice_extractor import clear_voice_extractor
-from facefusion.processors.frame import globals as frame_processors_globals
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
@@ -52,7 +50,7 @@ def get_frame_processor() -> Any:
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
 	return FRAME_PROCESSOR
 
 
@@ -68,7 +66,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[frame_processors_globals.lip_syncer_model]
+			'model': MODELS[state_manager.get_item('lip_syncer_model')]
 		}
 	return OPTIONS.get(key)
 
@@ -88,7 +86,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	frame_processors_globals.lip_syncer_model = args.lip_syncer_model
+	state_manager.init_item('lip_syncer_model', args.lip_syncer_model)
 
 
 def pre_check() -> bool:
@@ -96,7 +94,7 @@ def pre_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not facefusion.globals.skip_download:
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()
@@ -107,7 +105,7 @@ def post_check() -> bool:
 	model_url = get_options('model').get('url')
 	model_path = get_options('model').get('path')
 
-	if not facefusion.globals.skip_download and not is_download_done(model_url, model_path):
+	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
 		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
 		return False
 	if not is_file(model_path):
@@ -117,16 +115,16 @@ def post_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
-	if not has_audio(facefusion.globals.source_paths):
+	if not has_audio(state_manager.get_item('source_paths')):
 		logger.error(wording.get('choose_audio_source') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode in [ 'output', 'preview' ] and not is_image(facefusion.globals.target_path) and not is_video(facefusion.globals.target_path):
+	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not in_directory(facefusion.globals.output_path):
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
 		return False
-	if mode == 'output' and not same_file_extension([ facefusion.globals.target_path, facefusion.globals.output_path ]):
+	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
 		return False
 	return True
@@ -135,9 +133,9 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_voice.cache_clear()
-	if facefusion.globals.video_memory_strategy == 'strict' or facefusion.globals.video_memory_strategy == 'moderate':
+	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_frame_processor()
-	if facefusion.globals.video_memory_strategy == 'strict':
+	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
 		clear_face_occluder()
@@ -153,14 +151,14 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 	bounding_box = create_bounding_box_from_face_landmark_68(face_landmark_68)
 	bounding_box[1] -= numpy.abs(bounding_box[3] - bounding_box[1]) * 0.125
 	mouth_mask = create_mouth_mask(face_landmark_68)
-	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], facefusion.globals.face_mask_blur, facefusion.globals.face_mask_padding)
+	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 	crop_masks =\
 	[
 		mouth_mask,
 		box_mask
 	]
 
-	if 'occlusion' in facefusion.globals.face_mask_types:
+	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, (96, 96))
@@ -214,16 +212,16 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 	target_vision_frame = inputs.get('target_vision_frame')
 	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
-	if facefusion.globals.face_selector_mode == 'many':
+	if state_manager.get_item('face_selector_mode') == 'many':
 		if many_faces:
 			for target_face in many_faces:
 				target_vision_frame = sync_lip(target_face, source_audio_frame, target_vision_frame)
-	if facefusion.globals.face_selector_mode == 'one':
+	if state_manager.get_item('face_selector_mode') == 'one':
 		target_face = get_one_face(many_faces)
 		if target_face:
 			target_vision_frame = sync_lip(target_face, source_audio_frame, target_vision_frame)
-	if facefusion.globals.face_selector_mode == 'reference':
-		similar_faces = find_similar_faces(many_faces, reference_faces, facefusion.globals.reference_face_distance)
+	if state_manager.get_item('face_selector_mode') == 'reference':
+		similar_faces = find_similar_faces(many_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if similar_faces:
 			for similar_face in similar_faces:
 				target_vision_frame = sync_lip(similar_face, source_audio_frame, target_vision_frame)
@@ -231,9 +229,9 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 
 
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_audio_path = get_first(filter_audio_paths(source_paths))
-	temp_video_fps = restrict_video_fps(facefusion.globals.target_path, facefusion.globals.output_video_fps)
+	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 
 	for queue_payload in process_manager.manage(queue_payloads):
 		frame_number = queue_payload['frame_number']
@@ -253,7 +251,7 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 
 
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
-	reference_faces = get_reference_faces() if 'reference' in facefusion.globals.face_selector_mode else None
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_audio_frame = create_empty_audio_frame()
 	target_vision_frame = read_static_image(target_path)
 	output_vision_frame = process_frame(
@@ -266,8 +264,8 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	source_audio_paths = filter_audio_paths(facefusion.globals.source_paths)
-	temp_video_fps = restrict_video_fps(facefusion.globals.target_path, facefusion.globals.output_video_fps)
+	source_audio_paths = filter_audio_paths(state_manager.get_item('source_paths'))
+	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 	for source_audio_path in source_audio_paths:
 		read_static_voice(source_audio_path, temp_video_fps)
 	frame_processors.multi_process_frames(source_paths, temp_frame_paths, process_frames)

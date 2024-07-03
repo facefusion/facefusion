@@ -4,8 +4,7 @@ import cv2
 import numpy
 import onnxruntime
 
-import facefusion.globals
-from facefusion import process_manager
+from facefusion import process_manager, state_manager
 from facefusion.common_helper import get_first
 from facefusion.face_helper import estimate_matrix_by_face_landmark_5, warp_face_by_face_landmark_5, warp_face_by_translation, create_static_anchors, distance_to_face_landmark_5, distance_to_bounding_box, convert_to_face_landmark_5, normalize_bounding_box, create_rotated_matrix_and_size, transform_bounding_box, transform_points, estimate_face_angle_from_face_landmark_68, apply_nms, get_nms_threshold
 from facefusion.face_store import get_static_faces, set_static_faces
@@ -81,31 +80,32 @@ def get_face_analyser() -> Any:
 	global FACE_ANALYSER
 
 	face_detectors = {}
+	face_recognizer = None
 	face_landmarkers = {}
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
 		if FACE_ANALYSER is None:
-			if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
-				face_detectors['retinaface'] = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
-				face_detectors['scrfd'] = onnxruntime.InferenceSession(MODELS.get('face_detector_scrfd').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
-				face_detectors['yoloface'] = onnxruntime.InferenceSession(MODELS.get('face_detector_yoloface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_blendswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			if facefusion.globals.face_recognizer_model == 'arcface_ghost':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_ghost').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			if facefusion.globals.face_recognizer_model == 'arcface_simswap':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			if facefusion.globals.face_recognizer_model == 'arcface_uniface':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_uniface').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			face_landmarkers['68'] = onnxruntime.InferenceSession(MODELS.get('face_landmarker_68').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			face_landmarkers['68_5'] = onnxruntime.InferenceSession(MODELS.get('face_landmarker_68_5').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
-			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+			if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
+				face_detectors['retinaface'] = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
+				face_detectors['scrfd'] = onnxruntime.InferenceSession(MODELS.get('face_detector_scrfd').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
+				face_detectors['yoloface'] = onnxruntime.InferenceSession(MODELS.get('face_detector_yoloface').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			if state_manager.get_item('face_recognizer_model') == 'arcface_blendswap':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_blendswap').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			if state_manager.get_item('face_recognizer_model') == 'arcface_ghost':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_ghost').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			if state_manager.get_item('face_recognizer_model') == 'arcface_inswapper':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			if state_manager.get_item('face_recognizer_model') == 'arcface_simswap':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			if state_manager.get_item('face_recognizer_model') == 'arcface_uniface':
+				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_uniface').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			face_landmarkers['68'] = onnxruntime.InferenceSession(MODELS.get('face_landmarker_68').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			face_landmarkers['68_5'] = onnxruntime.InferenceSession(MODELS.get('face_landmarker_68_5').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
 			FACE_ANALYSER =\
 			{
 				'face_detectors': face_detectors,
@@ -137,32 +137,32 @@ def pre_check() -> bool:
 		MODELS.get('gender_age').get('path')
 	]
 
-	if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
+	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
 		model_urls.append(MODELS.get('face_detector_retinaface').get('url'))
 		model_paths.append(MODELS.get('face_detector_retinaface').get('path'))
-	if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
+	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
 		model_urls.append(MODELS.get('face_detector_scrfd').get('url'))
 		model_paths.append(MODELS.get('face_detector_scrfd').get('path'))
-	if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
+	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
 		model_urls.append(MODELS.get('face_detector_yoloface').get('url'))
 		model_paths.append(MODELS.get('face_detector_yoloface').get('path'))
-	if facefusion.globals.face_recognizer_model == 'arcface_blendswap':
+	if state_manager.get_item('face_detector_model') == 'arcface_blendswap':
 		model_urls.append(MODELS.get('face_recognizer_arcface_blendswap').get('url'))
 		model_paths.append(MODELS.get('face_recognizer_arcface_blendswap').get('path'))
-	if facefusion.globals.face_recognizer_model == 'arcface_ghost':
+	if state_manager.get_item('face_recognizer_model') == 'arcface_ghost':
 		model_urls.append(MODELS.get('face_recognizer_arcface_ghost').get('url'))
 		model_paths.append(MODELS.get('face_recognizer_arcface_ghost').get('path'))
-	if facefusion.globals.face_recognizer_model == 'arcface_inswapper':
+	if state_manager.get_item('face_recognizer_model') == 'arcface_inswapper':
 		model_urls.append(MODELS.get('face_recognizer_arcface_inswapper').get('url'))
 		model_paths.append(MODELS.get('face_recognizer_arcface_inswapper').get('path'))
-	if facefusion.globals.face_recognizer_model == 'arcface_simswap':
+	if state_manager.get_item('face_recognizer_model') == 'arcface_simswap':
 		model_urls.append(MODELS.get('face_recognizer_arcface_simswap').get('url'))
 		model_paths.append(MODELS.get('face_recognizer_arcface_simswap').get('path'))
-	if facefusion.globals.face_recognizer_model == 'arcface_uniface':
+	if state_manager.get_item('face_recognizer_model') == 'arcface_uniface':
 		model_urls.append(MODELS.get('face_recognizer_arcface_uniface').get('url'))
 		model_paths.append(MODELS.get('face_recognizer_arcface_uniface').get('path'))
 
-	if not facefusion.globals.skip_download:
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, model_urls)
 		process_manager.end()
@@ -190,7 +190,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 		})
 
 	for index, feature_stride in enumerate(feature_strides):
-		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
+		keep_indices = numpy.where(detections[index] >= state_manager.get_item('face_detector_score'))[0]
 		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
@@ -233,7 +233,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 		})
 
 	for index, feature_stride in enumerate(feature_strides):
-		keep_indices = numpy.where(detections[index] >= facefusion.globals.face_detector_score)[0]
+		keep_indices = numpy.where(detections[index] >= state_manager.get_item('face_detector_score'))[0]
 		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
@@ -274,7 +274,7 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 
 	detections = numpy.squeeze(detections).T
 	bounding_box_raw, score_raw, face_landmark_5_raw = numpy.split(detections, [ 4, 5 ], axis = 1)
-	keep_indices = numpy.where(score_raw > facefusion.globals.face_detector_score)[0]
+	keep_indices = numpy.where(score_raw > state_manager.get_item('face_detector_score'))[0]
 	if numpy.any(keep_indices):
 		bounding_box_raw, face_landmark_5_raw, score_raw = bounding_box_raw[keep_indices], face_landmark_5_raw[keep_indices], score_raw[keep_indices]
 		for bounding_box in bounding_box_raw:
@@ -298,18 +298,18 @@ def detect_faces(vision_frame: VisionFrame) -> Tuple[List[BoundingBox], List[Fac
 	face_landmarks_5 = []
 	face_scores = []
 
-	if facefusion.globals.face_detector_model in [ 'many', 'retinaface' ]:
-		bounding_boxes_retinaface, face_landmarks_5_retinaface, face_scores_retinaface = detect_with_retinaface(vision_frame, facefusion.globals.face_detector_size)
+	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
+		bounding_boxes_retinaface, face_landmarks_5_retinaface, face_scores_retinaface = detect_with_retinaface(vision_frame, state_manager.get_item('face_detector_size'))
 		bounding_boxes.extend(bounding_boxes_retinaface)
 		face_landmarks_5.extend(face_landmarks_5_retinaface)
 		face_scores.extend(face_scores_retinaface)
-	if facefusion.globals.face_detector_model in [ 'many', 'scrfd' ]:
-		bounding_boxes_scrfd, face_landmarks_5_scrfd, face_scores_scrfd = detect_with_scrfd(vision_frame, facefusion.globals.face_detector_size)
+	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
+		bounding_boxes_scrfd, face_landmarks_5_scrfd, face_scores_scrfd = detect_with_scrfd(vision_frame, state_manager.get_item('face_detector_size'))
 		bounding_boxes.extend(bounding_boxes_scrfd)
 		face_landmarks_5.extend(face_landmarks_5_scrfd)
 		face_scores.extend(face_scores_scrfd)
-	if facefusion.globals.face_detector_model in [ 'many', 'yoloface' ]:
-		bounding_boxes_yoloface, face_landmarks_5_yoloface, face_scores_yoloface = detect_with_yoloface(vision_frame, facefusion.globals.face_detector_size)
+	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
+		bounding_boxes_yoloface, face_landmarks_5_yoloface, face_scores_yoloface = detect_with_yoloface(vision_frame, state_manager.get_item('face_detector_size'))
 		bounding_boxes.extend(bounding_boxes_yoloface)
 		face_landmarks_5.extend(face_landmarks_5_yoloface)
 		face_scores.extend(face_scores_yoloface)
@@ -338,8 +338,8 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 
 def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_landmarks_5 : List[FaceLandmark5], face_scores : List[Score]) -> List[Face]:
 	faces = []
-	nms_threshold = get_nms_threshold(facefusion.globals.face_detector_model, facefusion.globals.face_detector_angles)
-	keep_indices = apply_nms(bounding_boxes, face_scores, facefusion.globals.face_detector_score, nms_threshold)
+	nms_threshold = get_nms_threshold(state_manager.get_item('face_detector_model'), state_manager.get_item('face_detector_angles'))
+	keep_indices = apply_nms(bounding_boxes, face_scores, state_manager.get_item('face_detector_score'), nms_threshold)
 
 	for index in keep_indices:
 		bounding_box = bounding_boxes[index]
@@ -348,9 +348,9 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 		face_landmark_68 = face_landmark_68_5
 		face_landmark_68_score = 0.0
 		face_angle = estimate_face_angle_from_face_landmark_68(face_landmark_68_5)
-		if facefusion.globals.face_landmarker_score > 0:
+		if state_manager.get_item('face_landmarker_score') > 0:
 			face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box, face_angle)
-			if face_landmark_68_score > facefusion.globals.face_landmarker_score:
+			if face_landmark_68_score > state_manager.get_item('face_landmarker_score'):
 				face_landmark_5_68 = convert_to_face_landmark_5(face_landmark_68)
 		face_landmark_set : FaceLandmarkSet =\
 		{
@@ -503,16 +503,16 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 				all_face_landmarks_5 = []
 				all_face_scores = []
 
-				for angle in facefusion.globals.face_detector_angles:
-					if angle == 0:
+				for face_detector_angle in state_manager.get_item('face_detector_angles'):
+					if face_detector_angle == 0:
 						bounding_boxes, face_landmarks_5, face_scores = detect_faces(vision_frame)
 					else:
-						bounding_boxes, face_landmarks_5, face_scores = detect_rotated_faces(vision_frame, angle)
+						bounding_boxes, face_landmarks_5, face_scores = detect_rotated_faces(vision_frame, face_detector_angle)
 					all_bounding_boxes.extend(bounding_boxes)
 					all_face_landmarks_5.extend(face_landmarks_5)
 					all_face_scores.extend(face_scores)
 
-				if all_bounding_boxes and all_face_landmarks_5 and all_face_scores and facefusion.globals.face_detector_score > 0:
+				if all_bounding_boxes and all_face_landmarks_5 and all_face_scores and state_manager.get_item('face_detector_score') > 0:
 					faces = create_faces(vision_frame, all_bounding_boxes, all_face_landmarks_5, all_face_scores)
 
 					if faces:

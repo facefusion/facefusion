@@ -4,8 +4,7 @@ import scipy
 import numpy
 import onnxruntime
 
-import facefusion.globals
-from facefusion import process_manager
+from facefusion import process_manager, state_manager
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import ModelSet, AudioChunk, Audio
 from facefusion.execution import apply_execution_provider_options
@@ -31,7 +30,7 @@ def get_voice_extractor() -> Any:
 			sleep(0.5)
 		if VOICE_EXTRACTOR is None:
 			model_path = MODELS.get('voice_extractor').get('path')
-			VOICE_EXTRACTOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(facefusion.globals.execution_device_id, facefusion.globals.execution_providers))
+			VOICE_EXTRACTOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
 	return VOICE_EXTRACTOR
 
 
@@ -46,7 +45,7 @@ def pre_check() -> bool:
 	model_url = MODELS.get('voice_extractor').get('url')
 	model_path = MODELS.get('voice_extractor').get('path')
 
-	if not facefusion.globals.skip_download:
+	if not state_manager.get_item('skip_download'):
 		process_manager.check()
 		conditional_download(download_directory_path, [ model_url ])
 		process_manager.end()

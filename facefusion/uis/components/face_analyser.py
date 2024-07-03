@@ -2,9 +2,8 @@ from typing import Optional, Dict, Any, Tuple, List
 
 import gradio
 
-import facefusion.globals
 import facefusion.choices
-from facefusion import face_analyser, wording
+from facefusion import face_analyser, state_manager, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.typing import Score, FaceDetectorModel, Angle
 from facefusion.uis.core import register_ui_component
@@ -26,33 +25,33 @@ def render() -> None:
 	face_detector_size_dropdown_args : Dict[str, Any] =\
 	{
 		'label': wording.get('uis.face_detector_size_dropdown'),
-		'value': facefusion.globals.face_detector_size
+		'value': state_manager.get_item('face_detector_size')
 	}
-	if facefusion.globals.face_detector_size in facefusion.choices.face_detector_set[facefusion.globals.face_detector_model]:
-		face_detector_size_dropdown_args['choices'] = facefusion.choices.face_detector_set[facefusion.globals.face_detector_model]
+	if state_manager.get_item('face_detector_size') in facefusion.choices.face_detector_set[state_manager.get_item('face_detector_model')]:
+		face_detector_size_dropdown_args['choices'] = facefusion.choices.face_detector_set[state_manager.get_item('face_detector_model')]
 	with gradio.Row():
 		FACE_DETECTOR_MODEL_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.face_detector_model_dropdown'),
 			choices = facefusion.choices.face_detector_set.keys(),
-			value = facefusion.globals.face_detector_model
+			value = state_manager.get_item('face_detector_model')
 		)
 		FACE_DETECTOR_SIZE_DROPDOWN = gradio.Dropdown(**face_detector_size_dropdown_args)
 	FACE_DETECTOR_ANGLES_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.face_detector_angles_checkbox_group'),
 		choices = facefusion.choices.face_detector_angles,
-		value = facefusion.globals.face_detector_angles
+		value = state_manager.get_item('face_detector_angles')
 	)
 	with gradio.Row():
 		FACE_DETECTOR_SCORE_SLIDER = gradio.Slider(
 			label = wording.get('uis.face_detector_score_slider'),
-			value = facefusion.globals.face_detector_score,
+			value = state_manager.get_item('face_detector_score'),
 			step = facefusion.choices.face_detector_score_range[1] - facefusion.choices.face_detector_score_range[0],
 			minimum = facefusion.choices.face_detector_score_range[0],
 			maximum = facefusion.choices.face_detector_score_range[-1]
 		)
 		FACE_LANDMARKER_SCORE_SLIDER = gradio.Slider(
 			label = wording.get('uis.face_landmarker_score_slider'),
-			value = facefusion.globals.face_landmarker_score,
+			value = state_manager.get_item('face_landmarker_score'),
 			step = facefusion.choices.face_landmarker_score_range[1] - facefusion.choices.face_landmarker_score_range[0],
 			minimum = facefusion.choices.face_landmarker_score_range[0],
 			maximum = facefusion.choices.face_landmarker_score_range[-1]
@@ -73,28 +72,29 @@ def listen() -> None:
 
 
 def update_face_detector_model(face_detector_model : FaceDetectorModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
-	facefusion.globals.face_detector_model = face_detector_model
+	state_manager.set_item('face_detector_model', face_detector_model)
 	update_face_detector_size('640x640')
 	clear_face_analyser()
 	if face_analyser.pre_check():
-		if facefusion.globals.face_detector_size in facefusion.choices.face_detector_set[face_detector_model]:
-			return gradio.Dropdown(value = facefusion.globals.face_detector_model), gradio.Dropdown(value = facefusion.globals.face_detector_size, choices = facefusion.choices.face_detector_set[face_detector_model])
-		return gradio.Dropdown(value = facefusion.globals.face_detector_model), gradio.Dropdown(value = facefusion.globals.face_detector_size, choices = [ facefusion.globals.face_detector_size ])
+		if state_manager.get_item('face_detector_size') in facefusion.choices.face_detector_set[state_manager.get_item('face_detector_model')]:
+			return gradio.Dropdown(value = state_manager.get_item('face_detector_model')), gradio.Dropdown(value = state_manager.get_item('face_detector_size'), choices = facefusion.choices.face_detector_set[face_detector_model])
+		return gradio.Dropdown(value = state_manager.get_item('face_detector_model')), gradio.Dropdown(value = state_manager.get_item('face_detector_size'), choices = [ state_manager.get_item('face_detector_size') ])
 	return gradio.Dropdown(), gradio.Dropdown()
 
 
 def update_face_detector_size(face_detector_size : str) -> None:
-	facefusion.globals.face_detector_size = face_detector_size
+	state_manager.set_item('face_detector_size', face_detector_size)
 
 
 def update_face_detector_angles(face_detector_angles : List[Angle]) -> gradio.CheckboxGroup:
-	facefusion.globals.face_detector_angles = face_detector_angles or facefusion.choices.face_detector_angles
-	return gradio.CheckboxGroup(value = facefusion.globals.face_detector_angles)
+	face_detector_angles = face_detector_angles or facefusion.choices.face_detector_angles
+	state_manager.set_item('face_detector_angles', face_detector_angles)
+	return gradio.CheckboxGroup(value = state_manager.get_item('face_detector_angles'))
 
 
 def update_face_detector_score(face_detector_score : Score) -> None:
-	facefusion.globals.face_detector_score = face_detector_score
+	state_manager.set_item('face_detector_score', face_detector_score)
 
 
 def update_face_landmarker_score(face_landmarker_score : Score) -> None:
-	facefusion.globals.face_landmarker_score = face_landmarker_score
+	state_manager.set_item('face_landmarker_score', face_landmarker_score)

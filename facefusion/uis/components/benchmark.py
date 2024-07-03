@@ -6,8 +6,7 @@ import tempfile
 import statistics
 import gradio
 
-import facefusion.globals
-from facefusion import process_manager, wording
+from facefusion import process_manager, state_manager, wording
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import is_video
 from facefusion.processors.frame.core import get_frame_processors_modules
@@ -86,27 +85,27 @@ def suggest_output_path(target_path : str) -> Optional[str]:
 
 
 def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
-	facefusion.globals.source_paths = [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ]
-	facefusion.globals.face_landmarker_score = 0
-	facefusion.globals.temp_frame_format = 'bmp'
-	facefusion.globals.output_video_preset = 'ultrafast'
+	state_manager.set_item('source_paths', [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ])
+	state_manager.set_item('face_landmarker_score', 0)
+	state_manager.set_item('temp_frame_format', 'bmp')
+	state_manager.set_item('output_video_preset', 'ultrafast')
 	benchmark_results = []
 	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 
 	if target_paths:
 		pre_process()
 		for target_path in target_paths:
-			facefusion.globals.target_path = target_path
-			facefusion.globals.output_path = suggest_output_path(target_path)
+			state_manager.set_item('target_path', target_path)
+			state_manager.set_item('output_path', suggest_output_path(state_manager.get_item('target_path')))
 			benchmark_results.append(benchmark(benchmark_cycles))
 			yield benchmark_results
 		post_process()
 
 
 def pre_process() -> None:
-	if facefusion.globals.system_memory_limit > 0:
-		limit_system_memory(facefusion.globals.system_memory_limit)
-	for frame_processor_module in get_frame_processors_modules(facefusion.globals.frame_processors):
+	if state_manager.get_item('system_memory_limit') > 0:
+		limit_system_memory(state_manager.get_item('system_memory_limit'))
+	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
 		frame_processor_module.get_frame_processor()
 
 
@@ -116,10 +115,10 @@ def post_process() -> None:
 
 def benchmark(benchmark_cycles : int) -> List[Any]:
 	process_times = []
-	video_frame_total = count_video_frame_total(facefusion.globals.target_path)
-	output_video_resolution = detect_video_resolution(facefusion.globals.target_path)
-	facefusion.globals.output_video_resolution = pack_resolution(output_video_resolution)
-	facefusion.globals.output_video_fps = detect_video_fps(facefusion.globals.target_path)
+	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
+	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
+	state_manager.set_item('output_video_resolution', pack_resolution(output_video_resolution))
+	state_manager.set_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
 
 	for index in range(benchmark_cycles):
 		start_time = perf_counter()
@@ -133,7 +132,7 @@ def benchmark(benchmark_cycles : int) -> List[Any]:
 
 	return\
 	[
-		facefusion.globals.target_path,
+		state_manager.get_item('target_path'),
 		benchmark_cycles,
 		average_run,
 		fastest_run,
@@ -145,6 +144,6 @@ def benchmark(benchmark_cycles : int) -> List[Any]:
 def clear() -> gradio.Dataframe:
 	while process_manager.is_processing():
 		sleep(0.5)
-	if facefusion.globals.target_path:
-		clear_temp_directory(facefusion.globals.target_path)
+	if state_manager.get_item('target_path'):
+		clear_temp_directory(state_manager.get_item('target_path'))
 	return gradio.Dataframe(value = None)

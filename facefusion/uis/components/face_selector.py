@@ -2,9 +2,8 @@ from typing import List, Optional, Tuple, Any, Dict
 
 import gradio
 
-import facefusion.globals
 import facefusion.choices
-from facefusion import wording
+from facefusion import state_manager, wording
 from facefusion.typing import VisionFrame, FaceSelectorMode, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import clear_static_faces, clear_reference_faces
@@ -35,43 +34,43 @@ def render() -> None:
 		'object_fit': 'cover',
 		'columns': 8,
 		'allow_preview': False,
-		'visible': 'reference' in facefusion.globals.face_selector_mode
+		'visible': 'reference' in state_manager.get_item('face_selector_mode')
 	}
-	if is_image(facefusion.globals.target_path):
-		reference_frame = read_static_image(facefusion.globals.target_path)
+	if is_image(state_manager.get_item('target_path')):
+		reference_frame = read_static_image(state_manager.get_item('target_path'))
 		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
-	if is_video(facefusion.globals.target_path):
-		reference_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+	if is_video(state_manager.get_item('target_path')):
+		reference_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_selector_mode_dropdown'),
 		choices = facefusion.choices.face_selector_modes,
-		value = facefusion.globals.face_selector_mode
+		value = state_manager.get_item('face_selector_mode')
 	)
 	REFERENCE_FACE_POSITION_GALLERY = gradio.Gallery(**reference_face_gallery_args)
 	with gradio.Row():
 		FACE_SELECTOR_ORDER_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.face_selector_order_dropdown'),
 			choices = facefusion.choices.face_selector_orders,
-			value = facefusion.globals.face_selector_order
+			value = state_manager.get_item('face_selector_order')
 		)
 		FACE_SELECTOR_AGE_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.face_selector_age_dropdown'),
 			choices = [ 'none' ] + facefusion.choices.face_selector_ages,
-			value = facefusion.globals.face_selector_age or 'none'
+			value = state_manager.get_item('face_selector_age') or 'none'
 		)
 		FACE_SELECTOR_GENDER_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.face_selector_gender_dropdown'),
 			choices = [ 'none' ] + facefusion.choices.face_selector_genders,
-			value = facefusion.globals.face_selector_gender or 'none'
+			value = state_manager.get_item('face_selector_gender') or 'none'
 		)
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
 		label = wording.get('uis.reference_face_distance_slider'),
-		value = facefusion.globals.reference_face_distance,
+		value = state_manager.get_item('reference_face_distance'),
 		step = facefusion.choices.reference_face_distance_range[1] - facefusion.choices.reference_face_distance_range[0],
 		minimum = facefusion.choices.reference_face_distance_range[0],
 		maximum = facefusion.choices.reference_face_distance_range[-1],
-		visible = 'reference' in facefusion.globals.face_selector_mode
+		visible = 'reference' in state_manager.get_item('face_selector_mode')
 	)
 	register_ui_component('face_selector_mode_dropdown', FACE_SELECTOR_MODE_DROPDOWN)
 	register_ui_component('face_selector_order_dropdown', FACE_SELECTOR_ORDER_DROPDOWN)
@@ -120,29 +119,30 @@ def listen() -> None:
 
 
 def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gradio.Gallery, gradio.Slider]:
+	state_manager.set_item('face_selector_mode', face_selector_mode)
 	if face_selector_mode == 'many':
-		facefusion.globals.face_selector_mode = face_selector_mode
 		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
 	if face_selector_mode == 'one':
-		facefusion.globals.face_selector_mode = face_selector_mode
 		return gradio.Gallery(visible = False), gradio.Slider(visible = False)
 	if face_selector_mode == 'reference':
-		facefusion.globals.face_selector_mode = face_selector_mode
 		return gradio.Gallery(visible = True), gradio.Slider(visible = True)
 
 
 def update_face_selector_order(face_analyser_order : FaceSelectorOrder) -> gradio.Gallery:
-	facefusion.globals.face_selector_order = face_analyser_order if face_analyser_order != 'none' else None
+	face_selector_order = face_analyser_order if face_analyser_order != 'none' else None
+	state_manager.set_item('face_selector_order', face_selector_order)
 	return update_reference_position_gallery()
 
 
-def update_face_selector_age(face_analyser_age : FaceSelectorAge) -> gradio.Gallery:
-	facefusion.globals.face_selector_age = face_analyser_age if face_analyser_age != 'none' else None
+def update_face_selector_age(face_selector_age : FaceSelectorAge) -> gradio.Gallery:
+	face_selector_age = face_selector_age if face_selector_age != 'none' else None
+	state_manager.set_item('face_selector_age', face_selector_age)
 	return update_reference_position_gallery()
 
 
 def update_face_selector_gender(face_analyser_gender : FaceSelectorGender) -> gradio.Gallery:
-	facefusion.globals.face_selector_gender = face_analyser_gender if face_analyser_gender != 'none' else None
+	face_selector_gender = face_analyser_gender if face_analyser_gender != 'none' else None
+	state_manager.set_item('face_selector_gender', face_selector_gender)
 	return update_reference_position_gallery()
 
 
@@ -154,15 +154,15 @@ def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradi
 
 
 def update_reference_face_position(reference_face_position : int = 0) -> None:
-	facefusion.globals.reference_face_position = reference_face_position
+	state_manager.set_item('reference_face_position', reference_face_position)
 
 
 def update_reference_face_distance(reference_face_distance : float) -> None:
-	facefusion.globals.reference_face_distance = reference_face_distance
+	state_manager.set_item('reference_face_distance', reference_face_distance)
 
 
 def update_reference_frame_number(reference_frame_number : int) -> None:
-	facefusion.globals.reference_frame_number = reference_frame_number
+	state_manager.set_item('reference_frame_number', reference_frame_number)
 
 
 def clear_and_update_reference_position_gallery() -> gradio.Gallery:
@@ -173,11 +173,11 @@ def clear_and_update_reference_position_gallery() -> gradio.Gallery:
 
 def update_reference_position_gallery() -> gradio.Gallery:
 	gallery_vision_frames = []
-	if is_image(facefusion.globals.target_path):
-		temp_vision_frame = read_static_image(facefusion.globals.target_path)
+	if is_image(state_manager.get_item('target_path')):
+		temp_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
-	if is_video(facefusion.globals.target_path):
-		temp_vision_frame = get_video_frame(facefusion.globals.target_path, facefusion.globals.reference_frame_number)
+	if is_video(state_manager.get_item('target_path')):
+		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
 	if gallery_vision_frames:
 		return gradio.Gallery(value = gallery_vision_frames)
