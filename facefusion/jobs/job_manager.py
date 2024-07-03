@@ -7,7 +7,7 @@ import os
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus, JobSet
 from facefusion.choices import job_statuses
-from facefusion.date_helper import get_current_datetime
+from facefusion.date_helper import get_current_date_time
 from facefusion.filesystem import is_file, is_directory, move_file, remove_file, create_directory, remove_directory
 from facefusion.temp_helper import create_base_directory
 
@@ -34,7 +34,7 @@ def create_job(job_id : str) -> bool:
 	job : Job =\
 	{
 		'version': '1',
-		'date_created': get_current_datetime().isoformat(),
+		'date_created': get_current_date_time().isoformat(),
 		'date_updated': None,
 		'steps': []
 	}
@@ -218,7 +218,7 @@ def update_job_file(job_id : str, job : Job) -> bool:
 
 	if is_file(job_path):
 		with open(job_path, 'w') as job_file:
-			job['date_updated'] = get_current_datetime().isoformat()
+			job['date_updated'] = get_current_date_time().isoformat()
 			json.dump(job, job_file, indent = 4)
 		return is_file(job_path)
 	return False
