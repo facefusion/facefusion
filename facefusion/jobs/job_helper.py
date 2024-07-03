@@ -19,8 +19,8 @@ def suggest_job_id(job_prefix : str = 'job') -> str:
 
 def compose_job_list(job_status : JobStatus) -> Tuple[TableHeaders, TableContents]:
 	jobs = job_manager.find_jobs(job_status)
-	job_headers = [ 'job id', 'steps', 'date created', 'date updated', 'job status' ]
-	job_contents = []
+	job_headers : TableHeaders = [ 'job id', 'steps', 'date created', 'date updated', 'job status' ]
+	job_contents : TableContents = []
 
 	for index, job_id in enumerate(jobs):
 		job = jobs[job_id]
