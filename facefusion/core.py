@@ -8,6 +8,7 @@ import warnings
 import shutil
 import numpy
 import onnxruntime
+from datetime import datetime
 from time import sleep, time
 from argparse import ArgumentParser, HelpFormatter
 
@@ -25,6 +26,7 @@ from facefusion.common_helper import create_metavar, get_first, flush_argv
 from facefusion.execution import get_execution_provider_choices
 from facefusion.normalizer import normalize_padding, normalize_fps
 from facefusion.memory import limit_system_memory
+from facefusion.date_helper import describe_time_ago
 from facefusion.statistics import conditional_log_statistics
 from facefusion.download import conditional_download
 from facefusion.filesystem import is_image, is_video, filter_audio_paths, resolve_relative_path, list_directory
@@ -390,7 +392,9 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 		for index, job_id in enumerate(jobs):
 			job = jobs[job_id]
 			step_total = job_manager.count_step_total(job_id)
-			job_contents.append([ job_id, step_total, job.get('date_created'), job.get('date_updated'), args.job_list ])
+			date_created = datetime.fromisoformat(job.get('date_created'))
+			date_updated = datetime.fromisoformat(job.get('date_updated'))
+			job_contents.append([ job_id, step_total, describe_time_ago(date_created), describe_time_ago(date_updated), args.job_list ])
 
 		if job_contents:
 			logger.table(job_headers, job_contents)
