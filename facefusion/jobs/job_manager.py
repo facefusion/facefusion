@@ -34,7 +34,7 @@ def create_job(job_id : str) -> bool:
 	job : Job =\
 	{
 		'version': '1',
-		'date_created': get_current_datetime(),
+		'date_created': get_current_datetime().isoformat(),
 		'date_updated': None,
 		'steps': []
 	}
@@ -218,7 +218,7 @@ def update_job_file(job_id : str, job : Job) -> bool:
 
 	if is_file(job_path):
 		with open(job_path, 'w') as job_file:
-			job['date_updated'] = get_current_datetime()
+			job['date_updated'] = get_current_datetime().isoformat()
 			json.dump(job, job_file, indent = 4)
 		return is_file(job_path)
 	return False
