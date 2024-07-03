@@ -6,9 +6,9 @@ import numpy
 Score = float
 Angle = int
 
-BoundingBox = NDArray[numpy.float32]
-FaceLandmark5 = numpy.ndarray[Any, Any]
-FaceLandmark68 = numpy.ndarray[Any, Any]
+BoundingBox = NDArray[Any]
+FaceLandmark5 = NDArray[Any]
+FaceLandmark68 = NDArray[Any]
 FaceLandmarkSet = TypedDict('FaceLandmarkSet',
 {
 	'5' : FaceLandmark5, #type:ignore[valid-type]
@@ -21,7 +21,7 @@ FaceScoreSet = TypedDict('FaceScoreSet',
 	'detector' : Score,
 	'landmarker' : Score
 })
-Embedding = numpy.ndarray[Any, Any]
+Embedding = NDArray[numpy.float64]
 Face = namedtuple('Face',
 [
 	'bounding_box',
@@ -40,19 +40,19 @@ FaceStore = TypedDict('FaceStore',
 	'reference_faces': FaceSet
 })
 
-VisionFrame = numpy.ndarray[Any, Any]
-Mask = numpy.ndarray[Any, Any]
-Points = numpy.ndarray[Any, Any]
-Distance = numpy.ndarray[Any, Any]
-Matrix = numpy.ndarray[Any, Any]
-Translation = numpy.ndarray[Any, Any]
+VisionFrame = NDArray[Any]
+Mask = NDArray[Any]
+Points = NDArray[Any]
+Distance = NDArray[Any]
+Matrix = NDArray[Any]
+Translation = NDArray[Any]
 
 AudioBuffer = bytes
-Audio = numpy.ndarray[Any, Any]
-AudioChunk = numpy.ndarray[Any, Any]
-AudioFrame = numpy.ndarray[Any, Any]
-Spectrogram = numpy.ndarray[Any, Any]
-MelFilterBank = numpy.ndarray[Any, Any]
+Audio = NDArray[Any]
+AudioChunk = NDArray[Any]
+AudioFrame = NDArray[Any]
+Spectrogram = NDArray[Any]
+MelFilterBank = NDArray[Any]
 
 Fps = float
 Padding = Tuple[int, int, int, int]
@@ -70,7 +70,7 @@ ProcessStep = Callable[[Dict[str, Any]], bool]
 Args = Dict[str, Any]
 
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
-WarpTemplateSet = Dict[WarpTemplate, numpy.ndarray[Any, Any]]
+WarpTemplateSet = Dict[WarpTemplate, NDArray[Any]]
 ProcessMode = Literal['output', 'preview', 'stream']
 
 ErrorCode = Literal[0, 1, 2, 3, 4]
