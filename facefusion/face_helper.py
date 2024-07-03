@@ -177,8 +177,8 @@ def estimate_face_angle_from_face_landmark_68(face_landmark_68 : FaceLandmark68)
 
 
 def apply_nms(bounding_boxes : List[BoundingBox], face_scores : List[Score], score_threshold : float, nms_threshold : float) -> Sequence[int]:
-	bounding_boxes = [ (x1, y1, x2 - x1, y2 - y1) for (x1, y1, x2, y2) in bounding_boxes ]
-	keep_indices = cv2.dnn.NMSBoxes(bounding_boxes, face_scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
+	normed_bounding_boxes = [ (x1, y1, x2 - x1, y2 - y1) for (x1, y1, x2, y2) in bounding_boxes ]
+	keep_indices = cv2.dnn.NMSBoxes(normed_bounding_boxes, face_scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
 	return keep_indices
 
 
