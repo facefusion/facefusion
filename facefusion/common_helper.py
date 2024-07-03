@@ -1,6 +1,5 @@
 import sys
 from typing import List, Any
-from datetime import datetime
 import platform
 
 
@@ -26,10 +25,6 @@ def create_float_range(start : float, end : float, step : float) -> List[float]:
 		float_range.append(round(current, 2))
 		current = round(current + step, 2)
 	return float_range
-
-
-def get_current_datetime() -> str:
-	return datetime.now().astimezone().isoformat()
 
 
 def is_linux() -> bool:
