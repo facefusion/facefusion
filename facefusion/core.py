@@ -52,6 +52,7 @@ def create_program() -> ArgumentParser:
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 200), add_help = False)
 	# general
 	program.add_argument('-c', '--config-path', help = wording.get('help.config_path'), dest = 'config_path', default = 'facefusion.ini')
+	job_store.register_job_keys([ 'config-path' ])
 	apply_config_path(program)
 	program.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
 	program.add_argument('-t', '--target-path', help = wording.get('help.target_path'), dest = 'target_path', default = config.get_str_value('general.target_path'))
