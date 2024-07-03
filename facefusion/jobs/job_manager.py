@@ -7,7 +7,7 @@ import os
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.typing import Args, Job, JobStatus, JobStep, JobStepStatus, JobSet
 from facefusion.choices import job_statuses
-from facefusion.common_helper import get_current_datetime
+from facefusion.date_helper import get_current_datetime
 from facefusion.filesystem import is_file, is_directory, move_file, remove_file, create_directory, remove_directory
 from facefusion.temp_helper import create_base_directory
 
