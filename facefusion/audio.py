@@ -1,11 +1,12 @@
-from typing import Optional, Any, List
 from functools import lru_cache
+from typing import Any, List, Optional
+
 import numpy
 import scipy
 
-from facefusion.filesystem import is_audio
 from facefusion.ffmpeg import read_audio_buffer
-from facefusion.typing import Fps, Audio, AudioFrame, Spectrogram, MelFilterBank
+from facefusion.filesystem import is_audio
+from facefusion.typing import Audio, AudioFrame, Fps, MelFilterBank, Spectrogram
 from facefusion.voice_extractor import batch_extract_voice
 
 

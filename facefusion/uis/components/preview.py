@@ -1,21 +1,22 @@
-from typing import Any, Dict, Optional
 from time import sleep
+from typing import Any, Dict, Optional
+
 import cv2
 import gradio
 import numpy
 
-from facefusion import state_manager, logger, wording
-from facefusion.audio import get_audio_frame, create_empty_audio_frame
+from facefusion import logger, state_manager, wording
+from facefusion.audio import create_empty_audio_frame, get_audio_frame
 from facefusion.common_helper import get_first
-from facefusion.core import conditional_append_reference_faces
-from facefusion.face_analyser import get_many_faces, get_average_face
-from facefusion.face_store import clear_static_faces, get_reference_faces, clear_reference_faces
-from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame
-from facefusion.vision import get_video_frame, count_video_frame_total, normalize_frame_color, resize_frame_resolution, read_static_image, read_static_images
-from facefusion.filesystem import is_image, is_video, filter_audio_paths
 from facefusion.content_analyser import analyse_frame
+from facefusion.core import conditional_append_reference_faces
+from facefusion.face_analyser import get_average_face, get_many_faces
+from facefusion.face_store import clear_reference_faces, clear_static_faces, get_reference_faces
+from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.frame.core import load_frame_processor_module
+from facefusion.typing import AudioFrame, Face, FaceSet, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
+from facefusion.vision import count_video_frame_total, get_video_frame, normalize_frame_color, read_static_image, read_static_images, resize_frame_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 PREVIEW_FRAME_SLIDER : Optional[gradio.Slider] = None

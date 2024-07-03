@@ -1,4 +1,4 @@
-from facefusion.execution import get_execution_provider_choices, has_execution_provider, apply_execution_provider_options
+from facefusion.execution import apply_execution_provider_options, get_execution_provider_choices, has_execution_provider
 
 
 def test_get_execution_provider_choices() -> None:

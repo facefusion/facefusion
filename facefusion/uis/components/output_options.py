@@ -1,12 +1,13 @@
 from typing import Optional, Tuple
+
 import gradio
 
 import facefusion.choices
 from facefusion import state_manager, wording
-from facefusion.typing import OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Fps
 from facefusion.filesystem import is_image, is_video
+from facefusion.typing import Fps, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset
 from facefusion.uis.core import get_ui_components, register_ui_component
-from facefusion.vision import detect_image_resolution, create_image_resolutions, detect_video_fps, detect_video_resolution, create_video_resolutions, pack_resolution
+from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, pack_resolution
 
 OUTPUT_IMAGE_QUALITY_SLIDER : Optional[gradio.Slider] = None
 OUTPUT_IMAGE_RESOLUTION_DROPDOWN : Optional[gradio.Dropdown] = None

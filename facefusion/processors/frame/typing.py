@@ -1,6 +1,6 @@
 from typing import Dict, List, Literal, TypedDict
 
-from facefusion.typing import Face, FaceSet, AudioFrame, VisionFrame, StateContext
+from facefusion.typing import AudioFrame, Face, FaceSet, StateContext, VisionFrame
 
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender']
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']

@@ -1,25 +1,26 @@
-from typing import Optional, Generator, Deque
 import os
 import subprocess
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor
+from time import sleep
+from typing import Deque, Generator, Optional
+
 import cv2
 import gradio
-from time import sleep
-from concurrent.futures import ThreadPoolExecutor
-from collections import deque
 from tqdm import tqdm
 
-from facefusion import state_manager, logger, wording
+from facefusion import logger, state_manager, wording
 from facefusion.audio import create_empty_audio_frame
 from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream
-from facefusion.filesystem import filter_image_paths
-from facefusion.typing import VisionFrame, Face, Fps
-from facefusion.face_analyser import get_many_faces, get_average_face
-from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
+from facefusion.face_analyser import get_average_face, get_many_faces
 from facefusion.ffmpeg import open_ffmpeg
-from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
-from facefusion.uis.typing import StreamMode, WebcamMode
+from facefusion.filesystem import filter_image_paths
+from facefusion.processors.frame.core import get_frame_processors_modules, load_frame_processor_module
+from facefusion.typing import Face, Fps, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components
+from facefusion.uis.typing import StreamMode, WebcamMode
+from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
 
 WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None

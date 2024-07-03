@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from typing import Any, Optional, List
+from typing import Any, List, Optional
 
 from facefusion import state_manager
 

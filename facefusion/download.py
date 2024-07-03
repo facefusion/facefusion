@@ -1,10 +1,11 @@
 import os
-import subprocess
 import ssl
+import subprocess
 import urllib.request
-from typing import List
 from functools import lru_cache
+from typing import List
 from urllib.parse import urlparse
+
 from tqdm import tqdm
 
 from facefusion import state_manager, wording

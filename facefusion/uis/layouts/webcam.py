@@ -1,7 +1,7 @@
 import gradio
 
 from facefusion import state_manager
-from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, webcam_options, source, webcam
+from facefusion.uis.components import about, execution, execution_thread_count, frame_processors, frame_processors_options, source, webcam, webcam_options
 
 
 def pre_check() -> bool:

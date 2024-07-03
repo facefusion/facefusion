@@ -1,24 +1,25 @@
-from typing import Any, List, Literal
 from argparse import ArgumentParser
+from typing import Any, List, Literal
+
 import cv2
 import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, state_manager, logger, wording
-from facefusion.face_analyser import get_one_face, get_many_faces, clear_face_analyser
-from facefusion.face_selector import find_similar_faces, sort_and_filter_faces, categorize_age, categorize_gender
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
+from facefusion import config, logger, process_manager, state_manager, wording
+from facefusion.content_analyser import clear_content_analyser
+from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
+from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_occlusion_mask, create_region_mask, create_static_box_mask
+from facefusion.face_selector import categorize_age, categorize_gender, find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, same_file_extension
-from facefusion.content_analyser import clear_content_analyser
-from facefusion.program_helper import find_argument_group
-from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, QueuePayload
-from facefusion.vision import read_image, read_static_image, write_image
-from facefusion.processors.frame.typing import FaceDebuggerInputs
 from facefusion.processors.frame import choices as frame_processors_choices
+from facefusion.processors.frame.typing import FaceDebuggerInputs
+from facefusion.program_helper import find_argument_group
+from facefusion.typing import Face, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.vision import read_image, read_static_image, write_image
 
 NAME = __name__.upper()
 

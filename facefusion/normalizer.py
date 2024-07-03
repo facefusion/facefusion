@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from facefusion.typing import Padding, Fps
+from facefusion.typing import Fps, Padding
 
 
 def normalize_padding(padding : Optional[List[int]]) -> Optional[Padding]:

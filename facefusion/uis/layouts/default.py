@@ -1,7 +1,7 @@
 import gradio
 
 from facefusion import state_manager
-from facefusion.uis.components import about, frame_processors, frame_processors_options, execution, execution_thread_count, execution_queue_count, memory, temp_frame, output_options, common_options, source, target, output, preview, trim_frame, face_analyser, face_selector, face_masker
+from facefusion.uis.components import about, common_options, execution, execution_queue_count, execution_thread_count, face_analyser, face_masker, face_selector, frame_processors, frame_processors_options, memory, output, output_options, preview, source, target, temp_frame, trim_frame
 
 
 def pre_check() -> bool:

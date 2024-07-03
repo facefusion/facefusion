@@ -1,9 +1,10 @@
 from typing import Optional
+
 import gradio
 
 from facefusion import wording
-from facefusion.uis.core import register_ui_component
 from facefusion.uis.components.benchmark import BENCHMARKS
+from facefusion.uis.core import register_ui_component
 
 BENCHMARK_RUNS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 BENCHMARK_CYCLES_SLIDER : Optional[gradio.Button] = None

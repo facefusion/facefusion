@@ -1,15 +1,16 @@
-from typing import Any, Tuple
 from time import sleep
-import scipy
+from typing import Any, Tuple
+
 import numpy
 import onnxruntime
+import scipy
 
 from facefusion import process_manager, state_manager
-from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import ModelSet, AudioChunk, Audio
-from facefusion.execution import apply_execution_provider_options
-from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.download import conditional_download
+from facefusion.execution import apply_execution_provider_options
+from facefusion.filesystem import is_file, resolve_relative_path
+from facefusion.thread_helper import thread_lock, thread_semaphore
+from facefusion.typing import Audio, AudioChunk, ModelSet
 
 VOICE_EXTRACTOR = None
 MODELS : ModelSet =\

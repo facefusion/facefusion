@@ -1,7 +1,7 @@
+from logging import DEBUG, ERROR, INFO, Logger, WARNING, basicConfig, getLogger
 from typing import Dict, Tuple
-from logging import basicConfig, getLogger, Logger, DEBUG, INFO, WARNING, ERROR
 
-from facefusion.typing import LogLevel, TableHeaders, TableContents
+from facefusion.typing import LogLevel, TableContents, TableHeaders
 
 
 def init(log_level : LogLevel) -> None:

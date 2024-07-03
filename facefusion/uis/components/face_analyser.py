@@ -1,11 +1,11 @@
-from typing import Optional, Dict, Any, Tuple, List
+from typing import Any, Dict, List, Optional, Tuple
 
 import gradio
 
 import facefusion.choices
 from facefusion import face_analyser, state_manager, wording
 from facefusion.face_analyser import clear_face_analyser
-from facefusion.typing import Score, FaceDetectorModel, Angle
+from facefusion.typing import Angle, FaceDetectorModel, Score
 from facefusion.uis.core import register_ui_component
 
 FACE_DETECTOR_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None

@@ -1,38 +1,38 @@
-import os
-
-os.environ['OMP_NUM_THREADS'] = '1'
-
+import shutil
 import signal
 import sys
 import warnings
-import shutil
+from argparse import ArgumentParser, HelpFormatter
+from datetime import datetime
+from time import sleep, time
+from typing import Tuple
+
 import numpy
 import onnxruntime
-from time import sleep, time
-from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
-from facefusion import face_analyser, face_masker, content_analyser, config, process_manager, state_manager, metadata, logger, voice_extractor, wording
-from facefusion.typing import ErrorCode, Args
-from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces
-from facefusion.face_selector import sort_and_filter_faces
-from facefusion.face_store import get_reference_faces, append_reference_face
-from facefusion.content_analyser import analyse_image, analyse_video
-from facefusion.program_helper import validate_args, reduce_args, update_args, suggest_face_detector_choices, import_state
-from facefusion.jobs import job_manager, job_runner, job_store, job_helper
-from facefusion.exit_helper import hard_exit, conditional_exit, graceful_exit
-from facefusion.common_helper import create_metavar, get_first, flush_argv
-from facefusion.execution import get_execution_provider_choices
-from facefusion.normalizer import normalize_padding, normalize_fps
-from facefusion.memory import limit_system_memory
-from facefusion.statistics import conditional_log_statistics
-from facefusion.download import conditional_download
-from facefusion.filesystem import is_image, is_video, filter_audio_paths, resolve_relative_path, list_directory
-from facefusion.temp_helper import get_temp_frame_paths, get_temp_file_path, create_temp_directory, move_temp_file, clear_temp_directory
-from facefusion.ffmpeg import extract_frames, merge_video, copy_image, finalize_image, restore_audio, replace_audio
-from facefusion.vision import read_image, read_static_images, detect_image_resolution, restrict_video_fps, create_image_resolutions, get_video_frame, detect_video_resolution, detect_video_fps, restrict_video_resolution, restrict_image_resolution, create_video_resolutions, pack_resolution, unpack_resolution
-from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules, load_frame_processor_module
 import facefusion.processors.frame
+from facefusion import config, content_analyser, face_analyser, face_masker, logger, metadata, process_manager, state_manager, voice_extractor, wording
+from facefusion.common_helper import create_metavar, flush_argv, get_first
+from facefusion.content_analyser import analyse_image, analyse_video
+from facefusion.date_helper import describe_time_ago
+from facefusion.download import conditional_download
+from facefusion.execution import get_execution_provider_choices
+from facefusion.exit_helper import conditional_exit, graceful_exit, hard_exit
+from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
+from facefusion.face_selector import sort_and_filter_faces
+from facefusion.face_store import append_reference_face, get_reference_faces
+from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
+from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_relative_path
+from facefusion.jobs import job_helper, job_manager, job_runner, job_store
+from facefusion.memory import limit_system_memory
+from facefusion.normalizer import normalize_fps, normalize_padding
+from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules, load_frame_processor_module
+from facefusion.program_helper import import_state, reduce_args, suggest_face_detector_choices, update_args, validate_args
+from facefusion.statistics import conditional_log_statistics
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
+from facefusion.typing import Args, ErrorCode, JobStatus, TableContents, TableHeaders
+from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, get_video_frame, pack_resolution, read_image, read_static_images, restrict_image_resolution, restrict_video_fps, restrict_video_resolution, unpack_resolution
 
 onnxruntime.set_default_logger_severity(3)
 warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
@@ -347,6 +347,27 @@ def force_download() -> None:
 	conditional_download(download_directory_path, model_urls)
 
 
+def compose_job_list(job_status : JobStatus) -> Tuple[TableHeaders, TableContents]:
+	jobs = job_manager.find_jobs(job_status)
+	job_headers : TableHeaders = [ 'job id', 'steps', 'date created', 'date updated', 'job status' ]
+	job_contents : TableContents = []
+
+	for index, job_id in enumerate(jobs):
+		job = jobs[job_id]
+		step_total = job_manager.count_step_total(job_id)
+		date_created = datetime.fromisoformat(job.get('date_created'))
+		date_updated = datetime.fromisoformat(job.get('date_updated'))
+		job_contents.append(
+		[
+			job_id,
+			step_total,
+			describe_time_ago(date_created),
+			describe_time_ago(date_updated),
+			job_status
+		])
+	return job_headers, job_contents
+
+
 def route_job_manager(program : ArgumentParser) -> ErrorCode:
 	args = program.parse_args()
 	step_program = reduce_args(program, job_store.get_step_keys())
@@ -383,7 +404,7 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 		logger.error(wording.get('job_all_not_deleted'), __name__.upper())
 		return 1
 	if args.job_list:
-		job_headers, job_contents = job_helper.compose_job_list(args.job_list)
+		job_headers, job_contents = compose_job_list(args.job_list)
 
 		if job_contents:
 			logger.table(job_headers, job_contents)

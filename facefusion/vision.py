@@ -1,13 +1,14 @@
-from typing import Optional, List, Tuple
 from functools import lru_cache
+from typing import List, Optional, Tuple
+
 import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.common_helper import is_windows
-from facefusion.typing import VisionFrame, Resolution, Fps
 from facefusion.choices import image_template_sizes, video_template_sizes
+from facefusion.common_helper import is_windows
 from facefusion.filesystem import is_image, is_video, sanitize_path_for_windows
+from facefusion.typing import Fps, Resolution, VisionFrame
 
 
 @lru_cache(maxsize = 128)

@@ -1,9 +1,9 @@
 import sys
 from time import sleep
 
-from facefusion.typing import ErrorCode
 from facefusion import process_manager, state_manager
 from facefusion.temp_helper import clear_temp_directory
+from facefusion.typing import ErrorCode
 
 
 def hard_exit(error_code : ErrorCode) -> None:

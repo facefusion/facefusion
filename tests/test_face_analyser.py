@@ -1,12 +1,13 @@
 import subprocess
+
 import pytest
 
 from facefusion import state_manager
-from facefusion.typing import Face
 from facefusion.download import conditional_download
-from facefusion.face_analyser import pre_check, clear_face_analyser, get_one_face, get_many_faces
+from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face, pre_check
+from facefusion.typing import Face
 from facefusion.vision import read_static_image
-from .helper import get_test_examples_directory, get_test_example_file
+from .helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

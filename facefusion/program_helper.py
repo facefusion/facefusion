@@ -1,11 +1,11 @@
-from typing import List, Optional, Union
-from argparse import ArgumentParser, Action, _ArgumentGroup
+from argparse import Action, ArgumentParser, _ArgumentGroup
 from copy import copy
+from typing import List, Optional, Union
 
 import facefusion.choices
+from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.typing import FrameProcessorState
 from facefusion.typing import Args, State
-from facefusion.processors.frame import choices as frame_processors_choices
 
 
 def find_argument_group(program : ArgumentParser, group_name : str) -> Optional[_ArgumentGroup]:

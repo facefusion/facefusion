@@ -1,8 +1,9 @@
-import shutil
-from typing import List, Optional
 import os
-import filetype
+import shutil
 from pathlib import Path
+from typing import List, Optional
+
+import filetype
 
 from facefusion.common_helper import is_windows
 

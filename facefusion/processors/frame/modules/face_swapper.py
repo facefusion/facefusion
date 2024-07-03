@@ -1,6 +1,7 @@
-from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 from time import sleep
+from typing import Any, List, Literal, Optional
+
 import numpy
 import onnx
 import onnxruntime
@@ -9,24 +10,24 @@ from onnx import numpy_helper
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, state_manager, logger, wording
-from facefusion.execution import has_execution_provider, apply_execution_provider_options
-from facefusion.face_analyser import get_one_face, get_average_face, get_many_faces, clear_face_analyser
-from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_region_mask, clear_face_occluder, clear_face_parser
-from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back
-from facefusion.face_store import get_reference_faces
+from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import clear_content_analyser
-from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode_pixel_boost
-from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
-from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
-from facefusion.typing import Face, Embedding, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
-from facefusion.filesystem import same_file_extension, is_file, in_directory, is_image, has_image, is_video, filter_image_paths, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
-from facefusion.vision import read_image, read_static_image, read_static_images, write_image, unpack_resolution
-from facefusion.processors.frame.typing import FaceSwapperInputs
+from facefusion.execution import apply_execution_provider_options, has_execution_provider
+from facefusion.face_analyser import clear_face_analyser, get_average_face, get_many_faces, get_one_face
+from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
+from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_occlusion_mask, create_region_mask, create_static_box_mask
+from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
+from facefusion.face_store import get_reference_faces
+from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.frame import choices as frame_processors_choices
+from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode_pixel_boost
+from facefusion.processors.frame.typing import FaceSwapperInputs
+from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
+from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
+from facefusion.typing import Embedding, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
 FRAME_PROCESSOR = None
 MODEL_INITIALIZER = None

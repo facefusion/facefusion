@@ -1,10 +1,10 @@
-from typing import List
 import glob
 import os
 import tempfile
+from typing import List
 
 from facefusion import state_manager
-from facefusion.filesystem import remove_directory, move_file, create_directory
+from facefusion.filesystem import create_directory, move_file, remove_directory
 
 
 def get_temp_file_path(file_path : str) -> str:

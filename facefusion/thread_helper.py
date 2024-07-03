@@ -1,6 +1,6 @@
-from typing import Union, ContextManager
 import threading
 from contextlib import nullcontext
+from typing import ContextManager, Union
 
 from facefusion.execution import has_execution_provider
 

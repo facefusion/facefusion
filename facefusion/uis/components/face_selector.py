@@ -1,16 +1,16 @@
-from typing import List, Optional, Tuple, Any, Dict
+from typing import Any, Dict, List, Optional, Tuple
 
 import gradio
 
 import facefusion.choices
 from facefusion import state_manager, wording
-from facefusion.typing import VisionFrame, FaceSelectorMode, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender
-from facefusion.face_selector import sort_and_filter_faces
-from facefusion.face_store import clear_static_faces, clear_reference_faces
-from facefusion.vision import get_video_frame, read_static_image, normalize_frame_color
-from facefusion.filesystem import is_image, is_video
 from facefusion.face_analyser import get_many_faces
+from facefusion.face_selector import sort_and_filter_faces
+from facefusion.face_store import clear_reference_faces, clear_static_faces
+from facefusion.filesystem import is_image, is_video
+from facefusion.typing import FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
+from facefusion.vision import get_video_frame, normalize_frame_color, read_static_image
 
 FACE_SELECTOR_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SELECTOR_ORDER_DROPDOWN : Optional[gradio.Dropdown] = None

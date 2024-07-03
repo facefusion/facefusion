@@ -1,14 +1,15 @@
-from typing import Dict, Optional, Any, List
-from types import ModuleType
-import os
 import importlib
+import os
+from types import ModuleType
+from typing import Any, Dict, List, Optional
+
 import gradio
 
+from facefusion import logger, metadata, state_manager, wording
 from facefusion.exit_helper import hard_exit
-from facefusion.uis import overrides
-from facefusion import state_manager, metadata, logger, wording
-from facefusion.uis.typing import Component, ComponentName
 from facefusion.filesystem import resolve_relative_path
+from facefusion.uis import overrides
+from facefusion.uis.typing import Component, ComponentName
 
 os.environ['GRADIO_ANALYTICS_ENABLED'] = '0'
 gradio.networking.GRADIO_API_SERVER = os.getenv('GRADIO_TUNNEL_URL', gradio.networking.GRADIO_API_SERVER)

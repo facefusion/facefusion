@@ -1,20 +1,21 @@
-from typing import Any, Optional, List, Dict, Generator
-from time import sleep, perf_counter
-import os
 import hashlib
-import tempfile
+import os
 import statistics
+import tempfile
+from time import perf_counter, sleep
+from typing import Any, Dict, Generator, List, Optional
+
 import gradio
 
 from facefusion import process_manager, state_manager, wording
+from facefusion.core import conditional_process
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import is_video
-from facefusion.processors.frame.core import get_frame_processors_modules
-from facefusion.vision import count_video_frame_total, detect_video_resolution, detect_video_fps, pack_resolution
-from facefusion.core import conditional_process
 from facefusion.memory import limit_system_memory
+from facefusion.processors.frame.core import get_frame_processors_modules
 from facefusion.temp_helper import clear_temp_directory
 from facefusion.uis.core import get_ui_component
+from facefusion.vision import count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution
 
 BENCHMARK_RESULTS_DATAFRAME : Optional[gradio.Dataframe] = None
 BENCHMARK_START_BUTTON : Optional[gradio.Button] = None

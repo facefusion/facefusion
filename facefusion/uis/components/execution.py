@@ -1,11 +1,12 @@
 from typing import List, Optional
+
 import gradio
 
-from facefusion.typing import ExecutionProviderKey
 from facefusion import state_manager, wording
+from facefusion.execution import get_execution_provider_choices
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.processors.frame.core import clear_frame_processors_modules
-from facefusion.execution import get_execution_provider_choices
+from facefusion.typing import ExecutionProviderKey
 
 EXECUTION_PROVIDERS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 

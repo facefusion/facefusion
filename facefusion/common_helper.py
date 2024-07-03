@@ -1,6 +1,6 @@
-import sys
-from typing import List, Any
 import platform
+import sys
+from typing import Any, List
 
 
 def create_metavar(ranges : List[Any]) -> str:

@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from facefusion.program_helper import find_argument_group, validate_args, reduce_args, update_args
+from facefusion.program_helper import find_argument_group, reduce_args, update_args, validate_args
 
 
 def test_find_argument_group() -> None:

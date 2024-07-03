@@ -1,10 +1,11 @@
-from typing import Dict, Tuple
-import sys
 import os
-import tempfile
 import subprocess
-import inquirer
+import sys
+import tempfile
 from argparse import ArgumentParser, HelpFormatter
+from typing import Dict, Tuple
+
+import inquirer
 
 from facefusion import metadata, wording
 from facefusion.common_helper import is_linux, is_macos, is_windows

@@ -1,6 +1,7 @@
-from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 from time import sleep
+from typing import Any, List, Literal, Optional
+
 import cv2
 import numpy
 import onnxruntime
@@ -8,26 +9,25 @@ import onnxruntime
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, state_manager, logger, wording
-from facefusion.execution import apply_execution_provider_options
-from facefusion.face_analyser import get_one_face, get_many_faces, clear_face_analyser
-from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, create_mouth_mask, clear_face_occluder, clear_face_parser
-from facefusion.face_helper import warp_face_by_face_landmark_5, warp_face_by_bounding_box, paste_back, create_bounding_box_from_face_landmark_68
-from facefusion.face_store import get_reference_faces
-from facefusion.content_analyser import clear_content_analyser
-from facefusion.program_helper import find_argument_group
-from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
-from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, AudioFrame, QueuePayload
-from facefusion.filesystem import same_file_extension, is_file, in_directory, has_audio, resolve_relative_path
-from facefusion.download import conditional_download, is_download_done
-from facefusion.audio import read_static_voice, get_voice_frame, create_empty_audio_frame
-from facefusion.filesystem import is_image, is_video, filter_audio_paths
+from facefusion import config, logger, process_manager, state_manager, wording
+from facefusion.audio import create_empty_audio_frame, get_voice_frame, read_static_voice
 from facefusion.common_helper import get_first
-from facefusion.vision import read_image, read_static_image, write_image, restrict_video_fps
-from facefusion.processors.frame.typing import LipSyncerInputs
-from facefusion.voice_extractor import clear_voice_extractor
+from facefusion.content_analyser import clear_content_analyser
+from facefusion.download import conditional_download, is_download_done
+from facefusion.execution import apply_execution_provider_options
+from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
+from facefusion.face_helper import create_bounding_box_from_face_landmark_68, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
+from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_mouth_mask, create_occlusion_mask, create_static_box_mask
+from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
+from facefusion.face_store import get_reference_faces
+from facefusion.filesystem import filter_audio_paths, has_audio, in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.frame import choices as frame_processors_choices
+from facefusion.processors.frame.typing import LipSyncerInputs
+from facefusion.program_helper import find_argument_group
+from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
+from facefusion.typing import AudioFrame, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
+from facefusion.voice_extractor import clear_voice_extractor
 
 FRAME_PROCESSOR = None
 NAME = __name__.upper()

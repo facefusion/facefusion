@@ -1,10 +1,11 @@
 import os.path
+
 import pytest
 
 from facefusion.common_helper import is_windows
 from facefusion.download import conditional_download
-from facefusion.filesystem import get_file_size, same_file_extension, is_file, is_directory, in_directory, is_audio, has_audio, is_image, has_image, is_video, filter_audio_paths, filter_image_paths, sanitize_path_for_windows, copy_file, create_directory, list_directory, remove_directory
-from .helper import get_test_examples_directory, get_test_example_file, get_test_outputs_directory
+from facefusion.filesystem import copy_file, create_directory, filter_audio_paths, filter_image_paths, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, list_directory, remove_directory, same_file_extension, sanitize_path_for_windows
+from .helper import get_test_example_file, get_test_examples_directory, get_test_outputs_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

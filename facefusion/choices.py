@@ -1,7 +1,7 @@
 from typing import List
 
-from facefusion.typing import Angle, Score, VideoMemoryStrategy, FaceSelectorMode, FaceSelectorOrder, FaceSelectorAge, FaceSelectorGender, FaceDetectorSet, FaceMaskType, FaceMaskRegion, TempFrameFormat, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, ExecutionProviderSet, JobStatus
-from facefusion.common_helper import create_int_range, create_float_range
+from facefusion.common_helper import create_float_range, create_int_range
+from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceMaskRegion, FaceMaskType, FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, JobStatus, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Score, TempFrameFormat, VideoMemoryStrategy
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
 face_detector_set : FaceDetectorSet =\

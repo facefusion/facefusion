@@ -1,4 +1,5 @@
-from typing import Optional, List
+from typing import List, Optional
+
 import gradio
 
 from facefusion import state_manager, wording

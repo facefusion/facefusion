@@ -1,8 +1,9 @@
-from typing import Optional, List
 import hashlib
+from typing import List, Optional
+
 import numpy
 
-from facefusion.typing import VisionFrame, Face, FaceStore, FaceSet
+from facefusion.typing import Face, FaceSet, FaceStore, VisionFrame
 
 FACE_STORE : FaceStore =\
 {

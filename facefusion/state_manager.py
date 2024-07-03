@@ -1,8 +1,8 @@
-from typing import Union, Any
 import inspect
+from typing import Any, Union
 
-from facefusion.typing import State, StateSet, StateContext, StateKey
 from facefusion.processors.frame.typing import FrameProcessorState, FrameProcessorStateKey
+from facefusion.typing import State, StateContext, StateKey, StateSet
 
 STATES : Union[StateSet, FrameProcessorState] =\
 {

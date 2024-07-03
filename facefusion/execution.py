@@ -1,11 +1,12 @@
-from typing import List, Any
-from functools import lru_cache
 import subprocess
 import xml.etree.ElementTree as ElementTree
+from functools import lru_cache
+from typing import Any, List
+
 import onnxruntime
 
-from facefusion.typing import ExecutionProviderSet, ExecutionProviderKey, ExecutionProviderValue, ExecutionDevice, ValueAndUnit
 from facefusion.choices import execution_provider_set
+from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, ValueAndUnit
 
 
 def get_execution_provider_choices() -> List[ExecutionProviderKey]:

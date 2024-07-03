@@ -1,7 +1,8 @@
+import base64
 from typing import Any
+
 import cv2
 import numpy
-import base64
 
 
 def encode_array_to_base64(array : numpy.ndarray[Any, Any]) -> str:

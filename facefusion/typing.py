@@ -1,7 +1,8 @@
-from typing import Any, Literal, Callable, List, Tuple, Dict, TypedDict, Optional
-from numpy.typing import NDArray
 from collections import namedtuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypedDict
+
 import numpy
+from numpy.typing import NDArray
 
 Score = float
 Angle = int

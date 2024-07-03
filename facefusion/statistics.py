@@ -1,7 +1,8 @@
 from typing import Any, Dict
+
 import numpy
 
-from facefusion import state_manager, logger
+from facefusion import logger, state_manager
 from facefusion.face_store import get_face_store
 from facefusion.typing import FaceSet
 

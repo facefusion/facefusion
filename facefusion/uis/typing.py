@@ -1,4 +1,5 @@
-from typing import Literal, Any, IO
+from typing import Any, IO, Literal
+
 import gradio
 
 File = IO[Any]

@@ -1,18 +1,19 @@
-from typing import Any
 from functools import lru_cache
 from time import sleep
+from typing import Any
+
 import cv2
 import numpy
 import onnxruntime
 from tqdm import tqdm
 
 from facefusion import process_manager, state_manager, wording
-from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
-from facefusion.typing import VisionFrame, ModelSet, Fps
-from facefusion.execution import apply_execution_provider_options
-from facefusion.vision import get_video_frame, count_video_frame_total, read_image, detect_video_fps
-from facefusion.filesystem import resolve_relative_path, is_file
 from facefusion.download import conditional_download
+from facefusion.execution import apply_execution_provider_options
+from facefusion.filesystem import is_file, resolve_relative_path
+from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
+from facefusion.typing import Fps, ModelSet, VisionFrame
+from facefusion.vision import count_video_frame_total, detect_video_fps, get_video_frame, read_image
 
 CONTENT_ANALYSER = None
 MODELS : ModelSet =\

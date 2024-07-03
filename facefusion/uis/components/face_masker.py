@@ -1,9 +1,10 @@
-from typing import Optional, Tuple, List
+from typing import List, Optional, Tuple
+
 import gradio
 
 import facefusion.choices
-from facefusion import wording, state_manager
-from facefusion.typing import FaceMaskType, FaceMaskRegion
+from facefusion import state_manager, wording
+from facefusion.typing import FaceMaskRegion, FaceMaskType
 from facefusion.uis.core import register_ui_component
 
 FACE_MASK_TYPES_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None

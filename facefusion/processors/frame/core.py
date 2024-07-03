@@ -1,12 +1,13 @@
-import os
 import importlib
+import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue
 from types import ModuleType
 from typing import Any, List
+
 from tqdm import tqdm
 
-from facefusion import state_manager, logger, wording
+from facefusion import logger, state_manager, wording
 from facefusion.exit_helper import hard_exit
 from facefusion.typing import ProcessFrames, QueuePayload
 

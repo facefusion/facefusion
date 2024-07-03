@@ -1,7 +1,7 @@
 import pytest
 
 from facefusion.download import conditional_download, get_download_size, is_download_done
-from .helper import get_test_examples_directory, get_test_example_file
+from .helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

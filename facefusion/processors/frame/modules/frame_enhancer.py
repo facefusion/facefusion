@@ -1,6 +1,7 @@
-from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 from time import sleep
+from typing import Any, List, Literal, Optional
+
 import cv2
 import numpy
 import onnxruntime
@@ -8,19 +9,19 @@ import onnxruntime
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, state_manager, logger, wording
-from facefusion.face_analyser import clear_face_analyser
-from facefusion.content_analyser import clear_content_analyser
-from facefusion.execution import apply_execution_provider_options
-from facefusion.program_helper import find_argument_group
-from facefusion.thread_helper import thread_lock, conditional_thread_semaphore
-from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
+from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
-from facefusion.filesystem import same_file_extension, is_file, in_directory,resolve_relative_path, is_image, is_video
+from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.vision import read_image, read_static_image, write_image, merge_tile_frames, create_tile_frames
-from facefusion.processors.frame.typing import FrameEnhancerInputs
+from facefusion.execution import apply_execution_provider_options
+from facefusion.face_analyser import clear_face_analyser
+from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.frame import choices as frame_processors_choices
+from facefusion.processors.frame.typing import FrameEnhancerInputs
+from facefusion.program_helper import find_argument_group
+from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
+from facefusion.typing import Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.vision import create_tile_frames, merge_tile_frames, read_image, read_static_image, write_image
 
 FRAME_PROCESSOR = None
 NAME = __name__.upper()
