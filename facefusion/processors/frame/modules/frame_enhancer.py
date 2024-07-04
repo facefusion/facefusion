@@ -76,6 +76,20 @@ MODELS : ModelSet =\
 		'size': (256, 16, 8),
 		'scale': 4
 	},
+	'real_esrgan_x8':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x8.onnx',
+		'path': resolve_relative_path('../.assets/models/real_esrgan_x8.onnx'),
+		'size': (256, 16, 8),
+		'scale': 8
+	},
+	'real_esrgan_x8_fp16':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_esrgan_x8_fp16.onnx',
+		'path': resolve_relative_path('../.assets/models/real_esrgan_x8_fp16.onnx'),
+		'size': (256, 16, 8),
+		'scale': 8
+	},
 	'real_hatgan_x4':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/real_hatgan_x4.onnx',
