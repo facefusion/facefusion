@@ -137,6 +137,7 @@ def create_program() -> ArgumentParser:
 	group_uis = program.add_argument_group('uis')
 	group_uis.add_argument('--open-browser', help = wording.get('help.open_browser'), action = 'store_true', default = config.get_bool_value('uis.open_browser'))
 	group_uis.add_argument('--ui-layouts', help = wording.get('help.ui_layouts').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layouts', 'default'), nargs = '+')
+	group_uis.add_argument('--ui-workflow', help = wording.get('help.ui_workflow'), default = config.get_str_value('uis.ui_workflow', 'instant_runner'), choices = facefusion.choices.ui_workflows)
 	# job manager
 	group_job_manager = program.add_argument_group('job manager')
 	group_job_manager.add_argument('--job-create', help = wording.get('help.job_create'), metavar = 'JOB_ID')
@@ -240,6 +241,7 @@ def apply_args(program : ArgumentParser) -> None:
 	# uis
 	state_manager.init_item('open_browser', args.open_browser)
 	state_manager.init_item('ui_layouts', args.ui_layouts)
+	state_manager.init_item('ui_workflow', args.ui_workflow)
 
 
 def run(program : ArgumentParser) -> None:

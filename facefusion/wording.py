@@ -156,6 +156,7 @@ WORDING : Dict[str, Any] =\
 		# uis
 		'open_browser': 'open the browser once the program is ready',
 		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)',
+		'ui_workflow': 'choose the ui workflow',
 		# job manager
 		'job_create': 'create a drafted job',
 		'job_submit': 'submit a drafted job to become a queued job',
@@ -257,6 +258,8 @@ WORDING : Dict[str, Any] =\
 		'temp_frame_format_dropdown': 'TEMP FRAME FORMAT',
 		# trim frame
 		'trim_frame_slider': 'TRIM FRAME',
+		# ui workflow
+		'ui_workflow': 'UI WORKFLOW',
 		# webcam
 		'webcam_image': 'WEBCAM',
 		# webcam options
