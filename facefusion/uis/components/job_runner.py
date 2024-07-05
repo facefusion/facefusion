@@ -60,20 +60,20 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 def process() -> Tuple[gradio.Button, gradio.Button, gradio.Image, gradio.Video]:
 	output_path = state_manager.get_item('output_path')
-	stored_output_path = state_manager.get_item('output_path')
+	temp_output_path = state_manager.get_item('output_path')
 
 	if state_manager.get_item('system_memory_limit') > 0:
 		limit_system_memory(state_manager.get_item('system_memory_limit'))
-	if is_directory(output_path):
-		output_path = suggest_output_path(output_path, state_manager.get_item('target_path'))
+	if is_directory(temp_output_path):
+		temp_output_path = suggest_output_path(temp_output_path, state_manager.get_item('target_path'))
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
-		state_manager.set_item('output_path', output_path)
+		state_manager.set_item('output_path', temp_output_path)
 		create_and_run_job()
-		state_manager.set_item('output_path', stored_output_path)
-	if is_image(output_path):
-		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = output_path, visible = True), gradio.Video(value = None, visible = False)
-	if is_video(output_path):
-		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None, visible = False), gradio.Video(value = output_path, visible = True)
+		state_manager.set_item('output_path', output_path)
+	if is_image(temp_output_path):
+		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = temp_output_path, visible = True), gradio.Video(value = None, visible = False)
+	if is_video(temp_output_path):
+		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None, visible = False), gradio.Video(value = temp_output_path, visible = True)
 	return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None), gradio.Video(value = None)
 
 
