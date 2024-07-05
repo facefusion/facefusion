@@ -33,6 +33,11 @@ FRAME_PROCESSOR = None
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
+	'wav2lip':
+	{
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip.onnx',
+		'path': resolve_relative_path('../.assets/models/wav2lip.onnx')
+	},
 	'wav2lip_gan':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip_gan.onnx',
