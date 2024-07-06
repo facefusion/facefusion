@@ -12,33 +12,38 @@ from facefusion.jobs import job_helper, job_manager, job_runner, job_store
 from facefusion.memory import limit_system_memory
 from facefusion.program_helper import import_state, reduce_args
 from facefusion.temp_helper import clear_temp_directory
-from facefusion.uis.core import get_ui_component
+from facefusion.uis.core import get_ui_component, register_ui_component
 
+INSTANT_RUNNER_GROUP : Optional[gradio.Group] = None
 INSTANT_RUNNER_START_BUTTON : Optional[gradio.Button] = None
 INSTANT_RUNNER_STOP_BUTTON : Optional[gradio.Button] = None
 INSTANT_RUNNER_CLEAR_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
+	global INSTANT_RUNNER_GROUP
 	global INSTANT_RUNNER_START_BUTTON
 	global INSTANT_RUNNER_STOP_BUTTON
 	global INSTANT_RUNNER_CLEAR_BUTTON
 
-	INSTANT_RUNNER_START_BUTTON = gradio.Button(
-		value = wording.get('uis.start_button'),
-		variant = 'primary',
-		size = 'sm'
-	)
-	INSTANT_RUNNER_STOP_BUTTON = gradio.Button(
-		value = wording.get('uis.stop_button'),
-		variant = 'primary',
-		size = 'sm',
-		visible = False
-	)
-	INSTANT_RUNNER_CLEAR_BUTTON = gradio.Button(
-		value = wording.get('uis.clear_button'),
-		size = 'sm'
-	)
+	with gradio.Group(visible = state_manager.get_item('ui_workflow') == 'instant_runner') as INSTANT_RUNNER_GROUP:
+		with gradio.Row():
+			INSTANT_RUNNER_START_BUTTON = gradio.Button(
+				value = wording.get('uis.start_button'),
+				variant = 'primary',
+				size = 'sm'
+			)
+			INSTANT_RUNNER_STOP_BUTTON = gradio.Button(
+				value = wording.get('uis.stop_button'),
+				variant = 'primary',
+				size = 'sm',
+				visible = False
+			)
+			INSTANT_RUNNER_CLEAR_BUTTON = gradio.Button(
+				value = wording.get('uis.clear_button'),
+				size = 'sm'
+			)
+	register_ui_component('instant_runner_group', INSTANT_RUNNER_GROUP)
 
 
 def listen() -> None:

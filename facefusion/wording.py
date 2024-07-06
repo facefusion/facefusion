@@ -177,6 +177,7 @@ WORDING : Dict[str, Any] =\
 	'uis':
 	{
 		# general
+		'apply_button': 'APPLY',
 		'start_button': 'START',
 		'stop_button': 'STOP',
 		'clear_button': 'CLEAR',
