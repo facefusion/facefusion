@@ -54,5 +54,8 @@ ComponentName = Literal\
 	'webcam_resolution_dropdown'
 ]
 
+JobManagerAction = Literal['job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-list', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step']
+JobRunnerAction = Literal[ 'job-run', 'job-run-all', 'job-retry', 'job-retry-all' ]
+
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']

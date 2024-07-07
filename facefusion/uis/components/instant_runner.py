@@ -26,7 +26,8 @@ def render() -> None:
 	global INSTANT_RUNNER_STOP_BUTTON
 	global INSTANT_RUNNER_CLEAR_BUTTON
 
-	with gradio.Group(visible = state_manager.get_item('ui_workflow') == 'instant_runner') as INSTANT_RUNNER_GROUP:
+	is_instant_runner = state_manager.get_item('ui_workflow') == 'instant_runner'
+	with gradio.Group(visible = is_instant_runner) as INSTANT_RUNNER_GROUP:
 		with gradio.Row():
 			INSTANT_RUNNER_START_BUTTON = gradio.Button(
 				value = wording.get('uis.start_button'),

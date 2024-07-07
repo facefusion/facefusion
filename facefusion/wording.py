@@ -196,6 +196,9 @@ WORDING : Dict[str, Any] =\
 		'execution_queue_count_slider': 'EXECUTION QUEUE COUNT',
 		# execution thread count
 		'execution_thread_count_slider': 'EXECUTION THREAD COUNT',
+		# job runner
+		'job_runner_job_action_dropdown': 'JOB ACTION',
+		'job_runner_job_id_dropdown': 'JOB ID',
 		# face analyser
 		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',
 		'face_detector_size_dropdown': 'FACE DETECTOR SIZE',

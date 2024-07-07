@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import gradio
 
@@ -22,7 +22,7 @@ def render() -> None:
 	global FACE_DETECTOR_SCORE_SLIDER
 	global FACE_LANDMARKER_SCORE_SLIDER
 
-	face_detector_size_dropdown_args : Dict[str, Any] =\
+	face_detector_size_dropdown_args =\
 	{
 		'label': wording.get('uis.face_detector_size_dropdown'),
 		'value': state_manager.get_item('face_detector_size')

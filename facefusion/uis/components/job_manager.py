@@ -12,8 +12,9 @@ JOB_MANAGER_APPLY_BUTTON : Optional[gradio.Button] = None
 def render() -> None:
 	global JOB_MANAGER_APPLY_BUTTON
 
-	with gradio.Group(visible = state_manager.get_item('ui_workflow') == 'job_manager') as JOB_MANAGER_GROUP:
-		with gradio.Row():
+	is_job_manager = state_manager.get_item('ui_workflow') == 'job_manager'
+	with gradio.Group(visible = is_job_manager) as JOB_MANAGER_GROUP:
+		with gradio.Blocks():
 			JOB_MANAGER_APPLY_BUTTON = gradio.Button(
 				value = wording.get('uis.apply_button'),
 				variant = 'primary',
