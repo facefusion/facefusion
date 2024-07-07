@@ -1,6 +1,7 @@
-from typing import Any, List, Literal, Optional
 from argparse import ArgumentParser
 from time import sleep
+from typing import Any, List, Literal, Optional
+
 import cv2
 import numpy
 import onnxruntime
@@ -9,22 +10,22 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, process_manager, state_manager, logger, wording
-from facefusion.face_analyser import get_many_faces, clear_face_analyser, get_one_face
-from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder
-from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back, combine_two_matrix
-from facefusion.execution import apply_execution_provider_options
+from facefusion.common_helper import create_metavar, map_float_range
 from facefusion.content_analyser import clear_content_analyser
+from facefusion.download import conditional_download, is_download_done
+from facefusion.execution import apply_execution_provider_options
+from facefusion.face_analyser import get_many_faces, clear_face_analyser, get_one_face
+from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back, combine_two_matrix
+from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder
+from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
+from facefusion.filesystem import same_file_extension, is_file, in_directory, is_image, is_video, resolve_relative_path
+from facefusion.processors.frame import choices as frame_processors_choices
+from facefusion.processors.frame.typing import AgeModifierInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
-from facefusion.common_helper import create_metavar, map_float_range
-from facefusion.filesystem import same_file_extension, is_file, in_directory, is_image, is_video, resolve_relative_path
-from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
-from facefusion.processors.frame.typing import AgeModifierInputs
-from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
 NAME = __name__.upper()
