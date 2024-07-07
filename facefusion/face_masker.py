@@ -104,7 +104,7 @@ def pre_check() -> bool:
 def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_padding : Padding) -> Mask:
 	blur_amount = int(crop_size[0] * 0.5 * face_mask_blur)
 	blur_area = max(blur_amount // 2, 1)
-	box_mask : Mask = numpy.ones(crop_size, numpy.float32)
+	box_mask : Mask = numpy.ones(crop_size).astype(numpy.float32)
 	box_mask[:max(blur_area, int(crop_size[1] * face_mask_padding[0] / 100)), :] = 0
 	box_mask[-max(blur_area, int(crop_size[1] * face_mask_padding[2] / 100)):, :] = 0
 	box_mask[:, :max(blur_area, int(crop_size[0] * face_mask_padding[3] / 100))] = 0
@@ -136,8 +136,8 @@ def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List
 	face_parser = get_face_parser()
 	prepare_vision_frame = cv2.resize(crop_vision_frame, (512, 512))
 	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255
-	prepare_vision_frame = numpy.subtract(prepare_vision_frame, numpy.array([ 0.485, 0.456, 0.406 ], numpy.float32))
-	prepare_vision_frame = numpy.divide(prepare_vision_frame, numpy.array([ 0.229, 0.224, 0.225 ], numpy.float32))
+	prepare_vision_frame = numpy.subtract(prepare_vision_frame, numpy.array([ 0.485, 0.456, 0.406 ]).astype(numpy.float32))
+	prepare_vision_frame = numpy.divide(prepare_vision_frame, numpy.array([ 0.229, 0.224, 0.225 ]).astype(numpy.float32))
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0)
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 3, 1, 2)
 
