@@ -23,7 +23,7 @@ from facefusion.common_helper import create_metavar, map_float_range
 from facefusion.filesystem import same_file_extension, is_file, in_directory, is_image, is_video, resolve_relative_path
 from facefusion.download import conditional_download, is_download_done
 from facefusion.vision import read_image, read_static_image, write_image
-from facefusion.processors.frame.typing import FaceEnhancerInputs
+from facefusion.processors.frame.typing import AgeModifierInputs
 from facefusion.processors.frame import choices as frame_processors_choices
 
 FRAME_PROCESSOR = None
@@ -222,7 +222,7 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 	return modify_age(target_face, temp_vision_frame)
 
 
-def process_frame(inputs : FaceEnhancerInputs) -> VisionFrame:
+def process_frame(inputs : AgeModifierInputs) -> VisionFrame:
 	reference_faces = inputs.get('reference_faces')
 	target_vision_frame = inputs.get('target_vision_frame')
 	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
