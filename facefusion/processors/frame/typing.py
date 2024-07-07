@@ -8,6 +8,7 @@ FaceSwapperModel = Literal['blendswap_256', 'ghost_256_unet_1', 'ghost_256_unet_
 FrameColorizerModel = Literal['ddcolor', 'ddcolor_artistic', 'deoldify', 'deoldify_artistic', 'deoldify_stable']
 FrameEnhancerModel = Literal['clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_hatgan_x4', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'span_kendata_x4', 'ultra_sharp_x4']
 LipSyncerModel = Literal['wav2lip', 'wav2lip_gan']
+AgeModifierModel = Literal['styleganex']
 
 FaceSwapperSet = Dict[FaceSwapperModel, List[str]]
 
@@ -42,7 +43,7 @@ LipSyncerInputs = TypedDict('LipSyncerInputs',
 	'target_vision_frame' : VisionFrame
 })
 
-FrameProcessorStateKey = Literal['face_debugger_items', 'face_enhancer_model', 'face_enhancer_blend', 'face_swapper_model', 'face_swapper_pixel_boost', 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size', 'frame_enhancer_model', 'frame_enhancer_blend', 'lip_syncer_model']
+FrameProcessorStateKey = Literal['face_debugger_items', 'face_enhancer_model', 'face_enhancer_blend', 'face_swapper_model', 'face_swapper_pixel_boost', 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size', 'frame_enhancer_model', 'frame_enhancer_blend', 'lip_syncer_model', 'age_modifier_model', 'age_modifier_direction']
 FrameProcessorState = TypedDict('FrameProcessorState',
 {
 	'face_debugger_items' : List[FaceDebuggerItem],
@@ -55,6 +56,8 @@ FrameProcessorState = TypedDict('FrameProcessorState',
 	'frame_colorizer_size' : str,
 	'frame_enhancer_model' : FrameEnhancerModel,
 	'frame_enhancer_blend' : int,
-	'lip_syncer_model' : LipSyncerModel
+	'lip_syncer_model' : LipSyncerModel,
+	'age_modifier_model': AgeModifierModel,
+	'age_modifier_direction': int
 })
 FrameProcessorStateSet = Dict[StateContext, FrameProcessorState]

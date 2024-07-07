@@ -193,3 +193,10 @@ def get_nms_threshold(face_detector_model : FaceDetectorModel, face_detector_ang
 	if len(face_detector_angles) == 4:
 		return 0.1
 	return 0.4
+
+
+def combine_two_matrix(matrix_a : Matrix, matrix_b : Matrix) -> Matrix:
+	matrix_a = numpy.vstack([ matrix_a, [ 0, 0, 1 ] ])
+	matrix_b = numpy.vstack([ matrix_b, [ 0, 0, 1 ] ])
+	matrix_combined = numpy.dot(matrix_a, matrix_b)[:2, :]
+	return matrix_combined

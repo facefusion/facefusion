@@ -41,6 +41,8 @@ ComponentName = Literal\
 	'frame_enhancer_model_dropdown',
 	'frame_enhancer_blend_slider',
 	'lip_syncer_model_dropdown',
+	'age_modifier_model_dropdown',
+	'age_modifier_direction_slider',
 	'output_video_fps_slider',
 	'benchmark_runs_checkbox_group',
 	'benchmark_cycles_slider',

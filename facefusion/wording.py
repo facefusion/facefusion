@@ -151,6 +151,8 @@ WORDING : Dict[str, Any] =\
 		'frame_enhancer_model': 'choose the model responsible for enhancing the frame',
 		'frame_enhancer_blend': 'blend the enhanced into the previous frame',
 		'lip_syncer_model': 'choose the model responsible for syncing the lips',
+		'age_modifier_model': 'choose the model responsible for ageing the face',
+		'age_modifier_direction': 'specify the young-to-old direction of age',
 		# uis
 		'open_browser': 'open the browser once the program is ready',
 		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)',
@@ -227,6 +229,8 @@ WORDING : Dict[str, Any] =\
 		'frame_enhancer_model_dropdown': 'FRAME ENHANCER MODEL',
 		'frame_enhancer_blend_slider': 'FRAME ENHANCER BLEND',
 		'lip_syncer_model_dropdown': 'LIP SYNCER MODEL',
+		'age_modifier_model_dropdown': 'AGE MODIFIER MODEL',
+		'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
 		# memory
 		'video_memory_strategy_dropdown': 'VIDEO MEMORY STRATEGY',
 		'system_memory_limit_slider': 'SYSTEM MEMORY LIMIT',

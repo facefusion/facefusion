@@ -27,6 +27,12 @@ def create_float_range(start : float, end : float, step : float) -> List[float]:
 	return float_range
 
 
+def map_float_range(value : float, start : float, end : float, map_start : float, map_end : float) -> float:
+	ratio = (value - start) / (end - start)
+	mapped_range = map_start + (map_end - map_start) * ratio
+	return mapped_range
+
+
 def is_linux() -> bool:
 	return to_lower_case(platform.system()) == 'linux'
 
