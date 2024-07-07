@@ -196,6 +196,10 @@ WORDING : Dict[str, Any] =\
 		'execution_queue_count_slider': 'EXECUTION QUEUE COUNT',
 		# execution thread count
 		'execution_thread_count_slider': 'EXECUTION THREAD COUNT',
+		# job manager
+		'job_manager_job_action_dropdown': 'JOB_ACTION',
+		'job_manager_job_id_dropdown': 'JOB ID',
+		'job_manager_step_index_dropdown': 'STEP INDEX',
 		# job runner
 		'job_runner_job_action_dropdown': 'JOB ACTION',
 		'job_runner_job_id_dropdown': 'JOB ID',
