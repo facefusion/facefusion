@@ -134,8 +134,11 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 
 def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
 	face_parser = get_face_parser()
-	prepare_vision_frame = cv2.flip(cv2.resize(crop_vision_frame, (512, 512)), 1)
-	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32)[:, :, ::-1] / 127.5 - 1
+	prepare_vision_frame = cv2.resize(crop_vision_frame, (512, 512))
+	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255
+	prepare_vision_frame = numpy.subtract(prepare_vision_frame, numpy.array([ 0.485, 0.456, 0.406 ], numpy.float32))
+	prepare_vision_frame = numpy.divide(prepare_vision_frame, numpy.array([ 0.229, 0.224, 0.225 ], numpy.float32))
+	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0)
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 3, 1, 2)
 
 	with conditional_thread_semaphore():
