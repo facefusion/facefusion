@@ -6,7 +6,7 @@ from facefusion import face_analyser, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.core import load_frame_processor_module
-from facefusion.processors.frame.typing import FaceDebuggerItem, FaceEnhancerModel, FaceSwapperModel, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel, AgeModifierModel
+from facefusion.processors.frame.typing import AgeModifierModel, FaceDebuggerItem, FaceEnhancerModel, FaceSwapperModel, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
