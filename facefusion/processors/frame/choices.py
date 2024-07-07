@@ -1,7 +1,8 @@
 from typing import List
 
 from facefusion.common_helper import create_int_range
-from facefusion.processors.frame.typing import AgeModifierModel, FaceDebuggerItem, FaceEnhancerModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
+from facefusion.processors.frame.typing import AgeModifierModel, FaceDebuggerItem, FaceEnhancerModel, FaceSwapperSet, \
+	FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender' ]
 face_enhancer_models : List[FaceEnhancerModel] = [ 'codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus' ]

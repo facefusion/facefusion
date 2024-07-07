@@ -9,22 +9,22 @@ import onnxruntime
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
-from facefusion import config, process_manager, state_manager, logger, wording
+from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, map_float_range
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import apply_execution_provider_options
-from facefusion.face_analyser import get_many_faces, clear_face_analyser, get_one_face
-from facefusion.face_helper import warp_face_by_face_landmark_5, paste_back, combine_two_matrix
-from facefusion.face_masker import create_static_box_mask, create_occlusion_mask, clear_face_occluder
+from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
+from facefusion.face_helper import combine_two_matrix, paste_back, warp_face_by_face_landmark_5
+from facefusion.face_masker import clear_face_occluder, create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
-from facefusion.filesystem import same_file_extension, is_file, in_directory, is_image, is_video, resolve_relative_path
+from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.typing import AgeModifierInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Face, VisionFrame, UpdateProgress, ProcessMode, ModelSet, OptionsWithModel, QueuePayload
+from facefusion.typing import Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 FRAME_PROCESSOR = None
