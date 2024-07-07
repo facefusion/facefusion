@@ -80,7 +80,7 @@ def register_args(program : ArgumentParser) -> None:
 	group_frame_processors = find_argument_group(program, 'frame processors')
 	if group_frame_processors:
 		group_frame_processors.add_argument('--age-modifier-model', help = wording.get('help.age_modifier_model'), default = config.get_str_value('frame_processors.age_modifier_model', 'styleganex'), choices = frame_processors_choices.age_modifier_models)
-		group_frame_processors.add_argument('--age-modifier-direction', help = wording.get('help.age_modifier_direction'), type = int, default = config.get_int_value('frame_processors.age_modifier_direction', '50'), choices = frame_processors_choices.age_modifier_direction_range, metavar = create_metavar(frame_processors_choices.age_modifier_direction_range))
+		group_frame_processors.add_argument('--age-modifier-direction', help = wording.get('help.age_modifier_direction'), type = int, default = config.get_int_value('frame_processors.age_modifier_direction', '0'), choices = frame_processors_choices.age_modifier_direction_range, metavar = create_metavar(frame_processors_choices.age_modifier_direction_range))
 		facefusion.jobs.job_store.register_step_keys([ 'age_modifier_model', 'age_modifier_direction' ])
 
 
@@ -173,7 +173,7 @@ def fix_color(crop_vision_frame_extended_raw : VisionFrame, crop_vision_frame_ex
 	crop_vision_frame_extended_raw_downscaled = cv2.resize(crop_vision_frame_extended_raw, (48, 48), interpolation = cv2.INTER_AREA)
 	crop_vision_frame_extended_downscaled = cv2.resize(crop_vision_frame_extended, (48, 48), interpolation = cv2.INTER_AREA)
 	color_difference = crop_vision_frame_extended_raw_downscaled - crop_vision_frame_extended_downscaled
-	color_difference = cv2.resize(color_difference, crop_vision_frame_extended.shape[:2][::-1], interpolation = cv2.INTER_CUBIC)
+	color_difference = cv2.resize(color_difference, crop_vision_frame_extended.shape[:2][::-1], interpolation = cv2.INTER_CUBIC) #type:ignore[assignment]
 	color_difference_mask = 1 - create_static_box_mask(crop_vision_frame_extended.shape[:2][::-1], 1.0, (0, 0, 0, 0))
 	color_difference_mask = numpy.stack((color_difference_mask, ) * 3, axis = -1)
 	crop_vision_frame_extended += (color_difference * color_difference_mask.clip(0, 0.75))
