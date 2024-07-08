@@ -9,7 +9,6 @@ from facefusion import process_manager, state_manager, wording
 from facefusion.core import create_program, process_step
 from facefusion.filesystem import is_directory, is_image, is_video
 from facefusion.jobs import job_helper, job_manager, job_runner, job_store
-from facefusion.memory import limit_system_memory
 from facefusion.program_helper import import_state, reduce_args
 from facefusion.temp_helper import clear_temp_directory
 from facefusion.uis.core import get_ui_component, register_ui_component
@@ -53,7 +52,7 @@ def listen() -> None:
 
 	if output_image and output_video:
 		INSTANT_RUNNER_START_BUTTON.click(start, outputs = [ INSTANT_RUNNER_START_BUTTON, INSTANT_RUNNER_STOP_BUTTON ])
-		INSTANT_RUNNER_START_BUTTON.click(process, outputs = [ INSTANT_RUNNER_START_BUTTON, INSTANT_RUNNER_STOP_BUTTON, output_image, output_video ])
+		INSTANT_RUNNER_START_BUTTON.click(run, outputs = [ INSTANT_RUNNER_START_BUTTON, INSTANT_RUNNER_STOP_BUTTON, output_image, output_video ])
 		INSTANT_RUNNER_STOP_BUTTON.click(stop, outputs = [ INSTANT_RUNNER_START_BUTTON, INSTANT_RUNNER_STOP_BUTTON ])
 		INSTANT_RUNNER_CLEAR_BUTTON.click(clear, outputs = [ output_image, output_video ])
 
@@ -64,12 +63,10 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 	return gradio.Button(visible = False), gradio.Button(visible = True)
 
 
-def process() -> Tuple[gradio.Button, gradio.Button, gradio.Image, gradio.Video]:
+def run() -> Tuple[gradio.Button, gradio.Button, gradio.Image, gradio.Video]:
 	output_path = state_manager.get_item('output_path')
 	temp_output_path = state_manager.get_item('output_path')
 
-	if state_manager.get_item('system_memory_limit') > 0:
-		limit_system_memory(state_manager.get_item('system_memory_limit'))
 	if is_directory(temp_output_path):
 		temp_output_path = suggest_output_path(temp_output_path, state_manager.get_item('target_path'))
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
@@ -83,6 +80,7 @@ def process() -> Tuple[gradio.Button, gradio.Button, gradio.Image, gradio.Video]
 	return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None), gradio.Video(value = None)
 
 
+# todo: move to a helper method and write testing
 def suggest_output_path(output_directory_path : str, target_path : str) -> Optional[str]:
 	if is_image(target_path) or is_video(target_path):
 		_, target_extension = os.path.splitext(target_path)
