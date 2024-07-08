@@ -59,7 +59,7 @@ def render() -> None:
 
 def listen() -> None:
 	JOB_RUNNER_JOB_ACTION_DROPDOWN.change(update_job_action, inputs = JOB_RUNNER_JOB_ACTION_DROPDOWN, outputs = JOB_RUNNER_JOB_ID_DROPDOWN)
-	JOB_RUNNER_JOB_ID_DROPDOWN.change(update_job_id, inputs = [ JOB_RUNNER_JOB_ACTION_DROPDOWN, JOB_RUNNER_JOB_ID_DROPDOWN ], outputs = JOB_RUNNER_JOB_ID_DROPDOWN)
+	JOB_RUNNER_JOB_ID_DROPDOWN.change(update_job_id, inputs = JOB_RUNNER_JOB_ID_DROPDOWN, outputs = JOB_RUNNER_JOB_ID_DROPDOWN)
 	JOB_RUNNER_START_BUTTON.click(start, outputs = [ JOB_RUNNER_START_BUTTON, JOB_RUNNER_STOP_BUTTON ])
 	JOB_RUNNER_START_BUTTON.click(run, inputs = [ JOB_RUNNER_JOB_ACTION_DROPDOWN, JOB_RUNNER_JOB_ID_DROPDOWN ], outputs = [ JOB_RUNNER_START_BUTTON, JOB_RUNNER_STOP_BUTTON, JOB_RUNNER_JOB_ID_DROPDOWN ])
 	JOB_RUNNER_STOP_BUTTON.click(stop, outputs = [ JOB_RUNNER_START_BUTTON, JOB_RUNNER_STOP_BUTTON ])
@@ -120,9 +120,9 @@ def update_job_action(job_action : JobRunnerAction) -> gradio.Dropdown:
 	return gradio.Dropdown(visible = False, value = None, choices = None)
 
 
-def update_job_id(job_action : JobRunnerAction, job_id : str) -> gradio.Dropdown:
+def update_job_id(job_id : str) -> gradio.Dropdown:
 	# todo: implement validate_job(job_id : str)
 	# 1. use this in job_manager.submit_job() instead of count_step_total(job_id)
 	# 2. validate json (json.decoder.JSONDecodeError)
 	# 3. validate steps exist
-	return gradio.Dropdown()
+	return gradio.Dropdown(value = job_id)
