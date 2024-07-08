@@ -54,7 +54,7 @@ def render() -> None:
 						size = 'sm',
 						visible = False
 					)
-	register_ui_component('job_runner_group', JOB_RUNNER_GROUP)
+		register_ui_component('job_runner_group', JOB_RUNNER_GROUP)
 
 
 def listen() -> None:
@@ -72,6 +72,7 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 
 def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, gradio.Button, gradio.Dropdown]:
+	# todo: do not process when list is none
 	if job_action == 'job-run' and job_id:
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__.upper())
 		if job_runner.run_job(job_id, process_step):
