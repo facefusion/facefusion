@@ -11,6 +11,7 @@ from facefusion.filesystem import is_directory, is_image, is_video
 from facefusion.jobs import job_helper, job_manager, job_runner, job_store
 from facefusion.program_helper import import_state, reduce_args
 from facefusion.temp_helper import clear_temp_directory
+from facefusion.typing import Args
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 INSTANT_RUNNER_GROUP : Optional[gradio.Group] = None
@@ -91,12 +92,17 @@ def suggest_output_path(output_directory_path : str, target_path : str) -> Optio
 
 def create_and_run_job() -> bool:
 	job_id = job_helper.suggest_job_id('ui')
+	step_args = get_step_args()
+
+	return job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step)
+
+
+def get_step_args() -> Args:
 	program = create_program()
 	program = import_state(program, job_store.get_step_keys(), state_manager.get_state())
 	program = reduce_args(program, job_store.get_step_keys())
 	step_args = vars(program.parse_args())
-
-	return job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step)
+	return step_args
 
 
 def stop() -> Tuple[gradio.Button, gradio.Button]:

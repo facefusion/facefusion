@@ -372,8 +372,6 @@ def compose_job_list(job_status : JobStatus) -> Tuple[TableHeaders, TableContent
 
 def route_job_manager(program : ArgumentParser) -> ErrorCode:
 	args = program.parse_args()
-	step_program = reduce_args(program, job_store.get_step_keys())
-	step_args = vars(step_program.parse_args())
 
 	if args.job_create:
 		if job_manager.create_job(args.job_create):
@@ -413,6 +411,8 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 			return 0
 		return 1
 	if args.job_add_step:
+		step_args = extract_step_args(program)
+
 		if job_manager.add_step(args.job_add_step, step_args):
 			logger.info(wording.get('job_step_added').format(job_id = args.job_add_step), __name__.upper())
 			return 0
@@ -421,6 +421,7 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 	if args.job_remix_step:
 		job_id, step_index = args.job_remix_step
 		step_index = int(step_index)
+		step_args = extract_step_args(program)
 
 		if job_manager.remix_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_remix_step_added').format(job_id = job_id, step_index = step_index), __name__.upper())
@@ -430,6 +431,7 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 	if args.job_insert_step:
 		job_id, step_index = args.job_insert_step
 		step_index = int(step_index)
+		step_args = extract_step_args(program)
 
 		if job_manager.insert_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_step_inserted').format(job_id = job_id, step_index = step_index), __name__.upper())
@@ -497,12 +499,17 @@ def process_step(step_args : Args) -> bool:
 
 def process_headless(program : ArgumentParser) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('headless')
-	step_program = reduce_args(program, job_store.get_step_keys())
-	step_args = vars(step_program.parse_args())
+	step_args = extract_step_args(program)
 
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0
 	return 1
+
+
+def extract_step_args(program : ArgumentParser):
+	step_program = reduce_args(program, job_store.get_step_keys())
+	step_args = vars(step_program.parse_args())
+	return step_args
 
 
 def process_image(start_time : float) -> ErrorCode:

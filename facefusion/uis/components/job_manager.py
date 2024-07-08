@@ -4,7 +4,10 @@ import gradio
 
 from facefusion import logger, state_manager, wording
 from facefusion.common_helper import get_first
-from facefusion.jobs import job_manager
+from facefusion.core import create_program
+from facefusion.jobs import job_manager, job_store
+from facefusion.program_helper import import_state, reduce_args
+from facefusion.typing import Args
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import JobManagerAction
@@ -13,7 +16,7 @@ JOB_MANAGER_GROUP : Optional[gradio.Group] = None
 JOB_MANAGER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_MANAGER_JOB_ID_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_MANAGER_STEP_INDEX_DROPDOWN : Optional[gradio.Dropdown] = None
-JOB_MANAGER_APPLY_BUTTON : Optional[gradio.Button] = None
+JOB_MANAGER_EXECUTE_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
@@ -21,7 +24,7 @@ def render() -> None:
 	global JOB_MANAGER_JOB_ACTION_DROPDOWN
 	global JOB_MANAGER_JOB_ID_DROPDOWN
 	global JOB_MANAGER_STEP_INDEX_DROPDOWN
-	global JOB_MANAGER_APPLY_BUTTON
+	global JOB_MANAGER_EXECUTE_BUTTON
 
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
 		is_job_manager = state_manager.get_item('ui_workflow') == 'job_manager'
@@ -47,8 +50,8 @@ def render() -> None:
 					value = 0 # todo: select first from choices
 				)
 			with gradio.Blocks():
-				JOB_MANAGER_APPLY_BUTTON = gradio.Button(
-					value = wording.get('uis.apply_button'),
+				JOB_MANAGER_EXECUTE_BUTTON = gradio.Button(
+					value = wording.get('uis.execute_button'),
 					variant = 'primary',
 					size = 'sm'
 				)
@@ -59,7 +62,7 @@ def listen() -> None:
 	JOB_MANAGER_JOB_ACTION_DROPDOWN.change(update_job_action, inputs = JOB_MANAGER_JOB_ACTION_DROPDOWN, outputs = JOB_MANAGER_JOB_ID_DROPDOWN)
 	JOB_MANAGER_JOB_ID_DROPDOWN.change(update_job_id, inputs = JOB_MANAGER_JOB_ID_DROPDOWN, outputs = JOB_MANAGER_JOB_ID_DROPDOWN)
 	JOB_MANAGER_STEP_INDEX_DROPDOWN.change(update_step_index, inputs = JOB_MANAGER_STEP_INDEX_DROPDOWN,outputs = JOB_MANAGER_STEP_INDEX_DROPDOWN)
-	JOB_MANAGER_APPLY_BUTTON.click(apply, inputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ], outputs = [ JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
+	JOB_MANAGER_EXECUTE_BUTTON.click(apply, inputs = [JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN], outputs = [JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN])
 
 
 def apply(job_action : JobManagerAction, job_id : str, step_index : int) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
@@ -89,20 +92,23 @@ def apply(job_action : JobManagerAction, job_id : str, step_index : int) -> Tupl
 		else:
 			logger.error(wording.get('job_all_not_deleted'), __name__.upper())
 	if job_action == 'job-add-step':
-		print('todo: implement step args')
-		if job_manager.add_step(job_id, {}):
+		step_args = get_step_args()
+
+		if job_manager.add_step(job_id, step_args):
 			logger.info(wording.get('job_step_added').format(job_id = job_id), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_added').format(job_id = job_id), __name__.upper())
 	if job_action == 'job-remix-step':
-		print('todo: implement step args')
-		if job_manager.remix_step(job_id, step_index, {}):
+		step_args = get_step_args()
+
+		if job_manager.remix_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_remix_step_added').format(job_id = job_id, step_index = step_index), __name__.upper())
 		else:
 			logger.error(wording.get('job_remix_step_not_added').format(job_id = job_id, step_index = step_index), __name__.upper())
 	if job_action == 'job-insert-step':
-		print('todo: implement step args')
-		if job_manager.insert_step(job_id, step_index, {}):
+		step_args = get_step_args()
+
+		if job_manager.insert_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_step_inserted').format(job_id = job_id, step_index = step_index), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_inserted').format(job_id = job_id, step_index = step_index), __name__.upper())
@@ -112,6 +118,14 @@ def apply(job_action : JobManagerAction, job_id : str, step_index : int) -> Tupl
 		else:
 			logger.error(wording.get('job_step_not_removed').format(job_id = job_id, step_index = step_index), __name__.upper())
 	return gradio.Dropdown(), gradio.Dropdown()
+
+
+def get_step_args() -> Args:
+	program = create_program()
+	program = import_state(program, job_store.get_step_keys(), state_manager.get_state())
+	program = reduce_args(program, job_store.get_step_keys())
+	step_args = vars(program.parse_args())
+	return step_args
 
 
 def update_job_action(job_action : JobManagerAction) -> gradio.Dropdown:
