@@ -140,7 +140,7 @@ WORDING : Dict[str, Any] =\
 		'skip_audio': 'omit the audio from the target video',
 		# frame processors
 		'frame_processors': 'load a single or multiple frame processors. (choices: {choices}, ...)',
-		'age_modifier_model': 'choose the model responsible for ageing the face',
+		'age_modifier_model': 'choose the model responsible for aging the face',
 		'age_modifier_direction': 'specify the direction in which the age should be modified',
 		'face_debugger_items': 'load a single or multiple frame processors (choices: {choices})',
 		'face_enhancer_model': 'choose the model responsible for enhancing the face',
