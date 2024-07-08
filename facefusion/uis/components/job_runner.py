@@ -11,9 +11,9 @@ from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import JobRunnerAction
 
-JOB_RUNNER_GROUP  : Optional[gradio.Group] = None
-JOB_RUNNER_JOB_ACTION_DROPDOWN  : Optional[gradio.Dropdown] = None
-JOB_RUNNER_JOB_ID_DROPDOWN  : Optional[gradio.Dropdown] = None
+JOB_RUNNER_GROUP : Optional[gradio.Group] = None
+JOB_RUNNER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
+JOB_RUNNER_JOB_ID_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_RUNNER_START_BUTTON : Optional[gradio.Button] = None
 JOB_RUNNER_STOP_BUTTON : Optional[gradio.Button] = None
 
