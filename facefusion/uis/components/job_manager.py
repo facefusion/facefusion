@@ -14,6 +14,7 @@ from facefusion.uis.typing import JobManagerAction
 
 JOB_MANAGER_GROUP : Optional[gradio.Group] = None
 JOB_MANAGER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
+JOB_MANAGER_JOB_ID_TEXTBOX : Optional[gradio.Textbox] = None
 JOB_MANAGER_JOB_ID_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_MANAGER_STEP_INDEX_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_MANAGER_EXECUTE_BUTTON : Optional[gradio.Button] = None
@@ -22,6 +23,7 @@ JOB_MANAGER_EXECUTE_BUTTON : Optional[gradio.Button] = None
 def render() -> None:
 	global JOB_MANAGER_GROUP
 	global JOB_MANAGER_JOB_ACTION_DROPDOWN
+	global JOB_MANAGER_JOB_ID_TEXTBOX
 	global JOB_MANAGER_JOB_ID_DROPDOWN
 	global JOB_MANAGER_STEP_INDEX_DROPDOWN
 	global JOB_MANAGER_EXECUTE_BUTTON
@@ -37,11 +39,16 @@ def render() -> None:
 					choices = uis_choices.job_manager_actions,
 					value = get_first(uis_choices.job_manager_actions)
 				)
-				# todo: dont show job id on job-create action and initially
+				JOB_MANAGER_JOB_ID_TEXTBOX = gradio.Textbox(
+					label = wording.get('uis.job_manager_job_id_dropdown'),
+					max_lines = 1,
+					interactive = True
+				)
 				JOB_MANAGER_JOB_ID_DROPDOWN = gradio.Dropdown(
 					label = wording.get('uis.job_manager_job_id_dropdown'),
 					choices = job_drafted_ids,
-					value = get_first(job_drafted_ids)
+					value = get_first(job_drafted_ids),
+					visible = False
 				)
 				# todo: only show step index on step related actions
 				JOB_MANAGER_STEP_INDEX_DROPDOWN = gradio.Dropdown(
@@ -59,18 +66,25 @@ def render() -> None:
 
 
 def listen() -> None:
-	JOB_MANAGER_JOB_ACTION_DROPDOWN.change(update_job_action, inputs = JOB_MANAGER_JOB_ACTION_DROPDOWN, outputs = JOB_MANAGER_JOB_ID_DROPDOWN)
+	JOB_MANAGER_JOB_ACTION_DROPDOWN.change(update_job_action, inputs = JOB_MANAGER_JOB_ACTION_DROPDOWN, outputs = [ JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN ])
 	JOB_MANAGER_JOB_ID_DROPDOWN.change(update_job_id, inputs = JOB_MANAGER_JOB_ID_DROPDOWN, outputs = JOB_MANAGER_JOB_ID_DROPDOWN)
 	JOB_MANAGER_STEP_INDEX_DROPDOWN.change(update_step_index, inputs = JOB_MANAGER_STEP_INDEX_DROPDOWN,outputs = JOB_MANAGER_STEP_INDEX_DROPDOWN)
-	JOB_MANAGER_EXECUTE_BUTTON.click(apply, inputs = [JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN], outputs = [JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN])
+	JOB_MANAGER_EXECUTE_BUTTON.click(job_create, inputs = [JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX], outputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
+	JOB_MANAGER_EXECUTE_BUTTON.click(run, inputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ], outputs = [ JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
 
 
-def apply(job_action : JobManagerAction, job_id : str, step_index : int) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
+def job_create(job_action : JobManagerAction, job_id : str) -> Tuple[gradio.Dropdown, gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
 	if job_action == 'job-create':
 		if job_manager.create_job(job_id):
 			logger.info(wording.get('job_created').format(job_id = job_id), __name__.upper())
+			job_drafted_ids = job_manager.find_job_ids('drafted')
+			return gradio.Dropdown(value = 'job-add-step'), gradio.Textbox(value = None, visible = False), gradio.Dropdown(choices = job_drafted_ids, value = job_id, visible = True), gradio.Dropdown(choices = [ 0 ], value = 0)
 		else:
 			logger.error(wording.get('job_not_created').format(job_id = job_id), __name__.upper())
+	return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(), gradio.Dropdown()
+
+
+def run(job_action : JobManagerAction, job_id : str, step_index : int) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
 	if job_action == 'job-submit':
 		if job_manager.submit_job(job_id):
 			logger.info(wording.get('job_submitted').format(job_id = job_id), __name__.upper())
@@ -128,9 +142,10 @@ def get_step_args() -> Args:
 	return step_args
 
 
-def update_job_action(job_action : JobManagerAction) -> gradio.Dropdown:
-	print(job_action)
-	return gradio.Dropdown()
+def update_job_action(job_action : JobManagerAction) -> Tuple[gradio.Textbox, gradio.Dropdown]:
+	if job_action == 'job-create':
+		return gradio.Textbox(visible = True), gradio.Dropdown(visible = False)
+	return gradio.Textbox(visible = False), gradio.Dropdown(visible = True)
 
 
 def update_job_id(job_id : str) -> gradio.Dropdown:

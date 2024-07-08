@@ -506,7 +506,7 @@ def process_headless(program : ArgumentParser) -> ErrorCode:
 	return 1
 
 
-def extract_step_args(program : ArgumentParser):
+def extract_step_args(program : ArgumentParser) -> Args:
 	step_program = reduce_args(program, job_store.get_step_keys())
 	step_args = vars(step_program.parse_args())
 	return step_args
