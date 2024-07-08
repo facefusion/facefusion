@@ -13,7 +13,6 @@ from .helper import get_test_example_file, get_test_examples_directory, get_test
 def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
@@ -26,7 +25,6 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-@pytest.mark.skip()
 def test_enhance_face_to_image() -> None:
 	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--headless', '--frame-processors', 'age_modifier', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-age-face-to-image.jpg') ]
 
@@ -34,7 +32,6 @@ def test_enhance_face_to_image() -> None:
 	assert is_test_output_file('test-age-face-to-image.jpg') is True
 
 
-@pytest.mark.skip()
 def test_enhance_face_to_video() -> None:
 	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--headless', '--frame-processors', 'age_modifier', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-age-face-to-video.mp4'), '--trim-frame-end', '10' ]
 

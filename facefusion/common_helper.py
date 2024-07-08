@@ -27,10 +27,10 @@ def create_float_range(start : float, end : float, step : float) -> List[float]:
 	return float_range
 
 
-def map_float_range(value : float, start : float, end : float, map_start : float, map_end : float) -> float:
+def map_float(value : float, start : float, end : float, map_start : float, map_end : float) -> float:
 	ratio = (value - start) / (end - start)
-	mapped_range = map_start + (map_end - map_start) * ratio
-	return mapped_range
+	map_value = map_start + (map_end - map_start) * ratio
+	return map_value
 
 
 def is_linux() -> bool:

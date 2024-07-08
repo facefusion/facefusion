@@ -140,6 +140,8 @@ WORDING : Dict[str, Any] =\
 		'skip_audio': 'omit the audio from the target video',
 		# frame processors
 		'frame_processors': 'load a single or multiple frame processors. (choices: {choices}, ...)',
+		'age_modifier_model': 'choose the model responsible for ageing the face',
+		'age_modifier_direction': 'specify the young-to-old direction of age',
 		'face_debugger_items': 'load a single or multiple frame processors (choices: {choices})',
 		'face_enhancer_model': 'choose the model responsible for enhancing the face',
 		'face_enhancer_blend': 'blend the enhanced into the previous face',
@@ -151,8 +153,6 @@ WORDING : Dict[str, Any] =\
 		'frame_enhancer_model': 'choose the model responsible for enhancing the frame',
 		'frame_enhancer_blend': 'blend the enhanced into the previous frame',
 		'lip_syncer_model': 'choose the model responsible for syncing the lips',
-		'age_modifier_model': 'choose the model responsible for ageing the face',
-		'age_modifier_direction': 'specify the young-to-old direction of age',
 		# uis
 		'open_browser': 'open the browser once the program is ready',
 		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)',
@@ -218,6 +218,8 @@ WORDING : Dict[str, Any] =\
 		# frame processors
 		'frame_processors_checkbox_group': 'FRAME PROCESSORS',
 		# frame processors options
+		'age_modifier_model_dropdown': 'AGE MODIFIER MODEL',
+		'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
 		'face_debugger_items_checkbox_group': 'FACE DEBUGGER ITEMS',
 		'face_enhancer_model_dropdown': 'FACE ENHANCER MODEL',
 		'face_enhancer_blend_slider': 'FACE ENHANCER BLEND',
@@ -229,8 +231,6 @@ WORDING : Dict[str, Any] =\
 		'frame_enhancer_model_dropdown': 'FRAME ENHANCER MODEL',
 		'frame_enhancer_blend_slider': 'FRAME ENHANCER BLEND',
 		'lip_syncer_model_dropdown': 'LIP SYNCER MODEL',
-		'age_modifier_model_dropdown': 'AGE MODIFIER MODEL',
-		'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
 		# memory
 		'video_memory_strategy_dropdown': 'VIDEO MEMORY STRATEGY',
 		'system_memory_limit_slider': 'SYSTEM MEMORY LIMIT',

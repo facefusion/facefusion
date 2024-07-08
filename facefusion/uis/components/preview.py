@@ -16,7 +16,8 @@ from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.typing import AudioFrame, Face, FaceSet, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
-from facefusion.vision import count_video_frame_total, get_video_frame, normalize_frame_color, read_static_image, read_static_images, resize_frame_resolution
+from facefusion.vision import count_video_frame_total, get_video_frame, normalize_frame_color, read_static_image, \
+	read_static_images, resize_frame_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 PREVIEW_FRAME_SLIDER : Optional[gradio.Slider] = None
@@ -103,10 +104,10 @@ def listen() -> None:
 
 	for ui_component in get_ui_components(
 	[
+		'age_modifier_direction_slider',
 		'face_enhancer_blend_slider',
 		'frame_colorizer_blend_slider',
 		'frame_enhancer_blend_slider',
-		'age_modifier_direction_slider',
 		'reference_face_distance_slider',
 		'face_mask_blur_slider',
 		'face_mask_padding_top_slider',
@@ -119,6 +120,7 @@ def listen() -> None:
 
 	for ui_component in get_ui_components(
 	[
+		'age_modifier_model_dropdown',
 		'frame_processors_checkbox_group',
 		'face_enhancer_model_dropdown',
 		'face_swapper_model_dropdown',
@@ -126,7 +128,6 @@ def listen() -> None:
 		'frame_colorizer_model_dropdown',
 		'frame_enhancer_model_dropdown',
 		'lip_syncer_model_dropdown',
-		'age_modifier_model_dropdown',
 		'face_selector_mode_dropdown',
 		'face_selector_order_dropdown',
 		'face_selector_age_dropdown',

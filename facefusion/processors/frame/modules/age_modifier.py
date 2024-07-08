@@ -5,17 +5,18 @@ from typing import Any, List, Literal, Optional
 import cv2
 import numpy
 import onnxruntime
+from cv2.typing import Size
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, process_manager, state_manager, wording
-from facefusion.common_helper import create_metavar, map_float_range
+from facefusion.common_helper import create_metavar, map_float
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import apply_execution_provider_options
 from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
-from facefusion.face_helper import combine_two_matrix, paste_back, warp_face_by_face_landmark_5
+from facefusion.face_helper import merge_matrix, paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import clear_face_occluder, create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
@@ -24,20 +25,21 @@ from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.typing import AgeModifierInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Face, Mask, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, \
+	VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 FRAME_PROCESSOR = None
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
-	'styleganex':
+	'styleganex_age':
 	{
-		'url': '...',
-		'path': resolve_relative_path('../.assets/models/age_modifier_styleganex.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/styleganex_age.onnx',
+		'path': resolve_relative_path('../.assets/models/styleganex_age.onnx'),
 		'template': 'ffhq_512',
 		'size': (512, 512)
-	},
+	}
 }
 OPTIONS : Optional[OptionsWithModel] = None
 
@@ -80,7 +82,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 def register_args(program : ArgumentParser) -> None:
 	group_frame_processors = find_argument_group(program, 'frame processors')
 	if group_frame_processors:
-		group_frame_processors.add_argument('--age-modifier-model', help = wording.get('help.age_modifier_model'), default = config.get_str_value('frame_processors.age_modifier_model', 'styleganex'), choices = frame_processors_choices.age_modifier_models)
+		group_frame_processors.add_argument('--age-modifier-model', help = wording.get('help.age_modifier_model'), default = config.get_str_value('frame_processors.age_modifier_model', 'styleganex_age'), choices = frame_processors_choices.age_modifier_models)
 		group_frame_processors.add_argument('--age-modifier-direction', help = wording.get('help.age_modifier_direction'), type = int, default = config.get_int_value('frame_processors.age_modifier_direction', '0'), choices = frame_processors_choices.age_modifier_direction_range, metavar = create_metavar(frame_processors_choices.age_modifier_direction_range))
 		facefusion.jobs.job_store.register_step_keys([ 'age_modifier_model', 'age_modifier_direction' ])
 
@@ -143,10 +145,10 @@ def modify_age(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFram
 	model_template = get_options('model').get('template')
 	model_size = get_options('model').get('size')
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
-	face_landmark_5_extended = (face_landmark_5 - face_landmark_5[2]) * 2 + face_landmark_5[2]
+	extend_face_landmark_5 = (face_landmark_5 - face_landmark_5[2]) * 2 + face_landmark_5[2]
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, (256, 256))
-	crop_vision_frame_extended, affine_matrix_extended = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5_extended, model_template, model_size)
-	crop_vision_frame_extended_raw = crop_vision_frame_extended.copy()
+	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_template, model_size)
+	extend_vision_frame_raw = extend_vision_frame.copy()
 	box_mask = create_static_box_mask(model_size, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
 	[
@@ -155,35 +157,48 @@ def modify_age(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFram
 
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
-		combined_matrix = combine_two_matrix(affine_matrix_extended, cv2.invertAffineTransform(affine_matrix))
+		combined_matrix = merge_matrix([ extend_affine_matrix, cv2.invertAffineTransform(affine_matrix) ])
 		occlusion_mask = cv2.warpAffine(occlusion_mask, combined_matrix, model_size)
 		crop_masks.append(occlusion_mask)
-	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	crop_vision_frame_extended = prepare_crop_frame(crop_vision_frame_extended)
-	crop_vision_frame_extended = apply_age_modifier(crop_vision_frame, crop_vision_frame_extended)
-	crop_vision_frame_extended = normalize_crop_frame(crop_vision_frame_extended)
-	crop_vision_frame_extended = fix_color(crop_vision_frame_extended_raw, crop_vision_frame_extended)
-	crop_mask = cv2.pyrUp(numpy.minimum.reduce(crop_masks).clip(0, 1))
-	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame_extended, crop_mask, affine_matrix_extended * 2)
+	crop_vision_frame = prepare_vision_frame(crop_vision_frame)
+	extend_vision_frame = prepare_vision_frame(extend_vision_frame)
+	extend_vision_frame = apply_age(crop_vision_frame, extend_vision_frame)
+	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
+	extend_vision_frame = fix_color(extend_vision_frame_raw, extend_vision_frame)
+	extend_crop_mask = cv2.pyrUp(numpy.minimum.reduce(crop_masks).clip(0, 1))
+	extend_affine_matrix *= extend_vision_frame.shape[0] / 512
+	paste_vision_frame = paste_back(temp_vision_frame, extend_vision_frame, extend_crop_mask, extend_affine_matrix)
 	return paste_vision_frame
 
 
-def fix_color(crop_vision_frame_extended_raw : VisionFrame, crop_vision_frame_extended : VisionFrame) -> VisionFrame:
-	crop_vision_frame_extended_raw = crop_vision_frame_extended_raw.astype(numpy.float32) / 255
-	crop_vision_frame_extended = crop_vision_frame_extended.astype(numpy.float32) / 255
-	crop_vision_frame_extended_raw_downscaled = cv2.resize(crop_vision_frame_extended_raw, (48, 48), interpolation = cv2.INTER_AREA)
-	crop_vision_frame_extended_downscaled = cv2.resize(crop_vision_frame_extended, (48, 48), interpolation = cv2.INTER_AREA)
-	color_difference = crop_vision_frame_extended_raw_downscaled - crop_vision_frame_extended_downscaled
-	color_difference = cv2.resize(color_difference, crop_vision_frame_extended.shape[:2][::-1], interpolation = cv2.INTER_CUBIC) #type:ignore[assignment]
-	color_difference_mask = 1 - create_static_box_mask(crop_vision_frame_extended.shape[:2][::-1], 1.0, (0, 0, 0, 0))
+def fix_color(extend_vision_frame_raw : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
+	color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, (48, 48))
+	color_difference_mask = create_static_box_mask(extend_vision_frame.shape[:2][::-1], 1.0, (0, 0, 0, 0))
 	color_difference_mask = numpy.stack((color_difference_mask, ) * 3, axis = -1)
-	crop_vision_frame_extended += (color_difference * color_difference_mask.clip(0, 0.75))
-	crop_vision_frame_extended = crop_vision_frame_extended.clip(0, 1)
-	crop_vision_frame_extended = numpy.multiply(crop_vision_frame_extended, 255).astype(numpy.uint8)
-	return crop_vision_frame_extended
+	extend_vision_frame = normalize_color_difference(color_difference, color_difference_mask, extend_vision_frame)
+	return extend_vision_frame
 
 
-def apply_age_modifier(crop_vision_frame : VisionFrame, crop_vision_frame_extended : VisionFrame) -> VisionFrame:
+def compute_color_difference(extend_vision_frame_raw : VisionFrame, extend_vision_frame : VisionFrame, size : Size) -> VisionFrame:
+	extend_vision_frame_raw = extend_vision_frame_raw.astype(numpy.float32) / 255
+	extend_vision_frame_raw = cv2.resize(extend_vision_frame_raw, size, interpolation = cv2.INTER_AREA)
+	extend_vision_frame = extend_vision_frame.astype(numpy.float32) / 255
+	extend_vision_frame = cv2.resize(extend_vision_frame, size, interpolation = cv2.INTER_AREA)
+	color_difference = extend_vision_frame_raw - extend_vision_frame
+	return color_difference
+
+
+def normalize_color_difference(color_difference : VisionFrame, color_difference_mask : Mask, extend_vision_frame : VisionFrame) -> VisionFrame:
+	color_difference = cv2.resize(color_difference, extend_vision_frame.shape[:2][::-1], interpolation = cv2.INTER_CUBIC)
+	color_difference_mask = 1 - color_difference_mask.clip(0, 0.75)
+	extend_vision_frame = extend_vision_frame.astype(numpy.float32) / 255
+	extend_vision_frame += color_difference * color_difference_mask
+	extend_vision_frame = extend_vision_frame.clip(0, 1)
+	extend_vision_frame = numpy.multiply(extend_vision_frame, 255).astype(numpy.uint8)
+	return extend_vision_frame
+
+
+def apply_age(crop_vision_frame : VisionFrame, crop_vision_frame_extended : VisionFrame) -> VisionFrame:
 	frame_processor = get_frame_processor()
 	frame_processor_inputs = {}
 
@@ -193,8 +208,7 @@ def apply_age_modifier(crop_vision_frame : VisionFrame, crop_vision_frame_extend
 		if frame_processor_input.name == 'target_with_background':
 			frame_processor_inputs[frame_processor_input.name] = crop_vision_frame_extended
 		if frame_processor_input.name == 'direction':
-			age_modifier_direction = map_float_range(state_manager.get_item('age_modifier_direction'), -100, 100, 2.5, -2.5)
-			frame_processor_inputs[frame_processor_input.name] = numpy.array(age_modifier_direction, dtype = numpy.float32)
+			frame_processor_inputs[frame_processor_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
 
 	with thread_semaphore():
 		crop_vision_frame, latent = frame_processor.run(None, frame_processor_inputs)
@@ -202,21 +216,26 @@ def apply_age_modifier(crop_vision_frame : VisionFrame, crop_vision_frame_extend
 	return crop_vision_frame[0]
 
 
-def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
-	crop_vision_frame = (crop_vision_frame - 0.5) / 0.5
-	crop_vision_frame = numpy.expand_dims(crop_vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
-	return crop_vision_frame
+def prepare_direction(direction : int) -> numpy.ndarray[Any, Any]:
+	direction = map_float(float(direction), -100, 100, 2.5, -2.5) #type:ignore[assignment]
+	return numpy.array(direction, dtype = numpy.float32)
 
 
-def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	crop_vision_frame = numpy.clip(crop_vision_frame, -1, 1)
-	crop_vision_frame = (crop_vision_frame + 1) / 2
-	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0).clip(0, 255)
-	crop_vision_frame = (crop_vision_frame * 255.0)
-	crop_vision_frame = crop_vision_frame.astype(numpy.uint8)[:, :, ::-1]
-	crop_vision_frame = cv2.pyrDown(crop_vision_frame)
-	return crop_vision_frame
+def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:
+	vision_frame = vision_frame[:, :, ::-1] / 255.0
+	vision_frame = (vision_frame - 0.5) / 0.5
+	vision_frame = numpy.expand_dims(vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
+	return vision_frame
+
+
+def normalize_extend_frame(extend_vision_frame : VisionFrame) -> VisionFrame:
+	extend_vision_frame = numpy.clip(extend_vision_frame, -1, 1)
+	extend_vision_frame = (extend_vision_frame + 1) / 2
+	extend_vision_frame = extend_vision_frame.transpose(1, 2, 0).clip(0, 255)
+	extend_vision_frame = (extend_vision_frame * 255.0)
+	extend_vision_frame = extend_vision_frame.astype(numpy.uint8)[:, :, ::-1]
+	extend_vision_frame = cv2.pyrDown(extend_vision_frame)
+	return extend_vision_frame
 
 
 def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
