@@ -16,8 +16,7 @@ from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.typing import AudioFrame, Face, FaceSet, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
-from facefusion.vision import count_video_frame_total, get_video_frame, normalize_frame_color, read_static_image, \
-	read_static_images, resize_frame_resolution
+from facefusion.vision import count_video_frame_total, get_video_frame, normalize_frame_color, read_static_image, read_static_images, resize_frame_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 PREVIEW_FRAME_SLIDER : Optional[gradio.Slider] = None
