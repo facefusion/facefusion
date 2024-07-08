@@ -2,7 +2,7 @@ from typing import Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, wording
+from facefusion import logger, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.jobs import job_manager
 from facefusion.uis import choices as uis_choices
@@ -63,8 +63,12 @@ def listen() -> None:
 
 
 def apply(job_action : JobManagerAction, job_id : str, job_index : int) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
+	if job_action == 'job-create':
+		if job_manager.create_job(job_id):
+			logger.info(wording.get('job_created').format(job_id = job_id), __name__.upper())
+		else:
+			logger.error(wording.get('job_not_created').format(job_id = job_id), __name__.upper())
 	# todo: implement job actions
-	print(job_action, job_id, job_index)
 	return gradio.Dropdown(), gradio.Dropdown()
 
 
