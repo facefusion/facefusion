@@ -141,7 +141,7 @@ WORDING : Dict[str, Any] =\
 		# frame processors
 		'frame_processors': 'load a single or multiple frame processors. (choices: {choices}, ...)',
 		'age_modifier_model': 'choose the model responsible for ageing the face',
-		'age_modifier_direction': 'specify the young-to-old direction of age',
+		'age_modifier_direction': 'specify the direction in which the age should be modified',
 		'face_debugger_items': 'load a single or multiple frame processors (choices: {choices})',
 		'face_enhancer_model': 'choose the model responsible for enhancing the face',
 		'face_enhancer_blend': 'blend the enhanced into the previous face',

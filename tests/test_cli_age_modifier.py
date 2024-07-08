@@ -5,8 +5,7 @@ import pytest
 
 from facefusion.download import conditional_download
 from facefusion.jobs.job_manager import clear_jobs, init_jobs
-from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, \
-	is_test_output_file, prepare_test_output_directory
+from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_output_file, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -25,15 +24,15 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-def test_enhance_face_to_image() -> None:
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--headless', '--frame-processors', 'age_modifier', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-age-face-to-image.jpg') ]
+def test_modify_age_to_image() -> None:
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--headless', '--frame-processors', 'age_modifier', '--age-modifier-direction', '100', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-age-face-to-image.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test-age-face-to-image.jpg') is True
 
 
-def test_enhance_face_to_video() -> None:
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--headless', '--frame-processors', 'age_modifier', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-age-face-to-video.mp4'), '--trim-frame-end', '10' ]
+def test_modify_age_to_video() -> None:
+	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--headless', '--frame-processors', 'age_modifier', '--age-modifier-direction', '100', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-age-face-to-video.mp4'), '--trim-frame-end', '10' ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test-age-face-to-video.mp4') is True

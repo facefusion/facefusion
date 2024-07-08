@@ -48,7 +48,22 @@ LipSyncerInputs = TypedDict('LipSyncerInputs',
 	'target_vision_frame' : VisionFrame
 })
 
-FrameProcessorStateKey = Literal['age_modifier_model', 'age_modifier_direction', 'face_debugger_items', 'face_enhancer_model', 'face_enhancer_blend', 'face_swapper_model', 'face_swapper_pixel_boost', 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size', 'frame_enhancer_model', 'frame_enhancer_blend', 'lip_syncer_model']
+FrameProcessorStateKey = Literal\
+[
+	'age_modifier_model',
+	'age_modifier_direction',
+	'face_debugger_items',
+	'face_enhancer_model',
+	'face_enhancer_blend',
+	'face_swapper_model',
+	'face_swapper_pixel_boost',
+	'frame_colorizer_model',
+	'frame_colorizer_blend',
+	'frame_colorizer_size',
+	'frame_enhancer_model',
+	'frame_enhancer_blend',
+	'lip_syncer_model'
+]
 FrameProcessorState = TypedDict('FrameProcessorState',
 {
 	'age_modifier_model': AgeModifierModel,

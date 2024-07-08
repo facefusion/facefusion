@@ -23,7 +23,7 @@ frame_colorizer_sizes : List[str] = [ '192x192', '256x256', '384x384', '512x512'
 frame_enhancer_models : List[FrameEnhancerModel] = [ 'clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'real_hatgan_x4', 'span_kendata_x4', 'ultra_sharp_x4' ]
 lip_syncer_models : List[LipSyncerModel] = [ 'wav2lip', 'wav2lip_gan' ]
 
+age_modifier_direction_range : List[int] = create_int_range(-100, 100, 1)
 face_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_colorizer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
-age_modifier_direction_range : List[int] = create_int_range(-100, 100, 1)

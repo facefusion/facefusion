@@ -6,6 +6,7 @@ import cv2
 import numpy
 import onnxruntime
 from cv2.typing import Size
+from numpy.typing import NDArray
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -210,14 +211,14 @@ def apply_age(crop_vision_frame : VisionFrame, crop_vision_frame_extended : Visi
 			frame_processor_inputs[frame_processor_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
 
 	with thread_semaphore():
-		crop_vision_frame, latent = frame_processor.run(None, frame_processor_inputs)
+		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
 
-	return crop_vision_frame[0]
+	return crop_vision_frame
 
 
-def prepare_direction(direction : int) -> numpy.ndarray[Any, Any]:
+def prepare_direction(direction : int) -> NDArray[Any]:
 	direction = map_float(float(direction), -100, 100, 2.5, -2.5) #type:ignore[assignment]
-	return numpy.array(direction, dtype = numpy.float32)
+	return numpy.array(direction).astype(numpy.float32)
 
 
 def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:
