@@ -103,6 +103,7 @@ def listen() -> None:
 
 	for ui_component in get_ui_components(
 	[
+		'age_modifier_direction_slider',
 		'face_enhancer_blend_slider',
 		'frame_colorizer_blend_slider',
 		'frame_enhancer_blend_slider',
@@ -118,6 +119,7 @@ def listen() -> None:
 
 	for ui_component in get_ui_components(
 	[
+		'age_modifier_model_dropdown',
 		'frame_processors_checkbox_group',
 		'face_enhancer_model_dropdown',
 		'face_swapper_model_dropdown',

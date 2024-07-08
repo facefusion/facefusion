@@ -2,6 +2,7 @@ from typing import Dict, List, Literal, TypedDict
 
 from facefusion.typing import AudioFrame, Face, FaceSet, StateContext, VisionFrame
 
+AgeModifierModel = Literal['styleganex_age']
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender']
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']
 FaceSwapperModel = Literal['blendswap_256', 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_512_unofficial', 'uniface_256']
@@ -11,6 +12,11 @@ LipSyncerModel = Literal['wav2lip', 'wav2lip_gan']
 
 FaceSwapperSet = Dict[FaceSwapperModel, List[str]]
 
+AgeModifierInputs = TypedDict('AgeModifierInputs',
+{
+	'reference_faces' : FaceSet,
+	'target_vision_frame' : VisionFrame
+})
 FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',
 {
 	'reference_faces' : FaceSet,
@@ -42,9 +48,11 @@ LipSyncerInputs = TypedDict('LipSyncerInputs',
 	'target_vision_frame' : VisionFrame
 })
 
-FrameProcessorStateKey = Literal['face_debugger_items', 'face_enhancer_model', 'face_enhancer_blend', 'face_swapper_model', 'face_swapper_pixel_boost', 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size', 'frame_enhancer_model', 'frame_enhancer_blend', 'lip_syncer_model']
+FrameProcessorStateKey = Literal['age_modifier_model', 'age_modifier_direction', 'face_debugger_items', 'face_enhancer_model', 'face_enhancer_blend', 'face_swapper_model', 'face_swapper_pixel_boost', 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size', 'frame_enhancer_model', 'frame_enhancer_blend', 'lip_syncer_model']
 FrameProcessorState = TypedDict('FrameProcessorState',
 {
+	'age_modifier_model': AgeModifierModel,
+	'age_modifier_direction': int,
 	'face_debugger_items' : List[FaceDebuggerItem],
 	'face_enhancer_model' : FaceEnhancerModel,
 	'face_enhancer_blend' : int,
