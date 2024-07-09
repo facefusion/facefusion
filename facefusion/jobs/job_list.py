@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Tuple
+from typing import Optional, Tuple
 
 from facefusion.date_helper import describe_time_ago
 from facefusion.jobs import job_manager
@@ -14,14 +14,20 @@ def compose_job_list(job_status : JobStatus) -> Tuple[TableHeaders, TableContent
 	for index, job_id in enumerate(jobs):
 		job = jobs[job_id]
 		step_total = job_manager.count_step_total(job_id)
-		date_created = datetime.fromisoformat(job.get('date_created'))
-		date_updated = datetime.fromisoformat(job.get('date_updated'))
+		date_created = prepare_describe_datetime(job.get('date_created'))
+		date_updated = prepare_describe_datetime(job.get('date_updated'))
 		job_contents.append(
 		[
 			job_id,
 			step_total,
-			describe_time_ago(date_created),
-			describe_time_ago(date_updated),
+			date_created,
+			date_updated,
 			job_status
 		])
 	return job_headers, job_contents
+
+
+def prepare_describe_datetime(date_time : Optional[str]) -> Optional[str]:
+	if date_time:
+		return describe_time_ago(datetime.fromisoformat(date_time))
+	return None
