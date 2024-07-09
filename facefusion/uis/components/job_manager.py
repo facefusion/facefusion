@@ -3,10 +3,9 @@ from typing import Optional, Tuple
 import gradio
 
 from facefusion import logger, state_manager, wording
-from facefusion.common_helper import get_first
+from facefusion.common_helper import create_int_range, get_first, get_last
 from facefusion.core import create_program
 from facefusion.jobs import job_manager, job_store
-from facefusion.jobs.job_manager import validate_job
 from facefusion.program_helper import import_state, reduce_args
 from facefusion.typing import Args
 from facefusion.uis import choices as uis_choices
@@ -49,10 +48,14 @@ def render() -> None:
 					label = wording.get('uis.job_manager_job_id_dropdown'),
 					choices = job_drafted_ids,
 					value = get_first(job_drafted_ids),
+					interactive = True,
 					visible = False
 				)
 				JOB_MANAGER_STEP_INDEX_DROPDOWN = gradio.Dropdown(
 					label = wording.get('uis.job_manager_step_index_dropdown'),
+					choices = [ 0 ],
+					value = 0,
+					interactive = True,
 					visible = False
 				)
 			with gradio.Blocks():
@@ -66,8 +69,7 @@ def render() -> None:
 
 def listen() -> None:
 	JOB_MANAGER_JOB_ACTION_DROPDOWN.change(update_job_action, inputs = JOB_MANAGER_JOB_ACTION_DROPDOWN, outputs = [ JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
-	JOB_MANAGER_JOB_ID_DROPDOWN.change(update_job_id, inputs = JOB_MANAGER_JOB_ID_DROPDOWN, outputs = JOB_MANAGER_JOB_ID_DROPDOWN)
-	JOB_MANAGER_STEP_INDEX_DROPDOWN.change(update_step_index, inputs = JOB_MANAGER_STEP_INDEX_DROPDOWN,outputs = JOB_MANAGER_STEP_INDEX_DROPDOWN)
+	JOB_MANAGER_JOB_ID_DROPDOWN.change(update_job_id, inputs = JOB_MANAGER_JOB_ID_DROPDOWN, outputs = JOB_MANAGER_STEP_INDEX_DROPDOWN)
 	JOB_MANAGER_EXECUTE_BUTTON.click(run, inputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX ], outputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
 
 
@@ -147,9 +149,9 @@ def update_job_action(job_action : JobManagerAction) -> Tuple[gradio.Textbox, gr
 
 
 def update_job_id(job_id : str) -> gradio.Dropdown:
-	print('validate_job', validate_job(job_id))
-	return gradio.Dropdown(value = job_id)
+	step_total = job_manager.count_step_total(job_id)
+	step_choices = create_int_range(0, step_total - 1, 1)
 
-
-def update_step_index(step_index : int) -> gradio.Dropdown:
-	return gradio.Dropdown(value = step_index)
+	if step_total:
+		return gradio.Dropdown(value = get_last(step_choices), choices = step_choices)
+	return gradio.Dropdown(value = 0, choices = [ 0 ])
