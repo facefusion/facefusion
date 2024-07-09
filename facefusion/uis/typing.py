@@ -6,6 +6,8 @@ File = IO[Any]
 Component = gradio.File or gradio.Image or gradio.Video or gradio.Slider
 ComponentName = Literal\
 [
+	'age_modifier_model_dropdown',
+	'age_modifier_direction_slider',
 	'benchmark_cycles_slider',
 	'benchmark_runs_checkbox_group',
 	'face_debugger_items_checkbox_group',
