@@ -70,32 +70,32 @@ def render() -> None:
 def listen() -> None:
 	JOB_MANAGER_JOB_ACTION_DROPDOWN.change(update_job_action, inputs = JOB_MANAGER_JOB_ACTION_DROPDOWN, outputs = [ JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
 	JOB_MANAGER_JOB_ID_DROPDOWN.change(update_job_id, inputs = JOB_MANAGER_JOB_ID_DROPDOWN, outputs = JOB_MANAGER_STEP_INDEX_DROPDOWN)
-	JOB_MANAGER_APPLY_BUTTON.click(run, inputs = [JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX], outputs = [JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN])
+	JOB_MANAGER_APPLY_BUTTON.click(run, inputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ], outputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
 
 
-def run(job_action : JobManagerAction, job_id : str, step_index : int) -> Tuple[gradio.Dropdown, gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
+def run(job_action : JobManagerAction, created_job_id : str, selected_job_id : str, step_index : int) -> Tuple[gradio.Dropdown, gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
 	if job_action == 'job-create':
-		if job_manager.create_job(job_id):
-			logger.info(wording.get('job_created').format(job_id = job_id), __name__.upper())
+		if job_manager.create_job(created_job_id):
+			logger.info(wording.get('job_created').format(job_id = created_job_id), __name__.upper())
 			job_drafted_ids = job_manager.find_job_ids('drafted')
-			return gradio.Dropdown(value = 'job-add-step'), gradio.Textbox(value = None, visible = False), gradio.Dropdown(choices = job_drafted_ids, value = job_id, visible = True), gradio.Dropdown(choices = [ 0 ], value = 0)
+			return gradio.Dropdown(value = 'job-add-step'), gradio.Textbox(value = None, visible = False), gradio.Dropdown(choices = job_drafted_ids, value = created_job_id, visible = True), gradio.Dropdown(choices = [0], value = 0)
 		else:
-			logger.error(wording.get('job_not_created').format(job_id = job_id), __name__.upper())
+			logger.error(wording.get('job_not_created').format(job_id = created_job_id), __name__.upper())
 	if job_action == 'job-submit':
-		if job_manager.submit_job(job_id):
-			logger.info(wording.get('job_submitted').format(job_id = job_id), __name__.upper())
+		if job_manager.submit_job(selected_job_id):
+			logger.info(wording.get('job_submitted').format(job_id = selected_job_id), __name__.upper())
 		else:
-			logger.error(wording.get('job_not_submitted').format(job_id = job_id), __name__.upper())
+			logger.error(wording.get('job_not_submitted').format(job_id = selected_job_id), __name__.upper())
 	if job_action == 'job-submit-all':
 		if job_manager.submit_jobs():
 			logger.info(wording.get('job_all_submitted'), __name__.upper())
 		else:
 			logger.error(wording.get('job_all_not_submitted'), __name__.upper())
 	if job_action == 'job-delete':
-		if job_manager.delete_job(job_id):
-			logger.info(wording.get('job_deleted').format(job_id = job_id), __name__.upper())
+		if job_manager.delete_job(selected_job_id):
+			logger.info(wording.get('job_deleted').format(job_id = selected_job_id), __name__.upper())
 		else:
-			logger.error(wording.get('job_not_deleted').format(job_id = job_id), __name__.upper())
+			logger.error(wording.get('job_not_deleted').format(job_id = selected_job_id), __name__.upper())
 	if job_action == 'job-delete-all':
 		if job_manager.delete_jobs():
 			logger.info(wording.get('job_all_deleted'), __name__.upper())
@@ -104,29 +104,29 @@ def run(job_action : JobManagerAction, job_id : str, step_index : int) -> Tuple[
 	if job_action == 'job-add-step':
 		step_args = get_step_args()
 
-		if job_manager.add_step(job_id, step_args):
-			logger.info(wording.get('job_step_added').format(job_id = job_id), __name__.upper())
+		if job_manager.add_step(selected_job_id, step_args):
+			logger.info(wording.get('job_step_added').format(job_id = selected_job_id), __name__.upper())
 		else:
-			logger.error(wording.get('job_step_not_added').format(job_id = job_id), __name__.upper())
+			logger.error(wording.get('job_step_not_added').format(job_id = selected_job_id), __name__.upper())
 	if job_action == 'job-remix-step':
 		step_args = get_step_args()
 
-		if job_manager.remix_step(job_id, step_index, step_args):
-			logger.info(wording.get('job_remix_step_added').format(job_id = job_id, step_index = step_index), __name__.upper())
+		if job_manager.remix_step(selected_job_id, step_index, step_args):
+			logger.info(wording.get('job_remix_step_added').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 		else:
-			logger.error(wording.get('job_remix_step_not_added').format(job_id = job_id, step_index = step_index), __name__.upper())
+			logger.error(wording.get('job_remix_step_not_added').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 	if job_action == 'job-insert-step':
 		step_args = get_step_args()
 
-		if job_manager.insert_step(job_id, step_index, step_args):
-			logger.info(wording.get('job_step_inserted').format(job_id = job_id, step_index = step_index), __name__.upper())
+		if job_manager.insert_step(selected_job_id, step_index, step_args):
+			logger.info(wording.get('job_step_inserted').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 		else:
-			logger.error(wording.get('job_step_not_inserted').format(job_id = job_id, step_index = step_index), __name__.upper())
+			logger.error(wording.get('job_step_not_inserted').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 	if job_action == 'job-remove-step':
-		if job_manager.remove_step(job_id, step_index):
-			logger.info(wording.get('job_step_removed').format(job_id = job_id, step_index = step_index), __name__.upper())
+		if job_manager.remove_step(selected_job_id, step_index):
+			logger.info(wording.get('job_step_removed').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 		else:
-			logger.error(wording.get('job_step_not_removed').format(job_id = job_id, step_index = step_index), __name__.upper())
+			logger.error(wording.get('job_step_not_removed').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 	return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(), gradio.Dropdown()
 
 
