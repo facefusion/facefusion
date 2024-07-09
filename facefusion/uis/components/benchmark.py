@@ -93,7 +93,7 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 	state_manager.sync_item('execution_providers')
 	state_manager.sync_item('execution_thread_count')
 	state_manager.sync_item('execution_queue_count')
-	state_manager.set_item('system_memory_limit')
+	state_manager.sync_item('system_memory_limit')
 	benchmark_results = []
 	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
 

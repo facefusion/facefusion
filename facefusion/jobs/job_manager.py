@@ -45,7 +45,7 @@ def create_job(job_id : str) -> bool:
 def submit_job(job_id : str) -> bool:
 	job_drafted_ids = find_job_ids('drafted')
 
-	if job_id in job_drafted_ids and count_step_total(job_id):
+	if job_id in job_drafted_ids and validate_job(job_id):
 		return set_steps_status(job_id, 'queued') and move_job_file(job_id, 'queued')
 	return False
 
@@ -93,6 +93,10 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 		job_id, _ = os.path.splitext(os.path.basename(job_file))
 		job_ids.append(job_id)
 	return sorted(job_ids)
+
+
+def validate_job(job_id : str) -> bool:
+	return count_step_total(job_id) > 0
 
 
 def add_step(job_id : str, step_args : Args) -> bool:

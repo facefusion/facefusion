@@ -6,6 +6,7 @@ from facefusion import logger, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.core import create_program
 from facefusion.jobs import job_manager, job_store
+from facefusion.jobs.job_manager import validate_job
 from facefusion.program_helper import import_state, reduce_args
 from facefusion.typing import Args
 from facefusion.uis import choices as uis_choices
@@ -146,6 +147,7 @@ def update_job_action(job_action : JobManagerAction) -> Tuple[gradio.Textbox, gr
 
 
 def update_job_id(job_id : str) -> gradio.Dropdown:
+	print('validate_job', validate_job(job_id))
 	# todo: implement validate_job(job_id : str)
 	# 1. use this in job_manager.submit_job() instead of count_step_total(job_id)
 	# 2. validate json (json.decoder.JSONDecodeError)
