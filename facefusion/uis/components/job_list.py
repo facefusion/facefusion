@@ -4,10 +4,10 @@ import gradio
 
 import facefusion.choices
 from facefusion import state_manager, wording
-from facefusion.jobs.job_list import compose_job_list
-from facefusion.jobs import job_manager
-from facefusion.typing import JobStatus
 from facefusion.common_helper import get_first
+from facefusion.jobs import job_manager
+from facefusion.jobs.job_list import compose_job_list
+from facefusion.typing import JobStatus
 
 JOB_LIST_DATAFRAME : Optional[gradio.Dataframe] = None
 JOB_LIST_STATUS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
