@@ -60,7 +60,6 @@ def render() -> None:
 
 def listen() -> None:
 	JOB_RUNNER_JOB_ACTION_DROPDOWN.change(update_job_action, inputs = JOB_RUNNER_JOB_ACTION_DROPDOWN, outputs = JOB_RUNNER_JOB_ID_DROPDOWN)
-	JOB_RUNNER_JOB_ID_DROPDOWN.change(update_job_id, inputs = JOB_RUNNER_JOB_ID_DROPDOWN, outputs = JOB_RUNNER_JOB_ID_DROPDOWN)
 	JOB_RUNNER_START_BUTTON.click(start, outputs = [ JOB_RUNNER_START_BUTTON, JOB_RUNNER_STOP_BUTTON ])
 	JOB_RUNNER_START_BUTTON.click(run, inputs = [ JOB_RUNNER_JOB_ACTION_DROPDOWN, JOB_RUNNER_JOB_ID_DROPDOWN ], outputs = [ JOB_RUNNER_START_BUTTON, JOB_RUNNER_STOP_BUTTON, JOB_RUNNER_JOB_ID_DROPDOWN ])
 	JOB_RUNNER_STOP_BUTTON.click(stop, outputs = [ JOB_RUNNER_START_BUTTON, JOB_RUNNER_STOP_BUTTON ])
@@ -73,8 +72,7 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 
 def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, gradio.Button, gradio.Dropdown]:
-	# todo: do not process when list is none
-	if job_action == 'job-run' and job_id:
+	if job_action == 'job-run' and validate_job(job_id):
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__.upper())
 		if job_runner.run_job(job_id, process_step):
 			logger.info(wording.get('processing_job_succeed').format(job_id = job_id), __name__.upper())
@@ -88,7 +86,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 			logger.info(wording.get('processing_jobs_succeed'), __name__.upper())
 		else:
 			logger.info(wording.get('processing_jobs_failed'), __name__.upper())
-	if job_action == 'job-retry' and job_id:
+	if job_action == 'job-retry' and validate_job(job_id):
 		logger.info(wording.get('retrying_job').format(job_id = job_id), __name__.upper())
 		if job_runner.retry_job(job_id, process_step):
 			logger.info(wording.get('processing_job_succeed').format(job_id = job_id), __name__.upper())
@@ -118,13 +116,4 @@ def update_job_action(job_action : JobRunnerAction) -> gradio.Dropdown:
 		return gradio.Dropdown(visible = True, value = get_first(job_queued_ids), choices = job_queued_ids)
 	if job_action == 'job-retry':
 		return gradio.Dropdown(visible = True, value = get_first(job_failed_ids), choices = job_failed_ids)
-	return gradio.Dropdown(visible = False, value = None, choices = None)
-
-
-def update_job_id(job_id : str) -> gradio.Dropdown:
-	print('validate_job', validate_job(job_id))
-	# todo: implement validate_job(job_id : str)
-	# 1. use this in job_manager.submit_job() instead of count_step_total(job_id)
-	# 2. validate json (json.decoder.JSONDecodeError)
-	# 3. validate steps exist
-	return gradio.Dropdown(value = job_id)
+	return gradio.Dropdown(visible = False, value = 'none', choices = [ 'none '])

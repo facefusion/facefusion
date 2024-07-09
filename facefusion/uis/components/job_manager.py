@@ -148,10 +148,6 @@ def update_job_action(job_action : JobManagerAction) -> Tuple[gradio.Textbox, gr
 
 def update_job_id(job_id : str) -> gradio.Dropdown:
 	print('validate_job', validate_job(job_id))
-	# todo: implement validate_job(job_id : str)
-	# 1. use this in job_manager.submit_job() instead of count_step_total(job_id)
-	# 2. validate json (json.decoder.JSONDecodeError)
-	# 3. validate steps exist
 	return gradio.Dropdown(value = job_id)
 
 
