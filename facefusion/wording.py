@@ -203,6 +203,10 @@ WORDING : Dict[str, Any] =\
 		# job runner
 		'job_runner_job_action_dropdown': 'JOB ACTION',
 		'job_runner_job_id_dropdown': 'JOB ID',
+		# job list
+		'job_list_dataframe': 'JOB LIST',
+		'job_list_status_checkbox_group': 'JOB STATUS',
+		'job_list_update_button': 'UPDATE JOB LIST',
 		# face analyser
 		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',
 		'face_detector_size_dropdown': 'FACE DETECTOR SIZE',
