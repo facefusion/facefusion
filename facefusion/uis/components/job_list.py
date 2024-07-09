@@ -26,27 +26,23 @@ def render() -> None:
 			label = wording.get('uis.job_list_dataframe'),
 			headers = job_headers,
 			value = job_contents,
-			show_label = False,
+			show_label = False
 		)
 		JOB_LIST_STATUS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 			label = wording.get('uis.job_list_status_checkbox_group'),
 			choices = facefusion.choices.job_statuses,
 			value = facefusion.choices.job_statuses[0],
-			show_label = False,
-
+			show_label = False
 		)
 		JOB_LIST_UPDATE_BUTTON = gradio.Button(
 			value = wording.get('uis.job_list_update_button'),
 			variant = 'primary',
 			size = 'sm'
 		)
-		register_ui_component('job_list_dataframe', JOB_LIST_DATAFRAME)
-		register_ui_component('job_list_status_checkbox_group', JOB_LIST_STATUS_CHECKBOX_GROUP)
-		register_ui_component('job_list_update_button', JOB_LIST_UPDATE_BUTTON)
 
 
 def listen() -> None:
-	JOB_LIST_STATUS_CHECKBOX_GROUP.change(update_status_checkbox_group, inputs = JOB_LIST_STATUS_CHECKBOX_GROUP, outputs = [JOB_LIST_STATUS_CHECKBOX_GROUP, JOB_LIST_DATAFRAME])
+	JOB_LIST_STATUS_CHECKBOX_GROUP.change(update_status_checkbox_group, inputs = JOB_LIST_STATUS_CHECKBOX_GROUP, outputs = [ JOB_LIST_STATUS_CHECKBOX_GROUP, JOB_LIST_DATAFRAME ])
 	JOB_LIST_UPDATE_BUTTON.click(update_job_list, inputs = JOB_LIST_STATUS_CHECKBOX_GROUP, outputs = JOB_LIST_DATAFRAME)
 
 
