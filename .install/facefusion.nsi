@@ -5,8 +5,8 @@
 RequestExecutionLevel user
 ManifestDPIAware true
 
-Name 'FaceFusion NEXT'
-OutFile 'FaceFusion_NEXT.exe'
+Name 'FaceFusion 3.0.0'
+OutFile 'FaceFusion_3.0.0.exe'
 
 !define MUI_ICON 'facefusion.ico'
 
@@ -93,7 +93,7 @@ Section 'Download Your Copy'
 	RMDir /r $INSTDIR
 
 	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe config http.sslVerify false'
-	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch next .'
+	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch 3.0.0 .'
 SectionEnd
 
 Section 'Setup Your Environment'
@@ -168,7 +168,7 @@ Section 'Register The Application'
 	WriteUninstaller $INSTDIR\Uninstall.exe
 
 	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion DisplayName 'FaceFusion'
-	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion DisplayVersion '2.6.0'
+	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion DisplayVersion '3.0.0'
 	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion Publisher 'Henry Ruhs'
 	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion InstallLocation $INSTDIR
 	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion UninstallString $INSTDIR\uninstall.exe
