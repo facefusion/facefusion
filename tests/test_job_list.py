@@ -13,8 +13,9 @@ def before_each() -> None:
 
 def test_compose_job_list() -> None:
 	create_job('job-test-compose-job-list-1')
-	assert len(compose_job_list('drafted')[1]) == 1
 	create_job('job-test-compose-job-list-2')
-	assert len(compose_job_list('drafted')[1]) == 2
-	create_job('job-test-compose-job-list-3')
-	assert len(compose_job_list('drafted')[1]) == 3
+	job_headers, job_contents = compose_job_list('drafted')
+
+	assert job_headers == [ 'job id', 'steps', 'date created', 'date updated', 'job status' ]
+	assert job_contents[0] == [ 'job-test-compose-job-list-1', 0, 'Just now', None, 'drafted' ]
+	assert job_contents[1] == [ 'job-test-compose-job-list-2', 0, 'Just now', None, 'drafted' ]

@@ -178,6 +178,7 @@ WORDING : Dict[str, Any] =\
 	{
 		# general
 		'apply_button': 'APPLY',
+		'refresh_button': 'REFRESH',
 		'start_button': 'START',
 		'stop_button': 'STOP',
 		'clear_button': 'CLEAR',
@@ -206,7 +207,6 @@ WORDING : Dict[str, Any] =\
 		# job list
 		'job_list_dataframe': 'JOB LIST',
 		'job_list_status_checkbox_group': 'JOB STATUS',
-		'job_list_update_button': 'UPDATE JOB LIST',
 		# face analyser
 		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',
 		'face_detector_size_dropdown': 'FACE DETECTOR SIZE',
