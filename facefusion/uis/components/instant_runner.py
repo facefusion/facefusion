@@ -81,7 +81,6 @@ def run() -> Tuple[gradio.Button, gradio.Button, gradio.Image, gradio.Video]:
 	return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None), gradio.Video(value = None)
 
 
-# todo: move to a helper method and write testing
 def suggest_output_path(output_directory_path : str, target_path : str) -> Optional[str]:
 	if is_image(target_path) or is_video(target_path):
 		_, target_extension = os.path.splitext(target_path)
