@@ -17,7 +17,7 @@ JOB_MANAGER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_MANAGER_JOB_ID_TEXTBOX : Optional[gradio.Textbox] = None
 JOB_MANAGER_JOB_ID_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_MANAGER_STEP_INDEX_DROPDOWN : Optional[gradio.Dropdown] = None
-JOB_MANAGER_EXECUTE_BUTTON : Optional[gradio.Button] = None
+JOB_MANAGER_APPLY_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
@@ -26,7 +26,7 @@ def render() -> None:
 	global JOB_MANAGER_JOB_ID_TEXTBOX
 	global JOB_MANAGER_JOB_ID_DROPDOWN
 	global JOB_MANAGER_STEP_INDEX_DROPDOWN
-	global JOB_MANAGER_EXECUTE_BUTTON
+	global JOB_MANAGER_APPLY_BUTTON
 
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
 		is_job_manager = state_manager.get_item('ui_workflow') == 'job_manager'
@@ -59,8 +59,8 @@ def render() -> None:
 					visible = False
 				)
 			with gradio.Blocks():
-				JOB_MANAGER_EXECUTE_BUTTON = gradio.Button(
-					value = wording.get('uis.execute_button'),
+				JOB_MANAGER_APPLY_BUTTON = gradio.Button(
+					value = wording.get('uis.apply_button'),
 					variant = 'primary',
 					size = 'sm'
 				)
@@ -70,7 +70,7 @@ def render() -> None:
 def listen() -> None:
 	JOB_MANAGER_JOB_ACTION_DROPDOWN.change(update_job_action, inputs = JOB_MANAGER_JOB_ACTION_DROPDOWN, outputs = [ JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
 	JOB_MANAGER_JOB_ID_DROPDOWN.change(update_job_id, inputs = JOB_MANAGER_JOB_ID_DROPDOWN, outputs = JOB_MANAGER_STEP_INDEX_DROPDOWN)
-	JOB_MANAGER_EXECUTE_BUTTON.click(run, inputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX ], outputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
+	JOB_MANAGER_APPLY_BUTTON.click(run, inputs = [JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX], outputs = [JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN])
 
 
 def run(job_action : JobManagerAction, job_id : str, step_index : int) -> Tuple[gradio.Dropdown, gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
@@ -143,7 +143,9 @@ def update_job_action(job_action : JobManagerAction) -> Tuple[gradio.Textbox, gr
 		return gradio.Textbox(visible = True), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False)
 	if job_action in [ 'job-submit', 'job-delete' ]:
 		return gradio.Textbox(visible = False), gradio.Dropdown(visible = True), gradio.Dropdown(visible = False)
-	if job_action in [ 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
+	if job_action == 'job-add-step':
+		return gradio.Textbox(visible = False), gradio.Dropdown(visible = True), gradio.Dropdown(visible = False)
+	if job_action in [ 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		return gradio.Textbox(visible = False), gradio.Dropdown(visible = True), gradio.Dropdown(visible = True)
 	return gradio.Textbox(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False)
 
