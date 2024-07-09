@@ -154,6 +154,7 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 def slide_preview_image(frame_number : int = 0) -> gradio.Image:
 	if is_video(state_manager.get_item('target_path')):
 		preview_vision_frame = normalize_frame_color(get_video_frame(state_manager.get_item('target_path'), frame_number))
+		preview_vision_frame = resize_frame_resolution(preview_vision_frame, (640, 640))
 		return gradio.Image(value = preview_vision_frame)
 	return gradio.Image(value = None)
 
