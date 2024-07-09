@@ -7,7 +7,6 @@ from facefusion import state_manager, wording
 from facefusion.job_list import compose_job_list
 from facefusion.jobs import job_manager
 from facefusion.typing import JobStatus
-from facefusion.uis.core import register_ui_component
 
 JOB_LIST_DATAFRAME : Optional[gradio.Dataframe] = None
 JOB_LIST_STATUS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
