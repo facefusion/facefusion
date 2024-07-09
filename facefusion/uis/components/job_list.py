@@ -5,8 +5,7 @@ import gradio
 import facefusion.choices
 from facefusion import state_manager, wording
 from facefusion.common_helper import get_first
-from facefusion.jobs import job_manager
-from facefusion.jobs.job_list import compose_job_list
+from facefusion.jobs import job_list, job_manager
 from facefusion.typing import JobStatus
 
 JOB_LIST_JOB_DATAFRAME : Optional[gradio.Dataframe] = None
@@ -21,7 +20,7 @@ def render() -> None:
 
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
 		job_status = get_first(facefusion.choices.job_statuses)
-		job_headers, job_contents = compose_job_list(job_status)
+		job_headers, job_contents = job_list.compose_job_list(job_status)
 
 		JOB_LIST_JOB_DATAFRAME = gradio.Dataframe(
 			label = wording.get('uis.job_list_dataframe'),
@@ -56,6 +55,6 @@ def update_job_dataframe(job_statuses : List[JobStatus]) -> gradio.Dataframe:
 	all_job_contents = []
 
 	for job_status in job_statuses:
-		_, job_contents = compose_job_list(job_status)
+		_, job_contents = job_list.compose_job_list(job_status)
 		all_job_contents.extend(job_contents)
 	return gradio.Dataframe(value = all_job_contents)
