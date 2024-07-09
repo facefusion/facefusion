@@ -4,9 +4,10 @@ import gradio
 
 import facefusion.choices
 from facefusion import state_manager, wording
-from facefusion.job_list import compose_job_list
+from facefusion.jobs.job_list import compose_job_list
 from facefusion.jobs import job_manager
 from facefusion.typing import JobStatus
+from facefusion.common_helper import get_first
 
 JOB_LIST_DATAFRAME : Optional[gradio.Dataframe] = None
 JOB_LIST_STATUS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
@@ -19,7 +20,8 @@ def render() -> None:
 	global JOB_LIST_UPDATE_BUTTON
 
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
-		job_headers, job_contents = compose_job_list(facefusion.choices.job_statuses[0])
+		job_status = get_first(facefusion.choices.job_statuses)
+		job_headers, job_contents = compose_job_list(job_status)
 
 		JOB_LIST_DATAFRAME = gradio.Dataframe(
 			label = wording.get('uis.job_list_dataframe'),
@@ -30,7 +32,7 @@ def render() -> None:
 		JOB_LIST_STATUS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 			label = wording.get('uis.job_list_status_checkbox_group'),
 			choices = facefusion.choices.job_statuses,
-			value = facefusion.choices.job_statuses[0],
+			value = job_status,
 			show_label = False
 		)
 		JOB_LIST_UPDATE_BUTTON = gradio.Button(
