@@ -32,6 +32,10 @@ def set_item(key : UnionStateKey, value : Any) -> None:
 	STATES[state_context][key] = value #type:ignore
 
 
+def sync_item(key : UnionStateKey) -> None:
+	STATES['core'][key] = STATES['uis'][key] #type:ignore
+
+
 def clear_item(key : UnionStateKey) -> None:
 	set_item(key, None)
 
