@@ -74,45 +74,44 @@ def listen() -> None:
 
 
 def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id : str, step_index : int) -> Tuple[gradio.Dropdown, gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
+	created_job_id = created_job_id if created_job_id != 'none' else None
+	selected_job_id = selected_job_id if selected_job_id != 'none' else None
 	step_index = step_index if step_index != 'none' else None
 
 	if job_action == 'job-create':
-		if job_manager.create_job(created_job_id):
+		if created_job_id and job_manager.create_job(created_job_id):
 			drafted_job_ids = job_manager.find_job_ids('drafted')
 			logger.info(wording.get('job_created').format(job_id = created_job_id), __name__.upper())
 			return gradio.Dropdown(value = 'job-add-step'), gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = created_job_id, choices = drafted_job_ids, visible = True), gradio.Dropdown(value = 'none', choices = [ 'none' ])
 		else:
 			logger.error(wording.get('job_not_created').format(job_id = created_job_id), __name__.upper())
 	if job_action == 'job-submit':
-		if job_manager.submit_job(selected_job_id):
+		if selected_job_id and job_manager.submit_job(selected_job_id):
 			logger.info(wording.get('job_submitted').format(job_id = selected_job_id), __name__.upper())
 		else:
 			logger.error(wording.get('job_not_submitted').format(job_id = selected_job_id), __name__.upper())
 	if job_action == 'job-delete':
-		if job_manager.delete_job(selected_job_id):
+		if selected_job_id and job_manager.delete_job(selected_job_id):
 			logger.info(wording.get('job_deleted').format(job_id = selected_job_id), __name__.upper())
 		else:
 			logger.error(wording.get('job_not_deleted').format(job_id = selected_job_id), __name__.upper())
 	if job_action == 'job-add-step':
-		step_args = get_step_args()
-		if job_manager.add_step(selected_job_id, step_args):
+		if selected_job_id and job_manager.add_step(selected_job_id, get_step_args()):
 			logger.info(wording.get('job_step_added').format(job_id = selected_job_id), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_added').format(job_id = selected_job_id), __name__.upper())
-	if job_action == 'job-remix-step' and step_index:
-		step_args = get_step_args()
-		if job_manager.remix_step(selected_job_id, step_index, step_args):
+	if job_action == 'job-remix-step':
+		if selected_job_id and step_index and job_manager.remix_step(selected_job_id, step_index, get_step_args()):
 			logger.info(wording.get('job_remix_step_added').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 		else:
 			logger.error(wording.get('job_remix_step_not_added').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
-	if job_action == 'job-insert-step' and step_index:
-		step_args = get_step_args()
-		if job_manager.insert_step(selected_job_id, step_index, step_args):
+	if job_action == 'job-insert-step':
+		if selected_job_id and step_index and job_manager.insert_step(selected_job_id, step_index, get_step_args()):
 			logger.info(wording.get('job_step_inserted').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_inserted').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
-	if job_action == 'job-remove-step' and step_index:
-		if job_manager.remove_step(selected_job_id, step_index):
+	if job_action == 'job-remove-step':
+		if selected_job_id and step_index and job_manager.remove_step(selected_job_id, step_index):
 			logger.info(wording.get('job_step_removed').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 		else:
 			logger.error(wording.get('job_step_not_removed').format(job_id = selected_job_id, step_index = step_index), __name__.upper())

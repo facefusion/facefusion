@@ -72,6 +72,8 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 
 def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, gradio.Button, gradio.Dropdown]:
+	job_id = job_id if job_id != 'none' else None
+
 	if job_action == 'job-run' and validate_job(job_id):
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__.upper())
 		if job_runner.run_job(job_id, process_step):
