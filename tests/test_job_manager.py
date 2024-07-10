@@ -293,7 +293,7 @@ def test_get_steps() -> None:
 		'output_path': 'output-2.jpg'
 	}
 
-	assert get_steps('job-test-get-steps') == []
+	assert get_steps('job-invalid') == []
 
 	create_job('job-test-get-steps')
 	add_step('job-test-get-steps', args_1)
@@ -319,12 +319,13 @@ def test_set_step_status() -> None:
 		'output_path': 'output-2.jpg'
 	}
 
-	assert set_step_status('job-test-set-step-status', 0, 'completed') is False
+	assert set_step_status('job-invalid', 0, 'completed') is False
 
 	create_job('job-test-set-step-status')
 	add_step('job-test-set-step-status', args_1)
 	add_step('job-test-set-step-status', args_2)
 
+	assert set_step_status('job-test-set-step-status', 99, 'completed') is False
 	assert set_step_status('job-test-set-step-status', 0, 'completed') is True
 	assert set_step_status('job-test-set-step-status', 1, 'failed') is True
 
@@ -349,7 +350,7 @@ def test_set_steps_status() -> None:
 		'output_path': 'output-2.jpg'
 	}
 
-	assert set_steps_status('job-test-set-steps-status', 'queued') is False
+	assert set_steps_status('job-invalid', 'queued') is False
 
 	create_job('job-test-set-steps-status')
 	add_step('job-test-set-steps-status', args_1)
