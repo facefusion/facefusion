@@ -1,5 +1,5 @@
 from time import sleep
-from typing import Any, Dict, Optional
+from typing import Optional
 
 import cv2
 import gradio
@@ -26,12 +26,12 @@ def render() -> None:
 	global PREVIEW_IMAGE
 	global PREVIEW_FRAME_SLIDER
 
-	preview_image_args : Dict[str, Any] =\
+	preview_image_args =\
 	{
 		'label': wording.get('uis.preview_image'),
 		'interactive': False
 	}
-	preview_frame_slider_args : Dict[str, Any] =\
+	preview_frame_slider_args =\
 	{
 		'label': wording.get('uis.preview_frame_slider'),
 		'step': 1,

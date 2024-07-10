@@ -3,9 +3,7 @@ import signal
 import sys
 import warnings
 from argparse import ArgumentParser, HelpFormatter
-from datetime import datetime
 from time import sleep, time
-from typing import Tuple
 
 import numpy
 import onnxruntime
@@ -15,7 +13,6 @@ import facefusion.processors.frame
 from facefusion import config, content_analyser, face_analyser, face_masker, logger, metadata, process_manager, state_manager, voice_extractor, wording
 from facefusion.common_helper import create_metavar, flush_argv, get_first
 from facefusion.content_analyser import analyse_image, analyse_video
-from facefusion.date_helper import describe_time_ago
 from facefusion.download import conditional_download
 from facefusion.execution import get_execution_provider_choices
 from facefusion.exit_helper import conditional_exit, graceful_exit, hard_exit
@@ -25,13 +22,14 @@ from facefusion.face_store import append_reference_face, get_reference_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
 from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_relative_path
 from facefusion.jobs import job_helper, job_manager, job_runner, job_store
+from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
 from facefusion.normalizer import normalize_fps, normalize_padding
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules, load_frame_processor_module
 from facefusion.program_helper import import_state, reduce_args, suggest_face_detector_choices, update_args, validate_args
 from facefusion.statistics import conditional_log_statistics
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
-from facefusion.typing import Args, ErrorCode, JobStatus, TableContents, TableHeaders
+from facefusion.typing import Args, ErrorCode
 from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, get_video_frame, pack_resolution, read_image, read_static_images, restrict_image_resolution, restrict_video_fps, restrict_video_resolution, unpack_resolution
 
 onnxruntime.set_default_logger_severity(3)
@@ -137,6 +135,7 @@ def create_program() -> ArgumentParser:
 	group_uis = program.add_argument_group('uis')
 	group_uis.add_argument('--open-browser', help = wording.get('help.open_browser'), action = 'store_true', default = config.get_bool_value('uis.open_browser'))
 	group_uis.add_argument('--ui-layouts', help = wording.get('help.ui_layouts').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layouts', 'default'), nargs = '+')
+	group_uis.add_argument('--ui-workflow', help = wording.get('help.ui_workflow'), default = config.get_str_value('uis.ui_workflow', 'instant_runner'), choices = facefusion.choices.ui_workflows)
 	# job manager
 	group_job_manager = program.add_argument_group('job manager')
 	group_job_manager.add_argument('--job-create', help = wording.get('help.job_create'), metavar = 'JOB_ID')
@@ -240,6 +239,7 @@ def apply_args(program : ArgumentParser) -> None:
 	# uis
 	state_manager.init_item('open_browser', args.open_browser)
 	state_manager.init_item('ui_layouts', args.ui_layouts)
+	state_manager.init_item('ui_workflow', args.ui_workflow)
 
 
 def run(program : ArgumentParser) -> None:
@@ -347,31 +347,8 @@ def force_download() -> None:
 	conditional_download(download_directory_path, model_urls)
 
 
-def compose_job_list(job_status : JobStatus) -> Tuple[TableHeaders, TableContents]:
-	jobs = job_manager.find_jobs(job_status)
-	job_headers : TableHeaders = [ 'job id', 'steps', 'date created', 'date updated', 'job status' ]
-	job_contents : TableContents = []
-
-	for index, job_id in enumerate(jobs):
-		job = jobs[job_id]
-		step_total = job_manager.count_step_total(job_id)
-		date_created = datetime.fromisoformat(job.get('date_created'))
-		date_updated = datetime.fromisoformat(job.get('date_updated'))
-		job_contents.append(
-		[
-			job_id,
-			step_total,
-			describe_time_ago(date_created),
-			describe_time_ago(date_updated),
-			job_status
-		])
-	return job_headers, job_contents
-
-
 def route_job_manager(program : ArgumentParser) -> ErrorCode:
 	args = program.parse_args()
-	step_program = reduce_args(program, job_store.get_step_keys())
-	step_args = vars(step_program.parse_args())
 
 	if args.job_create:
 		if job_manager.create_job(args.job_create):
@@ -411,6 +388,8 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 			return 0
 		return 1
 	if args.job_add_step:
+		step_args = extract_step_args(program)
+
 		if job_manager.add_step(args.job_add_step, step_args):
 			logger.info(wording.get('job_step_added').format(job_id = args.job_add_step), __name__.upper())
 			return 0
@@ -419,6 +398,7 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 	if args.job_remix_step:
 		job_id, step_index = args.job_remix_step
 		step_index = int(step_index)
+		step_args = extract_step_args(program)
 
 		if job_manager.remix_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_remix_step_added').format(job_id = job_id, step_index = step_index), __name__.upper())
@@ -428,6 +408,7 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 	if args.job_insert_step:
 		job_id, step_index = args.job_insert_step
 		step_index = int(step_index)
+		step_args = extract_step_args(program)
 
 		if job_manager.insert_step(job_id, step_index, step_args):
 			logger.info(wording.get('job_step_inserted').format(job_id = job_id, step_index = step_index), __name__.upper())
@@ -495,12 +476,17 @@ def process_step(step_args : Args) -> bool:
 
 def process_headless(program : ArgumentParser) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('headless')
-	step_program = reduce_args(program, job_store.get_step_keys())
-	step_args = vars(step_program.parse_args())
+	step_args = extract_step_args(program)
 
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0
 	return 1
+
+
+def extract_step_args(program : ArgumentParser) -> Args:
+	step_program = reduce_args(program, job_store.get_step_keys())
+	step_args = vars(step_program.parse_args())
+	return step_args
 
 
 def process_image(start_time : float) -> ErrorCode:

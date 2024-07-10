@@ -139,6 +139,8 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'utilization' : ExecutionDeviceUtilization
 })
 
+UiWorkflow = Literal['instant_runner', 'job_runner', 'job_manager']
+
 JobStore = TypedDict('JobStore',
 {
 	'job_keys' : List[str],
@@ -211,7 +213,8 @@ StateKey = Literal\
 	'skip_audio',
 	'frame_processors',
 	'open_browser',
-	'ui_layouts'
+	'ui_layouts',
+	'ui_workflow'
 ]
 State = TypedDict('State',
 {
@@ -262,6 +265,7 @@ State = TypedDict('State',
 	'skip_audio' : bool,
 	'frame_processors' : List[str],
 	'open_browser' : bool,
-	'ui_layouts' : List[str]
+	'ui_layouts' : List[str],
+	'ui_workflow' : UiWorkflow
 })
 StateSet = Dict[StateContext, State]

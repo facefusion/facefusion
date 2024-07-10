@@ -53,5 +53,9 @@ def get_first(__list__ : Any) -> Any:
 	return next(iter(__list__), None)
 
 
+def get_last(__list__ : Any) -> Any:
+	return next(reversed(__list__), None)
+
+
 def flush_argv() -> None:
 	sys.argv = sys.argv[:1]

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 from gradio_rangeslider import RangeSlider
 
@@ -14,7 +14,7 @@ TRIM_FRAME_RANGE_SLIDER : Optional[RangeSlider] = None
 def render() -> None:
 	global TRIM_FRAME_RANGE_SLIDER
 
-	trim_frame_range_slider_args : Dict[str, Any] =\
+	trim_frame_range_slider_args =\
 	{
 		'label': wording.get('uis.trim_frame_slider'),
 		'minimum': 0,

@@ -6,9 +6,9 @@ from facefusion.typing import JobOutputSet, JobStep, ProcessStep
 
 
 def run_job(job_id : str, process_step : ProcessStep) -> bool:
-	job_queued_ids = find_job_ids('queued')
+	queued_job_ids = find_job_ids('queued')
 
-	if job_id in job_queued_ids:
+	if job_id in queued_job_ids:
 		if run_steps(job_id, process_step) and finalize_steps(job_id):
 			clean_steps(job_id)
 			return move_job_file(job_id, 'completed')
@@ -18,30 +18,30 @@ def run_job(job_id : str, process_step : ProcessStep) -> bool:
 
 
 def run_jobs(process_step : ProcessStep) -> bool:
-	job_queued_ids = find_job_ids('queued')
+	queued_job_ids = find_job_ids('queued')
 
-	if job_queued_ids:
-		for job_queued_id in job_queued_ids:
-			if not run_job(job_queued_id, process_step):
+	if queued_job_ids:
+		for job_id in queued_job_ids:
+			if not run_job(job_id, process_step):
 				return False
 		return True
 	return False
 
 
 def retry_job(job_id : str, process_step : ProcessStep) -> bool:
-	job_failed_ids = find_job_ids('failed')
+	failed_job_ids = find_job_ids('failed')
 
-	if job_id in job_failed_ids:
+	if job_id in failed_job_ids:
 		return set_steps_status(job_id, 'queued') and move_job_file(job_id, 'queued') and run_job(job_id, process_step)
 	return False
 
 
 def retry_jobs(process_step : ProcessStep) -> bool:
-	job_failed_ids = find_job_ids('failed')
+	failed_job_ids = find_job_ids('failed')
 
-	if job_failed_ids:
-		for job_queued_id in job_failed_ids:
-			if not retry_job(job_queued_id, process_step):
+	if failed_job_ids:
+		for job_id in failed_job_ids:
+			if not retry_job(job_id, process_step):
 				return False
 		return True
 	return False

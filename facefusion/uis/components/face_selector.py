@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import gradio
 
@@ -28,7 +28,7 @@ def render() -> None:
 	global REFERENCE_FACE_POSITION_GALLERY
 	global REFERENCE_FACE_DISTANCE_SLIDER
 
-	reference_face_gallery_args : Dict[str, Any] =\
+	reference_face_gallery_args =\
 	{
 		'label': wording.get('uis.reference_face_gallery'),
 		'object_fit': 'cover',

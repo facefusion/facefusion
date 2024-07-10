@@ -1,9 +1,10 @@
 from typing import List
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceMaskRegion, FaceMaskType, FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, JobStatus, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Score, TempFrameFormat, VideoMemoryStrategy
+from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceMaskRegion, FaceMaskType, FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, JobStatus, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
+
 face_detector_set : FaceDetectorSet =\
 {
 	'many': [ '640x640' ],
@@ -35,6 +36,8 @@ execution_provider_set : ExecutionProviderSet =\
 	'rocm': 'ROCMExecutionProvider',
 	'tensorrt': 'TensorrtExecutionProvider'
 }
+
+ui_workflows : List[UiWorkflow] = [ 'instant_runner', 'job_runner', 'job_manager' ]
 
 job_statuses : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 

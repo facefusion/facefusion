@@ -156,6 +156,7 @@ WORDING : Dict[str, Any] =\
 		# uis
 		'open_browser': 'open the browser once the program is ready',
 		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)',
+		'ui_workflow': 'choose the ui workflow',
 		# job manager
 		'job_create': 'create a drafted job',
 		'job_submit': 'submit a drafted job to become a queued job',
@@ -176,6 +177,8 @@ WORDING : Dict[str, Any] =\
 	'uis':
 	{
 		# general
+		'apply_button': 'APPLY',
+		'refresh_button': 'REFRESH',
 		'start_button': 'START',
 		'stop_button': 'STOP',
 		'clear_button': 'CLEAR',
@@ -194,6 +197,16 @@ WORDING : Dict[str, Any] =\
 		'execution_queue_count_slider': 'EXECUTION QUEUE COUNT',
 		# execution thread count
 		'execution_thread_count_slider': 'EXECUTION THREAD COUNT',
+		# job manager
+		'job_manager_job_action_dropdown': 'JOB_ACTION',
+		'job_manager_job_id_dropdown': 'JOB ID',
+		'job_manager_step_index_dropdown': 'STEP INDEX',
+		# job runner
+		'job_runner_job_action_dropdown': 'JOB ACTION',
+		'job_runner_job_id_dropdown': 'JOB ID',
+		# job list
+		'job_list_dataframe': 'JOB LIST',
+		'job_list_status_checkbox_group': 'JOB STATUS',
 		# face analyser
 		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',
 		'face_detector_size_dropdown': 'FACE DETECTOR SIZE',
@@ -257,6 +270,8 @@ WORDING : Dict[str, Any] =\
 		'temp_frame_format_dropdown': 'TEMP FRAME FORMAT',
 		# trim frame
 		'trim_frame_slider': 'TRIM FRAME',
+		# ui workflow
+		'ui_workflow': 'UI WORKFLOW',
 		# webcam
 		'webcam_image': 'WEBCAM',
 		# webcam options
