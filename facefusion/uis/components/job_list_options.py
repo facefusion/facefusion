@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import gradio
 
@@ -7,8 +7,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.jobs import job_manager
 from facefusion.typing import JobStatus
-from facefusion.uis.components.job_list import update_job_dataframe
-from facefusion.uis.core import get_ui_component, register_ui_component
+from facefusion.uis.core import register_ui_component
 
 JOB_LIST_JOB_STATUS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 
@@ -28,10 +27,9 @@ def render() -> None:
 
 
 def listen() -> None:
-	job_list_job_dataframe = get_ui_component('job_list_job_dataframe')
-	JOB_LIST_JOB_STATUS_CHECKBOX_GROUP.change(update_job_status_checkbox_group, inputs = JOB_LIST_JOB_STATUS_CHECKBOX_GROUP, outputs = [ JOB_LIST_JOB_STATUS_CHECKBOX_GROUP, job_list_job_dataframe ])
+	JOB_LIST_JOB_STATUS_CHECKBOX_GROUP.change(update_job_status_checkbox_group, inputs = JOB_LIST_JOB_STATUS_CHECKBOX_GROUP, outputs = JOB_LIST_JOB_STATUS_CHECKBOX_GROUP)
 
 
-def update_job_status_checkbox_group(job_statuses : List[JobStatus]) -> Tuple[gradio.CheckboxGroup, gradio.Dataframe]:
+def update_job_status_checkbox_group(job_statuses : List[JobStatus]) -> gradio.CheckboxGroup:
 	job_statuses = job_statuses or facefusion.choices.job_statuses
-	return gradio.CheckboxGroup(value = job_statuses), update_job_dataframe(job_statuses)
+	return gradio.CheckboxGroup(value = job_statuses)
