@@ -7,7 +7,6 @@ from facefusion import logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.core import process_step
 from facefusion.jobs import job_manager, job_runner
-from facefusion.jobs.job_manager import validate_job
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import JobRunnerAction
@@ -75,7 +74,7 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, gradio.Button, gradio.Dropdown]:
 	job_id = convert_str_none(job_id)
 
-	if job_action == 'job-run' and validate_job(job_id):
+	if job_action == 'job-run':
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__.upper())
 		if job_runner.run_job(job_id, process_step):
 			logger.info(wording.get('processing_job_succeed').format(job_id = job_id), __name__.upper())
@@ -89,7 +88,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 			logger.info(wording.get('processing_jobs_succeed'), __name__.upper())
 		else:
 			logger.info(wording.get('processing_jobs_failed'), __name__.upper())
-	if job_action == 'job-retry' and validate_job(job_id):
+	if job_action == 'job-retry':
 		logger.info(wording.get('retrying_job').format(job_id = job_id), __name__.upper())
 		if job_runner.retry_job(job_id, process_step):
 			logger.info(wording.get('processing_job_succeed').format(job_id = job_id), __name__.upper())

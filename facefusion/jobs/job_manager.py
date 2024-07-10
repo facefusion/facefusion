@@ -97,10 +97,8 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 
 def validate_job(job_id : str) -> bool:
 	job = read_job_file(job_id)
-	has_keys = all(key in job for key in [ 'version', 'date_created', 'date_updated', 'steps' ])
-	step_total = count_step_total(job_id)
 
-	return has_keys and step_total > 0
+	return job and 'version' in job and 'date_created' in job and 'date_updated' in job and 'steps' in job
 
 
 def add_step(job_id : str, step_args : Args) -> bool:

@@ -12,18 +12,19 @@ def compose_job_list(job_status : JobStatus) -> Tuple[TableHeaders, TableContent
 	job_contents : TableContents = []
 
 	for index, job_id in enumerate(jobs):
-		job = jobs[job_id]
-		step_total = job_manager.count_step_total(job_id)
-		date_created = prepare_describe_datetime(job.get('date_created'))
-		date_updated = prepare_describe_datetime(job.get('date_updated'))
-		job_contents.append(
-		[
-			job_id,
-			step_total,
-			date_created,
-			date_updated,
-			job_status
-		])
+		if job_manager.validate_job(job_id):
+			job = jobs[job_id]
+			step_total = job_manager.count_step_total(job_id)
+			date_created = prepare_describe_datetime(job.get('date_created'))
+			date_updated = prepare_describe_datetime(job.get('date_updated'))
+			job_contents.append(
+			[
+				job_id,
+				step_total,
+				date_created,
+				date_updated,
+				job_status
+			])
 	return job_headers, job_contents
 
 
