@@ -38,8 +38,8 @@ execution_provider_set : ExecutionProviderSet =\
 
 job_statuses : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 
-execution_thread_count_range : List[int] = create_int_range(1, 128, 1)
-execution_queue_count_range : List[int] = create_int_range(1, 32, 1)
+execution_thread_count_range : List[int] = create_int_range(1, 32, 1)
+execution_queue_count_range : List[int] = create_int_range(1, 4, 1)
 system_memory_limit_range : List[int] = create_int_range(0, 128, 4)
 face_detector_angles : List[Angle] = create_int_range(0, 270, 90)
 face_detector_score_range : List[Score] = create_float_range(0.0, 1.0, 0.05)
