@@ -119,7 +119,7 @@ def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	steps = get_steps(job_id)
 	step_args = copy(step_args)
 
-	if step_index < 0:
+	if step_index and step_index < 0:
 		step_index = count_step_total(job_id) - 1
 
 	for index, step in enumerate(steps):
@@ -139,7 +139,7 @@ def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 		'status': 'drafted'
 	}
 
-	if step_index < 0:
+	if step_index and step_index < 0:
 		step_index = count_step_total(job_id)
 
 	if job:
@@ -151,7 +151,7 @@ def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 def remove_step(job_id : str, step_index : int) -> bool:
 	job = read_job_file(job_id)
 
-	if step_index < 0:
+	if step_index and step_index < 0:
 		step_index = count_step_total(job_id) - 1
 
 	if job:
