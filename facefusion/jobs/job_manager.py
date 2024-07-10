@@ -1,13 +1,13 @@
 import glob
-import json
 import os
 from copy import copy
 from typing import List, Optional
 
 from facefusion.choices import job_statuses
 from facefusion.date_helper import get_current_date_time
-from facefusion.filesystem import create_directory, is_directory, is_file, move_file, remove_directory, remove_file
+from facefusion.filesystem import create_directory, is_directory, move_file, remove_directory, remove_file
 from facefusion.jobs.job_helper import get_step_output_path
+from facefusion.json import is_json, read_json, write_json
 from facefusion.temp_helper import create_base_directory
 from facefusion.typing import Args, Job, JobSet, JobStatus, JobStep, JobStepStatus
 
@@ -96,7 +96,8 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 
 
 def validate_job(job_id : str) -> bool:
-	return count_step_total(job_id) > 0
+	job = read_job_file(job_id)
+	return 'version' in job and 'date_created' in job and 'date_updated' in job and 'steps' in job and count_step_total(job_id) > 0
 
 
 def add_step(job_id : str, step_args : Args) -> bool:
@@ -199,32 +200,26 @@ def set_steps_status(job_id : str, step_status : JobStepStatus) -> bool:
 
 def read_job_file(job_id : str) -> Optional[Job]:
 	job_path = find_job_path(job_id)
-
-	if is_file(job_path):
-		with open(job_path, 'r') as job_file:
-			return json.load(job_file)
+	if is_json(job_path):
+		return read_json(job_path) #type:ignore[return-value]
 	return None
 
 
 def create_job_file(job_id : str, job : Job) -> bool:
 	job_path = find_job_path(job_id)
 
-	if not is_file(job_path):
+	if not is_json(job_path):
 		job_create_path = suggest_job_path(job_id, 'drafted')
-		with open(job_create_path, 'w') as job_file:
-			json.dump(job, job_file, indent = 4)
-		return is_file(job_create_path)
+		return write_json(job_create_path, job) #type:ignore[arg-type]
 	return False
 
 
 def update_job_file(job_id : str, job : Job) -> bool:
 	job_path = find_job_path(job_id)
 
-	if is_file(job_path):
-		with open(job_path, 'w') as job_file:
-			job['date_updated'] = get_current_date_time().isoformat()
-			json.dump(job, job_file, indent = 4)
-		return is_file(job_path)
+	if is_json(job_path):
+		job['date_updated'] = get_current_date_time().isoformat()
+		return write_json(job_path, job) #type:ignore[arg-type]
 	return False
 
 

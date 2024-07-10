@@ -70,6 +70,8 @@ ProcessFrames = Callable[[List[str], List[QueuePayload], UpdateProgress], None]
 ProcessStep = Callable[[Dict[str, Any]], bool]
 Args = Dict[str, Any]
 
+Content = Dict[Any, Any]
+
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512']
 WarpTemplateSet = Dict[WarpTemplate, NDArray[Any]]
 ProcessMode = Literal['output', 'preview', 'stream']
