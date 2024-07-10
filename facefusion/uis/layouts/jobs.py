@@ -1,7 +1,7 @@
 import gradio
 
 from facefusion import state_manager
-from facefusion.uis.components import about, job_list, job_runner
+from facefusion.uis.components import about, job_list, job_list_options, job_runner
 
 
 def pre_check() -> bool:
@@ -20,6 +20,8 @@ def render() -> gradio.Blocks:
 					about.render()
 				with gradio.Blocks():
 					job_runner.render()
+				with gradio.Blocks():
+					job_list_options.render()
 			with gradio.Column(scale = 5):
 				with gradio.Blocks():
 					job_list.render()
@@ -29,6 +31,7 @@ def render() -> gradio.Blocks:
 def listen() -> None:
 	job_runner.listen()
 	job_list.listen()
+	job_list_options.listen()
 
 
 def run(ui : gradio.Blocks) -> None:
