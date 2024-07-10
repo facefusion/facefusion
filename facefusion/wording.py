@@ -71,7 +71,7 @@ WORDING : Dict[str, Any] =\
 	'processing_jobs_succeed': 'Processing of all job succeed',
 	'processing_job_failed': 'Processing of job {job_id} failed',
 	'processing_jobs_failed': 'Processing of all jobs failed',
-	'time_ago_now': 'Just now',
+	'time_ago_now': 'just now',
 	'time_ago_minutes': '{minutes} minutes ago',
 	'time_ago_hours': '{hours} hours and {minutes} minutes ago',
 	'time_ago_days': '{days} days, {hours} hours and {minutes} minutes ago',

@@ -11,6 +11,7 @@ from facefusion.jobs.job_manager import validate_job
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import JobRunnerAction
+from facefusion.uis.ui_helper import convert_str_none
 
 JOB_RUNNER_GROUP : Optional[gradio.Group] = None
 JOB_RUNNER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -72,7 +73,7 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 
 def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, gradio.Button, gradio.Dropdown]:
-	job_id = job_id if job_id != 'none' else None
+	job_id = convert_str_none(job_id)
 
 	if job_action == 'job-run' and validate_job(job_id):
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__.upper())

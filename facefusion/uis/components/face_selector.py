@@ -10,6 +10,7 @@ from facefusion.face_store import clear_reference_faces, clear_static_faces
 from facefusion.filesystem import is_image, is_video
 from facefusion.typing import FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
+from facefusion.uis.ui_helper import convert_str_none
 from facefusion.vision import get_video_frame, normalize_frame_color, read_static_image
 
 FACE_SELECTOR_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -129,20 +130,17 @@ def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gr
 
 
 def update_face_selector_order(face_analyser_order : FaceSelectorOrder) -> gradio.Gallery:
-	face_selector_order = face_analyser_order if face_analyser_order != 'none' else None
-	state_manager.set_item('face_selector_order', face_selector_order)
+	state_manager.set_item('face_selector_order', convert_str_none(face_analyser_order))
 	return update_reference_position_gallery()
 
 
 def update_face_selector_age(face_selector_age : FaceSelectorAge) -> gradio.Gallery:
-	face_selector_age = face_selector_age if face_selector_age != 'none' else None
-	state_manager.set_item('face_selector_age', face_selector_age)
+	state_manager.set_item('face_selector_age', convert_str_none(face_selector_age))
 	return update_reference_position_gallery()
 
 
 def update_face_selector_gender(face_analyser_gender : FaceSelectorGender) -> gradio.Gallery:
-	face_selector_gender = face_analyser_gender if face_analyser_gender != 'none' else None
-	state_manager.set_item('face_selector_gender', face_selector_gender)
+	state_manager.set_item('face_selector_gender', convert_str_none(face_analyser_gender))
 	return update_reference_position_gallery()
 
 

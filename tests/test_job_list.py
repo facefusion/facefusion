@@ -17,5 +17,5 @@ def test_compose_job_list() -> None:
 	job_headers, job_contents = compose_job_list('drafted')
 
 	assert job_headers == [ 'job id', 'steps', 'date created', 'date updated', 'job status' ]
-	assert job_contents[0] == [ 'job-test-compose-job-list-1', 0, 'Just now', None, 'drafted' ]
-	assert job_contents[1] == [ 'job-test-compose-job-list-2', 0, 'Just now', None, 'drafted' ]
+	assert job_contents[0] == [ 'job-test-compose-job-list-1', 0, 'just now', None, 'drafted' ]
+	assert job_contents[1] == [ 'job-test-compose-job-list-2', 0, 'just now', None, 'drafted' ]

@@ -11,6 +11,7 @@ from facefusion.typing import Args
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import JobManagerAction
+from facefusion.uis.ui_helper import convert_int_none, convert_str_none
 
 JOB_MANAGER_GROUP : Optional[gradio.Group] = None
 JOB_MANAGER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -74,9 +75,9 @@ def listen() -> None:
 
 
 def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id : str, step_index : int) -> Tuple[gradio.Dropdown, gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
-	created_job_id = created_job_id if created_job_id != 'none' else None
-	selected_job_id = selected_job_id if selected_job_id != 'none' else None
-	step_index = step_index if step_index != 'none' else None
+	created_job_id = convert_str_none(created_job_id)
+	selected_job_id = convert_str_none(selected_job_id)
+	step_index = convert_int_none(step_index)
 
 	if job_action == 'job-create':
 		if created_job_id and job_manager.create_job(created_job_id):
