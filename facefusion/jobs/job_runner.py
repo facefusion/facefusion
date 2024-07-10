@@ -52,6 +52,7 @@ def run_step(job_id : str, step_index : int, step : JobStep, process_step : Proc
 	if job_manager.set_step_status(job_id, step_index, 'started') and process_step(step_args):
 		output_path = step_args.get('output_path')
 		step_output_path = job_helper.get_step_output_path(job_id, step_index, output_path)
+
 		return move_file(output_path, step_output_path) and job_manager.set_step_status(job_id, step_index, 'completed')
 	job_manager.set_step_status(job_id, step_index, 'failed')
 	return False
@@ -98,6 +99,7 @@ def collect_output_set(job_id : str) -> JobOutputSet:
 
 	for index, step in enumerate(steps):
 		output_path = step.get('args').get('output_path')
+
 		if output_path:
 			step_output_path = job_manager.get_step_output_path(job_id, index, output_path)
 			output_set.setdefault(output_path, []).append(step_output_path)

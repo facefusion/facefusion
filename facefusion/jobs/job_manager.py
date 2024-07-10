@@ -116,47 +116,51 @@ def add_step(job_id : str, step_args : Args) -> bool:
 
 def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	steps = get_steps(job_id)
+	step_total = count_step_total(job_id)
 	step_args = copy(step_args)
 
 	if step_index and step_index < 0:
 		step_index = count_step_total(job_id) - 1
 
-	for index, step in enumerate(steps):
-		if index == step_index:
-			output_path = steps[step_index].get('args').get('output_path')
-			step_args['target_path'] = get_step_output_path(job_id, step_index, output_path)
-			return add_step(job_id, step_args)
+	if step_index in range(step_total):
+		output_path = steps[step_index].get('args').get('output_path')
+		step_args['target_path'] = get_step_output_path(job_id, step_index, output_path)
+		return add_step(job_id, step_args)
 	return False
 
 
 def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	job = read_job_file(job_id)
-	step_total = count_step_total(job_id)
 	step_args = copy(step_args)
 
 	if step_index and step_index < 0:
 		step_index = count_step_total(job_id)
 
-	if job and step_index <= step_total:
-		job.get('steps').insert(step_index,
-		{
-			'args': step_args,
-			'status': 'drafted'
-		})
-		return update_job_file(job_id, job)
+	if job:
+		step_total = count_step_total(job_id) + 1
+
+		if step_index in range(step_total):
+			job.get('steps').insert(step_index,
+			{
+				'args': step_args,
+				'status': 'drafted'
+			})
+			return update_job_file(job_id, job)
 	return False
 
 
 def remove_step(job_id : str, step_index : int) -> bool:
 	job = read_job_file(job_id)
-	step_total = count_step_total(job_id)
 
 	if step_index and step_index < 0:
 		step_index = count_step_total(job_id) - 1
 
-	if job and step_index <= step_total:
-		job.get('steps').pop(step_index)
-		return update_job_file(job_id, job)
+	if job:
+		step_total = count_step_total(job_id)
+
+		if step_index in range(step_total):
+			job.get('steps').pop(step_index)
+			return update_job_file(job_id, job)
 	return False
 
 
@@ -181,11 +185,11 @@ def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus)
 
 	if job:
 		steps = job.get('steps')
+		step_total = count_step_total(job_id)
 
-		for index, step in enumerate(steps):
-			if index == step_index:
-				steps[index]['status'] = step_status
-				return update_job_file(job_id, job)
+		if step_index in range(step_total):
+			steps[step_index]['status'] = step_status
+			return update_job_file(job_id, job)
 	return False
 
 
