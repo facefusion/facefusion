@@ -1,5 +1,6 @@
 import json
 from typing import Any, Dict, Optional
+
 from facefusion.filesystem import is_file
 
 
