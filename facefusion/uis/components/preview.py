@@ -173,7 +173,7 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	source_face = get_average_face(source_faces)
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()
-	if source_audio_path and state_manager.get_item('output_video_fps')and state_manager.get_item('reference_frame_number'):
+	if source_audio_path and state_manager.get_item('output_video_fps') and state_manager.get_item('reference_frame_number'):
 		reference_audio_frame_number = state_manager.get_item('reference_frame_number')
 		if state_manager.get_item('trim_frame_start'):
 			reference_audio_frame_number -= state_manager.get_item('trim_frame_start')
