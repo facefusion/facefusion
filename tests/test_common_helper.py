@@ -2,7 +2,7 @@ from facefusion.common_helper import create_float_range, create_int_range, creat
 
 
 def test_create_metavar() -> None:
-	assert create_metavar([ 1, 2, 3, 4, 5 ]) == '[1-5]'
+	assert create_metavar([ 1, 2, 3, 4, 5 ]) == '[1..5:1]'
 
 
 def test_create_int_range() -> None:
