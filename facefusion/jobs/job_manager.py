@@ -44,8 +44,9 @@ def create_job(job_id : str) -> bool:
 
 def submit_job(job_id : str) -> bool:
 	drafted_job_ids = find_job_ids('drafted')
+	steps = get_steps(job_id)
 
-	if job_id in drafted_job_ids and validate_job(job_id) and validate_steps(job_id):
+	if job_id in drafted_job_ids and steps:
 		return set_steps_status(job_id, 'queued') and move_job_file(job_id, 'queued')
 	return False
 
@@ -98,11 +99,6 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 def validate_job(job_id : str) -> bool:
 	job = read_job_file(job_id)
 	return job and 'version' in job and 'date_created' in job and 'date_updated' in job and 'steps' in job
-
-
-def validate_steps(job_id : str) -> bool:
-	step_total = count_step_total(job_id)
-	return step_total > 0
 
 
 def add_step(job_id : str, step_args : Args) -> bool:
