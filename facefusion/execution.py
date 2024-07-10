@@ -45,7 +45,7 @@ def apply_execution_provider_options(execution_device_id : str, execution_provid
 		elif execution_provider == 'OpenVINOExecutionProvider':
 			execution_providers_with_options.append((execution_provider,
 			{
-				'device_type': execution_device_id,
+				'device_type': 'GPU.' + execution_device_id,
 				'precision': 'FP32'
 			}))
 		elif execution_provider in [ 'DmlExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider' ]:

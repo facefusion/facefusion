@@ -6,7 +6,7 @@ import numpy
 
 
 def encode_array_to_base64(array : numpy.ndarray[Any, Any]) -> str:
-	buffer = cv2.imencode('.jpg', array[:, :, ::-1])[1]
+	_, buffer = cv2.imencode('.jpg', array[:, :, ::-1])
 	return 'data:image/jpeg;base64,' + base64.b64encode(buffer.tobytes()).decode('utf-8')
 
 
