@@ -40,7 +40,6 @@ ComponentName = Literal\
 	'instant_runner_group',
 	'job_runner_group',
 	'job_manager_group',
-	'job_list_job_dataframe',
 	'job_list_job_status_checkbox_group',
 	'lip_syncer_model_dropdown',
 	'output_image',

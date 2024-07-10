@@ -7,7 +7,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.jobs import job_list, job_manager
 from facefusion.typing import JobStatus
-from facefusion.uis.core import get_ui_component, register_ui_component
+from facefusion.uis.core import get_ui_component
 
 JOB_LIST_JOB_DATAFRAME : Optional[gradio.Dataframe] = None
 JOB_LIST_REFRESH_BUTTON : Optional[gradio.Button] = None
@@ -32,11 +32,11 @@ def render() -> None:
 			variant = 'primary',
 			size = 'sm'
 		)
-		register_ui_component('job_list_job_dataframe', JOB_LIST_JOB_DATAFRAME)
 
 
 def listen() -> None:
 	job_list_job_status_checkbox_group = get_ui_component('job_list_job_status_checkbox_group')
+	job_list_job_status_checkbox_group.change(update_job_dataframe, inputs = job_list_job_status_checkbox_group, outputs = JOB_LIST_JOB_DATAFRAME)
 	JOB_LIST_REFRESH_BUTTON.click(update_job_dataframe, inputs = job_list_job_status_checkbox_group, outputs = JOB_LIST_JOB_DATAFRAME)
 
 
