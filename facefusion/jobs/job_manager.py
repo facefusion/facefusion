@@ -103,14 +103,13 @@ def validate_job(job_id : str) -> bool:
 
 def add_step(job_id : str, step_args : Args) -> bool:
 	job = read_job_file(job_id)
-	step : JobStep =\
-	{
-		'args': step_args,
-		'status': 'drafted'
-	}
 
 	if job:
-		job.get('steps').append(step)
+		job.get('steps').append(
+		{
+			'args': step_args,
+			'status': 'drafted'
+		})
 		return update_job_file(job_id, job)
 	return False
 
@@ -132,29 +131,30 @@ def remix_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	job = read_job_file(job_id)
+	step_total = count_step_total(job_id)
 	step_args = copy(step_args)
-	step : JobStep =\
-	{
-		'args': step_args,
-		'status': 'drafted'
-	}
 
 	if step_index and step_index < 0:
 		step_index = count_step_total(job_id)
 
-	if job:
-		job.get('steps').insert(step_index, step)
+	if job and step_index <= step_total:
+		job.get('steps').insert(step_index,
+		{
+			'args': step_args,
+			'status': 'drafted'
+		})
 		return update_job_file(job_id, job)
 	return False
 
 
 def remove_step(job_id : str, step_index : int) -> bool:
 	job = read_job_file(job_id)
+	step_total = count_step_total(job_id)
 
 	if step_index and step_index < 0:
 		step_index = count_step_total(job_id) - 1
 
-	if job:
+	if job and step_index <= step_total:
 		job.get('steps').pop(step_index)
 		return update_job_file(job_id, job)
 	return False

@@ -36,7 +36,7 @@ def test_submit_job() -> None:
 		'output_path': 'output-1.jpg'
 	}
 
-	assert submit_job('job-test-submit-job') is False
+	assert submit_job('job-invalid') is False
 
 	create_job('job-test-submit-job')
 
@@ -77,7 +77,7 @@ def test_submit_jobs() -> None:
 
 
 def test_delete_job() -> None:
-	assert delete_job('job-test-delete-job') is False
+	assert delete_job('job-invalid') is False
 
 	create_job('job-test-delete-job')
 
@@ -154,7 +154,7 @@ def test_add_step() -> None:
 		'output_path': 'output-2.jpg'
 	}
 
-	assert add_step('job-test-add-step', args_1) is False
+	assert add_step('job-invalid', args_1) is False
 
 	create_job('job-test-add-step')
 
@@ -182,12 +182,13 @@ def test_remix_step() -> None:
 		'output_path': 'output-2.jpg'
 	}
 
-	assert remix_step('job-test-remix-step', 0, args_1) is False
+	assert remix_step('job-invalid', 0, args_1) is False
 
 	create_job('job-test-remix-step')
 	add_step('job-test-remix-step', args_1)
 	add_step('job-test-remix-step', args_2)
 
+	assert remix_step('job-test-remix-step', 99, args_1) is False
 	assert remix_step('job-test-remix-step', 0, args_2) is True
 
 	steps = get_steps('job-test-remix-step')
@@ -220,12 +221,13 @@ def test_insert_step() -> None:
 		'output_path': 'output-3.jpg'
 	}
 
-	assert insert_step('job-test-insert-step', 0, args_1) is False
+	assert insert_step('job-invalid', 0, args_1) is False
 
 	create_job('job-test-insert-step')
 	add_step('job-test-insert-step', args_1)
 	add_step('job-test-insert-step', args_1)
 
+	assert insert_step('job-test-insert-step', 99, args_1) is False
 	assert insert_step('job-test-insert-step', 1, args_2) is True
 	assert insert_step('job-test-insert-step', -1, args_3) is True
 
@@ -258,7 +260,7 @@ def test_remove_step() -> None:
 		'output_path': 'output-3.jpg'
 	}
 
-	assert remove_step('job-test-insert-step', 0) is False
+	assert remove_step('job-invalid', 0) is False
 
 	create_job('job-test-remove-step')
 	add_step('job-test-remove-step', args_1)
@@ -266,6 +268,7 @@ def test_remove_step() -> None:
 	add_step('job-test-remove-step', args_1)
 	add_step('job-test-remove-step', args_3)
 
+	assert remove_step('job-test-remove-step', 99) is False
 	assert remove_step('job-test-remove-step', 1) is True
 	assert remove_step('job-test-remove-step', -1) is True
 

@@ -53,7 +53,7 @@ def test_run_job() -> None:
 		'output_path': get_test_output_file('output-1.jpg')
 	}
 
-	assert run_job('job-test-run-job', process_step) is False
+	assert run_job('job-invalid', process_step) is False
 
 	create_job('job-test-run-job')
 	add_step('job-test-run-job', args_1)
@@ -134,15 +134,15 @@ def test_run_steps() -> None:
 		'output_path': get_test_output_file('output-1.jpg')
 	}
 
-	assert run_steps('job-run-steps', process_step) is False
+	assert run_steps('job-invalid', process_step) is False
 
-	create_job('job-run-steps')
-	add_step('job-run-steps', args_1)
-	add_step('job-run-steps', args_1)
-	add_step('job-run-steps', args_2)
-	add_step('job-run-steps', args_3)
+	create_job('job-test-run-steps')
+	add_step('job-test-run-steps', args_1)
+	add_step('job-test-run-steps', args_1)
+	add_step('job-test-run-steps', args_2)
+	add_step('job-test-run-steps', args_3)
 
-	assert run_steps('job-run-steps', process_step) is True
+	assert run_steps('job-test-run-steps', process_step) is True
 
 
 def test_finalize_steps() -> None:
@@ -165,18 +165,18 @@ def test_finalize_steps() -> None:
 		'output_path': get_test_output_file('output-1.jpg')
 	}
 
-	create_job('job-finalize-steps')
-	add_step('job-finalize-steps', args_1)
-	add_step('job-finalize-steps', args_1)
-	add_step('job-finalize-steps', args_2)
-	add_step('job-finalize-steps', args_3)
+	create_job('job-test-finalize-steps')
+	add_step('job-test-finalize-steps', args_1)
+	add_step('job-test-finalize-steps', args_1)
+	add_step('job-test-finalize-steps', args_2)
+	add_step('job-test-finalize-steps', args_3)
 
-	copy_file(args_1.get('target_path'), get_test_output_file('output-1-job-finalize-steps-0.mp4'))
-	copy_file(args_1.get('target_path'), get_test_output_file('output-1-job-finalize-steps-1.mp4'))
-	copy_file(args_2.get('target_path'), get_test_output_file('output-2-job-finalize-steps-2.mp4'))
-	copy_file(args_3.get('target_path'), get_test_output_file('output-1-job-finalize-steps-3.jpg'))
+	copy_file(args_1.get('target_path'), get_test_output_file('output-1-job-test-finalize-steps-0.mp4'))
+	copy_file(args_1.get('target_path'), get_test_output_file('output-1-job-test-finalize-steps-1.mp4'))
+	copy_file(args_2.get('target_path'), get_test_output_file('output-2-job-test-finalize-steps-2.mp4'))
+	copy_file(args_3.get('target_path'), get_test_output_file('output-1-job-test-finalize-steps-3.jpg'))
 
-	assert finalize_steps('job-finalize-steps') is True
+	assert finalize_steps('job-test-finalize-steps') is True
 	assert is_test_output_file('output-1.mp4') is True
 	assert is_test_output_file('output-2.mp4') is True
 	assert is_test_output_file('output-1.jpg') is True
@@ -202,27 +202,27 @@ def test_collect_output_set() -> None:
 		'output_path': get_test_output_file('output-1.jpg')
 	}
 
-	create_job('job-collect-output-set')
-	add_step('job-collect-output-set', args_1)
-	add_step('job-collect-output-set', args_1)
-	add_step('job-collect-output-set', args_2)
-	add_step('job-collect-output-set', args_3)
+	create_job('job-test-collect-output-set')
+	add_step('job-test-collect-output-set', args_1)
+	add_step('job-test-collect-output-set', args_1)
+	add_step('job-test-collect-output-set', args_2)
+	add_step('job-test-collect-output-set', args_3)
 
 	output_set =\
 	{
 		get_test_output_file('output-1.mp4'):
 		[
-			get_test_output_file('output-1-job-collect-output-set-0.mp4'),
-			get_test_output_file('output-1-job-collect-output-set-1.mp4')
+			get_test_output_file('output-1-job-test-collect-output-set-0.mp4'),
+			get_test_output_file('output-1-job-test-collect-output-set-1.mp4')
 		],
 		get_test_output_file('output-2.mp4'):
 		[
-			get_test_output_file('output-2-job-collect-output-set-2.mp4')
+			get_test_output_file('output-2-job-test-collect-output-set-2.mp4')
 		],
 		get_test_output_file('output-1.jpg'):
 		[
-			get_test_output_file('output-1-job-collect-output-set-3.jpg')
+			get_test_output_file('output-1-job-test-collect-output-set-3.jpg')
 		]
 	}
 
-	assert collect_output_set('job-collect-output-set') == output_set
+	assert collect_output_set('job-test-collect-output-set') == output_set
