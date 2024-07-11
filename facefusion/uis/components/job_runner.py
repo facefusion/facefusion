@@ -80,7 +80,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 			logger.info(wording.get('processing_job_succeed').format(job_id = job_id), __name__.upper())
 		else:
 			logger.info(wording.get('processing_job_failed').format(job_id = job_id), __name__.upper())
-		queued_job_ids = job_manager.find_job_ids('queued') or [ 'none ']
+		queued_job_ids = job_manager.find_job_ids('queued') or [ 'none' ]
 		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Dropdown(value = get_first(queued_job_ids), choices = queued_job_ids)
 	if job_action == 'job-run-all':
 		logger.info(wording.get('running_jobs'), __name__.upper())
@@ -94,7 +94,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 			logger.info(wording.get('processing_job_succeed').format(job_id = job_id), __name__.upper())
 		else:
 			logger.info(wording.get('processing_job_failed').format(job_id = job_id), __name__.upper())
-		failed_job_ids = job_manager.find_job_ids('failed') or [ 'none ']
+		failed_job_ids = job_manager.find_job_ids('failed') or [ 'none' ]
 		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Dropdown(value = get_first(failed_job_ids), choices = failed_job_ids)
 	if job_action == 'job-retry-all':
 		logger.info(wording.get('retrying_jobs'), __name__.upper())
@@ -111,11 +111,11 @@ def stop() -> Tuple[gradio.Button, gradio.Button]:
 
 
 def update_job_action(job_action : JobRunnerAction) -> gradio.Dropdown:
-	queued_job_ids = job_manager.find_job_ids('queued') or [ 'none ']
-	failed_job_ids = job_manager.find_job_ids('failed') or [ 'none ']
+	queued_job_ids = job_manager.find_job_ids('queued') or [ 'none' ]
+	failed_job_ids = job_manager.find_job_ids('failed') or [ 'none' ]
 
 	if job_action == 'job-run':
 		return gradio.Dropdown(value = get_first(queued_job_ids), choices = queued_job_ids, visible = True)
 	if job_action == 'job-retry':
 		return gradio.Dropdown(value = get_first(failed_job_ids), choices = failed_job_ids, visible = True)
-	return gradio.Dropdown(value = 'none', choices = [ 'none '], visible = False)
+	return gradio.Dropdown(value = 'none', choices = [ 'none' ], visible = False)
