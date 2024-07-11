@@ -1,5 +1,3 @@
-import hashlib
-import os
 from time import sleep
 from typing import Optional, Tuple
 
@@ -13,6 +11,7 @@ from facefusion.program_helper import import_state, reduce_args
 from facefusion.temp_helper import clear_temp_directory
 from facefusion.typing import Args
 from facefusion.uis.core import get_ui_component, register_ui_component
+from facefusion.uis.ui_helper import suggest_output_path
 
 INSTANT_RUNNER_GROUP : Optional[gradio.Group] = None
 INSTANT_RUNNER_START_BUTTON : Optional[gradio.Button] = None
@@ -78,14 +77,6 @@ def run() -> Tuple[gradio.Button, gradio.Button, gradio.Image, gradio.Video]:
 	if is_video(step_args.get('output_path')):
 		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None, visible = False), gradio.Video(value = step_args.get('output_path'), visible = True)
 	return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None), gradio.Video(value = None)
-
-
-def suggest_output_path(output_directory_path : str, target_path : str) -> Optional[str]:
-	if is_image(target_path) or is_video(target_path):
-		_, target_extension = os.path.splitext(target_path)
-		output_name = hashlib.sha1(str(state_manager.get_state()).encode('utf-8')).hexdigest()[:8]
-		return os.path.join(output_directory_path, output_name + target_extension)
-	return None
 
 
 def create_and_run_job(step_args : Args) -> bool:

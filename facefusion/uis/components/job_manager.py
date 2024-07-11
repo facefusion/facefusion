@@ -1,5 +1,3 @@
-import hashlib
-import os
 from typing import Optional, Tuple
 
 import gradio
@@ -7,14 +5,14 @@ import gradio
 from facefusion import logger, state_manager, wording
 from facefusion.common_helper import get_first, get_last
 from facefusion.core import create_program
-from facefusion.filesystem import is_directory, is_image, is_video
+from facefusion.filesystem import is_directory
 from facefusion.jobs import job_manager, job_store
 from facefusion.program_helper import import_state, reduce_args
 from facefusion.typing import Args
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import JobManagerAction
-from facefusion.uis.ui_helper import convert_int_none, convert_str_none
+from facefusion.uis.ui_helper import convert_int_none, convert_str_none, suggest_output_path
 
 JOB_MANAGER_GROUP : Optional[gradio.Group] = None
 JOB_MANAGER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -81,35 +79,37 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 	created_job_id = convert_str_none(created_job_id)
 	selected_job_id = convert_str_none(selected_job_id)
 	step_index = convert_int_none(step_index)
+	step_args = get_step_args()
+	output_path = step_args.get('output_path')
 
+	if is_directory(step_args.get('output_path')):
+		step_args['output_path'] = suggest_output_path(step_args.get('output_path'), state_manager.get_item('target_path'))
 	if job_action == 'job-create':
-		if created_job_id and job_manager.create_job(created_job_id):
+		if job_manager.create_job(created_job_id):
 			drafted_job_ids = job_manager.find_job_ids('drafted')
+
 			logger.info(wording.get('job_created').format(job_id = created_job_id), __name__.upper())
 			return gradio.Dropdown(value = 'job-add-step'), gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = created_job_id, choices = drafted_job_ids, visible = True), gradio.Dropdown(value = 'none', choices = [ 'none' ])
 		else:
 			logger.error(wording.get('job_not_created').format(job_id = created_job_id), __name__.upper())
 	if job_action == 'job-submit':
-		if selected_job_id and job_manager.submit_job(selected_job_id):
+		if job_manager.submit_job(selected_job_id):
 			drafted_job_ids = job_manager.find_job_ids('drafted') or ['none ']
+
 			logger.info(wording.get('job_submitted').format(job_id = selected_job_id), __name__.upper())
 			return gradio.Dropdown(), gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = get_first(drafted_job_ids), choices = drafted_job_ids, visible = True), gradio.Dropdown()
 		else:
 			logger.error(wording.get('job_not_submitted').format(job_id = selected_job_id), __name__.upper())
 	if job_action == 'job-delete':
-		if selected_job_id and job_manager.delete_job(selected_job_id):
+		if job_manager.delete_job(selected_job_id):
 			job_ids = job_manager.find_job_ids('drafted') + job_manager.find_job_ids('queued') + job_manager.find_job_ids('failed') + job_manager.find_job_ids('completed')
+
 			logger.info(wording.get('job_deleted').format(job_id = selected_job_id), __name__.upper())
 			return gradio.Dropdown(), gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = get_first(job_ids), choices = job_ids, visible = True), gradio.Dropdown()
 		else:
 			logger.error(wording.get('job_not_deleted').format(job_id = selected_job_id), __name__.upper())
 	if job_action == 'job-add-step':
-		output_path = state_manager.get_item('output_path')
-		temp_output_path = state_manager.get_item('output_path')
-		if is_directory(temp_output_path):
-			temp_output_path = suggest_output_path(temp_output_path, state_manager.get_item('target_path'))
-		state_manager.set_item('output_path', temp_output_path)
-		if selected_job_id and job_manager.add_step(selected_job_id, get_step_args()):
+		if job_manager.add_step(selected_job_id, step_args):
 			state_manager.set_item('output_path', output_path)
 			logger.info(wording.get('job_step_added').format(job_id = selected_job_id), __name__.upper())
 			return gradio.Dropdown(), gradio.Textbox(value = None, visible = False), gradio.Dropdown(visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
@@ -117,15 +117,11 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 			state_manager.set_item('output_path', output_path)
 			logger.error(wording.get('job_step_not_added').format(job_id = selected_job_id), __name__.upper())
 	if job_action == 'job-remix-step':
-		output_path = state_manager.get_item('output_path')
-		temp_output_path = state_manager.get_item('output_path')
-		if is_directory(temp_output_path):
-			temp_output_path = suggest_output_path(temp_output_path, state_manager.get_item('target_path'))
-		state_manager.set_item('output_path', temp_output_path)
-		if job_manager.remix_step(selected_job_id, step_index, get_step_args()):
+		if job_manager.remix_step(selected_job_id, step_index, step_args):
 			drafted_job_ids = job_manager.find_job_ids('drafted') or ['none ']
 			job_id = get_first(drafted_job_ids)
 			step_choices = [ index for index, _ in enumerate(job_manager.get_steps(job_id)) ]
+
 			state_manager.set_item('output_path', output_path)
 			logger.info(wording.get('job_remix_step_added').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 			return gradio.Dropdown(), gradio.Textbox(value = None, visible = False), gradio.Dropdown(visible = True), gradio.Dropdown(value = get_last(step_choices), choices = step_choices, visible = True)
@@ -133,15 +129,11 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 			state_manager.set_item('output_path', output_path)
 			logger.error(wording.get('job_remix_step_not_added').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 	if job_action == 'job-insert-step':
-		output_path = state_manager.get_item('output_path')
-		temp_output_path = state_manager.get_item('output_path')
-		if is_directory(temp_output_path):
-			temp_output_path = suggest_output_path(temp_output_path, state_manager.get_item('target_path'))
-		state_manager.set_item('output_path', temp_output_path)
-		if job_manager.insert_step(selected_job_id, step_index, get_step_args()):
+		if job_manager.insert_step(selected_job_id, step_index, step_args):
 			drafted_job_ids = job_manager.find_job_ids('drafted') or ['none ']
 			job_id = get_first(drafted_job_ids)
 			step_choices = [ index for index, _ in enumerate(job_manager.get_steps(job_id)) ]
+
 			state_manager.set_item('output_path', output_path)
 			logger.info(wording.get('job_step_inserted').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 			return gradio.Dropdown(), gradio.Textbox(value = None, visible = False), gradio.Dropdown(visible = True), gradio.Dropdown(value = get_last(step_choices), choices = step_choices, visible = True)
@@ -153,19 +145,12 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 			drafted_job_ids = job_manager.find_job_ids('drafted') or ['none ']
 			job_id = get_first(drafted_job_ids)
 			step_choices = [ index for index, _ in enumerate(job_manager.get_steps(job_id)) ]
+
 			logger.info(wording.get('job_step_removed').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 			return gradio.Dropdown(), gradio.Textbox(value = None, visible = False), gradio.Dropdown(visible = True), gradio.Dropdown(value = get_last(step_choices), choices = step_choices, visible = True)
 		else:
 			logger.error(wording.get('job_step_not_removed').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 	return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(), gradio.Dropdown()
-
-
-def suggest_output_path(output_directory_path : str, target_path : str) -> Optional[str]:
-	if is_image(target_path) or is_video(target_path):
-		_, target_extension = os.path.splitext(target_path)
-		output_name = hashlib.sha1(str(state_manager.get_state()).encode('utf-8')).hexdigest()[:8]
-		return os.path.join(output_directory_path, output_name + target_extension)
-	return None
 
 
 def get_step_args() -> Args:
@@ -181,17 +166,21 @@ def update(job_action : JobManagerAction) -> Tuple[gradio.Textbox, gradio.Dropdo
 		return gradio.Textbox(value = None, visible = True), gradio.Dropdown(value = None, choices = None, visible = False), gradio.Dropdown(value = None, choices = None, visible = False)
 	if job_action == 'job-submit':
 		drafted_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
+
 		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = get_first(drafted_job_ids), choices = drafted_job_ids, visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
 	if job_action == 'job-delete':
 		job_ids = job_manager.find_job_ids('drafted') + job_manager.find_job_ids('queued') + job_manager.find_job_ids('failed') + job_manager.find_job_ids('completed')
+
 		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = get_first(job_ids), choices = job_ids, visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
 	if job_action == 'job-add-step':
 		drafted_job_ids = job_manager.find_job_ids('drafted')
+
 		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = get_first(drafted_job_ids), choices = drafted_job_ids, visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
 	if job_action in [ 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		drafted_job_ids = job_manager.find_job_ids('drafted')
 		job_id = get_first(drafted_job_ids)
 		step_choices = [ index for index, _ in enumerate(job_manager.get_steps(job_id)) ]
+
 		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = get_first(drafted_job_ids), choices = drafted_job_ids, visible = True), gradio.Dropdown(value = get_last(step_choices), choices = step_choices, visible = True)
 	return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = None, choices = None, visible = False), gradio.Dropdown(value = None, choices = None, visible = False)
 
