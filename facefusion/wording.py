@@ -184,8 +184,6 @@ WORDING : Dict[str, Any] =\
 		'clear_button': 'CLEAR',
 		# about
 		'donate_button': 'DONATE',
-		# benchmark
-		'benchmark_results_dataframe': 'BENCHMARK RESULTS',
 		# benchmark options
 		'benchmark_runs_checkbox_group': 'BENCHMARK RUNS',
 		'benchmark_cycles_slider': 'BENCHMARK CYCLES',
@@ -205,7 +203,6 @@ WORDING : Dict[str, Any] =\
 		'job_runner_job_action_dropdown': 'JOB ACTION',
 		'job_runner_job_id_dropdown': 'JOB ID',
 		# job list
-		'job_list_dataframe': 'JOB LIST',
 		'job_list_status_checkbox_group': 'JOB STATUS',
 		# face analyser
 		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',

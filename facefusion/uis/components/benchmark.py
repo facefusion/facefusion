@@ -2,22 +2,19 @@ import hashlib
 import os
 import statistics
 import tempfile
-from time import perf_counter, sleep
+from time import perf_counter
 from typing import Any, Dict, Generator, List, Optional
 
 import gradio
 
-from facefusion import process_manager, state_manager, wording
+from facefusion import state_manager, wording
 from facefusion.core import conditional_process
-from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import is_video
 from facefusion.memory import limit_system_memory
-from facefusion.processors.frame.core import get_frame_processors_modules
-from facefusion.temp_helper import clear_temp_directory
 from facefusion.uis.core import get_ui_component
 from facefusion.vision import count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution
 
-BENCHMARK_RESULTS_DATAFRAME : Optional[gradio.Dataframe] = None
+BENCHMARK_BENCHMARKS_DATAFRAME : Optional[gradio.Dataframe] = None
 BENCHMARK_START_BUTTON : Optional[gradio.Button] = None
 BENCHMARK_CLEAR_BUTTON : Optional[gradio.Button] = None
 BENCHMARKS : Dict[str, str] =\
@@ -33,12 +30,11 @@ BENCHMARKS : Dict[str, str] =\
 
 
 def render() -> None:
-	global BENCHMARK_RESULTS_DATAFRAME
+	global BENCHMARK_BENCHMARKS_DATAFRAME
 	global BENCHMARK_START_BUTTON
 	global BENCHMARK_CLEAR_BUTTON
 
-	BENCHMARK_RESULTS_DATAFRAME = gradio.Dataframe(
-		label = wording.get('uis.benchmark_results_dataframe'),
+	BENCHMARK_BENCHMARKS_DATAFRAME = gradio.Dataframe(
 		headers =
 		[
 			'target_path',
@@ -56,15 +52,12 @@ def render() -> None:
 			'number',
 			'number',
 			'number'
-		]
+		],
+		show_label = False
 	)
 	BENCHMARK_START_BUTTON = gradio.Button(
 		value = wording.get('uis.start_button'),
 		variant = 'primary',
-		size = 'sm'
-	)
-	BENCHMARK_CLEAR_BUTTON = gradio.Button(
-		value = wording.get('uis.clear_button'),
 		size = 'sm'
 	)
 
@@ -74,8 +67,7 @@ def listen() -> None:
 	benchmark_cycles_slider = get_ui_component('benchmark_cycles_slider')
 
 	if benchmark_runs_checkbox_group and benchmark_cycles_slider:
-		BENCHMARK_START_BUTTON.click(start, inputs = [ benchmark_runs_checkbox_group, benchmark_cycles_slider ], outputs = BENCHMARK_RESULTS_DATAFRAME)
-	BENCHMARK_CLEAR_BUTTON.click(clear, outputs = BENCHMARK_RESULTS_DATAFRAME)
+		BENCHMARK_START_BUTTON.click(start, inputs = [ benchmark_runs_checkbox_group, benchmark_cycles_slider ], outputs = BENCHMARK_BENCHMARKS_DATAFRAME)
 
 
 def suggest_output_path(target_path : str) -> Optional[str]:
@@ -104,18 +96,11 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 			state_manager.init_item('output_path', suggest_output_path(state_manager.get_item('target_path')))
 			benchmark_results.append(benchmark(benchmark_cycles))
 			yield benchmark_results
-		post_process()
 
 
 def pre_process() -> None:
 	if state_manager.get_item('system_memory_limit') > 0:
 		limit_system_memory(state_manager.get_item('system_memory_limit'))
-	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
-		frame_processor_module.get_frame_processor()
-
-
-def post_process() -> None:
-	clear_static_faces()
 
 
 def benchmark(benchmark_cycles : int) -> List[Any]:
@@ -125,6 +110,7 @@ def benchmark(benchmark_cycles : int) -> List[Any]:
 	state_manager.init_item('output_video_resolution', pack_resolution(output_video_resolution))
 	state_manager.init_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
 
+	conditional_process()
 	for index in range(benchmark_cycles):
 		start_time = perf_counter()
 		conditional_process()
@@ -144,11 +130,3 @@ def benchmark(benchmark_cycles : int) -> List[Any]:
 		slowest_run,
 		relative_fps
 	]
-
-
-def clear() -> gradio.Dataframe:
-	while process_manager.is_processing():
-		sleep(0.5)
-	if state_manager.get_item('target_path'):
-		clear_temp_directory(state_manager.get_item('target_path'))
-	return gradio.Dataframe(value = None)
