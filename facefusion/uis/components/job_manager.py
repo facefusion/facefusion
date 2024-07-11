@@ -32,7 +32,7 @@ def render() -> None:
 
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
 		is_job_manager = state_manager.get_item('ui_workflow') == 'job_manager'
-		drafted_job_ids = job_manager.find_job_ids('drafted') or ['none']
+		drafted_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 
 		with gradio.Group(visible = is_job_manager) as JOB_MANAGER_GROUP:
 			with gradio.Blocks():
