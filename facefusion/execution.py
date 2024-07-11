@@ -120,8 +120,8 @@ def create_value_and_unit(text : str) -> ValueAndUnit:
 	value, unit = text.split()
 	value_and_unit : ValueAndUnit =\
 	{
-		'value': value,
-		'unit': unit
+		'value': int(value),
+		'unit': str(unit)
 	}
 
 	return value_and_unit

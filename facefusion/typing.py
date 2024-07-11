@@ -109,7 +109,7 @@ ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvide
 ExecutionProviderSet = Dict[ExecutionProviderKey, ExecutionProviderValue]
 ValueAndUnit = TypedDict('ValueAndUnit',
 {
-	'value' : str,
+	'value' : int,
 	'unit' : str
 })
 ExecutionDeviceFramework = TypedDict('ExecutionDeviceFramework',
