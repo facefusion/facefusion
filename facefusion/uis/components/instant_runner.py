@@ -65,19 +65,18 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 
 def run() -> Tuple[gradio.Button, gradio.Button, gradio.Image, gradio.Video]:
-	output_path = state_manager.get_item('output_path')
-	temp_output_path = state_manager.get_item('output_path')
+	step_args = get_step_args()
+	output_path = step_args.get('output_path')
 
-	if is_directory(temp_output_path):
-		temp_output_path = suggest_output_path(temp_output_path, state_manager.get_item('target_path'))
+	if is_directory(step_args.get('output_path')):
+		step_args['output_path'] = suggest_output_path(step_args.get('output_path'), state_manager.get_item('target_path'))
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
-		state_manager.set_item('output_path', temp_output_path)
-		create_and_run_job()
+		create_and_run_job(step_args)
 		state_manager.set_item('output_path', output_path)
-	if is_image(temp_output_path):
-		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = temp_output_path, visible = True), gradio.Video(value = None, visible = False)
-	if is_video(temp_output_path):
-		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None, visible = False), gradio.Video(value = temp_output_path, visible = True)
+	if is_image(step_args.get('output_path')):
+		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = step_args.get('output_path'), visible = True), gradio.Video(value = None, visible = False)
+	if is_video(step_args.get('output_path')):
+		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None, visible = False), gradio.Video(value = step_args.get('output_path'), visible = True)
 	return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None), gradio.Video(value = None)
 
 
@@ -89,9 +88,8 @@ def suggest_output_path(output_directory_path : str, target_path : str) -> Optio
 	return None
 
 
-def create_and_run_job() -> bool:
+def create_and_run_job(step_args : Args) -> bool:
 	job_id = job_helper.suggest_job_id('ui')
-	step_args = get_step_args()
 
 	return job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step)
 
