@@ -205,7 +205,6 @@ def set_steps_status(job_id : str, step_status : JobStepStatus) -> bool:
 
 def read_job_file(job_id : str) -> Optional[Job]:
 	job_path = find_job_path(job_id)
-
 	return read_json(job_path) #type:ignore[return-value]
 
 
@@ -239,17 +238,27 @@ def delete_job_file(job_id : str) -> bool:
 
 
 def suggest_job_path(job_id : str, job_status : JobStatus) -> Optional[str]:
-	job_file_name = job_id + '.json'
-	return os.path.join(JOBS_PATH, job_status, job_file_name)
+	job_file_name = get_job_file_name(job_id)
+
+	if job_file_name:
+		return os.path.join(JOBS_PATH, job_status, job_file_name)
+	return None
 
 
 def find_job_path(job_id : str) -> Optional[str]:
-	job_file_name = job_id + '.json'
+	job_file_name = get_job_file_name(job_id)
 
-	for job_status in job_statuses:
-		job_pattern = os.path.join(JOBS_PATH, job_status, job_file_name)
-		job_files = glob.glob(job_pattern)
+	if job_file_name:
+		for job_status in job_statuses:
+			job_pattern = os.path.join(JOBS_PATH, job_status, job_file_name)
+			job_paths = glob.glob(job_pattern)
 
-		for job_file in job_files:
-			return job_file
+			for job_path in job_paths:
+				return job_path
+	return None
+
+
+def get_job_file_name(job_id : str) -> Optional[str]:
+	if job_id:
+		return job_id + '.json'
 	return None
