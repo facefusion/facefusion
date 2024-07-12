@@ -12,7 +12,7 @@ from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import JobRunnerAction
 from facefusion.uis.ui_helper import convert_str_none
 
-JOB_RUNNER_GROUP : Optional[gradio.Group] = None
+JOB_RUNNER_WRAPPER : Optional[gradio.Column] = None
 JOB_RUNNER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_RUNNER_JOB_ID_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_RUNNER_START_BUTTON : Optional[gradio.Button] = None
@@ -20,7 +20,7 @@ JOB_RUNNER_STOP_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
-	global JOB_RUNNER_GROUP
+	global JOB_RUNNER_WRAPPER
 	global JOB_RUNNER_JOB_ACTION_DROPDOWN
 	global JOB_RUNNER_JOB_ID_DROPDOWN
 	global JOB_RUNNER_START_BUTTON
@@ -30,32 +30,30 @@ def render() -> None:
 		is_job_runner = state_manager.get_item('ui_workflow') == 'job_runner'
 		queued_job_ids = job_manager.find_job_ids('queued') or [ 'none' ]
 
-		with gradio.Group(visible = is_job_runner) as JOB_RUNNER_GROUP:
-			with gradio.Blocks():
-				JOB_RUNNER_JOB_ACTION_DROPDOWN = gradio.Dropdown(
-					label = wording.get('uis.job_runner_job_action_dropdown'),
-					choices = uis_choices.job_runner_actions,
-					value = get_first(uis_choices.job_runner_actions)
+		with gradio.Column(visible = is_job_runner) as JOB_RUNNER_WRAPPER:
+			JOB_RUNNER_JOB_ACTION_DROPDOWN = gradio.Dropdown(
+				label = wording.get('uis.job_runner_job_action_dropdown'),
+				choices = uis_choices.job_runner_actions,
+				value = get_first(uis_choices.job_runner_actions)
+			)
+			JOB_RUNNER_JOB_ID_DROPDOWN = gradio.Dropdown(
+				label = wording.get('uis.job_runner_job_id_dropdown'),
+				choices = queued_job_ids,
+				value = get_first(queued_job_ids)
+			)
+			with gradio.Row():
+				JOB_RUNNER_START_BUTTON = gradio.Button(
+					value = wording.get('uis.start_button'),
+					variant = 'primary',
+					size = 'sm'
 				)
-				JOB_RUNNER_JOB_ID_DROPDOWN = gradio.Dropdown(
-					label = wording.get('uis.job_runner_job_id_dropdown'),
-					choices = queued_job_ids,
-					value = get_first(queued_job_ids)
+				JOB_RUNNER_STOP_BUTTON = gradio.Button(
+					value = wording.get('uis.stop_button'),
+					variant = 'primary',
+					size = 'sm',
+					visible = False
 				)
-			with gradio.Blocks():
-				with gradio.Row():
-					JOB_RUNNER_START_BUTTON = gradio.Button(
-						value = wording.get('uis.start_button'),
-						variant = 'primary',
-						size = 'sm'
-					)
-					JOB_RUNNER_STOP_BUTTON = gradio.Button(
-						value = wording.get('uis.stop_button'),
-						variant = 'primary',
-						size = 'sm',
-						visible = False
-					)
-		register_ui_component('job_runner_group', JOB_RUNNER_GROUP)
+		register_ui_component('job_runner_wrapper', JOB_RUNNER_WRAPPER)
 
 
 def listen() -> None:

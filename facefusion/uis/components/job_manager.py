@@ -14,7 +14,7 @@ from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import JobManagerAction
 from facefusion.uis.ui_helper import convert_int_none, convert_str_none, suggest_output_path
 
-JOB_MANAGER_GROUP : Optional[gradio.Group] = None
+JOB_MANAGER_WRAPPER : Optional[gradio.Row] = None
 JOB_MANAGER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_MANAGER_JOB_ID_TEXTBOX : Optional[gradio.Textbox] = None
 JOB_MANAGER_JOB_ID_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -23,7 +23,7 @@ JOB_MANAGER_APPLY_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
-	global JOB_MANAGER_GROUP
+	global JOB_MANAGER_WRAPPER
 	global JOB_MANAGER_JOB_ACTION_DROPDOWN
 	global JOB_MANAGER_JOB_ID_TEXTBOX
 	global JOB_MANAGER_JOB_ID_DROPDOWN
@@ -34,39 +34,37 @@ def render() -> None:
 		is_job_manager = state_manager.get_item('ui_workflow') == 'job_manager'
 		drafted_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 
-		with gradio.Group(visible = is_job_manager) as JOB_MANAGER_GROUP:
-			with gradio.Blocks():
-				JOB_MANAGER_JOB_ACTION_DROPDOWN = gradio.Dropdown(
-					label = wording.get('uis.job_manager_job_action_dropdown'),
-					choices = uis_choices.job_manager_actions,
-					value = get_first(uis_choices.job_manager_actions)
-				)
-				JOB_MANAGER_JOB_ID_TEXTBOX = gradio.Textbox(
-					label = wording.get('uis.job_manager_job_id_dropdown'),
-					max_lines = 1,
-					interactive = True
-				)
-				JOB_MANAGER_JOB_ID_DROPDOWN = gradio.Dropdown(
-					label = wording.get('uis.job_manager_job_id_dropdown'),
-					choices = drafted_job_ids,
-					value = get_first(drafted_job_ids),
-					interactive = True,
-					visible = False
-				)
-				JOB_MANAGER_STEP_INDEX_DROPDOWN = gradio.Dropdown(
-					label = wording.get('uis.job_manager_step_index_dropdown'),
-					choices = [ 'none' ],
-					value = 'none',
-					interactive = True,
-					visible = False
-				)
-			with gradio.Blocks():
-				JOB_MANAGER_APPLY_BUTTON = gradio.Button(
-					value = wording.get('uis.apply_button'),
-					variant = 'primary',
-					size = 'sm'
-				)
-		register_ui_component('job_manager_group', JOB_MANAGER_GROUP)
+		with gradio.Column(visible = is_job_manager) as JOB_MANAGER_WRAPPER:
+			JOB_MANAGER_JOB_ACTION_DROPDOWN = gradio.Dropdown(
+				label = wording.get('uis.job_manager_job_action_dropdown'),
+				choices = uis_choices.job_manager_actions,
+				value = get_first(uis_choices.job_manager_actions)
+			)
+			JOB_MANAGER_JOB_ID_TEXTBOX = gradio.Textbox(
+				label = wording.get('uis.job_manager_job_id_dropdown'),
+				max_lines = 1,
+				interactive = True
+			)
+			JOB_MANAGER_JOB_ID_DROPDOWN = gradio.Dropdown(
+				label = wording.get('uis.job_manager_job_id_dropdown'),
+				choices = drafted_job_ids,
+				value = get_first(drafted_job_ids),
+				interactive = True,
+				visible = False
+			)
+			JOB_MANAGER_STEP_INDEX_DROPDOWN = gradio.Dropdown(
+				label = wording.get('uis.job_manager_step_index_dropdown'),
+				choices = [ 'none' ],
+				value = 'none',
+				interactive = True,
+				visible = False
+			)
+			JOB_MANAGER_APPLY_BUTTON = gradio.Button(
+				value = wording.get('uis.apply_button'),
+				variant = 'primary',
+				size = 'sm'
+			)
+		register_ui_component('job_manager_wrapper', JOB_MANAGER_WRAPPER)
 
 
 def listen() -> None:

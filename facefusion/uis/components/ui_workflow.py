@@ -21,12 +21,12 @@ def render() -> None:
 
 
 def listen() -> None:
-	instant_runner_group = get_ui_component('instant_runner_group')
-	job_runner_group = get_ui_component('job_runner_group')
-	job_manager_group = get_ui_component('job_manager_group')
+	instant_runner_wrapper = get_ui_component('instant_runner_wrapper')
+	job_runner_wrapper = get_ui_component('job_runner_wrapper')
+	job_manager_wrapper = get_ui_component('job_manager_wrapper')
 
-	if instant_runner_group and job_runner_group and job_manager_group:
-		UI_WORKFLOW_DROPDOWN.change(update_ui_workflow, inputs = UI_WORKFLOW_DROPDOWN, outputs = [ instant_runner_group, job_runner_group, job_manager_group])
+	if instant_runner_wrapper and job_runner_wrapper and job_manager_wrapper:
+		UI_WORKFLOW_DROPDOWN.change(update_ui_workflow, inputs = UI_WORKFLOW_DROPDOWN, outputs = [ instant_runner_wrapper, job_runner_wrapper, job_manager_wrapper ])
 
 
 def update_ui_workflow(ui_workflow : UiWorkflow) -> Tuple[gradio.Group, gradio.Group, gradio.Group]:

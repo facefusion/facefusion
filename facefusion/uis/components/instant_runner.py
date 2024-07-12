@@ -13,37 +13,36 @@ from facefusion.typing import Args
 from facefusion.uis.core import get_ui_component, register_ui_component
 from facefusion.uis.ui_helper import suggest_output_path
 
-INSTANT_RUNNER_GROUP : Optional[gradio.Group] = None
+INSTANT_RUNNER_WRAPPER : Optional[gradio.Row] = None
 INSTANT_RUNNER_START_BUTTON : Optional[gradio.Button] = None
 INSTANT_RUNNER_STOP_BUTTON : Optional[gradio.Button] = None
 INSTANT_RUNNER_CLEAR_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
-	global INSTANT_RUNNER_GROUP
+	global INSTANT_RUNNER_WRAPPER
 	global INSTANT_RUNNER_START_BUTTON
 	global INSTANT_RUNNER_STOP_BUTTON
 	global INSTANT_RUNNER_CLEAR_BUTTON
 
 	is_instant_runner = state_manager.get_item('ui_workflow') == 'instant_runner'
-	with gradio.Group(visible = is_instant_runner) as INSTANT_RUNNER_GROUP:
-		with gradio.Row():
-			INSTANT_RUNNER_START_BUTTON = gradio.Button(
-				value = wording.get('uis.start_button'),
-				variant = 'primary',
-				size = 'sm'
-			)
-			INSTANT_RUNNER_STOP_BUTTON = gradio.Button(
-				value = wording.get('uis.stop_button'),
-				variant = 'primary',
-				size = 'sm',
-				visible = False
-			)
-			INSTANT_RUNNER_CLEAR_BUTTON = gradio.Button(
-				value = wording.get('uis.clear_button'),
-				size = 'sm'
-			)
-	register_ui_component('instant_runner_group', INSTANT_RUNNER_GROUP)
+	with gradio.Row(visible = is_instant_runner) as INSTANT_RUNNER_WRAPPER:
+		INSTANT_RUNNER_START_BUTTON = gradio.Button(
+			value = wording.get('uis.start_button'),
+			variant = 'primary',
+			size = 'sm'
+		)
+		INSTANT_RUNNER_STOP_BUTTON = gradio.Button(
+			value = wording.get('uis.stop_button'),
+			variant = 'primary',
+			size = 'sm',
+			visible = False
+		)
+		INSTANT_RUNNER_CLEAR_BUTTON = gradio.Button(
+			value = wording.get('uis.clear_button'),
+			size = 'sm'
+		)
+	register_ui_component('instant_runner_wrapper', INSTANT_RUNNER_WRAPPER)
 
 
 def listen() -> None:
