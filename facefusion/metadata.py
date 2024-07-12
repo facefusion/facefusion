@@ -1,11 +1,11 @@
 METADATA =\
 {
-	'name': 'FaceFusion',
-	'description': 'Next generation face swapper and enhancer',
-	'version': '2.6.1',
-	'license': 'MIT',
-	'author': 'Henry Ruhs',
-	'url': 'https://facefusion.io'
+	'name': 'GiniFace',
+	'description': 'Face Lipsync & Swapp + enhance & moderate AI',
+	'version': '1.0.1',
+	'license': 'Non-Commercial',
+	'author': 'OFAI_KIM',
+	'url': 'https://ginipick.com'
 }
 
 
