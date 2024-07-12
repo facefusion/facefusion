@@ -461,11 +461,13 @@ def route_job_runner(program : ArgumentParser) -> ErrorCode:
 	return 2
 
 
-def process_step(step_args : Args) -> bool:
+def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	program = create_program()
 	program = update_args(program, step_args)
 	program = import_state(program, job_store.get_job_keys(), state_manager.get_state())
+	step_total = job_manager.count_step_total(job_id)
 
+	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__.upper())
 	if validate_args(program):
 		apply_args(program)
 		clear_frame_processors_modules()

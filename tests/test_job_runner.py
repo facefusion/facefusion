@@ -29,7 +29,7 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-def process_step(step_args : Args) -> bool:
+def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	return copy_file(step_args.get('target_path'), step_args.get('output_path'))
 
 

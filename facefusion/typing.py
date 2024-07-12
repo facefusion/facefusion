@@ -65,10 +65,10 @@ QueuePayload = TypedDict('QueuePayload',
 	'frame_number' : int,
 	'frame_path' : str
 })
+Args = Dict[str, Any]
 UpdateProgress = Callable[[int], None]
 ProcessFrames = Callable[[List[str], List[QueuePayload], UpdateProgress], None]
-ProcessStep = Callable[[Dict[str, Any]], bool]
-Args = Dict[str, Any]
+ProcessStep = Callable[[str, int, Args], bool]
 
 Content = Dict[str, Any]
 
