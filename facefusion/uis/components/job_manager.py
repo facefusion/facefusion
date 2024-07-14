@@ -115,7 +115,7 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 			state_manager.set_item('output_path', output_path)
 			logger.error(wording.get('job_step_not_added').format(job_id = selected_job_id), __name__.upper())
 	if job_action == 'job-remix-step':
-		if selected_job_id and job_manager.has_step(step_index) and job_manager.remix_step(selected_job_id, step_index, step_args):
+		if selected_job_id and job_manager.has_step(selected_job_id, step_index) and job_manager.remix_step(selected_job_id, step_index, step_args):
 			drafted_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 			job_id = get_first(drafted_job_ids)
 			step_choices = get_step_choices(job_id) or [ 'none' ] #type:ignore[list-item]
@@ -127,7 +127,7 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 			state_manager.set_item('output_path', output_path)
 			logger.error(wording.get('job_remix_step_not_added').format(job_id = selected_job_id, step_index = step_index), __name__.upper())
 	if job_action == 'job-insert-step':
-		if selected_job_id and job_manager.has_step(step_index) and job_manager.insert_step(selected_job_id, step_index, step_args):
+		if selected_job_id and job_manager.has_step(selected_job_id, step_index) and job_manager.insert_step(selected_job_id, step_index, step_args):
 			drafted_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 			job_id = get_first(drafted_job_ids)
 			step_choices = get_step_choices(job_id) or [ 'none' ] #type:ignore[list-item]
