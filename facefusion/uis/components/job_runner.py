@@ -74,7 +74,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 
 	if job_action == 'job-run':
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__.upper())
-		if job_runner.run_job(job_id, process_step):
+		if job_id and job_runner.run_job(job_id, process_step):
 			logger.info(wording.get('processing_job_succeed').format(job_id = job_id), __name__.upper())
 		else:
 			logger.info(wording.get('processing_job_failed').format(job_id = job_id), __name__.upper())
@@ -88,7 +88,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 			logger.info(wording.get('processing_jobs_failed'), __name__.upper())
 	if job_action == 'job-retry':
 		logger.info(wording.get('retrying_job').format(job_id = job_id), __name__.upper())
-		if job_runner.retry_job(job_id, process_step):
+		if job_id and job_runner.retry_job(job_id, process_step):
 			logger.info(wording.get('processing_job_succeed').format(job_id = job_id), __name__.upper())
 		else:
 			logger.info(wording.get('processing_job_failed').format(job_id = job_id), __name__.upper())

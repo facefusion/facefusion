@@ -190,6 +190,7 @@ def test_remix_step() -> None:
 
 	assert remix_step('job-test-remix-step', 99, args_1) is False
 	assert remix_step('job-test-remix-step', 0, args_2) is True
+	assert remix_step('job-test-remix-step', -1, args_2) is True
 
 	steps = get_steps('job-test-remix-step')
 
@@ -198,7 +199,10 @@ def test_remix_step() -> None:
 	assert steps[2].get('args').get('source_path') == args_2.get('source_path')
 	assert steps[2].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 0, args_1.get('output_path'))
 	assert steps[2].get('args').get('output_path') == args_2.get('output_path')
-	assert count_step_total('job-test-remix-step') == 3
+	assert steps[3].get('args').get('source_path') == args_2.get('source_path')
+	assert steps[3].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 2, args_2.get('output_path'))
+	assert steps[3].get('args').get('output_path') == args_2.get('output_path')
+	assert count_step_total('job-test-remix-step') == 4
 
 
 def test_insert_step() -> None:
@@ -228,7 +232,7 @@ def test_insert_step() -> None:
 	add_step('job-test-insert-step', args_1)
 
 	assert insert_step('job-test-insert-step', 99, args_1) is False
-	assert insert_step('job-test-insert-step', 1, args_2) is True
+	assert insert_step('job-test-insert-step', 0, args_2) is True
 	assert insert_step('job-test-insert-step', -1, args_3) is True
 
 	steps = get_steps('job-test-insert-step')
@@ -269,12 +273,12 @@ def test_remove_step() -> None:
 	add_step('job-test-remove-step', args_3)
 
 	assert remove_step('job-test-remove-step', 99) is False
-	assert remove_step('job-test-remove-step', 1) is True
+	assert remove_step('job-test-remove-step', 0) is True
 	assert remove_step('job-test-remove-step', -1) is True
 
 	steps = get_steps('job-test-remove-step')
 
-	assert steps[0].get('args') == args_1
+	assert steps[0].get('args') == args_2
 	assert steps[1].get('args') == args_1
 	assert count_step_total('job-test-remove-step') == 2
 
