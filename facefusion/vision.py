@@ -71,8 +71,9 @@ def create_image_resolutions(resolution : Resolution) -> List[str]:
 
 
 @lru_cache(maxsize=128)
-def get_video_stream(video_path : str):
+def get_video_stream(video_path : str) -> VideoCapture:
 	return cv2.VideoCapture(video_path)
+
 
 def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
