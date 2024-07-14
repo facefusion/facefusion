@@ -172,15 +172,15 @@ def update(job_action : JobManagerAction) -> Tuple[gradio.Textbox, gradio.Dropdo
 
 		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = get_first(drafted_job_ids), choices = drafted_job_ids, visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
 	if job_action == 'job-delete':
-		job_ids = job_manager.find_job_ids('drafted') + job_manager.find_job_ids('queued') + job_manager.find_job_ids('failed') + job_manager.find_job_ids('completed')
+		job_ids = job_manager.find_job_ids('drafted') + job_manager.find_job_ids('queued') + job_manager.find_job_ids('failed') + job_manager.find_job_ids('completed') or [ 'none' ]
 
 		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = get_first(job_ids), choices = job_ids, visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
 	if job_action == 'job-add-step':
-		drafted_job_ids = job_manager.find_job_ids('drafted')
+		drafted_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 
 		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = get_first(drafted_job_ids), choices = drafted_job_ids, visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
 	if job_action in [ 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
-		drafted_job_ids = job_manager.find_job_ids('drafted')
+		drafted_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 		job_id = get_first(drafted_job_ids)
 		step_choices = get_step_choices(job_id) or [ 'none' ] #type:ignore[list-item]
 
