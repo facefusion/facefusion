@@ -161,17 +161,12 @@ def get_step_choices(job_id : str) -> List[int]:
 def update(job_action : JobManagerAction, selected_job_id : str) -> Tuple[gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
 	if job_action == 'job-create':
 		return gradio.Textbox(value = None, visible = True), gradio.Dropdown(value = None, choices = None, visible = False), gradio.Dropdown(value = None, choices = None, visible = False)
-	if job_action == 'job-submit':
-		updated_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
-		updated_job_id = selected_job_id if selected_job_id in updated_job_ids else get_last(updated_job_ids)
-
-		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = updated_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
 	if job_action == 'job-delete':
 		updated_job_ids = job_manager.find_job_ids('drafted') + job_manager.find_job_ids('queued') + job_manager.find_job_ids('failed') + job_manager.find_job_ids('completed') or [ 'none' ]
 		updated_job_id = selected_job_id if selected_job_id in updated_job_ids else get_last(updated_job_ids)
 
 		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = updated_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
-	if job_action == 'job-add-step':
+	if job_action in [ 'job-submit', 'job-add-step' ]:
 		updated_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 		updated_job_id = selected_job_id if selected_job_id in updated_job_ids else get_last(updated_job_ids)
 

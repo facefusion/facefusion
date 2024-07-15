@@ -112,11 +112,11 @@ def stop() -> Tuple[gradio.Button, gradio.Button]:
 
 def update_job_action(job_action : JobRunnerAction) -> gradio.Dropdown:
 	if job_action == 'job-run':
-		updated_job_ids = job_manager.find_job_ids('queued') or ['none']
+		updated_job_ids = job_manager.find_job_ids('queued') or [ 'none' ]
 
 		return gradio.Dropdown(value = get_last(updated_job_ids), choices = updated_job_ids, visible = True)
 	if job_action == 'job-retry':
-		updated_job_ids = job_manager.find_job_ids('failed') or ['none']
+		updated_job_ids = job_manager.find_job_ids('failed') or [ 'none' ]
 
 		return gradio.Dropdown(value = get_last(updated_job_ids), choices = updated_job_ids, visible = True)
 	return gradio.Dropdown(visible = False)
