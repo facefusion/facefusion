@@ -88,12 +88,14 @@ def find_jobs(job_status : JobStatus) -> JobSet:
 
 def find_job_ids(job_status : JobStatus) -> List[str]:
 	job_pattern = os.path.join(JOBS_PATH, job_status, '*.json')
+	job_files = glob.glob(job_pattern)
+	job_files.sort(key = os.path.getmtime)
 	job_ids = []
 
-	for job_file in glob.glob(job_pattern):
+	for job_file in job_files:
 		job_id, _ = os.path.splitext(os.path.basename(job_file))
 		job_ids.append(job_id)
-	return sorted(job_ids)
+	return job_ids
 
 
 def validate_job(job_id : str) -> bool:
