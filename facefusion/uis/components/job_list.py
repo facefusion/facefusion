@@ -24,6 +24,7 @@ def render() -> None:
 		JOB_LIST_JOBS_DATAFRAME = gradio.Dataframe(
 			headers = job_headers,
 			value = job_contents,
+			datatype = [ 'str', 'number', 'date', 'date', 'str' ],
 			show_label = False
 		)
 		JOB_LIST_REFRESH_BUTTON = gradio.Button(
