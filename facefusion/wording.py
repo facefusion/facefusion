@@ -93,9 +93,7 @@ WORDING : Dict[str, Any] =\
 		'output_path': 'specify the output image or video within a directory',
 		'jobs_path': 'specify the directory to store jobs',
 		# misc
-		'force_download': 'force automate downloads and exit',
-		'skip_download': 'omit automate downloads and remote lookups',
-		'headless': 'run the program without a user interface',
+		'skip_download': 'omit downloads and remote lookups',
 		'log_level': 'adjust the message severity displayed in the terminal',
 		# execution
 		'execution_device_id': 'specify the device used for processing',
@@ -158,6 +156,13 @@ WORDING : Dict[str, Any] =\
 		'open_browser': 'open the browser once the program is ready',
 		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)',
 		'ui_workflow': 'choose the ui workflow',
+		# run
+		'run': 'run the program',
+		'run_headless': 'run the program in headless mode',
+		'force_download': 'force automate downloads and exit',
+		# job
+		'job_id': 'specify the job id',
+		'step_index': 'specify the step index',
 		# job manager
 		'job_create': 'create a drafted job',
 		'job_submit': 'submit a drafted job to become a queued job',

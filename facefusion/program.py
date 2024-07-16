@@ -2,7 +2,7 @@ from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
 import facefusion.processors.frame
-from facefusion import config, metadata, state_manager, wording
+from facefusion import config, logger, metadata, state_manager, wording
 from facefusion.common_helper import create_metavar
 from facefusion.execution import get_execution_provider_choices
 from facefusion.filesystem import list_directory, is_image, is_video
@@ -17,6 +17,14 @@ def create_help_formatter(prog : str) -> HelpFormatter:
 	return HelpFormatter(prog, max_help_position = 200)
 
 
+def create_config_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	program.add_argument('-c', '--config-path', help = wording.get('help.config_path'), default = 'facefusion.ini')
+	job_store.register_job_keys([ 'config-path' ])
+	apply_config_path(program)
+	return program
+
+
 def create_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	program.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
@@ -24,6 +32,14 @@ def create_path_program() -> ArgumentParser:
 	program.add_argument('-o', '--output-path', help = wording.get('help.output_path'), dest = 'output_path', default = config.get_str_value('general.output_path'))
 	program.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('general.jobs_path', '.jobs'))
 	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
+	return program
+
+
+def create_misc_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_misc = program.add_argument_group('misc')
+	group_misc.add_argument('--skip-download', help = wording.get('help.skip_download'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
+	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
 	return program
 
 
@@ -134,41 +150,48 @@ def create_uis_program() -> ArgumentParser:
 	return program
 
 
+def create_job_id_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	program.add_argument('--job-id', help = wording.get('help.job_id'))
+	return program
+
+
+def create_job_status_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	program.add_argument('--job-status', help = wording.get('help.job_status'), choices = facefusion.choices.job_statuses)
+	return program
+
+
+def create_step_index_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	program.add_argument('--step-index', help = wording.get('help.step_index'))
+	return program
+
+
 def create_program() -> ArgumentParser:
 	program = ArgumentParser(formatter_class = create_help_formatter, add_help = False)
-	program.add_argument('-c', '--config-path', help = wording.get('help.config_path'), default = 'facefusion.ini')
-	job_store.register_job_keys([ 'config-path' ])
-	apply_config_path(program)
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	sub_program = program.add_subparsers()
-	sub_program.add_parser('run', parents = [ create_path_program(), create_execution_program(), create_memory_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program(), create_uis_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('job-add-step', parents = [ create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('job-run', parents = [ create_path_program(), create_execution_program(), create_memory_program() ], formatter_class=create_help_formatter)
-
-	#group_misc = program.add_argument_group('misc')
-	#group_misc.add_argument('--force-download', help = wording.get('help.force_download'), action = 'store_true', default = config.get_bool_value('misc.force_download'))
-	#group_misc.add_argument('--skip-download', help = wording.get('help.skip_download'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
-	#group_misc.add_argument('--headless', help = wording.get('help.headless'), action = 'store_true', default = config.get_bool_value('misc.headless'))
-	#group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
-	#job_store.register_job_keys([ 'skip_download', 'log_level' ])
-
-	#group_job_manager = program.add_argument_group('job manager')
-	#group_job_manager.add_argument('--job-create', help = wording.get('help.job_create'), metavar = 'JOB_ID')
-	#group_job_manager.add_argument('--job-submit', help = wording.get('help.job_submit'), metavar = 'JOB_ID')
-	#group_job_manager.add_argument('--job-submit-all', help = wording.get('help.job_submit_all'), action = 'store_true')
-	#group_job_manager.add_argument('--job-delete', help = wording.get('help.job_delete'), metavar = 'JOB_ID')
-	#group_job_manager.add_argument('--job-delete-all', help = wording.get('help.job_delete_all'), action = 'store_true')
-	#group_job_manager.add_argument('--job-list', help = wording.get('help.job_list'), choices = facefusion.choices.job_statuses)
-	#group_job_manager.add_argument('--job-add-step', help = wording.get('help.job_add_step'), metavar = 'JOB_ID')
-	#group_job_manager.add_argument('--job-remix-step', help = wording.get('help.job_remix_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
-	#group_job_manager.add_argument('--job-insert-step', help = wording.get('help.job_insert_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
-	#group_job_manager.add_argument('--job-remove-step', help = wording.get('help.job_remove_step'), nargs = 2, metavar = ('JOB_ID', 'STEP_INDEX'))
-
-	#group_job_runner = program.add_argument_group('job runner')
-	#group_job_runner.add_argument('--job-run', help = wording.get('help.job_run'), metavar = 'JOB_ID')
-	#group_job_runner.add_argument('--job-run-all', help = wording.get('help.job_run_all'), action = 'store_true')
-	#group_job_runner.add_argument('--job-retry', help = wording.get('help.job_retry'), metavar = 'JOB_ID')
-	#group_job_runner.add_argument('--job-retry-all', help = wording.get('help.job_retry_all'), action = 'store_true')
+	# general
+	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_program(), create_path_program(), create_misc_program(), create_execution_program(), create_memory_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program(), create_uis_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('run-headless', help = wording.get('help.run_headless'), parents = [ create_config_program(), create_path_program(), create_misc_program(), create_execution_program(), create_memory_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('force-download', help = wording.get('help.force_download'), formatter_class = create_help_formatter)
+	# job manager
+	sub_program.add_parser('job-create', help = wording.get('help.job_create'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-submit', help = wording.get('help.job_submit'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-submit-all', help = wording.get('help.job_submit_all'))
+	sub_program.add_parser('job-delete', help = wording.get('help.job_delete'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-delete-all', help = wording.get('help.job_delete_all'))
+	sub_program.add_parser('job-list', help = wording.get('help.job_list'), parents = [ create_job_status_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-add-step', help = wording.get('help.job_add_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-remix-step', help = wording.get('help.job_remix_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-insert-step', help = wording.get('help.job_insert_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-remove-step', help = wording.get('help.job_remove_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
+	# job runner
+	sub_program.add_parser('job-run', help = wording.get('help.job_run'), parents = [ create_job_id_program(), create_config_program(), create_misc_program(), create_execution_program(), create_memory_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-run-all', help = wording.get('help.job_run_all'), parents = [ create_config_program(), create_misc_program(), create_execution_program(), create_memory_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-retry', help = wording.get('help.job_retry'), parents = [ create_job_id_program(), create_config_program(), create_misc_program(), create_execution_program(), create_memory_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-retry-all', help = wording.get('help.job_retry_all'), parents = [ create_config_program(), create_execution_program(), create_misc_program(), create_memory_program() ], formatter_class = create_help_formatter)
 	return ArgumentParser(parents = [ program ], formatter_class = create_help_formatter, add_help = True)
 
 
@@ -179,15 +202,15 @@ def apply_config_path(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	# general
+	# path
 	state_manager.init_item('source_paths', args.source_paths)
 	state_manager.init_item('target_path', args.target_path)
 	state_manager.init_item('output_path', args.output_path)
 	state_manager.init_item('jobs_path', args.jobs_path)
 	# misc
-	state_manager.init_item('force_download', args.force_download)
+	# todo: state_manager.init_item('force_download', args.force_download)
 	state_manager.init_item('skip_download', args.skip_download)
-	state_manager.init_item('headless', args.headless)
+	# todo: state_manager.init_item('headless', args.headless)
 	state_manager.init_item('log_level', args.log_level)
 	# execution
 	state_manager.init_item('execution_device_id', args.execution_device_id)
