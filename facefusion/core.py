@@ -22,7 +22,7 @@ from facefusion.jobs import job_helper, job_manager, job_runner, job_store
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules
-from facefusion.program import create_program, apply_args
+from facefusion.program import apply_args, create_program
 from facefusion.program_helper import import_state, reduce_args, update_args, validate_args
 from facefusion.statistics import conditional_log_statistics
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
