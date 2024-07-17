@@ -13,7 +13,11 @@ from facefusion.program_helper import suggest_face_detector_choices
 from facefusion.vision import detect_image_resolution, create_image_resolutions, pack_resolution, detect_video_resolution, create_video_resolutions, detect_video_fps
 
 
-def create_help_formatter(prog : str) -> HelpFormatter:
+def create_help_formatter_50(prog : str) -> HelpFormatter:
+	return HelpFormatter(prog, max_help_position = 50)
+
+
+def create_help_formatter_200(prog : str) -> HelpFormatter:
 	return HelpFormatter(prog, max_help_position = 200)
 
 
@@ -169,30 +173,30 @@ def create_step_index_program() -> ArgumentParser:
 
 
 def create_program() -> ArgumentParser:
-	program = ArgumentParser(formatter_class = create_help_formatter, add_help = False)
+	program = ArgumentParser(formatter_class = create_help_formatter_200, add_help = False)
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	sub_program = program.add_subparsers()
 	# general
-	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_program(), create_path_program(), create_misc_program(), create_execution_program(), create_memory_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program(), create_uis_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('run-headless', help = wording.get('help.run_headless'), parents = [ create_config_program(), create_path_program(), create_misc_program(), create_execution_program(), create_memory_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('force-download', help = wording.get('help.force_download'), formatter_class = create_help_formatter)
+	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_program(), create_path_program(), create_misc_program(), create_execution_program(), create_memory_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program(), create_uis_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('run-headless', help = wording.get('help.run_headless'), parents = [ create_config_program(), create_path_program(), create_misc_program(), create_execution_program(), create_memory_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('force-download', help = wording.get('help.force_download'), formatter_class = create_help_formatter_200)
 	# job manager
-	sub_program.add_parser('job-create', help = wording.get('help.job_create'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('job-submit', help = wording.get('help.job_submit'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-create', help = wording.get('help.job_create'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-submit', help = wording.get('help.job_submit'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter_200)
 	sub_program.add_parser('job-submit-all', help = wording.get('help.job_submit_all'))
-	sub_program.add_parser('job-delete', help = wording.get('help.job_delete'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-delete', help = wording.get('help.job_delete'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter_200)
 	sub_program.add_parser('job-delete-all', help = wording.get('help.job_delete_all'))
-	sub_program.add_parser('job-list', help = wording.get('help.job_list'), parents = [ create_job_status_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('job-add-step', help = wording.get('help.job_add_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('job-remix-step', help = wording.get('help.job_remix_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('job-insert-step', help = wording.get('help.job_insert_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('job-remove-step', help = wording.get('help.job_remove_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter)
+	sub_program.add_parser('job-list', help = wording.get('help.job_list'), parents = [ create_job_status_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-add-step', help = wording.get('help.job_add_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-remix-step', help = wording.get('help.job_remix_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-insert-step', help = wording.get('help.job_insert_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-remove-step', help = wording.get('help.job_remove_step'), parents = [ create_job_id_program(), create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], formatter_class = create_help_formatter_200)
 	# job runner
-	sub_program.add_parser('job-run', help = wording.get('help.job_run'), parents = [ create_job_id_program(), create_config_program(), create_misc_program(), create_execution_program(), create_memory_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('job-run-all', help = wording.get('help.job_run_all'), parents = [ create_config_program(), create_misc_program(), create_execution_program(), create_memory_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('job-retry', help = wording.get('help.job_retry'), parents = [ create_job_id_program(), create_config_program(), create_misc_program(), create_execution_program(), create_memory_program() ], formatter_class = create_help_formatter)
-	sub_program.add_parser('job-retry-all', help = wording.get('help.job_retry_all'), parents = [ create_config_program(), create_execution_program(), create_misc_program(), create_memory_program() ], formatter_class = create_help_formatter)
-	return ArgumentParser(parents = [ program ], formatter_class = create_help_formatter, add_help = True)
+	sub_program.add_parser('job-run', help = wording.get('help.job_run'), parents = [ create_job_id_program(), create_config_program(), create_misc_program(), create_execution_program(), create_memory_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-run-all', help = wording.get('help.job_run_all'), parents = [ create_config_program(), create_misc_program(), create_execution_program(), create_memory_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-retry', help = wording.get('help.job_retry'), parents = [ create_job_id_program(), create_config_program(), create_misc_program(), create_execution_program(), create_memory_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-retry-all', help = wording.get('help.job_retry_all'), parents = [ create_config_program(), create_execution_program(), create_misc_program(), create_memory_program() ], formatter_class = create_help_formatter_200)
+	return ArgumentParser(parents = [ program ], formatter_class = create_help_formatter_50, add_help = True)
 
 
 def apply_config_path(program : ArgumentParser) -> None:
