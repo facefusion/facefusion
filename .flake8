@@ -1,6 +1,5 @@
 [flake8]
 select = E3, E4, F, I1, I2
-per-file-ignores = run.py:E402
 plugins = flake8-import-order
 application_import_names = facefusion
 import-order-style = pycharm

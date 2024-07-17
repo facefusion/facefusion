@@ -26,24 +26,24 @@ def before_each() -> None:
 
 
 def test_job_run() -> None:
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-run', 'test-job-run' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-run', 'test-job-run' ]
 
 	assert subprocess.run(commands).returncode == 1
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-run' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-run' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-run.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-run.jpg') ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-run', 'test-job-run' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-run', 'test-job-run' ]
 
 	assert subprocess.run(commands).returncode == 1
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-submit', 'test-job-run' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-submit', 'test-job-run' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-run', 'test-job-run' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-run', 'test-job-run' ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert subprocess.run(commands).returncode == 1
@@ -51,33 +51,33 @@ def test_job_run() -> None:
 
 
 def test_job_run_all() -> None:
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-run-all' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-run-all' ]
 
 	assert subprocess.run(commands).returncode == 1
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-run-all-1' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-run-all-1' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-run-all-2' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-create', 'test-job-run-all-2' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run-all-1', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-run-all-1.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run-all-1', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-run-all-1.jpg') ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run-all-2', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-end', '10' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run-all-2', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-end', '10' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run-all-2', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-start', '10', '--trim-frame-start', '20' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-add-step', 'test-job-run-all-2', '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-start', '10', '--trim-frame-start', '20' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-run-all' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-run-all' ]
 
 	assert subprocess.run(commands).returncode == 1
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-submit-all' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-submit-all' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'run.py', '-j', get_test_jobs_directory(), '--job-run-all' ]
+	commands = [ sys.executable, 'facefusion.py', '-j', get_test_jobs_directory(), '--job-run-all' ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert subprocess.run(commands).returncode == 1
