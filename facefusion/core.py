@@ -48,20 +48,20 @@ def run(program : ArgumentParser) -> None:
 
 	if state_manager.get_item('system_memory_limit') > 0:
 		limit_system_memory(state_manager.get_item('system_memory_limit'))
-	if args.job_create or args.job_submit or args.job_submit_all or args.job_delete or args.job_delete_all or args.job_add_step or args.job_remix_step or args.job_insert_step or args.job_remove_step or args.job_list:
+	if args.command == 'force_download':
+		force_download()
+		return conditional_exit(0)
+	if args.command in [ 'job_create', 'job_submit', 'job_submit_all', 'job_delete', 'job_delete_all', 'job_add_step', 'job_remix_step', 'job_insert_step', 'job_remove_step', 'job_list' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_code = route_job_manager(program)
 		hard_exit(error_code)
-	if state_manager.get_item('force_download'):
-		force_download()
-		return conditional_exit(0)
 	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check():
 		return conditional_exit(2)
 	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
 		if not frame_processor_module.pre_check():
 			return conditional_exit(2)
-	if args.job_run or args.job_run_all or args.job_retry or args.job_retry_all:
+	if args.command in [ 'job_run', 'job_run_all', 'job_retry', 'job_retry_all' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_code = route_job_runner(program)

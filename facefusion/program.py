@@ -1,3 +1,4 @@
+import sys
 from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
@@ -31,9 +32,9 @@ def create_config_program() -> ArgumentParser:
 
 def create_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', dest = 'source_paths', default = config.get_str_list('general.source_paths'))
-	program.add_argument('-t', '--target-path', help = wording.get('help.target_path'), dest = 'target_path', default = config.get_str_value('general.target_path'))
-	program.add_argument('-o', '--output-path', help = wording.get('help.output_path'), dest = 'output_path', default = config.get_str_value('general.output_path'))
+	program.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', default = config.get_str_list('general.source_paths'))
+	program.add_argument('-t', '--target-path', help = wording.get('help.target_path'), default = config.get_str_value('general.target_path'))
+	program.add_argument('-o', '--output-path', help = wording.get('help.output_path'), default = config.get_str_value('general.output_path'))
 	program.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('general.jobs_path', '.jobs'))
 	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
 	return program
@@ -183,9 +184,9 @@ def collect_job_program() -> ArgumentParser:
 def create_program() -> ArgumentParser:
 	program = ArgumentParser(formatter_class = create_help_formatter_200, add_help = False)
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
-	sub_program = program.add_subparsers()
+	sub_program = program.add_subparsers(dest = 'command')
 	# general
-	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ collect_step_program(), collect_job_program(), create_uis_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ collect_step_program(), create_uis_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
 	sub_program.add_parser('run-headless', help = wording.get('help.run_headless'), parents = [ collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
 	sub_program.add_parser('force-download', help = wording.get('help.force_download'), formatter_class = create_help_formatter_200)
 	# job manager
@@ -219,19 +220,6 @@ def apply_args(program : ArgumentParser) -> None:
 	state_manager.init_item('target_path', args.target_path)
 	state_manager.init_item('output_path', args.output_path)
 	state_manager.init_item('jobs_path', args.jobs_path)
-	# misc
-	# todo: state_manager.init_item('force_download', args.force_download)
-	state_manager.init_item('skip_download', args.skip_download)
-	# todo: state_manager.init_item('headless', args.headless)
-	state_manager.init_item('log_level', args.log_level)
-	# execution
-	state_manager.init_item('execution_device_id', args.execution_device_id)
-	state_manager.init_item('execution_providers', args.execution_providers)
-	state_manager.init_item('execution_thread_count', args.execution_thread_count)
-	state_manager.init_item('execution_queue_count', args.execution_queue_count)
-	# memory
-	state_manager.init_item('video_memory_strategy', args.video_memory_strategy)
-	state_manager.init_item('system_memory_limit', args.system_memory_limit)
 	# face analyser
 	state_manager.init_item('face_detector_model', args.face_detector_model)
 	state_manager.init_item('face_detector_size', args.face_detector_size)
@@ -290,4 +278,15 @@ def apply_args(program : ArgumentParser) -> None:
 	state_manager.init_item('open_browser', args.open_browser)
 	state_manager.init_item('ui_layouts', args.ui_layouts)
 	state_manager.init_item('ui_workflow', args.ui_workflow)
+	# misc
+	state_manager.init_item('skip_download', args.skip_download)
+	state_manager.init_item('log_level', args.log_level)
+	# execution
+	state_manager.init_item('execution_device_id', args.execution_device_id)
+	state_manager.init_item('execution_providers', args.execution_providers)
+	state_manager.init_item('execution_thread_count', args.execution_thread_count)
+	state_manager.init_item('execution_queue_count', args.execution_queue_count)
+	# memory
+	state_manager.init_item('video_memory_strategy', args.video_memory_strategy)
+	state_manager.init_item('system_memory_limit', args.system_memory_limit)
 
