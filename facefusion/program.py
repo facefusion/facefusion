@@ -40,14 +40,6 @@ def create_path_program() -> ArgumentParser:
 	return program
 
 
-def create_misc_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	group_misc = program.add_argument_group('misc')
-	group_misc.add_argument('--skip-download', help = wording.get('help.skip_download'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
-	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
-	return program
-
-
 def create_execution_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	execution_providers = get_execution_provider_choices()
@@ -66,6 +58,14 @@ def create_memory_program() -> ArgumentParser:
 	group_memory.add_argument('--video-memory-strategy', help = wording.get('help.video_memory_strategy'), default = config.get_str_value('memory.video_memory_strategy', 'strict'), choices = facefusion.choices.video_memory_strategies)
 	group_memory.add_argument('--system-memory-limit', help = wording.get('help.system_memory_limit'), type = int, default = config.get_int_value('memory.system_memory_limit', '0'), choices = facefusion.choices.system_memory_limit_range, metavar = create_metavar(facefusion.choices.system_memory_limit_range))
 	job_store.register_job_keys([ 'video_memory_strategy', 'system_memory_limit' ])
+	return program
+
+
+def create_misc_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_misc = program.add_argument_group('misc')
+	group_misc.add_argument('--skip-download', help = wording.get('help.skip_download'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
+	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
 	return program
 
 
@@ -157,19 +157,19 @@ def create_uis_program() -> ArgumentParser:
 
 def create_job_id_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('--job-id', help = wording.get('help.job_id'))
+	program.add_argument('job-id', help = wording.get('help.job_id'))
 	return program
 
 
 def create_job_status_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('--job-status', help = wording.get('help.job_status'), choices = facefusion.choices.job_statuses)
+	program.add_argument('job-status', help = wording.get('help.job_status'), choices = facefusion.choices.job_statuses)
 	return program
 
 
 def create_step_index_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('--step-index', help = wording.get('help.step_index'))
+	program.add_argument('step-index', help = wording.get('help.step_index'), type = int)
 	return program
 
 
@@ -178,7 +178,7 @@ def collect_step_program() -> ArgumentParser:
 
 
 def collect_job_program() -> ArgumentParser:
-	return ArgumentParser(parents= [ create_misc_program(), create_execution_program(), create_memory_program() ], add_help = False)
+	return ArgumentParser(parents= [ create_execution_program(), create_memory_program(), create_misc_program() ], add_help = False)
 
 
 def create_program() -> ArgumentParser:
@@ -215,6 +215,14 @@ def apply_config_path(program : ArgumentParser) -> None:
 
 def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
+	# general
+	state_manager.init_item('command', args.command)
+	if args.command == 'job-run':
+		state_manager.init_item('job_id', args.job_id)
+	if args.command == 'job-list':
+		state_manager.init_item('job_status', args.job_status)
+	if args.command == 'job-add-step':
+		state_manager.init_item('step_index', args.step_index)
 	# path
 	state_manager.init_item('source_paths', args.source_paths)
 	state_manager.init_item('target_path', args.target_path)
@@ -275,12 +283,10 @@ def apply_args(program : ArgumentParser) -> None:
 		frame_processor_module = load_frame_processor_module(frame_processor)
 		frame_processor_module.apply_args(program)
 	# uis
-	state_manager.init_item('open_browser', args.open_browser)
-	state_manager.init_item('ui_layouts', args.ui_layouts)
-	state_manager.init_item('ui_workflow', args.ui_workflow)
-	# misc
-	state_manager.init_item('skip_download', args.skip_download)
-	state_manager.init_item('log_level', args.log_level)
+	if args.command == 'run':
+		state_manager.init_item('open_browser', args.open_browser)
+		state_manager.init_item('ui_layouts', args.ui_layouts)
+		state_manager.init_item('ui_workflow', args.ui_workflow)
 	# execution
 	state_manager.init_item('execution_device_id', args.execution_device_id)
 	state_manager.init_item('execution_providers', args.execution_providers)
@@ -289,4 +295,6 @@ def apply_args(program : ArgumentParser) -> None:
 	# memory
 	state_manager.init_item('video_memory_strategy', args.video_memory_strategy)
 	state_manager.init_item('system_memory_limit', args.system_memory_limit)
-
+	# misc
+	state_manager.init_item('skip_download', args.skip_download)
+	state_manager.init_item('log_level', args.log_level)
