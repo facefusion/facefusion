@@ -1,4 +1,3 @@
-import sys
 from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices

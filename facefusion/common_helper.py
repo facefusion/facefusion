@@ -1,5 +1,5 @@
 import platform
-import sys
+
 from typing import Any, List
 
 
