@@ -89,9 +89,9 @@ def create_program() -> ArgumentParser:
 	# face selector
 	group_face_selector = program.add_argument_group('face selector')
 	group_face_selector.add_argument('--face-selector-mode', help = wording.get('help.face_selector_mode'), default = config.get_str_value('face_selector.face_selector_mode', 'reference'), choices = facefusion.choices.face_selector_modes)
-	group_face_selector.add_argument('--face-selector-order', help = wording.get('help.face_selector_order'), default = config.get_str_value('face_analyser.face_selector_order', 'left-right'), choices = facefusion.choices.face_selector_orders)
-	group_face_selector.add_argument('--face-selector-age', help = wording.get('help.face_selector_age'), default = config.get_str_value('face_analyser.face_selector_age'), choices = facefusion.choices.face_selector_ages)
-	group_face_selector.add_argument('--face-selector-gender', help = wording.get('help.face_selector_gender'), default = config.get_str_value('face_analyser.face_selector_gender'), choices = facefusion.choices.face_selector_genders)
+	group_face_selector.add_argument('--face-selector-order', help = wording.get('help.face_selector_order'), default = config.get_str_value('face_selector.face_selector_order', 'left-right'), choices = facefusion.choices.face_selector_orders)
+	group_face_selector.add_argument('--face-selector-age', help = wording.get('help.face_selector_age'), default = config.get_str_value('face_selector.face_selector_age'), choices = facefusion.choices.face_selector_ages)
+	group_face_selector.add_argument('--face-selector-gender', help = wording.get('help.face_selector_gender'), default = config.get_str_value('face_selector.face_selector_gender'), choices = facefusion.choices.face_selector_genders)
 	group_face_selector.add_argument('--reference-face-position', help = wording.get('help.reference_face_position'), type = int, default = config.get_int_value('face_selector.reference_face_position', '0'))
 	group_face_selector.add_argument('--reference-face-distance', help = wording.get('help.reference_face_distance'), type = float, default = config.get_float_value('face_selector.reference_face_distance', '0.6'), choices = facefusion.choices.reference_face_distance_range, metavar = create_metavar(facefusion.choices.reference_face_distance_range))
 	group_face_selector.add_argument('--reference-frame-number', help = wording.get('help.reference_frame_number'), type = int, default = config.get_int_value('face_selector.reference_frame_number', '0'))
