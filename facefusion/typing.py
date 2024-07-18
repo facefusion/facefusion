@@ -169,9 +169,6 @@ StateContext = Literal['core', 'uis']
 StateKey = Literal\
 [
 	'command',
-	'job_id',
-	'job_status',
-	'step_index',
 	'config_path',
 	'source_paths',
 	'target_path',
@@ -218,14 +215,14 @@ StateKey = Literal\
 	'video_memory_strategy',
 	'system_memory_limit',
 	'skip_download',
-	'log_level'
+	'log_level',
+	'job_id',
+	'job_status',
+	'step_index'
 ]
 State = TypedDict('State',
 {
 	'command' : str,
-	'job_id' : str,
-	'job_status' : JobStatus,
-	'step_index' : int,
 	'config_path' : str,
 	'source_paths' : List[str],
 	'target_path' : str,
@@ -274,6 +271,9 @@ State = TypedDict('State',
 	'frame_processors' : List[str],
 	'open_browser' : bool,
 	'ui_layouts' : List[str],
-	'ui_workflow' : UiWorkflow
+	'ui_workflow' : UiWorkflow,
+	'job_id': str,
+	'job_status': JobStatus,
+	'step_index': int
 })
 StateSet = Dict[StateContext, State]

@@ -21,24 +21,6 @@ def create_help_formatter_200(prog : str) -> HelpFormatter:
 	return HelpFormatter(prog, max_help_position = 200)
 
 
-def create_job_id_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	program.add_argument('job-id', help = wording.get('help.job_id'))
-	return program
-
-
-def create_job_status_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	program.add_argument('job-status', help = wording.get('help.job_status'), choices = facefusion.choices.job_statuses)
-	return program
-
-
-def create_step_index_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	program.add_argument('step-index', help = wording.get('help.step_index'), type = int)
-	return program
-
-
 def create_config_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	program.add_argument('-c', '--config-path', help = wording.get('help.config_path'), default = 'facefusion.ini')
@@ -73,9 +55,9 @@ def create_face_selector_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_selector = program.add_argument_group('face selector')
 	group_face_selector.add_argument('--face-selector-mode', help = wording.get('help.face_selector_mode'), default = config.get_str_value('face_selector.face_selector_mode', 'reference'), choices = facefusion.choices.face_selector_modes)
-	group_face_selector.add_argument('--face-selector-order', help = wording.get('help.face_selector_order'), default = config.get_str_value('face_analyser.face_selector_order', 'left-right'), choices = facefusion.choices.face_selector_orders)
-	group_face_selector.add_argument('--face-selector-age', help = wording.get('help.face_selector_age'), default = config.get_str_value('face_analyser.face_selector_age'), choices = facefusion.choices.face_selector_ages)
-	group_face_selector.add_argument('--face-selector-gender', help = wording.get('help.face_selector_gender'), default = config.get_str_value('face_analyser.face_selector_gender'), choices = facefusion.choices.face_selector_genders)
+	group_face_selector.add_argument('--face-selector-order', help = wording.get('help.face_selector_order'), default = config.get_str_value('face_selector.face_selector_order', 'left-right'), choices = facefusion.choices.face_selector_orders)
+	group_face_selector.add_argument('--face-selector-age', help = wording.get('help.face_selector_age'), default = config.get_str_value('face_selector.face_selector_age'), choices = facefusion.choices.face_selector_ages)
+	group_face_selector.add_argument('--face-selector-gender', help = wording.get('help.face_selector_gender'), default = config.get_str_value('face_selector.face_selector_gender'), choices = facefusion.choices.face_selector_genders)
 	group_face_selector.add_argument('--reference-face-position', help = wording.get('help.reference_face_position'), type = int, default = config.get_int_value('face_selector.reference_face_position', '0'))
 	group_face_selector.add_argument('--reference-face-distance', help = wording.get('help.reference_face_distance'), type = float, default = config.get_float_value('face_selector.reference_face_distance', '0.6'), choices = facefusion.choices.reference_face_distance_range, metavar = create_metavar(facefusion.choices.reference_face_distance_range))
 	group_face_selector.add_argument('--reference-frame-number', help = wording.get('help.reference_frame_number'), type = int, default = config.get_int_value('face_selector.reference_frame_number', '0'))
@@ -172,6 +154,24 @@ def create_misc_program() -> ArgumentParser:
 	return program
 
 
+def create_job_id_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	program.add_argument('job-id', help = wording.get('help.job_id'))
+	return program
+
+
+def create_job_status_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	program.add_argument('job-status', help = wording.get('help.job_status'), choices = facefusion.choices.job_statuses)
+	return program
+
+
+def create_step_index_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	program.add_argument('step-index', help = wording.get('help.step_index'), type = int)
+	return program
+
+
 def collect_step_program() -> ArgumentParser:
 	return ArgumentParser(parents= [ create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], add_help = False)
 
@@ -216,12 +216,6 @@ def apply_args(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	# general
 	state_manager.init_item('command', args.command)
-	if args.command == 'job-run':
-		state_manager.init_item('job_id', args.job_id)
-	if args.command == 'job-list':
-		state_manager.init_item('job_status', args.job_status)
-	if args.command == 'job-add-step':
-		state_manager.init_item('step_index', args.step_index)
 	# path
 	state_manager.init_item('source_paths', args.source_paths)
 	state_manager.init_item('target_path', args.target_path)
@@ -297,3 +291,10 @@ def apply_args(program : ArgumentParser) -> None:
 	# misc
 	state_manager.init_item('skip_download', args.skip_download)
 	state_manager.init_item('log_level', args.log_level)
+	# job
+	if args.command == 'job-run':
+		state_manager.init_item('job_id', args.job_id)
+	if args.command == 'job-list':
+		state_manager.init_item('job_status', args.job_status)
+	if args.command == 'job-add-step':
+		state_manager.init_item('step_index', args.step_index)
