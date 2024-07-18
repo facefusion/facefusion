@@ -21,6 +21,24 @@ def create_help_formatter_200(prog : str) -> HelpFormatter:
 	return HelpFormatter(prog, max_help_position = 200)
 
 
+def create_job_id_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	program.add_argument('job-id', help = wording.get('help.job_id'))
+	return program
+
+
+def create_job_status_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	program.add_argument('job-status', help = wording.get('help.job_status'), choices = facefusion.choices.job_statuses)
+	return program
+
+
+def create_step_index_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	program.add_argument('step-index', help = wording.get('help.step_index'), type = int)
+	return program
+
+
 def create_config_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	program.add_argument('-c', '--config-path', help = wording.get('help.config_path'), default = 'facefusion.ini')
@@ -36,35 +54,6 @@ def create_path_program() -> ArgumentParser:
 	program.add_argument('-o', '--output-path', help = wording.get('help.output_path'), default = config.get_str_value('general.output_path'))
 	program.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('general.jobs_path', '.jobs'))
 	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
-	return program
-
-
-def create_execution_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	execution_providers = get_execution_provider_choices()
-	group_execution = program.add_argument_group('execution')
-	group_execution.add_argument('--execution-device-id', help = wording.get('help.execution_device_id'), default = config.get_str_value('execution.execution_device_id', '0'))
-	group_execution.add_argument('--execution-providers', help = wording.get('help.execution_providers').format(choices = ', '.join(execution_providers)), default = config.get_str_list('execution.execution_providers', 'cpu'), choices = execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
-	group_execution.add_argument('--execution-thread-count', help = wording.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution.execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_metavar(facefusion.choices.execution_thread_count_range))
-	group_execution.add_argument('--execution-queue-count', help = wording.get('help.execution_queue_count'), type = int, default = config.get_int_value('execution.execution_queue_count', '1'), choices = facefusion.choices.execution_queue_count_range, metavar = create_metavar(facefusion.choices.execution_queue_count_range))
-	job_store.register_job_keys([ 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count' ])
-	return program
-
-
-def create_memory_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	group_memory = program.add_argument_group('memory')
-	group_memory.add_argument('--video-memory-strategy', help = wording.get('help.video_memory_strategy'), default = config.get_str_value('memory.video_memory_strategy', 'strict'), choices = facefusion.choices.video_memory_strategies)
-	group_memory.add_argument('--system-memory-limit', help = wording.get('help.system_memory_limit'), type = int, default = config.get_int_value('memory.system_memory_limit', '0'), choices = facefusion.choices.system_memory_limit_range, metavar = create_metavar(facefusion.choices.system_memory_limit_range))
-	job_store.register_job_keys([ 'video_memory_strategy', 'system_memory_limit' ])
-	return program
-
-
-def create_misc_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	group_misc = program.add_argument_group('misc')
-	group_misc.add_argument('--skip-download', help = wording.get('help.skip_download'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
-	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
 	return program
 
 
@@ -154,21 +143,32 @@ def create_uis_program() -> ArgumentParser:
 	return program
 
 
-def create_job_id_program() -> ArgumentParser:
+def create_execution_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('job-id', help = wording.get('help.job_id'))
+	execution_providers = get_execution_provider_choices()
+	group_execution = program.add_argument_group('execution')
+	group_execution.add_argument('--execution-device-id', help = wording.get('help.execution_device_id'), default = config.get_str_value('execution.execution_device_id', '0'))
+	group_execution.add_argument('--execution-providers', help = wording.get('help.execution_providers').format(choices = ', '.join(execution_providers)), default = config.get_str_list('execution.execution_providers', 'cpu'), choices = execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
+	group_execution.add_argument('--execution-thread-count', help = wording.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution.execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_metavar(facefusion.choices.execution_thread_count_range))
+	group_execution.add_argument('--execution-queue-count', help = wording.get('help.execution_queue_count'), type = int, default = config.get_int_value('execution.execution_queue_count', '1'), choices = facefusion.choices.execution_queue_count_range, metavar = create_metavar(facefusion.choices.execution_queue_count_range))
+	job_store.register_job_keys([ 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count' ])
 	return program
 
 
-def create_job_status_program() -> ArgumentParser:
+def create_memory_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('job-status', help = wording.get('help.job_status'), choices = facefusion.choices.job_statuses)
+	group_memory = program.add_argument_group('memory')
+	group_memory.add_argument('--video-memory-strategy', help = wording.get('help.video_memory_strategy'), default = config.get_str_value('memory.video_memory_strategy', 'strict'), choices = facefusion.choices.video_memory_strategies)
+	group_memory.add_argument('--system-memory-limit', help = wording.get('help.system_memory_limit'), type = int, default = config.get_int_value('memory.system_memory_limit', '0'), choices = facefusion.choices.system_memory_limit_range, metavar = create_metavar(facefusion.choices.system_memory_limit_range))
+	job_store.register_job_keys([ 'video_memory_strategy', 'system_memory_limit' ])
 	return program
 
 
-def create_step_index_program() -> ArgumentParser:
+def create_misc_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('step-index', help = wording.get('help.step_index'), type = int)
+	group_misc = program.add_argument_group('misc')
+	group_misc.add_argument('--skip-download', help = wording.get('help.skip_download'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
+	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
 	return program
 
 
