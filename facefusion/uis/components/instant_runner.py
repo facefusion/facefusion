@@ -4,10 +4,9 @@ from typing import Optional, Tuple
 import gradio
 
 from facefusion import process_manager, state_manager, wording
-from facefusion.core import create_program, process_step
+from facefusion.core import process_step
 from facefusion.filesystem import is_directory, is_image, is_video
 from facefusion.jobs import job_helper, job_manager, job_runner, job_store
-from facefusion.program_helper import import_state, reduce_args
 from facefusion.temp_helper import clear_temp_directory
 from facefusion.typing import Args
 from facefusion.uis.core import get_ui_component, register_ui_component
