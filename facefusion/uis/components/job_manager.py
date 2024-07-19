@@ -146,7 +146,7 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 def get_step_args() -> Args:
 	step_args =\
 	{
-		key: state_manager.get_item(key) for key in job_store.get_step_keys()
+		key: state_manager.get_item(key) for key in job_store.get_step_keys() #type:ignore[arg-type]
 	}
 	return step_args
 

@@ -86,7 +86,7 @@ def create_and_run_job(step_args : Args) -> bool:
 def get_step_args() -> Args:
 	step_args =\
 	{
-		key: state_manager.get_item(key) for key in job_store.get_step_keys()
+		key: state_manager.get_item(key) for key in job_store.get_step_keys() #type:ignore[arg-type]
 	}
 	return step_args
 

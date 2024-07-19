@@ -254,7 +254,7 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	args = step_args
 	job_args =\
 	{
-		key: state_manager.get_item(key) for key in job_store.get_job_keys()
+		key: state_manager.get_item(key) for key in job_store.get_job_keys() #type:ignore[arg-type]
 	}
 	args.update(job_args)
 	step_total = job_manager.count_step_total(job_id)
