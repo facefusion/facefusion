@@ -4,10 +4,8 @@ import gradio
 
 from facefusion import logger, state_manager, wording
 from facefusion.common_helper import get_first, get_last
-from facefusion.core import create_program
 from facefusion.filesystem import is_directory
 from facefusion.jobs import job_manager, job_store
-from facefusion.program_helper import import_state, reduce_args
 from facefusion.typing import Args
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import register_ui_component
@@ -146,10 +144,10 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 
 
 def get_step_args() -> Args:
-	program = create_program()
-	program = import_state(program, job_store.get_step_keys(), state_manager.get_state())
-	program = reduce_args(program, job_store.get_step_keys())
-	step_args = vars(program.parse_args())
+	step_args =\
+	{
+		key: state_manager.get_item(key) for key in job_store.get_step_keys()
+	}
 	return step_args
 
 
