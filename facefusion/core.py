@@ -41,10 +41,10 @@ def cli() -> None:
 		args = vars(program.parse_args())
 		apply_args(args)
 		logger.init(state_manager.get_item('log_level'))
-		run(program)
+		run(args)
 
 
-def run(program : ArgumentParser) -> None:
+def run(args : Args) -> None:
 	if state_manager.get_item('system_memory_limit') > 0:
 		limit_system_memory(state_manager.get_item('system_memory_limit'))
 	if state_manager.get_item('command') == 'force-download':
@@ -53,7 +53,7 @@ def run(program : ArgumentParser) -> None:
 	if state_manager.get_item('command') in [ 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step', 'job-list' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
-		error_code = route_job_manager(program)
+		error_code = route_job_manager(args)
 		hard_exit(error_code)
 	if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check():
 		return conditional_exit(2)
@@ -70,7 +70,7 @@ def run(program : ArgumentParser) -> None:
 	if state_manager.get_item('command') == 'run-headless':
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
-		error_core = process_headless(program)
+		error_core = process_headless(args)
 		hard_exit(error_core)
 	if state_manager.get_item('command') in [ 'job-run', 'job-run-all', 'job-retry', 'job-retry-all' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
@@ -146,7 +146,7 @@ def force_download() -> None:
 	conditional_download(download_directory_path, model_urls)
 
 
-def route_job_manager(program : ArgumentParser) -> ErrorCode:
+def route_job_manager(args : Args) -> ErrorCode:
 	if state_manager.get_item('command') == 'job-create':
 		if job_manager.create_job(state_manager.get_item('job_id')):
 			logger.info(wording.get('job_created').format(job_id = state_manager.get_item('job_id')), __name__.upper())
@@ -185,7 +185,7 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 			return 0
 		return 1
 	if state_manager.get_item('command') == 'job-add-step':
-		step_args = extract_step_args(program)
+		step_args = extract_step_args(args)
 
 		if job_manager.add_step(state_manager.get_item('job_id'), step_args):
 			logger.info(wording.get('job_step_added').format(job_id = state_manager.get_item('job_id')), __name__.upper())
@@ -193,7 +193,7 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 		logger.error(wording.get('job_step_not_added').format(job_id = state_manager.get_item('job_id')), __name__.upper())
 		return 1
 	if state_manager.get_item('command') == 'job-remix-step':
-		step_args = extract_step_args(program)
+		step_args = extract_step_args(args)
 
 		if job_manager.remix_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(wording.get('job_remix_step_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__.upper())
@@ -201,7 +201,7 @@ def route_job_manager(program : ArgumentParser) -> ErrorCode:
 		logger.error(wording.get('job_remix_step_not_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__.upper())
 		return 1
 	if state_manager.get_item('command') == 'job-insert-step':
-		step_args = extract_step_args(program)
+		step_args = extract_step_args(args)
 
 		if job_manager.insert_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(wording.get('job_step_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__.upper())
@@ -265,18 +265,17 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	return False
 
 
-def process_headless(program : ArgumentParser) -> ErrorCode:
+def process_headless(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('headless')
-	step_args = extract_step_args(program)
+	step_args = extract_step_args(args)
 
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0
 	return 1
 
 
-def extract_step_args(program : ArgumentParser) -> Args:
-	step_program = reduce_args(program, job_store.get_step_keys())
-	step_args = vars(step_program.parse_args())
+def extract_step_args(args : Args) -> Args:
+	step_args = { key: args[key] for key in args if key in job_store.get_step_keys() }
 	return step_args
 
 
