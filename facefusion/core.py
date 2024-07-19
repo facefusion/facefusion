@@ -41,13 +41,17 @@ def cli() -> None:
 		apply_args(args)
 
 		if state_manager.get_item('command'):
-			logger.init(state_manager.get_item('log_level'))
+			if state_manager.get_item('log_level'):
+				logger.init(state_manager.get_item('log_level'))
+			else:
+				logger.init('info')
 			run(args)
 
 
 def run(args : Args) -> None:
-	if state_manager.get_item('system_memory_limit') > 0:
-		limit_system_memory(state_manager.get_item('system_memory_limit'))
+	system_memory_limit = state_manager.get_item('system_memory_limit')
+	if system_memory_limit and system_memory_limit > 0:
+		limit_system_memory(system_memory_limit)
 	if state_manager.get_item('command') == 'force-download':
 		force_download()
 		return conditional_exit(0)

@@ -1,3 +1,4 @@
+import sys
 from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
@@ -35,6 +36,12 @@ def create_path_program() -> ArgumentParser:
 	program.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', default = config.get_str_list('general.source_paths'))
 	program.add_argument('-t', '--target-path', help = wording.get('help.target_path'), default = config.get_str_value('general.target_path'))
 	program.add_argument('-o', '--output-path', help = wording.get('help.output_path'), default = config.get_str_value('general.output_path'))
+	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
+	return program
+
+
+def create_jobs_path_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
 	program.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('general.jobs_path', '.jobs'))
 	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
 	return program
@@ -157,24 +164,24 @@ def create_misc_program() -> ArgumentParser:
 
 def create_job_id_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('job-id', help = wording.get('help.job_id'))
+	program.add_argument('job_id', help = wording.get('help.job_id'))
 	return program
 
 
 def create_job_status_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('job-status', help = wording.get('help.job_status'), choices = facefusion.choices.job_statuses)
+	program.add_argument('job_status', help = wording.get('help.job_status'), choices = facefusion.choices.job_statuses)
 	return program
 
 
 def create_step_index_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('step-index', help = wording.get('help.step_index'), type = int)
+	program.add_argument('step_index', help = wording.get('help.step_index'), type = int)
 	return program
 
 
 def collect_step_program() -> ArgumentParser:
-	return ArgumentParser(parents= [ create_config_program(), create_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], add_help = False)
+	return ArgumentParser(parents= [ create_config_program(), create_path_program(), create_jobs_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], add_help = False)
 
 
 def collect_job_program() -> ArgumentParser:
@@ -190,12 +197,12 @@ def create_program() -> ArgumentParser:
 	sub_program.add_parser('run-headless', help = wording.get('help.run_headless'), parents = [ collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
 	sub_program.add_parser('force-download', help = wording.get('help.force_download'), formatter_class = create_help_formatter_200)
 	# job manager
-	sub_program.add_parser('job-create', help = wording.get('help.job_create'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-submit', help = wording.get('help.job_submit'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-submit-all', help = wording.get('help.job_submit_all'))
-	sub_program.add_parser('job-delete', help = wording.get('help.job_delete'), parents = [ create_job_id_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-delete-all', help = wording.get('help.job_delete_all'))
-	sub_program.add_parser('job-list', help = wording.get('help.job_list'), parents = [ create_job_status_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-create', help = wording.get('help.job_create'), parents = [ create_job_id_program(), create_jobs_path_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-submit', help = wording.get('help.job_submit'), parents = [ create_job_id_program(), create_jobs_path_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-submit-all', help = wording.get('help.job_submit_all'), parents = [ create_jobs_path_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-delete', help = wording.get('help.job_delete'), parents = [ create_job_id_program(), create_jobs_path_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-delete-all', help = wording.get('help.job_delete_all'), parents = [ create_jobs_path_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-list', help = wording.get('help.job_list'), parents = [ create_job_status_program(), create_jobs_path_program() ], formatter_class = create_help_formatter_200)
 	sub_program.add_parser('job-add-step', help = wording.get('help.job_add_step'), parents = [ create_job_id_program(), collect_step_program() ], formatter_class = create_help_formatter_200)
 	sub_program.add_parser('job-remix-step', help = wording.get('help.job_remix_step'), parents = [ create_job_id_program(), collect_step_program() ], formatter_class = create_help_formatter_200)
 	sub_program.add_parser('job-insert-step', help = wording.get('help.job_insert_step'), parents = [ create_job_id_program(), collect_step_program() ], formatter_class = create_help_formatter_200)
@@ -292,9 +299,7 @@ def apply_args(args : Args) -> None:
 	state_manager.init_item('skip_download', args.get('skip_download'))
 	state_manager.init_item('log_level', args.get('log_level'))
 	# job
-	if args.get('command') in [ 'job-run', 'job-retry' ]:
-		state_manager.init_item('job_id', args.get('job_id'))
-	if args.get('command') == 'job-list':
-		state_manager.init_item('job_status', args.get('job_status'))
-	if args.get('command') in [ 'job-add-step', 'job-remix-step', 'job-insert-step' ]:
-		state_manager.init_item('step_index', args.get('step_index'))
+	state_manager.init_item('job_id', args.get('job_id'))
+	state_manager.init_item('job_status', args.get('job_status'))
+	state_manager.init_item('step_index', args.get('step_index'))
+
