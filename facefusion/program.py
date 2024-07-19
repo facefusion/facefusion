@@ -213,7 +213,7 @@ def create_program() -> ArgumentParser:
 	# job runner
 	sub_program.add_parser('job-run', help = wording.get('help.job_run'), parents = [ create_job_id_program(), create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
 	sub_program.add_parser('job-run-all', help = wording.get('help.job_run_all'), parents = [ create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-retry', help = wording.get('help.job_retry'), parents = [ create_job_id_program(), create_config_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-retry', help = wording.get('help.job_retry'), parents = [ create_job_id_program(), create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
 	sub_program.add_parser('job-retry-all', help = wording.get('help.job_retry_all'), parents = [ create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
 	return ArgumentParser(parents = [ program ], formatter_class = create_help_formatter_50, add_help = True)
 

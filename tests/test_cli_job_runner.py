@@ -4,7 +4,7 @@ import sys
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.jobs.job_manager import clear_jobs, init_jobs
+from facefusion.jobs.job_manager import clear_jobs, init_jobs, move_job_file, set_steps_status
 from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_output_file, prepare_test_output_directory
 
 
@@ -85,11 +85,63 @@ def test_job_run_all() -> None:
 	assert is_test_output_file('test-job-run-all-2.mp4') is True
 
 
-@pytest.mark.skip()
 def test_job_retry() -> None:
-	pass
+	commands = [ sys.executable, 'facefusion.py', 'job-retry', 'test-job-retry', '-j', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-retry', '-j', get_test_jobs_directory() ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-retry.jpg') ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-retry', 'test-job-retry', '-j', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	set_steps_status('test-job-retry', 'failed')
+	move_job_file('test-job-retry', 'failed')
+
+	commands = [ sys.executable, 'facefusion.py', 'job-retry', 'test-job-retry', '-j', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert subprocess.run(commands).returncode == 1
+	assert is_test_output_file('test-job-retry.jpg') is True
 
 
-@pytest.mark.skip()
 def test_job_retry_all() -> None:
-	pass
+	commands = [ sys.executable, 'facefusion.py', 'job-retry-all', '-j', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-retry-all-1', '-j', get_test_jobs_directory() ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-retry-all-2', '-j', get_test_jobs_directory() ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-1', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-retry-all-1.jpg') ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-2', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-retry-all-2.mp4'), '--trim-frame-end', '10' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-2', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-retry-all-2.mp4'), '--trim-frame-start', '10', '--trim-frame-start', '20' ]
+	subprocess.run(commands)
+
+	commands = [ sys.executable, 'facefusion.py', 'job-retry-all', '-j', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 1
+
+	set_steps_status('test-job-retry-all-1', 'failed')
+	set_steps_status('test-job-retry-all-2', 'failed')
+	move_job_file('test-job-retry-all-1', 'failed')
+	move_job_file('test-job-retry-all-2', 'failed')
+
+	commands = [ sys.executable, 'facefusion.py', 'job-retry-all', '-j', get_test_jobs_directory() ]
+
+	assert subprocess.run(commands).returncode == 0
+	assert subprocess.run(commands).returncode == 1
+	assert is_test_output_file('test-job-retry-all-1.jpg') is True
+	assert is_test_output_file('test-job-retry-all-2.mp4') is True
