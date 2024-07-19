@@ -38,7 +38,8 @@ def cli() -> None:
 	program = create_program()
 
 	if validate_args(program):
-		apply_args(program)
+		args = vars(program.parse_args())
+		apply_args(args)
 		logger.init(state_manager.get_item('log_level'))
 		run(program)
 
@@ -256,7 +257,8 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__.upper())
 	if validate_args(program):
-		apply_args(program)
+		args = vars(program.parse_args())
+		apply_args(args)
 		clear_frame_processors_modules()
 		error_code = conditional_process()
 		return error_code == 0

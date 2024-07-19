@@ -10,6 +10,7 @@ from facefusion.jobs import job_store
 from facefusion.normalizer import normalize_fps, normalize_padding
 from facefusion.processors.frame.core import load_frame_processor_module
 from facefusion.program_helper import suggest_face_detector_choices
+from facefusion.typing import Args
 from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, pack_resolution
 
 
@@ -212,89 +213,88 @@ def apply_config_path(program : ArgumentParser) -> None:
 	state_manager.init_item('config_path', known_args.config_path)
 
 
-def apply_args(program : ArgumentParser) -> None:
-	args = program.parse_args()
+def apply_args(args : Args) -> None:
 	# general
-	state_manager.init_item('command', args.command)
+	state_manager.init_item('command', args.get('command'))
 	# path
-	state_manager.init_item('source_paths', args.source_paths)
-	state_manager.init_item('target_path', args.target_path)
-	state_manager.init_item('output_path', args.output_path)
-	state_manager.init_item('jobs_path', args.jobs_path)
+	state_manager.init_item('source_paths', args.get('source_paths'))
+	state_manager.init_item('target_path', args.get('target_path'))
+	state_manager.init_item('output_path', args.get('output_path'))
+	state_manager.init_item('jobs_path', args.get('jobs_path'))
 	# face analyser
-	state_manager.init_item('face_detector_model', args.face_detector_model)
-	state_manager.init_item('face_detector_size', args.face_detector_size)
-	state_manager.init_item('face_detector_angles', args.face_detector_angles)
-	state_manager.init_item('face_detector_score', args.face_detector_score)
-	state_manager.init_item('face_landmarker_score', args.face_landmarker_score)
+	state_manager.init_item('face_detector_model', args.get('face_detector_model'))
+	state_manager.init_item('face_detector_size', args.get('face_detector_size'))
+	state_manager.init_item('face_detector_angles', args.get('face_detector_angles'))
+	state_manager.init_item('face_detector_score', args.get('face_detector_score'))
+	state_manager.init_item('face_landmarker_score', args.get('face_landmarker_score'))
 	# face selector
-	state_manager.init_item('face_selector_mode', args.face_selector_mode)
-	state_manager.init_item('face_selector_order', args.face_selector_order)
-	state_manager.init_item('face_selector_age', args.face_selector_age)
-	state_manager.init_item('face_selector_gender', args.face_selector_gender)
-	state_manager.init_item('reference_face_position', args.reference_face_position)
-	state_manager.init_item('reference_face_distance', args.reference_face_distance)
-	state_manager.init_item('reference_frame_number', args.reference_frame_number)
+	state_manager.init_item('face_selector_mode', args.get('face_selector_mode'))
+	state_manager.init_item('face_selector_order', args.get('face_selector_order'))
+	state_manager.init_item('face_selector_age', args.get('face_selector_age'))
+	state_manager.init_item('face_selector_gender', args.get('face_selector_gender'))
+	state_manager.init_item('reference_face_position', args.get('reference_face_position'))
+	state_manager.init_item('reference_face_distance', args.get('reference_face_distance'))
+	state_manager.init_item('reference_frame_number', args.get('reference_frame_number'))
 	# face masker
-	state_manager.init_item('face_mask_types', args.face_mask_types)
-	state_manager.init_item('face_mask_blur', args.face_mask_blur)
-	state_manager.init_item('face_mask_padding', normalize_padding(args.face_mask_padding))
-	state_manager.init_item('face_mask_regions', args.face_mask_regions)
+	state_manager.init_item('face_mask_types', args.get('face_mask_types'))
+	state_manager.init_item('face_mask_blur', args.get('face_mask_blur'))
+	state_manager.init_item('face_mask_padding', normalize_padding(args.get('face_mask_padding')))
+	state_manager.init_item('face_mask_regions', args.get('face_mask_regions'))
 	# frame extraction
-	state_manager.init_item('trim_frame_start', args.trim_frame_start)
-	state_manager.init_item('trim_frame_end', args.trim_frame_end)
-	state_manager.init_item('temp_frame_format', args.temp_frame_format)
-	state_manager.init_item('keep_temp', args.keep_temp)
+	state_manager.init_item('trim_frame_start', args.get('trim_frame_start'))
+	state_manager.init_item('trim_frame_end', args.get('trim_frame_end'))
+	state_manager.init_item('temp_frame_format', args.get('temp_frame_format'))
+	state_manager.init_item('keep_temp', args.get('keep_temp'))
 	# output creation
-	state_manager.init_item('output_image_quality', args.output_image_quality)
-	if is_image(args.target_path):
-		output_image_resolution = detect_image_resolution(args.target_path)
+	state_manager.init_item('output_image_quality', args.get('output_image_quality'))
+	if is_image(args.get('target_path')):
+		output_image_resolution = detect_image_resolution(args.get('target_path'))
 		output_image_resolutions = create_image_resolutions(output_image_resolution)
-		if args.output_image_resolution in output_image_resolutions:
-			state_manager.init_item('output_image_resolution', args.output_image_resolution)
+		if args.get('output_image_resolution') in output_image_resolutions:
+			state_manager.init_item('output_image_resolution', args.get('output_image_resolution'))
 		else:
 			state_manager.init_item('output_image_resolution', pack_resolution(output_image_resolution))
-	state_manager.init_item('output_audio_encoder', args.output_audio_encoder)
-	state_manager.init_item('output_video_encoder', args.output_video_encoder)
-	state_manager.init_item('output_video_preset', args.output_video_preset)
-	state_manager.init_item('output_video_quality', args.output_video_quality)
-	if is_video(args.target_path):
-		output_video_resolution = detect_video_resolution(args.target_path)
+	state_manager.init_item('output_audio_encoder', args.get('output_audio_encoder'))
+	state_manager.init_item('output_video_encoder', args.get('output_video_encoder'))
+	state_manager.init_item('output_video_preset', args.get('output_video_preset'))
+	state_manager.init_item('output_video_quality', args.get('output_video_quality'))
+	if is_video(args.get('target_path')):
+		output_video_resolution = detect_video_resolution(args.get('target_path'))
 		output_video_resolutions = create_video_resolutions(output_video_resolution)
-		if args.output_video_resolution in output_video_resolutions:
-			state_manager.init_item('output_video_resolution', args.output_video_resolution)
+		if args.get('output_video_resolution') in output_video_resolutions:
+			state_manager.init_item('output_video_resolution', args.get('output_video_resolution'))
 		else:
 			state_manager.init_item('output_video_resolution', pack_resolution(output_video_resolution))
-	if args.output_video_fps or is_video(args.target_path):
-		output_video_fps = normalize_fps(args.output_video_fps) or detect_video_fps(args.target_path)
+	if args.get('output_video_fps') or is_video(args.get('target_path')):
+		output_video_fps = normalize_fps(args.get('output_video_fps')) or detect_video_fps(args.get('target_path'))
 		state_manager.init_item('output_video_fps', output_video_fps)
-	state_manager.init_item('skip_audio', args.skip_audio)
+	state_manager.init_item('skip_audio', args.get('skip_audio'))
 	# frame processors
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')
-	state_manager.init_item('frame_processors', args.frame_processors)
+	state_manager.init_item('frame_processors', args.get('frame_processors'))
 	for frame_processor in available_frame_processors:
 		frame_processor_module = load_frame_processor_module(frame_processor)
-		frame_processor_module.apply_args(program)
+		frame_processor_module.apply_args(args)
 	# uis
-	if args.command == 'run':
-		state_manager.init_item('open_browser', args.open_browser)
-		state_manager.init_item('ui_layouts', args.ui_layouts)
-		state_manager.init_item('ui_workflow', args.ui_workflow)
+	if args.get('command') == 'run':
+		state_manager.init_item('open_browser', args.get('open_browser'))
+		state_manager.init_item('ui_layouts', args.get('ui_layouts'))
+		state_manager.init_item('ui_workflow', args.get('ui_workflow'))
 	# execution
-	state_manager.init_item('execution_device_id', args.execution_device_id)
-	state_manager.init_item('execution_providers', args.execution_providers)
-	state_manager.init_item('execution_thread_count', args.execution_thread_count)
-	state_manager.init_item('execution_queue_count', args.execution_queue_count)
+	state_manager.init_item('execution_device_id', args.get('execution_device_id'))
+	state_manager.init_item('execution_providers', args.get('execution_providers'))
+	state_manager.init_item('execution_thread_count', args.get('execution_thread_count'))
+	state_manager.init_item('execution_queue_count', args.get('execution_queue_count'))
 	# memory
-	state_manager.init_item('video_memory_strategy', args.video_memory_strategy)
-	state_manager.init_item('system_memory_limit', args.system_memory_limit)
+	state_manager.init_item('video_memory_strategy', args.get('video_memory_strategy'))
+	state_manager.init_item('system_memory_limit', args.get('system_memory_limit'))
 	# misc
-	state_manager.init_item('skip_download', args.skip_download)
-	state_manager.init_item('log_level', args.log_level)
+	state_manager.init_item('skip_download', args.get('skip_download'))
+	state_manager.init_item('log_level', args.get('log_level'))
 	# job
-	if args.command == 'job-run':
-		state_manager.init_item('job_id', args.job_id)
-	if args.command == 'job-list':
-		state_manager.init_item('job_status', args.job_status)
-	if args.command == 'job-add-step':
-		state_manager.init_item('step_index', args.step_index)
+	if args.get('command') in [ 'job-run', 'job-retry' ]:
+		state_manager.init_item('job_id', args.get('job_id'))
+	if args.get('command') == 'job-list':
+		state_manager.init_item('job_status', args.get('job_status'))
+	if args.get('command') in [ 'job-add-step', 'job-remix-step', 'job-insert-step' ]:
+		state_manager.init_item('step_index', args.get('step_index'))

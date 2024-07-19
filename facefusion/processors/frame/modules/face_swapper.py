@@ -26,7 +26,8 @@ from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode
 from facefusion.processors.frame.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import Embedding, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Embedding, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, \
+	UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
 FRAME_PROCESSOR = None
@@ -192,10 +193,9 @@ def register_args(program : ArgumentParser) -> None:
 		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost' ])
 
 
-def apply_args(program : ArgumentParser) -> None:
-	args = program.parse_args()
-	state_manager.init_item('face_swapper_model', args.face_swapper_model)
-	state_manager.init_item('face_swapper_pixel_boost', args.face_swapper_pixel_boost)
+def apply_args(args : Args) -> None:
+	state_manager.init_item('face_swapper_model', args.get('face_swapper_model'))
+	state_manager.init_item('face_swapper_pixel_boost', args.get('face_swapper_pixel_boost'))
 
 	if state_manager.get_item('face_swapper_model') == 'blendswap_256':
 		state_manager.init_item('face_recognizer_model', 'arcface_blendswap')

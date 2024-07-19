@@ -24,7 +24,8 @@ from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.typing import FaceEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, \
+	VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 FRAME_PROCESSOR = None
@@ -141,10 +142,9 @@ def register_args(program : ArgumentParser) -> None:
 		facefusion.jobs.job_store.register_step_keys([ 'face_enhancer_model', 'face_enhancer_blend' ])
 
 
-def apply_args(program : ArgumentParser) -> None:
-	args = program.parse_args()
-	state_manager.init_item('face_enhancer_model', args.face_enhancer_model)
-	state_manager.init_item('face_enhancer_blend', args.face_enhancer_blend)
+def apply_args(args : Args) -> None:
+	state_manager.init_item('face_enhancer_model', args.get('face_enhancer_model'))
+	state_manager.init_item('face_enhancer_blend',  args.get('face_enhancer_blend'))
 
 
 def pre_check() -> bool:
