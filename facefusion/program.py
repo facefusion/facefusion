@@ -1,4 +1,3 @@
-import sys
 from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
@@ -302,4 +301,3 @@ def apply_args(args : Args) -> None:
 	state_manager.init_item('job_id', args.get('job_id'))
 	state_manager.init_item('job_status', args.get('job_status'))
 	state_manager.init_item('step_index', args.get('step_index'))
-
