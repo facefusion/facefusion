@@ -192,6 +192,7 @@ def collect_job_program() -> ArgumentParser:
 
 def create_program() -> ArgumentParser:
 	program = ArgumentParser(formatter_class = create_help_formatter_200, add_help = False)
+	program._positionals.title = 'commands'
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	sub_program = program.add_subparsers(dest = 'command')
 	# general
