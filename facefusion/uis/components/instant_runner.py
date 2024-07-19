@@ -85,10 +85,10 @@ def create_and_run_job(step_args : Args) -> bool:
 
 
 def get_step_args() -> Args:
-	program = create_program()
-	program = import_state(program, job_store.get_step_keys(), state_manager.get_state())
-	program = reduce_args(program, job_store.get_step_keys())
-	step_args = vars(program.parse_args())
+	step_args =\
+	{
+		key: state_manager.get_item(key) for key in job_store.get_step_keys()
+	}
 	return step_args
 
 
