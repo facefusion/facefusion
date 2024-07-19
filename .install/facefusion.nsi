@@ -150,8 +150,8 @@ SectionEnd
 
 Section 'Create Run Batch'
 	SetOutPath $INSTDIR
-	FileOpen $0 run.bat w
-	FileWrite $0 '@echo off && conda activate facefusion && python run.py %*'
+	FileOpen $0 facefusion.bat w
+	FileWrite $0 '@echo off && conda activate facefusion && python facefusion.py %*'
 	FileClose $0
 SectionEnd
 

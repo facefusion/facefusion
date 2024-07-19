@@ -99,8 +99,9 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 
 
 def pre_process() -> None:
-	if state_manager.get_item('system_memory_limit') > 0:
-		limit_system_memory(state_manager.get_item('system_memory_limit'))
+	system_memory_limit = state_manager.get_item('system_memory_limit')
+	if system_memory_limit and system_memory_limit > 0:
+		limit_system_memory(system_memory_limit)
 
 
 def benchmark(benchmark_cycles : int) -> List[Any]:

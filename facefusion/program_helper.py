@@ -1,11 +1,8 @@
-from argparse import Action, ArgumentParser, _ArgumentGroup
-from copy import copy
-from typing import List, Optional, Union
+from argparse import ArgumentParser, _ArgumentGroup
+from typing import List, Optional
 
 import facefusion.choices
 from facefusion.processors.frame import choices as frame_processors_choices
-from facefusion.processors.frame.typing import FrameProcessorState
-from facefusion.typing import Args, State
 
 
 def find_argument_group(program : ArgumentParser, group_name : str) -> Optional[_ArgumentGroup]:
@@ -24,43 +21,6 @@ def validate_args(program : ArgumentParser) -> bool:
 			elif action.default not in action.choices:
 				return False
 	return True
-
-
-def reduce_args(program : ArgumentParser, keys : List[str]) -> ArgumentParser:
-	program = copy(program)
-	actions : List[Action] = []
-
-	for action in program._actions:
-		if action.dest in keys:
-			actions.append(action)
-	program._actions = actions
-	return program
-
-
-def update_args(program : ArgumentParser, args : Args) -> ArgumentParser:
-	program = copy(program)
-
-	for action in program._actions:
-		if action.dest in args:
-			if action.dest == 'face_detector_size':
-				action.choices = suggest_face_detector_choices(program)
-			if action.dest == 'face_swapper_pixel_boost':
-				action.choices = suggest_face_swapper_pixel_boost_choices(program)
-			action.default = args[action.dest]
-	return program
-
-
-def import_state(program : ArgumentParser, keys : List[str], state : Union[State, FrameProcessorState]) -> ArgumentParser:
-	program = copy(program)
-	args : Args = {}
-
-	for key in keys:
-		if key in state:
-			args[key] = state[key] #type:ignore[literal-required]
-
-	if args:
-		return update_args(program, args)
-	return program
 
 
 def suggest_face_detector_choices(program : ArgumentParser) -> List[str]:

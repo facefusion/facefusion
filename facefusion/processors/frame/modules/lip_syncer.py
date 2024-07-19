@@ -25,7 +25,8 @@ from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.typing import LipSyncerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import AudioFrame, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, AudioFrame, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, \
+	UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
 from facefusion.voice_extractor import clear_voice_extractor
 
@@ -89,9 +90,8 @@ def register_args(program : ArgumentParser) -> None:
 		facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model' ])
 
 
-def apply_args(program : ArgumentParser) -> None:
-	args = program.parse_args()
-	state_manager.init_item('lip_syncer_model', args.lip_syncer_model)
+def apply_args(args : Args) -> None:
+	state_manager.init_item('lip_syncer_model', args.get('lip_syncer_model'))
 
 
 def pre_check() -> bool:

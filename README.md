@@ -26,7 +26,7 @@ Usage
 Run the command:
 
 ```
-python run.py [options]
+python facefusion.py [options]
 
 options:
   -h, --help                                                                                                                                                                            show this help message and exit

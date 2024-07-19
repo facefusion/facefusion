@@ -100,7 +100,7 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 
 def validate_job(job_id : str) -> bool:
 	job = read_job_file(job_id)
-	return job and 'version' in job and 'date_created' in job and 'date_updated' in job and 'steps' in job
+	return bool(job and 'version' in job and 'date_created' in job and 'date_updated' in job and 'steps' in job)
 
 
 def has_step(job_id : str, step_index : int) -> bool:

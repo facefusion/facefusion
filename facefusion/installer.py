@@ -10,8 +10,6 @@ import inquirer
 from facefusion import metadata, wording
 from facefusion.common_helper import is_linux, is_macos, is_windows
 
-if is_macos():
-	os.environ['SYSTEM_VERSION_COMPAT'] = '0'
 
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 

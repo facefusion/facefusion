@@ -26,7 +26,7 @@ from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.typing import AgeModifierInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Face, Mask, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, Mask, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 FRAME_PROCESSOR = None
@@ -87,10 +87,9 @@ def register_args(program : ArgumentParser) -> None:
 		facefusion.jobs.job_store.register_step_keys([ 'age_modifier_model', 'age_modifier_direction' ])
 
 
-def apply_args(program : ArgumentParser) -> None:
-	args = program.parse_args()
-	state_manager.init_item('age_modifier_model', args.age_modifier_model)
-	state_manager.init_item('age_modifier_direction', args.age_modifier_direction)
+def apply_args(args : Args) -> None:
+	state_manager.init_item('age_modifier_model', args.get('age_modifier_model'))
+	state_manager.init_item('age_modifier_direction', args.get('age_modifier_direction'))
 
 
 def pre_check() -> bool:

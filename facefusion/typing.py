@@ -168,21 +168,12 @@ JobSet = Dict[str, Job]
 StateContext = Literal['core', 'uis']
 StateKey = Literal\
 [
+	'command',
 	'config_path',
 	'source_paths',
 	'target_path',
 	'output_path',
 	'jobs_path',
-	'force_download',
-	'skip_download',
-	'headless',
-	'log_level',
-	'execution_device_id',
-	'execution_providers',
-	'execution_thread_count',
-	'execution_queue_count',
-	'video_memory_strategy',
-	'system_memory_limit',
 	'face_detector_model',
 	'face_detector_size',
 	'face_detector_angles',
@@ -216,10 +207,22 @@ StateKey = Literal\
 	'frame_processors',
 	'open_browser',
 	'ui_layouts',
-	'ui_workflow'
+	'ui_workflow',
+	'execution_device_id',
+	'execution_providers',
+	'execution_thread_count',
+	'execution_queue_count',
+	'video_memory_strategy',
+	'system_memory_limit',
+	'skip_download',
+	'log_level',
+	'job_id',
+	'job_status',
+	'step_index'
 ]
 State = TypedDict('State',
 {
+	'command' : str,
 	'config_path' : str,
 	'source_paths' : List[str],
 	'target_path' : str,
@@ -268,6 +271,9 @@ State = TypedDict('State',
 	'frame_processors' : List[str],
 	'open_browser' : bool,
 	'ui_layouts' : List[str],
-	'ui_workflow' : UiWorkflow
+	'ui_workflow' : UiWorkflow,
+	'job_id': str,
+	'job_status': JobStatus,
+	'step_index': int
 })
 StateSet = Dict[StateContext, State]

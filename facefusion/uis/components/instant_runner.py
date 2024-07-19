@@ -4,10 +4,10 @@ from typing import Optional, Tuple
 import gradio
 
 from facefusion import process_manager, state_manager, wording
-from facefusion.core import create_program, process_step
+from facefusion.args import collect_step_args
+from facefusion.core import process_step
 from facefusion.filesystem import is_directory, is_image, is_video
-from facefusion.jobs import job_helper, job_manager, job_runner, job_store
-from facefusion.program_helper import import_state, reduce_args
+from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.temp_helper import clear_temp_directory
 from facefusion.typing import Args
 from facefusion.uis.core import get_ui_component, register_ui_component
@@ -63,7 +63,7 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 
 def run() -> Tuple[gradio.Button, gradio.Button, gradio.Image, gradio.Video]:
-	step_args = get_step_args()
+	step_args = collect_step_args()
 	output_path = step_args.get('output_path')
 
 	if is_directory(step_args.get('output_path')):
@@ -82,14 +82,6 @@ def create_and_run_job(step_args : Args) -> bool:
 	job_id = job_helper.suggest_job_id('ui')
 
 	return job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step)
-
-
-def get_step_args() -> Args:
-	program = create_program()
-	program = import_state(program, job_store.get_step_keys(), state_manager.get_state())
-	program = reduce_args(program, job_store.get_step_keys())
-	step_args = vars(program.parse_args())
-	return step_args
 
 
 def stop() -> Tuple[gradio.Button, gradio.Button]:
