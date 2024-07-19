@@ -250,19 +250,18 @@ def route_job_runner() -> ErrorCode:
 
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
-	program = create_program()
-	program = update_args(program, step_args)
-	program = import_state(program, job_store.get_job_keys(), state_manager.get_state())
+	args = step_args
+	job_args =\
+	{
+		key: state_manager.get_item(key) for key in job_store.get_job_keys()
+	}
+	step_args.update(job_args)
 	step_total = job_manager.count_step_total(job_id)
-
 	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__.upper())
-	if validate_args(program):
-		args = vars(program.parse_args())
-		apply_args(args)
-		clear_frame_processors_modules()
-		error_code = conditional_process()
-		return error_code == 0
-	return False
+	apply_args(args)
+	clear_frame_processors_modules()
+	error_code = conditional_process()
+	return error_code == 0
 
 
 def process_headless(args : Args) -> ErrorCode:
@@ -275,7 +274,10 @@ def process_headless(args : Args) -> ErrorCode:
 
 
 def extract_step_args(args : Args) -> Args:
-	step_args = { key: args[key] for key in args if key in job_store.get_step_keys() }
+	step_args =\
+	{
+		key: args[key] for key in args if key in job_store.get_step_keys()
+	}
 	return step_args
 
 
