@@ -7,12 +7,28 @@ from facefusion.typing import Args
 from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, pack_resolution
 
 
-def extract_step_args(args : Args) -> Args:
+def reduce_step_args(args : Args) -> Args:
 	step_args =\
 	{
 		key: args[key] for key in args if key in job_store.get_step_keys()
 	}
 	return step_args
+
+
+def collect_step_args() -> Args:
+	step_args =\
+	{
+		key: state_manager.get_item(key) for key in job_store.get_step_keys() #type:ignore[arg-type]
+	}
+	return step_args
+
+
+def collect_job_args() -> Args:
+	job_args =\
+	{
+		key: state_manager.get_item(key) for key in job_store.get_job_keys() #type:ignore[arg-type]
+	}
+	return job_args
 
 
 def apply_args(args : Args) -> None:

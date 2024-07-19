@@ -8,7 +8,7 @@ import numpy
 import onnxruntime
 
 from facefusion import content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, voice_extractor, wording
-from facefusion.args import apply_args, extract_step_args
+from facefusion.args import apply_args, collect_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.download import conditional_download
@@ -18,7 +18,7 @@ from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, get_reference_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
 from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_relative_path
-from facefusion.jobs import job_helper, job_manager, job_runner, job_store
+from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules
@@ -191,7 +191,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 			return 0
 		return 1
 	if state_manager.get_item('command') == 'job-add-step':
-		step_args = extract_step_args(args)
+		step_args = reduce_step_args(args)
 
 		if job_manager.add_step(state_manager.get_item('job_id'), step_args):
 			logger.info(wording.get('job_step_added').format(job_id = state_manager.get_item('job_id')), __name__.upper())
@@ -199,7 +199,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		logger.error(wording.get('job_step_not_added').format(job_id = state_manager.get_item('job_id')), __name__.upper())
 		return 1
 	if state_manager.get_item('command') == 'job-remix-step':
-		step_args = extract_step_args(args)
+		step_args = reduce_step_args(args)
 
 		if job_manager.remix_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(wording.get('job_remix_step_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__.upper())
@@ -207,7 +207,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		logger.error(wording.get('job_remix_step_not_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__.upper())
 		return 1
 	if state_manager.get_item('command') == 'job-insert-step':
-		step_args = extract_step_args(args)
+		step_args = reduce_step_args(args)
 
 		if job_manager.insert_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(wording.get('job_step_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__.upper())
@@ -257,11 +257,7 @@ def route_job_runner() -> ErrorCode:
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	args = step_args
-	job_args =\
-	{
-		key: state_manager.get_item(key) for key in job_store.get_job_keys() #type:ignore[arg-type]
-	}
-	args.update(job_args)
+	args.update(collect_job_args())
 	step_total = job_manager.count_step_total(job_id)
 	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__.upper())
 	apply_args(args)
@@ -272,7 +268,7 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 def process_headless(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('headless')
-	step_args = extract_step_args(args)
+	step_args = reduce_step_args(args)
 
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0

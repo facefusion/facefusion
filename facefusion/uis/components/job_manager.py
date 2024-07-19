@@ -3,10 +3,10 @@ from typing import List, Optional, Tuple
 import gradio
 
 from facefusion import logger, state_manager, wording
+from facefusion.args import collect_step_args
 from facefusion.common_helper import get_first, get_last
 from facefusion.filesystem import is_directory
-from facefusion.jobs import job_manager, job_store
-from facefusion.typing import Args
+from facefusion.jobs import job_manager
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import JobManagerAction
@@ -75,7 +75,7 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 	created_job_id = convert_str_none(created_job_id)
 	selected_job_id = convert_str_none(selected_job_id)
 	selected_step_index = convert_int_none(selected_step_index)
-	step_args = get_step_args()
+	step_args = collect_step_args()
 	output_path = step_args.get('output_path')
 
 	if is_directory(step_args.get('output_path')):
@@ -141,14 +141,6 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 		else:
 			logger.error(wording.get('job_step_not_removed').format(job_id = selected_job_id, step_index = selected_step_index), __name__.upper())
 	return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(), gradio.Dropdown()
-
-
-def get_step_args() -> Args:
-	step_args =\
-	{
-		key: state_manager.get_item(key) for key in job_store.get_step_keys() #type:ignore[arg-type]
-	}
-	return step_args
 
 
 def get_step_choices(job_id : str) -> List[int]:
