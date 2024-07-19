@@ -48,7 +48,7 @@ def apply_execution_provider_options(execution_device_id : str, execution_provid
 				'device_type': 'GPU.' + execution_device_id,
 				'precision': 'FP32'
 			}))
-		elif execution_provider in [ 'DmlExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider' ]:
+		elif execution_provider in [ 'DmlExecutionProvider', 'ROCMExecutionProvider' ]:
 			execution_providers_with_options.append((execution_provider,
 			{
 				'device_id': execution_device_id
