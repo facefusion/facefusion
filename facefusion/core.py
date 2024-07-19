@@ -2,7 +2,6 @@ import shutil
 import signal
 import sys
 import warnings
-from argparse import ArgumentParser
 from time import sleep, time
 
 import numpy
@@ -23,7 +22,7 @@ from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules
 from facefusion.program import apply_args, create_program
-from facefusion.program_helper import import_state, reduce_args, update_args, validate_args
+from facefusion.program_helper import validate_args
 from facefusion.statistics import conditional_log_statistics
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
 from facefusion.typing import Args, ErrorCode
@@ -40,8 +39,10 @@ def cli() -> None:
 	if validate_args(program):
 		args = vars(program.parse_args())
 		apply_args(args)
-		logger.init(state_manager.get_item('log_level'))
-		run(args)
+
+		if state_manager.get_item('command'):
+			logger.init(state_manager.get_item('log_level'))
+			run(args)
 
 
 def run(args : Args) -> None:
