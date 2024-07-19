@@ -39,7 +39,7 @@ def create_path_program() -> ArgumentParser:
 def create_jobs_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	program.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('general.jobs_path', '.jobs'))
-	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
+	job_store.register_job_keys([ 'jobs_path' ])
 	return program
 
 
