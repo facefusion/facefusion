@@ -60,8 +60,10 @@ def run(args : Args) -> None:
 			hard_exit(1)
 		error_code = route_job_manager(args)
 		hard_exit(error_code)
+	if not pre_check():
+		return conditional_exit(2)
 	if state_manager.get_item('command') in [ 'run', 'run-headless' ]:
-		if not pre_check() or not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check():
+		if not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check():
 			return conditional_exit(2)
 		for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
 			if not frame_processor_module.pre_check():

@@ -144,7 +144,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(args : Args) -> None:
 	state_manager.init_item('face_enhancer_model', args.get('face_enhancer_model'))
-	state_manager.init_item('face_enhancer_blend',  args.get('face_enhancer_blend'))
+	state_manager.init_item('face_enhancer_blend', args.get('face_enhancer_blend'))
 
 
 def pre_check() -> bool:
