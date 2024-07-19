@@ -8,6 +8,7 @@ import numpy
 import onnxruntime
 
 from facefusion import content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, voice_extractor, wording
+from facefusion.args import apply_args, extract_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.download import conditional_download
@@ -21,7 +22,7 @@ from facefusion.jobs import job_helper, job_manager, job_runner, job_store
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules
-from facefusion.program import apply_args, create_program
+from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.statistics import conditional_log_statistics
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
@@ -276,14 +277,6 @@ def process_headless(args : Args) -> ErrorCode:
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0
 	return 1
-
-
-def extract_step_args(args : Args) -> Args:
-	step_args =\
-	{
-		key: args[key] for key in args if key in job_store.get_step_keys()
-	}
-	return step_args
 
 
 def process_image(start_time : float) -> ErrorCode:
