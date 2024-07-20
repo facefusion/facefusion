@@ -4,12 +4,11 @@ from typing import Any, Dict, List
 
 import cv2
 import numpy
-import onnxruntime
 from cv2.typing import Size
 
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.execution import apply_execution_provider_options
+from facefusion.execution import create_inference_session
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import FaceLandmark68, FaceMaskRegion, Mask, ModelSet, Padding, VisionFrame
@@ -52,7 +51,7 @@ def get_face_occluder() -> Any:
 			sleep(0.5)
 		if FACE_OCCLUDER is None:
 			model_path = MODELS.get('face_occluder').get('path')
-			FACE_OCCLUDER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			FACE_OCCLUDER = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return FACE_OCCLUDER
 
 
@@ -64,7 +63,7 @@ def get_face_parser() -> Any:
 			sleep(0.5)
 		if FACE_PARSER is None:
 			model_path = MODELS.get('face_parser').get('path')
-			FACE_PARSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			FACE_PARSER = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return FACE_PARSER
 
 

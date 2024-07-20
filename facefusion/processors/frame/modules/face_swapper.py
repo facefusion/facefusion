@@ -4,7 +4,6 @@ from typing import Any, List, Literal, Optional
 
 import numpy
 import onnx
-import onnxruntime
 from onnx import numpy_helper
 
 import facefusion.jobs.job_manager
@@ -14,7 +13,7 @@ from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import apply_execution_provider_options, has_execution_provider
+from facefusion.execution import create_inference_session, has_execution_provider
 from facefusion.face_analyser import clear_face_analyser, get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_occlusion_mask, create_region_mask, create_static_box_mask
@@ -137,7 +136,7 @@ def get_frame_processor() -> Any:
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			FRAME_PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return FRAME_PROCESSOR
 
 

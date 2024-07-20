@@ -3,12 +3,11 @@ from typing import Any, List, Optional, Tuple
 
 import cv2
 import numpy
-import onnxruntime
 
 from facefusion import process_manager, state_manager
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download
-from facefusion.execution import apply_execution_provider_options
+from facefusion.execution import create_inference_session
 from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, estimate_face_angle_from_face_landmark_68, estimate_matrix_by_face_landmark_5, get_nms_threshold, normalize_bounding_box, transform_bounding_box, transform_points, warp_face_by_face_landmark_5, warp_face_by_translation
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.filesystem import is_file, resolve_relative_path
@@ -89,24 +88,24 @@ def get_face_analyser() -> Any:
 			sleep(0.5)
 		if FACE_ANALYSER is None:
 			if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
-				face_detectors['retinaface'] = onnxruntime.InferenceSession(MODELS.get('face_detector_retinaface').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+				face_detectors['retinaface'] = create_inference_session(MODELS.get('face_detector_retinaface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
-				face_detectors['scrfd'] = onnxruntime.InferenceSession(MODELS.get('face_detector_scrfd').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+				face_detectors['scrfd'] = create_inference_session(MODELS.get('face_detector_scrfd').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
-				face_detectors['yoloface'] = onnxruntime.InferenceSession(MODELS.get('face_detector_yoloface').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+				face_detectors['yoloface'] = create_inference_session(MODELS.get('face_detector_yoloface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_recognizer_model') == 'arcface_blendswap':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_blendswap').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+				face_recognizer = create_inference_session(MODELS.get('face_recognizer_arcface_blendswap').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_recognizer_model') == 'arcface_ghost':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_ghost').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+				face_recognizer = create_inference_session(MODELS.get('face_recognizer_arcface_ghost').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_recognizer_model') == 'arcface_inswapper':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_inswapper').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+				face_recognizer = create_inference_session(MODELS.get('face_recognizer_arcface_inswapper').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_recognizer_model') == 'arcface_simswap':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_simswap').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+				face_recognizer = create_inference_session(MODELS.get('face_recognizer_arcface_simswap').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_recognizer_model') == 'arcface_uniface':
-				face_recognizer = onnxruntime.InferenceSession(MODELS.get('face_recognizer_arcface_uniface').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
-			face_landmarkers['68'] = onnxruntime.InferenceSession(MODELS.get('face_landmarker_68').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
-			face_landmarkers['68_5'] = onnxruntime.InferenceSession(MODELS.get('face_landmarker_68_5').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
-			gender_age = onnxruntime.InferenceSession(MODELS.get('gender_age').get('path'), providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+				face_recognizer = create_inference_session(MODELS.get('face_recognizer_arcface_uniface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+			face_landmarkers['68'] = create_inference_session(MODELS.get('face_landmarker_68').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+			face_landmarkers['68_5'] = create_inference_session(MODELS.get('face_landmarker_68_5').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+			gender_age = create_inference_session(MODELS.get('gender_age').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			FACE_ANALYSER =\
 			{
 				'face_detectors': face_detectors,
