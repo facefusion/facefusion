@@ -34,11 +34,11 @@ def collect_job_args() -> Args:
 def apply_args(args : Args) -> None:
 	# general
 	state_manager.init_item('command', args.get('command'))
-	# path
+	# paths
+	state_manager.init_item('jobs_path', args.get('jobs_path'))
 	state_manager.init_item('source_paths', args.get('source_paths'))
 	state_manager.init_item('target_path', args.get('target_path'))
 	state_manager.init_item('output_path', args.get('output_path'))
-	state_manager.init_item('jobs_path', args.get('jobs_path'))
 	# face analyser
 	state_manager.init_item('face_detector_model', args.get('face_detector_model'))
 	state_manager.init_item('face_detector_size', args.get('face_detector_size'))

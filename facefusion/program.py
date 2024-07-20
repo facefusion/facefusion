@@ -27,19 +27,19 @@ def create_config_program() -> ArgumentParser:
 	return program
 
 
-def create_path_program() -> ArgumentParser:
+def create_jobs_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', default = config.get_str_list('general.source_paths'))
-	program.add_argument('-t', '--target-path', help = wording.get('help.target_path'), default = config.get_str_value('general.target_path'))
-	program.add_argument('-o', '--output-path', help = wording.get('help.output_path'), default = config.get_str_value('general.output_path'))
-	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
+	program.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('paths.jobs_path', '.jobs'))
+	job_store.register_job_keys([ 'jobs_path' ])
 	return program
 
 
-def create_jobs_path_program() -> ArgumentParser:
+def create_paths_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('general.jobs_path', '.jobs'))
-	job_store.register_job_keys([ 'jobs_path' ])
+	program.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', default = config.get_str_list('paths.source_paths'))
+	program.add_argument('-t', '--target-path', help = wording.get('help.target_path'), default = config.get_str_value('paths.target_path'))
+	program.add_argument('-o', '--output-path', help = wording.get('help.output_path'), default = config.get_str_value('paths.output_path'))
+	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
 	return program
 
 
@@ -185,7 +185,7 @@ def create_step_index_program() -> ArgumentParser:
 
 
 def collect_step_program() -> ArgumentParser:
-	return ArgumentParser(parents= [ create_config_program(), create_path_program(), create_jobs_path_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], add_help = False)
+	return ArgumentParser(parents= [ create_config_program(), create_jobs_path_program(), create_paths_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], add_help = False)
 
 
 def collect_job_program() -> ArgumentParser:
