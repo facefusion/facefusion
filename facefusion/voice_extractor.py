@@ -2,12 +2,11 @@ from time import sleep
 from typing import Any, Tuple
 
 import numpy
-import onnxruntime
 import scipy
 
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.execution import apply_execution_provider_options
+from facefusion.execution import create_inference_session
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Audio, AudioChunk, ModelSet
@@ -31,7 +30,7 @@ def get_voice_extractor() -> Any:
 			sleep(0.5)
 		if VOICE_EXTRACTOR is None:
 			model_path = MODELS.get('voice_extractor').get('path')
-			VOICE_EXTRACTOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			VOICE_EXTRACTOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return VOICE_EXTRACTOR
 
 

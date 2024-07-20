@@ -4,12 +4,11 @@ from typing import Any
 
 import cv2
 import numpy
-import onnxruntime
 from tqdm import tqdm
 
 from facefusion import process_manager, state_manager, wording
 from facefusion.download import conditional_download
-from facefusion.execution import apply_execution_provider_options
+from facefusion.execution import create_inference_session
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Fps, ModelSet, VisionFrame
@@ -37,7 +36,7 @@ def get_content_analyser() -> Any:
 			sleep(0.5)
 		if CONTENT_ANALYSER is None:
 			model_path = MODELS.get('open_nsfw').get('path')
-			CONTENT_ANALYSER = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			CONTENT_ANALYSER = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return CONTENT_ANALYSER
 
 

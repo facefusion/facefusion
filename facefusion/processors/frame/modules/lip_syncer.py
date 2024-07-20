@@ -4,7 +4,6 @@ from typing import Any, List, Literal, Optional
 
 import cv2
 import numpy
-import onnxruntime
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -14,7 +13,7 @@ from facefusion.audio import create_empty_audio_frame, get_voice_frame, read_sta
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import apply_execution_provider_options
+from facefusion.execution import create_inference_session
 from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
 from facefusion.face_helper import create_bounding_box_from_face_landmark_68, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
 from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_mouth_mask, create_occlusion_mask, create_static_box_mask
@@ -25,8 +24,7 @@ from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.typing import LipSyncerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import Args, AudioFrame, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, \
-	UpdateProgress, VisionFrame
+from facefusion.typing import Args, AudioFrame, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
 from facefusion.voice_extractor import clear_voice_extractor
 
@@ -56,7 +54,7 @@ def get_frame_processor() -> Any:
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers')))
+			FRAME_PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return FRAME_PROCESSOR
 
 

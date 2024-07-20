@@ -4,7 +4,6 @@ from typing import Any, List, Literal, Optional
 
 import cv2
 import numpy
-import onnxruntime
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -13,15 +12,14 @@ from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import apply_execution_provider_options, has_execution_provider
+from facefusion.execution import create_inference_session, has_execution_provider
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.typing import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Args, ExecutionProviderKey, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, \
-	UpdateProgress, VisionFrame
+from facefusion.typing import Args, ExecutionProviderKey, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, unpack_resolution, write_image
 
 FRAME_PROCESSOR = None
@@ -71,7 +69,7 @@ def get_frame_processor() -> Any:
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
 			execution_providers : List[ExecutionProviderKey] = [ 'cpu' ] if has_execution_provider('coreml') else state_manager.get_item('execution_providers')
-			FRAME_PROCESSOR = onnxruntime.InferenceSession(model_path, providers = apply_execution_provider_options(state_manager.get_item('execution_device_id'), execution_providers))
+			FRAME_PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), execution_providers)
 	return FRAME_PROCESSOR
 
 

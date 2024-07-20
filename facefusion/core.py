@@ -1,7 +1,6 @@
 import shutil
 import signal
 import sys
-import warnings
 from time import sleep, time
 
 import numpy
@@ -30,7 +29,6 @@ from facefusion.typing import Args, ErrorCode
 from facefusion.vision import get_video_frame, pack_resolution, read_image, read_static_images, restrict_image_resolution, restrict_video_fps, restrict_video_resolution, unpack_resolution
 
 onnxruntime.set_default_logger_severity(3)
-warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 
 
 def cli() -> None:

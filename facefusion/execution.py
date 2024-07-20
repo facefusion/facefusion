@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ElementTree
 from functools import lru_cache
 from typing import Any, List
 
-import onnxruntime
+from onnxruntime import InferenceSession, get_available_providers
 
 from facefusion.choices import execution_provider_set
 from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, ValueAndUnit
@@ -18,7 +18,7 @@ def has_execution_provider(execution_provider_key : ExecutionProviderKey) -> boo
 
 
 def get_available_execution_provider_set() -> ExecutionProviderSet:
-	available_execution_providers = onnxruntime.get_available_providers()
+	available_execution_providers = get_available_providers()
 	available_execution_provider_set : ExecutionProviderSet = {}
 
 	for execution_provider_key, execution_provider_value in execution_provider_set.items():
@@ -67,6 +67,10 @@ def use_exhaustive() -> bool:
 	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
 
 	return any(execution_device.get('product').get('name').startswith(product_names) for execution_device in execution_devices)
+
+
+def create_inference_session(model_path : str, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSession:
+	return InferenceSession(model_path, providers = apply_execution_provider_options(execution_device_id, execution_provider_keys))
 
 
 def run_nvidia_smi() -> subprocess.Popen[bytes]:
