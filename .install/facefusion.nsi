@@ -96,8 +96,8 @@ Section 'Download Your Copy'
 	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch 3.0.0 .'
 SectionEnd
 
-Section 'Set Up Your Environment'
-	DetailPrint 'Set Up Your Environment'
+Section 'Prepare Your Environment'
+	DetailPrint 'Prepare Your Environment'
 	nsExec::Exec '$LOCALAPPDATA\Programs\Miniconda3\Scripts\conda.exe init --all'
 	nsExec::Exec '$LOCALAPPDATA\Programs\Miniconda3\Scripts\conda.exe create --name facefusion python=3.10 --yes'
 SectionEnd
