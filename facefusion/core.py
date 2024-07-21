@@ -20,7 +20,7 @@ from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_d
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
-from facefusion.processors.frame import face_restorer
+from facefusion.processors.frame import expression_restorer
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
@@ -62,7 +62,7 @@ def run(args : Args) -> None:
 	if not pre_check():
 		return conditional_exit(2)
 	if state_manager.get_item('command') in [ 'run', 'run-headless' ]:
-		if not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check() or not face_restorer.pre_check():
+		if not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check() or not expression_restorer.pre_check():
 			return conditional_exit(2)
 		for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
 			if not frame_processor_module.pre_check():

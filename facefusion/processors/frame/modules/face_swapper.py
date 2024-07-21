@@ -17,20 +17,17 @@ from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import create_inference_session, has_execution_provider
 from facefusion.face_analyser import clear_face_analyser, get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
-from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_occlusion_mask, create_region_mask, \
-	create_static_box_mask
+from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_occlusion_mask, create_region_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
-from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_file, is_image, is_video, \
-	resolve_relative_path, same_file_extension
+from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.frame import choices as frame_processors_choices
-from facefusion.processors.frame.face_restorer import clear_expression_restorer, restore_expression
+from facefusion.processors.frame.expression_restorer import clear_expression_restorer, restore_expression
 from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.processors.frame.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import Args, Embedding, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, \
-	UpdateProgress, VisionFrame
+from facefusion.typing import Args, Embedding, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
 FRAME_PROCESSOR = None
