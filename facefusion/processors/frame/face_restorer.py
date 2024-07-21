@@ -15,7 +15,7 @@ from facefusion.typing import ModelSet, VisionFrame
 EXPRESSION_RESTORER = None
 MODELS : ModelSet =\
 {
-	'live_portrait_expression_restorer':
+	'expression_restorer':
 	{
 		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/live_portrait_expression_restorer.onnx',
 		'path': resolve_relative_path('../.assets/models/live_portrait_expression_restorer.onnx'),
@@ -30,7 +30,7 @@ def get_expression_restorer() -> Any:
 		while process_manager.is_checking():
 			sleep(0.5)
 		if EXPRESSION_RESTORER is None:
-			model_path = MODELS.get('live_portrait_expression_restorer').get('path')
+			model_path = MODELS.get('expression_restorer').get('path')
 			EXPRESSION_RESTORER = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return EXPRESSION_RESTORER
 
@@ -45,11 +45,11 @@ def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
 	model_urls =\
 	[
-		MODELS.get('live_portrait_expression_restorer').get('url'),
+		MODELS.get('expression_restorer').get('url'),
 	]
 	model_paths =\
 	[
-		MODELS.get('live_portrait_expression_restorer').get('path'),
+		MODELS.get('expression_restorer').get('path'),
 	]
 
 	if not state_manager.get_item('skip_download'):

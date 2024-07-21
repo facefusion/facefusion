@@ -301,7 +301,7 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 		region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))
 		crop_masks.append(region_mask)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
-	if state_manager.get_item('face_swapper_expression_restorer') != 0:
+	if state_manager.get_item('face_swapper_expression_restorer') > 0:
 		crop_vision_frame, matrix_scale = restore_expression(source_vision_frame, crop_vision_frame, state_manager.get_item('face_swapper_expression_restorer'))
 		crop_mask = cv2.resize(crop_mask, crop_vision_frame.shape[:2][::-1])
 		affine_matrix *= matrix_scale
