@@ -159,3 +159,8 @@ def create_mouth_mask(face_landmark_68 : FaceLandmark68) -> Mask:
 	mouth_mask = cv2.erode(mouth_mask.clip(0, 1), numpy.ones((21, 3)))
 	mouth_mask = cv2.GaussianBlur(mouth_mask, (0, 0), sigmaX = 1, sigmaY = 15)
 	return mouth_mask
+
+
+def create_face_mask(crop_vision_frame : VisionFrame) -> Mask:
+	face_regions : List[FaceMaskRegion] = [ 'skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip' ]
+	return create_region_mask(crop_vision_frame, face_regions)

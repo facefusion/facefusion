@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from time import sleep
 from typing import Any, List, Literal, Optional
 
+import cv2
 import numpy
 import onnx
 from onnx import numpy_helper
@@ -10,7 +11,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.frame.core as frame_processors
 from facefusion import config, logger, process_manager, state_manager, wording
-from facefusion.common_helper import get_first
+from facefusion.common_helper import create_metavar, get_first
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import create_inference_session, has_execution_provider
@@ -21,6 +22,7 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.frame import choices as frame_processors_choices
+from facefusion.processors.frame.expression_restorer import clear_expression_restorer, restore_expression
 from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.processors.frame.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
@@ -188,12 +190,14 @@ def register_args(program : ArgumentParser) -> None:
 		group_frame_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', 'inswapper_128_fp16'), choices = frame_processors_choices.face_swapper_set.keys())
 		face_swapper_pixel_boost_choices = suggest_face_swapper_pixel_boost_choices(program)
 		group_frame_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('frame_processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
-		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost' ])
+		group_frame_processors.add_argument('--face-swapper-expression-restorer', help = wording.get('help.face_swapper_expression_restorer'), type = float, default = config.get_int_value('frame_processors.face_swapper_expression_restorer', '0'), choices = frame_processors_choices.face_swapper_expression_restorer_range, metavar = create_metavar(frame_processors_choices.face_swapper_expression_restorer_range))
+		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_expression_restorer' ])
 
 
 def apply_args(args : Args) -> None:
 	state_manager.init_item('face_swapper_model', args.get('face_swapper_model'))
 	state_manager.init_item('face_swapper_pixel_boost', args.get('face_swapper_pixel_boost'))
+	state_manager.init_item('face_swapper_expression_restorer', args.get('face_swapper_expression_restorer'))
 
 	if state_manager.get_item('face_swapper_model') == 'blendswap_256':
 		state_manager.init_item('face_recognizer_model', 'arcface_blendswap')
@@ -264,6 +268,7 @@ def post_process() -> None:
 		clear_content_analyser()
 		clear_face_occluder()
 		clear_face_parser()
+		clear_expression_restorer()
 
 
 def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
@@ -272,6 +277,7 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	pixel_boost_size = unpack_resolution(state_manager.get_item('face_swapper_pixel_boost'))
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, pixel_boost_size)
+	source_vision_frame = crop_vision_frame.copy()
 	crop_masks = []
 	temp_vision_frames = []
 
@@ -292,6 +298,10 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 		region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))
 		crop_masks.append(region_mask)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
+	if state_manager.get_item('face_swapper_expression_restorer') > 0:
+		crop_vision_frame, matrix_scale = restore_expression(source_vision_frame, crop_vision_frame, state_manager.get_item('face_swapper_expression_restorer'))
+		crop_mask = cv2.resize(crop_mask, crop_vision_frame.shape[:2][::-1])
+		affine_matrix *= matrix_scale
 	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 

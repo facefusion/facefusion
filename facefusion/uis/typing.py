@@ -31,6 +31,7 @@ ComponentName = Literal\
 	'face_selector_order_dropdown',
 	'face_swapper_model_dropdown',
 	'face_swapper_pixel_boost_dropdown',
+	'face_swapper_expression_restorer_slider',
 	'frame_colorizer_blend_slider',
 	'frame_colorizer_model_dropdown',
 	'frame_colorizer_size_dropdown',

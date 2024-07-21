@@ -1,6 +1,6 @@
 from typing import List
 
-from facefusion.common_helper import create_int_range
+from facefusion.common_helper import create_float_range, create_int_range
 from facefusion.processors.frame.typing import AgeModifierModel, FaceDebuggerItem, FaceEnhancerModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
@@ -27,3 +27,4 @@ age_modifier_direction_range : List[int] = create_int_range(-100, 100, 1)
 face_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_colorizer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
+face_swapper_expression_restorer_range : List[float] = create_float_range(0, 2, 0.1)
