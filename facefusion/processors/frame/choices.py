@@ -1,6 +1,6 @@
 from typing import List
 
-from facefusion.common_helper import create_int_range, create_float_range
+from facefusion.common_helper import create_float_range, create_int_range
 from facefusion.processors.frame.typing import AgeModifierModel, FaceDebuggerItem, FaceEnhancerModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
