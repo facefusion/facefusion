@@ -17,7 +17,7 @@ MODELS : ModelSet =\
 {
 	'expression_restorer':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/live_portrait_expression_restorer.onnx',
+		'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/Models/live_portrait_expression_restorer.onnx',
 		'path': resolve_relative_path('../.assets/models/live_portrait_expression_restorer.onnx'),
 	}
 }
