@@ -17,8 +17,8 @@ MODELS : ModelSet =\
 {
 	'expression_restorer':
 	{
-		'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/Models/live_portrait_expression_restorer.onnx',
-		'path': resolve_relative_path('../.assets/models/live_portrait_expression_restorer.onnx'),
+		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/expression_restorer.onnx',
+		'path': resolve_relative_path('../.assets/models/expression_restorer.onnx')
 	}
 }
 
@@ -70,7 +70,7 @@ def restore_expression(source_vision_frame : VisionFrame, target_vision_frame : 
 		{
 			'source': [ prepare_source_frame ],
 			'target': [ prepare_target_frame ],
-			'intensity': prepare_restore_amount
+			'factor': prepare_restore_amount
 		})[0][0]
 
 	restore_frame = restore_frame.transpose(1, 2, 0)[:, :, ::-1].clip(0, 1) * 255
