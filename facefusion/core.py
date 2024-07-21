@@ -20,6 +20,7 @@ from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_d
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
+from facefusion.processors.frame import face_restorer
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
@@ -27,7 +28,6 @@ from facefusion.statistics import conditional_log_statistics
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
 from facefusion.typing import Args, ErrorCode
 from facefusion.vision import get_video_frame, pack_resolution, read_image, read_static_images, restrict_image_resolution, restrict_video_fps, restrict_video_resolution, unpack_resolution
-from facefusion.processors.frame import face_restorer
 
 onnxruntime.set_default_logger_severity(3)
 
