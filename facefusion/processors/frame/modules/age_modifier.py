@@ -14,7 +14,7 @@ from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, map_float
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import create_inference_session
+from facefusion.execution import create_inference_session, has_execution_provider
 from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import clear_face_occluder, create_occlusion_mask, create_static_box_mask
@@ -51,7 +51,8 @@ def get_frame_processor() -> Any:
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+			execution_providers = ['cpu'] if has_execution_provider('coreml') else state_manager.get_item('execution_providers')
+			FRAME_PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), execution_providers)
 	return FRAME_PROCESSOR
 
 

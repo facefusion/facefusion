@@ -25,8 +25,7 @@ from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode
 from facefusion.processors.frame.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import Args, Embedding, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, \
-	UpdateProgress, VisionFrame
+from facefusion.typing import Args, Embedding, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
 FRAME_PROCESSOR = None

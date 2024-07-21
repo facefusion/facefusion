@@ -19,7 +19,7 @@ from facefusion.processors.frame import choices as frame_processors_choices
 from facefusion.processors.frame.typing import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Args, ExecutionProviderKey, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, unpack_resolution, write_image
 
 FRAME_PROCESSOR = None
@@ -68,7 +68,7 @@ def get_frame_processor() -> Any:
 			sleep(0.5)
 		if FRAME_PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			execution_providers : List[ExecutionProviderKey] = [ 'cpu' ] if has_execution_provider('coreml') else state_manager.get_item('execution_providers')
+			execution_providers = [ 'cpu' ] if has_execution_provider('coreml') else state_manager.get_item('execution_providers')
 			FRAME_PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), execution_providers)
 	return FRAME_PROCESSOR
 
