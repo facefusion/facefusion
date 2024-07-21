@@ -27,6 +27,7 @@ from facefusion.statistics import conditional_log_statistics
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
 from facefusion.typing import Args, ErrorCode
 from facefusion.vision import get_video_frame, pack_resolution, read_image, read_static_images, restrict_image_resolution, restrict_video_fps, restrict_video_resolution, unpack_resolution
+from facefusion.processors.frame import face_restorer
 
 onnxruntime.set_default_logger_severity(3)
 
@@ -61,7 +62,7 @@ def run(args : Args) -> None:
 	if not pre_check():
 		return conditional_exit(2)
 	if state_manager.get_item('command') in [ 'run', 'run-headless' ]:
-		if not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check():
+		if not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check() or not face_restorer.pre_check():
 			return conditional_exit(2)
 		for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
 			if not frame_processor_module.pre_check():
