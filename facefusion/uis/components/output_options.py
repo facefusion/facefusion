@@ -118,14 +118,14 @@ def remote_update() -> Tuple[gradio.Slider, gradio.Dropdown, gradio.Dropdown, gr
 		output_image_resolution = detect_image_resolution(state_manager.get_item('target_path'))
 		output_image_resolutions = create_image_resolutions(output_image_resolution)
 		state_manager.set_item('output_image_resolution', pack_resolution(output_image_resolution))
-		return gradio.Slider(visible = True), gradio.Dropdown(value = state_manager.get_item('output_image_resolution'), choices = output_image_resolutions, visible = True), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Dropdown(value = None, choices = None, visible = False), gradio.Slider(value = None, visible = False)
+		return gradio.Slider(visible = True), gradio.Dropdown(value = state_manager.get_item('output_image_resolution'), choices = output_image_resolutions, visible = True), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False)
 	if is_video(state_manager.get_item('target_path')):
 		output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
 		output_video_resolutions = create_video_resolutions(output_video_resolution)
 		state_manager.set_item('output_video_resolution', pack_resolution(output_video_resolution))
 		state_manager.set_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
 		return gradio.Slider(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = True), gradio.Dropdown(visible = True), gradio.Dropdown(visible = True), gradio.Slider(visible = True), gradio.Dropdown(value = state_manager.get_item('output_video_resolution'), choices = output_video_resolutions, visible = True), gradio.Slider(value = state_manager.get_item('output_video_fps'), visible = True)
-	return gradio.Slider(visible = False), gradio.Dropdown(value = None, choices = None, visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Dropdown(value = None, choices = None, visible = False), gradio.Slider(value = None, visible = False)
+	return gradio.Slider(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False), gradio.Dropdown(visible = False), gradio.Slider(visible = False)
 
 
 def update_output_image_quality(output_image_quality : float) -> None:

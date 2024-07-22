@@ -71,7 +71,7 @@ def remote_update(ui_workflow : UiWorkflow) -> Tuple[gradio.Row, gradio.Dropdown
 	is_job_runner = ui_workflow == 'job_runner'
 	queued_job_ids = job_manager.find_job_ids('queued') or [ 'none' ]
 
-	return gradio.Row(visible = is_job_runner), gradio.Dropdown(value = get_first(uis_choices.job_runner_actions), choices = uis_choices.job_runner_actions), gradio.Dropdown(value = get_last(queued_job_ids), choices = queued_job_ids, visible = True)
+	return gradio.Row(visible = is_job_runner), gradio.Dropdown(value = get_first(uis_choices.job_runner_actions), choices = uis_choices.job_runner_actions), gradio.Dropdown(value = get_last(queued_job_ids), choices = queued_job_ids)
 
 
 def start() -> Tuple[gradio.Button, gradio.Button]:
@@ -113,7 +113,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 			logger.info(wording.get('processing_jobs_succeed'), __name__.upper())
 		else:
 			logger.info(wording.get('processing_jobs_failed'), __name__.upper())
-	return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Dropdown(value = None, choices = None)
+	return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Dropdown()
 
 
 def stop() -> Tuple[gradio.Button, gradio.Button]:
