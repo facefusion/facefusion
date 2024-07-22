@@ -38,9 +38,6 @@ ComponentName = Literal\
 	'frame_enhancer_blend_slider',
 	'frame_enhancer_model_dropdown',
 	'frame_processors_checkbox_group',
-	'instant_runner_wrapper',
-	'job_runner_wrapper',
-	'job_manager_wrapper',
 	'job_list_job_status_checkbox_group',
 	'lip_syncer_model_dropdown',
 	'output_image',
@@ -53,6 +50,7 @@ ComponentName = Literal\
 	'source_image',
 	'target_image',
 	'target_video',
+	'ui_workflow_dropdown',
 	'webcam_fps_slider',
 	'webcam_mode_radio',
 	'webcam_resolution_dropdown'

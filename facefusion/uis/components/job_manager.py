@@ -7,8 +7,9 @@ from facefusion.args import collect_step_args
 from facefusion.common_helper import get_first, get_last
 from facefusion.filesystem import is_directory
 from facefusion.jobs import job_manager
+from facefusion.typing import UiWorkflow
 from facefusion.uis import choices as uis_choices
-from facefusion.uis.core import register_ui_component
+from facefusion.uis.core import get_ui_component
 from facefusion.uis.typing import JobManagerAction
 from facefusion.uis.ui_helper import convert_int_none, convert_str_none, suggest_output_path
 
@@ -62,13 +63,21 @@ def render() -> None:
 				variant = 'primary',
 				size = 'sm'
 			)
-		register_ui_component('job_manager_wrapper', JOB_MANAGER_WRAPPER)
 
 
 def listen() -> None:
 	JOB_MANAGER_JOB_ACTION_DROPDOWN.change(update, inputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_DROPDOWN ], outputs = [ JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
 	JOB_MANAGER_JOB_ID_DROPDOWN.change(update_step_index, inputs = JOB_MANAGER_JOB_ID_DROPDOWN, outputs = JOB_MANAGER_STEP_INDEX_DROPDOWN)
 	JOB_MANAGER_APPLY_BUTTON.click(apply, inputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ], outputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
+
+	ui_workflow_dropdown = get_ui_component('ui_workflow_dropdown')
+	if ui_workflow_dropdown:
+		ui_workflow_dropdown.change(remote_update, inputs = ui_workflow_dropdown, outputs = [ JOB_MANAGER_WRAPPER, JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
+
+
+def remote_update(ui_workflow : UiWorkflow) -> Tuple[gradio.Row, gradio.Dropdown, gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
+	is_job_manager = ui_workflow == 'job_manager'
+	return gradio.Row(visible = is_job_manager), gradio.Dropdown(value = get_first(uis_choices.job_manager_actions)), gradio.Textbox(value = None, visible = True), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False)
 
 
 def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id : str, selected_step_index : int) -> Tuple[gradio.Dropdown, gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:

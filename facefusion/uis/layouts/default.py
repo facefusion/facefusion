@@ -71,7 +71,6 @@ def listen() -> None:
 	source.listen()
 	target.listen()
 	output.listen()
-	ui_workflow.listen()
 	instant_runner.listen()
 	job_runner.listen()
 	job_manager.listen()

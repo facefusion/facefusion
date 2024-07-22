@@ -7,8 +7,9 @@ from facefusion import logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first, get_last
 from facefusion.core import process_step
 from facefusion.jobs import job_manager, job_runner
+from facefusion.typing import UiWorkflow
 from facefusion.uis import choices as uis_choices
-from facefusion.uis.core import register_ui_component
+from facefusion.uis.core import get_ui_component
 from facefusion.uis.typing import JobRunnerAction
 from facefusion.uis.ui_helper import convert_str_none
 
@@ -53,7 +54,6 @@ def render() -> None:
 					size = 'sm',
 					visible = False
 				)
-		register_ui_component('job_runner_wrapper', JOB_RUNNER_WRAPPER)
 
 
 def listen() -> None:
@@ -61,6 +61,17 @@ def listen() -> None:
 	JOB_RUNNER_START_BUTTON.click(start, outputs = [ JOB_RUNNER_START_BUTTON, JOB_RUNNER_STOP_BUTTON ])
 	JOB_RUNNER_START_BUTTON.click(run, inputs = [ JOB_RUNNER_JOB_ACTION_DROPDOWN, JOB_RUNNER_JOB_ID_DROPDOWN ], outputs = [ JOB_RUNNER_START_BUTTON, JOB_RUNNER_STOP_BUTTON, JOB_RUNNER_JOB_ID_DROPDOWN ])
 	JOB_RUNNER_STOP_BUTTON.click(stop, outputs = [ JOB_RUNNER_START_BUTTON, JOB_RUNNER_STOP_BUTTON ])
+
+	ui_workflow_dropdown = get_ui_component('ui_workflow_dropdown')
+	if ui_workflow_dropdown:
+		ui_workflow_dropdown.change(remote_update, inputs = ui_workflow_dropdown, outputs = [ JOB_RUNNER_WRAPPER, JOB_RUNNER_JOB_ACTION_DROPDOWN, JOB_RUNNER_JOB_ID_DROPDOWN ])
+
+
+def remote_update(ui_workflow : UiWorkflow) -> Tuple[gradio.Row, gradio.Dropdown, gradio.Dropdown]:
+	is_job_runner = ui_workflow == 'job_runner'
+	queued_job_ids = job_manager.find_job_ids('queued') or [ 'none' ]
+
+	return gradio.Row(visible = is_job_runner), gradio.Dropdown(value = get_first(uis_choices.job_runner_actions), choices = uis_choices.job_runner_actions), gradio.Dropdown(value = get_last(queued_job_ids), choices = queued_job_ids, visible = True)
 
 
 def start() -> Tuple[gradio.Button, gradio.Button]:

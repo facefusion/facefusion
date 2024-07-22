@@ -28,8 +28,7 @@ def render() -> None:
 
 	preview_image_args =\
 	{
-		'label': wording.get('uis.preview_image'),
-		'interactive': False
+		'label': wording.get('uis.preview_image')
 	}
 	preview_frame_slider_args =\
 	{
@@ -70,6 +69,7 @@ def render() -> None:
 def listen() -> None:
 	PREVIEW_FRAME_SLIDER.change(slide_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE, show_progress = 'hidden')
 	PREVIEW_FRAME_SLIDER.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE, show_progress = 'hidden')
+
 	reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
 	if reference_face_position_gallery:
 		reference_face_position_gallery.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
