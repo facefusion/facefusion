@@ -143,7 +143,7 @@ def insert_step(job_id : str, step_index : int, step_args : Args) -> bool:
 		step_index = count_step_total(job_id) - 1
 
 	if job and has_step(job_id, step_index):
-		job.get('steps').insert(step_index + 1,
+		job.get('steps').insert(step_index,
 		{
 			'args': step_args,
 			'status': 'drafted'

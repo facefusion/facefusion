@@ -237,10 +237,10 @@ def test_insert_step() -> None:
 
 	steps = get_steps('job-test-insert-step')
 
-	assert steps[0].get('args') == args_1
-	assert steps[1].get('args') == args_2
-	assert steps[2].get('args') == args_1
-	assert steps[3].get('args') == args_3
+	assert steps[0].get('args') == args_2
+	assert steps[1].get('args') == args_1
+	assert steps[2].get('args') == args_3
+	assert steps[3].get('args') == args_1
 	assert count_step_total('job-test-insert-step') == 4
 
 
