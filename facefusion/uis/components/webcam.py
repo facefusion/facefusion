@@ -69,13 +69,13 @@ def render() -> None:
 
 
 def listen() -> None:
-	start_event = None
 	webcam_mode_radio = get_ui_component('webcam_mode_radio')
 	webcam_resolution_dropdown = get_ui_component('webcam_resolution_dropdown')
 	webcam_fps_slider = get_ui_component('webcam_fps_slider')
+
 	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
-	WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
+		WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
 
 	for ui_component in get_ui_components(
 	[

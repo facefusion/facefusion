@@ -6,7 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.face_store import clear_reference_faces, clear_static_faces
 from facefusion.filesystem import get_file_size, is_image, is_video
 from facefusion.uis.core import register_ui_component
-from facefusion.uis.typing import File
+from facefusion.uis.typing import ComponentOptions, File
 from facefusion.vision import get_video_frame, normalize_frame_color
 
 FILE_SIZE_LIMIT = 512 * 1024 * 1024
@@ -33,29 +33,29 @@ def render() -> None:
 		],
 		value = state_manager.get_item('target_path') if is_target_image or is_target_video else None
 	)
-	target_image_args =\
+	target_image_options : ComponentOptions =\
 	{
 		'show_label': False,
 		'visible': False
 	}
-	target_video_args =\
+	target_video_options : ComponentOptions =\
 	{
 		'show_label': False,
 		'visible': False
 	}
 	if is_target_image:
-		target_image_args['value'] = TARGET_FILE.value.get('path')
-		target_image_args['visible'] = True
+		target_image_options['value'] = TARGET_FILE.value.get('path')
+		target_image_options['visible'] = True
 	if is_target_video:
 		if get_file_size(state_manager.get_item('target_path')) > FILE_SIZE_LIMIT:
 			preview_vision_frame = normalize_frame_color(get_video_frame(state_manager.get_item('target_path')))
-			target_image_args['value'] = preview_vision_frame #type:ignore[assignment]
-			target_image_args['visible'] = True
+			target_image_options['value'] = preview_vision_frame
+			target_image_options['visible'] = True
 		else:
-			target_video_args['value'] = TARGET_FILE.value.get('path')
-			target_video_args['visible'] = True
-	TARGET_IMAGE = gradio.Image(**target_image_args)
-	TARGET_VIDEO = gradio.Video(**target_video_args)
+			target_video_options['value'] = TARGET_FILE.value.get('path')
+			target_video_options['visible'] = True
+	TARGET_IMAGE = gradio.Image(**target_image_options)
+	TARGET_VIDEO = gradio.Video(**target_video_options)
 	register_ui_component('target_image', TARGET_IMAGE)
 	register_ui_component('target_video', TARGET_VIDEO)
 

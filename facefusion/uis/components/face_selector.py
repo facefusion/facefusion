@@ -10,6 +10,7 @@ from facefusion.face_store import clear_reference_faces, clear_static_faces
 from facefusion.filesystem import is_image, is_video
 from facefusion.typing import FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
+from facefusion.uis.typing import ComponentOptions
 from facefusion.uis.ui_helper import convert_str_none
 from facefusion.vision import get_video_frame, normalize_frame_color, read_static_image
 
@@ -29,7 +30,7 @@ def render() -> None:
 	global REFERENCE_FACE_POSITION_GALLERY
 	global REFERENCE_FACE_DISTANCE_SLIDER
 
-	reference_face_gallery_args =\
+	reference_face_gallery_options : ComponentOptions =\
 	{
 		'label': wording.get('uis.reference_face_gallery'),
 		'object_fit': 'cover',
@@ -39,16 +40,16 @@ def render() -> None:
 	}
 	if is_image(state_manager.get_item('target_path')):
 		reference_frame = read_static_image(state_manager.get_item('target_path'))
-		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
+		reference_face_gallery_options['value'] = extract_gallery_frames(reference_frame)
 	if is_video(state_manager.get_item('target_path')):
 		reference_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		reference_face_gallery_args['value'] = extract_gallery_frames(reference_frame)
+		reference_face_gallery_options['value'] = extract_gallery_frames(reference_frame)
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_selector_mode_dropdown'),
 		choices = facefusion.choices.face_selector_modes,
 		value = state_manager.get_item('face_selector_mode')
 	)
-	REFERENCE_FACE_POSITION_GALLERY = gradio.Gallery(**reference_face_gallery_args)
+	REFERENCE_FACE_POSITION_GALLERY = gradio.Gallery(**reference_face_gallery_options)
 	with gradio.Row():
 		FACE_SELECTOR_ORDER_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.face_selector_order_dropdown'),

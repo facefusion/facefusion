@@ -7,8 +7,9 @@ from facefusion.args import collect_step_args
 from facefusion.common_helper import get_first, get_last
 from facefusion.filesystem import is_directory
 from facefusion.jobs import job_manager
+from facefusion.typing import UiWorkflow
 from facefusion.uis import choices as uis_choices
-from facefusion.uis.core import register_ui_component
+from facefusion.uis.core import get_ui_component
 from facefusion.uis.typing import JobManagerAction
 from facefusion.uis.ui_helper import convert_int_none, convert_str_none, suggest_output_path
 
@@ -62,13 +63,21 @@ def render() -> None:
 				variant = 'primary',
 				size = 'sm'
 			)
-		register_ui_component('job_manager_wrapper', JOB_MANAGER_WRAPPER)
 
 
 def listen() -> None:
 	JOB_MANAGER_JOB_ACTION_DROPDOWN.change(update, inputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_DROPDOWN ], outputs = [ JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
 	JOB_MANAGER_JOB_ID_DROPDOWN.change(update_step_index, inputs = JOB_MANAGER_JOB_ID_DROPDOWN, outputs = JOB_MANAGER_STEP_INDEX_DROPDOWN)
 	JOB_MANAGER_APPLY_BUTTON.click(apply, inputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ], outputs = [ JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
+
+	ui_workflow_dropdown = get_ui_component('ui_workflow_dropdown')
+	if ui_workflow_dropdown:
+		ui_workflow_dropdown.change(remote_update, inputs = ui_workflow_dropdown, outputs = [ JOB_MANAGER_WRAPPER, JOB_MANAGER_JOB_ACTION_DROPDOWN, JOB_MANAGER_JOB_ID_TEXTBOX, JOB_MANAGER_JOB_ID_DROPDOWN, JOB_MANAGER_STEP_INDEX_DROPDOWN ])
+
+
+def remote_update(ui_workflow : UiWorkflow) -> Tuple[gradio.Row, gradio.Dropdown, gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
+	is_job_manager = ui_workflow == 'job_manager'
+	return gradio.Row(visible = is_job_manager), gradio.Dropdown(value = get_first(uis_choices.job_manager_actions)), gradio.Textbox(value = None, visible = True), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False)
 
 
 def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id : str, selected_step_index : int) -> Tuple[gradio.Dropdown, gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
@@ -85,7 +94,7 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 			updated_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 
 			logger.info(wording.get('job_created').format(job_id = created_job_id), __name__.upper())
-			return gradio.Dropdown(value = 'job-add-step'), gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = created_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown()
+			return gradio.Dropdown(value = 'job-add-step'), gradio.Textbox(visible = False), gradio.Dropdown(value = created_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown()
 		else:
 			logger.error(wording.get('job_not_created').format(job_id = created_job_id), __name__.upper())
 	if job_action == 'job-submit':
@@ -108,7 +117,7 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 		if selected_job_id and job_manager.add_step(selected_job_id, step_args):
 			state_manager.set_item('output_path', output_path)
 			logger.info(wording.get('job_step_added').format(job_id = selected_job_id), __name__.upper())
-			return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
+			return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(visible = True), gradio.Dropdown(visible = False)
 		else:
 			state_manager.set_item('output_path', output_path)
 			logger.error(wording.get('job_step_not_added').format(job_id = selected_job_id), __name__.upper())
@@ -150,24 +159,24 @@ def get_step_choices(job_id : str) -> List[int]:
 
 def update(job_action : JobManagerAction, selected_job_id : str) -> Tuple[gradio.Textbox, gradio.Dropdown, gradio.Dropdown]:
 	if job_action == 'job-create':
-		return gradio.Textbox(value = None, visible = True), gradio.Dropdown(value = None, choices = None, visible = False), gradio.Dropdown(value = None, choices = None, visible = False)
+		return gradio.Textbox(value = None, visible = True), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False)
 	if job_action == 'job-delete':
 		updated_job_ids = job_manager.find_job_ids('drafted') + job_manager.find_job_ids('queued') + job_manager.find_job_ids('failed') + job_manager.find_job_ids('completed') or [ 'none' ]
 		updated_job_id = selected_job_id if selected_job_id in updated_job_ids else get_last(updated_job_ids)
 
-		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = updated_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
+		return gradio.Textbox(visible = False), gradio.Dropdown(value = updated_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown(visible = False)
 	if job_action in [ 'job-submit', 'job-add-step' ]:
 		updated_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 		updated_job_id = selected_job_id if selected_job_id in updated_job_ids else get_last(updated_job_ids)
 
-		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = updated_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown(value = None, choices = None, visible = False)
+		return gradio.Textbox(visible = False), gradio.Dropdown(value = updated_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown(visible = False)
 	if job_action in [ 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		updated_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 		updated_job_id = selected_job_id if selected_job_id in updated_job_ids else get_last(updated_job_ids)
 		updated_step_choices = get_step_choices(updated_job_id) or [ 'none' ] #type:ignore[list-item]
 
-		return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = updated_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown(value = get_last(updated_step_choices), choices = updated_step_choices, visible = True)
-	return gradio.Textbox(value = None, visible = False), gradio.Dropdown(value = None, choices = None, visible = False), gradio.Dropdown(value = None, choices = None, visible = False)
+		return gradio.Textbox(visible = False), gradio.Dropdown(value = updated_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown(value = get_last(updated_step_choices), choices = updated_step_choices, visible = True)
+	return gradio.Textbox(visible = False), gradio.Dropdown(visible = False), gradio.Dropdown(visible = False)
 
 
 def update_step_index(job_id : str) -> gradio.Dropdown:

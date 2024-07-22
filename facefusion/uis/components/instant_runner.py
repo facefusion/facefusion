@@ -9,8 +9,8 @@ from facefusion.core import process_step
 from facefusion.filesystem import is_directory, is_image, is_video
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.temp_helper import clear_temp_directory
-from facefusion.typing import Args
-from facefusion.uis.core import get_ui_component, register_ui_component
+from facefusion.typing import Args, UiWorkflow
+from facefusion.uis.core import get_ui_component
 from facefusion.uis.ui_helper import suggest_output_path
 
 INSTANT_RUNNER_WRAPPER : Optional[gradio.Row] = None
@@ -42,18 +42,26 @@ def render() -> None:
 			value = wording.get('uis.clear_button'),
 			size = 'sm'
 		)
-	register_ui_component('instant_runner_wrapper', INSTANT_RUNNER_WRAPPER)
 
 
 def listen() -> None:
 	output_image = get_ui_component('output_image')
 	output_video = get_ui_component('output_video')
+	ui_workflow_dropdown = get_ui_component('ui_workflow_dropdown')
 
 	if output_image and output_video:
 		INSTANT_RUNNER_START_BUTTON.click(start, outputs = [ INSTANT_RUNNER_START_BUTTON, INSTANT_RUNNER_STOP_BUTTON ])
 		INSTANT_RUNNER_START_BUTTON.click(run, outputs = [ INSTANT_RUNNER_START_BUTTON, INSTANT_RUNNER_STOP_BUTTON, output_image, output_video ])
 		INSTANT_RUNNER_STOP_BUTTON.click(stop, outputs = [ INSTANT_RUNNER_START_BUTTON, INSTANT_RUNNER_STOP_BUTTON ])
 		INSTANT_RUNNER_CLEAR_BUTTON.click(clear, outputs = [ output_image, output_video ])
+	if ui_workflow_dropdown:
+		ui_workflow_dropdown.change(remote_update, inputs = ui_workflow_dropdown, outputs = INSTANT_RUNNER_WRAPPER)
+
+
+def remote_update(ui_workflow : UiWorkflow) -> gradio.Row:
+	is_instant_runner = ui_workflow == 'instant_runner'
+
+	return gradio.Row(visible = is_instant_runner)
 
 
 def start() -> Tuple[gradio.Button, gradio.Button]:

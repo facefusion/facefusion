@@ -6,6 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import is_video
 from facefusion.uis.core import get_ui_components
+from facefusion.uis.typing import ComponentOptions
 from facefusion.vision import count_video_frame_total
 
 TRIM_FRAME_RANGE_SLIDER : Optional[RangeSlider] = None
@@ -14,7 +15,7 @@ TRIM_FRAME_RANGE_SLIDER : Optional[RangeSlider] = None
 def render() -> None:
 	global TRIM_FRAME_RANGE_SLIDER
 
-	trim_frame_range_slider_args =\
+	trim_frame_range_slider_options : ComponentOptions =\
 	{
 		'label': wording.get('uis.trim_frame_slider'),
 		'minimum': 0,
@@ -25,10 +26,10 @@ def render() -> None:
 		video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 		trim_frame_start = state_manager.get_item('trim_frame_start') or 0
 		trim_frame_end = state_manager.get_item('trim_frame_end') or video_frame_total
-		trim_frame_range_slider_args['maximum'] = video_frame_total
-		trim_frame_range_slider_args['value'] = (trim_frame_start, trim_frame_end)
-		trim_frame_range_slider_args['visible'] = True
-	TRIM_FRAME_RANGE_SLIDER = RangeSlider(**trim_frame_range_slider_args)
+		trim_frame_range_slider_options['maximum'] = video_frame_total
+		trim_frame_range_slider_options['value'] = (trim_frame_start, trim_frame_end)
+		trim_frame_range_slider_options['visible'] = True
+	TRIM_FRAME_RANGE_SLIDER = RangeSlider(**trim_frame_range_slider_options)
 
 
 def listen() -> None:

@@ -80,7 +80,7 @@ ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
 
 TableHeaders = List[str]
-TableContents = List[List[int | float | str]]
+TableContents = List[List[Any]]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yoloface']
