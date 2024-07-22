@@ -91,7 +91,6 @@ def test_filter_image_paths() -> None:
 	assert filter_audio_paths([ 'invalid' ]) == []
 
 
-@pytest.mark.skip()
 def test_sanitize_path_for_windows() -> None:
 	if is_windows():
 		assert sanitize_path_for_windows(get_test_example_file('söurce.jpg')).endswith('SURCE~1.JPG')
