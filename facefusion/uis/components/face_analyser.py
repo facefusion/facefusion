@@ -7,6 +7,7 @@ from facefusion import face_analyser, state_manager, wording
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.typing import Angle, FaceDetectorModel, Score
 from facefusion.uis.core import register_ui_component
+from facefusion.uis.typing import ComponentOptions
 
 FACE_DETECTOR_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_DETECTOR_SIZE_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -22,20 +23,20 @@ def render() -> None:
 	global FACE_DETECTOR_SCORE_SLIDER
 	global FACE_LANDMARKER_SCORE_SLIDER
 
-	face_detector_size_dropdown_args =\
+	face_detector_size_dropdown_options : ComponentOptions =\
 	{
 		'label': wording.get('uis.face_detector_size_dropdown'),
 		'value': state_manager.get_item('face_detector_size')
 	}
 	if state_manager.get_item('face_detector_size') in facefusion.choices.face_detector_set[state_manager.get_item('face_detector_model')]:
-		face_detector_size_dropdown_args['choices'] = facefusion.choices.face_detector_set[state_manager.get_item('face_detector_model')]
+		face_detector_size_dropdown_options['choices'] = facefusion.choices.face_detector_set[state_manager.get_item('face_detector_model')]
 	with gradio.Row():
 		FACE_DETECTOR_MODEL_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.face_detector_model_dropdown'),
 			choices = facefusion.choices.face_detector_set.keys(),
 			value = state_manager.get_item('face_detector_model')
 		)
-		FACE_DETECTOR_SIZE_DROPDOWN = gradio.Dropdown(**face_detector_size_dropdown_args)
+		FACE_DETECTOR_SIZE_DROPDOWN = gradio.Dropdown(**face_detector_size_dropdown_options)
 	FACE_DETECTOR_ANGLES_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.face_detector_angles_checkbox_group'),
 		choices = facefusion.choices.face_detector_angles,

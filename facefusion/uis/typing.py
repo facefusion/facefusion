@@ -1,9 +1,8 @@
-from typing import Any, IO, Literal
-
-import gradio
+from typing import Any, Dict, IO, Literal
 
 File = IO[Any]
-Component = gradio.File or gradio.Image or gradio.Video or gradio.Slider
+Component = Any
+ComponentOptions = Dict[str, Any]
 ComponentName = Literal\
 [
 	'age_modifier_model_dropdown',
