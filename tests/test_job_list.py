@@ -1,5 +1,3 @@
-from time import sleep
-
 import pytest
 
 from facefusion.jobs.job_list import compose_job_list
@@ -15,7 +13,6 @@ def before_each() -> None:
 
 def test_compose_job_list() -> None:
 	create_job('job-test-compose-job-list-1')
-	sleep(0.5)
 	create_job('job-test-compose-job-list-2')
 	job_headers, job_contents = compose_job_list('drafted')
 
