@@ -39,6 +39,7 @@ def render() -> gradio.Blocks:
 					target.render()
 				with gradio.Blocks():
 					output.render()
+				with gradio.Blocks():
 					ui_workflow.render()
 					instant_runner.render()
 					job_runner.render()
