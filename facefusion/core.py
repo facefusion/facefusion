@@ -14,7 +14,7 @@ from facefusion.download import conditional_download
 from facefusion.exit_helper import conditional_exit, graceful_exit, hard_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
-from facefusion.face_store import append_reference_face, get_reference_faces
+from facefusion.face_store import append_reference_face, clear_reference_faces, clear_static_faces, get_reference_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
 from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_relative_path
 from facefusion.jobs import job_helper, job_manager, job_runner
@@ -262,6 +262,8 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_total = job_manager.count_step_total(job_id)
 	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__.upper())
 	apply_args(args)
+	clear_reference_faces()
+	clear_static_faces()
 	clear_frame_processors_modules()
 	error_code = conditional_process()
 	return error_code == 0
