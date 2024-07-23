@@ -1,3 +1,5 @@
+from time import sleep
+
 import pytest
 
 from facefusion.jobs.job_helper import get_step_output_path
@@ -101,7 +103,9 @@ def test_find_jobs() -> None:
 
 def test_find_job_ids() -> None:
 	create_job('job-test-find-job-ids-1')
+	sleep(0.5)
 	create_job('job-test-find-job-ids-2')
+	sleep(0.5)
 	create_job('job-test-find-job-ids-3')
 
 	assert find_job_ids('drafted') == [ 'job-test-find-job-ids-1', 'job-test-find-job-ids-2', 'job-test-find-job-ids-3' ]
