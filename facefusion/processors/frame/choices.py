@@ -24,6 +24,10 @@ frame_enhancer_models : List[FrameEnhancerModel] = [ 'clear_reality_x4', 'lsdir_
 lip_syncer_models : List[LipSyncerModel] = [ 'wav2lip', 'wav2lip_gan' ]
 
 age_modifier_direction_range : List[int] = create_int_range(-100, 100, 1)
+face_editor_eye_factor_range : List[float] = create_float_range(0, 1, 0.1)
+face_editor_eye_blend_range : List[int] = create_int_range(0, 100, 1)
+face_editor_lip_factor_range : List[float] = create_float_range(0, 1, 0.1)
+face_editor_lip_blend_range : List[int] = create_int_range(0, 100, 1)
 face_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_colorizer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)

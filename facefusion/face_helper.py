@@ -201,3 +201,10 @@ def merge_matrix(matrices : List[Matrix]) -> Matrix:
 		matrix = numpy.vstack([ matrix, [ 0, 0, 1 ] ])
 		merged_matrix = numpy.dot(merged_matrix, matrix)
 	return merged_matrix[:2, :]
+
+
+def calc_distance_ratio(face_landmark_68 : FaceLandmark68, top_index : int, bottom_index : int, right_index : int, left_index : int) -> float:
+	vertical_direction = face_landmark_68[top_index] - face_landmark_68[bottom_index]
+	horizontal_direction = face_landmark_68[right_index] - face_landmark_68[left_index]
+	distance_ratio = float( numpy.linalg.norm(vertical_direction) / (numpy.linalg.norm(horizontal_direction) + 1e-6) )
+	return distance_ratio

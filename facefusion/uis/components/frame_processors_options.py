@@ -12,6 +12,10 @@ from facefusion.uis.core import get_ui_component, register_ui_component
 AGE_MODIFIER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 AGE_MODIFIER_DIRECTION_SLIDER : Optional[gradio.Slider] = None
 FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
+FACE_EDITOR_EYE_FACTOR_SLIDER : Optional[gradio.Slider] = None
+FACE_EDITOR_EYE_BLEND_SLIDER : Optional[gradio.Slider] = None
+FACE_EDITOR_LIP_FACTOR_SLIDER : Optional[gradio.Slider] = None
+FACE_EDITOR_LIP_BLEND_SLIDER : Optional[gradio.Slider] = None
 FACE_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_ENHANCER_BLEND_SLIDER : Optional[gradio.Slider] = None
 FACE_SWAPPER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -29,6 +33,10 @@ def render() -> None:
 	global AGE_MODIFIER_MODEL_DROPDOWN
 	global AGE_MODIFIER_DIRECTION_SLIDER
 	global FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP
+	global FACE_EDITOR_EYE_FACTOR_SLIDER
+	global FACE_EDITOR_EYE_BLEND_SLIDER
+	global FACE_EDITOR_LIP_FACTOR_SLIDER
+	global FACE_EDITOR_LIP_BLEND_SLIDER
 	global FACE_ENHANCER_MODEL_DROPDOWN
 	global FACE_ENHANCER_BLEND_SLIDER
 	global FACE_SWAPPER_MODEL_DROPDOWN
@@ -60,6 +68,38 @@ def render() -> None:
 		choices = frame_processors_choices.face_debugger_items,
 		value = state_manager.get_item('face_debugger_items'),
 		visible = 'face_debugger' in state_manager.get_item('frame_processors')
+	)
+	FACE_EDITOR_EYE_FACTOR_SLIDER = gradio.Slider(
+		label = wording.get('uis.face_editor_eye_factor_slider'),
+		value = state_manager.get_item('face_editor_eye_factor'),
+		step = frame_processors_choices.face_editor_eye_factor_range[1] - frame_processors_choices.face_editor_eye_factor_range[0],
+		minimum = frame_processors_choices.face_editor_eye_factor_range[0],
+		maximum = frame_processors_choices.face_editor_eye_factor_range[-1],
+		visible = 'face_editor' in state_manager.get_item('frame_processors')
+	)
+	FACE_EDITOR_EYE_BLEND_SLIDER = gradio.Slider(
+		label = wording.get('uis.face_editor_eye_blend_slider'),
+		value = state_manager.get_item('face_editor_eye_blend'),
+		step = frame_processors_choices.face_editor_eye_blend_range[1] - frame_processors_choices.face_editor_eye_blend_range[0],
+		minimum = frame_processors_choices.face_editor_eye_blend_range[0],
+		maximum = frame_processors_choices.face_editor_eye_blend_range[-1],
+		visible = 'face_editor' in state_manager.get_item('frame_processors')
+	)
+	FACE_EDITOR_LIP_FACTOR_SLIDER = gradio.Slider(
+		label = wording.get('uis.face_editor_lip_factor_slider'),
+		value = state_manager.get_item('face_editor_lip_factor'),
+		step = frame_processors_choices.face_editor_lip_factor_range[1] - frame_processors_choices.face_editor_lip_factor_range[0],
+		minimum = frame_processors_choices.face_editor_lip_factor_range[0],
+		maximum = frame_processors_choices.face_editor_lip_factor_range[-1],
+		visible = 'face_editor' in state_manager.get_item('frame_processors')
+	)
+	FACE_EDITOR_LIP_BLEND_SLIDER = gradio.Slider(
+		label = wording.get('uis.face_editor_lip_blend_slider'),
+		value = state_manager.get_item('face_editor_lip_blend'),
+		step = frame_processors_choices.face_editor_lip_blend_range[1] - frame_processors_choices.face_editor_lip_blend_range[0],
+		minimum = frame_processors_choices.face_editor_lip_blend_range[0],
+		maximum = frame_processors_choices.face_editor_lip_blend_range[-1],
+		visible = 'face_editor' in state_manager.get_item('frame_processors')
 	)
 	FACE_ENHANCER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_enhancer_model_dropdown'),
@@ -138,6 +178,10 @@ def render() -> None:
 	register_ui_component('age_modifier_model_dropdown', AGE_MODIFIER_MODEL_DROPDOWN)
 	register_ui_component('age_modifier_direction_slider', AGE_MODIFIER_DIRECTION_SLIDER)
 	register_ui_component('face_debugger_items_checkbox_group', FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
+	register_ui_component('face_editor_eye_factor_slider', FACE_EDITOR_EYE_FACTOR_SLIDER)
+	register_ui_component('face_editor_eye_blend_slider', FACE_EDITOR_EYE_BLEND_SLIDER)
+	register_ui_component('face_editor_lip_factor_slider', FACE_EDITOR_LIP_FACTOR_SLIDER)
+	register_ui_component('face_editor_lip_blend_slider', FACE_EDITOR_LIP_BLEND_SLIDER)
 	register_ui_component('face_enhancer_model_dropdown', FACE_ENHANCER_MODEL_DROPDOWN)
 	register_ui_component('face_enhancer_blend_slider', FACE_ENHANCER_BLEND_SLIDER)
 	register_ui_component('face_swapper_model_dropdown', FACE_SWAPPER_MODEL_DROPDOWN)
@@ -155,6 +199,10 @@ def listen() -> None:
 	AGE_MODIFIER_MODEL_DROPDOWN.change(update_age_modifier_model, inputs = AGE_MODIFIER_MODEL_DROPDOWN, outputs = AGE_MODIFIER_MODEL_DROPDOWN)
 	AGE_MODIFIER_DIRECTION_SLIDER.release(update_age_modifier_direction, inputs = AGE_MODIFIER_DIRECTION_SLIDER)
 	FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP.change(update_face_debugger_items, inputs = FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
+	FACE_EDITOR_EYE_FACTOR_SLIDER.release(update_face_editor_eye_factor, inputs = FACE_EDITOR_EYE_FACTOR_SLIDER)
+	FACE_EDITOR_EYE_BLEND_SLIDER.release(update_face_editor_eye_blend, inputs = FACE_EDITOR_EYE_BLEND_SLIDER)
+	FACE_EDITOR_LIP_FACTOR_SLIDER.release(update_face_editor_lip_factor, inputs = FACE_EDITOR_LIP_FACTOR_SLIDER)
+	FACE_EDITOR_LIP_BLEND_SLIDER.release(update_face_editor_lip_blend, inputs = FACE_EDITOR_LIP_BLEND_SLIDER)
 	FACE_ENHANCER_MODEL_DROPDOWN.change(update_face_enhancer_model, inputs = FACE_ENHANCER_MODEL_DROPDOWN, outputs = FACE_ENHANCER_MODEL_DROPDOWN)
 	FACE_ENHANCER_BLEND_SLIDER.release(update_face_enhancer_blend, inputs = FACE_ENHANCER_BLEND_SLIDER)
 	FACE_SWAPPER_MODEL_DROPDOWN.change(update_face_swapper_model, inputs = FACE_SWAPPER_MODEL_DROPDOWN, outputs = [ FACE_SWAPPER_MODEL_DROPDOWN, FACE_SWAPPER_PIXEL_BOOST_DROPDOWN ])
@@ -169,18 +217,19 @@ def listen() -> None:
 
 	frame_processors_checkbox_group = get_ui_component('frame_processors_checkbox_group')
 	if frame_processors_checkbox_group:
-		frame_processors_checkbox_group.change(update_frame_processors, inputs = frame_processors_checkbox_group, outputs = [ AGE_MODIFIER_MODEL_DROPDOWN, AGE_MODIFIER_DIRECTION_SLIDER, FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP, FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER, FACE_SWAPPER_MODEL_DROPDOWN, FACE_SWAPPER_PIXEL_BOOST_DROPDOWN, FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER, FRAME_COLORIZER_MODEL_DROPDOWN, FRAME_COLORIZER_BLEND_SLIDER, FRAME_COLORIZER_SIZE_DROPDOWN, FRAME_ENHANCER_MODEL_DROPDOWN, FRAME_ENHANCER_BLEND_SLIDER, LIP_SYNCER_MODEL_DROPDOWN ])
+		frame_processors_checkbox_group.change(update_frame_processors, inputs = frame_processors_checkbox_group, outputs = [ AGE_MODIFIER_MODEL_DROPDOWN, AGE_MODIFIER_DIRECTION_SLIDER, FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP, FACE_EDITOR_EYE_FACTOR_SLIDER, FACE_EDITOR_EYE_BLEND_SLIDER, FACE_EDITOR_LIP_FACTOR_SLIDER, FACE_EDITOR_LIP_BLEND_SLIDER, FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER, FACE_SWAPPER_MODEL_DROPDOWN, FACE_SWAPPER_PIXEL_BOOST_DROPDOWN, FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER, FRAME_COLORIZER_MODEL_DROPDOWN, FRAME_COLORIZER_BLEND_SLIDER, FRAME_COLORIZER_SIZE_DROPDOWN, FRAME_ENHANCER_MODEL_DROPDOWN, FRAME_ENHANCER_BLEND_SLIDER, LIP_SYNCER_MODEL_DROPDOWN ])
 
 
-def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider, gradio.CheckboxGroup, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Dropdown]:
+def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider, gradio.CheckboxGroup, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider,  gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Dropdown]:
 	has_age_modifier = 'age_modifier' in frame_processors
 	has_face_debugger = 'face_debugger' in frame_processors
+	has_face_editor = 'face_editor' in frame_processors
 	has_face_enhancer = 'face_enhancer' in frame_processors
 	has_face_swapper = 'face_swapper' in frame_processors
 	has_frame_colorizer = 'frame_colorizer' in frame_processors
 	has_frame_enhancer = 'frame_enhancer' in frame_processors
 	has_lip_syncer = 'lip_syncer' in frame_processors
-	return gradio.Dropdown(visible = has_age_modifier), gradio.Slider(visible = has_age_modifier), gradio.CheckboxGroup(visible = has_face_debugger), gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_face_swapper), gradio.Slider(visible = has_face_swapper), gradio.Dropdown(visible = has_frame_colorizer), gradio.Slider(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_enhancer), gradio.Slider(visible = has_frame_enhancer), gradio.Dropdown(visible = has_lip_syncer)
+	return gradio.Dropdown(visible = has_age_modifier), gradio.Slider(visible = has_age_modifier), gradio.CheckboxGroup(visible = has_face_debugger), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_face_swapper), gradio.Slider(visible = has_face_swapper), gradio.Dropdown(visible = has_frame_colorizer), gradio.Slider(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_colorizer), gradio.Dropdown(visible = has_frame_enhancer), gradio.Slider(visible = has_frame_enhancer), gradio.Dropdown(visible = has_lip_syncer)
 
 
 def update_age_modifier_model(age_modifier_model : AgeModifierModel) -> gradio.Dropdown:
@@ -199,6 +248,22 @@ def update_age_modifier_direction(age_modifier_direction : float) -> None:
 
 def update_face_debugger_items(face_debugger_items : List[FaceDebuggerItem]) -> None:
 	state_manager.set_item('face_debugger_items', face_debugger_items)
+
+
+def update_face_editor_eye_factor(face_editor_eye_factor : float) -> None:
+	state_manager.set_item('face_editor_eye_factor', face_editor_eye_factor)
+
+
+def update_face_editor_eye_blend(face_editor_eye_blend : int) -> None:
+	state_manager.set_item('face_editor_eye_blend', face_editor_eye_blend)
+
+
+def update_face_editor_lip_factor(face_editor_lip_factor : float) -> None:
+	state_manager.set_item('face_editor_lip_factor', face_editor_lip_factor)
+
+
+def update_face_editor_lip_blend(face_editor_lip_blend : int) -> None:
+	state_manager.set_item('face_editor_lip_blend', face_editor_lip_blend)
 
 
 def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> gradio.Dropdown:

@@ -22,6 +22,11 @@ FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',
 	'reference_faces' : FaceSet,
 	'target_vision_frame' : VisionFrame
 })
+FaceEditorInputs = TypedDict('FaceEditorInputs',
+{
+	'reference_faces' : FaceSet,
+	'target_vision_frame' : VisionFrame
+})
 FaceEnhancerInputs = TypedDict('FaceEnhancerInputs',
 {
 	'reference_faces' : FaceSet,
@@ -53,6 +58,10 @@ FrameProcessorStateKey = Literal\
 	'age_modifier_model',
 	'age_modifier_direction',
 	'face_debugger_items',
+	'face_editor_eye_factor',
+	'face_editor_eye_blend',
+	'face_editor_lip_factor',
+	'face_editor_lip_blend',
 	'face_enhancer_model',
 	'face_enhancer_blend',
 	'face_swapper_model',
