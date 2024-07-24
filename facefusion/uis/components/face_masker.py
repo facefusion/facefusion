@@ -73,12 +73,12 @@ def render() -> None:
 					maximum = facefusion.choices.face_mask_padding_range[-1],
 					value = state_manager.get_item('face_mask_padding')[3]
 				)
-		FACE_MASK_REGION_CHECKBOX_GROUP = gradio.CheckboxGroup(
-			label = wording.get('uis.face_mask_region_checkbox_group'),
-			choices = facefusion.choices.face_mask_regions,
-			value = state_manager.get_item('face_mask_regions'),
-			visible = has_region_mask
-		)
+	FACE_MASK_REGION_CHECKBOX_GROUP = gradio.CheckboxGroup(
+		label = wording.get('uis.face_mask_region_checkbox_group'),
+		choices = facefusion.choices.face_mask_regions,
+		value = state_manager.get_item('face_mask_regions'),
+		visible = has_region_mask
+	)
 	register_ui_component('face_mask_types_checkbox_group', FACE_MASK_TYPES_CHECKBOX_GROUP)
 	register_ui_component('face_mask_blur_slider', FACE_MASK_BLUR_SLIDER)
 	register_ui_component('face_mask_padding_top_slider', FACE_MASK_PADDING_TOP_SLIDER)
@@ -89,7 +89,7 @@ def render() -> None:
 
 
 def listen() -> None:
-	FACE_MASK_TYPES_CHECKBOX_GROUP.change(update_face_mask_type, inputs = FACE_MASK_TYPES_CHECKBOX_GROUP, outputs = [FACE_MASK_TYPES_CHECKBOX_GROUP, FACE_MASK_WRAPPER, FACE_MASK_REGION_CHECKBOX_GROUP])
+	FACE_MASK_TYPES_CHECKBOX_GROUP.change(update_face_mask_type, inputs = FACE_MASK_TYPES_CHECKBOX_GROUP, outputs = [ FACE_MASK_TYPES_CHECKBOX_GROUP, FACE_MASK_WRAPPER, FACE_MASK_REGION_CHECKBOX_GROUP ])
 	FACE_MASK_BLUR_SLIDER.release(update_face_mask_blur, inputs = FACE_MASK_BLUR_SLIDER)
 	FACE_MASK_REGION_CHECKBOX_GROUP.change(update_face_mask_regions, inputs = FACE_MASK_REGION_CHECKBOX_GROUP, outputs = FACE_MASK_REGION_CHECKBOX_GROUP)
 	face_mask_padding_sliders = [ FACE_MASK_PADDING_TOP_SLIDER, FACE_MASK_PADDING_RIGHT_SLIDER, FACE_MASK_PADDING_BOTTOM_SLIDER, FACE_MASK_PADDING_LEFT_SLIDER ]
