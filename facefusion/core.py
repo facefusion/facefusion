@@ -14,13 +14,12 @@ from facefusion.download import conditional_download
 from facefusion.exit_helper import conditional_exit, graceful_exit, hard_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
-from facefusion.face_store import append_reference_face, clear_reference_faces, clear_static_faces, get_reference_faces
+from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
 from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_relative_path
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
-from facefusion.processors.frame import expression_restorer
 from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
@@ -42,12 +41,12 @@ def cli() -> None:
 
 		if state_manager.get_item('command'):
 			logger.init(state_manager.get_item('log_level'))
-			run(args)
+			route(args)
 		else:
 			program.print_help()
 
 
-def run(args : Args) -> None:
+def route(args : Args) -> None:
 	system_memory_limit = state_manager.get_item('system_memory_limit')
 	if system_memory_limit and system_memory_limit > 0:
 		limit_system_memory(system_memory_limit)
@@ -61,15 +60,11 @@ def run(args : Args) -> None:
 		hard_exit(error_code)
 	if not pre_check():
 		return conditional_exit(2)
-	if state_manager.get_item('command') in [ 'run', 'run-headless' ]:
-		if not content_analyser.pre_check() or not face_analyser.pre_check() or not face_masker.pre_check() or not voice_extractor.pre_check() or not expression_restorer.pre_check():
-			return conditional_exit(2)
-		for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
-			if not frame_processor_module.pre_check():
-				return conditional_exit(2)
 	if state_manager.get_item('command') == 'run':
 		import facefusion.uis.core as ui
 
+		if not common_pre_check() or not frame_processors_pre_check():
+			return conditional_exit(2)
 		for ui_layout in ui.get_ui_layouts_modules(state_manager.get_item('ui_layouts')):
 			if not ui_layout.pre_check():
 				return conditional_exit(2)
@@ -93,6 +88,17 @@ def pre_check() -> bool:
 	if not shutil.which('ffmpeg'):
 		logger.error(wording.get('ffmpeg_not_installed'), __name__.upper())
 		return False
+	return True
+
+
+def common_pre_check() -> bool:
+	return content_analyser.pre_check() and face_analyser.pre_check() and face_masker.pre_check() and voice_extractor.pre_check()
+
+
+def frame_processors_pre_check() -> bool:
+	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
+		if not frame_processor_module.pre_check():
+			return False
 	return True
 
 
@@ -257,16 +263,19 @@ def route_job_runner() -> ErrorCode:
 
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
-	args = step_args
-	args.update(collect_job_args())
 	step_total = job_manager.count_step_total(job_id)
 	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__.upper())
-	apply_args(args)
+
+	step_args.update(collect_job_args())
+	apply_args(step_args)
+
 	clear_reference_faces()
-	clear_static_faces()
 	clear_frame_processors_modules()
-	error_code = conditional_process()
-	return error_code == 0
+
+	if common_pre_check() and frame_processors_pre_check():
+		error_code = conditional_process()
+		return error_code == 0
+	return False
 
 
 def process_headless(args : Args) -> ErrorCode:
