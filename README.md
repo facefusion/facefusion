@@ -34,7 +34,7 @@ options:
 
 commands:
     run                                           run the program
-    run-headless                                  run the program in headless mode
+    headless-run                                  run the program in headless mode
     force-download                                force automate downloads and exit
     job-create                                    create a drafted job
     job-submit                                    submit a drafted job to become a queued job

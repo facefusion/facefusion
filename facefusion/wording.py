@@ -159,7 +159,7 @@ WORDING : Dict[str, Any] =\
 		'ui_workflow': 'choose the ui workflow',
 		# run
 		'run': 'run the program',
-		'run_headless': 'run the program in headless mode',
+		'headless_run': 'run the program in headless mode',
 		'force_download': 'force automate downloads and exit',
 		# job
 		'job_id': 'specify the job id',

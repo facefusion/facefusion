@@ -11,7 +11,7 @@ def hard_exit(error_code : ErrorCode) -> None:
 
 
 def conditional_exit(error_code : ErrorCode) -> None:
-	if state_manager.get_item('command') == 'run-headless':
+	if state_manager.get_item('command') == 'headless-run':
 		hard_exit(error_code)
 
 
