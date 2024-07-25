@@ -87,7 +87,7 @@ def apply_args(args : Args) -> None:
 		output_video_fps = normalize_fps(args.get('output_video_fps')) or detect_video_fps(args.get('target_path'))
 		state_manager.init_item('output_video_fps', output_video_fps)
 	state_manager.init_item('skip_audio', args.get('skip_audio'))
-	# frame processors
+	# processors
 	available_frame_processors = list_directory('facefusion/processors/frame/modules')
 	state_manager.init_item('frame_processors', args.get('frame_processors'))
 	for frame_processor in available_frame_processors:

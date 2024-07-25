@@ -163,12 +163,12 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	group_frame_processors = find_argument_group(program, 'frame processors')
-	if group_frame_processors:
-		group_frame_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', 'inswapper_128_fp16'), choices = frame_processors_choices.face_swapper_set.keys())
+	group_processors = find_argument_group(program, 'processors')
+	if group_processors:
+		group_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', 'inswapper_128_fp16'), choices = frame_processors_choices.face_swapper_set.keys())
 		face_swapper_pixel_boost_choices = suggest_face_swapper_pixel_boost_choices(program)
-		group_frame_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('frame_processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
-		group_frame_processors.add_argument('--face-swapper-expression-restorer', help = wording.get('help.face_swapper_expression_restorer'), type = float, default = config.get_int_value('frame_processors.face_swapper_expression_restorer', '0'), choices = frame_processors_choices.face_swapper_expression_restorer_range, metavar = create_metavar(frame_processors_choices.face_swapper_expression_restorer_range))
+		group_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('frame_processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
+		group_processors.add_argument('--face-swapper-expression-restorer', help = wording.get('help.face_swapper_expression_restorer'), type = float, default = config.get_int_value('frame_processors.face_swapper_expression_restorer', '0'), choices = frame_processors_choices.face_swapper_expression_restorer_range, metavar = create_metavar(frame_processors_choices.face_swapper_expression_restorer_range))
 		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_expression_restorer' ])
 
 

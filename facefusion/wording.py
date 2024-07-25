@@ -40,8 +40,8 @@ WORDING : Dict[str, Any] =\
 	'specify_image_or_video_output': 'Specify the output image or video within a directory',
 	'match_target_and_output_extension': 'Match the target and output extension',
 	'no_source_face_detected': 'No source face detected',
-	'frame_processor_not_loaded': 'Frame processor {frame_processor} could not be loaded',
-	'frame_processor_not_implemented': 'Frame processor {frame_processor} not implemented correctly',
+	'processor_not_loaded': 'Processor {processor} could not be loaded',
+	'processor_not_implemented': 'Processor {processor} not implemented correctly',
 	'ui_layout_not_loaded': 'UI layout {ui_layout} could not be loaded',
 	'ui_layout_not_implemented': 'UI layout {ui_layout} not implemented correctly',
 	'stream_not_loaded': 'Stream {stream_mode} could not be loaded',
@@ -92,17 +92,6 @@ WORDING : Dict[str, Any] =\
 		'target_path': 'choose single target image or video',
 		'output_path': 'specify the output image or video within a directory',
 		'jobs_path': 'specify the directory to store jobs',
-		# misc
-		'skip_download': 'omit downloads and remote lookups',
-		'log_level': 'adjust the message severity displayed in the terminal',
-		# execution
-		'execution_device_id': 'specify the device used for processing',
-		'execution_providers': 'accelerate the model inference using different providers (choices: {choices}, ...)',
-		'execution_thread_count': 'specify the amount of parallel threads while processing',
-		'execution_queue_count': 'specify the amount of frames each thread is processing',
-		# memory
-		'video_memory_strategy': 'balance fast frame processing and low VRAM usage',
-		'system_memory_limit': 'limit the available RAM that can be used while processing',
 		# face analyser
 		'face_detector_model': 'choose the model responsible for detecting the faces',
 		'face_detector_size': 'specify the size of the frame provided to the face detector',
@@ -137,11 +126,11 @@ WORDING : Dict[str, Any] =\
 		'output_video_resolution': 'specify the video output resolution based on the target video',
 		'output_video_fps': 'specify the video output fps based on the target video',
 		'skip_audio': 'omit the audio from the target video',
-		# frame processors
-		'frame_processors': 'load a single or multiple frame processors. (choices: {choices}, ...)',
+		# processors
+		'processors': 'load a single or multiple processors. (choices: {choices}, ...)',
 		'age_modifier_model': 'choose the model responsible for aging the face',
 		'age_modifier_direction': 'specify the direction in which the age should be modified',
-		'face_debugger_items': 'load a single or multiple frame processors (choices: {choices})',
+		'face_debugger_items': 'load a single or multiple processors (choices: {choices})',
 		'face_enhancer_model': 'choose the model responsible for enhancing the face',
 		'face_enhancer_blend': 'blend the enhanced into the previous face',
 		'face_swapper_model': 'choose the model responsible for swapping the face',
@@ -157,6 +146,17 @@ WORDING : Dict[str, Any] =\
 		'open_browser': 'open the browser once the program is ready',
 		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)',
 		'ui_workflow': 'choose the ui workflow',
+		# execution
+		'execution_device_id': 'specify the device used for processing',
+		'execution_providers': 'accelerate the model inference using different providers (choices: {choices}, ...)',
+		'execution_thread_count': 'specify the amount of parallel threads while processing',
+		'execution_queue_count': 'specify the amount of frames each thread is processing',
+		# memory
+		'video_memory_strategy': 'balance fast processing and low VRAM usage',
+		'system_memory_limit': 'limit the available RAM that can be used while processing',
+		# misc
+		'skip_download': 'omit downloads and remote lookups',
+		'log_level': 'adjust the message severity displayed in the terminal',
 		# run
 		'run': 'run the program',
 		'headless_run': 'run the program in headless mode',
@@ -183,106 +183,80 @@ WORDING : Dict[str, Any] =\
 	},
 	'uis':
 	{
-		# general
+		'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
+		'age_modifier_model_dropdown': 'AGE MODIFIER MODEL',
 		'apply_button': 'APPLY',
-		'refresh_button': 'REFRESH',
-		'start_button': 'START',
-		'stop_button': 'STOP',
-		'clear_button': 'CLEAR',
-		# about
-		'donate_button': 'DONATE',
-		# benchmark options
-		'benchmark_runs_checkbox_group': 'BENCHMARK RUNS',
 		'benchmark_cycles_slider': 'BENCHMARK CYCLES',
-		# common options
+		'benchmark_runs_checkbox_group': 'BENCHMARK RUNS',
+		'clear_button': 'CLEAR',
 		'common_options_checkbox_group': 'OPTIONS',
-		# execution
+		'donate_button': 'DONATE',
 		'execution_providers_checkbox_group': 'EXECUTION PROVIDERS',
-		# execution queue count
 		'execution_queue_count_slider': 'EXECUTION QUEUE COUNT',
-		# execution thread count
 		'execution_thread_count_slider': 'EXECUTION THREAD COUNT',
-		# job manager
+		'face_debugger_items_checkbox_group': 'FACE DEBUGGER ITEMS',
+		'face_detector_angles_checkbox_group': 'FACE DETECTOR ANGLES',
+		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',
+		'face_detector_score_slider': 'FACE DETECTOR SCORE',
+		'face_detector_size_dropdown': 'FACE DETECTOR SIZE',
+		'face_enhancer_blend_slider': 'FACE ENHANCER BLEND',
+		'face_enhancer_model_dropdown': 'FACE ENHANCER MODEL',
+		'face_landmarker_score_slider': 'FACE LANDMARKER SCORE',
+		'face_mask_blur_slider': 'FACE MASK BLUR',
+		'face_mask_padding_bottom_slider': 'FACE MASK PADDING BOTTOM',
+		'face_mask_padding_left_slider': 'FACE MASK PADDING LEFT',
+		'face_mask_padding_right_slider': 'FACE MASK PADDING RIGHT',
+		'face_mask_padding_top_slider': 'FACE MASK PADDING TOP',
+		'face_mask_region_checkbox_group': 'FACE MASK REGIONS',
+		'face_mask_types_checkbox_group': 'FACE MASK TYPES',
+		'face_selector_age_dropdown': 'FACE SELECTOR AGE',
+		'face_selector_gender_dropdown': 'FACE SELECTOR GENDER',
+		'face_selector_mode_dropdown': 'FACE SELECTOR MODE',
+		'face_selector_order_dropdown': 'FACE SELECTOR ORDER',
+		'face_swapper_expression_restorer_slider': 'FACE SWAPPER EXPRESSION RESTORER',
+		'face_swapper_model_dropdown': 'FACE SWAPPER MODEL',
+		'face_swapper_pixel_boost_dropdown': 'FACE SWAPPER PIXEL BOOST',
+		'frame_colorizer_blend_slider': 'FRAME COLORIZER BLEND',
+		'frame_colorizer_model_dropdown': 'FRAME COLORIZER MODEL',
+		'frame_colorizer_size_dropdown': 'FRAME COLORIZER SIZE',
+		'frame_enhancer_blend_slider': 'FRAME ENHANCER BLEND',
+		'frame_enhancer_model_dropdown': 'FRAME ENHANCER MODEL',
+		'job_list_status_checkbox_group': 'JOB STATUS',
 		'job_manager_job_action_dropdown': 'JOB_ACTION',
 		'job_manager_job_id_dropdown': 'JOB ID',
 		'job_manager_step_index_dropdown': 'STEP INDEX',
-		# job runner
 		'job_runner_job_action_dropdown': 'JOB ACTION',
 		'job_runner_job_id_dropdown': 'JOB ID',
-		# job list
-		'job_list_status_checkbox_group': 'JOB STATUS',
-		# face analyser
-		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',
-		'face_detector_size_dropdown': 'FACE DETECTOR SIZE',
-		'face_detector_angles_checkbox_group': 'FACE DETECTOR ANGLES',
-		'face_detector_score_slider': 'FACE DETECTOR SCORE',
-		'face_landmarker_score_slider': 'FACE LANDMARKER SCORE',
-		# face masker
-		'face_mask_types_checkbox_group': 'FACE MASK TYPES',
-		'face_mask_blur_slider': 'FACE MASK BLUR',
-		'face_mask_padding_top_slider': 'FACE MASK PADDING TOP',
-		'face_mask_padding_right_slider': 'FACE MASK PADDING RIGHT',
-		'face_mask_padding_bottom_slider': 'FACE MASK PADDING BOTTOM',
-		'face_mask_padding_left_slider': 'FACE MASK PADDING LEFT',
-		'face_mask_region_checkbox_group': 'FACE MASK REGIONS',
-		# face selector
-		'face_selector_mode_dropdown': 'FACE SELECTOR MODE',
-		'face_selector_order_dropdown': 'FACE SELECTOR ORDER',
-		'face_selector_age_dropdown': 'FACE SELECTOR AGE',
-		'face_selector_gender_dropdown': 'FACE SELECTOR GENDER',
-		'reference_face_gallery': 'REFERENCE FACE',
-		'reference_face_distance_slider': 'REFERENCE FACE DISTANCE',
-		# frame processors
-		'frame_processors_checkbox_group': 'FRAME PROCESSORS',
-		# frame processors options
-		'age_modifier_model_dropdown': 'AGE MODIFIER MODEL',
-		'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
-		'face_debugger_items_checkbox_group': 'FACE DEBUGGER ITEMS',
-		'face_enhancer_model_dropdown': 'FACE ENHANCER MODEL',
-		'face_enhancer_blend_slider': 'FACE ENHANCER BLEND',
-		'face_swapper_model_dropdown': 'FACE SWAPPER MODEL',
-		'face_swapper_pixel_boost_dropdown': 'FACE SWAPPER PIXEL BOOST',
-		'face_swapper_expression_restorer_slider': 'FACE SWAPPER EXPRESSION RESTORER',
-		'frame_colorizer_model_dropdown': 'FRAME COLORIZER MODEL',
-		'frame_colorizer_blend_slider': 'FRAME COLORIZER BLEND',
-		'frame_colorizer_size_dropdown': 'FRAME COLORIZER SIZE',
-		'frame_enhancer_model_dropdown': 'FRAME ENHANCER MODEL',
-		'frame_enhancer_blend_slider': 'FRAME ENHANCER BLEND',
 		'lip_syncer_model_dropdown': 'LIP SYNCER MODEL',
-		# memory
-		'video_memory_strategy_dropdown': 'VIDEO MEMORY STRATEGY',
-		'system_memory_limit_slider': 'SYSTEM MEMORY LIMIT',
-		# output
+		'output_audio_encoder_dropdown': 'OUTPUT AUDIO ENCODER',
 		'output_image_or_video': 'OUTPUT',
-		# output options
-		'output_path_textbox': 'OUTPUT PATH',
 		'output_image_quality_slider': 'OUTPUT IMAGE QUALITY',
 		'output_image_resolution_dropdown': 'OUTPUT IMAGE RESOLUTION',
-		'output_audio_encoder_dropdown': 'OUTPUT AUDIO ENCODER',
+		'output_path_textbox': 'OUTPUT PATH',
 		'output_video_encoder_dropdown': 'OUTPUT VIDEO ENCODER',
+		'output_video_fps_slider': 'OUTPUT VIDEO FPS',
 		'output_video_preset_dropdown': 'OUTPUT VIDEO PRESET',
 		'output_video_quality_slider': 'OUTPUT VIDEO QUALITY',
 		'output_video_resolution_dropdown': 'OUTPUT VIDEO RESOLUTION',
-		'output_video_fps_slider': 'OUTPUT VIDEO FPS',
-		# preview
-		'preview_image': 'PREVIEW',
 		'preview_frame_slider': 'PREVIEW FRAME',
-		# source
+		'preview_image': 'PREVIEW',
+		'processors_checkbox_group': 'PROCESSORS',
+		'reference_face_distance_slider': 'REFERENCE FACE DISTANCE',
+		'reference_face_gallery': 'REFERENCE FACE',
+		'refresh_button': 'REFRESH',
 		'source_file': 'SOURCE',
-		# target
+		'start_button': 'START',
+		'stop_button': 'STOP',
+		'system_memory_limit_slider': 'SYSTEM MEMORY LIMIT',
 		'target_file': 'TARGET',
-		# temp frame
 		'temp_frame_format_dropdown': 'TEMP FRAME FORMAT',
-		# trim frame
 		'trim_frame_slider': 'TRIM FRAME',
-		# ui workflow
 		'ui_workflow': 'UI WORKFLOW',
-		# webcam
+		'video_memory_strategy_dropdown': 'VIDEO MEMORY STRATEGY',
+		'webcam_fps_slider': 'WEBCAM FPS',
 		'webcam_image': 'WEBCAM',
-		# webcam options
 		'webcam_mode_radio': 'WEBCAM MODE',
 		'webcam_resolution_dropdown': 'WEBCAM RESOLUTION',
-		'webcam_fps_slider': 'WEBCAM FPS'
 	}
 }
 

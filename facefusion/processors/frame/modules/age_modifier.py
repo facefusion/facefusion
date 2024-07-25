@@ -80,10 +80,10 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	group_frame_processors = find_argument_group(program, 'frame processors')
-	if group_frame_processors:
-		group_frame_processors.add_argument('--age-modifier-model', help = wording.get('help.age_modifier_model'), default = config.get_str_value('frame_processors.age_modifier_model', 'styleganex_age'), choices = frame_processors_choices.age_modifier_models)
-		group_frame_processors.add_argument('--age-modifier-direction', help = wording.get('help.age_modifier_direction'), type = int, default = config.get_int_value('frame_processors.age_modifier_direction', '0'), choices = frame_processors_choices.age_modifier_direction_range, metavar = create_metavar(frame_processors_choices.age_modifier_direction_range))
+	group_processors = find_argument_group(program, 'processors')
+	if group_processors:
+		group_processors.add_argument('--age-modifier-model', help = wording.get('help.age_modifier_model'), default = config.get_str_value('frame_processors.age_modifier_model', 'styleganex_age'), choices = frame_processors_choices.age_modifier_models)
+		group_processors.add_argument('--age-modifier-direction', help = wording.get('help.age_modifier_direction'), type = int, default = config.get_int_value('frame_processors.age_modifier_direction', '0'), choices = frame_processors_choices.age_modifier_direction_range, metavar = create_metavar(frame_processors_choices.age_modifier_direction_range))
 		facefusion.jobs.job_store.register_step_keys([ 'age_modifier_model', 'age_modifier_direction' ])
 
 
