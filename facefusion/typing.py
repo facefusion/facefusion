@@ -103,6 +103,7 @@ OptionsWithModel = TypedDict('OptionsWithModel',
 {
 	'model' : ModelValue
 })
+ModelInitializer = NDArray[Any]
 
 ExecutionProviderKey = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 'rocm']
 ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'ROCMExecutionProvider']

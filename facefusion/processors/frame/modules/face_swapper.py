@@ -4,8 +4,6 @@ from typing import Any, List, Literal, Optional
 
 import cv2
 import numpy
-import onnx
-from onnx import numpy_helper
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -14,7 +12,7 @@ from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, get_first
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import create_inference_session, has_execution_provider
+from facefusion.execution import create_inference_session, get_static_model_initializer, has_execution_provider
 from facefusion.face_analyser import clear_face_analyser, get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_occlusion_mask, create_region_mask, create_static_box_mask
@@ -31,7 +29,6 @@ from facefusion.typing import Args, Embedding, Face, ModelSet, OptionsWithModel,
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
 FRAME_PROCESSOR = None
-MODEL_INITIALIZER = None
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
@@ -147,25 +144,6 @@ def clear_frame_processor() -> None:
 	FRAME_PROCESSOR = None
 
 
-def get_model_initializer() -> Any:
-	global MODEL_INITIALIZER
-
-	with thread_lock():
-		while process_manager.is_checking():
-			sleep(0.5)
-		if MODEL_INITIALIZER is None:
-			model_path = get_options('model').get('path')
-			model = onnx.load(model_path)
-			MODEL_INITIALIZER = numpy_helper.to_array(model.graph.initializer[-1])
-	return MODEL_INITIALIZER
-
-
-def clear_model_initializer() -> None:
-	global MODEL_INITIALIZER
-
-	MODEL_INITIALIZER = None
-
-
 def get_options(key : Literal['model']) -> Any:
 	global OPTIONS
 
@@ -260,8 +238,8 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	get_static_model_initializer.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_model_initializer()
 		clear_frame_processor()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
@@ -342,11 +320,12 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 
 def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_options('model').get('type')
+	model_path = get_options('model').get('path')
 
 	if model_type == 'ghost':
 		source_embedding = source_face.embedding.reshape(1, -1)
 	elif model_type == 'inswapper':
-		model_initializer = get_model_initializer()
+		model_initializer = get_static_model_initializer(model_path)
 		source_embedding = source_face.embedding.reshape((1, -1))
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
 	else:
