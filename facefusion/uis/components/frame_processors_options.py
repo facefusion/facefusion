@@ -45,7 +45,7 @@ def render() -> None:
 		label = wording.get('uis.age_modifier_model_dropdown'),
 		choices = frame_processors_choices.age_modifier_models,
 		value = state_manager.get_item('age_modifier_model'),
-		visible = 'age_modifier' in state_manager.get_item('frame_processors')
+		visible = False
 	)
 	AGE_MODIFIER_DIRECTION_SLIDER = gradio.Slider(
 		label = wording.get('uis.age_modifier_direction_slider'),
@@ -53,19 +53,19 @@ def render() -> None:
 		step = frame_processors_choices.age_modifier_direction_range[1] - frame_processors_choices.age_modifier_direction_range[0],
 		minimum = frame_processors_choices.age_modifier_direction_range[0],
 		maximum = frame_processors_choices.age_modifier_direction_range[-1],
-		visible = 'age_modifier' in state_manager.get_item('frame_processors')
+		visible = False
 	)
 	FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.face_debugger_items_checkbox_group'),
 		choices = frame_processors_choices.face_debugger_items,
 		value = state_manager.get_item('face_debugger_items'),
-		visible = 'face_debugger' in state_manager.get_item('frame_processors')
+		visible = False
 	)
 	FACE_ENHANCER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_enhancer_model_dropdown'),
 		choices = frame_processors_choices.face_enhancer_models,
 		value = state_manager.get_item('face_enhancer_model'),
-		visible = 'face_enhancer' in state_manager.get_item('frame_processors')
+		visible = False
 	)
 	FACE_ENHANCER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_enhancer_blend_slider'),
@@ -73,7 +73,7 @@ def render() -> None:
 		step = frame_processors_choices.face_enhancer_blend_range[1] - frame_processors_choices.face_enhancer_blend_range[0],
 		minimum = frame_processors_choices.face_enhancer_blend_range[0],
 		maximum = frame_processors_choices.face_enhancer_blend_range[-1],
-		visible = 'face_enhancer' in state_manager.get_item('frame_processors')
+		visible = False
 	)
 	FACE_SWAPPER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_swapper_model_dropdown'),
@@ -152,10 +152,10 @@ def render() -> None:
 
 
 def listen() -> None:
-	AGE_MODIFIER_MODEL_DROPDOWN.change(update_age_modifier_model, inputs = AGE_MODIFIER_MODEL_DROPDOWN, outputs = AGE_MODIFIER_MODEL_DROPDOWN)
-	AGE_MODIFIER_DIRECTION_SLIDER.release(update_age_modifier_direction, inputs = AGE_MODIFIER_DIRECTION_SLIDER)
-	FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP.change(update_face_debugger_items, inputs = FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
-	FACE_ENHANCER_MODEL_DROPDOWN.change(update_face_enhancer_model, inputs = FACE_ENHANCER_MODEL_DROPDOWN, outputs = FACE_ENHANCER_MODEL_DROPDOWN)
+	#AGE_MODIFIER_MODEL_DROPDOWN.change(update_age_modifier_model, inputs = AGE_MODIFIER_MODEL_DROPDOWN, outputs = AGE_MODIFIER_MODEL_DROPDOWN)
+	#AGE_MODIFIER_DIRECTION_SLIDER.release(update_age_modifier_direction, inputs = AGE_MODIFIER_DIRECTION_SLIDER)
+	#FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP.change(update_face_debugger_items, inputs = FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
+	#FACE_ENHANCER_MODEL_DROPDOWN.change(update_face_enhancer_model, inputs = FACE_ENHANCER_MODEL_DROPDOWN, outputs = FACE_ENHANCER_MODEL_DROPDOWN)
 	FACE_ENHANCER_BLEND_SLIDER.release(update_face_enhancer_blend, inputs = FACE_ENHANCER_BLEND_SLIDER)
 	FACE_SWAPPER_MODEL_DROPDOWN.change(update_face_swapper_model, inputs = FACE_SWAPPER_MODEL_DROPDOWN, outputs = [ FACE_SWAPPER_MODEL_DROPDOWN, FACE_SWAPPER_PIXEL_BOOST_DROPDOWN ])
 	FACE_SWAPPER_PIXEL_BOOST_DROPDOWN.change(update_face_swapper_pixel_boost, inputs = FACE_SWAPPER_PIXEL_BOOST_DROPDOWN)
@@ -173,9 +173,9 @@ def listen() -> None:
 
 
 def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider, gradio.CheckboxGroup, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Dropdown]:
-	has_age_modifier = 'age_modifier' in frame_processors
-	has_face_debugger = 'face_debugger' in frame_processors
-	has_face_enhancer = 'face_enhancer' in frame_processors
+	has_age_modifier = False
+	has_face_debugger = False
+	has_face_enhancer = False
 	has_face_swapper = 'face_swapper' in frame_processors
 	has_frame_colorizer = 'frame_colorizer' in frame_processors
 	has_frame_enhancer = 'frame_enhancer' in frame_processors
