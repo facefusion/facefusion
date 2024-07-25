@@ -79,13 +79,13 @@ def render() -> None:
 		label = wording.get('uis.face_swapper_model_dropdown'),
 		choices = frame_processors_choices.face_swapper_set.keys(),
 		value = state_manager.get_item('face_swapper_model'),
-		visible = 'face_swapper' in state_manager.get_item('frame_processors')
+		visible = False
 	)
 	FACE_SWAPPER_PIXEL_BOOST_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_swapper_pixel_boost_dropdown'),
 		choices = frame_processors_choices.face_swapper_set.get(state_manager.get_item('face_swapper_model')),
 		value = state_manager.get_item('face_swapper_pixel_boost'),
-		visible = 'face_swapper' in state_manager.get_item('frame_processors')
+		visible = False
 	)
 	FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_swapper_expression_restorer_slider'),
@@ -93,7 +93,7 @@ def render() -> None:
 		step = frame_processors_choices.face_swapper_expression_restorer_range[1] - frame_processors_choices.face_swapper_expression_restorer_range[0],
 		minimum = frame_processors_choices.face_swapper_expression_restorer_range[0],
 		maximum = frame_processors_choices.face_swapper_expression_restorer_range[-1],
-		visible = 'face_swapper' in state_manager.get_item('frame_processors')
+		visible = False
 	)
 	FRAME_COLORIZER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.frame_colorizer_model_dropdown'),
@@ -156,10 +156,10 @@ def listen() -> None:
 	#AGE_MODIFIER_DIRECTION_SLIDER.release(update_age_modifier_direction, inputs = AGE_MODIFIER_DIRECTION_SLIDER)
 	#FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP.change(update_face_debugger_items, inputs = FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
 	#FACE_ENHANCER_MODEL_DROPDOWN.change(update_face_enhancer_model, inputs = FACE_ENHANCER_MODEL_DROPDOWN, outputs = FACE_ENHANCER_MODEL_DROPDOWN)
-	FACE_ENHANCER_BLEND_SLIDER.release(update_face_enhancer_blend, inputs = FACE_ENHANCER_BLEND_SLIDER)
-	FACE_SWAPPER_MODEL_DROPDOWN.change(update_face_swapper_model, inputs = FACE_SWAPPER_MODEL_DROPDOWN, outputs = [ FACE_SWAPPER_MODEL_DROPDOWN, FACE_SWAPPER_PIXEL_BOOST_DROPDOWN ])
-	FACE_SWAPPER_PIXEL_BOOST_DROPDOWN.change(update_face_swapper_pixel_boost, inputs = FACE_SWAPPER_PIXEL_BOOST_DROPDOWN)
-	FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER.release(update_face_swapper_expression_restorer, inputs = FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER)
+	#FACE_ENHANCER_BLEND_SLIDER.release(update_face_enhancer_blend, inputs = FACE_ENHANCER_BLEND_SLIDER)
+	#FACE_SWAPPER_MODEL_DROPDOWN.change(update_face_swapper_model, inputs = FACE_SWAPPER_MODEL_DROPDOWN, outputs = [ FACE_SWAPPER_MODEL_DROPDOWN, FACE_SWAPPER_PIXEL_BOOST_DROPDOWN ])
+	#FACE_SWAPPER_PIXEL_BOOST_DROPDOWN.change(update_face_swapper_pixel_boost, inputs = FACE_SWAPPER_PIXEL_BOOST_DROPDOWN)
+	#FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER.release(update_face_swapper_expression_restorer, inputs = FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER)
 	FRAME_COLORIZER_MODEL_DROPDOWN.change(update_frame_colorizer_model, inputs = FRAME_COLORIZER_MODEL_DROPDOWN, outputs = FRAME_COLORIZER_MODEL_DROPDOWN)
 	FRAME_COLORIZER_BLEND_SLIDER.release(update_frame_colorizer_blend, inputs = FRAME_COLORIZER_BLEND_SLIDER)
 	FRAME_COLORIZER_SIZE_DROPDOWN.change(update_frame_colorizer_size, inputs = FRAME_COLORIZER_SIZE_DROPDOWN)
@@ -176,7 +176,7 @@ def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.Dropdo
 	has_age_modifier = False
 	has_face_debugger = False
 	has_face_enhancer = False
-	has_face_swapper = 'face_swapper' in frame_processors
+	has_face_swapper = False
 	has_frame_colorizer = 'frame_colorizer' in frame_processors
 	has_frame_enhancer = 'frame_enhancer' in frame_processors
 	has_lip_syncer = 'lip_syncer' in frame_processors

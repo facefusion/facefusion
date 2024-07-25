@@ -40,19 +40,20 @@ def listen() -> None:
 
 	frame_processors_checkbox_group = get_ui_component('frame_processors_checkbox_group')
 	if frame_processors_checkbox_group:
-		frame_processors_checkbox_group.change(update_frame_processors, inputs = frame_processors_checkbox_group, outputs = [ AGE_MODIFIER_MODEL_DROPDOWN, AGE_MODIFIER_DIRECTION_SLIDER ])
+		frame_processors_checkbox_group.change(remote_update, inputs = frame_processors_checkbox_group, outputs = [ AGE_MODIFIER_MODEL_DROPDOWN, AGE_MODIFIER_DIRECTION_SLIDER ])
 
 
-def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider]:
+def remote_update(frame_processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider]:
 	has_age_modifier = 'age_modifier' in frame_processors
 	return gradio.Dropdown(visible = has_age_modifier), gradio.Slider(visible = has_age_modifier)
 
 
 def update_age_modifier_model(age_modifier_model : AgeModifierModel) -> gradio.Dropdown:
-	state_manager.set_item('age_modifier_model', age_modifier_model)
 	age_modifier_module = load_frame_processor_module('age_modifier')
 	age_modifier_module.clear_frame_processor()
+	state_manager.set_item('age_modifier_model', age_modifier_model)
 	age_modifier_module.set_options('model', age_modifier_module.MODELS[state_manager.get_item('age_modifier_model')])
+
 	if age_modifier_module.pre_check():
 		return gradio.Dropdown(value = state_manager.get_item('age_modifier_model'))
 	return gradio.Dropdown()

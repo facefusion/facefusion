@@ -3,10 +3,11 @@ import xml.etree.ElementTree as ElementTree
 from functools import lru_cache
 from typing import Any, List
 
+import onnx
 from onnxruntime import InferenceSession, get_available_providers
 
 from facefusion.choices import execution_provider_set
-from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, ValueAndUnit
+from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, ModelInitializer, ValueAndUnit
 
 
 def get_execution_provider_choices() -> List[ExecutionProviderKey]:
@@ -71,6 +72,12 @@ def use_exhaustive() -> bool:
 
 def create_inference_session(model_path : str, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSession:
 	return InferenceSession(model_path, providers = apply_execution_provider_options(execution_device_id, execution_provider_keys))
+
+
+@lru_cache(maxsize = None)
+def get_static_model_initializer(model_path : str) -> ModelInitializer:
+	model = onnx.load(model_path)
+	return onnx.numpy_helper.to_array(model.graph.initializer[-1])
 
 
 def run_nvidia_smi() -> subprocess.Popen[bytes]:

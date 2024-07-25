@@ -39,19 +39,20 @@ def listen() -> None:
 
 	frame_processors_checkbox_group = get_ui_component('frame_processors_checkbox_group')
 	if frame_processors_checkbox_group:
-		frame_processors_checkbox_group.change(update_frame_processors, inputs = frame_processors_checkbox_group, outputs = [ FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER ])
+		frame_processors_checkbox_group.change(remote_update, inputs = frame_processors_checkbox_group, outputs = [ FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER ])
 
 
-def update_frame_processors(frame_processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider]:
+def remote_update(frame_processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider]:
 	has_face_enhancer = 'face_enhancer' in frame_processors
 	return gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer)
 
 
 def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> gradio.Dropdown:
-	state_manager.set_item('face_enhancer_model', face_enhancer_model)
 	face_enhancer_module = load_frame_processor_module('face_enhancer')
 	face_enhancer_module.clear_frame_processor()
+	state_manager.set_item('face_enhancer_model', face_enhancer_model)
 	face_enhancer_module.set_options('model', face_enhancer_module.MODELS[state_manager.get_item('face_enhancer_model')])
+
 	if face_enhancer_module.pre_check():
 		return gradio.Dropdown(value = state_manager.get_item('face_enhancer_model'))
 	return gradio.Dropdown()

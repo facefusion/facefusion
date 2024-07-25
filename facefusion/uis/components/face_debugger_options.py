@@ -27,10 +27,10 @@ def listen() -> None:
 
 	frame_processors_checkbox_group = get_ui_component('frame_processors_checkbox_group')
 	if frame_processors_checkbox_group:
-		frame_processors_checkbox_group.change(update_frame_processors, inputs = frame_processors_checkbox_group, outputs = FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
+		frame_processors_checkbox_group.change(remote_update, inputs = frame_processors_checkbox_group, outputs = FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
 
 
-def update_frame_processors(frame_processors : List[str]) -> gradio.CheckboxGroup:
+def remote_update(frame_processors : List[str]) -> gradio.CheckboxGroup:
 	has_face_debugger = 'face_debugger' in frame_processors
 	return gradio.CheckboxGroup(visible = has_face_debugger)
 
