@@ -1,13 +1,12 @@
 from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
-import facefusion.processors.frame
 from facefusion import config, logger, metadata, state_manager, wording
 from facefusion.common_helper import create_metavar
 from facefusion.execution import get_execution_provider_choices
 from facefusion.filesystem import list_directory
 from facefusion.jobs import job_store
-from facefusion.processors.frame.core import load_frame_processor_module
+from facefusion.processors.core import load_processor_module
 from facefusion.program_helper import suggest_face_detector_choices
 
 
@@ -107,15 +106,15 @@ def create_output_creation_program() -> ArgumentParser:
 	return program
 
 
-def create_frame_processors_program() -> ArgumentParser:
+def create_processors_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	available_frame_processors = list_directory('facefusion/processors/frame/modules')
-	group_frame_processors = program.add_argument_group('frame processors')
-	group_frame_processors.add_argument('--frame-processors', help = wording.get('help.frame_processors').format(choices = ', '.join(available_frame_processors)), default = config.get_str_list('frame_processors.frame_processors', 'face_swapper'), nargs = '+')
-	job_store.register_step_keys([ 'frame_processors' ])
-	for frame_processor in available_frame_processors:
-		frame_processor_module = load_frame_processor_module(frame_processor)
-		frame_processor_module.register_args(program)
+	available_processors = list_directory('facefusion/processors/modules')
+	group_processors = program.add_argument_group('processors')
+	group_processors.add_argument('--processors', help = wording.get('help.processors').format(choices = ', '.join(available_processors)), default = config.get_str_list('processors.processors', 'face_swapper'), nargs = '+')
+	job_store.register_step_keys([ 'processors' ])
+	for processor in available_processors:
+		processor_module = load_processor_module(processor)
+		processor_module.register_args(program)
 	return program
 
 
@@ -186,7 +185,7 @@ def create_step_index_program() -> ArgumentParser:
 
 
 def collect_step_program() -> ArgumentParser:
-	return ArgumentParser(parents= [ create_config_program(), create_jobs_path_program(), create_paths_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_frame_processors_program() ], add_help = False)
+	return ArgumentParser(parents= [ create_config_program(), create_jobs_path_program(), create_paths_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
 
 
 def collect_job_program() -> ArgumentParser:

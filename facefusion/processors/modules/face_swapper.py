@@ -7,7 +7,7 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-import facefusion.processors.frame.core as frame_processors
+import facefusion.processors.core as processors
 from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, get_first
 from facefusion.content_analyser import clear_content_analyser
@@ -19,16 +19,16 @@ from facefusion.face_masker import clear_face_occluder, clear_face_parser, creat
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
-from facefusion.processors.frame import choices as frame_processors_choices
-from facefusion.processors.frame.expression_restorer import clear_expression_restorer, restore_expression
-from facefusion.processors.frame.pixel_boost import explode_pixel_boost, implode_pixel_boost
-from facefusion.processors.frame.typing import FaceSwapperInputs
+from facefusion.processors import choices as processors_choices
+from facefusion.processors.expression_restorer import clear_expression_restorer, restore_expression
+from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel_boost
+from facefusion.processors.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Args, Embedding, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
-FRAME_PROCESSOR = None
+PROCESSOR = None
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
@@ -126,22 +126,22 @@ MODELS : ModelSet =\
 OPTIONS : Optional[OptionsWithModel] = None
 
 
-def get_frame_processor() -> Any:
-	global FRAME_PROCESSOR
+def get_processor() -> Any:
+	global PROCESSOR
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if FRAME_PROCESSOR is None:
+		if PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return FRAME_PROCESSOR
+			PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+	return PROCESSOR
 
 
-def clear_frame_processor() -> None:
-	global FRAME_PROCESSOR
+def clear_processor() -> None:
+	global PROCESSOR
 
-	FRAME_PROCESSOR = None
+	PROCESSOR = None
 
 
 def get_options(key : Literal['model']) -> Any:
@@ -163,12 +163,12 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	group_frame_processors = find_argument_group(program, 'frame processors')
-	if group_frame_processors:
-		group_frame_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('frame_processors.face_swapper_model', 'inswapper_128_fp16'), choices = frame_processors_choices.face_swapper_set.keys())
+	group_processors = find_argument_group(program, 'processors')
+	if group_processors:
+		group_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('processors.face_swapper_model', 'inswapper_128_fp16'), choices = processors_choices.face_swapper_set.keys())
 		face_swapper_pixel_boost_choices = suggest_face_swapper_pixel_boost_choices(program)
-		group_frame_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('frame_processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
-		group_frame_processors.add_argument('--face-swapper-expression-restorer', help = wording.get('help.face_swapper_expression_restorer'), type = float, default = config.get_int_value('frame_processors.face_swapper_expression_restorer', '0'), choices = frame_processors_choices.face_swapper_expression_restorer_range, metavar = create_metavar(frame_processors_choices.face_swapper_expression_restorer_range))
+		group_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('processors.face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
+		group_processors.add_argument('--face-swapper-expression-restorer', help = wording.get('help.face_swapper_expression_restorer'), type = float, default = config.get_int_value('processors.face_swapper_expression_restorer', '0'), choices = processors_choices.face_swapper_expression_restorer_range, metavar = create_metavar(processors_choices.face_swapper_expression_restorer_range))
 		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_expression_restorer' ])
 
 
@@ -240,7 +240,7 @@ def post_process() -> None:
 	read_static_image.cache_clear()
 	get_static_model_initializer.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_frame_processor()
+		clear_processor()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
@@ -285,21 +285,21 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 
 
 def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFrame:
-	frame_processor = get_frame_processor()
+	processor = get_processor()
 	model_type = get_options('model').get('type')
-	frame_processor_inputs = {}
+	processor_inputs = {}
 
-	for frame_processor_input in frame_processor.get_inputs():
-		if frame_processor_input.name == 'source':
+	for processor_input in processor.get_inputs():
+		if processor_input.name == 'source':
 			if model_type == 'blendswap' or model_type == 'uniface':
-				frame_processor_inputs[frame_processor_input.name] = prepare_source_frame(source_face)
+				processor_inputs[processor_input.name] = prepare_source_frame(source_face)
 			else:
-				frame_processor_inputs[frame_processor_input.name] = prepare_source_embedding(source_face)
-		if frame_processor_input.name == 'target':
-			frame_processor_inputs[frame_processor_input.name] = crop_vision_frame
+				processor_inputs[processor_input.name] = prepare_source_embedding(source_face)
+		if processor_input.name == 'target':
+			processor_inputs[processor_input.name] = crop_vision_frame
 
 	with conditional_thread_semaphore():
-		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
+		crop_vision_frame = processor.run(None, processor_inputs)[0][0]
 
 	return crop_vision_frame
 
@@ -421,4 +421,4 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	frame_processors.multi_process_frames(source_paths, temp_frame_paths, process_frames)
+	processors.multi_process_frames(source_paths, temp_frame_paths, process_frames)

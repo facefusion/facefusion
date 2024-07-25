@@ -33,7 +33,7 @@ def test_job_run() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-run', '-j', get_test_jobs_directory() ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-run.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-run.jpg') ]
 	subprocess.run(commands)
 
 	commands = [ sys.executable, 'facefusion.py', 'job-run', 'test-job-run', '-j', get_test_jobs_directory() ]
@@ -61,13 +61,13 @@ def test_job_run_all() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-run-all-2', '-j', get_test_jobs_directory() ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run-all-1', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-run-all-1.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run-all-1', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-run-all-1.jpg') ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run-all-2', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-end', '10' ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run-all-2', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-end', '10' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run-all-2', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-start', '10', '--trim-frame-start', '20' ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run-all-2', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-start', '10', '--trim-frame-start', '20' ]
 	subprocess.run(commands)
 
 	commands = [ sys.executable, 'facefusion.py', 'job-run-all', '-j', get_test_jobs_directory() ]
@@ -93,7 +93,7 @@ def test_job_retry() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-retry', '-j', get_test_jobs_directory() ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-retry.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-retry.jpg') ]
 	subprocess.run(commands)
 
 	commands = [ sys.executable, 'facefusion.py', 'job-retry', 'test-job-retry', '-j', get_test_jobs_directory() ]
@@ -121,13 +121,13 @@ def test_job_retry_all() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-retry-all-2', '-j', get_test_jobs_directory() ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-1', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-retry-all-1.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-1', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-retry-all-1.jpg') ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-2', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-retry-all-2.mp4'), '--trim-frame-end', '10' ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-2', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-retry-all-2.mp4'), '--trim-frame-end', '10' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-2', '-j', get_test_jobs_directory(), '--frame-processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-retry-all-2.mp4'), '--trim-frame-start', '10', '--trim-frame-start', '20' ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-2', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-retry-all-2.mp4'), '--trim-frame-start', '10', '--trim-frame-start', '20' ]
 	subprocess.run(commands)
 
 	commands = [ sys.executable, 'facefusion.py', 'job-retry-all', '-j', get_test_jobs_directory() ]

@@ -2,7 +2,7 @@ from facefusion import state_manager
 from facefusion.filesystem import is_image, is_video, list_directory
 from facefusion.jobs import job_store
 from facefusion.normalizer import normalize_fps, normalize_padding
-from facefusion.processors.frame.core import load_frame_processor_module
+from facefusion.processors.core import load_processor_module
 from facefusion.typing import Args
 from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, pack_resolution
 
@@ -87,12 +87,12 @@ def apply_args(args : Args) -> None:
 		output_video_fps = normalize_fps(args.get('output_video_fps')) or detect_video_fps(args.get('target_path'))
 		state_manager.init_item('output_video_fps', output_video_fps)
 	state_manager.init_item('skip_audio', args.get('skip_audio'))
-	# frame processors
-	available_frame_processors = list_directory('facefusion/processors/frame/modules')
-	state_manager.init_item('frame_processors', args.get('frame_processors'))
-	for frame_processor in available_frame_processors:
-		frame_processor_module = load_frame_processor_module(frame_processor)
-		frame_processor_module.apply_args(args)
+	# processors
+	available_processors = list_directory('facefusion/processors/modules')
+	state_manager.init_item('processors', args.get('processors'))
+	for processor in available_processors:
+		processor_module = load_processor_module(processor)
+		processor_module.apply_args(args)
 	# uis
 	if args.get('command') == 'run':
 		state_manager.init_item('open_browser', args.get('open_browser'))

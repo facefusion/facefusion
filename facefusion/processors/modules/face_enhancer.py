@@ -7,7 +7,7 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-import facefusion.processors.frame.core as frame_processors
+import facefusion.processors.core as processors
 from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
 from facefusion.content_analyser import clear_content_analyser
@@ -19,14 +19,14 @@ from facefusion.face_masker import clear_face_occluder, create_occlusion_mask, c
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
-from facefusion.processors.frame import choices as frame_processors_choices
-from facefusion.processors.frame.typing import FaceEnhancerInputs
+from facefusion.processors import choices as processors_choices
+from facefusion.processors.typing import FaceEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Args, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
-FRAME_PROCESSOR = None
+PROCESSOR = None
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
@@ -97,22 +97,22 @@ MODELS : ModelSet =\
 OPTIONS : Optional[OptionsWithModel] = None
 
 
-def get_frame_processor() -> Any:
-	global FRAME_PROCESSOR
+def get_processor() -> Any:
+	global PROCESSOR
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if FRAME_PROCESSOR is None:
+		if PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return FRAME_PROCESSOR
+			PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+	return PROCESSOR
 
 
-def clear_frame_processor() -> None:
-	global FRAME_PROCESSOR
+def clear_processor() -> None:
+	global PROCESSOR
 
-	FRAME_PROCESSOR = None
+	PROCESSOR = None
 
 
 def get_options(key : Literal['model']) -> Any:
@@ -133,10 +133,10 @@ def set_options(key : Literal['model'], value : Any) -> None:
 
 
 def register_args(program : ArgumentParser) -> None:
-	group_frame_processors = find_argument_group(program, 'frame processors')
-	if group_frame_processors:
-		group_frame_processors.add_argument('--face-enhancer-model', help = wording.get('help.face_enhancer_model'), default = config.get_str_value('frame_processors.face_enhancer_model', 'gfpgan_1.4'), choices = frame_processors_choices.face_enhancer_models)
-		group_frame_processors.add_argument('--face-enhancer-blend', help = wording.get('help.face_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.face_enhancer_blend', '80'), choices = frame_processors_choices.face_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.face_enhancer_blend_range))
+	group_processors = find_argument_group(program, 'processors')
+	if group_processors:
+		group_processors.add_argument('--face-enhancer-model', help = wording.get('help.face_enhancer_model'), default = config.get_str_value('processors.face_enhancer_model', 'gfpgan_1.4'), choices = processors_choices.face_enhancer_models)
+		group_processors.add_argument('--face-enhancer-blend', help = wording.get('help.face_enhancer_blend'), type = int, default = config.get_int_value('processors.face_enhancer_blend', '80'), choices = processors_choices.face_enhancer_blend_range, metavar = create_metavar(processors_choices.face_enhancer_blend_range))
 		facefusion.jobs.job_store.register_step_keys([ 'face_enhancer_model', 'face_enhancer_blend' ])
 
 
@@ -186,7 +186,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_frame_processor()
+		clear_processor()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
@@ -216,18 +216,18 @@ def enhance_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFr
 
 
 def apply_enhance(crop_vision_frame : VisionFrame) -> VisionFrame:
-	frame_processor = get_frame_processor()
-	frame_processor_inputs = {}
+	processor = get_processor()
+	processor_inputs = {}
 
-	for frame_processor_input in frame_processor.get_inputs():
-		if frame_processor_input.name == 'input':
-			frame_processor_inputs[frame_processor_input.name] = crop_vision_frame
-		if frame_processor_input.name == 'weight':
+	for processor_input in processor.get_inputs():
+		if processor_input.name == 'input':
+			processor_inputs[processor_input.name] = crop_vision_frame
+		if processor_input.name == 'weight':
 			weight = numpy.array([ 1 ]).astype(numpy.double)
-			frame_processor_inputs[frame_processor_input.name] = weight
+			processor_inputs[processor_input.name] = weight
 
 	with thread_semaphore():
-		crop_vision_frame = frame_processor.run(None, frame_processor_inputs)[0][0]
+		crop_vision_frame = processor.run(None, processor_inputs)[0][0]
 
 	return crop_vision_frame
 
@@ -306,4 +306,4 @@ def process_image(source_path : str, target_path : str, output_path : str) -> No
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	frame_processors.multi_process_frames(None, temp_frame_paths, process_frames)
+	processors.multi_process_frames(None, temp_frame_paths, process_frames)

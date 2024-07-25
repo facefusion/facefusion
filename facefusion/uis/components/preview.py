@@ -13,7 +13,7 @@ from facefusion.core import conditional_append_reference_faces
 from facefusion.face_analyser import get_average_face, get_many_faces
 from facefusion.face_store import clear_reference_faces, clear_static_faces, get_reference_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
-from facefusion.processors.frame.core import load_frame_processor_module
+from facefusion.processors.core import load_processor_module
 from facefusion.typing import AudioFrame, Face, FaceSet, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.typing import ComponentOptions
@@ -122,7 +122,7 @@ def listen() -> None:
 	for ui_component in get_ui_components(
 	[
 		'age_modifier_model_dropdown',
-		'frame_processors_checkbox_group',
+		'processors_checkbox_group',
 		'face_enhancer_model_dropdown',
 		'face_swapper_model_dropdown',
 		'face_swapper_pixel_boost_dropdown',
@@ -162,9 +162,9 @@ def slide_preview_image(frame_number : int = 0) -> gradio.Image:
 
 
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
-	for frame_processor in state_manager.get_item('frame_processors'):
-		frame_processor_module = load_frame_processor_module(frame_processor)
-		while not frame_processor_module.post_check():
+	for processor in state_manager.get_item('processors'):
+		processor_module = load_processor_module(processor)
+		while not processor_module.post_check():
 			logger.disable()
 			sleep(0.5)
 		logger.enable()
@@ -206,12 +206,12 @@ def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_
 	target_vision_frame = resize_frame_resolution(target_vision_frame, (640, 640))
 	if analyse_frame(target_vision_frame):
 		return cv2.GaussianBlur(target_vision_frame, (99, 99), 0)
-	for frame_processor in state_manager.get_item('frame_processors'):
-		frame_processor_module = load_frame_processor_module(frame_processor)
+	for processor in state_manager.get_item('processors'):
+		processor_module = load_processor_module(processor)
 		logger.disable()
-		if frame_processor_module.pre_process('preview'):
+		if processor_module.pre_process('preview'):
 			logger.enable()
-			target_vision_frame = frame_processor_module.process_frame(
+			target_vision_frame = processor_module.process_frame(
 			{
 				'reference_faces': reference_faces,
 				'source_face': source_face,
