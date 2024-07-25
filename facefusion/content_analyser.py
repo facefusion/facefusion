@@ -69,14 +69,15 @@ def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
 
 
 def analyse_frame(vision_frame : VisionFrame) -> bool:
-	content_analyser = get_content_analyser()
-	vision_frame = prepare_frame(vision_frame)
-	with conditional_thread_semaphore(facefusion.globals.execution_providers):
-		probability = content_analyser.run(None,
-		{
-			content_analyser.get_inputs()[0].name: vision_frame
-		})[0][0][1]
-	return probability > PROBABILITY_LIMIT
+	# content_analyser = get_content_analyser()
+	# vision_frame = prepare_frame(vision_frame)
+	# with conditional_thread_semaphore(facefusion.globals.execution_providers):
+	# 	probability = content_analyser.run(None,
+	# 	{
+	# 		content_analyser.get_inputs()[0].name: vision_frame
+	# 	})[0][0][1]
+	# return probability > PROBABILITY_LIMIT
+	return False
 
 
 def prepare_frame(vision_frame : VisionFrame) -> VisionFrame:
