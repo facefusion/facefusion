@@ -51,7 +51,7 @@ def get_processor() -> Any:
 			sleep(0.5)
 		if PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			execution_providers = ['cpu'] if has_execution_provider('coreml') else state_manager.get_item('execution_providers')
+			execution_providers = [ 'cpu' ] if has_execution_provider('coreml') else state_manager.get_item('execution_providers')
 			PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), execution_providers)
 	return PROCESSOR
 

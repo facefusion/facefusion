@@ -46,14 +46,17 @@ def render() -> None:
 	source_face = get_average_face(source_faces)
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()
+
 	if source_audio_path and state_manager.get_item('output_video_fps') and state_manager.get_item('reference_frame_number'):
 		temp_audio_frame = get_audio_frame(source_audio_path, state_manager.get_item('output_video_fps'), state_manager.get_item('reference_frame_number'))
 		if numpy.any(temp_audio_frame):
 			source_audio_frame = temp_audio_frame
+
 	if is_image(state_manager.get_item('target_path')):
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)
 		preview_image_options['value'] = normalize_frame_color(preview_vision_frame)
+
 	if is_video(state_manager.get_item('target_path')):
 		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
@@ -175,6 +178,7 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	source_face = get_average_face(source_faces)
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()
+
 	if source_audio_path and state_manager.get_item('output_video_fps') and state_manager.get_item('reference_frame_number'):
 		reference_audio_frame_number = state_manager.get_item('reference_frame_number')
 		if state_manager.get_item('trim_frame_start'):
@@ -182,11 +186,13 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		temp_audio_frame = get_audio_frame(source_audio_path, state_manager.get_item('output_video_fps'), reference_audio_frame_number)
 		if numpy.any(temp_audio_frame):
 			source_audio_frame = temp_audio_frame
+
 	if is_image(state_manager.get_item('target_path')):
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, target_vision_frame)
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
 		return gradio.Image(value = preview_vision_frame)
+
 	if is_video(state_manager.get_item('target_path')):
 		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), frame_number)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
@@ -206,6 +212,7 @@ def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_
 	target_vision_frame = resize_frame_resolution(target_vision_frame, (640, 640))
 	if analyse_frame(target_vision_frame):
 		return cv2.GaussianBlur(target_vision_frame, (99, 99), 0)
+
 	for processor in state_manager.get_item('processors'):
 		processor_module = load_processor_module(processor)
 		logger.disable()

@@ -136,7 +136,7 @@ def conditional_append_reference_faces() -> None:
 			for processor_module in get_processors_modules(state_manager.get_item('processors')):
 				abstract_reference_frame = processor_module.get_reference_frame(source_face, reference_face, reference_frame)
 				if numpy.any(abstract_reference_frame):
-					abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame]))
+					abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame ]))
 					abstract_reference_face = get_one_face(abstract_reference_faces, state_manager.get_item('reference_face_position'))
 					append_reference_face(processor_module.__name__, abstract_reference_face)
 
@@ -263,15 +263,13 @@ def route_job_runner() -> ErrorCode:
 
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
+	clear_reference_faces()
+	clear_processors_modules()
 	step_total = job_manager.count_step_total(job_id)
-	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__.upper())
-
 	step_args.update(collect_job_args())
 	apply_args(step_args)
 
-	clear_reference_faces()
-	clear_processors_modules()
-
+	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__.upper())
 	if common_pre_check() and processors_pre_check():
 		error_code = conditional_process()
 		return error_code == 0
