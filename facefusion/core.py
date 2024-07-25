@@ -20,7 +20,7 @@ from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_d
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
-from facefusion.processors.frame.core import clear_frame_processors_modules, get_frame_processors_modules
+from facefusion.processors.core import clear_processors_modules, get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.statistics import conditional_log_statistics
@@ -63,7 +63,7 @@ def route(args : Args) -> None:
 	if state_manager.get_item('command') == 'run':
 		import facefusion.uis.core as ui
 
-		if not common_pre_check() or not frame_processors_pre_check():
+		if not common_pre_check() or not processors_pre_check():
 			return conditional_exit(2)
 		for ui_layout in ui.get_ui_layouts_modules(state_manager.get_item('ui_layouts')):
 			if not ui_layout.pre_check():
@@ -95,21 +95,21 @@ def common_pre_check() -> bool:
 	return content_analyser.pre_check() and face_analyser.pre_check() and face_masker.pre_check() and voice_extractor.pre_check()
 
 
-def frame_processors_pre_check() -> bool:
-	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
-		if not frame_processor_module.pre_check():
+def processors_pre_check() -> bool:
+	for processor_module in get_processors_modules(state_manager.get_item('processors')):
+		if not processor_module.pre_check():
 			return False
 	return True
 
 
 def conditional_process() -> ErrorCode:
 	start_time = time()
-	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
-		while not frame_processor_module.post_check():
+	for processor_module in get_processors_modules(state_manager.get_item('processors')):
+		while not processor_module.post_check():
 			logger.disable()
 			sleep(0.5)
 		logger.enable()
-		if not frame_processor_module.pre_process('output'):
+		if not processor_module.pre_process('output'):
 			return 2
 	conditional_append_reference_faces()
 	if is_image(state_manager.get_item('target_path')):
@@ -133,17 +133,17 @@ def conditional_append_reference_faces() -> None:
 		append_reference_face('origin', reference_face)
 
 		if source_face and reference_face:
-			for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
-				abstract_reference_frame = frame_processor_module.get_reference_frame(source_face, reference_face, reference_frame)
+			for processor_module in get_processors_modules(state_manager.get_item('processors')):
+				abstract_reference_frame = processor_module.get_reference_frame(source_face, reference_face, reference_frame)
 				if numpy.any(abstract_reference_frame):
 					abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame]))
 					abstract_reference_face = get_one_face(abstract_reference_faces, state_manager.get_item('reference_face_position'))
-					append_reference_face(frame_processor_module.__name__, abstract_reference_face)
+					append_reference_face(processor_module.__name__, abstract_reference_face)
 
 
 def force_download() -> None:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	available_frame_processors = list_directory('facefusion/processors/frame/modules')
+	available_processors = list_directory('facefusion/processors/modules')
 	models =\
 	[
 		content_analyser.MODELS,
@@ -152,9 +152,9 @@ def force_download() -> None:
 		voice_extractor.MODELS
 	]
 
-	for frame_processor_module in get_frame_processors_modules(available_frame_processors):
-		if hasattr(frame_processor_module, 'MODELS'):
-			models.append(frame_processor_module.MODELS)
+	for processor_module in get_processors_modules(available_processors):
+		if hasattr(processor_module, 'MODELS'):
+			models.append(processor_module.MODELS)
 	model_urls = [ models[model].get('url') for models in models for model in models ]
 	conditional_download(download_directory_path, model_urls)
 
@@ -270,9 +270,9 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	apply_args(step_args)
 
 	clear_reference_faces()
-	clear_frame_processors_modules()
+	clear_processors_modules()
 
-	if common_pre_check() and frame_processors_pre_check():
+	if common_pre_check() and processors_pre_check():
 		error_code = conditional_process()
 		return error_code == 0
 	return False
@@ -308,10 +308,10 @@ def process_image(start_time : float) -> ErrorCode:
 		return 1
 	# process image
 	temp_file_path = get_temp_file_path(state_manager.get_item('target_path'))
-	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
-		logger.info(wording.get('processing'), frame_processor_module.NAME)
-		frame_processor_module.process_image(state_manager.get_item('source_paths'), temp_file_path, temp_file_path)
-		frame_processor_module.post_process()
+	for processor_module in get_processors_modules(state_manager.get_item('processors')):
+		logger.info(wording.get('processing'), processor_module.NAME)
+		processor_module.process_image(state_manager.get_item('source_paths'), temp_file_path, temp_file_path)
+		processor_module.post_process()
 	if is_process_stopping():
 		process_manager.end()
 		return 4
@@ -363,10 +363,10 @@ def process_video(start_time : float) -> ErrorCode:
 	# process frames
 	temp_frame_paths = get_temp_frame_paths(state_manager.get_item('target_path'))
 	if temp_frame_paths:
-		for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
-			logger.info(wording.get('processing'), frame_processor_module.NAME)
-			frame_processor_module.process_video(state_manager.get_item('source_paths'), temp_frame_paths)
-			frame_processor_module.post_process()
+		for processor_module in get_processors_modules(state_manager.get_item('processors')):
+			logger.info(wording.get('processing'), processor_module.NAME)
+			processor_module.process_video(state_manager.get_item('source_paths'), temp_frame_paths)
+			processor_module.post_process()
 		if is_process_stopping():
 			return 4
 	else:
@@ -389,7 +389,7 @@ def process_video(start_time : float) -> ErrorCode:
 		logger.info(wording.get('skipping_audio'), __name__.upper())
 		move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 	else:
-		if 'lip_syncer' in state_manager.get_item('frame_processors'):
+		if 'lip_syncer' in state_manager.get_item('processors'):
 			source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 			if source_audio_path and replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
 				logger.debug(wording.get('restoring_audio_succeed'), __name__.upper())

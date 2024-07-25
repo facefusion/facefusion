@@ -1,13 +1,12 @@
 from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
-import facefusion.processors.frame
 from facefusion import config, logger, metadata, state_manager, wording
 from facefusion.common_helper import create_metavar
 from facefusion.execution import get_execution_provider_choices
 from facefusion.filesystem import list_directory
 from facefusion.jobs import job_store
-from facefusion.processors.frame.core import load_frame_processor_module
+from facefusion.processors.core import load_processor_module
 from facefusion.program_helper import suggest_face_detector_choices
 
 
@@ -109,12 +108,12 @@ def create_output_creation_program() -> ArgumentParser:
 
 def create_processors_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	available_processors = list_directory('facefusion/processors/frame/modules')
+	available_processors = list_directory('facefusion/processors/modules')
 	group_processors = program.add_argument_group('processors')
 	group_processors.add_argument('--processors', help = wording.get('help.processors').format(choices = ', '.join(available_processors)), default = config.get_str_list('processors.processors', 'face_swapper'), nargs = '+')
 	job_store.register_step_keys([ 'processors' ])
 	for processor in available_processors:
-		processor_module = load_frame_processor_module(processor)
+		processor_module = load_processor_module(processor)
 		processor_module.register_args(program)
 	return program
 

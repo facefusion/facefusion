@@ -7,7 +7,7 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-import facefusion.processors.frame.core as frame_processors
+import facefusion.processors.core as processors
 from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
 from facefusion.content_analyser import clear_content_analyser
@@ -15,14 +15,14 @@ from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import create_inference_session
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
-from facefusion.processors.frame import choices as frame_processors_choices
-from facefusion.processors.frame.typing import FrameEnhancerInputs
+from facefusion.processors import choices as processors_choices
+from facefusion.processors.typing import FrameEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Args, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import create_tile_frames, merge_tile_frames, read_image, read_static_image, write_image
 
-FRAME_PROCESSOR = None
+PROCESSOR = None
 NAME = __name__.upper()
 MODELS : ModelSet =\
 {
@@ -114,22 +114,22 @@ MODELS : ModelSet =\
 OPTIONS : Optional[OptionsWithModel] = None
 
 
-def get_frame_processor() -> Any:
-	global FRAME_PROCESSOR
+def get_processor() -> Any:
+	global PROCESSOR
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if FRAME_PROCESSOR is None:
+		if PROCESSOR is None:
 			model_path = get_options('model').get('path')
-			FRAME_PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return FRAME_PROCESSOR
+			PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+	return PROCESSOR
 
 
-def clear_frame_processor() -> None:
-	global FRAME_PROCESSOR
+def clear_processor() -> None:
+	global PROCESSOR
 
-	FRAME_PROCESSOR = None
+	PROCESSOR = None
 
 
 def get_options(key : Literal['model']) -> Any:
@@ -152,8 +152,8 @@ def set_options(key : Literal['model'], value : Any) -> None:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('frame_processors.frame_enhancer_model', 'span_kendata_x4'), choices = frame_processors_choices.frame_enhancer_models)
-		group_processors.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('frame_processors.frame_enhancer_blend', '80'), choices = frame_processors_choices.frame_enhancer_blend_range, metavar = create_metavar(frame_processors_choices.frame_enhancer_blend_range))
+		group_processors.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('processors.frame_enhancer_model', 'span_kendata_x4'), choices = processors_choices.frame_enhancer_models)
+		group_processors.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('processors.frame_enhancer_blend', '80'), choices = processors_choices.frame_enhancer_blend_range, metavar = create_metavar(processors_choices.frame_enhancer_blend_range))
 		facefusion.jobs.job_store.register_step_keys([ 'frame_enhancer_model', 'frame_enhancer_blend' ])
 
 
@@ -203,14 +203,14 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_frame_processor()
+		clear_processor()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
 
 
 def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
-	frame_processor = get_frame_processor()
+	processor = get_processor()
 	size = get_options('model').get('size')
 	scale = get_options('model').get('scale')
 	temp_height, temp_width = temp_vision_frame.shape[:2]
@@ -218,9 +218,9 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 	for index, tile_vision_frame in enumerate(tile_vision_frames):
 		with conditional_thread_semaphore():
-			tile_vision_frame = frame_processor.run(None,
+			tile_vision_frame = processor.run(None,
 			{
-				frame_processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
+				processor.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
 			})[0]
 		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame)
 
@@ -280,4 +280,4 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	frame_processors.multi_process_frames(None, temp_frame_paths, process_frames)
+	processors.multi_process_frames(None, temp_frame_paths, process_frames)

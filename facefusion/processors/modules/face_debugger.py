@@ -6,7 +6,7 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-import facefusion.processors.frame.core as frame_processors
+import facefusion.processors.core as processors
 from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
@@ -15,8 +15,8 @@ from facefusion.face_masker import clear_face_occluder, clear_face_parser, creat
 from facefusion.face_selector import categorize_age, categorize_gender, find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, same_file_extension
-from facefusion.processors.frame import choices as frame_processors_choices
-from facefusion.processors.frame.typing import FaceDebuggerInputs
+from facefusion.processors import choices as processors_choices
+from facefusion.processors.typing import FaceDebuggerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.typing import Args, Face, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
@@ -24,11 +24,11 @@ from facefusion.vision import read_image, read_static_image, write_image
 NAME = __name__.upper()
 
 
-def get_frame_processor() -> None:
+def get_processor() -> None:
 	pass
 
 
-def clear_frame_processor() -> None:
+def clear_processor() -> None:
 	pass
 
 
@@ -43,7 +43,7 @@ def set_options(key : Literal['model'], value : Any) -> None:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--face-debugger-items', help = wording.get('help.face_debugger_items').format(choices = ', '.join(frame_processors_choices.face_debugger_items)), default = config.get_str_list('frame_processors.face_debugger_items', 'face-landmark-5/68 face-mask'), choices = frame_processors_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
+		group_processors.add_argument('--face-debugger-items', help = wording.get('help.face_debugger_items').format(choices = ', '.join(processors_choices.face_debugger_items)), default = config.get_str_list('processors.face_debugger_items', 'face-landmark-5/68 face-mask'), choices = processors_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
 		facefusion.jobs.job_store.register_step_keys([ 'face_debugger_items' ])
 
 
@@ -72,7 +72,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_frame_processor()
+		clear_processor()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
@@ -224,4 +224,4 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 
 
 def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	frame_processors.multi_process_frames(source_paths, temp_frame_paths, process_frames)
+	processors.multi_process_frames(source_paths, temp_frame_paths, process_frames)

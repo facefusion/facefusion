@@ -2,7 +2,7 @@ from argparse import ArgumentParser, _ArgumentGroup
 from typing import List, Optional
 
 import facefusion.choices
-from facefusion.processors.frame import choices as frame_processors_choices
+from facefusion.processors import choices as processors_choices
 
 
 def find_argument_group(program : ArgumentParser, group_name : str) -> Optional[_ArgumentGroup]:
@@ -30,4 +30,4 @@ def suggest_face_detector_choices(program : ArgumentParser) -> List[str]:
 
 def suggest_face_swapper_pixel_boost_choices(program : ArgumentParser) -> List[str]:
 	known_args, _ = program.parse_known_args()
-	return frame_processors_choices.face_swapper_set.get(known_args.face_swapper_model) #type:ignore[call-overload]
+	return processors_choices.face_swapper_set.get(known_args.face_swapper_model) #type:ignore[call-overload]

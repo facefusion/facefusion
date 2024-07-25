@@ -11,11 +11,11 @@ from facefusion import logger, state_manager, wording
 from facefusion.exit_helper import hard_exit
 from facefusion.typing import ProcessFrames, QueuePayload
 
-FRAME_PROCESSORS_MODULES : List[ModuleType] = []
-FRAME_PROCESSORS_METHODS =\
+PROCESSORS_MODULES : List[ModuleType] = []
+PROCESSORS_METHODS =\
 [
-	'get_frame_processor',
-	'clear_frame_processor',
+	'get_processor',
+	'clear_processor',
 	'get_options',
 	'set_options',
 	'register_args',
@@ -32,38 +32,38 @@ FRAME_PROCESSORS_METHODS =\
 ]
 
 
-def load_frame_processor_module(frame_processor : str) -> Any:
+def load_processor_module(processor : str) -> Any:
 	try:
-		frame_processor_module = importlib.import_module('facefusion.processors.frame.modules.' + frame_processor)
-		for method_name in FRAME_PROCESSORS_METHODS:
-			if not hasattr(frame_processor_module, method_name):
+		processor_module = importlib.import_module('facefusion.processors.modules.' + processor)
+		for method_name in PROCESSORS_METHODS:
+			if not hasattr(processor_module, method_name):
 				raise NotImplementedError
 	except ModuleNotFoundError as exception:
-		logger.error(wording.get('frame_processor_not_loaded').format(frame_processor = frame_processor), __name__.upper())
+		logger.error(wording.get('processor_not_loaded').format(processor = processor), __name__.upper())
 		logger.debug(exception.msg, __name__.upper())
 		hard_exit(1)
 	except NotImplementedError:
-		logger.error(wording.get('frame_processor_not_implemented').format(frame_processor = frame_processor), __name__.upper())
+		logger.error(wording.get('processor_not_implemented').format(processor = processor), __name__.upper())
 		hard_exit(1)
-	return frame_processor_module
+	return processor_module
 
 
-def get_frame_processors_modules(frame_processors : List[str]) -> List[ModuleType]:
-	global FRAME_PROCESSORS_MODULES
+def get_processors_modules(processors : List[str]) -> List[ModuleType]:
+	global PROCESSORS_MODULES
 
-	if not FRAME_PROCESSORS_MODULES:
-		for frame_processor in frame_processors:
-			frame_processor_module = load_frame_processor_module(frame_processor)
-			FRAME_PROCESSORS_MODULES.append(frame_processor_module)
-	return FRAME_PROCESSORS_MODULES
+	if not PROCESSORS_MODULES:
+		for processor in processors:
+			processor_module = load_processor_module(processor)
+			PROCESSORS_MODULES.append(processor_module)
+	return PROCESSORS_MODULES
 
 
-def clear_frame_processors_modules() -> None:
-	global FRAME_PROCESSORS_MODULES
+def clear_processors_modules() -> None:
+	global PROCESSORS_MODULES
 
-	for frame_processor_module in get_frame_processors_modules(state_manager.get_item('frame_processors')):
-		frame_processor_module.clear_frame_processor()
-	FRAME_PROCESSORS_MODULES = []
+	for processor_module in PROCESSORS_MODULES:
+		processor_module.clear_processor()
+	PROCESSORS_MODULES = []
 
 
 def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str], process_frames : ProcessFrames) -> None:
@@ -107,10 +107,10 @@ def create_queue_payloads(temp_frame_paths : List[str]) -> List[QueuePayload]:
 	queue_payloads = []
 	temp_frame_paths = sorted(temp_frame_paths, key = os.path.basename)
 
-	for index, frame_path in enumerate(temp_frame_paths):
+	for frame_number, frame_path in enumerate(temp_frame_paths):
 		frame_payload : QueuePayload =\
 		{
-			'frame_number': index,
+			'frame_number': frame_number,
 			'frame_path': frame_path
 		}
 		queue_payloads.append(frame_payload)
