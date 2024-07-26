@@ -83,8 +83,8 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 	return InferenceSession(model_path, providers = apply_execution_provider_options(execution_device_id, execution_provider_keys))
 
 
-def create_inference_session_pool(model_dict : Dict[str, Any], execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> Dict[str, InferenceSession]:
-	return { model_name: create_inference_session(model_dict.get(model_name).get('path'), execution_device_id, execution_provider_keys) for model_name in model_dict.keys() }
+def create_inference_session_pool(models : Dict[str, Any], execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> Dict[str, InferenceSession]:
+	return { model_name: create_inference_session(models.get(model_name).get('path'), execution_device_id, execution_provider_keys) for model_name in models.keys() }
 
 
 @lru_cache(maxsize = None)
