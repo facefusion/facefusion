@@ -11,13 +11,11 @@ from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_SWAPPER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SWAPPER_PIXEL_BOOST_DROPDOWN : Optional[gradio.Dropdown] = None
-FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER : Optional[gradio.Slider] = None
 
 
 def render() -> None:
 	global FACE_SWAPPER_MODEL_DROPDOWN
 	global FACE_SWAPPER_PIXEL_BOOST_DROPDOWN
-	global FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER
 
 	FACE_SWAPPER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_swapper_model_dropdown'),
@@ -31,32 +29,22 @@ def render() -> None:
 		value = state_manager.get_item('face_swapper_pixel_boost'),
 		visible = 'face_swapper' in state_manager.get_item('processors')
 	)
-	FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER = gradio.Slider(
-		label = wording.get('uis.face_swapper_expression_restorer_slider'),
-		value = state_manager.get_item('face_swapper_expression_restorer'),
-		step = processors_choices.face_swapper_expression_restorer_range[1] - processors_choices.face_swapper_expression_restorer_range[0],
-		minimum = processors_choices.face_swapper_expression_restorer_range[0],
-		maximum = processors_choices.face_swapper_expression_restorer_range[-1],
-		visible = 'face_swapper' in state_manager.get_item('processors')
-	)
 	register_ui_component('face_swapper_model_dropdown', FACE_SWAPPER_MODEL_DROPDOWN)
 	register_ui_component('face_swapper_pixel_boost_dropdown', FACE_SWAPPER_PIXEL_BOOST_DROPDOWN)
-	register_ui_component('face_swapper_expression_restorer_slider', FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER)
 
 
 def listen() -> None:
 	FACE_SWAPPER_MODEL_DROPDOWN.change(update_face_swapper_model, inputs = FACE_SWAPPER_MODEL_DROPDOWN, outputs = [ FACE_SWAPPER_MODEL_DROPDOWN, FACE_SWAPPER_PIXEL_BOOST_DROPDOWN ])
 	FACE_SWAPPER_PIXEL_BOOST_DROPDOWN.change(update_face_swapper_pixel_boost, inputs = FACE_SWAPPER_PIXEL_BOOST_DROPDOWN)
-	FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER.release(update_face_swapper_expression_restorer, inputs = FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER)
 
 	processors_checkbox_group = get_ui_component('processors_checkbox_group')
 	if processors_checkbox_group:
-		processors_checkbox_group.change(remote_update, inputs = processors_checkbox_group, outputs = [ FACE_SWAPPER_MODEL_DROPDOWN, FACE_SWAPPER_PIXEL_BOOST_DROPDOWN, FACE_SWAPPER_EXPRESSION_RESTORER_SLIDER ])
+		processors_checkbox_group.change(remote_update, inputs = processors_checkbox_group, outputs = [ FACE_SWAPPER_MODEL_DROPDOWN, FACE_SWAPPER_PIXEL_BOOST_DROPDOWN ])
 
 
-def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Dropdown, gradio.Slider]:
+def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
 	has_face_swapper = 'face_swapper' in processors
-	return gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_face_swapper), gradio.Slider(visible = has_face_swapper)
+	return gradio.Dropdown(visible = has_face_swapper), gradio.Dropdown(visible = has_face_swapper)
 
 
 def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
@@ -83,7 +71,3 @@ def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gr
 
 def update_face_swapper_pixel_boost(face_swapper_pixel_boost : str) -> None:
 	state_manager.set_item('face_swapper_pixel_boost', face_swapper_pixel_boost)
-
-
-def update_face_swapper_expression_restorer(face_swapper_expression_restorer : float) -> None:
-	state_manager.set_item('face_swapper_expression_restorer', face_swapper_expression_restorer)

@@ -109,7 +109,6 @@ def listen() -> None:
 	[
 		'age_modifier_direction_slider',
 		'face_enhancer_blend_slider',
-		'face_swapper_expression_restorer_slider',
 		'frame_colorizer_blend_slider',
 		'frame_enhancer_blend_slider',
 		'reference_face_distance_slider',
