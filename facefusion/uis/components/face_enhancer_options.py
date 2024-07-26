@@ -51,7 +51,7 @@ def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> gradi
 	face_enhancer_module = load_processor_module('face_enhancer')
 	face_enhancer_module.clear_processor()
 	state_manager.set_item('face_enhancer_model', face_enhancer_model)
-	face_enhancer_module.set_options('model', face_enhancer_module.MODELS[state_manager.get_item('face_enhancer_model')])
+	face_enhancer_module.set_options('model', face_enhancer_module.MODEL_SET[state_manager.get_item('face_enhancer_model')])
 
 	if face_enhancer_module.pre_check():
 		return gradio.Dropdown(value = state_manager.get_item('face_enhancer_model'))

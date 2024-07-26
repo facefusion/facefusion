@@ -16,7 +16,7 @@ from facefusion.typing import Angle, BoundingBox, Embedding, Face, FaceLandmark5
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 FACE_ANALYSER = None
-MODELS : ModelSet =\
+MODEL_SET : ModelSet =\
 {
 	'face_detector_retinaface':
 	{
@@ -88,24 +88,24 @@ def get_face_analyser() -> Any:
 			sleep(0.5)
 		if FACE_ANALYSER is None:
 			if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
-				face_detectors['retinaface'] = create_inference_session(MODELS.get('face_detector_retinaface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+				face_detectors['retinaface'] = create_inference_session(MODEL_SET.get('face_detector_retinaface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
-				face_detectors['scrfd'] = create_inference_session(MODELS.get('face_detector_scrfd').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+				face_detectors['scrfd'] = create_inference_session(MODEL_SET.get('face_detector_scrfd').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
-				face_detectors['yoloface'] = create_inference_session(MODELS.get('face_detector_yoloface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+				face_detectors['yoloface'] = create_inference_session(MODEL_SET.get('face_detector_yoloface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_recognizer_model') == 'arcface_blendswap':
-				face_recognizer = create_inference_session(MODELS.get('face_recognizer_arcface_blendswap').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+				face_recognizer = create_inference_session(MODEL_SET.get('face_recognizer_arcface_blendswap').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_recognizer_model') == 'arcface_ghost':
-				face_recognizer = create_inference_session(MODELS.get('face_recognizer_arcface_ghost').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+				face_recognizer = create_inference_session(MODEL_SET.get('face_recognizer_arcface_ghost').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_recognizer_model') == 'arcface_inswapper':
-				face_recognizer = create_inference_session(MODELS.get('face_recognizer_arcface_inswapper').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+				face_recognizer = create_inference_session(MODEL_SET.get('face_recognizer_arcface_inswapper').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_recognizer_model') == 'arcface_simswap':
-				face_recognizer = create_inference_session(MODELS.get('face_recognizer_arcface_simswap').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+				face_recognizer = create_inference_session(MODEL_SET.get('face_recognizer_arcface_simswap').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			if state_manager.get_item('face_recognizer_model') == 'arcface_uniface':
-				face_recognizer = create_inference_session(MODELS.get('face_recognizer_arcface_uniface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			face_landmarkers['68'] = create_inference_session(MODELS.get('face_landmarker_68').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			face_landmarkers['68_5'] = create_inference_session(MODELS.get('face_landmarker_68_5').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			gender_age = create_inference_session(MODELS.get('gender_age').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+				face_recognizer = create_inference_session(MODEL_SET.get('face_recognizer_arcface_uniface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+			face_landmarkers['68'] = create_inference_session(MODEL_SET.get('face_landmarker_68').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+			face_landmarkers['68_5'] = create_inference_session(MODEL_SET.get('face_landmarker_68_5').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+			gender_age = create_inference_session(MODEL_SET.get('gender_age').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 			FACE_ANALYSER =\
 			{
 				'face_detectors': face_detectors,
@@ -126,41 +126,41 @@ def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
 	model_urls =\
 	[
-		MODELS.get('face_landmarker_68').get('url'),
-		MODELS.get('face_landmarker_68_5').get('url'),
-		MODELS.get('gender_age').get('url')
+		MODEL_SET.get('face_landmarker_68').get('url'),
+		MODEL_SET.get('face_landmarker_68_5').get('url'),
+		MODEL_SET.get('gender_age').get('url')
 	]
 	model_paths =\
 	[
-		MODELS.get('face_landmarker_68').get('path'),
-		MODELS.get('face_landmarker_68_5').get('path'),
-		MODELS.get('gender_age').get('path')
+		MODEL_SET.get('face_landmarker_68').get('path'),
+		MODEL_SET.get('face_landmarker_68_5').get('path'),
+		MODEL_SET.get('gender_age').get('path')
 	]
 
 	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
-		model_urls.append(MODELS.get('face_detector_retinaface').get('url'))
-		model_paths.append(MODELS.get('face_detector_retinaface').get('path'))
+		model_urls.append(MODEL_SET.get('face_detector_retinaface').get('url'))
+		model_paths.append(MODEL_SET.get('face_detector_retinaface').get('path'))
 	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
-		model_urls.append(MODELS.get('face_detector_scrfd').get('url'))
-		model_paths.append(MODELS.get('face_detector_scrfd').get('path'))
+		model_urls.append(MODEL_SET.get('face_detector_scrfd').get('url'))
+		model_paths.append(MODEL_SET.get('face_detector_scrfd').get('path'))
 	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
-		model_urls.append(MODELS.get('face_detector_yoloface').get('url'))
-		model_paths.append(MODELS.get('face_detector_yoloface').get('path'))
+		model_urls.append(MODEL_SET.get('face_detector_yoloface').get('url'))
+		model_paths.append(MODEL_SET.get('face_detector_yoloface').get('path'))
 	if state_manager.get_item('face_detector_model') == 'arcface_blendswap':
-		model_urls.append(MODELS.get('face_recognizer_arcface_blendswap').get('url'))
-		model_paths.append(MODELS.get('face_recognizer_arcface_blendswap').get('path'))
+		model_urls.append(MODEL_SET.get('face_recognizer_arcface_blendswap').get('url'))
+		model_paths.append(MODEL_SET.get('face_recognizer_arcface_blendswap').get('path'))
 	if state_manager.get_item('face_recognizer_model') == 'arcface_ghost':
-		model_urls.append(MODELS.get('face_recognizer_arcface_ghost').get('url'))
-		model_paths.append(MODELS.get('face_recognizer_arcface_ghost').get('path'))
+		model_urls.append(MODEL_SET.get('face_recognizer_arcface_ghost').get('url'))
+		model_paths.append(MODEL_SET.get('face_recognizer_arcface_ghost').get('path'))
 	if state_manager.get_item('face_recognizer_model') == 'arcface_inswapper':
-		model_urls.append(MODELS.get('face_recognizer_arcface_inswapper').get('url'))
-		model_paths.append(MODELS.get('face_recognizer_arcface_inswapper').get('path'))
+		model_urls.append(MODEL_SET.get('face_recognizer_arcface_inswapper').get('url'))
+		model_paths.append(MODEL_SET.get('face_recognizer_arcface_inswapper').get('path'))
 	if state_manager.get_item('face_recognizer_model') == 'arcface_simswap':
-		model_urls.append(MODELS.get('face_recognizer_arcface_simswap').get('url'))
-		model_paths.append(MODELS.get('face_recognizer_arcface_simswap').get('path'))
+		model_urls.append(MODEL_SET.get('face_recognizer_arcface_simswap').get('url'))
+		model_paths.append(MODEL_SET.get('face_recognizer_arcface_simswap').get('path'))
 	if state_manager.get_item('face_recognizer_model') == 'arcface_uniface':
-		model_urls.append(MODELS.get('face_recognizer_arcface_uniface').get('url'))
-		model_paths.append(MODELS.get('face_recognizer_arcface_uniface').get('path'))
+		model_urls.append(MODEL_SET.get('face_recognizer_arcface_uniface').get('url'))
+		model_paths.append(MODEL_SET.get('face_recognizer_arcface_uniface').get('path'))
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()

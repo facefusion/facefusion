@@ -12,7 +12,7 @@ from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Audio, AudioChunk, ModelSet
 
 VOICE_EXTRACTOR = None
-MODELS : ModelSet =\
+MODEL_SET : ModelSet =\
 {
 	'voice_extractor':
 	{
@@ -29,7 +29,7 @@ def get_voice_extractor() -> Any:
 		while process_manager.is_checking():
 			sleep(0.5)
 		if VOICE_EXTRACTOR is None:
-			model_path = MODELS.get('voice_extractor').get('path')
+			model_path = MODEL_SET.get('voice_extractor').get('path')
 			VOICE_EXTRACTOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return VOICE_EXTRACTOR
 
@@ -42,8 +42,8 @@ def clear_voice_extractor() -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_url = MODELS.get('voice_extractor').get('url')
-	model_path = MODELS.get('voice_extractor').get('path')
+	model_url = MODEL_SET.get('voice_extractor').get('url')
+	model_path = MODEL_SET.get('voice_extractor').get('path')
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()

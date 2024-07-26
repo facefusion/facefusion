@@ -31,7 +31,8 @@ NAME = __name__.upper()
 
 MODEL_SET : ModelSet =\
 {
-	'live_portrait':{
+	'live_portrait':
+	{
 		'models':
 		{
 			'feature_extractor':

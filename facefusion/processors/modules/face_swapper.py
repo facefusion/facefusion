@@ -28,7 +28,7 @@ from facefusion.vision import read_image, read_static_image, read_static_images,
 
 PROCESSOR = None
 NAME = __name__.upper()
-MODELS : ModelSet =\
+MODEL_SET : ModelSet =\
 {
 	'blendswap_256':
 	{
@@ -149,7 +149,7 @@ def get_options(key : Literal['model']) -> Any:
 		face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') or has_execution_provider('openvino') and state_manager.get_item('face_swapper_model') == 'inswapper_128_fp16' else state_manager.get_item('face_swapper_model')
 		OPTIONS =\
 		{
-			'model': MODELS[face_swapper_model]
+			'model': MODEL_SET[face_swapper_model]
 		}
 	return OPTIONS.get(key)
 

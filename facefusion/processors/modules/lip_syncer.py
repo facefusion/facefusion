@@ -30,7 +30,7 @@ from facefusion.voice_extractor import clear_voice_extractor
 
 PROCESSOR = None
 NAME = __name__.upper()
-MODELS : ModelSet =\
+MODEL_SET : ModelSet =\
 {
 	'wav2lip':
 	{
@@ -70,7 +70,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[state_manager.get_item('lip_syncer_model')]
+			'model': MODEL_SET[state_manager.get_item('lip_syncer_model')]
 		}
 	return OPTIONS.get(key)
 

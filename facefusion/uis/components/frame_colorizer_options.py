@@ -62,7 +62,7 @@ def update_frame_colorizer_model(frame_colorizer_model : FrameColorizerModel) ->
 	frame_colorizer_module = load_processor_module('frame_colorizer')
 	frame_colorizer_module.clear_processor()
 	state_manager.set_item('frame_colorizer_model', frame_colorizer_model)
-	frame_colorizer_module.set_options('model', frame_colorizer_module.MODELS[frame_colorizer_model])
+	frame_colorizer_module.set_options('model', frame_colorizer_module.MODEL_SET[frame_colorizer_model])
 
 	if frame_colorizer_module.pre_check():
 		return gradio.Dropdown(value = state_manager.get_item('frame_colorizer_model'))

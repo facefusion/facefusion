@@ -24,7 +24,7 @@ from facefusion.vision import create_tile_frames, merge_tile_frames, read_image,
 
 PROCESSOR = None
 NAME = __name__.upper()
-MODELS : ModelSet =\
+MODEL_SET : ModelSet =\
 {
 	'clear_reality_x4':
 	{
@@ -138,7 +138,7 @@ def get_options(key : Literal['model']) -> Any:
 	if OPTIONS is None:
 		OPTIONS =\
 		{
-			'model': MODELS[state_manager.get_item('frame_enhancer_model')]
+			'model': MODEL_SET[state_manager.get_item('frame_enhancer_model')]
 		}
 	return OPTIONS.get(key)
 

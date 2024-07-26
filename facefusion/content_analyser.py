@@ -15,7 +15,7 @@ from facefusion.typing import Fps, ModelSet, VisionFrame
 from facefusion.vision import count_video_frame_total, detect_video_fps, get_video_frame, read_image
 
 CONTENT_ANALYSER = None
-MODELS : ModelSet =\
+MODEL_SET : ModelSet =\
 {
 	'open_nsfw':
 	{
@@ -35,7 +35,7 @@ def get_content_analyser() -> Any:
 		while process_manager.is_checking():
 			sleep(0.5)
 		if CONTENT_ANALYSER is None:
-			model_path = MODELS.get('open_nsfw').get('path')
+			model_path = MODEL_SET.get('open_nsfw').get('path')
 			CONTENT_ANALYSER = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return CONTENT_ANALYSER
 
@@ -48,8 +48,8 @@ def clear_content_analyser() -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_url = MODELS.get('open_nsfw').get('url')
-	model_path = MODELS.get('open_nsfw').get('path')
+	model_url = MODEL_SET.get('open_nsfw').get('url')
+	model_path = MODEL_SET.get('open_nsfw').get('path')
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()

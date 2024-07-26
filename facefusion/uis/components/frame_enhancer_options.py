@@ -52,7 +52,7 @@ def update_frame_enhancer_model(frame_enhancer_model : FrameEnhancerModel) -> gr
 	frame_enhancer_module = load_processor_module('frame_enhancer')
 	frame_enhancer_module.clear_processor()
 	state_manager.set_item('frame_enhancer_model', frame_enhancer_model)
-	frame_enhancer_module.set_options('model', frame_enhancer_module.MODELS[state_manager.get_item('frame_enhancer_model')])
+	frame_enhancer_module.set_options('model', frame_enhancer_module.MODEL_SET[state_manager.get_item('frame_enhancer_model')])
 
 	if frame_enhancer_module.pre_check():
 		return gradio.Dropdown(value = state_manager.get_item('frame_enhancer_model'))

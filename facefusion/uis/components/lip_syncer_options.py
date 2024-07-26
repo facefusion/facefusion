@@ -40,7 +40,7 @@ def update_lip_syncer_model(lip_syncer_model : LipSyncerModel) -> gradio.Dropdow
 	lip_syncer_module = load_processor_module('lip_syncer')
 	lip_syncer_module.clear_processor()
 	state_manager.set_item('lip_syncer_model', lip_syncer_model)
-	lip_syncer_module.set_options('model', lip_syncer_module.MODELS[state_manager.get_item('lip_syncer_model')])
+	lip_syncer_module.set_options('model', lip_syncer_module.MODEL_SET[state_manager.get_item('lip_syncer_model')])
 
 	if lip_syncer_module.pre_check():
 		return gradio.Dropdown(value = state_manager.get_item('lip_syncer_model'))

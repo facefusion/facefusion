@@ -144,18 +144,18 @@ def conditional_append_reference_faces() -> None:
 def force_download() -> None:
 	download_directory_path = resolve_relative_path('../.assets/models')
 	available_processors = list_directory('facefusion/processors/modules')
-	models =\
+	model_set =\
 	[
-		content_analyser.MODELS,
-		face_analyser.MODELS,
-		face_masker.MODELS,
-		voice_extractor.MODELS
+		content_analyser.MODEL_SET,
+		face_analyser.MODEL_SET,
+		face_masker.MODEL_SET,
+		voice_extractor.MODEL_SET
 	]
 
 	for processor_module in get_processors_modules(available_processors):
-		if hasattr(processor_module, 'MODELS'):
-			models.append(processor_module.MODELS)
-	model_urls = [ models[model].get('url') for models in models for model in models ]
+		if hasattr(processor_module, 'MODEL_SET'):
+			model_set.append(processor_module.MODEL_SET)
+	model_urls = [ models[model].get('url') for models in model_set for model in models ]
 	conditional_download(download_directory_path, model_urls)
 
 
