@@ -49,7 +49,7 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps) -> bool:
 	trim_frame_start = state_manager.get_item('trim_frame_start')
 	trim_frame_end = state_manager.get_item('trim_frame_end')
-	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
+	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 	commands = [ '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0' ]
 
 	if isinstance(trim_frame_start, int) and isinstance(trim_frame_end, int):
@@ -67,7 +67,7 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 def merge_video(target_path : str, output_video_resolution : str, output_video_fps : Fps) -> bool:
 	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
 	temp_file_path = get_temp_file_path(target_path)
-	temp_frames_pattern = get_temp_frames_pattern(target_path, '%04d')
+	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 	commands = [ '-r', str(temp_video_fps), '-i', temp_frames_pattern, '-s', str(output_video_resolution), '-c:v', state_manager.get_item('output_video_encoder') ]
 
 	if state_manager.get_item('output_video_encoder') in [ 'libx264', 'libx265' ]:
