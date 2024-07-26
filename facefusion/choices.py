@@ -33,7 +33,8 @@ execution_provider_set : ExecutionProviderSet =\
 	'cuda': 'CUDAExecutionProvider',
 	'directml': 'DmlExecutionProvider',
 	'openvino': 'OpenVINOExecutionProvider',
-	'rocm': 'ROCMExecutionProvider'
+	'rocm': 'ROCMExecutionProvider',
+	'tensorrt': 'TensorrtExecutionProvider'
 }
 
 ui_workflows : List[UiWorkflow] = [ 'instant_runner', 'job_runner', 'job_manager' ]
