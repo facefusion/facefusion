@@ -1,7 +1,7 @@
 import subprocess
 import xml.etree.ElementTree as ElementTree
 from functools import lru_cache
-from typing import Any, List
+from typing import Any, Dict, List
 
 import onnx
 from onnxruntime import InferenceSession, get_available_providers
@@ -72,6 +72,10 @@ def use_exhaustive() -> bool:
 
 def create_inference_session(model_path : str, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSession:
 	return InferenceSession(model_path, providers = apply_execution_provider_options(execution_device_id, execution_provider_keys))
+
+
+def create_inference_session_pool(model_dict : Dict[str, Any], execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> Dict[str, InferenceSession]:
+	return { model_name: create_inference_session(model_dict.get(model_name).get('path'), execution_device_id, execution_provider_keys) for model_name in model_dict.keys() }
 
 
 @lru_cache(maxsize = None)
