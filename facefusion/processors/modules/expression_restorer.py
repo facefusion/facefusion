@@ -12,7 +12,7 @@ from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, map_float
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import create_inference_session
+from facefusion.execution import create_inference_session_pool
 from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import clear_face_occluder, create_face_mask, create_occlusion_mask, create_static_box_mask
@@ -28,6 +28,7 @@ from facefusion.vision import get_video_frame, read_image, read_static_image, wr
 
 PROCESSOR = None
 NAME = __name__.upper()
+
 MODEL_SET : ModelSet =\
 {
 	'live_portrait':{
@@ -64,9 +65,7 @@ def get_processor() -> Any:
 			sleep(0.5)
 		if PROCESSOR is None:
 			models = get_options('model').get('models')
-			execution_device_id = state_manager.get_item('execution_device_id')
-			execution_providers = state_manager.get_item('execution_providers')
-			PROCESSOR = { model_name: create_inference_session(models.get(model_name).get('path'), execution_device_id, execution_providers) for model_name in models.keys() }
+			PROCESSOR = create_inference_session_pool(models, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return PROCESSOR
 
 
@@ -165,33 +164,33 @@ def restore_expression(source_vision_frame : VisionFrame, target_face: Face, tem
 	expression_restorer_factor = map_float(float(state_manager.get_item('expression_restorer_factor')), 0, 200, 0, 2)
 	source_vision_frame = cv2.resize(source_vision_frame, temp_vision_frame.shape[:2][::-1])
 	source_crop_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
-	temp_crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
-	box_mask = create_static_box_mask(temp_crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
+	target_crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
+	box_mask = create_static_box_mask(target_crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
 	[
 		box_mask
 	]
 
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
-		occlusion_mask = create_occlusion_mask(temp_crop_vision_frame)
+		occlusion_mask = create_occlusion_mask(target_crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 	source_crop_vision_frame = prepare_crop_frame(source_crop_vision_frame)
-	temp_crop_vision_frame = prepare_crop_frame(temp_crop_vision_frame)
-	temp_crop_vision_frame = apply_restore_expression(source_crop_vision_frame, temp_crop_vision_frame, expression_restorer_factor)
-	temp_crop_vision_frame = normalize_crop_frame(temp_crop_vision_frame)
-	crop_masks.append(create_face_mask(temp_crop_vision_frame))
+	target_crop_vision_frame = prepare_crop_frame(target_crop_vision_frame)
+	target_crop_vision_frame = apply_restore_expression(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
+	target_crop_vision_frame = normalize_crop_frame(target_crop_vision_frame)
+	crop_masks.append(create_face_mask(target_crop_vision_frame))
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
-	temp_vision_frame = paste_back(temp_vision_frame, temp_crop_vision_frame, crop_mask, affine_matrix)
+	temp_vision_frame = paste_back(temp_vision_frame, target_crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
 
-def apply_restore_expression(source_crop_vision_frame : VisionFrame, temp_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
+def apply_restore_expression(source_crop_vision_frame : VisionFrame, target_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
 	frame_processor = get_processor()
 
 	with thread_semaphore():
-		feature_3d = frame_processor.get('feature_extractor').run(None,
+		feature_volume = frame_processor.get('feature_extractor').run(None,
 		{
-			'input': temp_crop_vision_frame
+			'input': target_crop_vision_frame
 		})[0]
 
 	with thread_semaphore():
@@ -201,20 +200,20 @@ def apply_restore_expression(source_crop_vision_frame : VisionFrame, temp_crop_v
 		})
 
 	with thread_semaphore():
-		temp_rotation, temp_scale, temp_translation, temp_expression, temp_key_points_raw, temp_key_points = frame_processor.get('motion_extractor').run(None,
+		target_rotation, target_scale, target_translation, target_expression, target_motion_points_raw, target_motion_points = frame_processor.get('motion_extractor').run(None,
 		{
-			'input': temp_crop_vision_frame
+			'input': target_crop_vision_frame
 		})
 
-	expression = source_expression * expression_restorer_factor + temp_expression * (1 - expression_restorer_factor)
-	key_points = temp_scale * (temp_key_points_raw @ temp_rotation + expression) + temp_translation
+	expression = source_expression * expression_restorer_factor + target_expression * (1 - expression_restorer_factor)
+	motion_points = target_scale * (target_motion_points_raw @ target_rotation + expression) + target_translation
 
 	with thread_semaphore():
 		crop_vision_frame = frame_processor.get('generator').run(None,
 		{
-			'feature_3d': feature_3d,
-			'kp_source': temp_key_points,
-			'kp_driving': key_points
+			'feature_3d': feature_volume,
+			'kp_source': target_motion_points,
+			'kp_driving': motion_points
 		})[0][0]
 
 	return crop_vision_frame
