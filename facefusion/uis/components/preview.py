@@ -109,6 +109,10 @@ def listen() -> None:
 	[
 		'age_modifier_direction_slider',
 		'expression_restorer_factor_slider',
+		'face_editor_eye_open_ratio_slider',
+		'face_editor_eye_open_factor_slider',
+		'face_editor_lip_open_ratio_slider',
+		'face_editor_lip_open_factor_slider',
 		'face_enhancer_blend_slider',
 		'frame_colorizer_blend_slider',
 		'frame_enhancer_blend_slider',
@@ -127,6 +131,7 @@ def listen() -> None:
 		'age_modifier_model_dropdown',
 		'expression_restorer_model_dropdown',
 		'processors_checkbox_group',
+		'face_editor_model_dropdown',
 		'face_enhancer_model_dropdown',
 		'face_swapper_model_dropdown',
 		'face_swapper_pixel_boost_dropdown',

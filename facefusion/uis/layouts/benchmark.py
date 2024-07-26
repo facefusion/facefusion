@@ -2,7 +2,7 @@ import gradio
 
 from facefusion import state_manager
 from facefusion.download import conditional_download
-from facefusion.uis.components import about, age_modifier_options, benchmark, benchmark_options, execution, execution_queue_count, execution_thread_count, expression_restorer_options, face_debugger_options, face_enhancer_options, face_swapper_options, frame_colorizer_options, frame_enhancer_options, lip_syncer_options, memory, processors
+from facefusion.uis.components import about, age_modifier_options, benchmark, benchmark_options, execution, execution_queue_count, execution_thread_count, expression_restorer_options, face_debugger_options, face_editor_options, face_enhancer_options, face_swapper_options, frame_colorizer_options, frame_enhancer_options, lip_syncer_options, memory, processors
 
 
 def pre_check() -> bool:
@@ -42,6 +42,8 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					face_debugger_options.render()
 				with gradio.Blocks():
+					face_editor_options.render()
+				with gradio.Blocks():
 					face_enhancer_options.render()
 				with gradio.Blocks():
 					face_swapper_options.render()
@@ -70,6 +72,7 @@ def listen() -> None:
 	age_modifier_options.listen()
 	expression_restorer_options.listen()
 	face_debugger_options.listen()
+	face_editor_options.listen()
 	face_enhancer_options.listen()
 	face_swapper_options.listen()
 	frame_colorizer_options.listen()

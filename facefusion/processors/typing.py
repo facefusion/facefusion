@@ -5,6 +5,7 @@ from facefusion.typing import AudioFrame, Face, FaceSet, StateContext, VisionFra
 AgeModifierModel = Literal['styleganex_age']
 ExpressionRestorerModel = Literal['live_portrait']
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender']
+FaceEditorModel = Literal['live_portrait']
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']
 FaceSwapperModel = Literal['blendswap_256', 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_512_unofficial', 'uniface_256']
 FrameColorizerModel = Literal['ddcolor', 'ddcolor_artistic', 'deoldify', 'deoldify_artistic', 'deoldify_stable']
@@ -25,6 +26,11 @@ ExpressionRestorerInputs = TypedDict('ExpressionRestorerInputs',
 	'target_vision_frame' : VisionFrame
 })
 FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',
+{
+	'reference_faces' : FaceSet,
+	'target_vision_frame' : VisionFrame
+})
+FaceEditorInputs = TypedDict('FaceEditorInputs',
 {
 	'reference_faces' : FaceSet,
 	'target_vision_frame' : VisionFrame
@@ -62,6 +68,11 @@ FrameProcessorStateKey = Literal\
 	'expression_restorer_model',
 	'expression_restorer_factor',
 	'face_debugger_items',
+	'face_editor_model',
+	'face_editor_eye_open_ratio',
+	'face_editor_eye_open_factor',
+	'face_editor_lip_open_ratio',
+	'face_editor_lip_open_factor',
 	'face_enhancer_model',
 	'face_enhancer_blend',
 	'face_swapper_model',
