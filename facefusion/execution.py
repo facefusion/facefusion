@@ -48,8 +48,7 @@ def apply_execution_provider_options(execution_device_id : str, execution_provid
 			{
 				'device_id': execution_device_id,
 				'trt_engine_cache_enable': True,
-				'trt_timing_cache_enable': True,
-				'trt_fp16_enable': True
+				'trt_timing_cache_enable': True
 			}))
 		elif execution_provider == 'OpenVINOExecutionProvider':
 			execution_providers_with_options.append((execution_provider,
