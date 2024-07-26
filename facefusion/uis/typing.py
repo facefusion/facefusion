@@ -28,7 +28,6 @@ ComponentName = Literal\
 	'face_selector_gender_dropdown',
 	'face_selector_mode_dropdown',
 	'face_selector_order_dropdown',
-	'face_swapper_expression_restorer_slider',
 	'face_swapper_model_dropdown',
 	'face_swapper_pixel_boost_dropdown',
 	'frame_colorizer_blend_slider',
