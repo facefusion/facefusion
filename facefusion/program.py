@@ -10,12 +10,12 @@ from facefusion.processors.core import load_processor_module
 from facefusion.program_helper import suggest_face_detector_choices
 
 
-def create_help_formatter_50(prog : str) -> HelpFormatter:
+def create_help_formatter_small(prog : str) -> HelpFormatter:
 	return HelpFormatter(prog, max_help_position = 50)
 
 
-def create_help_formatter_200(prog : str) -> HelpFormatter:
-	return HelpFormatter(prog, max_help_position = 200)
+def create_help_formatter_large(prog : str) -> HelpFormatter:
+	return HelpFormatter(prog, max_help_position = 300)
 
 
 def create_config_program() -> ArgumentParser:
@@ -193,31 +193,31 @@ def collect_job_program() -> ArgumentParser:
 
 
 def create_program() -> ArgumentParser:
-	program = ArgumentParser(formatter_class = create_help_formatter_200, add_help = False)
+	program = ArgumentParser(formatter_class = create_help_formatter_large, add_help = False)
 	program._positionals.title = 'commands'
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	sub_program = program.add_subparsers(dest = 'command')
 	# general
-	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ collect_step_program(), create_uis_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [ collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('force-download', help = wording.get('help.force_download'), parents = [ create_log_level_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ collect_step_program(), create_uis_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [ collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('force-download', help = wording.get('help.force_download'), parents = [ create_log_level_program() ], formatter_class = create_help_formatter_large)
 	# job manager
-	sub_program.add_parser('job-create', help = wording.get('help.job_create'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-submit', help = wording.get('help.job_submit'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-submit-all', help = wording.get('help.job_submit_all'), parents = [ create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-delete', help = wording.get('help.job_delete'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-delete-all', help = wording.get('help.job_delete_all'), parents = [ create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-list', help = wording.get('help.job_list'), parents = [ create_job_status_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-add-step', help = wording.get('help.job_add_step'), parents = [ create_job_id_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-remix-step', help = wording.get('help.job_remix_step'), parents = [ create_job_id_program(), create_step_index_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-insert-step', help = wording.get('help.job_insert_step'), parents = [ create_job_id_program(), create_step_index_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-remove-step', help = wording.get('help.job_remove_step'), parents = [ create_job_id_program(), create_step_index_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_200)
+	sub_program.add_parser('job-create', help = wording.get('help.job_create'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-submit', help = wording.get('help.job_submit'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-submit-all', help = wording.get('help.job_submit_all'), parents = [ create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-delete', help = wording.get('help.job_delete'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-delete-all', help = wording.get('help.job_delete_all'), parents = [ create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-list', help = wording.get('help.job_list'), parents = [ create_job_status_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-add-step', help = wording.get('help.job_add_step'), parents = [ create_job_id_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-remix-step', help = wording.get('help.job_remix_step'), parents = [ create_job_id_program(), create_step_index_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-insert-step', help = wording.get('help.job_insert_step'), parents = [ create_job_id_program(), create_step_index_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-remove-step', help = wording.get('help.job_remove_step'), parents = [ create_job_id_program(), create_step_index_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	# job runner
-	sub_program.add_parser('job-run', help = wording.get('help.job_run'), parents = [ create_job_id_program(), create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-run-all', help = wording.get('help.job_run_all'), parents = [ create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-retry', help = wording.get('help.job_retry'), parents = [ create_job_id_program(), create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
-	sub_program.add_parser('job-retry-all', help = wording.get('help.job_retry_all'), parents = [ create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_200)
-	return ArgumentParser(parents = [ program ], formatter_class = create_help_formatter_50, add_help = True)
+	sub_program.add_parser('job-run', help = wording.get('help.job_run'), parents = [ create_job_id_program(), create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-run-all', help = wording.get('help.job_run_all'), parents = [ create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-retry', help = wording.get('help.job_retry'), parents = [ create_job_id_program(), create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-retry-all', help = wording.get('help.job_retry_all'), parents = [ create_config_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	return ArgumentParser(parents = [ program ], formatter_class = create_help_formatter_small, add_help = True)
 
 
 def apply_config_path(program : ArgumentParser) -> None:
