@@ -1,9 +1,10 @@
 from typing import List
 
 from facefusion.common_helper import create_int_range
-from facefusion.processors.typing import AgeModifierModel, FaceDebuggerItem, FaceEnhancerModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
+from facefusion.processors.typing import AgeModifierModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEnhancerModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
+expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]
 face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender' ]
 face_enhancer_models : List[FaceEnhancerModel] = [ 'codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus' ]
 face_swapper_set : FaceSwapperSet =\
@@ -24,6 +25,7 @@ frame_enhancer_models : List[FrameEnhancerModel] = [ 'clear_reality_x4', 'lsdir_
 lip_syncer_models : List[LipSyncerModel] = [ 'wav2lip', 'wav2lip_gan' ]
 
 age_modifier_direction_range : List[int] = create_int_range(-100, 100, 1)
+expression_restorer_factor_range : List[int] = create_int_range(0, 200, 1)
 face_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_colorizer_blend_range : List[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
