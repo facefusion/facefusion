@@ -11,7 +11,7 @@ from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import create_inference_session, get_static_model_initializer, has_execution_provider
+from facefusion.execution import create_inference_session_pool, get_static_model_initializer, has_execution_provider
 from facefusion.face_analyser import clear_face_analyser, get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_occlusion_mask, create_region_mask, create_static_box_mask
@@ -23,18 +23,24 @@ from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel
 from facefusion.processors.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import Args, Embedding, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Embedding, Face, InferenceSessionPool, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
-PROCESSOR = None
+INFERENCE_SESSION_POOL : Optional[InferenceSessionPool] = None
 NAME = __name__.upper()
 MODEL_SET : ModelSet =\
 {
 	'blendswap_256':
 	{
+		'sources':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/blendswap_256.onnx',
+				'path': resolve_relative_path('../.assets/models/blendswap_256.onnx')
+			}
+		},
 		'type': 'blendswap',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/blendswap_256.onnx',
-		'path': resolve_relative_path('../.assets/models/blendswap_256.onnx'),
 		'template': 'ffhq_512',
 		'size': (256, 256),
 		'mean': [ 0.0, 0.0, 0.0 ],
@@ -42,9 +48,15 @@ MODEL_SET : ModelSet =\
 	},
 	'ghost_256_unet_1':
 	{
+		'sources':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_1.onnx',
+				'path': resolve_relative_path('../.assets/models/ghost_256_unet_1.onnx')
+			}
+		},
 		'type': 'ghost',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_1.onnx',
-		'path': resolve_relative_path('../.assets/models/ghost_256_unet_1.onnx'),
 		'template': 'arcface_112_v1',
 		'size': (256, 256),
 		'mean': [ 0.0, 0.0, 0.0 ],
@@ -52,9 +64,15 @@ MODEL_SET : ModelSet =\
 	},
 	'ghost_256_unet_2':
 	{
+		'sources':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_2.onnx',
+				'path': resolve_relative_path('../.assets/models/ghost_256_unet_2.onnx')
+			}
+		},
 		'type': 'ghost',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_2.onnx',
-		'path': resolve_relative_path('../.assets/models/ghost_256_unet_2.onnx'),
 		'template': 'arcface_112_v1',
 		'size': (256, 256),
 		'mean': [ 0.0, 0.0, 0.0 ],
@@ -62,9 +80,15 @@ MODEL_SET : ModelSet =\
 	},
 	'ghost_256_unet_3':
 	{
+		'sources':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_3.onnx',
+				'path': resolve_relative_path('../.assets/models/ghost_256_unet_3.onnx')
+			}
+		},
 		'type': 'ghost',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_3.onnx',
-		'path': resolve_relative_path('../.assets/models/ghost_256_unet_3.onnx'),
 		'template': 'arcface_112_v1',
 		'size': (256, 256),
 		'mean': [ 0.0, 0.0, 0.0 ],
@@ -72,9 +96,15 @@ MODEL_SET : ModelSet =\
 	},
 	'inswapper_128':
 	{
+		'sources':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
+				'path': resolve_relative_path('../.assets/models/inswapper_128.onnx')
+			}
+		},
 		'type': 'inswapper',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
-		'path': resolve_relative_path('../.assets/models/inswapper_128.onnx'),
 		'template': 'arcface_128_v2',
 		'size': (128, 128),
 		'mean': [ 0.0, 0.0, 0.0 ],
@@ -82,9 +112,15 @@ MODEL_SET : ModelSet =\
 	},
 	'inswapper_128_fp16':
 	{
+		'sources':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
+				'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx')
+			}
+		},
 		'type': 'inswapper',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
-		'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx'),
 		'template': 'arcface_128_v2',
 		'size': (128, 128),
 		'mean': [ 0.0, 0.0, 0.0 ],
@@ -92,9 +128,15 @@ MODEL_SET : ModelSet =\
 	},
 	'simswap_256':
 	{
+		'sources':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_256.onnx',
+				'path': resolve_relative_path('../.assets/models/simswap_256.onnx')
+			}
+		},
 		'type': 'simswap',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_256.onnx',
-		'path': resolve_relative_path('../.assets/models/simswap_256.onnx'),
 		'template': 'arcface_112_v1',
 		'size': (256, 256),
 		'mean': [ 0.485, 0.456, 0.406 ],
@@ -102,9 +144,15 @@ MODEL_SET : ModelSet =\
 	},
 	'simswap_512_unofficial':
 	{
+		'sources':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_512_unofficial.onnx',
+				'path': resolve_relative_path('../.assets/models/simswap_512_unofficial.onnx')
+			}
+		},
 		'type': 'simswap',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_512_unofficial.onnx',
-		'path': resolve_relative_path('../.assets/models/simswap_512_unofficial.onnx'),
 		'template': 'arcface_112_v1',
 		'size': (512, 512),
 		'mean': [ 0.0, 0.0, 0.0 ],
@@ -112,9 +160,15 @@ MODEL_SET : ModelSet =\
 	},
 	'uniface_256':
 	{
+		'sources':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/uniface_256.onnx',
+				'path': resolve_relative_path('../.assets/models/uniface_256.onnx')
+			}
+		},
 		'type': 'uniface',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/uniface_256.onnx',
-		'path': resolve_relative_path('../.assets/models/uniface_256.onnx'),
 		'template': 'ffhq_512',
 		'size': (256, 256),
 		'mean': [ 0.0, 0.0, 0.0 ],
@@ -124,25 +178,25 @@ MODEL_SET : ModelSet =\
 OPTIONS : Optional[OptionsWithModel] = None
 
 
-def get_processor() -> Any:
-	global PROCESSOR
+def get_inference_session_pool() -> InferenceSessionPool:
+	global INFERENCE_SESSION_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if PROCESSOR is None:
-			model_path = get_options('model').get('path')
-			PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return PROCESSOR
+		if INFERENCE_SESSION_POOL is None:
+			model_sources = get_option('model').get('sources')
+			INFERENCE_SESSION_POOL = create_inference_session_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+	return INFERENCE_SESSION_POOL
 
 
-def clear_processor() -> None:
-	global PROCESSOR
+def clear_inference_session_pool() -> None:
+	global INFERENCE_SESSION_POOL
 
-	PROCESSOR = None
+	INFERENCE_SESSION_POOL = None
 
 
-def get_options(key : Literal['model']) -> Any:
+def get_option(key : Literal['model']) -> Any:
 	global OPTIONS
 
 	if OPTIONS is None:
@@ -154,10 +208,16 @@ def get_options(key : Literal['model']) -> Any:
 	return OPTIONS.get(key)
 
 
-def set_options(key : Literal['model'], value : Any) -> None:
+def set_option(key : Literal['model'], value : Any) -> None:
 	global OPTIONS
 
 	OPTIONS[key] = value
+
+
+def clear_options() -> None:
+	global OPTIONS
+
+	OPTIONS = None
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -187,26 +247,31 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_url = get_options('model').get('url')
-	model_path = get_options('model').get('path')
+	model_sources = get_option('model').get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()
-		conditional_download(download_directory_path, [ model_url ])
+		conditional_download(download_directory_path, model_urls)
 		process_manager.end()
-	return is_file(model_path)
+	return all(is_file(model_path) for model_path in model_paths)
 
 
 def post_check() -> bool:
-	model_url = get_options('model').get('url')
-	model_path = get_options('model').get('path')
+	model_sources = get_option('model').get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
-		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
-		return False
-	if not is_file(model_path):
-		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-		return False
+	if not state_manager.get_item('skip_download'):
+		for model_url, model_path in zip(model_urls, model_paths):
+			if not is_download_done(model_url, model_path):
+				logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+				return False
+	for model_path in model_paths:
+		if not is_file(model_path):
+			logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
+			return False
 	return True
 
 
@@ -236,7 +301,7 @@ def post_process() -> None:
 	read_static_image.cache_clear()
 	get_static_model_initializer.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_processor()
+		clear_inference_session_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
@@ -245,8 +310,8 @@ def post_process() -> None:
 
 
 def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_options('model').get('template')
-	model_size = get_options('model').get('size')
+	model_template = get_option('model').get('template')
+	model_size = get_option('model').get('size')
 	pixel_boost_size = unpack_resolution(state_manager.get_item('face_swapper_pixel_boost'))
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, pixel_boost_size)
@@ -275,27 +340,27 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 
 
 def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFrame:
-	processor = get_processor()
-	model_type = get_options('model').get('type')
+	face_swapper = get_inference_session_pool().get('face_swapper')
+	model_type = get_option('model').get('type')
 	processor_inputs = {}
 
-	for processor_input in processor.get_inputs():
-		if processor_input.name == 'source':
+	for face_swapper_input in face_swapper.get_inputs():
+		if face_swapper_input.name == 'source':
 			if model_type == 'blendswap' or model_type == 'uniface':
-				processor_inputs[processor_input.name] = prepare_source_frame(source_face)
+				processor_inputs[face_swapper_input.name] = prepare_source_frame(source_face)
 			else:
-				processor_inputs[processor_input.name] = prepare_source_embedding(source_face)
-		if processor_input.name == 'target':
-			processor_inputs[processor_input.name] = crop_vision_frame
+				processor_inputs[face_swapper_input.name] = prepare_source_embedding(source_face)
+		if face_swapper_input.name == 'target':
+			processor_inputs[face_swapper_input.name] = crop_vision_frame
 
 	with conditional_thread_semaphore():
-		crop_vision_frame = processor.run(None, processor_inputs)[0][0]
+		crop_vision_frame = face_swapper.run(None, processor_inputs)[0][0]
 
 	return crop_vision_frame
 
 
 def prepare_source_frame(source_face : Face) -> VisionFrame:
-	model_type = get_options('model').get('type')
+	model_type = get_option('model').get('type')
 	source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
 
 	if model_type == 'blendswap':
@@ -309,12 +374,12 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 
 
 def prepare_source_embedding(source_face : Face) -> Embedding:
-	model_type = get_options('model').get('type')
-	model_path = get_options('model').get('path')
+	model_type = get_option('model').get('type')
 
 	if model_type == 'ghost':
 		source_embedding = source_face.embedding.reshape(1, -1)
 	elif model_type == 'inswapper':
+		model_path = get_option('model').get('sources').get('face_swapper').get('path')
 		model_initializer = get_static_model_initializer(model_path)
 		source_embedding = source_face.embedding.reshape((1, -1))
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
@@ -324,9 +389,9 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	model_type = get_options('model').get('type')
-	model_mean = get_options('model').get('mean')
-	model_standard_deviation = get_options('model').get('standard_deviation')
+	model_type = get_option('model').get('type')
+	model_mean = get_option('model').get('mean')
+	model_standard_deviation = get_option('model').get('standard_deviation')
 
 	if model_type == 'ghost':
 		crop_vision_frame = crop_vision_frame[:, :, ::-1] / 127.5 - 1
@@ -339,7 +404,7 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_options('model').get('type')
+	model_template = get_option('model').get('type')
 	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
 
 	if model_template == 'ghost':

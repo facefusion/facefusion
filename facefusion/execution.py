@@ -7,7 +7,7 @@ import onnx
 from onnxruntime import InferenceSession, get_available_providers
 
 from facefusion.choices import execution_provider_set
-from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, InferenceSessionPool, ModelInitializer, ModelSourcePool, ValueAndUnit
+from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, InferenceSessionPool, ModelInitializer, ModelSourceSet, ValueAndUnit
 
 
 def get_execution_provider_choices() -> List[ExecutionProviderKey]:
@@ -84,7 +84,7 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 	return InferenceSession(model_path, providers = providers)
 
 
-def create_inference_session_pool(models : ModelSourcePool, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSessionPool:
+def create_inference_session_pool(models : ModelSourceSet, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSessionPool:
 	inference_session_pool : InferenceSessionPool = {}
 
 	for model_name in models.keys():

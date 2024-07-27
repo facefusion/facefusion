@@ -103,7 +103,7 @@ ModelSource = TypedDict('ModelSource',
 	'url' : str,
 	'path' : str
 })
-ModelSourcePool = Dict[str, ModelSource]
+ModelSourceSet = Dict[str, ModelSource]
 ModelValue = Dict[str, Any]
 ModelSet = Dict[str, ModelValue]
 OptionsWithModel = TypedDict('OptionsWithModel',
