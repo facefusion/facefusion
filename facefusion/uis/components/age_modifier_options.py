@@ -50,7 +50,7 @@ def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slide
 
 def update_age_modifier_model(age_modifier_model : AgeModifierModel) -> gradio.Dropdown:
 	age_modifier_module = load_processor_module('age_modifier')
-	age_modifier_module.clear_processor()
+	age_modifier_module.clear_inference_session_pool()
 	state_manager.set_item('age_modifier_model', age_modifier_model)
 	age_modifier_module.set_options('model', age_modifier_module.MODEL_SET[state_manager.get_item('age_modifier_model')])
 

@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from time import sleep
-from typing import Any, List, Literal, Optional
+from typing import Any, List, Optional
 
 import cv2
 import numpy
@@ -14,7 +14,7 @@ from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, map_float
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import create_inference_session, has_execution_provider
+from facefusion.execution import create_inference_session_pool, has_execution_provider
 from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import clear_face_occluder, create_occlusion_mask, create_static_box_mask
@@ -25,58 +25,47 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import AgeModifierInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Args, Face, Mask, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, InferenceSessionPool, Mask, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
-PROCESSOR = None
+INFERENCE_SESSION_POOL : Optional[InferenceSessionPool] = None
 NAME = __name__.upper()
 MODEL_SET : ModelSet =\
 {
 	'styleganex_age':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/styleganex_age.onnx',
-		'path': resolve_relative_path('../.assets/models/styleganex_age.onnx'),
+		'sources':
+		{
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/styleganex_age.onnx',
+			'path': resolve_relative_path('../.assets/models/styleganex_age.onnx'),
+		},
 		'template': 'ffhq_512',
 		'size': (512, 512)
 	}
 }
-OPTIONS : Optional[OptionsWithModel] = None
 
 
-def get_processor() -> Any:
-	global PROCESSOR
+def get_inference_session_pool() -> Any:
+	global INFERENCE_SESSION_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if PROCESSOR is None:
-			model_path = get_options('model').get('path')
+		if INFERENCE_SESSION_POOL is None:
+			model_sources = get_model_options().get('sources')
 			execution_providers = [ 'cpu' ] if has_execution_provider('coreml') else state_manager.get_item('execution_providers')
-			PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), execution_providers)
-	return PROCESSOR
+			INFERENCE_SESSION_POOL = create_inference_session_pool(model_sources, state_manager.get_item('execution_device_id'), execution_providers)
+	return INFERENCE_SESSION_POOL
 
 
-def clear_processor() -> None:
-	global PROCESSOR
+def clear_inference_session_pool() -> None:
+	global INFERENCE_SESSION_POOL
 
-	PROCESSOR = None
-
-
-def get_options(key : Literal['model']) -> Any:
-	global OPTIONS
-
-	if OPTIONS is None:
-		OPTIONS =\
-		{
-			'model': MODEL_SET[state_manager.get_item('age_modifier_model')]
-		}
-	return OPTIONS.get(key)
+	INFERENCE_SESSION_POOL = None
 
 
-def set_options(key : Literal['model'], value : Any) -> None:
-	global OPTIONS
-
-	OPTIONS[key] = value
+def get_model_options() -> ModelOptions:
+	return MODEL_SET[state_manager.get_item('expression_restorer_model')]
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -94,26 +83,31 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_url = get_options('model').get('url')
-	model_path = get_options('model').get('path')
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()
-		conditional_download(download_directory_path, [ model_url ])
+		conditional_download(download_directory_path, model_urls)
 		process_manager.end()
-	return is_file(model_path)
+	return all(is_file(model_path) for model_path in model_paths)
 
 
 def post_check() -> bool:
-	model_url = get_options('model').get('url')
-	model_path = get_options('model').get('path')
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
-		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
-		return False
-	if not is_file(model_path):
-		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-		return False
+	if not state_manager.get_item('skip_download'):
+		for model_url, model_path in zip(model_urls, model_paths):
+			if not is_download_done(model_url, model_path):
+				logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+				return False
+	for model_path in model_paths:
+		if not is_file(model_path):
+			logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
+			return False
 	return True
 
 
@@ -133,7 +127,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_processor()
+		clear_inference_session_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
@@ -141,8 +135,8 @@ def post_process() -> None:
 
 
 def modify_age(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_options('model').get('template')
-	model_size = get_options('model').get('size')
+	model_template = get_model_options().get('template')
+	model_size = get_model_options().get('size')
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
 	extend_face_landmark_5 = (face_landmark_5 - face_landmark_5[2]) * 2 + face_landmark_5[2]
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, (256, 256))

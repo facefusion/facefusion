@@ -28,36 +28,50 @@ MODEL_SET : ModelSet =\
 {
 	'ddcolor':
 	{
-		'type': 'ddcolor',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor.onnx',
-		'path': resolve_relative_path('../.assets/models/ddcolor.onnx')
+		'sources':
+		{
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor.onnx',
+			'path': resolve_relative_path('../.assets/models/ddcolor.onnx')
+		},
+		'type': 'ddcolor'
 	},
 	'ddcolor_artistic':
 	{
-		'type': 'ddcolor',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor_artistic.onnx',
-		'path': resolve_relative_path('../.assets/models/ddcolor_artistic.onnx')
+		'sources':
+		{
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor_artistic.onnx',
+			'path': resolve_relative_path('../.assets/models/ddcolor_artistic.onnx')
+		},
+		'type': 'ddcolor'
 	},
 	'deoldify':
 	{
-		'type': 'deoldify',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify.onnx',
-		'path': resolve_relative_path('../.assets/models/deoldify.onnx')
+		'sources':
+		{
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify.onnx',
+			'path': resolve_relative_path('../.assets/models/deoldify.onnx')
+		},
+		'type': 'deoldify'
 	},
 	'deoldify_artistic':
 	{
-		'type': 'deoldify',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_artistic.onnx',
-		'path': resolve_relative_path('../.assets/models/deoldify_artistic.onnx')
+		'sources':
+		{
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_artistic.onnx',
+			'path': resolve_relative_path('../.assets/models/deoldify_artistic.onnx')
+		},
+		'type': 'deoldify'
 	},
 	'deoldify_stable':
 	{
-		'type': 'deoldify',
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_stable.onnx',
-		'path': resolve_relative_path('../.assets/models/deoldify_stable.onnx')
+		'sources':
+		{
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_stable.onnx',
+			'path': resolve_relative_path('../.assets/models/deoldify_stable.onnx')
+		},
+		'type': 'deoldify'
 	}
 }
-OPTIONS : Optional[OptionsWithModel] = None
 
 
 def get_processor() -> Any:
