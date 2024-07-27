@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypedDic
 
 import numpy
 from numpy.typing import NDArray
+from onnxruntime import InferenceSession
 
 Score = float
 Angle = int
@@ -97,6 +98,12 @@ OutputAudioEncoder = Literal['aac', 'libmp3lame', 'libopus', 'libvorbis']
 OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf']
 OutputVideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
+ModelSource = TypedDict('ModelSource',
+{
+	'url' : str,
+	'path' : str
+})
+ModelSourcePool = Dict[str, ModelSource]
 ModelValue = Dict[str, Any]
 ModelSet = Dict[str, ModelValue]
 OptionsWithModel = TypedDict('OptionsWithModel',
@@ -141,6 +148,7 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'video_memory' : ExecutionDeviceVideoMemory,
 	'utilization' : ExecutionDeviceUtilization
 })
+InferenceSessionPool = Dict[str, InferenceSession]
 
 UiWorkflow = Literal['instant_runner', 'job_runner', 'job_manager']
 

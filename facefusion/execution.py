@@ -1,13 +1,13 @@
 import subprocess
 import xml.etree.ElementTree as ElementTree
 from functools import lru_cache
-from typing import Any, Dict, List
+from typing import Any, List
 
 import onnx
 from onnxruntime import InferenceSession, get_available_providers
 
 from facefusion.choices import execution_provider_set
-from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, ModelInitializer, ValueAndUnit
+from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, InferenceSessionPool, ModelInitializer, ModelSourcePool, ValueAndUnit
 
 
 def get_execution_provider_choices() -> List[ExecutionProviderKey]:
@@ -32,7 +32,7 @@ def extract_execution_providers(execution_provider_keys : List[ExecutionProvider
 	return [ execution_provider_set[execution_provider_key] for execution_provider_key in execution_provider_keys if execution_provider_key in execution_provider_set ]
 
 
-def apply_execution_provider_options(execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> List[Any]:
+def create_execution_providers(execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> List[Any]:
 	execution_providers = extract_execution_providers(execution_provider_keys)
 	execution_providers_with_options : List[Any] = []
 
@@ -80,11 +80,16 @@ def use_exhaustive() -> bool:
 
 
 def create_inference_session(model_path : str, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSession:
-	return InferenceSession(model_path, providers = apply_execution_provider_options(execution_device_id, execution_provider_keys))
+	providers = create_execution_providers(execution_device_id, execution_provider_keys)
+	return InferenceSession(model_path, providers = providers)
 
 
-def create_inference_session_pool(models : Dict[str, Any], execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> Dict[str, InferenceSession]:
-	return { model_name: create_inference_session(models.get(model_name).get('path'), execution_device_id, execution_provider_keys) for model_name in models.keys() }
+def create_inference_session_pool(models : ModelSourcePool, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSessionPool:
+	inference_session_pool : InferenceSessionPool = {}
+
+	for model_name in models.keys():
+		inference_session_pool[model_name] = create_inference_session(models.get(model_name).get('path'), execution_device_id, execution_provider_keys)
+	return inference_session_pool
 
 
 @lru_cache(maxsize = None)
