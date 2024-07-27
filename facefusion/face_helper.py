@@ -1,11 +1,11 @@
 from functools import lru_cache
-from typing import Any, List, Sequence, Tuple
+from typing import List, Sequence, Tuple
 
 import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.typing import Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
+from facefusion.typing import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -87,7 +87,7 @@ def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame,
 
 
 @lru_cache(maxsize = None)
-def create_static_anchors(feature_stride : int, anchor_total : int, stride_height : int, stride_width : int) -> numpy.ndarray[Any, Any]:
+def create_static_anchors(feature_stride : int, anchor_total : int, stride_height : int, stride_width : int) -> Anchors:
 	y, x = numpy.mgrid[:stride_height, :stride_width][::-1]
 	anchors = numpy.stack((y, x), axis = -1)
 	anchors = (anchors * feature_stride).reshape((-1, 2))

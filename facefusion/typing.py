@@ -46,6 +46,7 @@ Mask = NDArray[Any]
 Points = NDArray[Any]
 Distance = NDArray[Any]
 Matrix = NDArray[Any]
+Anchors = NDArray[Any]
 Translation = NDArray[Any]
 
 AudioBuffer = bytes
@@ -53,6 +54,7 @@ Audio = NDArray[Any]
 AudioChunk = NDArray[Any]
 AudioFrame = NDArray[Any]
 Spectrogram = NDArray[Any]
+Mel = NDArray[Any]
 MelFilterBank = NDArray[Any]
 
 Fps = float
