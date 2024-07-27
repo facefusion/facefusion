@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from typing import Any, List, Literal
+from typing import List
 
 import cv2
 import numpy
@@ -24,19 +24,11 @@ from facefusion.vision import read_image, read_static_image, write_image
 NAME = __name__.upper()
 
 
-def get_processor() -> None:
+def get_inference_session_pool() -> None:
 	pass
 
 
-def clear_processor() -> None:
-	pass
-
-
-def get_options(key : Literal['model']) -> None:
-	pass
-
-
-def set_options(key : Literal['model'], value : Any) -> None:
+def clear_inference_session_pool() -> None:
 	pass
 
 
@@ -71,8 +63,6 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
-	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_processor()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()

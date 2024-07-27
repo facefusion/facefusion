@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from time import sleep
-from typing import Any, List, Literal, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import cv2
 import numpy
@@ -24,17 +24,16 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEditorInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Args, Face, FaceLandmark68, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, FaceLandmark68, InferenceSessionPool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
-PROCESSOR = None
+INFERENCE_SESSION_POOL : Optional[InferenceSessionPool] = None
 NAME = __name__.upper()
-
 MODEL_SET : ModelSet =\
 {
 	'live_portrait':
 	{
-		'models':
+		'sources':
 		{
 			'feature_extractor':
 			{
@@ -66,42 +65,28 @@ MODEL_SET : ModelSet =\
 		'size': (512, 512)
 	}
 }
-OPTIONS : Optional[OptionsWithModel] = None
 
 
-def get_processor() -> Any:
-	global PROCESSOR
+def get_inference_session_pool() -> InferenceSessionPool:
+	global INFERENCE_SESSION_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if PROCESSOR is None:
-			models = get_options('model').get('models')
-			PROCESSOR = create_inference_session_pool(models, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return PROCESSOR
+		if INFERENCE_SESSION_POOL is None:
+			module_sources = get_model_options().get('sources')
+			INFERENCE_SESSION_POOL = create_inference_session_pool(module_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+	return INFERENCE_SESSION_POOL
 
 
-def clear_processor() -> None:
-	global PROCESSOR
+def clear_inference_session_pool() -> None:
+	global INFERENCE_SESSION_POOL
 
-	PROCESSOR = None
-
-
-def get_options(key : Literal['model']) -> Any:
-	global OPTIONS
-
-	if OPTIONS is None:
-		OPTIONS =\
-		{
-			'model': MODEL_SET[state_manager.get_item('expression_restorer_model')]
-		}
-	return OPTIONS.get(key)
+	INFERENCE_SESSION_POOL = None
 
 
-def set_options(key : Literal['model'], value : Any) -> None:
-	global OPTIONS
-
-	OPTIONS[key] = value
+def get_model_options() -> ModelOptions:
+	return MODEL_SET[state_manager.get_item('face_editor_model')]
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -125,7 +110,7 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	models = get_options('model').get('models')
+	models = get_model_options().get('models')
 	model_urls = [ models.get(model).get('url') for model in models.keys() ]
 	model_paths = [ models.get(model).get('path') for model in models.keys() ]
 
@@ -137,7 +122,7 @@ def pre_check() -> bool:
 
 
 def post_check() -> bool:
-	models = get_options('model').get('models')
+	models = get_model_options().get('models')
 	model_urls = [ models.get(model).get('url') for model in models.keys() ]
 	model_paths = [ models.get(model).get('path') for model in models.keys() ]
 
@@ -169,7 +154,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_processor()
+		clear_inference_session_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
@@ -177,8 +162,8 @@ def post_process() -> None:
 
 
 def edit_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_options('model').get('template')
-	model_size = get_options('model').get('size')
+	model_template = get_model_options().get('template')
+	model_size = get_model_options().get('size')
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
@@ -199,31 +184,35 @@ def edit_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame
 
 
 def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
-	frame_processor = get_processor()
+	feature_extractor = get_inference_session_pool().get('feature_extractor')
+	motion_extractor = get_inference_session_pool().get('motion_extractor')
+	eye_retargeter = get_inference_session_pool().get('eye_retargeter')
+	lip_retargeter = get_inference_session_pool().get('lip_retargeter')
+	generator = get_inference_session_pool().get('generator')
 	face_editor_eye_open_ratio, face_editor_lip_open_ratio = calc_face_edit_ratio(face_landmark_68)
 	face_editor_eye_open_factor = map_float(float(state_manager.get_item('face_editor_eye_open_factor')), 0, 100, 0, 1)
 	face_editor_lip_open_factor = map_float(float(state_manager.get_item('face_editor_lip_open_factor')), 0, 100, 0, 1)
 
 	with thread_semaphore():
-		feature_volume = frame_processor.get('feature_extractor').run(None,
+		feature_volume = feature_extractor.run(None,
 		{
 			'input': crop_vision_frame
 		})[0]
 
 	with thread_semaphore():
-		motion_points = frame_processor.get('motion_extractor').run(None,
+		motion_points = motion_extractor.run(None,
 		{
 			'input': crop_vision_frame
 		})[5]
 
 	with thread_semaphore():
-		eye_motion_points = frame_processor.get('eye_retargeter').run(None,
+		eye_motion_points = eye_retargeter.run(None,
 		{
 			'input': numpy.concatenate([ motion_points.reshape(1, -1), face_editor_eye_open_ratio ], axis = 1)
 		})[0]
 
 	with thread_semaphore():
-		lip_motion_points = frame_processor.get('lip_retargeter').run(None,
+		lip_motion_points = lip_retargeter.run(None,
 		{
 			'input': numpy.concatenate([ motion_points.reshape(1, -1), face_editor_lip_open_ratio ], axis = 1)
 		})[0]
@@ -232,7 +221,7 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 	motion_points_edit = motion_points + eye_motion_points + lip_motion_points
 
 	with thread_semaphore():
-		crop_vision_frame = frame_processor.get('generator').run(None,
+		crop_vision_frame = generator.run(None,
 		{
 			'feature_3d': feature_volume,
 			'kp_source': motion_points,
