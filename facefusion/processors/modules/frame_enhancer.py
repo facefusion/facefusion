@@ -211,10 +211,10 @@ def post_process() -> None:
 
 def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	processor = get_processor()
-	size = get_options('model').get('size')
-	scale = get_options('model').get('scale')
+	model_size = get_options('model').get('size')
+	model_scale = get_options('model').get('scale')
 	temp_height, temp_width = temp_vision_frame.shape[:2]
-	tile_vision_frames, pad_width, pad_height = create_tile_frames(temp_vision_frame, size)
+	tile_vision_frames, pad_width, pad_height = create_tile_frames(temp_vision_frame, model_size)
 
 	for index, tile_vision_frame in enumerate(tile_vision_frames):
 		with conditional_thread_semaphore():
@@ -224,7 +224,7 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 			})[0]
 		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame)
 
-	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width * scale, temp_height * scale, pad_width * scale, pad_height * scale, (size[0] * scale, size[1] * scale, size[2] * scale))
+	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width * model_scale, temp_height * model_scale, pad_width * model_scale, pad_height * model_scale, (model_size[0] * model_scale, model_size[1] * model_scale, model_size[2] * model_scale))
 	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
 	return temp_vision_frame
 

@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from time import sleep
-from typing import Any, List, Literal, Optional
+from typing import List, Optional
 
 import numpy
 
@@ -23,7 +23,7 @@ from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel
 from facefusion.processors.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import Args, Embedding, Face, InferenceSessionPool, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Embedding, Face, InferenceSessionPool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
 INFERENCE_SESSION_POOL : Optional[InferenceSessionPool] = None
@@ -175,7 +175,6 @@ MODEL_SET : ModelSet =\
 		'standard_deviation': [ 1.0, 1.0, 1.0 ]
 	}
 }
-OPTIONS : Optional[OptionsWithModel] = None
 
 
 def get_inference_session_pool() -> InferenceSessionPool:
@@ -185,7 +184,7 @@ def get_inference_session_pool() -> InferenceSessionPool:
 		while process_manager.is_checking():
 			sleep(0.5)
 		if INFERENCE_SESSION_POOL is None:
-			model_sources = get_option('model').get('sources')
+			model_sources = get_model_options().get('sources')
 			INFERENCE_SESSION_POOL = create_inference_session_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return INFERENCE_SESSION_POOL
 
@@ -196,28 +195,9 @@ def clear_inference_session_pool() -> None:
 	INFERENCE_SESSION_POOL = None
 
 
-def get_option(key : Literal['model']) -> Any:
-	global OPTIONS
-
-	if OPTIONS is None:
-		face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') or has_execution_provider('openvino') and state_manager.get_item('face_swapper_model') == 'inswapper_128_fp16' else state_manager.get_item('face_swapper_model')
-		OPTIONS =\
-		{
-			'model': MODEL_SET[face_swapper_model]
-		}
-	return OPTIONS.get(key)
-
-
-def set_option(key : Literal['model'], value : Any) -> None:
-	global OPTIONS
-
-	OPTIONS[key] = value
-
-
-def clear_options() -> None:
-	global OPTIONS
-
-	OPTIONS = None
+def get_model_options() -> ModelOptions:
+	face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') or has_execution_provider('openvino') and state_manager.get_item('face_swapper_model') == 'inswapper_128_fp16' else state_manager.get_item('face_swapper_model')
+	return MODEL_SET[face_swapper_model]
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -247,7 +227,7 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_sources = get_option('model').get('sources')
+	model_sources = get_model_options().get('sources')
 	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
 	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
@@ -259,7 +239,7 @@ def pre_check() -> bool:
 
 
 def post_check() -> bool:
-	model_sources = get_option('model').get('sources')
+	model_sources = get_model_options().get('sources')
 	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
 	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
@@ -310,8 +290,8 @@ def post_process() -> None:
 
 
 def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_option('model').get('template')
-	model_size = get_option('model').get('size')
+	model_template = get_model_options().get('template')
+	model_size = get_model_options().get('size')
 	pixel_boost_size = unpack_resolution(state_manager.get_item('face_swapper_pixel_boost'))
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, pixel_boost_size)
@@ -341,7 +321,7 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 
 def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFrame:
 	face_swapper = get_inference_session_pool().get('face_swapper')
-	model_type = get_option('model').get('type')
+	model_type = get_model_options().get('type')
 	processor_inputs = {}
 
 	for face_swapper_input in face_swapper.get_inputs():
@@ -360,7 +340,7 @@ def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFra
 
 
 def prepare_source_frame(source_face : Face) -> VisionFrame:
-	model_type = get_option('model').get('type')
+	model_type = get_model_options().get('type')
 	source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
 
 	if model_type == 'blendswap':
@@ -374,12 +354,12 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 
 
 def prepare_source_embedding(source_face : Face) -> Embedding:
-	model_type = get_option('model').get('type')
+	model_type = get_model_options().get('type')
 
 	if model_type == 'ghost':
 		source_embedding = source_face.embedding.reshape(1, -1)
 	elif model_type == 'inswapper':
-		model_path = get_option('model').get('sources').get('face_swapper').get('path')
+		model_path = get_model_options().get('sources').get('face_swapper').get('path')
 		model_initializer = get_static_model_initializer(model_path)
 		source_embedding = source_face.embedding.reshape((1, -1))
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
@@ -389,9 +369,9 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	model_type = get_option('model').get('type')
-	model_mean = get_option('model').get('mean')
-	model_standard_deviation = get_option('model').get('standard_deviation')
+	model_type = get_model_options().get('type')
+	model_mean = get_model_options().get('mean')
+	model_standard_deviation = get_model_options().get('standard_deviation')
 
 	if model_type == 'ghost':
 		crop_vision_frame = crop_vision_frame[:, :, ::-1] / 127.5 - 1
@@ -404,7 +384,7 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_option('model').get('type')
+	model_template = get_model_options().get('type')
 	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
 
 	if model_template == 'ghost':

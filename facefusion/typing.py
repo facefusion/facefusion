@@ -104,13 +104,17 @@ ModelSource = TypedDict('ModelSource',
 	'path' : str
 })
 ModelSourceSet = Dict[str, ModelSource]
+ModelOptions = Dict[str, Any]
+ModelSet = Dict[str, ModelOptions]
+ModelInitializer = NDArray[Any]
+
+# todo: delete
 ModelValue = Dict[str, Any]
-ModelSet = Dict[str, ModelValue]
 OptionsWithModel = TypedDict('OptionsWithModel',
 {
 	'model' : ModelValue
 })
-ModelInitializer = NDArray[Any]
+# todo: delete
 
 ExecutionProviderKey = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 'rocm', 'tensorrt']
 ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']

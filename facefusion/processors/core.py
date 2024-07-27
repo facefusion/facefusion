@@ -18,7 +18,6 @@ PROCESSORS_METHODS =\
 	#'clear_inference_session_pool',
 	#'get_option',
 	#'set_option',
-	#'clear_options,
 	'register_args',
 	'apply_args',
 	'pre_check',
@@ -64,7 +63,6 @@ def clear_processors_modules() -> None:
 
 	for processor_module in PROCESSORS_MODULES:
 		processor_module.clear_inference_session_pool()
-		processor_module.clear_options()
 	PROCESSORS_MODULES = []
 
 
