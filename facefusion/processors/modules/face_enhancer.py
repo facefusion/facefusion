@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from time import sleep
-from typing import Any, List, Literal, Optional
+from typing import Any, List, Optional
 
 import cv2
 import numpy
@@ -23,7 +23,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Args, Face, InferenceSessionPool, ModelOptions, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, InferenceSessionPool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 INFERENCE_SESSION_POOL : Optional[InferenceSessionPool] = None

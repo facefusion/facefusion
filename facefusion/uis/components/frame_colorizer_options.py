@@ -60,9 +60,8 @@ def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slide
 
 def update_frame_colorizer_model(frame_colorizer_model : FrameColorizerModel) -> gradio.Dropdown:
 	frame_colorizer_module = load_processor_module('frame_colorizer')
-	frame_colorizer_module.clear_processor()
+	frame_colorizer_module.clear_inference_session_pool()
 	state_manager.set_item('frame_colorizer_model', frame_colorizer_model)
-	frame_colorizer_module.set_options('model', frame_colorizer_module.MODEL_SET[frame_colorizer_model])
 
 	if frame_colorizer_module.pre_check():
 		return gradio.Dropdown(value = state_manager.get_item('frame_colorizer_model'))

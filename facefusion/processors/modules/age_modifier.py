@@ -36,8 +36,11 @@ MODEL_SET : ModelSet =\
 	{
 		'sources':
 		{
-			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/styleganex_age.onnx',
-			'path': resolve_relative_path('../.assets/models/styleganex_age.onnx'),
+			'age_modifier':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/styleganex_age.onnx',
+				'path': resolve_relative_path('../.assets/models/styleganex_age.onnx')
+			}
 		},
 		'template': 'ffhq_512',
 		'size': (512, 512)
@@ -65,7 +68,7 @@ def clear_inference_session_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET[state_manager.get_item('expression_restorer_model')]
+	return MODEL_SET[state_manager.get_item('age_modifier_model')]
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -192,19 +195,19 @@ def normalize_color_difference(color_difference : VisionFrame, color_difference_
 
 
 def apply_age(crop_vision_frame : VisionFrame, crop_vision_frame_extended : VisionFrame) -> VisionFrame:
-	processor = get_processor()
-	processor_inputs = {}
+	age_modifier = get_inference_session_pool().get('age_modifier')
+	age_modifier_inputs = {}
 
-	for processor_input in processor.get_inputs():
-		if processor_input.name == 'target':
-			processor_inputs[processor_input.name] = crop_vision_frame
-		if processor_input.name == 'target_with_background':
-			processor_inputs[processor_input.name] = crop_vision_frame_extended
-		if processor_input.name == 'direction':
-			processor_inputs[processor_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
+	for age_modifier_input in age_modifier.get_inputs():
+		if age_modifier_input.name == 'target':
+			age_modifier_inputs[age_modifier_input.name] = crop_vision_frame
+		if age_modifier_input.name == 'target_with_background':
+			age_modifier_inputs[age_modifier_input.name] = crop_vision_frame_extended
+		if age_modifier_input.name == 'direction':
+			age_modifier_inputs[age_modifier_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
 
 	with thread_semaphore():
-		crop_vision_frame = processor.run(None, processor_inputs)[0][0]
+		crop_vision_frame = age_modifier.run(None, age_modifier_inputs)[0][0]
 
 	return crop_vision_frame
 
