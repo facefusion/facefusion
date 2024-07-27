@@ -322,19 +322,19 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFrame:
 	face_swapper = get_inference_pool().get('face_swapper')
 	model_type = get_model_options().get('type')
-	processor_inputs = {}
+	face_swapper_inputs = {}
 
 	for face_swapper_input in face_swapper.get_inputs():
 		if face_swapper_input.name == 'source':
 			if model_type == 'blendswap' or model_type == 'uniface':
-				processor_inputs[face_swapper_input.name] = prepare_source_frame(source_face)
+				face_swapper_inputs[face_swapper_input.name] = prepare_source_frame(source_face)
 			else:
-				processor_inputs[face_swapper_input.name] = prepare_source_embedding(source_face)
+				face_swapper_inputs[face_swapper_input.name] = prepare_source_embedding(source_face)
 		if face_swapper_input.name == 'target':
-			processor_inputs[face_swapper_input.name] = crop_vision_frame
+			face_swapper_inputs[face_swapper_input.name] = crop_vision_frame
 
 	with conditional_thread_semaphore():
-		crop_vision_frame = face_swapper.run(None, processor_inputs)[0][0]
+		crop_vision_frame = face_swapper.run(None, face_swapper_inputs)[0][0]
 
 	return crop_vision_frame
 
