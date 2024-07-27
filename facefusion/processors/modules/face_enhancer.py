@@ -12,7 +12,7 @@ from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import create_inference_session
+from facefusion.execution import create_inference_session_pool
 from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import clear_face_occluder, create_occlusion_mask, create_static_box_mask
@@ -23,113 +23,153 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Args, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, InferenceSessionPool, ModelOptions, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
-PROCESSOR = None
+INFERENCE_SESSION_POOL : Optional[InferenceSessionPool] = None
 NAME = __name__.upper()
 MODEL_SET : ModelSet =\
 {
 	'codeformer':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/codeformer.onnx',
-		'path': resolve_relative_path('../.assets/models/codeformer.onnx'),
+		'sources':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/codeformer.onnx',
+				'path': resolve_relative_path('../.assets/models/codeformer.onnx')
+			}
+		},
 		'template': 'ffhq_512',
 		'size': (512, 512)
 	},
 	'gfpgan_1.2':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.2.onnx',
-		'path': resolve_relative_path('../.assets/models/gfpgan_1.2.onnx'),
+		'sources':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.2.onnx',
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.2.onnx')
+			}
+		},
 		'template': 'ffhq_512',
 		'size': (512, 512)
 	},
 	'gfpgan_1.3':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.3.onnx',
-		'path': resolve_relative_path('../.assets/models/gfpgan_1.3.onnx'),
+		'sources':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.3.onnx',
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.onnx')
+			}
+		},
 		'template': 'ffhq_512',
 		'size': (512, 512)
 	},
 	'gfpgan_1.4':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.4.onnx',
-		'path': resolve_relative_path('../.assets/models/gfpgan_1.4.onnx'),
+		'sources':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.4.onnx',
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.onnx')
+			}
+		},
 		'template': 'ffhq_512',
 		'size': (512, 512)
 	},
 	'gpen_bfr_256':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_256.onnx',
-		'path': resolve_relative_path('../.assets/models/gpen_bfr_256.onnx'),
+		'sources':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_256.onnx',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_256.onnx')
+			}
+		},
 		'template': 'arcface_128_v2',
 		'size': (256, 256)
 	},
 	'gpen_bfr_512':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_512.onnx',
-		'path': resolve_relative_path('../.assets/models/gpen_bfr_512.onnx'),
+		'sources':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_512.onnx',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_512.onnx')
+			}
+		},
 		'template': 'ffhq_512',
 		'size': (512, 512)
 	},
 	'gpen_bfr_1024':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_1024.onnx',
-		'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.onnx'),
+		'sources':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_1024.onnx',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.onnx')
+			}
+		},
 		'template': 'ffhq_512',
 		'size': (1024, 1024)
 	},
 	'gpen_bfr_2048':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_2048.onnx',
-		'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.onnx'),
+		'sources':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_2048.onnx',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.onnx')
+			}
+		},
 		'template': 'ffhq_512',
 		'size': (2048, 2048)
 	},
 	'restoreformer_plus_plus':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/restoreformer_plus_plus.onnx',
-		'path': resolve_relative_path('../.assets/models/restoreformer_plus_plus.onnx'),
+		'sources':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/restoreformer_plus_plus.onnx',
+				'path': resolve_relative_path('../.assets/models/restoreformer_plus_plus.onnx')
+			}
+		},
 		'template': 'ffhq_512',
 		'size': (512, 512)
 	}
 }
-OPTIONS : Optional[OptionsWithModel] = None
 
 
-def get_processor() -> Any:
-	global PROCESSOR
+def get_inference_session_pool() -> Any:
+	global INFERENCE_SESSION_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if PROCESSOR is None:
-			model_path = get_options('model').get('path')
-			PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return PROCESSOR
+		if INFERENCE_SESSION_POOL is None:
+			model_sources = get_model_options().get('sources')
+			INFERENCE_SESSION_POOL = create_inference_session_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+		return INFERENCE_SESSION_POOL
 
 
-def clear_processor() -> None:
-	global PROCESSOR
+def clear_inference_session_pool() -> None:
+	global INFERENCE_SESSION_POOL
 
-	PROCESSOR = None
-
-
-def get_options(key : Literal['model']) -> Any:
-	global OPTIONS
-
-	if OPTIONS is None:
-		OPTIONS =\
-		{
-			'model': MODEL_SET[state_manager.get_item('face_enhancer_model')]
-		}
-	return OPTIONS.get(key)
+	INFERENCE_SESSION_POOL = None
 
 
-def set_options(key : Literal['model'], value : Any) -> None:
-	global OPTIONS
-
-	OPTIONS[key] = value
+def get_model_options() -> ModelOptions:
+	return MODEL_SET[state_manager.get_item('face_enhancer_model')]
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -147,26 +187,31 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_url = get_options('model').get('url')
-	model_path = get_options('model').get('path')
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()
-		conditional_download(download_directory_path, [ model_url ])
+		conditional_download(download_directory_path, model_urls)
 		process_manager.end()
-	return is_file(model_path)
+	return all(is_file(model_path) for model_path in model_paths)
 
 
 def post_check() -> bool:
-	model_url = get_options('model').get('url')
-	model_path = get_options('model').get('path')
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
-		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
-		return False
-	if not is_file(model_path):
-		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-		return False
+	if not state_manager.get_item('skip_download'):
+		for model_url, model_path in zip(model_urls, model_paths):
+			if not is_download_done(model_url, model_path):
+				logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+				return False
+	for model_path in model_paths:
+		if not is_file(model_path):
+			logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
+			return False
 	return True
 
 
@@ -186,7 +231,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_processor()
+		clear_inference_session_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
@@ -194,8 +239,8 @@ def post_process() -> None:
 
 
 def enhance_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_options('model').get('template')
-	model_size = get_options('model').get('size')
+	model_template = get_model_options().get('template')
+	model_size = get_model_options().get('size')
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
@@ -216,18 +261,18 @@ def enhance_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFr
 
 
 def apply_enhance(crop_vision_frame : VisionFrame) -> VisionFrame:
-	processor = get_processor()
-	processor_inputs = {}
+	face_enhancer = get_inference_session_pool().get('face_enhancer')
+	face_enhancer_inputs = {}
 
-	for processor_input in processor.get_inputs():
-		if processor_input.name == 'input':
-			processor_inputs[processor_input.name] = crop_vision_frame
-		if processor_input.name == 'weight':
+	for face_enhancer_input in face_enhancer.get_inputs():
+		if face_enhancer_input.name == 'input':
+			face_enhancer_inputs[face_enhancer_input.name] = crop_vision_frame
+		if face_enhancer_input.name == 'weight':
 			weight = numpy.array([ 1 ]).astype(numpy.double)
-			processor_inputs[processor_input.name] = weight
+			face_enhancer_inputs[face_enhancer_input.name] = weight
 
 	with thread_semaphore():
-		crop_vision_frame = processor.run(None, processor_inputs)[0][0]
+		crop_vision_frame = face_enhancer.run(None, face_enhancer_inputs)[0][0]
 
 	return crop_vision_frame
 
