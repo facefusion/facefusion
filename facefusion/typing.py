@@ -144,7 +144,7 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'video_memory' : ExecutionDeviceVideoMemory,
 	'utilization' : ExecutionDeviceUtilization
 })
-InferenceSessionPool = Dict[str, InferenceSession]
+InferencePool = Dict[str, InferenceSession]
 
 UiWorkflow = Literal['instant_runner', 'job_runner', 'job_manager']
 

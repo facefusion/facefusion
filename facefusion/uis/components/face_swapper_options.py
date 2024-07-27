@@ -49,7 +49,8 @@ def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Dropd
 
 def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
 	face_swapper_module = load_processor_module('face_swapper')
-	face_swapper_module.clear_inference_session_pool()
+	face_swapper_module.clear_inference_pool()
+	face_analyser.clear_face_analyser()
 	state_manager.set_item('face_swapper_model', face_swapper_model)
 	if state_manager.get_item('face_swapper_model') == 'blendswap_256':
 		state_manager.set_item('face_recognizer_model', 'arcface_blendswap')

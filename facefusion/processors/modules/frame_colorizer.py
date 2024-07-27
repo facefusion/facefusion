@@ -12,17 +12,17 @@ from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import create_inference_session_pool, has_execution_provider
+from facefusion.execution import create_inference_pool, has_execution_provider
 from facefusion.face_analyser import clear_face_analyser
 from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Args, Face, InferenceSessionPool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, unpack_resolution, write_image
 
-INFERENCE_SESSION_POOL : Optional[InferenceSessionPool] = None
+INFERENCE_POOL : Optional[InferencePool] = None
 NAME = __name__.upper()
 MODEL_SET : ModelSet =\
 {
@@ -89,23 +89,23 @@ MODEL_SET : ModelSet =\
 }
 
 
-def get_inference_session_pool() -> Any:
-	global INFERENCE_SESSION_POOL
+def get_inference_pool() -> Any:
+	global INFERENCE_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if INFERENCE_SESSION_POOL is None:
+		if INFERENCE_POOL is None:
 			model_sources = get_model_options().get('sources')
 			execution_providers = [ 'cpu' ] if has_execution_provider('coreml') else state_manager.get_item('execution_providers')
-			INFERENCE_SESSION_POOL = create_inference_session_pool(model_sources, state_manager.get_item('execution_device_id'), execution_providers)
-	return INFERENCE_SESSION_POOL
+			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), execution_providers)
+	return INFERENCE_POOL
 
 
-def clear_inference_session_pool() -> None:
-	global INFERENCE_SESSION_POOL
+def clear_inference_pool() -> None:
+	global INFERENCE_POOL
 
-	INFERENCE_SESSION_POOL = None
+	INFERENCE_POOL = None
 
 
 def get_model_options() -> ModelOptions:
@@ -173,14 +173,14 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_inference_session_pool()
+		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
 
 
 def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
-	frame_colorizer = get_inference_session_pool().get('frame_colorizer')
+	frame_colorizer = get_inference_pool().get('frame_colorizer')
 	prepare_vision_frame = prepare_temp_frame(temp_vision_frame)
 
 	with thread_semaphore():

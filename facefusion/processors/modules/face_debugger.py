@@ -24,11 +24,11 @@ from facefusion.vision import read_image, read_static_image, write_image
 NAME = __name__.upper()
 
 
-def get_inference_session_pool() -> None:
+def get_inference_pool() -> None:
 	pass
 
 
-def clear_inference_session_pool() -> None:
+def clear_inference_pool() -> None:
 	pass
 
 

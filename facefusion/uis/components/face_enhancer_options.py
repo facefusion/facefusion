@@ -49,7 +49,7 @@ def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slide
 
 def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> gradio.Dropdown:
 	face_enhancer_module = load_processor_module('face_enhancer')
-	face_enhancer_module.clear_inference_session_pool()
+	face_enhancer_module.clear_inference_pool()
 	state_manager.set_item('face_enhancer_model', face_enhancer_model)
 
 	if face_enhancer_module.pre_check():

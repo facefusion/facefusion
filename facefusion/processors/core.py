@@ -14,8 +14,8 @@ from facefusion.typing import ProcessFrames, QueuePayload
 PROCESSORS_MODULES : List[ModuleType] = []
 PROCESSORS_METHODS =\
 [
-	'get_inference_session_pool',
-	'clear_inference_session_pool',
+	'get_inference_pool',
+	'clear_inference_pool',
 	'register_args',
 	'apply_args',
 	'pre_check',
@@ -60,7 +60,7 @@ def clear_processors_modules() -> None:
 	global PROCESSORS_MODULES
 
 	for processor_module in PROCESSORS_MODULES:
-		processor_module.clear_inference_session_pool()
+		processor_module.clear_inference_pool()
 	PROCESSORS_MODULES = []
 
 

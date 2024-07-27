@@ -12,7 +12,7 @@ from facefusion import config, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import create_inference_session_pool
+from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import clear_face_occluder, create_occlusion_mask, create_static_box_mask
@@ -23,10 +23,10 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Args, Face, InferenceSessionPool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
-INFERENCE_SESSION_POOL : Optional[InferenceSessionPool] = None
+INFERENCE_POOL : Optional[InferencePool] = None
 NAME = __name__.upper()
 MODEL_SET : ModelSet =\
 {
@@ -150,22 +150,22 @@ MODEL_SET : ModelSet =\
 }
 
 
-def get_inference_session_pool() -> Any:
-	global INFERENCE_SESSION_POOL
+def get_inference_pool() -> Any:
+	global INFERENCE_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if INFERENCE_SESSION_POOL is None:
+		if INFERENCE_POOL is None:
 			model_sources = get_model_options().get('sources')
-			INFERENCE_SESSION_POOL = create_inference_session_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-		return INFERENCE_SESSION_POOL
+			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+		return INFERENCE_POOL
 
 
-def clear_inference_session_pool() -> None:
-	global INFERENCE_SESSION_POOL
+def clear_inference_pool() -> None:
+	global INFERENCE_POOL
 
-	INFERENCE_SESSION_POOL = None
+	INFERENCE_POOL = None
 
 
 def get_model_options() -> ModelOptions:
@@ -231,7 +231,7 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_inference_session_pool()
+		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
@@ -261,7 +261,7 @@ def enhance_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFr
 
 
 def apply_enhance(crop_vision_frame : VisionFrame) -> VisionFrame:
-	face_enhancer = get_inference_session_pool().get('face_enhancer')
+	face_enhancer = get_inference_pool().get('face_enhancer')
 	face_enhancer_inputs = {}
 
 	for face_enhancer_input in face_enhancer.get_inputs():

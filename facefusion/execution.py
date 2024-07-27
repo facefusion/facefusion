@@ -7,7 +7,7 @@ import onnx
 from onnxruntime import InferenceSession, get_available_providers
 
 from facefusion.choices import execution_provider_set
-from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, InferenceSessionPool, ModelInitializer, ModelSourceSet, ValueAndUnit
+from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, InferencePool, ModelInitializer, ModelSourceSet, ValueAndUnit
 
 
 def get_execution_provider_choices() -> List[ExecutionProviderKey]:
@@ -84,12 +84,12 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 	return InferenceSession(model_path, providers = providers)
 
 
-def create_inference_session_pool(models : ModelSourceSet, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSessionPool:
-	inference_session_pool : InferenceSessionPool = {}
+def create_inference_pool(models : ModelSourceSet, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferencePool:
+	inference_pool : InferencePool = {}
 
 	for model_name in models.keys():
-		inference_session_pool[model_name] = create_inference_session(models.get(model_name).get('path'), execution_device_id, execution_provider_keys)
-	return inference_session_pool
+		inference_pool[model_name] = create_inference_session(models.get(model_name).get('path'), execution_device_id, execution_provider_keys)
+	return inference_pool
 
 
 @lru_cache(maxsize = None)
