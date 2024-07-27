@@ -273,7 +273,7 @@ def post_process() -> None:
 
 
 def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
-	frame_enhancer = clear_inference_session_pool().get('frame_enhancer')
+	frame_enhancer = get_inference_session_pool().get('frame_enhancer')
 	model_size = get_model_options().get('size')
 	model_scale = get_model_options().get('scale')
 	temp_height, temp_width = temp_vision_frame.shape[:2]

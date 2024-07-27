@@ -109,7 +109,7 @@ def clear_inference_session_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET[state_manager.get_item('frame_colorizer')]
+	return MODEL_SET[state_manager.get_item('frame_colorizer_model')]
 
 
 def register_args(program : ArgumentParser) -> None:
