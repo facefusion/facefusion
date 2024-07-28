@@ -10,14 +10,14 @@ from numpy.typing import NDArray
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, logger, process_manager, state_manager, wording
+from facefusion import config, face_masker, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, map_float
 from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import create_inference_pool, has_execution_provider
 from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, warp_face_by_face_landmark_5
-from facefusion.face_masker import clear_face_occluder, create_occlusion_mask, create_static_box_mask
+from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
@@ -134,7 +134,7 @@ def post_process() -> None:
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
 		clear_content_analyser()
-		clear_face_occluder()
+		face_masker.clear_inference_pool()
 
 
 def modify_age(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame:
