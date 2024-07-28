@@ -8,7 +8,7 @@ from cv2.typing import Size
 
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.execution import create_inference_pool, create_inference_session
+from facefusion.execution import create_inference_pool
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame

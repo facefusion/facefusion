@@ -1,6 +1,6 @@
 from functools import lru_cache
 from time import sleep
-from typing import Any
+from typing import Any, Optional
 
 import cv2
 import numpy
@@ -8,19 +8,25 @@ from tqdm import tqdm
 
 from facefusion import process_manager, state_manager, wording
 from facefusion.download import conditional_download
-from facefusion.execution import create_inference_session
+from facefusion.execution import create_inference_pool
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import Fps, ModelSet, VisionFrame
+from facefusion.typing import Fps, InferencePool, ModelSet, VisionFrame
 from facefusion.vision import count_video_frame_total, detect_video_fps, get_video_frame, read_image
 
-CONTENT_ANALYSER = None
+INFERENCE_POOL : Optional[InferencePool] = None
 MODEL_SET : ModelSet =\
 {
 	'open_nsfw':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/open_nsfw.onnx',
-		'path': resolve_relative_path('../.assets/models/open_nsfw.onnx')
+		'sources':
+		{
+			'content_analyser':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/open_nsfw.onnx',
+				'path': resolve_relative_path('../.assets/models/open_nsfw.onnx')
+			}
+		}
 	}
 }
 PROBABILITY_LIMIT = 0.80
@@ -28,34 +34,39 @@ RATE_LIMIT = 10
 STREAM_COUNTER = 0
 
 
-def get_content_analyser() -> Any:
-	global CONTENT_ANALYSER
+def get_inference_pool() -> Any:
+	global INFERENCE_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if CONTENT_ANALYSER is None:
-			model_path = MODEL_SET.get('open_nsfw').get('path')
-			CONTENT_ANALYSER = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return CONTENT_ANALYSER
+		if INFERENCE_POOL is None:
+			model_sources = get_model_options().get('sources')
+			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+		return INFERENCE_POOL
 
 
-def clear_content_analyser() -> None:
-	global CONTENT_ANALYSER
+def clear_inference_pool() -> None:
+	global INFERENCE_POOL
 
-	CONTENT_ANALYSER = None
+	INFERENCE_POOL = None
+
+
+def get_model_options() -> InferencePool:
+	return MODEL_SET.get('open_nsfw')
 
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_url = MODEL_SET.get('open_nsfw').get('url')
-	model_path = MODEL_SET.get('open_nsfw').get('path')
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()
-		conditional_download(download_directory_path, [ model_url ])
+		conditional_download(download_directory_path, model_urls)
 		process_manager.end()
-	return is_file(model_path)
+	return all(is_file(model_path) for model_path in model_paths)
 
 
 def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
@@ -68,7 +79,7 @@ def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
 
 
 def analyse_frame(vision_frame : VisionFrame) -> bool:
-	content_analyser = get_content_analyser()
+	content_analyser = get_inference_pool().get('content_analyser')
 	vision_frame = prepare_frame(vision_frame)
 
 	with conditional_thread_semaphore():

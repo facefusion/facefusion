@@ -8,9 +8,8 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
-from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import clear_face_analyser
@@ -269,7 +268,7 @@ def post_process() -> None:
 		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
-		clear_content_analyser()
+		content_analyser.clear_inference_pool()
 
 
 def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:

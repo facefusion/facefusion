@@ -8,10 +8,9 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, face_masker, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_masker, logger, process_manager, state_manager, wording
 from facefusion.audio import create_empty_audio_frame, get_voice_frame, read_static_voice
 from facefusion.common_helper import get_first
-from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
@@ -138,7 +137,7 @@ def post_process() -> None:
 		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		clear_face_analyser()
-		clear_content_analyser()
+		content_analyser.clear_inference_pool()
 		face_masker.clear_inference_pool()
 		clear_voice_extractor()
 
