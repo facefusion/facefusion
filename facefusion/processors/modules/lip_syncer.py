@@ -8,7 +8,7 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_masker, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_masker, logger, process_manager, state_manager, voice_extractor, wording
 from facefusion.audio import create_empty_audio_frame, get_voice_frame, read_static_voice
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download, is_download_done
@@ -25,7 +25,6 @@ from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Args, AudioFrame, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
-from facefusion.voice_extractor import clear_voice_extractor
 
 INFERENCE_POOL : Optional[InferencePool] = None
 NAME = __name__.upper()
@@ -91,26 +90,31 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_url = get_model_options().get('url')
-	model_path = get_model_options().get('path')
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()
-		conditional_download(download_directory_path, [ model_url ])
+		conditional_download(download_directory_path, model_urls)
 		process_manager.end()
-	return is_file(model_path)
+	return all(is_file(model_path) for model_path in model_paths)
 
 
 def post_check() -> bool:
-	model_url = get_model_options().get('url')
-	model_path = get_model_options().get('path')
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
-		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
-		return False
-	if not is_file(model_path):
-		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-		return False
+	if not state_manager.get_item('skip_download'):
+		for model_url, model_path in zip(model_urls, model_paths):
+			if not is_download_done(model_url, model_path):
+				logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+				return False
+	for model_path in model_paths:
+		if not is_file(model_path):
+			logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
+			return False
 	return True
 
 
@@ -139,7 +143,7 @@ def post_process() -> None:
 		clear_face_analyser()
 		content_analyser.clear_inference_pool()
 		face_masker.clear_inference_pool()
-		clear_voice_extractor()
+		voice_extractor.clear_inference_pool()
 
 
 def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_frame : VisionFrame) -> VisionFrame:

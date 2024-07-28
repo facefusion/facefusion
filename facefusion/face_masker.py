@@ -1,6 +1,6 @@
 from functools import lru_cache
 from time import sleep
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import cv2
 import numpy
@@ -11,7 +11,7 @@ from facefusion.download import conditional_download
 from facefusion.execution import create_inference_pool
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
+from facefusion.typing import FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelOptions, ModelSet, Padding, VisionFrame
 
 INFERENCE_POOL : Optional[InferencePool] = None
 MODEL_SET : ModelSet =\
@@ -48,7 +48,7 @@ FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
 }
 
 
-def get_inference_pool() -> Any:
+def get_inference_pool() -> InferencePool:
 	global INFERENCE_POOL
 
 	with thread_lock():
@@ -66,7 +66,7 @@ def clear_inference_pool() -> None:
 	INFERENCE_POOL = None
 
 
-def get_model_options() -> InferencePool:
+def get_model_options() -> ModelOptions:
 	return MODEL_SET.get('face_masker')
 
 

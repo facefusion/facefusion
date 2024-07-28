@@ -1,6 +1,6 @@
 from functools import lru_cache
 from time import sleep
-from typing import Any, Optional
+from typing import Optional
 
 import cv2
 import numpy
@@ -11,7 +11,7 @@ from facefusion.download import conditional_download
 from facefusion.execution import create_inference_pool
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import Fps, InferencePool, ModelSet, VisionFrame
+from facefusion.typing import Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
 from facefusion.vision import count_video_frame_total, detect_video_fps, get_video_frame, read_image
 
 INFERENCE_POOL : Optional[InferencePool] = None
@@ -34,7 +34,7 @@ RATE_LIMIT = 10
 STREAM_COUNTER = 0
 
 
-def get_inference_pool() -> Any:
+def get_inference_pool() -> InferencePool:
 	global INFERENCE_POOL
 
 	with thread_lock():
@@ -52,7 +52,7 @@ def clear_inference_pool() -> None:
 	INFERENCE_POOL = None
 
 
-def get_model_options() -> InferencePool:
+def get_model_options() -> ModelOptions:
 	return MODEL_SET.get('open_nsfw')
 
 
