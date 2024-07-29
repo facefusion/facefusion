@@ -237,8 +237,8 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 
 	for queue_payload in process_manager.manage(queue_payloads):
-		frame_number = queue_payload['frame_number']
-		target_vision_path = queue_payload['frame_path']
+		frame_number = queue_payload.get('frame_number')
+		target_vision_path = queue_payload.get('frame_path')
 		source_audio_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
 		if not numpy.any(source_audio_frame):
 			source_audio_frame = create_empty_audio_frame()
