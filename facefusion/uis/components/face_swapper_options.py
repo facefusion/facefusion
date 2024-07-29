@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import face_analyser, state_manager, wording
+from facefusion import state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
@@ -49,21 +49,10 @@ def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Dropd
 
 def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
 	face_swapper_module = load_processor_module('face_swapper')
-	face_swapper_module.clear_processor()
+	face_swapper_module.clear_inference_pool()
 	state_manager.set_item('face_swapper_model', face_swapper_model)
-	if state_manager.get_item('face_swapper_model') == 'blendswap_256':
-		state_manager.set_item('face_recognizer_model', 'arcface_blendswap')
-	if state_manager.get_item('face_swapper_model') in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
-		state_manager.set_item('face_recognizer_model', 'arcface_ghost')
-	if state_manager.get_item('face_swapper_model') in [ 'inswapper_128', 'inswapper_128_fp16' ]:
-		state_manager.set_item('face_recognizer_model', 'arcface_inswapper')
-	if state_manager.get_item('face_swapper_model') in [ 'simswap_256', 'simswap_512_unofficial' ]:
-		state_manager.set_item('face_recognizer_model', 'arcface_simswap')
-	if state_manager.get_item('face_swapper_model') == 'uniface_256':
-		state_manager.set_item('face_recognizer_model', 'arcface_uniface')
-	face_swapper_module.set_options('model', face_swapper_module.MODEL_SET[state_manager.get_item('face_swapper_model')])
 
-	if face_analyser.pre_check() and face_swapper_module.pre_check():
+	if face_swapper_module.pre_check():
 		face_swapper_pixel_boost_choices = processors_choices.face_swapper_set.get(state_manager.get_item('face_swapper_model'))
 		return gradio.Dropdown(value = state_manager.get_item('face_swapper_model')), gradio.Dropdown(choices = face_swapper_pixel_boost_choices, value = get_first(face_swapper_pixel_boost_choices))
 	return gradio.Dropdown(), gradio.Dropdown()

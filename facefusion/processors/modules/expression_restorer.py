@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from time import sleep
-from typing import Any, List, Literal, Optional
+from typing import List, Optional
 
 import cv2
 import numpy
@@ -8,14 +8,13 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, map_float
-from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import create_inference_session_pool
-from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
+from facefusion.execution import create_inference_pool
+from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
-from facefusion.face_masker import clear_face_occluder, create_face_mask, create_occlusion_mask, create_static_box_mask
+from facefusion.face_masker import create_face_mask, create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
@@ -23,17 +22,16 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import ExpressionRestorerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Args, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import get_video_frame, read_image, read_static_image, write_image
 
-PROCESSOR = None
+INFERENCE_POOL : Optional[InferencePool] = None
 NAME = __name__.upper()
-
 MODEL_SET : ModelSet =\
 {
 	'live_portrait':
 	{
-		'models':
+		'sources':
 		{
 			'feature_extractor':
 			{
@@ -55,42 +53,28 @@ MODEL_SET : ModelSet =\
 		'size': (512, 512)
 	}
 }
-OPTIONS : Optional[OptionsWithModel] = None
 
 
-def get_processor() -> Any:
-	global PROCESSOR
+def get_inference_pool() -> InferencePool:
+	global INFERENCE_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if PROCESSOR is None:
-			models = get_options('model').get('models')
-			PROCESSOR = create_inference_session_pool(models, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return PROCESSOR
+		if INFERENCE_POOL is None:
+			model_sources = get_model_options().get('sources')
+			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+	return INFERENCE_POOL
 
 
-def clear_processor() -> None:
-	global PROCESSOR
+def clear_inference_pool() -> None:
+	global INFERENCE_POOL
 
-	PROCESSOR = None
-
-
-def get_options(key : Literal['model']) -> Any:
-	global OPTIONS
-
-	if OPTIONS is None:
-		OPTIONS =\
-		{
-			'model': MODEL_SET[state_manager.get_item('expression_restorer_model')]
-		}
-	return OPTIONS.get(key)
+	INFERENCE_POOL = None
 
 
-def set_options(key : Literal['model'], value : Any) -> None:
-	global OPTIONS
-
-	OPTIONS[key] = value
+def get_model_options() -> ModelOptions:
+	return MODEL_SET[state_manager.get_item('expression_restorer_model')]
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -108,9 +92,9 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	models = get_options('model').get('models')
-	model_urls = [ models.get(model).get('url') for model in models.keys() ]
-	model_paths = [ models.get(model).get('path') for model in models.keys() ]
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()
@@ -120,9 +104,9 @@ def pre_check() -> bool:
 
 
 def post_check() -> bool:
-	models = get_options('model').get('models')
-	model_urls = [ models.get(model).get('url') for model in models.keys() ]
-	model_paths = [ models.get(model).get('path') for model in models.keys() ]
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
 	if not state_manager.get_item('skip_download'):
 		for model_url, model_path in zip(model_urls, model_paths):
@@ -152,16 +136,16 @@ def pre_process(mode : ProcessMode) -> bool:
 def post_process() -> None:
 	read_static_image.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_processor()
+		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
-		clear_face_analyser()
-		clear_content_analyser()
-		clear_face_occluder()
+		content_analyser.clear_inference_pool()
+		face_analyser.clear_inference_pool()
+		face_masker.clear_inference_pool()
 
 
 def restore_expression(source_vision_frame : VisionFrame, target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_options('model').get('template')
-	model_size = get_options('model').get('size')
+	model_template = get_model_options().get('template')
+	model_size = get_model_options().get('size')
 	expression_restorer_factor = map_float(float(state_manager.get_item('expression_restorer_factor')), 0, 200, 0, 2)
 	source_vision_frame = cv2.resize(source_vision_frame, temp_vision_frame.shape[:2][::-1])
 	source_crop_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
@@ -186,22 +170,24 @@ def restore_expression(source_vision_frame : VisionFrame, target_face: Face, tem
 
 
 def apply_restore_expression(source_crop_vision_frame : VisionFrame, target_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
-	frame_processor = get_processor()
+	feature_extractor = get_inference_pool().get('feature_extractor')
+	motion_extractor = get_inference_pool().get('motion_extractor')
+	generator = get_inference_pool().get('generator')
 
 	with thread_semaphore():
-		feature_volume = frame_processor.get('feature_extractor').run(None,
+		feature_volume = feature_extractor.run(None,
 		{
 			'input': target_crop_vision_frame
 		})[0]
 
 	with thread_semaphore():
-		_, _, _, source_expression, _, _ = frame_processor.get('motion_extractor').run(None,
+		_, _, _, source_expression, _, _ = motion_extractor.run(None,
 		{
 			'input': source_crop_vision_frame
 		})
 
 	with thread_semaphore():
-		target_rotation, target_scale, target_translation, target_expression, target_motion_points_raw, target_motion_points = frame_processor.get('motion_extractor').run(None,
+		target_rotation, target_scale, target_translation, target_expression, target_motion_points_raw, target_motion_points = motion_extractor.run(None,
 		{
 			'input': target_crop_vision_frame
 		})
@@ -210,7 +196,7 @@ def apply_restore_expression(source_crop_vision_frame : VisionFrame, target_crop
 	motion_points = target_scale * (target_motion_points_raw @ target_rotation + expression) + target_translation
 
 	with thread_semaphore():
-		crop_vision_frame = frame_processor.get('generator').run(None,
+		crop_vision_frame = generator.run(None,
 		{
 			'feature_3d': feature_volume,
 			'kp_source': target_motion_points,

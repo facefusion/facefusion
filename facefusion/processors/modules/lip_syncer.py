@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from time import sleep
-from typing import Any, List, Literal, Optional
+from typing import List, Optional
 
 import cv2
 import numpy
@@ -8,15 +8,14 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, voice_extractor, wording
 from facefusion.audio import create_empty_audio_frame, get_voice_frame, read_static_voice
 from facefusion.common_helper import get_first
-from facefusion.content_analyser import clear_content_analyser
 from facefusion.download import conditional_download, is_download_done
-from facefusion.execution import create_inference_session
-from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
+from facefusion.execution import create_inference_pool
+from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import create_bounding_box_from_face_landmark_68, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
-from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_mouth_mask, create_occlusion_mask, create_static_box_mask
+from facefusion.face_masker import create_mouth_mask, create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import filter_audio_paths, has_audio, in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
@@ -24,61 +23,58 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import LipSyncerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import Args, AudioFrame, Face, ModelSet, OptionsWithModel, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, AudioFrame, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
-from facefusion.voice_extractor import clear_voice_extractor
 
-PROCESSOR = None
+INFERENCE_POOL : Optional[InferencePool] = None
 NAME = __name__.upper()
 MODEL_SET : ModelSet =\
 {
 	'wav2lip':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip.onnx',
-		'path': resolve_relative_path('../.assets/models/wav2lip.onnx')
+		'sources':
+		{
+			'lip_syncer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip.onnx',
+				'path': resolve_relative_path('../.assets/models/wav2lip.onnx')
+			}
+		}
 	},
 	'wav2lip_gan':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip_gan.onnx',
-		'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx')
+		'sources':
+		{
+			'lip_syncer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip_gan.onnx',
+				'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx')
+			}
+		}
 	}
 }
-OPTIONS : Optional[OptionsWithModel] = None
 
 
-def get_processor() -> Any:
-	global PROCESSOR
+def get_inference_pool() -> InferencePool:
+	global INFERENCE_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if PROCESSOR is None:
-			model_path = get_options('model').get('path')
-			PROCESSOR = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return PROCESSOR
+		if INFERENCE_POOL is None:
+			module_sources = get_model_options().get('sources')
+			INFERENCE_POOL = create_inference_pool(module_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+	return INFERENCE_POOL
 
 
-def clear_processor() -> None:
-	global PROCESSOR
+def clear_inference_pool() -> None:
+	global INFERENCE_POOL
 
-	PROCESSOR = None
-
-
-def get_options(key : Literal['model']) -> Any:
-	global OPTIONS
-
-	if OPTIONS is None:
-		OPTIONS =\
-		{
-			'model': MODEL_SET[state_manager.get_item('lip_syncer_model')]
-		}
-	return OPTIONS.get(key)
+	INFERENCE_POOL = None
 
 
-def set_options(key : Literal['model'], value : Any) -> None:
-	global OPTIONS
-
-	OPTIONS[key] = value
+def get_model_options() -> ModelOptions:
+	return MODEL_SET[state_manager.get_item('lip_syncer_model')]
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -94,26 +90,31 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_url = get_options('model').get('url')
-	model_path = get_options('model').get('path')
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()
-		conditional_download(download_directory_path, [ model_url ])
+		conditional_download(download_directory_path, model_urls)
 		process_manager.end()
-	return is_file(model_path)
+	return all(is_file(model_path) for model_path in model_paths)
 
 
 def post_check() -> bool:
-	model_url = get_options('model').get('url')
-	model_path = get_options('model').get('path')
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download') and not is_download_done(model_url, model_path):
-		logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
-		return False
-	if not is_file(model_path):
-		logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-		return False
+	if not state_manager.get_item('skip_download'):
+		for model_url, model_path in zip(model_urls, model_paths):
+			if not is_download_done(model_url, model_path):
+				logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
+				return False
+	for model_path in model_paths:
+		if not is_file(model_path):
+			logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
+			return False
 	return True
 
 
@@ -137,17 +138,16 @@ def post_process() -> None:
 	read_static_image.cache_clear()
 	read_static_voice.cache_clear()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_processor()
+		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
-		clear_face_analyser()
-		clear_content_analyser()
-		clear_face_occluder()
-		clear_face_parser()
-		clear_voice_extractor()
+		content_analyser.clear_inference_pool()
+		face_analyser.clear_inference_pool()
+		face_masker.clear_inference_pool()
+		voice_extractor.clear_inference_pool()
 
 
 def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
-	processor = get_processor()
+	lip_syncer = get_inference_pool().get('lip_syncer')
 	temp_audio_frame = prepare_audio_frame(temp_audio_frame)
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'ffhq_512', (512, 512))
 	face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
@@ -168,7 +168,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 	close_vision_frame = prepare_crop_frame(close_vision_frame)
 
 	with conditional_thread_semaphore():
-		close_vision_frame = processor.run(None,
+		close_vision_frame = lip_syncer.run(None,
 		{
 			'source': temp_audio_frame,
 			'target': close_vision_frame

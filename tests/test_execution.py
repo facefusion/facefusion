@@ -1,4 +1,4 @@
-from facefusion.execution import apply_execution_provider_options, get_execution_provider_choices, has_execution_provider
+from facefusion.execution import create_execution_providers, get_execution_provider_choices, has_execution_provider
 
 
 def test_get_execution_provider_choices() -> None:
@@ -21,4 +21,4 @@ def test_multiple_execution_providers() -> None:
 		'CPUExecutionProvider'
 	]
 
-	assert apply_execution_provider_options('1', [ 'cpu', 'cuda' ]) == execution_provider_with_options
+	assert create_execution_providers('1', [ 'cpu', 'cuda' ]) == execution_provider_with_options

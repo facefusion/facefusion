@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypedDic
 
 import numpy
 from numpy.typing import NDArray
+from onnxruntime import InferenceSession
 
 Score = float
 Angle = int
@@ -87,7 +88,6 @@ TableContents = List[List[Any]]
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yoloface']
 FaceDetectorSet = Dict[FaceDetectorModel, List[str]]
-FaceRecognizerModel = Literal['arcface_blendswap', 'arcface_ghost', 'arcface_inswapper', 'arcface_simswap', 'arcface_uniface']
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
 FaceSelectorAge = Literal['child', 'teen', 'adult', 'senior']
@@ -99,12 +99,14 @@ OutputAudioEncoder = Literal['aac', 'libmp3lame', 'libopus', 'libvorbis']
 OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf']
 OutputVideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
-ModelValue = Dict[str, Any]
-ModelSet = Dict[str, ModelValue]
-OptionsWithModel = TypedDict('OptionsWithModel',
+ModelSource = TypedDict('ModelSource',
 {
-	'model' : ModelValue
+	'url' : str,
+	'path' : str
 })
+ModelSourceSet = Dict[str, ModelSource]
+ModelOptions = Dict[str, Any]
+ModelSet = Dict[str, ModelOptions]
 ModelInitializer = NDArray[Any]
 
 ExecutionProviderKey = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 'rocm', 'tensorrt']
@@ -143,6 +145,7 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'video_memory' : ExecutionDeviceVideoMemory,
 	'utilization' : ExecutionDeviceUtilization
 })
+InferencePool = Dict[str, InferenceSession]
 
 UiWorkflow = Literal['instant_runner', 'job_runner', 'job_manager']
 
@@ -182,7 +185,6 @@ StateKey = Literal\
 	'face_detector_angles',
 	'face_detector_score',
 	'face_landmarker_score',
-	'face_recognizer_model',
 	'face_selector_mode',
 	'face_selector_order',
 	'face_selector_age',
@@ -236,7 +238,6 @@ State = TypedDict('State',
 	'face_detector_angles' : List[Angle],
 	'face_detector_score' : Score,
 	'face_landmarker_score' : Score,
-	'face_recognizer_model' : FaceRecognizerModel,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
 	'face_selector_age' : FaceSelectorAge,

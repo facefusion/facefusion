@@ -4,7 +4,6 @@ import gradio
 
 import facefusion.choices
 from facefusion import face_analyser, state_manager, wording
-from facefusion.face_analyser import clear_face_analyser
 from facefusion.typing import Angle, FaceDetectorModel, Score
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import ComponentOptions
@@ -75,7 +74,8 @@ def listen() -> None:
 def update_face_detector_model(face_detector_model : FaceDetectorModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
 	state_manager.set_item('face_detector_model', face_detector_model)
 	update_face_detector_size('640x640')
-	clear_face_analyser()
+	face_analyser.clear_inference_pool()
+
 	if face_analyser.pre_check():
 		if state_manager.get_item('face_detector_size') in facefusion.choices.face_detector_set[state_manager.get_item('face_detector_model')]:
 			return gradio.Dropdown(value = state_manager.get_item('face_detector_model')), gradio.Dropdown(value = state_manager.get_item('face_detector_size'), choices = facefusion.choices.face_detector_set[face_detector_model])

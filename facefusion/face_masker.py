@@ -1,6 +1,6 @@
 from functools import lru_cache
 from time import sleep
-from typing import Any, Dict, List
+from typing import Dict, List, Optional
 
 import cv2
 import numpy
@@ -8,24 +8,29 @@ from cv2.typing import Size
 
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.execution import create_inference_session
+from facefusion.execution import create_inference_pool
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import FaceLandmark68, FaceMaskRegion, Mask, ModelSet, Padding, VisionFrame
+from facefusion.typing import FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelOptions, ModelSet, Padding, VisionFrame
 
-FACE_OCCLUDER = None
-FACE_PARSER = None
+INFERENCE_POOL : Optional[InferencePool] = None
 MODEL_SET : ModelSet =\
 {
-	'face_occluder':
+	'face_masker':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_occluder.onnx',
-		'path': resolve_relative_path('../.assets/models/face_occluder.onnx')
-	},
-	'face_parser':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_parser.onnx',
-		'path': resolve_relative_path('../.assets/models/face_parser.onnx')
+		'sources':
+		{
+			'face_occluder':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_occluder.onnx',
+				'path': resolve_relative_path('../.assets/models/face_occluder.onnx')
+			},
+			'face_parser':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_parser.onnx',
+				'path': resolve_relative_path('../.assets/models/face_parser.onnx')
+			}
+		}
 	}
 }
 FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
@@ -43,54 +48,33 @@ FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
 }
 
 
-def get_face_occluder() -> Any:
-	global FACE_OCCLUDER
+def get_inference_pool() -> InferencePool:
+	global INFERENCE_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if FACE_OCCLUDER is None:
-			model_path = MODEL_SET.get('face_occluder').get('path')
-			FACE_OCCLUDER = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return FACE_OCCLUDER
+		if INFERENCE_POOL is None:
+			model_sources = get_model_options().get('sources')
+			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+		return INFERENCE_POOL
 
 
-def get_face_parser() -> Any:
-	global FACE_PARSER
+def clear_inference_pool() -> None:
+	global INFERENCE_POOL
 
-	with thread_lock():
-		while process_manager.is_checking():
-			sleep(0.5)
-		if FACE_PARSER is None:
-			model_path = MODEL_SET.get('face_parser').get('path')
-			FACE_PARSER = create_inference_session(model_path, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return FACE_PARSER
+	INFERENCE_POOL = None
 
 
-def clear_face_occluder() -> None:
-	global FACE_OCCLUDER
-
-	FACE_OCCLUDER = None
-
-
-def clear_face_parser() -> None:
-	global FACE_PARSER
-
-	FACE_PARSER = None
+def get_model_options() -> ModelOptions:
+	return MODEL_SET.get('face_masker')
 
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_urls =\
-	[
-		MODEL_SET.get('face_occluder').get('url'),
-		MODEL_SET.get('face_parser').get('url')
-	]
-	model_paths =\
-	[
-		MODEL_SET.get('face_occluder').get('path'),
-		MODEL_SET.get('face_parser').get('path')
-	]
+	model_sources = get_model_options().get('sources')
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()
@@ -114,7 +98,7 @@ def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_p
 
 
 def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
-	face_occluder = get_face_occluder()
+	face_occluder = get_inference_pool().get('face_occluder')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, face_occluder.get_inputs()[0].shape[1:3][::-1])
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 1, 2, 3)
@@ -132,7 +116,7 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 
 
 def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
-	face_parser = get_face_parser()
+	face_parser = get_inference_pool().get('face_parser')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, (512, 512))
 	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255
 	prepare_vision_frame = numpy.subtract(prepare_vision_frame, numpy.array([ 0.485, 0.456, 0.406 ]).astype(numpy.float32))

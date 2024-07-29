@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from typing import Any, List, Literal
+from typing import List
 
 import cv2
 import numpy
@@ -7,11 +7,10 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, logger, process_manager, state_manager, wording
-from facefusion.content_analyser import clear_content_analyser
-from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face
+from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
+from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
-from facefusion.face_masker import clear_face_occluder, clear_face_parser, create_occlusion_mask, create_region_mask, create_static_box_mask
+from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
 from facefusion.face_selector import categorize_age, categorize_gender, find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, same_file_extension
@@ -24,19 +23,11 @@ from facefusion.vision import read_image, read_static_image, write_image
 NAME = __name__.upper()
 
 
-def get_processor() -> None:
+def get_inference_pool() -> None:
 	pass
 
 
-def clear_processor() -> None:
-	pass
-
-
-def get_options(key : Literal['model']) -> None:
-	pass
-
-
-def set_options(key : Literal['model'], value : Any) -> None:
+def clear_inference_pool() -> None:
 	pass
 
 
@@ -71,13 +62,10 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
-	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_processor()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
-		clear_face_analyser()
-		clear_content_analyser()
-		clear_face_occluder()
-		clear_face_parser()
+		content_analyser.clear_inference_pool()
+		face_analyser.clear_inference_pool()
+		face_masker.clear_inference_pool()
 
 
 def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:

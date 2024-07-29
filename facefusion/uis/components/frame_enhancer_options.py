@@ -50,7 +50,7 @@ def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slide
 
 def update_frame_enhancer_model(frame_enhancer_model : FrameEnhancerModel) -> gradio.Dropdown:
 	frame_enhancer_module = load_processor_module('frame_enhancer')
-	frame_enhancer_module.clear_processor()
+	frame_enhancer_module.clear_inference_pool()
 	state_manager.set_item('frame_enhancer_model', frame_enhancer_model)
 	frame_enhancer_module.set_options('model', frame_enhancer_module.MODEL_SET[state_manager.get_item('frame_enhancer_model')])
 

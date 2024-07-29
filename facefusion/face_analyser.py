@@ -1,5 +1,5 @@
 from time import sleep
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import cv2
 import numpy
@@ -7,160 +7,137 @@ import numpy
 from facefusion import process_manager, state_manager
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download
-from facefusion.execution import create_inference_session
+from facefusion.execution import create_inference_pool
 from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, estimate_face_angle_from_face_landmark_68, estimate_matrix_by_face_landmark_5, get_nms_threshold, normalize_bounding_box, transform_bounding_box, transform_points, warp_face_by_face_landmark_5, warp_face_by_translation
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock, thread_semaphore
-from facefusion.typing import Angle, BoundingBox, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, FaceScoreSet, ModelSet, Score, VisionFrame
+from facefusion.typing import Angle, BoundingBox, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, FaceScoreSet, InferencePool, ModelSet, ModelSourceSet, Score, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
-FACE_ANALYSER = None
+INFERENCE_POOL : Optional[InferencePool] = None
 MODEL_SET : ModelSet =\
 {
-	'face_detector_retinaface':
+	'retinaface':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/retinaface_10g.onnx',
-		'path': resolve_relative_path('../.assets/models/retinaface_10g.onnx')
+		'sources':
+		{
+			'face_detector_retinaface':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/retinaface_10g.onnx',
+				'path': resolve_relative_path('../.assets/models/retinaface_10g.onnx')
+			}
+		}
 	},
-	'face_detector_scrfd':
+	'scrfd':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/scrfd_2.5g.onnx',
-		'path': resolve_relative_path('../.assets/models/scrfd_2.5g.onnx')
+		'sources':
+		{
+			'face_detector_scrfd':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/scrfd_2.5g.onnx',
+				'path': resolve_relative_path('../.assets/models/scrfd_2.5g.onnx')
+			}
+		}
 	},
-	'face_detector_yoloface':
+	'yoloface':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yoloface_8n.onnx',
-		'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
+		'sources':
+		{
+			'face_detector_yoloface':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yoloface_8n.onnx',
+				'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
+			}
+		}
 	},
-	'face_recognizer_arcface_blendswap':
+	'arcface':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
-		'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
-	},
-	'face_recognizer_arcface_ghost':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_ghost.onnx',
-		'path': resolve_relative_path('../.assets/models/arcface_ghost.onnx')
-	},
-	'face_recognizer_arcface_inswapper':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
-		'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
-	},
-	'face_recognizer_arcface_simswap':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_simswap.onnx',
-		'path': resolve_relative_path('../.assets/models/arcface_simswap.onnx')
-	},
-	'face_recognizer_arcface_uniface':
-	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
-		'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
+		'sources':
+		{
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
+			}
+		}
 	},
 	'face_landmarker_68':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/2dfan4.onnx',
-		'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
+		'sources':
+		{
+			'face_landmarker_68':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/2dfan4.onnx',
+				'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
+			}
+		}
 	},
 	'face_landmarker_68_5':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_landmarker_68_5.onnx',
-		'path': resolve_relative_path('../.assets/models/face_landmarker_68_5.onnx')
+		'sources':
+		{
+			'face_landmarker_68_5':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_landmarker_68_5.onnx',
+				'path': resolve_relative_path('../.assets/models/face_landmarker_68_5.onnx')
+			}
+		}
 	},
 	'gender_age':
 	{
-		'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gender_age.onnx',
-		'path': resolve_relative_path('../.assets/models/gender_age.onnx')
+		'sources':
+		{
+			'gender_age':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gender_age.onnx',
+				'path': resolve_relative_path('../.assets/models/gender_age.onnx')
+			}
+		}
 	}
 }
 
 
-def get_face_analyser() -> Any:
-	global FACE_ANALYSER
-
-	face_detectors = {}
-	face_recognizer = None
-	face_landmarkers = {}
+def get_inference_pool() -> InferencePool:
+	global INFERENCE_POOL
 
 	with thread_lock():
 		while process_manager.is_checking():
 			sleep(0.5)
-		if FACE_ANALYSER is None:
-			if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
-				face_detectors['retinaface'] = create_inference_session(MODEL_SET.get('face_detector_retinaface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
-				face_detectors['scrfd'] = create_inference_session(MODEL_SET.get('face_detector_scrfd').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
-				face_detectors['yoloface'] = create_inference_session(MODEL_SET.get('face_detector_yoloface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			if state_manager.get_item('face_recognizer_model') == 'arcface_blendswap':
-				face_recognizer = create_inference_session(MODEL_SET.get('face_recognizer_arcface_blendswap').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			if state_manager.get_item('face_recognizer_model') == 'arcface_ghost':
-				face_recognizer = create_inference_session(MODEL_SET.get('face_recognizer_arcface_ghost').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			if state_manager.get_item('face_recognizer_model') == 'arcface_inswapper':
-				face_recognizer = create_inference_session(MODEL_SET.get('face_recognizer_arcface_inswapper').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			if state_manager.get_item('face_recognizer_model') == 'arcface_simswap':
-				face_recognizer = create_inference_session(MODEL_SET.get('face_recognizer_arcface_simswap').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			if state_manager.get_item('face_recognizer_model') == 'arcface_uniface':
-				face_recognizer = create_inference_session(MODEL_SET.get('face_recognizer_arcface_uniface').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			face_landmarkers['68'] = create_inference_session(MODEL_SET.get('face_landmarker_68').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			face_landmarkers['68_5'] = create_inference_session(MODEL_SET.get('face_landmarker_68_5').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			gender_age = create_inference_session(MODEL_SET.get('gender_age').get('path'), state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-			FACE_ANALYSER =\
-			{
-				'face_detectors': face_detectors,
-				'face_recognizer': face_recognizer,
-				'face_landmarkers': face_landmarkers,
-				'gender_age': gender_age
-			}
-	return FACE_ANALYSER
+		if INFERENCE_POOL is None:
+			model_sources = collect_model_sources()
+			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
+		return INFERENCE_POOL
 
 
-def clear_face_analyser() -> Any:
-	global FACE_ANALYSER
+def clear_inference_pool() -> None:
+	global INFERENCE_POOL
 
-	FACE_ANALYSER = None
+	INFERENCE_POOL = None
+
+
+def collect_model_sources() -> ModelSourceSet:
+	model_sources =\
+	{
+		'face_recognizer': MODEL_SET.get('arcface').get('sources').get('face_recognizer'),
+		'face_landmarker_68': MODEL_SET.get('face_landmarker_68').get('sources').get('face_landmarker_68'),
+		'face_landmarker_68_5': MODEL_SET.get('face_landmarker_68_5').get('sources').get('face_landmarker_68_5'),
+		'gender_age': MODEL_SET.get('gender_age').get('sources').get('gender_age')
+	}
+	if state_manager.get_item('face_detector_model') in ['many', 'retinaface']:
+		model_sources['face_detector_retinaface'] = MODEL_SET.get('retinaface').get('sources').get('face_detector_retinaface')
+	if state_manager.get_item('face_detector_model') in ['many', 'scrfd']:
+		model_sources['face_detector_scrfd'] = MODEL_SET.get('scrfd').get('sources').get('face_detector_scrfd')
+	if state_manager.get_item('face_detector_model') in ['many', 'yoloface']:
+		model_sources['face_detector_yoloface'] = MODEL_SET.get('yoloface').get('sources').get('face_detector_yoloface')
+	return model_sources
 
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_urls =\
-	[
-		MODEL_SET.get('face_landmarker_68').get('url'),
-		MODEL_SET.get('face_landmarker_68_5').get('url'),
-		MODEL_SET.get('gender_age').get('url')
-	]
-	model_paths =\
-	[
-		MODEL_SET.get('face_landmarker_68').get('path'),
-		MODEL_SET.get('face_landmarker_68_5').get('path'),
-		MODEL_SET.get('gender_age').get('path')
-	]
-
-	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
-		model_urls.append(MODEL_SET.get('face_detector_retinaface').get('url'))
-		model_paths.append(MODEL_SET.get('face_detector_retinaface').get('path'))
-	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
-		model_urls.append(MODEL_SET.get('face_detector_scrfd').get('url'))
-		model_paths.append(MODEL_SET.get('face_detector_scrfd').get('path'))
-	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
-		model_urls.append(MODEL_SET.get('face_detector_yoloface').get('url'))
-		model_paths.append(MODEL_SET.get('face_detector_yoloface').get('path'))
-	if state_manager.get_item('face_detector_model') == 'arcface_blendswap':
-		model_urls.append(MODEL_SET.get('face_recognizer_arcface_blendswap').get('url'))
-		model_paths.append(MODEL_SET.get('face_recognizer_arcface_blendswap').get('path'))
-	if state_manager.get_item('face_recognizer_model') == 'arcface_ghost':
-		model_urls.append(MODEL_SET.get('face_recognizer_arcface_ghost').get('url'))
-		model_paths.append(MODEL_SET.get('face_recognizer_arcface_ghost').get('path'))
-	if state_manager.get_item('face_recognizer_model') == 'arcface_inswapper':
-		model_urls.append(MODEL_SET.get('face_recognizer_arcface_inswapper').get('url'))
-		model_paths.append(MODEL_SET.get('face_recognizer_arcface_inswapper').get('path'))
-	if state_manager.get_item('face_recognizer_model') == 'arcface_simswap':
-		model_urls.append(MODEL_SET.get('face_recognizer_arcface_simswap').get('url'))
-		model_paths.append(MODEL_SET.get('face_recognizer_arcface_simswap').get('path'))
-	if state_manager.get_item('face_recognizer_model') == 'arcface_uniface':
-		model_urls.append(MODEL_SET.get('face_recognizer_arcface_uniface').get('url'))
-		model_paths.append(MODEL_SET.get('face_recognizer_arcface_uniface').get('path'))
+	model_sources = collect_model_sources()
+	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
+	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
 	if not state_manager.get_item('skip_download'):
 		process_manager.check()
@@ -170,7 +147,7 @@ def pre_check() -> bool:
 
 
 def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
-	face_detector = get_face_analyser().get('face_detectors').get('retinaface')
+	face_detector = get_inference_pool().get('face_detector_retinaface')
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
@@ -213,7 +190,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 
 
 def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
-	face_detector = get_face_analyser().get('face_detectors').get('scrfd')
+	face_detector = get_inference_pool().get('face_detector_scrfd')
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
@@ -256,7 +233,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 
 
 def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
-	face_detector = get_face_analyser().get('face_detectors').get('yoloface')
+	face_detector = get_inference_pool().get('face_detector_yoloface')
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
@@ -380,7 +357,7 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 
 
 def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[Embedding, Embedding]:
-	face_recognizer = get_face_analyser().get('face_recognizer')
+	face_recognizer = get_inference_pool().get('face_recognizer')
 	crop_vision_frame, matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, 'arcface_112_v2', (112, 112))
 	crop_vision_frame = crop_vision_frame / 127.5 - 1
 	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
@@ -398,7 +375,7 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 
 
 def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
-	face_landmarker = get_face_analyser().get('face_landmarkers').get('68')
+	face_landmarker = get_inference_pool().get('face_landmarker_68')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, (256, 256))
@@ -425,7 +402,7 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 
 
 def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
-	face_landmarker = get_face_analyser().get('face_landmarkers').get('68_5')
+	face_landmarker = get_inference_pool().get('face_landmarker_68_5')
 	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'ffhq_512', (1, 1))
 	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
 
@@ -440,7 +417,7 @@ def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandm
 
 
 def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[int, int]:
-	gender_age = get_face_analyser().get('gender_age')
+	gender_age = get_inference_pool().get('gender_age')
 	bounding_box = bounding_box.reshape(2, -1)
 	scale = 64 / numpy.subtract(*bounding_box[::-1]).max()
 	translation = 48 - bounding_box.sum(axis = 0) * scale * 0.5
