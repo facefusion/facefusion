@@ -23,7 +23,6 @@ def before_all() -> None:
 	state_manager.init_item('face_detector_angles', [ 0 ])
 	state_manager.init_item('face_detector_score', 0.5)
 	state_manager.init_item('face_landmarker_score', 0.5)
-	state_manager.init_item('face_recognizer_model', 'arcface_inswapper')
 
 
 @pytest.fixture(autouse = True)
