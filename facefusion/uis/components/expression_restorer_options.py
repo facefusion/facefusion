@@ -54,7 +54,7 @@ def update_expression_restorer_model(expression_restorer_model : ExpressionResto
 	state_manager.set_item('expression_restorer_model', expression_restorer_model)
 	expression_restorer_module.set_options('model', expression_restorer_module.MODEL_SET[state_manager.get_item('expression_restorer_model')])
 
-	if expression_restorer_module.pre_check():
+	if expression_restorer_module.conditional_download_sources():
 		return gradio.Dropdown(value = state_manager.get_item('expression_restorer_model'))
 	return gradio.Dropdown()
 

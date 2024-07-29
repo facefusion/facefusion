@@ -89,7 +89,7 @@ def update_face_editor_model(face_editor_model : FaceEditorModel) -> gradio.Drop
 	face_editor_module.clear_inference_pool()
 	state_manager.set_item('face_editor_model', face_editor_model)
 
-	if face_editor_module.pre_check():
+	if face_editor_module.conditional_download_sources():
 		return gradio.Dropdown(value = state_manager.get_item('face_editor_model'))
 	return gradio.Dropdown()
 

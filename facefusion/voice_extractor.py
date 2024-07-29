@@ -4,10 +4,9 @@ from typing import Optional, Tuple
 import numpy
 import scipy
 
-from facefusion import process_manager, state_manager
-from facefusion.download import conditional_download
+from facefusion import process_manager, source_helper, state_manager
 from facefusion.execution import create_inference_pool
-from facefusion.filesystem import is_file, resolve_relative_path
+from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Audio, AudioChunk, InferencePool, ModelOptions, ModelSet
 
@@ -53,14 +52,8 @@ def get_model_options() -> ModelOptions:
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
 	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download'):
-		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
-		process_manager.end()
-	return all(is_file(model_path) for model_path in model_paths)
+	return source_helper.conditional_download_sources(download_directory_path, model_sources)
 
 
 def batch_extract_voice(audio : Audio, chunk_size : int, step_size : int) -> Audio:

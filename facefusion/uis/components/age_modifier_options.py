@@ -54,7 +54,7 @@ def update_age_modifier_model(age_modifier_model : AgeModifierModel) -> gradio.D
 	state_manager.set_item('age_modifier_model', age_modifier_model)
 	age_modifier_module.set_options('model', age_modifier_module.MODEL_SET[state_manager.get_item('age_modifier_model')])
 
-	if age_modifier_module.pre_check():
+	if age_modifier_module.conditional_download_sources():
 		return gradio.Dropdown(value = state_manager.get_item('age_modifier_model'))
 	return gradio.Dropdown()
 

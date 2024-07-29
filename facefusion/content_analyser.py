@@ -7,9 +7,9 @@ import numpy
 from tqdm import tqdm
 
 from facefusion import process_manager, state_manager, wording
-from facefusion.download import conditional_download
 from facefusion.execution import create_inference_pool
-from facefusion.filesystem import is_file, resolve_relative_path
+from facefusion.filesystem import resolve_relative_path
+from facefusion.source_helper import conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
 from facefusion.vision import count_video_frame_total, detect_video_fps, get_video_frame, read_image
@@ -59,14 +59,8 @@ def get_model_options() -> ModelOptions:
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
 	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download'):
-		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
-		process_manager.end()
-	return all(is_file(model_path) for model_path in model_paths)
+	return conditional_download_sources(download_directory_path, model_sources)
 
 
 def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:

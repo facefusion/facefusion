@@ -10,12 +10,13 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
-from facefusion.download import conditional_download, is_download_done
+from facefusion.download import is_download_done
 from facefusion.execution import create_inference_pool
 from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FrameEnhancerInputs
 from facefusion.program_helper import find_argument_group
+from facefusion.source_helper import conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import create_tile_frames, merge_tile_frames, read_image, read_static_image, write_image
@@ -221,14 +222,8 @@ def apply_args(args : Args) -> None:
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
 	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download'):
-		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
-		process_manager.end()
-	return all(is_file(model_path) for model_path in model_paths)
+	return conditional_download_sources(download_directory_path, model_sources)
 
 
 def post_check() -> bool:

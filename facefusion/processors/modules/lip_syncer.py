@@ -11,7 +11,7 @@ import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, voice_extractor, wording
 from facefusion.audio import create_empty_audio_frame, get_voice_frame, read_static_voice
 from facefusion.common_helper import get_first
-from facefusion.download import conditional_download, is_download_done
+from facefusion.download import is_download_done
 from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import create_bounding_box_from_face_landmark_68, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
@@ -22,6 +22,7 @@ from facefusion.filesystem import filter_audio_paths, has_audio, in_directory, i
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import LipSyncerInputs
 from facefusion.program_helper import find_argument_group
+from facefusion.source_helper import conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Args, AudioFrame, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
@@ -91,14 +92,8 @@ def apply_args(args : Args) -> None:
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
 	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download'):
-		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
-		process_manager.end()
-	return all(is_file(model_path) for model_path in model_paths)
+	return conditional_download_sources(download_directory_path, model_sources)
 
 
 def post_check() -> bool:

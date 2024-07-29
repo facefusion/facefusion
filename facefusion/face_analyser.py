@@ -6,13 +6,13 @@ import numpy
 
 from facefusion import process_manager, state_manager
 from facefusion.common_helper import get_first
-from facefusion.download import conditional_download
 from facefusion.execution import create_inference_pool
 from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, estimate_face_angle_from_face_landmark_68, estimate_matrix_by_face_landmark_5, get_nms_threshold, normalize_bounding_box, transform_bounding_box, transform_points, warp_face_by_face_landmark_5, warp_face_by_translation
 from facefusion.face_store import get_static_faces, set_static_faces
-from facefusion.filesystem import is_file, resolve_relative_path
+from facefusion.filesystem import resolve_relative_path
+from facefusion.source_helper import conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock, thread_semaphore
-from facefusion.typing import Angle, BoundingBox, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, FaceScoreSet, InferencePool, ModelSet, ModelSourceSet, Score, VisionFrame
+from facefusion.typing import Angle, BoundingBox, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, FaceScoreSet, InferencePool, ModelSet, Score, SourceSet, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 INFERENCE_POOL : Optional[InferencePool] = None
@@ -116,7 +116,7 @@ def clear_inference_pool() -> None:
 	INFERENCE_POOL = None
 
 
-def collect_model_sources() -> ModelSourceSet:
+def collect_model_sources() -> SourceSet:
 	model_sources =\
 	{
 		'face_recognizer': MODEL_SET.get('arcface').get('sources').get('face_recognizer'),
@@ -124,11 +124,11 @@ def collect_model_sources() -> ModelSourceSet:
 		'face_landmarker_68_5': MODEL_SET.get('face_landmarker_68_5').get('sources').get('face_landmarker_68_5'),
 		'gender_age': MODEL_SET.get('gender_age').get('sources').get('gender_age')
 	}
-	if state_manager.get_item('face_detector_model') in ['many', 'retinaface']:
+	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
 		model_sources['face_detector_retinaface'] = MODEL_SET.get('retinaface').get('sources').get('face_detector_retinaface')
-	if state_manager.get_item('face_detector_model') in ['many', 'scrfd']:
+	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
 		model_sources['face_detector_scrfd'] = MODEL_SET.get('scrfd').get('sources').get('face_detector_scrfd')
-	if state_manager.get_item('face_detector_model') in ['many', 'yoloface']:
+	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
 		model_sources['face_detector_yoloface'] = MODEL_SET.get('yoloface').get('sources').get('face_detector_yoloface')
 	return model_sources
 
@@ -136,14 +136,8 @@ def collect_model_sources() -> ModelSourceSet:
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
 	model_sources = collect_model_sources()
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download'):
-		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
-		process_manager.end()
-	return all(is_file(model_path) for model_path in model_paths)
+	return conditional_download_sources(download_directory_path, model_sources)
 
 
 def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:

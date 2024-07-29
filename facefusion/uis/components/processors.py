@@ -31,7 +31,7 @@ def update_processors(processors : List[str]) -> gradio.CheckboxGroup:
 
 	for processor in state_manager.get_item('processors'):
 		processor_module = load_processor_module(processor)
-		if not processor_module.pre_check():
+		if not processor_module.conditional_download_sources():
 			return gradio.CheckboxGroup()
 	return gradio.CheckboxGroup(value = state_manager.get_item('processors'), choices = sort_processors(state_manager.get_item('processors')))
 

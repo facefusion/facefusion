@@ -63,7 +63,7 @@ def update_frame_colorizer_model(frame_colorizer_model : FrameColorizerModel) ->
 	frame_colorizer_module.clear_inference_pool()
 	state_manager.set_item('frame_colorizer_model', frame_colorizer_model)
 
-	if frame_colorizer_module.pre_check():
+	if frame_colorizer_module.conditional_download_sources():
 		return gradio.Dropdown(value = state_manager.get_item('frame_colorizer_model'))
 	return gradio.Dropdown()
 
