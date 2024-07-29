@@ -264,7 +264,10 @@ def process_frames(source_path : List[str], queue_payloads : List[QueuePayload],
 	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 
 	for queue_payload in process_manager.manage(queue_payloads):
-		source_vision_frame = get_video_frame(state_manager.get_item('target_path'), queue_payload['frame_number'])
+		frame_number = queue_payload['frame_number']
+		if state_manager.get_item('trim_frame_start'):
+			frame_number += state_manager.get_item('trim_frame_start')
+		source_vision_frame = get_video_frame(state_manager.get_item('target_path'), frame_number)
 		target_vision_path = queue_payload['frame_path']
 		target_vision_frame = read_image(target_vision_path)
 		output_vision_frame = process_frame(
