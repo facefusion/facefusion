@@ -1,14 +1,13 @@
 from argparse import ArgumentParser
 from time import sleep
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, \
-	wording
+from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import create_inference_pool, get_static_model_initializer, has_execution_provider
@@ -23,7 +22,8 @@ from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel
 from facefusion.processors.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
-from facefusion.typing import Args, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Embedding, Face, FaceLandmark5, InferencePool, ModelOptions, ModelSet, ProcessMode, \
+	QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
 INFERENCE_POOL : Optional[InferencePool] = None
@@ -388,17 +388,37 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 
 def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_model_options().get('type')
+	source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
+	source_embedding, source_normed_embedding = calc_embedding(source_vision_frame, source_face.landmark_set.get('5'))
 
 	if model_type == 'ghost':
-		source_embedding = source_face.embedding.reshape(1, -1)
+		source_embedding = source_embedding.reshape(1, -1)
 	elif model_type == 'inswapper':
 		model_path = get_model_options().get('sources').get('face_swapper').get('path')
 		model_initializer = get_static_model_initializer(model_path)
-		source_embedding = source_face.embedding.reshape((1, -1))
+		source_embedding = source_embedding.reshape((1, -1))
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
 	else:
-		source_embedding = source_face.normed_embedding.reshape(1, -1)
+		source_embedding = source_normed_embedding.reshape(1, -1)
 	return source_embedding
+
+
+def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[Embedding, Embedding]:
+	face_recognizer = get_inference_pool().get('face_recognizer')
+	crop_vision_frame, matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, 'arcface_112_v2', (112, 112))
+	crop_vision_frame = crop_vision_frame / 127.5 - 1
+	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
+	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
+
+	with conditional_thread_semaphore():
+		embedding = face_recognizer.run(None,
+		{
+			face_recognizer.get_inputs()[0].name: crop_vision_frame
+		})[0]
+
+	embedding = embedding.ravel()
+	normed_embedding = embedding / numpy.linalg.norm(embedding)
+	return embedding, normed_embedding
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:

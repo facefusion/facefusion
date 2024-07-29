@@ -12,8 +12,7 @@ from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, create
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.filesystem import is_file, resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock, thread_semaphore
-from facefusion.typing import Angle, BoundingBox, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, \
-	FaceScoreSet, InferencePool, ModelSet, ModelSourceSet, Score, VisionFrame
+from facefusion.typing import Angle, BoundingBox, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, FaceScoreSet, InferencePool, ModelSet, ModelSourceSet, Score, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 INFERENCE_POOL : Optional[InferencePool] = None

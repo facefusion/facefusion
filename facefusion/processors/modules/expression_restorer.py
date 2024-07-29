@@ -8,8 +8,7 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, \
-	wording
+from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, map_float
 from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import create_inference_pool
