@@ -7,11 +7,12 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_masker, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, \
+	wording
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download, is_download_done
 from facefusion.execution import create_inference_pool, get_static_model_initializer, has_execution_provider
-from facefusion.face_analyser import clear_face_analyser, get_average_face, get_many_faces, get_one_face
+from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
@@ -37,6 +38,11 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/blendswap_256.onnx',
 				'path': resolve_relative_path('../.assets/models/blendswap_256.onnx')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 			}
 		},
 		'type': 'blendswap',
@@ -53,6 +59,11 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_1.onnx',
 				'path': resolve_relative_path('../.assets/models/ghost_256_unet_1.onnx')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_ghost.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_ghost.onnx')
 			}
 		},
 		'type': 'ghost',
@@ -69,6 +80,11 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_2.onnx',
 				'path': resolve_relative_path('../.assets/models/ghost_256_unet_2.onnx')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_ghost.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_ghost.onnx')
 			}
 		},
 		'type': 'ghost',
@@ -85,6 +101,11 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_3.onnx',
 				'path': resolve_relative_path('../.assets/models/ghost_256_unet_3.onnx')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_ghost.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_ghost.onnx')
 			}
 		},
 		'type': 'ghost',
@@ -101,6 +122,11 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
 				'path': resolve_relative_path('../.assets/models/inswapper_128.onnx')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 			}
 		},
 		'type': 'inswapper',
@@ -117,6 +143,11 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
 				'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 			}
 		},
 		'type': 'inswapper',
@@ -133,6 +164,11 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_256.onnx',
 				'path': resolve_relative_path('../.assets/models/simswap_256.onnx')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_simswap.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_simswap.onnx')
 			}
 		},
 		'type': 'simswap',
@@ -149,6 +185,11 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_512_unofficial.onnx',
 				'path': resolve_relative_path('../.assets/models/simswap_512_unofficial.onnx')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_simswap.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_simswap.onnx')
 			}
 		},
 		'type': 'simswap',
@@ -165,6 +206,11 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/uniface_256.onnx',
 				'path': resolve_relative_path('../.assets/models/uniface_256.onnx')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 			}
 		},
 		'type': 'uniface',
@@ -211,17 +257,6 @@ def register_args(program : ArgumentParser) -> None:
 def apply_args(args : Args) -> None:
 	state_manager.init_item('face_swapper_model', args.get('face_swapper_model'))
 	state_manager.init_item('face_swapper_pixel_boost', args.get('face_swapper_pixel_boost'))
-
-	if state_manager.get_item('face_swapper_model') == 'blendswap_256':
-		state_manager.init_item('face_recognizer_model', 'arcface_blendswap')
-	if state_manager.get_item('face_swapper_model') in [ 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3' ]:
-		state_manager.init_item('face_recognizer_model', 'arcface_ghost')
-	if state_manager.get_item('face_swapper_model') in [ 'inswapper_128', 'inswapper_128_fp16' ]:
-		state_manager.init_item('face_recognizer_model', 'arcface_inswapper')
-	if state_manager.get_item('face_swapper_model') in [ 'simswap_256', 'simswap_512_unofficial' ]:
-		state_manager.init_item('face_recognizer_model', 'arcface_simswap')
-	if state_manager.get_item('face_swapper_model') == 'uniface_256':
-		state_manager.init_item('face_recognizer_model', 'arcface_uniface')
 
 
 def pre_check() -> bool:
@@ -282,8 +317,8 @@ def post_process() -> None:
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
-		clear_face_analyser()
 		content_analyser.clear_inference_pool()
+		face_analyser.clear_inference_pool()
 		face_masker.clear_inference_pool()
 
 

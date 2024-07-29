@@ -86,7 +86,6 @@ TableContents = List[List[Any]]
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yoloface']
 FaceDetectorSet = Dict[FaceDetectorModel, List[str]]
-FaceRecognizerModel = Literal['arcface_blendswap', 'arcface_ghost', 'arcface_inswapper', 'arcface_simswap', 'arcface_uniface']
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
 FaceSelectorAge = Literal['child', 'teen', 'adult', 'senior']
@@ -184,7 +183,6 @@ StateKey = Literal\
 	'face_detector_angles',
 	'face_detector_score',
 	'face_landmarker_score',
-	'face_recognizer_model',
 	'face_selector_mode',
 	'face_selector_order',
 	'face_selector_age',
@@ -238,7 +236,6 @@ State = TypedDict('State',
 	'face_detector_angles' : List[Angle],
 	'face_detector_score' : Score,
 	'face_landmarker_score' : Score,
-	'face_recognizer_model' : FaceRecognizerModel,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
 	'face_selector_age' : FaceSelectorAge,
