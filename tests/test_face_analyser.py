@@ -2,9 +2,9 @@ import subprocess
 
 import pytest
 
-from facefusion import state_manager
+from facefusion import face_analyser, state_manager
 from facefusion.download import conditional_download
-from facefusion.face_analyser import clear_face_analyser, get_many_faces, get_one_face, pre_check
+from facefusion.face_analyser import get_many_faces, get_one_face, pre_check
 from facefusion.typing import Face
 from facefusion.vision import read_static_image
 from .helper import get_test_example_file, get_test_examples_directory
@@ -27,7 +27,7 @@ def before_all() -> None:
 
 @pytest.fixture(autouse = True)
 def before_each() -> None:
-	clear_face_analyser()
+	face_analyser.clear_inference_pool()
 
 
 def test_get_one_face_with_retinaface() -> None:
