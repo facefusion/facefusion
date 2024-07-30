@@ -105,10 +105,6 @@ def processors_pre_check() -> bool:
 def conditional_process() -> ErrorCode:
 	start_time = time()
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		while not processor_module.post_check():
-			logger.disable()
-			sleep(0.5)
-		logger.enable()
 		if not processor_module.pre_process('output'):
 			return 2
 	conditional_append_reference_faces()

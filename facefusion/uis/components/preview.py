@@ -5,7 +5,7 @@ import cv2
 import gradio
 import numpy
 
-from facefusion import logger, state_manager, wording
+from facefusion import logger, process_manager, state_manager, wording
 from facefusion.audio import create_empty_audio_frame, get_audio_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
@@ -171,12 +171,8 @@ def slide_preview_image(frame_number : int = 0) -> gradio.Image:
 
 
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
-	for processor in state_manager.get_item('processors'):
-		processor_module = load_processor_module(processor)
-		while not processor_module.post_check():
-			logger.disable()
-			sleep(0.5)
-		logger.enable()
+	while process_manager.is_checking():
+		sleep(0.5)
 	conditional_append_reference_faces()
 	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_frames = read_static_images(state_manager.get_item('source_paths'))

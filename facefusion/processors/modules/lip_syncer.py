@@ -96,23 +96,6 @@ def pre_check() -> bool:
 	return conditional_download_sources(download_directory_path, model_sources)
 
 
-def post_check() -> bool:
-	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
-
-	if not state_manager.get_item('skip_download'):
-		for model_url, model_path in zip(model_urls, model_paths):
-			if not is_download_done(model_url, model_path):
-				logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
-				return False
-	for model_path in model_paths:
-		if not is_file(model_path):
-			logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-			return False
-	return True
-
-
 def pre_process(mode : ProcessMode) -> bool:
 	if not has_audio(state_manager.get_item('source_paths')):
 		logger.error(wording.get('choose_audio_source') + wording.get('exclamation_mark'), NAME)

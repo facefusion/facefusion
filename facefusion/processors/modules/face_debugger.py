@@ -46,10 +46,6 @@ def pre_check() -> bool:
 	return True
 
 
-def post_check() -> bool:
-	return True
-
-
 def pre_process(mode : ProcessMode) -> bool:
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
