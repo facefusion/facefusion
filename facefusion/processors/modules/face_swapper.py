@@ -31,6 +31,19 @@ MODEL_SET : ModelSet =\
 {
 	'blendswap_256':
 	{
+		'hashes':
+		{
+			'face_swapper':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/blendswap_256.hash',
+				'path': resolve_relative_path('../.assets/models/blendswap_256.hash')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_w600k_r50.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
+			}
+		},
 		'sources':
 		{
 			'face_swapper':
@@ -52,6 +65,19 @@ MODEL_SET : ModelSet =\
 	},
 	'ghost_256_unet_1':
 	{
+		'hashes':
+		{
+			'face_swapper':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/ghost_256_unet_1.hash',
+				'path': resolve_relative_path('../.assets/models/ghost_256_unet_1.hash')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_ghost.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_ghost.hash')
+			}
+		},
 		'sources':
 		{
 			'face_swapper':
@@ -73,6 +99,19 @@ MODEL_SET : ModelSet =\
 	},
 	'ghost_256_unet_2':
 	{
+		'hashes':
+		{
+			'face_swapper':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/ghost_256_unet_2.hash',
+				'path': resolve_relative_path('../.assets/models/ghost_256_unet_2.hash')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_ghost.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_ghost.hash')
+			}
+		},
 		'sources':
 		{
 			'face_swapper':
@@ -94,6 +133,19 @@ MODEL_SET : ModelSet =\
 	},
 	'ghost_256_unet_3':
 	{
+		'hashes':
+		{
+			'face_swapper':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/ghost_256_unet_3.hash',
+				'path': resolve_relative_path('../.assets/models/ghost_256_unet_3.hash')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_ghost.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_ghost.hash')
+			}
+		},
 		'sources':
 		{
 			'face_swapper':
@@ -119,8 +171,13 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/resolve/main/inswapper_128.hash',
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/inswapper_128.hash',
 				'path': resolve_relative_path('../.assets/models/inswapper_128.hash')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main//arcface_w600k_r50.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
 			}
 		},
 		'sources':
@@ -144,6 +201,19 @@ MODEL_SET : ModelSet =\
 	},
 	'inswapper_128_fp16':
 	{
+		'hashes':
+		{
+			'face_swapper':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/inswapper_128_fp16.hash',
+				'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.hash')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_w600k_r50.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
+			}
+		},
 		'sources':
 		{
 			'face_swapper':
@@ -165,6 +235,19 @@ MODEL_SET : ModelSet =\
 	},
 	'simswap_256':
 	{
+		'hashes':
+		{
+			'face_swapper':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/simswap_256.hash',
+				'path': resolve_relative_path('../.assets/models/simswap_256.hash')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_simswap.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_simswap.hash')
+			}
+		},
 		'sources':
 		{
 			'face_swapper':
@@ -186,6 +269,19 @@ MODEL_SET : ModelSet =\
 	},
 	'simswap_512_unofficial':
 	{
+		'hashes':
+		{
+			'face_swapper':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/simswap_512_unofficial.hash',
+				'path': resolve_relative_path('../.assets/models/simswap_512_unofficial.hash')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_simswap.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_simswap.hash')
+			}
+		},
 		'sources':
 		{
 			'face_swapper':
@@ -207,6 +303,19 @@ MODEL_SET : ModelSet =\
 	},
 	'uniface_256':
 	{
+		'hashes':
+		{
+			'face_swapper':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/uniface_256.hash',
+				'path': resolve_relative_path('../.assets/models/uniface_256.hash')
+			},
+			'face_recognizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_w600k_r50.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
+			}
+		},
 		'sources':
 		{
 			'face_swapper':

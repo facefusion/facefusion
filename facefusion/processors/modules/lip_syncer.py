@@ -21,7 +21,7 @@ from facefusion.filesystem import filter_audio_paths, has_audio, in_directory, i
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import LipSyncerInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.source_helper import conditional_download_sources
+from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Args, AudioFrame, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
@@ -32,6 +32,14 @@ MODEL_SET : ModelSet =\
 {
 	'wav2lip':
 	{
+		'hashes':
+		{
+			'lip_syncer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/wav2lip.hash',
+				'path': resolve_relative_path('../.assets/models/wav2lip.hash')
+			}
+		},
 		'sources':
 		{
 			'lip_syncer':
@@ -43,11 +51,19 @@ MODEL_SET : ModelSet =\
 	},
 	'wav2lip_gan':
 	{
+		'hashes':
+		{
+			'lip_syncer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/wav2lip_gan.hash',
+				'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx')
+			}
+		},
 		'sources':
 		{
 			'lip_syncer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip_gan.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip_gan.hash',
 				'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx')
 			}
 		}
@@ -90,9 +106,10 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:

@@ -15,7 +15,7 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FrameEnhancerInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.source_helper import conditional_download_sources
+from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import create_tile_frames, merge_tile_frames, read_image, read_static_image, write_image
@@ -26,6 +26,14 @@ MODEL_SET : ModelSet =\
 {
 	'clear_reality_x4':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/clear_reality_x4.hash',
+				'path': resolve_relative_path('../.assets/models/clear_reality_x4.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -39,6 +47,14 @@ MODEL_SET : ModelSet =\
 	},
 	'lsdir_x4':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/lsdir_x4.hash',
+				'path': resolve_relative_path('../.assets/models/lsdir_x4.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -52,6 +68,14 @@ MODEL_SET : ModelSet =\
 	},
 	'nomos8k_sc_x4':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/nomos8k_sc_x4.hash',
+				'path': resolve_relative_path('../.assets/models/nomos8k_sc_x4.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -65,6 +89,14 @@ MODEL_SET : ModelSet =\
 	},
 	'real_esrgan_x2':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/real_esrgan_x2.hash',
+				'path': resolve_relative_path('../.assets/models/real_esrgan_x2.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -78,6 +110,14 @@ MODEL_SET : ModelSet =\
 	},
 	'real_esrgan_x2_fp16':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/real_esrgan_x2_fp16.hash',
+				'path': resolve_relative_path('../.assets/models/real_esrgan_x2_fp16.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -91,6 +131,14 @@ MODEL_SET : ModelSet =\
 	},
 	'real_esrgan_x4':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/real_esrgan_x4.hash',
+				'path': resolve_relative_path('../.assets/models/real_esrgan_x4.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -104,6 +152,14 @@ MODEL_SET : ModelSet =\
 	},
 	'real_esrgan_x4_fp16':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/real_esrgan_x4_fp16.hash',
+				'path': resolve_relative_path('../.assets/models/real_esrgan_x4_fp16.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -117,6 +173,14 @@ MODEL_SET : ModelSet =\
 	},
 	'real_esrgan_x8':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/real_esrgan_x8.hash',
+				'path': resolve_relative_path('../.assets/models/real_esrgan_x8.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -130,6 +194,14 @@ MODEL_SET : ModelSet =\
 	},
 	'real_esrgan_x8_fp16':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/real_esrgan_x8_fp16.hash',
+				'path': resolve_relative_path('../.assets/models/real_esrgan_x8_fp16.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -143,6 +215,14 @@ MODEL_SET : ModelSet =\
 	},
 	'real_hatgan_x4':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/real_hatgan_x4.hash',
+				'path': resolve_relative_path('../.assets/models/real_hatgan_x4.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -156,6 +236,14 @@ MODEL_SET : ModelSet =\
 	},
 	'span_kendata_x4':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/span_kendata_x4.hash',
+				'path': resolve_relative_path('../.assets/models/span_kendata_x4.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -169,6 +257,14 @@ MODEL_SET : ModelSet =\
 	},
 	'ultra_sharp_x4':
 	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/ultra_sharp_x4.hash',
+				'path': resolve_relative_path('../.assets/models/ultra_sharp_x4.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_enhancer':
@@ -220,9 +316,10 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:

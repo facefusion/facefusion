@@ -20,7 +20,7 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEnhancerInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.source_helper import conditional_download_sources
+from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
@@ -31,6 +31,14 @@ MODEL_SET : ModelSet =\
 {
 	'codeformer':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/codeformer.hash',
+				'path': resolve_relative_path('../.assets/models/codeformer.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
@@ -44,6 +52,14 @@ MODEL_SET : ModelSet =\
 	},
 	'gfpgan_1.2':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/gfpgan_1.2.hash',
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.2.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
@@ -57,6 +73,14 @@ MODEL_SET : ModelSet =\
 	},
 	'gfpgan_1.3':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/gfpgan_1.3.hash',
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
@@ -70,6 +94,14 @@ MODEL_SET : ModelSet =\
 	},
 	'gfpgan_1.4':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/gfpgan_1.4.hash',
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
@@ -83,6 +115,14 @@ MODEL_SET : ModelSet =\
 	},
 	'gpen_bfr_256':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/gpen_bfr_256.hash',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_256.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
@@ -96,6 +136,14 @@ MODEL_SET : ModelSet =\
 	},
 	'gpen_bfr_512':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/gpen_bfr_512.hash',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_512.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
@@ -109,6 +157,14 @@ MODEL_SET : ModelSet =\
 	},
 	'gpen_bfr_1024':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/gpen_bfr_1024.hash',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
@@ -122,6 +178,14 @@ MODEL_SET : ModelSet =\
 	},
 	'gpen_bfr_2048':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/gpen_bfr_2048.hash',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
@@ -135,6 +199,14 @@ MODEL_SET : ModelSet =\
 	},
 	'restoreformer_plus_plus':
 	{
+		'hash':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/restoreformer_plus_plus.hash',
+				'path': resolve_relative_path('../.assets/models/restoreformer_plus_plus.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
@@ -186,9 +258,10 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:

@@ -15,7 +15,7 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.source_helper import conditional_download_sources
+from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, unpack_resolution, write_image
@@ -26,6 +26,14 @@ MODEL_SET : ModelSet =\
 {
 	'ddcolor':
 	{
+		'hashes':
+		{
+			'frame_colorizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/ddcolor.hash',
+				'path': resolve_relative_path('../.assets/models/ddcolor.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_colorizer':
@@ -38,6 +46,14 @@ MODEL_SET : ModelSet =\
 	},
 	'ddcolor_artistic':
 	{
+		'hashes':
+		{
+			'frame_colorizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/ddcolor_artistic.hashes',
+				'path': resolve_relative_path('../.assets/models/ddcolor_artistic.hashes')
+			}
+		},
 		'sources':
 		{
 			'frame_colorizer':
@@ -50,6 +66,14 @@ MODEL_SET : ModelSet =\
 	},
 	'deoldify':
 	{
+		'hashes':
+		{
+			'frame_colorizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/deoldify.hash',
+				'path': resolve_relative_path('../.assets/models/deoldify.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_colorizer':
@@ -62,6 +86,14 @@ MODEL_SET : ModelSet =\
 	},
 	'deoldify_artistic':
 	{
+		'hashes':
+		{
+			'frame_colorizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/deoldify_artistic.hash',
+				'path': resolve_relative_path('../.assets/models/deoldify_artistic.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_colorizer':
@@ -74,6 +106,14 @@ MODEL_SET : ModelSet =\
 	},
 	'deoldify_stable':
 	{
+		'hashes':
+		{
+			'frame_colorizer':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/deoldify_stable.hash',
+				'path': resolve_relative_path('../.assets/models/deoldify_stable.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_colorizer':
@@ -127,9 +167,10 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:
