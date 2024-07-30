@@ -9,19 +9,18 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
-from facefusion.download import is_download_done
 from facefusion.execution import create_inference_pool, get_static_model_initializer, has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
-from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.processors.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
-from facefusion.source_helper import conditional_download_sources
+from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Args, Embedding, Face, FaceLandmark5, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
@@ -116,6 +115,14 @@ MODEL_SET : ModelSet =\
 	},
 	'inswapper_128':
 	{
+		'hashes':
+		{
+			'face_swapper':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/resolve/main/inswapper_128.hash',
+				'path': resolve_relative_path('../.assets/models/inswapper_128.hash')
+			}
+		},
 		'sources':
 		{
 			'face_swapper':
@@ -261,9 +268,10 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:

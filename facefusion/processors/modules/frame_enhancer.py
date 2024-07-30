@@ -10,9 +10,8 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
-from facefusion.download import is_download_done
 from facefusion.execution import create_inference_pool
-from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FrameEnhancerInputs
 from facefusion.program_helper import find_argument_group

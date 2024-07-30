@@ -1,7 +1,7 @@
 import shutil
 import signal
 import sys
-from time import sleep, time
+from time import time
 
 import numpy
 import onnxruntime
@@ -10,19 +10,19 @@ from facefusion import content_analyser, face_analyser, face_masker, logger, pro
 from facefusion.args import apply_args, collect_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
-from facefusion.download import conditional_download
 from facefusion.exit_helper import conditional_exit, graceful_exit, hard_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
-from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_relative_path
+from facefusion.filesystem import filter_audio_paths, is_image, is_video, resolve_relative_path
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
 from facefusion.processors.core import clear_processors_modules, get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
+from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.statistics import conditional_log_statistics
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
 from facefusion.typing import Args, ErrorCode
@@ -51,8 +51,8 @@ def route(args : Args) -> None:
 	if system_memory_limit and system_memory_limit > 0:
 		limit_system_memory(system_memory_limit)
 	if state_manager.get_item('command') == 'force-download':
-		force_download()
-		return conditional_exit(0)
+		error_code = force_download()
+		return conditional_exit(error_code)
 	if state_manager.get_item('command') in [ 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step', 'job-list' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
@@ -137,22 +137,23 @@ def conditional_append_reference_faces() -> None:
 					append_reference_face(processor_module.__name__, abstract_reference_face)
 
 
-def force_download() -> None:
+def force_download() -> ErrorCode:
 	download_directory_path = resolve_relative_path('../.assets/models')
-	available_processors = list_directory('facefusion/processors/modules')
-	model_set =\
+	models =\
 	[
-		content_analyser.MODEL_SET,
-		face_analyser.MODEL_SET,
-		face_masker.MODEL_SET,
-		voice_extractor.MODEL_SET
+		content_analyser.MODEL_SET.get('open_nsfw')
 	]
 
-	for processor_module in get_processors_modules(available_processors):
-		if hasattr(processor_module, 'MODEL_SET'):
-			model_set.append(processor_module.MODEL_SET)
-	model_urls = [ models[model].get('url') for models in model_set for model in models ]
-	conditional_download(download_directory_path, model_urls)
+	for model in models:
+		model_hashes = model.get('hashes')
+		model_sources = model.get('sources')
+
+		if model_hashes:
+			conditional_download_hashes(download_directory_path, model_hashes)
+		if model_sources:
+			if not conditional_download_sources(download_directory_path, model_sources):
+				return 1
+	return 0
 
 
 def route_job_manager(args : Args) -> ErrorCode:

@@ -9,7 +9,7 @@ from tqdm import tqdm
 from facefusion import process_manager, state_manager, wording
 from facefusion.execution import create_inference_pool
 from facefusion.filesystem import resolve_relative_path
-from facefusion.source_helper import conditional_download_sources
+from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
 from facefusion.vision import count_video_frame_total, detect_video_fps, get_video_frame, read_image
@@ -19,6 +19,14 @@ MODEL_SET : ModelSet =\
 {
 	'open_nsfw':
 	{
+		'hashes':
+		{
+			'content_analyser':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/blob/main/open_nsfw.hash',
+				'path': resolve_relative_path('../.assets/models/open_nsfw.hash')
+			}
+		},
 		'sources':
 		{
 			'content_analyser':
@@ -58,9 +66,10 @@ def get_model_options() -> ModelOptions:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:

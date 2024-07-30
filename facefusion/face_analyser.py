@@ -12,7 +12,7 @@ from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.filesystem import resolve_relative_path
 from facefusion.source_helper import conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock, thread_semaphore
-from facefusion.typing import Angle, BoundingBox, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, FaceScoreSet, InferencePool, ModelSet, Score, SourceSet, VisionFrame
+from facefusion.typing import Angle, BoundingBox, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, FaceScoreSet, InferencePool, ModelSet, Score, DownloadSet, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 INFERENCE_POOL : Optional[InferencePool] = None
@@ -116,7 +116,7 @@ def clear_inference_pool() -> None:
 	INFERENCE_POOL = None
 
 
-def collect_model_sources() -> SourceSet:
+def collect_model_sources() -> DownloadSet:
 	model_sources =\
 	{
 		'face_recognizer': MODEL_SET.get('arcface').get('sources').get('face_recognizer'),
