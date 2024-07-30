@@ -23,7 +23,7 @@ MODEL_SET : ModelSet =\
 		{
 			'content_analyser':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/blob/main/open_nsfw.hash',
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/open_nsfw.hash',
 				'path': resolve_relative_path('../.assets/models/open_nsfw.hash')
 			}
 		},

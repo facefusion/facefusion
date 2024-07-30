@@ -9,7 +9,7 @@ from cv2.typing import Size
 from facefusion import process_manager, state_manager
 from facefusion.execution import create_inference_pool
 from facefusion.filesystem import resolve_relative_path
-from facefusion.source_helper import conditional_download_sources
+from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelOptions, ModelSet, Padding, VisionFrame
 
@@ -18,6 +18,19 @@ MODEL_SET : ModelSet =\
 {
 	'face_masker':
 	{
+		'hashes':
+		{
+			'face_occluder':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/face_occluder.hash',
+				'path': resolve_relative_path('../.assets/models/face_occluder.hash')
+			},
+			'face_parser':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/face_parser.hash',
+				'path': resolve_relative_path('../.assets/models/face_parser.hash')
+			}
+		},
 		'sources':
 		{
 			'face_occluder':
@@ -72,9 +85,10 @@ def get_model_options() -> ModelOptions:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 @lru_cache(maxsize = None)

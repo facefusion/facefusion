@@ -141,17 +141,24 @@ def force_download() -> ErrorCode:
 	download_directory_path = resolve_relative_path('../.assets/models')
 	models =\
 	[
-		content_analyser.MODEL_SET.get('open_nsfw')
+		content_analyser.MODEL_SET.get('open_nsfw'),
+		face_analyser.MODEL_SET.get('retinaface'),
+		face_analyser.MODEL_SET.get('scrfd'),
+		face_analyser.MODEL_SET.get('yoloface'),
+		face_analyser.MODEL_SET.get('arcface'),
+		face_analyser.MODEL_SET.get('face_landmarker_68'),
+		face_analyser.MODEL_SET.get('face_landmarker_68_5'),
+		face_analyser.MODEL_SET.get('gender_age'),
+		face_masker.MODEL_SET.get('face_masker'),
+		voice_extractor.MODEL_SET.get('voice_extractor')
 	]
 
 	for model in models:
 		model_hashes = model.get('hashes')
 		model_sources = model.get('sources')
 
-		if model_hashes:
-			conditional_download_hashes(download_directory_path, model_hashes)
-		if model_sources:
-			if not conditional_download_sources(download_directory_path, model_sources):
+		if model_hashes and model_sources:
+			if not conditional_download_hashes(download_directory_path, model_hashes) or not conditional_download_sources(download_directory_path, model_sources):
 				return 1
 	return 0
 

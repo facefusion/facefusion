@@ -7,7 +7,7 @@ import onnx
 from onnxruntime import InferenceSession, get_available_providers
 
 from facefusion.choices import execution_provider_set
-from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, InferencePool, ModelInitializer, DownloadSet, ValueAndUnit
+from facefusion.typing import DownloadSet, ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, InferencePool, ModelInitializer, ValueAndUnit
 
 
 def get_execution_provider_choices() -> List[ExecutionProviderKey]:

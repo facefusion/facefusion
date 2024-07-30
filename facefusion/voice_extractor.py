@@ -4,9 +4,10 @@ from typing import Optional, Tuple
 import numpy
 import scipy
 
-from facefusion import process_manager, source_helper, state_manager
+from facefusion import process_manager, state_manager
 from facefusion.execution import create_inference_pool
 from facefusion.filesystem import resolve_relative_path
+from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Audio, AudioChunk, InferencePool, ModelOptions, ModelSet
 
@@ -15,6 +16,14 @@ MODEL_SET : ModelSet =\
 {
 	'voice_extractor':
 	{
+		'hashes':
+		{
+			'voice_extractor':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/voice_extractor.hash',
+				'path': resolve_relative_path('../.assets/models/voice_extractor.hash')
+			}
+		},
 		'sources':
 		{
 			'voice_extractor':
@@ -51,9 +60,10 @@ def get_model_options() -> ModelOptions:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return source_helper.conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def batch_extract_voice(audio : Audio, chunk_size : int, step_size : int) -> Audio:
