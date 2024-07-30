@@ -15,7 +15,7 @@ from facefusion.face_analyser import get_average_face, get_many_faces, get_one_f
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
-from facefusion.filesystem import filter_audio_paths, is_image, is_video, resolve_relative_path
+from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_relative_path
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
@@ -138,8 +138,9 @@ def conditional_append_reference_faces() -> None:
 
 
 def force_download() -> ErrorCode:
+	available_processors = list_directory('facefusion/processors/modules')
 	download_directory_path = resolve_relative_path('../.assets/models')
-	models =\
+	model_set =\
 	[
 		content_analyser.MODEL_SET.get('open_nsfw'),
 		face_analyser.MODEL_SET.get('retinaface'),
@@ -150,10 +151,15 @@ def force_download() -> ErrorCode:
 		face_analyser.MODEL_SET.get('face_landmarker_68_5'),
 		face_analyser.MODEL_SET.get('gender_age'),
 		face_masker.MODEL_SET.get('face_masker'),
-		voice_extractor.MODEL_SET.get('voice_extractor')
+		voice_extractor.MODEL_SET.get('voice_extractor'),
 	]
 
-	for model in models:
+	for processor_module in get_processors_modules(available_processors):
+		if hasattr(processor_module, 'MODEL_SET'):
+			for processor_model in processor_module.MODEL_SET:
+				model_set.append(processor_module.MODEL_SET[processor_model])
+
+	for model in model_set:
 		model_hashes = model.get('hashes')
 		model_sources = model.get('sources')
 

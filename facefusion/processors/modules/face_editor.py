@@ -32,6 +32,34 @@ MODEL_SET : ModelSet =\
 {
 	'live_portrait':
 	{
+		'hashes':
+		{
+			'feature_extractor':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/feature_extractor.hash',
+				'path': resolve_relative_path('../.assets/models/feature_extractor.hash')
+			},
+			'motion_extractor':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/motion_extractor.hash',
+				'path': resolve_relative_path('../.assets/models/motion_extractor.hash')
+			},
+			'eye_retargeter':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/eye_retargeter.hash',
+				'path': resolve_relative_path('../.assets/models/eye_retargeter.hash')
+			},
+			'lip_retargeter':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/lip_retargeter.hash',
+				'path': resolve_relative_path('../.assets/models/lip_retargeter.hash')
+			},
+			'generator':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/generator.hash',
+				'path': resolve_relative_path('../.assets/models/generator.hash')
+			}
+		},
 		'sources':
 		{
 			'feature_extractor':
@@ -109,9 +137,10 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_sources(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:

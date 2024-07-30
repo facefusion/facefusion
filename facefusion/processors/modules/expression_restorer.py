@@ -20,7 +20,7 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import ExpressionRestorerInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.source_helper import conditional_download_sources
+from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import get_video_frame, read_image, read_static_image, write_image
@@ -31,6 +31,24 @@ MODEL_SET : ModelSet =\
 {
 	'live_portrait':
 	{
+		'hashes':
+		{
+			'feature_extractor':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/feature_extractor.hash',
+				'path': resolve_relative_path('../.assets/models/feature_extractor.hash')
+			},
+			'motion_extractor':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/motion_extractor.hash',
+				'path': resolve_relative_path('../.assets/models/motion_extractor.hash')
+			},
+			'generator':
+			{
+				'url': 'https://huggingface.co/facefusion/hashes/raw/main/generator.hash',
+				'path': resolve_relative_path('../.assets/models/generator.hash')
+			}
+		},
 		'sources':
 		{
 			'feature_extractor':
@@ -92,9 +110,10 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:
