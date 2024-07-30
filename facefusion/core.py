@@ -105,7 +105,7 @@ def processors_pre_check() -> bool:
 def conditional_process() -> ErrorCode:
 	start_time = time()
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		if not processor_module.pre_process('output'):
+		if not processor_module.pre_check() or not processor_module.pre_process('output'):
 			return 2
 	conditional_append_reference_faces()
 	if is_image(state_manager.get_item('target_path')):
