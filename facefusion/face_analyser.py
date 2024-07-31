@@ -127,7 +127,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_landmarker_68_5':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/face_landmarker_68_5.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_landmarker_68_5.onnx',
 				'path': resolve_relative_path('../.assets/models/face_landmarker_68_5.onnx')
 			}
 		}
