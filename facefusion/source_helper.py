@@ -1,6 +1,5 @@
 import os
 import zlib
-
 from typing import List, Optional
 
 from facefusion import process_manager, state_manager
