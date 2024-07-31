@@ -31,8 +31,6 @@ WORDING : Dict[str, Any] =\
 	'processing_image_failed': 'Processing to image failed',
 	'processing_video_succeed': 'Processing to video succeed in {seconds} seconds',
 	'processing_video_failed': 'Processing to video failed',
-	'model_download_not_done': 'Download of the model is not done',
-	'model_file_not_present': 'File of the model is not present',
 	'choose_image_source': 'Choose a image for the source',
 	'choose_audio_source': 'Choose a audio for the source',
 	'choose_video_target': 'Choose a video for the target',

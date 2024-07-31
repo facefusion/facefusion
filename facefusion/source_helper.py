@@ -1,5 +1,6 @@
-import hashlib
 import os
+import zlib
+
 from typing import List, Optional
 
 from facefusion import process_manager, state_manager
@@ -48,7 +49,7 @@ def validate_hash(validate_path : str) -> bool:
 		with open(validate_path, 'rb') as validate_file:
 			validate_content = validate_file.read()
 
-		return hashlib.sha256(validate_content).hexdigest() == hash_content
+		return format(zlib.crc32(validate_content), '08x') == hash_content
 	return False
 
 
