@@ -56,14 +56,14 @@ MODEL_SET : ModelSet =\
 			'lip_syncer':
 			{
 				'url': 'https://huggingface.co/facefusion/hashes/raw/main/wav2lip_gan.hash',
-				'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx')
+				'path': resolve_relative_path('../.assets/models/wav2lip_gan.hash')
 			}
 		},
 		'sources':
 		{
 			'lip_syncer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip_gan.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip_gan.onnx',
 				'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx')
 			}
 		}
