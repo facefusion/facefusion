@@ -24,7 +24,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_detector_retinaface':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/retinaface_10g.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.hash',
 				'path': resolve_relative_path('../.assets/models/retinaface_10g.hash')
 			}
 		},
@@ -32,7 +32,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_detector_retinaface':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/retinaface_10g.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.onnx',
 				'path': resolve_relative_path('../.assets/models/retinaface_10g.onnx')
 			}
 		}
@@ -43,7 +43,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_detector_scrfd':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/scrfd_2.5g.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/scrfd_2.5g.hash',
 				'path': resolve_relative_path('../.assets/models/scrfd_2.5g.hash')
 			}
 		},
@@ -51,7 +51,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_detector_scrfd':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/scrfd_2.5g.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/scrfd_2.5g.onnx',
 				'path': resolve_relative_path('../.assets/models/scrfd_2.5g.onnx')
 			}
 		}
@@ -62,7 +62,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_detector_yoloface':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/yoloface_8n.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/yoloface_8n.hash',
 				'path': resolve_relative_path('../.assets/models/yoloface_8n.hash')
 			}
 		},
@@ -70,7 +70,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_detector_yoloface':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yoloface_8n.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/yoloface_8n.onnx',
 				'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
 			}
 		}
@@ -81,7 +81,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_recognizer':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_w600k_r50.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.hash',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
 			}
 		},
@@ -89,7 +89,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 			}
 		}
@@ -100,7 +100,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_landmarker_68':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/2dfan4.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.hash',
 				'path': resolve_relative_path('../.assets/models/2dfan4.hash')
 			}
 		},
@@ -108,7 +108,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_landmarker_68':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/2dfan4.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.onnx',
 				'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
 			}
 		}
@@ -119,7 +119,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_landmarker_68_5':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/face_landmarker_68_5.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/face_landmarker_68_5.hash',
 				'path': resolve_relative_path('../.assets/models/face_landmarker_68_5.hash')
 			}
 		},
@@ -127,7 +127,7 @@ MODEL_SET : ModelSet =\
 		{
 			'face_landmarker_68_5':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_landmarker_68_5.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/face_landmarker_68_5.onnx',
 				'path': resolve_relative_path('../.assets/models/face_landmarker_68_5.onnx')
 			}
 		}
@@ -138,7 +138,7 @@ MODEL_SET : ModelSet =\
 		{
 			'gender_age':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/gender_age.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gender_age.hash',
 				'path': resolve_relative_path('../.assets/models/gender_age.hash')
 			}
 		},
@@ -146,7 +146,7 @@ MODEL_SET : ModelSet =\
 		{
 			'gender_age':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gender_age.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gender_age.onnx',
 				'path': resolve_relative_path('../.assets/models/gender_age.onnx')
 			}
 		}

@@ -36,56 +36,56 @@ MODEL_SET : ModelSet =\
 		{
 			'feature_extractor':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/feature_extractor.hash',
-				'path': resolve_relative_path('../.assets/models/feature_extractor.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_feature_extractor.hash',
+				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.hash')
 			},
 			'motion_extractor':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/motion_extractor.hash',
-				'path': resolve_relative_path('../.assets/models/motion_extractor.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_motion_extractor.hash',
+				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.hash')
 			},
 			'eye_retargeter':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/eye_retargeter.hash',
-				'path': resolve_relative_path('../.assets/models/eye_retargeter.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_eye_retargeter.hash',
+				'path': resolve_relative_path('../.assets/models/live_portrait_eye_retargeter.hash')
 			},
 			'lip_retargeter':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/lip_retargeter.hash',
-				'path': resolve_relative_path('../.assets/models/lip_retargeter.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_lip_retargeter.hash',
+				'path': resolve_relative_path('../.assets/models/live_portrait_lip_retargeter.hash')
 			},
 			'generator':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/generator.hash',
-				'path': resolve_relative_path('../.assets/models/generator.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_generator.hash',
+				'path': resolve_relative_path('../.assets/models/live_portrait_generator.hash')
 			}
 		},
 		'sources':
 		{
 			'feature_extractor':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/feature_extractor.onnx',
-				'path': resolve_relative_path('../.assets/models/feature_extractor.onnx')
+				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_feature_extractor.onnx',
+				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.onnx')
 			},
 			'motion_extractor':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/motion_extractor.onnx',
-				'path': resolve_relative_path('../.assets/models/motion_extractor.onnx')
+				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_motion_extractor.onnx',
+				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.onnx')
 			},
 			'eye_retargeter':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/eye_retargeter.onnx',
-				'path': resolve_relative_path('../.assets/models/eye_retargeter.onnx')
+				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_eye_retargeter.onnx',
+				'path': resolve_relative_path('../.assets/models/live_portrait_eye_retargeter.onnx')
 			},
 			'lip_retargeter':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/lip_retargeter.onnx',
-				'path': resolve_relative_path('../.assets/models/lip_retargeter.onnx')
+				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_lip_retargeter.onnx',
+				'path': resolve_relative_path('../.assets/models/live_portrait_lip_retargeter.onnx')
 			},
 			'generator':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/generator.onnx',
-				'path': resolve_relative_path('../.assets/models/generator.onnx')
+				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_generator.onnx',
+				'path': resolve_relative_path('../.assets/models/live_portrait_generator.onnx')
 			}
 		},
 		'template': 'ffhq_512',
@@ -221,6 +221,7 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 		{
 			'input': numpy.concatenate([ motion_points.reshape(1, -1), face_editor_lip_open_ratio ], axis = 1)
 		})[0]
+
 	eye_motion_points = eye_motion_points.reshape(-1, 21, 3) * face_editor_eye_open_factor
 	lip_motion_points = lip_motion_points.reshape(-1, 21, 3) * face_editor_lip_open_factor
 	motion_points_edit = motion_points + eye_motion_points + lip_motion_points

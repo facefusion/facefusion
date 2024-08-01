@@ -35,36 +35,36 @@ MODEL_SET : ModelSet =\
 		{
 			'feature_extractor':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/feature_extractor.hash',
-				'path': resolve_relative_path('../.assets/models/feature_extractor.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_feature_extractor.hash',
+				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.hash')
 			},
 			'motion_extractor':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/motion_extractor.hash',
-				'path': resolve_relative_path('../.assets/models/motion_extractor.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_motion_extractor.hash',
+				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.hash')
 			},
 			'generator':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/generator.hash',
-				'path': resolve_relative_path('../.assets/models/generator.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_generator.hash',
+				'path': resolve_relative_path('../.assets/models/live_portrait_generator.hash')
 			}
 		},
 		'sources':
 		{
 			'feature_extractor':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/feature_extractor.onnx',
-				'path': resolve_relative_path('../.assets/models/feature_extractor.onnx')
+				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_feature_extractor.onnx',
+				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.onnx')
 			},
 			'motion_extractor':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/motion_extractor.onnx',
-				'path': resolve_relative_path('../.assets/models/motion_extractor.onnx')
+				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_motion_extractor.onnx',
+				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.onnx')
 			},
 			'generator':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/generator.onnx',
-				'path': resolve_relative_path('../.assets/models/generator.onnx')
+				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_generator.onnx',
+				'path': resolve_relative_path('../.assets/models/live_portrait_generator.onnx')
 			}
 		},
 		'template': 'arcface_128_v2',
@@ -177,10 +177,10 @@ def apply_restore_expression(source_crop_vision_frame : VisionFrame, target_crop
 		})[0]
 
 	with thread_semaphore():
-		_, _, _, source_expression, _, _ = motion_extractor.run(None,
+		source_expression = motion_extractor.run(None,
 		{
 			'input': source_crop_vision_frame
-		})
+		})[3]
 
 	with thread_semaphore():
 		target_rotation, target_scale, target_translation, target_expression, target_motion_points_raw, target_motion_points = motion_extractor.run(None,

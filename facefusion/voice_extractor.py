@@ -20,16 +20,16 @@ MODEL_SET : ModelSet =\
 		{
 			'voice_extractor':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/voice_extractor.hash',
-				'path': resolve_relative_path('../.assets/models/voice_extractor.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/kim_vocal_2.hash',
+				'path': resolve_relative_path('../.assets/models/kim_vocal_2.hash')
 			}
 		},
 		'sources':
 		{
 			'voice_extractor':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/voice_extractor.onnx',
-				'path': resolve_relative_path('../.assets/models/voice_extractor.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/kim_vocal_2.onnx',
+				'path': resolve_relative_path('../.assets/models/kim_vocal_2.onnx')
 			}
 		}
 	}

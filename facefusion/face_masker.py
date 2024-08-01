@@ -22,26 +22,26 @@ MODEL_SET : ModelSet =\
 		{
 			'face_occluder':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/face_occluder.hash',
-				'path': resolve_relative_path('../.assets/models/face_occluder.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/dfl_xseg.hash',
+				'path': resolve_relative_path('../.assets/models/dfl_xseg.hash')
 			},
 			'face_parser':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/face_parser.hash',
-				'path': resolve_relative_path('../.assets/models/face_parser.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/resnet_34.hash',
+				'path': resolve_relative_path('../.assets/models/resnet_34.hash')
 			}
 		},
 		'sources':
 		{
 			'face_occluder':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_occluder.onnx',
-				'path': resolve_relative_path('../.assets/models/face_occluder.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/dfl_xseg.onnx',
+				'path': resolve_relative_path('../.assets/models/dfl_xseg.onnx')
 			},
 			'face_parser':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_parser.onnx',
-				'path': resolve_relative_path('../.assets/models/face_parser.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/resnet_34.onnx',
+				'path': resolve_relative_path('../.assets/models/resnet_34.onnx')
 			}
 		}
 	}

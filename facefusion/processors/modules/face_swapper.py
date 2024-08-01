@@ -35,12 +35,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/blendswap_256.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/blendswap_256.hash',
 				'path': resolve_relative_path('../.assets/models/blendswap_256.hash')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_w600k_r50.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.hash',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
 			}
 		},
@@ -48,12 +48,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/blendswap_256.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/blendswap_256.onnx',
 				'path': resolve_relative_path('../.assets/models/blendswap_256.onnx')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 			}
 		},
@@ -69,12 +69,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/ghost_256_unet_1.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_256_unet_1.hash',
 				'path': resolve_relative_path('../.assets/models/ghost_256_unet_1.hash')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_ghost.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_ghost.hash',
 				'path': resolve_relative_path('../.assets/models/arcface_ghost.hash')
 			}
 		},
@@ -82,12 +82,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_1.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_256_unet_1.onnx',
 				'path': resolve_relative_path('../.assets/models/ghost_256_unet_1.onnx')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_ghost.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_ghost.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_ghost.onnx')
 			}
 		},
@@ -103,12 +103,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/ghost_256_unet_2.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_256_unet_2.hash',
 				'path': resolve_relative_path('../.assets/models/ghost_256_unet_2.hash')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_ghost.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_ghost.hash',
 				'path': resolve_relative_path('../.assets/models/arcface_ghost.hash')
 			}
 		},
@@ -116,12 +116,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_2.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_256_unet_2.onnx',
 				'path': resolve_relative_path('../.assets/models/ghost_256_unet_2.onnx')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_ghost.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_ghost.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_ghost.onnx')
 			}
 		},
@@ -137,12 +137,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/ghost_256_unet_3.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_256_unet_3.hash',
 				'path': resolve_relative_path('../.assets/models/ghost_256_unet_3.hash')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_ghost.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_ghost.hash',
 				'path': resolve_relative_path('../.assets/models/arcface_ghost.hash')
 			}
 		},
@@ -150,12 +150,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ghost_256_unet_3.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_256_unet_3.onnx',
 				'path': resolve_relative_path('../.assets/models/ghost_256_unet_3.onnx')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_ghost.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_ghost.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_ghost.onnx')
 			}
 		},
@@ -171,12 +171,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/inswapper_128.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/inswapper_128.hash',
 				'path': resolve_relative_path('../.assets/models/inswapper_128.hash')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main//arcface_w600k_r50.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0//arcface_w600k_r50.hash',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
 			}
 		},
@@ -184,12 +184,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/inswapper_128.onnx',
 				'path': resolve_relative_path('../.assets/models/inswapper_128.onnx')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 			}
 		},
@@ -205,12 +205,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/inswapper_128_fp16.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/inswapper_128_fp16.hash',
 				'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.hash')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_w600k_r50.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.hash',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
 			}
 		},
@@ -218,12 +218,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128_fp16.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/inswapper_128_fp16.onnx',
 				'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 			}
 		},
@@ -239,12 +239,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/simswap_256.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/simswap_256.hash',
 				'path': resolve_relative_path('../.assets/models/simswap_256.hash')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_simswap.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_simswap.hash',
 				'path': resolve_relative_path('../.assets/models/arcface_simswap.hash')
 			}
 		},
@@ -252,12 +252,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_256.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/simswap_256.onnx',
 				'path': resolve_relative_path('../.assets/models/simswap_256.onnx')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_simswap.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_simswap.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_simswap.onnx')
 			}
 		},
@@ -273,12 +273,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/simswap_512_unofficial.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/simswap_512_unofficial.hash',
 				'path': resolve_relative_path('../.assets/models/simswap_512_unofficial.hash')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_simswap.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_simswap.hash',
 				'path': resolve_relative_path('../.assets/models/arcface_simswap.hash')
 			}
 		},
@@ -286,12 +286,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/simswap_512_unofficial.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/simswap_512_unofficial.onnx',
 				'path': resolve_relative_path('../.assets/models/simswap_512_unofficial.onnx')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_simswap.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_simswap.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_simswap.onnx')
 			}
 		},
@@ -307,12 +307,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/uniface_256.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/uniface_256.hash',
 				'path': resolve_relative_path('../.assets/models/uniface_256.hash')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/arcface_w600k_r50.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.hash',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
 			}
 		},
@@ -320,12 +320,12 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/uniface_256.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/uniface_256.onnx',
 				'path': resolve_relative_path('../.assets/models/uniface_256.onnx')
 			},
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 			}
 		},

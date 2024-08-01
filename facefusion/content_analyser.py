@@ -23,7 +23,7 @@ MODEL_SET : ModelSet =\
 		{
 			'content_analyser':
 			{
-				'url': 'https://huggingface.co/facefusion/hashes/raw/main/open_nsfw.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/open_nsfw.hash',
 				'path': resolve_relative_path('../.assets/models/open_nsfw.hash')
 			}
 		},
@@ -31,7 +31,7 @@ MODEL_SET : ModelSet =\
 		{
 			'content_analyser':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/open_nsfw.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/open_nsfw.onnx',
 				'path': resolve_relative_path('../.assets/models/open_nsfw.onnx')
 			}
 		}
