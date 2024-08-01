@@ -54,7 +54,7 @@ def update_frame_enhancer_model(frame_enhancer_model : FrameEnhancerModel) -> gr
 	state_manager.set_item('frame_enhancer_model', frame_enhancer_model)
 	frame_enhancer_module.set_options('model', frame_enhancer_module.MODEL_SET[state_manager.get_item('frame_enhancer_model')])
 
-	if frame_enhancer_module.conditional_download_sources():
+	if frame_enhancer_module.pre_check():
 		return gradio.Dropdown(value = state_manager.get_item('frame_enhancer_model'))
 	return gradio.Dropdown()
 

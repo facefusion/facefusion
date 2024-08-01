@@ -53,7 +53,7 @@ def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> gradi
 	face_enhancer_module.clear_inference_pool()
 	state_manager.set_item('face_enhancer_model', face_enhancer_model)
 
-	if face_enhancer_module.conditional_download_sources():
+	if face_enhancer_module.pre_check():
 		return gradio.Dropdown(value = state_manager.get_item('face_enhancer_model'))
 	return gradio.Dropdown()
 

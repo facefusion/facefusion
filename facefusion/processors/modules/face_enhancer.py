@@ -199,7 +199,7 @@ MODEL_SET : ModelSet =\
 	},
 	'restoreformer_plus_plus':
 	{
-		'hash':
+		'hashes':
 		{
 			'face_enhancer':
 			{
