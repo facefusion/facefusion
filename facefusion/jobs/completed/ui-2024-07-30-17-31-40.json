@@ -1,0 +1,94 @@
+{
+    "version": "1",
+    "date_created": "2024-07-30T17:31:40.414168+09:00",
+    "date_updated": "2024-07-30T17:35:54.752688+09:00",
+    "steps": [
+        {
+            "args": {
+                "source_paths": [
+                    "/Users/kazuki/ffmpeg/input/ariya.jpg"
+                ],
+                "target_path": "/private/var/folders/yb/q9qctnwn5zsgtxg1dpwr07940000gn/T/gradio/f56d061a41dfb41c7de039017cbd565e34ab6e28/teen pee - XVIDEOS.COM.mp4",
+                "output_path": "/Users/kazuki/ffmpeg/output/02b4c20f.mp4",
+                "face_detector_model": "yoloface",
+                "face_detector_angles": [
+                    0
+                ],
+                "face_detector_size": "640x640",
+                "face_detector_score": 0.5,
+                "face_landmarker_score": 0.5,
+                "face_selector_mode": "many",
+                "face_selector_order": "large-small",
+                "face_selector_age": null,
+                "face_selector_gender": "female",
+                "reference_face_position": 0,
+                "reference_face_distance": 0.6,
+                "reference_frame_number": 0,
+                "face_mask_types": [
+                    "box",
+                    "occlusion",
+                    "region"
+                ],
+                "face_mask_blur": 0.0,
+                "face_mask_padding": [
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "face_mask_regions": [
+                    "skin",
+                    "left-eyebrow",
+                    "right-eyebrow",
+                    "left-eye",
+                    "right-eye",
+                    "glasses",
+                    "nose",
+                    "mouth",
+                    "upper-lip",
+                    "lower-lip"
+                ],
+                "trim_frame_start": null,
+                "trim_frame_end": null,
+                "temp_frame_format": "jpg",
+                "keep_temp": null,
+                "output_image_quality": 80,
+                "output_image_resolution": null,
+                "output_audio_encoder": "aac",
+                "output_video_encoder": "hevc_videotoolbox",
+                "output_video_preset": "ultrafast",
+                "output_video_quality": 80,
+                "output_video_resolution": "854x480",
+                "output_video_fps": 29.96999513575995,
+                "skip_audio": null,
+                "processors": [
+                    "face_swapper"
+                ],
+                "age_modifier_model": "styleganex_age",
+                "age_modifier_direction": 0,
+                "expression_restorer_model": "live_portrait",
+                "expression_restorer_factor": 100,
+                "face_debugger_items": [
+                    "face-landmark-5/68",
+                    "face-mask"
+                ],
+                "face_editor_model": "live_portrait",
+                "face_editor_eye_open_ratio": 0.0,
+                "face_editor_eye_open_factor": 100,
+                "face_editor_lip_open_ratio": 0.0,
+                "face_editor_lip_open_factor": 100,
+                "face_enhancer_model": "gfpgan_1.4",
+                "face_enhancer_blend": 80,
+                "face_swapper_model": "inswapper_128_fp16",
+                "face_swapper_pixel_boost": "128x128",
+                "frame_colorizer_model": "ddcolor",
+                "frame_colorizer_blend": 100,
+                "frame_colorizer_size": "256x256",
+                "frame_enhancer_model": "span_kendata_x4",
+                "frame_enhancer_blend": 80,
+                "lip_syncer_model": "wav2lip_gan"
+            },
+            "status": "completed"
+        }
+    ]
+}

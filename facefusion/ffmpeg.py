@@ -46,44 +46,49 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 			logger.debug(error.strip(), __name__.upper())
 
 
-def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps) -> bool:
-	trim_frame_start = state_manager.get_item('trim_frame_start')
-	trim_frame_end = state_manager.get_item('trim_frame_end')
-	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
-	commands = [ '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0' ]
+def extract_frames(target_path: str, temp_video_resolution: str, temp_video_fps: Fps) -> bool:
+    trim_frame_start = state_manager.get_item('trim_frame_start')
+    trim_frame_end = state_manager.get_item('trim_frame_end')
+    temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
+    commands = ['-hwaccel', 'videotoolbox', '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0']
 
-	if isinstance(trim_frame_start, int) and isinstance(trim_frame_end, int):
-		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
-	elif isinstance(trim_frame_start, int):
-		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ',fps=' + str(temp_video_fps) ])
-	elif isinstance(trim_frame_end, int):
-		commands.extend([ '-vf', 'trim=end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
-	else:
-		commands.extend([ '-vf', 'fps=' + str(temp_video_fps) ])
-	commands.extend([ '-vsync', '0', temp_frames_pattern ])
-	return run_ffmpeg(commands).returncode == 0
+    if isinstance(trim_frame_start, int) and isinstance(trim_frame_end, int):
+        commands.extend(['-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps)])
+    elif isinstance(trim_frame_start, int):
+        commands.extend(['-vf', 'trim=start_frame=' + str(trim_frame_start) + ',fps=' + str(temp_video_fps)])
+    elif isinstance(trim_frame_end, int):
+        commands.extend(['-vf', 'trim=end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps)])
+    else:
+        commands.extend(['-vf', 'fps=' + str(temp_video_fps)])
+    commands.extend(['-vsync', '0', temp_frames_pattern])
+    return run_ffmpeg(commands).returncode == 0
 
 
-def merge_video(target_path : str, output_video_resolution : str, output_video_fps : Fps) -> bool:
-	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
-	temp_file_path = get_temp_file_path(target_path)
-	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
-	commands = [ '-r', str(temp_video_fps), '-i', temp_frames_pattern, '-s', str(output_video_resolution), '-c:v', state_manager.get_item('output_video_encoder') ]
+def merge_video(target_path: str, output_video_resolution: str, output_video_fps: Fps) -> bool:
+    temp_video_fps = restrict_video_fps(target_path, output_video_fps)
+    temp_file_path = get_temp_file_path(target_path)
+    temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
+    commands = ['-r', str(temp_video_fps), '-i', temp_frames_pattern, '-s', str(output_video_resolution), '-c:v', state_manager.get_item('output_video_encoder')]
 
-	if state_manager.get_item('output_video_encoder') in [ 'libx264', 'libx265' ]:
-		output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
-		commands.extend([ '-crf', str(output_video_compression), '-preset', state_manager.get_item('output_video_preset') ])
-	if state_manager.get_item('output_video_encoder') in [ 'libvpx-vp9' ]:
-		output_video_compression = round(63 - (state_manager.get_item('output_video_quality') * 0.63))
-		commands.extend([ '-crf', str(output_video_compression) ])
-	if state_manager.get_item('output_video_encoder') in [ 'h264_nvenc', 'hevc_nvenc' ]:
-		output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
-		commands.extend([ '-cq', str(output_video_compression), '-preset', map_nvenc_preset(state_manager.get_item('output_video_preset')) ])
-	if state_manager.get_item('output_video_encoder') in [ 'h264_amf', 'hevc_amf' ]:
-		output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
-		commands.extend([ '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(state_manager.get_item('output_video_preset')) ])
-	commands.extend([ '-vf', 'framerate=fps=' + str(output_video_fps), '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_file_path ])
-	return run_ffmpeg(commands).returncode == 0
+    output_video_encoder = state_manager.get_item('output_video_encoder')
+    if output_video_encoder in ['libx264', 'libx265']:
+        output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
+        commands.extend(['-crf', str(output_video_compression), '-preset', state_manager.get_item('output_video_preset')])
+    elif output_video_encoder == 'libvpx-vp9':
+        output_video_compression = round(63 - (state_manager.get_item('output_video_quality') * 0.63))
+        commands.extend(['-crf', str(output_video_compression)])
+    elif output_video_encoder in ['h264_nvenc', 'hevc_nvenc']:
+        output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
+        commands.extend(['-cq', str(output_video_compression), '-preset', map_nvenc_preset(state_manager.get_item('output_video_preset'))])
+    elif output_video_encoder in ['h264_amf', 'hevc_amf']:
+        output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
+        commands.extend(['-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(state_manager.get_item('output_video_preset'))])
+    elif output_video_encoder in ['h264_videotoolbox', 'hevc_videotoolbox']:
+        output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
+        commands.extend(['-b:v', f'{output_video_compression}M', '-pix_fmt', 'yuv420p'])
+
+    commands.extend(['-vf', f'fps={output_video_fps}', '-colorspace', 'bt709', '-y', temp_file_path])
+    return run_ffmpeg(commands).returncode == 0
 
 
 def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
@@ -101,18 +106,31 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	return process.returncode == 0
 
 
-def copy_image(target_path : str, temp_image_resolution : str) -> bool:
-	temp_file_path = get_temp_file_path(target_path)
-	temp_image_compression = calc_image_compression(target_path, 100)
-	commands = [ '-i', target_path, '-s', str(temp_image_resolution), '-q:v', str(temp_image_compression), '-y', temp_file_path ]
-	return run_ffmpeg(commands).returncode == 0
+def copy_image(target_path: str, temp_image_resolution: str) -> bool:
+    temp_file_path = get_temp_file_path(target_path)
+    temp_image_compression = calc_image_compression(target_path, 100)
+    commands = [
+        '-i', target_path,
+        '-s', str(temp_image_resolution),
+        '-c:v', 'h264_videotoolbox',  # macOSのVideoToolboxエンコーダを使用
+        '-q:v', str(temp_image_compression),
+        '-y', temp_file_path
+    ]
+    return run_ffmpeg(commands).returncode == 0
 
 
-def finalize_image(target_path : str, output_path : str, output_image_resolution : str) -> bool:
-	temp_file_path = get_temp_file_path(target_path)
-	output_image_compression = calc_image_compression(target_path, state_manager.get_item('output_image_quality'))
-	commands = [ '-i', temp_file_path, '-s', str(output_image_resolution), '-q:v', str(output_image_compression), '-y', output_path ]
-	return run_ffmpeg(commands).returncode == 0
+def finalize_image(target_path: str, output_path: str, output_image_resolution: str) -> bool:
+    temp_file_path = get_temp_file_path(target_path)
+    output_image_compression = calc_image_compression(target_path, state_manager.get_item('output_image_quality'))
+    commands = [
+        '-i', temp_file_path,
+        '-s', str(output_image_resolution),
+        '-c:v', 'hevc_videotoolbox',  # macOSのVideoToolboxを使用
+        '-b:v', f'{output_image_compression}M',  # 圧縮率をビットレートで指定
+        '-pix_fmt', 'yuv420p',  # ピクセルフォーマットを指定
+        '-y', output_path
+    ]
+    return run_ffmpeg(commands).returncode == 0
 
 
 def calc_image_compression(image_path : str, image_quality : int) -> int:
@@ -171,3 +189,13 @@ def map_amf_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
 	if output_video_preset in [ 'slow', 'slower', 'veryslow' ]:
 		return 'quality'
 	return None
+
+
+def map_coreml_preset(output_video_preset: OutputVideoPreset) -> Optional[str]:
+    if output_video_preset in ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast']:
+        return 'realtime'
+    elif output_video_preset == 'medium':
+        return 'balanced'
+    elif output_video_preset in ['slow', 'slower', 'veryslow']:
+        return 'quality'
+    return None

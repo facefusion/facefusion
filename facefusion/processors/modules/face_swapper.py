@@ -120,8 +120,8 @@ MODEL_SET : ModelSet =\
 		{
 			'face_swapper':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
-				'path': resolve_relative_path('../.assets/models/inswapper_128.onnx')
+#				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx',
+				'path': resolve_relative_path('../.assets/models/inswapper_128.mlpackage')
 			},
 			'face_recognizer':
 			{
