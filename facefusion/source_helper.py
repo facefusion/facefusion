@@ -48,9 +48,7 @@ def validate_hash(validate_path : str) -> bool:
 		with open(validate_path, 'rb') as validate_file:
 			validate_content = validate_file.read()
 
-		is_valid = format(zlib.crc32(validate_content), '08x') == hash_content
-		print(validate_path, is_valid, format(zlib.crc32(validate_content), '08x'))
-		return is_valid
+		return format(zlib.crc32(validate_content), '08x') == hash_content
 	return False
 
 
