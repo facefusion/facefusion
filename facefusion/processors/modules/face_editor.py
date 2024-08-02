@@ -229,9 +229,9 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 	with thread_semaphore():
 		crop_vision_frame = generator.run(None,
 		{
-			'feature_3d': feature_volume,
-			'kp_source': motion_points,
-			'kp_driving': motion_points_edit
+			'feature_volume': feature_volume,
+			'target': motion_points,
+			'source': motion_points_edit
 		})[0][0]
 
 	return crop_vision_frame

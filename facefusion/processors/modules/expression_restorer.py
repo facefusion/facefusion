@@ -194,9 +194,9 @@ def apply_restore_expression(source_crop_vision_frame : VisionFrame, target_crop
 	with thread_semaphore():
 		crop_vision_frame = generator.run(None,
 		{
-			'feature_3d': feature_volume,
-			'kp_source': target_motion_points,
-			'kp_driving': motion_points
+			'feature_volume': feature_volume,
+			'target': target_motion_points,
+			'source': motion_points
 		})[0][0]
 
 	return crop_vision_frame
