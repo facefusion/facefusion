@@ -56,7 +56,7 @@ def update_trim_frame(trim_frame : Tuple[float, float]) -> None:
 	clear_static_faces()
 	trim_frame_start, trim_frame_end = trim_frame
 	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
-	trim_frame_start = trim_frame_start if trim_frame_start > 0 else None
-	trim_frame_end = trim_frame_end if trim_frame_end < video_frame_total else None
-	state_manager.set_item('trim_frame_start', int(trim_frame_start))
-	state_manager.set_item('trim_frame_end', int(trim_frame_end))
+	trim_frame_start = int(trim_frame_start) if trim_frame_start > 0 else None
+	trim_frame_end = int(trim_frame_end) if trim_frame_end < video_frame_total else None
+	state_manager.set_item('trim_frame_start', trim_frame_start)
+	state_manager.set_item('trim_frame_end', trim_frame_end)
