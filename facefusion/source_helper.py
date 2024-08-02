@@ -20,22 +20,26 @@ def conditional_download_hashes(download_directory_path : str, hashes : Download
 	hash_urls = [ hashes.get(hash_key).get('url') for hash_key in hashes.keys() ]
 	hash_paths = [ hashes.get(hash_key).get('path') for hash_key in hashes.keys() ]
 
+	process_manager.check()
 	if not has_hashes(hash_paths) and not state_manager.get_item('skip_download'):
-		process_manager.check()
 		conditional_download(download_directory_path, hash_urls)
+	is_valid = has_hashes(hash_paths)
+	if is_valid:
 		process_manager.end()
-	return has_hashes(hash_paths)
+	return is_valid
 
 
 def conditional_download_sources(download_directory_path : str, sources : DownloadSet) -> bool:
 	source_urls = [ sources.get(source_key).get('url') for source_key in sources.keys() ]
 	source_paths = [ sources.get(source_key).get('path') for source_key in sources.keys() ]
 
+	process_manager.check()
 	if not has_sources(source_paths) and not state_manager.get_item('skip_download'):
-		process_manager.check()
 		conditional_download(download_directory_path, source_urls)
+	is_valid = has_sources(source_paths)
+	if is_valid:
 		process_manager.end()
-	return has_sources(source_paths)
+	return is_valid
 
 
 def validate_hash(validate_path : str) -> bool:
