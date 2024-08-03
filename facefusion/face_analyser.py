@@ -6,11 +6,11 @@ import numpy
 
 from facefusion import process_manager, state_manager
 from facefusion.common_helper import get_first
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, estimate_face_angle_from_face_landmark_68, estimate_matrix_by_face_landmark_5, get_nms_threshold, normalize_bounding_box, transform_bounding_box, transform_points, warp_face_by_face_landmark_5, warp_face_by_translation
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.filesystem import resolve_relative_path
-from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock, thread_semaphore
 from facefusion.typing import Angle, BoundingBox, DownloadSet, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, FaceScoreSet, InferencePool, ModelSet, Score, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution

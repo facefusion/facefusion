@@ -5,9 +5,9 @@ import numpy
 import scipy
 
 from facefusion import process_manager, state_manager
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.filesystem import resolve_relative_path
-from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Audio, AudioChunk, InferencePool, ModelOptions, ModelSet
 

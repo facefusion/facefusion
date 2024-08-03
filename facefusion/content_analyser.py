@@ -7,9 +7,9 @@ import numpy
 from tqdm import tqdm
 
 from facefusion import process_manager, state_manager, wording
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.filesystem import resolve_relative_path
-from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
 from facefusion.vision import count_video_frame_total, detect_video_fps, get_video_frame, read_image

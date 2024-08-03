@@ -10,6 +10,7 @@ from facefusion import content_analyser, face_analyser, face_masker, logger, pro
 from facefusion.args import apply_args, collect_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import conditional_exit, graceful_exit, hard_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
@@ -22,7 +23,6 @@ from facefusion.memory import limit_system_memory
 from facefusion.processors.core import clear_processors_modules, get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
-from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.statistics import conditional_log_statistics
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
 from facefusion.typing import Args, ErrorCode

@@ -8,9 +8,11 @@ from urllib.parse import urlparse
 
 from tqdm import tqdm
 
-from facefusion import state_manager, wording
+from facefusion import process_manager, state_manager, wording
 from facefusion.common_helper import is_macos
 from facefusion.filesystem import get_file_size, is_file, remove_file
+from facefusion.hash_helper import validate_hash
+from facefusion.typing import DownloadSet
 
 if is_macos():
 	ssl._create_default_https_context = ssl._create_unverified_context
@@ -53,3 +55,37 @@ def is_download_done(url : str, file_path : str) -> bool:
 	if is_file(file_path):
 		return get_download_size(url) == get_file_size(file_path)
 	return False
+
+
+def conditional_download_hashes(download_directory_path : str, hashes : DownloadSet) -> bool:
+	hash_urls = [ hashes.get(hash_key).get('url') for hash_key in hashes.keys() ]
+	hash_paths = [ hashes.get(hash_key).get('path') for hash_key in hashes.keys() ]
+
+	process_manager.check()
+	if not has_hashes(hash_paths) and not state_manager.get_item('skip_download'):
+		conditional_download(download_directory_path, hash_urls)
+	is_valid = has_hashes(hash_paths)
+	if is_valid:
+		process_manager.end()
+	return is_valid
+
+
+def conditional_download_sources(download_directory_path : str, sources : DownloadSet) -> bool:
+	source_urls = [ sources.get(source_key).get('url') for source_key in sources.keys() ]
+	source_paths = [ sources.get(source_key).get('path') for source_key in sources.keys() ]
+
+	process_manager.check()
+	if not has_sources(source_paths) and not state_manager.get_item('skip_download'):
+		conditional_download(download_directory_path, source_urls)
+	is_valid = has_sources(source_paths)
+	if is_valid:
+		process_manager.end()
+	return is_valid
+
+
+def has_hashes(hash_paths : List[str]) -> bool:
+	return all(is_file(hash_path) for hash_path in hash_paths)
+
+
+def has_sources(source_paths : List[str]) -> bool:
+	return all(validate_hash(source_path) for source_path in source_paths)

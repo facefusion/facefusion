@@ -9,6 +9,7 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool, get_static_model_initializer, has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
@@ -20,7 +21,6 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.processors.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group, suggest_face_swapper_pixel_boost_choices
-from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import Args, Embedding, Face, FaceLandmark5, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image

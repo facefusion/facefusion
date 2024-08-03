@@ -3,15 +3,15 @@ from typing import Any, List
 
 
 def is_linux() -> bool:
-	return to_lower_case(platform.system()) == 'linux'
+	return platform.system().lower() == 'linux'
 
 
 def is_macos() -> bool:
-	return to_lower_case(platform.system()) == 'darwin'
+	return platform.system().lower() == 'darwin'
 
 
 def is_windows() -> bool:
-	return to_lower_case(platform.system()) == 'windows'
+	return platform.system().lower() == 'windows'
 
 
 def create_metavar(ranges : List[Any]) -> str:
@@ -42,10 +42,6 @@ def map_float(value : float, start : float, end : float, map_start : float, map_
 	ratio = (value - start) / (end - start)
 	map_value = map_start + (map_end - map_start) * ratio
 	return map_value
-
-
-def to_lower_case(__string__ : Any) -> str:
-	return str(__string__).lower()
 
 
 def get_first(__list__ : Any) -> Any:

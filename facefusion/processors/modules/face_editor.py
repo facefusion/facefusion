@@ -11,6 +11,7 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, map_float
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
@@ -21,7 +22,6 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEditorInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import thread_lock, thread_semaphore
 from facefusion.typing import Args, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image

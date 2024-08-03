@@ -7,9 +7,9 @@ import numpy
 from cv2.typing import Size
 
 from facefusion import process_manager, state_manager
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.filesystem import resolve_relative_path
-from facefusion.source_helper import conditional_download_hashes, conditional_download_sources
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelOptions, ModelSet, Padding, VisionFrame
 
