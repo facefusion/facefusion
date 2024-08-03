@@ -64,27 +64,27 @@ MODEL_SET : ModelSet =\
 		{
 			'feature_extractor':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_feature_extractor.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_feature_extractor.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.onnx')
 			},
 			'motion_extractor':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_motion_extractor.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_motion_extractor.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.onnx')
 			},
 			'eye_retargeter':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_eye_retargeter.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_eye_retargeter.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_eye_retargeter.onnx')
 			},
 			'lip_retargeter':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_lip_retargeter.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_lip_retargeter.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_lip_retargeter.onnx')
 			},
 			'generator':
 			{
-				'url': 'https://github.com/harisreedhar/LivePortrait-Experiments/releases/download/v3/live_portrait_generator.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_generator.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_generator.onnx')
 			}
 		},
