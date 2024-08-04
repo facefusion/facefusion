@@ -8,9 +8,9 @@ from facefusion.filesystem import create_directory, move_file, remove_directory
 
 
 def get_temp_file_path(file_path : str) -> str:
-	_, extension = os.path.splitext(os.path.basename(file_path))
+	_, temp_file_extension = os.path.splitext(os.path.basename(file_path))
 	temp_directory_path = get_temp_directory_path(file_path)
-	return os.path.join(temp_directory_path, 'temp' + extension)
+	return os.path.join(temp_directory_path, 'temp' + temp_file_extension)
 
 
 def move_temp_file(file_path : str, move_path : str) -> bool:
@@ -43,9 +43,9 @@ def clear_base_directory() -> bool:
 
 
 def get_temp_directory_path(file_path : str) -> str:
-	file_name, _ = os.path.splitext(os.path.basename(file_path))
+	temp_file_name, _ = os.path.splitext(os.path.basename(file_path))
 	base_directory_path = get_base_directory_path()
-	return os.path.join(base_directory_path, file_name)
+	return os.path.join(base_directory_path, temp_file_name)
 
 
 def create_temp_directory(file_path : str) -> bool:
