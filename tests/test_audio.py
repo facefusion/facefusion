@@ -11,7 +11,7 @@ from .helper import get_test_example_file, get_test_examples_directory
 def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.mp3'
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), get_test_example_file('source.wav') ])
 

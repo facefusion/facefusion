@@ -1,7 +1,7 @@
 import shutil
 import signal
 import sys
-from time import sleep, time
+from time import time
 
 import numpy
 import onnxruntime
@@ -10,7 +10,7 @@ from facefusion import content_analyser, face_analyser, face_masker, logger, pro
 from facefusion.args import apply_args, collect_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
-from facefusion.download import conditional_download
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import conditional_exit, graceful_exit, hard_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
@@ -51,8 +51,8 @@ def route(args : Args) -> None:
 	if system_memory_limit and system_memory_limit > 0:
 		limit_system_memory(system_memory_limit)
 	if state_manager.get_item('command') == 'force-download':
-		force_download()
-		return conditional_exit(0)
+		error_code = force_download()
+		return conditional_exit(error_code)
 	if state_manager.get_item('command') in [ 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step', 'job-list' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
@@ -105,11 +105,7 @@ def processors_pre_check() -> bool:
 def conditional_process() -> ErrorCode:
 	start_time = time()
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		while not processor_module.post_check():
-			logger.disable()
-			sleep(0.5)
-		logger.enable()
-		if not processor_module.pre_process('output'):
+		if not processor_module.pre_check() or not processor_module.pre_process('output'):
 			return 2
 	conditional_append_reference_faces()
 	if is_image(state_manager.get_item('target_path')):
@@ -141,22 +137,36 @@ def conditional_append_reference_faces() -> None:
 					append_reference_face(processor_module.__name__, abstract_reference_face)
 
 
-def force_download() -> None:
-	download_directory_path = resolve_relative_path('../.assets/models')
+def force_download() -> ErrorCode:
 	available_processors = list_directory('facefusion/processors/modules')
+	download_directory_path = resolve_relative_path('../.assets/models')
 	model_set =\
 	[
-		content_analyser.MODEL_SET,
-		face_analyser.MODEL_SET,
-		face_masker.MODEL_SET,
-		voice_extractor.MODEL_SET
+		content_analyser.MODEL_SET.get('open_nsfw'),
+		face_analyser.MODEL_SET.get('retinaface'),
+		face_analyser.MODEL_SET.get('scrfd'),
+		face_analyser.MODEL_SET.get('yoloface'),
+		face_analyser.MODEL_SET.get('arcface'),
+		face_analyser.MODEL_SET.get('face_landmarker_68'),
+		face_analyser.MODEL_SET.get('face_landmarker_68_5'),
+		face_analyser.MODEL_SET.get('gender_age'),
+		face_masker.MODEL_SET.get('face_masker'),
+		voice_extractor.MODEL_SET.get('voice_extractor'),
 	]
 
 	for processor_module in get_processors_modules(available_processors):
 		if hasattr(processor_module, 'MODEL_SET'):
-			model_set.append(processor_module.MODEL_SET)
-	model_urls = [ models[model].get('url') for models in model_set for model in models ]
-	conditional_download(download_directory_path, model_urls)
+			for processor_model in processor_module.MODEL_SET:
+				model_set.append(processor_module.MODEL_SET[processor_model])
+
+	for model in model_set:
+		model_hashes = model.get('hashes')
+		model_sources = model.get('sources')
+
+		if model_hashes and model_sources:
+			if not conditional_download_hashes(download_directory_path, model_hashes) or not conditional_download_sources(download_directory_path, model_sources):
+				return 1
+	return 0
 
 
 def route_job_manager(args : Args) -> ErrorCode:

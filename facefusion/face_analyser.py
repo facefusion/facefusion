@@ -6,13 +6,13 @@ import numpy
 
 from facefusion import process_manager, state_manager
 from facefusion.common_helper import get_first
-from facefusion.download import conditional_download
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, estimate_face_angle_from_face_landmark_68, estimate_matrix_by_face_landmark_5, get_nms_threshold, normalize_bounding_box, transform_bounding_box, transform_points, warp_face_by_face_landmark_5, warp_face_by_translation
 from facefusion.face_store import get_static_faces, set_static_faces
-from facefusion.filesystem import is_file, resolve_relative_path
+from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock, thread_semaphore
-from facefusion.typing import Angle, BoundingBox, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, FaceScoreSet, InferencePool, ModelSet, ModelSourceSet, Score, VisionFrame
+from facefusion.typing import Angle, BoundingBox, DownloadSet, Embedding, Face, FaceLandmark5, FaceLandmark68, FaceLandmarkSet, FaceScoreSet, InferencePool, ModelSet, Score, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 INFERENCE_POOL : Optional[InferencePool] = None
@@ -20,77 +20,133 @@ MODEL_SET : ModelSet =\
 {
 	'retinaface':
 	{
+		'hashes':
+		{
+			'face_detector_retinaface':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.hash',
+				'path': resolve_relative_path('../.assets/models/retinaface_10g.hash')
+			}
+		},
 		'sources':
 		{
 			'face_detector_retinaface':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/retinaface_10g.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.onnx',
 				'path': resolve_relative_path('../.assets/models/retinaface_10g.onnx')
 			}
 		}
 	},
 	'scrfd':
 	{
+		'hashes':
+		{
+			'face_detector_scrfd':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/scrfd_2.5g.hash',
+				'path': resolve_relative_path('../.assets/models/scrfd_2.5g.hash')
+			}
+		},
 		'sources':
 		{
 			'face_detector_scrfd':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/scrfd_2.5g.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/scrfd_2.5g.onnx',
 				'path': resolve_relative_path('../.assets/models/scrfd_2.5g.onnx')
 			}
 		}
 	},
 	'yoloface':
 	{
+		'hashes':
+		{
+			'face_detector_yoloface':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/yoloface_8n.hash',
+				'path': resolve_relative_path('../.assets/models/yoloface_8n.hash')
+			}
+		},
 		'sources':
 		{
 			'face_detector_yoloface':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/yoloface_8n.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/yoloface_8n.onnx',
 				'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
 			}
 		}
 	},
 	'arcface':
 	{
+		'hashes':
+		{
+			'face_recognizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
+			}
+		},
 		'sources':
 		{
 			'face_recognizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/arcface_w600k_r50.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.onnx',
 				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 			}
 		}
 	},
 	'face_landmarker_68':
 	{
+		'hashes':
+		{
+			'face_landmarker_68':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.hash',
+				'path': resolve_relative_path('../.assets/models/2dfan4.hash')
+			}
+		},
 		'sources':
 		{
 			'face_landmarker_68':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/2dfan4.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.onnx',
 				'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
 			}
 		}
 	},
 	'face_landmarker_68_5':
 	{
+		'hashes':
+		{
+			'face_landmarker_68_5':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/face_landmarker_68_5.hash',
+				'path': resolve_relative_path('../.assets/models/face_landmarker_68_5.hash')
+			}
+		},
 		'sources':
 		{
 			'face_landmarker_68_5':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_landmarker_68_5.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/face_landmarker_68_5.onnx',
 				'path': resolve_relative_path('../.assets/models/face_landmarker_68_5.onnx')
 			}
 		}
 	},
 	'gender_age':
 	{
+		'hashes':
+		{
+			'gender_age':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gender_age.hash',
+				'path': resolve_relative_path('../.assets/models/gender_age.hash')
+			}
+		},
 		'sources':
 		{
 			'gender_age':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gender_age.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gender_age.onnx',
 				'path': resolve_relative_path('../.assets/models/gender_age.onnx')
 			}
 		}
@@ -116,7 +172,24 @@ def clear_inference_pool() -> None:
 	INFERENCE_POOL = None
 
 
-def collect_model_sources() -> ModelSourceSet:
+def collect_model_hashes() -> DownloadSet:
+	model_hashes =\
+	{
+		'face_recognizer': MODEL_SET.get('arcface').get('hashes').get('face_recognizer'),
+		'face_landmarker_68': MODEL_SET.get('face_landmarker_68').get('hashes').get('face_landmarker_68'),
+		'face_landmarker_68_5': MODEL_SET.get('face_landmarker_68_5').get('hashes').get('face_landmarker_68_5'),
+		'gender_age': MODEL_SET.get('gender_age').get('hashes').get('gender_age')
+	}
+	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
+		model_hashes['face_detector_retinaface'] = MODEL_SET.get('retinaface').get('hashes').get('face_detector_retinaface')
+	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
+		model_hashes['face_detector_scrfd'] = MODEL_SET.get('scrfd').get('hashes').get('face_detector_scrfd')
+	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
+		model_hashes['face_detector_yoloface'] = MODEL_SET.get('yoloface').get('hashes').get('face_detector_yoloface')
+	return model_hashes
+
+
+def collect_model_sources() -> DownloadSet:
 	model_sources =\
 	{
 		'face_recognizer': MODEL_SET.get('arcface').get('sources').get('face_recognizer'),
@@ -124,26 +197,21 @@ def collect_model_sources() -> ModelSourceSet:
 		'face_landmarker_68_5': MODEL_SET.get('face_landmarker_68_5').get('sources').get('face_landmarker_68_5'),
 		'gender_age': MODEL_SET.get('gender_age').get('sources').get('gender_age')
 	}
-	if state_manager.get_item('face_detector_model') in ['many', 'retinaface']:
+	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
 		model_sources['face_detector_retinaface'] = MODEL_SET.get('retinaface').get('sources').get('face_detector_retinaface')
-	if state_manager.get_item('face_detector_model') in ['many', 'scrfd']:
+	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
 		model_sources['face_detector_scrfd'] = MODEL_SET.get('scrfd').get('sources').get('face_detector_scrfd')
-	if state_manager.get_item('face_detector_model') in ['many', 'yoloface']:
+	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
 		model_sources['face_detector_yoloface'] = MODEL_SET.get('yoloface').get('sources').get('face_detector_yoloface')
 	return model_sources
 
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = collect_model_hashes()
 	model_sources = collect_model_sources()
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download'):
-		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
-		process_manager.end()
-	return all(is_file(model_path) for model_path in model_paths)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:

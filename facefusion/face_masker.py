@@ -7,9 +7,9 @@ import numpy
 from cv2.typing import Size
 
 from facefusion import process_manager, state_manager
-from facefusion.download import conditional_download
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
-from facefusion.filesystem import is_file, resolve_relative_path
+from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
 from facefusion.typing import FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelOptions, ModelSet, Padding, VisionFrame
 
@@ -18,17 +18,30 @@ MODEL_SET : ModelSet =\
 {
 	'face_masker':
 	{
+		'hashes':
+		{
+			'face_occluder':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/dfl_xseg.hash',
+				'path': resolve_relative_path('../.assets/models/dfl_xseg.hash')
+			},
+			'face_parser':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/resnet_34.hash',
+				'path': resolve_relative_path('../.assets/models/resnet_34.hash')
+			}
+		},
 		'sources':
 		{
 			'face_occluder':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_occluder.onnx',
-				'path': resolve_relative_path('../.assets/models/face_occluder.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/dfl_xseg.onnx',
+				'path': resolve_relative_path('../.assets/models/dfl_xseg.onnx')
 			},
 			'face_parser':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/face_parser.onnx',
-				'path': resolve_relative_path('../.assets/models/face_parser.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/resnet_34.onnx',
+				'path': resolve_relative_path('../.assets/models/resnet_34.onnx')
 			}
 		}
 	}
@@ -72,15 +85,10 @@ def get_model_options() -> ModelOptions:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download'):
-		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
-		process_manager.end()
-	return all(is_file(model_path) for model_path in model_paths)
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 @lru_cache(maxsize = None)

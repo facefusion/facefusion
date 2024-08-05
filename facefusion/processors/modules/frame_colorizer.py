@@ -10,9 +10,9 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
-from facefusion.download import conditional_download, is_download_done
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool, has_execution_provider
-from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
@@ -26,11 +26,19 @@ MODEL_SET : ModelSet =\
 {
 	'ddcolor':
 	{
+		'hashes':
+		{
+			'frame_colorizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ddcolor.hash',
+				'path': resolve_relative_path('../.assets/models/ddcolor.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_colorizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ddcolor.onnx',
 				'path': resolve_relative_path('../.assets/models/ddcolor.onnx')
 			}
 		},
@@ -38,11 +46,19 @@ MODEL_SET : ModelSet =\
 	},
 	'ddcolor_artistic':
 	{
+		'hashes':
+		{
+			'frame_colorizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ddcolor_artistic.hashes',
+				'path': resolve_relative_path('../.assets/models/ddcolor_artistic.hashes')
+			}
+		},
 		'sources':
 		{
 			'frame_colorizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/ddcolor_artistic.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ddcolor_artistic.onnx',
 				'path': resolve_relative_path('../.assets/models/ddcolor_artistic.onnx')
 			}
 		},
@@ -50,11 +66,19 @@ MODEL_SET : ModelSet =\
 	},
 	'deoldify':
 	{
+		'hashes':
+		{
+			'frame_colorizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/deoldify.hash',
+				'path': resolve_relative_path('../.assets/models/deoldify.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_colorizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/deoldify.onnx',
 				'path': resolve_relative_path('../.assets/models/deoldify.onnx')
 			}
 		},
@@ -62,11 +86,19 @@ MODEL_SET : ModelSet =\
 	},
 	'deoldify_artistic':
 	{
+		'hashes':
+		{
+			'frame_colorizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/deoldify_artistic.hash',
+				'path': resolve_relative_path('../.assets/models/deoldify_artistic.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_colorizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_artistic.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/deoldify_artistic.onnx',
 				'path': resolve_relative_path('../.assets/models/deoldify_artistic.onnx')
 			}
 		},
@@ -74,11 +106,19 @@ MODEL_SET : ModelSet =\
 	},
 	'deoldify_stable':
 	{
+		'hashes':
+		{
+			'frame_colorizer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/deoldify_stable.hash',
+				'path': resolve_relative_path('../.assets/models/deoldify_stable.hash')
+			}
+		},
 		'sources':
 		{
 			'frame_colorizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/deoldify_stable.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/deoldify_stable.onnx',
 				'path': resolve_relative_path('../.assets/models/deoldify_stable.onnx')
 			}
 		},
@@ -127,32 +167,10 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download'):
-		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
-		process_manager.end()
-	return all(is_file(model_path) for model_path in model_paths)
-
-
-def post_check() -> bool:
-	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
-
-	if not state_manager.get_item('skip_download'):
-		for model_url, model_path in zip(model_urls, model_paths):
-			if not is_download_done(model_url, model_path):
-				logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
-				return False
-	for model_path in model_paths:
-		if not is_file(model_path):
-			logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-			return False
-	return True
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:

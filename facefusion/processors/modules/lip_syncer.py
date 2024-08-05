@@ -11,14 +11,14 @@ import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, voice_extractor, wording
 from facefusion.audio import create_empty_audio_frame, get_voice_frame, read_static_voice
 from facefusion.common_helper import get_first
-from facefusion.download import conditional_download, is_download_done
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import create_bounding_box_from_face_landmark_68, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_mouth_mask, create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
-from facefusion.filesystem import filter_audio_paths, has_audio, in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.filesystem import filter_audio_paths, has_audio, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import LipSyncerInputs
 from facefusion.program_helper import find_argument_group
@@ -32,22 +32,38 @@ MODEL_SET : ModelSet =\
 {
 	'wav2lip':
 	{
+		'hashes':
+		{
+			'lip_syncer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip.hash',
+				'path': resolve_relative_path('../.assets/models/wav2lip.hash')
+			}
+		},
 		'sources':
 		{
 			'lip_syncer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip.onnx',
 				'path': resolve_relative_path('../.assets/models/wav2lip.onnx')
 			}
 		}
 	},
 	'wav2lip_gan':
 	{
+		'hashes':
+		{
+			'lip_syncer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_gan.hash',
+				'path': resolve_relative_path('../.assets/models/wav2lip_gan.hash')
+			}
+		},
 		'sources':
 		{
 			'lip_syncer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/wav2lip_gan.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_gan.onnx',
 				'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx')
 			}
 		}
@@ -90,32 +106,10 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download'):
-		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
-		process_manager.end()
-	return all(is_file(model_path) for model_path in model_paths)
-
-
-def post_check() -> bool:
-	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
-
-	if not state_manager.get_item('skip_download'):
-		for model_url, model_path in zip(model_urls, model_paths):
-			if not is_download_done(model_url, model_path):
-				logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
-				return False
-	for model_path in model_paths:
-		if not is_file(model_path):
-			logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-			return False
-	return True
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:

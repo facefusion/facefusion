@@ -12,9 +12,9 @@ from .helper import get_test_example_file, get_test_examples_directory, get_test
 def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.mp3',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4'
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	copy_file(get_test_example_file('source.jpg'), get_test_example_file('söurce.jpg'))
 

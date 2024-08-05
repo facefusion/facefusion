@@ -99,12 +99,13 @@ OutputAudioEncoder = Literal['aac', 'libmp3lame', 'libopus', 'libvorbis']
 OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf']
 OutputVideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
-ModelSource = TypedDict('ModelSource',
-{
+Download = TypedDict('Download',
+					 {
 	'url' : str,
 	'path' : str
 })
-ModelSourceSet = Dict[str, ModelSource]
+DownloadSet = Dict[str, Download]
+
 ModelOptions = Dict[str, Any]
 ModelSet = Dict[str, ModelOptions]
 ModelInitializer = NDArray[Any]

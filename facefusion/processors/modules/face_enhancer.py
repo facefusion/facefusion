@@ -10,14 +10,14 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar
-from facefusion.download import conditional_download, is_download_done
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
-from facefusion.filesystem import in_directory, is_file, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEnhancerInputs
 from facefusion.program_helper import find_argument_group
@@ -31,11 +31,19 @@ MODEL_SET : ModelSet =\
 {
 	'codeformer':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/codeformer.hash',
+				'path': resolve_relative_path('../.assets/models/codeformer.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/codeformer.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/codeformer.onnx',
 				'path': resolve_relative_path('../.assets/models/codeformer.onnx')
 			}
 		},
@@ -44,11 +52,19 @@ MODEL_SET : ModelSet =\
 	},
 	'gfpgan_1.2':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.2.hash',
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.2.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.2.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.2.onnx',
 				'path': resolve_relative_path('../.assets/models/gfpgan_1.2.onnx')
 			}
 		},
@@ -57,11 +73,19 @@ MODEL_SET : ModelSet =\
 	},
 	'gfpgan_1.3':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.3.hash',
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.3.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.3.onnx',
 				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.onnx')
 			}
 		},
@@ -70,11 +94,19 @@ MODEL_SET : ModelSet =\
 	},
 	'gfpgan_1.4':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.4.hash',
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gfpgan_1.4.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.4.onnx',
 				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.onnx')
 			}
 		},
@@ -83,11 +115,19 @@ MODEL_SET : ModelSet =\
 	},
 	'gpen_bfr_256':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_256.hash',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_256.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_256.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_256.onnx',
 				'path': resolve_relative_path('../.assets/models/gpen_bfr_256.onnx')
 			}
 		},
@@ -96,11 +136,19 @@ MODEL_SET : ModelSet =\
 	},
 	'gpen_bfr_512':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_512.hash',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_512.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_512.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_512.onnx',
 				'path': resolve_relative_path('../.assets/models/gpen_bfr_512.onnx')
 			}
 		},
@@ -109,11 +157,19 @@ MODEL_SET : ModelSet =\
 	},
 	'gpen_bfr_1024':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_1024.hash',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_1024.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_1024.onnx',
 				'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.onnx')
 			}
 		},
@@ -122,11 +178,19 @@ MODEL_SET : ModelSet =\
 	},
 	'gpen_bfr_2048':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_2048.hash',
+				'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/gpen_bfr_2048.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_2048.onnx',
 				'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.onnx')
 			}
 		},
@@ -135,11 +199,19 @@ MODEL_SET : ModelSet =\
 	},
 	'restoreformer_plus_plus':
 	{
+		'hashes':
+		{
+			'face_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/restoreformer_plus_plus.hash',
+				'path': resolve_relative_path('../.assets/models/restoreformer_plus_plus.hash')
+			}
+		},
 		'sources':
 		{
 			'face_enhancer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models/restoreformer_plus_plus.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/restoreformer_plus_plus.onnx',
 				'path': resolve_relative_path('../.assets/models/restoreformer_plus_plus.onnx')
 			}
 		},
@@ -186,32 +258,10 @@ def apply_args(args : Args) -> None:
 
 def pre_check() -> bool:
 	download_directory_path = resolve_relative_path('../.assets/models')
+	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
 
-	if not state_manager.get_item('skip_download'):
-		process_manager.check()
-		conditional_download(download_directory_path, model_urls)
-		process_manager.end()
-	return all(is_file(model_path) for model_path in model_paths)
-
-
-def post_check() -> bool:
-	model_sources = get_model_options().get('sources')
-	model_urls = [ model_sources.get(model_source).get('url') for model_source in model_sources.keys() ]
-	model_paths = [ model_sources.get(model_source).get('path') for model_source in model_sources.keys() ]
-
-	if not state_manager.get_item('skip_download'):
-		for model_url, model_path in zip(model_urls, model_paths):
-			if not is_download_done(model_url, model_path):
-				logger.error(wording.get('model_download_not_done') + wording.get('exclamation_mark'), NAME)
-				return False
-	for model_path in model_paths:
-		if not is_file(model_path):
-			logger.error(wording.get('model_file_not_present') + wording.get('exclamation_mark'), NAME)
-			return False
-	return True
+	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:

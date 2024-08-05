@@ -2,7 +2,6 @@ import os
 import subprocess
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from time import sleep
 from typing import Deque, Generator, Optional
 
 import cv2
@@ -16,9 +15,9 @@ from facefusion.content_analyser import analyse_stream
 from facefusion.face_analyser import get_average_face, get_many_faces
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.filesystem import filter_image_paths
-from facefusion.processors.core import get_processors_modules, load_processor_module
+from facefusion.processors.core import get_processors_modules
 from facefusion.typing import Face, Fps, VisionFrame
-from facefusion.uis.core import get_ui_component, get_ui_components
+from facefusion.uis.core import get_ui_component
 from facefusion.uis.typing import StreamMode, WebcamMode
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
 
@@ -77,17 +76,6 @@ def listen() -> None:
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 		WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
 
-	for ui_component in get_ui_components(
-	[
-		'processors_checkbox_group',
-		'face_swapper_model_dropdown',
-		'face_enhancer_model_dropdown',
-		'frame_enhancer_model_dropdown',
-		'lip_syncer_model_dropdown',
-		'source_image'
-	]):
-		ui_component.change(update, cancels = start_event)
-
 
 def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	state_manager.set_item('face_selector_mode', 'one')
@@ -139,15 +127,6 @@ def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture,
 				while deque_capture_frames:
 					progress.update()
 					yield deque_capture_frames.popleft()
-
-
-def update() -> None:
-	for processor in state_manager.get_item('processors'):
-		processor_module = load_processor_module(processor)
-		while not processor_module.post_check():
-			logger.disable()
-			sleep(0.5)
-		logger.enable()
 
 
 def stop() -> gradio.Image:
