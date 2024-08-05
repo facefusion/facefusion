@@ -52,7 +52,6 @@ def update_age_modifier_model(age_modifier_model : AgeModifierModel) -> gradio.D
 	age_modifier_module = load_processor_module('age_modifier')
 	age_modifier_module.clear_inference_pool()
 	state_manager.set_item('age_modifier_model', age_modifier_model)
-	age_modifier_module.set_options('model', age_modifier_module.MODEL_SET[state_manager.get_item('age_modifier_model')])
 
 	if age_modifier_module.pre_check():
 		return gradio.Dropdown(value = state_manager.get_item('age_modifier_model'))

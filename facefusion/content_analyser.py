@@ -88,7 +88,7 @@ def analyse_frame(vision_frame : VisionFrame) -> bool:
 	with conditional_thread_semaphore():
 		probability = content_analyser.run(None,
 		{
-			content_analyser.get_inputs()[0].name: vision_frame
+			'input': vision_frame
 		})[0][0][1]
 
 	return probability > PROBABILITY_LIMIT

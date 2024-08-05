@@ -231,7 +231,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 	with thread_semaphore():
 		detections = face_detector.run(None,
 		{
-			face_detector.get_inputs()[0].name: detect_vision_frame
+			'input': detect_vision_frame
 		})
 
 	for index, feature_stride in enumerate(feature_strides):
@@ -274,7 +274,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 	with thread_semaphore():
 		detections = face_detector.run(None,
 		{
-			face_detector.get_inputs()[0].name: detect_vision_frame
+			'input': detect_vision_frame
 		})
 
 	for index, feature_stride in enumerate(feature_strides):
@@ -314,7 +314,7 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 	with thread_semaphore():
 		detections = face_detector.run(None,
 		{
-			face_detector.get_inputs()[0].name: detect_vision_frame
+			'input': detect_vision_frame
 		})
 
 	detections = numpy.squeeze(detections).T
@@ -434,7 +434,7 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 	with conditional_thread_semaphore():
 		embedding = face_recognizer.run(None,
 		{
-			face_recognizer.get_inputs()[0].name: crop_vision_frame
+			'input': crop_vision_frame
 		})[0]
 
 	embedding = embedding.ravel()
@@ -458,7 +458,7 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 	with conditional_thread_semaphore():
 		face_landmark_68, face_heatmap = face_landmarker.run(None,
 		{
-			face_landmarker.get_inputs()[0].name: [ crop_vision_frame ]
+			'input': [ crop_vision_frame ]
 		})
 
 	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64 * 256
@@ -477,7 +477,7 @@ def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandm
 	with conditional_thread_semaphore():
 		face_landmark_68_5 = face_landmarker.run(None,
 		{
-			face_landmarker.get_inputs()[0].name: [ face_landmark_5 ]
+			'input': [ face_landmark_5 ]
 		})[0][0]
 
 	face_landmark_68_5 = cv2.transform(face_landmark_68_5.reshape(1, -1, 2), cv2.invertAffineTransform(affine_matrix)).reshape(-1, 2)
@@ -496,7 +496,7 @@ def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBo
 	with conditional_thread_semaphore():
 		prediction = gender_age.run(None,
 		{
-			gender_age.get_inputs()[0].name: crop_vision_frame
+			'input': crop_vision_frame
 		})[0][0]
 
 	gender = int(numpy.argmax(prediction[:2]))

@@ -114,7 +114,7 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 	with conditional_thread_semaphore():
 		occlusion_mask : Mask = face_occluder.run(None,
 		{
-			face_occluder.get_inputs()[0].name: prepare_vision_frame
+			'input': prepare_vision_frame
 		})[0][0]
 
 	occlusion_mask = occlusion_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
@@ -135,7 +135,7 @@ def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List
 	with conditional_thread_semaphore():
 		region_mask : Mask = face_parser.run(None,
 		{
-			face_parser.get_inputs()[0].name: prepare_vision_frame
+			'input': prepare_vision_frame
 		})[0][0]
 
 	region_mask = numpy.isin(region_mask.argmax(0), [ FACE_MASK_REGIONS[region] for region in face_mask_regions ])

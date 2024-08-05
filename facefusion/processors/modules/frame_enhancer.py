@@ -355,7 +355,7 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 		with conditional_thread_semaphore():
 			tile_vision_frame = frame_enhancer.run(None,
 			{
-				frame_enhancer.get_inputs()[0].name : prepare_tile_frame(tile_vision_frame)
+				'input': prepare_tile_frame(tile_vision_frame)
 			})[0]
 		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame)
 

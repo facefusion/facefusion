@@ -88,7 +88,7 @@ def extract_voice(temp_audio_chunk : AudioChunk) -> AudioChunk:
 	with thread_semaphore():
 		temp_audio_chunk = voice_extractor.run(None,
 		{
-			voice_extractor.get_inputs()[0].name: temp_audio_chunk
+			'input': temp_audio_chunk
 		})[0]
 
 	temp_audio_chunk = compose_audio_chunk(temp_audio_chunk, trim_size)

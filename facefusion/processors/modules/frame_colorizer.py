@@ -202,7 +202,7 @@ def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	with thread_semaphore():
 		color_vision_frame = frame_colorizer.run(None,
 		{
-			frame_colorizer.get_inputs()[0].name: prepare_vision_frame
+			'input': prepare_vision_frame
 		})[0][0]
 
 	color_vision_frame = merge_color_frame(temp_vision_frame, color_vision_frame)

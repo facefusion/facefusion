@@ -428,9 +428,11 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	if 'box' in state_manager.get_item('face_mask_types'):
 		box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 		crop_masks.append(box_mask)
+
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
+
 	pixel_boost_vision_frames = implode_pixel_boost(crop_vision_frame, pixel_boost_total, model_size)
 	for pixel_boost_vision_frame in pixel_boost_vision_frames:
 		pixel_boost_vision_frame = prepare_crop_frame(pixel_boost_vision_frame)
@@ -438,6 +440,7 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 		pixel_boost_vision_frame = normalize_crop_frame(pixel_boost_vision_frame)
 		temp_vision_frames.append(pixel_boost_vision_frame)
 	crop_vision_frame = explode_pixel_boost(temp_vision_frames, pixel_boost_total, model_size, pixel_boost_size)
+
 	if 'region' in state_manager.get_item('face_mask_types'):
 		region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))
 		crop_masks.append(region_mask)
@@ -507,7 +510,7 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 	with conditional_thread_semaphore():
 		embedding = face_recognizer.run(None,
 		{
-			face_recognizer.get_inputs()[0].name: crop_vision_frame
+			'input': crop_vision_frame
 		})[0]
 
 	embedding = embedding.ravel()
