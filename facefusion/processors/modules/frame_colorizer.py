@@ -50,8 +50,8 @@ MODEL_SET : ModelSet =\
 		{
 			'frame_colorizer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ddcolor_artistic.hashes',
-				'path': resolve_relative_path('../.assets/models/ddcolor_artistic.hashes')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ddcolor_artistic.hash',
+				'path': resolve_relative_path('../.assets/models/ddcolor_artistic.hash')
 			}
 		},
 		'sources':
