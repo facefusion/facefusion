@@ -36,10 +36,6 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 						current_size = get_file_size(download_file_path)
 						progress.update(current_size - progress.n)
 
-		if download_size and not is_download_done(url, download_file_path):
-			remove_file(download_file_path)
-			conditional_download(download_directory_path, [ url ])
-
 
 @lru_cache(maxsize = None)
 def get_download_size(url : str) -> int:
@@ -101,6 +97,9 @@ def conditional_download_sources(download_directory_path : str, sources : Downlo
 	for invalid_source_path in invalid_source_paths:
 		invalid_source_file_name, _ = os.path.splitext(os.path.basename(invalid_source_path))
 		logger.error(wording.get('validating_source_failed').format(source_file_name = invalid_source_file_name), __name__.upper())
+
+		if remove_file(invalid_source_path):
+			logger.error(wording.get('deleting_corrupt_source').format(source_file_name = invalid_source_file_name), __name__.upper())
 
 	if not invalid_source_paths:
 		process_manager.end()

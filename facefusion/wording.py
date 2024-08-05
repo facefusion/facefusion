@@ -74,6 +74,7 @@ WORDING : Dict[str, Any] =\
 	'validating_hash_failed': 'Validating hash for {hash_file_name} failed',
 	'validating_source_succeed': 'Validating source for {source_file_name} succeed',
 	'validating_source_failed': 'Validating source for {source_file_name} failed',
+	'deleting_corrupt_source': 'Deleting corrupt source for {source_file_name}',
 	'time_ago_now': 'just now',
 	'time_ago_minutes': '{minutes} minutes ago',
 	'time_ago_hours': '{hours} hours and {minutes} minutes ago',
