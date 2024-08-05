@@ -63,8 +63,7 @@ def get_inference_pool() -> Any:
 			sleep(0.5)
 		if INFERENCE_POOL is None:
 			model_sources = get_model_options().get('sources')
-			execution_providers = [ 'cpu' ] if has_execution_provider('coreml') else state_manager.get_item('execution_providers')
-			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), execution_providers)
+			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 	return INFERENCE_POOL
 
 
