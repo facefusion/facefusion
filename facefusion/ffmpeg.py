@@ -82,6 +82,8 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	if state_manager.get_item('output_video_encoder') in [ 'h264_amf', 'hevc_amf' ]:
 		output_video_compression = round(51 - (state_manager.get_item('output_video_quality') * 0.51))
 		commands.extend([ '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(state_manager.get_item('output_video_preset')) ])
+	if state_manager.get_item('output_video_encoder') in [ 'h264_videotoolbox', 'hevc_videotoolbox' ]:
+		commands.extend([ '-q:v', str(state_manager.get_item('output_video_quality')) ])
 	commands.extend([ '-vf', 'framerate=fps=' + str(output_video_fps), '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_file_path ])
 	return run_ffmpeg(commands).returncode == 0
 
