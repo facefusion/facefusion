@@ -13,7 +13,7 @@ import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_metavar, map_float
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.execution import create_inference_pool, has_execution_provider
+from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
