@@ -259,6 +259,7 @@ WORDING : Dict[str, Any] =\
 		'stop_button': 'STOP',
 		'system_memory_limit_slider': 'SYSTEM MEMORY LIMIT',
 		'target_file': 'TARGET',
+		'terminal_textbox': 'TERMINAL',
 		'temp_frame_format_dropdown': 'TEMP FRAME FORMAT',
 		'trim_frame_slider': 'TRIM FRAME',
 		'ui_workflow': 'UI WORKFLOW',
