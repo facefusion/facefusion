@@ -27,6 +27,7 @@ lip_syncer_models : List[LipSyncerModel] = [ 'wav2lip', 'wav2lip_gan' ]
 
 age_modifier_direction_range : List[int] = create_int_range(-100, 100, 1)
 expression_restorer_factor_range : List[int] = create_int_range(0, 200, 1)
+face_editor_eyebrow_direction_range : List[float] = create_float_range(-1, 1, 0.1)
 face_editor_eye_gaze_horizontal_range : List[float] = create_float_range(-1, 1, 0.1)
 face_editor_eye_gaze_vertical_range : List[float] = create_float_range(-1, 1, 0.1)
 face_editor_eye_open_ratio_range : List[float] = create_float_range(-1, 1, 0.1)

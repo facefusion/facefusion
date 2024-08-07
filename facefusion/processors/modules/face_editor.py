@@ -120,6 +120,7 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--face-editor-model', help = wording.get('help.face_editor_model'), default = config.get_str_value('processors.face_editor_model', 'live_portrait'), choices = processors_choices.face_editor_models)
+		group_processors.add_argument('--face-editor-eyebrow-direction', help = wording.get('help.face_editor_eyebrow_direction'), type = float, default = config.get_float_value('processors.face_editor_eyebrow_direction', '0'), choices = processors_choices.face_editor_eyebrow_direction_range, metavar = create_metavar(processors_choices.face_editor_eyebrow_direction_range))
 		group_processors.add_argument('--face-editor-eye-gaze-horizontal', help = wording.get('help.face_editor_eye_gaze_horizontal'), type = float, default = config.get_float_value('processors.face_editor_eye_gaze_horizontal', '0'), choices = processors_choices.face_editor_eye_gaze_horizontal_range, metavar = create_metavar(processors_choices.face_editor_eye_gaze_horizontal_range))
 		group_processors.add_argument('--face-editor-eye-gaze-vertical', help = wording.get('help.face_editor_eye_gaze_vertical'), type = float, default = config.get_float_value('processors.face_editor_eye_gaze_vertical', '0'), choices = processors_choices.face_editor_eye_gaze_vertical_range, metavar = create_metavar(processors_choices.face_editor_eye_gaze_vertical_range))
 		group_processors.add_argument('--face-editor-eye-open-ratio', help = wording.get('help.face_editor_eye_open_ratio'), type = float, default = config.get_float_value('processors.face_editor_eye_open_ratio', '0'), choices = processors_choices.face_editor_eye_open_ratio_range, metavar = create_metavar(processors_choices.face_editor_eye_open_ratio_range))
@@ -129,6 +130,7 @@ def register_args(program : ArgumentParser) -> None:
 
 def apply_args(args : Args) -> None:
 	state_manager.init_item('face_editor_model', args.get('face_editor_model'))
+	state_manager.init_item('face_editor_eyebrow_direction', args.get('face_editor_eyebrow_direction'))
 	state_manager.init_item('face_editor_eye_gaze_horizontal', args.get('face_editor_eye_gaze_horizontal'))
 	state_manager.init_item('face_editor_eye_gaze_vertical', args.get('face_editor_eye_gaze_vertical'))
 	state_manager.init_item('face_editor_eye_open_ratio', args.get('face_editor_eye_open_ratio'))
@@ -205,8 +207,10 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 		{
 			'input': crop_vision_frame
 		})
+	expression = edit_eye_gaze(expression)
+	expression = edit_eyebrow_direction(expression)
 	motion_points_edit @= rotation
-	motion_points_edit += edit_eye_gaze(expression)
+	motion_points_edit += expression
 	motion_points_edit *= scale
 	motion_points_edit += translation
 	motion_points_edit += edit_eye_open(motion_points, face_landmark_68)
@@ -220,6 +224,20 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 			'source': motion_points_edit
 		})[0][0]
 	return crop_vision_frame
+
+
+def edit_eyebrow_direction(expression : NDArray[Any]) -> NDArray[Any]:
+	face_editor_eyebrow = state_manager.get_item('face_editor_eyebrow_direction')
+
+	if face_editor_eyebrow > 0:
+		expression[0, 1, 1] += map_float(face_editor_eyebrow, -1, 1, -0.015, 0.015)
+		expression[0, 2, 1] -= map_float(face_editor_eyebrow, -1, 1, -0.020, 0.020)
+	else:
+		expression[0, 1, 0] -= map_float(face_editor_eyebrow, -1, 1, -0.015, 0.015)
+		expression[0, 2, 0] += map_float(face_editor_eyebrow, -1, 1, -0.020, 0.020)
+		expression[0, 1, 1] += map_float(face_editor_eyebrow, -1, 1, -0.005, 0.005)
+		expression[0, 2, 1] -= map_float(face_editor_eyebrow, -1, 1, -0.005, 0.005)
+	return expression
 
 
 def edit_eye_gaze(expression : NDArray[Any]) -> NDArray[Any]:
