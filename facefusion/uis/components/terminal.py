@@ -1,7 +1,8 @@
 import io
 import logging
-import gradio as gr
 from typing import Optional
+
+import gradio as gr
 
 from facefusion import logger, wording
 
