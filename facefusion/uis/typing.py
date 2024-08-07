@@ -17,6 +17,8 @@ ComponentName = Literal\
 	'face_detector_score_slider',
 	'face_detector_size_dropdown',
 	'face_editor_model_dropdown',
+	'face_editor_eye_gaze_horizontal_slider',
+	'face_editor_eye_gaze_vertical_slider',
 	'face_editor_eye_open_ratio_slider',
 	'face_editor_lip_open_ratio_slider',
 	'face_enhancer_blend_slider',

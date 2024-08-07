@@ -69,6 +69,8 @@ FrameProcessorStateKey = Literal\
 	'expression_restorer_factor',
 	'face_debugger_items',
 	'face_editor_model',
+	'face_editor_eye_gaze_horizontal',
+	'face_editor_eye_gaze_vertical',
 	'face_editor_eye_open_ratio',
 	'face_editor_lip_open_ratio',
 	'face_enhancer_model',
