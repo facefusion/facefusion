@@ -205,14 +205,12 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 		{
 			'input': crop_vision_frame
 		})
-	expression = edit_eye_gaze(expression)
 	motion_points_edit @= rotation
-	motion_points_edit += expression
+	motion_points_edit += edit_eye_gaze(expression)
 	motion_points_edit *= scale
 	motion_points_edit += translation
-	eye_motion_points = edit_eye_open(motion_points, face_landmark_68)
-	lip_motion_points = edit_lip_open(motion_points, face_landmark_68)
-	motion_points_edit = motion_points_edit + eye_motion_points + lip_motion_points
+	motion_points_edit += edit_eye_open(motion_points, face_landmark_68)
+	motion_points_edit += edit_lip_open(motion_points, face_landmark_68)
 
 	with thread_semaphore():
 		crop_vision_frame = generator.run(None,
