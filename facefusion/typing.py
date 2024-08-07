@@ -5,6 +5,7 @@ import numpy
 from numpy.typing import NDArray
 from onnxruntime import InferenceSession
 
+Scale = float
 Score = float
 Angle = int
 
@@ -57,6 +58,8 @@ AudioFrame = NDArray[Any]
 Spectrogram = NDArray[Any]
 Mel = NDArray[Any]
 MelFilterBank = NDArray[Any]
+
+MotionPoints = NDArray[Any]
 
 Fps = float
 Padding = Tuple[int, int, int, int]

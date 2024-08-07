@@ -1,10 +1,9 @@
 from argparse import ArgumentParser
 from time import sleep
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional
 
 import cv2
 import numpy
-from numpy.typing import NDArray
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -14,8 +13,8 @@ from facefusion.common_helper import create_metavar, map_float
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
-from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
-from facefusion.face_masker import create_face_mask, create_occlusion_mask, create_static_box_mask
+from facefusion.face_helper import paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
+from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -23,7 +22,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEditorInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_lock, thread_semaphore
-from facefusion.typing import Args, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, MotionPoints, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 INFERENCE_POOL : Optional[InferencePool] = None
@@ -120,19 +119,21 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--face-editor-model', help = wording.get('help.face_editor_model'), default = config.get_str_value('processors.face_editor_model', 'live_portrait'), choices = processors_choices.face_editor_models)
+		group_processors.add_argument('--face-editor-eyebrow-direction', help = wording.get('help.face_editor_eyebrow_direction'), type = float, default = config.get_float_value('processors.face_editor_eyebrow_direction', '0'), choices = processors_choices.face_editor_eyebrow_direction_range, metavar = create_metavar(processors_choices.face_editor_eyebrow_direction_range))
+		group_processors.add_argument('--face-editor-eye-gaze-horizontal', help = wording.get('help.face_editor_eye_gaze_horizontal'), type = float, default = config.get_float_value('processors.face_editor_eye_gaze_horizontal', '0'), choices = processors_choices.face_editor_eye_gaze_horizontal_range, metavar = create_metavar(processors_choices.face_editor_eye_gaze_horizontal_range))
+		group_processors.add_argument('--face-editor-eye-gaze-vertical', help = wording.get('help.face_editor_eye_gaze_vertical'), type = float, default = config.get_float_value('processors.face_editor_eye_gaze_vertical', '0'), choices = processors_choices.face_editor_eye_gaze_vertical_range, metavar = create_metavar(processors_choices.face_editor_eye_gaze_vertical_range))
 		group_processors.add_argument('--face-editor-eye-open-ratio', help = wording.get('help.face_editor_eye_open_ratio'), type = float, default = config.get_float_value('processors.face_editor_eye_open_ratio', '0'), choices = processors_choices.face_editor_eye_open_ratio_range, metavar = create_metavar(processors_choices.face_editor_eye_open_ratio_range))
-		group_processors.add_argument('--face-editor-eye-open-factor', help = wording.get('help.face_editor_eye_open_factor'), type = int, default = config.get_int_value('processors.face_editor_eye_open_factor', '100'), choices = processors_choices.face_editor_eye_open_factor_range, metavar = create_metavar(processors_choices.face_editor_eye_open_factor_range))
 		group_processors.add_argument('--face-editor-lip-open-ratio', help = wording.get('help.face_editor_lip_open_ratio'), type = float, default = config.get_float_value('processors.face_editor_lip_open_ratio', '0'), choices = processors_choices.face_editor_lip_open_ratio_range, metavar = create_metavar(processors_choices.face_editor_lip_open_ratio_range))
-		group_processors.add_argument('--face-editor-lip-open-factor', help = wording.get('help.face_editor_lip_open_factor'), type = int, default = config.get_int_value('processors.face_editor_lip_open_factor', '100'), choices = processors_choices.face_editor_lip_open_factor_range, metavar = create_metavar(processors_choices.face_editor_lip_open_factor_range))
-		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model','face_editor_eye_open_ratio', 'face_editor_eye_open_factor', 'face_editor_lip_open_ratio', 'face_editor_lip_open_factor' ])
+		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio' ])
 
 
 def apply_args(args : Args) -> None:
 	state_manager.init_item('face_editor_model', args.get('face_editor_model'))
+	state_manager.init_item('face_editor_eyebrow_direction', args.get('face_editor_eyebrow_direction'))
+	state_manager.init_item('face_editor_eye_gaze_horizontal', args.get('face_editor_eye_gaze_horizontal'))
+	state_manager.init_item('face_editor_eye_gaze_vertical', args.get('face_editor_eye_gaze_vertical'))
 	state_manager.init_item('face_editor_eye_open_ratio', args.get('face_editor_eye_open_ratio'))
-	state_manager.init_item('face_editor_eye_open_factor', args.get('face_editor_eye_open_factor'))
 	state_manager.init_item('face_editor_lip_open_ratio', args.get('face_editor_lip_open_ratio'))
-	state_manager.init_item('face_editor_lip_open_factor', args.get('face_editor_lip_open_factor'))
 
 
 def pre_check() -> bool:
@@ -169,7 +170,8 @@ def post_process() -> None:
 def edit_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
-	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
+	face_landmark_5 = scale_face_landmark_5(target_face.landmark_set.get('5/68'), 1.2)
+	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, model_size)
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
 	[
@@ -182,7 +184,6 @@ def edit_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
 	crop_vision_frame = apply_edit_face(crop_vision_frame, target_face.landmark_set.get('68'))
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
-	crop_masks.append(create_face_mask(crop_vision_frame))
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
@@ -191,12 +192,7 @@ def edit_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame
 def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
 	feature_extractor = get_inference_pool().get('feature_extractor')
 	motion_extractor = get_inference_pool().get('motion_extractor')
-	eye_retargeter = get_inference_pool().get('eye_retargeter')
-	lip_retargeter = get_inference_pool().get('lip_retargeter')
 	generator = get_inference_pool().get('generator')
-	face_editor_eye_open_ratio, face_editor_lip_open_ratio = calc_face_edit_ratio(face_landmark_68)
-	face_editor_eye_open_factor = map_float(float(state_manager.get_item('face_editor_eye_open_factor')), 0, 100, 0, 1)
-	face_editor_lip_open_factor = map_float(float(state_manager.get_item('face_editor_lip_open_factor')), 0, 100, 0, 1)
 
 	with thread_semaphore():
 		feature_volume = feature_extractor.run(None,
@@ -205,26 +201,18 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 		})[0]
 
 	with thread_semaphore():
-		motion_points = motion_extractor.run(None,
+		rotation, scale, translation, expression, motion_points_raw, motion_points = motion_extractor.run(None,
 		{
 			'input': crop_vision_frame
-		})[5]
-
-	with thread_semaphore():
-		eye_motion_points = eye_retargeter.run(None,
-		{
-			'input': numpy.concatenate([ motion_points.reshape(1, -1), face_editor_eye_open_ratio ], axis = 1)
-		})[0]
-
-	with thread_semaphore():
-		lip_motion_points = lip_retargeter.run(None,
-		{
-			'input': numpy.concatenate([ motion_points.reshape(1, -1), face_editor_lip_open_ratio ], axis = 1)
-		})[0]
-
-	eye_motion_points = eye_motion_points.reshape(-1, 21, 3) * face_editor_eye_open_factor
-	lip_motion_points = lip_motion_points.reshape(-1, 21, 3) * face_editor_lip_open_factor
-	motion_points_edit = motion_points + eye_motion_points + lip_motion_points
+		})
+	expression = edit_eye_gaze(expression)
+	expression = edit_eyebrow_direction(expression)
+	motion_points_edit = motion_points_raw @ rotation
+	motion_points_edit += expression
+	motion_points_edit *= scale
+	motion_points_edit += translation
+	motion_points_edit += edit_eye_open(motion_points, face_landmark_68)
+	motion_points_edit += edit_lip_open(motion_points, face_landmark_68)
 
 	with thread_semaphore():
 		crop_vision_frame = generator.run(None,
@@ -233,29 +221,99 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 			'target': motion_points,
 			'source': motion_points_edit
 		})[0][0]
-
 	return crop_vision_frame
 
 
-def calc_face_edit_ratio(face_landmark_68 : FaceLandmark68) -> Tuple[NDArray[Any], NDArray[Any]]:
+def edit_eyebrow_direction(expression : MotionPoints) -> MotionPoints:
+	face_editor_eyebrow = state_manager.get_item('face_editor_eyebrow_direction')
+
+	if face_editor_eyebrow > 0:
+		expression[0, 1, 1] += map_float(face_editor_eyebrow, -1, 1, -0.015, 0.015)
+		expression[0, 2, 1] -= map_float(face_editor_eyebrow, -1, 1, -0.020, 0.020)
+	else:
+		expression[0, 1, 0] -= map_float(face_editor_eyebrow, -1, 1, -0.015, 0.015)
+		expression[0, 2, 0] += map_float(face_editor_eyebrow, -1, 1, -0.020, 0.020)
+		expression[0, 1, 1] += map_float(face_editor_eyebrow, -1, 1, -0.005, 0.005)
+		expression[0, 2, 1] -= map_float(face_editor_eyebrow, -1, 1, -0.005, 0.005)
+	return expression
+
+
+def edit_eye_gaze(expression : MotionPoints) -> MotionPoints:
+	face_editor_eye_gaze_horizontal = state_manager.get_item('face_editor_eye_gaze_horizontal')
+	face_editor_eye_gaze_vertical = state_manager.get_item('face_editor_eye_gaze_vertical')
+
+	if face_editor_eye_gaze_horizontal > 0:
+		expression[0, 11, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.015, 0.015)
+		expression[0, 15, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.020, 0.020)
+	else:
+		expression[0, 11, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.020, 0.020)
+		expression[0, 15, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.015, 0.015)
+	expression[0, 1, 1] += map_float(face_editor_eye_gaze_vertical, -1, 1, -0.0025, 0.0025)
+	expression[0, 2, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.0025, 0.0025)
+	expression[0, 11, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.010, 0.010)
+	expression[0, 13, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.005, 0.005)
+	expression[0, 15, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.010, 0.010)
+	expression[0, 16, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.005, 0.005)
+	return expression
+
+
+def edit_eye_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark68) -> MotionPoints:
+	eye_retargeter = get_inference_pool().get('eye_retargeter')
 	face_editor_eye_open_ratio = state_manager.get_item('face_editor_eye_open_ratio')
+	left_eye_ratio = calc_distance_ratio(face_landmark_68, 37, 40, 39, 36)
+	right_eye_ratio = calc_distance_ratio(face_landmark_68, 43, 46, 45, 42)
+
+	if face_editor_eye_open_ratio < 0:
+		close_eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.0 ] ])
+		close_eye_motion_points = close_eye_motion_points.reshape(1, -1).astype(numpy.float32)
+
+		with thread_semaphore():
+			close_eye_motion_points = eye_retargeter.run(None,
+			{
+				'input': close_eye_motion_points
+			})[0]
+		eye_motion_points = close_eye_motion_points * face_editor_eye_open_ratio * -1
+	else:
+		open_eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.8 ] ])
+		open_eye_motion_points = open_eye_motion_points.reshape(1, -1).astype(numpy.float32)
+
+		with thread_semaphore():
+			open_eye_motion_points = eye_retargeter.run(None,
+			{
+				'input': open_eye_motion_points
+			})[0]
+		eye_motion_points = open_eye_motion_points * face_editor_eye_open_ratio
+	eye_motion_points = eye_motion_points.reshape(-1, 21, 3)
+	return eye_motion_points
+
+
+def edit_lip_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark68) -> MotionPoints:
+	lip_retargeter = get_inference_pool().get('lip_retargeter')
 	face_editor_lip_open_ratio = state_manager.get_item('face_editor_lip_open_ratio')
-	face_editor_eye_open_ratio = map_float(face_editor_eye_open_ratio, 0, 1, 0, 0.7)
-	face_editor_lip_open_ratio = map_float(face_editor_lip_open_ratio, 0, 1, 0, 1.3)
-	eye_ratio = numpy.array(
-	[
-		calc_distance_ratio(face_landmark_68, 37, 40, 39, 36),
-		calc_distance_ratio(face_landmark_68, 43, 46, 45, 42),
-		face_editor_eye_open_ratio
-	]).astype(numpy.float32)
-	lip_ratio = numpy.array(
-	[
-		calc_distance_ratio(face_landmark_68, 62, 66, 54, 48),
-		face_editor_lip_open_ratio
-	]).astype(numpy.float32)
-	eye_ratio = eye_ratio.reshape(1, -1)
-	lip_ratio = lip_ratio.reshape(1, -1)
-	return eye_ratio, lip_ratio
+	lip_ratio = calc_distance_ratio(face_landmark_68, 62, 66, 54, 48)
+
+	if face_editor_lip_open_ratio < 0:
+		close_lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 0.0 ] ])
+		close_lip_motion_points = close_lip_motion_points.reshape(1, -1).astype(numpy.float32)
+
+		with thread_semaphore():
+			close_lip_motion_points = lip_retargeter.run(None,
+			{
+				'input': close_lip_motion_points
+			})[0]
+		lip_motion_points = close_lip_motion_points * face_editor_lip_open_ratio * -1
+	else:
+		open_lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 1.3 ] ])
+		open_lip_motion_points = open_lip_motion_points.reshape(1, -1).astype(numpy.float32)
+
+		with thread_semaphore():
+			open_lip_motion_points = lip_retargeter.run(None,
+			{
+				'input': open_lip_motion_points
+			})[0]
+		lip_motion_points = open_lip_motion_points * face_editor_lip_open_ratio
+	lip_motion_points = lip_motion_points.reshape(-1, 21, 3)
+	return lip_motion_points
 
 
 def calc_distance_ratio(face_landmark_68 : FaceLandmark68, top_index : int, bottom_index : int, left_index : int, right_index : int) -> float:
