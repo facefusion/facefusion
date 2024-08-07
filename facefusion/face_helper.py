@@ -5,7 +5,7 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.typing import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
+from facefusion.typing import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -152,6 +152,13 @@ def distance_to_face_landmark_5(points : Points, distance : Distance) -> FaceLan
 	y = points[:, 1::2] + distance[:, 1::2]
 	face_landmark_5 = numpy.stack((x, y), axis = -1)
 	return face_landmark_5
+
+
+def scale_face_landmark_5(face_landmark_5 : FaceLandmark5, scale : Scale) -> FaceLandmark5:
+	face_landmark_5_scale = face_landmark_5 - face_landmark_5[2]
+	face_landmark_5_scale *= scale
+	face_landmark_5_scale += face_landmark_5[2]
+	return face_landmark_5_scale
 
 
 def convert_to_face_landmark_5(face_landmark_68 : FaceLandmark68) -> FaceLandmark5:
