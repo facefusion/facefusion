@@ -227,8 +227,15 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 def edit_eye_gaze(expression : NDArray[Any]) -> NDArray[Any]:
 	face_editor_eye_gaze_horizontal = state_manager.get_item('face_editor_eye_gaze_horizontal')
 	face_editor_eye_gaze_vertical = state_manager.get_item('face_editor_eye_gaze_vertical')
-	expression[0, 11, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.015, 0.015)
-	expression[0, 15, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.020, 0.020)
+
+	if face_editor_eye_gaze_horizontal > 0:
+		expression[0, 11, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.015, 0.015)
+		expression[0, 15, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.020, 0.020)
+	else:
+		expression[0, 11, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.020, 0.020)
+		expression[0, 15, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.015, 0.015)
+	expression[0, 1, 1] += map_float(face_editor_eye_gaze_vertical, -1, 1, -0.0025, 0.0025)
+	expression[0, 2, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.0025, 0.0025)
 	expression[0, 11, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.010, 0.010)
 	expression[0, 13, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.005, 0.005)
 	expression[0, 15, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.010, 0.010)
