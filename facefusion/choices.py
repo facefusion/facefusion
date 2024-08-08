@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
 from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceMaskRegion, FaceMaskType, FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, JobStatus, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
@@ -41,14 +41,14 @@ ui_workflows : List[UiWorkflow] = [ 'instant_runner', 'job_runner', 'job_manager
 
 job_statuses : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 
-execution_thread_count_range : List[int] = create_int_range(1, 32, 1)
-execution_queue_count_range : List[int] = create_int_range(1, 4, 1)
-system_memory_limit_range : List[int] = create_int_range(0, 128, 4)
-face_detector_angles : List[Angle] = create_int_range(0, 270, 90)
-face_detector_score_range : List[Score] = create_float_range(0.0, 1.0, 0.05)
-face_landmarker_score_range : List[Score] = create_float_range(0.0, 1.0, 0.05)
-face_mask_blur_range : List[float] = create_float_range(0.0, 1.0, 0.05)
-face_mask_padding_range : List[int] = create_int_range(0, 100, 1)
-reference_face_distance_range : List[float] = create_float_range(0.0, 1.5, 0.05)
-output_image_quality_range : List[int] = create_int_range(0, 100, 1)
-output_video_quality_range : List[int] = create_int_range(0, 100, 1)
+execution_thread_count_range : Sequence[int] = create_int_range(1, 32, 1)
+execution_queue_count_range : Sequence[int] = create_int_range(1, 4, 1)
+system_memory_limit_range : Sequence[int] = create_int_range(0, 128, 4)
+face_detector_angles : Sequence[Angle] = create_int_range(0, 270, 90)
+face_detector_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
+face_landmarker_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
+face_mask_blur_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
+face_mask_padding_range : Sequence[int] = create_int_range(0, 100, 1)
+reference_face_distance_range : Sequence[float] = create_float_range(0.0, 1.5, 0.05)
+output_image_quality_range : Sequence[int] = create_int_range(0, 100, 1)
+output_video_quality_range : Sequence[int] = create_int_range(0, 100, 1)
