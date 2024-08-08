@@ -1,5 +1,5 @@
 import platform
-from typing import Any, List, Sequence
+from typing import Any, Sequence
 
 
 def is_linux() -> bool:
