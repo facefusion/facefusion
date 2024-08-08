@@ -3,6 +3,7 @@ from typing import List, Optional, Tuple
 import gradio
 
 from facefusion import state_manager, wording
+from facefusion.common_helper import calc_int_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
 from facefusion.processors.typing import FaceEnhancerModel
@@ -25,7 +26,7 @@ def render() -> None:
 	FACE_ENHANCER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_enhancer_blend_slider'),
 		value = state_manager.get_item('face_enhancer_blend'),
-		step = processors_choices.face_enhancer_blend_range[1] - processors_choices.face_enhancer_blend_range[0],
+		step = calc_int_step(processors_choices.face_enhancer_blend_range),
 		minimum = processors_choices.face_enhancer_blend_range[0],
 		maximum = processors_choices.face_enhancer_blend_range[-1],
 		visible = 'face_enhancer' in state_manager.get_item('processors')

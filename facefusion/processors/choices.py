@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
 from facefusion.processors.typing import AgeModifierModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
@@ -25,13 +25,13 @@ frame_colorizer_sizes : List[str] = [ '192x192', '256x256', '384x384', '512x512'
 frame_enhancer_models : List[FrameEnhancerModel] = [ 'clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'real_hatgan_x4', 'span_kendata_x4', 'ultra_sharp_x4' ]
 lip_syncer_models : List[LipSyncerModel] = [ 'wav2lip', 'wav2lip_gan' ]
 
-age_modifier_direction_range : List[int] = create_int_range(-100, 100, 1)
-expression_restorer_factor_range : List[int] = create_int_range(0, 200, 1)
-face_editor_eyebrow_direction_range : List[float] = create_float_range(-1, 1, 0.1)
-face_editor_eye_gaze_horizontal_range : List[float] = create_float_range(-1, 1, 0.1)
-face_editor_eye_gaze_vertical_range : List[float] = create_float_range(-1, 1, 0.1)
-face_editor_eye_open_ratio_range : List[float] = create_float_range(-1, 1, 0.1)
-face_editor_lip_open_ratio_range : List[float] = create_float_range(-1, 1, 0.1)
-face_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
-frame_colorizer_blend_range : List[int] = create_int_range(0, 100, 1)
-frame_enhancer_blend_range : List[int] = create_int_range(0, 100, 1)
+age_modifier_direction_range : Sequence[int] = create_int_range(-100, 100, 1)
+expression_restorer_factor_range : Sequence[int] = create_int_range(0, 200, 1)
+face_editor_eyebrow_direction_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.1)
+face_editor_eye_gaze_horizontal_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.1)
+face_editor_eye_gaze_vertical_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.1)
+face_editor_eye_open_ratio_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.1)
+face_editor_lip_open_ratio_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.1)
+face_enhancer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
+frame_colorizer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
+frame_enhancer_blend_range : Sequence[int] = create_int_range(0, 100, 1)

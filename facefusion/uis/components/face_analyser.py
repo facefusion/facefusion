@@ -1,9 +1,10 @@
-from typing import List, Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 import gradio
 
 import facefusion.choices
 from facefusion import face_analyser, state_manager, wording
+from facefusion.common_helper import calc_float_step
 from facefusion.typing import Angle, FaceDetectorModel, Score
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import ComponentOptions
@@ -45,14 +46,14 @@ def render() -> None:
 		FACE_DETECTOR_SCORE_SLIDER = gradio.Slider(
 			label = wording.get('uis.face_detector_score_slider'),
 			value = state_manager.get_item('face_detector_score'),
-			step = facefusion.choices.face_detector_score_range[1] - facefusion.choices.face_detector_score_range[0],
+			step = calc_float_step(facefusion.choices.face_detector_score_range),
 			minimum = facefusion.choices.face_detector_score_range[0],
 			maximum = facefusion.choices.face_detector_score_range[-1]
 		)
 		FACE_LANDMARKER_SCORE_SLIDER = gradio.Slider(
 			label = wording.get('uis.face_landmarker_score_slider'),
 			value = state_manager.get_item('face_landmarker_score'),
-			step = facefusion.choices.face_landmarker_score_range[1] - facefusion.choices.face_landmarker_score_range[0],
+			step = calc_float_step(facefusion.choices.face_landmarker_score_range),
 			minimum = facefusion.choices.face_landmarker_score_range[0],
 			maximum = facefusion.choices.face_landmarker_score_range[-1]
 		)
@@ -87,7 +88,7 @@ def update_face_detector_size(face_detector_size : str) -> None:
 	state_manager.set_item('face_detector_size', face_detector_size)
 
 
-def update_face_detector_angles(face_detector_angles : List[Angle]) -> gradio.CheckboxGroup:
+def update_face_detector_angles(face_detector_angles : Sequence[Angle]) -> gradio.CheckboxGroup:
 	face_detector_angles = face_detector_angles or facefusion.choices.face_detector_angles
 	state_manager.set_item('face_detector_angles', face_detector_angles)
 	return gradio.CheckboxGroup(value = state_manager.get_item('face_detector_angles'))

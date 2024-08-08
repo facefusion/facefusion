@@ -1,5 +1,5 @@
 import platform
-from typing import Any, List
+from typing import Any, Sequence
 
 
 def is_linux() -> bool:
@@ -14,11 +14,11 @@ def is_windows() -> bool:
 	return platform.system().lower() == 'windows'
 
 
-def create_metavar(ranges : List[Any]) -> str:
+def create_metavar(ranges : Sequence[Any]) -> str:
 	return '[' + str(ranges[0]) + '..' + str(ranges[-1]) + ':' + str(ranges[1] - ranges[0]) + ']'
 
 
-def create_int_range(start : int, end : int, step : int) -> List[int]:
+def create_int_range(start : int, end : int, step : int) -> Sequence[int]:
 	int_range = []
 	current = start
 
@@ -28,7 +28,7 @@ def create_int_range(start : int, end : int, step : int) -> List[int]:
 	return int_range
 
 
-def create_float_range(start : float, end : float, step : float) -> List[float]:
+def create_float_range(start : float, end : float, step : float) -> Sequence[float]:
 	float_range = []
 	current = start
 
@@ -36,6 +36,14 @@ def create_float_range(start : float, end : float, step : float) -> List[float]:
 		float_range.append(round(current, 2))
 		current = round(current + step, 2)
 	return float_range
+
+
+def calc_int_step(int_range : Sequence[int]) -> int:
+	return int_range[1] - int_range[0]
+
+
+def calc_float_step(float_range : Sequence[float]) -> float:
+	return round(float_range[1] - float_range[0], 2)
 
 
 def map_float(value : float, start : float, end : float, map_start : float, map_end : float) -> float:

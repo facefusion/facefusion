@@ -4,6 +4,7 @@ import gradio
 
 import facefusion.choices
 from facefusion import state_manager, wording
+from facefusion.common_helper import calc_float_step, calc_int_step
 from facefusion.typing import FaceMaskRegion, FaceMaskType
 from facefusion.uis.core import register_ui_component
 
@@ -40,7 +41,7 @@ def render() -> None:
 	)
 	FACE_MASK_BLUR_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_mask_blur_slider'),
-		step = facefusion.choices.face_mask_blur_range[1] - facefusion.choices.face_mask_blur_range[0],
+		step = calc_float_step(facefusion.choices.face_mask_blur_range),
 		minimum = facefusion.choices.face_mask_blur_range[0],
 		maximum = facefusion.choices.face_mask_blur_range[-1],
 		value = state_manager.get_item('face_mask_blur'),
@@ -50,7 +51,7 @@ def render() -> None:
 		with gradio.Row():
 			FACE_MASK_PADDING_TOP_SLIDER = gradio.Slider(
 				label = wording.get('uis.face_mask_padding_top_slider'),
-				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				step = calc_int_step(facefusion.choices.face_mask_padding_range),
 				minimum = facefusion.choices.face_mask_padding_range[0],
 				maximum = facefusion.choices.face_mask_padding_range[-1],
 				value = state_manager.get_item('face_mask_padding')[0],
@@ -58,7 +59,7 @@ def render() -> None:
 			)
 			FACE_MASK_PADDING_RIGHT_SLIDER = gradio.Slider(
 				label = wording.get('uis.face_mask_padding_right_slider'),
-				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				step = calc_int_step(facefusion.choices.face_mask_padding_range),
 				minimum = facefusion.choices.face_mask_padding_range[0],
 				maximum = facefusion.choices.face_mask_padding_range[-1],
 				value = state_manager.get_item('face_mask_padding')[1],
@@ -67,7 +68,7 @@ def render() -> None:
 		with gradio.Row():
 			FACE_MASK_PADDING_BOTTOM_SLIDER = gradio.Slider(
 				label = wording.get('uis.face_mask_padding_bottom_slider'),
-				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				step = calc_int_step(facefusion.choices.face_mask_padding_range),
 				minimum = facefusion.choices.face_mask_padding_range[0],
 				maximum = facefusion.choices.face_mask_padding_range[-1],
 				value = state_manager.get_item('face_mask_padding')[2],
@@ -75,7 +76,7 @@ def render() -> None:
 			)
 			FACE_MASK_PADDING_LEFT_SLIDER = gradio.Slider(
 				label = wording.get('uis.face_mask_padding_left_slider'),
-				step = facefusion.choices.face_mask_padding_range[1] - facefusion.choices.face_mask_padding_range[0],
+				step = calc_int_step(facefusion.choices.face_mask_padding_range),
 				minimum = facefusion.choices.face_mask_padding_range[0],
 				maximum = facefusion.choices.face_mask_padding_range[-1],
 				value = state_manager.get_item('face_mask_padding')[3],
