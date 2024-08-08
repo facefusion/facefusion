@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 import gradio
 
@@ -88,7 +88,7 @@ def update_face_detector_size(face_detector_size : str) -> None:
 	state_manager.set_item('face_detector_size', face_detector_size)
 
 
-def update_face_detector_angles(face_detector_angles : List[Angle]) -> gradio.CheckboxGroup:
+def update_face_detector_angles(face_detector_angles : Sequence[Angle]) -> gradio.CheckboxGroup:
 	face_detector_angles = face_detector_angles or facefusion.choices.face_detector_angles
 	state_manager.set_item('face_detector_angles', face_detector_angles)
 	return gradio.CheckboxGroup(value = state_manager.get_item('face_detector_angles'))
