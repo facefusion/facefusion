@@ -14,7 +14,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
-from facefusion.face_masker import create_face_mask, create_occlusion_mask, create_static_box_mask
+from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -159,7 +159,6 @@ def restore_expression(source_vision_frame : VisionFrame, target_face: Face, tem
 	target_crop_vision_frame = prepare_crop_frame(target_crop_vision_frame)
 	target_crop_vision_frame = apply_restore_expression(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
 	target_crop_vision_frame = normalize_crop_frame(target_crop_vision_frame)
-	crop_masks.append(create_face_mask(target_crop_vision_frame))
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, target_crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
@@ -189,6 +188,7 @@ def apply_restore_expression(source_crop_vision_frame : VisionFrame, target_crop
 		})
 
 	expression = source_expression * expression_restorer_factor + target_expression * (1 - expression_restorer_factor)
+	expression[:, [ 0, 4, 5, 6, 8, 9 ]] = target_expression[:, [ 0, 4, 5, 6, 8, 9 ]]
 	motion_points = target_scale * (target_motion_points_raw @ target_rotation + expression) + target_translation
 
 	with thread_semaphore():
