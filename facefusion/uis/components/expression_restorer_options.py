@@ -3,6 +3,7 @@ from typing import List, Optional, Tuple
 import gradio
 
 from facefusion import state_manager, wording
+from facefusion.common_helper import calc_float_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
 from facefusion.processors.typing import ExpressionRestorerModel
@@ -25,7 +26,7 @@ def render() -> None:
 	EXPRESSION_RESTORER_FACTOR_SLIDER = gradio.Slider(
 		label = wording.get('uis.expression_restorer_factor_slider'),
 		value = state_manager.get_item('expression_restorer_factor'),
-		step = processors_choices.expression_restorer_factor_range[1] - processors_choices.expression_restorer_factor_range[0],
+		step = calc_float_step(processors_choices.expression_restorer_factor_range),
 		minimum = processors_choices.expression_restorer_factor_range[0],
 		maximum = processors_choices.expression_restorer_factor_range[-1],
 		visible = 'expression_restorer' in state_manager.get_item('processors'),

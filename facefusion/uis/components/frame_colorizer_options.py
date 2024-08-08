@@ -3,6 +3,7 @@ from typing import List, Optional, Tuple
 import gradio
 
 from facefusion import state_manager, wording
+from facefusion.common_helper import calc_int_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
 from facefusion.processors.typing import FrameColorizerModel
@@ -27,7 +28,7 @@ def render() -> None:
 	FRAME_COLORIZER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('uis.frame_colorizer_blend_slider'),
 		value = state_manager.get_item('frame_colorizer_blend'),
-		step = processors_choices.frame_colorizer_blend_range[1] - processors_choices.frame_colorizer_blend_range[0],
+		step = calc_int_step(processors_choices.frame_colorizer_blend_range),
 		minimum = processors_choices.frame_colorizer_blend_range[0],
 		maximum = processors_choices.frame_colorizer_blend_range[-1],
 		visible = 'frame_colorizer' in state_manager.get_item('processors')
