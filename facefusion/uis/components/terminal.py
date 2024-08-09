@@ -50,11 +50,11 @@ def tqdm_update(self : tqdm, n : int = 1) -> None:
 		LOG_BUFFER.flush()
 
 
-def create_tqdm_output(self : tqdm_update) -> Optional[str]:
-	if self.desc and self.total:
+def create_tqdm_output(self : tqdm) -> Optional[str]:
+	if not self.disable and self.desc and self.total:
 		percentage = math.floor(self.n / self.total * 100)
 		return self.desc + wording.get('colon') + ' ' + str(percentage) + '% (' + str(self.n) + '/' + str(self.total) + ')'
-	if self.desc and self.unit:
+	if not self.disable and self.desc and self.unit:
 		return self.desc + wording.get('colon') + ' ' + str(self.n) + ' ' + self.unit
 	return None
 
