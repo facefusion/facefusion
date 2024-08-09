@@ -35,19 +35,28 @@ def listen() -> None:
 
 def tqdm_update(self : tqdm, n : int = 1) -> None:
 	TQDM_UPDATE(self, n)
-	percentage = math.floor(self.n / self.total * 100)
-	output = self.desc + wording.get('colon') + ' ' + str(percentage) + '% (' + str(self.n) + '/' + str(self.total) + ')'
+	output = create_tqdm_output(self)
 
-	LOG_BUFFER.seek(0)
-	log_buffer = LOG_BUFFER.read()
-	lines = log_buffer.splitlines()
-	if lines and lines[-1].startswith(self.desc):
-		position = log_buffer.rfind(lines[-1])
-		LOG_BUFFER.seek(position)
-	else:
-		LOG_BUFFER.seek(0, os.SEEK_END)
-	LOG_BUFFER.write(output + os.linesep)
-	LOG_BUFFER.flush()
+	if output:
+		LOG_BUFFER.seek(0)
+		log_buffer = LOG_BUFFER.read()
+		lines = log_buffer.splitlines()
+		if lines and lines[-1].startswith(self.desc):
+			position = log_buffer.rfind(lines[-1])
+			LOG_BUFFER.seek(position)
+		else:
+			LOG_BUFFER.seek(0, os.SEEK_END)
+		LOG_BUFFER.write(output + os.linesep)
+		LOG_BUFFER.flush()
+
+
+def create_tqdm_output(self : tqdm_update) -> Optional[str]:
+	if self.desc and self.total:
+		percentage = math.floor(self.n / self.total * 100)
+		return self.desc + wording.get('colon') + ' ' + str(percentage) + '% (' + str(self.n) + '/' + str(self.total) + ')'
+	if self.desc and self.unit:
+		return self.desc + wording.get('colon') + ' ' + str(self.n) + ' ' + self.unit
+	return None
 
 
 def read_logs() -> str:
