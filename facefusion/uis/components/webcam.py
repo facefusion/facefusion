@@ -107,10 +107,15 @@ def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -
 
 
 def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
+	deque_capture_frames: Deque[VisionFrame] = deque()
 	with tqdm(desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+		progress.set_postfix(
+		{
+			'execution_providers': state_manager.get_item('execution_providers'),
+			'execution_thread_count': state_manager.get_item('execution_thread_count')
+		})
 		with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 			futures = []
-			deque_capture_frames : Deque[VisionFrame] = deque()
 
 			while webcam_capture and webcam_capture.isOpened():
 				_, capture_frame = webcam_capture.read()
