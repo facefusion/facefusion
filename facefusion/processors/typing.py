@@ -61,7 +61,7 @@ LipSyncerInputs = TypedDict('LipSyncerInputs',
 	'target_vision_frame' : VisionFrame
 })
 
-FrameProcessorStateKey = Literal\
+ProcessorStateKey = Literal\
 [
 	'age_modifier_model',
 	'age_modifier_direction',
@@ -85,7 +85,7 @@ FrameProcessorStateKey = Literal\
 	'frame_enhancer_blend',
 	'lip_syncer_model'
 ]
-FrameProcessorState = TypedDict('FrameProcessorState',
+ProcessorState = TypedDict('ProcessorState',
 {
 	'age_modifier_model': AgeModifierModel,
 	'age_modifier_direction': int,
@@ -101,4 +101,4 @@ FrameProcessorState = TypedDict('FrameProcessorState',
 	'frame_enhancer_blend' : int,
 	'lip_syncer_model' : LipSyncerModel
 })
-FrameProcessorStateSet = Dict[StateContext, FrameProcessorState]
+ProcessorStateSet = Dict[StateContext, ProcessorState]

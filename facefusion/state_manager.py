@@ -1,16 +1,16 @@
 import inspect
 from typing import Any, Union
 
-from facefusion.processors.typing import FrameProcessorState, FrameProcessorStateKey
+from facefusion.processors.typing import ProcessorState, ProcessorStateKey
 from facefusion.typing import State, StateContext, StateKey, StateSet
 
-STATES : Union[StateSet, FrameProcessorState] =\
+STATES : Union[StateSet, ProcessorState] =\
 {
 	'core': {}, #type:ignore[typeddict-item]
 	'uis': {} #type:ignore[typeddict-item]
 }
-UnionState = Union[State, FrameProcessorState]
-UnionStateKey = Union[StateKey, FrameProcessorStateKey]
+UnionState = Union[State, ProcessorState]
+UnionStateKey = Union[StateKey, ProcessorStateKey]
 
 
 def get_state() -> UnionState:
