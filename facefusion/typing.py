@@ -90,6 +90,7 @@ TableContents = List[List[Any]]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yoloface']
+FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
 FaceDetectorSet = Dict[FaceDetectorModel, List[str]]
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
@@ -188,6 +189,7 @@ StateKey = Literal\
 	'face_detector_size',
 	'face_detector_angles',
 	'face_detector_score',
+	'face_landmarker_model',
 	'face_landmarker_score',
 	'face_selector_mode',
 	'face_selector_order',
@@ -241,6 +243,7 @@ State = TypedDict('State',
 	'face_detector_size' : str,
 	'face_detector_angles' : List[Angle],
 	'face_detector_score' : Score,
+	'face_landmarker_model' : FaceLandmarkerModel,
 	'face_landmarker_score' : Score,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,

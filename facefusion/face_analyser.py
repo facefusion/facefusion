@@ -94,11 +94,11 @@ MODEL_SET : ModelSet =\
 			}
 		}
 	},
-	'face_landmarker_68':
+	'2dfan4':
 	{
 		'hashes':
 		{
-			'face_landmarker_68':
+			'face_landmarker_2dfan4':
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.hash',
 				'path': resolve_relative_path('../.assets/models/2dfan4.hash')
@@ -106,10 +106,29 @@ MODEL_SET : ModelSet =\
 		},
 		'sources':
 		{
-			'face_landmarker_68':
+			'face_landmarker_2dfan4':
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.onnx',
 				'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
+			}
+		}
+	},
+	'peppa_wutz':
+	{
+		'hashes':
+		{
+			'face_landmarker_peppa_wutz':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.hash',
+				'path': resolve_relative_path('../.assets/models/peppa_wutz.hash')
+			}
+		},
+		'sources':
+		{
+			'face_landmarker_peppa_wutz':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.onnx',
+				'path': resolve_relative_path('../.assets/models/peppa_wutz.onnx')
 			}
 		}
 	},
@@ -176,16 +195,20 @@ def collect_model_hashes() -> DownloadSet:
 	model_hashes =\
 	{
 		'face_recognizer': MODEL_SET.get('arcface').get('hashes').get('face_recognizer'),
-		'face_landmarker_68': MODEL_SET.get('face_landmarker_68').get('hashes').get('face_landmarker_68'),
 		'face_landmarker_68_5': MODEL_SET.get('face_landmarker_68_5').get('hashes').get('face_landmarker_68_5'),
 		'gender_age': MODEL_SET.get('gender_age').get('hashes').get('gender_age')
 	}
+
 	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
 		model_hashes['face_detector_retinaface'] = MODEL_SET.get('retinaface').get('hashes').get('face_detector_retinaface')
 	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
 		model_hashes['face_detector_scrfd'] = MODEL_SET.get('scrfd').get('hashes').get('face_detector_scrfd')
 	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
 		model_hashes['face_detector_yoloface'] = MODEL_SET.get('yoloface').get('hashes').get('face_detector_yoloface')
+	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
+		model_hashes['face_landmarker_2dfan4'] = MODEL_SET.get('2dfan4').get('hashes').get('face_landmarker_2dfan4')
+	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
+		model_hashes['face_landmarker_peppa_wutz'] = MODEL_SET.get('peppa_wutz').get('hashes').get('face_landmarker_peppa_wutz')
 	return model_hashes
 
 
@@ -193,16 +216,20 @@ def collect_model_sources() -> DownloadSet:
 	model_sources =\
 	{
 		'face_recognizer': MODEL_SET.get('arcface').get('sources').get('face_recognizer'),
-		'face_landmarker_68': MODEL_SET.get('face_landmarker_68').get('sources').get('face_landmarker_68'),
 		'face_landmarker_68_5': MODEL_SET.get('face_landmarker_68_5').get('sources').get('face_landmarker_68_5'),
 		'gender_age': MODEL_SET.get('gender_age').get('sources').get('gender_age')
 	}
+
 	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
 		model_sources['face_detector_retinaface'] = MODEL_SET.get('retinaface').get('sources').get('face_detector_retinaface')
 	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
 		model_sources['face_detector_scrfd'] = MODEL_SET.get('scrfd').get('sources').get('face_detector_scrfd')
 	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
 		model_sources['face_detector_yoloface'] = MODEL_SET.get('yoloface').get('sources').get('face_detector_yoloface')
+	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
+		model_sources['face_landmarker_2dfan4'] = MODEL_SET.get('2dfan4').get('sources').get('face_landmarker_2dfan4')
+	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
+		model_sources['face_landmarker_peppa_wutz'] = MODEL_SET.get('peppa_wutz').get('sources').get('face_landmarker_peppa_wutz')
 	return model_sources
 
 
@@ -338,7 +365,7 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 	return bounding_boxes, face_landmarks_5, face_scores
 
 
-def detect_faces(vision_frame: VisionFrame) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
+def detect_faces(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[FaceLandmark5], List[Score]]:
 	bounding_boxes = []
 	face_landmarks_5 = []
 	face_scores = []
@@ -348,16 +375,19 @@ def detect_faces(vision_frame: VisionFrame) -> Tuple[List[BoundingBox], List[Fac
 		bounding_boxes.extend(bounding_boxes_retinaface)
 		face_landmarks_5.extend(face_landmarks_5_retinaface)
 		face_scores.extend(face_scores_retinaface)
+
 	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
 		bounding_boxes_scrfd, face_landmarks_5_scrfd, face_scores_scrfd = detect_with_scrfd(vision_frame, state_manager.get_item('face_detector_size'))
 		bounding_boxes.extend(bounding_boxes_scrfd)
 		face_landmarks_5.extend(face_landmarks_5_scrfd)
 		face_scores.extend(face_scores_scrfd)
+
 	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
 		bounding_boxes_yoloface, face_landmarks_5_yoloface, face_scores_yoloface = detect_with_yoloface(vision_frame, state_manager.get_item('face_detector_size'))
 		bounding_boxes.extend(bounding_boxes_yoloface)
 		face_landmarks_5.extend(face_landmarks_5_yoloface)
 		face_scores.extend(face_scores_yoloface)
+
 	bounding_boxes = [ normalize_bounding_box(bounding_box) for bounding_box in bounding_boxes ]
 	return bounding_boxes, face_landmarks_5, face_scores
 
@@ -388,26 +418,41 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 
 	for index in keep_indices:
 		bounding_box = bounding_boxes[index]
-		face_landmark_5_68 = face_landmarks_5[index]
+		face_landmark_5 = face_landmarks_5[index]
+		face_landmark_5_68 = face_landmark_5
 		face_landmark_68_5 = expand_face_landmark_68_from_5(face_landmark_5_68)
 		face_landmark_68 = face_landmark_68_5
-		face_landmark_68_score = 0.0
+		face_landmark_score_68 = 0.0
+		face_score = face_scores[index]
 		face_angle = estimate_face_angle_from_face_landmark_68(face_landmark_68_5)
+
 		if state_manager.get_item('face_landmarker_score') > 0:
-			face_landmark_68, face_landmark_68_score = detect_face_landmark_68(vision_frame, bounding_box, face_angle)
-			if face_landmark_68_score > state_manager.get_item('face_landmarker_score'):
+			face_landmark_score_2dfan4 = 0.0
+			face_landmark_score_peppa_wutz = 0.0
+			if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
+				face_landmark_2dfan4, face_landmark_score_2dfan4 = detect_with_2dfan4(vision_frame, bounding_box, face_angle)
+			if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
+				face_landmark_peppa_wutz, face_landmark_score_peppa_wutz = detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
+			if face_landmark_score_2dfan4 > face_landmark_score_peppa_wutz:
+				face_landmark_68 = face_landmark_2dfan4
+				face_landmark_score_68 = face_landmark_score_2dfan4
+			else:
+				face_landmark_68 = face_landmark_peppa_wutz
+				face_landmark_score_68 = face_landmark_score_peppa_wutz
+			if face_landmark_score_68 > state_manager.get_item('face_landmarker_score'):
 				face_landmark_5_68 = convert_to_face_landmark_5(face_landmark_68)
+
 		face_landmark_set : FaceLandmarkSet =\
 		{
-			'5': face_landmarks_5[index],
+			'5': face_landmark_5,
 			'5/68': face_landmark_5_68,
 			'68': face_landmark_68,
 			'68/5': face_landmark_68_5
 		}
 		face_score_set : FaceScoreSet =\
 		{
-			'detector': face_scores[index],
-			'landmarker': face_landmark_68_score
+			'detector': face_score,
+			'landmarker': face_landmark_score_68
 		}
 		embedding, normed_embedding = calc_embedding(vision_frame, face_landmark_set.get('5/68'))
 		gender, age = detect_gender_age(vision_frame, bounding_box)
@@ -442,17 +487,14 @@ def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandma
 	return embedding, normed_embedding
 
 
-def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
-	face_landmarker = get_inference_pool().get('face_landmarker_68')
+def detect_with_2dfan4(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
+	face_landmarker = get_inference_pool().get('face_landmarker_2dfan4')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, (256, 256))
 	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
 	crop_vision_frame = cv2.warpAffine(crop_vision_frame, rotated_matrix, rotated_size)
-	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_RGB2Lab)
-	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: #type:ignore[arg-type]
-		crop_vision_frame[:, :, 0] = cv2.createCLAHE(clipLimit = 2).apply(crop_vision_frame[:, :, 0])
-	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_Lab2RGB)
+	crop_vision_frame = conditional_optimize_contrast(crop_vision_frame)
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 
 	with conditional_thread_semaphore():
@@ -464,9 +506,41 @@ def detect_face_landmark_68(temp_vision_frame : VisionFrame, bounding_box : Boun
 	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64 * 256
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(rotated_matrix))
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
-	face_landmark_68_score = numpy.amax(face_heatmap, axis = (2, 3))
-	face_landmark_68_score = numpy.mean(face_landmark_68_score)
-	return face_landmark_68, face_landmark_68_score
+	face_landmark_score_68 = numpy.amax(face_heatmap, axis = (2, 3))
+	face_landmark_score_68 = numpy.mean(face_landmark_score_68)
+	return face_landmark_68, face_landmark_score_68
+
+
+def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
+	face_landmarker = get_inference_pool().get('face_landmarker_peppa_wutz')
+	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
+	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
+	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, (256, 256))
+	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
+	crop_vision_frame = cv2.warpAffine(crop_vision_frame, rotated_matrix, rotated_size)
+	crop_vision_frame = conditional_optimize_contrast(crop_vision_frame)
+	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
+	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
+
+	with conditional_thread_semaphore():
+		prediction = face_landmarker.run(None,
+		{
+			'input': crop_vision_frame
+		})[0]
+
+	face_landmark_68 = prediction.reshape(-1, 3)[:, :2] / 64 * 256
+	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(rotated_matrix))
+	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
+	face_landmark_score_68 = prediction.reshape(-1, 3)[:, 2].mean()
+	return face_landmark_68, face_landmark_score_68
+
+
+def conditional_optimize_contrast(crop_vision_frame : VisionFrame) -> VisionFrame:
+	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_RGB2Lab)
+	if numpy.mean(crop_vision_frame[:, :, 0]) < 30:  # type:ignore[arg-type]
+		crop_vision_frame[:, :, 0] = cv2.createCLAHE(clipLimit = 2).apply(crop_vision_frame[:, :, 0])
+	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_Lab2RGB)
+	return crop_vision_frame
 
 
 def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:

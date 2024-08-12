@@ -100,7 +100,8 @@ WORDING : Dict[str, Any] =\
 		'face_detector_size': 'specify the size of the frame provided to the face detector',
 		'face_detector_angles': 'specify the angles to rotate the frame before detecting faces',
 		'face_detector_score': 'filter the detected faces base on the confidence score',
-		'face_landmarker_score': 'filter the detected landmarks base on the confidence score',
+		'face_landmarker_model': 'choose the model responsible for detecting the face landmarks',
+		'face_landmarker_score': 'filter the detected face landmarks base on the confidence score',
 		# face selector
 		'face_selector_mode': 'use reference based tracking or simple matching',
 		'face_selector_order': 'specify the order of the detected faces',

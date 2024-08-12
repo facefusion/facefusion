@@ -1,7 +1,7 @@
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceMaskRegion, FaceMaskType, FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, JobStatus, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
+from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, JobStatus, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
 
@@ -12,6 +12,7 @@ face_detector_set : FaceDetectorSet =\
 	'scrfd': [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
 	'yoloface': [ '640x640' ]
 }
+face_landmarker_models : List[FaceLandmarkerModel] = [ 'many', '2dfan4', 'peppa_wutz' ]
 face_selector_modes : List[FaceSelectorMode] = [ 'many', 'one', 'reference' ]
 face_selector_orders : List[FaceSelectorOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
 face_selector_ages : List[FaceSelectorAge] = [ 'child', 'teen', 'adult', 'senior' ]
