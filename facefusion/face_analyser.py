@@ -8,7 +8,7 @@ from facefusion import process_manager, state_manager
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
-from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, estimate_face_angle_from_face_landmark_68, estimate_matrix_by_face_landmark_5, get_nms_threshold, normalize_bounding_box, transform_bounding_box, transform_points, warp_face_by_face_landmark_5, warp_face_by_translation
+from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, estimate_face_angle, estimate_matrix_by_face_landmark_5, get_nms_threshold, normalize_bounding_box, transform_bounding_box, transform_points, warp_face_by_face_landmark_5, warp_face_by_translation
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore, thread_lock, thread_semaphore
@@ -420,11 +420,11 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 		bounding_box = bounding_boxes[index]
 		face_landmark_5 = face_landmarks_5[index]
 		face_landmark_5_68 = face_landmark_5
-		face_landmark_68_5 = expand_face_landmark_68_from_5(face_landmark_5_68)
+		face_landmark_68_5 = estimate_face_landmark_68_5(face_landmark_5_68)
 		face_landmark_68 = face_landmark_68_5
 		face_landmark_score_68 = 0.0
 		face_score = face_scores[index]
-		face_angle = estimate_face_angle_from_face_landmark_68(face_landmark_68_5)
+		face_angle = estimate_face_angle(face_landmark_68_5)
 
 		if state_manager.get_item('face_landmarker_score') > 0:
 			face_landmark_score_2dfan4 = 0.0
@@ -543,7 +543,7 @@ def conditional_optimize_contrast(crop_vision_frame : VisionFrame) -> VisionFram
 	return crop_vision_frame
 
 
-def expand_face_landmark_68_from_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
+def estimate_face_landmark_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
 	face_landmarker = get_inference_pool().get('face_landmarker_68_5')
 	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'ffhq_512', (1, 1))
 	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)

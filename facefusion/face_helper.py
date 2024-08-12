@@ -103,7 +103,7 @@ def create_rotated_matrix_and_size(angle : Angle, size : Size) -> Tuple[Matrix, 
 	return rotated_matrix, rotated_size
 
 
-def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68) -> BoundingBox:
+def create_bounding_box(face_landmark_68 : FaceLandmark68) -> BoundingBox:
 	min_x, min_y = numpy.min(face_landmark_68, axis = 0)
 	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
 	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y ]))
@@ -173,7 +173,7 @@ def convert_to_face_landmark_5(face_landmark_68 : FaceLandmark68) -> FaceLandmar
 	return face_landmark_5
 
 
-def estimate_face_angle_from_face_landmark_68(face_landmark_68 : FaceLandmark68) -> Angle:
+def estimate_face_angle(face_landmark_68 : FaceLandmark68) -> Angle:
 	x1, y1 = face_landmark_68[0]
 	x2, y2 = face_landmark_68[16]
 	theta = numpy.arctan2(y2 - y1, x2 - x1)
