@@ -54,7 +54,7 @@ def is_download_done(url : str, file_path : str) -> bool:
 
 
 def conditional_download_hashes(download_directory_path : str, hashes : DownloadSet) -> bool:
-	hash_paths = [ hashes.get(source_key).get('path') for source_key in hashes.keys() ]
+	hash_paths = [ hashes.get(hash_key).get('path') for hash_key in hashes.keys() ]
 
 	process_manager.check()
 	if not state_manager.get_item('skip_download'):
