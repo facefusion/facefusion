@@ -124,7 +124,13 @@ def register_args(program : ArgumentParser) -> None:
 		group_processors.add_argument('--face-editor-eye-gaze-vertical', help = wording.get('help.face_editor_eye_gaze_vertical'), type = float, default = config.get_float_value('processors.face_editor_eye_gaze_vertical', '0'), choices = processors_choices.face_editor_eye_gaze_vertical_range, metavar = create_metavar(processors_choices.face_editor_eye_gaze_vertical_range))
 		group_processors.add_argument('--face-editor-eye-open-ratio', help = wording.get('help.face_editor_eye_open_ratio'), type = float, default = config.get_float_value('processors.face_editor_eye_open_ratio', '0'), choices = processors_choices.face_editor_eye_open_ratio_range, metavar = create_metavar(processors_choices.face_editor_eye_open_ratio_range))
 		group_processors.add_argument('--face-editor-lip-open-ratio', help = wording.get('help.face_editor_lip_open_ratio'), type = float, default = config.get_float_value('processors.face_editor_lip_open_ratio', '0'), choices = processors_choices.face_editor_lip_open_ratio_range, metavar = create_metavar(processors_choices.face_editor_lip_open_ratio_range))
-		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio' ])
+		group_processors.add_argument('--face-editor-lip-grim', help = wording.get('help.face_editor_lip_grim'), type = float, default = config.get_float_value('processors.face_editor_lip_grim', '0'), choices = processors_choices.face_editor_lip_grim_range, metavar = create_metavar(processors_choices.face_editor_lip_grim_range))
+		group_processors.add_argument('--face-editor-lip-pout', help = wording.get('help.face_editor_lip_pout'), type = float, default = config.get_float_value('processors.face_editor_lip_pout', '0'), choices = processors_choices.face_editor_lip_pout_range, metavar = create_metavar(processors_choices.face_editor_lip_pout_range))
+		group_processors.add_argument('--face-editor-lip-purse', help = wording.get('help.face_editor_lip_purse'), type = float, default = config.get_float_value('processors.face_editor_lip_purse', '0'), choices = processors_choices.face_editor_lip_purse_range, metavar = create_metavar(processors_choices.face_editor_lip_purse_range))
+		group_processors.add_argument('--face-editor-lip-smile', help = wording.get('help.face_editor_lip_smile'), type = float, default = config.get_float_value('processors.face_editor_lip_smile', '0'), choices = processors_choices.face_editor_lip_smile_range, metavar = create_metavar(processors_choices.face_editor_lip_smile_range))
+		group_processors.add_argument('--face-editor-lip-horizontal', help = wording.get('help.face_editor_lip_horizontal'), type = float, default = config.get_float_value('processors.face_editor_lip_horizontal', '0'), choices = processors_choices.face_editor_lip_horizontal_range, metavar = create_metavar(processors_choices.face_editor_lip_horizontal_range))
+		group_processors.add_argument('--face-editor-lip-vertical', help = wording.get('help.face_editor_lip_vertical'), type = float, default = config.get_float_value('processors.face_editor_lip_vertical', '0'), choices = processors_choices.face_editor_lip_vertical_range, metavar = create_metavar(processors_choices.face_editor_lip_vertical_range))
+		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio', 'face_editor_lip_grim', 'face_editor_lip_pout', 'face_editor_lip_purse', 'face_editor_lip_smile', 'face_editor_lip_horizontal', 'face_editor_lip_vertical' ])
 
 
 def apply_args(args : Args) -> None:
@@ -134,6 +140,12 @@ def apply_args(args : Args) -> None:
 	state_manager.init_item('face_editor_eye_gaze_vertical', args.get('face_editor_eye_gaze_vertical'))
 	state_manager.init_item('face_editor_eye_open_ratio', args.get('face_editor_eye_open_ratio'))
 	state_manager.init_item('face_editor_lip_open_ratio', args.get('face_editor_lip_open_ratio'))
+	state_manager.init_item('face_editor_lip_grim', args.get('face_editor_lip_grim'))
+	state_manager.init_item('face_editor_lip_pout', args.get('face_editor_lip_pout'))
+	state_manager.init_item('face_editor_lip_purse', args.get('face_editor_lip_purse'))
+	state_manager.init_item('face_editor_lip_smile', args.get('face_editor_lip_smile'))
+	state_manager.init_item('face_editor_lip_horizontal', args.get('face_editor_lip_horizontal'))
+	state_manager.init_item('face_editor_lip_vertical', args.get('face_editor_lip_vertical'))
 
 
 def pre_check() -> bool:
@@ -206,6 +218,11 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 			'input': crop_vision_frame
 		})
 	expression = edit_eye_gaze(expression)
+	expression = edit_lip_grim(expression)
+	expression = edit_lip_position(expression)
+	expression = edit_lip_pout(expression)
+	expression = edit_lip_purse(expression)
+	expression = edit_lip_smile(expression)
 	expression = edit_eyebrow_direction(expression)
 	motion_points_edit = motion_points_raw @ rotation
 	motion_points_edit += expression
@@ -314,6 +331,80 @@ def edit_lip_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark6
 		lip_motion_points = open_lip_motion_points * face_editor_lip_open_ratio
 	lip_motion_points = lip_motion_points.reshape(-1, 21, 3)
 	return lip_motion_points
+
+
+def edit_lip_grim(expression : MotionPoints) -> MotionPoints:
+	face_editor_lip_grim = state_manager.get_item('face_editor_lip_grim')
+	if face_editor_lip_grim > 0:
+		expression[0, 17, 2] -= map_float(face_editor_lip_grim, -1, 1, -0.005, 0.005)
+		expression[0, 19, 2] += map_float(face_editor_lip_grim, -1, 1, -0.01, 0.01)
+		expression[0, 20, 1] -= map_float(face_editor_lip_grim, -1, 1, -0.06, 0.06)
+		expression[0, 20, 2] -= map_float(face_editor_lip_grim, -1, 1, -0.03, 0.03)
+	else:
+		expression[0, 19, 1] -= map_float(face_editor_lip_grim, -1, 1, -0.05, 0.05)
+		expression[0, 19, 2] -= map_float(face_editor_lip_grim, -1, 1, -0.02, 0.02)
+		expression[0, 20, 2] -= map_float(face_editor_lip_grim, -1, 1, -0.03, 0.03)
+	return expression
+
+
+def edit_lip_position(expression : MotionPoints) -> MotionPoints:
+	face_editor_lip_horizontal = state_manager.get_item('face_editor_lip_horizontal')
+	face_editor_lip_vertical = state_manager.get_item('face_editor_lip_vertical')
+	expression[0, 19, 0] += map_float(face_editor_lip_horizontal, -1, 1, -0.05, 0.05)
+	expression[0, 20, 0] += map_float(face_editor_lip_horizontal, -1, 1, -0.04, 0.04)
+	if face_editor_lip_vertical > 0:
+		expression[0, 19, 1] -= map_float(face_editor_lip_vertical, -1, 1, -0.04, 0.04)
+		expression[0, 20, 1] -= map_float(face_editor_lip_vertical, -1, 1, -0.02, 0.02)
+	else:
+		expression[0, 19, 1] -= map_float(face_editor_lip_vertical, -1, 1, -0.05, 0.05)
+		expression[0, 20, 1] -= map_float(face_editor_lip_vertical, -1, 1, -0.04, 0.04)
+	return expression
+
+
+def edit_lip_pout(expression : MotionPoints) -> MotionPoints:
+	face_editor_lip_pout = state_manager.get_item('face_editor_lip_pout')
+	if face_editor_lip_pout > 0:
+		expression[0, 19, 1] -= map_float(face_editor_lip_pout, -1, 1, -0.022, 0.022)
+		expression[0, 19, 2] += map_float(face_editor_lip_pout, -1, 1, -0.025, 0.025)
+		expression[0, 20, 2] -= map_float(face_editor_lip_pout, -1, 1, -0.002, 0.002)
+	else:
+		expression[0, 19, 1] += map_float(face_editor_lip_pout, -1, 1, -0.022, 0.022)
+		expression[0, 19, 2] += map_float(face_editor_lip_pout, -1, 1, -0.025, 0.025)
+		expression[0, 20, 2] -= map_float(face_editor_lip_pout, -1, 1, -0.002, 0.002)
+	return expression
+
+
+def edit_lip_purse(expression : MotionPoints) -> MotionPoints:
+	face_editor_lip_purse = state_manager.get_item('face_editor_lip_purse')
+	if face_editor_lip_purse > 0:
+		expression[0, 19, 1] -= map_float(face_editor_lip_purse, -1, 1, -0.04, 0.04)
+		expression[0, 19, 2] -= map_float(face_editor_lip_purse, -1, 1, -0.02, 0.02)
+	else:
+		expression[0, 14, 1] -= map_float(face_editor_lip_purse, -1, 1, -0.02, 0.02)
+		expression[0, 17, 2] += map_float(face_editor_lip_purse, -1, 1, -0.01, 0.01)
+		expression[0, 19, 2] -= map_float(face_editor_lip_purse, -1, 1, -0.015, 0.015)
+		expression[0, 20, 2] -= map_float(face_editor_lip_purse, -1, 1, -0.002, 0.002)
+	return expression
+
+
+def edit_lip_smile(expression : MotionPoints) -> MotionPoints:
+	face_editor_lip_smile = state_manager.get_item('face_editor_lip_smile')
+	if face_editor_lip_smile > 0:
+		expression[0, 20, 1] -= map_float(face_editor_lip_smile, -1, 1, -0.015, 0.015)
+		expression[0, 14, 1] -= map_float(face_editor_lip_smile, -1, 1, -0.025, 0.025)
+		expression[0, 17, 1] += map_float(face_editor_lip_smile, -1, 1, -0.01, 0.01)
+		expression[0, 17, 2] += map_float(face_editor_lip_smile, -1, 1, -0.004, 0.004)
+		expression[0, 3, 1] -= map_float(face_editor_lip_smile, -1, 1, -0.0045, 0.0045)
+		expression[0, 7, 1] -= map_float(face_editor_lip_smile, -1, 1, -0.0045, 0.0045)
+	else:
+		expression[0, 14, 1] -= map_float(face_editor_lip_smile, -1, 1, -0.02, 0.02)
+		expression[0, 17, 1] += map_float(face_editor_lip_smile, -1, 1, -0.003, 0.003)
+		expression[0, 19, 1] += map_float(face_editor_lip_smile, -1, 1, -0.02, 0.02)
+		expression[0, 19, 2] -= map_float(face_editor_lip_smile, -1, 1, -0.005, 0.005)
+		expression[0, 20, 2] += map_float(face_editor_lip_smile, -1, 1, -0.01, 0.01)
+		expression[0, 3, 1] += map_float(face_editor_lip_smile, -1, 1, -0.0045, 0.0045)
+		expression[0, 7, 1] += map_float(face_editor_lip_smile, -1, 1, -0.0045, 0.0045)
+	return expression
 
 
 def calc_distance_ratio(face_landmark_68 : FaceLandmark68, top_index : int, bottom_index : int, left_index : int, right_index : int) -> float:
