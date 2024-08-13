@@ -1,8 +1,12 @@
-from facefusion.common_helper import calc_float_step, calc_int_step, create_float_range, create_int_range, create_metavar, map_float
+from facefusion.common_helper import calc_float_step, calc_int_step, create_float_range, create_int_range, create_int_metavar, create_float_metavar, map_float
 
 
-def test_create_metavar() -> None:
-	assert create_metavar([ 1, 2, 3, 4, 5 ]) == '[1..5:1]'
+def test_create_int_metavar() -> None:
+	assert create_int_metavar([ 1, 2, 3, 4, 5 ]) == '[1..5:1]'
+
+
+def test_create_float_metavar() -> None:
+	assert create_float_metavar([ 0.1, 0.2, 0.3, 0.4, 0.5 ]) == '[0.1..0.5:0.1]'
 
 
 def test_create_int_range() -> None:

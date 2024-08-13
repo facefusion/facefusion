@@ -9,7 +9,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, logger, process_manager, state_manager, wording
-from facefusion.common_helper import create_metavar
+from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -305,7 +305,7 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('processors.frame_enhancer_model', 'span_kendata_x4'), choices = processors_choices.frame_enhancer_models)
-		group_processors.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('processors.frame_enhancer_blend', '80'), choices = processors_choices.frame_enhancer_blend_range, metavar = create_metavar(processors_choices.frame_enhancer_blend_range))
+		group_processors.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('processors.frame_enhancer_blend', '80'), choices = processors_choices.frame_enhancer_blend_range, metavar = create_int_metavar(processors_choices.frame_enhancer_blend_range))
 		facefusion.jobs.job_store.register_step_keys([ 'frame_enhancer_model', 'frame_enhancer_blend' ])
 
 

@@ -14,8 +14,12 @@ def is_windows() -> bool:
 	return platform.system().lower() == 'windows'
 
 
-def create_metavar(ranges : Sequence[Any]) -> str:
-	return '[' + str(ranges[0]) + '..' + str(ranges[-1]) + ':' + str(ranges[1] - ranges[0]) + ']'
+def create_int_metavar(int_range : Sequence[int]) -> str:
+	return '[' + str(int_range[0]) + '..' + str(int_range[-1]) + ':' + str(calc_int_step(int_range)) + ']'
+
+
+def create_float_metavar(float_range : Sequence[float]) -> str:
+	return '[' + str(float_range[0]) + '..' + str(float_range[-1]) + ':' + str(calc_float_step(float_range)) + ']'
 
 
 def create_int_range(start : int, end : int, step : int) -> Sequence[int]:
