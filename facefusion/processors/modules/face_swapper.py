@@ -7,7 +7,7 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_attributor, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool, get_static_model_initializer, has_execution_provider
@@ -412,7 +412,7 @@ def post_process() -> None:
 		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		content_analyser.clear_inference_pool()
-		face_attributor.clear_inference_pool()
+		face_classifier.clear_inference_pool()
 		face_detector.clear_inference_pool()
 		face_landmarker.clear_inference_pool()
 		face_masker.clear_inference_pool()

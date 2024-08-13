@@ -4,7 +4,7 @@ import numpy
 
 from facefusion import state_manager
 from facefusion.common_helper import get_first
-from facefusion.face_attributor import detect_gender_age
+from facefusion.face_classifier import detect_gender_age
 from facefusion.face_detector import detect_faces, detect_rotated_faces
 from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, estimate_face_angle, get_nms_threshold
 from facefusion.face_landmarker import detect_face_landmarks, estimate_face_landmark_68_5
