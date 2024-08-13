@@ -2,9 +2,9 @@ import subprocess
 
 import pytest
 
-from facefusion import face_analyser, state_manager
+from facefusion import face_attributor, face_detector, face_landmarker, face_recognizer, state_manager
 from facefusion.download import conditional_download
-from facefusion.face_analyser import get_many_faces, get_one_face, pre_check
+from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.typing import Face
 from facefusion.vision import read_static_image
 from .helper import get_test_example_file, get_test_examples_directory
@@ -19,6 +19,10 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.8:ih*0.8', get_test_example_file('source-80crop.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.7:ih*0.7', get_test_example_file('source-70crop.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.6:ih*0.6', get_test_example_file('source-60crop.jpg') ])
+	face_attributor.pre_check()
+	face_detector.pre_check()
+	face_landmarker.pre_check()
+	face_recognizer.pre_check()
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('face_detector_angles', [ 0 ])
 	state_manager.init_item('face_detector_score', 0.5)
@@ -27,14 +31,16 @@ def before_all() -> None:
 
 @pytest.fixture(autouse = True)
 def before_each() -> None:
-	face_analyser.clear_inference_pool()
+	face_attributor.clear_inference_pool()
+	face_detector.clear_inference_pool()
+	face_landmarker.clear_inference_pool()
+	face_recognizer.clear_inference_pool()
 
 
 def test_get_one_face_with_retinaface() -> None:
 	state_manager.init_item('face_detector_model', 'retinaface')
 	state_manager.init_item('face_detector_size', '320x320')
 
-	pre_check()
 	source_paths =\
 	[
 		get_test_example_file('source.jpg'),
@@ -54,7 +60,6 @@ def test_get_one_face_with_scrfd() -> None:
 	state_manager.init_item('face_detector_model', 'scrfd')
 	state_manager.init_item('face_detector_size', '640x640')
 
-	pre_check()
 	source_paths =\
 	[
 		get_test_example_file('source.jpg'),
@@ -74,7 +79,6 @@ def test_get_one_face_with_yoloface() -> None:
 	state_manager.init_item('face_detector_model', 'yoloface')
 	state_manager.init_item('face_detector_size', '640x640')
 
-	pre_check()
 	source_paths =\
 	[
 		get_test_example_file('source.jpg'),
