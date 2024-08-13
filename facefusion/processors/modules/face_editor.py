@@ -179,7 +179,7 @@ def post_process() -> None:
 		face_masker.clear_inference_pool()
 
 
-def edit_face(target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+def edit_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
 	face_landmark_5 = scale_face_landmark_5(target_face.landmark_set.get('5/68'), 1.2)

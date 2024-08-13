@@ -139,7 +139,7 @@ def post_process() -> None:
 		face_masker.clear_inference_pool()
 
 
-def restore_expression(source_vision_frame : VisionFrame, target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+def restore_expression(source_vision_frame : VisionFrame, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
 	expression_restorer_factor = map_float(float(state_manager.get_item('expression_restorer_factor')), 0, 200, 0, 2)

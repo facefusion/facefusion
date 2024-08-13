@@ -486,7 +486,7 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_model_options().get('type')
 	source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
-	source_embedding, source_normed_embedding = calc_embedding(source_vision_frame, source_face.landmark_set.get('5'))
+	source_embedding, source_normed_embedding = calc_embedding(source_vision_frame, source_face.landmark_set.get('5/68'))
 
 	if model_type == 'ghost':
 		source_embedding = source_embedding.reshape(1, -1)
