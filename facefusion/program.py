@@ -2,7 +2,7 @@ from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
 from facefusion import config, logger, metadata, state_manager, wording
-from facefusion.common_helper import create_int_metavar, create_float_metavar
+from facefusion.common_helper import create_float_metavar, create_int_metavar
 from facefusion.execution import get_execution_provider_choices
 from facefusion.filesystem import list_directory
 from facefusion.jobs import job_store
