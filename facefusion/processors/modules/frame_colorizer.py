@@ -9,7 +9,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, logger, process_manager, state_manager, wording
-from facefusion.common_helper import create_metavar
+from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool, has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -154,7 +154,7 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--frame-colorizer-model', help = wording.get('help.frame_colorizer_model'), default = config.get_str_value('processors.frame_colorizer_model', 'ddcolor'), choices = processors_choices.frame_colorizer_models)
-		group_processors.add_argument('--frame-colorizer-blend', help = wording.get('help.frame_colorizer_blend'), type = int, default = config.get_int_value('processors.frame_colorizer_blend', '100'), choices = processors_choices.frame_colorizer_blend_range, metavar = create_metavar(processors_choices.frame_colorizer_blend_range))
+		group_processors.add_argument('--frame-colorizer-blend', help = wording.get('help.frame_colorizer_blend'), type = int, default = config.get_int_value('processors.frame_colorizer_blend', '100'), choices = processors_choices.frame_colorizer_blend_range, metavar = create_int_metavar(processors_choices.frame_colorizer_blend_range))
 		group_processors.add_argument('--frame-colorizer-size', help = wording.get('help.frame_colorizer_size'), type = str, default = config.get_str_value('processors.frame_colorizer_size', '256x256'), choices = processors_choices.frame_colorizer_sizes)
 		facefusion.jobs.job_store.register_step_keys([ 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size' ])
 

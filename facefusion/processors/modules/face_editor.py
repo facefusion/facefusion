@@ -9,7 +9,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
-from facefusion.common_helper import create_metavar, map_float
+from facefusion.common_helper import create_float_metavar, map_float
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
@@ -119,11 +119,11 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--face-editor-model', help = wording.get('help.face_editor_model'), default = config.get_str_value('processors.face_editor_model', 'live_portrait'), choices = processors_choices.face_editor_models)
-		group_processors.add_argument('--face-editor-eyebrow-direction', help = wording.get('help.face_editor_eyebrow_direction'), type = float, default = config.get_float_value('processors.face_editor_eyebrow_direction', '0'), choices = processors_choices.face_editor_eyebrow_direction_range, metavar = create_metavar(processors_choices.face_editor_eyebrow_direction_range))
-		group_processors.add_argument('--face-editor-eye-gaze-horizontal', help = wording.get('help.face_editor_eye_gaze_horizontal'), type = float, default = config.get_float_value('processors.face_editor_eye_gaze_horizontal', '0'), choices = processors_choices.face_editor_eye_gaze_horizontal_range, metavar = create_metavar(processors_choices.face_editor_eye_gaze_horizontal_range))
-		group_processors.add_argument('--face-editor-eye-gaze-vertical', help = wording.get('help.face_editor_eye_gaze_vertical'), type = float, default = config.get_float_value('processors.face_editor_eye_gaze_vertical', '0'), choices = processors_choices.face_editor_eye_gaze_vertical_range, metavar = create_metavar(processors_choices.face_editor_eye_gaze_vertical_range))
-		group_processors.add_argument('--face-editor-eye-open-ratio', help = wording.get('help.face_editor_eye_open_ratio'), type = float, default = config.get_float_value('processors.face_editor_eye_open_ratio', '0'), choices = processors_choices.face_editor_eye_open_ratio_range, metavar = create_metavar(processors_choices.face_editor_eye_open_ratio_range))
-		group_processors.add_argument('--face-editor-lip-open-ratio', help = wording.get('help.face_editor_lip_open_ratio'), type = float, default = config.get_float_value('processors.face_editor_lip_open_ratio', '0'), choices = processors_choices.face_editor_lip_open_ratio_range, metavar = create_metavar(processors_choices.face_editor_lip_open_ratio_range))
+		group_processors.add_argument('--face-editor-eyebrow-direction', help = wording.get('help.face_editor_eyebrow_direction'), type = float, default = config.get_float_value('processors.face_editor_eyebrow_direction', '0'), choices = processors_choices.face_editor_eyebrow_direction_range, metavar = create_float_metavar(processors_choices.face_editor_eyebrow_direction_range))
+		group_processors.add_argument('--face-editor-eye-gaze-horizontal', help = wording.get('help.face_editor_eye_gaze_horizontal'), type = float, default = config.get_float_value('processors.face_editor_eye_gaze_horizontal', '0'), choices = processors_choices.face_editor_eye_gaze_horizontal_range, metavar = create_float_metavar(processors_choices.face_editor_eye_gaze_horizontal_range))
+		group_processors.add_argument('--face-editor-eye-gaze-vertical', help = wording.get('help.face_editor_eye_gaze_vertical'), type = float, default = config.get_float_value('processors.face_editor_eye_gaze_vertical', '0'), choices = processors_choices.face_editor_eye_gaze_vertical_range, metavar = create_float_metavar(processors_choices.face_editor_eye_gaze_vertical_range))
+		group_processors.add_argument('--face-editor-eye-open-ratio', help = wording.get('help.face_editor_eye_open_ratio'), type = float, default = config.get_float_value('processors.face_editor_eye_open_ratio', '0'), choices = processors_choices.face_editor_eye_open_ratio_range, metavar = create_float_metavar(processors_choices.face_editor_eye_open_ratio_range))
+		group_processors.add_argument('--face-editor-lip-open-ratio', help = wording.get('help.face_editor_lip_open_ratio'), type = float, default = config.get_float_value('processors.face_editor_lip_open_ratio', '0'), choices = processors_choices.face_editor_lip_open_ratio_range, metavar = create_float_metavar(processors_choices.face_editor_lip_open_ratio_range))
 		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio' ])
 
 

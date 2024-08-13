@@ -9,7 +9,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
-from facefusion.common_helper import create_metavar, map_float
+from facefusion.common_helper import create_int_metavar, map_float
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
@@ -99,7 +99,7 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--expression-restorer-model', help = wording.get('help.expression_restorer_model'), default = config.get_str_value('processors.expression_restorer_model', 'live_portrait'), choices = processors_choices.expression_restorer_models)
-		group_processors.add_argument('--expression-restorer-factor', help = wording.get('help.expression_restorer_factor'), type = int, default = config.get_int_value('processors.expression_restorer_factor', '100'), choices = processors_choices.expression_restorer_factor_range, metavar = create_metavar(processors_choices.expression_restorer_factor_range))
+		group_processors.add_argument('--expression-restorer-factor', help = wording.get('help.expression_restorer_factor'), type = int, default = config.get_int_value('processors.expression_restorer_factor', '100'), choices = processors_choices.expression_restorer_factor_range, metavar = create_int_metavar(processors_choices.expression_restorer_factor_range))
 		facefusion.jobs.job_store.register_step_keys([ 'expression_restorer_model','expression_restorer_factor' ])
 
 
