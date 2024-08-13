@@ -5,7 +5,7 @@ from time import time
 
 import numpy
 
-from facefusion import content_analyser, face_analyser, face_detector, face_landmarker, face_masker, logger, process_manager, state_manager, voice_extractor, wording
+from facefusion import content_analyser, face_attributor, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, voice_extractor, wording
 from facefusion.args import apply_args, collect_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
@@ -89,7 +89,7 @@ def pre_check() -> bool:
 
 
 def common_pre_check() -> bool:
-	return content_analyser.pre_check() and face_analyser.pre_check() and face_detector.pre_check() and face_landmarker.pre_check() and face_masker.pre_check() and voice_extractor.pre_check()
+	return content_analyser.pre_check() and face_attributor.pre_check() and face_detector.pre_check() and face_landmarker.pre_check() and face_masker.pre_check() and face_recognizer.pre_check() and voice_extractor.pre_check()
 
 
 def processors_pre_check() -> bool:
@@ -140,14 +140,14 @@ def force_download() -> ErrorCode:
 	model_set =\
 	[
 		content_analyser.MODEL_SET.get('open_nsfw'),
-		face_analyser.MODEL_SET.get('arcface'),
-		face_analyser.MODEL_SET.get('gender_age'),
+		face_attributor.MODEL_SET.get('gender_age'),
 		face_detector.MODEL_SET.get('retinaface'),
 		face_detector.MODEL_SET.get('scrfd'),
 		face_detector.MODEL_SET.get('yoloface'),
 		face_landmarker.MODEL_SET.get('2dfan4'),
 		face_landmarker.MODEL_SET.get('peppa_wutz'),
-		face_analyser.MODEL_SET.get('face_landmarker_68_5'),
+		face_landmarker.MODEL_SET.get('face_landmarker_68_5'),
+		face_recognizer.MODEL_SET.get('arcface'),
 		face_masker.MODEL_SET.get('face_masker'),
 		voice_extractor.MODEL_SET.get('voice_extractor')
 	]
