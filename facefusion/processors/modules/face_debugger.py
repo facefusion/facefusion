@@ -7,7 +7,7 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_attributor, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, wording
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
@@ -60,8 +60,11 @@ def post_process() -> None:
 	read_static_image.cache_clear()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		content_analyser.clear_inference_pool()
-		face_analyser.clear_inference_pool()
+		face_attributor.clear_inference_pool()
+		face_detector.clear_inference_pool()
+		face_landmarker.clear_inference_pool()
 		face_masker.clear_inference_pool()
+		face_recognizer.clear_inference_pool()
 
 
 def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
