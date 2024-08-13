@@ -28,8 +28,8 @@ Embedding = NDArray[numpy.float64]
 Face = namedtuple('Face',
 [
 	'bounding_box',
-	'landmark_set',
 	'score_set',
+	'landmark_set',
 	'angle',
 	'embedding',
 	'normed_embedding',

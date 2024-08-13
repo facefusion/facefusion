@@ -4,10 +4,12 @@ from functools import lru_cache
 from typing import Any, List
 
 import onnx
-from onnxruntime import InferenceSession, get_available_providers
+from onnxruntime import InferenceSession, get_available_providers, set_default_logger_severity
 
 from facefusion.choices import execution_provider_set
 from facefusion.typing import DownloadSet, ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, InferencePool, ModelInitializer, ValueAndUnit
+
+set_default_logger_severity(3)
 
 
 def get_execution_provider_choices() -> List[ExecutionProviderKey]:

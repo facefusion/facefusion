@@ -14,7 +14,7 @@ from facefusion.typing import Audio, AudioChunk, InferencePool, ModelOptions, Mo
 INFERENCE_POOL : Optional[InferencePool] = None
 MODEL_SET : ModelSet =\
 {
-	'voice_extractor':
+	'kim_vocal_2':
 	{
 		'hashes':
 		{
@@ -55,7 +55,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET.get('voice_extractor')
+	return MODEL_SET.get('kim_vocal_2')
 
 
 def pre_check() -> bool:

@@ -4,9 +4,8 @@ import sys
 from time import time
 
 import numpy
-import onnxruntime
 
-from facefusion import content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, voice_extractor, wording
+from facefusion import content_analyser, face_analyser, face_detector, face_landmarker, face_masker, logger, process_manager, state_manager, voice_extractor, wording
 from facefusion.args import apply_args, collect_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
@@ -27,8 +26,6 @@ from facefusion.statistics import conditional_log_statistics
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
 from facefusion.typing import Args, ErrorCode
 from facefusion.vision import get_video_frame, pack_resolution, read_image, read_static_images, restrict_image_resolution, restrict_video_fps, restrict_video_resolution, unpack_resolution
-
-onnxruntime.set_default_logger_severity(3)
 
 
 def cli() -> None:
@@ -92,7 +89,7 @@ def pre_check() -> bool:
 
 
 def common_pre_check() -> bool:
-	return content_analyser.pre_check() and face_analyser.pre_check() and face_masker.pre_check() and voice_extractor.pre_check()
+	return content_analyser.pre_check() and face_analyser.pre_check() and face_detector.pre_check() and face_landmarker.pre_check() and face_masker.pre_check() and voice_extractor.pre_check()
 
 
 def processors_pre_check() -> bool:
@@ -143,15 +140,16 @@ def force_download() -> ErrorCode:
 	model_set =\
 	[
 		content_analyser.MODEL_SET.get('open_nsfw'),
-		face_analyser.MODEL_SET.get('retinaface'),
-		face_analyser.MODEL_SET.get('scrfd'),
-		face_analyser.MODEL_SET.get('yoloface'),
 		face_analyser.MODEL_SET.get('arcface'),
-		face_analyser.MODEL_SET.get('face_landmarker_68'),
-		face_analyser.MODEL_SET.get('face_landmarker_68_5'),
 		face_analyser.MODEL_SET.get('gender_age'),
+		face_detector.MODEL_SET.get('retinaface'),
+		face_detector.MODEL_SET.get('scrfd'),
+		face_detector.MODEL_SET.get('yoloface'),
+		face_landmarker.MODEL_SET.get('2dfan4'),
+		face_landmarker.MODEL_SET.get('peppa_wutz'),
+		face_analyser.MODEL_SET.get('face_landmarker_68_5'),
 		face_masker.MODEL_SET.get('face_masker'),
-		voice_extractor.MODEL_SET.get('voice_extractor'),
+		voice_extractor.MODEL_SET.get('voice_extractor')
 	]
 
 	for processor_module in get_processors_modules(available_processors):

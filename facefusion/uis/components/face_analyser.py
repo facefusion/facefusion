@@ -3,7 +3,7 @@ from typing import Optional, Sequence, Tuple
 import gradio
 
 import facefusion.choices
-from facefusion import face_analyser, state_manager, wording
+from facefusion import face_analyser, face_detector, state_manager, wording
 from facefusion.common_helper import calc_float_step
 from facefusion.typing import Angle, FaceDetectorModel, Score
 from facefusion.uis.core import register_ui_component
@@ -75,7 +75,7 @@ def listen() -> None:
 def update_face_detector_model(face_detector_model : FaceDetectorModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
 	state_manager.set_item('face_detector_model', face_detector_model)
 	update_face_detector_size('640x640')
-	face_analyser.clear_inference_pool()
+	face_detector.clear_inference_pool()
 
 	if face_analyser.pre_check():
 		if state_manager.get_item('face_detector_size') in facefusion.choices.face_detector_set[state_manager.get_item('face_detector_model')]:
