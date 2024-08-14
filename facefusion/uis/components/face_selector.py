@@ -108,12 +108,9 @@ def listen() -> None:
 	]):
 		ui_component.change(clear_and_update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
-	for ui_component in get_ui_components(
-	[
-		'face_detector_score_slider',
-		'face_landmarker_score_slider'
-	]):
-		ui_component.release(clear_and_update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
+	face_detector_score_slider = get_ui_component('face_detector_score_slider')
+	if face_detector_score_slider:
+		face_detector_score_slider.release(clear_and_update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
 	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
