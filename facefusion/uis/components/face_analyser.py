@@ -77,7 +77,7 @@ def listen() -> None:
 	FACE_DETECTOR_SIZE_DROPDOWN.change(update_face_detector_size, inputs = FACE_DETECTOR_SIZE_DROPDOWN)
 	FACE_DETECTOR_ANGLES_CHECKBOX_GROUP.change(update_face_detector_angles, inputs = FACE_DETECTOR_ANGLES_CHECKBOX_GROUP, outputs = FACE_DETECTOR_ANGLES_CHECKBOX_GROUP)
 	FACE_DETECTOR_SCORE_SLIDER.release(update_face_detector_score, inputs = FACE_DETECTOR_SCORE_SLIDER)
-	FACE_LANDMARKER_MODEL_DROPDOWN.change(update_face_landmarker_model, inputs = FACE_LANDMARKER_MODEL_DROPDOWN)
+	FACE_LANDMARKER_MODEL_DROPDOWN.change(update_face_landmarker_model, inputs = FACE_LANDMARKER_MODEL_DROPDOWN, outputs = FACE_LANDMARKER_MODEL_DROPDOWN)
 	FACE_LANDMARKER_SCORE_SLIDER.release(update_face_landmarker_score, inputs = FACE_LANDMARKER_SCORE_SLIDER)
 
 
@@ -107,9 +107,13 @@ def update_face_detector_score(face_detector_score : Score) -> None:
 	state_manager.set_item('face_detector_score', face_detector_score)
 
 
-def update_face_landmarker_model(face_landmarker_model : FaceLandmarkerModel) -> None:
+def update_face_landmarker_model(face_landmarker_model : FaceLandmarkerModel) -> gradio.Dropdown:
 	state_manager.set_item('face_landmarker_model', face_landmarker_model)
 	face_landmarker.clear_inference_pool()
+
+	if face_landmarker.pre_check():
+		gradio.Dropdown(value = state_manager.get_item('face_landmarker_model'))
+	return gradio.Dropdown()
 
 
 def update_face_landmarker_score(face_landmarker_score : Score) -> None:
