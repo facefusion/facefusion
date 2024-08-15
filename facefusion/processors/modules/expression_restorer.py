@@ -8,7 +8,7 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_int_metavar, map_float
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool
@@ -135,11 +135,14 @@ def post_process() -> None:
 		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		content_analyser.clear_inference_pool()
-		face_analyser.clear_inference_pool()
+		face_classifier.clear_inference_pool()
+		face_detector.clear_inference_pool()
+		face_landmarker.clear_inference_pool()
 		face_masker.clear_inference_pool()
+		face_recognizer.clear_inference_pool()
 
 
-def restore_expression(source_vision_frame : VisionFrame, target_face: Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+def restore_expression(source_vision_frame : VisionFrame, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
 	expression_restorer_factor = map_float(float(state_manager.get_item('expression_restorer_factor')), 0, 200, 0, 2)

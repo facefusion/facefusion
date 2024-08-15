@@ -7,7 +7,7 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_analyser, face_masker, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import create_inference_pool, get_static_model_initializer, has_execution_provider
@@ -412,8 +412,11 @@ def post_process() -> None:
 		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		content_analyser.clear_inference_pool()
-		face_analyser.clear_inference_pool()
+		face_classifier.clear_inference_pool()
+		face_detector.clear_inference_pool()
+		face_landmarker.clear_inference_pool()
 		face_masker.clear_inference_pool()
+		face_recognizer.clear_inference_pool()
 
 
 def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
@@ -486,7 +489,7 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_model_options().get('type')
 	source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
-	source_embedding, source_normed_embedding = calc_embedding(source_vision_frame, source_face.landmark_set.get('5'))
+	source_embedding, source_normed_embedding = calc_embedding(source_vision_frame, source_face.landmark_set.get('5/68'))
 
 	if model_type == 'ghost':
 		source_embedding = source_embedding.reshape(1, -1)

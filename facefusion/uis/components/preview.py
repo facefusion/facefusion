@@ -151,7 +151,8 @@ def listen() -> None:
 		'face_selector_gender_dropdown',
 		'face_detector_model_dropdown',
 		'face_detector_size_dropdown',
-		'face_detector_angles_checkbox_group'
+		'face_detector_angles_checkbox_group',
+		'face_landmarker_model_dropdown'
 	]):
 		ui_component.change(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 

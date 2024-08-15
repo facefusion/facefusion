@@ -42,15 +42,23 @@ def create_paths_program() -> ArgumentParser:
 	return program
 
 
-def create_face_analyser_program() -> ArgumentParser:
+def create_face_detector_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	group_face_analyser = program.add_argument_group('face analyser')
-	group_face_analyser.add_argument('--face-detector-model', help = wording.get('help.face_detector_model'), default = config.get_str_value('face_analyser.face_detector_model', 'yoloface'), choices = facefusion.choices.face_detector_set.keys())
-	group_face_analyser.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_analyser.face_detector_size', '640x640'), choices = suggest_face_detector_choices(program))
-	group_face_analyser.add_argument('--face-detector-angles', help = wording.get('help.face_detector_angles'), type = int, default = config.get_int_list('face_analyser.face_detector_angles', '0'), choices = facefusion.choices.face_detector_angles, nargs = '+', metavar = 'FACE_DETECTOR_ANGLES')
-	group_face_analyser.add_argument('--face-detector-score', help = wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_analyser.face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_float_metavar(facefusion.choices.face_detector_score_range))
-	group_face_analyser.add_argument('--face-landmarker-score', help = wording.get('help.face_landmarker_score'), type = float, default = config.get_float_value('face_analyser.face_landmarker_score', '0.5'), choices = facefusion.choices.face_landmarker_score_range, metavar = create_float_metavar(facefusion.choices.face_landmarker_score_range))
-	job_store.register_step_keys([ 'face_detector_model', 'face_detector_angles', 'face_detector_size', 'face_detector_score', 'face_landmarker_score' ])
+	group_face_detector = program.add_argument_group('face detector')
+	group_face_detector.add_argument('--face-detector-model', help = wording.get('help.face_detector_model'), default = config.get_str_value('face_detector.face_detector_model', 'yoloface'), choices = facefusion.choices.face_detector_set.keys())
+	group_face_detector.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_detector.face_detector_size', '640x640'), choices = suggest_face_detector_choices(program))
+	group_face_detector.add_argument('--face-detector-angles', help = wording.get('help.face_detector_angles'), type = int, default = config.get_int_list('face_detector.face_detector_angles', '0'), choices = facefusion.choices.face_detector_angles, nargs = '+', metavar = 'FACE_DETECTOR_ANGLES')
+	group_face_detector.add_argument('--face-detector-score', help = wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_detector.face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_float_metavar(facefusion.choices.face_detector_score_range))
+	job_store.register_step_keys([ 'face_detector_model', 'face_detector_angles', 'face_detector_size', 'face_detector_score' ])
+	return program
+
+
+def create_face_landmarker_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_face_landmarker = program.add_argument_group('face landmarker')
+	group_face_landmarker.add_argument('--face-landmarker-model', help = wording.get('help.face_landmarker_model'), default = config.get_str_value('face_landmarker.face_landmarker_model', '2dfan4'), choices = facefusion.choices.face_landmarker_models)
+	group_face_landmarker.add_argument('--face-landmarker-score', help = wording.get('help.face_landmarker_score'), type = float, default = config.get_float_value('face_landmarker.face_landmarker_score', '0.5'), choices = facefusion.choices.face_landmarker_score_range, metavar = create_float_metavar(facefusion.choices.face_landmarker_score_range))
+	job_store.register_step_keys([ 'face_landmarker_model', 'face_landmarker_score' ])
 	return program
 
 
@@ -185,7 +193,7 @@ def create_step_index_program() -> ArgumentParser:
 
 
 def collect_step_program() -> ArgumentParser:
-	return ArgumentParser(parents= [ create_config_program(), create_jobs_path_program(), create_paths_program(), create_face_analyser_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
+	return ArgumentParser(parents= [ create_config_program(), create_jobs_path_program(), create_paths_program(), create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
 
 
 def collect_job_program() -> ArgumentParser:

@@ -2,9 +2,9 @@ import subprocess
 
 import pytest
 
-from facefusion import face_analyser, state_manager
+from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
 from facefusion.download import conditional_download
-from facefusion.face_analyser import get_many_faces, get_one_face, pre_check
+from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.typing import Face
 from facefusion.vision import read_static_image
 from .helper import get_test_example_file, get_test_examples_directory
@@ -23,18 +23,24 @@ def before_all() -> None:
 	state_manager.init_item('face_detector_angles', [ 0 ])
 	state_manager.init_item('face_detector_score', 0.5)
 	state_manager.init_item('face_landmarker_score', 0.5)
+	face_classifier.pre_check()
+	face_landmarker.pre_check()
+	face_recognizer.pre_check()
 
 
 @pytest.fixture(autouse = True)
 def before_each() -> None:
-	face_analyser.clear_inference_pool()
+	face_classifier.clear_inference_pool()
+	face_detector.clear_inference_pool()
+	face_landmarker.clear_inference_pool()
+	face_recognizer.clear_inference_pool()
 
 
 def test_get_one_face_with_retinaface() -> None:
 	state_manager.init_item('face_detector_model', 'retinaface')
 	state_manager.init_item('face_detector_size', '320x320')
+	face_detector.pre_check()
 
-	pre_check()
 	source_paths =\
 	[
 		get_test_example_file('source.jpg'),
@@ -53,8 +59,8 @@ def test_get_one_face_with_retinaface() -> None:
 def test_get_one_face_with_scrfd() -> None:
 	state_manager.init_item('face_detector_model', 'scrfd')
 	state_manager.init_item('face_detector_size', '640x640')
+	face_detector.pre_check()
 
-	pre_check()
 	source_paths =\
 	[
 		get_test_example_file('source.jpg'),
@@ -73,8 +79,8 @@ def test_get_one_face_with_scrfd() -> None:
 def test_get_one_face_with_yoloface() -> None:
 	state_manager.init_item('face_detector_model', 'yoloface')
 	state_manager.init_item('face_detector_size', '640x640')
+	face_detector.pre_check()
 
-	pre_check()
 	source_paths =\
 	[
 		get_test_example_file('source.jpg'),

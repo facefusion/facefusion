@@ -44,6 +44,7 @@ def apply_args(args : Args) -> None:
 	state_manager.init_item('face_detector_size', args.get('face_detector_size'))
 	state_manager.init_item('face_detector_angles', args.get('face_detector_angles'))
 	state_manager.init_item('face_detector_score', args.get('face_detector_score'))
+	state_manager.init_item('face_landmarker_model', args.get('face_landmarker_model'))
 	state_manager.init_item('face_landmarker_score', args.get('face_landmarker_score'))
 	# face selector
 	state_manager.init_item('face_selector_mode', args.get('face_selector_mode'))
