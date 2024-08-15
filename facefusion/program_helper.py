@@ -1,4 +1,4 @@
-from argparse import ArgumentParser, _ArgumentGroup
+from argparse import ArgumentParser, _ArgumentGroup, _SubParsersAction
 from typing import List, Optional
 
 import facefusion.choices
@@ -13,6 +13,18 @@ def find_argument_group(program : ArgumentParser, group_name : str) -> Optional[
 
 
 def validate_args(program : ArgumentParser) -> bool:
+	if not validate_actions(program):
+		return False
+
+	for action in program._actions:
+		if isinstance(action, _SubParsersAction):
+			for _, sub_program in action._name_parser_map.items():
+				if not validate_args(sub_program):
+					return False
+	return True
+
+
+def validate_actions(program : ArgumentParser) -> bool:
 	for action in program._actions:
 		if action.default and action.choices:
 			if isinstance(action.default, list):

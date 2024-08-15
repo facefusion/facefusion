@@ -67,7 +67,7 @@ def test_job_run_all() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run-all-2', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-end', '10' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run-all-2', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-start', '10', '--trim-frame-start', '20' ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-run-all-2', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-run-all-2.mp4'), '--trim-frame-start', '11', '--trim-frame-end', '20' ]
 	subprocess.run(commands)
 
 	commands = [ sys.executable, 'facefusion.py', 'job-run-all', '-j', get_test_jobs_directory() ]
@@ -127,7 +127,7 @@ def test_job_retry_all() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-2', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-retry-all-2.mp4'), '--trim-frame-end', '10' ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-2', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-retry-all-2.mp4'), '--trim-frame-start', '10', '--trim-frame-start', '20' ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-retry-all-2', '-j', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-job-retry-all-2.mp4'), '--trim-frame-start', '11', '--trim-frame-end', '20' ]
 	subprocess.run(commands)
 
 	commands = [ sys.executable, 'facefusion.py', 'job-retry-all', '-j', get_test_jobs_directory() ]
