@@ -89,7 +89,17 @@ def pre_check() -> bool:
 
 
 def common_pre_check() -> bool:
-	return content_analyser.pre_check() and face_classifier.pre_check() and face_detector.pre_check() and face_landmarker.pre_check() and face_masker.pre_check() and face_recognizer.pre_check() and voice_extractor.pre_check()
+	modules =\
+	[
+		content_analyser,
+		face_classifier,
+		face_detector,
+		face_landmarker,
+		face_masker,
+		face_recognizer,
+		voice_extractor
+	]
+	return all(module.pre_check() for module in modules)
 
 
 def processors_pre_check() -> bool:
