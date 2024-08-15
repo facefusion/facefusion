@@ -99,6 +99,7 @@ def common_pre_check() -> bool:
 		face_recognizer,
 		voice_extractor
 	]
+
 	return all(module.pre_check() for module in modules)
 
 
