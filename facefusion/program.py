@@ -61,6 +61,7 @@ def create_face_landmarker_program() -> ArgumentParser:
 	job_store.register_step_keys([ 'face_landmarker_model', 'face_landmarker_score' ])
 	return program
 
+
 def create_face_selector_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_selector = program.add_argument_group('face selector')
