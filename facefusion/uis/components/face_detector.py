@@ -61,9 +61,9 @@ def listen() -> None:
 
 
 def update_face_detector_model(face_detector_model : FaceDetectorModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
+	face_detector.clear_inference_pool()
 	state_manager.set_item('face_detector_model', face_detector_model)
 	update_face_detector_size('640x640')
-	face_detector.clear_inference_pool()
 
 	if face_detector.pre_check():
 		if state_manager.get_item('face_detector_size') in facefusion.choices.face_detector_set[state_manager.get_item('face_detector_model')]:

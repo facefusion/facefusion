@@ -38,8 +38,8 @@ def listen() -> None:
 
 
 def update_face_landmarker_model(face_landmarker_model : FaceLandmarkerModel) -> gradio.Dropdown:
-	state_manager.set_item('face_landmarker_model', face_landmarker_model)
 	face_landmarker.clear_inference_pool()
+	state_manager.set_item('face_landmarker_model', face_landmarker_model)
 
 	if face_landmarker.pre_check():
 		gradio.Dropdown(value = state_manager.get_item('face_landmarker_model'))
