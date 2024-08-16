@@ -19,7 +19,7 @@ from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_d
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
-from facefusion.processors.core import clear_processors_modules, get_processors_modules
+from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.statistics import conditional_log_statistics
