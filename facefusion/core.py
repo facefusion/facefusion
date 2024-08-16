@@ -283,7 +283,6 @@ def route_job_runner() -> ErrorCode:
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	clear_reference_faces()
-	clear_processors_modules()
 	step_total = job_manager.count_step_total(job_id)
 	step_args.update(collect_job_args())
 	apply_args(step_args)
