@@ -204,6 +204,7 @@ WORDING : Dict[str, Any] =\
 		'webcam_image': 'WEBCAM',
 		# webcam options
 		'webcam_mode_radio': 'WEBCAM MODE',
+		'webcam_device_dropdown': 'WEBCAM DEVICE',
 		'webcam_resolution_dropdown': 'WEBCAM RESOLUTION',
 		'webcam_fps_slider': 'WEBCAM FPS'
 	}

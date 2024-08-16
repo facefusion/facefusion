@@ -21,6 +21,7 @@ from facefusion.ffmpeg import open_ffmpeg
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
 from facefusion.uis.typing import StreamMode, WebcamMode
 from facefusion.uis.core import get_ui_component, get_ui_components
+from facefusion.uis.choices import webcam_device
 
 WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None
@@ -28,14 +29,18 @@ WEBCAM_START_BUTTON : Optional[gradio.Button] = None
 WEBCAM_STOP_BUTTON : Optional[gradio.Button] = None
 
 
-def get_webcam_capture() -> Optional[cv2.VideoCapture]:
+def get_webcam_capture(device: str) -> Optional[cv2.VideoCapture]:
 	global WEBCAM_CAPTURE
-
+	device = list(filter(lambda x: x[1] == device, webcam_device))
+	if len(device) == 0:
+		device_index = 0
+	else:
+		device_index = device[0][0]
 	if WEBCAM_CAPTURE is None:
 		if is_windows():
-			webcam_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+			webcam_capture = cv2.VideoCapture(device_index, cv2.CAP_DSHOW)
 		else:
-			webcam_capture = cv2.VideoCapture(0)
+			webcam_capture = cv2.VideoCapture(device_index)
 		if webcam_capture and webcam_capture.isOpened():
 			WEBCAM_CAPTURE = webcam_capture
 	return WEBCAM_CAPTURE
@@ -71,10 +76,11 @@ def render() -> None:
 def listen() -> None:
 	start_event = None
 	webcam_mode_radio = get_ui_component('webcam_mode_radio')
+	webcam_device_dropdown = get_ui_component('webcam_device_dropdown')
 	webcam_resolution_dropdown = get_ui_component('webcam_resolution_dropdown')
 	webcam_fps_slider = get_ui_component('webcam_fps_slider')
 	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
-		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
+		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_device_dropdown, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 	WEBCAM_STOP_BUTTON.click(stop, cancels = start_event)
 
 	for ui_component in get_ui_components(
@@ -89,7 +95,7 @@ def listen() -> None:
 		ui_component.change(update, cancels = start_event)
 
 
-def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
+def start(webcam_mode : WebcamMode, webcam_device: str, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	facefusion.globals.face_selector_mode = 'one'
 	facefusion.globals.face_analyser_order = 'large-small'
 	source_image_paths = filter_image_paths(facefusion.globals.source_paths)
@@ -100,7 +106,7 @@ def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -
 	if webcam_mode in [ 'udp', 'v4l2' ]:
 		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) #type:ignore[arg-type]
 	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
-	webcam_capture = get_webcam_capture()
+	webcam_capture =  get_webcam_capture(device=webcam_device)
 	if webcam_capture and webcam_capture.isOpened():
 		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) #type:ignore[attr-defined]
 		webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)

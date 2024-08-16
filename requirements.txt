@@ -7,3 +7,4 @@ opencv-python==4.9.0.80
 psutil==5.9.8
 tqdm==4.66.4
 scipy==1.13.0
+PyCameraList==1.0.0
