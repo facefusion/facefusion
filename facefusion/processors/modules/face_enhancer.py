@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
-from time import sleep
-from typing import Any, List, Optional
+from typing import List
 
 import cv2
 import numpy
@@ -8,10 +7,9 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
@@ -21,11 +19,10 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEnhancerInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.thread_helper import thread_lock, thread_semaphore
+from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
-INFERENCE_POOL : Optional[InferencePool] = None
 NAME = __name__.upper()
 MODEL_SET : ModelSet =\
 {
@@ -221,22 +218,13 @@ MODEL_SET : ModelSet =\
 }
 
 
-def get_inference_pool() -> Any:
-	global INFERENCE_POOL
-
-	with thread_lock():
-		while process_manager.is_checking():
-			sleep(0.5)
-		if INFERENCE_POOL is None:
-			model_sources = get_model_options().get('sources')
-			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-		return INFERENCE_POOL
+def get_inference_pool() -> InferencePool:
+	model_sources = get_model_options().get('sources')
+	return inference_manager.get_inference_pool('face_enhancer', model_sources)
 
 
 def clear_inference_pool() -> None:
-	global INFERENCE_POOL
-
-	INFERENCE_POOL = None
+	inference_manager.clear_inference_pool('face_enhancer')
 
 
 def get_model_options() -> ModelOptions:

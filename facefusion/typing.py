@@ -151,6 +151,7 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'utilization' : ExecutionDeviceUtilization
 })
 InferencePool = Dict[str, InferenceSession]
+InferencePoolSet = Dict[str, InferencePool]
 
 UiWorkflow = Literal['instant_runner', 'job_runner', 'job_manager']
 
