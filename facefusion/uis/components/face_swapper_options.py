@@ -54,7 +54,8 @@ def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gr
 
 	if face_swapper_module.pre_check():
 		face_swapper_pixel_boost_choices = processors_choices.face_swapper_set.get(state_manager.get_item('face_swapper_model'))
-		return gradio.Dropdown(value = state_manager.get_item('face_swapper_model')), gradio.Dropdown(choices = face_swapper_pixel_boost_choices, value = get_first(face_swapper_pixel_boost_choices))
+		state_manager.set_item('face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices))
+		return gradio.Dropdown(value = state_manager.get_item('face_swapper_model')), gradio.Dropdown(value = state_manager.get_item('face_swapper_pixel_boost'), choices = face_swapper_pixel_boost_choices)
 	return gradio.Dropdown(), gradio.Dropdown()
 
 

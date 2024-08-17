@@ -3,8 +3,8 @@ from typing import Optional, Sequence, Tuple
 import gradio
 
 import facefusion.choices
-from facefusion import face_detector, state_manager, wording
-from facefusion.common_helper import calc_float_step
+from facefusion import choices, face_detector, state_manager, wording
+from facefusion.common_helper import calc_float_step, get_last
 from facefusion.typing import Angle, FaceDetectorModel, Score
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import ComponentOptions
@@ -63,12 +63,11 @@ def listen() -> None:
 def update_face_detector_model(face_detector_model : FaceDetectorModel) -> Tuple[gradio.Dropdown, gradio.Dropdown]:
 	face_detector.clear_inference_pool()
 	state_manager.set_item('face_detector_model', face_detector_model)
-	update_face_detector_size('640x640')
 
 	if face_detector.pre_check():
-		if state_manager.get_item('face_detector_size') in facefusion.choices.face_detector_set[state_manager.get_item('face_detector_model')]:
-			return gradio.Dropdown(value = state_manager.get_item('face_detector_model')), gradio.Dropdown(value = state_manager.get_item('face_detector_size'), choices = facefusion.choices.face_detector_set[face_detector_model])
-		return gradio.Dropdown(value = state_manager.get_item('face_detector_model')), gradio.Dropdown(value = state_manager.get_item('face_detector_size'), choices = [ state_manager.get_item('face_detector_size') ])
+		face_detector_size_choices = choices.face_detector_set.get(state_manager.get_item('face_detector_model'))
+		state_manager.set_item('face_detector_size', get_last(face_detector_size_choices))
+		return gradio.Dropdown(value = state_manager.get_item('face_detector_model')), gradio.Dropdown(value = state_manager.get_item('face_detector_size'), choices = face_detector_size_choices)
 	return gradio.Dropdown(), gradio.Dropdown()
 
 
