@@ -62,7 +62,7 @@ FunctionEnd
 
 Section 'Prepare Your Platform'
 	DetailPrint 'Install GIT'
-	inetc::get 'https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/Git-2.45.2-64-bit.exe' '$TEMP\Git.exe'
+	inetc::get 'https://github.com/git-for-windows/git/releases/download/v2.46.0.windows.1/Git-2.46.0-64-bit.exe' '$TEMP\Git.exe'
 	ExecWait '$TEMP\Git.exe /CURRENTUSER /VERYSILENT /DIR=$LOCALAPPDATA\Programs\Git' $0
 	Delete '$TEMP\Git.exe'
 
@@ -76,7 +76,7 @@ Section 'Prepare Your Platform'
 	RMDir /r '$LOCALAPPDATA\Programs\Miniconda3'
 
 	DetailPrint 'Install Conda'
-	inetc::get 'https://repo.anaconda.com/miniconda/Miniconda3-py310_24.3.0-0-Windows-x86_64.exe' '$TEMP\Miniconda3.exe'
+	inetc::get 'https://repo.anaconda.com/miniconda/Miniconda3-py310_24.5.0-0-Windows-x86_64.exe' '$TEMP\Miniconda3.exe'
 	ExecWait '$TEMP\Miniconda3.exe /InstallationType=JustMe /AddToPath=1 /S /D=$LOCALAPPDATA\Programs\Miniconda3' $1
 	Delete '$TEMP\Miniconda3.exe'
 
@@ -109,7 +109,7 @@ Section 'Create Install Batch'
 	FileOpen $1 install-accelerator.bat w
 	FileOpen $2 install-application.bat w
 
-	FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::ffmpeg=7.0.1 --yes'
+	FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::ffmpeg=7.0.2 --yes'
 	${If} $UseCuda == 1
 		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::cuda-runtime=12.4.1 cudnn=8.9.2.26 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda-12.4'
