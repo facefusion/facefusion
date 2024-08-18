@@ -21,8 +21,8 @@ def render() -> None:
 	TERMINAL_TEXTBOX = gr.Textbox(
 		label = wording.get('uis.terminal_textbox'),
 		value = read_logs,
-		lines = 10,
-		max_lines = 10,
+		lines = 8,
+		max_lines = 8,
 		every = 0.5,
 		show_copy_button = True
 	)

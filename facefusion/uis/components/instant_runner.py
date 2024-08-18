@@ -25,23 +25,25 @@ def render() -> None:
 	global INSTANT_RUNNER_STOP_BUTTON
 	global INSTANT_RUNNER_CLEAR_BUTTON
 
-	is_instant_runner = state_manager.get_item('ui_workflow') == 'instant_runner'
-	with gradio.Row(visible = is_instant_runner) as INSTANT_RUNNER_WRAPPER:
-		INSTANT_RUNNER_START_BUTTON = gradio.Button(
-			value = wording.get('uis.start_button'),
-			variant = 'primary',
-			size = 'sm'
-		)
-		INSTANT_RUNNER_STOP_BUTTON = gradio.Button(
-			value = wording.get('uis.stop_button'),
-			variant = 'primary',
-			size = 'sm',
-			visible = False
-		)
-		INSTANT_RUNNER_CLEAR_BUTTON = gradio.Button(
-			value = wording.get('uis.clear_button'),
-			size = 'sm'
-		)
+	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
+		is_instant_runner = state_manager.get_item('ui_workflow') == 'instant_runner'
+
+		with gradio.Row(visible = is_instant_runner) as INSTANT_RUNNER_WRAPPER:
+			INSTANT_RUNNER_START_BUTTON = gradio.Button(
+				value = wording.get('uis.start_button'),
+				variant = 'primary',
+				size = 'sm'
+			)
+			INSTANT_RUNNER_STOP_BUTTON = gradio.Button(
+				value = wording.get('uis.stop_button'),
+				variant = 'primary',
+				size = 'sm',
+				visible = False
+			)
+			INSTANT_RUNNER_CLEAR_BUTTON = gradio.Button(
+				value = wording.get('uis.clear_button'),
+				size = 'sm'
+			)
 
 
 def listen() -> None:

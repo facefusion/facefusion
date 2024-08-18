@@ -56,12 +56,12 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					output.render()
 				with gradio.Blocks():
+					terminal.render()
+				with gradio.Blocks():
 					ui_workflow.render()
 					instant_runner.render()
 					job_runner.render()
 					job_manager.render()
-				with gradio.Blocks():
-					terminal.render()
 			with gradio.Column(scale = 3):
 				with gradio.Blocks():
 					preview.render()

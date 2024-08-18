@@ -13,7 +13,7 @@ from facefusion.uis.core import get_ui_component
 from facefusion.uis.typing import JobManagerAction
 from facefusion.uis.ui_helper import convert_int_none, convert_str_none, suggest_output_path
 
-JOB_MANAGER_WRAPPER : Optional[gradio.Row] = None
+JOB_MANAGER_WRAPPER : Optional[gradio.Column] = None
 JOB_MANAGER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
 JOB_MANAGER_JOB_ID_TEXTBOX : Optional[gradio.Textbox] = None
 JOB_MANAGER_JOB_ID_DROPDOWN : Optional[gradio.Dropdown] = None
