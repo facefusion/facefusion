@@ -1,6 +1,6 @@
 from typing import Dict, List, Literal, TypedDict
 
-from facefusion.typing import AudioFrame, Face, FaceSet, AppContext, VisionFrame
+from facefusion.typing import AppContext, AudioFrame, Face, FaceSet, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
 ExpressionRestorerModel = Literal['live_portrait']
