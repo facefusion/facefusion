@@ -1,6 +1,6 @@
 from functools import lru_cache
 from time import sleep
-from typing import List, Optional
+from typing import List
 
 import onnx
 from onnxruntime import InferenceSession
@@ -9,7 +9,7 @@ from facefusion import process_manager, state_manager
 from facefusion.app_context import detect_app_context
 from facefusion.execution import create_execution_providers, has_execution_provider
 from facefusion.thread_helper import thread_lock
-from facefusion.typing import DownloadSet, ExecutionProviderKey, InferencePool, InferencePoolSet, InferenceSessionSet, ModelInitializer
+from facefusion.typing import DownloadSet, ExecutionProviderKey, InferencePool, InferencePoolSet, ModelInitializer
 
 INFERENCE_POOLS : InferencePoolSet =\
 {
@@ -18,7 +18,7 @@ INFERENCE_POOLS : InferencePoolSet =\
 }
 
 
-def get_inference_pool(model_context : str, model_sources : DownloadSet) -> Optional[InferencePool]:
+def get_inference_pool(model_context : str, model_sources : DownloadSet) -> InferencePool:
 	global INFERENCE_POOLS
 
 	with thread_lock():
@@ -26,16 +26,16 @@ def get_inference_pool(model_context : str, model_sources : DownloadSet) -> Opti
 			sleep(0.5)
 		app_context = detect_app_context()
 		if INFERENCE_POOLS.get(app_context).get(model_context) is None:
-			INFERENCE_POOLS[app_context][model_context] = create_inference_sessions(model_sources, state_manager.get_item('execution_device_id'), find_execution_providers(model_context))
+			INFERENCE_POOLS[app_context][model_context] = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), find_execution_providers(model_context))
 		return INFERENCE_POOLS.get(app_context).get(model_context)
 
 
-def create_inference_sessions(model_sources : DownloadSet, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSessionSet:
-	inference_sessions : InferenceSessionSet = {}
+def create_inference_pool(model_sources : DownloadSet, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferencePool:
+	inference_pool : InferencePool = {}
 
 	for model_name in model_sources.keys():
-		inference_sessions[model_name] = create_inference_session(model_sources.get(model_name).get('path'), execution_device_id, execution_provider_keys)
-	return inference_sessions
+		inference_pool[model_name] = create_inference_session(model_sources.get(model_name).get('path'), execution_device_id, execution_provider_keys)
+	return inference_pool
 
 
 def clear_inference_pool(model_context : str) -> None:

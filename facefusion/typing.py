@@ -153,9 +153,8 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 
 AppContext = Literal['core', 'uis']
 
-InferenceSessionSet = Dict[str, InferenceSession]
-InferencePool = Dict[str, InferenceSessionSet]
-InferencePoolSet = Dict[AppContext, InferencePool]
+InferencePool = Dict[str, InferenceSession]
+InferencePoolSet = Dict[AppContext, Dict[str, InferencePool]]
 
 UiWorkflow = Literal['instant_runner', 'job_runner', 'job_manager']
 
