@@ -5,6 +5,7 @@ from types import ModuleType
 from typing import Any, Dict, List, Optional
 
 import gradio
+from gradio.themes import Size
 
 from facefusion import logger, metadata, state_manager, wording
 from facefusion.exit_helper import hard_exit
@@ -101,6 +102,15 @@ def get_theme() -> gradio.Theme:
 	return gradio.themes.Base(
 		primary_hue = gradio.themes.colors.red,
 		secondary_hue = gradio.themes.colors.neutral,
+		radius_size = Size(
+			xxs = '0.375rem',
+			xs = '0.375rem',
+			sm = '0.375rem',
+			md = '0.375rem',
+			lg = '0.375rem',
+			xl = '0.375rem',
+			xxl = '0.375rem',
+		),
 		font = gradio.themes.GoogleFont('Open Sans')
 	).set(
 		background_fill_primary = '*neutral_100',
