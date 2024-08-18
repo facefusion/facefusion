@@ -1,17 +1,14 @@
-from time import sleep
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy
 import scipy
 
-from facefusion import process_manager, state_manager
+from facefusion import inference_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.execution import create_inference_pool
 from facefusion.filesystem import resolve_relative_path
-from facefusion.thread_helper import thread_lock, thread_semaphore
+from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import Audio, AudioChunk, InferencePool, ModelOptions, ModelSet
 
-INFERENCE_POOL : Optional[InferencePool] = None
 MODEL_SET : ModelSet =\
 {
 	'kim_vocal_2':
@@ -37,21 +34,12 @@ MODEL_SET : ModelSet =\
 
 
 def get_inference_pool() -> InferencePool:
-	global INFERENCE_POOL
-
-	with thread_lock():
-		while process_manager.is_checking():
-			sleep(0.5)
-		if INFERENCE_POOL is None:
-			model_sources = get_model_options().get('sources')
-			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-		return INFERENCE_POOL
+	model_sources = get_model_options().get('sources')
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
-	global INFERENCE_POOL
-
-	INFERENCE_POOL = None
+	inference_manager.clear_inference_pool(__name__)
 
 
 def get_model_options() -> ModelOptions:
@@ -80,7 +68,7 @@ def batch_extract_voice(audio : Audio, chunk_size : int, step_size : int) -> Aud
 
 def extract_voice(temp_audio_chunk : AudioChunk) -> AudioChunk:
 	voice_extractor = get_inference_pool().get('voice_extractor')
-	chunk_size = 1024 * (voice_extractor.get_inputs()[0].shape[3] - 1)
+	chunk_size = (voice_extractor.get_inputs()[0].shape[3] - 1) * 1024
 	trim_size = 3840
 	temp_audio_chunk, pad_size = prepare_audio_chunk(temp_audio_chunk.T, chunk_size, trim_size)
 	temp_audio_chunk = decompose_audio_chunk(temp_audio_chunk, trim_size)

@@ -1,6 +1,6 @@
 from typing import Dict, List, Literal, TypedDict
 
-from facefusion.typing import AudioFrame, Face, FaceSet, StateContext, VisionFrame
+from facefusion.typing import AudioFrame, Face, FaceSet, AppContext, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
 ExpressionRestorerModel = Literal['live_portrait']
@@ -107,4 +107,4 @@ ProcessorState = TypedDict('ProcessorState',
 	'frame_enhancer_blend' : int,
 	'lip_syncer_model' : LipSyncerModel
 })
-ProcessorStateSet = Dict[StateContext, ProcessorState]
+ProcessorStateSet = Dict[AppContext, ProcessorState]

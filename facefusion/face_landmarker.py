@@ -1,18 +1,15 @@
-from time import sleep
-from typing import Optional, Tuple
+from typing import Tuple
 
 import cv2
 import numpy
 
-from facefusion import process_manager, state_manager
+from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.execution import create_inference_pool
 from facefusion.face_helper import create_rotated_matrix_and_size, estimate_matrix_by_face_landmark_5, transform_points, warp_face_by_translation
 from facefusion.filesystem import resolve_relative_path
-from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
+from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import Angle, BoundingBox, DownloadSet, FaceLandmark5, FaceLandmark68, InferencePool, ModelSet, Score, VisionFrame
 
-INFERENCE_POOL : Optional[InferencePool] = None
 MODEL_SET : ModelSet =\
 {
 	'2dfan4':
@@ -76,21 +73,12 @@ MODEL_SET : ModelSet =\
 
 
 def get_inference_pool() -> InferencePool:
-	global INFERENCE_POOL
-
-	with thread_lock():
-		while process_manager.is_checking():
-			sleep(0.5)
-		if INFERENCE_POOL is None:
-			_, model_sources = collect_model_downloads()
-			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-		return INFERENCE_POOL
+	_, model_sources = collect_model_downloads()
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
-	global INFERENCE_POOL
-
-	INFERENCE_POOL = None
+	inference_manager.clear_inference_pool(__name__)
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:

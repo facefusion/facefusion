@@ -3,11 +3,10 @@ import xml.etree.ElementTree as ElementTree
 from functools import lru_cache
 from typing import Any, List
 
-import onnx
-from onnxruntime import InferenceSession, get_available_providers, set_default_logger_severity
+from onnxruntime import get_available_providers, set_default_logger_severity
 
 from facefusion.choices import execution_provider_set
-from facefusion.typing import DownloadSet, ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, InferencePool, ModelInitializer, ValueAndUnit
+from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ExecutionProviderValue, ValueAndUnit
 
 set_default_logger_severity(3)
 
@@ -79,25 +78,6 @@ def use_exhaustive() -> bool:
 	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
 
 	return any(execution_device.get('product').get('name').startswith(product_names) for execution_device in execution_devices)
-
-
-def create_inference_session(model_path : str, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSession:
-	providers = create_execution_providers(execution_device_id, execution_provider_keys)
-	return InferenceSession(model_path, providers = providers)
-
-
-def create_inference_pool(model_sources : DownloadSet, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferencePool:
-	inference_pool : InferencePool = {}
-
-	for model_name in model_sources.keys():
-		inference_pool[model_name] = create_inference_session(model_sources.get(model_name).get('path'), execution_device_id, execution_provider_keys)
-	return inference_pool
-
-
-@lru_cache(maxsize = None)
-def get_static_model_initializer(model_path : str) -> ModelInitializer:
-	model = onnx.load(model_path)
-	return onnx.numpy_helper.to_array(model.graph.initializer[-1])
 
 
 def run_nvidia_smi() -> subprocess.Popen[bytes]:
