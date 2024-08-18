@@ -7,7 +7,6 @@ from facefusion import logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first, get_last
 from facefusion.core import process_step
 from facefusion.jobs import job_manager, job_runner
-from facefusion.processors.core import clear_processors_modules
 from facefusion.typing import UiWorkflow
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component
@@ -84,8 +83,6 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, gradio.Button, gradio.Dropdown]:
 	job_id = convert_str_none(job_id)
 
-	if job_action in [ 'job-run', 'job-run-all', 'job-retry', 'job-retry-all' ]:
-		clear_processors_modules()
 	if job_action == 'job-run':
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__.upper())
 		if job_id and job_runner.run_job(job_id, process_step):

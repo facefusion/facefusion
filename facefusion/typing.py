@@ -150,8 +150,12 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'video_memory' : ExecutionDeviceVideoMemory,
 	'utilization' : ExecutionDeviceUtilization
 })
-InferencePool = Dict[str, InferenceSession]
-InferencePoolSet = Dict[str, InferencePool]
+
+AppContext = Literal['core', 'uis']
+
+InferenceSessionSet = Dict[str, InferenceSession]
+InferencePool = Dict[str, InferenceSessionSet]
+InferencePoolSet = Dict[AppContext, InferencePool]
 
 UiWorkflow = Literal['instant_runner', 'job_runner', 'job_manager']
 
@@ -177,7 +181,6 @@ Job = TypedDict('Job',
 })
 JobSet = Dict[str, Job]
 
-StateContext = Literal['core', 'uis']
 StateKey = Literal\
 [
 	'command',
@@ -286,4 +289,4 @@ State = TypedDict('State',
 	'job_status': JobStatus,
 	'step_index': int
 })
-StateSet = Dict[StateContext, State]
+StateSet = Dict[AppContext, State]

@@ -1,8 +1,8 @@
-import inspect
 from typing import Any, Union
 
+from facefusion.app_context import detect_app_context
 from facefusion.processors.typing import ProcessorState, ProcessorStateKey
-from facefusion.typing import State, StateContext, StateKey, StateSet
+from facefusion.typing import State, StateKey, StateSet
 
 STATES : Union[StateSet, ProcessorState] =\
 {
@@ -14,8 +14,8 @@ UnionStateKey = Union[StateKey, ProcessorStateKey]
 
 
 def get_state() -> UnionState:
-	state_context = detect_state_context()
-	return STATES.get(state_context) #type:ignore
+	app_context = detect_app_context()
+	return STATES.get(app_context) #type:ignore
 
 
 def init_item(key : UnionStateKey, value : Any) -> None:
@@ -28,8 +28,8 @@ def get_item(key : UnionStateKey) -> Any:
 
 
 def set_item(key : UnionStateKey, value : Any) -> None:
-	state_context = detect_state_context()
-	STATES[state_context][key] = value #type:ignore
+	app_context = detect_app_context()
+	STATES[app_context][key] = value #type:ignore
 
 
 def sync_item(key : UnionStateKey) -> None:
@@ -38,10 +38,3 @@ def sync_item(key : UnionStateKey) -> None:
 
 def clear_item(key : UnionStateKey) -> None:
 	set_item(key, None)
-
-
-def detect_state_context() -> StateContext:
-	for stack in inspect.stack():
-		if 'facefusion/uis' in stack.filename:
-			return 'uis'
-	return 'core'
