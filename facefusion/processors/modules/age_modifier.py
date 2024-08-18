@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
-from time import sleep
-from typing import Any, List, Optional
+from typing import Any, List
 
 import cv2
 import numpy
@@ -10,10 +9,9 @@ from numpy.typing import NDArray
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_int_metavar, map_float
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.execution import create_inference_pool
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
@@ -23,12 +21,10 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import AgeModifierInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.thread_helper import thread_lock, thread_semaphore
+from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import Args, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
-INFERENCE_POOL : Optional[InferencePool] = None
-NAME = __name__.upper()
 MODEL_SET : ModelSet =\
 {
 	'styleganex_age':
@@ -55,22 +51,13 @@ MODEL_SET : ModelSet =\
 }
 
 
-def get_inference_pool() -> Any:
-	global INFERENCE_POOL
-
-	with thread_lock():
-		while process_manager.is_checking():
-			sleep(0.5)
-		if INFERENCE_POOL is None:
-			model_sources = get_model_options().get('sources')
-			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-	return INFERENCE_POOL
+def get_inference_pool() -> InferencePool:
+	model_sources = get_model_options().get('sources')
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
-	global INFERENCE_POOL
-
-	INFERENCE_POOL = None
+	inference_manager.clear_inference_pool(__name__)
 
 
 def get_model_options() -> ModelOptions:
@@ -100,13 +87,13 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
-		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__.upper())
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__.upper())
 		return False
 	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
-		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__.upper())
 		return False
 	return True
 

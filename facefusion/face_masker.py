@@ -1,19 +1,16 @@
 from functools import lru_cache
-from time import sleep
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion import process_manager, state_manager
+from facefusion import inference_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.execution import create_inference_pool
 from facefusion.filesystem import resolve_relative_path
-from facefusion.thread_helper import conditional_thread_semaphore, thread_lock
+from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelOptions, ModelSet, Padding, VisionFrame
 
-INFERENCE_POOL : Optional[InferencePool] = None
 MODEL_SET : ModelSet =\
 {
 	'face_masker':
@@ -62,21 +59,12 @@ FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
 
 
 def get_inference_pool() -> InferencePool:
-	global INFERENCE_POOL
-
-	with thread_lock():
-		while process_manager.is_checking():
-			sleep(0.5)
-		if INFERENCE_POOL is None:
-			model_sources = get_model_options().get('sources')
-			INFERENCE_POOL = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-		return INFERENCE_POOL
+	model_sources = get_model_options().get('sources')
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
-	global INFERENCE_POOL
-
-	INFERENCE_POOL = None
+	inference_manager.clear_inference_pool(__name__)
 
 
 def get_model_options() -> ModelOptions:

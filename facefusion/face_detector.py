@@ -75,11 +75,11 @@ MODEL_SET : ModelSet =\
 
 def get_inference_pool() -> InferencePool:
 	_, model_sources = collect_model_downloads()
-	return inference_manager.get_inference_pool('face_detector', model_sources)
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
-	inference_manager.clear_inference_pool('face_detector')
+	inference_manager.clear_inference_pool(__name__)
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:

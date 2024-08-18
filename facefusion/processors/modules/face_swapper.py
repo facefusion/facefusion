@@ -9,13 +9,14 @@ import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.execution import get_static_model_initializer, has_execution_provider
+from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.inference_manager import get_static_model_initializer
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.processors.typing import FaceSwapperInputs
@@ -24,7 +25,6 @@ from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import Args, Embedding, Face, FaceLandmark5, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
-NAME = __name__.upper()
 MODEL_SET : ModelSet =\
 {
 	'blendswap_256':
@@ -338,11 +338,11 @@ MODEL_SET : ModelSet =\
 
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
-	return inference_manager.get_inference_pool('face_swapper', model_sources)
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
-	inference_manager.clear_inference_pool('face_swapper')
+	inference_manager.clear_inference_pool(__name__)
 
 
 def get_model_options() -> ModelOptions:
@@ -374,22 +374,22 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if not has_image(state_manager.get_item('source_paths')):
-		logger.error(wording.get('choose_image_source') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('choose_image_source') + wording.get('exclamation_mark'), __name__.upper())
 		return False
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_frames)
 	if not get_one_face(source_faces):
-		logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), __name__.upper())
 		return False
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
-		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__.upper())
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__.upper())
 		return False
 	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
-		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), NAME)
+		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__.upper())
 		return False
 	return True
 
