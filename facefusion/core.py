@@ -34,7 +34,7 @@ def cli() -> None:
 
 	if validate_args(program):
 		args = vars(program.parse_args())
-		apply_args(args)
+		apply_args(args, state_manager.init_item)
 
 		if state_manager.get_item('command'):
 			logger.init(state_manager.get_item('log_level'))
@@ -113,7 +113,7 @@ def processors_pre_check() -> bool:
 def conditional_process() -> ErrorCode:
 	start_time = time()
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		if not processor_module.pre_check() or not processor_module.pre_process('output'):
+		if not processor_module.pre_process('output'):
 			return 2
 	conditional_append_reference_faces()
 	if is_image(state_manager.get_item('target_path')):
@@ -285,7 +285,7 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	clear_reference_faces()
 	step_total = job_manager.count_step_total(job_id)
 	step_args.update(collect_job_args())
-	apply_args(step_args)
+	apply_args(step_args, state_manager.set_item)
 
 	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__.upper())
 	if common_pre_check() and processors_pre_check():
