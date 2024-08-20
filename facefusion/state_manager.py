@@ -6,8 +6,8 @@ from facefusion.typing import State, StateKey, StateSet
 
 STATES : Union[StateSet, ProcessorState] =\
 {
-	'core': {}, #type:ignore[typeddict-item]
-	'uis': {} #type:ignore[typeddict-item]
+	'cli': {}, #type:ignore[typeddict-item]
+	'ui': {} #type:ignore[typeddict-item]
 }
 UnionState = Union[State, ProcessorState]
 UnionStateKey = Union[StateKey, ProcessorStateKey]
@@ -19,8 +19,8 @@ def get_state() -> UnionState:
 
 
 def init_item(key : UnionStateKey, value : Any) -> None:
-	STATES['core'][key] = value #type:ignore
-	STATES['uis'][key] = value #type:ignore
+	STATES['cli'][key] = value #type:ignore
+	STATES['ui'][key] = value #type:ignore
 
 
 def get_item(key : UnionStateKey) -> Any:
@@ -33,7 +33,7 @@ def set_item(key : UnionStateKey, value : Any) -> None:
 
 
 def sync_item(key : UnionStateKey) -> None:
-	STATES['core'][key] = STATES['uis'][key] #type:ignore
+	STATES['cli'][key] = STATES['ui'][key] #type:ignore
 
 
 def clear_item(key : UnionStateKey) -> None:

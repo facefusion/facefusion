@@ -151,7 +151,7 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'utilization' : ExecutionDeviceUtilization
 })
 
-AppContext = Literal['core', 'uis']
+AppContext = Literal['cli', 'ui']
 
 InferencePool = Dict[str, InferenceSession]
 InferencePoolSet = Dict[AppContext, Dict[str, InferencePool]]
