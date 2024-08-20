@@ -173,17 +173,17 @@ def apply_restore_expression(source_crop_vision_frame : VisionFrame, target_crop
 		})[5]
 
 	with thread_semaphore():
-		target_pitch, target_yaw, target_roll, target_scale, target_translation, target_expression, target_motion_points_raw = motion_extractor.run(None,
+		target_pitch, target_yaw, target_roll, target_scale, target_translation, target_expression, target_motion_points = motion_extractor.run(None,
 		{
 			'input': target_crop_vision_frame
 		})
-	target_rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [target_pitch, target_yaw, target_roll], degrees = True).as_matrix()
-	target_rotation = target_rotation.T.astype(numpy.float32)
-	target_motion_points = target_scale * (target_motion_points_raw @ target_rotation + target_expression) + target_translation
+	target_rotation_matrix = scipy.spatial.transform.Rotation.from_euler('xyz', [ target_pitch, target_yaw, target_roll ], degrees = True).as_matrix()
+	target_rotation_matrix = target_rotation_matrix.T.astype(numpy.float32)
+	target_motion_points = target_scale * (target_motion_points @ target_rotation_matrix + target_expression) + target_translation
 
 	expression = source_expression * expression_restorer_factor + target_expression * (1 - expression_restorer_factor)
 	expression[:, [ 0, 4, 5, 8, 9 ]] = target_expression[:, [ 0, 4, 5, 8, 9 ]]
-	motion_points = target_scale * (target_motion_points_raw @ target_rotation + expression) + target_translation
+	motion_points = target_scale * (target_motion_points @ target_rotation_matrix + expression) + target_translation
 
 	with thread_semaphore():
 		crop_vision_frame = generator.run(None,

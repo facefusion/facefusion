@@ -204,13 +204,13 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 		})[0]
 
 	with thread_semaphore():
-		pitch, yaw, roll, scale, translation, expression, motion_points_raw = motion_extractor.run(None,
+		pitch, yaw, roll, scale, translation, expression, motion_points = motion_extractor.run(None,
 		{
 			'input': crop_vision_frame
 		})
-	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [pitch, yaw, roll], degrees = True).as_matrix()
-	rotation = rotation.T.astype(numpy.float32)
-	motion_points = scale * (motion_points_raw @ rotation + expression) + translation
+	rotation_matrix = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
+	rotation_matrix = rotation_matrix.T.astype(numpy.float32)
+	motion_points = scale * (motion_points @ rotation_matrix + expression) + translation
 	expression = edit_eye_gaze(expression)
 	expression = edit_mouth_grim(expression)
 	expression = edit_mouth_position(expression)
@@ -218,7 +218,7 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 	expression = edit_mouth_purse(expression)
 	expression = edit_mouth_smile(expression)
 	expression = edit_eyebrow_direction(expression)
-	motion_points_edit = motion_points_raw @ rotation
+	motion_points_edit = motion_points @ rotation_matrix
 	motion_points_edit += expression
 	motion_points_edit *= scale
 	motion_points_edit += translation
