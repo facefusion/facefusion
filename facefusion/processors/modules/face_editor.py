@@ -32,12 +32,12 @@ MODEL_SET : ModelSet =\
 		{
 			'feature_extractor':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_feature_extractor.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_feature_extractor.hash',
 				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.hash')
 			},
 			'motion_extractor':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_motion_extractor.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_motion_extractor.hash',
 				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.hash')
 			},
 			'eye_retargeter':
@@ -52,7 +52,7 @@ MODEL_SET : ModelSet =\
 			},
 			'generator':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_generator.hash',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_generator.hash',
 				'path': resolve_relative_path('../.assets/models/live_portrait_generator.hash')
 			}
 		},
@@ -60,12 +60,12 @@ MODEL_SET : ModelSet =\
 		{
 			'feature_extractor':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_feature_extractor.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_feature_extractor.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.onnx')
 			},
 			'motion_extractor':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_motion_extractor.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_motion_extractor.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.onnx')
 			},
 			'eye_retargeter':
@@ -80,7 +80,7 @@ MODEL_SET : ModelSet =\
 			},
 			'generator':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_generator.onnx',
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_generator.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_generator.onnx')
 			}
 		},
