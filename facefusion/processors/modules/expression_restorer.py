@@ -3,6 +3,7 @@ from typing import List
 
 import cv2
 import numpy
+import scipy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -31,17 +32,17 @@ MODEL_SET : ModelSet =\
 		{
 			'feature_extractor':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_feature_extractor.hash',
+				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_feature_extractor.hash',
 				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.hash')
 			},
 			'motion_extractor':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_motion_extractor.hash',
+				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_motion_extractor.hash',
 				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.hash')
 			},
 			'generator':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_generator.hash',
+				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_generator.hash',
 				'path': resolve_relative_path('../.assets/models/live_portrait_generator.hash')
 			}
 		},
@@ -49,17 +50,17 @@ MODEL_SET : ModelSet =\
 		{
 			'feature_extractor':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_feature_extractor.onnx',
+				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_feature_extractor.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.onnx')
 			},
 			'motion_extractor':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_motion_extractor.onnx',
+				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_motion_extractor.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.onnx')
 			},
 			'generator':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_generator.onnx',
+				'url': 'https://huggingface.co/bluefoxcreation/Liveportrait-ONNX/resolve/main/live_portrait_generator.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_generator.onnx')
 			}
 		},
@@ -169,16 +170,19 @@ def apply_restore_expression(source_crop_vision_frame : VisionFrame, target_crop
 		source_expression = motion_extractor.run(None,
 		{
 			'input': source_crop_vision_frame
-		})[3]
+		})[5]
 
 	with thread_semaphore():
-		target_rotation, target_scale, target_translation, target_expression, target_motion_points_raw, target_motion_points = motion_extractor.run(None,
+		target_pitch, target_yaw, target_roll, target_scale, target_translation, target_expression, target_motion_points_raw = motion_extractor.run(None,
 		{
 			'input': target_crop_vision_frame
 		})
+	target_rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [target_pitch, target_yaw, target_roll], degrees = True).as_matrix()
+	target_rotation = target_rotation.T.astype(numpy.float32)
+	target_motion_points = target_scale * (target_motion_points_raw @ target_rotation + target_expression) + target_translation
 
 	expression = source_expression * expression_restorer_factor + target_expression * (1 - expression_restorer_factor)
-	expression[:, [ 0, 4, 5, 6, 8, 9 ]] = target_expression[:, [ 0, 4, 5, 6, 8, 9 ]]
+	expression[:, [ 0, 4, 5, 8, 9 ]] = target_expression[:, [ 0, 4, 5, 8, 9 ]]
 	motion_points = target_scale * (target_motion_points_raw @ target_rotation + expression) + target_translation
 
 	with thread_semaphore():
