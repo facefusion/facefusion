@@ -132,13 +132,31 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		crop_masks.append(occlusion_mask)
 	crop_vision_frame = prepare_vision_frame(crop_vision_frame)
 	extend_vision_frame = prepare_vision_frame(extend_vision_frame)
-	extend_vision_frame = apply_age(crop_vision_frame, extend_vision_frame)
+	extend_vision_frame = apply_modify(crop_vision_frame, extend_vision_frame)
 	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
 	extend_vision_frame = fix_color(extend_vision_frame_raw, extend_vision_frame)
 	extend_crop_mask = cv2.pyrUp(numpy.minimum.reduce(crop_masks).clip(0, 1))
 	extend_affine_matrix *= extend_vision_frame.shape[0] / 512
 	paste_vision_frame = paste_back(temp_vision_frame, extend_vision_frame, extend_crop_mask, extend_affine_matrix)
 	return paste_vision_frame
+
+
+def apply_modify(crop_vision_frame : VisionFrame, crop_vision_frame_extended : VisionFrame) -> VisionFrame:
+	age_modifier = get_inference_pool().get('age_modifier')
+	age_modifier_inputs = {}
+
+	for age_modifier_input in age_modifier.get_inputs():
+		if age_modifier_input.name == 'target':
+			age_modifier_inputs[age_modifier_input.name] = crop_vision_frame
+		if age_modifier_input.name == 'target_with_background':
+			age_modifier_inputs[age_modifier_input.name] = crop_vision_frame_extended
+		if age_modifier_input.name == 'direction':
+			age_modifier_inputs[age_modifier_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
+
+	with thread_semaphore():
+		crop_vision_frame = age_modifier.run(None, age_modifier_inputs)[0][0]
+
+	return crop_vision_frame
 
 
 def fix_color(extend_vision_frame_raw : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
@@ -166,24 +184,6 @@ def normalize_color_difference(color_difference : VisionFrame, color_difference_
 	extend_vision_frame = extend_vision_frame.clip(0, 1)
 	extend_vision_frame = numpy.multiply(extend_vision_frame, 255).astype(numpy.uint8)
 	return extend_vision_frame
-
-
-def apply_age(crop_vision_frame : VisionFrame, crop_vision_frame_extended : VisionFrame) -> VisionFrame:
-	age_modifier = get_inference_pool().get('age_modifier')
-	age_modifier_inputs = {}
-
-	for age_modifier_input in age_modifier.get_inputs():
-		if age_modifier_input.name == 'target':
-			age_modifier_inputs[age_modifier_input.name] = crop_vision_frame
-		if age_modifier_input.name == 'target_with_background':
-			age_modifier_inputs[age_modifier_input.name] = crop_vision_frame_extended
-		if age_modifier_input.name == 'direction':
-			age_modifier_inputs[age_modifier_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
-
-	with thread_semaphore():
-		crop_vision_frame = age_modifier.run(None, age_modifier_inputs)[0][0]
-
-	return crop_vision_frame
 
 
 def prepare_direction(direction : int) -> NDArray[Any]:

@@ -59,6 +59,7 @@ Spectrogram = NDArray[Any]
 Mel = NDArray[Any]
 MelFilterBank = NDArray[Any]
 
+Expression = NDArray[Any]
 MotionPoints = NDArray[Any]
 
 Fps = float

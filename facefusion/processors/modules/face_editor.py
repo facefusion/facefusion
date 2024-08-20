@@ -21,7 +21,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEditorInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.typing import Args, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, MotionPoints, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Expression, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, MotionPoints, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 MODEL_SET : ModelSet =\
@@ -185,14 +185,14 @@ def edit_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	crop_vision_frame = apply_edit_face(crop_vision_frame, target_face.landmark_set.get('68'))
+	crop_vision_frame = apply_edit(crop_vision_frame, target_face.landmark_set.get('68'))
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
 
-def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
+def apply_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
 	feature_extractor = get_inference_pool().get('feature_extractor')
 	motion_extractor = get_inference_pool().get('motion_extractor')
 	generator = get_inference_pool().get('generator')
@@ -208,9 +208,10 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 		{
 			'input': crop_vision_frame
 		})
+
 	rotation_matrix = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
 	rotation_matrix = rotation_matrix.T.astype(numpy.float32)
-	motion_points = scale * (motion_points @ rotation_matrix + expression) + translation
+	motion_points_transform = scale * (motion_points @ rotation_matrix + expression) + translation
 	expression = edit_eye_gaze(expression)
 	expression = edit_mouth_grim(expression)
 	expression = edit_mouth_position(expression)
@@ -222,20 +223,21 @@ def apply_edit_face(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLand
 	motion_points_edit += expression
 	motion_points_edit *= scale
 	motion_points_edit += translation
-	motion_points_edit += edit_eye_open(motion_points, face_landmark_68)
-	motion_points_edit += edit_lip_open(motion_points, face_landmark_68)
+	motion_points_edit += edit_eye_open(motion_points_transform, face_landmark_68)
+	motion_points_edit += edit_lip_open(motion_points_transform, face_landmark_68)
 
 	with thread_semaphore():
 		crop_vision_frame = generator.run(None,
 		{
 			'feature_volume': feature_volume,
-			'target': motion_points,
+			'target': motion_points_transform,
 			'source': motion_points_edit
 		})[0][0]
+
 	return crop_vision_frame
 
 
-def edit_eyebrow_direction(expression : MotionPoints) -> MotionPoints:
+def edit_eyebrow_direction(expression : Expression) -> Expression:
 	face_editor_eyebrow = state_manager.get_item('face_editor_eyebrow_direction')
 
 	if face_editor_eyebrow > 0:
@@ -249,7 +251,7 @@ def edit_eyebrow_direction(expression : MotionPoints) -> MotionPoints:
 	return expression
 
 
-def edit_eye_gaze(expression : MotionPoints) -> MotionPoints:
+def edit_eye_gaze(expression : Expression) -> Expression:
 	face_editor_eye_gaze_horizontal = state_manager.get_item('face_editor_eye_gaze_horizontal')
 	face_editor_eye_gaze_vertical = state_manager.get_item('face_editor_eye_gaze_vertical')
 
@@ -283,6 +285,7 @@ def edit_eye_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark6
 			{
 				'input': close_eye_motion_points
 			})[0]
+
 		eye_motion_points = close_eye_motion_points * face_editor_eye_open_ratio * -1
 	else:
 		open_eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.8 ] ])
@@ -293,6 +296,7 @@ def edit_eye_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark6
 			{
 				'input': open_eye_motion_points
 			})[0]
+
 		eye_motion_points = open_eye_motion_points * face_editor_eye_open_ratio
 	eye_motion_points = eye_motion_points.reshape(-1, 21, 3)
 	return eye_motion_points
@@ -312,6 +316,7 @@ def edit_lip_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark6
 			{
 				'input': close_lip_motion_points
 			})[0]
+
 		lip_motion_points = close_lip_motion_points * face_editor_lip_open_ratio * -1
 	else:
 		open_lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 1.3 ] ])
@@ -322,12 +327,13 @@ def edit_lip_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark6
 			{
 				'input': open_lip_motion_points
 			})[0]
+
 		lip_motion_points = open_lip_motion_points * face_editor_lip_open_ratio
 	lip_motion_points = lip_motion_points.reshape(-1, 21, 3)
 	return lip_motion_points
 
 
-def edit_mouth_grim(expression : MotionPoints) -> MotionPoints:
+def edit_mouth_grim(expression : Expression) -> Expression:
 	face_editor_mouth_grim = state_manager.get_item('face_editor_mouth_grim')
 	if face_editor_mouth_grim > 0:
 		expression[0, 17, 2] -= map_float(face_editor_mouth_grim, -1, 1, -0.005, 0.005)
@@ -341,7 +347,7 @@ def edit_mouth_grim(expression : MotionPoints) -> MotionPoints:
 	return expression
 
 
-def edit_mouth_position(expression : MotionPoints) -> MotionPoints:
+def edit_mouth_position(expression : Expression) -> Expression:
 	face_editor_mouth_position_horizontal = state_manager.get_item('face_editor_mouth_position_horizontal')
 	face_editor_mouth_position_vertical = state_manager.get_item('face_editor_mouth_position_vertical')
 	expression[0, 19, 0] += map_float(face_editor_mouth_position_horizontal, -1, 1, -0.05, 0.05)
@@ -355,7 +361,7 @@ def edit_mouth_position(expression : MotionPoints) -> MotionPoints:
 	return expression
 
 
-def edit_mouth_pout(expression : MotionPoints) -> MotionPoints:
+def edit_mouth_pout(expression : Expression) -> Expression:
 	face_editor_mouth_pout = state_manager.get_item('face_editor_mouth_pout')
 	if face_editor_mouth_pout > 0:
 		expression[0, 19, 1] -= map_float(face_editor_mouth_pout, -1, 1, -0.022, 0.022)
@@ -368,7 +374,7 @@ def edit_mouth_pout(expression : MotionPoints) -> MotionPoints:
 	return expression
 
 
-def edit_mouth_purse(expression : MotionPoints) -> MotionPoints:
+def edit_mouth_purse(expression : Expression) -> Expression:
 	face_editor_mouth_purse = state_manager.get_item('face_editor_mouth_purse')
 	if face_editor_mouth_purse > 0:
 		expression[0, 19, 1] -= map_float(face_editor_mouth_purse, -1, 1, -0.04, 0.04)
@@ -381,7 +387,7 @@ def edit_mouth_purse(expression : MotionPoints) -> MotionPoints:
 	return expression
 
 
-def edit_mouth_smile(expression : MotionPoints) -> MotionPoints:
+def edit_mouth_smile(expression : Expression) -> Expression:
 	face_editor_mouth_smile = state_manager.get_item('face_editor_mouth_smile')
 	if face_editor_mouth_smile > 0:
 		expression[0, 20, 1] -= map_float(face_editor_mouth_smile, -1, 1, -0.015, 0.015)

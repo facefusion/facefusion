@@ -148,14 +148,14 @@ def restore_expression(source_vision_frame : VisionFrame, target_face : Face, te
 		crop_masks.append(occlusion_mask)
 	source_crop_vision_frame = prepare_crop_frame(source_crop_vision_frame)
 	target_crop_vision_frame = prepare_crop_frame(target_crop_vision_frame)
-	target_crop_vision_frame = apply_restore_expression(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
+	target_crop_vision_frame = apply_restore(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
 	target_crop_vision_frame = normalize_crop_frame(target_crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, target_crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
 
-def apply_restore_expression(source_crop_vision_frame : VisionFrame, target_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
+def apply_restore(source_crop_vision_frame : VisionFrame, target_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
 	feature_extractor = get_inference_pool().get('feature_extractor')
 	motion_extractor = get_inference_pool().get('motion_extractor')
 	generator = get_inference_pool().get('generator')
@@ -177,20 +177,21 @@ def apply_restore_expression(source_crop_vision_frame : VisionFrame, target_crop
 		{
 			'input': target_crop_vision_frame
 		})
+
 	target_rotation_matrix = scipy.spatial.transform.Rotation.from_euler('xyz', [ target_pitch, target_yaw, target_roll ], degrees = True).as_matrix()
 	target_rotation_matrix = target_rotation_matrix.T.astype(numpy.float32)
-	target_motion_points = target_scale * (target_motion_points @ target_rotation_matrix + target_expression) + target_translation
+	target_motion_points_transform = target_scale * (target_motion_points @ target_rotation_matrix + target_expression) + target_translation
 
 	expression = source_expression * expression_restorer_factor + target_expression * (1 - expression_restorer_factor)
 	expression[:, [ 0, 4, 5, 8, 9 ]] = target_expression[:, [ 0, 4, 5, 8, 9 ]]
-	motion_points = target_scale * (target_motion_points @ target_rotation_matrix + expression) + target_translation
+	source_motion_points = target_scale * (target_motion_points @ target_rotation_matrix + expression) + target_translation
 
 	with thread_semaphore():
 		crop_vision_frame = generator.run(None,
 		{
 			'feature_volume': feature_volume,
-			'target': target_motion_points,
-			'source': motion_points
+			'target': target_motion_points_transform,
+			'source': source_motion_points
 		})[0][0]
 
 	return crop_vision_frame
