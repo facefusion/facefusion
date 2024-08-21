@@ -13,21 +13,20 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 
 if is_macos():
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.18.0')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.19.0')
 else:
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.18.0')
-	ONNXRUNTIMES['cuda-12.4'] = ('onnxruntime-gpu', '1.18.0')
-	ONNXRUNTIMES['cuda-11.8'] = ('onnxruntime-gpu', '1.18.0')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.19.0')
+	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.19.0')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.18.0')
 if is_linux():
 	ONNXRUNTIMES['rocm-5.4.2'] = ('onnxruntime-rocm', '1.16.3')
 	ONNXRUNTIMES['rocm-5.6'] = ('onnxruntime-rocm', '1.16.3')
 if is_windows():
-	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.18.0')
+	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.19.0')
 
 
 def cli() -> None:
-	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 200))
+	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 50))
 	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys())
 	program.add_argument('--skip-conda', help = wording.get('help.skip_conda'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
@@ -69,8 +68,4 @@ def run(program : ArgumentParser) -> None:
 				os.remove(wheel_path)
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
-			if onnxruntime == 'cuda-12.4':
-				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--extra-index-url', 'https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple', '--force-reinstall' ])
-			else:
-				subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
-		subprocess.call([ 'pip', 'install', 'numpy==1.26.4', '--force-reinstall' ])
+			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
