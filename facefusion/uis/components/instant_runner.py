@@ -7,7 +7,7 @@ from facefusion import process_manager, state_manager, wording
 from facefusion.args import collect_step_args
 from facefusion.core import process_step
 from facefusion.filesystem import is_directory, is_image, is_video
-from facefusion.jobs import job_helper, job_manager, job_runner
+from facefusion.jobs import job_helper, job_manager, job_runner, job_store
 from facefusion.temp_helper import clear_temp_directory
 from facefusion.typing import Args, UiWorkflow
 from facefusion.uis.core import get_ui_component
@@ -90,6 +90,9 @@ def run() -> Tuple[gradio.Button, gradio.Button, gradio.Image, gradio.Video]:
 
 def create_and_run_job(step_args : Args) -> bool:
 	job_id = job_helper.suggest_job_id('ui')
+
+	for key in job_store.get_job_keys():
+		state_manager.sync_item(key) #type:ignore
 
 	return job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step)
 

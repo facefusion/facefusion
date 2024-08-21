@@ -6,7 +6,7 @@ import gradio
 from facefusion import logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first, get_last
 from facefusion.core import process_step
-from facefusion.jobs import job_manager, job_runner
+from facefusion.jobs import job_manager, job_runner, job_store
 from facefusion.typing import UiWorkflow
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component
@@ -82,6 +82,9 @@ def start() -> Tuple[gradio.Button, gradio.Button]:
 
 def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, gradio.Button, gradio.Dropdown]:
 	job_id = convert_str_none(job_id)
+
+	for key in job_store.get_job_keys():
+		state_manager.sync_item(key) #type:ignore
 
 	if job_action == 'job-run':
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__.upper())

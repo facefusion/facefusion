@@ -33,7 +33,7 @@ def set_item(key : UnionStateKey, value : Any) -> None:
 
 
 def sync_item(key : UnionStateKey) -> None:
-	STATES['cli'][key] = STATES['ui'][key] #type:ignore
+	STATES['cli'][key] = STATES.get('ui').get(key) #type:ignore
 
 
 def clear_item(key : UnionStateKey) -> None:
