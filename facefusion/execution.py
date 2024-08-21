@@ -51,7 +51,8 @@ def create_execution_providers(execution_device_id : str, execution_provider_key
 				'trt_engine_cache_enable': True,
 				'trt_engine_cache_path': '.caches',
 				'trt_timing_cache_enable': True,
-				'trt_timing_cache_path': '.caches'
+				'trt_timing_cache_path': '.caches',
+				'trt_builder_optimization_level': 5
 			}))
 		elif execution_provider == 'OpenVINOExecutionProvider':
 			execution_providers_with_options.append((execution_provider,
