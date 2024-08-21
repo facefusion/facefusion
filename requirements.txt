@@ -1,7 +1,7 @@
 filetype==1.2.0
 gradio==4.41.0
 gradio_rangeslider==0.0.6
-numpy==2.1.0
+numpy==1.26.4
 onnx==1.16.2
 onnxruntime==1.19.0
 opencv-python==4.10.0.84
