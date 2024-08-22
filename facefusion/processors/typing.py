@@ -111,11 +111,11 @@ ProcessorState = TypedDict('ProcessorState',
 })
 ProcessorStateSet = Dict[AppContext, ProcessorState]
 
+LivePortraitPitch = float
+LivePortraitYaw = float
+LivePortraitRoll = float
 LivePortraitExpression = NDArray[Any]
 LivePortraitFeatureVolume = NDArray[Any]
 LivePortraitMotionPoints = NDArray[Any]
 LivePortraitScale = NDArray[Any]
 LivePortraitTranslation = NDArray[Any]
-LivePortraitPitch = float
-LivePortraitYaw = float
-LivePortraitRoll = float
