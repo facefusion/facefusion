@@ -98,9 +98,11 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		if 'box' in state_manager.get_item('face_mask_types'):
 			box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], 0, state_manager.get_item('face_mask_padding'))
 			crop_masks.append(box_mask)
+
 		if 'occlusion' in state_manager.get_item('face_mask_types'):
 			occlusion_mask = create_occlusion_mask(crop_vision_frame)
 			crop_masks.append(occlusion_mask)
+
 		if 'region' in state_manager.get_item('face_mask_types'):
 			region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))
 			crop_masks.append(region_mask)

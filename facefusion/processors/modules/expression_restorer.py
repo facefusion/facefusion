@@ -147,6 +147,7 @@ def restore_expression(source_vision_frame : VisionFrame, target_face : Face, te
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(target_crop_vision_frame)
 		crop_masks.append(occlusion_mask)
+
 	source_crop_vision_frame = prepare_crop_frame(source_crop_vision_frame)
 	target_crop_vision_frame = prepare_crop_frame(target_crop_vision_frame)
 	target_crop_vision_frame = forward(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
