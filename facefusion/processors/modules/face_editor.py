@@ -223,6 +223,7 @@ def forward_extract_feature(crop_vision_frame : VisionFrame) -> LivePortraitFeat
 		{
 			'input': crop_vision_frame
 		})[0]
+
 	return feature_volume
 
 
@@ -234,6 +235,7 @@ def forward_extract_motion(crop_vision_frame : VisionFrame) -> Tuple[LivePortrai
 		{
 			'input': crop_vision_frame
 		})
+
 	return pitch, yaw, roll, scale, translation, expression, motion_points
 
 
@@ -245,6 +247,7 @@ def forward_retarget_eye(eye_motion_points : LivePortraitMotionPoints) -> LivePo
 		{
 			'input': eye_motion_points
 		})[0]
+
 	return eye_motion_points
 
 
@@ -256,6 +259,7 @@ def forward_retarget_lip(lip_motion_points : LivePortraitMotionPoints) -> LivePo
 		{
 			'input': lip_motion_points
 		})[0]
+
 	return lip_motion_points
 
 
@@ -269,6 +273,7 @@ def forward_generate_frame(feature_volume : LivePortraitFeatureVolume, source_mo
 			'source': source_motion_points,
 			'target': target_motion_points
 		})[0][0]
+
 	return crop_vision_frame
 
 
