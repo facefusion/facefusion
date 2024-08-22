@@ -149,21 +149,21 @@ def restore_expression(source_vision_frame : VisionFrame, target_face : Face, te
 		crop_masks.append(occlusion_mask)
 	source_crop_vision_frame = prepare_crop_frame(source_crop_vision_frame)
 	target_crop_vision_frame = prepare_crop_frame(target_crop_vision_frame)
-	target_crop_vision_frame = apply_restore(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
+	target_crop_vision_frame = forward(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
 	target_crop_vision_frame = normalize_crop_frame(target_crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, target_crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
 
-def apply_restore(source_crop_vision_frame : VisionFrame, target_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
+def forward(source_crop_vision_frame : VisionFrame, target_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
 	feature_volume = forward_extract_feature(target_crop_vision_frame)
 	source_expression = forward_extract_motion(source_crop_vision_frame)[5]
 	pitch, yaw, roll, scale, translation, target_expression, motion_points = forward_extract_motion(target_crop_vision_frame)
 	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
 	rotation = rotation.T.astype(numpy.float32)
-	source_expression = source_expression * expression_restorer_factor + target_expression * (1 - expression_restorer_factor)
 	source_expression[:, [ 0, 4, 5, 8, 9 ]] = target_expression[:, [ 0, 4, 5, 8, 9 ]]
+	source_expression = source_expression * expression_restorer_factor + target_expression * (1 - expression_restorer_factor)
 	source_motion_points = scale * (motion_points @ rotation + source_expression) + translation
 	target_motion_points = scale * (motion_points @ rotation + target_expression) + translation
 	crop_vision_frame = forward_generate_frame(feature_volume, source_motion_points, target_motion_points)
