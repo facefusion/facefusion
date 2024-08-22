@@ -5,8 +5,6 @@ import numpy
 from numpy.typing import NDArray
 from onnxruntime import InferenceSession
 
-from facefusion.processors.typing import ProcessorState, ProcessorStateKey
-
 Scale = float
 Score = float
 Angle = int
