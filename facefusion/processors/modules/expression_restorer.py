@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy
@@ -19,8 +19,9 @@ from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import ExpressionRestorerInputs
+from facefusion.processors.typing import LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
-from facefusion.thread_helper import thread_semaphore
+from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import get_video_frame, read_image, read_static_image, write_image
 
@@ -148,50 +149,60 @@ def restore_expression(source_vision_frame : VisionFrame, target_face : Face, te
 		crop_masks.append(occlusion_mask)
 	source_crop_vision_frame = prepare_crop_frame(source_crop_vision_frame)
 	target_crop_vision_frame = prepare_crop_frame(target_crop_vision_frame)
-	target_crop_vision_frame = apply_restore(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
+	target_crop_vision_frame = forward(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
 	target_crop_vision_frame = normalize_crop_frame(target_crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, target_crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
 
-def apply_restore(source_crop_vision_frame : VisionFrame, target_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
-	feature_extractor = get_inference_pool().get('feature_extractor')
-	motion_extractor = get_inference_pool().get('motion_extractor')
-	generator = get_inference_pool().get('generator')
+def forward(source_crop_vision_frame : VisionFrame, target_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
+	feature_volume = forward_extract_feature(target_crop_vision_frame)
+	source_expression = forward_extract_motion(source_crop_vision_frame)[5]
+	pitch, yaw, roll, scale, translation, target_expression, motion_points = forward_extract_motion(target_crop_vision_frame)
+	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
+	rotation = rotation.T.astype(numpy.float32)
+	source_expression[:, [ 0, 4, 5, 8, 9 ]] = target_expression[:, [ 0, 4, 5, 8, 9 ]]
+	source_expression = source_expression * expression_restorer_factor + target_expression * (1 - expression_restorer_factor)
+	source_motion_points = scale * (motion_points @ rotation + source_expression) + translation
+	target_motion_points = scale * (motion_points @ rotation + target_expression) + translation
+	crop_vision_frame = forward_generate_frame(feature_volume, source_motion_points, target_motion_points)
+	return crop_vision_frame
 
-	with thread_semaphore():
+
+def forward_extract_feature(crop_vision_frame : VisionFrame) -> LivePortraitFeatureVolume:
+	feature_extractor = get_inference_pool().get('feature_extractor')
+
+	with conditional_thread_semaphore():
 		feature_volume = feature_extractor.run(None,
 		{
-			'input': target_crop_vision_frame
+			'input': crop_vision_frame
 		})[0]
 
-	with thread_semaphore():
-		source_expression = motion_extractor.run(None,
-		{
-			'input': source_crop_vision_frame
-		})[5]
+	return feature_volume
 
-	with thread_semaphore():
-		target_pitch, target_yaw, target_roll, target_scale, target_translation, target_expression, target_motion_points = motion_extractor.run(None,
+
+def forward_extract_motion(crop_vision_frame : VisionFrame) -> Tuple[LivePortraitPitch, LivePortraitYaw, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitExpression, LivePortraitMotionPoints]:
+	motion_extractor = get_inference_pool().get('motion_extractor')
+
+	with conditional_thread_semaphore():
+		pitch, yaw, roll, scale, translation, expression, motion_points = motion_extractor.run(None,
 		{
-			'input': target_crop_vision_frame
+			'input': crop_vision_frame
 		})
 
-	target_rotation_matrix = scipy.spatial.transform.Rotation.from_euler('xyz', [ target_pitch, target_yaw, target_roll ], degrees = True).as_matrix()
-	target_rotation_matrix = target_rotation_matrix.T.astype(numpy.float32)
-	target_motion_points_transform = target_scale * (target_motion_points @ target_rotation_matrix + target_expression) + target_translation
+	return pitch, yaw, roll, scale, translation, expression, motion_points
 
-	expression = source_expression * expression_restorer_factor + target_expression * (1 - expression_restorer_factor)
-	expression[:, [ 0, 4, 5, 8, 9 ]] = target_expression[:, [ 0, 4, 5, 8, 9 ]]
-	source_motion_points = target_scale * (target_motion_points @ target_rotation_matrix + expression) + target_translation
+
+def forward_generate_frame(feature_volume : LivePortraitFeatureVolume, source_motion_points : LivePortraitMotionPoints, target_motion_points : LivePortraitMotionPoints) -> VisionFrame:
+	generator = get_inference_pool().get('generator')
 
 	with thread_semaphore():
 		crop_vision_frame = generator.run(None,
 		{
 			'feature_volume': feature_volume,
-			'target': target_motion_points_transform,
-			'source': source_motion_points
+			'source': source_motion_points,
+			'target': target_motion_points
 		})[0][0]
 
 	return crop_vision_frame

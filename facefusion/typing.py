@@ -59,9 +59,6 @@ Spectrogram = NDArray[Any]
 Mel = NDArray[Any]
 MelFilterBank = NDArray[Any]
 
-Expression = NDArray[Any]
-MotionPoints = NDArray[Any]
-
 Fps = float
 Padding = Tuple[int, int, int, int]
 Resolution = Tuple[int, int]
