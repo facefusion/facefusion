@@ -211,7 +211,7 @@ def forward(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) 
 	motion_points_source += translation
 	motion_points_source += edit_eye_open(motion_points_target, face_landmark_68)
 	motion_points_source += edit_lip_open(motion_points_target, face_landmark_68)
-	crop_vision_frame = forward_generator(feature_volume, motion_points_source, motion_points_target)
+	crop_vision_frame = forward_generate_frame(feature_volume, motion_points_source, motion_points_target)
 	return crop_vision_frame
 
 
@@ -259,7 +259,7 @@ def forward_retarget_lip(lip_motion_points : LivePortraitMotionPoints) -> LivePo
 	return lip_motion_points
 
 
-def forward_generator(feature_volume : LivePortraitFeatureVolume, source_motion_points : LivePortraitMotionPoints, target_motion_points : LivePortraitMotionPoints) -> VisionFrame:
+def forward_generate_frame(feature_volume : LivePortraitFeatureVolume, source_motion_points : LivePortraitMotionPoints, target_motion_points : LivePortraitMotionPoints) -> VisionFrame:
 	generator = get_inference_pool().get('generator')
 
 	with thread_semaphore():
