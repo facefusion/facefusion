@@ -315,9 +315,9 @@ def edit_eye_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark6
 	right_eye_ratio = calc_distance_ratio(face_landmark_68, 43, 46, 45, 42)
 
 	if face_editor_eye_open_ratio < 0:
-		eye_motion_points = numpy.concatenate([motion_points.ravel(), [left_eye_ratio, right_eye_ratio, 0.0]])
+		eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.0 ] ])
 	else:
-		eye_motion_points = numpy.concatenate([motion_points.ravel(), [left_eye_ratio, right_eye_ratio, 0.8]])
+		eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.8 ] ])
 	eye_motion_points = forward_retarget_eye(eye_motion_points) * numpy.abs(face_editor_eye_open_ratio)
 	return eye_motion_points
 
