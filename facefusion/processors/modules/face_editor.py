@@ -21,7 +21,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEditorInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
-from facefusion.typing import Args, Expression, Face, FaceLandmark68, FeatureVolume, InferencePool, ModelOptions, ModelSet, MotionPoints, ProcessMode, QueuePayload, RotationMatrix, ScaleElement, TranslationElement, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, FaceLandmark68, InferencePool, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 MODEL_SET : ModelSet =\
@@ -194,8 +194,10 @@ def edit_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 
 def forward_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
 	feature_volume = forward_extract_feature(crop_vision_frame)
-	rotation_matrix, scale, translation, expression, motion_points = forward_extract_motion(crop_vision_frame)
-	motion_points_transform = scale * (motion_points @ rotation_matrix + expression) + translation
+	pitch, yaw, roll, scale, translation, expression, motion_points = forward_extract_motion(crop_vision_frame)
+	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
+	rotation = rotation.T.astype(numpy.float32)
+	motion_points_target = scale * (motion_points @ rotation + expression) + translation
 	expression = edit_eye_gaze(expression)
 	expression = edit_mouth_grim(expression)
 	expression = edit_mouth_position(expression)
@@ -203,17 +205,17 @@ def forward_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmar
 	expression = edit_mouth_purse(expression)
 	expression = edit_mouth_smile(expression)
 	expression = edit_eyebrow_direction(expression)
-	motion_points_edit = motion_points @ rotation_matrix
-	motion_points_edit += expression
-	motion_points_edit *= scale
-	motion_points_edit += translation
-	motion_points_edit += edit_eye_open(motion_points_transform, face_landmark_68)
-	motion_points_edit += edit_lip_open(motion_points_transform, face_landmark_68)
-	crop_vision_frame = forward_generator(feature_volume, motion_points_edit, motion_points_transform)
+	motion_points_source = motion_points @ rotation
+	motion_points_source += expression
+	motion_points_source *= scale
+	motion_points_source += translation
+	motion_points_source += edit_eye_open(motion_points_target, face_landmark_68)
+	motion_points_source += edit_lip_open(motion_points_target, face_landmark_68)
+	crop_vision_frame = forward_generator(feature_volume, motion_points_source, motion_points_target)
 	return crop_vision_frame
 
 
-def forward_extract_feature(crop_vision_frame : VisionFrame) -> FeatureVolume:
+def forward_extract_feature(crop_vision_frame : VisionFrame) -> LivePortraitFeatureVolume:
 	feature_extractor = get_inference_pool().get('feature_extractor')
 
 	with conditional_thread_semaphore():
@@ -224,7 +226,7 @@ def forward_extract_feature(crop_vision_frame : VisionFrame) -> FeatureVolume:
 	return feature_volume
 
 
-def forward_extract_motion(crop_vision_frame : VisionFrame) -> Tuple[RotationMatrix, ScaleElement, TranslationElement, Expression, MotionPoints]:
+def forward_extract_motion(crop_vision_frame : VisionFrame) -> Tuple[LivePortraitPitch, LivePortraitYaw, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitExpression, LivePortraitMotionPoints]:
 	motion_extractor = get_inference_pool().get('motion_extractor')
 
 	with conditional_thread_semaphore():
@@ -232,38 +234,32 @@ def forward_extract_motion(crop_vision_frame : VisionFrame) -> Tuple[RotationMat
 		{
 			'input': crop_vision_frame
 		})
-	rotation_matrix = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees=True).as_matrix()
-	rotation_matrix = rotation_matrix.T.astype(numpy.float32)
-	return rotation_matrix, scale, translation, expression, motion_points
+	return pitch, yaw, roll, scale, translation, expression, motion_points
 
 
-def forward_retarget_eye(eye_motion_points: MotionPoints) -> MotionPoints:
+def forward_retarget_eye(eye_motion_points: LivePortraitMotionPoints) -> LivePortraitMotionPoints:
 	eye_retargeter = get_inference_pool().get('eye_retargeter')
-	eye_motion_points = eye_motion_points.reshape(1, -1).astype(numpy.float32)
 
 	with conditional_thread_semaphore():
 		eye_motion_points = eye_retargeter.run(None,
 		{
 			'input': eye_motion_points
 		})[0]
-	eye_motion_points = eye_motion_points.reshape(-1, 21, 3)
 	return eye_motion_points
 
 
-def forward_retarget_lip(lip_motion_points: MotionPoints) -> MotionPoints:
+def forward_retarget_lip(lip_motion_points: LivePortraitMotionPoints) -> LivePortraitMotionPoints:
 	lip_retargeter = get_inference_pool().get('lip_retargeter')
-	lip_motion_points = lip_motion_points.reshape(1, -1).astype(numpy.float32)
 
 	with conditional_thread_semaphore():
 		lip_motion_points = lip_retargeter.run(None,
 		{
 			'input': lip_motion_points
 		})[0]
-	lip_motion_points = lip_motion_points.reshape(-1, 21, 3)
 	return lip_motion_points
 
 
-def forward_generator(feature_volume : FeatureVolume, source_motion_points : MotionPoints, target_motion_points : MotionPoints) -> VisionFrame:
+def forward_generator(feature_volume : LivePortraitFeatureVolume, source_motion_points : LivePortraitMotionPoints, target_motion_points : LivePortraitMotionPoints) -> VisionFrame:
 	generator = get_inference_pool().get('generator')
 
 	with thread_semaphore():
@@ -276,7 +272,7 @@ def forward_generator(feature_volume : FeatureVolume, source_motion_points : Mot
 	return crop_vision_frame
 
 
-def edit_eyebrow_direction(expression : Expression) -> Expression:
+def edit_eyebrow_direction(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_eyebrow = state_manager.get_item('face_editor_eyebrow_direction')
 
 	if face_editor_eyebrow > 0:
@@ -290,7 +286,7 @@ def edit_eyebrow_direction(expression : Expression) -> Expression:
 	return expression
 
 
-def edit_eye_gaze(expression : Expression) -> Expression:
+def edit_eye_gaze(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_eye_gaze_horizontal = state_manager.get_item('face_editor_eye_gaze_horizontal')
 	face_editor_eye_gaze_vertical = state_manager.get_item('face_editor_eye_gaze_vertical')
 
@@ -309,7 +305,7 @@ def edit_eye_gaze(expression : Expression) -> Expression:
 	return expression
 
 
-def edit_eye_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark68) -> MotionPoints:
+def edit_eye_open(motion_points : LivePortraitMotionPoints, face_landmark_68 : FaceLandmark68) -> LivePortraitMotionPoints:
 	face_editor_eye_open_ratio = state_manager.get_item('face_editor_eye_open_ratio')
 	left_eye_ratio = calc_distance_ratio(face_landmark_68, 37, 40, 39, 36)
 	right_eye_ratio = calc_distance_ratio(face_landmark_68, 43, 46, 45, 42)
@@ -318,11 +314,13 @@ def edit_eye_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark6
 		eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.0 ] ])
 	else:
 		eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.8 ] ])
+	eye_motion_points = eye_motion_points.reshape(1, -1).astype(numpy.float32)
 	eye_motion_points = forward_retarget_eye(eye_motion_points) * numpy.abs(face_editor_eye_open_ratio)
+	eye_motion_points = eye_motion_points.reshape(-1, 21, 3)
 	return eye_motion_points
 
 
-def edit_lip_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark68) -> MotionPoints:
+def edit_lip_open(motion_points : LivePortraitMotionPoints, face_landmark_68 : FaceLandmark68) -> LivePortraitMotionPoints:
 	face_editor_lip_open_ratio = state_manager.get_item('face_editor_lip_open_ratio')
 	lip_ratio = calc_distance_ratio(face_landmark_68, 62, 66, 54, 48)
 
@@ -330,11 +328,13 @@ def edit_lip_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark6
 		lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 0.0 ] ])
 	else:
 		lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 1.3 ] ])
+	lip_motion_points = lip_motion_points.reshape(1, -1).astype(numpy.float32)
 	lip_motion_points = forward_retarget_lip(lip_motion_points)	* numpy.abs(face_editor_lip_open_ratio)
+	lip_motion_points = lip_motion_points.reshape(-1, 21, 3)
 	return lip_motion_points
 
 
-def edit_mouth_grim(expression : Expression) -> Expression:
+def edit_mouth_grim(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_mouth_grim = state_manager.get_item('face_editor_mouth_grim')
 	if face_editor_mouth_grim > 0:
 		expression[0, 17, 2] -= map_float(face_editor_mouth_grim, -1, 1, -0.005, 0.005)
@@ -348,7 +348,7 @@ def edit_mouth_grim(expression : Expression) -> Expression:
 	return expression
 
 
-def edit_mouth_position(expression : Expression) -> Expression:
+def edit_mouth_position(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_mouth_position_horizontal = state_manager.get_item('face_editor_mouth_position_horizontal')
 	face_editor_mouth_position_vertical = state_manager.get_item('face_editor_mouth_position_vertical')
 	expression[0, 19, 0] += map_float(face_editor_mouth_position_horizontal, -1, 1, -0.05, 0.05)
@@ -362,7 +362,7 @@ def edit_mouth_position(expression : Expression) -> Expression:
 	return expression
 
 
-def edit_mouth_pout(expression : Expression) -> Expression:
+def edit_mouth_pout(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_mouth_pout = state_manager.get_item('face_editor_mouth_pout')
 	if face_editor_mouth_pout > 0:
 		expression[0, 19, 1] -= map_float(face_editor_mouth_pout, -1, 1, -0.022, 0.022)
@@ -375,7 +375,7 @@ def edit_mouth_pout(expression : Expression) -> Expression:
 	return expression
 
 
-def edit_mouth_purse(expression : Expression) -> Expression:
+def edit_mouth_purse(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_mouth_purse = state_manager.get_item('face_editor_mouth_purse')
 	if face_editor_mouth_purse > 0:
 		expression[0, 19, 1] -= map_float(face_editor_mouth_purse, -1, 1, -0.04, 0.04)
@@ -388,7 +388,7 @@ def edit_mouth_purse(expression : Expression) -> Expression:
 	return expression
 
 
-def edit_mouth_smile(expression : Expression) -> Expression:
+def edit_mouth_smile(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_mouth_smile = state_manager.get_item('face_editor_mouth_smile')
 	if face_editor_mouth_smile > 0:
 		expression[0, 20, 1] -= map_float(face_editor_mouth_smile, -1, 1, -0.015, 0.015)
