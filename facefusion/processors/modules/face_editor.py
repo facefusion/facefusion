@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy
@@ -20,8 +20,8 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEditorInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.thread_helper import thread_semaphore
-from facefusion.typing import Args, Expression, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, MotionPoints, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
+from facefusion.typing import Args, Expression, Face, FaceLandmark68, FeatureVolume, InferencePool, ModelOptions, ModelSet, MotionPoints, ProcessMode, QueuePayload, RotationMatrix, ScaleElement, TranslationElement, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 MODEL_SET : ModelSet =\
@@ -185,32 +185,16 @@ def edit_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	crop_vision_frame = apply_edit(crop_vision_frame, target_face.landmark_set.get('68'))
+	crop_vision_frame = forward_edit(crop_vision_frame, target_face.landmark_set.get('68'))
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
 
-def apply_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
-	feature_extractor = get_inference_pool().get('feature_extractor')
-	motion_extractor = get_inference_pool().get('motion_extractor')
-	generator = get_inference_pool().get('generator')
-
-	with thread_semaphore():
-		feature_volume = feature_extractor.run(None,
-		{
-			'input': crop_vision_frame
-		})[0]
-
-	with thread_semaphore():
-		pitch, yaw, roll, scale, translation, expression, motion_points = motion_extractor.run(None,
-		{
-			'input': crop_vision_frame
-		})
-
-	rotation_matrix = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
-	rotation_matrix = rotation_matrix.T.astype(numpy.float32)
+def forward_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
+	feature_volume = forward_extract_feature(crop_vision_frame)
+	rotation_matrix, scale, translation, expression, motion_points = forward_extract_motion(crop_vision_frame)
 	motion_points_transform = scale * (motion_points @ rotation_matrix + expression) + translation
 	expression = edit_eye_gaze(expression)
 	expression = edit_mouth_grim(expression)
@@ -225,15 +209,70 @@ def apply_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark6
 	motion_points_edit += translation
 	motion_points_edit += edit_eye_open(motion_points_transform, face_landmark_68)
 	motion_points_edit += edit_lip_open(motion_points_transform, face_landmark_68)
+	crop_vision_frame = forward_generator(feature_volume, motion_points_edit, motion_points_transform)
+	return crop_vision_frame
+
+
+def forward_extract_feature(crop_vision_frame : VisionFrame) -> FeatureVolume:
+	feature_extractor = get_inference_pool().get('feature_extractor')
+
+	with conditional_thread_semaphore():
+		feature_volume = feature_extractor.run(None,
+		{
+			'input': crop_vision_frame
+		})[0]
+	return feature_volume
+
+
+def forward_extract_motion(crop_vision_frame : VisionFrame) -> Tuple[RotationMatrix, ScaleElement, TranslationElement, Expression, MotionPoints]:
+	motion_extractor = get_inference_pool().get('motion_extractor')
+
+	with conditional_thread_semaphore():
+		pitch, yaw, roll, scale, translation, expression, motion_points = motion_extractor.run(None,
+		{
+			'input': crop_vision_frame
+		})
+	rotation_matrix = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees=True).as_matrix()
+	rotation_matrix = rotation_matrix.T.astype(numpy.float32)
+	return rotation_matrix, scale, translation, expression, motion_points
+
+
+def forward_retarget_eye(eye_motion_points: MotionPoints) -> MotionPoints:
+	eye_retargeter = get_inference_pool().get('eye_retargeter')
+	eye_motion_points = eye_motion_points.reshape(1, -1).astype(numpy.float32)
+
+	with conditional_thread_semaphore():
+		eye_motion_points = eye_retargeter.run(None,
+		{
+			'input': eye_motion_points
+		})[0]
+	eye_motion_points = eye_motion_points.reshape(-1, 21, 3)
+	return eye_motion_points
+
+
+def forward_retarget_lip(lip_motion_points: MotionPoints) -> MotionPoints:
+	lip_retargeter = get_inference_pool().get('lip_retargeter')
+	lip_motion_points = lip_motion_points.reshape(1, -1).astype(numpy.float32)
+
+	with conditional_thread_semaphore():
+		lip_motion_points = lip_retargeter.run(None,
+		{
+			'input': lip_motion_points
+		})[0]
+	lip_motion_points = lip_motion_points.reshape(-1, 21, 3)
+	return lip_motion_points
+
+
+def forward_generator(feature_volume : FeatureVolume, source_motion_points : MotionPoints, target_motion_points : MotionPoints) -> VisionFrame:
+	generator = get_inference_pool().get('generator')
 
 	with thread_semaphore():
 		crop_vision_frame = generator.run(None,
 		{
 			'feature_volume': feature_volume,
-			'target': motion_points_transform,
-			'source': motion_points_edit
+			'source': source_motion_points,
+			'target': target_motion_points
 		})[0][0]
-
 	return crop_vision_frame
 
 
@@ -271,65 +310,27 @@ def edit_eye_gaze(expression : Expression) -> Expression:
 
 
 def edit_eye_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark68) -> MotionPoints:
-	eye_retargeter = get_inference_pool().get('eye_retargeter')
 	face_editor_eye_open_ratio = state_manager.get_item('face_editor_eye_open_ratio')
 	left_eye_ratio = calc_distance_ratio(face_landmark_68, 37, 40, 39, 36)
 	right_eye_ratio = calc_distance_ratio(face_landmark_68, 43, 46, 45, 42)
 
 	if face_editor_eye_open_ratio < 0:
-		close_eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.0 ] ])
-		close_eye_motion_points = close_eye_motion_points.reshape(1, -1).astype(numpy.float32)
-
-		with thread_semaphore():
-			close_eye_motion_points = eye_retargeter.run(None,
-			{
-				'input': close_eye_motion_points
-			})[0]
-
-		eye_motion_points = close_eye_motion_points * face_editor_eye_open_ratio * -1
+		eye_motion_points = numpy.concatenate([motion_points.ravel(), [left_eye_ratio, right_eye_ratio, 0.0]])
 	else:
-		open_eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.8 ] ])
-		open_eye_motion_points = open_eye_motion_points.reshape(1, -1).astype(numpy.float32)
-
-		with thread_semaphore():
-			open_eye_motion_points = eye_retargeter.run(None,
-			{
-				'input': open_eye_motion_points
-			})[0]
-
-		eye_motion_points = open_eye_motion_points * face_editor_eye_open_ratio
-	eye_motion_points = eye_motion_points.reshape(-1, 21, 3)
+		eye_motion_points = numpy.concatenate([motion_points.ravel(), [left_eye_ratio, right_eye_ratio, 0.8]])
+	eye_motion_points = forward_retarget_eye(eye_motion_points) * numpy.abs(face_editor_eye_open_ratio)
 	return eye_motion_points
 
 
 def edit_lip_open(motion_points : MotionPoints, face_landmark_68 : FaceLandmark68) -> MotionPoints:
-	lip_retargeter = get_inference_pool().get('lip_retargeter')
 	face_editor_lip_open_ratio = state_manager.get_item('face_editor_lip_open_ratio')
 	lip_ratio = calc_distance_ratio(face_landmark_68, 62, 66, 54, 48)
 
 	if face_editor_lip_open_ratio < 0:
-		close_lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 0.0 ] ])
-		close_lip_motion_points = close_lip_motion_points.reshape(1, -1).astype(numpy.float32)
-
-		with thread_semaphore():
-			close_lip_motion_points = lip_retargeter.run(None,
-			{
-				'input': close_lip_motion_points
-			})[0]
-
-		lip_motion_points = close_lip_motion_points * face_editor_lip_open_ratio * -1
+		lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 0.0 ] ])
 	else:
-		open_lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 1.3 ] ])
-		open_lip_motion_points = open_lip_motion_points.reshape(1, -1).astype(numpy.float32)
-
-		with thread_semaphore():
-			open_lip_motion_points = lip_retargeter.run(None,
-			{
-				'input': open_lip_motion_points
-			})[0]
-
-		lip_motion_points = open_lip_motion_points * face_editor_lip_open_ratio
-	lip_motion_points = lip_motion_points.reshape(-1, 21, 3)
+		lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 1.3 ] ])
+	lip_motion_points = forward_retarget_lip(lip_motion_points)	* numpy.abs(face_editor_lip_open_ratio)
 	return lip_motion_points
 
 

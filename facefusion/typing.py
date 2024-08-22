@@ -60,7 +60,11 @@ Mel = NDArray[Any]
 MelFilterBank = NDArray[Any]
 
 Expression = NDArray[Any]
+FeatureVolume = NDArray[Any]
 MotionPoints = NDArray[Any]
+RotationMatrix = NDArray[Any]
+ScaleElement = NDArray[Any]
+TranslationElement = NDArray[Any]
 
 Fps = float
 Padding = Tuple[int, int, int, int]
