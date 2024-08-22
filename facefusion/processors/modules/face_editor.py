@@ -18,10 +18,10 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.typing import FaceEditorInputs
+from facefusion.processors.typing import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
-from facefusion.typing import Args, Face, FaceLandmark68, InferencePool, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import Args, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 MODEL_SET : ModelSet =\
@@ -185,14 +185,14 @@ def edit_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	crop_vision_frame = forward_edit(crop_vision_frame, target_face.landmark_set.get('68'))
+	crop_vision_frame = forward(crop_vision_frame, target_face.landmark_set.get('68'))
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
 
-def forward_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
+def forward(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
 	feature_volume = forward_extract_feature(crop_vision_frame)
 	pitch, yaw, roll, scale, translation, expression, motion_points = forward_extract_motion(crop_vision_frame)
 	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
@@ -237,7 +237,7 @@ def forward_extract_motion(crop_vision_frame : VisionFrame) -> Tuple[LivePortrai
 	return pitch, yaw, roll, scale, translation, expression, motion_points
 
 
-def forward_retarget_eye(eye_motion_points: LivePortraitMotionPoints) -> LivePortraitMotionPoints:
+def forward_retarget_eye(eye_motion_points : LivePortraitMotionPoints) -> LivePortraitMotionPoints:
 	eye_retargeter = get_inference_pool().get('eye_retargeter')
 
 	with conditional_thread_semaphore():
@@ -248,7 +248,7 @@ def forward_retarget_eye(eye_motion_points: LivePortraitMotionPoints) -> LivePor
 	return eye_motion_points
 
 
-def forward_retarget_lip(lip_motion_points: LivePortraitMotionPoints) -> LivePortraitMotionPoints:
+def forward_retarget_lip(lip_motion_points : LivePortraitMotionPoints) -> LivePortraitMotionPoints:
 	lip_retargeter = get_inference_pool().get('lip_retargeter')
 
 	with conditional_thread_semaphore():

@@ -59,15 +59,6 @@ Spectrogram = NDArray[Any]
 Mel = NDArray[Any]
 MelFilterBank = NDArray[Any]
 
-LivePortraitExpression = NDArray[Any]
-LivePortraitFeatureVolume = NDArray[Any]
-LivePortraitMotionPoints = NDArray[Any]
-LivePortraitScale = NDArray[Any]
-LivePortraitTranslation = NDArray[Any]
-LivePortraitPitch = float
-LivePortraitYaw = float
-LivePortraitRoll = float
-
 Fps = float
 Padding = Tuple[int, int, int, int]
 Resolution = Tuple[int, int]

@@ -1,4 +1,6 @@
-from typing import Dict, List, Literal, TypedDict
+from typing import Any, Dict, List, Literal, TypedDict
+
+from numpy._typing import NDArray
 
 from facefusion.typing import AppContext, AudioFrame, Face, FaceSet, VisionFrame
 
@@ -108,3 +110,12 @@ ProcessorState = TypedDict('ProcessorState',
 	'lip_syncer_model' : LipSyncerModel
 })
 ProcessorStateSet = Dict[AppContext, ProcessorState]
+
+LivePortraitExpression = NDArray[Any]
+LivePortraitFeatureVolume = NDArray[Any]
+LivePortraitMotionPoints = NDArray[Any]
+LivePortraitScale = NDArray[Any]
+LivePortraitTranslation = NDArray[Any]
+LivePortraitPitch = float
+LivePortraitYaw = float
+LivePortraitRoll = float
