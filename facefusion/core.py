@@ -160,7 +160,7 @@ def force_download() -> ErrorCode:
 		face_landmarker.MODEL_SET.get('face_landmarker_68_5'),
 		face_recognizer.MODEL_SET.get('arcface'),
 		face_masker.MODEL_SET.get('face_masker'),
-		voice_extractor.MODEL_SET.get('voice_extractor')
+		voice_extractor.MODEL_SET.get('kim_vocal_2')
 	]
 
 	for processor_module in get_processors_modules(available_processors):
