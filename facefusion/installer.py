@@ -69,3 +69,5 @@ def run(program : ArgumentParser) -> None:
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
 			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--no-deps', '--force-reinstall' ])
+		if onnxruntime == 'cuda':
+			subprocess.call([ 'pip', 'install', 'tensorrt==10.3.0', '--no-deps', '--force-reinstall' ])
