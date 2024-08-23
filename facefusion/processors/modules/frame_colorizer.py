@@ -181,17 +181,22 @@ def post_process() -> None:
 
 
 def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
+	color_vision_frame = prepare_temp_frame(temp_vision_frame)
+	color_vision_frame = forward(color_vision_frame)
+	color_vision_frame = merge_color_frame(temp_vision_frame, color_vision_frame)
+	color_vision_frame = blend_frame(temp_vision_frame, color_vision_frame)
+	return color_vision_frame
+
+
+def forward(color_vision_frame : VisionFrame) -> VisionFrame:
 	frame_colorizer = get_inference_pool().get('frame_colorizer')
-	prepare_vision_frame = prepare_temp_frame(temp_vision_frame)
 
 	with thread_semaphore():
 		color_vision_frame = frame_colorizer.run(None,
 		{
-			'input': prepare_vision_frame
+			'input': color_vision_frame
 		})[0][0]
 
-	color_vision_frame = merge_color_frame(temp_vision_frame, color_vision_frame)
-	color_vision_frame = blend_frame(temp_vision_frame, color_vision_frame)
 	return color_vision_frame
 
 

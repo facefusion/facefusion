@@ -184,6 +184,7 @@ def edit_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
+
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
 	crop_vision_frame = forward(crop_vision_frame, target_face.landmark_set.get('68'))
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)

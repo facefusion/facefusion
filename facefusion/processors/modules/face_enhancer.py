@@ -290,8 +290,9 @@ def enhance_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionF
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
+
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	crop_vision_frame = apply_enhance(crop_vision_frame)
+	crop_vision_frame = forward(crop_vision_frame)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
@@ -299,7 +300,7 @@ def enhance_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionF
 	return temp_vision_frame
 
 
-def apply_enhance(crop_vision_frame : VisionFrame) -> VisionFrame:
+def forward(crop_vision_frame : VisionFrame) -> VisionFrame:
 	face_enhancer = get_inference_pool().get('face_enhancer')
 	face_enhancer_inputs = {}
 
