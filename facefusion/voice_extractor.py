@@ -62,6 +62,7 @@ def batch_extract_voice(audio : Audio, chunk_size : int, step_size : int) -> Aud
 		end = min(start + chunk_size, audio.shape[0])
 		temp_audio[start:end, ...] += extract_voice(audio[start:end, ...])
 		temp_chunk[start:end, ...] += 1
+
 	audio = temp_audio / temp_chunk
 	return audio
 
@@ -72,6 +73,14 @@ def extract_voice(temp_audio_chunk : AudioChunk) -> AudioChunk:
 	trim_size = 3840
 	temp_audio_chunk, pad_size = prepare_audio_chunk(temp_audio_chunk.T, chunk_size, trim_size)
 	temp_audio_chunk = decompose_audio_chunk(temp_audio_chunk, trim_size)
+	temp_audio_chunk = forward(temp_audio_chunk)
+	temp_audio_chunk = compose_audio_chunk(temp_audio_chunk, trim_size)
+	temp_audio_chunk = normalize_audio_chunk(temp_audio_chunk, chunk_size, trim_size, pad_size)
+	return temp_audio_chunk
+
+
+def forward(temp_audio_chunk : AudioChunk) -> AudioChunk:
+	voice_extractor = get_inference_pool().get('voice_extractor')
 
 	with thread_semaphore():
 		temp_audio_chunk = voice_extractor.run(None,
@@ -79,8 +88,6 @@ def extract_voice(temp_audio_chunk : AudioChunk) -> AudioChunk:
 			'input': temp_audio_chunk
 		})[0]
 
-	temp_audio_chunk = compose_audio_chunk(temp_audio_chunk, trim_size)
-	temp_audio_chunk = normalize_audio_chunk(temp_audio_chunk, chunk_size, trim_size, pad_size)
 	return temp_audio_chunk
 
 
@@ -94,6 +101,7 @@ def prepare_audio_chunk(temp_audio_chunk : AudioChunk, chunk_size : int, trim_si
 
 	for index in range(0, audio_chunk_size, step_size):
 		temp_audio_chunks.append(temp_audio_chunk[:, index:index + chunk_size])
+
 	temp_audio_chunk = numpy.concatenate(temp_audio_chunks, axis = 0)
 	temp_audio_chunk = temp_audio_chunk.reshape((-1, chunk_size))
 	return temp_audio_chunk, pad_size

@@ -8,7 +8,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, normalize_bounding_box, transform_bounding_box, transform_points
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
-from facefusion.typing import Angle, BoundingBox, DownloadSet, FaceLandmark5, InferencePool, ModelSet, Score, VisionFrame
+from facefusion.typing import Angle, BoundingBox, Detection, DownloadSet, FaceLandmark5, InferencePool, ModelSet, Score, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 MODEL_SET : ModelSet =\
@@ -143,33 +143,29 @@ def detect_rotated_faces(vision_frame : VisionFrame, angle : Angle) -> Tuple[Lis
 
 
 def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
-	face_detector = get_inference_pool().get('retinaface')
+	bounding_boxes = []
+	face_scores = []
+	face_landmarks_5 = []
+	feature_strides = [ 8, 16, 32 ]
+	feature_map_channel = 3
+	anchor_total = 2
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
-	feature_strides = [ 8, 16, 32 ]
-	feature_map_channel = 3
-	anchor_total = 2
-	bounding_boxes = []
-	face_scores = []
-	face_landmarks_5 = []
-
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
-	with thread_semaphore():
-		detections = face_detector.run(None,
-		{
-			'input': detect_vision_frame
-		})
+	detection = forward_with_retinaface(detect_vision_frame)
 
 	for index, feature_stride in enumerate(feature_strides):
-		keep_indices = numpy.where(detections[index] >= state_manager.get_item('face_detector_score'))[0]
+		keep_indices = numpy.where(detection[index] >= state_manager.get_item('face_detector_score'))[0]
+
 		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
 			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
-			bounding_box_raw = detections[index + feature_map_channel] * feature_stride
-			face_landmark_5_raw = detections[index + feature_map_channel * 2] * feature_stride
+			bounding_box_raw = detection[index + feature_map_channel] * feature_stride
+			face_landmark_5_raw = detection[index + feature_map_channel * 2] * feature_stride
+
 			for bounding_box in distance_to_bounding_box(anchors, bounding_box_raw)[keep_indices]:
 				bounding_boxes.append(numpy.array(
 				[
@@ -178,41 +174,40 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 					bounding_box[2] * ratio_width,
 					bounding_box[3] * ratio_height,
 				]))
-			for score in detections[index][keep_indices]:
+
+			for score in detection[index][keep_indices]:
 				face_scores.append(score[0])
+
 			for face_landmark_5 in distance_to_face_landmark_5(anchors, face_landmark_5_raw)[keep_indices]:
 				face_landmarks_5.append(face_landmark_5 * [ ratio_width, ratio_height ])
+
 	return bounding_boxes, face_scores, face_landmarks_5
 
 
 def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
-	face_detector = get_inference_pool().get('scrfd')
+	bounding_boxes = []
+	face_scores = []
+	face_landmarks_5 = []
+	feature_strides = [ 8, 16, 32 ]
+	feature_map_channel = 3
+	anchor_total = 2
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
-	feature_strides = [ 8, 16, 32 ]
-	feature_map_channel = 3
-	anchor_total = 2
-	bounding_boxes = []
-	face_scores = []
-	face_landmarks_5 = []
-
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
-	with thread_semaphore():
-		detections = face_detector.run(None,
-		{
-			'input': detect_vision_frame
-		})
+	detection = forward_with_scrfd(detect_vision_frame)
 
 	for index, feature_stride in enumerate(feature_strides):
-		keep_indices = numpy.where(detections[index] >= state_manager.get_item('face_detector_score'))[0]
+		keep_indices = numpy.where(detection[index] >= state_manager.get_item('face_detector_score'))[0]
+
 		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
 			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
-			bounding_box_raw = detections[index + feature_map_channel] * feature_stride
-			face_landmark_5_raw = detections[index + feature_map_channel * 2] * feature_stride
+			bounding_box_raw = detection[index + feature_map_channel] * feature_stride
+			face_landmark_5_raw = detection[index + feature_map_channel * 2] * feature_stride
+
 			for bounding_box in distance_to_bounding_box(anchors, bounding_box_raw)[keep_indices]:
 				bounding_boxes.append(numpy.array(
 				[
@@ -221,35 +216,33 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 					bounding_box[2] * ratio_width,
 					bounding_box[3] * ratio_height,
 				]))
-			for score in detections[index][keep_indices]:
+
+			for score in detection[index][keep_indices]:
 				face_scores.append(score[0])
+
 			for face_landmark_5 in distance_to_face_landmark_5(anchors, face_landmark_5_raw)[keep_indices]:
 				face_landmarks_5.append(face_landmark_5 * [ ratio_width, ratio_height ])
+
 	return bounding_boxes, face_scores, face_landmarks_5
 
 
 def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
-	face_detector = get_inference_pool().get('yoloface')
+	bounding_boxes = []
+	face_scores = []
+	face_landmarks_5 = []
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
-	bounding_boxes = []
-	face_scores = []
-	face_landmarks_5 = []
-
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
-	with thread_semaphore():
-		detections = face_detector.run(None,
-		{
-			'input': detect_vision_frame
-		})
-
-	detections = numpy.squeeze(detections).T
-	bounding_box_raw, score_raw, face_landmark_5_raw = numpy.split(detections, [ 4, 5 ], axis = 1)
+	detection = forward_with_yoloface(detect_vision_frame)
+	detection = numpy.squeeze(detection).T
+	bounding_box_raw, score_raw, face_landmark_5_raw = numpy.split(detection, [ 4, 5 ], axis = 1)
 	keep_indices = numpy.where(score_raw > state_manager.get_item('face_detector_score'))[0]
+
 	if numpy.any(keep_indices):
 		bounding_box_raw, face_landmark_5_raw, score_raw = bounding_box_raw[keep_indices], face_landmark_5_raw[keep_indices], score_raw[keep_indices]
+
 		for bounding_box in bounding_box_raw:
 			bounding_boxes.append(numpy.array(
 			[
@@ -258,12 +251,51 @@ def detect_with_yoloface(vision_frame : VisionFrame, face_detector_size : str) -
 				(bounding_box[0] + bounding_box[2] / 2) * ratio_width,
 				(bounding_box[1] + bounding_box[3] / 2) * ratio_height,
 			]))
+
 		face_scores = score_raw.ravel().tolist()
 		face_landmark_5_raw[:, 0::3] = (face_landmark_5_raw[:, 0::3]) * ratio_width
 		face_landmark_5_raw[:, 1::3] = (face_landmark_5_raw[:, 1::3]) * ratio_height
+
 		for face_landmark_5 in face_landmark_5_raw:
 			face_landmarks_5.append(numpy.array(face_landmark_5.reshape(-1, 3)[:, :2]))
+
 	return bounding_boxes, face_scores, face_landmarks_5
+
+
+def forward_with_retinaface(detect_vision_frame : VisionFrame) -> Detection:
+	face_detector = get_inference_pool().get('retinaface')
+
+	with thread_semaphore():
+		detection = face_detector.run(None,
+		{
+			'input': detect_vision_frame
+		})
+
+	return detection
+
+
+def forward_with_scrfd(detect_vision_frame : VisionFrame) -> Detection:
+	face_detector = get_inference_pool().get('scrfd')
+
+	with thread_semaphore():
+		detection = face_detector.run(None,
+		{
+			'input': detect_vision_frame
+		})
+
+	return detection
+
+
+def forward_with_yoloface(detect_vision_frame : VisionFrame) -> Detection:
+	face_detector = get_inference_pool().get('yoloface')
+
+	with thread_semaphore():
+		detection = face_detector.run(None,
+		{
+			'input': detect_vision_frame
+		})
+
+	return detection
 
 
 def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : str) -> VisionFrame:
