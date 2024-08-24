@@ -173,7 +173,7 @@ def estimate_face_landmark_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark
 	return face_landmark_68_5
 
 
-def forward_with_2dfan4(crop_vision_frame : VisionFrame) -> Prediction:
+def forward_with_2dfan4(crop_vision_frame : VisionFrame) -> Tuple[Prediction, Prediction]:
 	face_landmarker = get_inference_pool().get('2dfan4')
 
 	with conditional_thread_semaphore():
