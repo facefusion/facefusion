@@ -7,7 +7,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import warp_face_by_translation
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import BoundingBox, Prediction, InferencePool, ModelOptions, ModelSet, VisionFrame
+from facefusion.typing import BoundingBox, InferencePool, ModelOptions, ModelSet, Prediction, VisionFrame
 
 MODEL_SET : ModelSet =\
 {
