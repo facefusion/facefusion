@@ -10,7 +10,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
-from facefusion.common_helper import create_int_metavar, map_float
+from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, warp_face_by_face_landmark_5
@@ -188,7 +188,7 @@ def normalize_color_difference(color_difference : VisionFrame, color_difference_
 
 
 def prepare_direction(direction : int) -> NDArray[Any]:
-	direction = map_float(float(direction), -100, 100, 2.5, -2.5) #type:ignore[assignment]
+	direction = numpy.interp(float(direction), [ -100, 100 ], [ 2.5, -2.5 ]) #type:ignore[assignment]
 	return numpy.array(direction).astype(numpy.float32)
 
 

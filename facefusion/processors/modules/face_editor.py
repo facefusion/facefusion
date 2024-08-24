@@ -9,7 +9,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
-from facefusion.common_helper import create_float_metavar, map_float
+from facefusion.common_helper import create_float_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
@@ -282,13 +282,13 @@ def edit_eyebrow_direction(expression : LivePortraitExpression) -> LivePortraitE
 	face_editor_eyebrow = state_manager.get_item('face_editor_eyebrow_direction')
 
 	if face_editor_eyebrow > 0:
-		expression[0, 1, 1] += map_float(face_editor_eyebrow, -1, 1, -0.015, 0.015)
-		expression[0, 2, 1] -= map_float(face_editor_eyebrow, -1, 1, -0.020, 0.020)
+		expression[0, 1, 1] += numpy.interp(face_editor_eyebrow, [ -1, 1 ], [ -0.015, 0.015 ])
+		expression[0, 2, 1] -= numpy.interp(face_editor_eyebrow, [ -1, 1 ], [ -0.020, 0.020 ])
 	else:
-		expression[0, 1, 0] -= map_float(face_editor_eyebrow, -1, 1, -0.015, 0.015)
-		expression[0, 2, 0] += map_float(face_editor_eyebrow, -1, 1, -0.020, 0.020)
-		expression[0, 1, 1] += map_float(face_editor_eyebrow, -1, 1, -0.005, 0.005)
-		expression[0, 2, 1] -= map_float(face_editor_eyebrow, -1, 1, -0.005, 0.005)
+		expression[0, 1, 0] -= numpy.interp(face_editor_eyebrow, [ -1, 1 ], [ -0.015, 0.015 ])
+		expression[0, 2, 0] += numpy.interp(face_editor_eyebrow, [ -1, 1 ], [ -0.020, 0.020 ])
+		expression[0, 1, 1] += numpy.interp(face_editor_eyebrow, [ -1, 1 ], [ -0.005, 0.005 ])
+		expression[0, 2, 1] -= numpy.interp(face_editor_eyebrow, [ -1, 1 ], [ -0.005, 0.005 ])
 	return expression
 
 
@@ -297,17 +297,17 @@ def edit_eye_gaze(expression : LivePortraitExpression) -> LivePortraitExpression
 	face_editor_eye_gaze_vertical = state_manager.get_item('face_editor_eye_gaze_vertical')
 
 	if face_editor_eye_gaze_horizontal > 0:
-		expression[0, 11, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.015, 0.015)
-		expression[0, 15, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.020, 0.020)
+		expression[0, 11, 0] += numpy.interp(face_editor_eye_gaze_horizontal, [ -1, 1 ], [ -0.015, 0.015 ])
+		expression[0, 15, 0] += numpy.interp(face_editor_eye_gaze_horizontal, [ -1, 1 ], [ -0.020, 0.020 ])
 	else:
-		expression[0, 11, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.020, 0.020)
-		expression[0, 15, 0] += map_float(face_editor_eye_gaze_horizontal, -1, 1, -0.015, 0.015)
-	expression[0, 1, 1] += map_float(face_editor_eye_gaze_vertical, -1, 1, -0.0025, 0.0025)
-	expression[0, 2, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.0025, 0.0025)
-	expression[0, 11, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.010, 0.010)
-	expression[0, 13, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.005, 0.005)
-	expression[0, 15, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.010, 0.010)
-	expression[0, 16, 1] -= map_float(face_editor_eye_gaze_vertical, -1, 1, -0.005, 0.005)
+		expression[0, 11, 0] += numpy.interp(face_editor_eye_gaze_horizontal, [ -1, 1 ], [ -0.020, 0.020 ])
+		expression[0, 15, 0] += numpy.interp(face_editor_eye_gaze_horizontal, [ -1, 1 ], [ -0.015, 0.015 ])
+	expression[0, 1, 1] += numpy.interp(face_editor_eye_gaze_vertical, [ -1, 1 ], [ -0.0025, 0.0025 ])
+	expression[0, 2, 1] -= numpy.interp(face_editor_eye_gaze_vertical, [ -1, 1 ], [ -0.0025, 0.0025 ])
+	expression[0, 11, 1] -= numpy.interp(face_editor_eye_gaze_vertical, [ -1, 1 ], [ -0.010, 0.010 ])
+	expression[0, 13, 1] -= numpy.interp(face_editor_eye_gaze_vertical, [ -1, 1 ], [ -0.005, 0.005 ])
+	expression[0, 15, 1] -= numpy.interp(face_editor_eye_gaze_vertical, [ -1, 1 ], [ -0.010, 0.010 ])
+	expression[0, 16, 1] -= numpy.interp(face_editor_eye_gaze_vertical, [ -1, 1 ], [ -0.005, 0.005 ])
 	return expression
 
 
@@ -343,74 +343,74 @@ def edit_lip_open(motion_points : LivePortraitMotionPoints, face_landmark_68 : F
 def edit_mouth_grim(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_mouth_grim = state_manager.get_item('face_editor_mouth_grim')
 	if face_editor_mouth_grim > 0:
-		expression[0, 17, 2] -= map_float(face_editor_mouth_grim, -1, 1, -0.005, 0.005)
-		expression[0, 19, 2] += map_float(face_editor_mouth_grim, -1, 1, -0.01, 0.01)
-		expression[0, 20, 1] -= map_float(face_editor_mouth_grim, -1, 1, -0.06, 0.06)
-		expression[0, 20, 2] -= map_float(face_editor_mouth_grim, -1, 1, -0.03, 0.03)
+		expression[0, 17, 2] -= numpy.interp(face_editor_mouth_grim, [ -1, 1 ], [ -0.005, 0.005 ])
+		expression[0, 19, 2] += numpy.interp(face_editor_mouth_grim, [ -1, 1 ], [ -0.01, 0.01 ])
+		expression[0, 20, 1] -= numpy.interp(face_editor_mouth_grim, [ -1, 1 ], [ -0.06, 0.06 ])
+		expression[0, 20, 2] -= numpy.interp(face_editor_mouth_grim, [ -1, 1 ], [ -0.03, 0.03 ])
 	else:
-		expression[0, 19, 1] -= map_float(face_editor_mouth_grim, -1, 1, -0.05, 0.05)
-		expression[0, 19, 2] -= map_float(face_editor_mouth_grim, -1, 1, -0.02, 0.02)
-		expression[0, 20, 2] -= map_float(face_editor_mouth_grim, -1, 1, -0.03, 0.03)
+		expression[0, 19, 1] -= numpy.interp(face_editor_mouth_grim, [ -1, 1 ], [ -0.05, 0.05 ])
+		expression[0, 19, 2] -= numpy.interp(face_editor_mouth_grim, [ -1, 1 ], [ -0.02, 0.02 ])
+		expression[0, 20, 2] -= numpy.interp(face_editor_mouth_grim, [ -1, 1 ], [ -0.03, 0.03 ])
 	return expression
 
 
 def edit_mouth_position(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_mouth_position_horizontal = state_manager.get_item('face_editor_mouth_position_horizontal')
 	face_editor_mouth_position_vertical = state_manager.get_item('face_editor_mouth_position_vertical')
-	expression[0, 19, 0] += map_float(face_editor_mouth_position_horizontal, -1, 1, -0.05, 0.05)
-	expression[0, 20, 0] += map_float(face_editor_mouth_position_horizontal, -1, 1, -0.04, 0.04)
+	expression[0, 19, 0] += numpy.interp(face_editor_mouth_position_horizontal, [ -1, 1 ], [ -0.05, 0.05 ])
+	expression[0, 20, 0] += numpy.interp(face_editor_mouth_position_horizontal, [ -1, 1 ], [ -0.04, 0.04 ])
 	if face_editor_mouth_position_vertical > 0:
-		expression[0, 19, 1] -= map_float(face_editor_mouth_position_vertical, -1, 1, -0.04, 0.04)
-		expression[0, 20, 1] -= map_float(face_editor_mouth_position_vertical, -1, 1, -0.02, 0.02)
+		expression[0, 19, 1] -= numpy.interp(face_editor_mouth_position_vertical, [ -1, 1 ], [ -0.04, 0.04 ])
+		expression[0, 20, 1] -= numpy.interp(face_editor_mouth_position_vertical, [ -1, 1 ], [ -0.02, 0.02 ])
 	else:
-		expression[0, 19, 1] -= map_float(face_editor_mouth_position_vertical, -1, 1, -0.05, 0.05)
-		expression[0, 20, 1] -= map_float(face_editor_mouth_position_vertical, -1, 1, -0.04, 0.04)
+		expression[0, 19, 1] -= numpy.interp(face_editor_mouth_position_vertical, [ -1, 1 ], [ -0.05, 0.05 ])
+		expression[0, 20, 1] -= numpy.interp(face_editor_mouth_position_vertical, [ -1, 1 ], [ -0.04, 0.04 ])
 	return expression
 
 
 def edit_mouth_pout(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_mouth_pout = state_manager.get_item('face_editor_mouth_pout')
 	if face_editor_mouth_pout > 0:
-		expression[0, 19, 1] -= map_float(face_editor_mouth_pout, -1, 1, -0.022, 0.022)
-		expression[0, 19, 2] += map_float(face_editor_mouth_pout, -1, 1, -0.025, 0.025)
-		expression[0, 20, 2] -= map_float(face_editor_mouth_pout, -1, 1, -0.002, 0.002)
+		expression[0, 19, 1] -= numpy.interp(face_editor_mouth_pout, [ -1, 1 ], [ -0.022, 0.022 ])
+		expression[0, 19, 2] += numpy.interp(face_editor_mouth_pout, [ -1, 1 ], [ -0.025, 0.025 ])
+		expression[0, 20, 2] -= numpy.interp(face_editor_mouth_pout, [ -1, 1 ], [ -0.002, 0.002 ])
 	else:
-		expression[0, 19, 1] += map_float(face_editor_mouth_pout, -1, 1, -0.022, 0.022)
-		expression[0, 19, 2] += map_float(face_editor_mouth_pout, -1, 1, -0.025, 0.025)
-		expression[0, 20, 2] -= map_float(face_editor_mouth_pout, -1, 1, -0.002, 0.002)
+		expression[0, 19, 1] += numpy.interp(face_editor_mouth_pout, [ -1, 1 ], [ -0.022, 0.022 ])
+		expression[0, 19, 2] += numpy.interp(face_editor_mouth_pout, [ -1, 1 ], [ -0.025, 0.025 ])
+		expression[0, 20, 2] -= numpy.interp(face_editor_mouth_pout, [ -1, 1 ], [ -0.002, 0.002 ])
 	return expression
 
 
 def edit_mouth_purse(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_mouth_purse = state_manager.get_item('face_editor_mouth_purse')
 	if face_editor_mouth_purse > 0:
-		expression[0, 19, 1] -= map_float(face_editor_mouth_purse, -1, 1, -0.04, 0.04)
-		expression[0, 19, 2] -= map_float(face_editor_mouth_purse, -1, 1, -0.02, 0.02)
+		expression[0, 19, 1] -= numpy.interp(face_editor_mouth_purse, [ -1, 1 ], [ -0.04, 0.04 ])
+		expression[0, 19, 2] -= numpy.interp(face_editor_mouth_purse, [ -1, 1 ], [ -0.02, 0.02 ])
 	else:
-		expression[0, 14, 1] -= map_float(face_editor_mouth_purse, -1, 1, -0.02, 0.02)
-		expression[0, 17, 2] += map_float(face_editor_mouth_purse, -1, 1, -0.01, 0.01)
-		expression[0, 19, 2] -= map_float(face_editor_mouth_purse, -1, 1, -0.015, 0.015)
-		expression[0, 20, 2] -= map_float(face_editor_mouth_purse, -1, 1, -0.002, 0.002)
+		expression[0, 14, 1] -= numpy.interp(face_editor_mouth_purse, [ -1, 1 ], [ -0.02, 0.02 ])
+		expression[0, 17, 2] += numpy.interp(face_editor_mouth_purse, [ -1, 1 ], [ -0.01, 0.01 ])
+		expression[0, 19, 2] -= numpy.interp(face_editor_mouth_purse, [ -1, 1 ], [ -0.015, 0.015 ])
+		expression[0, 20, 2] -= numpy.interp(face_editor_mouth_purse, [ -1, 1 ], [ -0.002, 0.002 ])
 	return expression
 
 
 def edit_mouth_smile(expression : LivePortraitExpression) -> LivePortraitExpression:
 	face_editor_mouth_smile = state_manager.get_item('face_editor_mouth_smile')
 	if face_editor_mouth_smile > 0:
-		expression[0, 20, 1] -= map_float(face_editor_mouth_smile, -1, 1, -0.015, 0.015)
-		expression[0, 14, 1] -= map_float(face_editor_mouth_smile, -1, 1, -0.025, 0.025)
-		expression[0, 17, 1] += map_float(face_editor_mouth_smile, -1, 1, -0.01, 0.01)
-		expression[0, 17, 2] += map_float(face_editor_mouth_smile, -1, 1, -0.004, 0.004)
-		expression[0, 3, 1] -= map_float(face_editor_mouth_smile, -1, 1, -0.0045, 0.0045)
-		expression[0, 7, 1] -= map_float(face_editor_mouth_smile, -1, 1, -0.0045, 0.0045)
+		expression[0, 20, 1] -= numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.015, 0.015 ])
+		expression[0, 14, 1] -= numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.025, 0.025 ])
+		expression[0, 17, 1] += numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.01, 0.01 ])
+		expression[0, 17, 2] += numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.004, 0.004 ])
+		expression[0, 3, 1] -= numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.0045, 0.0045 ])
+		expression[0, 7, 1] -= numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.0045, 0.0045 ])
 	else:
-		expression[0, 14, 1] -= map_float(face_editor_mouth_smile, -1, 1, -0.02, 0.02)
-		expression[0, 17, 1] += map_float(face_editor_mouth_smile, -1, 1, -0.003, 0.003)
-		expression[0, 19, 1] += map_float(face_editor_mouth_smile, -1, 1, -0.02, 0.02)
-		expression[0, 19, 2] -= map_float(face_editor_mouth_smile, -1, 1, -0.005, 0.005)
-		expression[0, 20, 2] += map_float(face_editor_mouth_smile, -1, 1, -0.01, 0.01)
-		expression[0, 3, 1] += map_float(face_editor_mouth_smile, -1, 1, -0.0045, 0.0045)
-		expression[0, 7, 1] += map_float(face_editor_mouth_smile, -1, 1, -0.0045, 0.0045)
+		expression[0, 14, 1] -= numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.02, 0.02 ])
+		expression[0, 17, 1] += numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.003, 0.003 ])
+		expression[0, 19, 1] += numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.02, 0.02 ])
+		expression[0, 19, 2] -= numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.005, 0.005 ])
+		expression[0, 20, 2] += numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.01, 0.01 ])
+		expression[0, 3, 1] += numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.0045, 0.0045 ])
+		expression[0, 7, 1] += numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.0045, 0.0045 ])
 	return expression
 
 
