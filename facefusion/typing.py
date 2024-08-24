@@ -10,7 +10,7 @@ Score = float
 Angle = int
 
 Detection = NDArray[Any]
-Prediction = Any
+Prediction = NDArray[Any]
 
 BoundingBox = NDArray[Any]
 FaceLandmark5 = NDArray[Any]
