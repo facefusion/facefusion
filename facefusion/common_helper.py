@@ -50,12 +50,6 @@ def calc_float_step(float_range : Sequence[float]) -> float:
 	return round(float_range[1] - float_range[0], 2)
 
 
-def map_float(value : float, start : float, end : float, map_start : float, map_end : float) -> float:
-	ratio = (value - start) / (end - start)
-	map_value = map_start + (map_end - map_start) * ratio
-	return map_value
-
-
 def get_first(__list__ : Any) -> Any:
 	return next(iter(__list__), None)
 
