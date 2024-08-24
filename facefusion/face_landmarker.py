@@ -8,7 +8,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import create_rotated_matrix_and_size, estimate_matrix_by_face_landmark_5, transform_points, warp_face_by_translation
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Angle, BoundingBox, DownloadSet, FaceLandmark5, FaceLandmark68, InferencePool, ModelSet, Score, VisionFrame
+from facefusion.typing import Angle, BoundingBox, DownloadSet, FaceLandmark5, FaceLandmark68, InferencePool, ModelSet, Prediction, Score, VisionFrame
 
 MODEL_SET : ModelSet =\
 {
@@ -124,7 +124,6 @@ def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox
 
 
 def detect_with_2dfan4(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
-	face_landmarker = get_inference_pool().get('2dfan4')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, (256, 256))
@@ -132,13 +131,7 @@ def detect_with_2dfan4(temp_vision_frame : VisionFrame, bounding_box : BoundingB
 	crop_vision_frame = cv2.warpAffine(crop_vision_frame, rotated_matrix, rotated_size)
 	crop_vision_frame = conditional_optimize_contrast(crop_vision_frame)
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
-
-	with conditional_thread_semaphore():
-		face_landmark_68, face_heatmap = face_landmarker.run(None,
-		{
-			'input': [ crop_vision_frame ]
-		})
-
+	face_landmark_68, face_heatmap = forward_with_2dfan4(crop_vision_frame)
 	face_landmark_68 = face_landmark_68[:, :, :2][0] / 64 * 256
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(rotated_matrix))
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
@@ -148,7 +141,6 @@ def detect_with_2dfan4(temp_vision_frame : VisionFrame, bounding_box : BoundingB
 
 
 def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
-	face_landmarker = get_inference_pool().get('peppa_wutz')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, (256, 256))
@@ -157,13 +149,7 @@ def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : Bound
 	crop_vision_frame = conditional_optimize_contrast(crop_vision_frame)
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
-
-	with conditional_thread_semaphore():
-		prediction = face_landmarker.run(None,
-		{
-			'input': crop_vision_frame
-		})[0]
-
+	prediction = forward_with_peppa_wutz(crop_vision_frame)
 	face_landmark_68 = prediction.reshape(-1, 3)[:, :2] / 64 * 256
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(rotated_matrix))
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
@@ -180,9 +166,39 @@ def conditional_optimize_contrast(crop_vision_frame : VisionFrame) -> VisionFram
 
 
 def estimate_face_landmark_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
-	face_landmarker = get_inference_pool().get('face_landmarker_68_5')
 	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'ffhq_512', (1, 1))
 	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+	face_landmark_68_5 = forward_face_landmark_68_5(face_landmark_5)
+	face_landmark_68_5 = cv2.transform(face_landmark_68_5.reshape(1, -1, 2), cv2.invertAffineTransform(affine_matrix)).reshape(-1, 2)
+	return face_landmark_68_5
+
+
+def forward_with_2dfan4(crop_vision_frame : VisionFrame) -> Prediction:
+	face_landmarker = get_inference_pool().get('2dfan4')
+
+	with conditional_thread_semaphore():
+		prediction = face_landmarker.run(None,
+		{
+			'input': [ crop_vision_frame ]
+		})
+
+	return prediction
+
+
+def forward_with_peppa_wutz(crop_vision_frame : VisionFrame) -> Prediction:
+	face_landmarker = get_inference_pool().get('peppa_wutz')
+
+	with conditional_thread_semaphore():
+		prediction = face_landmarker.run(None,
+		{
+			'input': crop_vision_frame
+		})[0]
+
+	return prediction
+
+
+def forward_face_landmark_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
+	face_landmarker = get_inference_pool().get('face_landmarker_68_5')
 
 	with conditional_thread_semaphore():
 		face_landmark_68_5 = face_landmarker.run(None,
@@ -190,5 +206,4 @@ def estimate_face_landmark_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark
 			'input': [ face_landmark_5 ]
 		})[0][0]
 
-	face_landmark_68_5 = cv2.transform(face_landmark_68_5.reshape(1, -1, 2), cv2.invertAffineTransform(affine_matrix)).reshape(-1, 2)
 	return face_landmark_68_5

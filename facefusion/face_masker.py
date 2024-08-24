@@ -98,13 +98,7 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 	prepare_vision_frame = cv2.resize(crop_vision_frame, face_occluder.get_inputs()[0].shape[1:3][::-1])
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 1, 2, 3)
-
-	with conditional_thread_semaphore():
-		occlusion_mask : Mask = face_occluder.run(None,
-		{
-			'input': prepare_vision_frame
-		})[0][0]
-
+	occlusion_mask = forward_occlude_face(prepare_vision_frame)
 	occlusion_mask = occlusion_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
 	occlusion_mask = cv2.resize(occlusion_mask, crop_vision_frame.shape[:2][::-1])
 	occlusion_mask = (cv2.GaussianBlur(occlusion_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
@@ -112,20 +106,13 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 
 
 def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
-	face_parser = get_inference_pool().get('face_parser')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, (512, 512))
 	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255
 	prepare_vision_frame = numpy.subtract(prepare_vision_frame, numpy.array([ 0.485, 0.456, 0.406 ]).astype(numpy.float32))
 	prepare_vision_frame = numpy.divide(prepare_vision_frame, numpy.array([ 0.229, 0.224, 0.225 ]).astype(numpy.float32))
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0)
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 3, 1, 2)
-
-	with conditional_thread_semaphore():
-		region_mask : Mask = face_parser.run(None,
-		{
-			'input': prepare_vision_frame
-		})[0][0]
-
+	region_mask = forward_parse_face(prepare_vision_frame)
 	region_mask = numpy.isin(region_mask.argmax(0), [ FACE_MASK_REGIONS[region] for region in face_mask_regions ])
 	region_mask = cv2.resize(region_mask.astype(numpy.float32), crop_vision_frame.shape[:2][::-1])
 	region_mask = (cv2.GaussianBlur(region_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
@@ -139,3 +126,27 @@ def create_mouth_mask(face_landmark_68 : FaceLandmark68) -> Mask:
 	mouth_mask = cv2.erode(mouth_mask.clip(0, 1), numpy.ones((21, 3)))
 	mouth_mask = cv2.GaussianBlur(mouth_mask, (0, 0), sigmaX = 1, sigmaY = 15)
 	return mouth_mask
+
+
+def forward_occlude_face(prepare_vision_frame : VisionFrame) -> Mask:
+	face_occluder = get_inference_pool().get('face_occluder')
+
+	with conditional_thread_semaphore():
+		occlusion_mask : Mask = face_occluder.run(None,
+		{
+			'input': prepare_vision_frame
+		})[0][0]
+
+	return occlusion_mask
+
+
+def forward_parse_face(prepare_vision_frame : VisionFrame) -> Mask:
+	face_parser = get_inference_pool().get('face_parser')
+
+	with conditional_thread_semaphore():
+		region_mask : Mask = face_parser.run(None,
+		{
+			'input': prepare_vision_frame
+		})[0][0]
+
+	return region_mask
