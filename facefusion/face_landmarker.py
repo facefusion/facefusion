@@ -29,7 +29,8 @@ MODEL_SET : ModelSet =\
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.onnx',
 				'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
 			}
-		}
+		},
+		'size': (256, 256)
 	},
 	'peppa_wutz':
 	{
@@ -48,7 +49,8 @@ MODEL_SET : ModelSet =\
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.onnx',
 				'path': resolve_relative_path('../.assets/models/peppa_wutz.onnx')
 			}
-		}
+		},
+		'size': (256, 256)
 	},
 	'face_landmarker_68_5':
 	{
@@ -123,11 +125,12 @@ def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox
 	return face_landmark_peppa_wutz, face_landmark_score_peppa_wutz
 
 
-def detect_with_2dfan4(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
+def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox, face_angle: Angle) -> Tuple[FaceLandmark68, Score]:
+	model_size = MODEL_SET.get('2dfan4').get('size')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
-	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
-	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, (256, 256))
-	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
+	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
+	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, model_size)
+	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, model_size)
 	crop_vision_frame = cv2.warpAffine(crop_vision_frame, rotated_matrix, rotated_size)
 	crop_vision_frame = conditional_optimize_contrast(crop_vision_frame)
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
@@ -141,16 +144,17 @@ def detect_with_2dfan4(temp_vision_frame : VisionFrame, bounding_box : BoundingB
 
 
 def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
+	model_size = MODEL_SET.get('peppa_wutz').get('size')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
-	translation = (256 - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
-	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, (256, 256))
-	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (256, 256))
+	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
+	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, model_size)
+	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, model_size)
 	crop_vision_frame = cv2.warpAffine(crop_vision_frame, rotated_matrix, rotated_size)
 	crop_vision_frame = conditional_optimize_contrast(crop_vision_frame)
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1).astype(numpy.float32) / 255.0
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
 	prediction = forward_with_peppa_wutz(crop_vision_frame)
-	face_landmark_68 = prediction.reshape(-1, 3)[:, :2] / 64 * 256
+	face_landmark_68 = prediction.reshape(-1, 3)[:, :2] / 64 * model_size[0]
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(rotated_matrix))
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_score_68 = prediction.reshape(-1, 3)[:, 2].mean()
