@@ -87,3 +87,5 @@ def run(program : ArgumentParser) -> None:
 				]
 
 				subprocess.call([ 'conda', 'env', 'config', 'vars', 'set', 'LD_LIBRARY_PATH=' + ':'.join(library_paths) ])
+				subprocess.call([ 'conda', 'deactivate' ])
+				subprocess.call([ 'conda', 'activate', os.getenv('CONDA_DEFAULT_ENV') ])
