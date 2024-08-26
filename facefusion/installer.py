@@ -35,11 +35,12 @@ def cli() -> None:
 
 def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
-	python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
+	has_conda = 'CONDA_PREFIX' in os.environ
 
-	if not args.skip_conda and 'CONDA_PREFIX' not in os.environ:
+	if not args.skip_conda and not has_conda:
 		sys.stdout.write(wording.get('conda_not_activated') + os.linesep)
 		sys.exit(1)
+
 	if args.onnxruntime:
 		answers =\
 		{
@@ -50,12 +51,16 @@ def run(program : ArgumentParser) -> None:
 		[
 			inquirer.List('onnxruntime', message = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = list(ONNXRUNTIMES.keys()))
 		])
+
 	if answers:
 		onnxruntime = answers['onnxruntime']
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime]
 
 		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--force-reinstall' ])
+
 		if onnxruntime == 'rocm-5.4.2' or onnxruntime == 'rocm-5.6':
+			python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
+
 			if python_id in [ 'cp39', 'cp310', 'cp311' ]:
 				rocm_version = onnxruntime.replace('-', '')
 				rocm_version = rocm_version.replace('.', '')
@@ -69,5 +74,16 @@ def run(program : ArgumentParser) -> None:
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
 			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
+
 		if onnxruntime == 'cuda':
 			subprocess.call([ 'pip', 'install', 'tensorrt==10.3.0', '--force-reinstall' ])
+
+			if has_conda:
+				python_id = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
+				library_paths =\
+				[
+					os.path.join(os.getenv('CONDA_PREFIX'), 'lib'),
+					os.path.join(os.getenv('CONDA_PREFIX'), 'lib', python_id, 'site-packages', 'tensorrt_libs')
+				]
+
+				subprocess.call([ 'conda', 'env', 'config', 'vars', 'set', 'LD_LIBRARY_PATH=' + ':'.join(library_paths) ])
