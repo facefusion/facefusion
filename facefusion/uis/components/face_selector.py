@@ -10,7 +10,7 @@ from facefusion.face_analyser import get_many_faces
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import clear_reference_faces, clear_static_faces
 from facefusion.filesystem import is_image, is_video
-from facefusion.typing import FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, VisionFrame
+from facefusion.typing import FaceSelectorMode, FaceSelectorOrder, Gender, Race, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.typing import ComponentOptions
 from facefusion.uis.ui_helper import convert_str_none
@@ -72,14 +72,14 @@ def render() -> None:
 				value = state_manager.get_item('face_selector_race') or 'none'
 			)
 		with gradio.Row():
-			face_selector_age_start = state_manager.get_item('face_selector_age_start') or facefusion.choices.face_selector_age_start_range[0]
-			face_selector_age_end = state_manager.get_item('face_selector_age_end') or facefusion.choices.face_selector_age_end_range[-1]
+			face_selector_age_start = state_manager.get_item('face_selector_age_start') or facefusion.choices.face_selector_age_range[0]
+			face_selector_age_end = state_manager.get_item('face_selector_age_end') or facefusion.choices.face_selector_age_range[-1]
 			FACE_SELECTOR_AGE_RANGE_SLIDER = RangeSlider(
 				label = wording.get('uis.face_selector_age_range_slider'),
-				minimum = facefusion.choices.face_selector_age_start_range[0],
-				maximum = facefusion.choices.face_selector_age_end_range[-1],
+				minimum = facefusion.choices.face_selector_age_range[0],
+				maximum = facefusion.choices.face_selector_age_range[-1],
 				value = (face_selector_age_start, face_selector_age_end),
-				step = calc_int_step(facefusion.choices.face_selector_age_start_range)
+				step = calc_int_step(facefusion.choices.face_selector_age_range)
 			)
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
 		label = wording.get('uis.reference_face_distance_slider'),
@@ -149,12 +149,12 @@ def update_face_selector_order(face_analyser_order : FaceSelectorOrder) -> gradi
 	return update_reference_position_gallery()
 
 
-def update_face_selector_gender(face_selector_gender : FaceSelectorGender) -> gradio.Gallery:
+def update_face_selector_gender(face_selector_gender : Gender) -> gradio.Gallery:
 	state_manager.set_item('face_selector_gender', convert_str_none(face_selector_gender))
 	return update_reference_position_gallery()
 
 
-def update_face_selector_race(face_selector_race : FaceSelectorRace) -> gradio.Gallery:
+def update_face_selector_race(face_selector_race : Race) -> gradio.Gallery:
 	state_manager.set_item('face_selector_race', convert_str_none(face_selector_race))
 	return update_reference_position_gallery()
 

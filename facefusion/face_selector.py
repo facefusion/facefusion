@@ -3,7 +3,7 @@ from typing import List
 import numpy
 
 from facefusion import state_manager
-from facefusion.typing import Face, FaceSelectorGender, FaceSelectorOrder, FaceSelectorRace, FaceSet
+from facefusion.typing import Face, FaceSelectorOrder, FaceSet, Gender, Race
 
 
 def find_similar_faces(faces : List[Face], reference_faces : FaceSet, face_distance : float) -> List[Face]:
@@ -63,7 +63,7 @@ def sort_by_order(faces : List[Face], order : FaceSelectorOrder) -> List[Face]:
 	return faces
 
 
-def filter_by_gender(faces : List[Face], gender : FaceSelectorGender) -> List[Face]:
+def filter_by_gender(faces : List[Face], gender : Gender) -> List[Face]:
 	filter_faces = []
 
 	for face in faces:
@@ -72,19 +72,20 @@ def filter_by_gender(faces : List[Face], gender : FaceSelectorGender) -> List[Fa
 	return filter_faces
 
 
-def filter_by_race(faces : List[Face], race : FaceSelectorRace) -> List[Face]:
+def filter_by_age(faces : List[Face], face_selector_age_start : int, face_selector_age_end : int) -> List[Face]:
 	filter_faces = []
+	age = range(face_selector_age_start, face_selector_age_end)
 
 	for face in faces:
-		if face.race == race:
+		if set(face.age) & set(age):
 			filter_faces.append(face)
 	return filter_faces
 
 
-def filter_by_age(faces : List[Face], face_selector_age_start : int, face_selector_age_end : int) -> List[Face]:
+def filter_by_race(faces : List[Face], race : Race) -> List[Face]:
 	filter_faces = []
 
 	for face in faces:
-		if set(face.age) & set(range(face_selector_age_start, face_selector_age_end)):
+		if face.race == race:
 			filter_faces.append(face)
 	return filter_faces

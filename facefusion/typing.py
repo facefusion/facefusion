@@ -28,6 +28,9 @@ FaceScoreSet = TypedDict('FaceScoreSet',
 	'landmarker' : Score
 })
 Embedding = NDArray[numpy.float64]
+Gender = Literal['female', 'male']
+Age = range
+Race = Literal['white', 'black', 'latino', 'asian', 'indian', 'arabic']
 Face = namedtuple('Face',
 [
 	'bounding_box',
@@ -96,8 +99,6 @@ FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
 FaceDetectorSet = Dict[FaceDetectorModel, List[str]]
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
-FaceSelectorGender = Literal['female', 'male']
-FaceSelectorRace = Literal['white', 'black', 'latino', 'asian', 'indian', 'arabic']
 FaceMaskType = Literal['box', 'occlusion', 'region']
 FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip']
 TempFrameFormat = Literal['jpg', 'png', 'bmp']
@@ -254,8 +255,8 @@ State = TypedDict('State',
 	'face_landmarker_score' : Score,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
-	'face_selector_race': FaceSelectorRace,
-	'face_selector_gender' : FaceSelectorGender,
+	'face_selector_race': Race,
+	'face_selector_gender' : Gender,
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
 	'reference_face_position' : int,

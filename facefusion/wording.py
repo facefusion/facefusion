@@ -245,7 +245,7 @@ WORDING : Dict[str, Any] =\
 		'face_mask_types_checkbox_group': 'FACE MASK TYPES',
 		'face_selector_gender_dropdown': 'FACE SELECTOR GENDER',
 		'face_selector_race_dropdown': 'FACE SELECTOR RACE',
-		'face_selector_age_range_slider': 'FACE SELECTOR AGE RANGE',
+		'face_selector_age_range_slider': 'FACE SELECTOR AGE',
 		'face_selector_mode_dropdown': 'FACE SELECTOR MODE',
 		'face_selector_order_dropdown': 'FACE SELECTOR ORDER',
 		'face_swapper_model_dropdown': 'FACE SWAPPER MODEL',
