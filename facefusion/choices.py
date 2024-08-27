@@ -1,7 +1,7 @@
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, JobStatus, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
+from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, JobStatus, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
 
@@ -15,7 +15,6 @@ face_detector_set : FaceDetectorSet =\
 face_landmarker_models : List[FaceLandmarkerModel] = [ 'many', '2dfan4', 'peppa_wutz' ]
 face_selector_modes : List[FaceSelectorMode] = [ 'many', 'one', 'reference' ]
 face_selector_orders : List[FaceSelectorOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
-face_selector_ages : List[FaceSelectorAge] = [ 'child', 'teen', 'adult', 'senior' ]
 face_selector_genders : List[FaceSelectorGender] = [ 'female', 'male' ]
 face_selector_races : List[FaceSelectorRace] = [ 'white', 'black', 'latino', 'asian', 'indian', 'arabic' ]
 face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'region' ]
@@ -51,6 +50,8 @@ face_detector_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
 face_landmarker_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
 face_mask_blur_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
 face_mask_padding_range : Sequence[int] = create_int_range(0, 100, 1)
+face_selector_age_start_range : Sequence[int] = create_int_range(0, 100, 1)
+face_selector_age_end_range : Sequence[int] = create_int_range(0, 100, 1)
 reference_face_distance_range : Sequence[float] = create_float_range(0.0, 1.5, 0.05)
 output_image_quality_range : Sequence[int] = create_int_range(0, 100, 1)
 output_video_quality_range : Sequence[int] = create_int_range(0, 100, 1)

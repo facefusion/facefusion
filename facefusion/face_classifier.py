@@ -37,36 +37,6 @@ MODEL_SET : ModelSet =\
 }
 
 
-def categorize_age(age_id : int) -> str:
-	if age_id < 2:
-		return 'child'
-	elif age_id < 3:
-		return 'teen'
-	elif age_id < 7:
-		return 'adult'
-	return 'senior'
-
-
-def categorize_gender(gender_id : int) -> str:
-	if gender_id:
-		return 'female'
-	return 'male'
-
-
-def categorize_race(race_id : int) -> str:
-	if race_id == 0:
-		return 'white'
-	elif race_id == 1:
-		return 'black'
-	elif race_id == 2:
-		return 'latino'
-	elif race_id == 3 or race_id == 4:
-		return 'asian'
-	elif race_id == 5:
-		return 'indian'
-	return 'arabic'
-
-
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
 	return inference_manager.get_inference_pool(__name__, model_sources)
@@ -88,7 +58,7 @@ def pre_check() -> bool:
 	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
-def detect_gender_age(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[str, str, str]:
+def detect_gender_age(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[str, range, str]:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
 	model_mean = get_model_options().get('mean')
@@ -116,3 +86,44 @@ def forward(crop_vision_frame : VisionFrame) -> Tuple[Prediction, Prediction, Pr
 		})
 
 	return gender_id, age_id, race_id
+
+
+def categorize_age(age_id : int) -> range:
+	if age_id == 0:
+		return range(0, 3)
+	elif age_id == 1:
+		return range(3, 10)
+	elif age_id == 2:
+		return range(10, 20)
+	elif age_id == 3:
+		return range(20, 30)
+	elif age_id == 4:
+		return range(30, 40)
+	elif age_id == 5:
+		return range(40, 50)
+	elif age_id == 6:
+		return range(50, 60)
+	elif age_id == 7:
+		return range(60, 70)
+	else:
+		return range(70, 100)
+
+
+def categorize_gender(gender_id : int) -> str:
+	if gender_id == 1:
+		return 'female'
+	return 'male'
+
+
+def categorize_race(race_id : int) -> str:
+	if race_id == 0:
+		return 'white'
+	elif race_id == 1:
+		return 'black'
+	elif race_id == 2:
+		return 'latino'
+	elif race_id == 3 or race_id == 4:
+		return 'asian'
+	elif race_id == 5:
+		return 'indian'
+	return 'arabic'
