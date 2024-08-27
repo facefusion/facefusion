@@ -4,31 +4,35 @@ import numpy
 
 from facefusion import inference_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.face_helper import warp_face_by_translation
+from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import BoundingBox, InferencePool, ModelOptions, ModelSet, Prediction, VisionFrame
+from facefusion.typing import FaceLandmark5, InferencePool, ModelOptions, ModelSet, Prediction, VisionFrame
 
 MODEL_SET : ModelSet =\
 {
-	'gender_age':
+	'fair_face':
 	{
 		'hashes':
 		{
 			'gender_age':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gender_age.hash',
-				'path': resolve_relative_path('../.assets/models/gender_age.hash')
+				'url': 'https://huggingface.co/bluefoxcreation/gender_age/resolve/main/fair_face.hash',
+				'path': resolve_relative_path('../.assets/models/fair_face.hash')
 			}
 		},
 		'sources':
 		{
 			'gender_age':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gender_age.onnx',
-				'path': resolve_relative_path('../.assets/models/gender_age.onnx')
+				'url': 'https://huggingface.co/bluefoxcreation/gender_age/resolve/main/fair_face.onnx',
+				'path': resolve_relative_path('../.assets/models/fair_face.onnx')
 			}
-		}
+		},
+		'template': 'arcface_112_v2',
+		'size': (224, 224),
+		'mean': [ 0.485, 0.456, 0.406 ],
+		'standard_deviation': [ 0.229, 0.224, 0.225 ]
 	}
 }
 
@@ -43,7 +47,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET.get('gender_age')
+	return MODEL_SET.get('fair_face')
 
 
 def pre_check() -> bool:
@@ -54,26 +58,72 @@ def pre_check() -> bool:
 	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
 
 
-def detect_gender_age(temp_vision_frame : VisionFrame, bounding_box : BoundingBox) -> Tuple[int, int]:
-	bounding_box = bounding_box.reshape(2, -1)
-	scale = 64 / numpy.subtract(*bounding_box[::-1]).max()
-	translation = 48 - bounding_box.sum(axis = 0) * scale * 0.5
-	crop_vision_frame, affine_matrix = warp_face_by_translation(temp_vision_frame, translation, scale, (96, 96))
-	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
-	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
-	prediction = forward(crop_vision_frame)
-	gender = int(numpy.argmax(prediction[:2]))
-	age = int(numpy.round(prediction[2] * 100))
-	return gender, age
+def detect_gender_age(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[str, range, str]:
+	model_template = get_model_options().get('template')
+	model_size = get_model_options().get('size')
+	model_mean = get_model_options().get('mean')
+	model_standard_deviation = get_model_options().get('standard_deviation')
+	crop_vision_frame, _ = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, model_size)
+	crop_vision_frame = crop_vision_frame.astype(numpy.float32)[:, :, ::-1] / 255
+	crop_vision_frame -= model_mean
+	crop_vision_frame /= model_standard_deviation
+	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1)
+	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis=0)
+	gender_id, age_id, race_id = forward(crop_vision_frame)
+	gender = categorize_gender(int(gender_id[0]))
+	age = categorize_age(int(age_id[0]))
+	race = categorize_race(int(race_id[0]))
+	return gender, age, race
 
 
-def forward(crop_vision_frame : VisionFrame) -> Prediction:
+def forward(crop_vision_frame : VisionFrame) -> Tuple[Prediction, Prediction, Prediction]:
 	gender_age = get_inference_pool().get('gender_age')
 
 	with conditional_thread_semaphore():
-		prediction = gender_age.run(None,
+		race_id, gender_id, age_id = gender_age.run(None,
 		{
 			'input': crop_vision_frame
-		})[0][0]
+		})
 
-	return prediction
+	return gender_id, age_id, race_id
+
+
+def categorize_age(age_id : int) -> range:
+	if age_id == 0:
+		return range(0, 3)
+	elif age_id == 1:
+		return range(3, 10)
+	elif age_id == 2:
+		return range(10, 20)
+	elif age_id == 3:
+		return range(20, 30)
+	elif age_id == 4:
+		return range(30, 40)
+	elif age_id == 5:
+		return range(40, 50)
+	elif age_id == 6:
+		return range(50, 60)
+	elif age_id == 7:
+		return range(60, 70)
+	else:
+		return range(70, 100)
+
+
+def categorize_gender(gender_id : int) -> str:
+	if gender_id == 1:
+		return 'female'
+	return 'male'
+
+
+def categorize_race(race_id : int) -> str:
+	if race_id == 0:
+		return 'white'
+	elif race_id == 1:
+		return 'black'
+	elif race_id == 2:
+		return 'latino'
+	elif race_id == 3 or race_id == 4:
+		return 'asian'
+	elif race_id == 5:
+		return 'indian'
+	return 'arabic'

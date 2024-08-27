@@ -37,7 +37,8 @@ Face = namedtuple('Face',
 	'embedding',
 	'normed_embedding',
 	'gender',
-	'age'
+	'age',
+	'race'
 ])
 FaceSet = Dict[str, List[Face]]
 FaceStore = TypedDict('FaceStore',
@@ -95,8 +96,8 @@ FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
 FaceDetectorSet = Dict[FaceDetectorModel, List[str]]
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
-FaceSelectorAge = Literal['child', 'teen', 'adult', 'senior']
 FaceSelectorGender = Literal['female', 'male']
+FaceSelectorRace = Literal['white', 'black', 'latino', 'asian', 'indian', 'arabic']
 FaceMaskType = Literal['box', 'occlusion', 'region']
 FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip']
 TempFrameFormat = Literal['jpg', 'png', 'bmp']
@@ -197,8 +198,10 @@ StateKey = Literal\
 	'face_landmarker_score',
 	'face_selector_mode',
 	'face_selector_order',
-	'face_selector_age',
 	'face_selector_gender',
+	'face_selector_race',
+	'face_selector_age_start',
+	'face_selector_age_end',
 	'reference_face_position',
 	'reference_face_distance',
 	'reference_frame_number',
@@ -251,8 +254,10 @@ State = TypedDict('State',
 	'face_landmarker_score' : Score,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
-	'face_selector_age' : FaceSelectorAge,
+	'face_selector_race': FaceSelectorRace,
 	'face_selector_gender' : FaceSelectorGender,
+	'face_selector_age_start' : int,
+	'face_selector_age_end' : int,
 	'reference_face_position' : int,
 	'reference_face_distance' : float,
 	'reference_frame_number' : int,

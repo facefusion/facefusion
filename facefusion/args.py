@@ -49,8 +49,10 @@ def apply_args(args : Args) -> None:
 	# face selector
 	state_manager.init_item('face_selector_mode', args.get('face_selector_mode'))
 	state_manager.init_item('face_selector_order', args.get('face_selector_order'))
-	state_manager.init_item('face_selector_age', args.get('face_selector_age'))
 	state_manager.init_item('face_selector_gender', args.get('face_selector_gender'))
+	state_manager.init_item('face_selector_race', args.get('face_selector_race'))
+	state_manager.init_item('face_selector_age_start', args.get('face_selector_age_start'))
+	state_manager.init_item('face_selector_age_end', args.get('face_selector_age_end'))
 	state_manager.init_item('reference_face_position', args.get('reference_face_position'))
 	state_manager.init_item('reference_face_distance', args.get('reference_face_distance'))
 	state_manager.init_item('reference_frame_number', args.get('reference_frame_number'))
