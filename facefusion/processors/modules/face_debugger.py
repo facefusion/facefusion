@@ -11,7 +11,7 @@ from facefusion import config, content_analyser, face_classifier, face_detector,
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
-from facefusion.face_selector import categorize_age, categorize_gender, find_similar_faces, sort_and_filter_faces
+from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, same_file_extension
 from facefusion.processors import choices as processors_choices
@@ -148,13 +148,17 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, tertiary_color if has_face_landmark_5_fallback else secondary_color, 2)
 		if 'age' in face_debugger_items:
-			face_age_text = categorize_age(target_face.age)
+			face_age_text = str(target_face.age.start) + '-' + str(target_face.age.stop)
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_age_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
 		if 'gender' in face_debugger_items:
-			face_gender_text = categorize_gender(target_face.gender)
+			face_gender_text = target_face.gender
 			top = top + 20
 			cv2.putText(temp_vision_frame, face_gender_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
+		if 'race' in face_debugger_items:
+			face_race_text = target_face.race
+			top = top + 20
+			cv2.putText(temp_vision_frame, face_race_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
 
 	return temp_vision_frame
 

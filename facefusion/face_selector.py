@@ -3,7 +3,7 @@ from typing import List
 import numpy
 
 from facefusion import state_manager
-from facefusion.typing import Face, FaceSelectorAge, FaceSelectorGender, FaceSelectorOrder, FaceSet
+from facefusion.typing import Face, FaceSelectorOrder, FaceSet, Gender, Race
 
 
 def find_similar_faces(faces : List[Face], reference_faces : FaceSet, face_distance : float) -> List[Face]:
@@ -34,10 +34,12 @@ def sort_and_filter_faces(faces : List[Face]) -> List[Face]:
 	if faces:
 		if state_manager.get_item('face_selector_order'):
 			faces = sort_by_order(faces, state_manager.get_item('face_selector_order'))
-		if state_manager.get_item('face_selector_age'):
-			faces = filter_by_age(faces, state_manager.get_item('face_selector_age'))
 		if state_manager.get_item('face_selector_gender'):
 			faces = filter_by_gender(faces, state_manager.get_item('face_selector_gender'))
+		if state_manager.get_item('face_selector_race'):
+			faces = filter_by_race(faces, state_manager.get_item('face_selector_race'))
+		if state_manager.get_item('face_selector_age_start') or state_manager.get_item('face_selector_age_end'):
+			faces = filter_by_age(faces, state_manager.get_item('face_selector_age_start'), state_manager.get_item('face_selector_age_end'))
 	return faces
 
 
@@ -61,35 +63,29 @@ def sort_by_order(faces : List[Face], order : FaceSelectorOrder) -> List[Face]:
 	return faces
 
 
-def filter_by_age(faces : List[Face], age : FaceSelectorAge) -> List[Face]:
+def filter_by_gender(faces : List[Face], gender : Gender) -> List[Face]:
 	filter_faces = []
 
 	for face in faces:
-		if categorize_age(face.age) == age:
+		if face.gender == gender:
 			filter_faces.append(face)
 	return filter_faces
 
 
-def filter_by_gender(faces : List[Face], gender : FaceSelectorGender) -> List[Face]:
+def filter_by_age(faces : List[Face], face_selector_age_start : int, face_selector_age_end : int) -> List[Face]:
 	filter_faces = []
+	age = range(face_selector_age_start, face_selector_age_end)
 
 	for face in faces:
-		if categorize_gender(face.gender) == gender:
+		if set(face.age) & set(age):
 			filter_faces.append(face)
 	return filter_faces
 
 
-def categorize_age(age : int) -> FaceSelectorAge:
-	if age < 13:
-		return 'child'
-	elif age < 19:
-		return 'teen'
-	elif age < 60:
-		return 'adult'
-	return 'senior'
+def filter_by_race(faces : List[Face], race : Race) -> List[Face]:
+	filter_faces = []
 
-
-def categorize_gender(gender : int) -> FaceSelectorGender:
-	if gender == 0:
-		return 'female'
-	return 'male'
+	for face in faces:
+		if face.race == race:
+			filter_faces.append(face)
+	return filter_faces

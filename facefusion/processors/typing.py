@@ -6,7 +6,7 @@ from facefusion.typing import AppContext, AudioFrame, Face, FaceSet, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
 ExpressionRestorerModel = Literal['live_portrait']
-FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender']
+FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race']
 FaceEditorModel = Literal['live_portrait']
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']
 FaceSwapperModel = Literal['blendswap_256', 'ghost_256_unet_1', 'ghost_256_unet_2', 'ghost_256_unet_3', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_512_unofficial', 'uniface_256']
