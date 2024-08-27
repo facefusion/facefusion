@@ -17,7 +17,7 @@ MODEL_SET : ModelSet =\
 		{
 			'gender_age':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/gender_age/resolve/main/fair_face.hash?download=true',
+				'url': 'https://huggingface.co/bluefoxcreation/gender_age/resolve/main/fair_face.hash',
 				'path': resolve_relative_path('../.assets/models/fair_face.hash')
 			}
 		},
