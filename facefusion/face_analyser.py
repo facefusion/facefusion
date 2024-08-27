@@ -46,7 +46,7 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 			'landmarker': face_landmark_score_68
 		}
 		embedding, normed_embedding = calc_embedding(vision_frame, face_landmark_set.get('5/68'))
-		gender, age = detect_gender_age(vision_frame, bounding_box)
+		gender, age, race = detect_gender_age(vision_frame, face_landmark_set.get('5/68'))
 		faces.append(Face(
 			bounding_box = bounding_box,
 			score_set = face_score_set,
@@ -55,7 +55,8 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 			embedding = embedding,
 			normed_embedding = normed_embedding,
 			gender = gender,
-			age = age
+			age = age,
+			race = race
 		))
 	return faces
 
@@ -86,7 +87,8 @@ def get_average_face(faces : List[Face]) -> Optional[Face]:
 			embedding = numpy.mean(embeddings, axis = 0),
 			normed_embedding = numpy.mean(normed_embeddings, axis = 0),
 			gender = first_face.gender,
-			age = first_face.age
+			age = first_face.age,
+			race = first_face.race
 		)
 	return None
 

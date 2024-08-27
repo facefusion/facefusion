@@ -1,7 +1,7 @@
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, JobStatus, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
+from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorAge, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, JobStatus, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
 
@@ -17,6 +17,7 @@ face_selector_modes : List[FaceSelectorMode] = [ 'many', 'one', 'reference' ]
 face_selector_orders : List[FaceSelectorOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
 face_selector_ages : List[FaceSelectorAge] = [ 'child', 'teen', 'adult', 'senior' ]
 face_selector_genders : List[FaceSelectorGender] = [ 'female', 'male' ]
+face_selector_races : List[FaceSelectorRace] = [ 'white', 'black', 'latino', 'asian', 'indian', 'arabic' ]
 face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'region' ]
 face_mask_regions : List[FaceMaskRegion] = [ 'skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip' ]
 temp_frame_formats : List[TempFrameFormat] = [ 'bmp', 'jpg', 'png' ]

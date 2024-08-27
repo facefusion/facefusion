@@ -5,7 +5,7 @@ from facefusion.processors.typing import AgeModifierModel, ExpressionRestorerMod
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
 expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]
-face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender' ]
+face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race' ]
 face_editor_models : List[FaceEditorModel] = [ 'live_portrait' ]
 face_enhancer_models : List[FaceEnhancerModel] = [ 'codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus' ]
 face_swapper_set : FaceSwapperSet =\

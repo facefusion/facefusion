@@ -41,6 +41,7 @@ ComponentName = Literal\
 	'face_mask_types_checkbox_group',
 	'face_selector_age_dropdown',
 	'face_selector_gender_dropdown',
+	'face_selector_race_dropdown',
 	'face_selector_mode_dropdown',
 	'face_selector_order_dropdown',
 	'face_swapper_model_dropdown',
