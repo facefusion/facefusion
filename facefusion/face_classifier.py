@@ -115,8 +115,6 @@ def categorize_age(age_id : int) -> Age:
 
 
 def categorize_race(race_id : int) -> Race:
-	if race_id == 0:
-		return 'white'
 	if race_id == 1:
 		return 'black'
 	if race_id == 2:
@@ -127,4 +125,4 @@ def categorize_race(race_id : int) -> Race:
 		return 'indian'
 	if race_id == 6:
 		return 'arabic'
-
+	return 'white'
