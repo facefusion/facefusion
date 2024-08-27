@@ -10,7 +10,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
-from facefusion.common_helper import create_int_metavar, map_float
+from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, warp_face_by_face_landmark_5
@@ -130,9 +130,10 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		combined_matrix = merge_matrix([ extend_affine_matrix, cv2.invertAffineTransform(affine_matrix) ])
 		occlusion_mask = cv2.warpAffine(occlusion_mask, combined_matrix, model_size)
 		crop_masks.append(occlusion_mask)
+
 	crop_vision_frame = prepare_vision_frame(crop_vision_frame)
 	extend_vision_frame = prepare_vision_frame(extend_vision_frame)
-	extend_vision_frame = apply_modify(crop_vision_frame, extend_vision_frame)
+	extend_vision_frame = forward(crop_vision_frame, extend_vision_frame)
 	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
 	extend_vision_frame = fix_color(extend_vision_frame_raw, extend_vision_frame)
 	extend_crop_mask = cv2.pyrUp(numpy.minimum.reduce(crop_masks).clip(0, 1))
@@ -141,7 +142,7 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	return paste_vision_frame
 
 
-def apply_modify(crop_vision_frame : VisionFrame, crop_vision_frame_extended : VisionFrame) -> VisionFrame:
+def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
 	age_modifier = get_inference_pool().get('age_modifier')
 	age_modifier_inputs = {}
 
@@ -149,7 +150,7 @@ def apply_modify(crop_vision_frame : VisionFrame, crop_vision_frame_extended : V
 		if age_modifier_input.name == 'target':
 			age_modifier_inputs[age_modifier_input.name] = crop_vision_frame
 		if age_modifier_input.name == 'target_with_background':
-			age_modifier_inputs[age_modifier_input.name] = crop_vision_frame_extended
+			age_modifier_inputs[age_modifier_input.name] = extend_vision_frame
 		if age_modifier_input.name == 'direction':
 			age_modifier_inputs[age_modifier_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
 
@@ -187,7 +188,7 @@ def normalize_color_difference(color_difference : VisionFrame, color_difference_
 
 
 def prepare_direction(direction : int) -> NDArray[Any]:
-	direction = map_float(float(direction), -100, 100, 2.5, -2.5) #type:ignore[assignment]
+	direction = numpy.interp(float(direction), [ -100, 100 ], [ 2.5, -2.5 ]) #type:ignore[assignment]
 	return numpy.array(direction).astype(numpy.float32)
 
 

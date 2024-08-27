@@ -428,7 +428,7 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	pixel_boost_vision_frames = implode_pixel_boost(crop_vision_frame, pixel_boost_total, model_size)
 	for pixel_boost_vision_frame in pixel_boost_vision_frames:
 		pixel_boost_vision_frame = prepare_crop_frame(pixel_boost_vision_frame)
-		pixel_boost_vision_frame = apply_swap(source_face, pixel_boost_vision_frame)
+		pixel_boost_vision_frame = forward_swap_face(source_face, pixel_boost_vision_frame)
 		pixel_boost_vision_frame = normalize_crop_frame(pixel_boost_vision_frame)
 		temp_vision_frames.append(pixel_boost_vision_frame)
 	crop_vision_frame = explode_pixel_boost(temp_vision_frames, pixel_boost_total, model_size, pixel_boost_size)
@@ -436,12 +436,13 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	if 'region' in state_manager.get_item('face_mask_types'):
 		region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))
 		crop_masks.append(region_mask)
+
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
 
-def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFrame:
+def forward_swap_face(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFrame:
 	face_swapper = get_inference_pool().get('face_swapper')
 	model_type = get_model_options().get('type')
 	face_swapper_inputs = {}
@@ -459,6 +460,18 @@ def apply_swap(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFra
 		crop_vision_frame = face_swapper.run(None, face_swapper_inputs)[0][0]
 
 	return crop_vision_frame
+
+
+def forward_calc_embedding(crop_vision_frame : VisionFrame) -> Embedding:
+	face_recognizer = get_inference_pool().get('face_recognizer')
+
+	with conditional_thread_semaphore():
+		embedding = face_recognizer.run(None,
+		{
+			'input': crop_vision_frame
+		})[0]
+
+	return embedding
 
 
 def prepare_source_frame(source_face : Face) -> VisionFrame:
@@ -493,18 +506,11 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 
 
 def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[Embedding, Embedding]:
-	face_recognizer = get_inference_pool().get('face_recognizer')
 	crop_vision_frame, matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, 'arcface_112_v2', (112, 112))
 	crop_vision_frame = crop_vision_frame / 127.5 - 1
 	crop_vision_frame = crop_vision_frame[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32)
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
-
-	with conditional_thread_semaphore():
-		embedding = face_recognizer.run(None,
-		{
-			'input': crop_vision_frame
-		})[0]
-
+	embedding = forward_calc_embedding(crop_vision_frame)
 	embedding = embedding.ravel()
 	normed_embedding = embedding / numpy.linalg.norm(embedding)
 	return embedding, normed_embedding

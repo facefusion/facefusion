@@ -64,8 +64,10 @@ def run(program : ArgumentParser) -> None:
 				wheel_url = 'https://download.onnxruntime.ai/' + wheel_name
 				subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
 				subprocess.call([ 'pip', 'uninstall', wheel_path, '-y', '-q' ])
-				subprocess.call([ 'pip', 'install', wheel_path, '--no-deps', '--force-reinstall' ])
+				subprocess.call([ 'pip', 'install', wheel_path, '--force-reinstall' ])
 				os.remove(wheel_path)
 		else:
 			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
-			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--no-deps', '--force-reinstall' ])
+			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
+		if onnxruntime == 'cuda':
+			subprocess.call([ 'pip', 'install', 'tensorrt==10.3.0', '--force-reinstall' ])

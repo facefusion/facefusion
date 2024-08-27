@@ -63,7 +63,6 @@ def get_static_model_initializer(model_path : str) -> ModelInitializer:
 
 
 def find_execution_providers(model_context : str) -> List[ExecutionProviderKey]:
-	if has_execution_provider('coreml'):
-		if model_context == 'facefusion.frame_colorizer':
-			return [ 'cpu' ]
+	if has_execution_provider('coreml') and model_context in [ 'facefusion.processors.modules.age_modifier', 'facefusion.processors.modules.frame_colorizer' ]:
+		return [ 'cpu' ]
 	return state_manager.get_item('execution_providers')
