@@ -37,32 +37,32 @@ MODEL_SET : ModelSet =\
 }
 
 
-def categorize_age(age : int) -> str:
-	if age < 2:
+def categorize_age(age_id : int) -> str:
+	if age_id < 2:
 		return 'child'
-	elif age < 3:
+	elif age_id < 3:
 		return 'teen'
-	elif age < 7:
+	elif age_id < 7:
 		return 'adult'
 	return 'senior'
 
 
-def categorize_gender(gender : int) -> str:
-	if gender:
+def categorize_gender(gender_id : int) -> str:
+	if gender_id:
 		return 'female'
 	return 'male'
 
 
-def categorize_race(race : int) -> str:
-	if race == 0:
+def categorize_race(race_id : int) -> str:
+	if race_id == 0:
 		return 'white'
-	elif race == 1:
+	elif race_id == 1:
 		return 'black'
-	elif race == 2:
+	elif race_id == 2:
 		return 'latino'
-	elif race == 3 or race == 4:
+	elif race_id == 3 or race_id == 4:
 		return 'asian'
-	elif race == 5:
+	elif race_id == 5:
 		return 'indian'
 	return 'arabic'
 
@@ -99,10 +99,10 @@ def detect_gender_age(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLan
 	crop_vision_frame /= model_standard_deviation
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1)
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis=0)
-	gender_raw, age_raw, race_raw = forward(crop_vision_frame)
-	gender = categorize_gender(int(gender_raw[0]))
-	age = categorize_age(int(age_raw[0]))
-	race = categorize_race(int(race_raw[0]))
+	gender_id, age_id, race_id = forward(crop_vision_frame)
+	gender = categorize_gender(int(gender_id[0]))
+	age = categorize_age(int(age_id[0]))
+	race = categorize_race(int(race_id[0]))
 	return gender, age, race
 
 
@@ -110,9 +110,9 @@ def forward(crop_vision_frame : VisionFrame) -> Tuple[Prediction, Prediction, Pr
 	gender_age = get_inference_pool().get('gender_age')
 
 	with conditional_thread_semaphore():
-		race_raw, gender_raw, age_raw = gender_age.run(None,
+		race_id, gender_id, age_id = gender_age.run(None,
 		{
 			'input': crop_vision_frame
 		})
 
-	return gender_raw, age_raw, race_raw
+	return gender_id, age_id, race_id
