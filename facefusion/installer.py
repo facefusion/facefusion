@@ -79,11 +79,20 @@ def run(program : ArgumentParser) -> None:
 			subprocess.call([ 'pip', 'install', 'tensorrt==10.3.0', '--force-reinstall' ])
 
 			if has_conda:
-				python_id = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
-				library_paths =\
-				[
-					os.path.join(os.getenv('CONDA_PREFIX'), 'lib'),
-					os.path.join(os.getenv('CONDA_PREFIX'), 'lib', python_id, 'site-packages', 'tensorrt_libs')
-				]
+				library_paths = os.getenv('LD_LIBRARY_PATH').split(':')
+
+				if is_linux():
+					python_id = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
+					library_paths.extend(
+					[
+						os.path.join(os.getenv('CONDA_PREFIX'), 'lib'),
+						os.path.join(os.getenv('CONDA_PREFIX'), 'lib', python_id, 'site-packages', 'tensorrt_libs')
+					])
+				else:
+					library_paths.extend(
+					[
+						os.path.join(os.getenv('CONDA_PREFIX'), 'Lib'),
+						os.path.join(os.getenv('CONDA_PREFIX'), 'Lib', 'site-packages', 'tensorrt_libs')
+					])
 
 				subprocess.call([ 'conda', 'env', 'config', 'vars', 'set', 'LD_LIBRARY_PATH=' + ':'.join(library_paths) ])
