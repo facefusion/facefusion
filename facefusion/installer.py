@@ -19,8 +19,7 @@ else:
 	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.19.0')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.18.0')
 if is_linux():
-	ONNXRUNTIMES['rocm-5.4.2'] = ('onnxruntime-rocm', '1.16.3')
-	ONNXRUNTIMES['rocm-5.6'] = ('onnxruntime-rocm', '1.16.3')
+	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.18.0')
 if is_windows():
 	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.19.0')
 
@@ -58,15 +57,13 @@ def run(program : ArgumentParser) -> None:
 
 		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--force-reinstall' ])
 
-		if onnxruntime == 'rocm-5.4.2' or onnxruntime == 'rocm-5.6':
+		if onnxruntime == 'rocm':
 			python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
-			if python_id in [ 'cp39', 'cp310', 'cp311' ]:
-				rocm_version = onnxruntime.replace('-', '')
-				rocm_version = rocm_version.replace('.', '')
-				wheel_name = 'onnxruntime_training-' + onnxruntime_version + '+' + rocm_version + '-' + python_id + '-' + python_id + '-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
+			if python_id == 'cp310':
+				wheel_name = 'onnxruntime_rocm-' + onnxruntime_version +'-' + python_id + '-' + python_id + '-linux_x86_64.whl'
 				wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
-				wheel_url = 'https://download.onnxruntime.ai/' + wheel_name
+				wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.2/' + wheel_name
 				subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
 				subprocess.call([ 'pip', 'uninstall', wheel_path, '-y', '-q' ])
 				subprocess.call([ 'pip', 'install', wheel_path, '--force-reinstall' ])
