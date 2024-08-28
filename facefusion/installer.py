@@ -65,7 +65,7 @@ def run(program : ArgumentParser) -> None:
 				wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
 				wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.2/' + wheel_name
 				subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
-				subprocess.call([ 'pip', 'uninstall', wheel_path, '-y', '-q' ])
+				subprocess.call([ 'pip', 'uninstall', 'onnxruntime', wheel_path, '-y', '-q' ])
 				subprocess.call([ 'pip', 'install', wheel_path, '--force-reinstall' ])
 				os.remove(wheel_path)
 		else:
