@@ -76,7 +76,7 @@ def run(program : ArgumentParser) -> None:
 			subprocess.call([ 'pip', 'install', 'tensorrt==10.3.0', '--force-reinstall' ])
 
 			if has_conda:
-				library_paths = os.getenv('LD_LIBRARY_PATH').split(':')
+				library_paths = []
 
 				if is_linux():
 					python_id = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
