@@ -78,6 +78,9 @@ def run(program : ArgumentParser) -> None:
 			if has_conda:
 				library_paths = []
 
+				if os.getenv('LD_LIBRARY_PATH'):
+					library_paths = os.getenv('LD_LIBRARY_PATH').split(':')
+
 				if is_linux():
 					python_id = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
 					library_paths.extend(
