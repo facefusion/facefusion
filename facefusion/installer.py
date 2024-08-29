@@ -78,21 +78,26 @@ def run(program : ArgumentParser) -> None:
 			if has_conda:
 				library_paths = []
 
-				if os.getenv('LD_LIBRARY_PATH'):
-					library_paths = os.getenv('LD_LIBRARY_PATH').split(':')
-
 				if is_linux():
+					if os.getenv('LD_LIBRARY_PATH'):
+						library_paths = os.getenv('LD_LIBRARY_PATH').split(os.pathsep)
+
 					python_id = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
 					library_paths.extend(
 					[
 						os.path.join(os.getenv('CONDA_PREFIX'), 'lib'),
 						os.path.join(os.getenv('CONDA_PREFIX'), 'lib', python_id, 'site-packages', 'tensorrt_libs')
 					])
-				else:
+
+					subprocess.call([ 'conda', 'env', 'config', 'vars', 'set', 'LD_LIBRARY_PATH=' + os.pathsep.join(library_paths) ])
+				if is_windows():
+					if os.getenv('PATH'):
+						library_paths = os.getenv('PATH').split(os.pathsep)
+
 					library_paths.extend(
 					[
 						os.path.join(os.getenv('CONDA_PREFIX'), 'Lib'),
 						os.path.join(os.getenv('CONDA_PREFIX'), 'Lib', 'site-packages', 'tensorrt_libs')
 					])
 
-				subprocess.call([ 'conda', 'env', 'config', 'vars', 'set', 'LD_LIBRARY_PATH=' + ':'.join(library_paths) ])
+					subprocess.call([ 'conda', 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
