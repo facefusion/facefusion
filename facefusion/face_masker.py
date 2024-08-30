@@ -79,12 +79,16 @@ def clear_inference_pool() -> None:
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
-	model_hashes = {}
-	model_sources = {}
-	model_hashes['face_occluder'] = MODEL_SET.get('face_occluder').get('hashes').get('face_occluder')
-	model_sources['face_occluder'] = MODEL_SET.get('face_occluder').get('sources').get('face_occluder')
-	model_hashes['face_parser'] = MODEL_SET.get('face_parser').get('hashes').get('face_parser')
-	model_sources['face_parser'] = MODEL_SET.get('face_parser').get('sources').get('face_parser')
+	model_hashes =\
+	{
+		'face_occluder': MODEL_SET.get('face_occluder').get('hashes').get('face_occluder'),
+		'face_parser': MODEL_SET.get('face_parser').get('hashes').get('face_parser')
+	}
+	model_sources =\
+	{
+		'face_occluder': MODEL_SET.get('face_occluder').get('sources').get('face_occluder'),
+		'face_parser': MODEL_SET.get('face_parser').get('sources').get('face_parser')
+	}
 	return model_hashes, model_sources
 
 
