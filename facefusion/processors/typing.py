@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Literal, TypedDict
 
 from numpy._typing import NDArray
 
-from facefusion.typing import AppContext, AudioFrame, Face, FaceSet, VisionFrame
+from facefusion.typing import AppContext, AudioFrame, FaceSet, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
 ExpressionRestorerModel = Literal['live_portrait']
@@ -45,7 +45,6 @@ FaceEnhancerInputs = TypedDict('FaceEnhancerInputs',
 FaceSwapperInputs = TypedDict('FaceSwapperInputs',
 {
 	'reference_faces' : FaceSet,
-	'source_face' : Face,
 	'target_vision_frame' : VisionFrame
 })
 FrameColorizerInputs = TypedDict('FrameColorizerInputs',
