@@ -114,9 +114,10 @@ def post_process() -> None:
 def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
+	crop_size = (model_size[0] // 2, model_size[1] // 2)
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
 	extend_face_landmark_5 = (face_landmark_5 - face_landmark_5[2]) * 2 + face_landmark_5[2]
-	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, (model_size[0] // 2, model_size[1] // 2))
+	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, crop_size)
 	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_template, model_size)
 	extend_vision_frame_raw = extend_vision_frame.copy()
 	box_mask = create_static_box_mask(model_size, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))

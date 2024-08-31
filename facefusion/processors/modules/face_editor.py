@@ -423,8 +423,8 @@ def calc_distance_ratio(face_landmark_68 : FaceLandmark68, top_index : int, bott
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	model_size = get_model_options().get('size')
-	model_size = (model_size[0] // 2, model_size[1] // 2)
-	crop_vision_frame = cv2.resize(crop_vision_frame, model_size, interpolation = cv2.INTER_AREA)
+	prepare_size = (model_size[0] // 2, model_size[1] // 2)
+	crop_vision_frame = cv2.resize(crop_vision_frame, prepare_size, interpolation = cv2.INTER_AREA)
 	crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 	return crop_vision_frame
