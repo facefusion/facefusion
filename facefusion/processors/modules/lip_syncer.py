@@ -43,7 +43,8 @@ MODEL_SET : ModelSet =\
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip.onnx',
 				'path': resolve_relative_path('../.assets/models/wav2lip.onnx')
 			}
-		}
+		},
+		'size': (96, 96)
 	},
 	'wav2lip_gan':
 	{
@@ -62,7 +63,8 @@ MODEL_SET : ModelSet =\
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_gan.onnx',
 				'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx')
 			}
-		}
+		},
+		'size': (96, 96)
 	}
 }
 
@@ -131,6 +133,7 @@ def post_process() -> None:
 
 
 def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
+	model_size = get_model_options().get('size')
 	temp_audio_frame = prepare_audio_frame(temp_audio_frame)
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'ffhq_512', (512, 512))
 	face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
@@ -148,7 +151,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 
-	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, (96, 96))
+	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, model_size)
 	close_vision_frame = prepare_crop_frame(close_vision_frame)
 	close_vision_frame = forward(temp_audio_frame, close_vision_frame)
 	close_vision_frame = normalize_close_frame(close_vision_frame)

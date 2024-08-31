@@ -150,14 +150,14 @@ def restore_expression(source_vision_frame : VisionFrame, target_face : Face, te
 
 	source_crop_vision_frame = prepare_crop_frame(source_crop_vision_frame)
 	target_crop_vision_frame = prepare_crop_frame(target_crop_vision_frame)
-	target_crop_vision_frame = forward(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
+	target_crop_vision_frame = apply_restore(source_crop_vision_frame, target_crop_vision_frame, expression_restorer_factor)
 	target_crop_vision_frame = normalize_crop_frame(target_crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, target_crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
 
-def forward(source_crop_vision_frame : VisionFrame, target_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
+def apply_restore(source_crop_vision_frame : VisionFrame, target_crop_vision_frame : VisionFrame, expression_restorer_factor : float) -> VisionFrame:
 	feature_volume = forward_extract_feature(target_crop_vision_frame)
 	source_expression = forward_extract_motion(source_crop_vision_frame)[5]
 	pitch, yaw, roll, scale, translation, target_expression, motion_points = forward_extract_motion(target_crop_vision_frame)
@@ -210,7 +210,9 @@ def forward_generate_frame(feature_volume : LivePortraitFeatureVolume, source_mo
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	crop_vision_frame = cv2.resize(crop_vision_frame, (256, 256), interpolation = cv2.INTER_AREA)
+	model_size = get_model_options().get('size')
+	model_size = (model_size[0] // 2, model_size[1] // 2)
+	crop_vision_frame = cv2.resize(crop_vision_frame, model_size, interpolation = cv2.INTER_AREA)
 	crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 	return crop_vision_frame
