@@ -110,13 +110,14 @@ def prepare_audio_chunk(temp_audio_chunk : AudioChunk, chunk_size : int, trim_si
 def decompose_audio_chunk(temp_audio_chunk : AudioChunk, trim_size : int) -> AudioChunk:
 	frame_size = 7680
 	frame_overlap = 6656
-	voice_extractor = get_inference_pool().get('voice_extractor')
-	voice_extractor_shape = voice_extractor.get_inputs()[0].shape
+	frame_total = 3072
+	bin_total = 256
+	channel_total = 4
 	window = scipy.signal.windows.hann(frame_size)
 	temp_audio_chunk = scipy.signal.stft(temp_audio_chunk, nperseg = frame_size, noverlap = frame_overlap, window = window)[2]
 	temp_audio_chunk = numpy.stack((numpy.real(temp_audio_chunk), numpy.imag(temp_audio_chunk)), axis = -1).transpose((0, 3, 1, 2))
-	temp_audio_chunk = temp_audio_chunk.reshape(-1, 2, 2, trim_size + 1, voice_extractor_shape[3]).reshape(-1, voice_extractor_shape[1], trim_size + 1, voice_extractor_shape[3])
-	temp_audio_chunk = temp_audio_chunk[:, :, :voice_extractor_shape[2]]
+	temp_audio_chunk = temp_audio_chunk.reshape(-1, 2, 2, trim_size + 1, bin_total).reshape(-1, channel_total, trim_size + 1, bin_total)
+	temp_audio_chunk = temp_audio_chunk[:, :, :frame_total]
 	temp_audio_chunk /= numpy.sqrt(1.0 / window.sum() ** 2)
 	return temp_audio_chunk
 
@@ -124,11 +125,11 @@ def decompose_audio_chunk(temp_audio_chunk : AudioChunk, trim_size : int) -> Aud
 def compose_audio_chunk(temp_audio_chunk : AudioChunk, trim_size : int) -> AudioChunk:
 	frame_size = 7680
 	frame_overlap = 6656
-	voice_extractor = get_inference_pool().get('voice_extractor')
-	voice_extractor_shape = voice_extractor.get_inputs()[0].shape
+	frame_total = 3072
+	bin_total = 256
 	window = scipy.signal.windows.hann(frame_size)
-	temp_audio_chunk = numpy.pad(temp_audio_chunk, ((0, 0), (0, 0), (0, trim_size + 1 - voice_extractor_shape[2]), (0, 0)))
-	temp_audio_chunk = temp_audio_chunk.reshape(-1, 2, trim_size + 1, voice_extractor_shape[3]).transpose((0, 2, 3, 1))
+	temp_audio_chunk = numpy.pad(temp_audio_chunk, ((0, 0), (0, 0), (0, trim_size + 1 - frame_total), (0, 0)))
+	temp_audio_chunk = temp_audio_chunk.reshape(-1, 2, trim_size + 1, bin_total).transpose((0, 2, 3, 1))
 	temp_audio_chunk = temp_audio_chunk[:, :, :, 0] + 1j * temp_audio_chunk[:, :, :, 1]
 	temp_audio_chunk = scipy.signal.istft(temp_audio_chunk, nperseg = frame_size, noverlap = frame_overlap, window = window)[1]
 	temp_audio_chunk *= numpy.sqrt(1.0 / window.sum() ** 2)
