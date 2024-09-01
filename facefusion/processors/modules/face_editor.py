@@ -186,14 +186,14 @@ def edit_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 		crop_masks.append(occlusion_mask)
 
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	crop_vision_frame = forward(crop_vision_frame, target_face.landmark_set.get('68'))
+	crop_vision_frame = apply_edit(crop_vision_frame, target_face.landmark_set.get('68'))
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return temp_vision_frame
 
 
-def forward(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
+def apply_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
 	feature_volume = forward_extract_feature(crop_vision_frame)
 	pitch, yaw, roll, scale, translation, expression, motion_points = forward_extract_motion(crop_vision_frame)
 	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
@@ -422,7 +422,9 @@ def calc_distance_ratio(face_landmark_68 : FaceLandmark68, top_index : int, bott
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	crop_vision_frame = cv2.resize(crop_vision_frame, (256, 256), interpolation = cv2.INTER_AREA)
+	model_size = get_model_options().get('size')
+	prepare_size = (model_size[0] // 2, model_size[1] // 2)
+	crop_vision_frame = cv2.resize(crop_vision_frame, prepare_size, interpolation = cv2.INTER_AREA)
 	crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 	return crop_vision_frame
