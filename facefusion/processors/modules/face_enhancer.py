@@ -74,7 +74,7 @@ MODEL_SET : ModelSet =\
 			'face_enhancer':
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.3.hash',
-				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.hash')
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.3.hash')
 			}
 		},
 		'sources':
@@ -82,7 +82,7 @@ MODEL_SET : ModelSet =\
 			'face_enhancer':
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.3.onnx',
-				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.onnx')
+				'path': resolve_relative_path('../.assets/models/gfpgan_1.3.onnx')
 			}
 		},
 		'template': 'ffhq_512',

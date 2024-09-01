@@ -146,35 +146,30 @@ def conditional_append_reference_faces() -> None:
 
 
 def force_download() -> ErrorCode:
-	available_processors = list_directory('facefusion/processors/modules')
 	download_directory_path = resolve_relative_path('../.assets/models')
-	model_set =\
+	available_processors = list_directory('facefusion/processors/modules')
+	common_modules =\
 	[
-		content_analyser.MODEL_SET.get('open_nsfw'),
-		face_classifier.MODEL_SET.get('gender_age'),
-		face_detector.MODEL_SET.get('retinaface'),
-		face_detector.MODEL_SET.get('scrfd'),
-		face_detector.MODEL_SET.get('yoloface'),
-		face_landmarker.MODEL_SET.get('2dfan4'),
-		face_landmarker.MODEL_SET.get('peppa_wutz'),
-		face_landmarker.MODEL_SET.get('face_landmarker_68_5'),
-		face_recognizer.MODEL_SET.get('arcface'),
-		face_masker.MODEL_SET.get('face_masker'),
-		voice_extractor.MODEL_SET.get('kim_vocal_2')
+		content_analyser,
+		face_classifier,
+		face_detector,
+		face_landmarker,
+		face_recognizer,
+		face_masker,
+		voice_extractor
 	]
+	processor_modules = get_processors_modules(available_processors)
 
-	for processor_module in get_processors_modules(available_processors):
-		if hasattr(processor_module, 'MODEL_SET'):
-			for processor_model in processor_module.MODEL_SET:
-				model_set.append(processor_module.MODEL_SET[processor_model])
+	for module in common_modules + processor_modules:
+		if hasattr(module, 'MODEL_SET'):
+			for model in module.MODEL_SET.values():
+				model_hashes = model.get('hashes')
+				model_sources = model.get('sources')
 
-	for model in model_set:
-		model_hashes = model.get('hashes')
-		model_sources = model.get('sources')
+				if model_hashes and model_sources:
+					if not conditional_download_hashes(download_directory_path, model_hashes) or not conditional_download_sources(download_directory_path, model_sources):
+						return 1
 
-		if model_hashes and model_sources:
-			if not conditional_download_hashes(download_directory_path, model_hashes) or not conditional_download_sources(download_directory_path, model_sources):
-				return 1
 	return 0
 
 
