@@ -180,7 +180,7 @@ WORDING : Dict[str, Any] =\
 		'run': 'run the program',
 		'headless_run': 'run the program in headless mode',
 		'force_download': 'force automate downloads and exit',
-		# job
+		# jobs
 		'job_id': 'specify the job id',
 		'step_index': 'specify the step index',
 		# job manager

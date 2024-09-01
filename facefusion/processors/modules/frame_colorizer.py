@@ -15,7 +15,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, unpack_resolution, write_image
 
 MODEL_SET : ModelSet =\
@@ -145,10 +145,10 @@ def register_args(program : ArgumentParser) -> None:
 		facefusion.jobs.job_store.register_step_keys([ 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size' ])
 
 
-def apply_args(args : Args) -> None:
-	state_manager.init_item('frame_colorizer_model', args.get('frame_colorizer_model'))
-	state_manager.init_item('frame_colorizer_blend', args.get('frame_colorizer_blend'))
-	state_manager.init_item('frame_colorizer_size', args.get('frame_colorizer_size'))
+def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
+	apply_state_item('frame_colorizer_model', args.get('frame_colorizer_model'))
+	apply_state_item('frame_colorizer_blend', args.get('frame_colorizer_blend'))
+	apply_state_item('frame_colorizer_size', args.get('frame_colorizer_size'))
 
 
 def pre_check() -> bool:

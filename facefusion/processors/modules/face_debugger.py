@@ -17,7 +17,7 @@ from facefusion.filesystem import in_directory, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceDebuggerInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.typing import Args, Face, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, Face, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 
@@ -36,8 +36,8 @@ def register_args(program : ArgumentParser) -> None:
 		facefusion.jobs.job_store.register_step_keys([ 'face_debugger_items' ])
 
 
-def apply_args(args : Args) -> None:
-	state_manager.init_item('face_debugger_items', args.get('face_debugger_items'))
+def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
+	apply_state_item('face_debugger_items', args.get('face_debugger_items'))
 
 
 def pre_check() -> bool:

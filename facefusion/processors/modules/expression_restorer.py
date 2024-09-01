@@ -22,7 +22,7 @@ from facefusion.processors.typing import ExpressionRestorerInputs
 from facefusion.processors.typing import LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
-from facefusion.typing import Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import get_video_frame, read_image, read_static_image, write_image
 
 MODEL_SET : ModelSet =\
@@ -92,9 +92,9 @@ def register_args(program : ArgumentParser) -> None:
 		facefusion.jobs.job_store.register_step_keys([ 'expression_restorer_model','expression_restorer_factor' ])
 
 
-def apply_args(args : Args) -> None:
-	state_manager.init_item('expression_restorer_model', args.get('expression_restorer_model'))
-	state_manager.init_item('expression_restorer_factor', args.get('expression_restorer_factor'))
+def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
+	apply_state_item('expression_restorer_model', args.get('expression_restorer_model'))
+	apply_state_item('expression_restorer_factor', args.get('expression_restorer_factor'))
 
 
 def pre_check() -> bool:

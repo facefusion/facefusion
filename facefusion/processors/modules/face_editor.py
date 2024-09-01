@@ -21,7 +21,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
-from facefusion.typing import Args, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 MODEL_SET : ModelSet =\
@@ -121,19 +121,19 @@ def register_args(program : ArgumentParser) -> None:
 		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio', 'face_editor_mouth_grim', 'face_editor_mouth_pout', 'face_editor_mouth_purse', 'face_editor_mouth_smile', 'face_editor_mouth_position_horizontal', 'face_editor_mouth_position_vertical' ])
 
 
-def apply_args(args : Args) -> None:
-	state_manager.init_item('face_editor_model', args.get('face_editor_model'))
-	state_manager.init_item('face_editor_eyebrow_direction', args.get('face_editor_eyebrow_direction'))
-	state_manager.init_item('face_editor_eye_gaze_horizontal', args.get('face_editor_eye_gaze_horizontal'))
-	state_manager.init_item('face_editor_eye_gaze_vertical', args.get('face_editor_eye_gaze_vertical'))
-	state_manager.init_item('face_editor_eye_open_ratio', args.get('face_editor_eye_open_ratio'))
-	state_manager.init_item('face_editor_lip_open_ratio', args.get('face_editor_lip_open_ratio'))
-	state_manager.init_item('face_editor_mouth_grim', args.get('face_editor_mouth_grim'))
-	state_manager.init_item('face_editor_mouth_pout', args.get('face_editor_mouth_pout'))
-	state_manager.init_item('face_editor_mouth_purse', args.get('face_editor_mouth_purse'))
-	state_manager.init_item('face_editor_mouth_smile', args.get('face_editor_mouth_smile'))
-	state_manager.init_item('face_editor_mouth_position_horizontal', args.get('face_editor_mouth_position_horizontal'))
-	state_manager.init_item('face_editor_mouth_position_vertical', args.get('face_editor_mouth_position_vertical'))
+def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
+	apply_state_item('face_editor_model', args.get('face_editor_model'))
+	apply_state_item('face_editor_eyebrow_direction', args.get('face_editor_eyebrow_direction'))
+	apply_state_item('face_editor_eye_gaze_horizontal', args.get('face_editor_eye_gaze_horizontal'))
+	apply_state_item('face_editor_eye_gaze_vertical', args.get('face_editor_eye_gaze_vertical'))
+	apply_state_item('face_editor_eye_open_ratio', args.get('face_editor_eye_open_ratio'))
+	apply_state_item('face_editor_lip_open_ratio', args.get('face_editor_lip_open_ratio'))
+	apply_state_item('face_editor_mouth_grim', args.get('face_editor_mouth_grim'))
+	apply_state_item('face_editor_mouth_pout', args.get('face_editor_mouth_pout'))
+	apply_state_item('face_editor_mouth_purse', args.get('face_editor_mouth_purse'))
+	apply_state_item('face_editor_mouth_smile', args.get('face_editor_mouth_smile'))
+	apply_state_item('face_editor_mouth_position_horizontal', args.get('face_editor_mouth_position_horizontal'))
+	apply_state_item('face_editor_mouth_position_vertical', args.get('face_editor_mouth_position_vertical'))
 
 
 def pre_check() -> bool:
