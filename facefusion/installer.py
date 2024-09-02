@@ -73,8 +73,6 @@ def run(program : ArgumentParser) -> None:
 			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
 
 		if onnxruntime == 'cuda':
-			subprocess.call([ 'pip', 'install', 'tensorrt==10.3.0', '--extra-index-url', 'https://pypi.nvidia.com', '--force-reinstall' ])
-
 			if has_conda:
 				library_paths = []
 
