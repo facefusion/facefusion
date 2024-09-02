@@ -1,12 +1,15 @@
-import inspect
+import sys
 
 from facefusion.typing import AppContext
 
 
 def detect_app_context() -> AppContext:
-	for stack in inspect.stack():
-		if 'facefusion/jobs' in stack.filename:
+	frame = sys._getframe(1)
+
+	while frame:
+		if 'facefusion/jobs' in frame.f_code.co_filename:
 			return 'cli'
-		if 'facefusion/uis' in stack.filename:
+		if 'facefusion/uis' in frame.f_code.co_filename:
 			return 'ui'
+		frame = frame.f_back
 	return 'cli'

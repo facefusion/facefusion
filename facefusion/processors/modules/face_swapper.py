@@ -346,8 +346,9 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') and state_manager.get_item('face_swapper_model') == 'inswapper_128_fp16' else state_manager.get_item('face_swapper_model')
-	return MODEL_SET[face_swapper_model]
+	face_swapper_model = state_manager.get_item('face_swapper_model')
+	face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') and face_swapper_model == 'inswapper_128_fp16' else face_swapper_model
+	return MODEL_SET.get(face_swapper_model)
 
 
 def register_args(program : ArgumentParser) -> None:
