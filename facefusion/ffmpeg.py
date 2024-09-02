@@ -43,7 +43,7 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 
 	for error in errors:
 		if error.strip():
-			logger.debug(error.strip(), __name__.upper())
+			logger.debug(error.strip(), __name__)
 
 
 def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps) -> bool:

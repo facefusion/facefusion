@@ -68,10 +68,10 @@ def conditional_download_hashes(download_directory_path : str, hashes : Download
 	valid_hash_paths, invalid_hash_paths = validate_hash_paths(hash_paths)
 	for valid_hash_path in valid_hash_paths:
 		valid_hash_file_name, _ = os.path.splitext(os.path.basename(valid_hash_path))
-		logger.debug(wording.get('validating_hash_succeed').format(hash_file_name = valid_hash_file_name), __name__.upper())
+		logger.debug(wording.get('validating_hash_succeed').format(hash_file_name = valid_hash_file_name), __name__)
 	for invalid_hash_path in invalid_hash_paths:
 		invalid_hash_file_name, _ = os.path.splitext(os.path.basename(invalid_hash_path))
-		logger.error(wording.get('validating_hash_failed').format(hash_file_name = invalid_hash_file_name), __name__.upper())
+		logger.error(wording.get('validating_hash_failed').format(hash_file_name = invalid_hash_file_name), __name__)
 
 	if not invalid_hash_paths:
 		process_manager.end()
@@ -93,13 +93,13 @@ def conditional_download_sources(download_directory_path : str, sources : Downlo
 	valid_source_paths, invalid_source_paths = validate_source_paths(source_paths)
 	for valid_source_path in valid_source_paths:
 		valid_source_file_name, _ = os.path.splitext(os.path.basename(valid_source_path))
-		logger.debug(wording.get('validating_source_succeed').format(source_file_name = valid_source_file_name), __name__.upper())
+		logger.debug(wording.get('validating_source_succeed').format(source_file_name = valid_source_file_name), __name__)
 	for invalid_source_path in invalid_source_paths:
 		invalid_source_file_name, _ = os.path.splitext(os.path.basename(invalid_source_path))
-		logger.error(wording.get('validating_source_failed').format(source_file_name = invalid_source_file_name), __name__.upper())
+		logger.error(wording.get('validating_source_failed').format(source_file_name = invalid_source_file_name), __name__)
 
 		if remove_file(invalid_source_path):
-			logger.error(wording.get('deleting_corrupt_source').format(source_file_name = invalid_source_file_name), __name__.upper())
+			logger.error(wording.get('deleting_corrupt_source').format(source_file_name = invalid_source_file_name), __name__)
 
 	if not invalid_source_paths:
 		process_manager.end()

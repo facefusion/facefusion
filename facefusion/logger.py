@@ -14,19 +14,19 @@ def get_package_logger() -> Logger:
 
 
 def debug(message : str, scope : str) -> None:
-	get_package_logger().debug('[' + scope + '] ' + message)
+	get_package_logger().debug('[' + scope.upper() + '] ' + message)
 
 
 def info(message : str, scope : str) -> None:
-	get_package_logger().info('[' + scope + '] ' + message)
+	get_package_logger().info('[' + scope.upper() + '] ' + message)
 
 
 def warn(message : str, scope : str) -> None:
-	get_package_logger().warning('[' + scope + '] ' + message)
+	get_package_logger().warning('[' + scope.upper() + '] ' + message)
 
 
 def error(message : str, scope : str) -> None:
-	get_package_logger().error('[' + scope + '] ' + message)
+	get_package_logger().error('[' + scope.upper() + '] ' + message)
 
 
 def table(headers : TableHeaders, contents : TableContents) -> None:

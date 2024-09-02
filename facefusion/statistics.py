@@ -48,4 +48,4 @@ def conditional_log_statistics() -> None:
 		statistics = create_statistics(get_face_store().get('static_faces'))
 
 		for name, value in statistics.items():
-			logger.debug(str(name) + ': ' + str(value), __name__.upper())
+			logger.debug(str(name) + ': ' + str(value), __name__)

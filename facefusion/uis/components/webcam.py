@@ -164,5 +164,5 @@ def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : 
 			if device_name:
 				commands.extend([ '-f', 'v4l2', '/dev/' + device_name ])
 		except FileNotFoundError:
-			logger.error(wording.get('stream_not_loaded').format(stream_mode = stream_mode), __name__.upper())
+			logger.error(wording.get('stream_not_loaded').format(stream_mode = stream_mode), __name__)
 	return open_ffmpeg(commands)

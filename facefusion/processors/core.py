@@ -36,11 +36,11 @@ def load_processor_module(processor : str) -> Any:
 			if not hasattr(processor_module, method_name):
 				raise NotImplementedError
 	except ModuleNotFoundError as exception:
-		logger.error(wording.get('processor_not_loaded').format(processor = processor), __name__.upper())
-		logger.debug(exception.msg, __name__.upper())
+		logger.error(wording.get('processor_not_loaded').format(processor = processor), __name__)
+		logger.debug(exception.msg, __name__)
 		hard_exit(1)
 	except NotImplementedError:
-		logger.error(wording.get('processor_not_implemented').format(processor = processor), __name__.upper())
+		logger.error(wording.get('processor_not_implemented').format(processor = processor), __name__)
 		hard_exit(1)
 	return processor_module
 
