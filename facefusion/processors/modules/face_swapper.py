@@ -491,17 +491,19 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 
 def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_model_options().get('type')
-	source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
-	source_embedding, source_normed_embedding = calc_embedding(source_vision_frame, source_face.landmark_set.get('5/68'))
 
 	if model_type == 'ghost':
+		source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
+		source_embedding, _ = calc_embedding(source_vision_frame, source_face.landmark_set.get('5/68'))
 		source_embedding = source_embedding.reshape(1, -1)
 	elif model_type == 'inswapper':
 		model_path = get_model_options().get('sources').get('face_swapper').get('path')
 		model_initializer = get_static_model_initializer(model_path)
-		source_embedding = source_embedding.reshape((1, -1))
+		source_embedding = source_face.embedding.reshape((1, -1))
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
 	else:
+		source_vision_frame = read_static_image(get_first(state_manager.get_item('source_paths')))
+		_, source_normed_embedding = calc_embedding(source_vision_frame, source_face.landmark_set.get('5/68'))
 		source_embedding = source_normed_embedding.reshape(1, -1)
 	return source_embedding
 
