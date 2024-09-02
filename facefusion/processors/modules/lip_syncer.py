@@ -79,7 +79,8 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET[state_manager.get_item('lip_syncer_model')]
+	lip_syncer_model = state_manager.get_item('lip_syncer_model')
+	return MODEL_SET.get(lip_syncer_model)
 
 
 def register_args(program : ArgumentParser) -> None:

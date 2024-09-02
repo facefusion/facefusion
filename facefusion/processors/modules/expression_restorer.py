@@ -81,7 +81,8 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET[state_manager.get_item('expression_restorer_model')]
+	expression_restorer_model = state_manager.get_item('expression_restorer_model')
+	return MODEL_SET.get(expression_restorer_model)
 
 
 def register_args(program : ArgumentParser) -> None:
