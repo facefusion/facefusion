@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
-from facefusion import config, logger, metadata, state_manager, wording
+from facefusion import config, metadata, state_manager, wording
 from facefusion.common_helper import create_float_metavar, create_int_metavar
 from facefusion.execution import get_execution_provider_choices
 from facefusion.filesystem import list_directory
@@ -170,7 +170,7 @@ def create_skip_download_program() -> ArgumentParser:
 def create_log_level_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
-	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = logger.get_log_levels())
+	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = facefusion.choices.log_level_set.keys())
 	job_store.register_job_keys([ 'log_level' ])
 	return program
 

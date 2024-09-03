@@ -89,6 +89,7 @@ ProcessMode = Literal['output', 'preview', 'stream']
 
 ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
+LogLevelSet = Dict[LogLevel, int]
 
 TableHeaders = List[str]
 TableContents = List[List[Any]]
@@ -120,6 +121,7 @@ ModelInitializer = NDArray[Any]
 ExecutionProviderKey = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 'rocm', 'tensorrt']
 ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
 ExecutionProviderSet = Dict[ExecutionProviderKey, ExecutionProviderValue]
+
 ValueAndUnit = TypedDict('ValueAndUnit',
 {
 	'value' : int,
