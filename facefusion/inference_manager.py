@@ -31,7 +31,8 @@ def get_inference_pool(model_context : str, model_sources : DownloadSet) -> Infe
 		if app_context == 'ui' and INFERENCE_POOLS.get('cli').get(model_context):
 			INFERENCE_POOLS['ui'][model_context] = INFERENCE_POOLS.get('cli').get(model_context)
 		if INFERENCE_POOLS.get(app_context).get(model_context) is None:
-			INFERENCE_POOLS[app_context][model_context] = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), find_execution_providers(model_context))
+			execution_provider_keys = resolve_execution_provider_keys(model_context)
+			INFERENCE_POOLS[app_context][model_context] = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), execution_provider_keys)
 
 		return INFERENCE_POOLS.get(app_context).get(model_context)
 
@@ -62,7 +63,7 @@ def get_static_model_initializer(model_path : str) -> ModelInitializer:
 	return onnx.numpy_helper.to_array(model.graph.initializer[-1])
 
 
-def find_execution_providers(model_context : str) -> List[ExecutionProviderKey]:
+def resolve_execution_provider_keys(model_context : str) -> List[ExecutionProviderKey]:
 	if has_execution_provider('coreml') and model_context in [ 'facefusion.processors.modules.age_modifier', 'facefusion.processors.modules.frame_colorizer' ]:
 		return [ 'cpu' ]
 	return state_manager.get_item('execution_providers')
