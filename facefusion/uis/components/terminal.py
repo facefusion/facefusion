@@ -4,21 +4,30 @@ import math
 import os
 from typing import Optional
 
-import gradio as gr
+import gradio
 from tqdm import tqdm
 
-from facefusion import logger, wording
+from facefusion import logger, state_manager, wording
+from facefusion.choices import log_level_set
+from facefusion.typing import LogLevel
 
-TERMINAL_TEXTBOX: Optional[gr.Textbox] = None
+LOG_LEVEL_DROPDOWN : Optional[gradio.Dropdown] = None
+TERMINAL_TEXTBOX : Optional[gradio.Textbox] = None
 LOG_BUFFER = io.StringIO()
 LOG_HANDLER = logging.StreamHandler(LOG_BUFFER)
 TQDM_UPDATE = tqdm.update
 
 
 def render() -> None:
+	global LOG_LEVEL_DROPDOWN
 	global TERMINAL_TEXTBOX
 
-	TERMINAL_TEXTBOX = gr.Textbox(
+	LOG_LEVEL_DROPDOWN = gradio.Dropdown(
+		label = wording.get('uis.log_level_dropdown'),
+		choices = log_level_set.keys(),
+		value = state_manager.get_item('log_level')
+	)
+	TERMINAL_TEXTBOX = gradio.Textbox(
 		label = wording.get('uis.terminal_textbox'),
 		value = read_logs,
 		lines = 8,
@@ -29,8 +38,16 @@ def render() -> None:
 
 
 def listen() -> None:
+	global LOG_LEVEL_DROPDOWN
+
+	LOG_LEVEL_DROPDOWN.change(update_log_level, inputs = LOG_LEVEL_DROPDOWN)
 	logger.get_package_logger().addHandler(LOG_HANDLER)
 	tqdm.update = tqdm_update
+
+
+def update_log_level(log_level : LogLevel) -> None:
+	state_manager.set_item('log_level', log_level)
+	logger.init(state_manager.get_item('log_level'))
 
 
 def tqdm_update(self : tqdm, n : int = 1) -> None:
