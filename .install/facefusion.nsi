@@ -16,7 +16,7 @@ Page custom InstallPage PostInstallPage
 !insertmacro MUI_LANGUAGE English
 
 Var UseDefault
-Var UseCuda
+Var UseCudaTensorRT
 Var UseDirectMl
 Var UseOpenVino
 
@@ -28,11 +28,11 @@ Function InstallPage
 	nsDialogs::Create 1018
 	!insertmacro MUI_HEADER_TEXT 'Choose Your Accelerator' 'Choose your accelerator based on the graphics card.'
 
-	${NSD_CreateRadioButton} 0 40u 100% 10u 'Default'
+	${NSD_CreateRadioButton} 0 40u 100% 10u 'Default (CPU)'
 	Pop $UseDefault
 
-	${NSD_CreateRadioButton} 0 55u 100% 10u 'CUDA (NVIDIA)'
-	Pop $UseCuda
+	${NSD_CreateRadioButton} 0 55u 100% 10u 'CUDA / TensorRT (NVIDIA)'
+	Pop $UseCudaTensorRT
 
 	${NSD_CreateRadioButton} 0 70u 100% 10u 'DirectML (AMD, Intel, NVIDIA)'
 	Pop $UseDirectMl
@@ -47,7 +47,7 @@ FunctionEnd
 
 Function PostInstallPage
 	${NSD_GetState} $UseDefault $UseDefault
-	${NSD_GetState} $UseCuda $UseCuda
+	${NSD_GetState} $UseCudaTensorRT $UseCudaTensorRT
 	${NSD_GetState} $UseDirectMl $UseDirectMl
 	${NSD_GetState} $UseOpenVino $UseOpenVino
 FunctionEnd
@@ -76,7 +76,7 @@ Section 'Prepare Your Platform'
 	RMDir /r '$LOCALAPPDATA\Programs\Miniconda3'
 
 	DetailPrint 'Install Conda'
-	inetc::get 'https://repo.anaconda.com/miniconda/Miniconda3-py310_24.5.0-0-Windows-x86_64.exe' '$TEMP\Miniconda3.exe'
+	inetc::get 'https://repo.anaconda.com/miniconda/Miniconda3-py310_24.7.1-0-Windows-x86_64.exe' '$TEMP\Miniconda3.exe'
 	ExecWait '$TEMP\Miniconda3.exe /InstallationType=JustMe /AddToPath=1 /S /D=$LOCALAPPDATA\Programs\Miniconda3' $1
 	Delete '$TEMP\Miniconda3.exe'
 
@@ -110,9 +110,10 @@ Section 'Create Install Batch'
 	FileOpen $2 install-application.bat w
 
 	FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::ffmpeg=7.0.2 --yes'
-	${If} $UseCuda == 1
-		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::cuda-runtime=12.4.1 cudnn=8.9.2.26 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
-		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda-12.4'
+	${If} $UseCudaTensorRT == 1
+		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::cuda-runtime=12.4.1 cudnn=9.2.1.18 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
+		FileWrite $1 '@echo off && conda activate facefusion && pip install tensorrt==10.3.0'
+		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda'
 	${ElseIf} $UseDirectMl == 1
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime directml'
 	${ElseIf} $UseOpenVino == 1
