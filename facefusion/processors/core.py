@@ -11,7 +11,6 @@ from facefusion import logger, state_manager, wording
 from facefusion.exit_helper import hard_exit
 from facefusion.typing import ProcessFrames, QueuePayload
 
-PROCESSORS_MODULES : List[ModuleType] = []
 PROCESSORS_METHODS =\
 [
 	'get_inference_pool',
@@ -46,19 +45,17 @@ def load_processor_module(processor : str) -> Any:
 
 
 def get_processors_modules(processors : List[str]) -> List[ModuleType]:
-	global PROCESSORS_MODULES
+	processor_modules = []
 
-	if not PROCESSORS_MODULES:
-		for processor in processors:
-			processor_module = load_processor_module(processor)
-			PROCESSORS_MODULES.append(processor_module)
-	return PROCESSORS_MODULES
+	for processor in processors:
+		processor_module = load_processor_module(processor)
+		processor_modules.append(processor_module)
+	return processor_modules
 
 
-def clear_processors_modules() -> None:
-	global PROCESSORS_MODULES
-
-	for processor_module in PROCESSORS_MODULES:
+def clear_processors_modules(processors : List[str]) -> None:
+	for processor in processors:
+		processor_module = load_processor_module(processor)
 		processor_module.clear_inference_pool()
 
 

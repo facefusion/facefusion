@@ -4,7 +4,7 @@ import gradio
 
 from facefusion import state_manager, wording
 from facefusion.filesystem import list_directory
-from facefusion.processors.core import clear_processors_modules, load_processor_module
+from facefusion.processors.core import clear_processors_modules, get_processors_modules
 from facefusion.uis.core import register_ui_component
 
 PROCESSORS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
@@ -26,11 +26,10 @@ def listen() -> None:
 
 
 def update_processors(processors : List[str]) -> gradio.CheckboxGroup:
+	clear_processors_modules(state_manager.get_item('processors'))
 	state_manager.set_item('processors', processors)
-	clear_processors_modules()
 
-	for processor in state_manager.get_item('processors'):
-		processor_module = load_processor_module(processor)
+	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		if not processor_module.pre_check():
 			return gradio.CheckboxGroup()
 	return gradio.CheckboxGroup(value = state_manager.get_item('processors'), choices = sort_processors(state_manager.get_item('processors')))

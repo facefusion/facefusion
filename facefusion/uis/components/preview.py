@@ -13,7 +13,7 @@ from facefusion.core import conditional_append_reference_faces
 from facefusion.face_analyser import get_average_face, get_many_faces
 from facefusion.face_store import clear_reference_faces, clear_static_faces, get_reference_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
-from facefusion.processors.core import load_processor_module
+from facefusion.processors.core import get_processors_modules
 from facefusion.typing import AudioFrame, Face, FaceSet, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.typing import ComponentOptions
@@ -225,8 +225,7 @@ def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_
 	if analyse_frame(target_vision_frame):
 		return cv2.GaussianBlur(target_vision_frame, (99, 99), 0)
 
-	for processor in state_manager.get_item('processors'):
-		processor_module = load_processor_module(processor)
+	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.disable()
 		if processor_module.pre_process('preview'):
 			logger.enable()

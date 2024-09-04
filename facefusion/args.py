@@ -2,7 +2,7 @@ from facefusion import state_manager
 from facefusion.filesystem import is_image, is_video, list_directory
 from facefusion.jobs import job_store
 from facefusion.normalizer import normalize_fps, normalize_padding
-from facefusion.processors.core import load_processor_module
+from facefusion.processors.core import get_processors_modules
 from facefusion.typing import ApplyStateItem, Args
 from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, pack_resolution
 
@@ -94,8 +94,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	# processors
 	available_processors = list_directory('facefusion/processors/modules')
 	apply_state_item('processors', args.get('processors'))
-	for processor in available_processors:
-		processor_module = load_processor_module(processor)
+	for processor_module in get_processors_modules(available_processors):
 		processor_module.apply_args(args, apply_state_item)
 	# uis
 	if args.get('command') == 'run':
