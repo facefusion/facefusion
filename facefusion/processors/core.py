@@ -60,7 +60,6 @@ def clear_processors_modules() -> None:
 
 	for processor_module in PROCESSORS_MODULES:
 		processor_module.clear_inference_pool()
-	PROCESSORS_MODULES = []
 
 
 def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str], process_frames : ProcessFrames) -> None:

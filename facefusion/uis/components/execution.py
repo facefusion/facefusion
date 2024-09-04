@@ -25,8 +25,6 @@ def listen() -> None:
 
 
 def update_execution_providers(execution_providers : List[ExecutionProviderKey]) -> gradio.CheckboxGroup:
-	execution_providers = execution_providers or get_execution_provider_choices()
-	state_manager.set_item('execution_providers', execution_providers)
 	content_analyser.clear_inference_pool()
 	face_classifier.clear_inference_pool()
 	face_detector.clear_inference_pool()
@@ -35,4 +33,6 @@ def update_execution_providers(execution_providers : List[ExecutionProviderKey])
 	face_recognizer.clear_inference_pool()
 	voice_extractor.clear_inference_pool()
 	clear_processors_modules()
+	execution_providers = execution_providers or get_execution_provider_choices()
+	state_manager.set_item('execution_providers', execution_providers)
 	return gradio.CheckboxGroup(value = state_manager.get_item('execution_providers'))

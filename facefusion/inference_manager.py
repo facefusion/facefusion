@@ -25,16 +25,17 @@ def get_inference_pool(model_context : str, model_sources : DownloadSet) -> Infe
 		while process_manager.is_checking():
 			sleep(0.5)
 		app_context = detect_app_context()
+		inference_context = get_inference_context(model_context)
 
-		if app_context == 'cli' and INFERENCE_POOLS.get('ui').get(model_context):
-			INFERENCE_POOLS['cli'][model_context] = INFERENCE_POOLS.get('ui').get(model_context)
-		if app_context == 'ui' and INFERENCE_POOLS.get('cli').get(model_context):
-			INFERENCE_POOLS['ui'][model_context] = INFERENCE_POOLS.get('cli').get(model_context)
-		if INFERENCE_POOLS.get(app_context).get(model_context) is None:
+		if app_context == 'cli' and INFERENCE_POOLS.get('ui').get(inference_context):
+			INFERENCE_POOLS['cli'][inference_context] = INFERENCE_POOLS.get('ui').get(inference_context)
+		if app_context == 'ui' and INFERENCE_POOLS.get('cli').get(inference_context):
+			INFERENCE_POOLS['ui'][inference_context] = INFERENCE_POOLS.get('cli').get(inference_context)
+		if not INFERENCE_POOLS.get(app_context).get(inference_context):
 			execution_provider_keys = resolve_execution_provider_keys(model_context)
-			INFERENCE_POOLS[app_context][model_context] = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), execution_provider_keys)
+			INFERENCE_POOLS[app_context][inference_context] = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), execution_provider_keys)
 
-		return INFERENCE_POOLS.get(app_context).get(model_context)
+		return INFERENCE_POOLS.get(app_context).get(inference_context)
 
 
 def create_inference_pool(model_sources : DownloadSet, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferencePool:
@@ -49,7 +50,10 @@ def clear_inference_pool(model_context : str) -> None:
 	global INFERENCE_POOLS
 
 	app_context = detect_app_context()
-	INFERENCE_POOLS[app_context][model_context] = None
+	inference_context = get_inference_context(model_context)
+
+	if INFERENCE_POOLS.get(app_context).get(inference_context):
+		del INFERENCE_POOLS[app_context][inference_context]
 
 
 def create_inference_session(model_path : str, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSession:
@@ -67,3 +71,9 @@ def resolve_execution_provider_keys(model_context : str) -> List[ExecutionProvid
 	if has_execution_provider('coreml') and model_context in [ 'facefusion.processors.modules.age_modifier', 'facefusion.processors.modules.frame_colorizer' ]:
 		return [ 'cpu' ]
 	return state_manager.get_item('execution_providers')
+
+
+def get_inference_context(model_context : str) -> str:
+	execution_provider_keys = resolve_execution_provider_keys(model_context)
+	inference_context = model_context + '.' + '_'.join(execution_provider_keys)
+	return inference_context
