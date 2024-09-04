@@ -66,7 +66,7 @@ def create_face_selector_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_selector = program.add_argument_group('face selector')
 	group_face_selector.add_argument('--face-selector-mode', help = wording.get('help.face_selector_mode'), default = config.get_str_value('face_selector.face_selector_mode', 'reference'), choices = facefusion.choices.face_selector_modes)
-	group_face_selector.add_argument('--face-selector-order', help = wording.get('help.face_selector_order'), default = config.get_str_value('face_selector.face_selector_order', 'left-right'), choices = facefusion.choices.face_selector_orders)
+	group_face_selector.add_argument('--face-selector-order', help = wording.get('help.face_selector_order'), default = config.get_str_value('face_selector.face_selector_order', 'large-small'), choices = facefusion.choices.face_selector_orders)
 	group_face_selector.add_argument('--face-selector-gender', help = wording.get('help.face_selector_gender'), default = config.get_str_value('face_selector.face_selector_gender'), choices = facefusion.choices.face_selector_genders)
 	group_face_selector.add_argument('--face-selector-race', help = wording.get('help.face_selector_race'), default = config.get_str_value('face_selector.face_selector_race'), choices = facefusion.choices.face_selector_races)
 	group_face_selector.add_argument('--face-selector-age-start', help = wording.get('help.face_selector_age_start'), type = int, default = config.get_int_value('face_selector.face_selector_age_start'), choices = facefusion.choices.face_selector_age_range, metavar = create_int_metavar(facefusion.choices.face_selector_age_range))

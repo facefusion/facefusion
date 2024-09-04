@@ -79,7 +79,6 @@ def listen() -> None:
 
 def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	state_manager.set_item('face_selector_mode', 'one')
-	state_manager.set_item('face_selector_order', 'large-small')
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_frames)
