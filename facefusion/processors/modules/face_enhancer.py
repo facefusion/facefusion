@@ -219,11 +219,15 @@ MODEL_SET : ModelSet =\
 
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
-	return inference_manager.get_inference_pool(__name__, model_sources)
+	face_enhancer_model = state_manager.get_item('face_enhancer_model')
+	model_context = __name__ + '.' + face_enhancer_model
+	return inference_manager.get_inference_pool(model_context, model_sources)
 
 
 def clear_inference_pool() -> None:
-	inference_manager.clear_inference_pool(__name__)
+	face_enhancer_model = state_manager.get_item('face_enhancer_model')
+	model_context = __name__ + '.' + face_enhancer_model
+	inference_manager.clear_inference_pool(model_context)
 
 
 def get_model_options() -> ModelOptions:
