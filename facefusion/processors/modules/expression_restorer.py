@@ -73,8 +73,7 @@ MODEL_SET : ModelSet =\
 
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
-	expression_restorer_model = state_manager.get_item('expression_restorer_model')
-	model_context = __name__ + '.' + expression_restorer_model
+	model_context = __name__ + '.' + state_manager.get_item('expression_restorer_model')
 	return inference_manager.get_inference_pool(model_context, model_sources)
 
 

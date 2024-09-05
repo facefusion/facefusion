@@ -125,14 +125,12 @@ MODEL_SET : ModelSet =\
 
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
-	frame_colorizer_model = state_manager.get_item('frame_colorizer_model')
-	model_context = __name__ + '.' + frame_colorizer_model
+	model_context = __name__ + '.' + state_manager.get_item('frame_colorizer_model')
 	return inference_manager.get_inference_pool(model_context, model_sources)
 
 
 def clear_inference_pool() -> None:
-	frame_colorizer_model = state_manager.get_item('frame_colorizer_model')
-	model_context = __name__ + '.' + frame_colorizer_model
+	model_context = __name__ + '.' + state_manager.get_item('frame_colorizer_model')
 	inference_manager.clear_inference_pool(model_context)
 
 
