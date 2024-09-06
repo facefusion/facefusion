@@ -60,8 +60,8 @@ Function Destroy
 	${EndIf}
 FunctionEnd
 
-Section 'Prepare Your Platform'
-	DetailPrint 'Install GIT'
+Section 'Preparing Platform'
+	DetailPrint 'Installing Git'
 	inetc::get 'https://github.com/git-for-windows/git/releases/download/v2.46.0.windows.1/Git-2.46.0-64-bit.exe' '$TEMP\Git.exe'
 	ExecWait '$TEMP\Git.exe /CURRENTUSER /VERYSILENT /DIR=$LOCALAPPDATA\Programs\Git' $0
 	Delete '$TEMP\Git.exe'
@@ -71,11 +71,11 @@ Section 'Prepare Your Platform'
 		Call Destroy
 	${EndIf}
 
-	DetailPrint 'Uninstall Conda'
+	DetailPrint 'Uninstalling Conda'
 	ExecWait '$LOCALAPPDATA\Programs\Miniconda3\Uninstall-Miniconda3.exe /S _?=$LOCALAPPDATA\Programs\Miniconda3'
 	RMDir /r '$LOCALAPPDATA\Programs\Miniconda3'
 
-	DetailPrint 'Install Conda'
+	DetailPrint 'Installing Conda'
 	inetc::get 'https://repo.anaconda.com/miniconda/Miniconda3-py310_24.7.1-0-Windows-x86_64.exe' '$TEMP\Miniconda3.exe'
 	ExecWait '$TEMP\Miniconda3.exe /InstallationType=JustMe /AddToPath=1 /S /D=$LOCALAPPDATA\Programs\Miniconda3' $1
 	Delete '$TEMP\Miniconda3.exe'
@@ -86,23 +86,23 @@ Section 'Prepare Your Platform'
 	${EndIf}
 SectionEnd
 
-Section 'Download Your Copy'
+Section 'Downloading Application'
 	SetOutPath $INSTDIR
 
-	DetailPrint 'Download Your Copy'
+	DetailPrint 'Downloading Application'
 	RMDir /r $INSTDIR
 
 	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe config http.sslVerify false'
 	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch 3.0.0 .'
 SectionEnd
 
-Section 'Prepare Your Environment'
-	DetailPrint 'Prepare Your Environment'
+Section 'Preparing Environment'
+	DetailPrint 'Preparing Environment'
 	nsExec::Exec '$LOCALAPPDATA\Programs\Miniconda3\Scripts\conda.exe init --all'
 	nsExec::Exec '$LOCALAPPDATA\Programs\Miniconda3\Scripts\conda.exe create --name facefusion python=3.10 --yes'
 SectionEnd
 
-Section 'Create Install Batch'
+Section 'Creating Install Batch'
 	SetOutPath $INSTDIR
 
 	FileOpen $0 install-ffmpeg.bat w
@@ -111,8 +111,7 @@ Section 'Create Install Batch'
 
 	FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::ffmpeg=7.0.2 --yes'
 	${If} $UseCudaTensorRT == 1
-		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::cuda-runtime=12.4.1 cudnn=9.2.1.18 conda-forge::gputil=1.4.0 conda-forge::zlib-wapi --yes'
-		FileWrite $1 '@echo off && conda activate facefusion && pip install tensorrt==10.3.0'
+		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::cuda-runtime=12.4.1 conda-forge::cudnn=9.2.1.18 conda-forge::gputil=1.4.0 --yes && pip install tensorrt==10.3.0 --extra-index-url https://pypi.nvidia.com'
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda'
 	${ElseIf} $UseDirectMl == 1
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime directml'
@@ -128,28 +127,28 @@ Section 'Create Install Batch'
 	FileClose $2
 SectionEnd
 
-Section 'Install Your FFmpeg'
+Section 'Installing FFmpeg'
 	SetOutPath $INSTDIR
 
-	DetailPrint 'Install Your FFmpeg'
+	DetailPrint 'Installing FFmpeg'
 	nsExec::ExecToLog 'install-ffmpeg.bat'
 SectionEnd
 
-Section 'Install Your Accelerator'
+Section 'Installing Accelerator'
 	SetOutPath $INSTDIR
 
-	DetailPrint 'Install Your Accelerator'
+	DetailPrint 'Installing Accelerator'
 	nsExec::ExecToLog 'install-accelerator.bat'
 SectionEnd
 
-Section 'Install The Application'
+Section 'Installing Application'
 	SetOutPath $INSTDIR
 
-	DetailPrint 'Install The Application'
+	DetailPrint 'Installing Application'
 	nsExec::ExecToLog 'install-application.bat'
 SectionEnd
 
-Section 'Create Run Batch'
+Section 'Creating Run Batch'
 	SetOutPath $INSTDIR
 
 	FileOpen $0 facefusion.bat w
@@ -157,15 +156,16 @@ Section 'Create Run Batch'
 	FileClose $0
 SectionEnd
 
-Section 'Register The Application'
-	DetailPrint 'Register The Application'
+Section 'Registering Application'
+	DetailPrint 'Registering Application'
 
 	CreateDirectory $SMPROGRAMS\FaceFusion
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion.lnk' $INSTDIR\run.bat '--open-browser' $INSTDIR\.install\facefusion.ico
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Benchmark.lnk' $INSTDIR\run.bat '--ui-layouts benchmark --open-browser' $INSTDIR\.install\facefusion.ico
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Webcam.lnk' $INSTDIR\run.bat '--ui-layouts webcam --open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion.lnk' $INSTDIR\facefusion.bat 'run --open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Benchmark.lnk' $INSTDIR\facefusion.bat 'run --ui-layouts benchmark --open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Jobs.lnk' $INSTDIR\facefusion.bat 'run --ui-layouts jobs --open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Webcam.lnk' $INSTDIR\facefusion.bat 'run --ui-layouts webcam --open-browser' $INSTDIR\.install\facefusion.ico
 
-	CreateShortcut $DESKTOP\FaceFusion.lnk $INSTDIR\run.bat '--open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut $DESKTOP\FaceFusion.lnk $INSTDIR\facefusion.bat 'run --open-browser' $INSTDIR\.install\facefusion.ico
 
 	WriteUninstaller $INSTDIR\Uninstall.exe
 
