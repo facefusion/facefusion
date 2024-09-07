@@ -2,7 +2,6 @@ import os
 import subprocess
 import tempfile
 from typing import List, Optional
-from tqdm import tqdm  # Import tqdm for progress bar
 import filetype
 import re
 from facefusion import logger, process_manager, state_manager
@@ -10,6 +9,7 @@ from facefusion.filesystem import remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.typing import AudioBuffer, Fps, OutputVideoPreset
 from facefusion.vision import count_video_frame_total, restrict_video_fps
+from tqdm import tqdm  # Import tqdm for progress bar
 
 
 def run_ffmpeg(args: List[str]) -> subprocess.Popen[bytes]:
