@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -100,4 +101,4 @@ def run(program : ArgumentParser) -> None:
 				])
 				library_paths = [ library_path for library_path in library_paths if os.path.exists(library_path) ]
 
-				subprocess.call([ 'conda', 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
+				subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
