@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import tempfile
 from typing import List, Optional
@@ -13,7 +14,7 @@ from facefusion.vision import restrict_video_fps
 
 
 def run_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
-	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'error' ]
+	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-loglevel', 'error' ]
 	commands.extend(args)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
@@ -32,7 +33,7 @@ def run_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 
 
 def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
-	commands = [ 'ffmpeg', '-hide_banner', '-loglevel', 'quiet' ]
+	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-loglevel', 'quiet' ]
 	commands.extend(args)
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 

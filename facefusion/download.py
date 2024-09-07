@@ -1,4 +1,5 @@
 import os
+import shutil
 import ssl
 import subprocess
 import urllib.request
@@ -27,7 +28,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 
 		if initial_size < download_size:
 			with tqdm(total = download_size, initial = initial_size, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-				subprocess.Popen([ 'curl', '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])
+				subprocess.Popen([ shutil.which('curl'), '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])
 				current_size = initial_size
 
 				progress.set_postfix(file = download_file_name)
