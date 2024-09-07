@@ -5,8 +5,11 @@
 RequestExecutionLevel user
 ManifestDPIAware true
 
-Name 'FaceFusion 3.0.0'
-OutFile 'FaceFusion_3.0.0.exe'
+!define VERSION '3.0.0'
+!define TAG 'next'
+
+Name 'FaceFusion ${VERSION}'
+OutFile 'FaceFusion_${VERSION}.exe'
 
 !define MUI_ICON 'facefusion.ico'
 
@@ -32,7 +35,7 @@ Function InstallPage
 	Pop $UseDefault
 
 	${NSD_CreateRadioButton} 0 55u 100% 10u 'CUDA / TensorRT (NVIDIA)'
-	Pop $UseCudaTensorRT
+	Pop $UseCudaTensorRt
 
 	${NSD_CreateRadioButton} 0 70u 100% 10u 'DirectML (AMD, Intel, NVIDIA)'
 	Pop $UseDirectMl
@@ -47,7 +50,7 @@ FunctionEnd
 
 Function PostInstallPage
 	${NSD_GetState} $UseDefault $UseDefault
-	${NSD_GetState} $UseCudaTensorRT $UseCudaTensorRT
+	${NSD_GetState} $UseCudaTensorRt $UseCudaTensorRt
 	${NSD_GetState} $UseDirectMl $UseDirectMl
 	${NSD_GetState} $UseOpenVino $UseOpenVino
 FunctionEnd
@@ -90,10 +93,9 @@ Section 'Downloading Application'
 	SetOutPath $INSTDIR
 
 	DetailPrint 'Downloading Application'
-	RMDir /r $INSTDIR
 
 	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe config http.sslVerify false'
-	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion --branch 3.0.0 .'
+	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion . --branch ${TAG}'
 SectionEnd
 
 Section 'Preparing Environment'
@@ -110,7 +112,7 @@ Section 'Creating Install Batch'
 	FileOpen $2 install-application.bat w
 
 	FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::ffmpeg=7.0.2 --yes'
-	${If} $UseCudaTensorRT == 1
+	${If} $UseCudaTensorRt == 1
 		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::cuda-runtime=12.4.1 conda-forge::cudnn=9.2.1.18 conda-forge::gputil=1.4.0 --yes && pip install tensorrt==10.3.0 --extra-index-url https://pypi.nvidia.com'
 		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda'
 	${ElseIf} $UseDirectMl == 1
@@ -132,6 +134,7 @@ Section 'Installing FFmpeg'
 
 	DetailPrint 'Installing FFmpeg'
 	nsExec::ExecToLog 'install-ffmpeg.bat'
+	Delete 'install-ffmpeg.bat'
 SectionEnd
 
 Section 'Installing Accelerator'
@@ -139,6 +142,7 @@ Section 'Installing Accelerator'
 
 	DetailPrint 'Installing Accelerator'
 	nsExec::ExecToLog 'install-accelerator.bat'
+	Delete 'install-accelerator.bat'
 SectionEnd
 
 Section 'Installing Application'
@@ -146,13 +150,14 @@ Section 'Installing Application'
 
 	DetailPrint 'Installing Application'
 	nsExec::ExecToLog 'install-application.bat'
+	Delete 'install-application.bat'
 SectionEnd
 
 Section 'Creating Run Batch'
 	SetOutPath $INSTDIR
 
-	FileOpen $0 facefusion.bat w
-	FileWrite $0 '@echo off && conda activate facefusion && python facefusion.py %*'
+	FileOpen $0 run.bat w
+	FileWrite $0 '@echo off && conda activate facefusion && python facefusion.py run %*'
 	FileClose $0
 SectionEnd
 
@@ -160,17 +165,17 @@ Section 'Registering Application'
 	DetailPrint 'Registering Application'
 
 	CreateDirectory $SMPROGRAMS\FaceFusion
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion.lnk' $INSTDIR\facefusion.bat 'run --open-browser' $INSTDIR\.install\facefusion.ico
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Benchmark.lnk' $INSTDIR\facefusion.bat 'run --ui-layouts benchmark --open-browser' $INSTDIR\.install\facefusion.ico
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Jobs.lnk' $INSTDIR\facefusion.bat 'run --ui-layouts jobs --open-browser' $INSTDIR\.install\facefusion.ico
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Webcam.lnk' $INSTDIR\facefusion.bat 'run --ui-layouts webcam --open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion.lnk' $INSTDIR\run.bat '--open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Benchmark.lnk' $INSTDIR\run.bat '--ui-layouts benchmark --open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Jobs.lnk' $INSTDIR\run.bat '--ui-layouts jobs --open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Webcam.lnk' $INSTDIR\run.bat '--ui-layouts webcam --open-browser' $INSTDIR\.install\facefusion.ico
 
-	CreateShortcut $DESKTOP\FaceFusion.lnk $INSTDIR\facefusion.bat 'run --open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut $DESKTOP\FaceFusion.lnk $INSTDIR\run.bat '--open-browser' $INSTDIR\.install\facefusion.ico
 
-	WriteUninstaller $INSTDIR\Uninstall.exe
+	WriteUninstaller $INSTDIR\uninstall.exe
 
 	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion DisplayName 'FaceFusion'
-	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion DisplayVersion '3.0.0'
+	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion DisplayVersion ${VERSION}
 	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion Publisher 'Henry Ruhs'
 	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion InstallLocation $INSTDIR
 	WriteRegStr HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion UninstallString $INSTDIR\uninstall.exe
