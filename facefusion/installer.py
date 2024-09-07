@@ -56,7 +56,7 @@ def run(program : ArgumentParser) -> None:
 		onnxruntime = answers['onnxruntime']
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIMES[onnxruntime]
 
-		subprocess.call([ 'pip', 'install', '-r', 'requirements.txt', '--force-reinstall' ])
+		subprocess.call([ shutil.which('pip'), 'install', '-r', 'requirements.txt', '--force-reinstall' ])
 
 		if onnxruntime == 'rocm':
 			python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
@@ -65,13 +65,13 @@ def run(program : ArgumentParser) -> None:
 				wheel_name = 'onnxruntime_rocm-' + onnxruntime_version +'-' + python_id + '-' + python_id + '-linux_x86_64.whl'
 				wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
 				wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.2/' + wheel_name
-				subprocess.call([ 'curl', '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
-				subprocess.call([ 'pip', 'uninstall', 'onnxruntime', wheel_path, '-y', '-q' ])
-				subprocess.call([ 'pip', 'install', wheel_path, '--force-reinstall' ])
+				subprocess.call([ shutil.which('curl'), '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
+				subprocess.call([ shutil.which('pip'), 'uninstall', 'onnxruntime', wheel_path, '-y', '-q' ])
+				subprocess.call([ shutil.which('pip'), 'install', wheel_path, '--force-reinstall' ])
 				os.remove(wheel_path)
 		else:
-			subprocess.call([ 'pip', 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
-			subprocess.call([ 'pip', 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
+			subprocess.call([ shutil.which('pip'), 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
+			subprocess.call([ shutil.which('pip'), 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
 
 		if onnxruntime == 'cuda' and has_conda:
 			library_paths = []
@@ -88,7 +88,7 @@ def run(program : ArgumentParser) -> None:
 				])
 				library_paths = [ library_path for library_path in library_paths if os.path.exists(library_path) ]
 
-				subprocess.call([ 'conda', 'env', 'config', 'vars', 'set', 'LD_LIBRARY_PATH=' + os.pathsep.join(library_paths) ])
+				subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'LD_LIBRARY_PATH=' + os.pathsep.join(library_paths) ])
 
 			if is_windows():
 				if os.getenv('PATH'):
