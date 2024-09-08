@@ -29,7 +29,7 @@ FunctionEnd
 
 Function InstallPage
 	nsDialogs::Create 1018
-	!insertmacro MUI_HEADER_TEXT 'Choose Your Accelerator' 'Choose your accelerator based on the graphics card.'
+	!insertmacro MUI_HEADER_TEXT 'Choose The Accelerator' 'Choose the accelerator based on the graphics card.'
 
 	${NSD_CreateRadioButton} 0 40u 100% 10u 'Default (CPU)'
 	Pop $UseDefault
