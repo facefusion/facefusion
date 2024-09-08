@@ -44,7 +44,7 @@ def create_execution_providers(execution_device_id : str, execution_provider_key
 				'device_id': execution_device_id,
 				'cudnn_conv_algo_search': 'EXHAUSTIVE' if use_exhaustive() else 'DEFAULT'
 			}))
-		elif execution_provider == 'TensorrtExecutionProvider':
+		if execution_provider == 'TensorrtExecutionProvider':
 			execution_providers_with_options.append((execution_provider,
 			{
 				'device_id': execution_device_id,
@@ -54,18 +54,18 @@ def create_execution_providers(execution_device_id : str, execution_provider_key
 				'trt_timing_cache_path': '.caches',
 				'trt_builder_optimization_level': 5
 			}))
-		elif execution_provider == 'OpenVINOExecutionProvider':
+		if execution_provider == 'OpenVINOExecutionProvider':
 			execution_providers_with_options.append((execution_provider,
 			{
 				'device_type': 'GPU.' + execution_device_id,
 				'precision': 'FP32'
 			}))
-		elif execution_provider in [ 'DmlExecutionProvider', 'ROCMExecutionProvider' ]:
+		if execution_provider in [ 'DmlExecutionProvider', 'ROCMExecutionProvider' ]:
 			execution_providers_with_options.append((execution_provider,
 			{
 				'device_id': execution_device_id
 			}))
-		elif execution_provider == 'CoreMLExecutionProvider':
+		if execution_provider == 'CoreMLExecutionProvider':
 			execution_providers_with_options.append(execution_provider)
 
 	if 'CPUExecutionProvider' in execution_providers:
