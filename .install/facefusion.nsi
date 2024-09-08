@@ -93,9 +93,10 @@ Section 'Downloading Application'
 	SetOutPath $INSTDIR
 
 	DetailPrint 'Downloading Application'
+	RMDir /r $INSTDIR\${VERSION}
 
 	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe config http.sslVerify false'
-	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion . --branch ${TAG}'
+	nsExec::Exec '$LOCALAPPDATA\Programs\Git\cmd\git.exe clone https://github.com/facefusion/facefusion ${VERSION} --branch ${TAG}'
 SectionEnd
 
 Section 'Preparing Environment'
@@ -114,14 +115,14 @@ Section 'Creating Install Batch'
 	FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::ffmpeg=7.0.2 --yes'
 	${If} $UseCudaTensorRt == 1
 		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::cuda-runtime=12.4.1 conda-forge::cudnn=9.2.1.18 conda-forge::gputil=1.4.0 --yes && pip install tensorrt==10.3.0 --extra-index-url https://pypi.nvidia.com'
-		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime cuda'
+		FileWrite $2 '@echo off && conda activate facefusion && cd $INSTDIR\${VERSION} && python install.py --onnxruntime cuda'
 	${ElseIf} $UseDirectMl == 1
-		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime directml'
+		FileWrite $2 '@echo off && conda activate facefusion && cd $INSTDIR\${VERSION} && python install.py --onnxruntime directml'
 	${ElseIf} $UseOpenVino == 1
 		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::openvino=2024.2.0 --yes'
-		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime openvino'
+		FileWrite $2 '@echo off && conda activate facefusion && cd $INSTDIR\${VERSION} && python install.py --onnxruntime openvino'
 	${Else}
-		FileWrite $2 '@echo off && conda activate facefusion && python install.py --onnxruntime default'
+		FileWrite $2 '@echo off && conda activate facefusion && cd $INSTDIR\${VERSION} && python install.py --onnxruntime default'
 	${EndIf}
 
 	FileClose $0
@@ -157,7 +158,7 @@ Section 'Creating Run Batch'
 	SetOutPath $INSTDIR
 
 	FileOpen $0 run.bat w
-	FileWrite $0 '@echo off && conda activate facefusion && python facefusion.py run %*'
+	FileWrite $0 '@echo off && conda activate facefusion && cd $INSTDIR\${VERSION} && python facefusion.py run %*'
 	FileClose $0
 SectionEnd
 
@@ -165,12 +166,12 @@ Section 'Registering Application'
 	DetailPrint 'Registering Application'
 
 	CreateDirectory $SMPROGRAMS\FaceFusion
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion.lnk' $INSTDIR\run.bat '--open-browser' $INSTDIR\.install\facefusion.ico
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Benchmark.lnk' $INSTDIR\run.bat '--ui-layouts benchmark --open-browser' $INSTDIR\.install\facefusion.ico
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Jobs.lnk' $INSTDIR\run.bat '--ui-layouts jobs --open-browser' $INSTDIR\.install\facefusion.ico
-	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Webcam.lnk' $INSTDIR\run.bat '--ui-layouts webcam --open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion.lnk' $INSTDIR\run.bat '--open-browser' $INSTDIR\${VERSION}\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Benchmark.lnk' $INSTDIR\run.bat '--ui-layouts benchmark --open-browser' $INSTDIR\${VERSION}\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Jobs.lnk' $INSTDIR\run.bat '--ui-layouts jobs --open-browser' $INSTDIR\${VERSION}\.install\facefusion.ico
+	CreateShortcut '$SMPROGRAMS\FaceFusion\FaceFusion Webcam.lnk' $INSTDIR\run.bat '--ui-layouts webcam --open-browser' $INSTDIR\${VERSION}\.install\facefusion.ico
 
-	CreateShortcut $DESKTOP\FaceFusion.lnk $INSTDIR\run.bat '--open-browser' $INSTDIR\.install\facefusion.ico
+	CreateShortcut $DESKTOP\FaceFusion.lnk $INSTDIR\run.bat '--open-browser' $INSTDIR\${VERSION}\.install\facefusion.ico
 
 	WriteUninstaller $INSTDIR\uninstall.exe
 
@@ -186,7 +187,10 @@ Section 'Uninstall'
 
 	Delete $DESKTOP\FaceFusion.lnk
 	RMDir /r $SMPROGRAMS\FaceFusion
-	RMDir /r $INSTDIR
+	RMDir /r $INSTDIR\${VERSION}
+	Delete $INSTDIR\run.bat
+	Delete $INSTDIR\uninstall.exe
+	RMDir $INSTDIR
 
 	DeleteRegKey HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FaceFusion
 SectionEnd
