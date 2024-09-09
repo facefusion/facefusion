@@ -105,53 +105,42 @@ Section 'Preparing Environment'
 	nsExec::Exec '$LOCALAPPDATA\Programs\Miniconda3\Scripts\conda.exe create --name facefusion python=3.10 --yes'
 SectionEnd
 
-Section 'Creating Install Batch'
-	SetOutPath $INSTDIR
-
-	FileOpen $0 install-ffmpeg.bat w
-	FileOpen $1 install-accelerator.bat w
-	FileOpen $2 install-application.bat w
-
-	FileWrite $0 '@echo off && conda activate facefusion && conda install conda-forge::ffmpeg=7.0.2 --yes'
-	${If} $UseCudaTensorRt == 1
-		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::cuda-runtime=12.4.1 conda-forge::cudnn=9.2.1.18 conda-forge::gputil=1.4.0 --yes && pip install tensorrt==10.3.0 --extra-index-url https://pypi.nvidia.com'
-		FileWrite $2 '@echo off && conda activate facefusion && cd $INSTDIR\${VERSION} && python install.py --onnxruntime cuda'
-	${ElseIf} $UseDirectMl == 1
-		FileWrite $2 '@echo off && conda activate facefusion && cd $INSTDIR\${VERSION} && python install.py --onnxruntime directml'
-	${ElseIf} $UseOpenVino == 1
-		FileWrite $1 '@echo off && conda activate facefusion && conda install conda-forge::openvino=2024.2.0 --yes'
-		FileWrite $2 '@echo off && conda activate facefusion && cd $INSTDIR\${VERSION} && python install.py --onnxruntime openvino'
-	${Else}
-		FileWrite $2 '@echo off && conda activate facefusion && cd $INSTDIR\${VERSION} && python install.py --onnxruntime default'
-	${EndIf}
-
-	FileClose $0
-	FileClose $1
-	FileClose $2
-SectionEnd
 
 Section 'Installing FFmpeg'
-	SetOutPath $INSTDIR
-
 	DetailPrint 'Installing FFmpeg'
-	nsExec::ExecToLog 'install-ffmpeg.bat'
-	Delete 'install-ffmpeg.bat'
+	nsExec::ExecToLog 'cmd /C conda run -n facefusion conda install conda-forge::ffmpeg=7.0.2 --yes'
 SectionEnd
 
 Section 'Installing Accelerator'
 	SetOutPath $INSTDIR
 
-	DetailPrint 'Installing Accelerator'
-	nsExec::ExecToLog 'install-accelerator.bat'
-	Delete 'install-accelerator.bat'
+	${If} $UseCudaTensorRt == 1
+		DetailPrint 'Installing Accelerator (CUDA)'
+		nsExec::ExecToLog 'cmd /C conda run -n facefusion conda install conda-forge::cuda-runtime=12.4.1 conda-forge::cudnn=9.2.1.18 conda-forge::gputil=1.4.0 --yes'
+		DetailPrint 'Installing Accelerator (TensorRT)'
+		nsExec::ExecToLog 'cmd /C conda run -n facefusion pip install tensorrt==10.3.0 --extra-index-url https://pypi.nvidia.com'
+	${EndIf}
+	${If} $UseOpenVino == 1
+		nsExec::ExecToLog 'cmd /C conda run -n facefusion conda install conda-forge::openvino=2024.2.0 --yes'
+	${EndIf}
 SectionEnd
 
 Section 'Installing Application'
-	SetOutPath $INSTDIR
+	SetOutPath $INSTDIR\${VERSION}
 
 	DetailPrint 'Installing Application'
-	nsExec::ExecToLog 'install-application.bat'
-	Delete 'install-application.bat'
+	${If} $UseDefault == 1
+		nsExec::ExecToLog 'cmd /C conda run -n facefusion python install.py --onnxruntime default'
+	${EndIf}
+	${If} $UseCudaTensorRt == 1
+		nsExec::ExecToLog 'cmd /C conda run -n facefusion python install.py --onnxruntime cuda'
+	${EndIf}
+	${If} $UseDirectMl == 1
+		nsExec::ExecToLog 'cmd /C conda run -n facefusion python install.py --onnxruntime directml'
+	${EndIf}
+	${If} $UseOpenVino == 1
+		nsExec::ExecToLog 'cmd /C conda run -n facefusion python install.py --onnxruntime openvino'
+	${EndIf}
 SectionEnd
 
 Section 'Creating Run Batch'
@@ -183,7 +172,7 @@ Section 'Registering Application'
 SectionEnd
 
 Section 'Uninstall'
-	nsExec::Exec '$LOCALAPPDATA\Programs\Miniconda3\Scripts\conda.exe env remove --name facefusion --yes'
+	nsExec::Exec 'conda env remove --name facefusion --yes'
 
 	Delete $DESKTOP\FaceFusion.lnk
 	RMDir /r $SMPROGRAMS\FaceFusion
