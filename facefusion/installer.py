@@ -14,15 +14,15 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 
 if is_macos():
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.19.0')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.19.2')
 else:
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.19.0')
-	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.19.0')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.19.2')
+	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.19.2')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.18.0')
 if is_linux():
 	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.18.0')
 if is_windows():
-	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.19.0')
+	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.19.2')
 
 
 def cli() -> None:
@@ -102,3 +102,6 @@ def run(program : ArgumentParser) -> None:
 				library_paths = [ library_path for library_path in library_paths if os.path.exists(library_path) ]
 
 				subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
+
+		if onnxruntime_version == '1.18.0':
+			subprocess.call([ shutil.which('pip'), 'install', 'numpy==1.26.4', '--force-reinstall' ])
