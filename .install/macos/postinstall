@@ -1,0 +1,33 @@
+#!/bin/bash
+
+VERSION='3.0.0'
+TAG='next'
+
+echo 'Installing Homebrew'
+curl https://github.com/Homebrew/brew/releases/download/4.3.19/Homebrew-4.3.19.pkg --create-dirs --insecure --location --continue-at - --output Homebrew-4.3.19.pkg
+installer -pkg Homebrew-4.3.19.pkg -target /
+
+echo 'Installing Git'
+brew install git
+
+echo 'Installing Conda'
+brew install miniconda
+
+echo 'Downloading Application'
+mkdir $HOME/FaceFusion
+cd $HOME/FaceFusion
+rm -rf $VERSION
+
+git config http.sslVerify false
+git clone https://github.com/facefusion/facefusion $VERSION --branch $TAG
+
+echo 'Preparing Environment'
+conda init --all
+conda create --name facefusion python=3.10 -y
+
+echo 'Installing FFmpeg'
+bash -c 'conda run -n facefusion conda install conda-forge::ffmpeg=7.0.2 --yes'
+
+echo 'Installing Application'
+bash -c 'conda run -n facefusion python install.py --onnxruntime default'
+
