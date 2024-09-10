@@ -142,6 +142,7 @@ def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_score_68 = numpy.amax(face_heatmap, axis = (2, 3))
 	face_landmark_score_68 = numpy.mean(face_landmark_score_68)
+	face_landmark_score_68 = numpy.interp(face_landmark_score_68, [ 0, 0.9 ], [ 0, 1 ])
 	return face_landmark_68, face_landmark_score_68
 
 
@@ -160,6 +161,7 @@ def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : Bound
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(rotated_matrix))
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_score_68 = prediction.reshape(-1, 3)[:, 2].mean()
+	face_landmark_score_68 = numpy.interp(face_landmark_score_68, [ 0.2, 0.95 ], [ 0, 1 ])
 	return face_landmark_68, face_landmark_score_68
 
 
