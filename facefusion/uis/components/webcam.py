@@ -143,13 +143,13 @@ def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.disable()
 		if processor_module.pre_process('stream'):
-			logger.enable()
 			target_vision_frame = processor_module.process_frame(
 			{
 				'source_face': source_face,
 				'source_audio_frame': source_audio_frame,
 				'target_vision_frame': target_vision_frame
 			})
+		logger.enable()
 	return target_vision_frame
 
 

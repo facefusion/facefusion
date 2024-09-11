@@ -228,7 +228,6 @@ def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.disable()
 		if processor_module.pre_process('preview'):
-			logger.enable()
 			target_vision_frame = processor_module.process_frame(
 			{
 				'reference_faces': reference_faces,
@@ -237,4 +236,5 @@ def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_
 				'source_vision_frame': source_vision_frame,
 				'target_vision_frame': target_vision_frame
 			})
+		logger.enable()
 	return target_vision_frame
