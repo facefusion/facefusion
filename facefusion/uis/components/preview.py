@@ -29,7 +29,8 @@ def render() -> None:
 
 	preview_image_options : ComponentOptions =\
 	{
-		'label': wording.get('uis.preview_image')
+		'label': wording.get('uis.preview_image'),
+		'elem_classes': [ 'image-preview' ]
 	}
 	preview_frame_slider_options : ComponentOptions =\
 	{
@@ -174,7 +175,7 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 def slide_preview_image(frame_number : int = 0) -> gradio.Image:
 	if is_video(state_manager.get_item('target_path')):
 		preview_vision_frame = normalize_frame_color(get_video_frame(state_manager.get_item('target_path'), frame_number))
-		preview_vision_frame = resize_frame_resolution(preview_vision_frame, (640, 640))
+		preview_vision_frame = resize_frame_resolution(preview_vision_frame, (1024, 1024))
 		return gradio.Image(value = preview_vision_frame)
 	return gradio.Image(value = None)
 
@@ -220,7 +221,7 @@ def update_preview_frame_slider() -> gradio.Slider:
 
 
 def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_audio_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:
-	target_vision_frame = resize_frame_resolution(target_vision_frame, (640, 640))
+	target_vision_frame = resize_frame_resolution(target_vision_frame, (1024, 1024))
 	source_vision_frame = target_vision_frame.copy()
 	if analyse_frame(target_vision_frame):
 		return cv2.GaussianBlur(target_vision_frame, (99, 99), 0)

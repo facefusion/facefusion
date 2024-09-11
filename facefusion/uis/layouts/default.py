@@ -15,7 +15,7 @@ def pre_render() -> bool:
 def render() -> gradio.Blocks:
 	with gradio.Blocks() as layout:
 		with gradio.Row():
-			with gradio.Column(scale = 2):
+			with gradio.Column(scale = 4):
 				with gradio.Blocks():
 					about.render()
 				with gradio.Blocks():
@@ -48,7 +48,7 @@ def render() -> gradio.Blocks:
 					temp_frame.render()
 				with gradio.Blocks():
 					output_options.render()
-			with gradio.Column(scale = 2):
+			with gradio.Column(scale = 4):
 				with gradio.Blocks():
 					source.render()
 				with gradio.Blocks():
@@ -62,7 +62,7 @@ def render() -> gradio.Blocks:
 					instant_runner.render()
 					job_runner.render()
 					job_manager.render()
-			with gradio.Column(scale = 3):
+			with gradio.Column(scale = 7):
 				with gradio.Blocks():
 					preview.render()
 				with gradio.Blocks():

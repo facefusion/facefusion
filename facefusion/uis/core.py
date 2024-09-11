@@ -81,7 +81,7 @@ def register_ui_component(component_name : ComponentName, component: Component) 
 
 def launch() -> None:
 	ui_layouts_total = len(state_manager.get_item('ui_layouts'))
-	with gradio.Blocks(theme = get_theme(), css = get_css(), title = metadata.get('name') + ' ' + metadata.get('version')) as ui:
+	with gradio.Blocks(theme = get_theme(), css = get_css(), title = metadata.get('name') + ' ' + metadata.get('version'), fill_width = True) as ui:
 		for ui_layout in state_manager.get_item('ui_layouts'):
 			ui_layout_module = load_ui_layout_module(ui_layout)
 			if ui_layout_module.pre_render():
