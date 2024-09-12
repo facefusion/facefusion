@@ -122,7 +122,7 @@ def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox
 	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
 		face_landmark_peppa_wutz, face_landmark_score_peppa_wutz = detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
 
-	if face_landmark_score_2dfan4 > face_landmark_score_peppa_wutz:
+	if face_landmark_score_2dfan4 > face_landmark_score_peppa_wutz - 0.1:
 		return face_landmark_2dfan4, face_landmark_score_2dfan4
 	return face_landmark_peppa_wutz, face_landmark_score_peppa_wutz
 
@@ -161,7 +161,7 @@ def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : Bound
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(rotated_matrix))
 	face_landmark_68 = transform_points(face_landmark_68, cv2.invertAffineTransform(affine_matrix))
 	face_landmark_score_68 = prediction.reshape(-1, 3)[:, 2].mean()
-	face_landmark_score_68 = numpy.interp(face_landmark_score_68, [ 0.2, 0.95 ], [ 0, 1 ])
+	face_landmark_score_68 = numpy.interp(face_landmark_score_68, [ 0, 0.95 ], [ 0, 1 ])
 	return face_landmark_68, face_landmark_score_68
 
 
