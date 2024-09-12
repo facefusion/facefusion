@@ -15,12 +15,12 @@ def pre_render() -> bool:
 def render() -> gradio.Blocks:
 	with gradio.Blocks() as layout:
 		with gradio.Row():
-			with gradio.Column(scale = 2):
+			with gradio.Column(scale = 4):
 				with gradio.Blocks():
 					about.render()
 				with gradio.Blocks():
 					job_list_options.render()
-			with gradio.Column(scale = 5):
+			with gradio.Column(scale = 11):
 				with gradio.Blocks():
 					job_list.render()
 	return layout
