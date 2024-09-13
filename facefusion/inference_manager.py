@@ -57,8 +57,8 @@ def clear_inference_pool(model_context : str) -> None:
 
 
 def create_inference_session(model_path : str, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSession:
-	providers = create_execution_providers(execution_device_id, execution_provider_keys)
-	return InferenceSession(model_path, providers = providers)
+	execution_providers = create_execution_providers(execution_device_id, execution_provider_keys)
+	return InferenceSession(model_path, providers = execution_providers)
 
 
 @lru_cache(maxsize = None)
