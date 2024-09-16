@@ -1,24 +1,41 @@
+import random
 from typing import Optional
 
 import gradio
 
-from facefusion import metadata, wording
+from facefusion import metadata
 
-ABOUT_BUTTON : Optional[gradio.Button] = None
-DONATE_BUTTON : Optional[gradio.Button] = None
+METADATA_BUTTON : Optional[gradio.Button] = None
+ACTION_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
-	global ABOUT_BUTTON
-	global DONATE_BUTTON
+	global METADATA_BUTTON
+	global ACTION_BUTTON
 
-	ABOUT_BUTTON = gradio.Button(
+	action = random.choice(
+	[
+		{
+			'wording': 'become a member',
+			'url': 'https://members.facefusion.io'
+		},
+		{
+			'wording': 'join our community',
+			'url': 'https://join.facefusion.io'
+		},
+		{
+			'wording': 'read the documentation',
+			'url': 'https://docs.facefusion.io'
+		}
+	])
+
+	METADATA_BUTTON = gradio.Button(
 		value = metadata.get('name') + ' ' + metadata.get('version'),
 		variant = 'primary',
 		link = metadata.get('url')
 	)
-	DONATE_BUTTON = gradio.Button(
-		value = wording.get('uis.donate_button'),
-		link = 'https://donate.facefusion.io',
+	ACTION_BUTTON = gradio.Button(
+		value = action.get('wording'),
+		link = action.get('url'),
 		size = 'sm'
 	)
