@@ -4,8 +4,8 @@ import gradio
 
 from facefusion import metadata, wording
 
-ABOUT_BUTTON : Optional[gradio.HTML] = None
-DONATE_BUTTON : Optional[gradio.HTML] = None
+ABOUT_BUTTON : Optional[gradio.Button] = None
+DONATE_BUTTON : Optional[gradio.Button] = None
 
 
 def render() -> None:
