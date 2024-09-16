@@ -51,7 +51,7 @@ def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slide
 
 def update_expression_restorer_model(expression_restorer_model : ExpressionRestorerModel) -> gradio.Dropdown:
 	expression_restorer_module = load_processor_module('expression_restorer')
-	expression_restorer_module.clear_processor()
+	expression_restorer_module.clear_inference_pool()
 	state_manager.set_item('expression_restorer_model', expression_restorer_model)
 
 	if expression_restorer_module.pre_check():

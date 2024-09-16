@@ -38,7 +38,7 @@ def remote_update(processors : List[str]) -> gradio.Dropdown:
 
 def update_lip_syncer_model(lip_syncer_model : LipSyncerModel) -> gradio.Dropdown:
 	lip_syncer_module = load_processor_module('lip_syncer')
-	lip_syncer_module.clear_processor()
+	lip_syncer_module.clear_inference_pool()
 	state_manager.set_item('lip_syncer_model', lip_syncer_model)
 
 	if lip_syncer_module.pre_check():
