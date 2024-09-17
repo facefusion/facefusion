@@ -68,6 +68,7 @@ MelFilterBank = NDArray[Any]
 
 Fps = float
 Padding = Tuple[int, int, int, int]
+Orientation = Literal['landscape', 'portrait']
 Resolution = Tuple[int, int]
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']

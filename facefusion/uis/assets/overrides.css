@@ -87,3 +87,10 @@
 {
 	object-fit: cover;
 }
+
+:root:root:root:root .image-preview.is-landscape
+{
+	position: sticky;
+	top: 0;
+	z-index: 100;
+}

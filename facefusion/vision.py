@@ -8,7 +8,7 @@ from cv2.typing import Size
 from facefusion.choices import image_template_sizes, video_template_sizes
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import is_image, is_video, sanitize_path_for_windows
-from facefusion.typing import Fps, Resolution, VisionFrame
+from facefusion.typing import Fps, Orientation, Resolution, VisionFrame
 
 
 @lru_cache(maxsize = 128)
@@ -176,6 +176,14 @@ def pack_resolution(resolution : Resolution) -> str:
 def unpack_resolution(resolution : str) -> Resolution:
 	width, height = map(int, resolution.split('x'))
 	return width, height
+
+
+def detect_frame_orientation(vision_frame : VisionFrame) -> Orientation:
+	height, width = vision_frame.shape[:2]
+
+	if width > height:
+		return 'landscape'
+	return 'portrait'
 
 
 def resize_frame_resolution(vision_frame : VisionFrame, max_resolution : Resolution) -> VisionFrame:
