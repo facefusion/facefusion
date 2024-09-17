@@ -78,9 +78,12 @@
 	padding: unset;
 }
 
-:root:root:root:root .image-preview
+:root:root:root:root .image-frame
 {
-	position: sticky;
-	top: 0;
-	z-index: 100;
+	width: 100%;
+}
+
+:root:root:root:root .image-frame > img
+{
+	object-fit: cover;
 }

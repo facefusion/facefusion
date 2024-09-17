@@ -29,8 +29,7 @@ def render() -> None:
 
 	preview_image_options : ComponentOptions =\
 	{
-		'label': wording.get('uis.preview_image'),
-		'elem_classes': [ 'image-preview' ]
+		'label': wording.get('uis.preview_image')
 	}
 	preview_frame_slider_options : ComponentOptions =\
 	{
