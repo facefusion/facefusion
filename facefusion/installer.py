@@ -28,7 +28,7 @@ if is_windows():
 def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: graceful_exit(0))
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 50))
-	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), default = 'default', choices = ONNXRUNTIMES.keys())
+	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys(), required = True)
 	program.add_argument('--skip-conda', help = wording.get('help.skip_conda'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	run(program)
