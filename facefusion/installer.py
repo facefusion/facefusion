@@ -9,7 +9,6 @@ from typing import Dict, Tuple
 
 from facefusion import metadata, wording
 from facefusion.common_helper import is_linux, is_macos, is_windows
-from facefusion.exit_helper import graceful_exit
 
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 
@@ -26,7 +25,7 @@ if is_windows():
 
 
 def cli() -> None:
-	signal.signal(signal.SIGINT, lambda signal_number, frame: graceful_exit(0))
+	signal.signal(signal.SIGINT, lambda signal_number, frame: sys.exit(0))
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 50))
 	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys(), required = True)
 	program.add_argument('--skip-conda', help = wording.get('help.skip_conda'), action = 'store_true')
