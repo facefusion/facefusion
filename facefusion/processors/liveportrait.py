@@ -24,7 +24,7 @@ EXPRESSION_LOWER_LIMITS = numpy.array([[
 	[ -4.61211195e-03, -1.21660791e-02, -2.93173041e-04 ],
 	[ -4.10017073e-02, -7.43824020e-02, -4.42762971e-02 ],
 	[ -1.90370996e-02, -3.74363363e-02, -1.34740388e-02 ]
-]])
+]], dtype = numpy.float32)
 EXPRESSION_UPPER_LIMITS = numpy.array([[
 	[ 4.46682945e-02, 7.08772913e-02, 4.08344204e-04 ],
 	[ 2.14308221e-02, 6.15894832e-02, 4.85319615e-05 ],
@@ -47,7 +47,7 @@ EXPRESSION_UPPER_LIMITS = numpy.array([[
 	[ 1.83460284e-02, 1.61141958e-02, 2.87440169e-04 ],
 	[ 3.57594155e-02, 1.80554688e-01, 2.75554154e-02 ],
 	[ 2.17450950e-02, 8.66811201e-02, 3.34241726e-02 ]
-]])
+]], dtype = numpy.float32)
 
 
 def limit_expression(expression : LivePortraitExpression) -> LivePortraitExpression:
