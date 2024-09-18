@@ -27,7 +27,7 @@ EXPRESSION_MIN = numpy.array(
 		[ -4.10017073e-02, -7.43824020e-02, -4.42762971e-02 ],
 		[ -1.90370996e-02, -3.74363363e-02, -1.34740388e-02 ]
 	]
-])
+]).astype(numpy.float32)
 EXPRESSION_MAX = numpy.array(
 [
 	[
@@ -53,7 +53,7 @@ EXPRESSION_MAX = numpy.array(
 		[ 3.57594155e-02, 1.80554688e-01, 2.75554154e-02 ],
 		[ 2.17450950e-02, 8.66811201e-02, 3.34241726e-02 ]
 	]
-])
+]).astype(numpy.float32)
 
 
 def limit_expression(expression : LivePortraitExpression) -> LivePortraitExpression:
