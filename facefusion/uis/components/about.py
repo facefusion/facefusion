@@ -17,7 +17,7 @@ def render() -> None:
 	[
 		{
 			'wording': 'become a member',
-			'url': 'https://members.facefusion.io'
+			'url': 'https://subscribe.facefusion.io'
 		},
 		{
 			'wording': 'join our community',

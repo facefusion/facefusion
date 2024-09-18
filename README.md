@@ -1,7 +1,7 @@
 FaceFusion
 ==========
 
-> Next generation face swapper and enhancer.
+> Industry leading face manipulation platform.
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=master)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
 [![Coverage Status](https://coveralls.io/repos/github/facefusion/facefusion/badge.svg)](https://coveralls.io/github/facefusion/facefusion)
@@ -17,7 +17,7 @@ Preview
 Installation
 ------------
 
-Be aware, the [installation](https://docs.facefusion.io/installation) needs technical skills and is not recommended for beginners. In case you are not comfortable using a terminal, our [Windows Installer](https://buymeacoffee.com/henryruhs/e/251939) and [macOS Installer](https://buymeacoffee.com/henryruhs/e/304634) get you started in minutes.
+Be aware, the [installation](https://docs.facefusion.io/installation) needs technical skills and is not recommended for beginners. In case you are not comfortable using a terminal, our [Windows Installer](https://windows-installer.facefusion.io) and [macOS Installer](https://macos-installer.facefusion.io) get you started in minutes.
 
 
 Usage
