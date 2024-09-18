@@ -52,22 +52,22 @@ MODEL_SET : ModelSet =\
 		},
 		'size': (256, 256)
 	},
-	'face_landmarker_68_5':
+	'fan_68_5':
 	{
 		'hashes':
 		{
-			'face_landmarker_68_5':
+			'fan_68_5':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/face_landmarker_68_5.hash',
-				'path': resolve_relative_path('../.assets/models/face_landmarker_68_5.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fan_68_5.hash',
+				'path': resolve_relative_path('../.assets/models/fan_68_5.hash')
 			}
 		},
 		'sources':
 		{
-			'face_landmarker_68_5':
+			'fan_68_5':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/face_landmarker_68_5.onnx',
-				'path': resolve_relative_path('../.assets/models/face_landmarker_68_5.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fan_68_5.onnx',
+				'path': resolve_relative_path('../.assets/models/fan_68_5.onnx')
 			}
 		}
 	}
@@ -88,11 +88,11 @@ def clear_inference_pool() -> None:
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	model_hashes =\
 	{
-		'face_landmarker_68_5': MODEL_SET.get('face_landmarker_68_5').get('hashes').get('face_landmarker_68_5')
+		'fan_68_5': MODEL_SET.get('fan_68_5').get('hashes').get('fan_68_5')
 	}
 	model_sources =\
 	{
-		'face_landmarker_68_5': MODEL_SET.get('face_landmarker_68_5').get('sources').get('face_landmarker_68_5')
+		'fan_68_5': MODEL_SET.get('fan_68_5').get('sources').get('fan_68_5')
 	}
 
 	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
@@ -176,7 +176,7 @@ def conditional_optimize_contrast(crop_vision_frame : VisionFrame) -> VisionFram
 def estimate_face_landmark_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
 	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'ffhq_512', (1, 1))
 	face_landmark_5 = cv2.transform(face_landmark_5.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-	face_landmark_68_5 = forward_face_landmark_68_5(face_landmark_5)
+	face_landmark_68_5 = forward_fan_68_5(face_landmark_5)
 	face_landmark_68_5 = cv2.transform(face_landmark_68_5.reshape(1, -1, 2), cv2.invertAffineTransform(affine_matrix)).reshape(-1, 2)
 	return face_landmark_68_5
 
@@ -205,8 +205,8 @@ def forward_with_peppa_wutz(crop_vision_frame : VisionFrame) -> Prediction:
 	return prediction
 
 
-def forward_face_landmark_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
-	face_landmarker = get_inference_pool().get('face_landmarker_68_5')
+def forward_fan_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
+	face_landmarker = get_inference_pool().get('fan_68_5')
 
 	with conditional_thread_semaphore():
 		face_landmark_68_5 = face_landmarker.run(None,
