@@ -18,6 +18,7 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
+from facefusion.processors.liveportrait import limit_expression
 from facefusion.processors.typing import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
@@ -209,6 +210,7 @@ def apply_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark6
 	expression = edit_mouth_purse(expression)
 	expression = edit_mouth_smile(expression)
 	expression = edit_eyebrow_direction(expression)
+	expression = limit_expression(expression)
 	motion_points_source = motion_points @ rotation
 	motion_points_source += expression
 	motion_points_source *= scale
@@ -322,7 +324,7 @@ def edit_eye_open(motion_points : LivePortraitMotionPoints, face_landmark_68 : F
 	if face_editor_eye_open_ratio < 0:
 		eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.0 ] ])
 	else:
-		eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.8 ] ])
+		eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.6 ] ])
 	eye_motion_points = eye_motion_points.reshape(1, -1).astype(numpy.float32)
 	eye_motion_points = forward_retarget_eye(eye_motion_points) * numpy.abs(face_editor_eye_open_ratio)
 	eye_motion_points = eye_motion_points.reshape(-1, 21, 3)
@@ -336,7 +338,7 @@ def edit_lip_open(motion_points : LivePortraitMotionPoints, face_landmark_68 : F
 	if face_editor_lip_open_ratio < 0:
 		lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 0.0 ] ])
 	else:
-		lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 1.3 ] ])
+		lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 1.0 ] ])
 	lip_motion_points = lip_motion_points.reshape(1, -1).astype(numpy.float32)
 	lip_motion_points = forward_retarget_lip(lip_motion_points)	* numpy.abs(face_editor_lip_open_ratio)
 	lip_motion_points = lip_motion_points.reshape(-1, 21, 3)

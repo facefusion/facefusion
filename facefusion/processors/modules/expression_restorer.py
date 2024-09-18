@@ -18,6 +18,7 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
+from facefusion.processors.liveportrait import limit_expression
 from facefusion.processors.typing import ExpressionRestorerInputs
 from facefusion.processors.typing import LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
@@ -167,6 +168,7 @@ def apply_restore(source_crop_vision_frame : VisionFrame, target_crop_vision_fra
 	rotation = rotation.T.astype(numpy.float32)
 	source_expression[:, [ 0, 4, 5, 8, 9 ]] = target_expression[:, [ 0, 4, 5, 8, 9 ]]
 	source_expression = source_expression * expression_restorer_factor + target_expression * (1 - expression_restorer_factor)
+	source_expression = limit_expression(source_expression)
 	source_motion_points = scale * (motion_points @ rotation + source_expression) + translation
 	target_motion_points = scale * (motion_points @ rotation + target_expression) + translation
 	crop_vision_frame = forward_generate_frame(feature_volume, source_motion_points, target_motion_points)
