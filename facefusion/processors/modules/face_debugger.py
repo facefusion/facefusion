@@ -133,7 +133,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	if 'face-landmark-68/5' in face_debugger_items and numpy.any(target_face.landmark_set.get('68')):
 		face_landmark_68 = target_face.landmark_set.get('68/5').astype(numpy.int32)
 		for index in range(face_landmark_68.shape[0]):
-			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, primary_color, -1)
+			cv2.circle(temp_vision_frame, (face_landmark_68[index][0], face_landmark_68[index][1]), 3, tertiary_color, -1)
 
 	if bounding_box[3] - bounding_box[1] > 50 and bounding_box[2] - bounding_box[0] > 50:
 		top = bounding_box[1]
