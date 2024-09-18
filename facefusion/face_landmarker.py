@@ -122,7 +122,7 @@ def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox
 	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
 		face_landmark_peppa_wutz, face_landmark_score_peppa_wutz = detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
 
-	if face_landmark_score_2dfan4 > face_landmark_score_peppa_wutz - 0.1:
+	if face_landmark_score_2dfan4 > face_landmark_score_peppa_wutz - 0.2:
 		return face_landmark_2dfan4, face_landmark_score_2dfan4
 	return face_landmark_peppa_wutz, face_landmark_score_peppa_wutz
 
