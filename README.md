@@ -4,7 +4,7 @@ FaceFusion
 > Industry leading face manipulation platform.
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=master)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
-[![Coverage Status](https://coveralls.io/repos/github/facefusion/facefusion/badge.svg)](https://coveralls.io/github/facefusion/facefusion)
+[![Coverage Status](https://img.shields.io/coveralls/facefusion/facefusion.svg)](https://coveralls.io/r/facefusion/facefusion)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 
