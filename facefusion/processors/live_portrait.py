@@ -62,6 +62,6 @@ def limit_expression(expression : LivePortraitExpression) -> LivePortraitExpress
 
 
 def create_rotation(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : LivePortraitRoll) -> LivePortraitRotation:
-	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees=True).as_matrix()
+	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
 	rotation = rotation.astype(numpy.float32)
 	return rotation
