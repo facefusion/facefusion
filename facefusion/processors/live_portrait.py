@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy
 import scipy
 
@@ -59,6 +61,41 @@ EXPRESSION_MAX = numpy.array(
 
 def limit_expression(expression : LivePortraitExpression) -> LivePortraitExpression:
 	return numpy.clip(expression, EXPRESSION_MIN, EXPRESSION_MAX)
+
+
+def limit_euler_angles(target_euler_angles : Tuple[LivePortraitPitch, LivePortraitYaw, LivePortraitRoll], output_euler_angles : Tuple[LivePortraitPitch, LivePortraitYaw, LivePortraitRoll]) -> Tuple[LivePortraitPitch, LivePortraitYaw, LivePortraitRoll]:
+	pitch, yaw, roll = output_euler_angles
+	pitch_min, pitch_max, yaw_min, yaw_max, roll_min, roll_max = calc_rotation_limits(target_euler_angles)
+	pitch = numpy.clip(pitch, pitch_min, pitch_max)
+	yaw = numpy.clip(yaw, yaw_min, yaw_max)
+	roll = numpy.clip(roll, roll_min, roll_max)
+	return pitch, yaw, roll
+
+
+def calc_rotation_limits(euler_angles : Tuple[LivePortraitPitch, LivePortraitYaw, LivePortraitRoll]) -> Tuple[float, float, float, float, float, float]:
+	pitch, yaw, roll = euler_angles
+	pitch_min = -30.0
+	pitch_max = 30.0
+	yaw_min = -60.0
+	yaw_max = 60.0
+	roll_min = -20.0
+	roll_max = 20.0
+
+	if pitch < 0:
+		pitch_min = min(pitch, pitch_min)
+	else:
+		pitch_max = max(pitch, pitch_max)
+
+	if yaw < 0:
+		yaw_min = min(yaw, yaw_min)
+	else:
+		yaw_max = max(yaw, yaw_max)
+
+	if roll < 0:
+		roll_min = min(roll, roll_min)
+	else:
+		roll_max = max(roll, roll_max)
+	return pitch_min, pitch_max, yaw_min, yaw_max, roll_min, roll_max
 
 
 def create_rotation(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : LivePortraitRoll) -> LivePortraitRotation:
