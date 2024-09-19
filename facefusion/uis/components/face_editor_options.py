@@ -21,6 +21,9 @@ FACE_EDITOR_MOUTH_PURSE_SLIDER : Optional[gradio.Slider] = None
 FACE_EDITOR_MOUTH_SMILE_SLIDER : Optional[gradio.Slider] = None
 FACE_EDITOR_MOUTH_POSITION_HORIZONTAL_SLIDER : Optional[gradio.Slider] = None
 FACE_EDITOR_MOUTH_POSITION_VERTICAL_SLIDER : Optional[gradio.Slider] = None
+FACE_EDITOR_POSE_PITCH_SLIDER : Optional[gradio.Slider] = None
+FACE_EDITOR_POSE_YAW_SLIDER : Optional[gradio.Slider] = None
+FACE_EDITOR_POSE_ROLL_SLIDER : Optional[gradio.Slider] = None
 
 
 def render() -> None:
@@ -36,6 +39,9 @@ def render() -> None:
 	global FACE_EDITOR_MOUTH_SMILE_SLIDER
 	global FACE_EDITOR_MOUTH_POSITION_HORIZONTAL_SLIDER
 	global FACE_EDITOR_MOUTH_POSITION_VERTICAL_SLIDER
+	global FACE_EDITOR_POSE_PITCH_SLIDER
+	global FACE_EDITOR_POSE_YAW_SLIDER
+	global FACE_EDITOR_POSE_ROLL_SLIDER
 
 	FACE_EDITOR_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_editor_model_dropdown'),
@@ -131,6 +137,30 @@ def render() -> None:
 		maximum = processors_choices.face_editor_mouth_position_vertical_range[-1],
 		visible = 'face_editor' in state_manager.get_item('processors'),
 	)
+	FACE_EDITOR_POSE_PITCH_SLIDER = gradio.Slider(
+		label = wording.get('uis.face_editor_pose_pitch_slider'),
+		value = state_manager.get_item('face_editor_pose_pitch'),
+		step = calc_float_step(processors_choices.face_editor_pose_pitch_range),
+		minimum = processors_choices.face_editor_pose_pitch_range[0],
+		maximum = processors_choices.face_editor_pose_pitch_range[-1],
+		visible = 'face_editor' in state_manager.get_item('processors'),
+	)
+	FACE_EDITOR_POSE_YAW_SLIDER = gradio.Slider(
+		label = wording.get('uis.face_editor_pose_yaw_slider'),
+		value = state_manager.get_item('face_editor_pose_yaw'),
+		step = calc_float_step(processors_choices.face_editor_pose_yaw_range),
+		minimum = processors_choices.face_editor_pose_yaw_range[0],
+		maximum = processors_choices.face_editor_pose_yaw_range[-1],
+		visible = 'face_editor' in state_manager.get_item('processors'),
+	)
+	FACE_EDITOR_POSE_ROLL_SLIDER = gradio.Slider(
+		label = wording.get('uis.face_editor_pose_roll_slider'),
+		value = state_manager.get_item('face_editor_pose_roll'),
+		step = calc_float_step(processors_choices.face_editor_pose_roll_range),
+		minimum = processors_choices.face_editor_pose_roll_range[0],
+		maximum = processors_choices.face_editor_pose_roll_range[-1],
+		visible = 'face_editor' in state_manager.get_item('processors'),
+	)
 	register_ui_component('face_editor_model_dropdown', FACE_EDITOR_MODEL_DROPDOWN)
 	register_ui_component('face_editor_eyebrow_direction_slider', FACE_EDITOR_EYEBROW_DIRECTION_SLIDER)
 	register_ui_component('face_editor_eye_gaze_horizontal_slider', FACE_EDITOR_EYE_GAZE_HORIZONTAL_SLIDER)
@@ -143,6 +173,9 @@ def render() -> None:
 	register_ui_component('face_editor_mouth_smile_slider', FACE_EDITOR_MOUTH_SMILE_SLIDER)
 	register_ui_component('face_editor_mouth_position_horizontal_slider', FACE_EDITOR_MOUTH_POSITION_HORIZONTAL_SLIDER)
 	register_ui_component('face_editor_mouth_position_vertical_slider', FACE_EDITOR_MOUTH_POSITION_VERTICAL_SLIDER)
+	register_ui_component('face_editor_pose_pitch_slider', FACE_EDITOR_POSE_PITCH_SLIDER)
+	register_ui_component('face_editor_pose_yaw_slider', FACE_EDITOR_POSE_YAW_SLIDER)
+	register_ui_component('face_editor_pose_roll_slider', FACE_EDITOR_POSE_ROLL_SLIDER)
 
 
 def listen() -> None:
@@ -158,15 +191,18 @@ def listen() -> None:
 	FACE_EDITOR_MOUTH_SMILE_SLIDER.release(update_face_editor_mouth_smile, inputs = FACE_EDITOR_MOUTH_SMILE_SLIDER)
 	FACE_EDITOR_MOUTH_POSITION_HORIZONTAL_SLIDER.release(update_face_editor_mouth_position_horizontal, inputs = FACE_EDITOR_MOUTH_POSITION_HORIZONTAL_SLIDER)
 	FACE_EDITOR_MOUTH_POSITION_VERTICAL_SLIDER.release(update_face_editor_mouth_position_vertical, inputs = FACE_EDITOR_MOUTH_POSITION_VERTICAL_SLIDER)
+	FACE_EDITOR_POSE_PITCH_SLIDER.release(update_face_editor_pose_pitch, inputs = FACE_EDITOR_POSE_PITCH_SLIDER)
+	FACE_EDITOR_POSE_YAW_SLIDER.release(update_face_editor_pose_yaw, inputs=FACE_EDITOR_POSE_YAW_SLIDER)
+	FACE_EDITOR_POSE_ROLL_SLIDER.release(update_face_editor_pose_roll, inputs=FACE_EDITOR_POSE_ROLL_SLIDER)
 
 	processors_checkbox_group = get_ui_component('processors_checkbox_group')
 	if processors_checkbox_group:
-		processors_checkbox_group.change(remote_update, inputs = processors_checkbox_group, outputs = [FACE_EDITOR_MODEL_DROPDOWN, FACE_EDITOR_EYEBROW_DIRECTION_SLIDER, FACE_EDITOR_EYE_GAZE_HORIZONTAL_SLIDER, FACE_EDITOR_EYE_GAZE_VERTICAL_SLIDER, FACE_EDITOR_EYE_OPEN_RATIO_SLIDER, FACE_EDITOR_LIP_OPEN_RATIO_SLIDER, FACE_EDITOR_MOUTH_GRIM_SLIDER, FACE_EDITOR_MOUTH_POUT_SLIDER, FACE_EDITOR_MOUTH_PURSE_SLIDER, FACE_EDITOR_MOUTH_SMILE_SLIDER, FACE_EDITOR_MOUTH_POSITION_HORIZONTAL_SLIDER, FACE_EDITOR_MOUTH_POSITION_VERTICAL_SLIDER])
+		processors_checkbox_group.change(remote_update, inputs = processors_checkbox_group, outputs = [FACE_EDITOR_MODEL_DROPDOWN, FACE_EDITOR_EYEBROW_DIRECTION_SLIDER, FACE_EDITOR_EYE_GAZE_HORIZONTAL_SLIDER, FACE_EDITOR_EYE_GAZE_VERTICAL_SLIDER, FACE_EDITOR_EYE_OPEN_RATIO_SLIDER, FACE_EDITOR_LIP_OPEN_RATIO_SLIDER, FACE_EDITOR_MOUTH_GRIM_SLIDER, FACE_EDITOR_MOUTH_POUT_SLIDER, FACE_EDITOR_MOUTH_PURSE_SLIDER, FACE_EDITOR_MOUTH_SMILE_SLIDER, FACE_EDITOR_MOUTH_POSITION_HORIZONTAL_SLIDER, FACE_EDITOR_MOUTH_POSITION_VERTICAL_SLIDER, FACE_EDITOR_POSE_PITCH_SLIDER, FACE_EDITOR_POSE_YAW_SLIDER, FACE_EDITOR_POSE_ROLL_SLIDER])
 
 
-def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider]:
+def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider]:
 	has_face_editor = 'face_editor' in processors
-	return gradio.Dropdown(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor)
+	return gradio.Dropdown(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor), gradio.Slider(visible = has_face_editor)
 
 
 def update_face_editor_model(face_editor_model : FaceEditorModel) -> gradio.Dropdown:
@@ -221,3 +257,15 @@ def update_face_editor_mouth_position_horizontal(face_editor_mouth_position_hori
 
 def update_face_editor_mouth_position_vertical(face_editor_mouth_position_vertical : float) -> None:
 	state_manager.set_item('face_editor_mouth_position_vertical', face_editor_mouth_position_vertical)
+
+
+def update_face_editor_pose_pitch(face_editor_pose_pitch : float) -> None:
+	state_manager.set_item('face_editor_pose_pitch', face_editor_pose_pitch)
+
+
+def update_face_editor_pose_yaw(face_editor_pose_yaw : float) -> None:
+	state_manager.set_item('face_editor_pose_yaw', face_editor_pose_yaw)
+
+
+def update_face_editor_pose_roll(face_editor_pose_roll : float) -> None:
+	state_manager.set_item('face_editor_pose_roll', face_editor_pose_roll)
