@@ -132,10 +132,10 @@ def register_args(program : ArgumentParser) -> None:
 		group_processors.add_argument('--face-editor-mouth-smile', help = wording.get('help.face_editor_mouth_smile'), type = float, default = config.get_float_value('processors.face_editor_mouth_smile', '0'), choices = processors_choices.face_editor_mouth_smile_range, metavar = create_float_metavar(processors_choices.face_editor_mouth_smile_range))
 		group_processors.add_argument('--face-editor-mouth-position-horizontal', help = wording.get('help.face_editor_mouth_position_horizontal'), type = float, default = config.get_float_value('processors.face_editor_mouth_position_horizontal', '0'), choices = processors_choices.face_editor_mouth_position_horizontal_range, metavar = create_float_metavar(processors_choices.face_editor_mouth_position_horizontal_range))
 		group_processors.add_argument('--face-editor-mouth-position-vertical', help = wording.get('help.face_editor_mouth_position_vertical'), type = float, default = config.get_float_value('processors.face_editor_mouth_position_vertical', '0'), choices = processors_choices.face_editor_mouth_position_vertical_range, metavar = create_float_metavar(processors_choices.face_editor_mouth_position_vertical_range))
-		group_processors.add_argument('--face-editor-pose-pitch', help = wording.get('help.face_editor_pose_pitch'), type = float, default = config.get_float_value('processors.face_editor_pose_pitch', '0'), choices = processors_choices.face_editor_pose_pitch_range, metavar = create_float_metavar(processors_choices.face_editor_pose_pitch_range))
-		group_processors.add_argument('--face-editor-pose-yaw', help=wording.get('help.face_editor_pose_yaw'), type = float, default = config.get_float_value('processors.face_editor_pose_yaw', '0'), choices = processors_choices.face_editor_pose_yaw_range, metavar = create_float_metavar(processors_choices.face_editor_pose_yaw_range))
-		group_processors.add_argument('--face-editor-pose-roll', help=wording.get('help.face_editor_pose_roll'), type = float, default = config.get_float_value('processors.face_editor_pose_roll', '0'), choices = processors_choices.face_editor_pose_roll_range, metavar = create_float_metavar(processors_choices.face_editor_pose_roll_range))
-		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio', 'face_editor_mouth_grim', 'face_editor_mouth_pout', 'face_editor_mouth_purse', 'face_editor_mouth_smile', 'face_editor_mouth_position_horizontal', 'face_editor_mouth_position_vertical', 'face_editor_pose_pitch', 'face_editor_pose_yaw', 'face_editor_pose_roll' ])
+		group_processors.add_argument('--face-editor-head-pitch', help = wording.get('help.face_editor_head_pitch'), type = float, default = config.get_float_value('processors.face_editor_head_pitch', '0'), choices = processors_choices.face_editor_head_pitch_range, metavar = create_float_metavar(processors_choices.face_editor_head_pitch_range))
+		group_processors.add_argument('--face-editor-head-yaw', help=wording.get('help.face_editor_head_yaw'), type = float, default = config.get_float_value('processors.face_editor_head_yaw', '0'), choices = processors_choices.face_editor_head_yaw_range, metavar = create_float_metavar(processors_choices.face_editor_head_yaw_range))
+		group_processors.add_argument('--face-editor-head-roll', help=wording.get('help.face_editor_head_roll'), type = float, default = config.get_float_value('processors.face_editor_head_roll', '0'), choices = processors_choices.face_editor_head_roll_range, metavar = create_float_metavar(processors_choices.face_editor_head_roll_range))
+		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio', 'face_editor_mouth_grim', 'face_editor_mouth_pout', 'face_editor_mouth_purse', 'face_editor_mouth_smile', 'face_editor_mouth_position_horizontal', 'face_editor_mouth_position_vertical', 'face_editor_head_pitch', 'face_editor_head_yaw', 'face_editor_head_roll' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
@@ -151,9 +151,9 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_editor_mouth_smile', args.get('face_editor_mouth_smile'))
 	apply_state_item('face_editor_mouth_position_horizontal', args.get('face_editor_mouth_position_horizontal'))
 	apply_state_item('face_editor_mouth_position_vertical', args.get('face_editor_mouth_position_vertical'))
-	apply_state_item('face_editor_pose_pitch', args.get('face_editor_pose_pitch'))
-	apply_state_item('face_editor_pose_yaw', args.get('face_editor_pose_yaw'))
-	apply_state_item('face_editor_pose_roll', args.get('face_editor_pose_roll'))
+	apply_state_item('face_editor_head_pitch', args.get('face_editor_head_pitch'))
+	apply_state_item('face_editor_head_yaw', args.get('face_editor_head_yaw'))
+	apply_state_item('face_editor_head_roll', args.get('face_editor_head_roll'))
 
 
 def pre_check() -> bool:
@@ -217,7 +217,7 @@ def apply_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark6
 	expression = edit_mouth_smile(expression)
 	expression = edit_eyebrow_direction(expression)
 	expression = limit_expression(expression)
-	rotation = edit_head_pose_rotation(pitch, yaw, roll)
+	rotation = edit_head_rotation(pitch, yaw, roll)
 	motion_points_source = motion_points @ rotation
 	motion_points_source += expression
 	motion_points_source *= scale
@@ -440,14 +440,14 @@ def edit_mouth_smile(expression : LivePortraitExpression) -> LivePortraitExpress
 	return expression
 
 
-def edit_head_pose_rotation(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : LivePortraitRoll) -> LivePortraitRotation:
-	face_editor_pose_pitch = state_manager.get_item('face_editor_pose_pitch')
-	face_editor_pose_yaw = state_manager.get_item('face_editor_pose_yaw')
-	face_editor_pose_roll = state_manager.get_item('face_editor_pose_roll')
-	pitch += float(numpy.interp(face_editor_pose_pitch, [ -1, 1 ], [ 30, -30 ]))
-	yaw += float(numpy.interp(face_editor_pose_yaw, [ -1, 1 ], [ 30, -30 ]))
-	roll += float(numpy.interp(face_editor_pose_roll, [ -1, 1 ], [ -30, 30 ]))
-	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees=True).as_matrix()
+def edit_head_rotation(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : LivePortraitRoll) -> LivePortraitRotation:
+	face_editor_head_pitch = state_manager.get_item('face_editor_head_pitch')
+	face_editor_head_yaw = state_manager.get_item('face_editor_head_yaw')
+	face_editor_head_roll = state_manager.get_item('face_editor_head_roll')
+	pitch += float(numpy.interp(face_editor_head_pitch, [ -1, 1 ], [ 30, -30 ]))
+	yaw += float(numpy.interp(face_editor_head_yaw, [ -1, 1 ], [ 30, -30 ]))
+	roll += float(numpy.interp(face_editor_head_roll, [ -1, 1 ], [ -30, 30 ]))
+	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
 	rotation = rotation.T.astype(numpy.float32)
 	return rotation
 
