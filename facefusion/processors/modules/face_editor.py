@@ -3,7 +3,6 @@ from typing import List, Tuple
 
 import cv2
 import numpy
-import scipy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -18,7 +17,7 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.live_portrait import limit_expression
+from facefusion.processors.live_portrait import create_rotation, limit_expression
 from facefusion.processors.typing import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
@@ -206,9 +205,8 @@ def edit_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 def apply_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
 	feature_volume = forward_extract_feature(crop_vision_frame)
 	pitch, yaw, roll, scale, translation, expression, motion_points = forward_extract_motion(crop_vision_frame)
-	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
-	rotation = rotation.T.astype(numpy.float32)
-	motion_points_target = scale * (motion_points @ rotation + expression) + translation
+	rotation = create_rotation(pitch, yaw, roll)
+	motion_points_target = scale * (motion_points @ rotation.T + expression) + translation
 	expression = edit_eye_gaze(expression)
 	expression = edit_mouth_grim(expression)
 	expression = edit_mouth_position(expression)
@@ -218,7 +216,7 @@ def apply_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark6
 	expression = edit_eyebrow_direction(expression)
 	expression = limit_expression(expression)
 	rotation = edit_head_rotation(pitch, yaw, roll)
-	motion_points_source = motion_points @ rotation
+	motion_points_source = motion_points @ rotation.T
 	motion_points_source += expression
 	motion_points_source *= scale
 	motion_points_source += translation
@@ -447,8 +445,7 @@ def edit_head_rotation(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : 
 	pitch += float(numpy.interp(face_editor_head_pitch, [ -1, 1 ], [ 30, -30 ]))
 	yaw += float(numpy.interp(face_editor_head_yaw, [ -1, 1 ], [ 30, -30 ]))
 	roll += float(numpy.interp(face_editor_head_roll, [ -1, 1 ], [ -30, 30 ]))
-	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
-	rotation = rotation.T.astype(numpy.float32)
+	rotation = create_rotation(pitch, yaw, roll)
 	return rotation
 
 
