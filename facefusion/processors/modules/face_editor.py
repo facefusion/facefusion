@@ -3,7 +3,6 @@ from typing import List, Tuple
 
 import cv2
 import numpy
-import scipy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -13,13 +12,13 @@ from facefusion.common_helper import create_float_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
-from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
+from facefusion.face_masker import create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.live_portrait import limit_expression
-from facefusion.processors.typing import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
+from facefusion.processors.live_portrait import create_rotation, limit_expression
+from facefusion.processors.typing import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
@@ -51,6 +50,11 @@ MODEL_SET : ModelSet =\
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_lip_retargeter.hash',
 				'path': resolve_relative_path('../.assets/models/live_portrait_lip_retargeter.hash')
 			},
+			'stitcher':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_stitcher.hash',
+				'path': resolve_relative_path('../.assets/models/live_portrait_stitcher.hash')
+			},
 			'generator':
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_generator.hash',
@@ -78,6 +82,11 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_lip_retargeter.onnx',
 				'path': resolve_relative_path('../.assets/models/live_portrait_lip_retargeter.onnx')
+			},
+			'stitcher':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_stitcher.onnx',
+				'path': resolve_relative_path('../.assets/models/live_portrait_stitcher.onnx')
 			},
 			'generator':
 			{
@@ -122,7 +131,10 @@ def register_args(program : ArgumentParser) -> None:
 		group_processors.add_argument('--face-editor-mouth-smile', help = wording.get('help.face_editor_mouth_smile'), type = float, default = config.get_float_value('processors.face_editor_mouth_smile', '0'), choices = processors_choices.face_editor_mouth_smile_range, metavar = create_float_metavar(processors_choices.face_editor_mouth_smile_range))
 		group_processors.add_argument('--face-editor-mouth-position-horizontal', help = wording.get('help.face_editor_mouth_position_horizontal'), type = float, default = config.get_float_value('processors.face_editor_mouth_position_horizontal', '0'), choices = processors_choices.face_editor_mouth_position_horizontal_range, metavar = create_float_metavar(processors_choices.face_editor_mouth_position_horizontal_range))
 		group_processors.add_argument('--face-editor-mouth-position-vertical', help = wording.get('help.face_editor_mouth_position_vertical'), type = float, default = config.get_float_value('processors.face_editor_mouth_position_vertical', '0'), choices = processors_choices.face_editor_mouth_position_vertical_range, metavar = create_float_metavar(processors_choices.face_editor_mouth_position_vertical_range))
-		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio', 'face_editor_mouth_grim', 'face_editor_mouth_pout', 'face_editor_mouth_purse', 'face_editor_mouth_smile', 'face_editor_mouth_position_horizontal', 'face_editor_mouth_position_vertical' ])
+		group_processors.add_argument('--face-editor-head-pitch', help = wording.get('help.face_editor_head_pitch'), type = float, default = config.get_float_value('processors.face_editor_head_pitch', '0'), choices = processors_choices.face_editor_head_pitch_range, metavar = create_float_metavar(processors_choices.face_editor_head_pitch_range))
+		group_processors.add_argument('--face-editor-head-yaw', help=wording.get('help.face_editor_head_yaw'), type = float, default = config.get_float_value('processors.face_editor_head_yaw', '0'), choices = processors_choices.face_editor_head_yaw_range, metavar = create_float_metavar(processors_choices.face_editor_head_yaw_range))
+		group_processors.add_argument('--face-editor-head-roll', help=wording.get('help.face_editor_head_roll'), type = float, default = config.get_float_value('processors.face_editor_head_roll', '0'), choices = processors_choices.face_editor_head_roll_range, metavar = create_float_metavar(processors_choices.face_editor_head_roll_range))
+		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio', 'face_editor_mouth_grim', 'face_editor_mouth_pout', 'face_editor_mouth_purse', 'face_editor_mouth_smile', 'face_editor_mouth_position_horizontal', 'face_editor_mouth_position_vertical', 'face_editor_head_pitch', 'face_editor_head_yaw', 'face_editor_head_roll' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
@@ -138,6 +150,9 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_editor_mouth_smile', args.get('face_editor_mouth_smile'))
 	apply_state_item('face_editor_mouth_position_horizontal', args.get('face_editor_mouth_position_horizontal'))
 	apply_state_item('face_editor_mouth_position_vertical', args.get('face_editor_mouth_position_vertical'))
+	apply_state_item('face_editor_head_pitch', args.get('face_editor_head_pitch'))
+	apply_state_item('face_editor_head_yaw', args.get('face_editor_head_yaw'))
+	apply_state_item('face_editor_head_roll', args.get('face_editor_head_roll'))
 
 
 def pre_check() -> bool:
@@ -177,32 +192,21 @@ def post_process() -> None:
 def edit_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
-	face_landmark_5 = scale_face_landmark_5(target_face.landmark_set.get('5/68'), 1.2)
+	face_landmark_5 = scale_face_landmark_5(target_face.landmark_set.get('5/68'), 1.5)
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, model_size)
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
-	crop_masks =\
-	[
-		box_mask
-	]
-
-	if 'occlusion' in state_manager.get_item('face_mask_types'):
-		occlusion_mask = create_occlusion_mask(crop_vision_frame)
-		crop_masks.append(occlusion_mask)
-
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
 	crop_vision_frame = apply_edit(crop_vision_frame, target_face.landmark_set.get('68'))
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
-	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
-	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
+	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, box_mask, affine_matrix)
 	return temp_vision_frame
 
 
 def apply_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68) -> VisionFrame:
 	feature_volume = forward_extract_feature(crop_vision_frame)
 	pitch, yaw, roll, scale, translation, expression, motion_points = forward_extract_motion(crop_vision_frame)
-	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
-	rotation = rotation.T.astype(numpy.float32)
-	motion_points_target = scale * (motion_points @ rotation + expression) + translation
+	rotation = create_rotation(pitch, yaw, roll)
+	motion_points_target = scale * (motion_points @ rotation.T + expression) + translation
 	expression = edit_eye_gaze(expression)
 	expression = edit_mouth_grim(expression)
 	expression = edit_mouth_position(expression)
@@ -211,12 +215,14 @@ def apply_edit(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark6
 	expression = edit_mouth_smile(expression)
 	expression = edit_eyebrow_direction(expression)
 	expression = limit_expression(expression)
-	motion_points_source = motion_points @ rotation
+	rotation = edit_head_rotation(pitch, yaw, roll)
+	motion_points_source = motion_points @ rotation.T
 	motion_points_source += expression
 	motion_points_source *= scale
 	motion_points_source += translation
 	motion_points_source += edit_eye_open(motion_points_target, face_landmark_68)
 	motion_points_source += edit_lip_open(motion_points_target, face_landmark_68)
+	motion_points_source = forward_stitch_motion_points(motion_points_source, motion_points_target)
 	crop_vision_frame = forward_generate_frame(feature_volume, motion_points_source, motion_points_target)
 	return crop_vision_frame
 
@@ -267,6 +273,19 @@ def forward_retarget_lip(lip_motion_points : LivePortraitMotionPoints) -> LivePo
 		})[0]
 
 	return lip_motion_points
+
+
+def forward_stitch_motion_points(source_motion_points : LivePortraitMotionPoints, target_motion_points : LivePortraitMotionPoints) -> LivePortraitMotionPoints:
+	stitcher = get_inference_pool().get('stitcher')
+
+	with thread_semaphore():
+		motion_points = stitcher.run(None,
+		{
+			'source': source_motion_points,
+			'target': target_motion_points
+		})[0]
+
+	return motion_points
 
 
 def forward_generate_frame(feature_volume : LivePortraitFeatureVolume, source_motion_points : LivePortraitMotionPoints, target_motion_points : LivePortraitMotionPoints) -> VisionFrame:
@@ -417,6 +436,17 @@ def edit_mouth_smile(expression : LivePortraitExpression) -> LivePortraitExpress
 		expression[0, 3, 1] += numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.0045, 0.0045 ])
 		expression[0, 7, 1] += numpy.interp(face_editor_mouth_smile, [ -1, 1 ], [ -0.0045, 0.0045 ])
 	return expression
+
+
+def edit_head_rotation(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : LivePortraitRoll) -> LivePortraitRotation:
+	face_editor_head_pitch = state_manager.get_item('face_editor_head_pitch')
+	face_editor_head_yaw = state_manager.get_item('face_editor_head_yaw')
+	face_editor_head_roll = state_manager.get_item('face_editor_head_roll')
+	pitch += float(numpy.interp(face_editor_head_pitch, [ -1, 1 ], [ 30, -30 ]))
+	yaw += float(numpy.interp(face_editor_head_yaw, [ -1, 1 ], [ 30, -30 ]))
+	roll += float(numpy.interp(face_editor_head_roll, [ -1, 1 ], [ -30, 30 ]))
+	rotation = create_rotation(pitch, yaw, roll)
+	return rotation
 
 
 def calc_distance_ratio(face_landmark_68 : FaceLandmark68, top_index : int, bottom_index : int, left_index : int, right_index : int) -> float:

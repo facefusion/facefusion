@@ -82,6 +82,9 @@ ProcessorStateKey = Literal\
 	'face_editor_mouth_smile',
 	'face_editor_mouth_position_horizontal',
 	'face_editor_mouth_position_vertical',
+	'face_editor_head_pitch',
+	'face_editor_head_yaw',
+	'face_editor_head_roll',
 	'face_enhancer_model',
 	'face_enhancer_blend',
 	'face_swapper_model',
@@ -117,5 +120,6 @@ LivePortraitRoll = float
 LivePortraitExpression = NDArray[Any]
 LivePortraitFeatureVolume = NDArray[Any]
 LivePortraitMotionPoints = NDArray[Any]
+LivePortraitRotation = NDArray[Any]
 LivePortraitScale = NDArray[Any]
 LivePortraitTranslation = NDArray[Any]

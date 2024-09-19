@@ -1,6 +1,7 @@
 import numpy
+import scipy
 
-from facefusion.processors.typing import LivePortraitExpression
+from facefusion.processors.typing import LivePortraitExpression, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitYaw
 
 EXPRESSION_MIN = numpy.array(
 [
@@ -58,3 +59,9 @@ EXPRESSION_MAX = numpy.array(
 
 def limit_expression(expression : LivePortraitExpression) -> LivePortraitExpression:
 	return numpy.clip(expression, EXPRESSION_MIN, EXPRESSION_MAX)
+
+
+def create_rotation(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : LivePortraitRoll) -> LivePortraitRotation:
+	rotation = scipy.spatial.transform.Rotation.from_euler('xyz', [ pitch, yaw, roll ], degrees = True).as_matrix()
+	rotation = rotation.astype(numpy.float32)
+	return rotation
