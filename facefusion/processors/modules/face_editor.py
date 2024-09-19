@@ -445,7 +445,7 @@ def edit_head_rotation(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : 
 	edit_pitch = pitch + float(numpy.interp(face_editor_head_pitch, [ -1, 1 ], [ 20, -20 ]))
 	edit_yaw = yaw + float(numpy.interp(face_editor_head_yaw, [ -1, 1 ], [ 60, -60 ]))
 	edit_roll = roll + float(numpy.interp(face_editor_head_roll, [ -1, 1 ], [ -15, 15 ]))
-	edit_pitch, edit_yaw, edit_roll = limit_euler_angles(( pitch, yaw, roll ), ( edit_pitch, edit_yaw, edit_roll ))
+	edit_pitch, edit_yaw, edit_roll = limit_euler_angles(pitch, yaw, roll, edit_pitch, edit_yaw, edit_roll)
 	rotation = create_rotation(edit_pitch, edit_yaw, edit_roll)
 	return rotation
 
