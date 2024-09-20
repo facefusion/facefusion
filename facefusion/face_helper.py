@@ -1,10 +1,11 @@
-from typing import Any, Tuple, List
-from cv2.typing import Size
 from functools import lru_cache
+from typing import List, Sequence, Tuple
+
 import cv2
 import numpy
+from cv2.typing import Size
 
-from facefusion.typing import BoundingBox, FaceLandmark5, FaceLandmark68, VisionFrame, Mask, Matrix, Translation, WarpTemplate, WarpTemplateSet, FaceAnalyserAge, FaceAnalyserGender
+from facefusion.typing import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -86,7 +87,7 @@ def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame,
 
 
 @lru_cache(maxsize = None)
-def create_static_anchors(feature_stride : int, anchor_total : int, stride_height : int, stride_width : int) -> numpy.ndarray[Any, Any]:
+def create_static_anchors(feature_stride : int, anchor_total : int, stride_height : int, stride_width : int) -> Anchors:
 	y, x = numpy.mgrid[:stride_height, :stride_width][::-1]
 	anchors = numpy.stack((y, x), axis = -1)
 	anchors = (anchors * feature_stride).reshape((-1, 2))
@@ -94,14 +95,50 @@ def create_static_anchors(feature_stride : int, anchor_total : int, stride_heigh
 	return anchors
 
 
-def create_bounding_box_from_face_landmark_68(face_landmark_68 : FaceLandmark68) -> BoundingBox:
+def create_rotated_matrix_and_size(angle : Angle, size : Size) -> Tuple[Matrix, Size]:
+	rotated_matrix = cv2.getRotationMatrix2D((size[0] / 2, size[1] / 2), angle, 1)
+	rotated_size = numpy.dot(numpy.abs(rotated_matrix[:, :2]), size)
+	rotated_matrix[:, -1] += (rotated_size - size) * 0.5 #type:ignore[misc]
+	rotated_size = int(rotated_size[0]), int(rotated_size[1])
+	return rotated_matrix, rotated_size
+
+
+def create_bounding_box(face_landmark_68 : FaceLandmark68) -> BoundingBox:
 	min_x, min_y = numpy.min(face_landmark_68, axis = 0)
 	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
-	bounding_box = numpy.array([ min_x, min_y, max_x, max_y ]).astype(numpy.int16)
+	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y ]))
 	return bounding_box
 
 
-def distance_to_bounding_box(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> BoundingBox:
+def normalize_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
+	x1, y1, x2, y2 = bounding_box
+	x1, x2 = sorted([ x1, x2 ])
+	y1, y2 = sorted([ y1, y2 ])
+	return numpy.array([ x1, y1, x2, y2 ])
+
+
+def transform_points(points : Points, matrix : Matrix) -> Points:
+	points = points.reshape(-1, 1, 2)
+	points = cv2.transform(points, matrix) #type:ignore[assignment]
+	points = points.reshape(-1, 2)
+	return points
+
+
+def transform_bounding_box(bounding_box : BoundingBox, matrix : Matrix) -> BoundingBox:
+	points = numpy.array(
+	[
+		[ bounding_box[0], bounding_box[1] ],
+		[ bounding_box[2], bounding_box[1] ],
+		[ bounding_box[2], bounding_box[3] ],
+		[ bounding_box[0], bounding_box[3] ]
+	])
+	points = transform_points(points, matrix)
+	x1, y1 = numpy.min(points, axis = 0)
+	x2, y2 = numpy.max(points, axis = 0)
+	return normalize_bounding_box(numpy.array([ x1, y1, x2, y2 ]))
+
+
+def distance_to_bounding_box(points : Points, distance : Distance) -> BoundingBox:
 	x1 = points[:, 0] - distance[:, 0]
 	y1 = points[:, 1] - distance[:, 1]
 	x2 = points[:, 0] + distance[:, 2]
@@ -110,14 +147,21 @@ def distance_to_bounding_box(points : numpy.ndarray[Any, Any], distance : numpy.
 	return bounding_box
 
 
-def distance_to_face_landmark_5(points : numpy.ndarray[Any, Any], distance : numpy.ndarray[Any, Any]) -> FaceLandmark5:
+def distance_to_face_landmark_5(points : Points, distance : Distance) -> FaceLandmark5:
 	x = points[:, 0::2] + distance[:, 0::2]
 	y = points[:, 1::2] + distance[:, 1::2]
 	face_landmark_5 = numpy.stack((x, y), axis = -1)
 	return face_landmark_5
 
 
-def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLandmark5:
+def scale_face_landmark_5(face_landmark_5 : FaceLandmark5, scale : Scale) -> FaceLandmark5:
+	face_landmark_5_scale = face_landmark_5 - face_landmark_5[2]
+	face_landmark_5_scale *= scale
+	face_landmark_5_scale += face_landmark_5[2]
+	return face_landmark_5_scale
+
+
+def convert_to_face_landmark_5(face_landmark_68 : FaceLandmark68) -> FaceLandmark5:
 	face_landmark_5 = numpy.array(
 	[
 		numpy.mean(face_landmark_68[36:42], axis = 0),
@@ -129,41 +173,38 @@ def convert_face_landmark_68_to_5(face_landmark_68 : FaceLandmark68) -> FaceLand
 	return face_landmark_5
 
 
-def apply_nms(bounding_box_list : List[BoundingBox], iou_threshold : float) -> List[int]:
-	keep_indices = []
-	dimension_list = numpy.reshape(bounding_box_list, (-1, 4))
-	x1 = dimension_list[:, 0]
-	y1 = dimension_list[:, 1]
-	x2 = dimension_list[:, 2]
-	y2 = dimension_list[:, 3]
-	areas = (x2 - x1 + 1) * (y2 - y1 + 1)
-	indices = numpy.arange(len(bounding_box_list))
-	while indices.size > 0:
-		index = indices[0]
-		remain_indices = indices[1:]
-		keep_indices.append(index)
-		xx1 = numpy.maximum(x1[index], x1[remain_indices])
-		yy1 = numpy.maximum(y1[index], y1[remain_indices])
-		xx2 = numpy.minimum(x2[index], x2[remain_indices])
-		yy2 = numpy.minimum(y2[index], y2[remain_indices])
-		width = numpy.maximum(0, xx2 - xx1 + 1)
-		height = numpy.maximum(0, yy2 - yy1 + 1)
-		iou = width * height / (areas[index] + areas[remain_indices] - width * height)
-		indices = indices[numpy.where(iou <= iou_threshold)[0] + 1]
+def estimate_face_angle(face_landmark_68 : FaceLandmark68) -> Angle:
+	x1, y1 = face_landmark_68[0]
+	x2, y2 = face_landmark_68[16]
+	theta = numpy.arctan2(y2 - y1, x2 - x1)
+	theta = numpy.degrees(theta) % 360
+	angles = numpy.linspace(0, 360, 5)
+	index = numpy.argmin(numpy.abs(angles - theta))
+	face_angle = int(angles[index] % 360)
+	return face_angle
+
+
+def apply_nms(bounding_boxes : List[BoundingBox], face_scores : List[Score], score_threshold : float, nms_threshold : float) -> Sequence[int]:
+	normed_bounding_boxes = [ (x1, y1, x2 - x1, y2 - y1) for (x1, y1, x2, y2) in bounding_boxes ]
+	keep_indices = cv2.dnn.NMSBoxes(normed_bounding_boxes, face_scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
 	return keep_indices
 
 
-def categorize_age(age : int) -> FaceAnalyserAge:
-	if age < 13:
-		return 'child'
-	elif age < 19:
-		return 'teen'
-	elif age < 60:
-		return 'adult'
-	return 'senior'
+def get_nms_threshold(face_detector_model : FaceDetectorModel, face_detector_angles : List[Angle]) -> float:
+	if face_detector_model == 'many':
+		return 0.1
+	if len(face_detector_angles) == 2:
+		return 0.3
+	if len(face_detector_angles) == 3:
+		return 0.2
+	if len(face_detector_angles) == 4:
+		return 0.1
+	return 0.4
 
 
-def categorize_gender(gender : int) -> FaceAnalyserGender:
-	if gender == 0:
-		return 'female'
-	return 'male'
+def merge_matrix(matrices : List[Matrix]) -> Matrix:
+	merged_matrix = numpy.vstack([ matrices[0], [ 0, 0, 1 ] ])
+	for matrix in matrices[1:]:
+		matrix = numpy.vstack([ matrix, [ 0, 0, 1 ] ])
+		merged_matrix = numpy.dot(merged_matrix, matrix)
+	return merged_matrix[:2, :]

@@ -13,9 +13,12 @@ jobs:
     with:
      python-version: '3.10'
   - run: pip install flake8
+  - run: pip install flake8-import-order
   - run: pip install mypy
-  - run: flake8 run.py facefusion tests
-  - run: mypy run.py facefusion tests
+  - run: flake8 facefusion.py install.py
+  - run: flake8 facefusion tests
+  - run: mypy facefusion.py install.py
+  - run: mypy facefusion tests
  test:
   strategy:
    matrix:
@@ -24,7 +27,7 @@ jobs:
   steps:
   - name: Checkout
     uses: actions/checkout@v4
-  - name: Set up FFMpeg
+  - name: Set up FFmpeg
     uses: FedericoCarboni/setup-ffmpeg@v3
   - name: Set up Python 3.10
     uses: actions/setup-python@v5
@@ -33,3 +36,23 @@ jobs:
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pytest
+ report:
+  needs: test
+  runs-on: ubuntu-latest
+  steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+  - name: Set up FFmpeg
+    uses: FedericoCarboni/setup-ffmpeg@v3
+  - name: Set up Python 3.10
+    uses: actions/setup-python@v5
+    with:
+     python-version: '3.10'
+  - run: python install.py --onnxruntime default --skip-conda
+  - run: pip install coveralls
+  - run: pip install pytest
+  - run: pip install pytest-cov
+  - run: pytest tests --cov facefusion
+  - run: coveralls --service github
+    env:
+     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

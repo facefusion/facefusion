@@ -1,4 +1,5 @@
 from typing import Optional
+
 import gradio
 
 from facefusion import wording

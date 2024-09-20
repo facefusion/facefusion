@@ -1,41 +1,43 @@
 import subprocess
+
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.vision import detect_image_resolution, restrict_image_resolution, create_image_resolutions, get_video_frame, count_video_frame_total, detect_video_fps, restrict_video_fps, detect_video_resolution, restrict_video_resolution, create_video_resolutions, normalize_resolution, pack_resolution, unpack_resolution
+from facefusion.vision import count_video_frame_total, create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, get_video_frame, normalize_resolution, pack_resolution, restrict_image_resolution, restrict_video_fps, restrict_video_resolution, unpack_resolution
+from .helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	conditional_download('.assets/examples',
+	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples/source.jpg',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-240p.mp4',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples/target-1080p.mp4'
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-1080p.mp4'
 	])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vframes', '1', '.assets/examples/target-240p.jpg' ])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-1080p.mp4', '-vframes', '1', '.assets/examples/target-1080p.jpg' ])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vframes', '1', '-vf', 'transpose=0', '.assets/examples/target-240p-90deg.jpg' ])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-1080p.mp4', '-vframes', '1', '-vf', 'transpose=0', '.assets/examples/target-1080p-90deg.jpg' ])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'fps=25', '.assets/examples/target-240p-25fps.mp4' ])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'fps=30', '.assets/examples/target-240p-30fps.mp4' ])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'fps=60', '.assets/examples/target-240p-60fps.mp4' ])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-240p.mp4', '-vf', 'transpose=0', '.assets/examples/target-240p-90deg.mp4' ])
-	subprocess.run([ 'ffmpeg', '-i', '.assets/examples/target-1080p.mp4', '-vf', 'transpose=0', '.assets/examples/target-1080p-90deg.mp4' ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vframes', '1', get_test_example_file('target-1080p.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', '-vf', 'transpose=0', get_test_example_file('target-240p-90deg.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vframes', '1', '-vf', 'transpose=0', get_test_example_file('target-1080p-90deg.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'transpose=0', get_test_example_file('target-240p-90deg.mp4') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vf', 'transpose=0', get_test_example_file('target-1080p-90deg.mp4') ])
 
 
 def test_detect_image_resolution() -> None:
-	assert detect_image_resolution('.assets/examples/target-240p.jpg') == (426, 226)
-	assert detect_image_resolution('.assets/examples/target-240p-90deg.jpg') == (226, 426)
-	assert detect_image_resolution('.assets/examples/target-1080p.jpg') == (2048, 1080)
-	assert detect_image_resolution('.assets/examples/target-1080p-90deg.jpg') == (1080, 2048)
+	assert detect_image_resolution(get_test_example_file('target-240p.jpg')) == (426, 226)
+	assert detect_image_resolution(get_test_example_file('target-240p-90deg.jpg')) == (226, 426)
+	assert detect_image_resolution(get_test_example_file('target-1080p.jpg')) == (2048, 1080)
+	assert detect_image_resolution(get_test_example_file('target-1080p-90deg.jpg')) == (1080, 2048)
 	assert detect_image_resolution('invalid') is None
 
 
 def test_restrict_image_resolution() -> None:
-	assert restrict_image_resolution('.assets/examples/target-1080p.jpg', (426, 226)) == (426, 226)
-	assert restrict_image_resolution('.assets/examples/target-1080p.jpg', (2048, 1080)) == (2048, 1080)
-	assert restrict_image_resolution('.assets/examples/target-1080p.jpg', (4096, 2160)) == (2048, 1080)
+	assert restrict_image_resolution(get_test_example_file('target-1080p.jpg'), (426, 226)) == (426, 226)
+	assert restrict_image_resolution(get_test_example_file('target-1080p.jpg'), (2048, 1080)) == (2048, 1080)
+	assert restrict_image_resolution(get_test_example_file('target-1080p.jpg'), (4096, 2160)) == (2048, 1080)
 
 
 def test_create_image_resolutions() -> None:
@@ -47,42 +49,42 @@ def test_create_image_resolutions() -> None:
 
 
 def test_get_video_frame() -> None:
-	assert get_video_frame('.assets/examples/target-240p-25fps.mp4') is not None
+	assert get_video_frame(get_test_example_file('target-240p-25fps.mp4')) is not None
 	assert get_video_frame('invalid') is None
 
 
 def test_count_video_frame_total() -> None:
-	assert count_video_frame_total('.assets/examples/target-240p-25fps.mp4') == 270
-	assert count_video_frame_total('.assets/examples/target-240p-30fps.mp4') == 324
-	assert count_video_frame_total('.assets/examples/target-240p-60fps.mp4') == 648
+	assert count_video_frame_total(get_test_example_file('target-240p-25fps.mp4')) == 270
+	assert count_video_frame_total(get_test_example_file('target-240p-30fps.mp4')) == 324
+	assert count_video_frame_total(get_test_example_file('target-240p-60fps.mp4')) == 648
 	assert count_video_frame_total('invalid') == 0
 
 
 def test_detect_video_fps() -> None:
-	assert detect_video_fps('.assets/examples/target-240p-25fps.mp4') == 25.0
-	assert detect_video_fps('.assets/examples/target-240p-30fps.mp4') == 30.0
-	assert detect_video_fps('.assets/examples/target-240p-60fps.mp4') == 60.0
+	assert detect_video_fps(get_test_example_file('target-240p-25fps.mp4')) == 25.0
+	assert detect_video_fps(get_test_example_file('target-240p-30fps.mp4')) == 30.0
+	assert detect_video_fps(get_test_example_file('target-240p-60fps.mp4')) == 60.0
 	assert detect_video_fps('invalid') is None
 
 
 def test_restrict_video_fps() -> None:
-	assert restrict_video_fps('.assets/examples/target-1080p.mp4', 20.0) == 20.0
-	assert restrict_video_fps('.assets/examples/target-1080p.mp4', 25.0) == 25.0
-	assert restrict_video_fps('.assets/examples/target-1080p.mp4', 60.0) == 25.0
+	assert restrict_video_fps(get_test_example_file('target-1080p.mp4'), 20.0) == 20.0
+	assert restrict_video_fps(get_test_example_file('target-1080p.mp4'), 25.0) == 25.0
+	assert restrict_video_fps(get_test_example_file('target-1080p.mp4'), 60.0) == 25.0
 
 
 def test_detect_video_resolution() -> None:
-	assert detect_video_resolution('.assets/examples/target-240p.mp4') == (426, 226)
-	assert detect_video_resolution('.assets/examples/target-240p-90deg.mp4') == (226, 426)
-	assert detect_video_resolution('.assets/examples/target-1080p.mp4') == (2048, 1080)
-	assert detect_video_resolution('.assets/examples/target-1080p-90deg.mp4') == (1080, 2048)
+	assert detect_video_resolution(get_test_example_file('target-240p.mp4')) == (426, 226)
+	assert detect_video_resolution(get_test_example_file('target-240p-90deg.mp4')) == (226, 426)
+	assert detect_video_resolution(get_test_example_file('target-1080p.mp4')) == (2048, 1080)
+	assert detect_video_resolution(get_test_example_file('target-1080p-90deg.mp4')) == (1080, 2048)
 	assert detect_video_resolution('invalid') is None
 
 
 def test_restrict_video_resolution() -> None:
-	assert restrict_video_resolution('.assets/examples/target-1080p.mp4', (426, 226)) == (426, 226)
-	assert restrict_video_resolution('.assets/examples/target-1080p.mp4', (2048, 1080)) == (2048, 1080)
-	assert restrict_video_resolution('.assets/examples/target-1080p.mp4', (4096, 2160)) == (2048, 1080)
+	assert restrict_video_resolution(get_test_example_file('target-1080p.mp4'), (426, 226)) == (426, 226)
+	assert restrict_video_resolution(get_test_example_file('target-1080p.mp4'), (2048, 1080)) == (2048, 1080)
+	assert restrict_video_resolution(get_test_example_file('target-1080p.mp4'), (4096, 2160)) == (2048, 1080)
 
 
 def test_create_video_resolutions() -> None:

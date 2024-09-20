@@ -1,3 +1,6 @@
 [flake8]
-select = E3, E4, F
-per-file-ignores = facefusion/core.py:E402
+select = E3, E4, F, I1, I2
+per-file-ignores = facefusion.py:E402, install.py:E402
+plugins = flake8-import-order
+application_import_names = facefusion
+import-order-style = pycharm

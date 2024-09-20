@@ -1,11 +1,13 @@
-from typing import Optional, Any, List
 from functools import lru_cache
+from typing import Any, List, Optional
+
 import numpy
 import scipy
+from numpy._typing import NDArray
 
-from facefusion.filesystem import is_audio
 from facefusion.ffmpeg import read_audio_buffer
-from facefusion.typing import Fps, Audio, AudioFrame, Spectrogram, MelFilterBank
+from facefusion.filesystem import is_audio
+from facefusion.typing import Audio, AudioFrame, Fps, Mel, MelFilterBank, Spectrogram
 from facefusion.voice_extractor import batch_extract_voice
 
 
@@ -36,8 +38,8 @@ def read_static_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]
 def read_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
 	sample_rate = 48000
 	channel_total = 2
-	chunk_size = 1024 * 240
-	step_size = 1024 * 180
+	chunk_size = 240 * 1024
+	step_size = 180 * 1024
 
 	if is_audio(audio_path):
 		audio_buffer = read_audio_buffer(audio_path, sample_rate, channel_total)
@@ -73,7 +75,7 @@ def create_empty_audio_frame() -> AudioFrame:
 	return audio_frame
 
 
-def prepare_audio(audio : numpy.ndarray[Any, Any]) -> Audio:
+def prepare_audio(audio : Audio) -> Audio:
 	if audio.ndim > 1:
 		audio = numpy.mean(audio, axis = 1)
 	audio = audio / numpy.max(numpy.abs(audio), axis = 0)
@@ -81,7 +83,7 @@ def prepare_audio(audio : numpy.ndarray[Any, Any]) -> Audio:
 	return audio
 
 
-def prepare_voice(audio : numpy.ndarray[Any, Any]) -> Audio:
+def prepare_voice(audio : Audio) -> Audio:
 	sample_rate = 48000
 	resample_rate = 16000
 
@@ -94,7 +96,7 @@ def convert_hertz_to_mel(hertz : float) -> float:
 	return 2595 * numpy.log10(1 + hertz / 700)
 
 
-def convert_mel_to_hertz(mel : numpy.ndarray[Any, Any]) -> numpy.ndarray[Any, Any]:
+def convert_mel_to_hertz(mel : Mel) -> NDArray[Any]:
 	return 700 * (10 ** (mel / 2595) - 1)
 
 
