@@ -2,6 +2,7 @@ from logging import Logger, basicConfig, getLogger
 from typing import Tuple
 
 from facefusion.choices import log_level_set
+from facefusion.common_helper import get_last
 from facefusion.typing import LogLevel, TableContents, TableHeaders
 
 
@@ -14,20 +15,28 @@ def get_package_logger() -> Logger:
 	return getLogger('facefusion')
 
 
-def debug(message : str, scope : str) -> None:
-	get_package_logger().debug('[' + scope.upper() + '] ' + message)
+def debug(message : str, module_name : str) -> None:
+	get_package_logger().debug(create_message(message, module_name))
 
 
-def info(message : str, scope : str) -> None:
-	get_package_logger().info('[' + scope.upper() + '] ' + message)
+def info(message : str, module_name : str) -> None:
+	get_package_logger().info(create_message(message, module_name))
 
 
-def warn(message : str, scope : str) -> None:
-	get_package_logger().warning('[' + scope.upper() + '] ' + message)
+def warn(message : str, module_name : str) -> None:
+	get_package_logger().warning(create_message(message, module_name))
 
 
-def error(message : str, scope : str) -> None:
-	get_package_logger().error('[' + scope.upper() + '] ' + message)
+def error(message : str, module_name : str) -> None:
+	get_package_logger().error(create_message(message, module_name))
+
+
+def create_message(message : str, module_name : str) -> str:
+	scope = get_last(module_name.split('.'))
+
+	if scope:
+		return '[' + scope.upper() + '] ' + message
+	return message
 
 
 def table(headers : TableHeaders, contents : TableContents) -> None:
