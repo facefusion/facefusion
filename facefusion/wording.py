@@ -204,6 +204,12 @@ WORDING : Dict[str, Any] =\
 		'job_retry': 'retry a failed job',
 		'job_retry_all': 'retry all failed jobs'
 	},
+	'about':
+	{
+		'become_a_member': 'become a member',
+		'join_our_community': 'join our community',
+		'read_the_documentation': 'read the documentation'
+	},
 	'uis':
 	{
 		'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
