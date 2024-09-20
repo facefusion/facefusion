@@ -488,12 +488,12 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_model_options().get('type')
+	model_type = get_model_options().get('type')
 	model_mean = get_model_options().get('mean')
 	model_standard_deviation = get_model_options().get('standard_deviation')
 
 	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
-	if model_template == 'ghost' or model_template == 'uniface':
+	if model_type == 'ghost' or model_type == 'uniface':
 		crop_vision_frame = crop_vision_frame * model_standard_deviation + model_mean
 	crop_vision_frame = crop_vision_frame.clip(0, 1)
 	crop_vision_frame = crop_vision_frame[:, :, ::-1] * 255
