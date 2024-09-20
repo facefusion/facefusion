@@ -1,6 +1,6 @@
 filetype==1.2.0
 gradio==4.44.0
-gradio_rangeslider==0.0.6
+gradio-rangeslider==0.0.6
 numpy==2.1.0
 onnx==1.16.2
 onnxruntime==1.19.2
