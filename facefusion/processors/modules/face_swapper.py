@@ -82,8 +82,8 @@ MODEL_SET : ModelSet =\
 		'type': 'ghost',
 		'template': 'arcface_112_v1',
 		'size': (256, 256),
-		'mean': [ 0.0, 0.0, 0.0 ],
-		'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		'mean': [ 0.5, 0.5, 0.5 ],
+		'standard_deviation': [ 0.5, 0.5, 0.5 ]
 	},
 	'ghost_256_unet_2':
 	{
@@ -116,8 +116,8 @@ MODEL_SET : ModelSet =\
 		'type': 'ghost',
 		'template': 'arcface_112_v1',
 		'size': (256, 256),
-		'mean': [ 0.0, 0.0, 0.0 ],
-		'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		'mean': [ 0.5, 0.5, 0.5 ],
+		'standard_deviation': [ 0.5, 0.5, 0.5 ]
 	},
 	'ghost_256_unet_3':
 	{
@@ -150,8 +150,8 @@ MODEL_SET : ModelSet =\
 		'type': 'ghost',
 		'template': 'arcface_112_v1',
 		'size': (256, 256),
-		'mean': [ 0.0, 0.0, 0.0 ],
-		'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		'mean': [ 0.5, 0.5, 0.5 ],
+		'standard_deviation': [ 0.5, 0.5, 0.5 ]
 	},
 	'inswapper_128':
 	{
@@ -290,8 +290,8 @@ MODEL_SET : ModelSet =\
 		'type': 'uniface',
 		'template': 'ffhq_512',
 		'size': (256, 256),
-		'mean': [ 0.0, 0.0, 0.0 ],
-		'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		'mean': [ 0.5, 0.5, 0.5 ],
+		'standard_deviation': [ 0.5, 0.5, 0.5 ]
 	}
 }
 
@@ -477,14 +477,10 @@ def convert_embedding(source_face : Face) -> Tuple[Embedding, Embedding]:
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	model_type = get_model_options().get('type')
 	model_mean = get_model_options().get('mean')
 	model_standard_deviation = get_model_options().get('standard_deviation')
 
-	if model_type == 'ghost':
-		crop_vision_frame = crop_vision_frame[:, :, ::-1] / 127.5 - 1
-	else:
-		crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
+	crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
 	crop_vision_frame = (crop_vision_frame - model_mean) / model_standard_deviation
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1)
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0).astype(numpy.float32)
@@ -492,14 +488,15 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_model_options().get('type')
-	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
+	model_type = get_model_options().get('type')
+	model_mean = get_model_options().get('mean')
+	model_standard_deviation = get_model_options().get('standard_deviation')
 
-	if model_template == 'ghost':
-		crop_vision_frame = (crop_vision_frame * 127.5 + 127.5).round()
-	else:
-		crop_vision_frame = (crop_vision_frame * 255.0).round()
-	crop_vision_frame = crop_vision_frame[:, :, ::-1]
+	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
+	if model_type == 'ghost' or model_type == 'uniface':
+		crop_vision_frame = crop_vision_frame * model_standard_deviation + model_mean
+	crop_vision_frame = crop_vision_frame.clip(0, 1)
+	crop_vision_frame = crop_vision_frame[:, :, ::-1] * 255
 	return crop_vision_frame
 
 
