@@ -2,7 +2,7 @@ from logging import Logger, basicConfig, getLogger
 from typing import Tuple
 
 from facefusion.choices import log_level_set
-from facefusion.common_helper import get_last
+from facefusion.common_helper import get_first, get_last
 from facefusion.typing import LogLevel, TableContents, TableHeaders
 
 
@@ -32,10 +32,12 @@ def error(message : str, module_name : str) -> None:
 
 
 def create_message(message : str, module_name : str) -> str:
-	scope = get_last(module_name.split('.'))
+	scopes = module_name.split('.')
+	first_scope = get_first(scopes)
+	last_scope = get_last(scopes)
 
-	if scope:
-		return '[' + scope.upper() + '] ' + message
+	if first_scope and last_scope:
+		return '[' + first_scope.upper() + '.' + last_scope.upper() + '] ' + message
 	return message
 
 
