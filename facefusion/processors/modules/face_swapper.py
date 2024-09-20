@@ -62,8 +62,8 @@ MODEL_SET : ModelSet =\
 			},
 			'embedding_converter':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_w600k_r50_ghost.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_w600k_r50_ghost.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.hash')
 			}
 		},
 		'sources':
@@ -75,8 +75,8 @@ MODEL_SET : ModelSet =\
 			},
 			'embedding_converter':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_w600k_r50_ghost.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_w600k_r50_ghost.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
 			}
 		},
 		'type': 'ghost',
@@ -96,8 +96,8 @@ MODEL_SET : ModelSet =\
 			},
 			'embedding_converter':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_w600k_r50_ghost.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_w600k_r50_ghost.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.hash')
 			}
 		},
 		'sources':
@@ -109,8 +109,8 @@ MODEL_SET : ModelSet =\
 			},
 			'embedding_converter':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_w600k_r50_ghost.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_w600k_r50_ghost.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
 			}
 		},
 		'type': 'ghost',
@@ -130,8 +130,8 @@ MODEL_SET : ModelSet =\
 			},
 			'embedding_converter':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_w600k_r50_ghost.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_w600k_r50_ghost.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.hash')
 			}
 		},
 		'sources':
@@ -143,8 +143,8 @@ MODEL_SET : ModelSet =\
 			},
 			'embedding_converter':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_w600k_r50_ghost.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_w600k_r50_ghost.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
 			}
 		},
 		'type': 'ghost',
@@ -212,8 +212,8 @@ MODEL_SET : ModelSet =\
 			},
 			'embedding_converter':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_w600k_r50_simswap.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_w600k_r50_simswap.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_simswap.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.hash')
 			}
 		},
 		'sources':
@@ -225,8 +225,8 @@ MODEL_SET : ModelSet =\
 			},
 			'embedding_converter':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_w600k_r50_simswap.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_w600k_r50_simswap.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_simswap.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.onnx')
 			}
 		},
 		'type': 'simswap',
@@ -246,8 +246,8 @@ MODEL_SET : ModelSet =\
 			},
 			'embedding_converter':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_w600k_r50_simswap.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_w600k_r50_simswap.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_simswap.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.hash')
 			}
 		},
 		'sources':
@@ -259,8 +259,8 @@ MODEL_SET : ModelSet =\
 			},
 			'embedding_converter':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_w600k_r50_simswap.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_w600k_r50_simswap.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_simswap.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.onnx')
 			}
 		},
 		'type': 'simswap',
