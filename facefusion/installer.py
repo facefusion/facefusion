@@ -21,7 +21,7 @@ else:
 if is_linux():
 	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.18.0')
 if is_windows():
-	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.19.2')
+	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.17.3')
 
 
 def cli() -> None:
@@ -89,5 +89,5 @@ def run(program : ArgumentParser) -> None:
 
 			subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
 
-	if onnxruntime_version == '1.18.0':
+	if onnxruntime_version < '1.19.0':
 		subprocess.call([ shutil.which('pip'), 'install', 'numpy==1.26.4', '--force-reinstall' ])
