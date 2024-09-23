@@ -78,7 +78,7 @@ def listen() -> None:
 
 	reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
 	if reference_face_position_gallery:
-		reference_face_position_gallery.select(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+		reference_face_position_gallery.select(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
