@@ -27,6 +27,10 @@ def get_inference_pool(model_context : str, model_sources : DownloadSet) -> Infe
 		app_context = detect_app_context()
 		inference_context = get_inference_context(model_context)
 
+		if app_context == 'cli' and INFERENCE_POOLS.get('ui').get(inference_context):
+			INFERENCE_POOLS['cli'][inference_context] = INFERENCE_POOLS.get('ui').get(inference_context)
+		if app_context == 'ui' and INFERENCE_POOLS.get('cli').get(inference_context):
+			INFERENCE_POOLS['ui'][inference_context] = INFERENCE_POOLS.get('cli').get(inference_context)
 		if not INFERENCE_POOLS.get(app_context).get(inference_context):
 			execution_provider_keys = resolve_execution_provider_keys(model_context)
 			INFERENCE_POOLS[app_context][inference_context] = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), execution_provider_keys)
