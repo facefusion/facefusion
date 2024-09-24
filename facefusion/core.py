@@ -403,15 +403,15 @@ def process_video(start_time : float) -> ErrorCode:
 		logger.info(wording.get('skipping_audio'), __name__)
 		move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 	else:
-		if 'lip_syncer' in state_manager.get_item('processors'):
-			source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
-			if source_audio_path and replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
-				logger.debug(wording.get('restoring_audio_succeed'), __name__)
+		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+		if source_audio_path:
+			if replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
+				logger.debug(wording.get('replacing_audio_succeed'), __name__)
 			else:
 				if is_process_stopping():
 					process_manager.end()
 					return 4
-				logger.warn(wording.get('restoring_audio_skipped'), __name__)
+				logger.warn(wording.get('replacing_audio_skipped'), __name__)
 				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 		else:
 			if restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), state_manager.get_item('output_video_fps')):

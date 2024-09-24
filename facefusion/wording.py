@@ -24,6 +24,8 @@ WORDING : Dict[str, Any] =\
 	'merging_video_succeed': 'Merging video succeed',
 	'merging_video_failed': 'Merging video failed',
 	'skipping_audio': 'Skipping audio',
+	'replacing_audio_succeed': 'Replacing audio succeed',
+	'replacing_audio_skipped': 'Replacing audio skipped',
 	'restoring_audio_succeed': 'Restoring audio succeed',
 	'restoring_audio_skipped': 'Restoring audio skipped',
 	'clearing_temp': 'Clearing temporary resources',
