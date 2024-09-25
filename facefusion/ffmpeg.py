@@ -174,7 +174,8 @@ def map_amf_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
 	if output_video_preset in [ 'slow', 'slower', 'veryslow' ]:
 		return 'quality'
 	return None
-	
+
+
 def map_qsv_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
 	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast' ]:
 		return 'fast'
