@@ -2,6 +2,7 @@ from functools import lru_cache
 
 import cv2
 import numpy
+import os
 from tqdm import tqdm
 
 from facefusion import inference_manager, state_manager, wording
@@ -35,7 +36,7 @@ MODEL_SET : ModelSet =\
 		'mean': [ 104, 117, 123 ]
 	}
 }
-PROBABILITY_LIMIT = 0.80
+PROBABILITY_LIMIT = os.environ.get('FACEFUSION_PROBABILITY_LIMIT', 0.80)
 RATE_LIMIT = 10
 STREAM_COUNTER = 0
 
