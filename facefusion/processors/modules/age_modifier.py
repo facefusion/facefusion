@@ -13,7 +13,7 @@ from facefusion import config, content_analyser, face_classifier, face_detector,
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.face_analyser import get_many_faces, get_one_face
-from facefusion.face_helper import merge_matrix, paste_back, warp_face_by_face_landmark_5
+from facefusion.face_helper import merge_matrix, paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
@@ -119,7 +119,7 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	model_size = get_model_options().get('size')
 	crop_size = (model_size[0] // 2, model_size[1] // 2)
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
-	extend_face_landmark_5 = (face_landmark_5 - face_landmark_5[2]) * 2 + face_landmark_5[2]
+	extend_face_landmark_5 = scale_face_landmark_5(face_landmark_5, 2.0)
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, crop_size)
 	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_template, model_size)
 	extend_vision_frame_raw = extend_vision_frame.copy()
