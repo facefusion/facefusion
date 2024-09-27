@@ -92,37 +92,38 @@ WORDING : Dict[str, Any] =\
 		# installer
 		'install_dependency': 'choose the variant of {dependency} to install',
 		'skip_conda': 'skip the conda environment check',
-		# general
+		# paths
 		'config_path': 'choose the config file to override defaults',
+		'jobs_path': 'specify the directory to store jobs',
 		'source_paths': 'choose single or multiple source images or audios',
 		'target_path': 'choose single target image or video',
 		'output_path': 'specify the output image or video within a directory',
-		'jobs_path': 'specify the directory to store jobs',
-		# face analyser
+		# face detector
 		'face_detector_model': 'choose the model responsible for detecting the faces',
 		'face_detector_size': 'specify the size of the frame provided to the face detector',
 		'face_detector_angles': 'specify the angles to rotate the frame before detecting faces',
 		'face_detector_score': 'filter the detected faces base on the confidence score',
+		# face landmarker
 		'face_landmarker_model': 'choose the model responsible for detecting the face landmarks',
 		'face_landmarker_score': 'filter the detected face landmarks base on the confidence score',
 		# face selector
 		'face_selector_mode': 'use reference based tracking or simple matching',
 		'face_selector_order': 'specify the order of the detected faces',
+		'face_selector_age_start': 'filter the detected faces based the starting age',
+		'face_selector_age_end': 'filter the detected faces based the ending age',
 		'face_selector_gender': 'filter the detected faces based on their gender',
-		'face_selector_age_start': 'filter the detected faces based on their age start',
-		'face_selector_age_end': 'filter the detected faces based on their age end',
 		'face_selector_race': 'filter the detected faces based on their race',
 		'reference_face_position': 'specify the position used to create the reference face',
-		'reference_face_distance': 'specify the desired similarity between the reference face and target face',
+		'reference_face_distance': 'specify the similarity between the reference face and target face',
 		'reference_frame_number': 'specify the frame used to create the reference face',
-		# face mask
+		# face masker
 		'face_mask_types': 'mix and match different face mask types (choices: {choices})',
 		'face_mask_blur': 'specify the degree of blur applied the box mask',
 		'face_mask_padding': 'apply top, right, bottom and left padding to the box mask',
 		'face_mask_regions': 'choose the facial features used for the region mask (choices: {choices})',
 		# frame extraction
-		'trim_frame_start': 'specify the the start frame of the target video',
-		'trim_frame_end': 'specify the the end frame of the target video',
+		'trim_frame_start': 'specify the starting frame of the target video',
+		'trim_frame_end': 'specify the ending frame of the target video',
 		'temp_frame_format': 'specify the temporary resources format',
 		'keep_temp': 'keep the temporary resources after processing',
 		# output creation
