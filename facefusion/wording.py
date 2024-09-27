@@ -137,11 +137,11 @@ WORDING : Dict[str, Any] =\
 		'output_video_fps': 'specify the video output fps based on the target video',
 		'skip_audio': 'omit the audio from the target video',
 		# processors
-		'processors': 'load a single or multiple processors. (choices: {choices}, ...)',
+		'processors': 'load a single or multiple processors (choices: {choices}, ...)',
 		'age_modifier_model': 'choose the model responsible for aging the face',
 		'age_modifier_direction': 'specify the direction in which the age should be modified',
 		'expression_restorer_model': 'choose the model responsible for restoring the expression',
-		'expression_restorer_factor': 'restore factor of expression from target face',
+		'expression_restorer_factor': 'restore factor of expression from the target face',
 		'face_debugger_items': 'load a single or multiple processors (choices: {choices})',
 		'face_editor_model': 'choose the model responsible for editing the face',
 		'face_editor_eyebrow_direction': 'specify the eyebrow direction',
