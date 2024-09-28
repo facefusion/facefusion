@@ -23,10 +23,6 @@ def pre_check() -> bool:
 	return False
 
 
-def pre_render() -> bool:
-	return True
-
-
 def render() -> gradio.Blocks:
 	with gradio.Blocks() as layout:
 		with gradio.Row():
