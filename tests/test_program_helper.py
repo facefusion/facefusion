@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 import pytest
 
-from facefusion.program_helper import find_argument_group, validate_actions, remove_args
+from facefusion.program_helper import find_argument_group, remove_args, validate_actions
 
 
 def test_find_argument_group() -> None:
