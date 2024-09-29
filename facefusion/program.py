@@ -20,7 +20,8 @@ def create_help_formatter_large(prog : str) -> HelpFormatter:
 
 def create_config_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('-c', '--config-path', help = wording.get('help.config_path'), default = 'facefusion.ini')
+	group_paths = program.add_argument_group('paths')
+	group_paths.add_argument('-c', '--config-path', help = wording.get('help.config_path'), default = 'facefusion.ini')
 	job_store.register_job_keys([ 'config-path' ])
 	apply_config_path(program)
 	return program
@@ -28,16 +29,18 @@ def create_config_program() -> ArgumentParser:
 
 def create_jobs_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('paths.jobs_path', '.jobs'))
+	group_paths = program.add_argument_group('paths')
+	group_paths.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('paths.jobs_path', '.jobs'))
 	job_store.register_job_keys([ 'jobs_path' ])
 	return program
 
 
 def create_paths_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', default = config.get_str_list('paths.source_paths'))
-	program.add_argument('-t', '--target-path', help = wording.get('help.target_path'), default = config.get_str_value('paths.target_path'))
-	program.add_argument('-o', '--output-path', help = wording.get('help.output_path'), default = config.get_str_value('paths.output_path'))
+	group_paths = program.add_argument_group('paths')
+	group_paths.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', default = config.get_str_list('paths.source_paths'))
+	group_paths.add_argument('-t', '--target-path', help = wording.get('help.target_path'), default = config.get_str_value('paths.target_path'))
+	group_paths.add_argument('-o', '--output-path', help = wording.get('help.output_path'), default = config.get_str_value('paths.output_path'))
 	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
 	return program
 
