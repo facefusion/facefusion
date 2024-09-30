@@ -24,6 +24,11 @@ def before_each() -> None:
 	init_jobs(get_test_jobs_directory())
 
 
+@pytest.mark.skip()
+def test_job_list() -> None:
+	pass
+
+
 def test_job_create() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-create', '-j', get_test_jobs_directory() ]
 
