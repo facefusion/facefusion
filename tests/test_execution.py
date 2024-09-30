@@ -11,7 +11,7 @@ def test_has_execution_provider() -> None:
 
 
 def test_multiple_execution_providers() -> None:
-	execution_provider_with_options =\
+	execution_providers =\
 	[
 		('CUDAExecutionProvider',
 		{
@@ -21,4 +21,4 @@ def test_multiple_execution_providers() -> None:
 		'CPUExecutionProvider'
 	]
 
-	assert create_execution_providers('1', [ 'cpu', 'cuda' ]) == execution_provider_with_options
+	assert create_execution_providers('1', [ 'cpu', 'cuda' ]) == execution_providers
