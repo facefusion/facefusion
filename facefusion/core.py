@@ -50,7 +50,7 @@ def route(args : Args) -> None:
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
 		return conditional_exit(error_code)
-	if state_manager.get_item('command') in [ 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step', 'job-list' ]:
+	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_code = route_job_manager(args)
@@ -177,6 +177,13 @@ def force_download() -> ErrorCode:
 
 
 def route_job_manager(args : Args) -> ErrorCode:
+	if state_manager.get_item('command') == 'job-list':
+		job_headers, job_contents = compose_job_list(state_manager.get_item('job_status'))
+
+		if job_contents:
+			logger.table(job_headers, job_contents)
+			return 0
+		return 1
 	if state_manager.get_item('command') == 'job-create':
 		if job_manager.create_job(state_manager.get_item('job_id')):
 			logger.info(wording.get('job_created').format(job_id = state_manager.get_item('job_id')), __name__)
@@ -206,13 +213,6 @@ def route_job_manager(args : Args) -> ErrorCode:
 			logger.info(wording.get('job_all_deleted'), __name__)
 			return 0
 		logger.error(wording.get('job_all_not_deleted'), __name__)
-		return 1
-	if state_manager.get_item('command') == 'job-list':
-		job_headers, job_contents = compose_job_list(state_manager.get_item('job_status'))
-
-		if job_contents:
-			logger.table(job_headers, job_contents)
-			return 0
 		return 1
 	if state_manager.get_item('command') == 'job-add-step':
 		step_args = reduce_step_args(args)

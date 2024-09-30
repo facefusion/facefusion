@@ -189,14 +189,15 @@ WORDING : Dict[str, Any] =\
 		'force_download': 'force automate downloads and exit',
 		# jobs
 		'job_id': 'specify the job id',
+		'job_status': 'specify the job status',
 		'step_index': 'specify the step index',
 		# job manager
+		'job_list': 'list jobs by status',
 		'job_create': 'create a drafted job',
 		'job_submit': 'submit a drafted job to become a queued job',
 		'job_submit_all': 'submit all drafted jobs to become a queued jobs',
 		'job_delete': 'delete a drafted, queued, failed or completed job',
 		'job_delete_all': 'delete all drafted, queued, failed and completed jobs',
-		'job_list': 'list jobs by status',
 		'job_add_step': 'add a step to a drafted job',
 		'job_remix_step': 'remix a previous step from a drafted job',
 		'job_insert_step': 'insert a step to a drafted job',
