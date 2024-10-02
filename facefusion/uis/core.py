@@ -25,7 +25,6 @@ UI_LAYOUT_MODULES : List[ModuleType] = []
 UI_LAYOUT_METHODS =\
 [
 	'pre_check',
-	'pre_render',
 	'render',
 	'listen',
 	'run'
@@ -83,14 +82,14 @@ def launch() -> None:
 	with gradio.Blocks(theme = get_theme(), css = get_css(), title = metadata.get('name') + ' ' + metadata.get('version'), fill_width = True) as ui:
 		for ui_layout in state_manager.get_item('ui_layouts'):
 			ui_layout_module = load_ui_layout_module(ui_layout)
-			if ui_layout_module.pre_render():
-				if ui_layouts_total > 1:
-					with gradio.Tab(ui_layout):
-						ui_layout_module.render()
-						ui_layout_module.listen()
-				else:
+
+			if ui_layouts_total > 1:
+				with gradio.Tab(ui_layout):
 					ui_layout_module.render()
 					ui_layout_module.listen()
+			else:
+				ui_layout_module.render()
+				ui_layout_module.listen()
 
 	for ui_layout in state_manager.get_item('ui_layouts'):
 		ui_layout_module = load_ui_layout_module(ui_layout)

@@ -82,6 +82,7 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 	state_manager.init_item('face_landmarker_score', 0)
 	state_manager.init_item('temp_frame_format', 'bmp')
 	state_manager.init_item('output_video_preset', 'ultrafast')
+	state_manager.init_item('skip_audio', True)
 	state_manager.sync_item('execution_providers')
 	state_manager.sync_item('execution_thread_count')
 	state_manager.sync_item('execution_queue_count')

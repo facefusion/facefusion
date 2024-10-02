@@ -47,7 +47,7 @@ FaceSet = Dict[str, List[Face]]
 FaceStore = TypedDict('FaceStore',
 {
 	'static_faces' : FaceSet,
-	'reference_faces': FaceSet
+	'reference_faces' : FaceSet
 })
 
 VisionFrame = NDArray[Any]
@@ -109,7 +109,7 @@ OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', '
 OutputVideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
 Download = TypedDict('Download',
-					 {
+{
 	'url' : str,
 	'path' : str
 })
@@ -259,7 +259,7 @@ State = TypedDict('State',
 	'face_landmarker_score' : Score,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
-	'face_selector_race': Race,
+	'face_selector_race' : Race,
 	'face_selector_gender' : Gender,
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
@@ -287,16 +287,16 @@ State = TypedDict('State',
 	'open_browser' : bool,
 	'ui_layouts' : List[str],
 	'ui_workflow' : UiWorkflow,
-	'execution_device_id': str,
-	'execution_providers': List[ExecutionProviderKey],
-	'execution_thread_count': int,
-	'execution_queue_count': int,
-	'video_memory_strategy': VideoMemoryStrategy,
-	'system_memory_limit': int,
-	'skip_download': bool,
-	'log_level': LogLevel,
-	'job_id': str,
-	'job_status': JobStatus,
-	'step_index': int
+	'execution_device_id' : str,
+	'execution_providers' : List[ExecutionProviderKey],
+	'execution_thread_count' : int,
+	'execution_queue_count' : int,
+	'video_memory_strategy' : VideoMemoryStrategy,
+	'system_memory_limit' : int,
+	'skip_download' : bool,
+	'log_level' : LogLevel,
+	'job_id' : str,
+	'job_status' : JobStatus,
+	'step_index' : int
 })
 StateSet = Dict[AppContext, State]

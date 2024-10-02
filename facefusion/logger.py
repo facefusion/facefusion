@@ -50,6 +50,7 @@ def table(headers : TableHeaders, contents : TableContents) -> None:
 	package_logger.info(table_separator)
 
 	for content in contents:
+		content = [ value if value else '' for value in content ]
 		package_logger.info(table_column.format(*content))
 
 	package_logger.info(table_separator)

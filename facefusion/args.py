@@ -50,10 +50,10 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	# face selector
 	state_manager.init_item('face_selector_mode', args.get('face_selector_mode'))
 	state_manager.init_item('face_selector_order', args.get('face_selector_order'))
-	state_manager.init_item('face_selector_gender', args.get('face_selector_gender'))
-	state_manager.init_item('face_selector_race', args.get('face_selector_race'))
 	state_manager.init_item('face_selector_age_start', args.get('face_selector_age_start'))
 	state_manager.init_item('face_selector_age_end', args.get('face_selector_age_end'))
+	state_manager.init_item('face_selector_gender', args.get('face_selector_gender'))
+	state_manager.init_item('face_selector_race', args.get('face_selector_race'))
 	state_manager.init_item('reference_face_position', args.get('reference_face_position'))
 	state_manager.init_item('reference_face_distance', args.get('reference_face_distance'))
 	state_manager.init_item('reference_frame_number', args.get('reference_frame_number'))
@@ -97,10 +97,9 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	for processor_module in get_processors_modules(available_processors):
 		processor_module.apply_args(args, apply_state_item)
 	# uis
-	if args.get('command') == 'run':
-		apply_state_item('open_browser', args.get('open_browser'))
-		apply_state_item('ui_layouts', args.get('ui_layouts'))
-		apply_state_item('ui_workflow', args.get('ui_workflow'))
+	apply_state_item('open_browser', args.get('open_browser'))
+	apply_state_item('ui_layouts', args.get('ui_layouts'))
+	apply_state_item('ui_workflow', args.get('ui_workflow'))
 	# execution
 	apply_state_item('execution_device_id', args.get('execution_device_id'))
 	apply_state_item('execution_providers', args.get('execution_providers'))
