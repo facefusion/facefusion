@@ -26,42 +26,42 @@ from facefusion.vision import read_image, read_static_image, restrict_video_fps,
 
 MODEL_SET : ModelSet =\
 {
-	'wav2lip':
+	'wav2lip_96':
 	{
 		'hashes':
 		{
 			'lip_syncer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip.hash',
-				'path': resolve_relative_path('../.assets/models/wav2lip.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_96.hash',
+				'path': resolve_relative_path('../.assets/models/wav2lip_96.hash')
 			}
 		},
 		'sources':
 		{
 			'lip_syncer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip.onnx',
-				'path': resolve_relative_path('../.assets/models/wav2lip.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_96.onnx',
+				'path': resolve_relative_path('../.assets/models/wav2lip_96.onnx')
 			}
 		},
 		'size': (96, 96)
 	},
-	'wav2lip_gan':
+	'wav2lip_gan_96':
 	{
 		'hashes':
 		{
 			'lip_syncer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_gan.hash',
-				'path': resolve_relative_path('../.assets/models/wav2lip_gan.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_gan_96.hash',
+				'path': resolve_relative_path('../.assets/models/wav2lip_gan_96.hash')
 			}
 		},
 		'sources':
 		{
 			'lip_syncer':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_gan.onnx',
-				'path': resolve_relative_path('../.assets/models/wav2lip_gan.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_gan_96.onnx',
+				'path': resolve_relative_path('../.assets/models/wav2lip_gan_96.onnx')
 			}
 		},
 		'size': (96, 96)
@@ -88,7 +88,7 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('processors.lip_syncer_model', 'wav2lip_gan'), choices = processors_choices.lip_syncer_models)
+		group_processors.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('processors.lip_syncer_model', 'wav2lip_gan_96'), choices = processors_choices.lip_syncer_models)
 		facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model' ])
 
 
