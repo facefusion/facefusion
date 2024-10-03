@@ -153,6 +153,40 @@ MODEL_SET : ModelSet =\
 		'mean': [ 0.5, 0.5, 0.5 ],
 		'standard_deviation': [ 0.5, 0.5, 0.5 ]
 	},
+	'hififace_unofficial_256':
+	{
+		'hashes':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/hififace_unofficial_256.hash',
+				'path': resolve_relative_path('../.assets/models/hififace_unofficial_256.hash')
+			},
+			'embedding_converter':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/arcface_converter_hififace.hash',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_hififace.hash')
+			}
+		},
+		'sources':
+		{
+			'face_swapper':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/hififace_unofficial_256.onnx',
+				'path': resolve_relative_path('../.assets/models/hififace_unofficial_256.onnx')
+			},
+			'embedding_converter':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/arcface_converter_hififace.onnx',
+				'path': resolve_relative_path('../.assets/models/arcface_converter_hififace.onnx')
+			}
+		},
+		'type': 'hififace',
+		'template': 'mtcnn_512',
+		'size': (256, 256),
+		'mean': [ 0.5, 0.5, 0.5 ],
+		'standard_deviation': [ 0.5, 0.5, 0.5 ]
+	},
 	'inswapper_128':
 	{
 		'hashes':
@@ -412,7 +446,7 @@ def forward_swap_face(source_face : Face, crop_vision_frame : VisionFrame) -> Vi
 
 	for face_swapper_input in face_swapper.get_inputs():
 		if face_swapper_input.name == 'source':
-			if model_type == 'blendswap' or model_type == 'uniface':
+			if model_type in [ 'blendswap', 'uniface' ]:
 				face_swapper_inputs[face_swapper_input.name] = prepare_source_frame(source_face)
 			else:
 				face_swapper_inputs[face_swapper_input.name] = prepare_source_embedding(source_face)
@@ -493,7 +527,7 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	model_standard_deviation = get_model_options().get('standard_deviation')
 
 	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
-	if model_type == 'ghost' or model_type == 'uniface':
+	if model_type in [ 'ghost', 'hififace', 'uniface' ]:
 		crop_vision_frame = crop_vision_frame * model_standard_deviation + model_mean
 	crop_vision_frame = crop_vision_frame.clip(0, 1)
 	crop_vision_frame = crop_vision_frame[:, :, ::-1] * 255
