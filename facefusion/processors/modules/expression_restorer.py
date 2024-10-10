@@ -108,6 +108,9 @@ def pre_check() -> bool:
 
 
 def pre_process(mode : ProcessMode) -> bool:
+	if mode == 'stream':
+		logger.error(wording.get('stream_not_supported') + wording.get('exclamation_mark'), __name__)
+		return False
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
 		return False
@@ -222,7 +225,7 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0).clip(0, 1)
-	crop_vision_frame = (crop_vision_frame * 255.0)
+	crop_vision_frame = crop_vision_frame * 255.0
 	crop_vision_frame = crop_vision_frame.astype(numpy.uint8)[:, :, ::-1]
 	return crop_vision_frame
 
