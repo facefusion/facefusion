@@ -135,32 +135,31 @@ def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int)
 
 
 def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) -> bool:
-	trim_frame_start = state_manager.get_item('trim_frame_start')
-	trim_frame_end = state_manager.get_item('trim_frame_end')
-	temp_file_path = get_temp_file_path(target_path)
-	commands = [ '-i', temp_file_path ]
+    trim_frame_start = state_manager.get_item('trim_frame_start')
+    trim_frame_end = state_manager.get_item('trim_frame_end')
+    audio_encoder = state_manager.get_item('output_audio_encoder')  # {{ edit_1 }}
+    temp_file_path = get_temp_file_path(target_path)
+    commands = ['-i', temp_file_path]
 
-	if isinstance(trim_frame_start, int):
-		start_time = trim_frame_start / output_video_fps
-		commands.extend([ '-ss', str(start_time) ])
-	if isinstance(trim_frame_end, int):
-		end_time = trim_frame_end / output_video_fps
-		commands.extend([ '-to', str(end_time) ])
+    if isinstance(trim_frame_start, int):
+        start_time = trim_frame_start / output_video_fps
+        commands.extend(['-ss', str(start_time)])
+    if isinstance(trim_frame_end, int):
+        end_time = trim_frame_end / output_video_fps
+        commands.extend(['-to', str(end_time)])
 
-	audio_encoder = state_manager.get_item('output_audio_encoder') or 'aac'
-
-	commands.extend([
+    commands.extend([
         '-i', target_path,
         '-c:v', 'copy',
         '-c:a', audio_encoder,
-        '-ar', '48000',  # Sample rate set to 48 kHz
+        '-ar', '48000',  # サンプルレートを48 kHzに設定
         '-map', '0:v:0',
         '-map', '1:a:0',
         '-shortest',
         '-y', output_path
-	])
+    ])
 
-	return run_ffmpeg(commands).returncode == 0
+    return run_ffmpeg(commands).returncode == 0
 
 
 def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:

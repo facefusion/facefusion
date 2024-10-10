@@ -15,8 +15,11 @@ class TestRestoreAudio(unittest.TestCase):
             'output_audio_encoder': 'aac'
         }.get(key)
 
+        # この行を追加して output_audio_encoder を設定
+        mock_state_manager.set_item('output_audio_encoder', 'aac')  # {{ edit_1 }}
+
         # Mocking get_temp_file_path to return a fake temp file path
-        mock_get_temp_file_path.return_value = '/fake/temp/path.mp4'
+        mock_get_temp_file_path.return_value = '/fake/temp/path.mp4'    
 
         # Mocking run_ffmpeg to return a mock process with a return code of 0 (success)
         mock_process = MagicMock()
