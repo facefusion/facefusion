@@ -46,6 +46,7 @@ WORDING : Dict[str, Any] =\
 	'ui_layout_not_loaded': 'UI layout {ui_layout} could not be loaded',
 	'ui_layout_not_implemented': 'UI layout {ui_layout} not implemented correctly',
 	'stream_not_loaded': 'Stream {stream_mode} could not be loaded',
+	'stream_not_supported': 'Stream not supported',
 	'job_created': 'Job {job_id} created',
 	'job_not_created': 'Job {job_id} not created',
 	'job_submitted': 'Job {job_id} submitted',
