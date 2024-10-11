@@ -167,7 +167,7 @@ def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : Bound
 
 def conditional_optimize_contrast(crop_vision_frame : VisionFrame) -> VisionFrame:
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_RGB2Lab)
-	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: # type:ignore[arg-type]
+	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: #type:ignore[arg-type]
 		crop_vision_frame[:, :, 0] = cv2.createCLAHE(clipLimit = 2).apply(crop_vision_frame[:, :, 0])
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_Lab2RGB)
 	return crop_vision_frame

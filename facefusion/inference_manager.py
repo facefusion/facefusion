@@ -13,8 +13,8 @@ from facefusion.typing import DownloadSet, ExecutionProviderKey, InferencePool, 
 
 INFERENCE_POOLS : InferencePoolSet =\
 {
-	'cli': {}, # type:ignore[typeddict-item]
-	'ui': {} # type:ignore[typeddict-item]
+	'cli': {}, #type:ignore[typeddict-item]
+	'ui': {} #type:ignore[typeddict-item]
 }
 
 
