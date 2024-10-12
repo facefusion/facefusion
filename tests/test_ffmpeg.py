@@ -5,8 +5,9 @@ import pytest
 
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, read_audio_buffer
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_directory_path
+from facefusion.ffmpeg import concat_video, extract_frames, read_audio_buffer, replace_audio
+from facefusion.filesystem import copy_file
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_directory_path, get_temp_file_path
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -125,3 +126,16 @@ def test_read_audio_buffer() -> None:
 	assert isinstance(read_audio_buffer(get_test_example_file('source.mp3'), 1, 1), bytes)
 	assert isinstance(read_audio_buffer(get_test_example_file('source.wav'), 1, 1), bytes)
 	assert read_audio_buffer(get_test_example_file('invalid.mp3'), 1, 1) is None
+
+
+def test_replace_audio() -> None:
+	target_path = get_test_example_file('target-240p.mp4')
+	output_path = get_test_output_file('test-replace-audio.mp4')
+
+	create_temp_directory(target_path)
+	copy_file(target_path, get_temp_file_path(target_path))
+
+	assert replace_audio(target_path, get_test_example_file('source.mp3'), output_path) is True
+	assert replace_audio(target_path, get_test_example_file('source.wav'), output_path) is True
+
+	clear_temp_directory(target_path)
