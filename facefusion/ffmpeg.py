@@ -10,7 +10,7 @@ from facefusion import logger, process_manager, state_manager
 from facefusion.filesystem import remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.typing import AudioBuffer, Fps, OutputVideoPreset
-from facefusion.vision import restrict_video_fps
+from facefusion.vision import detect_video_duration, restrict_video_fps
 
 
 def run_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
@@ -138,6 +138,7 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) 
 	trim_frame_start = state_manager.get_item('trim_frame_start')
 	trim_frame_end = state_manager.get_item('trim_frame_end')
 	temp_file_path = get_temp_file_path(target_path)
+	temp_video_duration = detect_video_duration(temp_file_path)
 	commands = [ '-i', temp_file_path ]
 
 	if isinstance(trim_frame_start, int):
@@ -146,13 +147,14 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) 
 	if isinstance(trim_frame_end, int):
 		end_time = trim_frame_end / output_video_fps
 		commands.extend([ '-to', str(end_time) ])
-	commands.extend([ '-i', target_path, '-c:v', 'copy', '-c:a', state_manager.get_item('output_audio_encoder'), '-map', '0:v:0', '-map', '1:a:0', '-shortest', '-y', output_path ])
+	commands.extend([ '-i', target_path, '-c:v', 'copy', '-c:a', state_manager.get_item('output_audio_encoder'), '-map', '0:v:0', '-map', '1:a:0', '-t', str(temp_video_duration), '-y', output_path ])
 	return run_ffmpeg(commands).returncode == 0
 
 
 def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:
 	temp_file_path = get_temp_file_path(target_path)
-	commands = [ '-i', temp_file_path, '-i', audio_path, '-c:v', 'copy', '-c:a', state_manager.get_item('output_audio_encoder'), '-shortest', '-y', output_path ]
+	temp_video_duration = detect_video_duration(temp_file_path)
+	commands = [ '-i', temp_file_path, '-i', audio_path, '-c:v', 'copy', '-c:a', state_manager.get_item('output_audio_encoder'), '-t', str(temp_video_duration), '-y', output_path ]
 	return run_ffmpeg(commands).returncode == 0
 
 

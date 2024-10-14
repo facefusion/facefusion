@@ -67,6 +67,7 @@ Mel = NDArray[Any]
 MelFilterBank = NDArray[Any]
 
 Fps = float
+Duration = float
 Padding = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']
 Resolution = Tuple[int, int]
