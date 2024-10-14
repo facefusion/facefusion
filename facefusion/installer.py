@@ -72,7 +72,7 @@ def run(program : ArgumentParser) -> None:
 				os.path.join(os.getenv('CONDA_PREFIX'), 'lib'),
 				os.path.join(os.getenv('CONDA_PREFIX'), 'lib', python_id, 'site-packages', 'tensorrt_libs')
 			])
-			library_paths = [ library_path for library_path in library_paths if os.path.exists(library_path) ]
+			library_paths = list(dict.fromkeys([ library_path for library_path in library_paths if os.path.exists(library_path) ]))
 
 			subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'LD_LIBRARY_PATH=' + os.pathsep.join(library_paths) ])
 
@@ -85,7 +85,7 @@ def run(program : ArgumentParser) -> None:
 				os.path.join(os.getenv('CONDA_PREFIX'), 'Lib'),
 				os.path.join(os.getenv('CONDA_PREFIX'), 'Lib', 'site-packages', 'tensorrt_libs')
 			])
-			library_paths = [ library_path for library_path in library_paths if os.path.exists(library_path) ]
+			library_paths = list(dict.fromkeys([ library_path for library_path in library_paths if os.path.exists(library_path) ]))
 
 			subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
 
