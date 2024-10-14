@@ -8,7 +8,7 @@ from cv2.typing import Size
 from facefusion.choices import image_template_sizes, video_template_sizes
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import is_image, is_video, sanitize_path_for_windows
-from facefusion.typing import Fps, Orientation, Resolution, VisionFrame
+from facefusion.typing import Duration, Fps, Orientation, Resolution, VisionFrame
 
 
 @lru_cache(maxsize = 128)
@@ -117,6 +117,14 @@ def restrict_video_fps(video_path : str, fps : Fps) -> Fps:
 		if video_fps < fps:
 			return video_fps
 	return fps
+
+
+def detect_video_duration(video_path : str) -> Duration:
+	video_frame_total = count_video_frame_total(video_path)
+	video_fps = detect_video_fps(video_path)
+	if video_frame_total and video_fps:
+		return video_frame_total / video_fps
+	return 0
 
 
 def detect_video_resolution(video_path : str) -> Optional[Resolution]:
