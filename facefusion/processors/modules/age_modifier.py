@@ -13,7 +13,7 @@ from facefusion import config, content_analyser, face_classifier, face_detector,
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.face_analyser import get_many_faces, get_one_face
-from facefusion.face_helper import merge_matrix, paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
+from facefusion.face_helper import merge_matrix, paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
@@ -33,20 +33,20 @@ MODEL_SET : ModelSet =\
 		{
 			'age_modifier':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/styleganex_age.hash',
-				'path': resolve_relative_path('../.assets/models/styleganex_age.hash')
+				'url': 'https://huggingface.co/bluefoxcreation/StyleGANEX-AGE/resolve/main/styleganex_age_opt.hash',
+				'path': resolve_relative_path('../.assets/models/styleganex_age_opt.hash')
 			}
 		},
 		'sources':
 		{
 			'age_modifier':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/styleganex_age.onnx',
-				'path': resolve_relative_path('../.assets/models/styleganex_age.onnx')
+				'url': 'https://huggingface.co/bluefoxcreation/StyleGANEX-AGE/resolve/main/styleganex_age_opt.onnx',
+				'path': resolve_relative_path('../.assets/models/styleganex_age_opt.onnx')
 			}
 		},
 		'template': 'ffhq_512',
-		'size': (512, 512)
+		'size': (256, 256)
 	}
 }
 
@@ -117,11 +117,12 @@ def post_process() -> None:
 def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
-	crop_size = (model_size[0] // 2, model_size[1] // 2)
+	extend_crop_size = (384, 384)
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
-	extend_face_landmark_5 = scale_face_landmark_5(face_landmark_5, 2.0)
-	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, crop_size)
-	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_template, model_size)
+	eye_center = face_landmark_5[[0, 1]].mean(axis = 0)
+	extend_face_landmark_5 = (face_landmark_5 - eye_center) * 1.6 + eye_center
+	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, model_size)
+	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_template, extend_crop_size)
 	extend_vision_frame_raw = extend_vision_frame.copy()
 	box_mask = create_static_box_mask(model_size, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
@@ -140,8 +141,8 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	extend_vision_frame = forward(crop_vision_frame, extend_vision_frame)
 	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
 	extend_vision_frame = fix_color(extend_vision_frame_raw, extend_vision_frame)
-	extend_crop_mask = cv2.pyrUp(numpy.minimum.reduce(crop_masks).clip(0, 1))
-	extend_affine_matrix *= extend_vision_frame.shape[0] / 512
+	extend_crop_mask = prepare_crop_masks(crop_masks)
+	extend_affine_matrix *= (model_size[0] * 4) / extend_crop_size[0]
 	paste_vision_frame = paste_back(temp_vision_frame, extend_vision_frame, extend_crop_mask, extend_affine_matrix)
 	return paste_vision_frame
 
@@ -159,7 +160,7 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) 
 			age_modifier_inputs[age_modifier_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
 
 	with thread_semaphore():
-		crop_vision_frame = age_modifier.run(None, age_modifier_inputs)[0][0]
+		crop_vision_frame = age_modifier.run(None, age_modifier_inputs)[0]
 
 	return crop_vision_frame
 
@@ -203,13 +204,21 @@ def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:
 	return vision_frame
 
 
+def prepare_crop_masks(crop_masks : List[Mask]) -> Mask:
+	model_size = get_model_options().get('size')
+	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
+	crop_mask = cv2.resize(crop_mask, (model_size[0] * 4, model_size[1] * 4))
+	return crop_mask
+
+
 def normalize_extend_frame(extend_vision_frame : VisionFrame) -> VisionFrame:
+	model_size = get_model_options().get('size')
 	extend_vision_frame = numpy.clip(extend_vision_frame, -1, 1)
 	extend_vision_frame = (extend_vision_frame + 1) / 2
-	extend_vision_frame = extend_vision_frame.transpose(1, 2, 0).clip(0, 255)
+	extend_vision_frame = extend_vision_frame[0].transpose(1, 2, 0).clip(0, 255)
 	extend_vision_frame = (extend_vision_frame * 255.0)
 	extend_vision_frame = extend_vision_frame.astype(numpy.uint8)[:, :, ::-1]
-	extend_vision_frame = cv2.pyrDown(extend_vision_frame)
+	extend_vision_frame = cv2.resize(extend_vision_frame, (model_size[0] * 4, model_size[1] * 4))
 	return extend_vision_frame
 
 
