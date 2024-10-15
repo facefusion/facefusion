@@ -41,6 +41,8 @@ def cli() -> None:
 			route(args)
 		else:
 			program.print_help()
+	else:
+		hard_exit(2)
 
 
 def route(args : Args) -> None:
