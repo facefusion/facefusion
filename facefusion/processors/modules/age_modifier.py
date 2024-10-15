@@ -45,8 +45,16 @@ MODEL_SET : ModelSet =\
 				'path': resolve_relative_path('../.assets/models/styleganex_age_opt.onnx')
 			}
 		},
-		'template': 'ffhq_512',
-		'size': (256, 256)
+		'templates':
+        {
+            'target': 'ffhq_512',
+            'target_with_background': 'styleganex_384'
+        },
+        'sizes':
+        {
+            'target': (256, 256),
+            'target_with_background': (384, 384)
+        }
 	}
 }
 
@@ -115,12 +123,13 @@ def post_process() -> None:
 
 
 def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_model_options().get('template')
-	model_size = get_model_options().get('size')
-	extend_crop_size = (384, 384)
+	model_template = get_model_options().get('templates').get('target')
+	model_size = get_model_options().get('sizes').get('target')
+	extend_crop_template = get_model_options().get('templates').get('target_with_background')
+	extend_crop_size = get_model_options().get('sizes').get('target_with_background')
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, model_size)
-	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, 'styleganex_384', extend_crop_size)
+	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, extend_crop_template, extend_crop_size)
 	extend_vision_frame_raw = extend_vision_frame.copy()
 	box_mask = create_static_box_mask(model_size, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
@@ -203,14 +212,14 @@ def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:
 
 
 def prepare_crop_masks(crop_masks : List[Mask]) -> Mask:
-	model_size = get_model_options().get('size')
+	model_size = get_model_options().get('sizes').get('target')
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	crop_mask = cv2.resize(crop_mask, (model_size[0] * 4, model_size[1] * 4))
 	return crop_mask
 
 
 def normalize_extend_frame(extend_vision_frame : VisionFrame) -> VisionFrame:
-	model_size = get_model_options().get('size')
+	model_size = get_model_options().get('sizes').get('target')
 	extend_vision_frame = numpy.clip(extend_vision_frame, -1, 1)
 	extend_vision_frame = (extend_vision_frame + 1) / 2
 	extend_vision_frame = extend_vision_frame[0].transpose(1, 2, 0).clip(0, 255)
