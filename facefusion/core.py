@@ -81,8 +81,8 @@ def route(args : Args) -> None:
 
 
 def pre_check() -> bool:
-	if sys.version_info < (3, 9):
-		logger.error(wording.get('python_not_supported').format(version = '3.9'), __name__)
+	if sys.version_info < (3, 10):
+		logger.error(wording.get('python_not_supported').format(version = '3.10'), __name__)
 		return False
 	if not shutil.which('curl'):
 		logger.error(wording.get('curl_not_installed'), __name__)
