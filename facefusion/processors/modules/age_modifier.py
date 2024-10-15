@@ -119,10 +119,8 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	model_size = get_model_options().get('size')
 	extend_crop_size = (384, 384)
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
-	eye_center = face_landmark_5[[0, 1]].mean(axis = 0)
-	extend_face_landmark_5 = (face_landmark_5 - eye_center) * 1.6 + eye_center
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, model_size)
-	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_template, extend_crop_size)
+	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, 'styleganex_384', extend_crop_size)
 	extend_vision_frame_raw = extend_vision_frame.copy()
 	box_mask = create_static_box_mask(model_size, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
