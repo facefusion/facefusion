@@ -225,7 +225,7 @@ def normalize_extend_frame(extend_vision_frame : VisionFrame) -> VisionFrame:
 	extend_vision_frame = extend_vision_frame[0].transpose(1, 2, 0).clip(0, 255)
 	extend_vision_frame = (extend_vision_frame * 255.0)
 	extend_vision_frame = extend_vision_frame.astype(numpy.uint8)[:, :, ::-1]
-	extend_vision_frame = cv2.resize(extend_vision_frame, (model_size[0] * 4, model_size[1] * 4))
+	extend_vision_frame = cv2.resize(extend_vision_frame, (model_size[0] * 4, model_size[1] * 4), interpolation = cv2.INTER_AREA)
 	return extend_vision_frame
 
 
