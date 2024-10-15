@@ -52,7 +52,7 @@ def create_execution_providers(execution_device_id : str, execution_provider_key
 		if execution_provider_key == 'openvino':
 			execution_providers.append((execution_provider_set.get(execution_provider_key),
 			{
-				'device_type': 'GPU.' + execution_device_id,
+				'device_type': 'GPU' if execution_device_id == 0 else 'GPU.' + execution_device_id,
 				'precision': 'FP32'
 			}))
 		if execution_provider_key in [ 'directml', 'rocm' ]:
