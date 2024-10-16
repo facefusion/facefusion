@@ -144,6 +144,7 @@ def get_theme() -> gradio.Theme:
 		button_secondary_border_color_hover_dark = 'transparent',
 		button_secondary_text_color = '*neutral_800',
 		button_small_padding = '0.75rem',
+		button_small_text_size = '0.875rem',
 		checkbox_background_color = '*neutral_200',
 		checkbox_background_color_selected = '*primary_600',
 		checkbox_background_color_selected_dark = '*primary_700',
