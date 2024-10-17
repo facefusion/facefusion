@@ -47,15 +47,15 @@ MODEL_SET : ModelSet =\
 			}
 		},
 		'templates':
-        {
-            'target': 'ffhq_512',
-            'target_with_background': 'styleganex_512'
-        },
-        'sizes':
-        {
-            'target': (256, 256),
-            'target_with_background': (512, 512)
-        }
+		{
+			'target': 'ffhq_512',
+			'target_with_background': 'styleganex_512'
+		},
+		'sizes':
+		{
+			'target': (256, 256),
+			'target_with_background': (512, 512)
+		}
 	}
 }
 
