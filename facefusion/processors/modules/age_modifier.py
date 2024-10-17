@@ -33,27 +33,28 @@ MODEL_SET : ModelSet =\
 		{
 			'age_modifier':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/StyleGANEX-AGE/resolve/main/styleganex_age_opt.hash',
-				'path': resolve_relative_path('../.assets/models/styleganex_age_opt.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/styleganex_age.hash',
+				'path': resolve_relative_path('../.assets/models/styleganex_age.hash')
 			}
 		},
 		'sources':
 		{
 			'age_modifier':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/StyleGANEX-AGE/resolve/main/styleganex_age_opt.onnx',
-				'path': resolve_relative_path('../.assets/models/styleganex_age_opt.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/styleganex_age.onnx',
+				'path': resolve_relative_path('../.assets/models/styleganex_age.onnx')
+
 			}
 		},
 		'templates':
         {
             'target': 'ffhq_512',
-            'target_with_background': 'styleganex_384'
+            'target_with_background': 'styleganex_512'
         },
         'sizes':
         {
             'target': (256, 256),
-            'target_with_background': (384, 384)
+            'target_with_background': (512, 512)
         }
 	}
 }
@@ -176,7 +177,7 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) 
 
 
 def fix_color(extend_vision_frame_raw : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
-	color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, (48, 48))
+	color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, (24, 24))
 	color_difference_mask = create_static_box_mask(extend_vision_frame.shape[:2][::-1], 1.0, (0, 0, 0, 0))
 	color_difference_mask = numpy.stack((color_difference_mask, ) * 3, axis = -1)
 	extend_vision_frame = normalize_color_difference(color_difference, color_difference_mask, extend_vision_frame)
