@@ -148,9 +148,10 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	extend_vision_frame = forward(crop_vision_frame, extend_vision_frame)
 	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
 	extend_vision_frame = fix_color(extend_vision_frame_raw, extend_vision_frame)
-	extend_crop_mask = prepare_crop_masks(crop_masks)
 	extend_affine_matrix *= (model_sizes.get('target')[0] * 4) / model_sizes.get('target_with_background')[0]
-	paste_vision_frame = paste_back(temp_vision_frame, extend_vision_frame, extend_crop_mask, extend_affine_matrix)
+	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
+	crop_mask = cv2.resize(crop_mask, (model_sizes.get('target')[0] * 4, model_sizes.get('target')[1] * 4))
+	paste_vision_frame = paste_back(temp_vision_frame, extend_vision_frame, crop_mask, extend_affine_matrix)
 	return paste_vision_frame
 
 
@@ -209,13 +210,6 @@ def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:
 	vision_frame = (vision_frame - 0.5) / 0.5
 	vision_frame = numpy.expand_dims(vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 	return vision_frame
-
-
-def prepare_crop_masks(crop_masks : List[Mask]) -> Mask:
-	model_sizes = get_model_options().get('sizes')
-	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
-	crop_mask = cv2.resize(crop_mask, (model_sizes.get('target')[0] * 4, model_sizes.get('target')[1] * 4))
-	return crop_mask
 
 
 def normalize_extend_frame(extend_vision_frame : VisionFrame) -> VisionFrame:
