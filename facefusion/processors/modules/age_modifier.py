@@ -177,7 +177,7 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) 
 
 
 def fix_color(extend_vision_frame_raw : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
-	color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, (24, 24))
+	color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, (48, 48))
 	color_difference_mask = create_static_box_mask(extend_vision_frame.shape[:2][::-1], 1.0, (0, 0, 0, 0))
 	color_difference_mask = numpy.stack((color_difference_mask, ) * 3, axis = -1)
 	extend_vision_frame = normalize_color_difference(color_difference, color_difference_mask, extend_vision_frame)
