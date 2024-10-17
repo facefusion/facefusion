@@ -6,6 +6,7 @@ ComponentOptions = Dict[str, Any]
 ComponentName = Literal\
 [
 	'age_modifier_direction_slider',
+	'age_modifier_scale_slider',
 	'age_modifier_model_dropdown',
 	'benchmark_cycles_slider',
 	'benchmark_runs_checkbox_group',

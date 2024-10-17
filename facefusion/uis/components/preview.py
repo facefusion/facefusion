@@ -110,6 +110,7 @@ def listen() -> None:
 	for ui_component in get_ui_components(
 	[
 		'age_modifier_direction_slider',
+		'age_modifier_scale_slider',
 		'expression_restorer_factor_slider',
 		'face_editor_eyebrow_direction_slider',
 		'face_editor_eye_gaze_horizontal_slider',
