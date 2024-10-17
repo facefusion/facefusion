@@ -10,7 +10,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
-from facefusion.common_helper import create_float_metavar, create_int_metavar
+from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
@@ -81,14 +81,12 @@ def register_args(program : ArgumentParser) -> None:
 	if group_processors:
 		group_processors.add_argument('--age-modifier-model', help = wording.get('help.age_modifier_model'), default = config.get_str_value('processors.age_modifier_model', 'styleganex_age'), choices = processors_choices.age_modifier_models)
 		group_processors.add_argument('--age-modifier-direction', help = wording.get('help.age_modifier_direction'), type = int, default = config.get_int_value('processors.age_modifier_direction', '0'), choices = processors_choices.age_modifier_direction_range, metavar = create_int_metavar(processors_choices.age_modifier_direction_range))
-		group_processors.add_argument('--age-modifier-scale', help = wording.get('help.age_modifier_scale'), type = float, default = config.get_float_value('processors.age_modifier_scale', '0'), choices = processors_choices.age_modifier_scale_range, metavar = create_float_metavar(processors_choices.age_modifier_scale_range))
 		facefusion.jobs.job_store.register_step_keys([ 'age_modifier_model', 'age_modifier_direction' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('age_modifier_model', args.get('age_modifier_model'))
 	apply_state_item('age_modifier_direction', args.get('age_modifier_direction'))
-	apply_state_item('age_modifier_scale', args.get('age_modifier_scale'))
 
 
 def pre_check() -> bool:
@@ -131,7 +129,7 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	extend_crop_template = get_model_options().get('templates').get('target_with_background')
 	extend_crop_size = get_model_options().get('sizes').get('target_with_background')
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
-	extend_face_landmark_5 = scale_face_landmark_5(face_landmark_5, prepare_scale(state_manager.get_item('age_modifier_scale')))
+	extend_face_landmark_5 = scale_face_landmark_5(face_landmark_5, 0.875)
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, model_size)
 	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, extend_crop_template, extend_crop_size)
 	extend_vision_frame_raw = extend_vision_frame.copy()
@@ -206,11 +204,6 @@ def normalize_color_difference(color_difference : VisionFrame, color_difference_
 def prepare_direction(direction : int) -> NDArray[Any]:
 	direction = numpy.interp(float(direction), [ -100, 100 ], [ 2.5, -2.5 ]) #type:ignore[assignment]
 	return numpy.array(direction).astype(numpy.float32)
-
-
-def prepare_scale(scale : float) -> float:
-	scale = 1 + float(numpy.interp(scale, [ -1.0, 1.0 ], [ -0.3, 0.3 ]))
-	return scale
 
 
 def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:

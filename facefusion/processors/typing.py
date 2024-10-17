@@ -67,7 +67,6 @@ ProcessorStateKey = Literal\
 [
 	'age_modifier_model',
 	'age_modifier_direction',
-	'age_modifier_scale',
 	'expression_restorer_model',
 	'expression_restorer_factor',
 	'face_debugger_items',
@@ -101,7 +100,6 @@ ProcessorState = TypedDict('ProcessorState',
 {
 	'age_modifier_model' : AgeModifierModel,
 	'age_modifier_direction' : int,
-	'age_modifier_scale' : float,
 	'expression_restorer_model' : ExpressionRestorerModel,
 	'expression_restorer_factor' : int,
 	'face_debugger_items' : List[FaceDebuggerItem],
