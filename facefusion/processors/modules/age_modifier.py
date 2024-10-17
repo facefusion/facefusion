@@ -124,16 +124,14 @@ def post_process() -> None:
 
 
 def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_model_options().get('templates').get('target')
-	model_size = get_model_options().get('sizes').get('target')
-	extend_crop_template = get_model_options().get('templates').get('target_with_background')
-	extend_crop_size = get_model_options().get('sizes').get('target_with_background')
+	model_templates = get_model_options().get('templates')
+	model_sizes = get_model_options().get('sizes')
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
+	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_templates.get('target'), model_sizes.get('target'))
 	extend_face_landmark_5 = scale_face_landmark_5(face_landmark_5, 0.875)
-	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, model_size)
-	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, extend_crop_template, extend_crop_size)
+	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_templates.get('target_with_background'), model_sizes.get('target_with_background'))
 	extend_vision_frame_raw = extend_vision_frame.copy()
-	box_mask = create_static_box_mask(extend_crop_size, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
+	box_mask = create_static_box_mask(model_sizes.get('target_with_background'), state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
 	[
 		box_mask
@@ -142,7 +140,7 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		combined_matrix = merge_matrix([ extend_affine_matrix, cv2.invertAffineTransform(affine_matrix) ])
-		occlusion_mask = cv2.warpAffine(occlusion_mask, combined_matrix, extend_crop_size)
+		occlusion_mask = cv2.warpAffine(occlusion_mask, combined_matrix, model_sizes.get('target_with_background'))
 		crop_masks.append(occlusion_mask)
 
 	crop_vision_frame = prepare_vision_frame(crop_vision_frame)
@@ -151,7 +149,7 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
 	extend_vision_frame = fix_color(extend_vision_frame_raw, extend_vision_frame)
 	extend_crop_mask = prepare_crop_masks(crop_masks)
-	extend_affine_matrix *= (model_size[0] * 4) / extend_crop_size[0]
+	extend_affine_matrix *= (model_sizes.get('target')[0] * 4) / model_sizes.get('target_with_background')[0]
 	paste_vision_frame = paste_back(temp_vision_frame, extend_vision_frame, extend_crop_mask, extend_affine_matrix)
 	return paste_vision_frame
 
@@ -214,20 +212,20 @@ def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:
 
 
 def prepare_crop_masks(crop_masks : List[Mask]) -> Mask:
-	model_size = get_model_options().get('sizes').get('target')
+	model_sizes = get_model_options().get('sizes')
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
-	crop_mask = cv2.resize(crop_mask, (model_size[0] * 4, model_size[1] * 4))
+	crop_mask = cv2.resize(crop_mask, (model_sizes.get('target')[0] * 4, model_sizes.get('target')[1] * 4))
 	return crop_mask
 
 
 def normalize_extend_frame(extend_vision_frame : VisionFrame) -> VisionFrame:
-	model_size = get_model_options().get('sizes').get('target')
+	model_sizes = get_model_options().get('sizes')
 	extend_vision_frame = numpy.clip(extend_vision_frame, -1, 1)
 	extend_vision_frame = (extend_vision_frame + 1) / 2
 	extend_vision_frame = extend_vision_frame[0].transpose(1, 2, 0).clip(0, 255)
 	extend_vision_frame = (extend_vision_frame * 255.0)
 	extend_vision_frame = extend_vision_frame.astype(numpy.uint8)[:, :, ::-1]
-	extend_vision_frame = cv2.resize(extend_vision_frame, (model_size[0] * 4, model_size[1] * 4), interpolation = cv2.INTER_AREA)
+	extend_vision_frame = cv2.resize(extend_vision_frame, (model_sizes.get('target')[0] * 4, model_sizes.get('target')[1] * 4), interpolation = cv2.INTER_AREA)
 	return extend_vision_frame
 
 
