@@ -168,7 +168,7 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) 
 			age_modifier_inputs[age_modifier_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
 
 	with thread_semaphore():
-		crop_vision_frame = age_modifier.run(None, age_modifier_inputs)[0]
+		crop_vision_frame = age_modifier.run(None, age_modifier_inputs)[0][0]
 
 	return crop_vision_frame
 
@@ -216,7 +216,7 @@ def normalize_extend_frame(extend_vision_frame : VisionFrame) -> VisionFrame:
 	model_sizes = get_model_options().get('sizes')
 	extend_vision_frame = numpy.clip(extend_vision_frame, -1, 1)
 	extend_vision_frame = (extend_vision_frame + 1) / 2
-	extend_vision_frame = extend_vision_frame[0].transpose(1, 2, 0).clip(0, 255)
+	extend_vision_frame = extend_vision_frame.transpose(1, 2, 0).clip(0, 255)
 	extend_vision_frame = (extend_vision_frame * 255.0)
 	extend_vision_frame = extend_vision_frame.astype(numpy.uint8)[:, :, ::-1]
 	extend_vision_frame = cv2.resize(extend_vision_frame, (model_sizes.get('target')[0] * 4, model_sizes.get('target')[1] * 4), interpolation = cv2.INTER_AREA)
