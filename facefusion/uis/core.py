@@ -10,15 +10,9 @@ from gradio.themes import Size
 from facefusion import logger, metadata, state_manager, wording
 from facefusion.exit_helper import hard_exit
 from facefusion.filesystem import resolve_relative_path
-from facefusion.uis import overrides
 from facefusion.uis.typing import Component, ComponentName
 
 os.environ['GRADIO_ANALYTICS_ENABLED'] = '0'
-
-warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
-
-gradio.processing_utils.encode_array_to_base64 = overrides.encode_array_to_base64
-gradio.processing_utils.encode_pil_to_base64 = overrides.encode_pil_to_base64
 
 UI_COMPONENTS: Dict[ComponentName, Component] = {}
 UI_LAYOUT_MODULES : List[ModuleType] = []
