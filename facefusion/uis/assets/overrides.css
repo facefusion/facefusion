@@ -17,6 +17,11 @@
 	width: 1.125rem;
 }
 
+:root:root:root:root input[type="range"]
+{
+	background: transparent;
+}
+
 :root:root:root:root input[type="range"]::-moz-range-thumb,
 :root:root:root:root input[type="range"]::-webkit-slider-thumb
 {

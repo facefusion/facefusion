@@ -14,6 +14,8 @@ from facefusion.uis.typing import Component, ComponentName
 
 os.environ['GRADIO_ANALYTICS_ENABLED'] = '0'
 
+warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
+
 UI_COMPONENTS: Dict[ComponentName, Component] = {}
 UI_LAYOUT_MODULES : List[ModuleType] = []
 UI_LAYOUT_METHODS =\
@@ -93,7 +95,20 @@ def launch() -> None:
 def get_theme() -> gradio.Theme:
 	return gradio.themes.Base(
 		primary_hue = gradio.themes.colors.red,
-		secondary_hue = gradio.themes.colors.neutral,
+		secondary_hue = gradio.themes.Color(
+			name = 'neutral',
+			c50 = '#fafafa',
+			c100 = '#f5f5f5',
+			c200 = '#e5e5e5',
+			c300 = '#d4d4d4',
+			c400 = '#a3a3a3',
+			c500 = '#737373',
+			c600 = '#525252',
+			c700 = '#404040',
+			c800 = '#262626',
+			c900 = '#212121',
+			c950 = '#171717',
+		),
 		radius_size = Size(
 			xxs = '0.375rem',
 			xs = '0.375rem',
@@ -106,10 +121,12 @@ def get_theme() -> gradio.Theme:
 		font = gradio.themes.GoogleFont('Open Sans')
 	).set(
 		background_fill_primary = '*neutral_100',
+		background_fill_primary_dark = '*neutral_950',
 		block_background_fill = 'white',
+		block_background_fill_dark = '*neutral_900',
 		block_border_width = '0',
 		block_label_background_fill = '*neutral_100',
-		block_label_background_fill_dark = '*neutral_700',
+		block_label_background_fill_dark = '*neutral_800',
 		block_label_border_width = 'none',
 		block_label_margin = '0.5rem',
 		block_label_radius = '*radius_md',
@@ -118,7 +135,7 @@ def get_theme() -> gradio.Theme:
 		block_label_text_color_dark = 'white',
 		block_label_text_weight = '600',
 		block_title_background_fill = '*neutral_100',
-		block_title_background_fill_dark = '*neutral_700',
+		block_title_background_fill_dark = '*neutral_800',
 		block_title_padding = '*block_label_padding',
 		block_title_radius = '*block_label_radius',
 		block_title_text_color = '*neutral_700',
@@ -132,6 +149,7 @@ def get_theme() -> gradio.Theme:
 		button_primary_background_fill = '*primary_500',
 		button_primary_text_color = 'white',
 		button_secondary_background_fill = 'white',
+		button_secondary_background_fill_dark = '*neutral_800',
 		button_secondary_border_color = 'transparent',
 		button_secondary_border_color_dark = 'transparent',
 		button_secondary_border_color_hover = 'transparent',
@@ -140,18 +158,19 @@ def get_theme() -> gradio.Theme:
 		button_small_padding = '0.75rem',
 		button_small_text_size = '0.875rem',
 		checkbox_background_color = '*neutral_200',
-		checkbox_background_color_selected = '*primary_600',
-		checkbox_background_color_selected_dark = '*primary_700',
+		checkbox_background_color_dark = '*neutral_900',
 		checkbox_border_color_focus = '*primary_500',
 		checkbox_border_color_focus_dark = '*primary_600',
 		checkbox_border_color_selected = '*primary_600',
 		checkbox_border_color_selected_dark = '*primary_700',
 		checkbox_label_background_fill = '*neutral_50',
+		checkbox_label_background_fill_dark = '*neutral_800',
 		checkbox_label_background_fill_hover = '*neutral_50',
 		checkbox_label_background_fill_selected = '*primary_500',
 		checkbox_label_background_fill_selected_dark = '*primary_600',
 		checkbox_label_text_color_selected = 'white',
 		input_background_fill = '*neutral_50',
+		input_background_fill_dark = '*neutral_800',
 		shadow_drop = 'none',
 		slider_color = '*primary_500',
 		slider_color_dark = '*primary_600'
