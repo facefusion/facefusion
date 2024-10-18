@@ -45,6 +45,7 @@
 
 :root:root:root:root .slider_input_container > span,
 :root:root:root:root .feather-upload,
+:root:root:root:root .toast-wrap,
 :root:root:root:root footer
 {
 	display: none;
@@ -74,4 +75,12 @@
 	position: sticky;
 	top: 0;
 	z-index: 100;
+}
+
+:root:root:root:root .block .error
+{
+	border: 0.125rem solid;
+	padding: 0.375rem 0.75rem;
+	font-size: 0.75rem;
+	text-transform: uppercase;
 }
