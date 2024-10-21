@@ -37,10 +37,30 @@
 	min-height: unset;
 }
 
-:root:root:root:root .generating,
-:root:root:root:root .thumbnail-item
+:root:root:root:root .tabs button:hover
 {
-	border: unset;
+	background: unset;
+}
+
+:root:root:root:root .tab-container
+{
+	height: 2.5rem;
+}
+
+:root:root:root:root .tabitem
+{
+	padding: 0.75rem 0 0 0
+}
+
+:root:root:root:root .tab-container:after,
+:root:root:root:root .tabs button:after
+{
+	border-width: 0.125rem;
+}
+
+:root:root:root:root .tab-container:after
+{
+	border-color: var(--block-background-fill)
 }
 
 :root:root:root:root .slider_input_container > span,
@@ -49,15 +69,6 @@
 :root:root:root:root footer
 {
 	display: none;
-}
-
-:root:root:root:root .tab-nav > button
-{
-	border: unset;
-	box-shadow: 0 0.125rem;
-	font-size: 1.125em;
-	margin: 0.5rem 0.75rem;
-	padding: unset;
 }
 
 :root:root:root:root .image-frame
@@ -83,4 +94,11 @@
 	padding: 0.375rem 0.75rem;
 	font-size: 0.75rem;
 	text-transform: uppercase;
+}
+
+:root:root:root:root .table-wrap,
+:root:root:root:root th,
+:root:root:root:root td
+{
+	border: unset;
 }
