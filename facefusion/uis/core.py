@@ -122,6 +122,8 @@ def get_theme() -> gradio.Theme:
 	).set(
 		background_fill_primary = '*neutral_100',
 		background_fill_primary_dark = '*neutral_950',
+		background_fill_secondary = '*neutral_50',
+		background_fill_secondary_dark = '*neutral_800',
 		block_background_fill = 'white',
 		block_background_fill_dark = '*neutral_900',
 		block_border_width = '0',

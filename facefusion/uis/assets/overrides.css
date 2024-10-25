@@ -6,7 +6,22 @@
 
 :root:root:root:root input[type="number"]
 {
-	max-width: 6rem;
+	appearance: textfield;
+	text-align: center;
+	order: 1;
+}
+
+:root:root:root:root input[type="number"]:focus-visible,
+:root:root:root:root input[type="number"]:focus
+{
+	box-shadow: unset;
+	border: unset;
+	outline: unset;
+}
+
+:root:root:root:root .reset-button
+{
+	background: var(--background-fill-secondary);
 }
 
 :root:root:root:root [type="checkbox"],
