@@ -100,8 +100,8 @@ def prepare_frame(vision_frame : VisionFrame) -> VisionFrame:
 
 @lru_cache(maxsize = None)
 def analyse_image(image_path : str) -> bool:
-	frame = read_image(image_path)
-	return analyse_frame(frame)
+	vision_frame = read_image(image_path)
+	return analyse_frame(vision_frame)
 
 
 @lru_cache(maxsize = None)
@@ -115,8 +115,8 @@ def analyse_video(video_path : str, start_frame : int, end_frame : int) -> bool:
 	with tqdm(total = len(frame_range), desc = wording.get('analysing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		for frame_number in frame_range:
 			if frame_number % int(video_fps) == 0:
-				frame = get_video_frame(video_path, frame_number)
-				if analyse_frame(frame):
+				vision_frame = get_video_frame(video_path, frame_number)
+				if analyse_frame(vision_frame):
 					counter += 1
 			rate = counter * int(video_fps) / len(frame_range) * 100
 			progress.update()
