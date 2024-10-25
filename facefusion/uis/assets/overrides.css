@@ -7,8 +7,10 @@
 :root:root:root:root input[type="number"]
 {
 	appearance: textfield;
+	border-radius: unset;
 	text-align: center;
 	order: 1;
+	padding: unset
 }
 
 :root:root:root:root input[type="number"]:focus-visible,
@@ -22,6 +24,9 @@
 :root:root:root:root .reset-button
 {
 	background: var(--background-fill-secondary);
+	border: unset;
+	font-size: unset;
+	padding: unset;
 }
 
 :root:root:root:root [type="checkbox"],
