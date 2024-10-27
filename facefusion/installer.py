@@ -91,3 +91,4 @@ def run(program : ArgumentParser) -> None:
 
 	if onnxruntime_version < '1.19.0':
 		subprocess.call([ shutil.which('pip'), 'install', 'numpy==1.26.4', '--force-reinstall' ])
+	subprocess.call([ shutil.which('pip'), 'install', 'python-multipart==0.0.12', '--force-reinstall' ])
