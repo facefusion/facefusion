@@ -3,7 +3,6 @@ from typing import Any, List
 
 import cv2
 import numpy
-from cv2.typing import Size
 from numpy.typing import NDArray
 
 import facefusion.jobs.job_manager
@@ -23,7 +22,7 @@ from facefusion.processors.typing import AgeModifierInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
-from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.vision import match_frame_color, read_image, read_static_image, write_image
 
 MODEL_SET : ModelSet =\
 {
@@ -147,7 +146,7 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	extend_vision_frame = prepare_vision_frame(extend_vision_frame)
 	extend_vision_frame = forward(crop_vision_frame, extend_vision_frame)
 	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
-	extend_vision_frame = fix_color(extend_vision_frame_raw, extend_vision_frame)
+	extend_vision_frame = match_frame_color(extend_vision_frame_raw, extend_vision_frame)
 	extend_affine_matrix *= (model_sizes.get('target')[0] * 4) / model_sizes.get('target_with_background')[0]
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	crop_mask = cv2.resize(crop_mask, (model_sizes.get('target')[0] * 4, model_sizes.get('target')[1] * 4))
@@ -171,38 +170,6 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) 
 		crop_vision_frame = age_modifier.run(None, age_modifier_inputs)[0][0]
 
 	return crop_vision_frame
-
-
-def fix_color(extend_vision_frame_raw : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
-	size_min = 16
-	size_max = extend_vision_frame.shape[0]
-	sizes = numpy.linspace(size_min, size_max, 3, endpoint = False)
-	sizes = numpy.repeat(sizes[:, None], 2, axis = 1).astype(numpy.int32)
-
-	for size in sizes:
-		color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, size)
-		extend_vision_frame_raw = normalize_color_difference(color_difference, extend_vision_frame)
-	color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, ( size_max, size_max ))
-	extend_vision_frame = normalize_color_difference(color_difference, extend_vision_frame)
-	return extend_vision_frame
-
-
-def compute_color_difference(extend_vision_frame_raw : VisionFrame, extend_vision_frame : VisionFrame, size : Size) -> VisionFrame:
-	extend_vision_frame_raw = extend_vision_frame_raw.astype(numpy.float32) / 255
-	extend_vision_frame_raw = cv2.resize(extend_vision_frame_raw, size, interpolation = cv2.INTER_AREA)
-	extend_vision_frame = extend_vision_frame.astype(numpy.float32) / 255
-	extend_vision_frame = cv2.resize(extend_vision_frame, size, interpolation = cv2.INTER_AREA)
-	color_difference = extend_vision_frame_raw - extend_vision_frame
-	return color_difference
-
-
-def normalize_color_difference(color_difference : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
-	color_difference = cv2.resize(color_difference, extend_vision_frame.shape[:2][::-1], interpolation = cv2.INTER_CUBIC)
-	extend_vision_frame = extend_vision_frame.astype(numpy.float32) / 255
-	extend_vision_frame += color_difference
-	extend_vision_frame = extend_vision_frame.clip(0, 1)
-	extend_vision_frame = numpy.multiply(extend_vision_frame, 255).astype(numpy.uint8)
-	return extend_vision_frame
 
 
 def prepare_direction(direction : int) -> NDArray[Any]:
