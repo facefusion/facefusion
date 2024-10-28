@@ -250,12 +250,12 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 
 
 def match_frame_color(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame) -> VisionFrame:
-	sizes = numpy.linspace(16, target_vision_frame.shape[0], 3, endpoint = False, dtype = numpy.int32)
+	color_difference_sizes = numpy.linspace(16, target_vision_frame.shape[0], 3, endpoint = False, dtype = numpy.int32)
 	target_vision_frame = target_vision_frame.astype(numpy.float32) / 255
 	source_vision_frame = source_vision_frame.astype(numpy.float32) / 255
 
-	for size in sizes:
-		source_vision_frame = apply_color_difference(source_vision_frame, target_vision_frame, ( size, size ))
+	for color_difference_size in color_difference_sizes:
+		source_vision_frame = apply_color_difference(source_vision_frame, target_vision_frame, ( color_difference_size, color_difference_size ))
 	target_vision_frame = apply_color_difference(source_vision_frame, target_vision_frame, target_vision_frame.shape[:2][::-1])
 	target_vision_frame = numpy.multiply(target_vision_frame, 255).astype(numpy.uint8)
 	return target_vision_frame
