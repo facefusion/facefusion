@@ -255,13 +255,13 @@ def match_frame_color(source_vision_frame : VisionFrame, target_vision_frame : V
 	color_difference_sizes = numpy.linspace(16, target_vision_frame.shape[0], 3, endpoint = False, dtype = numpy.int32)
 
 	for color_difference_size in color_difference_sizes:
-		source_vision_frame = apply_color_difference(source_vision_frame, target_vision_frame, ( color_difference_size, color_difference_size ))
-	target_vision_frame = apply_color_difference(source_vision_frame, target_vision_frame, target_vision_frame.shape[:2][::-1])
+		source_vision_frame = remove_color_difference(source_vision_frame, target_vision_frame, ( color_difference_size, color_difference_size ))
+	target_vision_frame = remove_color_difference(source_vision_frame, target_vision_frame, target_vision_frame.shape[:2][::-1])
 	target_vision_frame = numpy.multiply(target_vision_frame, 255).astype(numpy.uint8)
 	return target_vision_frame
 
 
-def apply_color_difference(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, size : Size) -> VisionFrame:
+def remove_color_difference(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, size : Size) -> VisionFrame:
 	source_frame_resize = cv2.resize(source_vision_frame, size, interpolation = cv2.INTER_AREA)
 	target_frame_resize = cv2.resize(target_vision_frame, size, interpolation = cv2.INTER_AREA)
 	color_difference_frame = numpy.subtract(source_frame_resize, target_frame_resize)
