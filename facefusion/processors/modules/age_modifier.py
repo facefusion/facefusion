@@ -174,10 +174,16 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) 
 
 
 def fix_color(extend_vision_frame_raw : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
-	color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, (48, 48))
-	color_difference_mask = create_static_box_mask(extend_vision_frame.shape[:2][::-1], 1.0, (0, 0, 0, 0))
-	color_difference_mask = numpy.stack((color_difference_mask, ) * 3, axis = -1)
-	extend_vision_frame = normalize_color_difference(color_difference, color_difference_mask, extend_vision_frame)
+	size_min = 16
+	size_max = extend_vision_frame.shape[0]
+	sizes = numpy.linspace(size_min, size_max, 3, endpoint = False)
+	sizes = numpy.repeat(sizes[:, None], 2, axis = 1).astype(numpy.int32)
+
+	for size in sizes:
+		color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, size)
+		extend_vision_frame_raw = normalize_color_difference(color_difference, extend_vision_frame)
+	color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, ( size_max, size_max ))
+	extend_vision_frame = normalize_color_difference(color_difference, extend_vision_frame)
 	return extend_vision_frame
 
 
@@ -190,11 +196,10 @@ def compute_color_difference(extend_vision_frame_raw : VisionFrame, extend_visio
 	return color_difference
 
 
-def normalize_color_difference(color_difference : VisionFrame, color_difference_mask : Mask, extend_vision_frame : VisionFrame) -> VisionFrame:
+def normalize_color_difference(color_difference : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
 	color_difference = cv2.resize(color_difference, extend_vision_frame.shape[:2][::-1], interpolation = cv2.INTER_CUBIC)
-	color_difference_mask = 1 - color_difference_mask.clip(0, 0.75)
 	extend_vision_frame = extend_vision_frame.astype(numpy.float32) / 255
-	extend_vision_frame += color_difference * color_difference_mask
+	extend_vision_frame += color_difference
 	extend_vision_frame = extend_vision_frame.clip(0, 1)
 	extend_vision_frame = numpy.multiply(extend_vision_frame, 255).astype(numpy.uint8)
 	return extend_vision_frame
