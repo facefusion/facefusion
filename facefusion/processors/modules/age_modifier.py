@@ -32,28 +32,28 @@ MODEL_SET : ModelSet =\
 		{
 			'age_modifier':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/styleganex_age.hash',
-				'path': resolve_relative_path('../.assets/models/styleganex_age.hash')
+				'url': 'https://huggingface.co/bluefoxcreation/StyleGANEX-AGE/resolve/main/styleganex_age_opt.hash',
+				'path': resolve_relative_path('../.assets/models/styleganex_age_opt.hash')
 			}
 		},
 		'sources':
 		{
 			'age_modifier':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/styleganex_age.onnx',
-				'path': resolve_relative_path('../.assets/models/styleganex_age.onnx')
+				'url': 'https://huggingface.co/bluefoxcreation/StyleGANEX-AGE/resolve/main/styleganex_age_opt.onnx',
+				'path': resolve_relative_path('../.assets/models/styleganex_age_opt.onnx')
 
 			}
 		},
 		'templates':
 		{
 			'target': 'ffhq_512',
-			'target_with_background': 'styleganex_512'
+			'target_with_background': 'styleganex_384'
 		},
 		'sizes':
 		{
 			'target': (256, 256),
-			'target_with_background': (512, 512)
+			'target_with_background': (384, 384)
 		}
 	}
 }
