@@ -123,7 +123,5 @@ def test_match_frame_color() -> None:
 	output_vision_frame = match_frame_color(source_vision_frame, target_vision_frame)
 	histogram_source = cv2.calcHist([ cv2.cvtColor(source_vision_frame, cv2.COLOR_BGR2HSV) ], [ 0, 1 ], None, [ 50, 60 ], [ 0, 180, 0, 256 ])
 	histogram_output = cv2.calcHist([ cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2HSV) ], [ 0, 1 ], None, [ 50, 60 ], [ 0, 180, 0, 256 ])
-	cv2.normalize(histogram_source, histogram_source, 0, 1, cv2.NORM_MINMAX)
-	cv2.normalize(histogram_output, histogram_output, 0, 1, cv2.NORM_MINMAX)
 
 	assert cv2.compareHist(histogram_source, histogram_output, cv2.HISTCMP_CORREL) > 0.5
