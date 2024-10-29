@@ -253,15 +253,15 @@ def match_frame_color(source_vision_frame : VisionFrame, target_vision_frame : V
 	color_difference_sizes = numpy.linspace(16, target_vision_frame.shape[0], 3, endpoint = False)
 
 	for color_difference_size in color_difference_sizes:
-		source_vision_frame = remove_color_difference(source_vision_frame, target_vision_frame, normalize_resolution(( color_difference_size, color_difference_size )))
-	target_vision_frame = remove_color_difference(source_vision_frame, target_vision_frame, target_vision_frame.shape[:2][::-1])
+		source_vision_frame = equalize_frame_color(source_vision_frame, target_vision_frame, normalize_resolution((color_difference_size, color_difference_size)))
+	target_vision_frame = equalize_frame_color(source_vision_frame, target_vision_frame, target_vision_frame.shape[:2][::-1])
 	return target_vision_frame
 
 
-def remove_color_difference(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, size : Size) -> VisionFrame:
+def equalize_frame_color(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, size : Size) -> VisionFrame:
 	source_frame_resize = cv2.resize(source_vision_frame, size, interpolation = cv2.INTER_AREA).astype(numpy.float32)
 	target_frame_resize = cv2.resize(target_vision_frame, size, interpolation = cv2.INTER_AREA).astype(numpy.float32)
-	color_difference_frame = numpy.subtract(source_frame_resize, target_frame_resize)
-	color_difference_frame = cv2.resize(color_difference_frame, target_vision_frame.shape[:2][::-1], interpolation = cv2.INTER_CUBIC)
-	target_vision_frame = numpy.add(target_vision_frame, color_difference_frame).clip(0, 255).astype(numpy.uint8)
+	color_difference_vision_frame = numpy.subtract(source_frame_resize, target_frame_resize)
+	color_difference_vision_frame = cv2.resize(color_difference_vision_frame, target_vision_frame.shape[:2][::-1], interpolation = cv2.INTER_CUBIC)
+	target_vision_frame = numpy.add(target_vision_frame, color_difference_vision_frame).clip(0, 255).astype(numpy.uint8)
 	return target_vision_frame
