@@ -1,5 +1,5 @@
 filetype==1.2.0
-gradio==5.1.0
+gradio==5.4.0
 gradio-rangeslider==0.0.8
 numpy==2.1.0
 onnx==1.16.1

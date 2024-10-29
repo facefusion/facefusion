@@ -32,16 +32,16 @@ MODEL_SET : ModelSet =\
 		{
 			'age_modifier':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/StyleGANEX-AGE/resolve/main/styleganex_age_opt.hash',
-				'path': resolve_relative_path('../.assets/models/styleganex_age_opt.hash')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/styleganex_age.hash',
+				'path': resolve_relative_path('../.assets/models/styleganex_age.hash')
 			}
 		},
 		'sources':
 		{
 			'age_modifier':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/StyleGANEX-AGE/resolve/main/styleganex_age_opt.onnx',
-				'path': resolve_relative_path('../.assets/models/styleganex_age_opt.onnx')
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/styleganex_age.onnx',
+				'path': resolve_relative_path('../.assets/models/styleganex_age.onnx')
 
 			}
 		},
