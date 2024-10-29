@@ -3,7 +3,7 @@ import subprocess
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.vision import count_video_frame_total, create_image_resolutions, create_video_resolutions,detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, get_video_frame, normalize_resolution, pack_resolution, restrict_image_resolution, restrict_video_fps, restrict_video_resolution, unpack_resolution
+from facefusion.vision import count_video_frame_total, create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, get_video_frame, match_frame_color, normalize_resolution, pack_resolution, read_image, restrict_image_resolution, restrict_video_fps, restrict_video_resolution, unpack_resolution
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -114,3 +114,8 @@ def test_pack_resolution() -> None:
 def test_unpack_resolution() -> None:
 	assert unpack_resolution('0x0') == (0, 0)
 	assert unpack_resolution('2x2') == (2, 2)
+
+
+def test_match_frame_color() -> None:
+	assert match_frame_color(read_image(get_test_example_file('target-1080p.jpg')), read_image(get_test_example_file('target-240p.jpg'))).shape == (226, 426, 3)
+	assert match_frame_color(read_image(get_test_example_file('target-240p.jpg')), read_image(get_test_example_file('target-1080p.jpg'))).shape == (1080, 2048, 3)
