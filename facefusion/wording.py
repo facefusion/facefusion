@@ -96,6 +96,7 @@ WORDING : Dict[str, Any] =\
 		'skip_conda': 'skip the conda environment check',
 		# paths
 		'config_path': 'choose the config file to override defaults',
+		'temp_path': 'specify the directory for the temporary resources',
 		'jobs_path': 'specify the directory to store jobs',
 		'source_paths': 'choose single or multiple source images or audios',
 		'target_path': 'choose single target image or video',
