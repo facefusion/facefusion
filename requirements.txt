@@ -8,3 +8,6 @@ opencv-python==4.10.0.84
 psutil==6.0.0
 tqdm==4.66.5
 scipy==1.14.1
+GPUtil==1.4.0
+pandas==2.2.3
+matplotlib==3.9.2
