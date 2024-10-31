@@ -12,10 +12,6 @@ from facefusion.exit_helper import hard_exit
 from facefusion.filesystem import resolve_relative_path
 from facefusion.uis.typing import Component, ComponentName
 
-os.environ['GRADIO_ANALYTICS_ENABLED'] = '0'
-
-warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
-
 UI_COMPONENTS: Dict[ComponentName, Component] = {}
 UI_LAYOUT_MODULES : List[ModuleType] = []
 UI_LAYOUT_METHODS =\
@@ -71,6 +67,13 @@ def get_ui_components(component_names : List[ComponentName]) -> Optional[List[Co
 
 def register_ui_component(component_name : ComponentName, component: Component) -> None:
 	UI_COMPONENTS[component_name] = component
+
+
+def init() -> None:
+	os.environ['GRADIO_ANALYTICS_ENABLED'] = '0'
+	os.environ['GRADIO_TEMP_DIR'] = os.path.join(state_manager.get_item('temp_path'), 'gradio')
+
+	warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 
 
 def launch() -> None:

@@ -8,7 +8,6 @@ from facefusion.date_helper import get_current_date_time
 from facefusion.filesystem import create_directory, is_directory, is_file, move_file, remove_directory, remove_file
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.json import read_json, write_json
-from facefusion.temp_helper import create_base_directory
 from facefusion.typing import Args, Job, JobSet, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : Optional[str] = None
@@ -20,7 +19,6 @@ def init_jobs(jobs_path : str) -> bool:
 	JOBS_PATH = jobs_path
 	job_status_paths = [ os.path.join(JOBS_PATH, job_status) for job_status in job_statuses ]
 
-	create_base_directory()
 	for job_status_path in job_status_paths:
 		create_directory(job_status_path)
 	return all(is_directory(status_path) for status_path in job_status_paths)
