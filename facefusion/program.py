@@ -19,16 +19,6 @@ def create_help_formatter_large(prog : str) -> HelpFormatter:
 	return HelpFormatter(prog, max_help_position = 300)
 
 
-def create_paths_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	group_paths = program.add_argument_group('paths')
-	group_paths.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', default = config.get_str_list('paths.source_paths'))
-	group_paths.add_argument('-t', '--target-path', help = wording.get('help.target_path'), default = config.get_str_value('paths.target_path'))
-	group_paths.add_argument('-o', '--output-path', help = wording.get('help.output_path'), default = config.get_str_value('paths.output_path'))
-	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
-	return program
-
-
 def create_config_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
@@ -41,7 +31,7 @@ def create_config_path_program() -> ArgumentParser:
 def create_temp_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
-	group_paths.add_argument('--temp-path', help = wording.get('help.temp_path'), default = tempfile.gettempdir())
+	group_paths.add_argument('--temp-path', help = wording.get('help.temp_path'), default = config.get_str_value('paths.temp_path', tempfile.gettempdir()))
 	job_store.register_job_keys([ 'temp_path' ])
 	return program
 
@@ -58,7 +48,7 @@ def create_source_paths_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', default = config.get_str_list('paths.source_paths'))
-	job_store.register_job_keys([ 'source_paths' ])
+	job_store.register_step_keys([ 'source_paths' ])
 	return program
 
 
@@ -66,7 +56,7 @@ def create_target_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('-t', '--target-path', help = wording.get('help.target_path'), default = config.get_str_value('paths.target_path'))
-	job_store.register_job_keys([ 'target_path' ])
+	job_store.register_step_keys([ 'target_path' ])
 	return program
 
 
@@ -243,8 +233,8 @@ def create_program() -> ArgumentParser:
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	sub_program = program.add_subparsers(dest = 'command')
 	# general
-	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_path_program(), create_jobs_path_program(), create_paths_program(), collect_step_program(), create_uis_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [ create_config_path_program(), create_jobs_path_program(), create_paths_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [ create_config_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('force-download', help = wording.get('help.force_download'), parents = [ create_log_level_program() ], formatter_class = create_help_formatter_large)
 	# job manager
 	sub_program.add_parser('job-list', help = wording.get('help.job_list'), parents = [ create_job_status_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
@@ -253,9 +243,9 @@ def create_program() -> ArgumentParser:
 	sub_program.add_parser('job-submit-all', help = wording.get('help.job_submit_all'), parents = [ create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-delete', help = wording.get('help.job_delete'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-delete-all', help = wording.get('help.job_delete_all'), parents = [ create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('job-add-step', help = wording.get('help.job_add_step'), parents = [ create_job_id_program(), create_config_path_program(), create_jobs_path_program(), create_paths_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('job-remix-step', help = wording.get('help.job_remix_step'), parents = [ create_job_id_program(), create_step_index_program(), create_config_path_program(), create_jobs_path_program(), create_paths_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('job-insert-step', help = wording.get('help.job_insert_step'), parents = [ create_job_id_program(), create_step_index_program(), create_config_path_program(), create_jobs_path_program(), create_paths_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-add-step', help = wording.get('help.job_add_step'), parents = [ create_job_id_program(), create_config_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-remix-step', help = wording.get('help.job_remix_step'), parents = [ create_job_id_program(), create_step_index_program(), create_config_path_program(), create_jobs_path_program(), create_source_paths_program(), create_output_path_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('job-insert-step', help = wording.get('help.job_insert_step'), parents = [ create_job_id_program(), create_step_index_program(), create_config_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-remove-step', help = wording.get('help.job_remove_step'), parents = [ create_job_id_program(), create_step_index_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	# job runner
 	sub_program.add_parser('job-run', help = wording.get('help.job_run'), parents = [ create_job_id_program(), create_config_path_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
