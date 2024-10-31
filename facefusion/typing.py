@@ -192,6 +192,7 @@ StateKey = Literal\
 [
 	'command',
 	'config_path',
+	'temp_path',
 	'jobs_path',
 	'source_paths',
 	'target_path',
@@ -248,6 +249,7 @@ State = TypedDict('State',
 {
 	'command' : str,
 	'config_path' : str,
+	'temp_path': str,
 	'jobs_path' : str,
 	'source_paths' : List[str],
 	'target_path' : str,
