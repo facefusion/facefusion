@@ -10,6 +10,6 @@ def get_time_ago(days : int, hours : int, minutes : int) -> datetime:
 
 def test_describe_time_ago() -> None:
 	assert describe_time_ago(get_time_ago(0, 0, 0)) == 'just now'
-	assert describe_time_ago(get_time_ago(0, 0, 5)) == '5 minutes ago'
+	assert describe_time_ago(get_time_ago(0, 0, 10)) == '10 minutes ago'
 	assert describe_time_ago(get_time_ago(0, 5, 10)) == '5 hours and 10 minutes ago'
-	assert describe_time_ago(get_time_ago(5, 10, 15)) == '5 days, 10 hours and 15 minutes ago'
+	assert describe_time_ago(get_time_ago(1, 5, 10)) == '1 days, 5 hours and 10 minutes ago'
