@@ -49,7 +49,7 @@ def create_temp_path_program() -> ArgumentParser:
 def create_jobs_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
-	group_paths.add_argument('-j', '--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('paths.jobs_path', '.jobs'))
+	group_paths.add_argument('--jobs-path', help = wording.get('help.jobs_path'), default = config.get_str_value('paths.jobs_path', '.jobs'))
 	job_store.register_job_keys([ 'jobs_path' ])
 	return program
 
