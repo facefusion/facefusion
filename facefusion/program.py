@@ -23,7 +23,7 @@ def create_config_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('--config-path', help = wording.get('help.config_path'), default = 'facefusion.ini')
-	job_store.register_job_keys([ 'config-path' ])
+	job_store.register_job_keys([ 'config_path' ])
 	apply_config_path(program)
 	return program
 
