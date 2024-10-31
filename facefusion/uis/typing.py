@@ -9,6 +9,7 @@ ComponentName = Literal\
 	'age_modifier_model_dropdown',
 	'benchmark_cycles_slider',
 	'benchmark_runs_checkbox_group',
+	'deep_swapper_model_dropdown',
 	'expression_restorer_factor_slider',
 	'expression_restorer_model_dropdown',
 	'face_debugger_items_checkbox_group',
