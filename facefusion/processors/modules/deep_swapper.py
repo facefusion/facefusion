@@ -128,8 +128,7 @@ def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 	crop_vision_frame, crop_source_mask, crop_target_mask = forward(crop_vision_frame)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_vision_frame = match_frame_color_with_mask(crop_vision_frame_raw, crop_vision_frame, crop_source_mask, crop_target_mask)
-	crop_masks.append(feather_crop_mask(crop_source_mask))
-	crop_masks.append(feather_crop_mask(crop_target_mask))
+	crop_masks.append(numpy.maximum.reduce([ feather_crop_mask(crop_source_mask), feather_crop_mask(crop_target_mask) ]).clip(0, 1))
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return paste_vision_frame
