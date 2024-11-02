@@ -13,10 +13,10 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 
 if is_macos():
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.19.2')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.20.0')
 else:
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.19.2')
-	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.19.2')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.20.0')
+	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.20.0')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.19.0')
 if is_linux():
 	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.18.0')
