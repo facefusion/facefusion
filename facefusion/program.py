@@ -3,12 +3,11 @@ from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
 from facefusion import config, metadata, state_manager, wording
-from facefusion.common_helper import create_float_metavar, create_int_metavar
+from facefusion.common_helper import create_float_metavar, create_int_metavar, get_last
 from facefusion.execution import get_execution_provider_choices
 from facefusion.filesystem import list_directory
 from facefusion.jobs import job_store
 from facefusion.processors.core import get_processors_modules
-from facefusion.program_helper import suggest_face_detector_choices
 
 
 def create_help_formatter_small(prog : str) -> HelpFormatter:
@@ -72,7 +71,9 @@ def create_face_detector_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_detector = program.add_argument_group('face detector')
 	group_face_detector.add_argument('--face-detector-model', help = wording.get('help.face_detector_model'), default = config.get_str_value('face_detector.face_detector_model', 'yoloface'), choices = facefusion.choices.face_detector_set.keys())
-	group_face_detector.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_detector.face_detector_size', '640x640'), choices = suggest_face_detector_choices(program))
+	known_args, _ = program.parse_known_args()
+	face_detector_size_choices = facefusion.choices.face_detector_set.get(known_args.face_detector_model)
+	group_face_detector.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_detector.face_detector_size', get_last(face_detector_size_choices)), choices = face_detector_size_choices)
 	group_face_detector.add_argument('--face-detector-angles', help = wording.get('help.face_detector_angles'), type = int, default = config.get_int_list('face_detector.face_detector_angles', '0'), choices = facefusion.choices.face_detector_angles, nargs = '+', metavar = 'FACE_DETECTOR_ANGLES')
 	group_face_detector.add_argument('--face-detector-score', help = wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_detector.face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_float_metavar(facefusion.choices.face_detector_score_range))
 	job_store.register_step_keys([ 'face_detector_model', 'face_detector_angles', 'face_detector_size', 'face_detector_score' ])
