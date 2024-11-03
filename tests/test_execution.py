@@ -16,7 +16,7 @@ def test_multiple_execution_providers() -> None:
 		('CUDAExecutionProvider',
 		{
 			'device_id': '1',
-			'cudnn_conv_algo_search': 'DEFAULT'
+			'cudnn_conv_algo_search': 'HEURISTIC'
 		}),
 		'CPUExecutionProvider'
 	]
