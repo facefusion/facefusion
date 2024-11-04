@@ -36,8 +36,7 @@ def create_execution_providers(execution_device_id : str, execution_provider_key
 		if execution_provider_key == 'cuda':
 			execution_providers.append((execution_provider_set.get(execution_provider_key),
 			{
-				'device_id': execution_device_id,
-				'cudnn_conv_algo_search': 'EXHAUSTIVE' if use_exhaustive() else 'HEURISTIC'
+				'device_id': execution_device_id
 			}))
 		if execution_provider_key == 'tensorrt':
 			execution_providers.append((execution_provider_set.get(execution_provider_key),
@@ -67,13 +66,6 @@ def create_execution_providers(execution_device_id : str, execution_provider_key
 		execution_providers.append(execution_provider_set.get('cpu'))
 
 	return execution_providers
-
-
-def use_exhaustive() -> bool:
-	execution_devices = detect_static_execution_devices()
-	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
-
-	return any(execution_device.get('product').get('name').startswith(product_names) for execution_device in execution_devices)
 
 
 def run_nvidia_smi() -> subprocess.Popen[bytes]:
