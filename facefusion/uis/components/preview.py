@@ -142,6 +142,7 @@ def listen() -> None:
 	for ui_component in get_ui_components(
 	[
 		'age_modifier_model_dropdown',
+		'deep_swapper_model_dropdown',
 		'expression_restorer_model_dropdown',
 		'processors_checkbox_group',
 		'face_editor_model_dropdown',

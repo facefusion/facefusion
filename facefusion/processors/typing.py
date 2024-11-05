@@ -5,6 +5,7 @@ from numpy._typing import NDArray
 from facefusion.typing import AppContext, AudioFrame, Face, FaceSet, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
+DeepSwapperModel = Literal['jackie_chan']
 ExpressionRestorerModel = Literal['live_portrait']
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race']
 FaceEditorModel = Literal['live_portrait']
@@ -17,6 +18,11 @@ LipSyncerModel = Literal['wav2lip_96', 'wav2lip_gan_96']
 FaceSwapperSet = Dict[FaceSwapperModel, List[str]]
 
 AgeModifierInputs = TypedDict('AgeModifierInputs',
+{
+	'reference_faces' : FaceSet,
+	'target_vision_frame' : VisionFrame
+})
+DeepSwapperInputs = TypedDict('DeepSwapperInputs',
 {
 	'reference_faces' : FaceSet,
 	'target_vision_frame' : VisionFrame
@@ -67,6 +73,7 @@ ProcessorStateKey = Literal\
 [
 	'age_modifier_model',
 	'age_modifier_direction',
+	'deep_swapper_model',
 	'expression_restorer_model',
 	'expression_restorer_factor',
 	'face_debugger_items',
@@ -100,6 +107,7 @@ ProcessorState = TypedDict('ProcessorState',
 {
 	'age_modifier_model' : AgeModifierModel,
 	'age_modifier_direction' : int,
+	'deep_swapper_model' : DeepSwapperModel,
 	'expression_restorer_model' : ExpressionRestorerModel,
 	'expression_restorer_factor' : int,
 	'face_debugger_items' : List[FaceDebuggerItem],
