@@ -241,8 +241,8 @@ def calc_histogram_difference(source_vision_frame : VisionFrame, target_vision_f
 	return histogram_differnce
 
 
-def blend_vision_frames(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, factor : float) -> VisionFrame:
-	blend_vision_frame = cv2.addWeighted(source_vision_frame, 1 - factor, target_vision_frame, factor, 0)
+def blend_vision_frames(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, blend_factor : float) -> VisionFrame:
+	blend_vision_frame = cv2.addWeighted(source_vision_frame, 1 - blend_factor, target_vision_frame, blend_factor, 0)
 	return blend_vision_frame
 
 
