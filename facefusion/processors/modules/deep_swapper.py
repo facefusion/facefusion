@@ -3,6 +3,7 @@ from typing import List, Tuple
 
 import cv2
 import numpy
+from cv2.typing import Size
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -43,7 +44,6 @@ MODEL_SET : ModelSet =\
 			}
 		},
 		'template': 'arcface_128_v2',
-		'size': (224, 224)
 	}
 }
 
@@ -62,6 +62,12 @@ def clear_inference_pool() -> None:
 def get_model_options() -> ModelOptions:
 	deep_swapper_model = state_manager.get_item('deep_swapper_model')
 	return MODEL_SET.get(deep_swapper_model)
+
+
+def get_model_size() -> Size:
+    deep_swapper = get_inference_pool().get('deep_swapper')
+    model_size = deep_swapper.get_outputs()[-1].shape[1:3]
+    return model_size
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -111,7 +117,7 @@ def post_process() -> None:
 
 def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
-	model_size = get_model_options().get('size')
+	model_size = get_model_size()
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
 	crop_vision_frame_raw = crop_vision_frame.copy()
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
@@ -155,7 +161,7 @@ def forward(crop_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mask, Mask]:
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	crop_vision_frame = cv2.addWeighted(crop_vision_frame, 1.5, cv2.GaussianBlur(crop_vision_frame, (0, 0), 2), -0.5, 0)
+	crop_vision_frame = cv2.addWeighted(crop_vision_frame, 1.75, cv2.GaussianBlur(crop_vision_frame, (0, 0), 2), -0.75, 0)
 	crop_vision_frame = crop_vision_frame / 255.0
 	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0).astype(numpy.float32)
 	return crop_vision_frame
@@ -168,7 +174,7 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def feather_crop_mask(crop_source_mask : Mask) -> Mask:
-	model_size = get_model_options().get('size')
+	model_size = get_model_size()
 	crop_mask = crop_source_mask.reshape(model_size).clip(0, 1)
 	crop_mask = cv2.erode(crop_mask, numpy.ones((5, 5), numpy.uint8), iterations = 1)
 	crop_mask = cv2.GaussianBlur(crop_mask, (7, 7), 0)
