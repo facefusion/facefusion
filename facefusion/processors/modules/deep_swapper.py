@@ -134,10 +134,7 @@ def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 	crop_vision_frame, crop_source_mask, crop_target_mask = forward(crop_vision_frame)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_vision_frame = adaptive_match_frame_color(crop_vision_frame_raw, crop_vision_frame)
-	crop_source_mask = feather_crop_mask(crop_source_mask)
-	crop_target_mask = feather_crop_mask(crop_target_mask)
-	crop_combine_mask = numpy.maximum.reduce([ crop_source_mask, crop_target_mask ])
-	crop_masks.append(crop_combine_mask)
+	crop_masks.append(prepare_crop_mask(crop_source_mask, crop_target_mask))
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return paste_vision_frame
@@ -173,11 +170,12 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def feather_crop_mask(crop_source_mask : Mask) -> Mask:
+def prepare_crop_mask(crop_source_mask : Mask, crop_target_mask : Mask) -> Mask:
 	model_size = get_model_size()
-	crop_mask = crop_source_mask.reshape(model_size).clip(0, 1)
+	crop_mask = numpy.maximum.reduce([ crop_source_mask, crop_target_mask ])
+	crop_mask = crop_mask.reshape(model_size).clip(0, 1)
 	crop_mask = cv2.erode(crop_mask, numpy.ones((5, 5), numpy.uint8), iterations = 1)
-	crop_mask = cv2.GaussianBlur(crop_mask, (7, 7), 0)
+	crop_mask = cv2.GaussianBlur(crop_mask, (9, 9), 0)
 	return crop_mask
 
 
