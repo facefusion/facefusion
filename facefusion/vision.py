@@ -210,7 +210,7 @@ def normalize_frame_color(vision_frame : VisionFrame) -> VisionFrame:
 	return cv2.cvtColor(vision_frame, cv2.COLOR_BGR2RGB)
 
 
-def adaptive_match_frame_color(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame) -> VisionFrame:
+def conditional_match_frame_color(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame) -> VisionFrame:
 	histogram_factor = calc_histogram_difference(source_vision_frame, target_vision_frame)
 	target_vision_frame = blend_vision_frames(target_vision_frame, match_frame_color(source_vision_frame, target_vision_frame), histogram_factor)
 	return target_vision_frame

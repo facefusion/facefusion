@@ -21,7 +21,7 @@ from facefusion.processors.typing import DeepSwapperInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
-from facefusion.vision import adaptive_match_frame_color, read_image, read_static_image, write_image
+from facefusion.vision import conditional_match_frame_color, read_image, read_static_image, write_image
 
 MODEL_SET : ModelSet =\
 {
@@ -133,7 +133,7 @@ def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
 	crop_vision_frame, crop_source_mask, crop_target_mask = forward(crop_vision_frame)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
-	crop_vision_frame = adaptive_match_frame_color(crop_vision_frame_raw, crop_vision_frame)
+	crop_vision_frame = conditional_match_frame_color(crop_vision_frame_raw, crop_vision_frame)
 	crop_masks.append(prepare_crop_mask(crop_source_mask, crop_target_mask))
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
