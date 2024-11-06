@@ -33,17 +33,17 @@ def calc_face_distance(face : Face, reference_face : Face) -> float:
 def sort_and_filter_faces(faces : List[Face]) -> List[Face]:
 	if faces:
 		if state_manager.get_item('face_selector_order'):
-			faces = sort_by_order(faces, state_manager.get_item('face_selector_order'))
+			faces = sort_faces_by_order(faces, state_manager.get_item('face_selector_order'))
 		if state_manager.get_item('face_selector_gender'):
-			faces = filter_by_gender(faces, state_manager.get_item('face_selector_gender'))
+			faces = filter_faces_by_gender(faces, state_manager.get_item('face_selector_gender'))
 		if state_manager.get_item('face_selector_race'):
-			faces = filter_by_race(faces, state_manager.get_item('face_selector_race'))
+			faces = filter_faces_by_race(faces, state_manager.get_item('face_selector_race'))
 		if state_manager.get_item('face_selector_age_start') or state_manager.get_item('face_selector_age_end'):
-			faces = filter_by_age(faces, state_manager.get_item('face_selector_age_start'), state_manager.get_item('face_selector_age_end'))
+			faces = filter_faces_by_age(faces, state_manager.get_item('face_selector_age_start'), state_manager.get_item('face_selector_age_end'))
 	return faces
 
 
-def sort_by_order(faces : List[Face], order : FaceSelectorOrder) -> List[Face]:
+def sort_faces_by_order(faces : List[Face], order : FaceSelectorOrder) -> List[Face]:
 	if order == 'left-right':
 		return sorted(faces, key = lambda face: face.bounding_box[0])
 	if order == 'right-left':
@@ -63,7 +63,7 @@ def sort_by_order(faces : List[Face], order : FaceSelectorOrder) -> List[Face]:
 	return faces
 
 
-def filter_by_gender(faces : List[Face], gender : Gender) -> List[Face]:
+def filter_faces_by_gender(faces : List[Face], gender : Gender) -> List[Face]:
 	filter_faces = []
 
 	for face in faces:
@@ -72,7 +72,7 @@ def filter_by_gender(faces : List[Face], gender : Gender) -> List[Face]:
 	return filter_faces
 
 
-def filter_by_age(faces : List[Face], face_selector_age_start : int, face_selector_age_end : int) -> List[Face]:
+def filter_faces_by_age(faces : List[Face], face_selector_age_start : int, face_selector_age_end : int) -> List[Face]:
 	filter_faces = []
 	age = range(face_selector_age_start, face_selector_age_end)
 
@@ -82,7 +82,7 @@ def filter_by_age(faces : List[Face], face_selector_age_start : int, face_select
 	return filter_faces
 
 
-def filter_by_race(faces : List[Face], race : Race) -> List[Face]:
+def filter_faces_by_race(faces : List[Face], race : Race) -> List[Face]:
 	filter_faces = []
 
 	for face in faces:
