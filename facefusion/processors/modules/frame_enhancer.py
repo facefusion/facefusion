@@ -41,6 +41,27 @@ MODEL_SET : ModelSet =\
 		'size': (128, 8, 4),
 		'scale': 4
 	},
+	'foolhardy_remacri_x4':
+	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/foolhardy_remacri_x4.hash',
+				'path': resolve_relative_path('../.assets/models/foolhardy_remacri_x4.hash')
+			}
+		},
+		'sources':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/foolhardy_remacri_x4.onnx',
+				'path': resolve_relative_path('../.assets/models/foolhardy_remacri_x4.onnx')
+			}
+		},
+		'size': (128, 8, 4),
+		'scale': 4
+	},
 	'lsdir_x4':
 	{
 		'hashes':
@@ -57,6 +78,27 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/lsdir_x4.onnx',
 				'path': resolve_relative_path('../.assets/models/lsdir_x4.onnx')
+			}
+		},
+		'size': (128, 8, 4),
+		'scale': 4
+	},
+	'nmkd_siax_x4':
+	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/nmkd_siax_x4.hash',
+				'path': resolve_relative_path('../.assets/models/nmkd_siax_x4.hash')
+			}
+		},
+		'sources':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/nmkd_siax_x4.onnx',
+				'path': resolve_relative_path('../.assets/models/nmkd_siax_x4.onnx')
 			}
 		},
 		'size': (128, 8, 4),
@@ -230,6 +272,48 @@ MODEL_SET : ModelSet =\
 		'size': (256, 16, 8),
 		'scale': 4
 	},
+	'real_web_photo_x4':
+	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/real_web_photo_x4.hash',
+				'path': resolve_relative_path('../.assets/models/real_web_photo_x4.hash')
+			}
+		},
+		'sources':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/real_web_photo_x4.onnx',
+				'path': resolve_relative_path('../.assets/models/real_web_photo_x4.onnx')
+			}
+		},
+		'size': (64, 4, 2),
+		'scale': 4
+	},
+	'realistic_rescaler_x4':
+	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/realistic_rescaler_x4.hash',
+				'path': resolve_relative_path('../.assets/models/realistic_rescaler_x4.hash')
+			}
+		},
+		'sources':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/realistic_rescaler_x4.onnx',
+				'path': resolve_relative_path('../.assets/models/realistic_rescaler_x4.onnx')
+			}
+		},
+		'size': (128, 8, 4),
+		'scale': 4
+	},
 	'span_kendata_x4':
 	{
 		'hashes':
@@ -246,6 +330,27 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/span_kendata_x4.onnx',
 				'path': resolve_relative_path('../.assets/models/span_kendata_x4.onnx')
+			}
+		},
+		'size': (128, 8, 4),
+		'scale': 4
+	},
+	'swin2_sr_x4':
+	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/swin2_sr_x4.hash',
+				'path': resolve_relative_path('../.assets/models/swin2_sr_x4.hash')
+			}
+		},
+		'sources':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/swin2_sr_x4.onnx',
+				'path': resolve_relative_path('../.assets/models/swin2_sr_x4.onnx')
 			}
 		},
 		'size': (128, 8, 4),
