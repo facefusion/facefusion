@@ -589,7 +589,13 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
 	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_frames = read_static_images(source_paths)
-	source_faces = get_many_faces(source_frames)
+	source_faces = []
+
+	for source_frame in source_frames:
+		temp_faces = get_many_faces([ source_frame ])
+		temp_faces = sort_faces_by_order(temp_faces, 'large-small')
+		if temp_faces:
+			source_faces.append(get_first(temp_faces))
 	source_face = get_average_face(source_faces)
 	target_vision_frame = read_static_image(target_path)
 	output_vision_frame = process_frame(
