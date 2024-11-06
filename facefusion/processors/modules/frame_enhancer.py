@@ -62,27 +62,6 @@ MODEL_SET : ModelSet =\
 		'size': (128, 8, 4),
 		'scale': 4
 	},
-	'nmkd_siax_x4':
-	{
-		'hashes':
-		{
-			'frame_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/nmkd_siax_x4.hash',
-				'path': resolve_relative_path('../.assets/models/nmkd_siax_x4.hash')
-			}
-		},
-		'sources':
-		{
-			'frame_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/nmkd_siax_x4.onnx',
-				'path': resolve_relative_path('../.assets/models/nmkd_siax_x4.onnx')
-			}
-		},
-		'size': (128, 8, 4),
-		'scale': 4
-	},
 	'nomos8k_sc_x4':
 	{
 		'hashes':
@@ -309,6 +288,27 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/remacri_x4.onnx',
 				'path': resolve_relative_path('../.assets/models/remacri_x4.onnx')
+			}
+		},
+		'size': (128, 8, 4),
+		'scale': 4
+	},
+	'siax_x4':
+	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/siax_x4.hash',
+				'path': resolve_relative_path('../.assets/models/siax_x4.hash')
+			}
+		},
+		'sources':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/siax_x4.onnx',
+				'path': resolve_relative_path('../.assets/models/siax_x4.onnx')
 			}
 		},
 		'size': (128, 8, 4),
