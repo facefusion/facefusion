@@ -5,7 +5,7 @@ from numpy._typing import NDArray
 from facefusion.typing import AppContext, AudioFrame, Face, FaceSet, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
-DeepSwapperModel = Literal['jackie_chan']
+DeepSwapperModel = Literal['iperov/jackie_chan_224']
 ExpressionRestorerModel = Literal['live_portrait']
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race']
 FaceEditorModel = Literal['live_portrait']

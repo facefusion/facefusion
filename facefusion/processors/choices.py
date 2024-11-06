@@ -4,7 +4,7 @@ from facefusion.common_helper import create_float_range, create_int_range
 from facefusion.processors.typing import AgeModifierModel, DeepSwapperModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
-deep_swapper_models : List[DeepSwapperModel] = [ 'jackie_chan' ]
+deep_swapper_models : List[DeepSwapperModel] = [ 'iperov/jackie_chan_224' ]
 expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]
 face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race' ]
 face_editor_models : List[FaceEditorModel] = [ 'live_portrait' ]

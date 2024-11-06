@@ -24,7 +24,7 @@ from facefusion.vision import conditional_match_frame_color, read_image, read_st
 
 MODEL_SET : ModelSet =\
 {
-	'jackie_chan':
+	'iperov/jackie_chan_224':
 	{
 		'hashes':
 		{
@@ -67,7 +67,7 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--deep-swapper-model', help = wording.get('help.deep_swapper_model'), default = config.get_str_value('processors.deep_swapper_model', 'jackie_chan'), choices = processors_choices.deep_swapper_models)
+		group_processors.add_argument('--deep-swapper-model', help = wording.get('help.deep_swapper_model'), default = config.get_str_value('processors.deep_swapper_model', 'iperov/jackie_chan_224'), choices = processors_choices.deep_swapper_models)
 		facefusion.jobs.job_store.register_step_keys([ 'deep_swapper_model' ])
 
 
