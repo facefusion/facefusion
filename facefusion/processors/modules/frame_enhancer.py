@@ -41,27 +41,6 @@ MODEL_SET : ModelSet =\
 		'size': (128, 8, 4),
 		'scale': 4
 	},
-	'foolhardy_remacri_x4':
-	{
-		'hashes':
-		{
-			'frame_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/foolhardy_remacri_x4.hash',
-				'path': resolve_relative_path('../.assets/models/foolhardy_remacri_x4.hash')
-			}
-		},
-		'sources':
-		{
-			'frame_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/foolhardy_remacri_x4.onnx',
-				'path': resolve_relative_path('../.assets/models/foolhardy_remacri_x4.onnx')
-			}
-		},
-		'size': (128, 8, 4),
-		'scale': 4
-	},
 	'lsdir_x4':
 	{
 		'hashes':
@@ -309,6 +288,27 @@ MODEL_SET : ModelSet =\
 			{
 				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/realistic_rescaler_x4.onnx',
 				'path': resolve_relative_path('../.assets/models/realistic_rescaler_x4.onnx')
+			}
+		},
+		'size': (128, 8, 4),
+		'scale': 4
+	},
+	'remacri_x4':
+	{
+		'hashes':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/remacri_x4.hash',
+				'path': resolve_relative_path('../.assets/models/remacri_x4.hash')
+			}
+		},
+		'sources':
+		{
+			'frame_enhancer':
+			{
+				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/remacri_x4.onnx',
+				'path': resolve_relative_path('../.assets/models/remacri_x4.onnx')
 			}
 		},
 		'size': (128, 8, 4),
