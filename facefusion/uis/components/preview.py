@@ -11,6 +11,7 @@ from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
 from facefusion.core import conditional_append_reference_faces
 from facefusion.face_analyser import get_average_face, get_many_faces
+from facefusion.face_selector import sort_faces_by_order
 from facefusion.face_store import clear_reference_faces, clear_static_faces, get_reference_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
@@ -191,7 +192,13 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	conditional_append_reference_faces()
 	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_frames = read_static_images(state_manager.get_item('source_paths'))
-	source_faces = get_many_faces(source_frames)
+	source_faces = []
+
+	for source_frame in source_frames:
+		temp_faces = get_many_faces([ source_frame ])
+		temp_faces = sort_faces_by_order(temp_faces, 'large-small')
+		if temp_faces:
+			source_faces.append(get_first(temp_faces))
 	source_face = get_average_face(source_faces)
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()

@@ -13,7 +13,7 @@ from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
-from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
+from facefusion.face_selector import find_similar_faces, sort_and_filter_faces, sort_faces_by_order
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.inference_manager import get_static_model_initializer
@@ -564,7 +564,13 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
 	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_frames = read_static_images(source_paths)
-	source_faces = get_many_faces(source_frames)
+	source_faces = []
+
+	for source_frame in source_frames:
+		temp_faces = get_many_faces([ source_frame ])
+		temp_faces = sort_faces_by_order(temp_faces, 'large-small')
+		if temp_faces:
+			source_faces.append(get_first(temp_faces))
 	source_face = get_average_face(source_faces)
 
 	for queue_payload in process_manager.manage(queue_payloads):
@@ -583,7 +589,13 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
 	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_frames = read_static_images(source_paths)
-	source_faces = get_many_faces(source_frames)
+	source_faces = []
+
+	for source_frame in source_frames:
+		temp_faces = get_many_faces([ source_frame ])
+		temp_faces = sort_faces_by_order(temp_faces, 'large-small')
+		if temp_faces:
+			source_faces.append(get_first(temp_faces))
 	source_face = get_average_face(source_faces)
 	target_vision_frame = read_static_image(target_path)
 	output_vision_frame = process_frame(
