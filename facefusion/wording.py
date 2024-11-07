@@ -178,14 +178,16 @@ WORDING : Dict[str, Any] =\
 		'ui_workflow': 'choose the ui workflow',
 		# execution
 		'execution_device_id': 'specify the device used for processing',
-		'execution_providers': 'accelerate the model inference using different providers (choices: {choices}, ...)',
+		'execution_providers': 'inference using different providers (choices: {choices}, ...)',
 		'execution_thread_count': 'specify the amount of parallel threads while processing',
 		'execution_queue_count': 'specify the amount of frames each thread is processing',
+		# download
+		'download_providers': 'download using different providers (choices: {choices}, ...)',
+		'skip_download': 'omit downloads and remote lookups',
 		# memory
 		'video_memory_strategy': 'balance fast processing and low VRAM usage',
 		'system_memory_limit': 'limit the available RAM that can be used while processing',
 		# misc
-		'skip_download': 'omit downloads and remote lookups',
 		'log_level': 'adjust the message severity displayed in the terminal',
 		# run
 		'run': 'run the program',

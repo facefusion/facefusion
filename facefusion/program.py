@@ -185,11 +185,12 @@ def create_memory_program() -> ArgumentParser:
 	return program
 
 
-def create_skip_download_program() -> ArgumentParser:
+def create_download_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	group_misc = program.add_argument_group('misc')
-	group_misc.add_argument('--skip-download', help = wording.get('help.skip_download'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
-	job_store.register_job_keys([ 'skip_download' ])
+	group_download = program.add_argument_group('download')
+	group_download.add_argument('--download-providers', help = wording.get('help.download_providers').format(choices = ', '.join(facefusion.choices.download_providers)), default = config.get_str_list('download.download_providers', 'github'), choices = facefusion.choices.download_providers, nargs = '+', metavar = 'DOWNLOAD_PROVIDERS')
+	group_download.add_argument('--skip-download', help = wording.get('help.skip_download'), action = 'store_true', default = config.get_bool_value('misc.skip_download'))
+	job_store.register_job_keys([ 'download_providers', 'skip_download' ])
 	return program
 
 
@@ -225,7 +226,7 @@ def collect_step_program() -> ArgumentParser:
 
 
 def collect_job_program() -> ArgumentParser:
-	return ArgumentParser(parents= [ create_execution_program(), create_memory_program(), create_skip_download_program(), create_log_level_program() ], add_help = False)
+	return ArgumentParser(parents= [ create_execution_program(), create_download_program(), create_memory_program(), create_log_level_program() ], add_help = False)
 
 
 def create_program() -> ArgumentParser:

@@ -167,8 +167,8 @@ def force_download() -> ErrorCode:
 	processor_modules = get_processors_modules(available_processors)
 
 	for module in common_modules + processor_modules:
-		if hasattr(module, 'MODEL_SET'):
-			for model in module.MODEL_SET.values():
+		if hasattr(module, 'create_model_set'):
+			for model in module.create_model_set().values():
 				model_hashes = model.get('hashes')
 				model_sources = model.get('sources')
 
