@@ -195,7 +195,7 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	source_faces = []
 
 	for source_frame in source_frames:
-		temp_faces = get_many_faces([source_frame])
+		temp_faces = get_many_faces([ source_frame ])
 		temp_faces = sort_faces_by_order(temp_faces, 'large-small')
 		if temp_faces:
 			source_faces.append(get_first(temp_faces))
