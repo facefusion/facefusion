@@ -8,7 +8,7 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
@@ -25,309 +25,310 @@ from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
-MODEL_SET : ModelSet =\
-{
-	'blendswap_256':
+def create_model_set() -> ModelSet:
+	return\
 	{
-		'hashes':
+		'blendswap_256':
 		{
-			'face_swapper':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/blendswap_256.hash',
-				'path': resolve_relative_path('../.assets/models/blendswap_256.hash')
-			}
-		},
-		'sources':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/blendswap_256.onnx',
-				'path': resolve_relative_path('../.assets/models/blendswap_256.onnx')
-			}
-		},
-		'type': 'blendswap',
-		'template': 'ffhq_512',
-		'size': (256, 256),
-		'mean': [ 0.0, 0.0, 0.0 ],
-		'standard_deviation': [ 1.0, 1.0, 1.0 ]
-	},
-	'ghost_1_256':
-	{
-		'hashes':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_1_256.hash',
-				'path': resolve_relative_path('../.assets/models/ghost_1_256.hash')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'blendswap_256.hash'),
+					'path': resolve_relative_path('../.assets/models/blendswap_256.hash')
+				}
 			},
-			'embedding_converter':
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.hash')
-			}
-		},
-		'sources':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_1_256.onnx',
-				'path': resolve_relative_path('../.assets/models/ghost_1_256.onnx')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'blendswap_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/blendswap_256.onnx')
+				}
 			},
-			'embedding_converter':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
-			}
+			'type': 'blendswap',
+			'template': 'ffhq_512',
+			'size': (256, 256),
+			'mean': [ 0.0, 0.0, 0.0 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
 		},
-		'type': 'ghost',
-		'template': 'arcface_112_v1',
-		'size': (256, 256),
-		'mean': [ 0.5, 0.5, 0.5 ],
-		'standard_deviation': [ 0.5, 0.5, 0.5 ]
-	},
-	'ghost_2_256':
-	{
-		'hashes':
+		'ghost_1_256':
 		{
-			'face_swapper':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_2_256.hash',
-				'path': resolve_relative_path('../.assets/models/ghost_2_256.hash')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'ghost_1_256.hash'),
+					'path': resolve_relative_path('../.assets/models/ghost_1_256.hash')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_ghost.hash'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.hash')
+				}
 			},
-			'embedding_converter':
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.hash')
-			}
-		},
-		'sources':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_2_256.onnx',
-				'path': resolve_relative_path('../.assets/models/ghost_2_256.onnx')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'ghost_1_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/ghost_1_256.onnx')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_ghost.onnx'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
+				}
 			},
-			'embedding_converter':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
-			}
+			'type': 'ghost',
+			'template': 'arcface_112_v1',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
 		},
-		'type': 'ghost',
-		'template': 'arcface_112_v1',
-		'size': (256, 256),
-		'mean': [ 0.5, 0.5, 0.5 ],
-		'standard_deviation': [ 0.5, 0.5, 0.5 ]
-	},
-	'ghost_3_256':
-	{
-		'hashes':
+		'ghost_2_256':
 		{
-			'face_swapper':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_3_256.hash',
-				'path': resolve_relative_path('../.assets/models/ghost_3_256.hash')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'ghost_2_256.hash'),
+					'path': resolve_relative_path('../.assets/models/ghost_2_256.hash')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_ghost.hash'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.hash')
+				}
 			},
-			'embedding_converter':
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.hash')
-			}
-		},
-		'sources':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/ghost_3_256.onnx',
-				'path': resolve_relative_path('../.assets/models/ghost_3_256.onnx')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'ghost_2_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/ghost_2_256.onnx')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_ghost.onnx'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
+				}
 			},
-			'embedding_converter':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_ghost.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
-			}
+			'type': 'ghost',
+			'template': 'arcface_112_v1',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
 		},
-		'type': 'ghost',
-		'template': 'arcface_112_v1',
-		'size': (256, 256),
-		'mean': [ 0.5, 0.5, 0.5 ],
-		'standard_deviation': [ 0.5, 0.5, 0.5 ]
-	},
-	'hififace_unofficial_256':
-	{
-		'hashes':
+		'ghost_3_256':
 		{
-			'face_swapper':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/hififace_unofficial_256.hash',
-				'path': resolve_relative_path('../.assets/models/hififace_unofficial_256.hash')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'ghost_3_256.hash'),
+					'path': resolve_relative_path('../.assets/models/ghost_3_256.hash')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_ghost.hash'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.hash')
+				}
 			},
-			'embedding_converter':
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/arcface_converter_hififace.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_hififace.hash')
-			}
-		},
-		'sources':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/hififace_unofficial_256.onnx',
-				'path': resolve_relative_path('../.assets/models/hififace_unofficial_256.onnx')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'ghost_3_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/ghost_3_256.onnx')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_ghost.onnx'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
+				}
 			},
-			'embedding_converter':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/arcface_converter_hififace.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_hififace.onnx')
-			}
+			'type': 'ghost',
+			'template': 'arcface_112_v1',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
 		},
-		'type': 'hififace',
-		'template': 'mtcnn_512',
-		'size': (256, 256),
-		'mean': [ 0.5, 0.5, 0.5 ],
-		'standard_deviation': [ 0.5, 0.5, 0.5 ]
-	},
-	'inswapper_128':
-	{
-		'hashes':
+		'hififace_unofficial_256':
 		{
-			'face_swapper':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/inswapper_128.hash',
-				'path': resolve_relative_path('../.assets/models/inswapper_128.hash')
-			}
-		},
-		'sources':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/inswapper_128.onnx',
-				'path': resolve_relative_path('../.assets/models/inswapper_128.onnx')
-			}
-		},
-		'type': 'inswapper',
-		'template': 'arcface_128_v2',
-		'size': (128, 128),
-		'mean': [ 0.0, 0.0, 0.0 ],
-		'standard_deviation': [ 1.0, 1.0, 1.0 ]
-	},
-	'inswapper_128_fp16':
-	{
-		'hashes':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/inswapper_128_fp16.hash',
-				'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.hash')
-			}
-		},
-		'sources':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/inswapper_128_fp16.onnx',
-				'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx')
-			}
-		},
-		'type': 'inswapper',
-		'template': 'arcface_128_v2',
-		'size': (128, 128),
-		'mean': [ 0.0, 0.0, 0.0 ],
-		'standard_deviation': [ 1.0, 1.0, 1.0 ]
-	},
-	'simswap_256':
-	{
-		'hashes':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/simswap_256.hash',
-				'path': resolve_relative_path('../.assets/models/simswap_256.hash')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'hififace_unofficial_256.hash'),
+					'path': resolve_relative_path('../.assets/models/hififace_unofficial_256.hash')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_hififace.hash'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_hififace.hash')
+				}
 			},
-			'embedding_converter':
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_simswap.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.hash')
-			}
-		},
-		'sources':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/simswap_256.onnx',
-				'path': resolve_relative_path('../.assets/models/simswap_256.onnx')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'hififace_unofficial_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/hififace_unofficial_256.onnx')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_hififace.onnx'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_hififace.onnx')
+				}
 			},
-			'embedding_converter':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_simswap.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.onnx')
-			}
+			'type': 'hififace',
+			'template': 'mtcnn_512',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
 		},
-		'type': 'simswap',
-		'template': 'arcface_112_v1',
-		'size': (256, 256),
-		'mean': [ 0.485, 0.456, 0.406 ],
-		'standard_deviation': [ 0.229, 0.224, 0.225 ]
-	},
-	'simswap_unofficial_512':
-	{
-		'hashes':
+		'inswapper_128':
 		{
-			'face_swapper':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/simswap_unofficial_512.hash',
-				'path': resolve_relative_path('../.assets/models/simswap_unofficial_512.hash')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'inswapper_128.hash'),
+					'path': resolve_relative_path('../.assets/models/inswapper_128.hash')
+				}
 			},
-			'embedding_converter':
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_simswap.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.hash')
-			}
-		},
-		'sources':
-		{
-			'face_swapper':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/simswap_unofficial_512.onnx',
-				'path': resolve_relative_path('../.assets/models/simswap_unofficial_512.onnx')
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'inswapper_128.onnx'),
+					'path': resolve_relative_path('../.assets/models/inswapper_128.onnx')
+				}
 			},
-			'embedding_converter':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_converter_simswap.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.onnx')
-			}
+			'type': 'inswapper',
+			'template': 'arcface_128_v2',
+			'size': (128, 128),
+			'mean': [ 0.0, 0.0, 0.0 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
 		},
-		'type': 'simswap',
-		'template': 'arcface_112_v1',
-		'size': (512, 512),
-		'mean': [ 0.0, 0.0, 0.0 ],
-		'standard_deviation': [ 1.0, 1.0, 1.0 ]
-	},
-	'uniface_256':
-	{
-		'hashes':
+		'inswapper_128_fp16':
 		{
-			'face_swapper':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/uniface_256.hash',
-				'path': resolve_relative_path('../.assets/models/uniface_256.hash')
-			}
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'inswapper_128_fp16.hash'),
+					'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.hash')
+				}
+			},
+			'sources':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'inswapper_128_fp16.onnx'),
+					'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx')
+				}
+			},
+			'type': 'inswapper',
+			'template': 'arcface_128_v2',
+			'size': (128, 128),
+			'mean': [ 0.0, 0.0, 0.0 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
 		},
-		'sources':
+		'simswap_256':
 		{
-			'face_swapper':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/uniface_256.onnx',
-				'path': resolve_relative_path('../.assets/models/uniface_256.onnx')
-			}
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'simswap_256.hash'),
+					'path': resolve_relative_path('../.assets/models/simswap_256.hash')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_simswap.hash'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.hash')
+				}
+			},
+			'sources':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'simswap_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/simswap_256.onnx')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_simswap.onnx'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.onnx')
+				}
+			},
+			'type': 'simswap',
+			'template': 'arcface_112_v1',
+			'size': (256, 256),
+			'mean': [ 0.485, 0.456, 0.406 ],
+			'standard_deviation': [ 0.229, 0.224, 0.225 ]
 		},
-		'type': 'uniface',
-		'template': 'ffhq_512',
-		'size': (256, 256),
-		'mean': [ 0.5, 0.5, 0.5 ],
-		'standard_deviation': [ 0.5, 0.5, 0.5 ]
+		'simswap_unofficial_512':
+		{
+			'hashes':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'simswap_unofficial_512.hash'),
+					'path': resolve_relative_path('../.assets/models/simswap_unofficial_512.hash')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_simswap.hash'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.hash')
+				}
+			},
+			'sources':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'simswap_unofficial_512.onnx'),
+					'path': resolve_relative_path('../.assets/models/simswap_unofficial_512.onnx')
+				},
+				'embedding_converter':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_converter_simswap.onnx'),
+					'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.onnx')
+				}
+			},
+			'type': 'simswap',
+			'template': 'arcface_112_v1',
+			'size': (512, 512),
+			'mean': [ 0.0, 0.0, 0.0 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		},
+		'uniface_256':
+		{
+			'hashes':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'uniface_256.hash'),
+					'path': resolve_relative_path('../.assets/models/uniface_256.hash')
+				}
+			},
+			'sources':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.0.0', 'uniface_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/uniface_256.onnx')
+				}
+			},
+			'type': 'uniface',
+			'template': 'ffhq_512',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
+		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -344,7 +345,7 @@ def clear_inference_pool() -> None:
 def get_model_options() -> ModelOptions:
 	face_swapper_model = state_manager.get_item('face_swapper_model')
 	face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') and face_swapper_model == 'inswapper_128_fp16' else face_swapper_model
-	return MODEL_SET.get(face_swapper_model)
+	return create_model_set().get(face_swapper_model)
 
 
 def register_args(program : ArgumentParser) -> None:

@@ -10,7 +10,7 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_int_metavar
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
@@ -24,39 +24,40 @@ from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import match_frame_color, read_image, read_static_image, write_image
 
-MODEL_SET : ModelSet =\
-{
-	'styleganex_age':
+def create_model_set() -> ModelSet:
+	return\
 	{
-		'hashes':
+		'styleganex_age':
 		{
-			'age_modifier':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/styleganex_age.hash',
-				'path': resolve_relative_path('../.assets/models/styleganex_age.hash')
-			}
-		},
-		'sources':
-		{
-			'age_modifier':
+				'age_modifier':
+				{
+					'url': resolve_download_url('models-3.0.0', 'styleganex_age.hash'),
+					'path': resolve_relative_path('../.assets/models/styleganex_age.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/styleganex_age.onnx',
-				'path': resolve_relative_path('../.assets/models/styleganex_age.onnx')
+				'age_modifier':
+				{
+					'url': resolve_download_url('models-3.0.0', 'styleganex_age.onnx'),
+					'path': resolve_relative_path('../.assets/models/styleganex_age.onnx')
 
+				}
+			},
+			'templates':
+			{
+				'target': 'ffhq_512',
+				'target_with_background': 'styleganex_384'
+			},
+			'sizes':
+			{
+				'target': (256, 256),
+				'target_with_background': (384, 384)
 			}
-		},
-		'templates':
-		{
-			'target': 'ffhq_512',
-			'target_with_background': 'styleganex_384'
-		},
-		'sizes':
-		{
-			'target': (256, 256),
-			'target_with_background': (384, 384)
 		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -72,7 +73,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	age_modifier_model = state_manager.get_item('age_modifier_model')
-	return MODEL_SET.get(age_modifier_model)
+	return create_model_set().get(age_modifier_model)
 
 
 def register_args(program : ArgumentParser) -> None:
