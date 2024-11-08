@@ -18,6 +18,7 @@ from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import create_tile_frames, merge_tile_frames, read_image, read_static_image, write_image
 
+
 def create_model_set() -> ModelSet:
 	return\
 	{

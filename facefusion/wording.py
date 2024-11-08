@@ -229,6 +229,7 @@ WORDING : Dict[str, Any] =\
 		'benchmark_runs_checkbox_group': 'BENCHMARK RUNS',
 		'clear_button': 'CLEAR',
 		'common_options_checkbox_group': 'OPTIONS',
+		'download_providers_checkbox_group': 'DOWNLOAD PROVIDERS',
 		'deep_swapper_model_dropdown': 'DEEP SWAPPER MODEL',
 		'execution_providers_checkbox_group': 'EXECUTION PROVIDERS',
 		'execution_queue_count_slider': 'EXECUTION QUEUE COUNT',

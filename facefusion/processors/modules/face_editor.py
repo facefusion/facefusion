@@ -24,6 +24,7 @@ from facefusion.thread_helper import conditional_thread_semaphore, thread_semaph
 from facefusion.typing import ApplyStateItem, Args, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
+
 def create_model_set() -> ModelSet:
 	return\
 	{
