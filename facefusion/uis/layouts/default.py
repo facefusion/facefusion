@@ -41,6 +41,8 @@ def render() -> gradio.Blocks:
 					execution_thread_count.render()
 					execution_queue_count.render()
 				with gradio.Blocks():
+					download.render()
+				with gradio.Blocks():
 					memory.render()
 				with gradio.Blocks():
 					temp_frame.render()
@@ -74,8 +76,6 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					face_landmarker.render()
 				with gradio.Blocks():
-					download.render()
-				with gradio.Blocks():
 					common_options.render()
 	return layout
 
@@ -95,6 +95,7 @@ def listen() -> None:
 	execution.listen()
 	execution_thread_count.listen()
 	execution_queue_count.listen()
+	download.listen()
 	memory.listen()
 	temp_frame.listen()
 	output_options.listen()
@@ -111,7 +112,6 @@ def listen() -> None:
 	face_masker.listen()
 	face_detector.listen()
 	face_landmarker.listen()
-	download.listen()
 	common_options.listen()
 
 

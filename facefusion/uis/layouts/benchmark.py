@@ -1,23 +1,23 @@
 import gradio
 
 from facefusion import state_manager
-from facefusion.download import conditional_download
-from facefusion.uis.components import about, age_modifier_options, benchmark, benchmark_options, deep_swapper_options, execution, execution_queue_count, execution_thread_count, expression_restorer_options, face_debugger_options, face_editor_options, face_enhancer_options, face_swapper_options, frame_colorizer_options, frame_enhancer_options, lip_syncer_options, memory, processors
+from facefusion.download import conditional_download, resolve_download_url
+from facefusion.uis.components import about, age_modifier_options, benchmark, benchmark_options, deep_swapper_options, download, execution, execution_queue_count, execution_thread_count, expression_restorer_options, face_debugger_options, face_editor_options, face_enhancer_options, face_swapper_options, frame_colorizer_options, frame_enhancer_options, lip_syncer_options, memory, processors
 
 
 def pre_check() -> bool:
 	if not state_manager.get_item('skip_download'):
 		conditional_download('.assets/examples',
 		[
-			'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
-			'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
-			'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4',
-			'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-360p.mp4',
-			'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-540p.mp4',
-			'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-720p.mp4',
-			'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-1080p.mp4',
-			'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-1440p.mp4',
-			'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-2160p.mp4'
+			resolve_download_url('examples-3.0.0', 'source.jpg'),
+			resolve_download_url('examples-3.0.0', 'source.mp3'),
+			resolve_download_url('examples-3.0.0', 'target-240p.mp4'),
+			resolve_download_url('examples-3.0.0', 'target-360p.mp4'),
+			resolve_download_url('examples-3.0.0', 'target-540p.mp4'),
+			resolve_download_url('examples-3.0.0', 'target-720p.mp4'),
+			resolve_download_url('examples-3.0.0', 'target-1080p.mp4'),
+			resolve_download_url('examples-3.0.0', 'target-1440p.mp4'),
+			resolve_download_url('examples-3.0.0', 'target-2160p.mp4')
 		])
 		return True
 	return False
@@ -56,6 +56,8 @@ def render() -> gradio.Blocks:
 					execution_thread_count.render()
 					execution_queue_count.render()
 				with gradio.Blocks():
+					download.render()
+				with gradio.Blocks():
 					memory.render()
 				with gradio.Blocks():
 					benchmark_options.render()
@@ -70,6 +72,7 @@ def listen() -> None:
 	age_modifier_options.listen()
 	deep_swapper_options.listen()
 	expression_restorer_options.listen()
+	download.listen()
 	face_debugger_options.listen()
 	face_editor_options.listen()
 	face_enhancer_options.listen()
