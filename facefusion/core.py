@@ -1,3 +1,5 @@
+import glob
+import itertools
 import shutil
 import signal
 import sys
@@ -6,7 +8,7 @@ from time import time
 import numpy
 
 from facefusion import content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, voice_extractor, wording
-from facefusion.args import apply_args, collect_job_args, reduce_step_args
+from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.download import conditional_download_hashes, conditional_download_sources
@@ -73,6 +75,11 @@ def route(args : Args) -> None:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_core = process_headless(args)
+		hard_exit(error_core)
+	if state_manager.get_item('command') == 'bulk-run':
+		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
+			hard_exit(1)
+		error_core = process_bulk(args)
 		hard_exit(error_core)
 	if state_manager.get_item('command') in [ 'job-run', 'job-run-all', 'job-retry', 'job-retry-all' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
@@ -301,6 +308,26 @@ def process_headless(args : Args) -> ErrorCode:
 
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0
+	return 1
+
+
+def process_bulk(args : Args) -> ErrorCode:
+	job_id = job_helper.suggest_job_id('bulk')
+	step_args = reduce_step_args(args)
+	job_args = reduce_job_args(args)
+	source_paths = sorted(glob.glob(job_args.get('source_pattern')))
+	target_paths = sorted(glob.glob(job_args.get('target_pattern')))
+
+	if job_manager.create_job(job_id):
+
+		for index, (source_path, target_path) in enumerate(itertools.product(source_paths, target_paths)):
+			step_args['source_paths'] = [ source_path ]
+			step_args['target_path'] = target_path
+			step_args['output_path'] = job_args.get('output_pattern').format(index = index)
+			job_manager.add_step(job_id, step_args)
+
+		if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
+			return 0
 	return 1
 
 

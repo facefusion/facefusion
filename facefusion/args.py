@@ -15,6 +15,14 @@ def reduce_step_args(args : Args) -> Args:
 	return step_args
 
 
+def reduce_job_args(args : Args) -> Args:
+	job_args =\
+	{
+		key: args[key] for key in args if key in job_store.get_job_keys()
+	}
+	return job_args
+
+
 def collect_step_args() -> Args:
 	step_args =\
 	{
@@ -40,6 +48,10 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('source_paths', args.get('source_paths'))
 	apply_state_item('target_path', args.get('target_path'))
 	apply_state_item('output_path', args.get('output_path'))
+	# patterns
+	apply_state_item('source_pattern', args.get('source_pattern'))
+	apply_state_item('target_pattern', args.get('target_pattern'))
+	apply_state_item('output_pattern', args.get('output_pattern'))
 	# face detector
 	apply_state_item('face_detector_model', args.get('face_detector_model'))
 	apply_state_item('face_detector_size', args.get('face_detector_size'))
