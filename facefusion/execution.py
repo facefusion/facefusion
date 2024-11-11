@@ -11,15 +11,11 @@ from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionPr
 set_default_logger_severity(3)
 
 
-def get_execution_provider_choices() -> List[ExecutionProviderKey]:
-	return list(get_available_execution_provider_set().keys())
-
-
 def has_execution_provider(execution_provider_key : ExecutionProviderKey) -> bool:
-	return execution_provider_key in get_execution_provider_choices()
+	return execution_provider_key in get_execution_provider_set().keys()
 
 
-def get_available_execution_provider_set() -> ExecutionProviderSet:
+def get_execution_provider_set() -> ExecutionProviderSet:
 	available_execution_providers = get_available_providers()
 	available_execution_provider_set : ExecutionProviderSet = {}
 

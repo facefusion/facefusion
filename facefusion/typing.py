@@ -117,13 +117,14 @@ ExecutionProviderKey = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 
 ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
 ExecutionProviderSet = Dict[ExecutionProviderKey, ExecutionProviderValue]
 
+DownloadProviderKey = Literal['github', 'huggingface']
+DownloadProviderSet = Dict[DownloadProviderKey, str]
 Download = TypedDict('Download',
 {
 	'url' : str,
 	'path' : str
 })
 DownloadSet = Dict[str, Download]
-DownloadProvider = Literal['github', 'huggingface']
 
 ValueAndUnit = TypedDict('ValueAndUnit',
 {
@@ -296,7 +297,7 @@ State = TypedDict('State',
 	'execution_providers' : List[ExecutionProviderKey],
 	'execution_thread_count' : int,
 	'execution_queue_count' : int,
-	'download_providers' : List[DownloadProvider],
+	'download_providers' : List[DownloadProviderKey],
 	'skip_download': bool,
 	'video_memory_strategy' : VideoMemoryStrategy,
 	'system_memory_limit' : int,

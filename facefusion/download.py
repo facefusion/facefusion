@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 from tqdm import tqdm
 
 from facefusion import logger, process_manager, state_manager, wording
+from facefusion.choices import download_provider_set
 from facefusion.common_helper import is_macos
 from facefusion.filesystem import get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
@@ -127,9 +128,7 @@ def validate_source_paths(source_paths : List[str]) -> Tuple[List[str], List[str
 def resolve_download_url(base_name : str, file_name : str) -> Optional[str]:
 	download_providers = state_manager.get_item('download_providers')
 
-	for download_provider in download_providers:
-		if download_provider == 'github':
-			return 'https://github.com/facefusion/facefusion-assets/releases/download/' + base_name + '/' + file_name
-		if download_provider == 'huggingface':
-			return 'https://huggingface.co/facefusion/' + base_name + '/resolve/main/' + file_name
+	for download_provider in download_provider_set:
+		if download_provider in download_providers:
+			return download_provider_set[download_provider].format(base_name = base_name, file_name = file_name)
 	return None
