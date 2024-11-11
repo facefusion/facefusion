@@ -47,12 +47,6 @@ def get_download_size(url : str) -> int:
 		return 0
 
 
-def is_download_done(url : str, file_path : str) -> bool:
-	if is_file(file_path):
-		return get_download_size(url) == get_file_size(file_path)
-	return False
-
-
 def conditional_download_hashes(download_directory_path : str, hashes : DownloadSet) -> bool:
 	hash_paths = [ hashes.get(hash_key).get('path') for hash_key in hashes.keys() ]
 
