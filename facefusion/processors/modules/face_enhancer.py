@@ -9,7 +9,7 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_int_metavar
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
@@ -23,198 +23,200 @@ from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
-MODEL_SET : ModelSet =\
-{
-	'codeformer':
+
+def create_model_set() -> ModelSet:
+	return\
 	{
-		'hashes':
+		'codeformer':
 		{
-			'face_enhancer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/codeformer.hash',
-				'path': resolve_relative_path('../.assets/models/codeformer.hash')
-			}
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'codeformer.hash'),
+					'path': resolve_relative_path('../.assets/models/codeformer.hash')
+				}
+			},
+			'sources':
+			{
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'codeformer.onnx'),
+					'path': resolve_relative_path('../.assets/models/codeformer.onnx')
+				}
+			},
+			'template': 'ffhq_512',
+			'size': (512, 512)
 		},
-		'sources':
+		'gfpgan_1.2':
 		{
-			'face_enhancer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/codeformer.onnx',
-				'path': resolve_relative_path('../.assets/models/codeformer.onnx')
-			}
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gfpgan_1.2.hash'),
+					'path': resolve_relative_path('../.assets/models/gfpgan_1.2.hash')
+				}
+			},
+			'sources':
+			{
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gfpgan_1.2.onnx'),
+					'path': resolve_relative_path('../.assets/models/gfpgan_1.2.onnx')
+				}
+			},
+			'template': 'ffhq_512',
+			'size': (512, 512)
 		},
-		'template': 'ffhq_512',
-		'size': (512, 512)
-	},
-	'gfpgan_1.2':
-	{
-		'hashes':
+		'gfpgan_1.3':
 		{
-			'face_enhancer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.2.hash',
-				'path': resolve_relative_path('../.assets/models/gfpgan_1.2.hash')
-			}
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gfpgan_1.3.hash'),
+					'path': resolve_relative_path('../.assets/models/gfpgan_1.3.hash')
+				}
+			},
+			'sources':
+			{
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gfpgan_1.3.onnx'),
+					'path': resolve_relative_path('../.assets/models/gfpgan_1.3.onnx')
+				}
+			},
+			'template': 'ffhq_512',
+			'size': (512, 512)
 		},
-		'sources':
+		'gfpgan_1.4':
 		{
-			'face_enhancer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.2.onnx',
-				'path': resolve_relative_path('../.assets/models/gfpgan_1.2.onnx')
-			}
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gfpgan_1.4.hash'),
+					'path': resolve_relative_path('../.assets/models/gfpgan_1.4.hash')
+				}
+			},
+			'sources':
+			{
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gfpgan_1.4.onnx'),
+					'path': resolve_relative_path('../.assets/models/gfpgan_1.4.onnx')
+				}
+			},
+			'template': 'ffhq_512',
+			'size': (512, 512)
 		},
-		'template': 'ffhq_512',
-		'size': (512, 512)
-	},
-	'gfpgan_1.3':
-	{
-		'hashes':
+		'gpen_bfr_256':
 		{
-			'face_enhancer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.3.hash',
-				'path': resolve_relative_path('../.assets/models/gfpgan_1.3.hash')
-			}
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gpen_bfr_256.hash'),
+					'path': resolve_relative_path('../.assets/models/gpen_bfr_256.hash')
+				}
+			},
+			'sources':
+			{
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gpen_bfr_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/gpen_bfr_256.onnx')
+				}
+			},
+			'template': 'arcface_128_v2',
+			'size': (256, 256)
 		},
-		'sources':
+		'gpen_bfr_512':
 		{
-			'face_enhancer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.3.onnx',
-				'path': resolve_relative_path('../.assets/models/gfpgan_1.3.onnx')
-			}
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gpen_bfr_512.hash'),
+					'path': resolve_relative_path('../.assets/models/gpen_bfr_512.hash')
+				}
+			},
+			'sources':
+			{
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gpen_bfr_512.onnx'),
+					'path': resolve_relative_path('../.assets/models/gpen_bfr_512.onnx')
+				}
+			},
+			'template': 'ffhq_512',
+			'size': (512, 512)
 		},
-		'template': 'ffhq_512',
-		'size': (512, 512)
-	},
-	'gfpgan_1.4':
-	{
-		'hashes':
+		'gpen_bfr_1024':
 		{
-			'face_enhancer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.4.hash',
-				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.hash')
-			}
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gpen_bfr_1024.hash'),
+					'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.hash')
+				}
+			},
+			'sources':
+			{
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gpen_bfr_1024.onnx'),
+					'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.onnx')
+				}
+			},
+			'template': 'ffhq_512',
+			'size': (1024, 1024)
 		},
-		'sources':
+		'gpen_bfr_2048':
 		{
-			'face_enhancer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gfpgan_1.4.onnx',
-				'path': resolve_relative_path('../.assets/models/gfpgan_1.4.onnx')
-			}
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gpen_bfr_2048.hash'),
+					'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.hash')
+				}
+			},
+			'sources':
+			{
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'gpen_bfr_2048.onnx'),
+					'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.onnx')
+				}
+			},
+			'template': 'ffhq_512',
+			'size': (2048, 2048)
 		},
-		'template': 'ffhq_512',
-		'size': (512, 512)
-	},
-	'gpen_bfr_256':
-	{
-		'hashes':
+		'restoreformer_plus_plus':
 		{
-			'face_enhancer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_256.hash',
-				'path': resolve_relative_path('../.assets/models/gpen_bfr_256.hash')
-			}
-		},
-		'sources':
-		{
-			'face_enhancer':
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'restoreformer_plus_plus.hash'),
+					'path': resolve_relative_path('../.assets/models/restoreformer_plus_plus.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_256.onnx',
-				'path': resolve_relative_path('../.assets/models/gpen_bfr_256.onnx')
-			}
-		},
-		'template': 'arcface_128_v2',
-		'size': (256, 256)
-	},
-	'gpen_bfr_512':
-	{
-		'hashes':
-		{
-			'face_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_512.hash',
-				'path': resolve_relative_path('../.assets/models/gpen_bfr_512.hash')
-			}
-		},
-		'sources':
-		{
-			'face_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_512.onnx',
-				'path': resolve_relative_path('../.assets/models/gpen_bfr_512.onnx')
-			}
-		},
-		'template': 'ffhq_512',
-		'size': (512, 512)
-	},
-	'gpen_bfr_1024':
-	{
-		'hashes':
-		{
-			'face_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_1024.hash',
-				'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.hash')
-			}
-		},
-		'sources':
-		{
-			'face_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_1024.onnx',
-				'path': resolve_relative_path('../.assets/models/gpen_bfr_1024.onnx')
-			}
-		},
-		'template': 'ffhq_512',
-		'size': (1024, 1024)
-	},
-	'gpen_bfr_2048':
-	{
-		'hashes':
-		{
-			'face_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_2048.hash',
-				'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.hash')
-			}
-		},
-		'sources':
-		{
-			'face_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/gpen_bfr_2048.onnx',
-				'path': resolve_relative_path('../.assets/models/gpen_bfr_2048.onnx')
-			}
-		},
-		'template': 'ffhq_512',
-		'size': (2048, 2048)
-	},
-	'restoreformer_plus_plus':
-	{
-		'hashes':
-		{
-			'face_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/restoreformer_plus_plus.hash',
-				'path': resolve_relative_path('../.assets/models/restoreformer_plus_plus.hash')
-			}
-		},
-		'sources':
-		{
-			'face_enhancer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/restoreformer_plus_plus.onnx',
-				'path': resolve_relative_path('../.assets/models/restoreformer_plus_plus.onnx')
-			}
-		},
-		'template': 'ffhq_512',
-		'size': (512, 512)
+				'face_enhancer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'restoreformer_plus_plus.onnx'),
+					'path': resolve_relative_path('../.assets/models/restoreformer_plus_plus.onnx')
+				}
+			},
+			'template': 'ffhq_512',
+			'size': (512, 512)
+		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -230,7 +232,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	face_enhancer_model = state_manager.get_item('face_enhancer_model')
-	return MODEL_SET.get(face_enhancer_model)
+	return create_model_set().get(face_enhancer_model)
 
 
 def register_args(program : ArgumentParser) -> None:

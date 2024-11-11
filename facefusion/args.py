@@ -106,11 +106,13 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('execution_providers', args.get('execution_providers'))
 	apply_state_item('execution_thread_count', args.get('execution_thread_count'))
 	apply_state_item('execution_queue_count', args.get('execution_queue_count'))
+	# download
+	apply_state_item('download_providers', args.get('download_providers'))
+	apply_state_item('skip_download', args.get('skip_download'))
 	# memory
 	apply_state_item('video_memory_strategy', args.get('video_memory_strategy'))
 	apply_state_item('system_memory_limit', args.get('system_memory_limit'))
 	# misc
-	apply_state_item('skip_download', args.get('skip_download'))
 	apply_state_item('log_level', args.get('log_level'))
 	# jobs
 	apply_state_item('job_id', args.get('job_id'))

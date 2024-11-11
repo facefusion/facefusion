@@ -109,13 +109,6 @@ OutputAudioEncoder = Literal['aac', 'libmp3lame', 'libopus', 'libvorbis']
 OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf','h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox']
 OutputVideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
-Download = TypedDict('Download',
-{
-	'url' : str,
-	'path' : str
-})
-DownloadSet = Dict[str, Download]
-
 ModelOptions = Dict[str, Any]
 ModelSet = Dict[str, ModelOptions]
 ModelInitializer = NDArray[Any]
@@ -123,6 +116,15 @@ ModelInitializer = NDArray[Any]
 ExecutionProviderKey = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 'rocm', 'tensorrt']
 ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
 ExecutionProviderSet = Dict[ExecutionProviderKey, ExecutionProviderValue]
+
+DownloadProviderKey = Literal['github', 'huggingface']
+DownloadProviderSet = Dict[DownloadProviderKey, str]
+Download = TypedDict('Download',
+{
+	'url' : str,
+	'path' : str
+})
+DownloadSet = Dict[str, Download]
 
 ValueAndUnit = TypedDict('ValueAndUnit',
 {
@@ -237,9 +239,10 @@ StateKey = Literal\
 	'execution_providers',
 	'execution_thread_count',
 	'execution_queue_count',
+	'download_providers',
+	'skip_download',
 	'video_memory_strategy',
 	'system_memory_limit',
-	'skip_download',
 	'log_level',
 	'job_id',
 	'job_status',
@@ -249,7 +252,7 @@ State = TypedDict('State',
 {
 	'command' : str,
 	'config_path' : str,
-	'temp_path': str,
+	'temp_path' : str,
 	'jobs_path' : str,
 	'source_paths' : List[str],
 	'target_path' : str,
@@ -294,9 +297,10 @@ State = TypedDict('State',
 	'execution_providers' : List[ExecutionProviderKey],
 	'execution_thread_count' : int,
 	'execution_queue_count' : int,
+	'download_providers' : List[DownloadProviderKey],
+	'skip_download' : bool,
 	'video_memory_strategy' : VideoMemoryStrategy,
 	'system_memory_limit' : int,
-	'skip_download' : bool,
 	'log_level' : LogLevel,
 	'job_id' : str,
 	'job_status' : JobStatus,
