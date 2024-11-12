@@ -1,9 +1,8 @@
-import glob
 import os
 from typing import List
 
 from facefusion import state_manager
-from facefusion.filesystem import create_directory, move_file, remove_directory
+from facefusion.filesystem import create_directory, move_file, remove_directory, resolve_file_pattern
 
 
 def get_temp_file_path(file_path : str) -> str:
@@ -36,7 +35,7 @@ def clear_temp_directory(file_path : str) -> bool:
 
 def get_temp_frame_paths(target_path : str) -> List[str]:
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '*')
-	return sorted(glob.glob(temp_frames_pattern))
+	return resolve_file_pattern(temp_frames_pattern)
 
 
 def get_temp_frames_pattern(target_path : str, temp_frame_prefix : str) -> str:
