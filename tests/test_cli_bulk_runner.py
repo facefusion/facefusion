@@ -14,8 +14,8 @@ def before_all() -> None:
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p-a.jpg') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '2', get_test_example_file('target-240p-b.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p-bulk-1.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '2', get_test_example_file('target-240p-bulk-2.jpg') ])
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -25,19 +25,21 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-def test_bulk_run_image_to_image() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'bulk-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-s', get_test_example_file('target-240p-*.jpg'), '-t', get_test_example_file('target-240p-*.jpg'), '-o', get_test_output_file('test-bulk-run-image-to-image-{index}.jpg') ]
+def test_bulk_run_targets() -> None:
+	commands = [ sys.executable, 'facefusion.py', 'bulk-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p-bulk-*.jpg'), '-o', get_test_output_file('test-bulk-run-targets-{index}.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
-	assert is_test_output_file('test-bulk-run-image-to-image-0.jpg') is True
-	assert is_test_output_file('test-bulk-run-image-to-image-1.jpg') is True
-	assert is_test_output_file('test-bulk-run-image-to-image-2.jpg') is True
-	assert is_test_output_file('test-bulk-run-image-to-image-3.jpg') is True
+	assert is_test_output_file('test-bulk-run-targets-0.jpg') is True
+	assert is_test_output_file('test-bulk-run-targets-1.jpg') is True
+	assert is_test_output_file('test-bulk-run-targets-2.jpg') is False
 
 
-def test_bulk_run_image_to_video() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'bulk-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-s', get_test_example_file('target-240p-*.jpg'), '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_file('test-bulk-run-image-to-video-{index}.mp4') ]
+def test_bulk_run_sources_to_targets() -> None:
+	commands = [ sys.executable, 'facefusion.py', 'bulk-run', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('target-240p-bulk-*.jpg'), '-t', get_test_example_file('target-240p-bulk-*.jpg'), '-o', get_test_output_file('test-bulk-run-sources-to-targets-{index}.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
-	assert is_test_output_file('test-bulk-run-image-to-video-0.mp4') is True
-	assert is_test_output_file('test-bulk-run-image-to-video-1.mp4') is True
+	assert is_test_output_file('test-bulk-run-sources-to-targets-0.jpg') is True
+	assert is_test_output_file('test-bulk-run-sources-to-targets-1.jpg') is True
+	assert is_test_output_file('test-bulk-run-sources-to-targets-2.jpg') is True
+	assert is_test_output_file('test-bulk-run-sources-to-targets-3.jpg') is True
+	assert is_test_output_file('test-bulk-run-sources-to-targets-4.jpg') is False

@@ -318,16 +318,24 @@ def process_bulk(args : Args) -> ErrorCode:
 	target_paths = resolve_file_pattern(job_args.get('target_pattern'))
 
 	if job_manager.create_job(job_id):
+		if source_paths and target_paths:
+			for index, (source_path, target_path) in enumerate(itertools.product(source_paths, target_paths)):
+				step_args['source_paths'] = [ source_path ]
+				step_args['target_path'] = target_path
+				step_args['output_path'] = job_args.get('output_pattern').format(index = index)
+				if not job_manager.add_step(job_id, step_args):
+					return 1
+			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
+				return 0
 
-		for index, (source_path, target_path) in enumerate(itertools.product(source_paths, target_paths)):
-			step_args['source_paths'] = [ source_path ]
-			step_args['target_path'] = target_path
-			step_args['output_path'] = job_args.get('output_pattern').format(index = index)
-			if not job_manager.add_step(job_id, step_args):
-				return 1
-
-		if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
-			return 0
+		if not source_paths and target_paths:
+			for index, target_path in enumerate(target_paths):
+				step_args['target_path'] = target_path
+				step_args['output_path'] = job_args.get('output_pattern').format(index = index)
+				if not job_manager.add_step(job_id, step_args):
+					return 1
+			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
+				return 0
 	return 1
 
 

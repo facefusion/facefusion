@@ -1,6 +1,5 @@
 import subprocess
 
-import cv2
 import pytest
 
 from facefusion.download import conditional_download
@@ -18,6 +17,7 @@ def before_all() -> None:
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vframes', '1', get_test_example_file('target-1080p.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', '-vf', 'hue=s=0', get_test_example_file('target-240p-0sat.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', '-vf', 'transpose=0', get_test_example_file('target-240p-90deg.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vframes', '1', '-vf', 'transpose=0', get_test_example_file('target-1080p-90deg.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
@@ -118,16 +118,16 @@ def test_unpack_resolution() -> None:
 
 
 def test_calc_histogram_difference() -> None:
-	source_vision_frame = read_image(get_test_example_file('target-1080p.jpg'))
-	target_vision_frame = cv2.cvtColor(cv2.cvtColor(source_vision_frame, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR)
+	source_vision_frame = read_image(get_test_example_file('target-240p.jpg'))
+	target_vision_frame = read_image(get_test_example_file('target-240p-0sat.jpg'))
 
 	assert calc_histogram_difference(source_vision_frame, source_vision_frame) == 1.0
 	assert calc_histogram_difference(source_vision_frame, target_vision_frame) < 0.5
 
 
 def test_match_frame_color() -> None:
-	source_vision_frame = read_image(get_test_example_file('target-1080p.jpg'))
-	target_vision_frame = cv2.cvtColor(cv2.cvtColor(source_vision_frame, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR)
+	source_vision_frame = read_image(get_test_example_file('target-240p.jpg'))
+	target_vision_frame = read_image(get_test_example_file('target-240p-0sat.jpg'))
 	output_vision_frame = match_frame_color(source_vision_frame, target_vision_frame)
 
 	assert calc_histogram_difference(source_vision_frame, output_vision_frame) > 0.5
