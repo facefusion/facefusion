@@ -1,4 +1,3 @@
-import glob
 import itertools
 import shutil
 import signal
@@ -17,7 +16,7 @@ from facefusion.face_analyser import get_average_face, get_many_faces, get_one_f
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
-from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_relative_path
+from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_file_pattern, resolve_relative_path
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
@@ -315,8 +314,8 @@ def process_bulk(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('bulk')
 	step_args = reduce_step_args(args)
 	job_args = reduce_job_args(args)
-	source_paths = sorted(glob.glob(job_args.get('source_pattern')))
-	target_paths = sorted(glob.glob(job_args.get('target_pattern')))
+	source_paths = resolve_file_pattern(job_args.get('source_pattern'))
+	target_paths = resolve_file_pattern(job_args.get('target_pattern'))
 
 	if job_manager.create_job(job_id):
 
