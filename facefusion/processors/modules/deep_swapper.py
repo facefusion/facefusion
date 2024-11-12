@@ -10,7 +10,7 @@ import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.face_analyser import get_many_faces, get_one_face
-from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
+from facefusion.face_helper import paste_back, warp_face_for_deepfacelive
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
@@ -42,7 +42,9 @@ MODEL_SET : ModelSet =\
 				'path': resolve_relative_path('../.assets/models/Jackie_Chan.dfm')
 			}
 		},
-		'template': 'arcface_128_v2',
+		'x_shift': 0.0,
+		'y_shift': 0.0,
+		'coverage': 2.2,
 		'size': (224, 224)
 	}
 }
@@ -110,9 +112,11 @@ def post_process() -> None:
 
 
 def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
-	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
+	model_coverage = get_model_options().get('coverage')
+	model_x_shift = get_model_options().get('x_shift')
+	model_y_shift = get_model_options().get('y_shift')
+	crop_vision_frame, affine_matrix = warp_face_for_deepfacelive(temp_vision_frame, target_face.landmark_set.get('5/68'), model_size, model_coverage, model_x_shift, model_y_shift)
 	crop_vision_frame_raw = crop_vision_frame.copy()
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 	crop_masks =\
@@ -166,10 +170,10 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 def prepare_crop_mask(crop_source_mask : Mask, crop_target_mask : Mask) -> Mask:
 	model_size = get_model_options().get('size')
-	crop_mask = numpy.maximum.reduce([ crop_source_mask, crop_target_mask ])
+	crop_mask = numpy.minimum.reduce([ crop_source_mask, crop_target_mask ])
 	crop_mask = crop_mask.reshape(model_size).clip(0, 1)
-	crop_mask = cv2.erode(crop_mask, numpy.ones((5, 5), numpy.uint8), iterations = 1)
-	crop_mask = cv2.GaussianBlur(crop_mask, (9, 9), 0)
+	crop_mask = cv2.erode(crop_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)), iterations = 2)
+	crop_mask = cv2.GaussianBlur(crop_mask, (0, 0), 6.25)
 	return crop_mask
 
 

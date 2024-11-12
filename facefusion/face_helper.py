@@ -5,7 +5,7 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.typing import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
+from facefusion.typing import Anchors, Angle, BoundingBox, Direction, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -56,6 +56,14 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.50123859, 0.61331904 ],
 		[ 0.43364461, 0.68337652 ],
 		[ 0.57015325, 0.68306005 ]
+	]),
+	'deep_face_live': numpy.array(
+	[
+		[ 0.22549182, 0.21599032 ],
+		[ 0.75476142, 0.21599032 ],
+		[ 0.49012712, 0.51562511 ],
+		[ 0.25414925, 0.78023333 ],
+		[ 0.72610437, 0.78023333 ]
 	])
 }
 
@@ -70,6 +78,29 @@ def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_
 	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, warp_template, crop_size)
 	crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
 	return crop_vision_frame, affine_matrix
+
+
+def warp_face_for_deepfacelive(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5, crop_size : Size, coverage : float, x_shift : float, y_shift : float) -> Tuple[VisionFrame, Matrix]:
+	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'deep_face_live', (1, 1))
+	square_points = numpy.array([ (0, 0), (1, 0), (1, 1), (0, 1) ]).astype(numpy.float32)
+	square_points = transform_points(square_points, cv2.invertAffineTransform(affine_matrix))
+	center_point = square_points.mean(axis = 0)
+	center_point += x_shift * numpy.subtract(square_points[1], square_points[0])
+	center_point += y_shift * numpy.subtract(square_points[3], square_points[0])
+	scale = numpy.linalg.norm(center_point - square_points[0]) * coverage
+	top_bottom_direction = calc_points_direction(square_points[0], square_points[2]) * scale
+	bottom_top_direction = calc_points_direction(square_points[3], square_points[1]) * scale
+	source_points = numpy.array([ center_point - top_bottom_direction, center_point + bottom_top_direction, center_point + top_bottom_direction ]).astype(numpy.float32)
+	target_points = numpy.array([ (0, 0), (1, 0), (1, 1) ]).astype(numpy.float32) * crop_size[0]
+	affine_matrix = cv2.getAffineTransform(source_points, target_points)
+	crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size, flags = cv2.INTER_CUBIC)
+	return crop_vision_frame, affine_matrix
+
+
+def calc_points_direction(start_point : Points, end_point : Points) -> Direction:
+	direction = end_point - start_point
+	direction /= numpy.linalg.norm(direction)
+	return direction
 
 
 def warp_face_by_bounding_box(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
