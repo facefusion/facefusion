@@ -109,7 +109,7 @@ def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_
 
 
 def warp_face_for_deepfacelive(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5, crop_size : Size, shift : Tuple[float, float], coverage : float) -> Tuple[VisionFrame, Matrix]:
-	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'deep_face_live', (1, 1))
+	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'deepfacelive', (1, 1))
 	square_points = POINTS_TEMPLATES.get('square')
 	square_points = transform_points(square_points, cv2.invertAffineTransform(affine_matrix))
 	center_point = square_points.mean(axis = 0)
