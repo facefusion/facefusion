@@ -16,7 +16,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.50000000, 0.61154464 ],
 		[ 0.37913393, 0.77687500 ],
 		[ 0.62086607, 0.77687500 ]
-	]),
+	]).astype(numpy.float32),
 	'arcface_112_v2': numpy.array(
 	[
 		[ 0.34191607, 0.46157411 ],
@@ -24,7 +24,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.50022500, 0.64050536 ],
 		[ 0.37097589, 0.82469196 ],
 		[ 0.63151696, 0.82325089 ]
-	]),
+	]).astype(numpy.float32),
 	'arcface_128_v2': numpy.array(
 	[
 		[ 0.36167656, 0.40387734 ],
@@ -32,7 +32,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.50019687, 0.56044219 ],
 		[ 0.38710391, 0.72160547 ],
 		[ 0.61507734, 0.72034453 ]
-	]),
+	]).astype(numpy.float32),
 	'deep_face_live': numpy.array(
 	[
 		[ 0.22549182, 0.21599032 ],
@@ -40,7 +40,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.49012712, 0.51562511 ],
 		[ 0.25414925, 0.78023333 ],
 		[ 0.72610437, 0.78023333 ]
-	]),
+	]).astype(numpy.float32),
 	'ffhq_512': numpy.array(
 	[
 		[ 0.37691676, 0.46864664 ],
@@ -48,7 +48,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.50123859, 0.61331904 ],
 		[ 0.39308822, 0.72541100 ],
 		[ 0.61150205, 0.72490465 ]
-	]),
+	]).astype(numpy.float32),
 	'mtcnn_512': numpy.array(
 	[
 		[ 0.36562865, 0.46733799 ],
@@ -56,7 +56,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.50019127, 0.61942959 ],
 		[ 0.39032951, 0.77598822 ],
 		[ 0.61178945, 0.77476328 ]
-	]),
+	]).astype(numpy.float32),
 	'styleganex_384': numpy.array(
 	[
 		[ 0.42353745, 0.52289879 ],
@@ -64,7 +64,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.50123859, 0.61331904 ],
 		[ 0.43364461, 0.68337652 ],
 		[ 0.57015325, 0.68306005 ]
-	])
+	]).astype(numpy.float32)
 }
 POINTS_TEMPLATES : PointsTemplateSet =\
 {
