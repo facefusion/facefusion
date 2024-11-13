@@ -5,7 +5,7 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.typing import Anchors, Angle, BoundingBox, Direction, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
+from facefusion.typing import Anchors, Angle, BoundingBox, Direction, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, PolygonTemplate, PolygonTemplateSet, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
 WARP_TEMPLATES : WarpTemplateSet =\
 {
@@ -66,11 +66,39 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.72610437, 0.78023333 ]
 	])
 }
+POLYGON_TEMPLATES : PolygonTemplateSet =\
+{
+	'square': numpy.array(
+	[
+		[ 0, 0 ],
+		[ 1, 0 ],
+		[ 1, 1 ],
+		[ 0, 1 ]
+	]),
+	'triangle_orthogonal': numpy.array(
+	[
+		[ 0, 0 ],
+		[ 1, 0 ],
+		[ 0, 1 ]
+	]),
+	'triangle_skew': numpy.array(
+	[
+		[ 0, 0 ],
+		[ 1, 0 ],
+		[ 1, 1 ]
+	])
+}
 
 
 def estimate_matrix_by_face_landmark_5(face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Matrix:
 	normed_warp_template = WARP_TEMPLATES.get(warp_template) * crop_size
 	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
+	return affine_matrix
+
+
+def estimate_matrix_by_points(source_points : Points, polygon_template : PolygonTemplate, crop_size : Size) -> Matrix:
+	target_points = POLYGON_TEMPLATES.get(polygon_template) * crop_size
+	affine_matrix = cv2.getAffineTransform(source_points, target_points.astype(numpy.float32))
 	return affine_matrix
 
 
@@ -82,7 +110,7 @@ def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_
 
 def warp_face_for_deepfacelive(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5, crop_size : Size, coverage : float, x_shift : float, y_shift : float) -> Tuple[VisionFrame, Matrix]:
 	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, 'deep_face_live', (1, 1))
-	square_points = numpy.array([ (0, 0), (1, 0), (1, 1), (0, 1) ]).astype(numpy.float32)
+	square_points = POLYGON_TEMPLATES.get('square').astype(numpy.float32)
 	square_points = transform_points(square_points, cv2.invertAffineTransform(affine_matrix))
 	center_point = square_points.mean(axis = 0)
 	center_point += x_shift * numpy.subtract(square_points[1], square_points[0])
@@ -91,22 +119,14 @@ def warp_face_for_deepfacelive(temp_vision_frame : VisionFrame, face_landmark_5 
 	top_bottom_direction = calc_points_direction(square_points[0], square_points[2]) * scale
 	bottom_top_direction = calc_points_direction(square_points[3], square_points[1]) * scale
 	source_points = numpy.array([ center_point - top_bottom_direction, center_point + bottom_top_direction, center_point + top_bottom_direction ]).astype(numpy.float32)
-	target_points = numpy.array([ (0, 0), (1, 0), (1, 1) ]).astype(numpy.float32) * crop_size[0]
-	affine_matrix = cv2.getAffineTransform(source_points, target_points)
+	affine_matrix = estimate_matrix_by_points(source_points, 'triangle_skew', crop_size)
 	crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size, flags = cv2.INTER_CUBIC)
 	return crop_vision_frame, affine_matrix
 
 
-def calc_points_direction(start_point : Points, end_point : Points) -> Direction:
-	direction = end_point - start_point
-	direction /= numpy.linalg.norm(direction)
-	return direction
-
-
 def warp_face_by_bounding_box(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
 	source_points = numpy.array([ [ bounding_box[0], bounding_box[1] ], [bounding_box[2], bounding_box[1] ], [ bounding_box[0], bounding_box[3] ] ]).astype(numpy.float32)
-	target_points = numpy.array([ [ 0, 0 ], [ crop_size[0], 0 ], [ 0, crop_size[1] ] ]).astype(numpy.float32)
-	affine_matrix = cv2.getAffineTransform(source_points, target_points)
+	affine_matrix = estimate_matrix_by_points(source_points, 'triangle_orthogonal', crop_size)
 	if bounding_box[2] - bounding_box[0] > crop_size[0] or bounding_box[3] - bounding_box[1] > crop_size[1]:
 		interpolation_method = cv2.INTER_AREA
 	else:
@@ -131,6 +151,12 @@ def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame,
 	paste_vision_frame[:, :, 1] = inverse_mask * inverse_vision_frame[:, :, 1] + (1 - inverse_mask) * temp_vision_frame[:, :, 1]
 	paste_vision_frame[:, :, 2] = inverse_mask * inverse_vision_frame[:, :, 2] + (1 - inverse_mask) * temp_vision_frame[:, :, 2]
 	return paste_vision_frame
+
+
+def calc_points_direction(start_point : Points, end_point : Points) -> Direction:
+	direction = end_point - start_point
+	direction /= numpy.linalg.norm(direction)
+	return direction
 
 
 @lru_cache(maxsize = None)
