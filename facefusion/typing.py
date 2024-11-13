@@ -86,10 +86,10 @@ ProcessStep = Callable[[str, int, Args], bool]
 
 Content = Dict[str, Any]
 
-WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'ffhq_512', 'mtcnn_512', 'styleganex_384', 'deep_face_live']
+WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'deep_face_live', 'ffhq_512', 'mtcnn_512', 'styleganex_384']
 WarpTemplateSet = Dict[WarpTemplate, NDArray[Any]]
-PolygonTemplate = Literal['square', 'triangle_orthogonal', 'triangle_skew']
-PolygonTemplateSet = Dict[PolygonTemplate, NDArray[Any]]
+PointsTemplate = Literal['square', 'triangle_orthogonal', 'triangle_skew']
+PointsTemplateSet = Dict[PointsTemplate, NDArray[Any]]
 ProcessMode = Literal['output', 'preview', 'stream']
 
 ErrorCode = Literal[0, 1, 2, 3, 4]

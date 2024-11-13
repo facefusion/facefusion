@@ -42,10 +42,9 @@ MODEL_SET : ModelSet =\
 				'path': resolve_relative_path('../.assets/models/Jackie_Chan.dfm')
 			}
 		},
-		'x_shift': 0.0,
-		'y_shift': 0.0,
-		'coverage': 2.2,
-		'size': (224, 224)
+		'size': (224, 224),
+		'shift': (0.0, 0.0),
+		'coverage': 2.2
 	}
 }
 
@@ -113,10 +112,9 @@ def post_process() -> None:
 
 def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_size = get_model_options().get('size')
+	model_shift = get_model_options().get('shift')
 	model_coverage = get_model_options().get('coverage')
-	model_x_shift = get_model_options().get('x_shift')
-	model_y_shift = get_model_options().get('y_shift')
-	crop_vision_frame, affine_matrix = warp_face_for_deepfacelive(temp_vision_frame, target_face.landmark_set.get('5/68'), model_size, model_coverage, model_x_shift, model_y_shift)
+	crop_vision_frame, affine_matrix = warp_face_for_deepfacelive(temp_vision_frame, target_face.landmark_set.get('5/68'), model_size, model_shift, model_coverage)
 	crop_vision_frame_raw = crop_vision_frame.copy()
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 	crop_masks =\
@@ -170,10 +168,12 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 def prepare_crop_mask(crop_source_mask : Mask, crop_target_mask : Mask) -> Mask:
 	model_size = get_model_options().get('size')
+	blur_size = 6.25
+	kernel_size = 3
 	crop_mask = numpy.minimum.reduce([ crop_source_mask, crop_target_mask ])
 	crop_mask = crop_mask.reshape(model_size).clip(0, 1)
-	crop_mask = cv2.erode(crop_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)), iterations = 2)
-	crop_mask = cv2.GaussianBlur(crop_mask, (0, 0), 6.25)
+	crop_mask = cv2.erode(crop_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size)), iterations = 2)
+	crop_mask = cv2.GaussianBlur(crop_mask, (0, 0), blur_size)
 	return crop_mask
 
 
