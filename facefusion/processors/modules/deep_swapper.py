@@ -33,7 +33,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'emma_watson_224.hash'),
-					'path': resolve_relative_path('../.assets/models/emma_watson_224.hash')
+					'path': resolve_relative_path('../.assets/models/iperov/emma_watson_224.hash')
 				}
 			},
 			'sources':
@@ -41,7 +41,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'emma_watson_224.dfm'),
-					'path': resolve_relative_path('../.assets/models/emma_watson_224.dfm')
+					'path': resolve_relative_path('../.assets/models/iperov/emma_watson_224.dfm')
 				}
 			},
 			'size': (224, 224),
@@ -55,7 +55,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'jackie_chan_224.hash'),
-					'path': resolve_relative_path('../.assets/models/jackie_chan_224.hash')
+					'path': resolve_relative_path('../.assets/models/iperov/jackie_chan_224.hash')
 				}
 			},
 			'sources':
@@ -63,7 +63,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'jackie_chan_224.dfm'),
-					'path': resolve_relative_path('../.assets/models/jackie_chan_224.dfm')
+					'path': resolve_relative_path('../.assets/models/iperov/jackie_chan_224.dfm')
 				}
 			},
 			'size': (224, 224),
@@ -77,7 +77,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'keanu_reeves_320.hash'),
-					'path': resolve_relative_path('../.assets/models/keanu_reeves_320.hash')
+					'path': resolve_relative_path('../.assets/models/iperov/keanu_reeves_320.hash')
 				}
 			},
 			'sources':
@@ -85,7 +85,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'keanu_reeves_320.dfm'),
-					'path': resolve_relative_path('../.assets/models/keanu_reeves_320.dfm')
+					'path': resolve_relative_path('../.assets/models/iperov/keanu_reeves_320.dfm')
 				}
 			},
 			'size': (320, 320),
@@ -99,7 +99,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'sylvester_stallone_224.hash'),
-					'path': resolve_relative_path('../.assets/models/sylvester_stallone_224.hash')
+					'path': resolve_relative_path('../.assets/models/iperov/sylvester_stallone_224.hash')
 				}
 			},
 			'sources':
@@ -107,7 +107,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'sylvester_stallone_224.dfm'),
-					'path': resolve_relative_path('../.assets/models/sylvester_stallone_224.dfm')
+					'path': resolve_relative_path('../.assets/models/iperov/sylvester_stallone_224.dfm')
 				}
 			},
 			'size': (224, 224),
@@ -121,7 +121,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'taylor_swift_224.hash'),
-					'path': resolve_relative_path('../.assets/models/taylor_swift_224.hash')
+					'path': resolve_relative_path('../.assets/models/iperov/taylor_swift_224.hash')
 				}
 			},
 			'sources':
@@ -129,7 +129,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'taylor_swift_224.dfm'),
-					'path': resolve_relative_path('../.assets/models/taylor_swift_224.dfm')
+					'path': resolve_relative_path('../.assets/models/iperov/taylor_swift_224.dfm')
 				}
 			},
 			'size': (224, 224),
@@ -167,11 +167,10 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:

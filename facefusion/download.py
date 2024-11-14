@@ -48,7 +48,7 @@ def get_download_size(url : str) -> int:
 		return 0
 
 
-def conditional_download_hashes(download_directory_path : str, hashes : DownloadSet) -> bool:
+def conditional_download_hashes(hashes : DownloadSet) -> bool:
 	hash_paths = [ hashes.get(hash_key).get('path') for hash_key in hashes.keys() ]
 
 	process_manager.check()
@@ -58,6 +58,7 @@ def conditional_download_hashes(download_directory_path : str, hashes : Download
 			for index in hashes:
 				if hashes.get(index).get('path') in invalid_hash_paths:
 					invalid_hash_url = hashes.get(index).get('url')
+					download_directory_path = os.path.dirname(hashes.get(index).get('path'))
 					conditional_download(download_directory_path, [ invalid_hash_url ])
 
 	valid_hash_paths, invalid_hash_paths = validate_hash_paths(hash_paths)
@@ -73,7 +74,7 @@ def conditional_download_hashes(download_directory_path : str, hashes : Download
 	return not invalid_hash_paths
 
 
-def conditional_download_sources(download_directory_path : str, sources : DownloadSet) -> bool:
+def conditional_download_sources(sources : DownloadSet) -> bool:
 	source_paths = [ sources.get(source_key).get('path') for source_key in sources.keys() ]
 
 	process_manager.check()
@@ -83,6 +84,7 @@ def conditional_download_sources(download_directory_path : str, sources : Downlo
 			for index in sources:
 				if sources.get(index).get('path') in invalid_source_paths:
 					invalid_source_url = sources.get(index).get('url')
+					download_directory_path = os.path.dirname(sources.get(index).get('path'))
 					conditional_download(download_directory_path, [ invalid_source_url ])
 
 	valid_source_paths, invalid_source_paths = validate_source_paths(source_paths)
