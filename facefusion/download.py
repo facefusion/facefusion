@@ -130,5 +130,5 @@ def resolve_download_url(base_name : str, file_name : str) -> Optional[str]:
 
 	for download_provider in download_provider_set:
 		if download_provider in download_providers:
-			return download_provider_set[download_provider].format(base_name = base_name, file_name = file_name)
+			return download_provider_set.get(download_provider).format(base_name = base_name, file_name = file_name)
 	return None
