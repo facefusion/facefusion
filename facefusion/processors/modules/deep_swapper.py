@@ -140,10 +140,10 @@ def forward(crop_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mask, Mask]:
 	deep_swapper = get_inference_pool().get('deep_swapper')
 	deep_swapper_inputs = {}
 
-	for deep_swapper_input in deep_swapper.get_inputs():
-		if deep_swapper_input.name == 'in_face:0':
+	for index, deep_swapper_input in enumerate(deep_swapper.get_inputs()):
+		if index == 0:
 			deep_swapper_inputs[deep_swapper_input.name] = crop_vision_frame
-		if deep_swapper_input.name == 'morph_value:0':
+		if index == 1:
 			morph_value = numpy.array([ 1 ]).astype(numpy.float32)
 			deep_swapper_inputs[deep_swapper_input.name] = morph_value
 
