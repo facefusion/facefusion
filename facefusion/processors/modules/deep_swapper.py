@@ -234,7 +234,7 @@ def forward(crop_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mask, Mask]:
 		if index == 0:
 			deep_swapper_inputs[deep_swapper_input.name] = crop_vision_frame
 		if index == 1:
-			morph_value = numpy.array([ 1 ]).astype(numpy.float32)
+			morph_value = numpy.array([ 0.5 ]).astype(numpy.float32)
 			deep_swapper_inputs[deep_swapper_input.name] = morph_value
 
 	with thread_semaphore():
