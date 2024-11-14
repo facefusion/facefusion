@@ -8,7 +8,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_for_deepfacelive
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
@@ -22,31 +22,121 @@ from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import conditional_match_frame_color, read_image, read_static_image, write_image
 
-MODEL_SET : ModelSet =\
-{
-	'iperov/jackie_chan_224':
+
+def create_model_set() -> ModelSet:
+	return\
 	{
-		'hashes':
+		'iperov/emma_watson_224':
 		{
-			'deep_swapper':
+			'hashes':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/DFM/resolve/main/Jackie_Chan.hash',
-				'path': resolve_relative_path('../.assets/models/Jackie_Chan.hash')
-			}
+				'deep_swapper':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'emma_watson_224.hash'),
+					'path': resolve_relative_path('../.assets/models/emma_watson_224.hash')
+				}
+			},
+			'sources':
+			{
+				'deep_swapper':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'emma_watson_224.dfm'),
+					'path': resolve_relative_path('../.assets/models/emma_watson_224.dfm')
+				}
+			},
+			'size': (224, 224),
+			'shift': (0.0, 0.0),
+			'coverage': 2.2
 		},
-		'sources':
+		'iperov/jackie_chan_224':
 		{
-			'deep_swapper':
+			'hashes':
 			{
-				'url': 'https://github.com/iperov/DeepFaceLive/releases/download/JACKIE_CHAN/Jackie_Chan.dfm',
-				'path': resolve_relative_path('../.assets/models/Jackie_Chan.dfm')
-			}
+				'deep_swapper':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'jackie_chan_224.hash'),
+					'path': resolve_relative_path('../.assets/models/jackie_chan_224.hash')
+				}
+			},
+			'sources':
+			{
+				'deep_swapper':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'jackie_chan_224.dfm'),
+					'path': resolve_relative_path('../.assets/models/jackie_chan_224.dfm')
+				}
+			},
+			'size': (224, 224),
+			'shift': (0.0, 0.0),
+			'coverage': 2.2
 		},
-		'size': (224, 224),
-		'shift': (0.0, 0.0),
-		'coverage': 2.2
+		'iperov/keanu_reeves_320':
+		{
+			'hashes':
+			{
+				'deep_swapper':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'keanu_reeves_320.hash'),
+					'path': resolve_relative_path('../.assets/models/keanu_reeves_320.hash')
+				}
+			},
+			'sources':
+			{
+				'deep_swapper':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'keanu_reeves_320.dfm'),
+					'path': resolve_relative_path('../.assets/models/keanu_reeves_320.dfm')
+				}
+			},
+			'size': (320, 320),
+			'shift': (0.0, 0.0),
+			'coverage': 2.2
+		},
+		'iperov/sylvester_stallone_224':
+		{
+			'hashes':
+			{
+				'deep_swapper':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'sylvester_stallone_224.hash'),
+					'path': resolve_relative_path('../.assets/models/sylvester_stallone_224.hash')
+				}
+			},
+			'sources':
+			{
+				'deep_swapper':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'sylvester_stallone_224.dfm'),
+					'path': resolve_relative_path('../.assets/models/sylvester_stallone_224.dfm')
+				}
+			},
+			'size': (224, 224),
+			'shift': (0.0, 0.0),
+			'coverage': 2.2
+		},
+		'iperov/taylor_swift_224':
+		{
+			'hashes':
+			{
+				'deep_swapper':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'taylor_swift_224.hash'),
+					'path': resolve_relative_path('../.assets/models/taylor_swift_224.hash')
+				}
+			},
+			'sources':
+			{
+				'deep_swapper':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'taylor_swift_224.dfm'),
+					'path': resolve_relative_path('../.assets/models/taylor_swift_224.dfm')
+				}
+			},
+			'size': (224, 224),
+			'shift': (0.0, 0.0),
+			'coverage': 2.2
+		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -62,7 +152,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	deep_swapper_model = state_manager.get_item('deep_swapper_model')
-	return MODEL_SET.get(deep_swapper_model)
+	return create_model_set().get(deep_swapper_model)
 
 
 def register_args(program : ArgumentParser) -> None:
