@@ -238,7 +238,7 @@ def create_model_set() -> ModelSet:
 			{
 				'frame_enhancer':
 				{
-					'url': resolve_download_url('models-3.0.0', 'real_web_photo_x4.hash'),
+					'url': resolve_download_url('models-3.1.0', 'real_web_photo_x4.hash'),
 					'path': resolve_relative_path('../.assets/models/real_web_photo_x4.hash')
 				}
 			},
@@ -246,7 +246,7 @@ def create_model_set() -> ModelSet:
 			{
 				'frame_enhancer':
 				{
-					'url': resolve_download_url('models-3.0.0', 'real_web_photo_x4.onnx'),
+					'url': resolve_download_url('models-3.1.0', 'real_web_photo_x4.onnx'),
 					'path': resolve_relative_path('../.assets/models/real_web_photo_x4.onnx')
 				}
 			},

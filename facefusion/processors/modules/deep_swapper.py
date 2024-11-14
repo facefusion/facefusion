@@ -33,7 +33,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'emma_watson_224.hash'),
-					'path': resolve_relative_path('../.assets/models/emma_watson_224.hash')
+					'path': resolve_relative_path('../.assets/models/iperov/emma_watson_224.hash')
 				}
 			},
 			'sources':
@@ -41,7 +41,7 @@ def create_model_set() -> ModelSet:
 				'deep_swapper':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'emma_watson_224.dfm'),
-					'path': resolve_relative_path('../.assets/models/emma_watson_224.dfm')
+					'path': resolve_relative_path('../.assets/models/iperov/emma_watson_224.dfm')
 				}
 			},
 			'size': (224, 224),
