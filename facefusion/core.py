@@ -75,10 +75,10 @@ def route(args : Args) -> None:
 			hard_exit(1)
 		error_core = process_headless(args)
 		hard_exit(error_core)
-	if state_manager.get_item('command') == 'bulk-run':
+	if state_manager.get_item('command') == 'batch-run':
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
-		error_core = process_bulk(args)
+		error_core = process_batch(args)
 		hard_exit(error_core)
 	if state_manager.get_item('command') in [ 'job-run', 'job-run-all', 'job-retry', 'job-retry-all' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
@@ -310,8 +310,8 @@ def process_headless(args : Args) -> ErrorCode:
 	return 1
 
 
-def process_bulk(args : Args) -> ErrorCode:
-	job_id = job_helper.suggest_job_id('bulk')
+def process_batch(args : Args) -> ErrorCode:
+	job_id = job_helper.suggest_job_id('batch')
 	step_args = reduce_step_args(args)
 	job_args = reduce_job_args(args)
 	source_paths = resolve_file_pattern(job_args.get('source_pattern'))
