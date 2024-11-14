@@ -33,7 +33,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.38710391, 0.72160547 ],
 		[ 0.61507734, 0.72034453 ]
 	]).astype(numpy.float32),
-	'deep_face_live': numpy.array(
+	'deepfacelive': numpy.array(
 	[
 		[ 0.22549182, 0.21599032 ],
 		[ 0.75476142, 0.21599032 ],
