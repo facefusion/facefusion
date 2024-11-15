@@ -143,6 +143,7 @@ ProcessorStateSet = Dict[AppContext, ProcessorState]
 
 AgeModifierDirection = NDArray[Any]
 DeepSwapperMorph = NDArray[Any]
+FaceEnhancerWeight = NDArray[Any]
 LivePortraitPitch = float
 LivePortraitYaw = float
 LivePortraitRoll = float
