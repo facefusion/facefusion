@@ -144,7 +144,7 @@ WORDING : Dict[str, Any] =\
 		'age_modifier_model': 'choose the model responsible for aging the face',
 		'age_modifier_direction': 'specify the direction in which the age should be modified',
 		'deep_swapper_model': 'choose the model responsible for swapping the face',
-		'deep_swapper_morph': 'specify the morph value for the dfm model',
+		'deep_swapper_morph': 'morph between source face and target faces',
 		'expression_restorer_model': 'choose the model responsible for restoring the expression',
 		'expression_restorer_factor': 'restore factor of expression from the target face',
 		'face_debugger_items': 'load a single or multiple processors (choices: {choices})',

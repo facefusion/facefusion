@@ -1,9 +1,8 @@
 from argparse import ArgumentParser
-from typing import Any, List
+from typing import List
 
 import cv2
 import numpy
-from numpy.typing import NDArray
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -18,7 +17,7 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.typing import AgeModifierInputs
+from facefusion.processors.typing import AgeModifierDirection, AgeModifierInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
@@ -145,7 +144,8 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 
 	crop_vision_frame = prepare_vision_frame(crop_vision_frame)
 	extend_vision_frame = prepare_vision_frame(extend_vision_frame)
-	extend_vision_frame = forward(crop_vision_frame, extend_vision_frame)
+	age_modifier_direction = numpy.array(numpy.interp(state_manager.get_item('age_modifier_direction'), [-100, 100], [2.5, -2.5])).astype(numpy.float32)
+	extend_vision_frame = forward(crop_vision_frame, extend_vision_frame, age_modifier_direction)
 	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
 	extend_vision_frame = match_frame_color(extend_vision_frame_raw, extend_vision_frame)
 	extend_affine_matrix *= (model_sizes.get('target')[0] * 4) / model_sizes.get('target_with_background')[0]
@@ -155,7 +155,7 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	return paste_vision_frame
 
 
-def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
+def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame, age_modifier_direction : AgeModifierDirection) -> VisionFrame:
 	age_modifier = get_inference_pool().get('age_modifier')
 	age_modifier_inputs = {}
 
@@ -165,17 +165,12 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) 
 		if age_modifier_input.name == 'target_with_background':
 			age_modifier_inputs[age_modifier_input.name] = extend_vision_frame
 		if age_modifier_input.name == 'direction':
-			age_modifier_inputs[age_modifier_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
+			age_modifier_inputs[age_modifier_input.name] = age_modifier_direction
 
 	with thread_semaphore():
 		crop_vision_frame = age_modifier.run(None, age_modifier_inputs)[0][0]
 
 	return crop_vision_frame
-
-
-def prepare_direction(direction : int) -> NDArray[Any]:
-	direction = numpy.interp(float(direction), [ -100, 100 ], [ 2.5, -2.5 ]) #type:ignore[assignment]
-	return numpy.array(direction).astype(numpy.float32)
 
 
 def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:

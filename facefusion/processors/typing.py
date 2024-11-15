@@ -141,6 +141,7 @@ ProcessorState = TypedDict('ProcessorState',
 })
 ProcessorStateSet = Dict[AppContext, ProcessorState]
 
+AgeModifierDirection = NDArray[Any]
 DeepSwapperMorph = NDArray[Any]
 LivePortraitPitch = float
 LivePortraitYaw = float

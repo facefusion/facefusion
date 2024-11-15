@@ -213,7 +213,7 @@ def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 		crop_masks.append(occlusion_mask)
 
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	deep_swapper_morph = numpy.interp(state_manager.get_item('deep_swapper_morph'), [ 0, 100 ], [ 0, 1 ]).astype(numpy.float32)[None]
+	deep_swapper_morph = numpy.array([ numpy.interp(state_manager.get_item('deep_swapper_morph'), [ 0, 100 ], [ 0, 1 ]) ]).astype(numpy.float32)
 	crop_vision_frame, crop_source_mask, crop_target_mask = forward(crop_vision_frame, deep_swapper_morph)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_vision_frame = conditional_match_frame_color(crop_vision_frame_raw, crop_vision_frame)
