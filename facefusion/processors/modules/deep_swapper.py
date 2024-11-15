@@ -25,114 +25,69 @@ from facefusion.vision import conditional_match_frame_color, read_image, read_st
 
 
 def create_model_set() -> ModelSet:
-	return\
-	{
-		'iperov/emma_watson_224':
+	model_config =\
+	[
+		('iperov', 'emma_watson_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'keanu_reeves_320', 'dfl_whole_face', (320, 320)),
+		('iperov', 'jackie_chan_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'alexandra_daddario_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'alexei_navalny_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'amber_heard_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'dilraba_dilmurat_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'elon_musk_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'emilia_clarke_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'emma_watson_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'erin_moriarty_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'jackie_chan_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'james_carrey_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'jason_statham_320', 'dfl_whole_face', (224, 224)),
+		('iperov', 'jessica_alba_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'keanu_reeves_320', 'dfl_whole_face', (224, 224)),
+		('iperov', 'lucy_liu_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'margot_robbie_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'meghan_markle_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'natalie_dormer_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'natalie_portman_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'nicolas_coppola__224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'robert_downey_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'rowan_atkinson_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'ryan_reynolds_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'scarlett_johansson_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'sylvester_stallone_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'taylor_swift_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'thomas_cruise_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'thomas_holland_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'vin_diesel_224', 'dfl_whole_face', (224, 224)),
+		('iperov', 'vladimir_putin_224', 'dfl_whole_face', (224, 224))
+	]
+	model_set : ModelSet = {}
+
+	for model_creator, model_name, model_template, model_size in model_config:
+		model_id = '/'.join([ model_creator, model_name ])
+
+		model_set[model_id] =\
 		{
 			'hashes':
 			{
 				'deep_swapper':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'emma_watson_224.hash'),
-					'path': resolve_relative_path('../.assets/models/iperov/emma_watson_224.hash')
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-' + model_creator, model_name + '.hash'),
+					'path': resolve_relative_path('../.assets/models/' + model_creator + '/' + model_name + '.hash')
 				}
 			},
 			'sources':
 			{
 				'deep_swapper':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'emma_watson_224.dfm'),
-					'path': resolve_relative_path('../.assets/models/iperov/emma_watson_224.dfm')
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-' + model_creator, model_name + '.dfm'),
+					'path': resolve_relative_path('../.assets/models/' + model_creator + '/' + model_name + '.dfm')
 				}
 			},
-			'template': 'dfl_whole_face',
-			'size': (224, 224),
-		},
-		'iperov/jackie_chan_224':
-		{
-			'hashes':
-			{
-				'deep_swapper':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'jackie_chan_224.hash'),
-					'path': resolve_relative_path('../.assets/models/iperov/jackie_chan_224.hash')
-				}
-			},
-			'sources':
-			{
-				'deep_swapper':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'jackie_chan_224.dfm'),
-					'path': resolve_relative_path('../.assets/models/iperov/jackie_chan_224.dfm')
-				}
-			},
-			'template': 'dfl_whole_face',
-			'size': (224, 224),
-		},
-		'iperov/keanu_reeves_320':
-		{
-			'hashes':
-			{
-				'deep_swapper':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'keanu_reeves_320.hash'),
-					'path': resolve_relative_path('../.assets/models/iperov/keanu_reeves_320.hash')
-				}
-			},
-			'sources':
-			{
-				'deep_swapper':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'keanu_reeves_320.dfm'),
-					'path': resolve_relative_path('../.assets/models/iperov/keanu_reeves_320.dfm')
-				}
-			},
-			'template': 'dfl_whole_face',
-			'size': (320, 320),
-		},
-		'iperov/sylvester_stallone_224':
-		{
-			'hashes':
-			{
-				'deep_swapper':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'sylvester_stallone_224.hash'),
-					'path': resolve_relative_path('../.assets/models/iperov/sylvester_stallone_224.hash')
-				}
-			},
-			'sources':
-			{
-				'deep_swapper':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'sylvester_stallone_224.dfm'),
-					'path': resolve_relative_path('../.assets/models/iperov/sylvester_stallone_224.dfm')
-				}
-			},
-			'template': 'dfl_whole_face',
-			'size': (224, 224),
-		},
-		'iperov/taylor_swift_224':
-		{
-			'hashes':
-			{
-				'deep_swapper':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'taylor_swift_224.hash'),
-					'path': resolve_relative_path('../.assets/models/iperov/taylor_swift_224.hash')
-				}
-			},
-			'sources':
-			{
-				'deep_swapper':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-iperov', 'taylor_swift_224.dfm'),
-					'path': resolve_relative_path('../.assets/models/iperov/taylor_swift_224.dfm')
-				}
-			},
-			'template': 'dfl_whole_face',
-			'size': (224, 224),
+			'template': model_template,
+			'size': model_size
 		}
-	}
+
+	return model_set
 
 
 def get_inference_pool() -> InferencePool:
@@ -154,7 +109,7 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--deep-swapper-model', help = wording.get('help.deep_swapper_model'), default = config.get_str_value('processors.deep_swapper_model', 'iperov/jackie_chan_224'), choices = processors_choices.deep_swapper_models)
+		group_processors.add_argument('--deep-swapper-model', help = wording.get('help.deep_swapper_model'), default = config.get_str_value('processors.deep_swapper_model', 'iperov/elon_musk_224'), choices = processors_choices.deep_swapper_models)
 		group_processors.add_argument('--deep-swapper-morph', help = wording.get('help.deep_swapper_morph'), type = int, default = config.get_int_value('processors.deep_swapper_morph', '80'), choices = processors_choices.deep_swapper_morph_range, metavar = create_int_metavar(processors_choices.deep_swapper_morph_range))
 		facefusion.jobs.job_store.register_step_keys([ 'deep_swapper_model', 'deep_swapper_morph' ])
 
