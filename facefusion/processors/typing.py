@@ -74,6 +74,7 @@ ProcessorStateKey = Literal\
 	'age_modifier_model',
 	'age_modifier_direction',
 	'deep_swapper_model',
+	'deep_swapper_morph',
 	'expression_restorer_model',
 	'expression_restorer_factor',
 	'face_debugger_items',
@@ -108,6 +109,7 @@ ProcessorState = TypedDict('ProcessorState',
 	'age_modifier_model' : AgeModifierModel,
 	'age_modifier_direction' : int,
 	'deep_swapper_model' : DeepSwapperModel,
+	'deep_swapper_morph' : int,
 	'expression_restorer_model' : ExpressionRestorerModel,
 	'expression_restorer_factor' : int,
 	'face_debugger_items' : List[FaceDebuggerItem],
@@ -139,6 +141,9 @@ ProcessorState = TypedDict('ProcessorState',
 })
 ProcessorStateSet = Dict[AppContext, ProcessorState]
 
+AgeModifierDirection = NDArray[Any]
+DeepSwapperMorph = NDArray[Any]
+FaceEnhancerWeight = NDArray[Any]
 LivePortraitPitch = float
 LivePortraitYaw = float
 LivePortraitRoll = float

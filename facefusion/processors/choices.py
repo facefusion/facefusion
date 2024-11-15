@@ -28,6 +28,7 @@ frame_enhancer_models : List[FrameEnhancerModel] = [ 'clear_reality_x4', 'lsdir_
 lip_syncer_models : List[LipSyncerModel] = [ 'wav2lip_96', 'wav2lip_gan_96' ]
 
 age_modifier_direction_range : Sequence[int] = create_int_range(-100, 100, 1)
+deep_swapper_morph_range : Sequence[int] = create_int_range(0, 100, 1)
 expression_restorer_factor_range : Sequence[int] = create_int_range(0, 100, 1)
 face_editor_eyebrow_direction_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.05)
 face_editor_eye_gaze_horizontal_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.05)
