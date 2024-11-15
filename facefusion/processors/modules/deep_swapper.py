@@ -10,7 +10,7 @@ import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
 from facefusion.face_analyser import get_many_faces, get_one_face
-from facefusion.face_helper import paste_back, warp_face_for_deepfacelive
+from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
@@ -44,9 +44,8 @@ def create_model_set() -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/iperov/emma_watson_224.dfm')
 				}
 			},
+			'template': 'dfl_whole_face',
 			'size': (224, 224),
-			'shift': (0.0, 0.0),
-			'coverage': 2.2
 		},
 		'iperov/jackie_chan_224':
 		{
@@ -66,9 +65,8 @@ def create_model_set() -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/iperov/jackie_chan_224.dfm')
 				}
 			},
+			'template': 'dfl_whole_face',
 			'size': (224, 224),
-			'shift': (0.0, 0.0),
-			'coverage': 2.2
 		},
 		'iperov/keanu_reeves_320':
 		{
@@ -88,9 +86,8 @@ def create_model_set() -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/iperov/keanu_reeves_320.dfm')
 				}
 			},
+			'template': 'dfl_whole_face',
 			'size': (320, 320),
-			'shift': (0.0, 0.0),
-			'coverage': 2.2
 		},
 		'iperov/sylvester_stallone_224':
 		{
@@ -110,9 +107,8 @@ def create_model_set() -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/iperov/sylvester_stallone_224.dfm')
 				}
 			},
+			'template': 'dfl_whole_face',
 			'size': (224, 224),
-			'shift': (0.0, 0.0),
-			'coverage': 2.2
 		},
 		'iperov/taylor_swift_224':
 		{
@@ -132,9 +128,8 @@ def create_model_set() -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/iperov/taylor_swift_224.dfm')
 				}
 			},
+			'template': 'dfl_whole_face',
 			'size': (224, 224),
-			'shift': (0.0, 0.0),
-			'coverage': 2.2
 		}
 	}
 
@@ -200,10 +195,9 @@ def post_process() -> None:
 
 
 def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
-	model_shift = get_model_options().get('shift')
-	model_coverage = get_model_options().get('coverage')
-	crop_vision_frame, affine_matrix = warp_face_for_deepfacelive(temp_vision_frame, target_face.landmark_set.get('5/68'), model_size, model_shift, model_coverage)
+	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
 	crop_vision_frame_raw = crop_vision_frame.copy()
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 	crop_masks =\
