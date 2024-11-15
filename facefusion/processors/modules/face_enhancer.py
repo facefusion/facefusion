@@ -17,7 +17,7 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.typing import FaceEnhancerInputs
+from facefusion.processors.typing import FaceEnhancerInputs, FaceEnhancerWeight
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
@@ -296,7 +296,8 @@ def enhance_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionF
 		crop_masks.append(occlusion_mask)
 
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	crop_vision_frame = forward(crop_vision_frame)
+	face_enhancer_weight = numpy.array([ 1 ]).astype(numpy.double)
+	crop_vision_frame = forward(crop_vision_frame, face_enhancer_weight)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
@@ -304,7 +305,7 @@ def enhance_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionF
 	return temp_vision_frame
 
 
-def forward(crop_vision_frame : VisionFrame) -> VisionFrame:
+def forward(crop_vision_frame : VisionFrame, face_enhancer_weight : FaceEnhancerWeight) -> VisionFrame:
 	face_enhancer = get_inference_pool().get('face_enhancer')
 	face_enhancer_inputs = {}
 
@@ -312,8 +313,7 @@ def forward(crop_vision_frame : VisionFrame) -> VisionFrame:
 		if face_enhancer_input.name == 'input':
 			face_enhancer_inputs[face_enhancer_input.name] = crop_vision_frame
 		if face_enhancer_input.name == 'weight':
-			weight = numpy.array([ 1 ]).astype(numpy.double)
-			face_enhancer_inputs[face_enhancer_input.name] = weight
+			face_enhancer_inputs[face_enhancer_input.name] = face_enhancer_weight
 
 	with thread_semaphore():
 		crop_vision_frame = face_enhancer.run(None, face_enhancer_inputs)[0][0]
