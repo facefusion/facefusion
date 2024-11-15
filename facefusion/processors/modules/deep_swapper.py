@@ -8,6 +8,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
+from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
@@ -16,7 +17,7 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.typing import DeepSwapperInputs
+from facefusion.processors.typing import DeepSwapperInputs, DeepSwapperMorph
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
@@ -154,11 +155,13 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--deep-swapper-model', help = wording.get('help.deep_swapper_model'), default = config.get_str_value('processors.deep_swapper_model', 'iperov/jackie_chan_224'), choices = processors_choices.deep_swapper_models)
-		facefusion.jobs.job_store.register_step_keys([ 'deep_swapper_model' ])
+		group_processors.add_argument('--deep-swapper-morph', help = wording.get('help.deep_swapper_morph'), type = int, default = config.get_int_value('processors.deep_swapper_morph', '80'), choices = processors_choices.deep_swapper_morph_range, metavar = create_int_metavar(processors_choices.deep_swapper_morph_range))
+		facefusion.jobs.job_store.register_step_keys([ 'deep_swapper_model', 'deep_swapper_morph' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('deep_swapper_model', args.get('deep_swapper_model'))
+	apply_state_item('deep_swapper_morph', args.get('deep_swapper_morph'))
 
 
 def pre_check() -> bool:
@@ -210,7 +213,8 @@ def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 		crop_masks.append(occlusion_mask)
 
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	crop_vision_frame, crop_source_mask, crop_target_mask = forward(crop_vision_frame)
+	deep_swapper_morph = numpy.interp(state_manager.get_item('deep_swapper_morph'), [ 0, 100 ], [ 0, 1 ]).astype(numpy.float32)[None]
+	crop_vision_frame, crop_source_mask, crop_target_mask = forward(crop_vision_frame, deep_swapper_morph)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_vision_frame = conditional_match_frame_color(crop_vision_frame_raw, crop_vision_frame)
 	crop_masks.append(prepare_crop_mask(crop_source_mask, crop_target_mask))
@@ -219,7 +223,7 @@ def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 	return paste_vision_frame
 
 
-def forward(crop_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mask, Mask]:
+def forward(crop_vision_frame : VisionFrame, deep_swapper_morph : DeepSwapperMorph) -> Tuple[VisionFrame, Mask, Mask]:
 	deep_swapper = get_inference_pool().get('deep_swapper')
 	deep_swapper_inputs = {}
 
@@ -227,8 +231,7 @@ def forward(crop_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mask, Mask]:
 		if index == 0:
 			deep_swapper_inputs[deep_swapper_input.name] = crop_vision_frame
 		if index == 1:
-			morph_value = numpy.array([ 0.5 ]).astype(numpy.float32)
-			deep_swapper_inputs[deep_swapper_input.name] = morph_value
+			deep_swapper_inputs[deep_swapper_input.name] = deep_swapper_morph
 
 	with thread_semaphore():
 		crop_target_mask, crop_vision_frame, crop_source_mask = deep_swapper.run(None, deep_swapper_inputs)
