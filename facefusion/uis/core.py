@@ -123,6 +123,9 @@ def get_theme() -> gradio.Theme:
 		),
 		font = gradio.themes.GoogleFont('Open Sans')
 	).set(
+		color_accent = 'transparent',
+		color_accent_soft = 'transparent',
+		color_accent_soft_dark = 'transparent',
 		background_fill_primary = '*neutral_100',
 		background_fill_primary_dark = '*neutral_950',
 		background_fill_secondary = '*neutral_50',
@@ -147,6 +150,10 @@ def get_theme() -> gradio.Theme:
 		block_title_text_size = '*text_sm',
 		block_title_text_weight = '600',
 		block_padding = '0.5rem',
+		border_color_accent = 'transparent',
+		border_color_accent_dark = 'transparent',
+		border_color_accent_subdued = 'transparent',
+		border_color_accent_subdued_dark = 'transparent',
 		border_color_primary = 'transparent',
 		border_color_primary_dark = 'transparent',
 		button_large_padding = '2rem 0.5rem',
