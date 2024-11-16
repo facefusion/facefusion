@@ -22,13 +22,17 @@ jobs:
  test:
   strategy:
    matrix:
-    os: [ macos-13, ubuntu-latest, windows-latest ]
+    os: [ macos-13, macos-latest, ubuntu-latest, windows-latest ]
   runs-on: ${{ matrix.os }}
   steps:
   - name: Checkout
     uses: actions/checkout@v4
-  - name: Set up FFmpeg
+  - name: Set up FFmpeg (Linux and Windows)
+    if: runner.os != 'macOS'
     uses: FedericoCarboni/setup-ffmpeg@v3
+  - name: Set up FFmpeg (macOS)
+    if: runner.os == 'macOS'
+    run: brew install ffmpeg
   - name: Set up Python 3.10
     uses: actions/setup-python@v5
     with:
