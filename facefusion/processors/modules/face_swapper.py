@@ -16,7 +16,7 @@ from facefusion.face_masker import create_occlusion_mask, create_region_mask, cr
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces, sort_faces_by_order
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
-from facefusion.inference_manager import get_static_model_initializer
+from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.processors.typing import FaceSwapperInputs
