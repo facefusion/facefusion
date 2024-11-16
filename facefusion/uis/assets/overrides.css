@@ -54,6 +54,12 @@
 	width: 1.125rem;
 }
 
+:root:root:root:root .thumbnail-item
+{
+	border: unset;
+	box-shadow: unset;
+}
+
 :root:root:root:root .grid-wrap.fixed-height
 {
 	min-height: unset;
