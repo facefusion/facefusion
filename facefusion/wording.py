@@ -98,6 +98,7 @@ WORDING : Dict[str, Any] =\
 		'source_paths': 'choose single or multiple source images or audios',
 		'target_path': 'choose single target image or video',
 		'output_path': 'specify the output image or video within a directory',
+		'temp_path': 'specify a custom temporary directory where temporary extracted frames are stored',
 		# face detector
 		'face_detector_model': 'choose the model responsible for detecting the faces',
 		'face_detector_size': 'specify the frame size provided to the face detector',
