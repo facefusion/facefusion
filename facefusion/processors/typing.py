@@ -5,18 +5,58 @@ from numpy._typing import NDArray
 from facefusion.typing import AppContext, AudioFrame, Face, FaceSet, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
+DeepSwapperModel = Literal\
+[
+	'iperov/emma_watson_224',
+	'iperov/keanu_reeves_320',
+	'iperov/jackie_chan_224',
+	'iperov/alexandra_daddario_224',
+	'iperov/alexei_navalny_224',
+	'iperov/amber_heard_224',
+	'iperov/dilraba_dilmurat_224',
+	'iperov/elon_musk_224',
+	'iperov/emilia_clarke_224',
+	'iperov/emma_watson_224',
+	'iperov/erin_moriarty_224',
+	'iperov/jackie_chan_224',
+	'iperov/james_carrey_224',
+	'iperov/jason_statham_320',
+	'iperov/jessica_alba_224',
+	'iperov/keanu_reeves_320',
+	'iperov/lucy_liu_224',
+	'iperov/margot_robbie_224',
+	'iperov/meghan_markle_224',
+	'iperov/natalie_dormer_224',
+	'iperov/natalie_portman_224',
+	'iperov/nicolas_coppola__224',
+	'iperov/robert_downey_224',
+	'iperov/rowan_atkinson_224',
+	'iperov/ryan_reynolds_224',
+	'iperov/scarlett_johansson_224',
+	'iperov/sylvester_stallone_224',
+	'iperov/taylor_swift_224',
+	'iperov/thomas_cruise_224',
+	'iperov/thomas_holland_224',
+	'iperov/vin_diesel_224',
+	'iperov/vladimir_putin_224'
+]
 ExpressionRestorerModel = Literal['live_portrait']
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race']
 FaceEditorModel = Literal['live_portrait']
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']
-FaceSwapperModel = Literal['blendswap_256', 'ghost_1_256', 'ghost_2_256', 'ghost_3_256', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_unofficial_512', 'uniface_256']
+FaceSwapperModel = Literal['blendswap_256', 'ghost_1_256', 'ghost_2_256', 'ghost_3_256', 'hififace_unofficial_256', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_unofficial_512', 'uniface_256']
 FrameColorizerModel = Literal['ddcolor', 'ddcolor_artistic', 'deoldify', 'deoldify_artistic', 'deoldify_stable']
-FrameEnhancerModel = Literal['clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_hatgan_x4', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'span_kendata_x4', 'ultra_sharp_x4']
+FrameEnhancerModel = Literal['clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'real_hatgan_x4', 'real_web_photo_x4', 'realistic_rescaler_x4', 'remacri_x4', 'siax_x4', 'span_kendata_x4', 'swin2_sr_x4', 'ultra_sharp_x4']
 LipSyncerModel = Literal['wav2lip_96', 'wav2lip_gan_96']
 
 FaceSwapperSet = Dict[FaceSwapperModel, List[str]]
 
 AgeModifierInputs = TypedDict('AgeModifierInputs',
+{
+	'reference_faces' : FaceSet,
+	'target_vision_frame' : VisionFrame
+})
+DeepSwapperInputs = TypedDict('DeepSwapperInputs',
 {
 	'reference_faces' : FaceSet,
 	'target_vision_frame' : VisionFrame
@@ -67,6 +107,8 @@ ProcessorStateKey = Literal\
 [
 	'age_modifier_model',
 	'age_modifier_direction',
+	'deep_swapper_model',
+	'deep_swapper_morph',
 	'expression_restorer_model',
 	'expression_restorer_factor',
 	'face_debugger_items',
@@ -100,6 +142,8 @@ ProcessorState = TypedDict('ProcessorState',
 {
 	'age_modifier_model' : AgeModifierModel,
 	'age_modifier_direction' : int,
+	'deep_swapper_model' : DeepSwapperModel,
+	'deep_swapper_morph' : int,
 	'expression_restorer_model' : ExpressionRestorerModel,
 	'expression_restorer_factor' : int,
 	'face_debugger_items' : List[FaceDebuggerItem],
@@ -131,6 +175,9 @@ ProcessorState = TypedDict('ProcessorState',
 })
 ProcessorStateSet = Dict[AppContext, ProcessorState]
 
+AgeModifierDirection = NDArray[Any]
+DeepSwapperMorph = NDArray[Any]
+FaceEnhancerWeight = NDArray[Any]
 LivePortraitPitch = float
 LivePortraitYaw = float
 LivePortraitRoll = float

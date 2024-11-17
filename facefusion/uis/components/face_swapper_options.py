@@ -19,7 +19,7 @@ def render() -> None:
 
 	FACE_SWAPPER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_swapper_model_dropdown'),
-		choices = processors_choices.face_swapper_set.keys(),
+		choices = list(processors_choices.face_swapper_set.keys()),
 		value = state_manager.get_item('face_swapper_model'),
 		visible = 'face_swapper' in state_manager.get_item('processors')
 	)

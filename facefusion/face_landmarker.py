@@ -105,10 +105,9 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	model_hashes, model_sources = collect_model_downloads()
 
-	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
 
 
 def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
@@ -167,7 +166,7 @@ def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : Bound
 
 def conditional_optimize_contrast(crop_vision_frame : VisionFrame) -> VisionFrame:
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_RGB2Lab)
-	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: # type:ignore[arg-type]
+	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: #type:ignore[arg-type]
 		crop_vision_frame[:, :, 0] = cv2.createCLAHE(clipLimit = 2).apply(crop_vision_frame[:, :, 0])
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_Lab2RGB)
 	return crop_vision_frame

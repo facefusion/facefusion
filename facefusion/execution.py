@@ -1,7 +1,8 @@
+import shutil
 import subprocess
 import xml.etree.ElementTree as ElementTree
 from functools import lru_cache
-from typing import Any, List
+from typing import Any, List, Optional
 
 from onnxruntime import get_available_providers, set_default_logger_severity
 
@@ -11,15 +12,11 @@ from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionPr
 set_default_logger_severity(3)
 
 
-def get_execution_provider_choices() -> List[ExecutionProviderKey]:
-	return list(get_available_execution_provider_set().keys())
-
-
 def has_execution_provider(execution_provider_key : ExecutionProviderKey) -> bool:
-	return execution_provider_key in get_execution_provider_choices()
+	return execution_provider_key in get_execution_provider_set().keys()
 
 
-def get_available_execution_provider_set() -> ExecutionProviderSet:
+def get_execution_provider_set() -> ExecutionProviderSet:
 	available_execution_providers = get_available_providers()
 	available_execution_provider_set : ExecutionProviderSet = {}
 
@@ -36,8 +33,7 @@ def create_execution_providers(execution_device_id : str, execution_provider_key
 		if execution_provider_key == 'cuda':
 			execution_providers.append((execution_provider_set.get(execution_provider_key),
 			{
-				'device_id': execution_device_id,
-				'cudnn_conv_algo_search': 'EXHAUSTIVE' if use_exhaustive() else 'DEFAULT'
+				'device_id': execution_device_id
 			}))
 		if execution_provider_key == 'tensorrt':
 			execution_providers.append((execution_provider_set.get(execution_provider_key),
@@ -52,7 +48,7 @@ def create_execution_providers(execution_device_id : str, execution_provider_key
 		if execution_provider_key == 'openvino':
 			execution_providers.append((execution_provider_set.get(execution_provider_key),
 			{
-				'device_type': 'GPU.' + execution_device_id,
+				'device_type': 'GPU' if execution_device_id == '0' else 'GPU.' + execution_device_id,
 				'precision': 'FP32'
 			}))
 		if execution_provider_key in [ 'directml', 'rocm' ]:
@@ -69,15 +65,8 @@ def create_execution_providers(execution_device_id : str, execution_provider_key
 	return execution_providers
 
 
-def use_exhaustive() -> bool:
-	execution_devices = detect_static_execution_devices()
-	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
-
-	return any(execution_device.get('product').get('name').startswith(product_names) for execution_device in execution_devices)
-
-
 def run_nvidia_smi() -> subprocess.Popen[bytes]:
-	commands = [ 'nvidia-smi', '--query', '--xml-format' ]
+	commands = [ shutil.which('nvidia-smi'), '--query', '--xml-format' ]
 	return subprocess.Popen(commands, stdout = subprocess.PIPE)
 
 
@@ -98,37 +87,44 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 	for gpu_element in root_element.findall('gpu'):
 		execution_devices.append(
 		{
-			'driver_version': root_element.find('driver_version').text,
+			'driver_version': root_element.findtext('driver_version'),
 			'framework':
 			{
 				'name': 'CUDA',
-				'version': root_element.find('cuda_version').text
+				'version': root_element.findtext('cuda_version')
 			},
 			'product':
 			{
 				'vendor': 'NVIDIA',
-				'name': gpu_element.find('product_name').text.replace('NVIDIA ', '')
+				'name': gpu_element.findtext('product_name').replace('NVIDIA', '').strip()
 			},
 			'video_memory':
 			{
-				'total': create_value_and_unit(gpu_element.find('fb_memory_usage/total').text),
-				'free': create_value_and_unit(gpu_element.find('fb_memory_usage/free').text)
+				'total': create_value_and_unit(gpu_element.findtext('fb_memory_usage/total')),
+				'free': create_value_and_unit(gpu_element.findtext('fb_memory_usage/free'))
+			},
+			'temperature':
+			{
+				'gpu': create_value_and_unit(gpu_element.findtext('temperature/gpu_temp')),
+				'memory': create_value_and_unit(gpu_element.findtext('temperature/memory_temp'))
 			},
 			'utilization':
 			{
-				'gpu': create_value_and_unit(gpu_element.find('utilization/gpu_util').text),
-				'memory': create_value_and_unit(gpu_element.find('utilization/memory_util').text)
+				'gpu': create_value_and_unit(gpu_element.findtext('utilization/gpu_util')),
+				'memory': create_value_and_unit(gpu_element.findtext('utilization/memory_util'))
 			}
 		})
+
 	return execution_devices
 
 
-def create_value_and_unit(text : str) -> ValueAndUnit:
-	value, unit = text.split()
-	value_and_unit : ValueAndUnit =\
-	{
-		'value': int(value),
-		'unit': str(unit)
-	}
+def create_value_and_unit(text : str) -> Optional[ValueAndUnit]:
+	if ' ' in text:
+		value, unit = text.split(' ')
 
-	return value_and_unit
+		return\
+		{
+			'value': int(value),
+			'unit': str(unit)
+		}
+	return None

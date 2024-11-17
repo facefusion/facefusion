@@ -1,3 +1,4 @@
+import glob
 import os
 import shutil
 from pathlib import Path
@@ -127,10 +128,16 @@ def create_directory(directory_path : str) -> bool:
 
 def list_directory(directory_path : str) -> Optional[List[str]]:
 	if is_directory(directory_path):
-		files = os.listdir(directory_path)
-		files = [ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ]
-		return sorted(files)
+		file_paths = os.listdir(directory_path)
+		file_paths = [ Path(file_path).stem for file_path in file_paths if not Path(file_path).stem.startswith(('.', '__')) ]
+		return sorted(file_paths)
 	return None
+
+
+def resolve_file_pattern(file_pattern : str) -> List[str]:
+	if in_directory(file_pattern):
+		return sorted(glob.glob(file_pattern))
+	return []
 
 
 def remove_directory(directory_path : str) -> bool:

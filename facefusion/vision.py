@@ -8,7 +8,7 @@ from cv2.typing import Size
 from facefusion.choices import image_template_sizes, video_template_sizes
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import is_image, is_video, sanitize_path_for_windows
-from facefusion.typing import Fps, Orientation, Resolution, VisionFrame
+from facefusion.typing import Duration, Fps, Orientation, Resolution, VisionFrame
 
 
 @lru_cache(maxsize = 128)
@@ -119,6 +119,14 @@ def restrict_video_fps(video_path : str, fps : Fps) -> Fps:
 	return fps
 
 
+def detect_video_duration(video_path : str) -> Duration:
+	video_frame_total = count_video_frame_total(video_path)
+	video_fps = detect_video_fps(video_path)
+	if video_frame_total and video_fps:
+		return video_frame_total / video_fps
+	return 0
+
+
 def detect_video_resolution(video_path : str) -> Optional[Resolution]:
 	if is_video(video_path):
 		if is_windows():
@@ -200,6 +208,42 @@ def resize_frame_resolution(vision_frame : VisionFrame, max_resolution : Resolut
 
 def normalize_frame_color(vision_frame : VisionFrame) -> VisionFrame:
 	return cv2.cvtColor(vision_frame, cv2.COLOR_BGR2RGB)
+
+
+def conditional_match_frame_color(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame) -> VisionFrame:
+	histogram_factor = calc_histogram_difference(source_vision_frame, target_vision_frame)
+	target_vision_frame = blend_vision_frames(target_vision_frame, match_frame_color(source_vision_frame, target_vision_frame), histogram_factor)
+	return target_vision_frame
+
+
+def match_frame_color(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame) -> VisionFrame:
+	color_difference_sizes = numpy.linspace(16, target_vision_frame.shape[0], 3, endpoint = False)
+
+	for color_difference_size in color_difference_sizes:
+		source_vision_frame = equalize_frame_color(source_vision_frame, target_vision_frame, normalize_resolution((color_difference_size, color_difference_size)))
+	target_vision_frame = equalize_frame_color(source_vision_frame, target_vision_frame, target_vision_frame.shape[:2][::-1])
+	return target_vision_frame
+
+
+def equalize_frame_color(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, size : Size) -> VisionFrame:
+	source_frame_resize = cv2.resize(source_vision_frame, size, interpolation = cv2.INTER_AREA).astype(numpy.float32)
+	target_frame_resize = cv2.resize(target_vision_frame, size, interpolation = cv2.INTER_AREA).astype(numpy.float32)
+	color_difference_vision_frame = numpy.subtract(source_frame_resize, target_frame_resize)
+	color_difference_vision_frame = cv2.resize(color_difference_vision_frame, target_vision_frame.shape[:2][::-1], interpolation = cv2.INTER_CUBIC)
+	target_vision_frame = numpy.add(target_vision_frame, color_difference_vision_frame).clip(0, 255).astype(numpy.uint8)
+	return target_vision_frame
+
+
+def calc_histogram_difference(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame) -> float:
+	histogram_source = cv2.calcHist([cv2.cvtColor(source_vision_frame, cv2.COLOR_BGR2HSV)], [ 0, 1 ], None, [ 50, 60 ], [ 0, 180, 0, 256 ])
+	histogram_target = cv2.calcHist([cv2.cvtColor(target_vision_frame, cv2.COLOR_BGR2HSV)], [ 0, 1 ], None, [ 50, 60 ], [ 0, 180, 0, 256 ])
+	histogram_differnce = float(numpy.interp(cv2.compareHist(histogram_source, histogram_target, cv2.HISTCMP_CORREL), [ -1, 1 ], [ 0, 1 ]))
+	return histogram_differnce
+
+
+def blend_vision_frames(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, blend_factor : float) -> VisionFrame:
+	blend_vision_frame = cv2.addWeighted(source_vision_frame, 1 - blend_factor, target_vision_frame, blend_factor, 0)
+	return blend_vision_frame
 
 
 def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[VisionFrame], int, int]:

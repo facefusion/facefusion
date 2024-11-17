@@ -1,8 +1,8 @@
-from facefusion.execution import create_execution_providers, get_execution_provider_choices, has_execution_provider
+from facefusion.execution import create_execution_providers, get_execution_provider_set, has_execution_provider
 
 
-def test_get_execution_provider_choices() -> None:
-	assert 'cpu' in get_execution_provider_choices()
+def test_get_execution_provider_set() -> None:
+	assert 'cpu' in get_execution_provider_set().keys()
 
 
 def test_has_execution_provider() -> None:
@@ -15,8 +15,7 @@ def test_multiple_execution_providers() -> None:
 	[
 		('CUDAExecutionProvider',
 		{
-			'device_id': '1',
-			'cudnn_conv_algo_search': 'DEFAULT'
+			'device_id': '1'
 		}),
 		'CPUExecutionProvider'
 	]

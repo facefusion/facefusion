@@ -93,10 +93,9 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	model_hashes, model_sources = collect_model_downloads()
 
-	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
 
 
 @lru_cache(maxsize = None)

@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.typing import Angle, ExecutionProviderSet, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
+from facefusion.typing import Angle, DownloadProviderSet, ExecutionProviderSet, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
 
@@ -22,19 +22,11 @@ face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'region' ]
 face_mask_regions : List[FaceMaskRegion] = [ 'skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip' ]
 temp_frame_formats : List[TempFrameFormat] = [ 'bmp', 'jpg', 'png' ]
 output_audio_encoders : List[OutputAudioEncoder] = [ 'aac', 'libmp3lame', 'libopus', 'libvorbis' ]
-output_video_encoders : List[OutputVideoEncoder] = [ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_videotoolbox', 'hevc_videotoolbox' ]
+output_video_encoders : List[OutputVideoEncoder] = [ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox' ]
 output_video_presets : List[OutputVideoPreset] = [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow' ]
 
 image_template_sizes : List[float] = [ 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 3.5, 4 ]
 video_template_sizes : List[int] = [ 240, 360, 480, 540, 720, 1080, 1440, 2160, 4320 ]
-
-log_level_set : LogLevelSet =\
-{
-	'error': logging.ERROR,
-	'warn': logging.WARNING,
-	'info': logging.INFO,
-	'debug': logging.DEBUG
-}
 
 execution_provider_set : ExecutionProviderSet =\
 {
@@ -45,6 +37,19 @@ execution_provider_set : ExecutionProviderSet =\
 	'openvino': 'OpenVINOExecutionProvider',
 	'rocm': 'ROCMExecutionProvider',
 	'tensorrt': 'TensorrtExecutionProvider'
+}
+download_provider_set : DownloadProviderSet =\
+{
+	'github': 'https://github.com/facefusion/facefusion-assets/releases/download/{base_name}/{file_name}',
+	'huggingface': 'https://huggingface.co/facefusion/{base_name}/resolve/main/{file_name}'
+}
+
+log_level_set : LogLevelSet =\
+{
+	'error': logging.ERROR,
+	'warn': logging.WARNING,
+	'info': logging.INFO,
+	'debug': logging.DEBUG
 }
 
 ui_workflows : List[UiWorkflow] = [ 'instant_runner', 'job_runner', 'job_manager' ]

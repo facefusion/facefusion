@@ -1,20 +1,18 @@
-from functools import lru_cache
 from time import sleep
 from typing import List
 
-import onnx
 from onnxruntime import InferenceSession
 
 from facefusion import process_manager, state_manager
 from facefusion.app_context import detect_app_context
 from facefusion.execution import create_execution_providers, has_execution_provider
 from facefusion.thread_helper import thread_lock
-from facefusion.typing import DownloadSet, ExecutionProviderKey, InferencePool, InferencePoolSet, ModelInitializer
+from facefusion.typing import DownloadSet, ExecutionProviderKey, InferencePool, InferencePoolSet
 
 INFERENCE_POOLS : InferencePoolSet =\
 {
-	'cli': {}, # type:ignore[typeddict-item]
-	'ui': {} # type:ignore[typeddict-item]
+	'cli': {}, #type:ignore[typeddict-item]
+	'ui': {} #type:ignore[typeddict-item]
 }
 
 
@@ -59,12 +57,6 @@ def clear_inference_pool(model_context : str) -> None:
 def create_inference_session(model_path : str, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSession:
 	execution_providers = create_execution_providers(execution_device_id, execution_provider_keys)
 	return InferenceSession(model_path, providers = execution_providers)
-
-
-@lru_cache(maxsize = None)
-def get_static_model_initializer(model_path : str) -> ModelInitializer:
-	model = onnx.load(model_path)
-	return onnx.numpy_helper.to_array(model.graph.initializer[-1])
 
 
 def resolve_execution_provider_keys(model_context : str) -> List[ExecutionProviderKey]:

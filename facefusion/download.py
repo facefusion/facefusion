@@ -4,16 +4,17 @@ import ssl
 import subprocess
 import urllib.request
 from functools import lru_cache
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
 from tqdm import tqdm
 
 from facefusion import logger, process_manager, state_manager, wording
+from facefusion.choices import download_provider_set
 from facefusion.common_helper import is_macos
 from facefusion.filesystem import get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
-from facefusion.typing import DownloadSet
+from facefusion.typing import DownloadProviderKey, DownloadSet
 
 if is_macos():
 	ssl._create_default_https_context = ssl._create_unverified_context
@@ -30,8 +31,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 			with tqdm(total = download_size, initial = initial_size, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 				subprocess.Popen([ shutil.which('curl'), '--create-dirs', '--silent', '--insecure', '--location', '--continue-at', '-', '--output', download_file_path, url ])
 				current_size = initial_size
-
-				progress.set_postfix(file = download_file_name)
+				progress.set_postfix(download_providers = state_manager.get_item('download_providers'), file_name = download_file_name)
 				while current_size < download_size:
 					if is_file(download_file_path):
 						current_size = get_file_size(download_file_path)
@@ -48,13 +48,7 @@ def get_download_size(url : str) -> int:
 		return 0
 
 
-def is_download_done(url : str, file_path : str) -> bool:
-	if is_file(file_path):
-		return get_download_size(url) == get_file_size(file_path)
-	return False
-
-
-def conditional_download_hashes(download_directory_path : str, hashes : DownloadSet) -> bool:
+def conditional_download_hashes(hashes : DownloadSet) -> bool:
 	hash_paths = [ hashes.get(hash_key).get('path') for hash_key in hashes.keys() ]
 
 	process_manager.check()
@@ -64,6 +58,7 @@ def conditional_download_hashes(download_directory_path : str, hashes : Download
 			for index in hashes:
 				if hashes.get(index).get('path') in invalid_hash_paths:
 					invalid_hash_url = hashes.get(index).get('url')
+					download_directory_path = os.path.dirname(hashes.get(index).get('path'))
 					conditional_download(download_directory_path, [ invalid_hash_url ])
 
 	valid_hash_paths, invalid_hash_paths = validate_hash_paths(hash_paths)
@@ -79,7 +74,7 @@ def conditional_download_hashes(download_directory_path : str, hashes : Download
 	return not invalid_hash_paths
 
 
-def conditional_download_sources(download_directory_path : str, sources : DownloadSet) -> bool:
+def conditional_download_sources(sources : DownloadSet) -> bool:
 	source_paths = [ sources.get(source_key).get('path') for source_key in sources.keys() ]
 
 	process_manager.check()
@@ -89,6 +84,7 @@ def conditional_download_sources(download_directory_path : str, sources : Downlo
 			for index in sources:
 				if sources.get(index).get('path') in invalid_source_paths:
 					invalid_source_url = sources.get(index).get('url')
+					download_directory_path = os.path.dirname(sources.get(index).get('path'))
 					conditional_download(download_directory_path, [ invalid_source_url ])
 
 	valid_source_paths, invalid_source_paths = validate_source_paths(source_paths)
@@ -129,3 +125,16 @@ def validate_source_paths(source_paths : List[str]) -> Tuple[List[str], List[str
 		else:
 			invalid_source_paths.append(source_path)
 	return valid_source_paths, invalid_source_paths
+
+
+def resolve_download_url(base_name : str, file_name : str) -> Optional[str]:
+	download_providers = state_manager.get_item('download_providers')
+
+	for download_provider in download_provider_set:
+		if download_provider in download_providers:
+			return resolve_download_url_by_provider(download_provider, base_name, file_name)
+	return None
+
+
+def resolve_download_url_by_provider(download_provider : DownloadProviderKey, base_name : str, file_name : str) -> Optional[str]:
+	return download_provider_set.get(download_provider).format(base_name = base_name, file_name = file_name)

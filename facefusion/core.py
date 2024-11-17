@@ -1,3 +1,4 @@
+import itertools
 import shutil
 import signal
 import sys
@@ -6,7 +7,7 @@ from time import time
 import numpy
 
 from facefusion import content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, voice_extractor, wording
-from facefusion.args import apply_args, collect_job_args, reduce_step_args
+from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.download import conditional_download_hashes, conditional_download_sources
@@ -15,7 +16,7 @@ from facefusion.face_analyser import get_average_face, get_many_faces, get_one_f
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
-from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_relative_path
+from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
@@ -41,6 +42,8 @@ def cli() -> None:
 			route(args)
 		else:
 			program.print_help()
+	else:
+		hard_exit(2)
 
 
 def route(args : Args) -> None:
@@ -65,11 +68,17 @@ def route(args : Args) -> None:
 		for ui_layout in ui.get_ui_layouts_modules(state_manager.get_item('ui_layouts')):
 			if not ui_layout.pre_check():
 				return conditional_exit(2)
+		ui.init()
 		ui.launch()
 	if state_manager.get_item('command') == 'headless-run':
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_core = process_headless(args)
+		hard_exit(error_core)
+	if state_manager.get_item('command') == 'batch-run':
+		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
+			hard_exit(1)
+		error_core = process_batch(args)
 		hard_exit(error_core)
 	if state_manager.get_item('command') in [ 'job-run', 'job-run-all', 'job-retry', 'job-retry-all' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
@@ -79,8 +88,8 @@ def route(args : Args) -> None:
 
 
 def pre_check() -> bool:
-	if sys.version_info < (3, 9):
-		logger.error(wording.get('python_not_supported').format(version = '3.9'), __name__)
+	if sys.version_info < (3, 10):
+		logger.error(wording.get('python_not_supported').format(version = '3.10'), __name__)
 		return False
 	if not shutil.which('curl'):
 		logger.error(wording.get('curl_not_installed'), __name__)
@@ -149,7 +158,6 @@ def conditional_append_reference_faces() -> None:
 
 
 def force_download() -> ErrorCode:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	available_processors = list_directory('facefusion/processors/modules')
 	common_modules =\
 	[
@@ -164,13 +172,13 @@ def force_download() -> ErrorCode:
 	processor_modules = get_processors_modules(available_processors)
 
 	for module in common_modules + processor_modules:
-		if hasattr(module, 'MODEL_SET'):
-			for model in module.MODEL_SET.values():
+		if hasattr(module, 'create_model_set'):
+			for model in module.create_model_set().values():
 				model_hashes = model.get('hashes')
 				model_sources = model.get('sources')
 
 				if model_hashes and model_sources:
-					if not conditional_download_hashes(download_directory_path, model_hashes) or not conditional_download_sources(download_directory_path, model_sources):
+					if not conditional_download_hashes(model_hashes) or not conditional_download_sources(model_sources):
 						return 1
 
 	return 0
@@ -298,6 +306,35 @@ def process_headless(args : Args) -> ErrorCode:
 
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0
+	return 1
+
+
+def process_batch(args : Args) -> ErrorCode:
+	job_id = job_helper.suggest_job_id('batch')
+	step_args = reduce_step_args(args)
+	job_args = reduce_job_args(args)
+	source_paths = resolve_file_pattern(job_args.get('source_pattern'))
+	target_paths = resolve_file_pattern(job_args.get('target_pattern'))
+
+	if job_manager.create_job(job_id):
+		if source_paths and target_paths:
+			for index, (source_path, target_path) in enumerate(itertools.product(source_paths, target_paths)):
+				step_args['source_paths'] = [ source_path ]
+				step_args['target_path'] = target_path
+				step_args['output_path'] = job_args.get('output_pattern').format(index = index)
+				if not job_manager.add_step(job_id, step_args):
+					return 1
+			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
+				return 0
+
+		if not source_paths and target_paths:
+			for index, target_path in enumerate(target_paths):
+				step_args['target_path'] = target_path
+				step_args['output_path'] = job_args.get('output_pattern').format(index = index)
+				if not job_manager.add_step(job_id, step_args):
+					return 1
+			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
+				return 0
 	return 1
 
 
