@@ -29,7 +29,9 @@ def get_temp_frames_pattern(target_path : str, temp_frame_prefix : str) -> str:
 
 
 def get_base_directory_path() -> str:
-	return os.path.join(tempfile.gettempdir(), 'facefusion')
+    if config.get_str_value('paths.temp_path'):
+       return os.path.join(config.get_str_value('paths.temp_path'), 'facefusion') 
+    return os.path.join(tempfile.gettempdir(), 'facefusion')
 
 
 def create_base_directory() -> bool:
