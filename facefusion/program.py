@@ -41,6 +41,7 @@ def create_paths_program() -> ArgumentParser:
 	group_paths.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', default = config.get_str_list('paths.source_paths'))
 	group_paths.add_argument('-t', '--target-path', help = wording.get('help.target_path'), default = config.get_str_value('paths.target_path'))
 	group_paths.add_argument('-o', '--output-path', help = wording.get('help.output_path'), default = config.get_str_value('paths.output_path'))
+	program.add_argument('--temp-path', help = wording.get('help.temp_path'), default = config.get_str_value('paths.temp_path'))
 	job_store.register_step_keys([ 'source_paths', 'target_path', 'output_path' ])
 	return program
 
