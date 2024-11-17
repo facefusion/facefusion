@@ -12,9 +12,7 @@ jobs:
     uses: actions/setup-python@v5
     with:
      python-version: '3.10'
-  - run: pip install flake8
-  - run: pip install flake8-import-order
-  - run: pip install mypy
+  - run: pip install flake8 flake8-import-order mypy
   - run: flake8 facefusion.py install.py
   - run: flake8 facefusion tests
   - run: mypy facefusion.py install.py
@@ -49,9 +47,7 @@ jobs:
     with:
      python-version: '3.10'
   - run: python install.py --onnxruntime default --skip-conda
-  - run: pip install coveralls
-  - run: pip install pytest
-  - run: pip install pytest-cov
+  - run: pip install coveralls pytest pytest-cov
   - run: pytest tests --cov facefusion
   - run: coveralls --service github
     env:
