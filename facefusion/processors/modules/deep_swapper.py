@@ -182,16 +182,25 @@ def forward(crop_vision_frame : VisionFrame, deep_swapper_morph : DeepSwapperMor
 	deep_swapper = get_inference_pool().get('deep_swapper')
 	deep_swapper_inputs = {}
 
-	for index, deep_swapper_input in enumerate(deep_swapper.get_inputs()):
-		if index == 0:
+	for deep_swapper_input in deep_swapper.get_inputs():
+		if deep_swapper_input.name == 'in_face:0':
 			deep_swapper_inputs[deep_swapper_input.name] = crop_vision_frame
-		if index == 1:
+		if deep_swapper_input.name == 'morph_value:0':
 			deep_swapper_inputs[deep_swapper_input.name] = deep_swapper_morph
 
 	with thread_semaphore():
 		crop_target_mask, crop_vision_frame, crop_source_mask = deep_swapper.run(None, deep_swapper_inputs)
 
 	return crop_vision_frame[0], crop_source_mask[0], crop_target_mask[0]
+
+
+def has_morph_input() -> bool:
+	deep_swapper = get_inference_pool().get('deep_swapper')
+
+	for deep_swapper_input in deep_swapper.get_inputs():
+		if deep_swapper_input.name == 'morph_value:0':
+			return True
+	return False
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
