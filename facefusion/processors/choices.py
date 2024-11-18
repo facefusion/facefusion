@@ -6,9 +6,6 @@ from facefusion.processors.typing import AgeModifierModel, DeepSwapperModel, Exp
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
 deep_swapper_models : List[DeepSwapperModel] =\
 [
-	'iperov/emma_watson_224',
-	'iperov/keanu_reeves_320',
-	'iperov/jackie_chan_224',
 	'iperov/alexandra_daddario_224',
 	'iperov/alexei_navalny_224',
 	'iperov/amber_heard_224',
@@ -27,7 +24,7 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'iperov/meghan_markle_224',
 	'iperov/natalie_dormer_224',
 	'iperov/natalie_portman_224',
-	'iperov/nicolas_coppola__224',
+	'iperov/nicolas_coppola_224',
 	'iperov/robert_downey_224',
 	'iperov/rowan_atkinson_224',
 	'iperov/ryan_reynolds_224',
@@ -37,7 +34,24 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'iperov/thomas_cruise_224',
 	'iperov/thomas_holland_224',
 	'iperov/vin_diesel_224',
-	'iperov/vladimir_putin_224'
+	'iperov/vladimir_putin_224',
+	'mats/alica_schmidt_320',
+	'mats/ashley_alexiss_224',
+	'mats/billie_eilish_224',
+	'mats/brie_larson_224',
+	'mats/cara_delevingne_224',
+	'mats/carolin_kebekus_224',
+	'mats/chelsea_clinton_224',
+	'mats/claire_boucher_224',
+	'mats/corinna_kopf_224',
+	'mats/florence_pugh_224',
+	'mats/hillary_clinton_224',
+	'mats/jenna_fischer_224',
+	'mats/kim_jisoo_320',
+	'mats/mica_suarez_320',
+	'mats/shailene_woodley_224',
+	'mats/shraddha_kapoor_320',
+	'mats/yu_jimin_352'
 ]
 expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]
 face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race' ]

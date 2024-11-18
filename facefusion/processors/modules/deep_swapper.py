@@ -27,42 +27,56 @@ from facefusion.vision import conditional_match_frame_color, read_image, read_st
 def create_model_set() -> ModelSet:
 	model_config =\
 	[
-		('iperov', 'emma_watson_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'keanu_reeves_320', 'dfl_whole_face', (320, 320)),
-		('iperov', 'jackie_chan_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'alexandra_daddario_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'alexei_navalny_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'amber_heard_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'dilraba_dilmurat_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'elon_musk_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'emilia_clarke_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'emma_watson_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'erin_moriarty_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'jackie_chan_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'james_carrey_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'jason_statham_320', 'dfl_whole_face', (320, 320)),
-		('iperov', 'jessica_alba_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'keanu_reeves_320', 'dfl_whole_face', (320, 320)),
-		('iperov', 'lucy_liu_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'margot_robbie_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'meghan_markle_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'natalie_dormer_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'natalie_portman_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'nicolas_coppola__224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'robert_downey_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'rowan_atkinson_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'ryan_reynolds_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'scarlett_johansson_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'sylvester_stallone_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'taylor_swift_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'thomas_cruise_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'thomas_holland_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'vin_diesel_224', 'dfl_whole_face', (224, 224)),
-		('iperov', 'vladimir_putin_224', 'dfl_whole_face', (224, 224))
+		('iperov', 'alexandra_daddario_224', (224, 224)),
+		('iperov', 'alexei_navalny_224', (224, 224)),
+		('iperov', 'amber_heard_224', (224, 224)),
+		('iperov', 'dilraba_dilmurat_224', (224, 224)),
+		('iperov', 'elon_musk_224', (224, 224)),
+		('iperov', 'emilia_clarke_224', (224, 224)),
+		('iperov', 'emma_watson_224', (224, 224)),
+		('iperov', 'erin_moriarty_224', (224, 224)),
+		('iperov', 'jackie_chan_224', (224, 224)),
+		('iperov', 'james_carrey_224', (224, 224)),
+		('iperov', 'jason_statham_320', (320, 320)),
+		('iperov', 'jessica_alba_224', (224, 224)),
+		('iperov', 'keanu_reeves_320', (320, 320)),
+		('iperov', 'lucy_liu_224', (224, 224)),
+		('iperov', 'margot_robbie_224', (224, 224)),
+		('iperov', 'meghan_markle_224', (224, 224)),
+		('iperov', 'natalie_dormer_224', (224, 224)),
+		('iperov', 'natalie_portman_224', (224, 224)),
+		('iperov', 'nicolas_coppola_224', (224, 224)),
+		('iperov', 'robert_downey_224', (224, 224)),
+		('iperov', 'rowan_atkinson_224', (224, 224)),
+		('iperov', 'ryan_reynolds_224', (224, 224)),
+		('iperov', 'scarlett_johansson_224', (224, 224)),
+		('iperov', 'sylvester_stallone_224', (224, 224)),
+		('iperov', 'taylor_swift_224', (224, 224)),
+		('iperov', 'thomas_cruise_224', (224, 224)),
+		('iperov', 'thomas_holland_224', (224, 224)),
+		('iperov', 'vin_diesel_224', (224, 224)),
+		('iperov', 'vladimir_putin_224', (224, 224)),
+		('mats', 'alica_schmidt_320', (320, 320)),
+		('mats', 'ashley_alexiss_224', (224, 224)),
+		('mats', 'billie_eilish_224', (224, 224)),
+		('mats', 'brie_larson_224', (224, 224)),
+		('mats', 'cara_delevingne_224', (224, 224)),
+		('mats', 'carolin_kebekus_224', (224, 224)),
+		('mats', 'chelsea_clinton_224', (224, 224)),
+		('mats', 'claire_boucher_224', (224, 224)),
+		('mats', 'corinna_kopf_224', (224, 224)),
+		('mats', 'florence_pugh_224', (224, 224)),
+		('mats', 'hillary_clinton_224', (224, 224)),
+		('mats', 'jenna_fischer_224', (224, 224)),
+		('mats', 'kim_jisoo_320', (320, 320)),
+		('mats', 'mica_suarez_320', (320, 320)),
+		('mats', 'shailene_woodley_224', (224, 224)),
+		('mats', 'shraddha_kapoor_320', (320, 320)),
+		('mats', 'yu_jimin_352', (352, 352))
 	]
 	model_set : ModelSet = {}
 
-	for model_creator, model_name, model_template, model_size in model_config:
+	for model_creator, model_name, model_size in model_config:
 		model_id = '/'.join([ model_creator, model_name ])
 
 		model_set[model_id] =\
@@ -83,7 +97,7 @@ def create_model_set() -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/' + model_creator + '/' + model_name + '.dfm')
 				}
 			},
-			'template': model_template,
+			'template': 'dfl_whole_face',
 			'size': model_size
 		}
 
