@@ -55,12 +55,12 @@ def listen() -> None:
 
 	processors_checkbox_group = get_ui_component('processors_checkbox_group')
 	if processors_checkbox_group:
-		processors_checkbox_group.change(remote_update, inputs = processors_checkbox_group, outputs = [ FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_WEIGHT_SLIDER ])
+		processors_checkbox_group.change(remote_update, inputs = processors_checkbox_group, outputs = [ FACE_ENHANCER_MODEL_DROPDOWN, FACE_ENHANCER_BLEND_SLIDER, FACE_ENHANCER_WEIGHT_SLIDER ])
 
 
-def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider]:
+def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider, gradio.Slider]:
 	has_face_enhancer = 'face_enhancer' in processors
-	return gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer and has_weight_input())
+	return gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer and has_weight_input())
 
 
 def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> Tuple[gradio.Dropdown, gradio.Slider]:
