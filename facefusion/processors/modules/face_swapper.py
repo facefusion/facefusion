@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from functools import lru_cache
 from typing import List, Tuple
 
 import numpy
@@ -26,7 +27,8 @@ from facefusion.typing import ApplyStateItem, Args, Embedding, Face, InferencePo
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
 
-def create_model_set() -> ModelSet:
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
 	return\
 	{
 		'blendswap_256':
@@ -346,7 +348,7 @@ def clear_inference_pool() -> None:
 def get_model_options() -> ModelOptions:
 	face_swapper_model = state_manager.get_item('face_swapper_model')
 	face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') and face_swapper_model == 'inswapper_128_fp16' else face_swapper_model
-	return create_model_set().get(face_swapper_model)
+	return create_static_model_set().get(face_swapper_model)
 
 
 def register_args(program : ArgumentParser) -> None:
