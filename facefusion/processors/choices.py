@@ -186,5 +186,6 @@ face_editor_head_pitch_range : Sequence[float] = create_float_range(-1.0, 1.0, 0
 face_editor_head_yaw_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.05)
 face_editor_head_roll_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.05)
 face_enhancer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
+face_enhancer_weight_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
 frame_colorizer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : Sequence[int] = create_int_range(0, 100, 1)

@@ -35,6 +35,7 @@ ComponentName = Literal\
 	'face_editor_mouth_smile_slider',
 	'face_enhancer_blend_slider',
 	'face_enhancer_model_dropdown',
+	'face_enhancer_weight_slider',
 	'face_landmarker_model_dropdown',
 	'face_landmarker_score_slider',
 	'face_mask_blur_slider',

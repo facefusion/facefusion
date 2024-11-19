@@ -128,6 +128,7 @@ def listen() -> None:
 		'face_editor_head_yaw_slider',
 		'face_editor_head_roll_slider',
 		'face_enhancer_blend_slider',
+		'face_enhancer_weight_slider',
 		'frame_colorizer_blend_slider',
 		'frame_enhancer_blend_slider',
 		'reference_face_distance_slider',
