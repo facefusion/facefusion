@@ -121,7 +121,7 @@ WORDING : Dict[str, Any] =\
 		'reference_frame_number': 'specify the frame used to create the reference face',
 		# face masker
 		'face_mask_types': 'mix and match different face mask types (choices: {choices})',
-		'face_mask_blur': 'specify the degree of blur applied the box mask',
+		'face_mask_blur': 'specify the degree of blur applied to the box mask',
 		'face_mask_padding': 'apply top, right, bottom and left padding to the box mask',
 		'face_mask_regions': 'choose the facial features used for the region mask (choices: {choices})',
 		# frame extraction
@@ -165,6 +165,7 @@ WORDING : Dict[str, Any] =\
 		'face_editor_head_roll': 'specify the head roll',
 		'face_enhancer_model': 'choose the model responsible for enhancing the face',
 		'face_enhancer_blend': 'blend the enhanced into the previous face',
+		'face_enhancer_weight': 'specify the degree of weight applied to the face',
 		'face_swapper_model': 'choose the model responsible for swapping the face',
 		'face_swapper_pixel_boost': 'choose the pixel boost resolution for the face swapper',
 		'frame_colorizer_model': 'choose the model responsible for colorizing the frame',
@@ -260,6 +261,7 @@ WORDING : Dict[str, Any] =\
 		'face_editor_mouth_purse_slider': 'FACE EDITOR MOUTH PURSE',
 		'face_editor_mouth_smile_slider': 'FACE EDITOR MOUTH SMILE',
 		'face_enhancer_blend_slider': 'FACE ENHANCER BLEND',
+		'face_enhancer_weight_slider': 'FACE ENHANCER WEIGHT',
 		'face_enhancer_model_dropdown': 'FACE ENHANCER MODEL',
 		'face_landmarker_model_dropdown': 'FACE LANDMARKER MODEL',
 		'face_landmarker_score_slider': 'FACE LANDMARKER SCORE',

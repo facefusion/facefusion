@@ -8,7 +8,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
-from facefusion.common_helper import create_int_metavar
+from facefusion.common_helper import create_float_metavar, create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
@@ -240,12 +240,14 @@ def register_args(program : ArgumentParser) -> None:
 	if group_processors:
 		group_processors.add_argument('--face-enhancer-model', help = wording.get('help.face_enhancer_model'), default = config.get_str_value('processors.face_enhancer_model', 'gfpgan_1.4'), choices = processors_choices.face_enhancer_models)
 		group_processors.add_argument('--face-enhancer-blend', help = wording.get('help.face_enhancer_blend'), type = int, default = config.get_int_value('processors.face_enhancer_blend', '80'), choices = processors_choices.face_enhancer_blend_range, metavar = create_int_metavar(processors_choices.face_enhancer_blend_range))
-		facefusion.jobs.job_store.register_step_keys([ 'face_enhancer_model', 'face_enhancer_blend' ])
+		group_processors.add_argument('--face-enhancer-weight', help = wording.get('help.face_enhancer_weight'), type = float, default = config.get_float_value('processors.face_enhancer_weight', '1.0'), choices = processors_choices.face_enhancer_weight_range, metavar = create_float_metavar(processors_choices.face_enhancer_weight_range))
+		facefusion.jobs.job_store.register_step_keys([ 'face_enhancer_model', 'face_enhancer_blend', 'face_enhancer_weight' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_enhancer_model', args.get('face_enhancer_model'))
 	apply_state_item('face_enhancer_blend', args.get('face_enhancer_blend'))
+	apply_state_item('face_enhancer_weight', args.get('face_enhancer_weight'))
 
 
 def pre_check() -> bool:
@@ -296,7 +298,7 @@ def enhance_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionF
 		crop_masks.append(occlusion_mask)
 
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	face_enhancer_weight = numpy.array([ 1 ]).astype(numpy.double)
+	face_enhancer_weight = numpy.array([ state_manager.get_item('face_enhancer_weight') ]).astype(numpy.double)
 	crop_vision_frame = forward(crop_vision_frame, face_enhancer_weight)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
@@ -319,6 +321,15 @@ def forward(crop_vision_frame : VisionFrame, face_enhancer_weight : FaceEnhancer
 		crop_vision_frame = face_enhancer.run(None, face_enhancer_inputs)[0][0]
 
 	return crop_vision_frame
+
+
+def has_weight_input() -> bool:
+	face_enhancer = get_inference_pool().get('face_enhancer')
+
+	for deep_swapper_input in face_enhancer.get_inputs():
+		if deep_swapper_input.name == 'weight':
+			return True
+	return False
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:

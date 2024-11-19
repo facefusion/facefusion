@@ -17,11 +17,12 @@ def render() -> None:
 	global AGE_MODIFIER_MODEL_DROPDOWN
 	global AGE_MODIFIER_DIRECTION_SLIDER
 
+	has_age_modifier = 'age_modifier' in state_manager.get_item('processors')
 	AGE_MODIFIER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.age_modifier_model_dropdown'),
 		choices = processors_choices.age_modifier_models,
 		value = state_manager.get_item('age_modifier_model'),
-		visible = 'age_modifier' in state_manager.get_item('processors')
+		visible = has_age_modifier
 	)
 	AGE_MODIFIER_DIRECTION_SLIDER = gradio.Slider(
 		label = wording.get('uis.age_modifier_direction_slider'),
@@ -29,7 +30,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.age_modifier_direction_range),
 		minimum = processors_choices.age_modifier_direction_range[0],
 		maximum = processors_choices.age_modifier_direction_range[-1],
-		visible = 'age_modifier' in state_manager.get_item('processors')
+		visible = has_age_modifier
 	)
 	register_ui_component('age_modifier_model_dropdown', AGE_MODIFIER_MODEL_DROPDOWN)
 	register_ui_component('age_modifier_direction_slider', AGE_MODIFIER_DIRECTION_SLIDER)
