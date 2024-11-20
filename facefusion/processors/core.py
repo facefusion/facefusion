@@ -53,12 +53,6 @@ def get_processors_modules(processors : List[str]) -> List[ModuleType]:
 	return processor_modules
 
 
-def clear_processors_modules(processors : List[str]) -> None:
-	for processor in processors:
-		processor_module = load_processor_module(processor)
-		processor_module.clear_inference_pool()
-
-
 def multi_process_frames(source_paths : List[str], temp_frame_paths : List[str], process_frames : ProcessFrames) -> None:
 	queue_payloads = create_queue_payloads(temp_frame_paths)
 	with tqdm(total = len(queue_payloads), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:

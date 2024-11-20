@@ -101,7 +101,7 @@ def pre_check() -> bool:
 
 
 def common_pre_check() -> bool:
-	modules =\
+	common_modules =\
 	[
 		content_analyser,
 		face_classifier,
@@ -112,7 +112,7 @@ def common_pre_check() -> bool:
 		voice_extractor
 	]
 
-	return all(module.pre_check() for module in modules)
+	return all(module.pre_check() for module in common_modules)
 
 
 def processors_pre_check() -> bool:
@@ -122,77 +122,23 @@ def processors_pre_check() -> bool:
 	return True
 
 
-def conditional_process() -> ErrorCode:
-	start_time = time()
-	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		if not processor_module.pre_process('output'):
-			return 2
-	conditional_append_reference_faces()
-	if is_image(state_manager.get_item('target_path')):
-		return process_image(start_time)
-	if is_video(state_manager.get_item('target_path')):
-		return process_video(start_time)
-	return 0
-
-
-def conditional_append_reference_faces() -> None:
-	if 'reference' in state_manager.get_item('face_selector_mode') and not get_reference_faces():
-		source_frames = read_static_images(state_manager.get_item('source_paths'))
-		source_faces = get_many_faces(source_frames)
-		source_face = get_average_face(source_faces)
-		if is_video(state_manager.get_item('target_path')):
-			reference_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		else:
-			reference_frame = read_image(state_manager.get_item('target_path'))
-		reference_faces = sort_and_filter_faces(get_many_faces([ reference_frame ]))
-		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
-		append_reference_face('origin', reference_face)
-
-		if source_face and reference_face:
-			for processor_module in get_processors_modules(state_manager.get_item('processors')):
-				abstract_reference_frame = processor_module.get_reference_frame(source_face, reference_face, reference_frame)
-				if numpy.any(abstract_reference_frame):
-					abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame ]))
-					abstract_reference_face = get_one_face(abstract_reference_faces, state_manager.get_item('reference_face_position'))
-					append_reference_face(processor_module.__name__, abstract_reference_face)
-
-
-def clear_model_sets() -> None:
-	available_processors = list_directory('facefusion/processors/modules')
+def force_download() -> ErrorCode:
 	common_modules =\
 	[
 		content_analyser,
 		face_classifier,
 		face_detector,
 		face_landmarker,
-		face_recognizer,
 		face_masker,
+		face_recognizer,
 		voice_extractor
 	]
+	available_processors = list_directory('facefusion/processors/modules')
 	processor_modules = get_processors_modules(available_processors)
 
 	for module in common_modules + processor_modules:
 		if hasattr(module, 'create_static_model_set'):
-			module.create_static_model_set.cache_clear()
-
-
-def force_download() -> ErrorCode:
-	available_processors = list_directory('facefusion/processors/modules')
-	common_modules =\
-	[
-		content_analyser,
-		face_classifier,
-		face_detector,
-		face_landmarker,
-		face_recognizer,
-		face_masker,
-		voice_extractor
-	]
-	processor_modules = get_processors_modules(available_processors)
-
-	for module in common_modules + processor_modules:
-		if hasattr(module, 'create_model_set'):
-			for model in module.create_model_set().values():
+			for model in module.create_static_model_set().values():
 				model_hashes = model.get('hashes')
 				model_sources = model.get('sources')
 
@@ -306,19 +252,6 @@ def route_job_runner() -> ErrorCode:
 	return 2
 
 
-def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
-	clear_reference_faces()
-	step_total = job_manager.count_step_total(job_id)
-	step_args.update(collect_job_args())
-	apply_args(step_args, state_manager.set_item)
-
-	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
-	if common_pre_check() and processors_pre_check():
-		error_code = conditional_process()
-		return error_code == 0
-	return False
-
-
 def process_headless(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('headless')
 	step_args = reduce_step_args(args)
@@ -355,6 +288,54 @@ def process_batch(args : Args) -> ErrorCode:
 			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 				return 0
 	return 1
+
+
+def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
+	clear_reference_faces()
+	step_total = job_manager.count_step_total(job_id)
+	step_args.update(collect_job_args())
+	apply_args(step_args, state_manager.set_item)
+
+	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
+	if common_pre_check() and processors_pre_check():
+		error_code = conditional_process()
+		return error_code == 0
+	return False
+
+
+def conditional_process() -> ErrorCode:
+	start_time = time()
+	for processor_module in get_processors_modules(state_manager.get_item('processors')):
+		if not processor_module.pre_process('output'):
+			return 2
+	conditional_append_reference_faces()
+	if is_image(state_manager.get_item('target_path')):
+		return process_image(start_time)
+	if is_video(state_manager.get_item('target_path')):
+		return process_video(start_time)
+	return 0
+
+
+def conditional_append_reference_faces() -> None:
+	if 'reference' in state_manager.get_item('face_selector_mode') and not get_reference_faces():
+		source_frames = read_static_images(state_manager.get_item('source_paths'))
+		source_faces = get_many_faces(source_frames)
+		source_face = get_average_face(source_faces)
+		if is_video(state_manager.get_item('target_path')):
+			reference_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		else:
+			reference_frame = read_image(state_manager.get_item('target_path'))
+		reference_faces = sort_and_filter_faces(get_many_faces([ reference_frame ]))
+		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
+		append_reference_face('origin', reference_face)
+
+		if source_face and reference_face:
+			for processor_module in get_processors_modules(state_manager.get_item('processors')):
+				abstract_reference_frame = processor_module.get_reference_frame(source_face, reference_face, reference_frame)
+				if numpy.any(abstract_reference_frame):
+					abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame ]))
+					abstract_reference_face = get_one_face(abstract_reference_faces, state_manager.get_item('reference_face_position'))
+					append_reference_face(processor_module.__name__, abstract_reference_face)
 
 
 def process_image(start_time : float) -> ErrorCode:

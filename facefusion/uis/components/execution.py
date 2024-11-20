@@ -4,7 +4,8 @@ import gradio
 
 from facefusion import content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, state_manager, voice_extractor, wording
 from facefusion.execution import get_execution_provider_set
-from facefusion.processors.core import clear_processors_modules
+from facefusion.filesystem import list_directory
+from facefusion.processors.core import get_processors_modules
 from facefusion.typing import ExecutionProviderKey
 
 EXECUTION_PROVIDERS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
@@ -25,14 +26,23 @@ def listen() -> None:
 
 
 def update_execution_providers(execution_providers : List[ExecutionProviderKey]) -> gradio.CheckboxGroup:
-	content_analyser.clear_inference_pool()
-	face_classifier.clear_inference_pool()
-	face_detector.clear_inference_pool()
-	face_landmarker.clear_inference_pool()
-	face_masker.clear_inference_pool()
-	face_recognizer.clear_inference_pool()
-	voice_extractor.clear_inference_pool()
-	clear_processors_modules(state_manager.get_item('processors'))
+	common_modules =\
+	[
+		content_analyser,
+		face_classifier,
+		face_detector,
+		face_landmarker,
+		face_masker,
+		face_recognizer,
+		voice_extractor
+	]
+	available_processors = list_directory('facefusion/processors/modules')
+	processor_modules = get_processors_modules(available_processors)
+
+	for module in common_modules + processor_modules:
+		if hasattr(module, 'clear_inference_pool'):
+			module.clear_inference_pool()
+
 	execution_providers = execution_providers or list(get_execution_provider_set())
 	state_manager.set_item('execution_providers', execution_providers)
 	return gradio.CheckboxGroup(value = state_manager.get_item('execution_providers'))
