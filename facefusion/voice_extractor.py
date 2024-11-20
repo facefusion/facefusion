@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Tuple
 
 import numpy
@@ -9,28 +10,31 @@ from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import Audio, AudioChunk, InferencePool, ModelOptions, ModelSet
 
-MODEL_SET : ModelSet =\
-{
-	'kim_vocal_2':
+
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
+	return\
 	{
-		'hashes':
+		'kim_vocal_2':
 		{
-			'voice_extractor':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/kim_vocal_2.hash',
-				'path': resolve_relative_path('../.assets/models/kim_vocal_2.hash')
-			}
-		},
-		'sources':
-		{
-			'voice_extractor':
+				'voice_extractor':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/kim_vocal_2.hash',
+					'path': resolve_relative_path('../.assets/models/kim_vocal_2.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/kim_vocal_2.onnx',
-				'path': resolve_relative_path('../.assets/models/kim_vocal_2.onnx')
+				'voice_extractor':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/kim_vocal_2.onnx',
+					'path': resolve_relative_path('../.assets/models/kim_vocal_2.onnx')
+				}
 			}
 		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -43,7 +47,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET.get('kim_vocal_2')
+	return create_static_model_set().get('kim_vocal_2')
 
 
 def pre_check() -> bool:

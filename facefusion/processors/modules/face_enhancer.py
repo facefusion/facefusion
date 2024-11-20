@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from functools import lru_cache
 from typing import List
 
 import cv2
@@ -24,7 +25,8 @@ from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOp
 from facefusion.vision import read_image, read_static_image, write_image
 
 
-def create_model_set() -> ModelSet:
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
 	return\
 	{
 		'codeformer':
@@ -232,7 +234,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	face_enhancer_model = state_manager.get_item('face_enhancer_model')
-	return create_model_set().get(face_enhancer_model)
+	return create_static_model_set().get(face_enhancer_model)
 
 
 def register_args(program : ArgumentParser) -> None:

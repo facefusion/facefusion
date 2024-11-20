@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from functools import lru_cache
 from typing import List
 
 import cv2
@@ -25,7 +26,8 @@ from facefusion.typing import ApplyStateItem, Args, AudioFrame, Face, InferenceP
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
 
 
-def create_model_set() -> ModelSet:
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
 	return\
 	{
 		'wav2lip_96':
@@ -84,7 +86,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	lip_syncer_model = state_manager.get_item('lip_syncer_model')
-	return create_model_set().get(lip_syncer_model)
+	return create_static_model_set().get(lip_syncer_model)
 
 
 def register_args(program : ArgumentParser) -> None:

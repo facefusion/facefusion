@@ -11,33 +11,37 @@ from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
 from facefusion.vision import count_video_frame_total, detect_video_fps, get_video_frame, read_image
 
-MODEL_SET : ModelSet =\
-{
-	'open_nsfw':
-	{
-		'hashes':
-		{
-			'content_analyser':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/open_nsfw.hash',
-				'path': resolve_relative_path('../.assets/models/open_nsfw.hash')
-			}
-		},
-		'sources':
-		{
-			'content_analyser':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/open_nsfw.onnx',
-				'path': resolve_relative_path('../.assets/models/open_nsfw.onnx')
-			}
-		},
-		'size': (224, 224),
-		'mean': [ 104, 117, 123 ]
-	}
-}
 PROBABILITY_LIMIT = 0.80
 RATE_LIMIT = 10
 STREAM_COUNTER = 0
+
+
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
+	return\
+	{
+		'open_nsfw':
+		{
+			'hashes':
+			{
+				'content_analyser':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/open_nsfw.hash',
+					'path': resolve_relative_path('../.assets/models/open_nsfw.hash')
+				}
+			},
+			'sources':
+			{
+				'content_analyser':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/open_nsfw.onnx',
+					'path': resolve_relative_path('../.assets/models/open_nsfw.onnx')
+				}
+			},
+			'size': (224, 224),
+			'mean': [ 104, 117, 123 ]
+		}
+	}
 
 
 def get_inference_pool() -> InferencePool:
@@ -50,7 +54,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET.get('open_nsfw')
+	return create_static_model_set().get('open_nsfw')
 
 
 def pre_check() -> bool:

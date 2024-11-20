@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Tuple
 
 import cv2
@@ -10,68 +11,71 @@ from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import Angle, BoundingBox, DownloadSet, FaceLandmark5, FaceLandmark68, InferencePool, ModelSet, Prediction, Score, VisionFrame
 
-MODEL_SET : ModelSet =\
-{
-	'2dfan4':
+
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
+	return\
 	{
-		'hashes':
+		'2dfan4':
 		{
-			'2dfan4':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.hash',
-				'path': resolve_relative_path('../.assets/models/2dfan4.hash')
-			}
+				'2dfan4':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.hash',
+					'path': resolve_relative_path('../.assets/models/2dfan4.hash')
+				}
+			},
+			'sources':
+			{
+				'2dfan4':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.onnx',
+					'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
+				}
+			},
+			'size': (256, 256)
 		},
-		'sources':
+		'peppa_wutz':
 		{
-			'2dfan4':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.onnx',
-				'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
-			}
+				'peppa_wutz':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.hash',
+					'path': resolve_relative_path('../.assets/models/peppa_wutz.hash')
+				}
+			},
+			'sources':
+			{
+				'peppa_wutz':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.onnx',
+					'path': resolve_relative_path('../.assets/models/peppa_wutz.onnx')
+				}
+			},
+			'size': (256, 256)
 		},
-		'size': (256, 256)
-	},
-	'peppa_wutz':
-	{
-		'hashes':
+		'fan_68_5':
 		{
-			'peppa_wutz':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.hash',
-				'path': resolve_relative_path('../.assets/models/peppa_wutz.hash')
-			}
-		},
-		'sources':
-		{
-			'peppa_wutz':
+				'fan_68_5':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fan_68_5.hash',
+					'path': resolve_relative_path('../.assets/models/fan_68_5.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.onnx',
-				'path': resolve_relative_path('../.assets/models/peppa_wutz.onnx')
-			}
-		},
-		'size': (256, 256)
-	},
-	'fan_68_5':
-	{
-		'hashes':
-		{
-			'fan_68_5':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fan_68_5.hash',
-				'path': resolve_relative_path('../.assets/models/fan_68_5.hash')
-			}
-		},
-		'sources':
-		{
-			'fan_68_5':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fan_68_5.onnx',
-				'path': resolve_relative_path('../.assets/models/fan_68_5.onnx')
+				'fan_68_5':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fan_68_5.onnx',
+					'path': resolve_relative_path('../.assets/models/fan_68_5.onnx')
+				}
 			}
 		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -86,21 +90,22 @@ def clear_inference_pool() -> None:
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
+	model_set = create_static_model_set()
 	model_hashes =\
 	{
-		'fan_68_5': MODEL_SET.get('fan_68_5').get('hashes').get('fan_68_5')
+		'fan_68_5': model_set.get('fan_68_5').get('hashes').get('fan_68_5')
 	}
 	model_sources =\
 	{
-		'fan_68_5': MODEL_SET.get('fan_68_5').get('sources').get('fan_68_5')
+		'fan_68_5': model_set.get('fan_68_5').get('sources').get('fan_68_5')
 	}
 
 	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
-		model_hashes['2dfan4'] = MODEL_SET.get('2dfan4').get('hashes').get('2dfan4')
-		model_sources['2dfan4'] = MODEL_SET.get('2dfan4').get('sources').get('2dfan4')
+		model_hashes['2dfan4'] = model_set.get('2dfan4').get('hashes').get('2dfan4')
+		model_sources['2dfan4'] = model_set.get('2dfan4').get('sources').get('2dfan4')
 	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
-		model_hashes['peppa_wutz'] = MODEL_SET.get('peppa_wutz').get('hashes').get('peppa_wutz')
-		model_sources['peppa_wutz'] = MODEL_SET.get('peppa_wutz').get('sources').get('peppa_wutz')
+		model_hashes['peppa_wutz'] = model_set.get('peppa_wutz').get('hashes').get('peppa_wutz')
+		model_sources['peppa_wutz'] = model_set.get('peppa_wutz').get('sources').get('peppa_wutz')
 	return model_hashes, model_sources
 
 
@@ -127,7 +132,7 @@ def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox
 
 
 def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox, face_angle: Angle) -> Tuple[FaceLandmark68, Score]:
-	model_size = MODEL_SET.get('2dfan4').get('size')
+	model_size = create_static_model_set().get('2dfan4').get('size')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, model_size)
@@ -146,7 +151,7 @@ def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox
 
 
 def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
-	model_size = MODEL_SET.get('peppa_wutz').get('size')
+	model_size = create_static_model_set().get('peppa_wutz').get('size')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, model_size)

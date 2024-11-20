@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 import cv2
 import numpy
+from charset_normalizer.md import lru_cache
 
 from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources
@@ -11,66 +12,69 @@ from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import Angle, BoundingBox, Detection, DownloadSet, FaceLandmark5, InferencePool, ModelSet, Score, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
-MODEL_SET : ModelSet =\
-{
-	'retinaface':
+
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
+	return\
 	{
-		'hashes':
+		'retinaface':
 		{
-			'retinaface':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.hash',
-				'path': resolve_relative_path('../.assets/models/retinaface_10g.hash')
+				'retinaface':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.hash',
+					'path': resolve_relative_path('../.assets/models/retinaface_10g.hash')
+				}
+			},
+			'sources':
+			{
+				'retinaface':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.onnx',
+					'path': resolve_relative_path('../.assets/models/retinaface_10g.onnx')
+				}
 			}
 		},
-		'sources':
+		'scrfd':
 		{
-			'retinaface':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.onnx',
-				'path': resolve_relative_path('../.assets/models/retinaface_10g.onnx')
-			}
-		}
-	},
-	'scrfd':
-	{
-		'hashes':
-		{
-			'scrfd':
+				'scrfd':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/scrfd_2.5g.hash',
+					'path': resolve_relative_path('../.assets/models/scrfd_2.5g.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/scrfd_2.5g.hash',
-				'path': resolve_relative_path('../.assets/models/scrfd_2.5g.hash')
-			}
-		},
-		'sources':
-		{
-			'scrfd':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/scrfd_2.5g.onnx',
-				'path': resolve_relative_path('../.assets/models/scrfd_2.5g.onnx')
-			}
-		}
-	},
-	'yoloface':
-	{
-		'hashes':
-		{
-			'yoloface':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/yoloface_8n.hash',
-				'path': resolve_relative_path('../.assets/models/yoloface_8n.hash')
+				'scrfd':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/scrfd_2.5g.onnx',
+					'path': resolve_relative_path('../.assets/models/scrfd_2.5g.onnx')
+				}
 			}
 		},
-		'sources':
+		'yoloface':
 		{
-			'yoloface':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/yoloface_8n.onnx',
-				'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
+				'yoloface':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/yoloface_8n.hash',
+					'path': resolve_relative_path('../.assets/models/yoloface_8n.hash')
+				}
+			},
+			'sources':
+			{
+				'yoloface':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/yoloface_8n.onnx',
+					'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
+				}
 			}
 		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -87,16 +91,17 @@ def clear_inference_pool() -> None:
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	model_hashes = {}
 	model_sources = {}
+	model_set = create_static_model_set()
 
 	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
-		model_hashes['retinaface'] = MODEL_SET.get('retinaface').get('hashes').get('retinaface')
-		model_sources['retinaface'] = MODEL_SET.get('retinaface').get('sources').get('retinaface')
+		model_hashes['retinaface'] = model_set.get('retinaface').get('hashes').get('retinaface')
+		model_sources['retinaface'] = model_set.get('retinaface').get('sources').get('retinaface')
 	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
-		model_hashes['scrfd'] = MODEL_SET.get('scrfd').get('hashes').get('scrfd')
-		model_sources['scrfd'] = MODEL_SET.get('scrfd').get('sources').get('scrfd')
+		model_hashes['scrfd'] = model_set.get('scrfd').get('hashes').get('scrfd')
+		model_sources['scrfd'] = model_set.get('scrfd').get('sources').get('scrfd')
 	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
-		model_hashes['yoloface'] = MODEL_SET.get('yoloface').get('hashes').get('yoloface')
-		model_sources['yoloface'] = MODEL_SET.get('yoloface').get('sources').get('yoloface')
+		model_hashes['yoloface'] = model_set.get('yoloface').get('hashes').get('yoloface')
+		model_sources['yoloface'] = model_set.get('yoloface').get('sources').get('yoloface')
 	return model_hashes, model_sources
 
 

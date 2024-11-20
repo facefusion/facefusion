@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from functools import lru_cache
 from typing import List, Tuple
 
 import cv2
@@ -24,7 +25,8 @@ from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, Mask, M
 from facefusion.vision import conditional_match_frame_color, read_image, read_static_image, write_image
 
 
-def create_model_set() -> ModelSet:
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
 	model_config =\
 	[
 		('druuzil', 'adrianne_palicki_384', (384, 384)),
@@ -217,7 +219,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	deep_swapper_model = state_manager.get_item('deep_swapper_model')
-	return create_model_set().get(deep_swapper_model)
+	return create_static_model_set().get(deep_swapper_model)
 
 
 def register_args(program : ArgumentParser) -> None:

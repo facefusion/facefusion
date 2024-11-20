@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import List, Tuple
 
 import numpy
@@ -9,32 +10,35 @@ from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import Age, FaceLandmark5, Gender, InferencePool, ModelOptions, ModelSet, Race, VisionFrame
 
-MODEL_SET : ModelSet =\
-{
-	'fairface':
+
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
+	return\
 	{
-		'hashes':
+		'fairface':
 		{
-			'face_classifier':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.hash',
-				'path': resolve_relative_path('../.assets/models/fairface.hash')
-			}
-		},
-		'sources':
-		{
-			'face_classifier':
+				'face_classifier':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.hash',
+					'path': resolve_relative_path('../.assets/models/fairface.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.onnx',
-				'path': resolve_relative_path('../.assets/models/fairface.onnx')
-			}
-		},
-		'template': 'arcface_112_v2',
-		'size': (224, 224),
-		'mean': [ 0.485, 0.456, 0.406 ],
-		'standard_deviation': [ 0.229, 0.224, 0.225 ]
+				'face_classifier':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.onnx',
+					'path': resolve_relative_path('../.assets/models/fairface.onnx')
+				}
+			},
+			'template': 'arcface_112_v2',
+			'size': (224, 224),
+			'mean': [ 0.485, 0.456, 0.406 ],
+			'standard_deviation': [ 0.229, 0.224, 0.225 ]
+		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -47,7 +51,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET.get('fairface')
+	return create_static_model_set().get('fairface')
 
 
 def pre_check() -> bool:

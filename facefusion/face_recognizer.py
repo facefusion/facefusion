@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import Tuple
 
 import numpy
@@ -9,30 +10,33 @@ from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import Embedding, FaceLandmark5, InferencePool, ModelOptions, ModelSet, VisionFrame
 
-MODEL_SET : ModelSet =\
-{
-	'arcface':
+
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
+	return\
 	{
-		'hashes':
+		'arcface':
 		{
-			'face_recognizer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
-			}
-		},
-		'sources':
-		{
-			'face_recognizer':
+				'face_recognizer':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.hash',
+					'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
-			}
-		},
-		'template': 'arcface_112_v2',
-		'size': (112, 112)
+				'face_recognizer':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.onnx',
+					'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
+				}
+			},
+			'template': 'arcface_112_v2',
+			'size': (112, 112)
+		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -45,7 +49,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET.get('arcface')
+	return create_static_model_set().get('arcface')
 
 
 def pre_check() -> bool:

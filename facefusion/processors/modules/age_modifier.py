@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from functools import lru_cache
 from typing import List
 
 import cv2
@@ -24,7 +25,8 @@ from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOp
 from facefusion.vision import match_frame_color, read_image, read_static_image, write_image
 
 
-def create_model_set() -> ModelSet:
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
 	return\
 	{
 		'styleganex_age':
@@ -73,7 +75,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	age_modifier_model = state_manager.get_item('age_modifier_model')
-	return create_model_set().get(age_modifier_model)
+	return create_static_model_set().get(age_modifier_model)
 
 
 def register_args(program : ArgumentParser) -> None:
