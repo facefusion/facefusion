@@ -11,49 +11,6 @@ from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import DownloadSet, FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
 
-MODEL_SET : ModelSet =\
-{
-	'face_occluder':
-	{
-		'hashes':
-		{
-			'face_occluder':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/dfl_xseg.hash',
-				'path': resolve_relative_path('../.assets/models/dfl_xseg.hash')
-			}
-		},
-		'sources':
-		{
-			'face_occluder':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/dfl_xseg.onnx',
-				'path': resolve_relative_path('../.assets/models/dfl_xseg.onnx')
-			}
-		},
-		'size': (256, 256)
-	},
-	'face_parser':
-	{
-		'hashes':
-		{
-			'face_parser':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.hash',
-				'path': resolve_relative_path('../.assets/models/bisenet_resnet_34.hash')
-			}
-		},
-		'sources':
-		{
-			'face_parser':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.onnx',
-				'path': resolve_relative_path('../.assets/models/bisenet_resnet_34.onnx')
-			}
-		},
-		'size': (512, 512)
-	}
-}
 FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
 {
 	'skin': 1,
@@ -69,6 +26,53 @@ FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
 }
 
 
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
+	return\
+	{
+		'face_occluder':
+		{
+			'hashes':
+			{
+				'face_occluder':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/dfl_xseg.hash',
+					'path': resolve_relative_path('../.assets/models/dfl_xseg.hash')
+				}
+			},
+			'sources':
+			{
+				'face_occluder':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/dfl_xseg.onnx',
+					'path': resolve_relative_path('../.assets/models/dfl_xseg.onnx')
+				}
+			},
+			'size': (256, 256)
+		},
+		'face_parser':
+		{
+			'hashes':
+			{
+				'face_parser':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.hash',
+					'path': resolve_relative_path('../.assets/models/bisenet_resnet_34.hash')
+				}
+			},
+			'sources':
+			{
+				'face_parser':
+				{
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.onnx',
+					'path': resolve_relative_path('../.assets/models/bisenet_resnet_34.onnx')
+				}
+			},
+			'size': (512, 512)
+		}
+	}
+
+
 def get_inference_pool() -> InferencePool:
 	_, model_sources = collect_model_downloads()
 	return inference_manager.get_inference_pool(__name__, model_sources)
@@ -79,15 +83,16 @@ def clear_inference_pool() -> None:
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
+	model_set = create_static_model_set()
 	model_hashes =\
 	{
-		'face_occluder': MODEL_SET.get('face_occluder').get('hashes').get('face_occluder'),
-		'face_parser': MODEL_SET.get('face_parser').get('hashes').get('face_parser')
+		'face_occluder': model_set.get('face_occluder').get('hashes').get('face_occluder'),
+		'face_parser': model_set.get('face_parser').get('hashes').get('face_parser')
 	}
 	model_sources =\
 	{
-		'face_occluder': MODEL_SET.get('face_occluder').get('sources').get('face_occluder'),
-		'face_parser': MODEL_SET.get('face_parser').get('sources').get('face_parser')
+		'face_occluder': model_set.get('face_occluder').get('sources').get('face_occluder'),
+		'face_parser': model_set.get('face_parser').get('sources').get('face_parser')
 	}
 	return model_hashes, model_sources
 
@@ -113,7 +118,7 @@ def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_p
 
 
 def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
-	model_size = MODEL_SET.get('face_occluder').get('size')
+	model_size = create_static_model_set().get('face_occluder').get('size')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 1, 2, 3)
@@ -125,7 +130,7 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 
 
 def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
-	model_size = MODEL_SET.get('face_parser').get('size')
+	model_size = create_static_model_set().get('face_parser').get('size')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
 	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255
 	prepare_vision_frame = numpy.subtract(prepare_vision_frame, numpy.array([ 0.485, 0.456, 0.406 ]).astype(numpy.float32))

@@ -157,6 +157,25 @@ def conditional_append_reference_faces() -> None:
 					append_reference_face(processor_module.__name__, abstract_reference_face)
 
 
+def clear_model_sets() -> None:
+	available_processors = list_directory('facefusion/processors/modules')
+	common_modules =\
+	[
+		content_analyser,
+		face_classifier,
+		face_detector,
+		face_landmarker,
+		face_recognizer,
+		face_masker,
+		voice_extractor
+	]
+	processor_modules = get_processors_modules(available_processors)
+
+	for module in common_modules + processor_modules:
+		if hasattr(module, 'create_static_model_set'):
+			module.create_static_model_set.cache_clear()
+
+
 def force_download() -> ErrorCode:
 	available_processors = list_directory('facefusion/processors/modules')
 	common_modules =\

@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from functools import lru_cache
 from typing import List, Tuple
 
 import cv2
@@ -26,7 +27,8 @@ from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOp
 from facefusion.vision import get_video_frame, read_image, read_static_image, write_image
 
 
-def create_model_set() -> ModelSet:
+@lru_cache(maxsize = None)
+def create_static_model_set() -> ModelSet:
 	return\
 	{
 		'live_portrait':
@@ -85,7 +87,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	expression_restorer_model = state_manager.get_item('expression_restorer_model')
-	return create_model_set().get(expression_restorer_model)
+	return create_static_model_set().get(expression_restorer_model)
 
 
 def register_args(program : ArgumentParser) -> None:
