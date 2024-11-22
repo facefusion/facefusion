@@ -149,7 +149,7 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) 
 	output_audio_encoder = state_manager.get_item('output_audio_encoder')
 	temp_file_path = get_temp_file_path(target_path)
 	temp_video_duration = detect_video_duration(temp_file_path)
-	commands = []
+	commands = [ '-i', temp_file_path ]
 
 	if isinstance(trim_frame_start, int):
 		start_time = trim_frame_start / output_video_fps
@@ -157,7 +157,7 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) 
 	if isinstance(trim_frame_end, int):
 		end_time = trim_frame_end / output_video_fps
 		commands.extend([ '-to', str(end_time) ])
-	commands.extend([ '-i', temp_file_path, '-i', target_path, '-c:v', 'copy', '-c:a', output_audio_encoder, '-map', '0:v:0', '-map', '1:a:0', '-t', str(temp_video_duration), '-y', output_path ])
+	commands.extend([ '-i', target_path, '-c:v', 'copy', '-c:a', output_audio_encoder, '-map', '0:v:0', '-map', '1:a:0', '-t', str(temp_video_duration), '-y', output_path ])
 	return run_ffmpeg(commands).returncode == 0
 
 
