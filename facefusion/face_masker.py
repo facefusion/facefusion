@@ -36,16 +36,16 @@ def create_static_model_set() -> ModelSet:
 			{
 				'face_occluder':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/dfl_xseg.hash',
-					'path': resolve_relative_path('../.assets/models/dfl_xseg.hash')
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/xseg_groggy_256.hash',
+					'path': resolve_relative_path('../.assets/models/xseg_groggy_256.hash')
 				}
 			},
 			'sources':
 			{
 				'face_occluder':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/dfl_xseg.onnx',
-					'path': resolve_relative_path('../.assets/models/dfl_xseg.onnx')
+					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/xseg_groggy_256.onnx',
+					'path': resolve_relative_path('../.assets/models/xseg_groggy_256.onnx')
 				}
 			},
 			'size': (256, 256)
