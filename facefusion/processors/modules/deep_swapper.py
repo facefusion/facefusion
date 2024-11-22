@@ -174,7 +174,7 @@ def create_static_model_set() -> ModelSet:
 		('rumateus', 'olivia_wilde_224', (224, 224)),
 		('rumateus', 'shay_mitchell_224', (224, 224)),
 		('rumateus', 'sophie_turner_224', (224, 224)),
-		('rumateus', 'taylor_swift__224', (224, 224))
+		('rumateus', 'taylor_swift_224', (224, 224))
 	]
 	model_set : ModelSet = {}
 
