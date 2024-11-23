@@ -162,9 +162,6 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame, 
 	age_modifier = get_inference_pool().get('age_modifier')
 	age_modifier_inputs = {}
 
-	if has_execution_provider('coreml'):
-		age_modifier.set_providers([ execution_provider_set.get('cpu') ])
-
 	for age_modifier_input in age_modifier.get_inputs():
 		if age_modifier_input.name == 'target':
 			age_modifier_inputs[age_modifier_input.name] = crop_vision_frame
