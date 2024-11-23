@@ -45,7 +45,6 @@ def create_static_model_set() -> ModelSet:
 				{
 					'url': resolve_download_url('models-3.1.0', 'styleganex_age.onnx'),
 					'path': resolve_relative_path('../.assets/models/styleganex_age.onnx')
-
 				}
 			},
 			'templates':
