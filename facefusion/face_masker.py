@@ -64,7 +64,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'face_parser':
 				{
-					'url': resolve_download_url('models-3.0.0', 'bisenet_resnet_34'),
+					'url': resolve_download_url('models-3.0.0', 'bisenet_resnet_34.onnx'),
 					'path': resolve_relative_path('../.assets/models/bisenet_resnet_34.onnx')
 				}
 			},
