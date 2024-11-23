@@ -200,7 +200,7 @@ def forward(color_vision_frame : VisionFrame) -> VisionFrame:
 	frame_colorizer = get_inference_pool().get('frame_colorizer')
 
 	if has_execution_provider('coreml'):
-		frame_colorizer.set_providers(execution_provider_set.get('cpu'))
+		frame_colorizer.set_providers([ execution_provider_set.get('cpu') ])
 
 	with thread_semaphore():
 		color_vision_frame = frame_colorizer.run(None,

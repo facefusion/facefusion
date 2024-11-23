@@ -449,7 +449,7 @@ def forward_swap_face(source_face : Face, crop_vision_frame : VisionFrame) -> Vi
 	face_swapper_inputs = {}
 
 	if has_execution_provider('coreml') and model_type in [ 'ghost', 'uniface' ]:
-		face_swapper.set_providers(execution_provider_set.get('cpu'))
+		face_swapper.set_providers([ execution_provider_set.get('cpu') ])
 
 	for face_swapper_input in face_swapper.get_inputs():
 		if face_swapper_input.name == 'source':
