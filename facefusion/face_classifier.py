@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy
 
 from facefusion import inference_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
@@ -21,7 +21,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'face_classifier':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.hash',
+					'url': resolve_download_url('models-3.0.0', 'fairface.hash'),
 					'path': resolve_relative_path('../.assets/models/fairface.hash')
 				}
 			},
@@ -29,7 +29,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'face_classifier':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.onnx',
+					'url': resolve_download_url('models-3.0.0', 'fairface.onnx'),
 					'path': resolve_relative_path('../.assets/models/fairface.onnx')
 				}
 			},

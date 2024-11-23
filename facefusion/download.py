@@ -52,14 +52,13 @@ def conditional_download_hashes(hashes : DownloadSet) -> bool:
 	hash_paths = [ hashes.get(hash_key).get('path') for hash_key in hashes.keys() ]
 
 	process_manager.check()
-	if not state_manager.get_item('skip_download'):
-		_, invalid_hash_paths = validate_hash_paths(hash_paths)
-		if invalid_hash_paths:
-			for index in hashes:
-				if hashes.get(index).get('path') in invalid_hash_paths:
-					invalid_hash_url = hashes.get(index).get('url')
-					download_directory_path = os.path.dirname(hashes.get(index).get('path'))
-					conditional_download(download_directory_path, [ invalid_hash_url ])
+	_, invalid_hash_paths = validate_hash_paths(hash_paths)
+	if invalid_hash_paths:
+		for index in hashes:
+			if hashes.get(index).get('path') in invalid_hash_paths:
+				invalid_hash_url = hashes.get(index).get('url')
+				download_directory_path = os.path.dirname(hashes.get(index).get('path'))
+				conditional_download(download_directory_path, [ invalid_hash_url ])
 
 	valid_hash_paths, invalid_hash_paths = validate_hash_paths(hash_paths)
 	for valid_hash_path in valid_hash_paths:
@@ -78,14 +77,13 @@ def conditional_download_sources(sources : DownloadSet) -> bool:
 	source_paths = [ sources.get(source_key).get('path') for source_key in sources.keys() ]
 
 	process_manager.check()
-	if not state_manager.get_item('skip_download'):
-		_, invalid_source_paths = validate_source_paths(source_paths)
-		if invalid_source_paths:
-			for index in sources:
-				if sources.get(index).get('path') in invalid_source_paths:
-					invalid_source_url = sources.get(index).get('url')
-					download_directory_path = os.path.dirname(sources.get(index).get('path'))
-					conditional_download(download_directory_path, [ invalid_source_url ])
+	_, invalid_source_paths = validate_source_paths(source_paths)
+	if invalid_source_paths:
+		for index in sources:
+			if sources.get(index).get('path') in invalid_source_paths:
+				invalid_source_url = sources.get(index).get('url')
+				download_directory_path = os.path.dirname(sources.get(index).get('path'))
+				conditional_download(download_directory_path, [ invalid_source_url ])
 
 	valid_source_paths, invalid_source_paths = validate_source_paths(source_paths)
 	for valid_source_path in valid_source_paths:

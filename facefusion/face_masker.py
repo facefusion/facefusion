@@ -6,7 +6,7 @@ import numpy
 from cv2.typing import Size
 
 from facefusion import inference_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import DownloadSet, FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
@@ -36,7 +36,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'face_occluder':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/xseg_groggy_5.hash',
+					'url': resolve_download_url('models-3.1.0', 'xseg_groggy_5.hash'),
 					'path': resolve_relative_path('../.assets/models/xseg_groggy_5.hash')
 				}
 			},
@@ -44,7 +44,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'face_occluder':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/xseg_groggy_5.onnx',
+					'url': resolve_download_url('models-3.1.0', 'xseg_groggy_5.onnx'),
 					'path': resolve_relative_path('../.assets/models/xseg_groggy_5.onnx')
 				}
 			},
@@ -56,7 +56,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'face_parser':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.hash',
+					'url': resolve_download_url('models-3.0.0', 'bisenet_resnet_34.hash'),
 					'path': resolve_relative_path('../.assets/models/bisenet_resnet_34.hash')
 				}
 			},
@@ -64,7 +64,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'face_parser':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.onnx',
+					'url': resolve_download_url('models-3.0.0', 'bisenet_resnet_34'),
 					'path': resolve_relative_path('../.assets/models/bisenet_resnet_34.onnx')
 				}
 			},

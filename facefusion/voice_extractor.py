@@ -5,7 +5,7 @@ import numpy
 import scipy
 
 from facefusion import inference_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import Audio, AudioChunk, InferencePool, ModelOptions, ModelSet
@@ -21,7 +21,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'voice_extractor':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/kim_vocal_2.hash',
+					'url': resolve_download_url('models-3.0.0', 'kim_vocal_2.hash'),
 					'path': resolve_relative_path('../.assets/models/kim_vocal_2.hash')
 				}
 			},
@@ -29,7 +29,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'voice_extractor':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/kim_vocal_2.onnx',
+					'url': resolve_download_url('models-3.0.0', 'kim_vocal_2.onnx'),
 					'path': resolve_relative_path('../.assets/models/kim_vocal_2.onnx')
 				}
 			}

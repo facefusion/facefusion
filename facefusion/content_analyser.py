@@ -5,7 +5,7 @@ import numpy
 from tqdm import tqdm
 
 from facefusion import inference_manager, state_manager, wording
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
@@ -26,7 +26,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'content_analyser':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/open_nsfw.hash',
+					'url': resolve_download_url('models-3.0.0', 'open_nsfw.hash'),
 					'path': resolve_relative_path('../.assets/models/open_nsfw.hash')
 				}
 			},
@@ -34,7 +34,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'content_analyser':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/open_nsfw.onnx',
+					'url': resolve_download_url('models-3.0.0', 'open_nsfw.onnx'),
 					'path': resolve_relative_path('../.assets/models/open_nsfw.onnx')
 				}
 			},

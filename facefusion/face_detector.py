@@ -5,7 +5,7 @@ import numpy
 from charset_normalizer.md import lru_cache
 
 from facefusion import inference_manager, state_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_helper import create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, normalize_bounding_box, transform_bounding_box, transform_points
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
@@ -23,7 +23,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'retinaface':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.hash',
+					'url': resolve_download_url('models-3.0.0', 'retinaface_10g.hash'),
 					'path': resolve_relative_path('../.assets/models/retinaface_10g.hash')
 				}
 			},
@@ -31,7 +31,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'retinaface':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.onnx',
+					'url': resolve_download_url('models-3.0.0', 'retinaface_10g.onnx'),
 					'path': resolve_relative_path('../.assets/models/retinaface_10g.onnx')
 				}
 			}
@@ -42,7 +42,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'scrfd':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/scrfd_2.5g.hash',
+					'url': resolve_download_url('models-3.0.0', 'scrfd_2.5g.hash'),
 					'path': resolve_relative_path('../.assets/models/scrfd_2.5g.hash')
 				}
 			},
@@ -50,7 +50,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'scrfd':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/scrfd_2.5g.onnx',
+					'url': resolve_download_url('models-3.0.0', 'scrfd_2.5g.onnx'),
 					'path': resolve_relative_path('../.assets/models/scrfd_2.5g.onnx')
 				}
 			}
@@ -61,7 +61,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'yoloface':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/yoloface_8n.hash',
+					'url': resolve_download_url('models-3.0.0', 'yoloface_8n.hash'),
 					'path': resolve_relative_path('../.assets/models/yoloface_8n.hash')
 				}
 			},
@@ -69,7 +69,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'yoloface':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/yoloface_8n.onnx',
+					'url': resolve_download_url('models-3.0.0', 'yoloface_8n.onnx'),
 					'path': resolve_relative_path('../.assets/models/yoloface_8n.onnx')
 				}
 			}

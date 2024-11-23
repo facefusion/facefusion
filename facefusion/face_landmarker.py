@@ -5,7 +5,7 @@ import cv2
 import numpy
 
 from facefusion import inference_manager, state_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_helper import create_rotated_matrix_and_size, estimate_matrix_by_face_landmark_5, transform_points, warp_face_by_translation
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
@@ -22,7 +22,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'2dfan4':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.hash',
+					'url': resolve_download_url('models-3.0.0', '2dfan4.hash'),
 					'path': resolve_relative_path('../.assets/models/2dfan4.hash')
 				}
 			},
@@ -30,7 +30,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'2dfan4':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.onnx',
+					'url': resolve_download_url('models-3.0.0', '2dfan4.onnx'),
 					'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
 				}
 			},
@@ -42,7 +42,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'peppa_wutz':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.hash',
+					'url': resolve_download_url('models-3.0.0', 'peppa_wutz.hash'),
 					'path': resolve_relative_path('../.assets/models/peppa_wutz.hash')
 				}
 			},
@@ -50,7 +50,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'peppa_wutz':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.onnx',
+					'url': resolve_download_url('models-3.0.0', 'peppa_wutz.onnx'),
 					'path': resolve_relative_path('../.assets/models/peppa_wutz.onnx')
 				}
 			},
@@ -62,7 +62,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'fan_68_5':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fan_68_5.hash',
+					'url': resolve_download_url('models-3.0.0', 'fan_68_5.hash'),
 					'path': resolve_relative_path('../.assets/models/fan_68_5.hash')
 				}
 			},
@@ -70,7 +70,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'fan_68_5':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fan_68_5.onnx',
+					'url': resolve_download_url('models-3.0.0', 'fan_68_5.onnx'),
 					'path': resolve_relative_path('../.assets/models/fan_68_5.onnx')
 				}
 			}

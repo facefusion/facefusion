@@ -6,21 +6,19 @@ from facefusion.uis.components import about, age_modifier_options, benchmark, be
 
 
 def pre_check() -> bool:
-	if not state_manager.get_item('skip_download'):
-		conditional_download('.assets/examples',
-		[
-			resolve_download_url('examples-3.0.0', 'source.jpg'),
-			resolve_download_url('examples-3.0.0', 'source.mp3'),
-			resolve_download_url('examples-3.0.0', 'target-240p.mp4'),
-			resolve_download_url('examples-3.0.0', 'target-360p.mp4'),
-			resolve_download_url('examples-3.0.0', 'target-540p.mp4'),
-			resolve_download_url('examples-3.0.0', 'target-720p.mp4'),
-			resolve_download_url('examples-3.0.0', 'target-1080p.mp4'),
-			resolve_download_url('examples-3.0.0', 'target-1440p.mp4'),
-			resolve_download_url('examples-3.0.0', 'target-2160p.mp4')
-		])
-		return True
-	return False
+	conditional_download('.assets/examples',
+	[
+		resolve_download_url('examples-3.0.0', 'source.jpg'),
+		resolve_download_url('examples-3.0.0', 'source.mp3'),
+		resolve_download_url('examples-3.0.0', 'target-240p.mp4'),
+		resolve_download_url('examples-3.0.0', 'target-360p.mp4'),
+		resolve_download_url('examples-3.0.0', 'target-540p.mp4'),
+		resolve_download_url('examples-3.0.0', 'target-720p.mp4'),
+		resolve_download_url('examples-3.0.0', 'target-1080p.mp4'),
+		resolve_download_url('examples-3.0.0', 'target-1440p.mp4'),
+		resolve_download_url('examples-3.0.0', 'target-2160p.mp4')
+	])
+	return True
 
 
 def render() -> gradio.Blocks:

@@ -4,7 +4,7 @@ from typing import Tuple
 import numpy
 
 from facefusion import inference_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
@@ -21,7 +21,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'face_recognizer':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.hash',
+					'url': resolve_download_url('models-3.0.0', 'arcface_w600k_r50.hash'),
 					'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
 				}
 			},
@@ -29,7 +29,7 @@ def create_static_model_set() -> ModelSet:
 			{
 				'face_recognizer':
 				{
-					'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.onnx',
+					'url': resolve_download_url('models-3.0.0', 'arcface_w600k_r50.onnx'),
 					'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
 				}
 			},
