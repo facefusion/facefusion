@@ -8,6 +8,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
+from facefusion.choices import execution_provider_set
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
@@ -347,7 +348,6 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	face_swapper_model = state_manager.get_item('face_swapper_model')
-	face_swapper_model = 'inswapper_128' if has_execution_provider('coreml') and face_swapper_model == 'inswapper_128_fp16' else face_swapper_model
 	return create_static_model_set().get(face_swapper_model)
 
 
@@ -447,6 +447,9 @@ def forward_swap_face(source_face : Face, crop_vision_frame : VisionFrame) -> Vi
 	face_swapper = get_inference_pool().get('face_swapper')
 	model_type = get_model_options().get('type')
 	face_swapper_inputs = {}
+
+	if has_execution_provider('coreml') and model_type in [ 'ghost', 'uniface' ]:
+		face_swapper.set_providers(execution_provider_set.get('cpu'))
 
 	for face_swapper_input in face_swapper.get_inputs():
 		if face_swapper_input.name == 'source':

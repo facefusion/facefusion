@@ -5,7 +5,7 @@ from onnxruntime import InferenceSession
 
 from facefusion import process_manager, state_manager
 from facefusion.app_context import detect_app_context
-from facefusion.execution import create_execution_providers, has_execution_provider
+from facefusion.execution import create_execution_providers
 from facefusion.thread_helper import thread_lock
 from facefusion.typing import DownloadSet, ExecutionProviderKey, InferencePool, InferencePoolSet
 
@@ -30,8 +30,7 @@ def get_inference_pool(model_context : str, model_sources : DownloadSet) -> Infe
 		if app_context == 'ui' and INFERENCE_POOLS.get('cli').get(inference_context):
 			INFERENCE_POOLS['ui'][inference_context] = INFERENCE_POOLS.get('cli').get(inference_context)
 		if not INFERENCE_POOLS.get(app_context).get(inference_context):
-			execution_provider_keys = resolve_execution_provider_keys(model_context)
-			INFERENCE_POOLS[app_context][inference_context] = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), execution_provider_keys)
+			INFERENCE_POOLS[app_context][inference_context] = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 
 		return INFERENCE_POOLS.get(app_context).get(inference_context)
 
@@ -59,13 +58,6 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 	return InferenceSession(model_path, providers = execution_providers)
 
 
-def resolve_execution_provider_keys(model_context : str) -> List[ExecutionProviderKey]:
-	if has_execution_provider('coreml') and (model_context.startswith('facefusion.processors.modules.age_modifier') or model_context.startswith('facefusion.processors.modules.frame_colorizer')):
-		return [ 'cpu' ]
-	return state_manager.get_item('execution_providers')
-
-
 def get_inference_context(model_context : str) -> str:
-	execution_provider_keys = resolve_execution_provider_keys(model_context)
-	inference_context = model_context + '.' + '_'.join(execution_provider_keys)
+	inference_context = model_context + '.' + '_'.join(state_manager.get_item('execution_providers'))
 	return inference_context
