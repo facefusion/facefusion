@@ -9,10 +9,8 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, inference_manager, logger, process_manager, state_manager, wording
-from facefusion.choices import execution_provider_set
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
-from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FrameColorizerInputs
@@ -198,9 +196,6 @@ def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 
 def forward(color_vision_frame : VisionFrame) -> VisionFrame:
 	frame_colorizer = get_inference_pool().get('frame_colorizer')
-
-	if has_execution_provider('coreml'):
-		frame_colorizer.set_providers([ execution_provider_set.get('cpu') ])
 
 	with thread_semaphore():
 		color_vision_frame = frame_colorizer.run(None,
