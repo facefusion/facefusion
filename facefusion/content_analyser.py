@@ -54,8 +54,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	download_scope = state_manager.get_item('download_scope')
-	return create_static_model_set(download_scope).get('open_nsfw')
+	return create_static_model_set('full').get('open_nsfw')
 
 
 def pre_check() -> bool:

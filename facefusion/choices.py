@@ -43,7 +43,7 @@ download_provider_set : DownloadProviderSet =\
 	'github': 'https://github.com/facefusion/facefusion-assets/releases/download/{base_name}/{file_name}',
 	'huggingface': 'https://huggingface.co/facefusion/{base_name}/resolve/main/{file_name}'
 }
-download_scopes : List[DownloadScope] = [ 'lite', 'medium', 'full' ]
+download_scopes : List[DownloadScope] = [ 'lite', 'full' ]
 
 log_level_set : LogLevelSet =\
 {

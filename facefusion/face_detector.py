@@ -91,8 +91,7 @@ def clear_inference_pool() -> None:
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	model_hashes = {}
 	model_sources = {}
-	download_scope = state_manager.get_item('download_scope')
-	model_set = create_static_model_set(download_scope)
+	model_set = create_static_model_set('full')
 
 	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
 		model_hashes['retinaface'] = model_set.get('retinaface').get('hashes').get('retinaface')

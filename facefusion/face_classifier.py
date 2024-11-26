@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 import numpy
 
-from facefusion import inference_manager, state_manager
+from facefusion import inference_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.filesystem import resolve_relative_path
@@ -51,8 +51,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	download_scope = state_manager.get_item('download_scope')
-	return create_static_model_set(download_scope).get('fairface')
+	return create_static_model_set('full').get('fairface')
 
 
 def pre_check() -> bool:

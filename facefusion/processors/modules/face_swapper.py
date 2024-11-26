@@ -348,8 +348,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	face_swapper_model = state_manager.get_item('face_swapper_model')
-	download_scope = state_manager.get_item('download_scope')
-	return create_static_model_set(download_scope).get(face_swapper_model)
+	return create_static_model_set('full').get(face_swapper_model)
 
 
 def register_args(program : ArgumentParser) -> None:

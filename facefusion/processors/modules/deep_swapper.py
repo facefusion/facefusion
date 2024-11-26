@@ -104,7 +104,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			('edel', 'sidney_sweeney_224', (224, 224)),
 			('edel', 'winona_ryder_224', (224, 224))
 		])
-	if download_scope == 'medium' or download_scope == 'full':
+	if download_scope in [ 'lite', 'full' ]:
 		model_config.extend(
 		[
 			('iperov', 'alexandra_daddario_224', (224, 224)),
@@ -230,8 +230,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	deep_swapper_model = state_manager.get_item('deep_swapper_model')
-	download_scope = state_manager.get_item('download_scope')
-	return create_static_model_set(download_scope).get(deep_swapper_model)
+	return create_static_model_set('full').get(deep_swapper_model)
 
 
 def register_args(program : ArgumentParser) -> None:

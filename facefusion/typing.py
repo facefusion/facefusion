@@ -119,7 +119,7 @@ ExecutionProviderSet = Dict[ExecutionProviderKey, ExecutionProviderValue]
 
 DownloadProviderKey = Literal['github', 'huggingface']
 DownloadProviderSet = Dict[DownloadProviderKey, str]
-DownloadScope = Literal['lite', 'medium', 'full']
+DownloadScope = Literal['lite', 'full']
 Download = TypedDict('Download',
 {
 	'url' : str,

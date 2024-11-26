@@ -140,8 +140,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	frame_colorizer_model = state_manager.get_item('frame_colorizer_model')
-	download_scope = state_manager.get_item('download_scope')
-	return create_static_model_set(download_scope).get(frame_colorizer_model)
+	return create_static_model_set('full').get(frame_colorizer_model)
 
 
 def register_args(program : ArgumentParser) -> None:

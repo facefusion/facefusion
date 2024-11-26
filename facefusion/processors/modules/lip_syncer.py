@@ -86,8 +86,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	lip_syncer_model = state_manager.get_item('lip_syncer_model')
-	download_scope = state_manager.get_item('download_scope')
-	return create_static_model_set(download_scope).get(lip_syncer_model)
+	return create_static_model_set('full').get(lip_syncer_model)
 
 
 def register_args(program : ArgumentParser) -> None:
