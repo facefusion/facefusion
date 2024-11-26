@@ -63,4 +63,3 @@ def update_deep_swapper_model(deep_swapper_model : DeepSwapperModel) -> Tuple[gr
 
 def update_deep_swapper_morph(deep_swapper_morph : int) -> None:
 	state_manager.set_item('deep_swapper_morph', deep_swapper_morph)
-
