@@ -8,11 +8,11 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Age, FaceLandmark5, Gender, InferencePool, ModelOptions, ModelSet, Race, VisionFrame
+from facefusion.typing import Age, DownloadScope, FaceLandmark5, Gender, InferencePool, ModelOptions, ModelSet, Race, VisionFrame
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'fairface':
@@ -51,7 +51,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return create_static_model_set().get('fairface')
+	return create_static_model_set('full').get('fairface')
 
 
 def pre_check() -> bool:

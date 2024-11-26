@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.typing import Angle, DownloadProviderSet, ExecutionProviderSet, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
+from facefusion.typing import Angle, DownloadProviderSet, DownloadScope, ExecutionProviderSet, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
 
@@ -43,6 +43,7 @@ download_provider_set : DownloadProviderSet =\
 	'github': 'https://github.com/facefusion/facefusion-assets/releases/download/{base_name}/{file_name}',
 	'huggingface': 'https://huggingface.co/facefusion/{base_name}/resolve/main/{file_name}'
 }
+download_scopes : List[DownloadScope] = [ 'lite', 'full' ]
 
 log_level_set : LogLevelSet =\
 {

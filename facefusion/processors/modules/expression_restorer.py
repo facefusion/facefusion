@@ -23,12 +23,12 @@ from facefusion.processors.typing import ExpressionRestorerInputs
 from facefusion.processors.typing import LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import get_video_frame, read_image, read_static_image, write_image
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'live_portrait':
@@ -87,7 +87,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	expression_restorer_model = state_manager.get_item('expression_restorer_model')
-	return create_static_model_set().get(expression_restorer_model)
+	return create_static_model_set('full').get(expression_restorer_model)
 
 
 def register_args(program : ArgumentParser) -> None:

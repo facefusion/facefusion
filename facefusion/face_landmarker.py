@@ -9,11 +9,11 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import create_rotated_matrix_and_size, estimate_matrix_by_face_landmark_5, transform_points, warp_face_by_translation
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Angle, BoundingBox, DownloadSet, FaceLandmark5, FaceLandmark68, InferencePool, ModelSet, Prediction, Score, VisionFrame
+from facefusion.typing import Angle, BoundingBox, DownloadScope, DownloadSet, FaceLandmark5, FaceLandmark68, InferencePool, ModelSet, Prediction, Score, VisionFrame
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'2dfan4':
@@ -90,7 +90,7 @@ def clear_inference_pool() -> None:
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
-	model_set = create_static_model_set()
+	model_set = create_static_model_set('full')
 	model_hashes =\
 	{
 		'fan_68_5': model_set.get('fan_68_5').get('hashes').get('fan_68_5')
@@ -132,7 +132,7 @@ def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox
 
 
 def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox, face_angle: Angle) -> Tuple[FaceLandmark68, Score]:
-	model_size = create_static_model_set().get('2dfan4').get('size')
+	model_size = create_static_model_set('full').get('2dfan4').get('size')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, model_size)
@@ -151,7 +151,7 @@ def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox
 
 
 def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
-	model_size = create_static_model_set().get('peppa_wutz').get('size')
+	model_size = create_static_model_set('full').get('peppa_wutz').get('size')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, model_size)

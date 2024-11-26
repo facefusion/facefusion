@@ -9,7 +9,7 @@ from facefusion import inference_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import DownloadSet, FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
+from facefusion.typing import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
 
 FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
 {
@@ -27,7 +27,7 @@ FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'face_occluder':
@@ -83,7 +83,7 @@ def clear_inference_pool() -> None:
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
-	model_set = create_static_model_set()
+	model_set = create_static_model_set('full')
 	model_hashes =\
 	{
 		'face_occluder': model_set.get('face_occluder').get('hashes').get('face_occluder'),
@@ -118,7 +118,7 @@ def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_p
 
 
 def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
-	model_size = create_static_model_set().get('face_occluder').get('size')
+	model_size = create_static_model_set('full').get('face_occluder').get('size')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 1, 2, 3)
@@ -130,7 +130,7 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 
 
 def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
-	model_size = create_static_model_set().get('face_parser').get('size')
+	model_size = create_static_model_set('full').get('face_parser').get('size')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
 	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255
 	prepare_vision_frame = numpy.subtract(prepare_vision_frame, numpy.array([ 0.485, 0.456, 0.406 ]).astype(numpy.float32))

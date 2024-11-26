@@ -119,6 +119,7 @@ ExecutionProviderSet = Dict[ExecutionProviderKey, ExecutionProviderValue]
 
 DownloadProviderKey = Literal['github', 'huggingface']
 DownloadProviderSet = Dict[DownloadProviderKey, str]
+DownloadScope = Literal['lite', 'full']
 Download = TypedDict('Download',
 {
 	'url' : str,
@@ -249,6 +250,7 @@ StateKey = Literal\
 	'execution_thread_count',
 	'execution_queue_count',
 	'download_providers',
+	'download_scope',
 	'video_memory_strategy',
 	'system_memory_limit',
 	'log_level',
@@ -309,6 +311,7 @@ State = TypedDict('State',
 	'execution_thread_count' : int,
 	'execution_queue_count' : int,
 	'download_providers' : List[DownloadProviderKey],
+	'download_scope' : DownloadScope,
 	'video_memory_strategy' : VideoMemoryStrategy,
 	'system_memory_limit' : int,
 	'log_level' : LogLevel,

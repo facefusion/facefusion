@@ -22,12 +22,12 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import LipSyncerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, AudioFrame, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'wav2lip_96':
@@ -86,7 +86,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	lip_syncer_model = state_manager.get_item('lip_syncer_model')
-	return create_static_model_set().get(lip_syncer_model)
+	return create_static_model_set('full').get(lip_syncer_model)
 
 
 def register_args(program : ArgumentParser) -> None:

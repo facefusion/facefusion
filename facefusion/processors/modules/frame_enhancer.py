@@ -16,12 +16,12 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FrameEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import create_tile_frames, merge_tile_frames, read_image, read_static_image, write_image
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'clear_reality_x4':
@@ -397,7 +397,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	frame_enhancer_model = state_manager.get_item('frame_enhancer_model')
-	return create_static_model_set().get(frame_enhancer_model)
+	return create_static_model_set('full').get(frame_enhancer_model)
 
 
 def register_args(program : ArgumentParser) -> None:

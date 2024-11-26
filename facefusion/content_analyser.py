@@ -8,7 +8,7 @@ from facefusion import inference_manager, state_manager, wording
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
+from facefusion.typing import DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
 from facefusion.vision import count_video_frame_total, detect_video_fps, get_video_frame, read_image
 
 PROBABILITY_LIMIT = 0.80
@@ -17,7 +17,7 @@ STREAM_COUNTER = 0
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'open_nsfw':
@@ -54,7 +54,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return create_static_model_set().get('open_nsfw')
+	return create_static_model_set('full').get('open_nsfw')
 
 
 def pre_check() -> bool:

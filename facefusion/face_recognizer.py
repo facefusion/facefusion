@@ -8,11 +8,11 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Embedding, FaceLandmark5, InferencePool, ModelOptions, ModelSet, VisionFrame
+from facefusion.typing import DownloadScope, Embedding, FaceLandmark5, InferencePool, ModelOptions, ModelSet, VisionFrame
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'arcface':
@@ -49,7 +49,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return create_static_model_set().get('arcface')
+	return create_static_model_set('full').get('arcface')
 
 
 def pre_check() -> bool:
