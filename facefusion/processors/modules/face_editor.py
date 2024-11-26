@@ -22,12 +22,12 @@ from facefusion.processors.live_portrait import create_rotation, limit_euler_ang
 from facefusion.processors.typing import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, DownloadScope, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'live_portrait':
@@ -117,7 +117,8 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	face_editor_model = state_manager.get_item('face_editor_model')
-	return create_static_model_set().get(face_editor_model)
+	download_scope = state_manager.get_item('download_scope')
+	return create_static_model_set(download_scope).get(face_editor_model)
 
 
 def register_args(program : ArgumentParser) -> None:

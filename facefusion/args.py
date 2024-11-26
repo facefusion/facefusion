@@ -120,6 +120,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('execution_queue_count', args.get('execution_queue_count'))
 	# download
 	apply_state_item('download_providers', args.get('download_providers'))
+	apply_state_item('download_scope', args.get('download_scope'))
 	# memory
 	apply_state_item('video_memory_strategy', args.get('video_memory_strategy'))
 	apply_state_item('system_memory_limit', args.get('system_memory_limit'))

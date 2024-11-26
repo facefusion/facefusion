@@ -138,7 +138,7 @@ def force_download() -> ErrorCode:
 
 	for module in common_modules + processor_modules:
 		if hasattr(module, 'create_static_model_set'):
-			for model in module.create_static_model_set().values():
+			for model in module.create_static_model_set(state_manager.get_item('download_scope')).values():
 				model_hashes = model.get('hashes')
 				model_sources = model.get('sources')
 

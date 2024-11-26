@@ -199,11 +199,12 @@ def create_execution_program() -> ArgumentParser:
 	return program
 
 
-def create_download_providers_program() -> ArgumentParser:
+def create_download_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_download = program.add_argument_group('download')
 	group_download.add_argument('--download-providers', help = wording.get('help.download_providers').format(choices = ', '.join(list(facefusion.choices.download_provider_set.keys()))), default = config.get_str_list('download.download_providers', 'github'), choices = list(facefusion.choices.download_provider_set.keys()), nargs = '+', metavar = 'DOWNLOAD_PROVIDERS')
-	job_store.register_job_keys([ 'download_providers' ])
+	group_download.add_argument('--download-scope', help = wording.get('help.download_scope'), default = config.get_str_value('download.download_scope', 'lite'), choices = list(facefusion.choices.download_scopes))
+	job_store.register_job_keys([ 'download_providers', 'download_scope' ])
 	return program
 
 
@@ -248,7 +249,7 @@ def collect_step_program() -> ArgumentParser:
 
 
 def collect_job_program() -> ArgumentParser:
-	return ArgumentParser(parents= [ create_execution_program(), create_download_providers_program(), create_memory_program(), create_log_level_program() ], add_help = False)
+	return ArgumentParser(parents= [ create_execution_program(), create_download_program(), create_memory_program(), create_log_level_program() ], add_help = False)
 
 
 def create_program() -> ArgumentParser:
@@ -260,7 +261,7 @@ def create_program() -> ArgumentParser:
 	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('batch-run', help = wording.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('force-download', help = wording.get('help.force_download'), parents = [ create_download_providers_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('force-download', help = wording.get('help.force_download'), parents = [ create_download_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	# job manager
 	sub_program.add_parser('job-list', help = wording.get('help.job_list'), parents = [ create_job_status_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-create', help = wording.get('help.job_create'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)

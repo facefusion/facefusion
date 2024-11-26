@@ -24,12 +24,12 @@ from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel
 from facefusion.processors.typing import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'blendswap_256':
@@ -348,7 +348,8 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	face_swapper_model = state_manager.get_item('face_swapper_model')
-	return create_static_model_set().get(face_swapper_model)
+	download_scope = state_manager.get_item('download_scope')
+	return create_static_model_set(download_scope).get(face_swapper_model)
 
 
 def register_args(program : ArgumentParser) -> None:

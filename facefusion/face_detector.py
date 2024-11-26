@@ -9,12 +9,12 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, normalize_bounding_box, transform_bounding_box, transform_points
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
-from facefusion.typing import Angle, BoundingBox, Detection, DownloadSet, FaceLandmark5, InferencePool, ModelSet, Score, VisionFrame
+from facefusion.typing import Angle, BoundingBox, Detection, DownloadScope, DownloadSet, FaceLandmark5, InferencePool, ModelSet, Score, VisionFrame
 from facefusion.vision import resize_frame_resolution, unpack_resolution
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'retinaface':
@@ -91,7 +91,8 @@ def clear_inference_pool() -> None:
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	model_hashes = {}
 	model_sources = {}
-	model_set = create_static_model_set()
+	download_scope = state_manager.get_item('download_scope')
+	model_set = create_static_model_set(download_scope)
 
 	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
 		model_hashes['retinaface'] = model_set.get('retinaface').get('hashes').get('retinaface')

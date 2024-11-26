@@ -3,16 +3,16 @@ from typing import List, Tuple
 
 import numpy
 
-from facefusion import inference_manager
+from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Age, FaceLandmark5, Gender, InferencePool, ModelOptions, ModelSet, Race, VisionFrame
+from facefusion.typing import Age, DownloadScope, FaceLandmark5, Gender, InferencePool, ModelOptions, ModelSet, Race, VisionFrame
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'fairface':
@@ -51,7 +51,8 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return create_static_model_set().get('fairface')
+	download_scope = state_manager.get_item('download_scope')
+	return create_static_model_set(download_scope).get('fairface')
 
 
 def pre_check() -> bool:

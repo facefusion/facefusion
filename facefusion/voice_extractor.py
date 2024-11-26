@@ -4,15 +4,15 @@ from typing import Tuple
 import numpy
 import scipy
 
-from facefusion import inference_manager
+from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
-from facefusion.typing import Audio, AudioChunk, InferencePool, ModelOptions, ModelSet
+from facefusion.typing import Audio, AudioChunk, DownloadScope, InferencePool, ModelOptions, ModelSet
 
 
 @lru_cache(maxsize = None)
-def create_static_model_set() -> ModelSet:
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
 		'kim_vocal_2':
@@ -47,7 +47,8 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return create_static_model_set().get('kim_vocal_2')
+	download_scope = state_manager.get_item('download_scope')
+	return create_static_model_set(download_scope).get('kim_vocal_2')
 
 
 def pre_check() -> bool:
