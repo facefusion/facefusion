@@ -46,7 +46,7 @@ def create_jobs_path_program() -> ArgumentParser:
 def create_source_paths_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
-	group_paths.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), action = 'append', default = config.get_str_list('paths.source_paths'))
+	group_paths.add_argument('-s', '--source-paths', help = wording.get('help.source_paths'), default = config.get_str_list('paths.source_paths'), nargs = '+')
 	job_store.register_step_keys([ 'source_paths' ])
 	return program
 
