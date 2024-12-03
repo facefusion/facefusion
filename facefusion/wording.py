@@ -98,9 +98,13 @@ WORDING : Dict[str, Any] =\
 		'config_path': 'choose the config file to override defaults',
 		'temp_path': 'specify the directory for the temporary resources',
 		'jobs_path': 'specify the directory to store jobs',
-		'source_paths': 'choose single or multiple source images or audios',
-		'target_path': 'choose single target image or video',
-		'output_path': 'specify the output image or video within a directory',
+		'source_paths': 'choose the image or audio paths',
+		'target_path': 'choose the image or video path',
+		'output_path': 'specify the image or video within a directory',
+		# patterns
+		'source_pattern': 'choose the image or audio pattern',
+		'target_pattern': 'choose the image or video pattern',
+		'output_pattern': 'specify the image or video pattern',
 		# face detector
 		'face_detector_model': 'choose the model responsible for detecting the faces',
 		'face_detector_size': 'specify the frame size provided to the face detector',
