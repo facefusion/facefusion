@@ -5,12 +5,37 @@ import tempfile
 from typing import List, Optional
 
 import filetype
+from tqdm import tqdm
 
-from facefusion import logger, process_manager, state_manager
+from facefusion import logger, process_manager, state_manager, wording
 from facefusion.filesystem import remove_file
-from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
-from facefusion.typing import AudioBuffer, Fps, OutputVideoPreset
-from facefusion.vision import detect_video_duration, restrict_video_fps
+from facefusion.temp_helper import get_temp_file_path, get_temp_frame_paths, get_temp_frames_pattern
+from facefusion.typing import AudioBuffer, Fps, OutputVideoPreset, UpdateProgress
+from facefusion.vision import count_video_frame_total, detect_video_duration, restrict_video_fps
+
+
+def run_ffmpeg_with_progress(args: List[str], update_progress : UpdateProgress):
+	log_level = state_manager.get_item('log_level')
+	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-loglevel', 'error' ]
+	commands.extend(args)
+	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
+
+	while process_manager.is_processing():
+		try:
+			while line := process.stdout.readline().decode():
+				if 'frame=' in line:
+					_, frame_number = line.split('frame=')
+					update_progress(int(frame_number))
+			if log_level == 'debug':
+				log_debug(process)
+			process.wait(timeout = 0.5)
+		except subprocess.TimeoutExpired:
+			continue
+		return process
+
+	if process_manager.is_stopping():
+		process.terminate()
+	return process
 
 
 def run_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
@@ -49,6 +74,7 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 
 
 def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps) -> bool:
+	extract_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 	trim_frame_start = state_manager.get_item('trim_frame_start')
 	trim_frame_end = state_manager.get_item('trim_frame_end')
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
@@ -56,17 +82,24 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 
 	if isinstance(trim_frame_start, int) and isinstance(trim_frame_end, int):
 		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
+		extract_frame_total = trim_frame_end - trim_frame_start
 	elif isinstance(trim_frame_start, int):
 		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ',fps=' + str(temp_video_fps) ])
+		extract_frame_total -= trim_frame_start
 	elif isinstance(trim_frame_end, int):
 		commands.extend([ '-vf', 'trim=end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
+		extract_frame_total -= trim_frame_end
 	else:
 		commands.extend([ '-vf', 'fps=' + str(temp_video_fps) ])
-	commands.extend([ '-vsync', '0', temp_frames_pattern ])
-	return run_ffmpeg(commands).returncode == 0
+	commands.extend([ '-vsync', '0', temp_frames_pattern, '-progress', '-', '-stats_period', '0.1' ])
+
+	with tqdm(total = extract_frame_total, desc = wording.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+		process = run_ffmpeg_with_progress(commands, lambda frame_number: progress.update(frame_number - progress.n))
+		return process.returncode == 0
 
 
-def merge_video(target_path : str, output_video_resolution : str, output_video_fps : Fps) -> bool:
+def merge_video(target_path : str, output_video_resolution : str, output_video_fps: Fps) -> bool:
+	merge_frame_total = len(get_temp_frame_paths(target_path))
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
@@ -92,8 +125,11 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 		commands.extend([ '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(output_video_preset) ])
 	if output_video_encoder in [ 'h264_videotoolbox', 'hevc_videotoolbox' ]:
 		commands.extend([ '-q:v', str(output_video_quality) ])
-	commands.extend([ '-vf', 'framerate=fps=' + str(output_video_fps), '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_file_path ])
-	return run_ffmpeg(commands).returncode == 0
+	commands.extend([ '-vf', 'framerate=fps=' + str(output_video_fps), '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_file_path, '-progress', '-', '-stats_period', '0.1' ])
+
+	with tqdm(total = merge_frame_total, desc = wording.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+		process = run_ffmpeg_with_progress(commands, lambda frame_number: progress.update(frame_number - progress.n))
+		return process.returncode == 0
 
 
 def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
