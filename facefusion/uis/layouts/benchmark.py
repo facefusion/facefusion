@@ -56,6 +56,7 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					download.render()
 				with gradio.Blocks():
+					state_manager.set_item('video_memory_strategy', 'tolerant')
 					memory.render()
 				with gradio.Blocks():
 					benchmark_options.render()
