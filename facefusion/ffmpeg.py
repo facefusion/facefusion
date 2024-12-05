@@ -16,7 +16,7 @@ from facefusion.vision import count_video_frame_total, detect_video_duration, re
 
 def run_ffmpeg_with_progress(args: List[str], update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
-	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-loglevel', 'error' ]
+	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-nostats', '-loglevel', 'error', '-progress', '-' ]
 	commands.extend(args)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
@@ -40,7 +40,7 @@ def run_ffmpeg_with_progress(args: List[str], update_progress : UpdateProgress) 
 
 def run_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
-	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-loglevel', 'error' ]
+	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-nostats', '-loglevel', 'error' ]
 	commands.extend(args)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
@@ -59,7 +59,7 @@ def run_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
 
 
 def open_ffmpeg(args : List[str]) -> subprocess.Popen[bytes]:
-	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-loglevel', 'quiet' ]
+	commands = [ shutil.which('ffmpeg'), '-loglevel', 'quiet' ]
 	commands.extend(args)
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
@@ -91,7 +91,7 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 		extract_frame_total -= trim_frame_end
 	else:
 		commands.extend([ '-vf', 'fps=' + str(temp_video_fps) ])
-	commands.extend([ '-vsync', '0', temp_frames_pattern, '-progress', '-', '-stats_period', '0.1' ])
+	commands.extend([ '-vsync', '0', temp_frames_pattern ])
 
 	with tqdm(total = extract_frame_total, desc = wording.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		process = run_ffmpeg_with_progress(commands, lambda frame_number: progress.update(frame_number - progress.n))
@@ -125,7 +125,7 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 		commands.extend([ '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(output_video_preset) ])
 	if output_video_encoder in [ 'h264_videotoolbox', 'hevc_videotoolbox' ]:
 		commands.extend([ '-q:v', str(output_video_quality) ])
-	commands.extend([ '-vf', 'framerate=fps=' + str(output_video_fps), '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_file_path, '-progress', '-', '-stats_period', '0.1' ])
+	commands.extend([ '-vf', 'framerate=fps=' + str(output_video_fps), '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_file_path ])
 
 	with tqdm(total = merge_frame_total, desc = wording.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		process = run_ffmpeg_with_progress(commands, lambda frame_number: progress.update(frame_number - progress.n))
