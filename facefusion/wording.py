@@ -12,6 +12,7 @@ WORDING : Dict[str, Any] =\
 	'extracting_frames_failed': 'Extracting frames failed',
 	'analysing': 'Analysing',
 	'extracting': 'Extracting',
+	'streaming': 'Streaming',
 	'processing': 'Processing',
 	'merging': 'Merging',
 	'downloading': 'Downloading',
