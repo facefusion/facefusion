@@ -14,7 +14,7 @@ from facefusion.typing import AudioBuffer, Fps, OutputVideoPreset, UpdateProgres
 from facefusion.vision import count_video_frame_total, detect_video_duration, restrict_video_fps
 
 
-def run_ffmpeg_with_progress(args: List[str], update_progress : UpdateProgress):
+def run_ffmpeg_with_progress(args: List[str], update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
 	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-loglevel', 'error' ]
 	commands.extend(args)
