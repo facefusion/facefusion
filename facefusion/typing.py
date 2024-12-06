@@ -96,7 +96,6 @@ LogLevelSet = Dict[LogLevel, int]
 TableHeaders = List[str]
 TableContents = List[List[Any]]
 
-VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yoloface']
 FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
 FaceDetectorSet = Dict[FaceDetectorModel, List[str]]
@@ -116,17 +115,6 @@ ModelInitializer = NDArray[Any]
 ExecutionProviderKey = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 'rocm', 'tensorrt']
 ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
 ExecutionProviderSet = Dict[ExecutionProviderKey, ExecutionProviderValue]
-
-DownloadProviderKey = Literal['github', 'huggingface']
-DownloadProviderSet = Dict[DownloadProviderKey, str]
-DownloadScope = Literal['lite', 'full']
-Download = TypedDict('Download',
-{
-	'url' : str,
-	'path' : str
-})
-DownloadSet = Dict[str, Download]
-
 ValueAndUnit = TypedDict('ValueAndUnit',
 {
 	'value' : int,
@@ -166,6 +154,18 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'temperature': ExecutionDeviceTemperature,
 	'utilization' : ExecutionDeviceUtilization
 })
+
+DownloadProviderKey = Literal['github', 'huggingface']
+DownloadProviderSet = Dict[DownloadProviderKey, str]
+DownloadScope = Literal['lite', 'full']
+Download = TypedDict('Download',
+{
+	'url' : str,
+	'path' : str
+})
+DownloadSet = Dict[str, Download]
+
+VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 
 AppContext = Literal['cli', 'ui']
 
