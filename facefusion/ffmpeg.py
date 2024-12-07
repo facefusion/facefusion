@@ -51,7 +51,7 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 	trim_frame_start = state_manager.get_item('trim_frame_start')
 	trim_frame_end = state_manager.get_item('trim_frame_end')
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
-	commands = [ '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0' ]
+	commands = ['-hwaccel auto', '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0' ]
 
 	if isinstance(trim_frame_start, int) and isinstance(trim_frame_end, int):
 		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
