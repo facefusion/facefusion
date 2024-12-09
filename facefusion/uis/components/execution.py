@@ -36,7 +36,7 @@ def update_execution_providers(execution_providers : List[ExecutionProviderKey])
 		face_recognizer,
 		voice_extractor
 	]
-	available_processors = list_directory('facefusion/processors/modules')
+	available_processors = [ file.get('name') for file in list_directory('facefusion/processors/modules') ]
 	processor_modules = get_processors_modules(available_processors)
 
 	for module in common_modules + processor_modules:

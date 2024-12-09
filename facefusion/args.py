@@ -105,7 +105,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 		apply_state_item('output_video_fps', output_video_fps)
 	apply_state_item('skip_audio', args.get('skip_audio'))
 	# processors
-	available_processors = list_directory('facefusion/processors/modules')
+	available_processors = [ file.get('name') for file in list_directory('facefusion/processors/modules') ]
 	apply_state_item('processors', args.get('processors'))
 	for processor_module in get_processors_modules(available_processors):
 		processor_module.apply_args(args, apply_state_item)

@@ -167,6 +167,13 @@ DownloadSet = Dict[str, Download]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 
+File = TypedDict('File',
+{
+	'name' : str,
+	'extension' : str,
+	'path': str
+})
+
 AppContext = Literal['cli', 'ui']
 
 InferencePool = Dict[str, InferenceSession]
