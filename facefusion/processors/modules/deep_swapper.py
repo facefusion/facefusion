@@ -33,165 +33,165 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	if download_scope == 'full':
 		model_config.extend(
 		[
-			('druuzil', 'adrianne_palicki_384', (384, 384)),
-			('druuzil', 'agnetha_falskog_224', (224, 224)),
-			('druuzil', 'alan_ritchson_320', (320, 320)),
-			('druuzil', 'alicia_vikander_320', (320, 320)),
-			('druuzil', 'amber_midthunder_320', (320, 320)),
-			('druuzil', 'andras_arato_384', (384, 384)),
-			('druuzil', 'andrew_tate_320', (320, 320)),
-			('druuzil', 'anne_hathaway_320', (320, 320)),
-			('druuzil', 'anya_chalotra_320', (320, 320)),
-			('druuzil', 'arnold_schwarzenegger_320', (320, 320)),
-			('druuzil', 'benjamin_affleck_320', (320, 320)),
-			('druuzil', 'benjamin_stiller_384', (384, 384)),
-			('druuzil', 'bradley_pitt_224', (224, 224)),
-			('druuzil', 'bryan_cranston_320', (320, 320)),
-			('druuzil', 'catherine_blanchett_352', (352, 352)),
-			('druuzil', 'christian_bale_320', (320, 320)),
-			('druuzil', 'christopher_hemsworth_320', (320, 320)),
-			('druuzil', 'christoph_waltz_384', (384, 384)),
-			('druuzil', 'cillian_murphy_320', (320, 320)),
-			('druuzil', 'cobie_smulders_256', (256, 256)),
-			('druuzil', 'dwayne_johnson_384', (384, 384)),
-			('druuzil', 'edward_norton_320', (320, 320)),
-			('druuzil', 'elisabeth_shue_320', (320, 320)),
-			('druuzil', 'elizabeth_olsen_384', (384, 384)),
-			('druuzil', 'elon_musk_320', (320, 320)),
-			('druuzil', 'emily_blunt_320', (320, 320)),
-			('druuzil', 'emma_stone_384', (384, 384)),
-			('druuzil', 'emma_watson_320', (320, 320)),
-			('druuzil', 'erin_moriarty_384', (384, 384)),
-			('druuzil', 'eva_green_320', (320, 320)),
-			('druuzil', 'ewan_mcgregor_320', (320, 320)),
-			('druuzil', 'florence_pugh_320', (320, 320)),
-			('druuzil', 'freya_allan_320', (320, 320)),
-			('druuzil', 'gary_cole_224', (224, 224)),
-			('druuzil', 'gigi_hadid_224', (224, 224)),
-			('druuzil', 'harrison_ford_384', (384, 384)),
-			('druuzil', 'hayden_christensen_320', (320, 320)),
-			('druuzil', 'heath_ledger_320', (320, 320)),
-			('druuzil', 'henry_cavill_448', (448, 448)),
-			('druuzil', 'hugh_jackman_384', (384, 384)),
-			('druuzil', 'idris_elba_320', (320, 320)),
-			('druuzil', 'jack_nicholson_320', (320, 320)),
-			('druuzil', 'james_mcavoy_320', (320, 320)),
-			('druuzil', 'james_varney_320', (320, 320)),
-			('druuzil', 'jason_momoa_320', (320, 320)),
-			('druuzil', 'jason_statham_320', (320, 320)),
-			('druuzil', 'jennifer_connelly_384', (384, 384)),
-			('druuzil', 'jimmy_donaldson_320', (320, 320)),
-			('druuzil', 'jordan_peterson_384', (384, 384)),
-			('druuzil', 'karl_urban_224', (224, 224)),
-			('druuzil', 'kate_beckinsale_384', (384, 384)),
-			('druuzil', 'laurence_fishburne_384', (384, 384)),
-			('druuzil', 'lili_reinhart_320', (320, 320)),
-			('druuzil', 'mads_mikkelsen_384', (384, 384)),
-			('druuzil', 'mary_winstead_320', (320, 320)),
-			('druuzil', 'melina_juergens_320', (320, 320)),
-			('druuzil', 'michael_fassbender_320', (320, 320)),
-			('druuzil', 'michael_fox_320', (320, 320)),
-			('druuzil', 'millie_bobby_brown_320', (320, 320)),
-			('druuzil', 'morgan_freeman_320', (320, 320)),
-			('druuzil', 'patrick_stewart_320', (320, 320)),
-			('druuzil', 'rebecca_ferguson_320', (320, 320)),
-			('druuzil', 'scarlett_johansson_320', (320, 320)),
-			('druuzil', 'seth_macfarlane_384', (384, 384)),
-			('druuzil', 'thomas_cruise_320', (320, 320)),
-			('druuzil', 'thomas_hanks_384', (384, 384)),
-			('edel', 'emma_roberts_224', (224, 224)),
-			('edel', 'ivanka_trump_224', (224, 224)),
-			('edel', 'lize_dzjabrailova_224', (224, 224)),
-			('edel', 'sidney_sweeney_224', (224, 224)),
-			('edel', 'winona_ryder_224', (224, 224))
+			('druuzil', 'adrianne_palicki_384'),
+			('druuzil', 'agnetha_falskog_224'),
+			('druuzil', 'alan_ritchson_320'),
+			('druuzil', 'alicia_vikander_320'),
+			('druuzil', 'amber_midthunder_320'),
+			('druuzil', 'andras_arato_384'),
+			('druuzil', 'andrew_tate_320'),
+			('druuzil', 'anne_hathaway_320'),
+			('druuzil', 'anya_chalotra_320'),
+			('druuzil', 'arnold_schwarzenegger_320'),
+			('druuzil', 'benjamin_affleck_320'),
+			('druuzil', 'benjamin_stiller_384'),
+			('druuzil', 'bradley_pitt_224'),
+			('druuzil', 'bryan_cranston_320'),
+			('druuzil', 'catherine_blanchett_352'),
+			('druuzil', 'christian_bale_320'),
+			('druuzil', 'christopher_hemsworth_320'),
+			('druuzil', 'christoph_waltz_384'),
+			('druuzil', 'cillian_murphy_320'),
+			('druuzil', 'cobie_smulders_256'),
+			('druuzil', 'dwayne_johnson_384'),
+			('druuzil', 'edward_norton_320'),
+			('druuzil', 'elisabeth_shue_320'),
+			('druuzil', 'elizabeth_olsen_384'),
+			('druuzil', 'elon_musk_320'),
+			('druuzil', 'emily_blunt_320'),
+			('druuzil', 'emma_stone_384'),
+			('druuzil', 'emma_watson_320'),
+			('druuzil', 'erin_moriarty_384'),
+			('druuzil', 'eva_green_320'),
+			('druuzil', 'ewan_mcgregor_320'),
+			('druuzil', 'florence_pugh_320'),
+			('druuzil', 'freya_allan_320'),
+			('druuzil', 'gary_cole_224'),
+			('druuzil', 'gigi_hadid_224'),
+			('druuzil', 'harrison_ford_384'),
+			('druuzil', 'hayden_christensen_320'),
+			('druuzil', 'heath_ledger_320'),
+			('druuzil', 'henry_cavill_448'),
+			('druuzil', 'hugh_jackman_384'),
+			('druuzil', 'idris_elba_320'),
+			('druuzil', 'jack_nicholson_320'),
+			('druuzil', 'james_mcavoy_320'),
+			('druuzil', 'james_varney_320'),
+			('druuzil', 'jason_momoa_320'),
+			('druuzil', 'jason_statham_320'),
+			('druuzil', 'jennifer_connelly_384'),
+			('druuzil', 'jimmy_donaldson_320'),
+			('druuzil', 'jordan_peterson_384'),
+			('druuzil', 'karl_urban_224'),
+			('druuzil', 'kate_beckinsale_384'),
+			('druuzil', 'laurence_fishburne_384'),
+			('druuzil', 'lili_reinhart_320'),
+			('druuzil', 'mads_mikkelsen_384'),
+			('druuzil', 'mary_winstead_320'),
+			('druuzil', 'melina_juergens_320'),
+			('druuzil', 'michael_fassbender_320'),
+			('druuzil', 'michael_fox_320'),
+			('druuzil', 'millie_bobby_brown_320'),
+			('druuzil', 'morgan_freeman_320'),
+			('druuzil', 'patrick_stewart_320'),
+			('druuzil', 'rebecca_ferguson_320'),
+			('druuzil', 'scarlett_johansson_320'),
+			('druuzil', 'seth_macfarlane_384'),
+			('druuzil', 'thomas_cruise_320'),
+			('druuzil', 'thomas_hanks_384'),
+			('edel', 'emma_roberts_224'),
+			('edel', 'ivanka_trump_224'),
+			('edel', 'lize_dzjabrailova_224'),
+			('edel', 'sidney_sweeney_224'),
+			('edel', 'winona_ryder_224')
 		])
 	if download_scope in [ 'lite', 'full' ]:
 		model_config.extend(
 		[
-			('iperov', 'alexandra_daddario_224', (224, 224)),
-			('iperov', 'alexei_navalny_224', (224, 224)),
-			('iperov', 'amber_heard_224', (224, 224)),
-			('iperov', 'dilraba_dilmurat_224', (224, 224)),
-			('iperov', 'elon_musk_224', (224, 224)),
-			('iperov', 'emilia_clarke_224', (224, 224)),
-			('iperov', 'emma_watson_224', (224, 224)),
-			('iperov', 'erin_moriarty_224', (224, 224)),
-			('iperov', 'jackie_chan_224', (224, 224)),
-			('iperov', 'james_carrey_224', (224, 224)),
-			('iperov', 'jason_statham_320', (320, 320)),
-			('iperov', 'keanu_reeves_320', (320, 320)),
-			('iperov', 'margot_robbie_224', (224, 224)),
-			('iperov', 'natalie_dormer_224', (224, 224)),
-			('iperov', 'nicolas_coppola_224', (224, 224)),
-			('iperov', 'robert_downey_224', (224, 224)),
-			('iperov', 'rowan_atkinson_224', (224, 224)),
-			('iperov', 'ryan_reynolds_224', (224, 224)),
-			('iperov', 'scarlett_johansson_224', (224, 224)),
-			('iperov', 'sylvester_stallone_224', (224, 224)),
-			('iperov', 'thomas_cruise_224', (224, 224)),
-			('iperov', 'thomas_holland_224', (224, 224)),
-			('iperov', 'vin_diesel_224', (224, 224)),
-			('iperov', 'vladimir_putin_224', (224, 224))
+			('iperov', 'alexandra_daddario_224'),
+			('iperov', 'alexei_navalny_224'),
+			('iperov', 'amber_heard_224'),
+			('iperov', 'dilraba_dilmurat_224'),
+			('iperov', 'elon_musk_224'),
+			('iperov', 'emilia_clarke_224'),
+			('iperov', 'emma_watson_224'),
+			('iperov', 'erin_moriarty_224'),
+			('iperov', 'jackie_chan_224'),
+			('iperov', 'james_carrey_224'),
+			('iperov', 'jason_statham_320'),
+			('iperov', 'keanu_reeves_320'),
+			('iperov', 'margot_robbie_224'),
+			('iperov', 'natalie_dormer_224'),
+			('iperov', 'nicolas_coppola_224'),
+			('iperov', 'robert_downey_224'),
+			('iperov', 'rowan_atkinson_224'),
+			('iperov', 'ryan_reynolds_224'),
+			('iperov', 'scarlett_johansson_224'),
+			('iperov', 'sylvester_stallone_224'),
+			('iperov', 'thomas_cruise_224'),
+			('iperov', 'thomas_holland_224'),
+			('iperov', 'vin_diesel_224'),
+			('iperov', 'vladimir_putin_224')
 		])
 	if download_scope == 'full':
 		model_config.extend(
 		[
-			('jen', 'angelica_trae_288', (288, 288)),
-			('jen', 'ella_freya_224', (224, 224)),
-			('jen', 'emma_myers_320', (320, 320)),
-			('jen', 'evie_pickerill_224', (224, 224)),
-			('jen', 'kang_hyewon_320', (320, 320)),
-			('jen', 'maddie_mead_224', (224, 224)),
-			('jen', 'nicole_turnbull_288', (288, 288)),
-			('mats', 'alica_schmidt_320', (320, 320)),
-			('mats', 'ashley_alexiss_224', (224, 224)),
-			('mats', 'billie_eilish_224', (224, 224)),
-			('mats', 'brie_larson_224', (224, 224)),
-			('mats', 'cara_delevingne_224', (224, 224)),
-			('mats', 'carolin_kebekus_224', (224, 224)),
-			('mats', 'chelsea_clinton_224', (224, 224)),
-			('mats', 'claire_boucher_224', (224, 224)),
-			('mats', 'corinna_kopf_224', (224, 224)),
-			('mats', 'florence_pugh_224', (224, 224)),
-			('mats', 'hillary_clinton_224', (224, 224)),
-			('mats', 'jenna_fischer_224', (224, 224)),
-			('mats', 'kim_jisoo_320', (320, 320)),
-			('mats', 'mica_suarez_320', (320, 320)),
-			('mats', 'shailene_woodley_224', (224, 224)),
-			('mats', 'shraddha_kapoor_320', (320, 320)),
-			('mats', 'yu_jimin_352', (352, 352)),
-			('rumateus', 'alison_brie_224', (224, 224)),
-			('rumateus', 'amber_heard_224', (224, 224)),
-			('rumateus', 'angelina_jolie_224', (224, 224)),
-			('rumateus', 'aubrey_plaza_224', (224, 224)),
-			('rumateus', 'bridget_regan_224', (224, 224)),
-			('rumateus', 'cobie_smulders_224', (224, 224)),
-			('rumateus', 'deborah_woll_224', (224, 224)),
-			('rumateus', 'dua_lipa_224', (224, 224)),
-			('rumateus', 'emma_stone_224', (224, 224)),
-			('rumateus', 'hailee_steinfeld_224', (224, 224)),
-			('rumateus', 'hilary_duff_224', (224, 224)),
-			('rumateus', 'jessica_alba_224', (224, 224)),
-			('rumateus', 'jessica_biel_224', (224, 224)),
-			('rumateus', 'john_cena_224', (224, 224)),
-			('rumateus', 'kim_kardashian_224', (224, 224)),
-			('rumateus', 'kristen_bell_224', (224, 224)),
-			('rumateus', 'lucy_liu_224', (224, 224)),
-			('rumateus', 'margot_robbie_224', (224, 224)),
-			('rumateus', 'megan_fox_224', (224, 224)),
-			('rumateus', 'meghan_markle_224', (224, 224)),
-			('rumateus', 'millie_bobby_brown_224', (224, 224)),
-			('rumateus', 'natalie_portman_224', (224, 224)),
-			('rumateus', 'nicki_minaj_224', (224, 224)),
-			('rumateus', 'olivia_wilde_224', (224, 224)),
-			('rumateus', 'shay_mitchell_224', (224, 224)),
-			('rumateus', 'sophie_turner_224', (224, 224)),
-			('rumateus', 'taylor_swift_224', (224, 224))
+			('jen', 'angelica_trae_288'),
+			('jen', 'ella_freya_224'),
+			('jen', 'emma_myers_320'),
+			('jen', 'evie_pickerill_224'),
+			('jen', 'kang_hyewon_320'),
+			('jen', 'maddie_mead_224'),
+			('jen', 'nicole_turnbull_288'),
+			('mats', 'alica_schmidt_320'),
+			('mats', 'ashley_alexiss_224'),
+			('mats', 'billie_eilish_224'),
+			('mats', 'brie_larson_224'),
+			('mats', 'cara_delevingne_224'),
+			('mats', 'carolin_kebekus_224'),
+			('mats', 'chelsea_clinton_224'),
+			('mats', 'claire_boucher_224'),
+			('mats', 'corinna_kopf_224'),
+			('mats', 'florence_pugh_224'),
+			('mats', 'hillary_clinton_224'),
+			('mats', 'jenna_fischer_224'),
+			('mats', 'kim_jisoo_320'),
+			('mats', 'mica_suarez_320'),
+			('mats', 'shailene_woodley_224'),
+			('mats', 'shraddha_kapoor_320'),
+			('mats', 'yu_jimin_352'),
+			('rumateus', 'alison_brie_224'),
+			('rumateus', 'amber_heard_224'),
+			('rumateus', 'angelina_jolie_224'),
+			('rumateus', 'aubrey_plaza_224'),
+			('rumateus', 'bridget_regan_224'),
+			('rumateus', 'cobie_smulders_224'),
+			('rumateus', 'deborah_woll_224'),
+			('rumateus', 'dua_lipa_224'),
+			('rumateus', 'emma_stone_224'),
+			('rumateus', 'hailee_steinfeld_224'),
+			('rumateus', 'hilary_duff_224'),
+			('rumateus', 'jessica_alba_224'),
+			('rumateus', 'jessica_biel_224'),
+			('rumateus', 'john_cena_224'),
+			('rumateus', 'kim_kardashian_224'),
+			('rumateus', 'kristen_bell_224'),
+			('rumateus', 'lucy_liu_224'),
+			('rumateus', 'margot_robbie_224'),
+			('rumateus', 'megan_fox_224'),
+			('rumateus', 'meghan_markle_224'),
+			('rumateus', 'millie_bobby_brown_224'),
+			('rumateus', 'natalie_portman_224'),
+			('rumateus', 'nicki_minaj_224'),
+			('rumateus', 'olivia_wilde_224'),
+			('rumateus', 'shay_mitchell_224'),
+			('rumateus', 'sophie_turner_224'),
+			('rumateus', 'taylor_swift_224')
 		])
 	model_set : ModelSet = {}
 
-	for model_creator, model_name, model_size in model_config:
-		model_id = '/'.join([ model_creator, model_name ])
+	for model_scope, model_name in model_config:
+		model_id = '/'.join([ model_scope, model_name ])
 
 		model_set[model_id] =\
 		{
@@ -199,25 +199,25 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'deep_swapper':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-' + model_creator, model_name + '.hash'),
-					'path': resolve_relative_path('../.assets/models/' + model_creator + '/' + model_name + '.hash')
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-' + model_scope, model_name + '.hash'),
+					'path': resolve_relative_path('../.assets/models/' + model_scope + '/' + model_name + '.hash')
 				}
 			},
 			'sources':
 			{
 				'deep_swapper':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-' + model_creator, model_name + '.dfm'),
-					'path': resolve_relative_path('../.assets/models/' + model_creator + '/' + model_name + '.dfm')
+					'url': resolve_download_url_by_provider('huggingface', 'deepfacelive-models-' + model_scope, model_name + '.dfm'),
+					'path': resolve_relative_path('../.assets/models/' + model_scope + '/' + model_name + '.dfm')
 				}
 			},
-			'template': 'dfl_whole_face',
-			'size': model_size
+			'template': 'dfl_whole_face'
 		}
 
 	model_files = list_directory(resolve_relative_path('../.assets/models/local'))
 
 	if model_files:
+
 		for model_file in model_files:
 			model_id = '/'.join([ 'local', model_file.get('name') ])
 
@@ -232,6 +232,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				},
 				'template': 'dfl_whole_face'
 			}
+
 	return model_set
 
 
@@ -253,8 +254,11 @@ def get_model_options() -> ModelOptions:
 
 def get_model_size() -> Size:
 	deep_swapper = get_inference_pool().get('deep_swapper')
-	model_size = deep_swapper.get_outputs()[-1].shape[1:3]
-	return model_size
+	deep_swapper_outputs = deep_swapper.get_outputs()
+
+	for deep_swapper_output in deep_swapper_outputs:
+		return deep_swapper_output.shape[1:3]
+	return 0, 0
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -307,7 +311,7 @@ def post_process() -> None:
 
 def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_template = get_model_options().get('template')
-	model_size = get_model_options().get('size') or get_model_size()
+	model_size = get_model_size()
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
 	crop_vision_frame_raw = crop_vision_frame.copy()
 	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
@@ -370,7 +374,7 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def prepare_crop_mask(crop_source_mask : Mask, crop_target_mask : Mask) -> Mask:
-	model_size = get_model_options().get('size') or get_model_size()
+	model_size = get_model_size()
 	blur_size = 6.25
 	kernel_size = 3
 	crop_mask = numpy.minimum.reduce([ crop_source_mask, crop_target_mask ])

@@ -158,7 +158,7 @@ deep_swapper_models : List[DeepSwapperModel] =\
 model_files = list_directory(resolve_relative_path('../.assets/models/local'))
 
 for model_file in model_files:
-	model_id = '/'.join(['local', model_file.get('name') ])
+	model_id = '/'.join([ 'local', model_file.get('name') ])
 	deep_swapper_models.append(model_id)
 
 expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]
