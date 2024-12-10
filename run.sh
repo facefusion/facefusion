@@ -1,0 +1,1 @@
+python facefusion.py run --open-browser
