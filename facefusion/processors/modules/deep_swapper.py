@@ -88,6 +88,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			('druuzil', 'lili_reinhart_320'),
 			('druuzil', 'mads_mikkelsen_384'),
 			('druuzil', 'mary_winstead_320'),
+			('druuzil', 'margaret_qualley_384'),
 			('druuzil', 'melina_juergens_320'),
 			('druuzil', 'michael_fassbender_320'),
 			('druuzil', 'michael_fox_320'),
