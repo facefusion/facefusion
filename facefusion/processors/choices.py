@@ -1,6 +1,7 @@
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
+from facefusion.filesystem import list_directory, resolve_relative_path
 from facefusion.processors.typing import AgeModifierModel, DeepSwapperModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
@@ -153,6 +154,15 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'rumateus/sophie_turner_224',
 	'rumateus/taylor_swift_224'
 ]
+
+model_files = list_directory(resolve_relative_path('../.assets/models/local'))
+
+if model_files:
+
+	for model_file in model_files:
+		model_id = '/'.join([ 'local', model_file.get('name') ])
+		deep_swapper_models.append(model_id)
+
 expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]
 face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race' ]
 face_editor_models : List[FaceEditorModel] = [ 'live_portrait' ]
