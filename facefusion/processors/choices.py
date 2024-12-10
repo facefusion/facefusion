@@ -157,9 +157,11 @@ deep_swapper_models : List[DeepSwapperModel] =\
 
 model_files = list_directory(resolve_relative_path('../.assets/models/local'))
 
-for model_file in model_files:
-	model_id = '/'.join([ 'local', model_file.get('name') ])
-	deep_swapper_models.append(model_id)
+if model_files:
+
+	for model_file in model_files:
+		model_id = '/'.join([ 'local', model_file.get('name') ])
+		deep_swapper_models.append(model_id)
 
 expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]
 face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race' ]

@@ -225,10 +225,10 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'sources':
 				{
-						'deep_swapper':
-						{
-							'path': resolve_relative_path(model_file.get('path'))
-						}
+					'deep_swapper':
+					{
+						'path': resolve_relative_path(model_file.get('path'))
+					}
 				},
 				'template': 'dfl_whole_face'
 			}
