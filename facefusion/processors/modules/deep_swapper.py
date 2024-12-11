@@ -215,12 +215,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'template': 'dfl_whole_face'
 		}
 
-	model_files = list_directory(resolve_relative_path('../.assets/models/local'))
+	custom_model_files = list_directory(resolve_relative_path('../.assets/models/custom'))
 
-	if model_files:
+	if custom_model_files:
 
-		for model_file in model_files:
-			model_id = '/'.join([ 'local', model_file.get('name') ])
+		for model_file in custom_model_files:
+			model_id = '/'.join([ 'custom', model_file.get('name') ])
 
 			model_set[model_id] =\
 			{

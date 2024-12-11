@@ -1,8 +1,8 @@
-from facefusion.execution import create_execution_providers, get_execution_provider_set, has_execution_provider
+from facefusion.execution import create_inference_execution_providers, get_available_execution_providers, has_execution_provider
 
 
 def test_get_execution_provider_set() -> None:
-	assert 'cpu' in get_execution_provider_set().keys()
+	assert 'cpu' in get_available_execution_providers()
 
 
 def test_has_execution_provider() -> None:
@@ -20,4 +20,4 @@ def test_multiple_execution_providers() -> None:
 		'CPUExecutionProvider'
 	]
 
-	assert create_execution_providers('1', [ 'cpu', 'cuda' ]) == execution_providers
+	assert create_inference_execution_providers('1', ['cpu', 'cuda']) == execution_providers

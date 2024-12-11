@@ -2,7 +2,7 @@ from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
 from facefusion.filesystem import list_directory, resolve_relative_path
-from facefusion.processors.typing import AgeModifierModel, DeepSwapperModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
+from facefusion.processors.typing import AgeModifierModel, DeepSwapperModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
 deep_swapper_models : List[DeepSwapperModel] =\
@@ -156,12 +156,12 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'rumateus/taylor_swift_224'
 ]
 
-model_files = list_directory(resolve_relative_path('../.assets/models/local'))
+custom_model_files = list_directory(resolve_relative_path('../.assets/models/custom'))
 
-if model_files:
+if custom_model_files:
 
-	for model_file in model_files:
-		model_id = '/'.join([ 'local', model_file.get('name') ])
+	for model_file in custom_model_files:
+		model_id = '/'.join([ 'custom', model_file.get('name') ])
 		deep_swapper_models.append(model_id)
 
 expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]
@@ -181,6 +181,7 @@ face_swapper_set : FaceSwapperSet =\
 	'simswap_unofficial_512': [ '512x512', '768x768', '1024x1024' ],
 	'uniface_256': [ '256x256', '512x512', '768x768', '1024x1024' ]
 }
+face_swapper_models : List[FaceSwapperModel] = list(face_swapper_set.keys())
 frame_colorizer_models : List[FrameColorizerModel] = [ 'ddcolor', 'ddcolor_artistic', 'deoldify', 'deoldify_artistic', 'deoldify_stable' ]
 frame_colorizer_sizes : List[str] = [ '192x192', '256x256', '384x384', '512x512' ]
 frame_enhancer_models : List[FrameEnhancerModel] = [ 'clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'real_hatgan_x4', 'real_web_photo_x4', 'realistic_rescaler_x4', 'remacri_x4', 'siax_x4', 'span_kendata_x4', 'swin2_sr_x4', 'ultra_sharp_x4' ]
