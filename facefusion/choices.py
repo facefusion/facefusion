@@ -37,7 +37,7 @@ execution_provider_set : ExecutionProviderSet =\
 	'rocm': 'ROCMExecutionProvider',
 	'tensorrt': 'TensorrtExecutionProvider'
 }
-execution_provider : List[ExecutionProvider] = list(execution_provider_set.keys())
+execution_providers : List[ExecutionProvider] = list(execution_provider_set.keys())
 download_provider_set : DownloadProviderSet =\
 {
 	'github': 'https://github.com/facefusion/facefusion-assets/releases/download/{base_name}/{file_name}',

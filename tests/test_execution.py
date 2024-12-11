@@ -20,4 +20,4 @@ def test_multiple_execution_providers() -> None:
 		'CPUExecutionProvider'
 	]
 
-	assert create_inference_execution_providers('1', ['cpu', 'cuda']) == execution_providers
+	assert create_inference_execution_providers('1', [ 'cpu', 'cuda' ]) == execution_providers
