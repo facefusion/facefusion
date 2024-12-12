@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.typing import Angle, DownloadProviderSet, DownloadScope, ExecutionProviderSet, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
+from facefusion.typing import Angle, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevel, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -11,6 +11,7 @@ face_detector_set : FaceDetectorSet =\
 	'scrfd': [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
 	'yoloface': [ '640x640' ]
 }
+face_detector_models : List[FaceDetectorModel] = list(face_detector_set.keys())
 face_landmarker_models : List[FaceLandmarkerModel] = [ 'many', '2dfan4', 'peppa_wutz' ]
 face_selector_modes : List[FaceSelectorMode] = [ 'many', 'one', 'reference' ]
 face_selector_orders : List[FaceSelectorOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
@@ -36,11 +37,13 @@ execution_provider_set : ExecutionProviderSet =\
 	'rocm': 'ROCMExecutionProvider',
 	'tensorrt': 'TensorrtExecutionProvider'
 }
+execution_providers : List[ExecutionProvider] = list(execution_provider_set.keys())
 download_provider_set : DownloadProviderSet =\
 {
 	'github': 'https://github.com/facefusion/facefusion-assets/releases/download/{base_name}/{file_name}',
 	'huggingface': 'https://huggingface.co/facefusion/{base_name}/resolve/main/{file_name}'
 }
+download_providers : List[DownloadProvider] = list(download_provider_set.keys())
 download_scopes : List[DownloadScope] = [ 'lite', 'full' ]
 
 video_memory_strategies : List[VideoMemoryStrategy] = [ 'strict', 'moderate', 'tolerant' ]
@@ -52,6 +55,7 @@ log_level_set : LogLevelSet =\
 	'info': logging.INFO,
 	'debug': logging.DEBUG
 }
+log_levels : List[LogLevel] = list(log_level_set.keys())
 
 ui_workflows : List[UiWorkflow] = [ 'instant_runner', 'job_runner', 'job_manager' ]
 job_statuses : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]

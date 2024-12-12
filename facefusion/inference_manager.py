@@ -5,9 +5,9 @@ from onnxruntime import InferenceSession
 
 from facefusion import process_manager, state_manager
 from facefusion.app_context import detect_app_context
-from facefusion.execution import create_execution_providers
+from facefusion.execution import create_inference_execution_providers
 from facefusion.thread_helper import thread_lock
-from facefusion.typing import DownloadSet, ExecutionProviderKey, InferencePool, InferencePoolSet
+from facefusion.typing import DownloadSet, ExecutionProvider, InferencePool, InferencePoolSet
 
 INFERENCE_POOLS : InferencePoolSet =\
 {
@@ -35,11 +35,11 @@ def get_inference_pool(model_context : str, model_sources : DownloadSet) -> Infe
 		return INFERENCE_POOLS.get(app_context).get(inference_context)
 
 
-def create_inference_pool(model_sources : DownloadSet, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferencePool:
+def create_inference_pool(model_sources : DownloadSet, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferencePool:
 	inference_pool : InferencePool = {}
 
 	for model_name in model_sources.keys():
-		inference_pool[model_name] = create_inference_session(model_sources.get(model_name).get('path'), execution_device_id, execution_provider_keys)
+		inference_pool[model_name] = create_inference_session(model_sources.get(model_name).get('path'), execution_device_id, execution_providers)
 	return inference_pool
 
 
@@ -53,9 +53,9 @@ def clear_inference_pool(model_context : str) -> None:
 		del INFERENCE_POOLS[app_context][inference_context]
 
 
-def create_inference_session(model_path : str, execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> InferenceSession:
-	execution_providers = create_execution_providers(execution_device_id, execution_provider_keys)
-	return InferenceSession(model_path, providers = execution_providers)
+def create_inference_session(model_path : str, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferenceSession:
+	inference_execution_providers = create_inference_execution_providers(execution_device_id, execution_providers)
+	return InferenceSession(model_path, providers = inference_execution_providers)
 
 
 def get_inference_context(model_context : str) -> str:

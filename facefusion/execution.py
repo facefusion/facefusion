@@ -6,37 +6,38 @@ from typing import Any, List, Optional
 
 from onnxruntime import get_available_providers, set_default_logger_severity
 
-from facefusion.choices import execution_provider_set
-from facefusion.typing import ExecutionDevice, ExecutionProviderKey, ExecutionProviderSet, ValueAndUnit
+import facefusion.choices
+from facefusion.typing import ExecutionDevice, ExecutionProvider, ValueAndUnit
 
 set_default_logger_severity(3)
 
 
-def has_execution_provider(execution_provider_key : ExecutionProviderKey) -> bool:
-	return execution_provider_key in get_execution_provider_set().keys()
+def has_execution_provider(execution_provider : ExecutionProvider) -> bool:
+	return execution_provider in get_available_execution_providers()
 
 
-def get_execution_provider_set() -> ExecutionProviderSet:
-	available_execution_providers = get_available_providers()
-	available_execution_provider_set : ExecutionProviderSet = {}
+def get_available_execution_providers() -> List[ExecutionProvider]:
+	inference_execution_providers = get_available_providers()
+	available_execution_providers = []
 
-	for execution_provider_key, execution_provider_value in execution_provider_set.items():
-		if execution_provider_value in available_execution_providers:
-			available_execution_provider_set[execution_provider_key] = execution_provider_value
-	return available_execution_provider_set
+	for execution_provider, execution_provider_value in facefusion.choices.execution_provider_set.items():
+		if execution_provider_value in inference_execution_providers:
+			available_execution_providers.append(execution_provider)
+
+	return available_execution_providers
 
 
-def create_execution_providers(execution_device_id : str, execution_provider_keys : List[ExecutionProviderKey]) -> List[Any]:
-	execution_providers : List[Any] = []
+def create_inference_execution_providers(execution_device_id : str, execution_providers : List[ExecutionProvider]) -> List[Any]:
+	inference_execution_providers : List[Any] = []
 
-	for execution_provider_key in execution_provider_keys:
-		if execution_provider_key == 'cuda':
-			execution_providers.append((execution_provider_set.get(execution_provider_key),
+	for execution_provider in execution_providers:
+		if execution_provider == 'cuda':
+			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id
 			}))
-		if execution_provider_key == 'tensorrt':
-			execution_providers.append((execution_provider_set.get(execution_provider_key),
+		if execution_provider == 'tensorrt':
+			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id,
 				'trt_engine_cache_enable': True,
@@ -45,24 +46,24 @@ def create_execution_providers(execution_device_id : str, execution_provider_key
 				'trt_timing_cache_path': '.caches',
 				'trt_builder_optimization_level': 5
 			}))
-		if execution_provider_key == 'openvino':
-			execution_providers.append((execution_provider_set.get(execution_provider_key),
+		if execution_provider == 'openvino':
+			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_type': 'GPU' if execution_device_id == '0' else 'GPU.' + execution_device_id,
 				'precision': 'FP32'
 			}))
-		if execution_provider_key in [ 'directml', 'rocm' ]:
-			execution_providers.append((execution_provider_set.get(execution_provider_key),
+		if execution_provider in [ 'directml', 'rocm' ]:
+			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id
 			}))
-		if execution_provider_key == 'coreml':
-			execution_providers.append(execution_provider_set.get(execution_provider_key))
+		if execution_provider == 'coreml':
+			inference_execution_providers.append(facefusion.choices.execution_provider_set.get(execution_provider))
 
-	if 'cpu' in execution_provider_keys:
-		execution_providers.append(execution_provider_set.get('cpu'))
+	if 'cpu' in execution_providers:
+		inference_execution_providers.append(facefusion.choices.execution_provider_set.get('cpu'))
 
-	return execution_providers
+	return inference_execution_providers
 
 
 def run_nvidia_smi() -> subprocess.Popen[bytes]:

@@ -5,7 +5,7 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.choices import image_template_sizes, video_template_sizes
+import facefusion.choices
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import is_image, is_video, sanitize_path_for_windows
 from facefusion.typing import Duration, Fps, Orientation, Resolution, VisionFrame
@@ -64,8 +64,8 @@ def create_image_resolutions(resolution : Resolution) -> List[str]:
 	if resolution:
 		width, height = resolution
 		temp_resolutions.append(normalize_resolution(resolution))
-		for template_size in image_template_sizes:
-			temp_resolutions.append(normalize_resolution((width * template_size, height * template_size)))
+		for image_template_size in facefusion.choices.image_template_sizes:
+			temp_resolutions.append(normalize_resolution((width * image_template_size, height * image_template_size)))
 		temp_resolutions = sorted(set(temp_resolutions))
 		for temp_resolution in temp_resolutions:
 			resolutions.append(pack_resolution(temp_resolution))
@@ -155,11 +155,11 @@ def create_video_resolutions(resolution : Resolution) -> List[str]:
 	if resolution:
 		width, height = resolution
 		temp_resolutions.append(normalize_resolution(resolution))
-		for template_size in video_template_sizes:
+		for video_template_size in facefusion.choices.video_template_sizes:
 			if width > height:
-				temp_resolutions.append(normalize_resolution((template_size * width / height, template_size)))
+				temp_resolutions.append(normalize_resolution((video_template_size * width / height, video_template_size)))
 			else:
-				temp_resolutions.append(normalize_resolution((template_size, template_size * height / width)))
+				temp_resolutions.append(normalize_resolution((video_template_size, video_template_size * height / width)))
 		temp_resolutions = sorted(set(temp_resolutions))
 		for temp_resolution in temp_resolutions:
 			resolutions.append(pack_resolution(temp_resolution))

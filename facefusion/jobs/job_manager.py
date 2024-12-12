@@ -2,7 +2,7 @@ import os
 from copy import copy
 from typing import List, Optional
 
-from facefusion.choices import job_statuses
+import facefusion.choices
 from facefusion.date_helper import get_current_date_time
 from facefusion.filesystem import create_directory, is_directory, is_file, move_file, remove_directory, remove_file, resolve_file_pattern
 from facefusion.jobs.job_helper import get_step_output_path
@@ -16,7 +16,7 @@ def init_jobs(jobs_path : str) -> bool:
 	global JOBS_PATH
 
 	JOBS_PATH = jobs_path
-	job_status_paths = [ os.path.join(JOBS_PATH, job_status) for job_status in job_statuses ]
+	job_status_paths = [ os.path.join(JOBS_PATH, job_status) for job_status in facefusion.choices.job_statuses ]
 
 	for job_status_path in job_status_paths:
 		create_directory(job_status_path)
@@ -245,7 +245,7 @@ def find_job_path(job_id : str) -> Optional[str]:
 	job_file_name = get_job_file_name(job_id)
 
 	if job_file_name:
-		for job_status in job_statuses:
+		for job_status in facefusion.choices.job_statuses:
 			job_pattern = os.path.join(JOBS_PATH, job_status, job_file_name)
 			job_paths = resolve_file_pattern(job_pattern)
 

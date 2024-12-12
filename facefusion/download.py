@@ -9,12 +9,12 @@ from urllib.parse import urlparse
 
 from tqdm import tqdm
 
+import facefusion.choices
 from facefusion import logger, process_manager, state_manager, wording
-from facefusion.choices import download_provider_set
 from facefusion.common_helper import is_macos
 from facefusion.filesystem import get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
-from facefusion.typing import DownloadProviderKey, DownloadSet
+from facefusion.typing import DownloadProvider, DownloadSet
 
 if is_macos():
 	ssl._create_default_https_context = ssl._create_unverified_context
@@ -128,11 +128,11 @@ def validate_source_paths(source_paths : List[str]) -> Tuple[List[str], List[str
 def resolve_download_url(base_name : str, file_name : str) -> Optional[str]:
 	download_providers = state_manager.get_item('download_providers')
 
-	for download_provider in download_provider_set:
+	for download_provider in facefusion.choices.download_provider_set:
 		if download_provider in download_providers:
 			return resolve_download_url_by_provider(download_provider, base_name, file_name)
 	return None
 
 
-def resolve_download_url_by_provider(download_provider : DownloadProviderKey, base_name : str, file_name : str) -> Optional[str]:
-	return download_provider_set.get(download_provider).format(base_name = base_name, file_name = file_name)
+def resolve_download_url_by_provider(download_provider : DownloadProvider, base_name : str, file_name : str) -> Optional[str]:
+	return facefusion.choices.download_provider_set.get(download_provider).format(base_name = base_name, file_name = file_name)

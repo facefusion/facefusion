@@ -4,7 +4,7 @@ from argparse import ArgumentParser, HelpFormatter
 import facefusion.choices
 from facefusion import config, metadata, state_manager, wording
 from facefusion.common_helper import create_float_metavar, create_int_metavar, get_last
-from facefusion.execution import get_execution_provider_set
+from facefusion.execution import get_available_execution_providers
 from facefusion.filesystem import list_directory
 from facefusion.jobs import job_store
 from facefusion.processors.core import get_processors_modules
@@ -94,7 +94,7 @@ def create_output_pattern_program() -> ArgumentParser:
 def create_face_detector_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_detector = program.add_argument_group('face detector')
-	group_face_detector.add_argument('--face-detector-model', help = wording.get('help.face_detector_model'), default = config.get_str_value('face_detector.face_detector_model', 'yoloface'), choices = list(facefusion.choices.face_detector_set.keys()))
+	group_face_detector.add_argument('--face-detector-model', help = wording.get('help.face_detector_model'), default = config.get_str_value('face_detector.face_detector_model', 'yoloface'), choices = facefusion.choices.face_detector_models)
 	known_args, _ = program.parse_known_args()
 	face_detector_size_choices = facefusion.choices.face_detector_set.get(known_args.face_detector_model)
 	group_face_detector.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_detector.face_detector_size', get_last(face_detector_size_choices)), choices = face_detector_size_choices)
@@ -190,9 +190,10 @@ def create_uis_program() -> ArgumentParser:
 
 def create_execution_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
+	available_execution_providers = get_available_execution_providers()
 	group_execution = program.add_argument_group('execution')
 	group_execution.add_argument('--execution-device-id', help = wording.get('help.execution_device_id'), default = config.get_str_value('execution.execution_device_id', '0'))
-	group_execution.add_argument('--execution-providers', help = wording.get('help.execution_providers').format(choices = ', '.join(list(get_execution_provider_set().keys()))), default = config.get_str_list('execution.execution_providers', 'cpu'), choices = list(get_execution_provider_set().keys()), nargs = '+', metavar = 'EXECUTION_PROVIDERS')
+	group_execution.add_argument('--execution-providers', help = wording.get('help.execution_providers').format(choices = ', '.join(available_execution_providers)), default = config.get_str_list('execution.execution_providers', 'cpu'), choices = available_execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
 	group_execution.add_argument('--execution-thread-count', help = wording.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution.execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_int_metavar(facefusion.choices.execution_thread_count_range))
 	group_execution.add_argument('--execution-queue-count', help = wording.get('help.execution_queue_count'), type = int, default = config.get_int_value('execution.execution_queue_count', '1'), choices = facefusion.choices.execution_queue_count_range, metavar = create_int_metavar(facefusion.choices.execution_queue_count_range))
 	job_store.register_job_keys([ 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count' ])
@@ -201,8 +202,9 @@ def create_execution_program() -> ArgumentParser:
 
 def create_download_providers_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
+	download_providers = list(facefusion.choices.download_provider_set.keys())
 	group_download = program.add_argument_group('download')
-	group_download.add_argument('--download-providers', help = wording.get('help.download_providers').format(choices = ', '.join(list(facefusion.choices.download_provider_set.keys()))), default = config.get_str_list('download.download_providers', 'github'), choices = list(facefusion.choices.download_provider_set.keys()), nargs = '+', metavar = 'DOWNLOAD_PROVIDERS')
+	group_download.add_argument('--download-providers', help = wording.get('help.download_providers').format(choices = ', '.join(download_providers)), default = config.get_str_list('download.download_providers', 'github'), choices = download_providers, nargs = '+', metavar = 'DOWNLOAD_PROVIDERS')
 	job_store.register_job_keys([ 'download_providers' ])
 	return program
 
@@ -210,7 +212,7 @@ def create_download_providers_program() -> ArgumentParser:
 def create_download_scope_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_download = program.add_argument_group('download')
-	group_download.add_argument('--download-scope', help = wording.get('help.download_scope'), default = config.get_str_value('download.download_scope', 'lite'), choices = list(facefusion.choices.download_scopes))
+	group_download.add_argument('--download-scope', help = wording.get('help.download_scope'), default = config.get_str_value('download.download_scope', 'lite'), choices = facefusion.choices.download_scopes)
 	job_store.register_job_keys([ 'download_scope' ])
 	return program
 
@@ -226,8 +228,9 @@ def create_memory_program() -> ArgumentParser:
 
 def create_misc_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
+	log_level_keys = list(facefusion.choices.log_level_set.keys())
 	group_misc = program.add_argument_group('misc')
-	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = list(facefusion.choices.log_level_set.keys()))
+	group_misc.add_argument('--log-level', help = wording.get('help.log_level'), default = config.get_str_value('misc.log_level', 'info'), choices = log_level_keys)
 	job_store.register_job_keys([ 'log_level' ])
 	return program
 

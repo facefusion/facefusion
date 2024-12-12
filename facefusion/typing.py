@@ -112,9 +112,9 @@ ModelOptions = Dict[str, Any]
 ModelSet = Dict[str, ModelOptions]
 ModelInitializer = NDArray[Any]
 
-ExecutionProviderKey = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 'rocm', 'tensorrt']
+ExecutionProvider = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 'rocm', 'tensorrt']
 ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
-ExecutionProviderSet = Dict[ExecutionProviderKey, ExecutionProviderValue]
+ExecutionProviderSet = Dict[ExecutionProvider, ExecutionProviderValue]
 ValueAndUnit = TypedDict('ValueAndUnit',
 {
 	'value' : int,
@@ -155,8 +155,8 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'utilization' : ExecutionDeviceUtilization
 })
 
-DownloadProviderKey = Literal['github', 'huggingface']
-DownloadProviderSet = Dict[DownloadProviderKey, str]
+DownloadProvider = Literal['github', 'huggingface']
+DownloadProviderSet = Dict[DownloadProvider, str]
 DownloadScope = Literal['lite', 'full']
 Download = TypedDict('Download',
 {
@@ -314,10 +314,10 @@ State = TypedDict('State',
 	'ui_layouts' : List[str],
 	'ui_workflow' : UiWorkflow,
 	'execution_device_id' : str,
-	'execution_providers' : List[ExecutionProviderKey],
+	'execution_providers' : List[ExecutionProvider],
 	'execution_thread_count' : int,
 	'execution_queue_count' : int,
-	'download_providers' : List[DownloadProviderKey],
+	'download_providers' : List[DownloadProvider],
 	'download_scope' : DownloadScope,
 	'video_memory_strategy' : VideoMemoryStrategy,
 	'system_memory_limit' : int,
