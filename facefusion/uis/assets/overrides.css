@@ -65,35 +65,51 @@
 	min-height: unset;
 }
 
-:root:root:root:root .tabs button:hover
+:root:root:root:root .tab-wrapper
 {
-	background: unset;
+	padding: 0 0.625rem;
 }
 
 :root:root:root:root .tab-container
 {
-	height: 2.5rem;
+	gap: 0.5em;
 }
 
-:root:root:root:root .tabitem
+:root:root:root:root .tab-container button
 {
-	padding: 0.75rem 0 0 0
+	background: unset;
+	border-bottom: 0.125rem solid;
 }
 
-:root:root:root:root .tab-container:after,
-:root:root:root:root .tabs button:after
+:root:root:root:root .tab-container button.selected
 {
-	border-width: 0.125rem;
+	color: var(--primary-500)
 }
 
-:root:root:root:root .tab-container:after
+:root:root:root:root .toast-body
 {
-	border-color: var(--block-background-fill)
+	background: white;
+	color: var(--primary-500);
+	border: unset;
+	border-radius: unset;
+}
+
+:root:root:root:root .dark .toast-body
+{
+	background: var(--neutral-900);
+	color: var(--primary-600);
+}
+
+:root:root:root:root .toast-icon,
+:root:root:root:root .toast-title,
+:root:root:root:root .toast-text,
+:root:root:root:root .toast-close
+{
+	color: unset;
 }
 
 :root:root:root:root .slider_input_container > span,
 :root:root:root:root .feather-upload,
-:root:root:root:root .toast-wrap,
 :root:root:root:root footer
 {
 	display: none;
