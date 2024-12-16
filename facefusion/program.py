@@ -138,7 +138,7 @@ def create_face_masker_program() -> ArgumentParser:
 	group_face_masker.add_argument('--face-mask-blur', help = wording.get('help.face_mask_blur'), type = float, default = config.get_float_value('face_masker.face_mask_blur', '0.3'), choices = facefusion.choices.face_mask_blur_range, metavar = create_float_metavar(facefusion.choices.face_mask_blur_range))
 	group_face_masker.add_argument('--face-mask-padding', help = wording.get('help.face_mask_padding'), type = int, default = config.get_int_list('face_masker.face_mask_padding', '0 0 0 0'), nargs = '+')
 	group_face_masker.add_argument('--face-mask-regions', help = wording.get('help.face_mask_regions').format(choices = ', '.join(facefusion.choices.face_mask_regions)), default = config.get_str_list('face_masker.face_mask_regions', ' '.join(facefusion.choices.face_mask_regions)), choices = facefusion.choices.face_mask_regions, nargs = '+', metavar = 'FACE_MASK_REGIONS')
-	job_store.register_step_keys([ 'face_mask_types', 'face_mask_blur', 'face_mask_padding', 'face_mask_regions' ])
+	job_store.register_step_keys([ 'face_occluder_model', 'face_parser_model', 'face_mask_types', 'face_mask_blur', 'face_mask_padding', 'face_mask_regions' ])
 	return program
 
 
