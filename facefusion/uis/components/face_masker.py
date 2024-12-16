@@ -30,7 +30,6 @@ def render() -> None:
 	global FACE_MASK_PADDING_BOTTOM_SLIDER
 	global FACE_MASK_PADDING_LEFT_SLIDER
 
-
 	has_box_mask = 'box' in state_manager.get_item('face_mask_types')
 	has_region_mask = 'region' in state_manager.get_item('face_mask_types')
 	with gradio.Row():
