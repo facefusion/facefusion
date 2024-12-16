@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.typing import Angle, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevel, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
+from facefusion.typing import Angle, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevel, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -15,8 +15,10 @@ face_detector_models : List[FaceDetectorModel] = list(face_detector_set.keys())
 face_landmarker_models : List[FaceLandmarkerModel] = [ 'many', '2dfan4', 'peppa_wutz' ]
 face_selector_modes : List[FaceSelectorMode] = [ 'many', 'one', 'reference' ]
 face_selector_orders : List[FaceSelectorOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
-face_selector_genders : List[Gender] = ['female', 'male']
-face_selector_races : List[Race] = ['white', 'black', 'latino', 'asian', 'indian', 'arabic']
+face_selector_genders : List[Gender] = [ 'female', 'male' ]
+face_selector_races : List[Race] = [ 'white', 'black', 'latino', 'asian', 'indian', 'arabic' ]
+face_occluder_models : List[FaceOccluderModel] = [ 'xseg_groggy_5' ]
+face_parser_models : List[FaceParserModel] = [ 'bisenet_resnet_18', 'bisenet_resnet_34' ]
 face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'region' ]
 face_mask_regions : List[FaceMaskRegion] = [ 'skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip' ]
 temp_frame_formats : List[TempFrameFormat] = [ 'bmp', 'jpg', 'png' ]
