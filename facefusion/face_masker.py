@@ -110,12 +110,15 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	if state_manager.get_item('face_occluder_model') == 'xseg_groggy_5':
 		model_hashes['xseg_groggy_5'] = model_set.get('xseg_groggy_5').get('hashes').get('face_occluder')
 		model_sources['xseg_groggy_5'] = model_set.get('xseg_groggy_5').get('sources').get('face_occluder')
+
 	if state_manager.get_item('face_parser_model') == 'bisenet_resnet_18':
 		model_hashes['bisenet_resnet_18'] = model_set.get('bisenet_resnet_18').get('hashes').get('face_parser')
 		model_sources['bisenet_resnet_18'] = model_set.get('bisenet_resnet_18').get('sources').get('face_parser')
+
 	if state_manager.get_item('face_parser_model') == 'bisenet_resnet_34':
 		model_hashes['bisenet_resnet_34'] = model_set.get('bisenet_resnet_34').get('hashes').get('face_parser')
 		model_sources['bisenet_resnet_34'] = model_set.get('bisenet_resnet_34').get('sources').get('face_parser')
+
 	return model_hashes, model_sources
 
 
