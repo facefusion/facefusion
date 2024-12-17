@@ -77,8 +77,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
-	model_context = __name__ + '.' + state_manager.get_item('expression_restorer_model')
-	return inference_manager.get_inference_pool(model_context, model_sources)
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
