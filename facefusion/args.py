@@ -71,6 +71,8 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('reference_face_distance', args.get('reference_face_distance'))
 	apply_state_item('reference_frame_number', args.get('reference_frame_number'))
 	# face masker
+	apply_state_item('face_occluder_model', args.get('face_occluder_model'))
+	apply_state_item('face_parser_model', args.get('face_parser_model'))
 	apply_state_item('face_mask_types', args.get('face_mask_types'))
 	apply_state_item('face_mask_blur', args.get('face_mask_blur'))
 	apply_state_item('face_mask_padding', normalize_padding(args.get('face_mask_padding')))

@@ -103,9 +103,11 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
 		model_hashes['2dfan4'] = model_set.get('2dfan4').get('hashes').get('2dfan4')
 		model_sources['2dfan4'] = model_set.get('2dfan4').get('sources').get('2dfan4')
+
 	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
 		model_hashes['peppa_wutz'] = model_set.get('peppa_wutz').get('hashes').get('peppa_wutz')
 		model_sources['peppa_wutz'] = model_set.get('peppa_wutz').get('sources').get('peppa_wutz')
+
 	return model_hashes, model_sources
 
 
@@ -123,6 +125,7 @@ def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox
 
 	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
 		face_landmark_2dfan4, face_landmark_score_2dfan4 = detect_with_2dfan4(vision_frame, bounding_box, face_angle)
+
 	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
 		face_landmark_peppa_wutz, face_landmark_score_peppa_wutz = detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
 

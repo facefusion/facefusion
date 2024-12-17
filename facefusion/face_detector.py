@@ -96,12 +96,15 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
 		model_hashes['retinaface'] = model_set.get('retinaface').get('hashes').get('retinaface')
 		model_sources['retinaface'] = model_set.get('retinaface').get('sources').get('retinaface')
+
 	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
 		model_hashes['scrfd'] = model_set.get('scrfd').get('hashes').get('scrfd')
 		model_sources['scrfd'] = model_set.get('scrfd').get('sources').get('scrfd')
+
 	if state_manager.get_item('face_detector_model') in [ 'many', 'yoloface' ]:
 		model_hashes['yoloface'] = model_set.get('yoloface').get('hashes').get('yoloface')
 		model_sources['yoloface'] = model_set.get('yoloface').get('sources').get('yoloface')
+
 	return model_hashes, model_sources
 
 

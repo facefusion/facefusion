@@ -126,6 +126,8 @@ WORDING : Dict[str, Any] =\
 		'reference_face_distance': 'specify the similarity between the reference face and target face',
 		'reference_frame_number': 'specify the frame used to create the reference face',
 		# face masker
+		'face_occluder_model': 'choose the model responsible for occluding the face',
+		'face_parser_model': 'choose the model responsible for parsing the face',
 		'face_mask_types': 'mix and match different face mask types (choices: {choices})',
 		'face_mask_blur': 'specify the degree of blur applied to the box mask',
 		'face_mask_padding': 'apply top, right, bottom and left padding to the box mask',
@@ -285,6 +287,8 @@ WORDING : Dict[str, Any] =\
 		'face_selector_race_dropdown': 'FACE SELECTOR RACE',
 		'face_swapper_model_dropdown': 'FACE SWAPPER MODEL',
 		'face_swapper_pixel_boost_dropdown': 'FACE SWAPPER PIXEL BOOST',
+		'face_occluder_model_dropdown': 'FACE OCCLUDER MODEL',
+		'face_parser_model_dropdown': 'FACE PARSER MODEL',
 		'frame_colorizer_blend_slider': 'FRAME COLORIZER BLEND',
 		'frame_colorizer_model_dropdown': 'FRAME COLORIZER MODEL',
 		'frame_colorizer_size_dropdown': 'FRAME COLORIZER SIZE',

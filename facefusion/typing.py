@@ -101,6 +101,8 @@ FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
 FaceDetectorSet = Dict[FaceDetectorModel, List[str]]
 FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
+FaceOccluderModel = Literal['xseg_1', 'xseg_2']
+FaceParserModel = Literal['bisenet_resnet_18', 'bisenet_resnet_34']
 FaceMaskType = Literal['box', 'occlusion', 'region']
 FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip']
 TempFrameFormat = Literal['bmp', 'jpg', 'png']
@@ -231,6 +233,8 @@ StateKey = Literal\
 	'reference_face_position',
 	'reference_face_distance',
 	'reference_frame_number',
+	'face_occluder_model',
+	'face_parser_model',
 	'face_mask_types',
 	'face_mask_blur',
 	'face_mask_padding',
@@ -292,6 +296,8 @@ State = TypedDict('State',
 	'reference_face_position' : int,
 	'reference_face_distance' : float,
 	'reference_frame_number' : int,
+	'face_occluder_model' : FaceOccluderModel,
+	'face_parser_model' : FaceParserModel,
 	'face_mask_types' : List[FaceMaskType],
 	'face_mask_blur' : float,
 	'face_mask_padding' : Padding,
