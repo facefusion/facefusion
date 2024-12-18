@@ -122,9 +122,34 @@ def restrict_video_fps(video_path : str, fps : Fps) -> Fps:
 def detect_video_duration(video_path : str) -> Duration:
 	video_frame_total = count_video_frame_total(video_path)
 	video_fps = detect_video_fps(video_path)
+
 	if video_frame_total and video_fps:
 		return video_frame_total / video_fps
 	return 0
+
+
+def count_trim_frame_total(video_path : str, trim_frame_start : int, trim_frame_end : int) -> int:
+	trim_frame_start, trim_frame_end = restrict_trim_frame(video_path, trim_frame_start, trim_frame_end)
+
+	return trim_frame_end - trim_frame_start
+
+
+def restrict_trim_frame(video_path : str, trim_frame_start : int, trim_frame_end : int) -> Tuple[int, int]:
+	video_frame_total = count_video_frame_total(video_path)
+
+	if isinstance(trim_frame_start, int) and trim_frame_start < 0:
+		trim_frame_start = 0
+	if isinstance(trim_frame_end, int) and trim_frame_end > video_frame_total:
+		trim_frame_end = video_frame_total
+
+	if isinstance(trim_frame_start, int) and isinstance(trim_frame_end, int):
+		return trim_frame_start, trim_frame_end
+	if isinstance(trim_frame_start, int):
+		return trim_frame_start, video_frame_total
+	if isinstance(trim_frame_end, int):
+		return 0, trim_frame_end
+
+	return 0, video_frame_total
 
 
 def detect_video_resolution(video_path : str) -> Optional[Resolution]:

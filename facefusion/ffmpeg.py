@@ -11,7 +11,7 @@ from facefusion import logger, process_manager, state_manager, wording
 from facefusion.filesystem import remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frame_paths, get_temp_frames_pattern
 from facefusion.typing import AudioBuffer, Fps, OutputVideoPreset, UpdateProgress
-from facefusion.vision import count_video_frame_total, detect_video_duration, restrict_video_fps
+from facefusion.vision import count_trim_frame_total, detect_video_duration, restrict_video_fps
 
 
 def run_ffmpeg_with_progress(args: List[str], update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
@@ -74,21 +74,18 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 
 
 def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps) -> bool:
-	extract_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 	trim_frame_start = state_manager.get_item('trim_frame_start')
 	trim_frame_end = state_manager.get_item('trim_frame_end')
+	extract_frame_total = count_trim_frame_total(state_manager.get_item('target_path'), trim_frame_start, trim_frame_end)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 	commands = [ '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0' ]
 
 	if isinstance(trim_frame_start, int) and isinstance(trim_frame_end, int):
 		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
-		extract_frame_total = trim_frame_end - trim_frame_start
 	elif isinstance(trim_frame_start, int):
 		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ',fps=' + str(temp_video_fps) ])
-		extract_frame_total -= trim_frame_start
 	elif isinstance(trim_frame_end, int):
 		commands.extend([ '-vf', 'trim=end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
-		extract_frame_total -= trim_frame_end
 	else:
 		commands.extend([ '-vf', 'fps=' + str(temp_video_fps) ])
 	commands.extend([ '-vsync', '0', temp_frames_pattern ])
@@ -99,10 +96,10 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 
 
 def merge_video(target_path : str, output_video_resolution : str, output_video_fps: Fps) -> bool:
-	merge_frame_total = len(get_temp_frame_paths(target_path))
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
+	merge_frame_total = len(get_temp_frame_paths(target_path))
 	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
 	temp_file_path = get_temp_file_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
