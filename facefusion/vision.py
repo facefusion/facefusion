@@ -128,13 +128,13 @@ def detect_video_duration(video_path : str) -> Duration:
 	return 0
 
 
-def count_trim_frame_total(video_path : str, trim_frame_start : int, trim_frame_end : int) -> int:
+def count_trim_frame_total(video_path : str, trim_frame_start : Optional[int], trim_frame_end : Optional[int]) -> int:
 	trim_frame_start, trim_frame_end = restrict_trim_frame(video_path, trim_frame_start, trim_frame_end)
 
 	return trim_frame_end - trim_frame_start
 
 
-def restrict_trim_frame(video_path : str, trim_frame_start : int, trim_frame_end : int) -> Tuple[int, int]:
+def restrict_trim_frame(video_path : str, trim_frame_start : Optional[int], trim_frame_end : Optional[int]) -> Tuple[int, int]:
 	video_frame_total = count_video_frame_total(video_path)
 
 	if isinstance(trim_frame_start, int):
