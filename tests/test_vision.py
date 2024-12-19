@@ -83,6 +83,8 @@ def test_count_trim_frame_total() -> None:
 	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), 0, 200) == 200
 	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), 70, 270) == 200
 	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), -10, None) == 270
+	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), None, -10) == 0
+	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), 280, None) == 0
 	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), None, 280) == 270
 	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), None, None) == 270
 
@@ -91,6 +93,8 @@ def test_restrict_trim_frame() -> None:
 	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), 0, 200) == (0, 200)
 	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), 70, 270) == (70, 270)
 	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), -10, None) == (0, 270)
+	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), None, -10) == (0, 0)
+	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), 280, None) == (270, 270)
 	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), None, 280) == (0, 270)
 	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), None, None) == (0, 270)
 

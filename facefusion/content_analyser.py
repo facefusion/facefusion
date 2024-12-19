@@ -9,7 +9,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
-from facefusion.vision import detect_video_fps, get_video_frame, read_image, restrict_trim_frame
+from facefusion.vision import detect_video_fps, get_video_frame, read_image
 
 PROBABILITY_LIMIT = 0.80
 RATE_LIMIT = 10
@@ -110,7 +110,6 @@ def analyse_image(image_path : str) -> bool:
 @lru_cache(maxsize = None)
 def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int) -> bool:
 	video_fps = detect_video_fps(video_path)
-	trim_frame_start, trim_frame_end = restrict_trim_frame(video_path, trim_frame_start, trim_frame_end)
 	frame_range = range(trim_frame_start, trim_frame_end)
 	rate = 0.0
 	counter = 0

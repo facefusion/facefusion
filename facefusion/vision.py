@@ -137,10 +137,10 @@ def count_trim_frame_total(video_path : str, trim_frame_start : int, trim_frame_
 def restrict_trim_frame(video_path : str, trim_frame_start : int, trim_frame_end : int) -> Tuple[int, int]:
 	video_frame_total = count_video_frame_total(video_path)
 
-	if isinstance(trim_frame_start, int) and trim_frame_start < 0:
-		trim_frame_start = 0
-	if isinstance(trim_frame_end, int) and trim_frame_end > video_frame_total:
-		trim_frame_end = video_frame_total
+	if isinstance(trim_frame_start, int):
+		trim_frame_start = max(0, min(trim_frame_start, video_frame_total))
+	if isinstance(trim_frame_end, int):
+		trim_frame_end = max(0, min(trim_frame_end, video_frame_total))
 
 	if isinstance(trim_frame_start, int) and isinstance(trim_frame_end, int):
 		return trim_frame_start, trim_frame_end

@@ -73,10 +73,8 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 			logger.debug(error.strip(), __name__)
 
 
-def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps) -> bool:
-	trim_frame_start = state_manager.get_item('trim_frame_start')
-	trim_frame_end = state_manager.get_item('trim_frame_end')
-	extract_frame_total = count_trim_frame_total(state_manager.get_item('target_path'), trim_frame_start, trim_frame_end)
+def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+	extract_frame_total = count_trim_frame_total(target_path, trim_frame_start, trim_frame_end)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 	commands = [ '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0' ]
 
@@ -176,9 +174,7 @@ def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int)
 	return None
 
 
-def restore_audio(target_path : str, output_path : str, output_video_fps : Fps) -> bool:
-	trim_frame_start = state_manager.get_item('trim_frame_start')
-	trim_frame_end = state_manager.get_item('trim_frame_end')
+def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
 	output_audio_encoder = state_manager.get_item('output_audio_encoder')
 	temp_file_path = get_temp_file_path(target_path)
 	temp_video_duration = detect_video_duration(temp_file_path)
