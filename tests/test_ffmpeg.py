@@ -33,78 +33,30 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	state_manager.clear_item('trim_frame_start')
-	state_manager.clear_item('trim_frame_end')
 	prepare_test_output_directory()
 
 
 def test_extract_frames() -> None:
-	target_paths =\
+	extract_set =\
 	[
-		get_test_example_file('target-240p-25fps.mp4'),
-		get_test_example_file('target-240p-30fps.mp4'),
-		get_test_example_file('target-240p-60fps.mp4')
+		(get_test_example_file('target-240p-25fps.mp4'), 0, 270, 324),
+		(get_test_example_file('target-240p-25fps.mp4'), 224, 270, 55),
+		(get_test_example_file('target-240p-25fps.mp4'), 124, 224, 120),
+		(get_test_example_file('target-240p-25fps.mp4'), 0, 100, 120),
+		(get_test_example_file('target-240p-30fps.mp4'), 0, 324, 324),
+		(get_test_example_file('target-240p-30fps.mp4'), 224, 324, 100),
+		(get_test_example_file('target-240p-30fps.mp4'), 124, 224, 100),
+		(get_test_example_file('target-240p-30fps.mp4'), 0, 100, 100),
+		(get_test_example_file('target-240p-60fps.mp4'), 0, 648, 324),
+		(get_test_example_file('target-240p-60fps.mp4'), 224, 648, 212),
+		(get_test_example_file('target-240p-60fps.mp4'), 124, 224, 50),
+		(get_test_example_file('target-240p-60fps.mp4'), 0, 100, 50)
 	]
 
-	for target_path in target_paths:
+	for target_path, trim_frame_start, trim_frame_end, frame_total in extract_set:
 		create_temp_directory(target_path)
 
-		assert extract_frames(target_path, '452x240', 30.0) is True
-		assert len(get_temp_frame_paths(target_path)) == 324
-
-		clear_temp_directory(target_path)
-
-
-def test_extract_frames_with_trim_start() -> None:
-	state_manager.init_item('trim_frame_start', 224)
-	target_paths =\
-	[
-		(get_test_example_file('target-240p-25fps.mp4'), 55),
-		(get_test_example_file('target-240p-30fps.mp4'), 100),
-		(get_test_example_file('target-240p-60fps.mp4'), 212)
-	]
-
-	for target_path, frame_total in target_paths:
-		create_temp_directory(target_path)
-
-		assert extract_frames(target_path, '452x240', 30.0) is True
-		assert len(get_temp_frame_paths(target_path)) == frame_total
-
-		clear_temp_directory(target_path)
-
-
-def test_extract_frames_with_trim_start_and_trim_end() -> None:
-	state_manager.init_item('trim_frame_start', 124)
-	state_manager.init_item('trim_frame_end', 224)
-	target_paths =\
-	[
-		(get_test_example_file('target-240p-25fps.mp4'), 120),
-		(get_test_example_file('target-240p-30fps.mp4'), 100),
-		(get_test_example_file('target-240p-60fps.mp4'), 50)
-	]
-
-	for target_path, frame_total in target_paths:
-		create_temp_directory(target_path)
-
-		assert extract_frames(target_path, '452x240', 30.0) is True
-		assert len(get_temp_frame_paths(target_path)) == frame_total
-
-		clear_temp_directory(target_path)
-
-
-def test_extract_frames_with_trim_end() -> None:
-	state_manager.init_item('trim_frame_end', 100)
-	target_paths =\
-	[
-		(get_test_example_file('target-240p-25fps.mp4'), 120),
-		(get_test_example_file('target-240p-30fps.mp4'), 100),
-		(get_test_example_file('target-240p-60fps.mp4'), 50)
-	]
-
-	for target_path, frame_total in target_paths:
-		create_temp_directory(target_path)
-
-		assert extract_frames(target_path, '426x240', 30.0) is True
+		assert extract_frames(target_path, '452x240', 30.0, trim_frame_start, trim_frame_end) is True
 		assert len(get_temp_frame_paths(target_path)) == frame_total
 
 		clear_temp_directory(target_path)
@@ -139,7 +91,7 @@ def test_restore_audio() -> None:
 		create_temp_directory(target_path)
 		copy_file(target_path, get_temp_file_path(target_path))
 
-		assert restore_audio(target_path, output_path, 30) is True
+		assert restore_audio(target_path, output_path, 30, 0, 270) is True
 
 		clear_temp_directory(target_path)
 
