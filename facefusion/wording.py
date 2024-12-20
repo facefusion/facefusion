@@ -126,8 +126,8 @@ WORDING : Dict[str, Any] =\
 		'reference_face_distance': 'specify the similarity between the reference face and target face',
 		'reference_frame_number': 'specify the frame used to create the reference face',
 		# face masker
-		'face_occluder_model': 'choose the model responsible for occluding the face',
-		'face_parser_model': 'choose the model responsible for parsing the face',
+		'face_occluder_model': 'choose the model responsible for the occlusion mask',
+		'face_parser_model': 'choose the model responsible for the region mask',
 		'face_mask_types': 'mix and match different face mask types (choices: {choices})',
 		'face_mask_blur': 'specify the degree of blur applied to the box mask',
 		'face_mask_padding': 'apply top, right, bottom and left padding to the box mask',
