@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.typing import Angle, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevel, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
+from facefusion.typing import Angle, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevel, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -20,7 +20,20 @@ face_selector_races : List[Race] = [ 'white', 'black', 'latino', 'asian', 'india
 face_occluder_models : List[FaceOccluderModel] = [ 'xseg_1', 'xseg_2' ]
 face_parser_models : List[FaceParserModel] = [ 'bisenet_resnet_18', 'bisenet_resnet_34' ]
 face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'region' ]
-face_mask_regions : List[FaceMaskRegion] = [ 'skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip' ]
+face_mask_region_set : FaceMaskRegionSet =\
+{
+	'skin': 1,
+	'left-eyebrow': 2,
+	'right-eyebrow': 3,
+	'left-eye': 4,
+	'right-eye': 5,
+	'glasses': 6,
+	'nose': 10,
+	'mouth': 11,
+	'upper-lip': 12,
+	'lower-lip': 13
+}
+face_mask_regions : List[FaceMaskRegion] = list(face_mask_region_set.keys())
 temp_frame_formats : List[TempFrameFormat] = [ 'bmp', 'jpg', 'png' ]
 output_audio_encoders : List[OutputAudioEncoder] = [ 'aac', 'libmp3lame', 'libopus', 'libvorbis' ]
 output_video_encoders : List[OutputVideoEncoder] = [ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox' ]

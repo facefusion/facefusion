@@ -1,29 +1,16 @@
 from functools import lru_cache
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import cv2
 import numpy
 from cv2.typing import Size
 
+import facefusion.choices
 from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
-
-FACE_MASK_REGIONS : Dict[FaceMaskRegion, int] =\
-{
-	'skin': 1,
-	'left-eyebrow': 2,
-	'right-eyebrow': 3,
-	'left-eye': 4,
-	'right-eye': 5,
-	'glasses': 6,
-	'nose': 10,
-	'mouth': 11,
-	'upper-lip': 12,
-	'lower-lip': 13
-}
 
 
 @lru_cache(maxsize = None)
@@ -189,7 +176,7 @@ def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0)
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 3, 1, 2)
 	region_mask = forward_parse_face(prepare_vision_frame)
-	region_mask = numpy.isin(region_mask.argmax(0), [ FACE_MASK_REGIONS[region] for region in face_mask_regions ])
+	region_mask = numpy.isin(region_mask.argmax(0), [ facefusion.choices.face_mask_region_set.get(face_mask_region) for face_mask_region in face_mask_regions ])
 	region_mask = cv2.resize(region_mask.astype(numpy.float32), crop_vision_frame.shape[:2][::-1])
 	region_mask = (cv2.GaussianBlur(region_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
 	return region_mask
