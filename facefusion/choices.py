@@ -55,8 +55,16 @@ execution_provider_set : ExecutionProviderSet =\
 execution_providers : List[ExecutionProvider] = list(execution_provider_set.keys())
 download_provider_set : DownloadProviderSet =\
 {
-	'github': 'https://github.com/facefusion/facefusion-assets/releases/download/{base_name}/{file_name}',
-	'huggingface': 'https://huggingface.co/facefusion/{base_name}/resolve/main/{file_name}'
+	'github':
+	{
+		'url': 'https://github.com',
+		'path': '/facefusion/facefusion-assets/releases/download/{base_name}/{file_name}'
+	},
+	'huggingface':
+	{
+		'url': 'https://huggingface.co',
+		'path': '/facefusion/{base_name}/resolve/main/{file_name}'
+	}
 }
 download_providers : List[DownloadProvider] = list(download_provider_set.keys())
 download_scopes : List[DownloadScope] = [ 'lite', 'full' ]

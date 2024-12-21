@@ -22,10 +22,15 @@ def run_ffmpeg_with_progress(args: List[str], update_progress : UpdateProgress) 
 
 	while process_manager.is_processing():
 		try:
-			while line := process.stdout.readline().decode():
-				if 'frame=' in line:
-					_, frame_number = line.split('frame=')
+			lines = process.stdout.readlines()
+
+			for line in lines:
+				__line__ = line.decode().lower()
+
+				if 'frame=' in __line__:
+					_, frame_number = __line__.split('frame=')
 					update_progress(int(frame_number))
+
 			if log_level == 'debug':
 				log_debug(process)
 			process.wait(timeout = 0.5)

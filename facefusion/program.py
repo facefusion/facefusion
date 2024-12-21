@@ -206,7 +206,7 @@ def create_download_providers_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	download_providers = list(facefusion.choices.download_provider_set.keys())
 	group_download = program.add_argument_group('download')
-	group_download.add_argument('--download-providers', help = wording.get('help.download_providers').format(choices = ', '.join(download_providers)), default = config.get_str_list('download.download_providers', 'github'), choices = download_providers, nargs = '+', metavar = 'DOWNLOAD_PROVIDERS')
+	group_download.add_argument('--download-providers', help = wording.get('help.download_providers').format(choices = ', '.join(download_providers)), default = config.get_str_list('download.download_providers', ' '.join(facefusion.choices.download_providers)), choices = download_providers, nargs = '+', metavar = 'DOWNLOAD_PROVIDERS')
 	job_store.register_job_keys([ 'download_providers' ])
 	return program
 

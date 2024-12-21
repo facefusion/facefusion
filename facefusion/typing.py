@@ -159,7 +159,12 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 })
 
 DownloadProvider = Literal['github', 'huggingface']
-DownloadProviderSet = Dict[DownloadProvider, str]
+DownloadProviderValue = TypedDict('DownloadProviderValue',
+{
+	'url' : str,
+	'path' : str
+})
+DownloadProviderSet = Dict[DownloadProvider, DownloadProviderValue]
 DownloadScope = Literal['lite', 'full']
 Download = TypedDict('Download',
 {
