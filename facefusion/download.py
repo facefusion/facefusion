@@ -44,14 +44,13 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 def get_static_download_size(url : str) -> int:
 	commands = [ '-I', url ]
 	process = open_curl(commands)
-	process.wait()
+	lines = reversed(process.stdout.readlines())
 
-	while line := process.stdout.readline().decode().lower():
+	for line in lines:
+		line = line.decode().lower()
 		if 'content-length:' in line:
 			_, content_length = line.split('content-length:')
-
-			if int(content_length) > 0:
-				return int(content_length)
+			return int(content_length)
 
 	return 0
 
