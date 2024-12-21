@@ -60,7 +60,7 @@ def get_static_download_size(url : str) -> int:
 def ping_static_url(url : str) -> bool:
 	commands = [ '-I', url ]
 	process = open_curl(commands)
-	process.wait()
+	process.communicate()
 	return process.returncode == 0
 
 
