@@ -25,8 +25,10 @@ def run_ffmpeg_with_progress(args: List[str], update_progress : UpdateProgress) 
 			lines = process.stdout.readlines()
 
 			for line in lines:
-				if 'frame=' in line.decode().lower():
-					_, frame_number = line.decode().lower().split('frame=')
+				__line__ = line.decode().lower()
+
+				if 'frame=' in __line__:
+					_, frame_number = __line__.split('frame=')
 					update_progress(int(frame_number))
 
 			if log_level == 'debug':
