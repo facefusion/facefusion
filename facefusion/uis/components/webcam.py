@@ -2,7 +2,7 @@ import os
 import subprocess
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from typing import Deque, Generator, Optional, List
+from typing import Deque, Generator, List, Optional
 
 import cv2
 import gradio
@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from facefusion import logger, state_manager, wording
 from facefusion.audio import create_empty_audio_frame
-from facefusion.common_helper import is_windows, get_first
+from facefusion.common_helper import get_first, is_windows
 from facefusion.content_analyser import analyse_stream
 from facefusion.face_analyser import get_average_face, get_many_faces
 from facefusion.ffmpeg import open_ffmpeg
@@ -23,7 +23,6 @@ from facefusion.vision import normalize_frame_color, read_static_images, unpack_
 
 WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None
-WEBCAM_DEVICE_ID_DROPDOWN : Optional[gradio.Dropdown] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
 WEBCAM_STOP_BUTTON : Optional[gradio.Button] = None
 
@@ -32,10 +31,13 @@ def get_webcam_capture(index : int) -> Optional[cv2.VideoCapture]:
 	global WEBCAM_CAPTURE
 
 	if WEBCAM_CAPTURE is None:
+		cv2.setLogLevel(0)
 		if is_windows():
 			webcam_capture = cv2.VideoCapture(index, cv2.CAP_DSHOW)
 		else:
 			webcam_capture = cv2.VideoCapture(index)
+		cv2.setLogLevel(3)
+
 		if webcam_capture and webcam_capture.isOpened():
 			WEBCAM_CAPTURE = webcam_capture
 	return WEBCAM_CAPTURE
@@ -51,18 +53,11 @@ def clear_webcam_capture() -> None:
 
 def render() -> None:
 	global WEBCAM_IMAGE
-	global WEBCAM_DEVICE_ID_DROPDOWN
 	global WEBCAM_START_BUTTON
 	global WEBCAM_STOP_BUTTON
 
-	available_webcam_ids = get_available_webcam_ids()
 	WEBCAM_IMAGE = gradio.Image(
 		label = wording.get('uis.webcam_image')
-	)
-	WEBCAM_DEVICE_ID_DROPDOWN = gradio.Dropdown(
-		value = get_first(available_webcam_ids),
-		label = wording.get('uis.webcam_device_id_dropdown'),
-		choices = available_webcam_ids
 	)
 	WEBCAM_START_BUTTON = gradio.Button(
 		value = wording.get('uis.start_button'),
@@ -76,13 +71,14 @@ def render() -> None:
 
 
 def listen() -> None:
+	webcam_device_id_dropdown = get_ui_component('webcam_device_id_dropdown')
 	webcam_mode_radio = get_ui_component('webcam_mode_radio')
 	webcam_resolution_dropdown = get_ui_component('webcam_resolution_dropdown')
 	webcam_fps_slider = get_ui_component('webcam_fps_slider')
 	source_image = get_ui_component('source_image')
 
-	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
-		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ WEBCAM_DEVICE_ID_DROPDOWN, webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
+	if webcam_device_id_dropdown and webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
+		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_device_id_dropdown, webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 		WEBCAM_STOP_BUTTON.click(stop, cancels = start_event, outputs = WEBCAM_IMAGE)
 
 	if source_image:
@@ -96,11 +92,14 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 	source_faces = get_many_faces(source_frames)
 	source_face = get_average_face(source_faces)
 	stream = None
+	webcam_capture = None
 
 	if webcam_mode in [ 'udp', 'v4l2' ]:
 		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) #type:ignore[arg-type]
 	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
-	webcam_capture = get_webcam_capture(webcam_device_id)
+
+	if isinstance(webcam_device_id, int):
+		webcam_capture = get_webcam_capture(webcam_device_id)
 
 	if webcam_capture and webcam_capture.isOpened():
 		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) #type:ignore[attr-defined]
@@ -171,7 +170,7 @@ def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : 
 		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000?pkt_size=1316' ])
 	if stream_mode == 'v4l2':
 		try:
-			device_name = os.listdir('/sys/devices/virtual/video4linux')[0]
+			device_name = get_first(os.listdir('/sys/devices/virtual/video4linux'))
 			if device_name:
 				commands.extend([ '-f', 'v4l2', '/dev/' + device_name ])
 		except FileNotFoundError:
@@ -179,10 +178,10 @@ def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : 
 	return open_ffmpeg(commands)
 
 
-def get_available_webcam_ids() -> List[int]:
+def get_available_webcam_ids(webcam_id_start : int, webcam_id_end : int) -> List[int]:
 	available_webcam_ids = []
 
-	for index in range(10):
+	for index in range(webcam_id_start, webcam_id_end):
 		webcam_capture = get_webcam_capture(index)
 
 		if webcam_capture and webcam_capture.isOpened():
