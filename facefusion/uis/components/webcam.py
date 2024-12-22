@@ -2,7 +2,7 @@ import os
 import subprocess
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from typing import Deque, Generator, Optional
+from typing import Deque, Generator, Optional, List
 
 import cv2
 import gradio
@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from facefusion import logger, state_manager, wording
 from facefusion.audio import create_empty_audio_frame
-from facefusion.common_helper import is_windows
+from facefusion.common_helper import is_windows, get_first
 from facefusion.content_analyser import analyse_stream
 from facefusion.face_analyser import get_average_face, get_many_faces
 from facefusion.ffmpeg import open_ffmpeg
@@ -23,18 +23,19 @@ from facefusion.vision import normalize_frame_color, read_static_images, unpack_
 
 WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None
+WEBCAM_DEVICE_ID_DROPDOWN : Optional[gradio.Dropdown] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
 WEBCAM_STOP_BUTTON : Optional[gradio.Button] = None
 
 
-def get_webcam_capture() -> Optional[cv2.VideoCapture]:
+def get_webcam_capture(index : int) -> Optional[cv2.VideoCapture]:
 	global WEBCAM_CAPTURE
 
 	if WEBCAM_CAPTURE is None:
 		if is_windows():
-			webcam_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+			webcam_capture = cv2.VideoCapture(index, cv2.CAP_DSHOW)
 		else:
-			webcam_capture = cv2.VideoCapture(0)
+			webcam_capture = cv2.VideoCapture(index)
 		if webcam_capture and webcam_capture.isOpened():
 			WEBCAM_CAPTURE = webcam_capture
 	return WEBCAM_CAPTURE
@@ -50,11 +51,18 @@ def clear_webcam_capture() -> None:
 
 def render() -> None:
 	global WEBCAM_IMAGE
+	global WEBCAM_DEVICE_ID_DROPDOWN
 	global WEBCAM_START_BUTTON
 	global WEBCAM_STOP_BUTTON
 
+	available_webcam_ids = get_available_webcam_ids()
 	WEBCAM_IMAGE = gradio.Image(
 		label = wording.get('uis.webcam_image')
+	)
+	WEBCAM_DEVICE_ID_DROPDOWN = gradio.Dropdown(
+		value = get_first(available_webcam_ids),
+		label = wording.get('uis.webcam_device_id_dropdown'),
+		choices = available_webcam_ids
 	)
 	WEBCAM_START_BUTTON = gradio.Button(
 		value = wording.get('uis.start_button'),
@@ -74,14 +82,14 @@ def listen() -> None:
 	source_image = get_ui_component('source_image')
 
 	if webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
-		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
+		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ WEBCAM_DEVICE_ID_DROPDOWN, webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 		WEBCAM_STOP_BUTTON.click(stop, cancels = start_event, outputs = WEBCAM_IMAGE)
 
 	if source_image:
 		source_image.change(stop, cancels = start_event, outputs = WEBCAM_IMAGE)
 
 
-def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
+def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	state_manager.set_item('face_selector_mode', 'one')
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
@@ -92,7 +100,7 @@ def start(webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -
 	if webcam_mode in [ 'udp', 'v4l2' ]:
 		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) #type:ignore[arg-type]
 	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
-	webcam_capture = get_webcam_capture()
+	webcam_capture = get_webcam_capture(webcam_device_id)
 
 	if webcam_capture and webcam_capture.isOpened():
 		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) #type:ignore[attr-defined]
@@ -169,3 +177,16 @@ def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : 
 		except FileNotFoundError:
 			logger.error(wording.get('stream_not_loaded').format(stream_mode = stream_mode), __name__)
 	return open_ffmpeg(commands)
+
+
+def get_available_webcam_ids() -> List[int]:
+	available_webcam_ids = []
+
+	for index in range(10):
+		webcam_capture = get_webcam_capture(index)
+
+		if webcam_capture and webcam_capture.isOpened():
+			available_webcam_ids.append(index)
+			clear_webcam_capture()
+
+	return available_webcam_ids
