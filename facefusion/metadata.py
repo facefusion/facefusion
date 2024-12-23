@@ -4,7 +4,7 @@ METADATA =\
 {
 	'name': 'FaceFusion',
 	'description': 'Industry leading face manipulation platform',
-	'version': 'NEXT',
+	'version': '3.1.0',
 	'license': 'MIT',
 	'author': 'Henry Ruhs',
 	'url': 'https://facefusion.io'

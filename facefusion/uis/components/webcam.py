@@ -27,15 +27,15 @@ WEBCAM_START_BUTTON : Optional[gradio.Button] = None
 WEBCAM_STOP_BUTTON : Optional[gradio.Button] = None
 
 
-def get_webcam_capture(index : int) -> Optional[cv2.VideoCapture]:
+def get_webcam_capture(webcam_device_id : int) -> Optional[cv2.VideoCapture]:
 	global WEBCAM_CAPTURE
 
 	if WEBCAM_CAPTURE is None:
 		cv2.setLogLevel(0)
 		if is_windows():
-			webcam_capture = cv2.VideoCapture(index, cv2.CAP_DSHOW)
+			webcam_capture = cv2.VideoCapture(webcam_device_id, cv2.CAP_DSHOW)
 		else:
-			webcam_capture = cv2.VideoCapture(index)
+			webcam_capture = cv2.VideoCapture(webcam_device_id)
 		cv2.setLogLevel(3)
 
 		if webcam_capture and webcam_capture.isOpened():
