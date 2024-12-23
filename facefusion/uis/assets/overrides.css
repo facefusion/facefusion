@@ -108,6 +108,11 @@
 	color: unset;
 }
 
+:root:root:root:root .toast-body .timer
+{
+	background: currentColor;
+}
+
 :root:root:root:root .slider_input_container > span,
 :root:root:root:root .feather-upload,
 :root:root:root:root footer
