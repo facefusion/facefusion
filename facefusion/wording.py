@@ -330,6 +330,7 @@ WORDING : Dict[str, Any] =\
 		'video_memory_strategy_dropdown': 'VIDEO MEMORY STRATEGY',
 		'webcam_fps_slider': 'WEBCAM FPS',
 		'webcam_image': 'WEBCAM',
+		'webcam_device_id_dropdown': 'WEBCAM DEVICE ID',
 		'webcam_mode_radio': 'WEBCAM MODE',
 		'webcam_resolution_dropdown': 'WEBCAM RESOLUTION'
 	}
