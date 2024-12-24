@@ -21,6 +21,7 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.6:ih*0.6', get_test_example_file('source-60crop.jpg') ])
 	state_manager.init_item('execution_device_id', 0)
 	state_manager.init_item('execution_providers', [ 'cpu' ])
+	state_manager.init_item('download_providers', [ 'github' ])
 	state_manager.init_item('face_detector_angles', [ 0 ])
 	state_manager.init_item('face_detector_model', 'many')
 	state_manager.init_item('face_detector_score', 0.5)

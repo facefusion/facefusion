@@ -43,11 +43,12 @@ def render() -> None:
 	global FACE_EDITOR_HEAD_YAW_SLIDER
 	global FACE_EDITOR_HEAD_ROLL_SLIDER
 
+	has_face_editor = 'face_editor' in state_manager.get_item('processors')
 	FACE_EDITOR_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_editor_model_dropdown'),
 		choices = processors_choices.face_editor_models,
 		value = state_manager.get_item('face_editor_model'),
-		visible = 'face_editor' in state_manager.get_item('processors')
+		visible = has_face_editor
 	)
 	FACE_EDITOR_EYEBROW_DIRECTION_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_eyebrow_direction_slider'),
@@ -55,7 +56,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_eyebrow_direction_range),
 		minimum = processors_choices.face_editor_eyebrow_direction_range[0],
 		maximum = processors_choices.face_editor_eyebrow_direction_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_EYE_GAZE_HORIZONTAL_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_eye_gaze_horizontal_slider'),
@@ -63,7 +64,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_eye_gaze_horizontal_range),
 		minimum = processors_choices.face_editor_eye_gaze_horizontal_range[0],
 		maximum = processors_choices.face_editor_eye_gaze_horizontal_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_EYE_GAZE_VERTICAL_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_eye_gaze_vertical_slider'),
@@ -71,7 +72,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_eye_gaze_vertical_range),
 		minimum = processors_choices.face_editor_eye_gaze_vertical_range[0],
 		maximum = processors_choices.face_editor_eye_gaze_vertical_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_EYE_OPEN_RATIO_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_eye_open_ratio_slider'),
@@ -79,7 +80,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_eye_open_ratio_range),
 		minimum = processors_choices.face_editor_eye_open_ratio_range[0],
 		maximum = processors_choices.face_editor_eye_open_ratio_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_LIP_OPEN_RATIO_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_lip_open_ratio_slider'),
@@ -87,7 +88,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_lip_open_ratio_range),
 		minimum = processors_choices.face_editor_lip_open_ratio_range[0],
 		maximum = processors_choices.face_editor_lip_open_ratio_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_MOUTH_GRIM_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_mouth_grim_slider'),
@@ -95,7 +96,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_mouth_grim_range),
 		minimum = processors_choices.face_editor_mouth_grim_range[0],
 		maximum = processors_choices.face_editor_mouth_grim_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_MOUTH_POUT_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_mouth_pout_slider'),
@@ -103,7 +104,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_mouth_pout_range),
 		minimum = processors_choices.face_editor_mouth_pout_range[0],
 		maximum = processors_choices.face_editor_mouth_pout_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_MOUTH_PURSE_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_mouth_purse_slider'),
@@ -111,7 +112,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_mouth_purse_range),
 		minimum = processors_choices.face_editor_mouth_purse_range[0],
 		maximum = processors_choices.face_editor_mouth_purse_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_MOUTH_SMILE_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_mouth_smile_slider'),
@@ -119,7 +120,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_mouth_smile_range),
 		minimum = processors_choices.face_editor_mouth_smile_range[0],
 		maximum = processors_choices.face_editor_mouth_smile_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_MOUTH_POSITION_HORIZONTAL_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_mouth_position_horizontal_slider'),
@@ -127,7 +128,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_mouth_position_horizontal_range),
 		minimum = processors_choices.face_editor_mouth_position_horizontal_range[0],
 		maximum = processors_choices.face_editor_mouth_position_horizontal_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_MOUTH_POSITION_VERTICAL_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_mouth_position_vertical_slider'),
@@ -135,7 +136,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_mouth_position_vertical_range),
 		minimum = processors_choices.face_editor_mouth_position_vertical_range[0],
 		maximum = processors_choices.face_editor_mouth_position_vertical_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_HEAD_PITCH_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_head_pitch_slider'),
@@ -143,7 +144,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_head_pitch_range),
 		minimum = processors_choices.face_editor_head_pitch_range[0],
 		maximum = processors_choices.face_editor_head_pitch_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_HEAD_YAW_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_head_yaw_slider'),
@@ -151,7 +152,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_head_yaw_range),
 		minimum = processors_choices.face_editor_head_yaw_range[0],
 		maximum = processors_choices.face_editor_head_yaw_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	FACE_EDITOR_HEAD_ROLL_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_editor_head_roll_slider'),
@@ -159,7 +160,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_editor_head_roll_range),
 		minimum = processors_choices.face_editor_head_roll_range[0],
 		maximum = processors_choices.face_editor_head_roll_range[-1],
-		visible = 'face_editor' in state_manager.get_item('processors'),
+		visible = has_face_editor
 	)
 	register_ui_component('face_editor_model_dropdown', FACE_EDITOR_MODEL_DROPDOWN)
 	register_ui_component('face_editor_eyebrow_direction_slider', FACE_EDITOR_EYEBROW_DIRECTION_SLIDER)

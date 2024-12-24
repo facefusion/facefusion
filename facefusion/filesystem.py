@@ -1,3 +1,4 @@
+import glob
 import os
 import shutil
 from pathlib import Path
@@ -6,6 +7,7 @@ from typing import List, Optional
 import filetype
 
 from facefusion.common_helper import is_windows
+from facefusion.typing import File
 
 if is_windows():
 	import ctypes
@@ -125,12 +127,30 @@ def create_directory(directory_path : str) -> bool:
 	return False
 
 
-def list_directory(directory_path : str) -> Optional[List[str]]:
+def list_directory(directory_path : str) -> Optional[List[File]]:
 	if is_directory(directory_path):
-		files = os.listdir(directory_path)
-		files = [ Path(file).stem for file in files if not Path(file).stem.startswith(('.', '__')) ]
-		return sorted(files)
+		file_paths = sorted(os.listdir(directory_path))
+		files: List[File] = []
+
+		for file_path in file_paths:
+			file_name, file_extension = os.path.splitext(file_path)
+
+			if not file_name.startswith(('.', '__')):
+				files.append(
+				{
+					'name': file_name,
+					'extension': file_extension,
+					'path': os.path.join(directory_path, file_path)
+				})
+
+		return files
 	return None
+
+
+def resolve_file_pattern(file_pattern : str) -> List[str]:
+	if in_directory(file_pattern):
+		return sorted(glob.glob(file_pattern))
+	return []
 
 
 def remove_directory(directory_path : str) -> bool:

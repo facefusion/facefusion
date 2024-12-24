@@ -35,6 +35,7 @@ options:
 commands:
     run                                           run the program
     headless-run                                  run the program in headless mode
+    batch-run                                     run the program in batch mode
     force-download                                force automate downloads and exit
     job-list                                      list jobs by status
     job-create                                    create a drafted job

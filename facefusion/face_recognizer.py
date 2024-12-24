@@ -1,38 +1,42 @@
+from functools import lru_cache
 from typing import Tuple
 
 import numpy
 
 from facefusion import inference_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Embedding, FaceLandmark5, InferencePool, ModelOptions, ModelSet, VisionFrame
+from facefusion.typing import DownloadScope, Embedding, FaceLandmark5, InferencePool, ModelOptions, ModelSet, VisionFrame
 
-MODEL_SET : ModelSet =\
-{
-	'arcface':
+
+@lru_cache(maxsize = None)
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
+	return\
 	{
-		'hashes':
+		'arcface':
 		{
-			'face_recognizer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.hash',
-				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
-			}
-		},
-		'sources':
-		{
-			'face_recognizer':
+				'face_recognizer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_w600k_r50.hash'),
+					'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/arcface_w600k_r50.onnx',
-				'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
-			}
-		},
-		'template': 'arcface_112_v2',
-		'size': (112, 112)
+				'face_recognizer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'arcface_w600k_r50.onnx'),
+					'path': resolve_relative_path('../.assets/models/arcface_w600k_r50.onnx')
+				}
+			},
+			'template': 'arcface_112_v2',
+			'size': (112, 112)
+		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -45,15 +49,14 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET.get('arcface')
+	return create_static_model_set('full').get('arcface')
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
 
 
 def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[Embedding, Embedding]:

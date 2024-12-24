@@ -1,40 +1,44 @@
+from functools import lru_cache
 from typing import List, Tuple
 
 import numpy
 
 from facefusion import inference_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Age, FaceLandmark5, Gender, InferencePool, ModelOptions, ModelSet, Race, VisionFrame
+from facefusion.typing import Age, DownloadScope, FaceLandmark5, Gender, InferencePool, ModelOptions, ModelSet, Race, VisionFrame
 
-MODEL_SET : ModelSet =\
-{
-	'fairface':
+
+@lru_cache(maxsize = None)
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
+	return\
 	{
-		'hashes':
+		'fairface':
 		{
-			'face_classifier':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.hash',
-				'path': resolve_relative_path('../.assets/models/fairface.hash')
-			}
-		},
-		'sources':
-		{
-			'face_classifier':
+				'face_classifier':
+				{
+					'url': resolve_download_url('models-3.0.0', 'fairface.hash'),
+					'path': resolve_relative_path('../.assets/models/fairface.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.onnx',
-				'path': resolve_relative_path('../.assets/models/fairface.onnx')
-			}
-		},
-		'template': 'arcface_112_v2',
-		'size': (224, 224),
-		'mean': [ 0.485, 0.456, 0.406 ],
-		'standard_deviation': [ 0.229, 0.224, 0.225 ]
+				'face_classifier':
+				{
+					'url': resolve_download_url('models-3.0.0', 'fairface.onnx'),
+					'path': resolve_relative_path('../.assets/models/fairface.onnx')
+				}
+			},
+			'template': 'arcface_112_v2',
+			'size': (224, 224),
+			'mean': [ 0.485, 0.456, 0.406 ],
+			'standard_deviation': [ 0.229, 0.224, 0.225 ]
+		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
@@ -47,15 +51,14 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET.get('fairface')
+	return create_static_model_set('full').get('fairface')
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
 
 
 def classify_face(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[Gender, Age, Race]:

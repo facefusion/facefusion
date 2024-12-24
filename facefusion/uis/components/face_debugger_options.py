@@ -13,11 +13,12 @@ FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 def render() -> None:
 	global FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP
 
+	has_face_debugger = 'face_debugger' in state_manager.get_item('processors')
 	FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.face_debugger_items_checkbox_group'),
 		choices = processors_choices.face_debugger_items,
 		value = state_manager.get_item('face_debugger_items'),
-		visible = 'face_debugger' in state_manager.get_item('processors')
+		visible = has_face_debugger
 	)
 	register_ui_component('face_debugger_items_checkbox_group', FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP)
 

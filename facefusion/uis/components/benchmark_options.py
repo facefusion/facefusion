@@ -16,8 +16,8 @@ def render() -> None:
 
 	BENCHMARK_RUNS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.benchmark_runs_checkbox_group'),
-		value = list(BENCHMARKS.keys()),
-		choices = list(BENCHMARKS.keys())
+		choices = list(BENCHMARKS.keys()),
+		value = list(BENCHMARKS.keys())
 	)
 	BENCHMARK_CYCLES_SLIDER = gradio.Slider(
 		label = wording.get('uis.benchmark_cycles_slider'),

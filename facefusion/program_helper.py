@@ -1,8 +1,5 @@
 from argparse import ArgumentParser, _ArgumentGroup, _SubParsersAction
-from typing import List, Optional
-
-import facefusion.choices
-from facefusion.processors import choices as processors_choices
+from typing import Optional
 
 
 def find_argument_group(program : ArgumentParser, group_name : str) -> Optional[_ArgumentGroup]:
@@ -32,21 +29,3 @@ def validate_actions(program : ArgumentParser) -> bool:
 			elif action.default not in action.choices:
 				return False
 	return True
-
-
-def remove_args(program : ArgumentParser, remove_names : List[str]) -> ArgumentParser:
-	actions = [ action for action in program._actions if action.dest in remove_names ]
-
-	for action in actions:
-		program._actions.remove(action)
-	return program
-
-
-def suggest_face_detector_choices(program : ArgumentParser) -> List[str]:
-	known_args, _ = program.parse_known_args()
-	return facefusion.choices.face_detector_set.get(known_args.face_detector_model) #type:ignore[call-overload]
-
-
-def suggest_face_swapper_pixel_boost_choices(program : ArgumentParser) -> List[str]:
-	known_args, _ = program.parse_known_args()
-	return processors_choices.face_swapper_set.get(known_args.face_swapper_model) #type:ignore[call-overload]

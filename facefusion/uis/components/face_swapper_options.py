@@ -17,17 +17,18 @@ def render() -> None:
 	global FACE_SWAPPER_MODEL_DROPDOWN
 	global FACE_SWAPPER_PIXEL_BOOST_DROPDOWN
 
+	has_face_swapper = 'face_swapper' in state_manager.get_item('processors')
 	FACE_SWAPPER_MODEL_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_swapper_model_dropdown'),
-		choices = processors_choices.face_swapper_set.keys(),
+		choices = processors_choices.face_swapper_models,
 		value = state_manager.get_item('face_swapper_model'),
-		visible = 'face_swapper' in state_manager.get_item('processors')
+		visible = has_face_swapper
 	)
 	FACE_SWAPPER_PIXEL_BOOST_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_swapper_pixel_boost_dropdown'),
 		choices = processors_choices.face_swapper_set.get(state_manager.get_item('face_swapper_model')),
 		value = state_manager.get_item('face_swapper_pixel_boost'),
-		visible = 'face_swapper' in state_manager.get_item('processors')
+		visible = has_face_swapper
 	)
 	register_ui_component('face_swapper_model_dropdown', FACE_SWAPPER_MODEL_DROPDOWN)
 	register_ui_component('face_swapper_pixel_boost_dropdown', FACE_SWAPPER_PIXEL_BOOST_DROPDOWN)

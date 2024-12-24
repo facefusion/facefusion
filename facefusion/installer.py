@@ -13,11 +13,11 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 
 if is_macos():
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.19.2')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.20.1')
 else:
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.19.2')
-	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.19.2')
-	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.19.0')
+	ONNXRUNTIMES['default'] = ('onnxruntime', '1.20.1')
+	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.20.1')
+	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.20.0')
 if is_linux():
 	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.18.0')
 if is_windows():
@@ -72,7 +72,7 @@ def run(program : ArgumentParser) -> None:
 				os.path.join(os.getenv('CONDA_PREFIX'), 'lib'),
 				os.path.join(os.getenv('CONDA_PREFIX'), 'lib', python_id, 'site-packages', 'tensorrt_libs')
 			])
-			library_paths = [ library_path for library_path in library_paths if os.path.exists(library_path) ]
+			library_paths = list(dict.fromkeys([ library_path for library_path in library_paths if os.path.exists(library_path) ]))
 
 			subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'LD_LIBRARY_PATH=' + os.pathsep.join(library_paths) ])
 
@@ -85,10 +85,9 @@ def run(program : ArgumentParser) -> None:
 				os.path.join(os.getenv('CONDA_PREFIX'), 'Lib'),
 				os.path.join(os.getenv('CONDA_PREFIX'), 'Lib', 'site-packages', 'tensorrt_libs')
 			])
-			library_paths = [ library_path for library_path in library_paths if os.path.exists(library_path) ]
+			library_paths = list(dict.fromkeys([ library_path for library_path in library_paths if os.path.exists(library_path) ]))
 
 			subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
 
 	if onnxruntime_version < '1.19.0':
 		subprocess.call([ shutil.which('pip'), 'install', 'numpy==1.26.4', '--force-reinstall' ])
-	subprocess.call([ shutil.which('pip'), 'install', 'python-multipart==0.0.12', '--force-reinstall' ])

@@ -15,6 +15,14 @@ def reduce_step_args(args : Args) -> Args:
 	return step_args
 
 
+def reduce_job_args(args : Args) -> Args:
+	job_args =\
+	{
+		key: args[key] for key in args if key in job_store.get_job_keys()
+	}
+	return job_args
+
+
 def collect_step_args() -> Args:
 	step_args =\
 	{
@@ -35,10 +43,15 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	# general
 	apply_state_item('command', args.get('command'))
 	# paths
+	apply_state_item('temp_path', args.get('temp_path'))
 	apply_state_item('jobs_path', args.get('jobs_path'))
 	apply_state_item('source_paths', args.get('source_paths'))
 	apply_state_item('target_path', args.get('target_path'))
 	apply_state_item('output_path', args.get('output_path'))
+	# patterns
+	apply_state_item('source_pattern', args.get('source_pattern'))
+	apply_state_item('target_pattern', args.get('target_pattern'))
+	apply_state_item('output_pattern', args.get('output_pattern'))
 	# face detector
 	apply_state_item('face_detector_model', args.get('face_detector_model'))
 	apply_state_item('face_detector_size', args.get('face_detector_size'))
@@ -48,16 +61,18 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_landmarker_model', args.get('face_landmarker_model'))
 	apply_state_item('face_landmarker_score', args.get('face_landmarker_score'))
 	# face selector
-	state_manager.init_item('face_selector_mode', args.get('face_selector_mode'))
-	state_manager.init_item('face_selector_order', args.get('face_selector_order'))
-	state_manager.init_item('face_selector_age_start', args.get('face_selector_age_start'))
-	state_manager.init_item('face_selector_age_end', args.get('face_selector_age_end'))
-	state_manager.init_item('face_selector_gender', args.get('face_selector_gender'))
-	state_manager.init_item('face_selector_race', args.get('face_selector_race'))
-	state_manager.init_item('reference_face_position', args.get('reference_face_position'))
-	state_manager.init_item('reference_face_distance', args.get('reference_face_distance'))
-	state_manager.init_item('reference_frame_number', args.get('reference_frame_number'))
+	apply_state_item('face_selector_mode', args.get('face_selector_mode'))
+	apply_state_item('face_selector_order', args.get('face_selector_order'))
+	apply_state_item('face_selector_age_start', args.get('face_selector_age_start'))
+	apply_state_item('face_selector_age_end', args.get('face_selector_age_end'))
+	apply_state_item('face_selector_gender', args.get('face_selector_gender'))
+	apply_state_item('face_selector_race', args.get('face_selector_race'))
+	apply_state_item('reference_face_position', args.get('reference_face_position'))
+	apply_state_item('reference_face_distance', args.get('reference_face_distance'))
+	apply_state_item('reference_frame_number', args.get('reference_frame_number'))
 	# face masker
+	apply_state_item('face_occluder_model', args.get('face_occluder_model'))
+	apply_state_item('face_parser_model', args.get('face_parser_model'))
 	apply_state_item('face_mask_types', args.get('face_mask_types'))
 	apply_state_item('face_mask_blur', args.get('face_mask_blur'))
 	apply_state_item('face_mask_padding', normalize_padding(args.get('face_mask_padding')))
@@ -92,7 +107,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 		apply_state_item('output_video_fps', output_video_fps)
 	apply_state_item('skip_audio', args.get('skip_audio'))
 	# processors
-	available_processors = list_directory('facefusion/processors/modules')
+	available_processors = [ file.get('name') for file in list_directory('facefusion/processors/modules') ]
 	apply_state_item('processors', args.get('processors'))
 	for processor_module in get_processors_modules(available_processors):
 		processor_module.apply_args(args, apply_state_item)
@@ -105,11 +120,13 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('execution_providers', args.get('execution_providers'))
 	apply_state_item('execution_thread_count', args.get('execution_thread_count'))
 	apply_state_item('execution_queue_count', args.get('execution_queue_count'))
+	# download
+	apply_state_item('download_providers', args.get('download_providers'))
+	apply_state_item('download_scope', args.get('download_scope'))
 	# memory
 	apply_state_item('video_memory_strategy', args.get('video_memory_strategy'))
 	apply_state_item('system_memory_limit', args.get('system_memory_limit'))
 	# misc
-	apply_state_item('skip_download', args.get('skip_download'))
 	apply_state_item('log_level', args.get('log_level'))
 	# jobs
 	apply_state_item('job_id', args.get('job_id'))

@@ -1,17 +1,18 @@
 from argparse import ArgumentParser
-from typing import Any, List
+from functools import lru_cache
+from typing import List
 
 import cv2
 import numpy
-from cv2.typing import Size
-from numpy.typing import NDArray
 
+import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_int_metavar
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
@@ -19,52 +20,61 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.typing import AgeModifierInputs
+from facefusion.processors.typing import AgeModifierDirection, AgeModifierInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
-from facefusion.vision import read_image, read_static_image, write_image
+from facefusion.typing import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.vision import match_frame_color, read_image, read_static_image, write_image
 
-MODEL_SET : ModelSet =\
-{
-	'styleganex_age':
+
+@lru_cache(maxsize = None)
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
+	return\
 	{
-		'hashes':
+		'styleganex_age':
 		{
-			'age_modifier':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/styleganex_age.hash',
-				'path': resolve_relative_path('../.assets/models/styleganex_age.hash')
-			}
-		},
-		'sources':
-		{
-			'age_modifier':
+				'age_modifier':
+				{
+					'url': resolve_download_url('models-3.1.0', 'styleganex_age.hash'),
+					'path': resolve_relative_path('../.assets/models/styleganex_age.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/styleganex_age.onnx',
-				'path': resolve_relative_path('../.assets/models/styleganex_age.onnx')
+				'age_modifier':
+				{
+					'url': resolve_download_url('models-3.1.0', 'styleganex_age.onnx'),
+					'path': resolve_relative_path('../.assets/models/styleganex_age.onnx')
+				}
+			},
+			'templates':
+			{
+				'target': 'ffhq_512',
+				'target_with_background': 'styleganex_384'
+			},
+			'sizes':
+			{
+				'target': (256, 256),
+				'target_with_background': (384, 384)
 			}
-		},
-		'template': 'ffhq_512',
-		'size': (512, 512)
+		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
-	model_context = __name__ + '.' + state_manager.get_item('age_modifier_model')
-	return inference_manager.get_inference_pool(model_context, model_sources)
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
-	model_context = __name__ + '.' + state_manager.get_item('age_modifier_model')
-	inference_manager.clear_inference_pool(model_context)
+	inference_manager.clear_inference_pool(__name__)
 
 
 def get_model_options() -> ModelOptions:
 	age_modifier_model = state_manager.get_item('age_modifier_model')
-	return MODEL_SET.get(age_modifier_model)
+	return create_static_model_set('full').get(age_modifier_model)
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -81,11 +91,10 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:
@@ -115,15 +124,14 @@ def post_process() -> None:
 
 
 def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_template = get_model_options().get('template')
-	model_size = get_model_options().get('size')
-	crop_size = (model_size[0] // 2, model_size[1] // 2)
+	model_templates = get_model_options().get('templates')
+	model_sizes = get_model_options().get('sizes')
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
-	extend_face_landmark_5 = scale_face_landmark_5(face_landmark_5, 2.0)
-	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, crop_size)
-	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_template, model_size)
+	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_templates.get('target'), model_sizes.get('target'))
+	extend_face_landmark_5 = scale_face_landmark_5(face_landmark_5, 0.875)
+	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_templates.get('target_with_background'), model_sizes.get('target_with_background'))
 	extend_vision_frame_raw = extend_vision_frame.copy()
-	box_mask = create_static_box_mask(model_size, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
+	box_mask = create_static_box_mask(model_sizes.get('target_with_background'), state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
 	[
 		box_mask
@@ -132,23 +140,28 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		combined_matrix = merge_matrix([ extend_affine_matrix, cv2.invertAffineTransform(affine_matrix) ])
-		occlusion_mask = cv2.warpAffine(occlusion_mask, combined_matrix, model_size)
+		occlusion_mask = cv2.warpAffine(occlusion_mask, combined_matrix, model_sizes.get('target_with_background'))
 		crop_masks.append(occlusion_mask)
 
 	crop_vision_frame = prepare_vision_frame(crop_vision_frame)
 	extend_vision_frame = prepare_vision_frame(extend_vision_frame)
-	extend_vision_frame = forward(crop_vision_frame, extend_vision_frame)
+	age_modifier_direction = numpy.array(numpy.interp(state_manager.get_item('age_modifier_direction'), [-100, 100], [2.5, -2.5])).astype(numpy.float32)
+	extend_vision_frame = forward(crop_vision_frame, extend_vision_frame, age_modifier_direction)
 	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
-	extend_vision_frame = fix_color(extend_vision_frame_raw, extend_vision_frame)
-	extend_crop_mask = cv2.pyrUp(numpy.minimum.reduce(crop_masks).clip(0, 1))
-	extend_affine_matrix *= extend_vision_frame.shape[0] / 512
-	paste_vision_frame = paste_back(temp_vision_frame, extend_vision_frame, extend_crop_mask, extend_affine_matrix)
+	extend_vision_frame = match_frame_color(extend_vision_frame_raw, extend_vision_frame)
+	extend_affine_matrix *= (model_sizes.get('target')[0] * 4) / model_sizes.get('target_with_background')[0]
+	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
+	crop_mask = cv2.resize(crop_mask, (model_sizes.get('target')[0] * 4, model_sizes.get('target')[1] * 4))
+	paste_vision_frame = paste_back(temp_vision_frame, extend_vision_frame, crop_mask, extend_affine_matrix)
 	return paste_vision_frame
 
 
-def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
+def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame, age_modifier_direction : AgeModifierDirection) -> VisionFrame:
 	age_modifier = get_inference_pool().get('age_modifier')
 	age_modifier_inputs = {}
+
+	if has_execution_provider('coreml'):
+		age_modifier.set_providers([ facefusion.choices.execution_provider_set.get('cpu') ])
 
 	for age_modifier_input in age_modifier.get_inputs():
 		if age_modifier_input.name == 'target':
@@ -156,44 +169,12 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame) 
 		if age_modifier_input.name == 'target_with_background':
 			age_modifier_inputs[age_modifier_input.name] = extend_vision_frame
 		if age_modifier_input.name == 'direction':
-			age_modifier_inputs[age_modifier_input.name] = prepare_direction(state_manager.get_item('age_modifier_direction'))
+			age_modifier_inputs[age_modifier_input.name] = age_modifier_direction
 
 	with thread_semaphore():
 		crop_vision_frame = age_modifier.run(None, age_modifier_inputs)[0][0]
 
 	return crop_vision_frame
-
-
-def fix_color(extend_vision_frame_raw : VisionFrame, extend_vision_frame : VisionFrame) -> VisionFrame:
-	color_difference = compute_color_difference(extend_vision_frame_raw, extend_vision_frame, (48, 48))
-	color_difference_mask = create_static_box_mask(extend_vision_frame.shape[:2][::-1], 1.0, (0, 0, 0, 0))
-	color_difference_mask = numpy.stack((color_difference_mask, ) * 3, axis = -1)
-	extend_vision_frame = normalize_color_difference(color_difference, color_difference_mask, extend_vision_frame)
-	return extend_vision_frame
-
-
-def compute_color_difference(extend_vision_frame_raw : VisionFrame, extend_vision_frame : VisionFrame, size : Size) -> VisionFrame:
-	extend_vision_frame_raw = extend_vision_frame_raw.astype(numpy.float32) / 255
-	extend_vision_frame_raw = cv2.resize(extend_vision_frame_raw, size, interpolation = cv2.INTER_AREA)
-	extend_vision_frame = extend_vision_frame.astype(numpy.float32) / 255
-	extend_vision_frame = cv2.resize(extend_vision_frame, size, interpolation = cv2.INTER_AREA)
-	color_difference = extend_vision_frame_raw - extend_vision_frame
-	return color_difference
-
-
-def normalize_color_difference(color_difference : VisionFrame, color_difference_mask : Mask, extend_vision_frame : VisionFrame) -> VisionFrame:
-	color_difference = cv2.resize(color_difference, extend_vision_frame.shape[:2][::-1], interpolation = cv2.INTER_CUBIC)
-	color_difference_mask = 1 - color_difference_mask.clip(0, 0.75)
-	extend_vision_frame = extend_vision_frame.astype(numpy.float32) / 255
-	extend_vision_frame += color_difference * color_difference_mask
-	extend_vision_frame = extend_vision_frame.clip(0, 1)
-	extend_vision_frame = numpy.multiply(extend_vision_frame, 255).astype(numpy.uint8)
-	return extend_vision_frame
-
-
-def prepare_direction(direction : int) -> NDArray[Any]:
-	direction = numpy.interp(float(direction), [ -100, 100 ], [ 2.5, -2.5 ]) #type:ignore[assignment]
-	return numpy.array(direction).astype(numpy.float32)
 
 
 def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:
@@ -204,12 +185,13 @@ def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:
 
 
 def normalize_extend_frame(extend_vision_frame : VisionFrame) -> VisionFrame:
+	model_sizes = get_model_options().get('sizes')
 	extend_vision_frame = numpy.clip(extend_vision_frame, -1, 1)
 	extend_vision_frame = (extend_vision_frame + 1) / 2
 	extend_vision_frame = extend_vision_frame.transpose(1, 2, 0).clip(0, 255)
 	extend_vision_frame = (extend_vision_frame * 255.0)
 	extend_vision_frame = extend_vision_frame.astype(numpy.uint8)[:, :, ::-1]
-	extend_vision_frame = cv2.pyrDown(extend_vision_frame)
+	extend_vision_frame = cv2.resize(extend_vision_frame, (model_sizes.get('target')[0] * 4, model_sizes.get('target')[1] * 4), interpolation = cv2.INTER_AREA)
 	return extend_vision_frame
 
 
