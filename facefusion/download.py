@@ -72,8 +72,9 @@ def conditional_download_hashes(hashes : DownloadSet) -> bool:
 		for index in hashes:
 			if hashes.get(index).get('path') in invalid_hash_paths:
 				invalid_hash_url = hashes.get(index).get('url')
-				download_directory_path = os.path.dirname(hashes.get(index).get('path'))
-				conditional_download(download_directory_path, [ invalid_hash_url ])
+				if invalid_hash_url:
+					download_directory_path = os.path.dirname(hashes.get(index).get('path'))
+					conditional_download(download_directory_path, [ invalid_hash_url ])
 
 	valid_hash_paths, invalid_hash_paths = validate_hash_paths(hash_paths)
 
@@ -98,8 +99,9 @@ def conditional_download_sources(sources : DownloadSet) -> bool:
 		for index in sources:
 			if sources.get(index).get('path') in invalid_source_paths:
 				invalid_source_url = sources.get(index).get('url')
-				download_directory_path = os.path.dirname(sources.get(index).get('path'))
-				conditional_download(download_directory_path, [ invalid_source_url ])
+				if invalid_source_url:
+					download_directory_path = os.path.dirname(sources.get(index).get('path'))
+					conditional_download(download_directory_path, [ invalid_source_url ])
 
 	valid_source_paths, invalid_source_paths = validate_source_paths(source_paths)
 
