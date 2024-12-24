@@ -22,11 +22,8 @@ def run_ffmpeg_with_progress(args: List[str], update_progress : UpdateProgress) 
 
 	while process_manager.is_processing():
 		try:
-			lines = process.stdout.readlines()
 
-			for line in lines:
-				__line__ = line.decode().lower()
-
+			while __line__ := process.stdout.readline().decode().lower():
 				if 'frame=' in __line__:
 					_, frame_number = __line__.split('frame=')
 					update_progress(int(frame_number))
