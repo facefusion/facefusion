@@ -72,8 +72,10 @@ def register_ui_component(component_name : ComponentName, component: Component) 
 def init() -> None:
 	os.environ['GRADIO_ANALYTICS_ENABLED'] = '0'
 	os.environ['GRADIO_TEMP_DIR'] = os.path.join(state_manager.get_item('temp_path'), 'gradio')
+	os.environ['GRADIO_ALLOWED_PATHS'] = '*'
 
 	warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
+	gradio.processing_utils._check_allowed = lambda path, check_in_upload_folder: None
 
 
 def launch() -> None:
