@@ -19,7 +19,7 @@ else:
 	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.20.1')
 	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.20.0')
 if is_linux():
-	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.18.0')
+	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.19.0')
 if is_windows():
 	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.17.3')
 
@@ -47,10 +47,10 @@ def run(program : ArgumentParser) -> None:
 	if args.onnxruntime == 'rocm':
 		python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
-		if python_id == 'cp310':
-			wheel_name = 'onnxruntime_rocm-' + onnxruntime_version +'-' + python_id + '-' + python_id + '-linux_x86_64.whl'
+		if python_id in [ 'cp310', 'cp312' ]:
+			wheel_name = 'onnxruntime_rocm-' + onnxruntime_version + '-' + python_id + '-' + python_id + '-linux_x86_64.whl'
 			wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
-			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.2/' + wheel_name
+			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.3.1/' + wheel_name
 			subprocess.call([ shutil.which('curl'), '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
 			subprocess.call([ shutil.which('pip'), 'uninstall', 'onnxruntime', wheel_path, '-y', '-q' ])
 			subprocess.call([ shutil.which('pip'), 'install', wheel_path, '--force-reinstall' ])
