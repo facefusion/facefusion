@@ -11,6 +11,7 @@ import facefusion.processors.core as processors
 from facefusion import config, content_analyser, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import FrameEnhancerInputs
@@ -395,6 +396,14 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	frame_enhancer_model = state_manager.get_item('frame_enhancer_model')
+
+	if has_execution_provider('coreml'):
+		if frame_enhancer_model == 'real_esrgan_x2_fp16':
+			return create_static_model_set('full').get('real_esrgan_x2')
+		if frame_enhancer_model == 'real_esrgan_x4_fp16':
+			return create_static_model_set('full').get('real_esrgan_x4')
+		if frame_enhancer_model == 'real_esrgan_x8_fp16':
+			return create_static_model_set('full').get('real_esrgan_x8')
 	return create_static_model_set('full').get(frame_enhancer_model)
 
 
