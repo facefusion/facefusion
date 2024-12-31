@@ -346,6 +346,9 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	face_swapper_model = state_manager.get_item('face_swapper_model')
+
+	if has_execution_provider('coreml') and face_swapper_model == 'inswapper_128_fp16':
+		return create_static_model_set('full').get('inswapper_128')
 	return create_static_model_set('full').get(face_swapper_model)
 
 
