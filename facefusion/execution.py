@@ -34,7 +34,8 @@ def create_inference_execution_providers(execution_device_id : str, execution_pr
 		if execution_provider == 'cuda':
 			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
-				'device_id': execution_device_id
+				'device_id': execution_device_id,
+				'cudnn_conv_algo_search': 'DEFAULT' if is_geforce_16_series() else 'EXHAUSTIVE'
 			}))
 		if execution_provider == 'tensorrt':
 			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
@@ -64,6 +65,13 @@ def create_inference_execution_providers(execution_device_id : str, execution_pr
 		inference_execution_providers.append(facefusion.choices.execution_provider_set.get('cpu'))
 
 	return inference_execution_providers
+
+
+def is_geforce_16_series() -> bool:
+	execution_devices = detect_static_execution_devices()
+	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
+
+	return any(execution_device.get('product').get('name').startswith(product_names) for execution_device in execution_devices)
 
 
 def run_nvidia_smi() -> subprocess.Popen[bytes]:

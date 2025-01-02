@@ -89,5 +89,5 @@ def run(program : ArgumentParser) -> None:
 
 			subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
 
-	if args.onnxruntime in [ 'rocm', 'directml' ]:
+	if args.onnxruntime in [ 'directml', 'rocm' ]:
 		subprocess.call([ shutil.which('pip'), 'install', 'numpy==1.26.4', '--force-reinstall' ])
