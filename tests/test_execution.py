@@ -15,7 +15,8 @@ def test_create_inference_execution_providers() -> None:
 	[
 		('CUDAExecutionProvider',
 		{
-			'device_id': '1'
+			'device_id': '1',
+			'cudnn_conv_algo_search': 'EXHAUSTIVE'
 		}),
 		'CPUExecutionProvider'
 	]
