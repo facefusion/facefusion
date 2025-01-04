@@ -130,7 +130,7 @@ def create_directory(directory_path : str) -> bool:
 def list_directory(directory_path : str) -> Optional[List[File]]:
 	if is_directory(directory_path):
 		file_paths = sorted(os.listdir(directory_path))
-		files: List[File] = []
+		files : List[File] = []
 
 		for file_path in file_paths:
 			file_name, file_extension = os.path.splitext(file_path)
