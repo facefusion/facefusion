@@ -6,11 +6,7 @@ from typing import List, Optional
 
 import filetype
 
-from facefusion.common_helper import is_windows
 from facefusion.typing import File
-
-if is_windows():
-	import ctypes
 
 
 def get_file_size(file_path : str) -> int:
