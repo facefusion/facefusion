@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.typing import Angle, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, JobStatus, LogLevel, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoMemoryStrategy
+from facefusion.typing import Angle, AudioFormat, AudioTypeSet, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset, Race, Score, TempFrameFormat, UiWorkflow, VideoFormat, VideoTypeSet, VideoMemoryStrategy
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -34,7 +34,31 @@ face_mask_region_set : FaceMaskRegionSet =\
 	'lower-lip': 13
 }
 face_mask_regions : List[FaceMaskRegion] = list(face_mask_region_set.keys())
-temp_frame_formats : List[TempFrameFormat] = [ 'bmp', 'jpg', 'png' ]
+
+audio_type_set : AudioTypeSet =\
+{
+	'mp3': 'audio/mpeg',
+	'ogg': 'audio/ogg',
+	'wav': 'audio/x-wav'
+}
+image_type_set : ImageTypeSet =\
+{
+	'bmp': 'image/bmp',
+	'jpg': 'image/jpeg',
+	'png': 'image/png',
+	'webp': 'image/webp'
+}
+video_type_set : VideoTypeSet =\
+{
+	'avi': 'video/x-msvideo',
+	'mp4': 'video/mp4',
+	'webm': 'video/webm'
+}
+audio_formats : List[AudioFormat] = list(audio_type_set.keys())
+image_formats : List[ImageFormat] = list(image_type_set.keys())
+video_formats : List[VideoFormat] = list(video_type_set.keys())
+temp_frame_formats : List[ImageFormat] = [ 'bmp', 'jpg', 'png' ]
+
 output_audio_encoders : List[OutputAudioEncoder] = [ 'aac', 'libmp3lame', 'libopus', 'libvorbis' ]
 output_video_encoders : List[OutputVideoEncoder] = [ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox' ]
 output_video_presets : List[OutputVideoPreset] = [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow' ]

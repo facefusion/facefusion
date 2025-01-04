@@ -38,8 +38,8 @@ def read_image(image_path : str) -> Optional[VisionFrame]:
 def write_image(image_path : str, vision_frame : VisionFrame) -> bool:
 	if image_path:
 		if is_windows():
-			_, file_extension = os.path.splitext(image_path)
-			_, vision_frame = cv2.imencode(file_extension, vision_frame)
+			_, image_file_format = os.path.splitext(image_path)
+			_, vision_frame = cv2.imencode(image_file_format, vision_frame)
 			vision_frame.tofile(image_path)
 			return is_image(image_path)
 		return cv2.imwrite(image_path, vision_frame)

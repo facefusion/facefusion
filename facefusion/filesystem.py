@@ -4,8 +4,7 @@ import shutil
 from pathlib import Path
 from typing import List, Optional
 
-import filetype
-
+import facefusion.choices
 from facefusion.typing import File
 
 
@@ -15,15 +14,15 @@ def get_file_size(file_path : str) -> int:
 	return 0
 
 
-def same_file_extension(file_paths : List[str]) -> bool:
-	file_extensions : List[str] = []
+def same_file_format(file_paths : List[str]) -> bool:
+	file_formats : List[str] = []
 
 	for file_path in file_paths:
-		_, file_extension = os.path.splitext(file_path.lower())
+		_, file_format = os.path.splitext(file_path.lower())
 
-		if file_extensions and file_extension not in file_extensions:
+		if file_formats and file_format not in file_formats:
 			return False
-		file_extensions.append(file_extension)
+		file_formats.append(file_format)
 	return True
 
 
@@ -42,7 +41,10 @@ def in_directory(file_path : str) -> bool:
 
 
 def is_audio(audio_path : str) -> bool:
-	return is_file(audio_path) and filetype.helpers.is_audio(audio_path)
+	if is_file(audio_path):
+		_, audio_file_format = os.path.splitext(audio_path.lower())
+		return audio_file_format in facefusion.choices.audio_formats
+	return False
 
 
 def has_audio(audio_paths : List[str]) -> bool:
@@ -52,7 +54,10 @@ def has_audio(audio_paths : List[str]) -> bool:
 
 
 def is_image(image_path : str) -> bool:
-	return is_file(image_path) and filetype.helpers.is_image(image_path)
+	if is_file(image_path):
+		_, image_file_format = os.path.splitext(image_path.lower())
+		return image_file_format in facefusion.choices.image_formats
+	return False
 
 
 def has_image(image_paths: List[str]) -> bool:
@@ -62,7 +67,10 @@ def has_image(image_paths: List[str]) -> bool:
 
 
 def is_video(video_path : str) -> bool:
-	return is_file(video_path) and filetype.helpers.is_video(video_path)
+	if is_file(video_path):
+		_, video_file_format = os.path.splitext(video_path.lower())
+		return video_file_format in facefusion.choices.video_formats
+	return False
 
 
 def filter_audio_paths(paths : List[str]) -> List[str]:
@@ -115,13 +123,13 @@ def list_directory(directory_path : str) -> Optional[List[File]]:
 		files : List[File] = []
 
 		for file_path in file_paths:
-			file_name, file_extension = os.path.splitext(file_path)
+			file_name, file_format = os.path.splitext(file_path)
 
 			if not file_name.startswith(('.', '__')):
 				files.append(
 				{
 					'name': file_name,
-					'extension': file_extension,
+					'format': file_format,
 					'path': os.path.join(directory_path, file_path)
 				})
 

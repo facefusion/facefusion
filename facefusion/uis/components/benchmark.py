@@ -72,8 +72,8 @@ def listen() -> None:
 
 def suggest_output_path(target_path : str) -> Optional[str]:
 	if is_video(target_path):
-		_, target_extension = os.path.splitext(target_path)
-		return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_extension)
+		_, target_file_format = os.path.splitext(target_path)
+		return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_file_format)
 	return None
 
 

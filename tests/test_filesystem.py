@@ -3,7 +3,7 @@ import os.path
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, list_directory, remove_directory, same_file_extension
+from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, list_directory, remove_directory, same_file_format
 from .helper import get_test_example_file, get_test_examples_directory, get_test_outputs_directory
 
 
@@ -22,9 +22,9 @@ def test_get_file_size() -> None:
 	assert get_file_size('invalid') == 0
 
 
-def test_same_file_extension() -> None:
-	assert same_file_extension([ 'target.jpg', 'output.jpg' ]) is True
-	assert same_file_extension([ 'target.jpg', 'output.mp4' ]) is False
+def test_same_file_format() -> None:
+	assert same_file_format([ 'target.jpg', 'output.jpg' ]) is True
+	assert same_file_format([ 'target.jpg', 'output.mp4' ]) is False
 
 
 def test_is_file() -> None:
@@ -100,7 +100,7 @@ def test_list_directory() -> None:
 	files = list_directory(get_test_examples_directory())
 
 	for file in files:
-		assert file.get('path') == get_test_example_file(file.get('name') + file.get('extension'))
+		assert file.get('path') == get_test_example_file(file.get('name') + file.get('format'))
 
 	assert list_directory('invalid') is None
 
