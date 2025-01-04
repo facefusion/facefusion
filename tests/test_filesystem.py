@@ -3,7 +3,7 @@ import os.path
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, list_directory, remove_directory, same_file_format
+from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, resolve_file_paths, remove_directory, same_file_extension
 from .helper import get_test_example_file, get_test_examples_directory, get_test_outputs_directory
 
 
@@ -23,26 +23,14 @@ def test_get_file_size() -> None:
 
 
 def test_same_file_format() -> None:
-	assert same_file_format([ 'target.jpg', 'output.jpg' ]) is True
-	assert same_file_format([ 'target.jpg', 'output.mp4' ]) is False
+	assert same_file_extension([ 'target.jpg', 'output.jpg' ]) is True
+	assert same_file_extension([ 'target.jpg', 'output.mp4' ]) is False
 
 
 def test_is_file() -> None:
 	assert is_file(get_test_example_file('source.jpg')) is True
 	assert is_file(get_test_examples_directory()) is False
 	assert is_file('invalid') is False
-
-
-def test_is_directory() -> None:
-	assert is_directory(get_test_examples_directory()) is True
-	assert is_directory(get_test_example_file('source.jpg')) is False
-	assert is_directory('invalid') is False
-
-
-def test_in_directory() -> None:
-	assert in_directory(get_test_example_file('source.jpg')) is True
-	assert in_directory('source.jpg') is False
-	assert in_directory('invalid') is False
 
 
 def test_is_audio() -> None:
@@ -89,20 +77,20 @@ def test_filter_image_paths() -> None:
 	assert filter_audio_paths([ 'invalid' ]) == []
 
 
+def test_resolve_file_paths() -> None:
+	file_paths = resolve_file_paths(get_test_examples_directory())
+
+	for file_path in file_paths:
+		assert file_path == get_test_example_file(file_path)
+
+	assert resolve_file_paths('invalid') is None
+
+
 def test_create_directory() -> None:
 	create_directory_path = os.path.join(get_test_outputs_directory(), 'create_directory')
 
 	assert create_directory(create_directory_path) is True
 	assert create_directory(get_test_example_file('source.jpg')) is False
-
-
-def test_list_directory() -> None:
-	files = list_directory(get_test_examples_directory())
-
-	for file in files:
-		assert file.get('path') == get_test_example_file(file.get('name') + file.get('format'))
-
-	assert list_directory('invalid') is None
 
 
 def test_remove_directory() -> None:
@@ -112,3 +100,15 @@ def test_remove_directory() -> None:
 	assert remove_directory(remove_directory_path) is True
 	assert remove_directory(get_test_example_file('source.jpg')) is False
 	assert remove_directory('invalid') is False
+
+
+def test_is_directory() -> None:
+	assert is_directory(get_test_examples_directory()) is True
+	assert is_directory(get_test_example_file('source.jpg')) is False
+	assert is_directory('invalid') is False
+
+
+def test_in_directory() -> None:
+	assert in_directory(get_test_example_file('source.jpg')) is True
+	assert in_directory('source.jpg') is False
+	assert in_directory('invalid') is False

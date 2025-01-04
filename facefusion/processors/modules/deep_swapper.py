@@ -5,6 +5,7 @@ from typing import List, Tuple
 import cv2
 import numpy
 from cv2.typing import Size
+from multipart import file_path
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
@@ -17,7 +18,7 @@ from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
-from facefusion.filesystem import in_directory, is_image, is_video, list_directory, resolve_relative_path, same_file_format
+from facefusion.filesystem import get_file_name, in_directory, is_image, is_video, resolve_file_paths, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import DeepSwapperInputs, DeepSwapperMorph
 from facefusion.program_helper import find_argument_group
@@ -216,12 +217,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'template': 'dfl_whole_face'
 		}
 
-	custom_model_files = list_directory(resolve_relative_path('../.assets/models/custom'))
+	custom_model_file_paths = resolve_file_paths(resolve_relative_path('../.assets/models/custom'))
 
-	if custom_model_files:
+	if custom_model_file_paths:
 
-		for model_file in custom_model_files:
-			model_id = '/'.join([ 'custom', model_file.get('name') ])
+		for model_file_path in custom_model_file_paths:
+			model_id = '/'.join([ 'custom', get_file_name(model_file_path) ])
 
 			model_set[model_id] =\
 			{
@@ -229,7 +230,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				{
 					'deep_swapper':
 					{
-						'path': resolve_relative_path(model_file.get('path'))
+						'path': resolve_relative_path(model_file_path)
 					}
 				},
 				'template': 'dfl_whole_face'
@@ -290,8 +291,8 @@ def pre_process(mode : ProcessMode) -> bool:
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
 		return False
-	if mode == 'output' and not same_file_format([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
-		logger.error(wording.get('match_target_and_output_format') + wording.get('exclamation_mark'), __name__)
+	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
+		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
 		return False
 	return True
 

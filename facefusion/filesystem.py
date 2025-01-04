@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import List, Optional
 
 import facefusion.choices
-from facefusion.typing import File
 
 
 def get_file_size(file_path : str) -> int:
@@ -14,15 +13,35 @@ def get_file_size(file_path : str) -> int:
 	return 0
 
 
-def same_file_format(file_paths : List[str]) -> bool:
-	file_formats : List[str] = []
+def get_file_name(file_path : str) -> Optional[str]:
+	if is_file(file_path):
+		file_name, _ = os.path.splitext(file_path)
+		return file_name
+	return None
+
+
+def get_file_extension(file_path : str) -> Optional[str]:
+	if is_file(file_path):
+		_, file_extension = os.path.splitext(file_path)
+		return file_extension
+	return None
+
+
+def get_file_format(file_path : str) -> Optional[str]:
+	if is_file(file_path):
+		return get_file_extension(file_path).lower().lstrip('.')
+	return None
+
+
+def same_file_extension(file_paths : List[str]) -> bool:
+	file_extensions : List[str] = []
 
 	for file_path in file_paths:
-		_, file_format = os.path.splitext(file_path.lower())
-
-		if file_formats and file_format not in file_formats:
+		file_extension = get_file_extension(file_path)
+		if file_extension and file_extension not in file_extensions:
 			return False
-		file_formats.append(file_format)
+		file_extensions.append(file_extension)
+
 	return True
 
 
@@ -30,20 +49,9 @@ def is_file(file_path : str) -> bool:
 	return bool(file_path and os.path.isfile(file_path))
 
 
-def is_directory(directory_path : str) -> bool:
-	return bool(directory_path and os.path.isdir(directory_path))
-
-
-def in_directory(file_path : str) -> bool:
-	if file_path and not is_directory(file_path):
-		return is_directory(os.path.dirname(file_path))
-	return False
-
-
 def is_audio(audio_path : str) -> bool:
 	if is_file(audio_path):
-		_, audio_file_format = os.path.splitext(audio_path.lower())
-		return audio_file_format in facefusion.choices.audio_formats
+		return get_file_format(audio_path) in facefusion.choices.audio_formats
 	return False
 
 
@@ -68,8 +76,7 @@ def has_image(image_paths: List[str]) -> bool:
 
 def is_video(video_path : str) -> bool:
 	if is_file(video_path):
-		_, video_file_format = os.path.splitext(video_path.lower())
-		return video_file_format in facefusion.choices.video_formats
+		return get_file_format(video_path) in facefusion.choices.video_formats
 	return False
 
 
@@ -83,10 +90,6 @@ def filter_image_paths(paths : List[str]) -> List[str]:
 	if paths:
 		return [ path for path in paths if is_image(path) ]
 	return []
-
-
-def resolve_relative_path(path : str) -> str:
-	return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
 
 
 def copy_file(file_path : str, move_path : str) -> bool:
@@ -110,31 +113,18 @@ def remove_file(file_path : str) -> bool:
 	return False
 
 
-def create_directory(directory_path : str) -> bool:
-	if directory_path and not is_file(directory_path):
-		Path(directory_path).mkdir(parents = True, exist_ok = True)
-		return is_directory(directory_path)
-	return False
+def resolve_file_paths(directory_path : str) -> List[str]:
+	file_paths : List[str] = []
 
-
-def list_directory(directory_path : str) -> Optional[List[File]]:
 	if is_directory(directory_path):
-		file_paths = sorted(os.listdir(directory_path))
-		files : List[File] = []
+		file_names_and_extensions = sorted(os.listdir(directory_path))
 
-		for file_path in file_paths:
-			file_name, file_format = os.path.splitext(file_path)
+		for file_name_and_extension in file_names_and_extensions:
+			if not file_name_and_extension.startswith(('.', '__')):
+				file_path = os.path.join(directory_path, file_name_and_extension)
+				file_paths.append(file_path)
 
-			if not file_name.startswith(('.', '__')):
-				files.append(
-				{
-					'name': file_name,
-					'format': file_format,
-					'path': os.path.join(directory_path, file_path)
-				})
-
-		return files
-	return None
+	return file_paths
 
 
 def resolve_file_pattern(file_pattern : str) -> List[str]:
@@ -143,8 +133,29 @@ def resolve_file_pattern(file_pattern : str) -> List[str]:
 	return []
 
 
+def is_directory(directory_path : str) -> bool:
+	return bool(directory_path and os.path.isdir(directory_path))
+
+
+def in_directory(file_path : str) -> bool:
+	if file_path and not is_directory(file_path):
+		return is_directory(os.path.dirname(file_path))
+	return False
+
+
+def create_directory(directory_path : str) -> bool:
+	if directory_path and not is_file(directory_path):
+		Path(directory_path).mkdir(parents = True, exist_ok = True)
+		return is_directory(directory_path)
+	return False
+
+
 def remove_directory(directory_path : str) -> bool:
 	if is_directory(directory_path):
 		shutil.rmtree(directory_path, ignore_errors = True)
 		return not is_directory(directory_path)
 	return False
+
+
+def resolve_relative_path(path : str) -> str:
+	return os.path.abspath(os.path.join(os.path.dirname(__file__), path))

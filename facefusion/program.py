@@ -5,7 +5,7 @@ import facefusion.choices
 from facefusion import config, metadata, state_manager, wording
 from facefusion.common_helper import create_float_metavar, create_int_metavar, get_last
 from facefusion.execution import get_available_execution_providers
-from facefusion.filesystem import list_directory
+from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.jobs import job_store
 from facefusion.processors.core import get_processors_modules
 
@@ -171,7 +171,7 @@ def create_output_creation_program() -> ArgumentParser:
 
 def create_processors_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	available_processors = [ file.get('name') for file in list_directory('facefusion/processors/modules') ]
+	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	group_processors = program.add_argument_group('processors')
 	group_processors.add_argument('--processors', help = wording.get('help.processors').format(choices = ', '.join(available_processors)), default = config.get_str_list('processors.processors', 'face_swapper'), nargs = '+')
 	job_store.register_step_keys([ 'processors' ])
@@ -182,7 +182,7 @@ def create_processors_program() -> ArgumentParser:
 
 def create_uis_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	available_ui_layouts = [ file.get('name') for file in list_directory('facefusion/uis/layouts') ]
+	available_ui_layouts = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/uis/layouts') ]
 	group_uis = program.add_argument_group('uis')
 	group_uis.add_argument('--open-browser', help = wording.get('help.open_browser'), action = 'store_true', default = config.get_bool_value('uis.open_browser'))
 	group_uis.add_argument('--ui-layouts', help = wording.get('help.ui_layouts').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis.ui_layouts', 'default'), nargs = '+')

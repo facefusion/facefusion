@@ -42,7 +42,7 @@ WORDING : Dict[str, Any] =\
 	'choose_video_target': 'Choose a video for the target',
 	'choose_image_or_video_target': 'Choose a image or video for the target',
 	'specify_image_or_video_output': 'Specify the output image or video within a directory',
-	'match_target_and_output_format': 'Match the target and output format',
+	'match_target_and_output_extension': 'Match the target and output extension',
 	'no_source_face_detected': 'No source face detected',
 	'processor_not_loaded': 'Processor {processor} could not be loaded',
 	'processor_not_implemented': 'Processor {processor} not implemented correctly',

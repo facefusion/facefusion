@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from facefusion import logger, process_manager, state_manager, wording
 from facefusion.filesystem import remove_file
-from facefusion.temp_helper import get_temp_file_path, get_temp_frame_paths, get_temp_frames_pattern
+from facefusion.temp_helper import get_temp_file_path, resolve_temp_frame_paths, get_temp_frames_pattern
 from facefusion.typing import AudioBuffer, Fps, OutputVideoPreset, UpdateProgress
 from facefusion.vision import count_trim_frame_total, detect_video_duration, restrict_video_fps
 
@@ -98,7 +98,7 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
-	merge_frame_total = len(get_temp_frame_paths(target_path))
+	merge_frame_total = len(resolve_temp_frame_paths(target_path))
 	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
 	temp_file_path = get_temp_file_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
