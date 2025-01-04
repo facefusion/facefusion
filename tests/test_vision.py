@@ -39,7 +39,6 @@ def test_read_image() -> None:
 	assert read_image('invalid') is None
 
 
-@pytest.mark.skip()
 def test_write_image() -> None:
 	vision_frame = read_image(get_test_example_file('target-240p.jpg'))
 

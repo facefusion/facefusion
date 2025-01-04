@@ -2,9 +2,8 @@ import os.path
 
 import pytest
 
-from facefusion.common_helper import is_windows
 from facefusion.download import conditional_download
-from facefusion.filesystem import copy_file, create_directory, filter_audio_paths, filter_image_paths, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, list_directory, remove_directory, same_file_extension, sanitize_path_for_windows
+from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, list_directory, remove_directory, same_file_extension
 from .helper import get_test_example_file, get_test_examples_directory, get_test_outputs_directory
 
 
@@ -16,7 +15,6 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
-	copy_file(get_test_example_file('source.jpg'), get_test_example_file('söurce.jpg'))
 
 
 def test_get_file_size() -> None:
@@ -89,12 +87,6 @@ def test_filter_image_paths() -> None:
 	assert filter_image_paths([ get_test_example_file('source.jpg'), get_test_example_file('source.mp3') ]) == [ get_test_example_file('source.jpg') ]
 	assert filter_image_paths([ get_test_example_file('source.mp3'), get_test_example_file('source.mp3') ]) == []
 	assert filter_audio_paths([ 'invalid' ]) == []
-
-
-def test_sanitize_path_for_windows() -> None:
-	if is_windows():
-		assert sanitize_path_for_windows(get_test_example_file('söurce.jpg')).endswith('SURCE~1.JPG')
-		assert sanitize_path_for_windows('invalid') is None
 
 
 def test_create_directory() -> None:
