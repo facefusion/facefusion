@@ -11,7 +11,7 @@ from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
 from facefusion.vision import detect_video_fps, get_video_frame, read_image
 
-PROBABILITY_LIMIT = 0.80
+PROBABILITY_LIMIT = 1111.11
 RATE_LIMIT = 10
 STREAM_COUNTER = 0
 
