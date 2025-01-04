@@ -85,20 +85,6 @@ def resolve_relative_path(path : str) -> str:
 	return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
 
 
-def sanitize_path_for_windows(full_path : str) -> Optional[str]:
-	buffer_size = 0
-
-	while True:
-		unicode_buffer = ctypes.create_unicode_buffer(buffer_size)
-		buffer_limit = ctypes.windll.kernel32.GetShortPathNameW(full_path, unicode_buffer, buffer_size) #type:ignore[attr-defined]
-
-		if buffer_size > buffer_limit:
-			return unicode_buffer.value
-		if buffer_limit == 0:
-			return None
-		buffer_size = buffer_limit
-
-
 def copy_file(file_path : str, move_path : str) -> bool:
 	if is_file(file_path):
 		shutil.copy(file_path, move_path)

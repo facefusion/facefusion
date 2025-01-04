@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from typing import List, Optional, Tuple
 
@@ -7,7 +8,7 @@ from cv2.typing import Size
 
 import facefusion.choices
 from facefusion.common_helper import is_windows
-from facefusion.filesystem import is_image, is_video, sanitize_path_for_windows
+from facefusion.filesystem import is_image, is_video
 from facefusion.typing import Duration, Fps, Orientation, Resolution, VisionFrame
 
 
@@ -28,7 +29,8 @@ def read_static_images(image_paths : List[str]) -> List[VisionFrame]:
 def read_image(image_path : str) -> Optional[VisionFrame]:
 	if is_image(image_path):
 		if is_windows():
-			image_path = sanitize_path_for_windows(image_path)
+			image_binary = numpy.fromfile(image_path, dtype = numpy.uint8)
+			return cv2.imdecode(image_binary, cv2.IMREAD_COLOR)
 		return cv2.imread(image_path)
 	return None
 
@@ -36,7 +38,10 @@ def read_image(image_path : str) -> Optional[VisionFrame]:
 def write_image(image_path : str, vision_frame : VisionFrame) -> bool:
 	if image_path:
 		if is_windows():
-			image_path = sanitize_path_for_windows(image_path)
+			_, file_extension = os.path.splitext(image_path)
+			_, vision_frame = cv2.imencode(file_extension, vision_frame)
+			vision_frame.tofile(image_path)
+			return is_image(image_path)
 		return cv2.imwrite(image_path, vision_frame)
 	return False
 
@@ -45,7 +50,9 @@ def detect_image_resolution(image_path : str) -> Optional[Resolution]:
 	if is_image(image_path):
 		image = read_image(image_path)
 		height, width = image.shape[:2]
-		return width, height
+
+		if width > 0 and height > 0:
+			return width, height
 	return None
 
 
@@ -74,8 +81,6 @@ def create_image_resolutions(resolution : Resolution) -> List[str]:
 
 def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
-		if is_windows():
-			video_path = sanitize_path_for_windows(video_path)
 		video_capture = cv2.VideoCapture(video_path)
 		if video_capture.isOpened():
 			frame_total = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
@@ -89,8 +94,6 @@ def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[Vision
 
 def count_video_frame_total(video_path : str) -> int:
 	if is_video(video_path):
-		if is_windows():
-			video_path = sanitize_path_for_windows(video_path)
 		video_capture = cv2.VideoCapture(video_path)
 		if video_capture.isOpened():
 			video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -101,8 +104,6 @@ def count_video_frame_total(video_path : str) -> int:
 
 def detect_video_fps(video_path : str) -> Optional[float]:
 	if is_video(video_path):
-		if is_windows():
-			video_path = sanitize_path_for_windows(video_path)
 		video_capture = cv2.VideoCapture(video_path)
 		if video_capture.isOpened():
 			video_fps = video_capture.get(cv2.CAP_PROP_FPS)
@@ -154,8 +155,6 @@ def restrict_trim_frame(video_path : str, trim_frame_start : Optional[int], trim
 
 def detect_video_resolution(video_path : str) -> Optional[Resolution]:
 	if is_video(video_path):
-		if is_windows():
-			video_path = sanitize_path_for_windows(video_path)
 		video_capture = cv2.VideoCapture(video_path)
 		if video_capture.isOpened():
 			width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -194,7 +193,7 @@ def create_video_resolutions(resolution : Resolution) -> List[str]:
 def normalize_resolution(resolution : Tuple[float, float]) -> Resolution:
 	width, height = resolution
 
-	if width and height:
+	if width > 0 and height > 0:
 		normalize_width = round(width / 2) * 2
 		normalize_height = round(height / 2) * 2
 		return normalize_width, normalize_height
