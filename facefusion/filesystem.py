@@ -51,33 +51,23 @@ def is_file(file_path : str) -> bool:
 
 
 def is_audio(audio_path : str) -> bool:
-	if is_file(audio_path):
-		return get_file_format(audio_path) in facefusion.choices.audio_formats
-	return False
+	return is_file(audio_path) and get_file_format(audio_path) in facefusion.choices.audio_formats
 
 
 def has_audio(audio_paths : List[str]) -> bool:
-	if audio_paths:
-		return any(is_audio(audio_path) for audio_path in audio_paths)
-	return False
+	return any(is_audio(audio_path) for audio_path in audio_paths)
 
 
 def is_image(image_path : str) -> bool:
-	if is_file(image_path):
-		return get_file_format(image_path) in facefusion.choices.image_formats
-	return False
+	return is_file(image_path) and get_file_format(image_path) in facefusion.choices.image_formats
 
 
 def has_image(image_paths: List[str]) -> bool:
-	if image_paths:
-		return any(is_image(image_path) for image_path in image_paths)
-	return False
+	return any(is_image(image_path) for image_path in image_paths)
 
 
 def is_video(video_path : str) -> bool:
-	if is_file(video_path):
-		return get_file_format(video_path) in facefusion.choices.video_formats
-	return False
+	return is_file(video_path) and get_file_format(video_path) in facefusion.choices.video_formats
 
 
 def filter_audio_paths(paths : List[str]) -> List[str]:
@@ -138,9 +128,7 @@ def is_directory(directory_path : str) -> bool:
 
 
 def in_directory(file_path : str) -> bool:
-	if file_path and not is_directory(file_path):
-		return is_directory(os.path.dirname(file_path))
-	return False
+	return not is_directory(file_path) and is_directory(os.path.dirname(file_path))
 
 
 def create_directory(directory_path : str) -> bool:
