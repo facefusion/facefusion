@@ -5,7 +5,6 @@ from typing import List, Tuple
 import cv2
 import numpy
 from cv2.typing import Size
-from multipart import file_path
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
