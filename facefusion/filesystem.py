@@ -46,7 +46,9 @@ def same_file_extension(first_file_path : str, second_file_path : str) -> bool:
 
 
 def is_file(file_path : str) -> bool:
-	return file_path and os.path.isfile(file_path) #type:ignore[return-value]
+	if file_path:
+		return os.path.isfile(file_path)
+	return False
 
 
 def is_audio(audio_path : str) -> bool:
@@ -54,11 +56,15 @@ def is_audio(audio_path : str) -> bool:
 
 
 def has_audio(audio_paths : List[str]) -> bool:
-	return audio_paths and any(map(is_audio, audio_paths)) #type:ignore[return-value]
+	if audio_paths:
+		return any(map(is_audio, audio_paths))
+	return False
 
 
 def are_audios(audio_paths : List[str]) -> bool:
-	return audio_paths and all(map(is_audio, audio_paths)) #type:ignore[return-value]
+	if audio_paths:
+		return all(map(is_audio, audio_paths))
+	return False
 
 
 def is_image(image_path : str) -> bool:
@@ -66,11 +72,15 @@ def is_image(image_path : str) -> bool:
 
 
 def has_image(image_paths : List[str]) -> bool:
-	return image_paths and any(is_image(image_path) for image_path in image_paths) #type:ignore[return-value]
+	if image_paths:
+		return any(is_image(image_path) for image_path in image_paths)
+	return False
 
 
 def are_images(image_paths : List[str]) -> bool:
-	return image_paths and all(map(is_image, image_paths)) #type:ignore[return-value]
+	if image_paths:
+		return all(map(is_image, image_paths))
+	return False
 
 
 def is_video(video_path : str) -> bool:
@@ -78,11 +88,15 @@ def is_video(video_path : str) -> bool:
 
 
 def has_video(video_paths : List[str]) -> bool:
-	return video_paths and any(map(is_video, video_paths)) #type:ignore[return-value]
+	if video_paths:
+		return any(map(is_video, video_paths))
+	return False
 
 
 def are_videos(video_paths : List[str]) -> bool:
-	return video_paths and any(map(is_video, video_paths)) #type:ignore[return-value]
+	if video_paths:
+		return any(map(is_video, video_paths))
+	return False
 
 
 def filter_audio_paths(paths : List[str]) -> List[str]:
@@ -139,7 +153,9 @@ def resolve_file_pattern(file_pattern : str) -> List[str]:
 
 
 def is_directory(directory_path : str) -> bool:
-	return directory_path and os.path.isdir(directory_path) #type:ignore[return-value]
+	if directory_path:
+		return os.path.isdir(directory_path)
+	return False
 
 
 def in_directory(file_path : str) -> bool:
