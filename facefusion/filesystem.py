@@ -1,7 +1,6 @@
 import glob
 import os
 import shutil
-from pathlib import Path
 from typing import List, Optional
 
 import facefusion.choices
@@ -124,16 +123,20 @@ def resolve_file_pattern(file_pattern : str) -> List[str]:
 
 
 def is_directory(directory_path : str) -> bool:
-	return bool(directory_path and os.path.isdir(directory_path))
+	return directory_path and os.path.isdir(directory_path)
 
 
 def in_directory(file_path : str) -> bool:
-	return not is_directory(file_path) and is_directory(os.path.dirname(file_path))
+	if file_path:
+		directory_path = os.path.dirname(file_path)
+		if directory_path:
+			return not is_directory(file_path) and is_directory(directory_path)
+	return False
 
 
 def create_directory(directory_path : str) -> bool:
 	if directory_path and not is_file(directory_path):
-		Path(directory_path).mkdir(parents = True, exist_ok = True)
+		os.makedirs(directory_path, exist_ok = True)
 		return is_directory(directory_path)
 	return False
 
