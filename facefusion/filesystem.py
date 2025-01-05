@@ -54,19 +54,35 @@ def is_audio(audio_path : str) -> bool:
 
 
 def has_audio(audio_paths : List[str]) -> bool:
-	return any(is_audio(audio_path) for audio_path in audio_paths)
+	return audio_paths and any(map(is_audio, audio_paths)) #type:ignore[return-value]
+
+
+def are_audios(audio_paths : List[str]) -> bool:
+	return audio_paths and all(map(is_audio, audio_paths)) #type:ignore[return-value]
 
 
 def is_image(image_path : str) -> bool:
 	return is_file(image_path) and get_file_format(image_path) in facefusion.choices.image_formats
 
 
-def has_image(image_paths: List[str]) -> bool:
-	return any(is_image(image_path) for image_path in image_paths)
+def has_image(image_paths : List[str]) -> bool:
+	return image_paths and any(is_image(image_path) for image_path in image_paths) #type:ignore[return-value]
+
+
+def are_images(image_paths : List[str]) -> bool:
+	return image_paths and all(map(is_image, image_paths)) #type:ignore[return-value]
 
 
 def is_video(video_path : str) -> bool:
 	return is_file(video_path) and get_file_format(video_path) in facefusion.choices.video_formats
+
+
+def has_video(video_paths : List[str]) -> bool:
+	return video_paths and any(map(is_video, video_paths)) #type:ignore[return-value]
+
+
+def are_videos(video_paths : List[str]) -> bool:
+	return video_paths and any(map(is_video, video_paths)) #type:ignore[return-value]
 
 
 def filter_audio_paths(paths : List[str]) -> List[str]:

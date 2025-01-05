@@ -3,7 +3,7 @@ import os.path
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_extension, get_file_format, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, remove_directory, resolve_file_paths, same_file_extension
+from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_extension, get_file_format, get_file_size, has_audio, has_image, has_video, in_directory, is_audio, is_directory, is_file, is_image, is_video, remove_directory, resolve_file_paths, same_file_extension
 from .helper import get_test_example_file, get_test_examples_directory, get_test_outputs_directory
 
 
@@ -76,6 +76,13 @@ def test_is_video() -> None:
 	assert is_video(get_test_example_file('target-240p.mp4')) is True
 	assert is_video(get_test_example_file('source.jpg')) is False
 	assert is_video('invalid') is False
+
+
+def test_has_video() -> None:
+	assert has_video([ get_test_example_file('target-240p.mp4') ]) is True
+	assert has_video([ get_test_example_file('target-240p.mp4'), get_test_example_file('source.mp3') ]) is True
+	assert has_video([ get_test_example_file('source.mp3'), get_test_example_file('source.mp3') ]) is False
+	assert has_video([ 'invalid' ]) is False
 
 
 def test_filter_audio_paths() -> None:
