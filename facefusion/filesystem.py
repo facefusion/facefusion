@@ -46,7 +46,7 @@ def same_file_extension(first_file_path : str, second_file_path : str) -> bool:
 
 
 def is_file(file_path : str) -> bool:
-	return bool(file_path and os.path.isfile(file_path))
+	return file_path and os.path.isfile(file_path) #type:ignore[return-value]
 
 
 def is_audio(audio_path : str) -> bool:
@@ -123,7 +123,7 @@ def resolve_file_pattern(file_pattern : str) -> List[str]:
 
 
 def is_directory(directory_path : str) -> bool:
-	return directory_path and os.path.isdir(directory_path)
+	return directory_path and os.path.isdir(directory_path) #type:ignore[return-value]
 
 
 def in_directory(file_path : str) -> bool:

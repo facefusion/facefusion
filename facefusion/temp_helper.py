@@ -2,7 +2,7 @@ import os
 from typing import List
 
 from facefusion import state_manager
-from facefusion.filesystem import create_directory, get_file_extension, move_file, remove_directory, resolve_file_pattern
+from facefusion.filesystem import create_directory, get_file_extension, get_file_name, move_file, remove_directory, resolve_file_pattern
 
 
 def get_temp_file_path(file_path : str) -> str:
@@ -27,7 +27,7 @@ def get_temp_frames_pattern(target_path : str, temp_frame_prefix : str) -> str:
 
 
 def get_temp_directory_path(file_path : str) -> str:
-	temp_file_name, _ = os.path.splitext(os.path.basename(file_path))
+	temp_file_name = get_file_name(file_path)
 	return os.path.join(state_manager.get_item('temp_path'), 'facefusion', temp_file_name)
 
 
