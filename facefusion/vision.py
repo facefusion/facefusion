@@ -8,7 +8,7 @@ from cv2.typing import Size
 
 import facefusion.choices
 from facefusion.common_helper import is_windows
-from facefusion.filesystem import is_image, is_video
+from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.typing import Duration, Fps, Orientation, Resolution, VisionFrame
 
 
@@ -38,8 +38,8 @@ def read_image(image_path : str) -> Optional[VisionFrame]:
 def write_image(image_path : str, vision_frame : VisionFrame) -> bool:
 	if image_path:
 		if is_windows():
-			_, image_file_format = os.path.splitext(image_path)
-			_, vision_frame = cv2.imencode(image_file_format, vision_frame)
+			image_file_extension = get_file_extension(image_path)
+			_, vision_frame = cv2.imencode(image_file_extension, vision_frame)
 			vision_frame.tofile(image_path)
 			return is_image(image_path)
 		return cv2.imwrite(image_path, vision_frame)

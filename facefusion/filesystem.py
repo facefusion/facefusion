@@ -14,35 +14,36 @@ def get_file_size(file_path : str) -> int:
 
 
 def get_file_name(file_path : str) -> Optional[str]:
-	if is_file(file_path):
-		file_name, _ = os.path.splitext(file_path)
+	file_name, _ = os.path.splitext(os.path.basename(file_path))
+
+	if file_name:
 		return file_name
 	return None
 
 
 def get_file_extension(file_path : str) -> Optional[str]:
-	if is_file(file_path):
-		_, file_extension = os.path.splitext(file_path)
+	_, file_extension = os.path.splitext(file_path)
+
+	if file_extension:
 		return file_extension
 	return None
 
 
 def get_file_format(file_path : str) -> Optional[str]:
-	if is_file(file_path):
-		return get_file_extension(file_path).lower().lstrip('.')
+	file_extension = get_file_extension(file_path)
+
+	if file_extension:
+		return file_extension.lower().lstrip('.')
 	return None
 
 
-def same_file_extension(file_paths : List[str]) -> bool:
-	file_extensions : List[str] = []
+def same_file_extension(first_file_path : str, second_file_path : str) -> bool:
+	first_file_extension = get_file_extension(first_file_path)
+	second_file_extension = get_file_extension(second_file_path)
 
-	for file_path in file_paths:
-		file_extension = get_file_extension(file_path)
-		if file_extension and file_extension not in file_extensions:
-			return False
-		file_extensions.append(file_extension)
-
-	return True
+	if first_file_extension and second_file_extension:
+		return get_file_extension(first_file_path) == get_file_extension(second_file_path)
+	return False
 
 
 def is_file(file_path : str) -> bool:
@@ -63,8 +64,7 @@ def has_audio(audio_paths : List[str]) -> bool:
 
 def is_image(image_path : str) -> bool:
 	if is_file(image_path):
-		_, image_file_format = os.path.splitext(image_path.lower())
-		return image_file_format in facefusion.choices.image_formats
+		return get_file_format(image_path) in facefusion.choices.image_formats
 	return False
 
 

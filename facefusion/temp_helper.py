@@ -2,13 +2,13 @@ import os
 from typing import List
 
 from facefusion import state_manager
-from facefusion.filesystem import create_directory, move_file, remove_directory, resolve_file_pattern
+from facefusion.filesystem import create_directory, get_file_extension, move_file, remove_directory, resolve_file_pattern
 
 
 def get_temp_file_path(file_path : str) -> str:
-	_, temp_file_format = os.path.splitext(os.path.basename(file_path))
 	temp_directory_path = get_temp_directory_path(file_path)
-	return os.path.join(temp_directory_path, 'temp' + temp_file_format)
+	temp_file_extension = get_file_extension(file_path)
+	return os.path.join(temp_directory_path, 'temp' + temp_file_extension)
 
 
 def move_temp_file(file_path : str, move_path : str) -> bool:

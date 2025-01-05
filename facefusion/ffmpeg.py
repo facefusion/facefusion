@@ -7,7 +7,7 @@ from typing import List, Optional
 from tqdm import tqdm
 
 from facefusion import logger, process_manager, state_manager, wording
-from facefusion.filesystem import remove_file
+from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, resolve_temp_frame_paths, get_temp_frames_pattern
 from facefusion.typing import AudioBuffer, Fps, OutputVideoPreset, UpdateProgress
 from facefusion.vision import count_trim_frame_total, detect_video_duration, restrict_video_fps
@@ -102,9 +102,8 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
 	temp_file_path = get_temp_file_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
-	_, target_file_format = os.path.splitext(target_path.lower())
 
-	if target_file_format == 'webm':
+	if get_file_format(target_path) == 'webm':
 		output_video_encoder = 'libvpx-vp9'
 	commands = [ '-r', str(temp_video_fps), '-i', temp_frames_pattern, '-s', str(output_video_resolution), '-c:v', output_video_encoder ]
 	if output_video_encoder in [ 'libx264', 'libx265' ]:
@@ -160,9 +159,7 @@ def finalize_image(target_path : str, output_path : str, output_image_resolution
 
 
 def calc_image_compression(image_path : str, image_quality : int) -> int:
-	_, image_file_format = os.path.splitext(image_path.lower())
-
-	if image_file_format == 'webm':
+	if get_file_format(image_path) == 'webm':
 		image_quality = 100 - image_quality
 	return round(31 - (image_quality * 0.31))
 

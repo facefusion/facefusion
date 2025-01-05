@@ -3,7 +3,10 @@ import os.path
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, resolve_file_paths, remove_directory, same_file_extension
+from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_extension, \
+	get_file_format, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, \
+	is_video, \
+	resolve_file_paths, remove_directory, same_file_extension
 from .helper import get_test_example_file, get_test_examples_directory, get_test_outputs_directory
 
 
@@ -18,13 +21,26 @@ def before_all() -> None:
 
 
 def test_get_file_size() -> None:
-	assert get_file_size(get_test_example_file('source.jpg')) > 0
+	assert get_file_size(get_test_example_file('source.jpg')) == 549458
 	assert get_file_size('invalid') == 0
 
 
-def test_same_file_format() -> None:
-	assert same_file_extension([ 'target.jpg', 'output.jpg' ]) is True
-	assert same_file_extension([ 'target.jpg', 'output.mp4' ]) is False
+def test_get_file_extension() -> None:
+	assert get_file_extension('source.jpg') == '.jpg'
+	assert get_file_extension('source.mp3') == '.mp3'
+	assert get_file_extension('invalid') is None
+
+
+def test_get_file_format() -> None:
+	assert get_file_format('source.jpg') == 'jpg'
+	assert get_file_format('source.mp3') == 'mp3'
+	assert get_file_format('invalid') is None
+
+
+def test_same_file_extension() -> None:
+	assert same_file_extension('source.jpg', 'source.jpg') is True
+	assert same_file_extension('source.jpg', 'source.mp3') is False
+	assert same_file_extension('invalid', 'invalid') is False
 
 
 def test_is_file() -> None:
@@ -83,7 +99,7 @@ def test_resolve_file_paths() -> None:
 	for file_path in file_paths:
 		assert file_path == get_test_example_file(file_path)
 
-	assert resolve_file_paths('invalid') is None
+	assert resolve_file_paths('invalid') == []
 
 
 def test_create_directory() -> None:
