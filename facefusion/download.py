@@ -15,7 +15,7 @@ from facefusion.typing import DownloadProvider, DownloadSet
 
 
 def open_curl(args : List[str]) -> subprocess.Popen[bytes]:
-	commands = [ shutil.which('curl'), '--silent', '--insecure', '--location' ]
+	commands = [ shutil.which('curl'), '--silent', '--insecure', '--location', '--connect-timeout', '10' ]
 	commands.extend(args)
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
