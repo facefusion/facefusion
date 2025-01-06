@@ -23,7 +23,10 @@ def has_inference_model(model_context : str, model_name : str) -> bool:
 	app_context = detect_app_context()
 	inference_context = get_inference_context(model_context)
 	inference_pool = INFERENCE_POOLS.get(app_context).get(inference_context)
-	return inference_pool and model_name in inference_pool
+
+	if inference_pool:
+		return model_name in inference_pool
+	return False
 
 
 def get_inference_pool(model_context : str, model_sources : DownloadSet) -> InferencePool:
