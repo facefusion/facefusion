@@ -83,12 +83,19 @@ download_provider_set : DownloadProviderSet =\
 {
 	'github':
 	{
-		'url': 'https://github.com',
+		'urls':
+		[
+			'https://github.com'
+		],
 		'path': '/facefusion/facefusion-assets/releases/download/{base_name}/{file_name}'
 	},
 	'huggingface':
 	{
-		'url': 'https://huggingface.co',
+		'urls':
+		[
+			'https://huggingface.co',
+			'https://hf-mirror.com'
+		],
 		'path': '/facefusion/{base_name}/resolve/main/{file_name}'
 	}
 }
