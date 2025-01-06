@@ -1,5 +1,5 @@
 from facefusion import state_manager
-from facefusion.filesystem import is_image, is_video, list_directory
+from facefusion.filesystem import get_file_name, is_image, is_video, resolve_file_paths
 from facefusion.jobs import job_store
 from facefusion.normalizer import normalize_fps, normalize_padding
 from facefusion.processors.core import get_processors_modules
@@ -107,7 +107,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 		apply_state_item('output_video_fps', output_video_fps)
 	apply_state_item('skip_audio', args.get('skip_audio'))
 	# processors
-	available_processors = [ file.get('name') for file in list_directory('facefusion/processors/modules') ]
+	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	apply_state_item('processors', args.get('processors'))
 	for processor_module in get_processors_modules(available_processors):
 		processor_module.apply_args(args, apply_state_item)

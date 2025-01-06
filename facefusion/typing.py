@@ -106,7 +106,15 @@ FaceParserModel = Literal['bisenet_resnet_18', 'bisenet_resnet_34']
 FaceMaskType = Literal['box', 'occlusion', 'region']
 FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip']
 FaceMaskRegionSet = Dict[FaceMaskRegion, int]
+
+AudioFormat = Literal['mp3', 'ogg', 'wav']
+ImageFormat = Literal['bmp', 'jpg', 'png', 'webp']
+VideoFormat = Literal['avi', 'mkv', 'mov', 'mp4', 'webm']
 TempFrameFormat = Literal['bmp', 'jpg', 'png']
+AudioTypeSet = Dict[AudioFormat, str]
+ImageTypeSet = Dict[ImageFormat, str]
+VideoTypeSet = Dict[VideoFormat, str]
+
 OutputAudioEncoder = Literal['aac', 'libmp3lame', 'libopus', 'libvorbis']
 OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf','h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox']
 OutputVideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
@@ -174,14 +182,6 @@ Download = TypedDict('Download',
 DownloadSet = Dict[str, Download]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
-
-File = TypedDict('File',
-{
-	'name' : str,
-	'extension' : str,
-	'path': str
-})
-
 AppContext = Literal['cli', 'ui']
 
 InferencePool = Dict[str, InferenceSession]

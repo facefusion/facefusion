@@ -7,7 +7,7 @@ from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, read_audio_buffer, replace_audio, restore_audio
 from facefusion.filesystem import copy_file
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -57,7 +57,7 @@ def test_extract_frames() -> None:
 		create_temp_directory(target_path)
 
 		assert extract_frames(target_path, '452x240', 30.0, trim_frame_start, trim_frame_end) is True
-		assert len(get_temp_frame_paths(target_path)) == frame_total
+		assert len(resolve_temp_frame_paths(target_path)) == frame_total
 
 		clear_temp_directory(target_path)
 

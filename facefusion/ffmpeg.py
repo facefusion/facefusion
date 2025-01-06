@@ -4,12 +4,11 @@ import subprocess
 import tempfile
 from typing import List, Optional
 
-import filetype
 from tqdm import tqdm
 
 from facefusion import logger, process_manager, state_manager, wording
-from facefusion.filesystem import remove_file
-from facefusion.temp_helper import get_temp_file_path, get_temp_frame_paths, get_temp_frames_pattern
+from facefusion.filesystem import get_file_format, remove_file
+from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern, resolve_temp_frame_paths
 from facefusion.typing import AudioBuffer, Fps, OutputVideoPreset, UpdateProgress
 from facefusion.vision import count_trim_frame_total, detect_video_duration, restrict_video_fps
 
@@ -99,13 +98,12 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
-	merge_frame_total = len(get_temp_frame_paths(target_path))
+	merge_frame_total = len(resolve_temp_frame_paths(target_path))
 	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
 	temp_file_path = get_temp_file_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
-	is_webm = filetype.guess_mime(target_path) == 'video/webm'
 
-	if is_webm:
+	if get_file_format(target_path) == 'webm':
 		output_video_encoder = 'libvpx-vp9'
 	commands = [ '-r', str(temp_video_fps), '-i', temp_frames_pattern, '-s', str(output_video_resolution), '-c:v', output_video_encoder ]
 	if output_video_encoder in [ 'libx264', 'libx265' ]:
@@ -161,8 +159,7 @@ def finalize_image(target_path : str, output_path : str, output_image_resolution
 
 
 def calc_image_compression(image_path : str, image_quality : int) -> int:
-	is_webp = filetype.guess_mime(image_path) == 'image/webp'
-	if is_webp:
+	if get_file_format(image_path) == 'webm':
 		image_quality = 100 - image_quality
 	return round(31 - (image_quality * 0.31))
 
