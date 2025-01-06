@@ -16,7 +16,7 @@ from facefusion.face_analyser import get_average_face, get_many_faces, get_one_f
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
-from facefusion.filesystem import filter_audio_paths, is_image, is_video, list_directory, resolve_file_pattern
+from facefusion.filesystem import filter_audio_paths, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
@@ -24,7 +24,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.statistics import conditional_log_statistics
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths, move_temp_file
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, move_temp_file, resolve_temp_frame_paths
 from facefusion.typing import Args, ErrorCode
 from facefusion.vision import get_video_frame, pack_resolution, read_image, read_static_images, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution
 
@@ -133,7 +133,7 @@ def force_download() -> ErrorCode:
 		face_recognizer,
 		voice_extractor
 	]
-	available_processors = [ file.get('name') for file in list_directory('facefusion/processors/modules') ]
+	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	processor_modules = get_processors_modules(available_processors)
 
 	for module in common_modules + processor_modules:
@@ -413,7 +413,7 @@ def process_video(start_time : float) -> ErrorCode:
 		process_manager.end()
 		return 1
 	# process frames
-	temp_frame_paths = get_temp_frame_paths(state_manager.get_item('target_path'))
+	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
 	if temp_frame_paths:
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			logger.info(wording.get('processing'), processor_module.__name__)

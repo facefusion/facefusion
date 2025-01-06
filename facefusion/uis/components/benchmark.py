@@ -9,7 +9,7 @@ import gradio
 
 from facefusion import state_manager, wording
 from facefusion.core import conditional_process
-from facefusion.filesystem import is_video
+from facefusion.filesystem import get_file_extension, is_video
 from facefusion.memory import limit_system_memory
 from facefusion.uis.core import get_ui_component
 from facefusion.vision import count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution
@@ -72,8 +72,8 @@ def listen() -> None:
 
 def suggest_output_path(target_path : str) -> Optional[str]:
 	if is_video(target_path):
-		_, target_extension = os.path.splitext(target_path)
-		return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_extension)
+		target_file_extension = get_file_extension(target_path)
+		return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_file_extension)
 	return None
 
 

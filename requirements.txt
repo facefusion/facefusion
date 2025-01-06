@@ -1,4 +1,3 @@
-filetype==1.2.0
 gradio==5.9.1
 gradio-rangeslider==0.0.8
 numpy==2.2.0

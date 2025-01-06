@@ -4,7 +4,7 @@ import pytest
 
 from facefusion.download import conditional_download
 from facefusion.vision import calc_histogram_difference, count_trim_frame_total, count_video_frame_total, create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, get_video_frame, match_frame_color, normalize_resolution, pack_resolution, read_image, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
-from .helper import get_test_example_file, get_test_examples_directory, prepare_test_output_directory, get_test_output_file
+from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
