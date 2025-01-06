@@ -238,7 +238,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return model_set
 
 
-def has_inference_model(model_name : str) -> InferencePool:
+def has_inference_model(model_name : str) -> bool:
 	return inference_manager.has_inference_model(__name__, model_name)
 
 
