@@ -31,7 +31,7 @@ def render() -> None:
 		step = calc_int_step(processors_choices.deep_swapper_morph_range),
 		minimum = processors_choices.deep_swapper_morph_range[0],
 		maximum = processors_choices.deep_swapper_morph_range[-1],
-		visible = has_deep_swapper and has_morph_input()
+		visible = has_morph_input()
 	)
 	register_ui_component('deep_swapper_model_dropdown', DEEP_SWAPPER_MODEL_DROPDOWN)
 	register_ui_component('deep_swapper_morph_slider', DEEP_SWAPPER_MORPH_SLIDER)
@@ -48,7 +48,7 @@ def listen() -> None:
 
 def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider]:
 	has_deep_swapper = 'deep_swapper' in processors
-	return gradio.Dropdown(visible = has_deep_swapper), gradio.Slider(visible = has_deep_swapper and has_morph_input())
+	return gradio.Dropdown(visible = has_deep_swapper), gradio.Slider(visible = has_morph_input())
 
 
 def update_deep_swapper_model(deep_swapper_model : DeepSwapperModel) -> Tuple[gradio.Dropdown, gradio.Slider]:
