@@ -2,7 +2,6 @@ import subprocess
 
 import pytest
 
-from facefusion import state_manager
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file
 from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, submit_job, submit_jobs
