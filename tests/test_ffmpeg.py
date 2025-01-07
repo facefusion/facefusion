@@ -29,6 +29,8 @@ def before_all() -> None:
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
 	state_manager.init_item('output_audio_encoder', 'aac')
+	state_manager.init_item('output_audio_quality', 80)
+	state_manager.init_item('output_audio_volume', 100)
 
 
 @pytest.fixture(scope = 'function', autouse = True)

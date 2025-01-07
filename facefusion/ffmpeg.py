@@ -108,7 +108,7 @@ def finalize_image(target_path : str, output_path : str, output_image_resolution
 	output_image_quality = state_manager.get_item('output_image_quality')
 	temp_file_path = get_temp_file_path(target_path)
 	if get_file_format(target_path) == 'webp':
-		output_image_compression = round(100 - output_image_quality)
+		output_image_compression = output_image_quality
 	else:
 		output_image_compression = round(31 - (output_image_quality * 0.31))
 	commands = [ '-i', temp_file_path, '-s', str(output_image_resolution), '-q:v', str(output_image_compression), '-y', output_path ]
@@ -139,13 +139,16 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, 
 		end_time = trim_frame_end / output_video_fps
 		commands.extend([ '-to', str(end_time) ])
 	commands.extend([ '-i', target_path, '-c:v', 'copy', '-c:a', output_audio_encoder ])
+	if output_audio_encoder in [ 'aac' ]:
+		output_audio_compression = round(10 - (output_audio_quality * 0.9))
+		commands.extend([ '-q:a', str(output_audio_compression) ])
 	if output_audio_encoder in [ 'libmp3lame' ]:
 		output_audio_compression = round(9 - (output_audio_quality * 0.9))
 		commands.extend([ '-q:a', str(output_audio_compression) ])
 	if output_audio_encoder in [ 'libopus', 'libvorbis' ]:
 		output_audio_compression = round((100 - output_audio_quality) / 10)
 		commands.extend([ '-q:a', str(output_audio_compression) ])
-	output_audio_volume = round(output_audio_volume / 100)
+	output_audio_volume = output_audio_volume / 100
 	commands.extend([ '-filter:a', 'volume=' + str(output_audio_volume), '-map', '0:v:0', '-map', '1:a:0', '-t', str(temp_video_duration), '-y', output_path ])
 	return run_ffmpeg(commands).returncode == 0
 
@@ -158,13 +161,16 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	temp_video_duration = detect_video_duration(temp_file_path)
 	commands = [ '-i', temp_file_path, '-i', audio_path, '-c:v', 'copy', '-c:a', output_audio_encoder ]
 
+	if output_audio_encoder in [ 'aac' ]:
+		output_audio_compression = round(10 - (output_audio_quality * 0.9))
+		commands.extend([ '-q:a', str(output_audio_compression) ])
 	if output_audio_encoder in [ 'libmp3lame' ]:
 		output_audio_compression = round(9 - (output_audio_quality * 0.9))
 		commands.extend([ '-q:a', str(output_audio_compression) ])
 	if output_audio_encoder in [ 'libopus', 'libvorbis' ]:
 		output_audio_compression = round((100 - output_audio_quality) / 10)
 		commands.extend([ '-q:a', str(output_audio_compression) ])
-	output_audio_volume = round(output_audio_volume / 100)
+	output_audio_volume = output_audio_volume / 100
 	commands.extend([ '-filter:a', 'volume=' + str(output_audio_volume), '-t', str(temp_video_duration), '-y', output_path ])
 	return run_ffmpeg(commands).returncode == 0
 
