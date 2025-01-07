@@ -138,14 +138,14 @@ WORDING : Dict[str, Any] =\
 		'temp_frame_format': 'specify the temporary resources format',
 		'keep_temp': 'keep the temporary resources after processing',
 		# output creation
-		'output_image_quality': 'specify the image quality which translates to the compression factor',
+		'output_image_quality': 'specify the image quality which translates to the image compression',
 		'output_image_resolution': 'specify the image resolution based on the target image',
 		'output_audio_encoder': 'specify the encoder used for the audio',
-		'output_audio_quality': 'specify the audio quality which translates to the compression factor',
+		'output_audio_quality': 'specify the audio quality which translates to the audio compression',
 		'output_audio_volume': 'specify the audio volume based on the target video',
 		'output_video_encoder': 'specify the encoder used for the video',
 		'output_video_preset': 'balance fast video processing and video file size',
-		'output_video_quality': 'specify the video quality which translates to the compression factor',
+		'output_video_quality': 'specify the video quality which translates to the video compression',
 		'output_video_resolution': 'specify the video resolution based on the target video',
 		'output_video_fps': 'specify the video fps based on the target video',
 		# processors
