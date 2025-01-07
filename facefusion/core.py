@@ -437,7 +437,7 @@ def process_video(start_time : float) -> ErrorCode:
 		process_manager.end()
 		return 1
 	# handle audio
-	if state_manager.get_item('skip_audio'):
+	if state_manager.get_item('output_audio_volume') == 0:
 		logger.info(wording.get('skipping_audio'), __name__)
 		move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 	else:

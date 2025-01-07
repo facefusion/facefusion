@@ -2,7 +2,6 @@ import subprocess
 
 import pytest
 
-from facefusion import state_manager
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file
 from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, submit_job, submit_jobs
@@ -19,7 +18,6 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
-	state_manager.init_item('output_audio_encoder', 'aac')
 
 
 @pytest.fixture(scope = 'function', autouse = True)
