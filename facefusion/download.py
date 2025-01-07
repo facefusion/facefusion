@@ -11,12 +11,11 @@ import facefusion.choices
 from facefusion import logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_name, get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
-from facefusion.typing import DownloadProvider, DownloadSet
+from facefusion.typing import Commands, DownloadProvider, DownloadSet
 
 
-def open_curl(args : List[str]) -> subprocess.Popen[bytes]:
-	commands = [ shutil.which('curl'), '--silent', '--insecure', '--location' ]
-	commands.extend(args)
+def open_curl(commands : Commands) -> subprocess.Popen[bytes]:
+	commands = [ shutil.which('curl'), '--silent', '--insecure', '--location' ] + commands
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
