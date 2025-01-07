@@ -85,6 +85,8 @@ ProcessStep = Callable[[str, int, Args], bool]
 
 Content = Dict[str, Any]
 
+Commands = List[str]
+
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'dfl_whole_face', 'ffhq_512', 'mtcnn_512', 'styleganex_384']
 WarpTemplateSet = Dict[WarpTemplate, NDArray[Any]]
 ProcessMode = Literal['output', 'preview', 'stream']
