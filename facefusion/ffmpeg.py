@@ -94,6 +94,87 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 		return process.returncode == 0
 
 
+def copy_image(target_path : str, temp_image_resolution : str) -> bool:
+	temp_file_path = get_temp_file_path(target_path)
+	if get_file_format(target_path) == 'webp':
+		output_image_compression = 100
+	else:
+		output_image_compression = 1
+	commands = [ '-i', target_path, '-s', str(temp_image_resolution), '-q:v', str(output_image_compression), '-y', temp_file_path ]
+	return run_ffmpeg(commands).returncode == 0
+
+
+def finalize_image(target_path : str, output_path : str, output_image_resolution : str) -> bool:
+	output_image_quality = state_manager.get_item('output_image_quality')
+	temp_file_path = get_temp_file_path(target_path)
+	if get_file_format(target_path) == 'webp':
+		output_image_compression = output_image_quality
+	else:
+		output_image_compression = round(31 - (output_image_quality * 0.31))
+	commands = [ '-i', temp_file_path, '-s', str(output_image_resolution), '-q:v', str(output_image_compression), '-y', output_path ]
+	return run_ffmpeg(commands).returncode == 0
+
+
+def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int) -> Optional[AudioBuffer]:
+	commands = [ '-i', target_path, '-vn', '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', str(sample_rate), '-ac', str(channel_total), '-' ]
+	process = open_ffmpeg(commands)
+	audio_buffer, _ = process.communicate()
+	if process.returncode == 0:
+		return audio_buffer
+	return None
+
+
+def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+	output_audio_encoder = state_manager.get_item('output_audio_encoder')
+	output_audio_quality = state_manager.get_item('output_audio_quality')
+	output_audio_volume = state_manager.get_item('output_audio_volume')
+	temp_file_path = get_temp_file_path(target_path)
+	temp_video_duration = detect_video_duration(temp_file_path)
+	commands = [ '-i', temp_file_path ]
+
+	if isinstance(trim_frame_start, int):
+		start_time = trim_frame_start / output_video_fps
+		commands.extend([ '-ss', str(start_time) ])
+	if isinstance(trim_frame_end, int):
+		end_time = trim_frame_end / output_video_fps
+		commands.extend([ '-to', str(end_time) ])
+	commands.extend([ '-i', target_path, '-c:v', 'copy', '-c:a', output_audio_encoder ])
+	if output_audio_encoder in [ 'aac' ]:
+		output_audio_compression = round(10 - (output_audio_quality * 0.9))
+		commands.extend([ '-q:a', str(output_audio_compression) ])
+	if output_audio_encoder in [ 'libmp3lame' ]:
+		output_audio_compression = round(9 - (output_audio_quality * 0.9))
+		commands.extend([ '-q:a', str(output_audio_compression) ])
+	if output_audio_encoder in [ 'libopus', 'libvorbis' ]:
+		output_audio_compression = round((100 - output_audio_quality) / 10)
+		commands.extend([ '-q:a', str(output_audio_compression) ])
+	output_audio_volume = output_audio_volume / 100
+	commands.extend([ '-filter:a', 'volume=' + str(output_audio_volume), '-map', '0:v:0', '-map', '1:a:0', '-t', str(temp_video_duration), '-y', output_path ])
+	return run_ffmpeg(commands).returncode == 0
+
+
+def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:
+	output_audio_encoder = state_manager.get_item('output_audio_encoder')
+	output_audio_quality = state_manager.get_item('output_audio_quality')
+	output_audio_volume = state_manager.get_item('output_audio_volume')
+	temp_file_path = get_temp_file_path(target_path)
+	temp_video_duration = detect_video_duration(temp_file_path)
+	commands = [ '-i', temp_file_path, '-i', audio_path, '-c:v', 'copy', '-c:a', output_audio_encoder ]
+
+	if output_audio_encoder in [ 'aac' ]:
+		output_audio_compression = round(10 - (output_audio_quality * 0.9))
+		commands.extend([ '-q:a', str(output_audio_compression) ])
+	if output_audio_encoder in [ 'libmp3lame' ]:
+		output_audio_compression = round(9 - (output_audio_quality * 0.9))
+		commands.extend([ '-q:a', str(output_audio_compression) ])
+	if output_audio_encoder in [ 'libopus', 'libvorbis' ]:
+		output_audio_compression = round((100 - output_audio_quality) / 10)
+		commands.extend([ '-q:a', str(output_audio_compression) ])
+	output_audio_volume = output_audio_volume / 100
+	commands.extend([ '-filter:a', 'volume=' + str(output_audio_volume), '-t', str(temp_video_duration), '-y', output_path ])
+	return run_ffmpeg(commands).returncode == 0
+
+
 def merge_video(target_path : str, output_video_resolution : str, output_video_fps: Fps) -> bool:
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
@@ -128,7 +209,6 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 
 
 def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
-	output_audio_encoder = state_manager.get_item('output_audio_encoder')
 	concat_video_path = tempfile.mktemp()
 
 	with open(concat_video_path, 'w') as concat_video_file:
@@ -136,65 +216,11 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 			concat_video_file.write('file \'' + os.path.abspath(temp_output_path) + '\'' + os.linesep)
 		concat_video_file.flush()
 		concat_video_file.close()
-	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', output_audio_encoder, '-y', os.path.abspath(output_path) ]
+	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', 'copy', '-y', os.path.abspath(output_path) ]
 	process = run_ffmpeg(commands)
 	process.communicate()
 	remove_file(concat_video_path)
 	return process.returncode == 0
-
-
-def copy_image(target_path : str, temp_image_resolution : str) -> bool:
-	temp_file_path = get_temp_file_path(target_path)
-	temp_image_compression = calc_image_compression(target_path, 100)
-	commands = [ '-i', target_path, '-s', str(temp_image_resolution), '-q:v', str(temp_image_compression), '-y', temp_file_path ]
-	return run_ffmpeg(commands).returncode == 0
-
-
-def finalize_image(target_path : str, output_path : str, output_image_resolution : str) -> bool:
-	output_image_quality = state_manager.get_item('output_image_quality')
-	temp_file_path = get_temp_file_path(target_path)
-	output_image_compression = calc_image_compression(target_path, output_image_quality)
-	commands = [ '-i', temp_file_path, '-s', str(output_image_resolution), '-q:v', str(output_image_compression), '-y', output_path ]
-	return run_ffmpeg(commands).returncode == 0
-
-
-def calc_image_compression(image_path : str, image_quality : int) -> int:
-	if get_file_format(image_path) == 'webm':
-		image_quality = 100 - image_quality
-	return round(31 - (image_quality * 0.31))
-
-
-def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int) -> Optional[AudioBuffer]:
-	commands = [ '-i', target_path, '-vn', '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', str(sample_rate), '-ac', str(channel_total), '-' ]
-	process = open_ffmpeg(commands)
-	audio_buffer, _ = process.communicate()
-	if process.returncode == 0:
-		return audio_buffer
-	return None
-
-
-def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
-	output_audio_encoder = state_manager.get_item('output_audio_encoder')
-	temp_file_path = get_temp_file_path(target_path)
-	temp_video_duration = detect_video_duration(temp_file_path)
-	commands = [ '-i', temp_file_path ]
-
-	if isinstance(trim_frame_start, int):
-		start_time = trim_frame_start / output_video_fps
-		commands.extend([ '-ss', str(start_time) ])
-	if isinstance(trim_frame_end, int):
-		end_time = trim_frame_end / output_video_fps
-		commands.extend([ '-to', str(end_time) ])
-	commands.extend([ '-i', target_path, '-c:v', 'copy', '-c:a', output_audio_encoder, '-map', '0:v:0', '-map', '1:a:0', '-t', str(temp_video_duration), '-y', output_path ])
-	return run_ffmpeg(commands).returncode == 0
-
-
-def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:
-	output_audio_encoder = state_manager.get_item('output_audio_encoder')
-	temp_file_path = get_temp_file_path(target_path)
-	temp_video_duration = detect_video_duration(temp_file_path)
-	commands = [ '-i', temp_file_path, '-i', audio_path, '-c:v', 'copy', '-c:a', output_audio_encoder, '-t', str(temp_video_duration), '-y', output_path ]
-	return run_ffmpeg(commands).returncode == 0
 
 
 def map_nvenc_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:

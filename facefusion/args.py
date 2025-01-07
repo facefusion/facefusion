@@ -92,6 +92,8 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 		else:
 			apply_state_item('output_image_resolution', pack_resolution(output_image_resolution))
 	apply_state_item('output_audio_encoder', args.get('output_audio_encoder'))
+	apply_state_item('output_audio_quality', args.get('output_audio_quality'))
+	apply_state_item('output_audio_volume', args.get('output_audio_volume'))
 	apply_state_item('output_video_encoder', args.get('output_video_encoder'))
 	apply_state_item('output_video_preset', args.get('output_video_preset'))
 	apply_state_item('output_video_quality', args.get('output_video_quality'))
@@ -105,7 +107,6 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	if args.get('output_video_fps') or is_video(args.get('target_path')):
 		output_video_fps = normalize_fps(args.get('output_video_fps')) or detect_video_fps(args.get('target_path'))
 		apply_state_item('output_video_fps', output_video_fps)
-	apply_state_item('skip_audio', args.get('skip_audio'))
 	# processors
 	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	apply_state_item('processors', args.get('processors'))
