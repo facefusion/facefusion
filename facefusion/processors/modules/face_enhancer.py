@@ -221,6 +221,10 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	}
 
 
+def has_inference_model(model_name : str) -> bool:
+	return inference_manager.has_inference_model(__name__, model_name)
+
+
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
 	return inference_manager.get_inference_pool(__name__, model_sources)
@@ -324,11 +328,13 @@ def forward(crop_vision_frame : VisionFrame, face_enhancer_weight : FaceEnhancer
 
 
 def has_weight_input() -> bool:
-	face_enhancer = get_inference_pool().get('face_enhancer')
+	if has_inference_model('face_enhancer'):
+		face_enhancer = get_inference_pool().get('face_enhancer')
 
-	for deep_swapper_input in face_enhancer.get_inputs():
-		if deep_swapper_input.name == 'weight':
-			return True
+		for deep_swapper_input in face_enhancer.get_inputs():
+			if deep_swapper_input.name == 'weight':
+				return True
+
 	return False
 
 

@@ -238,6 +238,10 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return model_set
 
 
+def has_inference_model(model_name : str) -> bool:
+	return inference_manager.has_inference_model(__name__, model_name)
+
+
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
 	return inference_manager.get_inference_pool(__name__, model_sources)
@@ -357,11 +361,13 @@ def forward(crop_vision_frame : VisionFrame, deep_swapper_morph : DeepSwapperMor
 
 
 def has_morph_input() -> bool:
-	deep_swapper = get_inference_pool().get('deep_swapper')
+	if has_inference_model('deep_swapper'):
+		deep_swapper = get_inference_pool().get('deep_swapper')
 
-	for deep_swapper_input in deep_swapper.get_inputs():
-		if deep_swapper_input.name == 'morph_value:0':
-			return True
+		for deep_swapper_input in deep_swapper.get_inputs():
+			if deep_swapper_input.name == 'morph_value:0':
+				return True
+
 	return False
 
 
