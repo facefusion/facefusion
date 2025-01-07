@@ -96,7 +96,11 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 
 def copy_image(target_path : str, temp_image_resolution : str) -> bool:
 	temp_file_path = get_temp_file_path(target_path)
-	commands = [ '-i', target_path, '-s', str(temp_image_resolution), '-c:v', 'copy', '-y', temp_file_path ]
+	if get_file_format(target_path) == 'webp':
+		output_image_compression = 100
+	else:
+		output_image_compression = 1
+	commands = [ '-i', target_path, '-s', str(temp_image_resolution), '-q:v', str(output_image_compression), '-y', temp_file_path ]
 	return run_ffmpeg(commands).returncode == 0
 
 
