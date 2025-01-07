@@ -139,7 +139,7 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, 
 		ffmpeg_builder.select_media_stream('0:v:0') +
 		ffmpeg_builder.select_media_stream('1:a:0') +
 		ffmpeg_builder.set_video_duration(temp_video_duration) +
-		ffmpeg_builder.overwrite_output_path(output_path)
+		ffmpeg_builder.force_output_path(output_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
 
@@ -159,7 +159,7 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality) +
 		ffmpeg_builder.set_audio_volume(output_audio_volume) +
 		ffmpeg_builder.set_video_duration(temp_video_duration) +
-		ffmpeg_builder.overwrite_output_path(output_path)
+		ffmpeg_builder.force_output_path(output_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
 

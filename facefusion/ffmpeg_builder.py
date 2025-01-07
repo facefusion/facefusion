@@ -9,7 +9,7 @@ def set_output_path(output_path : str) -> Commands:
 	return [ output_path ]
 
 
-def overwrite_output_path(output_path : str) -> Commands:
+def force_output_path(output_path : str) -> Commands:
 	return [ '-y', output_path ]
 
 
