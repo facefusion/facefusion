@@ -6,10 +6,10 @@ from typing import List, Optional
 
 from tqdm import tqdm
 
-from facefusion import logger, process_manager, state_manager, wording
+from facefusion import ffmpeg_builder, logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern, resolve_temp_frame_paths
-from facefusion.typing import AudioBuffer, Commands, Fps, OutputVideoPreset, UpdateProgress
+from facefusion.typing import AudioBuffer, Commands, Fps, VideoPreset, UpdateProgress
 from facefusion.vision import count_trim_frame_total, detect_video_duration, restrict_video_fps
 
 
@@ -127,26 +127,20 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, 
 	output_audio_volume = state_manager.get_item('output_audio_volume')
 	temp_file_path = get_temp_file_path(target_path)
 	temp_video_duration = detect_video_duration(temp_file_path)
-	commands = [ '-i', temp_file_path ]
 
-	if isinstance(trim_frame_start, int):
-		start_time = trim_frame_start / output_video_fps
-		commands.extend([ '-ss', str(start_time) ])
-	if isinstance(trim_frame_end, int):
-		end_time = trim_frame_end / output_video_fps
-		commands.extend([ '-to', str(end_time) ])
-	commands.extend([ '-i', target_path, '-c:v', 'copy', '-c:a', output_audio_encoder ])
-	if output_audio_encoder in [ 'aac' ]:
-		output_audio_compression = round(10 - (output_audio_quality * 0.9))
-		commands.extend([ '-q:a', str(output_audio_compression) ])
-	if output_audio_encoder in [ 'libmp3lame' ]:
-		output_audio_compression = round(9 - (output_audio_quality * 0.9))
-		commands.extend([ '-q:a', str(output_audio_compression) ])
-	if output_audio_encoder in [ 'libopus', 'libvorbis' ]:
-		output_audio_compression = round((100 - output_audio_quality) / 10)
-		commands.extend([ '-q:a', str(output_audio_compression) ])
-	output_audio_volume = output_audio_volume / 100
-	commands.extend([ '-filter:a', 'volume=' + str(output_audio_volume), '-map', '0:v:0', '-map', '1:a:0', '-t', str(temp_video_duration), '-y', output_path ])
+	commands = (
+		ffmpeg_builder.set_input_path(temp_file_path) +
+		ffmpeg_builder.set_media_range(trim_frame_start, trim_frame_end, output_video_fps) +
+		ffmpeg_builder.set_input_path(target_path) +
+		ffmpeg_builder.copy_video_encoder() +
+		ffmpeg_builder.set_audio_encoder(output_audio_encoder) +
+		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality) +
+		ffmpeg_builder.set_audio_volume(output_audio_volume) +
+		ffmpeg_builder.select_media_stream('0:v:0') +
+		ffmpeg_builder.select_media_stream('1:a:0') +
+		ffmpeg_builder.set_video_duration(temp_video_duration) +
+		ffmpeg_builder.overwrite_output_path(output_path)
+	)
 	return run_ffmpeg(commands).returncode == 0
 
 
@@ -156,19 +150,17 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	output_audio_volume = state_manager.get_item('output_audio_volume')
 	temp_file_path = get_temp_file_path(target_path)
 	temp_video_duration = detect_video_duration(temp_file_path)
-	commands = [ '-i', temp_file_path, '-i', audio_path, '-c:v', 'copy', '-c:a', output_audio_encoder ]
 
-	if output_audio_encoder in [ 'aac' ]:
-		output_audio_compression = round(10 - (output_audio_quality * 0.9))
-		commands.extend([ '-q:a', str(output_audio_compression) ])
-	if output_audio_encoder in [ 'libmp3lame' ]:
-		output_audio_compression = round(9 - (output_audio_quality * 0.9))
-		commands.extend([ '-q:a', str(output_audio_compression) ])
-	if output_audio_encoder in [ 'libopus', 'libvorbis' ]:
-		output_audio_compression = round((100 - output_audio_quality) / 10)
-		commands.extend([ '-q:a', str(output_audio_compression) ])
-	output_audio_volume = output_audio_volume / 100
-	commands.extend([ '-filter:a', 'volume=' + str(output_audio_volume), '-t', str(temp_video_duration), '-y', output_path ])
+	commands = (
+		ffmpeg_builder.set_input_path(temp_file_path) +
+		ffmpeg_builder.set_input_path(audio_path) +
+		ffmpeg_builder.copy_video_encoder() +
+		ffmpeg_builder.set_audio_encoder(output_audio_encoder) +
+		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality) +
+		ffmpeg_builder.set_audio_volume(output_audio_volume) +
+		ffmpeg_builder.set_video_duration(temp_video_duration) +
+		ffmpeg_builder.overwrite_output_path(output_path)
+	)
 	return run_ffmpeg(commands).returncode == 0
 
 
@@ -220,7 +212,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	return process.returncode == 0
 
 
-def map_nvenc_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
+def map_nvenc_preset(output_video_preset : VideoPreset) -> Optional[str]:
 	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast' ]:
 		return 'fast'
 	if output_video_preset == 'medium':
@@ -230,7 +222,7 @@ def map_nvenc_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
 	return None
 
 
-def map_amf_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
+def map_amf_preset(output_video_preset : VideoPreset) -> Optional[str]:
 	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast' ]:
 		return 'speed'
 	if output_video_preset in [ 'faster', 'fast', 'medium' ]:
@@ -240,7 +232,7 @@ def map_amf_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
 	return None
 
 
-def map_qsv_preset(output_video_preset : OutputVideoPreset) -> Optional[str]:
+def map_qsv_preset(output_video_preset : VideoPreset) -> Optional[str]:
 	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast' ]:
 		return 'fast'
 	if output_video_preset == 'medium':
