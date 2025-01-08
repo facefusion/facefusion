@@ -1,4 +1,4 @@
-from facefusion.typing import Commands, Duration, Fps, AudioEncoder
+from facefusion.typing import AudioEncoder, Commands, Duration, Fps
 
 
 def set_input_path(input_path : str) -> Commands:

@@ -6,7 +6,7 @@ import facefusion.choices
 from facefusion import state_manager, wording
 from facefusion.common_helper import calc_int_step
 from facefusion.filesystem import is_image, is_video
-from facefusion.typing import Fps, AudioEncoder, VideoEncoder, VideoPreset
+from facefusion.typing import AudioEncoder, Fps, VideoEncoder, VideoPreset
 from facefusion.uis.core import get_ui_components, register_ui_component
 from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, pack_resolution
 

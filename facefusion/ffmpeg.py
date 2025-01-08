@@ -9,7 +9,7 @@ from tqdm import tqdm
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern, resolve_temp_frame_paths
-from facefusion.typing import AudioBuffer, Commands, Fps, VideoPreset, UpdateProgress
+from facefusion.typing import AudioBuffer, Commands, Fps, UpdateProgress, VideoPreset
 from facefusion.vision import count_trim_frame_total, detect_video_duration, restrict_video_fps
 
 
