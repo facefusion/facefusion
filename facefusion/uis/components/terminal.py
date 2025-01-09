@@ -78,5 +78,5 @@ def create_tqdm_output(self : tqdm) -> Optional[str]:
 
 def read_logs() -> str:
 	LOG_BUFFER.seek(0)
-	logs = LOG_BUFFER.read().rstrip()
+	logs = LOG_BUFFER.read().strip()
 	return logs
