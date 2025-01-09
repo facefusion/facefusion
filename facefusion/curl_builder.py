@@ -4,7 +4,7 @@ from facefusion.typing import Commands
 
 
 def run(commands : Commands) -> Commands:
-	return [ shutil.which('curl'), '--silent', '--insecure', '--location' ] + commands
+	return [ shutil.which('curl'), '--insecure', '--location', '--silent' ] + commands
 
 
 def head(url : str) -> Commands:

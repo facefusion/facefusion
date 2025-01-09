@@ -1,4 +1,18 @@
+import shutil
+
 from facefusion.typing import AudioEncoder, Commands, Duration, Fps
+
+
+def run(commands : Commands) -> Commands:
+	return [ shutil.which('ffmpeg') ] + commands
+
+
+def set_log_level(log_level : str) -> Commands:
+	return [ '-loglevel', log_level ]
+
+
+def stream_progress() -> Commands:
+	return [ '-progress', '-' ]
 
 
 def set_input_path(input_path : str) -> Commands:

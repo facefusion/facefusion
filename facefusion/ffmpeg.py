@@ -15,7 +15,9 @@ from facefusion.vision import count_trim_frame_total, detect_video_duration, res
 
 def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
-	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-nostats', '-loglevel', 'error', '-progress', '-' ] + commands
+	commands.extend(ffmpeg_builder.stream_progress())
+	commands.extend(ffmpeg_builder.set_log_level('error'))
+	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
 	while process_manager.is_processing():
@@ -40,7 +42,8 @@ def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgre
 
 def run_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
-	commands = [ shutil.which('ffmpeg'), '-hide_banner', '-nostats', '-loglevel', 'error' ] + commands
+	commands.extend(ffmpeg_builder.set_log_level('error'))
+	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
 	while process_manager.is_processing():
@@ -58,7 +61,8 @@ def run_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
 
 
 def open_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
-	commands = [ shutil.which('ffmpeg'), '-loglevel', 'quiet' ] + commands
+	commands.extend(ffmpeg_builder.set_log_level('quiet'))
+	commands = ffmpeg_builder.run(commands)
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
