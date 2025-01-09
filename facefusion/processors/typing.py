@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Literal, TypedDict
 
-from numpy._typing import NDArray
+from numpy.typing import NDArray
 
 from facefusion.typing import AppContext, AudioFrame, Face, FaceSet, VisionFrame
 
