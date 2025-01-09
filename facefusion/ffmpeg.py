@@ -128,7 +128,8 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, 
 	temp_file_path = get_temp_file_path(target_path)
 	temp_video_duration = detect_video_duration(temp_file_path)
 
-	commands = (
+	commands =\
+	(
 		ffmpeg_builder.set_input_path(temp_file_path) +
 		ffmpeg_builder.set_media_range(trim_frame_start, trim_frame_end, output_video_fps) +
 		ffmpeg_builder.set_input_path(target_path) +
@@ -151,7 +152,8 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	temp_file_path = get_temp_file_path(target_path)
 	temp_video_duration = detect_video_duration(temp_file_path)
 
-	commands = (
+	commands =\
+	(
 		ffmpeg_builder.set_input_path(temp_file_path) +
 		ffmpeg_builder.set_input_path(audio_path) +
 		ffmpeg_builder.copy_video_encoder() +

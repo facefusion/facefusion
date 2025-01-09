@@ -27,7 +27,8 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 
 		if initial_size < download_size:
 			with tqdm(total = download_size, initial = initial_size, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-				commands = (
+				commands =\
+				(
 					curl_builder.download(url, download_file_path) +
 					curl_builder.set_timeout(10)
 				)
@@ -43,7 +44,8 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 
 @lru_cache(maxsize = None)
 def get_static_download_size(url : str) -> int:
-	commands = (
+	commands =\
+	(
 		curl_builder.head(url) +
 		curl_builder.set_timeout(5)
 	)
@@ -61,7 +63,8 @@ def get_static_download_size(url : str) -> int:
 
 @lru_cache(maxsize = None)
 def ping_static_url(url : str) -> bool:
-	commands = (
+	commands =\
+	(
 		curl_builder.head(url) +
 		curl_builder.set_timeout(5)
 	)
