@@ -14,8 +14,9 @@ from facefusion.vision import count_trim_frame_total, detect_video_duration, res
 
 def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
-	commands.extend(ffmpeg_builder.stream_progress())
 	commands.extend(ffmpeg_builder.set_log_level('error'))
+	commands.extend(ffmpeg_builder.set_progress())
+	commands.extend(ffmpeg_builder.stream_output())
 	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
@@ -80,7 +81,7 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
 		ffmpeg_builder.set_video_quality(0),
-		ffmpeg_builder.set_video_resolution(temp_video_resolution),
+		ffmpeg_builder.set_media_resolution(temp_video_resolution),
 		ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
 		ffmpeg_builder.prevent_frame_drop(),
 		ffmpeg_builder.set_output(temp_frames_pattern)
@@ -93,27 +94,38 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 
 def copy_image(target_path : str, temp_image_resolution : str) -> bool:
 	temp_file_path = get_temp_file_path(target_path)
-	if get_file_format(target_path) == 'webp':
-		output_image_compression = 100
-	else:
-		output_image_compression = 1
-	commands = [ '-i', target_path, '-s', str(temp_image_resolution), '-q:v', str(output_image_compression), '-y', temp_file_path ]
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(target_path),
+		ffmpeg_builder.set_media_resolution(temp_image_resolution),
+		ffmpeg_builder.set_image_quality(target_path, 100),
+		ffmpeg_builder.force_output(temp_file_path)
+	)
 	return run_ffmpeg(commands).returncode == 0
 
 
 def finalize_image(target_path : str, output_path : str, output_image_resolution : str) -> bool:
 	output_image_quality = state_manager.get_item('output_image_quality')
 	temp_file_path = get_temp_file_path(target_path)
-	if get_file_format(target_path) == 'webp':
-		output_image_compression = output_image_quality
-	else:
-		output_image_compression = round(31 - (output_image_quality * 0.31))
-	commands = [ '-i', temp_file_path, '-s', str(output_image_resolution), '-q:v', str(output_image_compression), '-y', output_path ]
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(temp_file_path),
+		ffmpeg_builder.set_media_resolution(output_image_resolution),
+		ffmpeg_builder.set_image_quality(target_path, output_image_quality),
+		ffmpeg_builder.force_output(output_path)
+	)
 	return run_ffmpeg(commands).returncode == 0
 
 
 def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int) -> Optional[AudioBuffer]:
-	commands = [ '-i', target_path, '-vn', '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', str(sample_rate), '-ac', str(channel_total), '-' ]
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(target_path),
+		[ '-vn' ],
+		[ '-f', 's16le' ],
+		[ '-acodec', 'pcm_s16le' ],
+		[ '-ar', str(sample_rate) ],
+		[ '-ac', str(channel_total) ],
+		ffmpeg_builder.stream_output()
+	)
+
 	process = open_ffmpeg(commands)
 	audio_buffer, _ = process.communicate()
 	if process.returncode == 0:
@@ -208,7 +220,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 
 	output_path = os.path.abspath(output_path)
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.use_concat_demuxer(),
+		ffmpeg_builder.unsafe_concat(),
 		ffmpeg_builder.set_input(concat_video_file.name),
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.copy_audio_encoder(),

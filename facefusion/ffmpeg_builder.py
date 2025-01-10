@@ -1,6 +1,7 @@
 import itertools
 import shutil
 
+from facefusion.filesystem import get_file_format
 from facefusion.typing import AudioEncoder, Commands, Duration, Fps
 
 
@@ -16,8 +17,8 @@ def set_log_level(log_level : str) -> Commands:
 	return [ '-loglevel', log_level ]
 
 
-def stream_progress() -> Commands:
-	return [ '-progress', '-' ]
+def set_progress() -> Commands:
+	return [ '-progress' ]
 
 
 def set_input(input_path : str) -> Commands:
@@ -32,7 +33,11 @@ def force_output(output_path : str) -> Commands:
 	return [ '-y', output_path ]
 
 
-def use_concat_demuxer() -> Commands:
+def stream_output() -> Commands:
+	return [ '-' ]
+
+
+def unsafe_concat() -> Commands:
 	return [ '-f', 'concat', '-safe', '0' ]
 
 
@@ -62,6 +67,18 @@ def select_media_range(frame_start : int, frame_end : int, media_fps : Fps) -> C
 
 def select_media_stream(media_stream : str) -> Commands:
 	return [ '-map', media_stream ]
+
+
+def set_media_resolution(video_resolution : str) -> Commands:
+	return [ '-s', video_resolution ]
+
+
+def set_image_quality(image_path : str, image_quality : int) -> Commands:
+	if get_file_format(image_path) == 'webp':
+		image_compression = image_quality
+	else:
+		image_compression = round(31 - (image_quality * 0.31))
+	return [ '-q:v', str(image_compression) ]
 
 
 def set_audio_encoder(audio_codec : str) -> Commands:
@@ -99,10 +116,6 @@ def copy_video_encoder() -> Commands:
 
 def set_video_quality(video_quality : int) -> Commands:
 	return [ '-q:v', str(video_quality) ]
-
-
-def set_video_resolution(video_resolution : str) -> Commands:
-	return [ '-s', video_resolution ]
 
 
 def set_video_duration(video_duration : Duration) -> Commands:
