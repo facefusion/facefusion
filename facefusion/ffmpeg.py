@@ -77,17 +77,14 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
 	extract_frame_total = count_trim_frame_total(target_path, trim_frame_start, trim_frame_end)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
-	commands = [ '-i', target_path, '-s', str(temp_video_resolution), '-q:v', '0' ]
-
-	if isinstance(trim_frame_start, int) and isinstance(trim_frame_end, int):
-		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ':end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
-	elif isinstance(trim_frame_start, int):
-		commands.extend([ '-vf', 'trim=start_frame=' + str(trim_frame_start) + ',fps=' + str(temp_video_fps) ])
-	elif isinstance(trim_frame_end, int):
-		commands.extend([ '-vf', 'trim=end_frame=' + str(trim_frame_end) + ',fps=' + str(temp_video_fps) ])
-	else:
-		commands.extend([ '-vf', 'fps=' + str(temp_video_fps) ])
-	commands.extend([ '-vsync', '0', temp_frames_pattern ])
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(target_path),
+		ffmpeg_builder.set_video_quality(0),
+		ffmpeg_builder.set_video_resolution(temp_video_resolution),
+		ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
+		ffmpeg_builder.prevent_frame_drop(),
+		ffmpeg_builder.set_output(temp_frames_pattern)
+	)
 
 	with tqdm(total = extract_frame_total, desc = wording.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		process = run_ffmpeg_with_progress(commands, lambda frame_number: progress.update(frame_number - progress.n))
@@ -132,9 +129,9 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, 
 	temp_video_duration = detect_video_duration(temp_file_path)
 
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_input_path(temp_file_path),
-		ffmpeg_builder.set_media_range(trim_frame_start, trim_frame_end, output_video_fps),
-		ffmpeg_builder.set_input_path(target_path),
+		ffmpeg_builder.set_input(temp_file_path),
+		ffmpeg_builder.select_media_range(trim_frame_start, trim_frame_end, output_video_fps),
+		ffmpeg_builder.set_input(target_path),
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.set_audio_encoder(output_audio_encoder),
 		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality),
@@ -142,7 +139,7 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, 
 		ffmpeg_builder.select_media_stream('0:v:0'),
 		ffmpeg_builder.select_media_stream('1:a:0'),
 		ffmpeg_builder.set_video_duration(temp_video_duration),
-		ffmpeg_builder.force_output_path(output_path)
+		ffmpeg_builder.force_output(output_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
 
@@ -155,14 +152,14 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	temp_video_duration = detect_video_duration(temp_file_path)
 
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_input_path(temp_file_path),
-		ffmpeg_builder.set_input_path(audio_path),
+		ffmpeg_builder.set_input(temp_file_path),
+		ffmpeg_builder.set_input(audio_path),
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.set_audio_encoder(output_audio_encoder),
 		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality),
 		ffmpeg_builder.set_audio_volume(output_audio_volume),
 		ffmpeg_builder.set_video_duration(temp_video_duration),
-		ffmpeg_builder.force_output_path(output_path)
+		ffmpeg_builder.force_output(output_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
 
@@ -212,10 +209,10 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	output_path = os.path.abspath(output_path)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.use_concat_demuxer(),
-		ffmpeg_builder.set_input_path(concat_video_file.name),
+		ffmpeg_builder.set_input(concat_video_file.name),
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.copy_audio_encoder(),
-		ffmpeg_builder.force_output_path(output_path)
+		ffmpeg_builder.force_output(output_path)
 	)
 	process = run_ffmpeg(commands)
 	process.communicate()

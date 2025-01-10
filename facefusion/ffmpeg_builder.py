@@ -20,15 +20,15 @@ def stream_progress() -> Commands:
 	return [ '-progress', '-' ]
 
 
-def set_input_path(input_path : str) -> Commands:
+def set_input(input_path : str) -> Commands:
 	return [ '-i', input_path ]
 
 
-def set_output_path(output_path : str) -> Commands:
+def set_output(output_path : str) -> Commands:
 	return [ output_path ]
 
 
-def force_output_path(output_path : str) -> Commands:
+def force_output(output_path : str) -> Commands:
 	return [ '-y', output_path ]
 
 
@@ -36,18 +36,32 @@ def use_concat_demuxer() -> Commands:
 	return [ '-f', 'concat', '-safe', '0' ]
 
 
-def select_media_stream(media_stream : str) -> Commands:
-	return [ '-map', media_stream ]
+def select_frame_range(frame_start : int, frame_end : int, video_fps : Fps) -> Commands:
+	if isinstance(frame_start, int) and isinstance(frame_end, int):
+		return [ '-vf', 'trim=start_frame=' + str(frame_start) + ':end_frame=' + str(frame_end) + ',fps=' + str(video_fps) ]
+	if isinstance(frame_start, int):
+		return ['-vf', 'trim=start_frame=' + str(frame_start) + ',fps=' + str(video_fps) ]
+	if isinstance(frame_end, int):
+		return [ '-vf', 'trim=end_frame=' + str(frame_end) + ',fps=' + str(video_fps) ]
+	return [ '-vf', 'fps=' + str(video_fps) ]
 
 
-def set_media_range(frame_start : int, frame_end : int, media_fps : Fps) -> Commands:
+def prevent_frame_drop() -> Commands:
+	return [ '-vsync', '0' ]
+
+
+def select_media_range(frame_start : int, frame_end : int, media_fps : Fps) -> Commands:
 	commands = []
 
-	if frame_start:
+	if isinstance(frame_start, int):
 		commands.extend([ '-ss', str(frame_start / media_fps) ])
-	if frame_end:
+	if isinstance(frame_end, int):
 		commands.extend([ '-to', str(frame_end / media_fps) ])
 	return commands
+
+
+def select_media_stream(media_stream : str) -> Commands:
+	return [ '-map', media_stream ]
 
 
 def set_audio_encoder(audio_codec : str) -> Commands:
@@ -81,6 +95,14 @@ def set_video_codec(video_codec : str) -> Commands:
 
 def copy_video_encoder() -> Commands:
 	return set_video_codec('copy')
+
+
+def set_video_quality(video_quality : int) -> Commands:
+	return [ '-q:v', str(video_quality) ]
+
+
+def set_video_resolution(video_resolution : str) -> Commands:
+	return [ '-s', video_resolution ]
 
 
 def set_video_duration(video_duration : Duration) -> Commands:
