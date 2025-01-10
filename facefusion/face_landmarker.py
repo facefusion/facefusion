@@ -98,13 +98,10 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 		'fan_68_5': model_set.get('fan_68_5').get('sources').get('fan_68_5')
 	}
 
-	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
-		model_hashes['2dfan4'] = model_set.get('2dfan4').get('hashes').get('2dfan4')
-		model_sources['2dfan4'] = model_set.get('2dfan4').get('sources').get('2dfan4')
-
-	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
-		model_hashes['peppa_wutz'] = model_set.get('peppa_wutz').get('hashes').get('peppa_wutz')
-		model_sources['peppa_wutz'] = model_set.get('peppa_wutz').get('sources').get('peppa_wutz')
+	for face_landmarker_model in [ '2dfan4', 'peppa_wutz' ]:
+		if state_manager.get_item('face_landmarker_model') in [ 'many', face_landmarker_model ]:
+			model_hashes[face_landmarker_model] = model_set.get(face_landmarker_model).get('hashes').get(face_landmarker_model)
+			model_sources[face_landmarker_model] = model_set.get(face_landmarker_model).get('sources').get(face_landmarker_model)
 
 	return model_hashes, model_sources
 
