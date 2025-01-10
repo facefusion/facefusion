@@ -211,7 +211,16 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 			concat_video_file.write('file \'' + os.path.abspath(temp_output_path) + '\'' + os.linesep)
 		concat_video_file.flush()
 		concat_video_file.close()
-	commands = [ '-f', 'concat', '-safe', '0', '-i', concat_video_file.name, '-c:v', 'copy', '-c:a', 'copy', '-y', os.path.abspath(output_path) ]
+
+	output_path = os.path.abspath(output_path)
+	commands =\
+	(
+		ffmpeg_builder.use_concat_demuxer() +
+		ffmpeg_builder.set_input_path(concat_video_file.name) +
+		ffmpeg_builder.copy_video_encoder() +
+		ffmpeg_builder.copy_audio_encoder() +
+		ffmpeg_builder.force_output_path(output_path)
+	)
 	process = run_ffmpeg(commands)
 	process.communicate()
 	remove_file(concat_video_path)

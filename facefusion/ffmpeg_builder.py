@@ -27,6 +27,10 @@ def force_output_path(output_path : str) -> Commands:
 	return [ '-y', output_path ]
 
 
+def use_concat_demuxer() -> Commands:
+	return [ '-f', 'concat', '-safe', '0' ]
+
+
 def select_media_stream(media_stream : str) -> Commands:
 	return [ '-map', media_stream ]
 
@@ -37,7 +41,7 @@ def set_media_range(frame_start : int, frame_end : int, media_fps : Fps) -> Comm
 	if frame_start:
 		commands.extend([ '-ss', str(frame_start / media_fps) ])
 	if frame_end:
-		commands.extend([ '-ss', str(frame_end / media_fps) ])
+		commands.extend([ '-to', str(frame_end / media_fps) ])
 	return commands
 
 
@@ -45,7 +49,7 @@ def set_audio_encoder(audio_codec : str) -> Commands:
 	return [ '-c:a', audio_codec ]
 
 
-def copy_audio_codec() -> Commands:
+def copy_audio_encoder() -> Commands:
 	return set_audio_encoder('copy')
 
 
