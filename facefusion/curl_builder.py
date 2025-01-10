@@ -1,3 +1,4 @@
+import itertools
 import shutil
 
 from facefusion.typing import Commands
@@ -5,6 +6,10 @@ from facefusion.typing import Commands
 
 def run(commands : Commands) -> Commands:
 	return [ shutil.which('curl'), '--insecure', '--location', '--silent' ] + commands
+
+
+def chain(*commands : Commands) -> Commands:
+	return list(itertools.chain(*commands))
 
 
 def head(url : str) -> Commands:

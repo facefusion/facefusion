@@ -131,18 +131,17 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, 
 	temp_file_path = get_temp_file_path(target_path)
 	temp_video_duration = detect_video_duration(temp_file_path)
 
-	commands =\
-	(
-		ffmpeg_builder.set_input_path(temp_file_path) +
-		ffmpeg_builder.set_media_range(trim_frame_start, trim_frame_end, output_video_fps) +
-		ffmpeg_builder.set_input_path(target_path) +
-		ffmpeg_builder.copy_video_encoder() +
-		ffmpeg_builder.set_audio_encoder(output_audio_encoder) +
-		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality) +
-		ffmpeg_builder.set_audio_volume(output_audio_volume) +
-		ffmpeg_builder.select_media_stream('0:v:0') +
-		ffmpeg_builder.select_media_stream('1:a:0') +
-		ffmpeg_builder.set_video_duration(temp_video_duration) +
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input_path(temp_file_path),
+		ffmpeg_builder.set_media_range(trim_frame_start, trim_frame_end, output_video_fps),
+		ffmpeg_builder.set_input_path(target_path),
+		ffmpeg_builder.copy_video_encoder(),
+		ffmpeg_builder.set_audio_encoder(output_audio_encoder),
+		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality),
+		ffmpeg_builder.set_audio_volume(output_audio_volume),
+		ffmpeg_builder.select_media_stream('0:v:0'),
+		ffmpeg_builder.select_media_stream('1:a:0'),
+		ffmpeg_builder.set_video_duration(temp_video_duration),
 		ffmpeg_builder.force_output_path(output_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
@@ -155,15 +154,14 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	temp_file_path = get_temp_file_path(target_path)
 	temp_video_duration = detect_video_duration(temp_file_path)
 
-	commands =\
-	(
-		ffmpeg_builder.set_input_path(temp_file_path) +
-		ffmpeg_builder.set_input_path(audio_path) +
-		ffmpeg_builder.copy_video_encoder() +
-		ffmpeg_builder.set_audio_encoder(output_audio_encoder) +
-		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality) +
-		ffmpeg_builder.set_audio_volume(output_audio_volume) +
-		ffmpeg_builder.set_video_duration(temp_video_duration) +
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input_path(temp_file_path),
+		ffmpeg_builder.set_input_path(audio_path),
+		ffmpeg_builder.copy_video_encoder(),
+		ffmpeg_builder.set_audio_encoder(output_audio_encoder),
+		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality),
+		ffmpeg_builder.set_audio_volume(output_audio_volume),
+		ffmpeg_builder.set_video_duration(temp_video_duration),
 		ffmpeg_builder.force_output_path(output_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
@@ -212,12 +210,11 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 		concat_video_file.close()
 
 	output_path = os.path.abspath(output_path)
-	commands =\
-	(
-		ffmpeg_builder.use_concat_demuxer() +
-		ffmpeg_builder.set_input_path(concat_video_file.name) +
-		ffmpeg_builder.copy_video_encoder() +
-		ffmpeg_builder.copy_audio_encoder() +
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.use_concat_demuxer(),
+		ffmpeg_builder.set_input_path(concat_video_file.name),
+		ffmpeg_builder.copy_video_encoder(),
+		ffmpeg_builder.copy_audio_encoder(),
 		ffmpeg_builder.force_output_path(output_path)
 	)
 	process = run_ffmpeg(commands)

@@ -1,3 +1,4 @@
+import itertools
 import shutil
 
 from facefusion.typing import AudioEncoder, Commands, Duration, Fps
@@ -5,6 +6,10 @@ from facefusion.typing import AudioEncoder, Commands, Duration, Fps
 
 def run(commands : Commands) -> Commands:
 	return [ shutil.which('ffmpeg') ] + commands
+
+
+def chain(*commands : Commands) -> Commands:
+	return list(itertools.chain(*commands))
 
 
 def set_log_level(log_level : str) -> Commands:
