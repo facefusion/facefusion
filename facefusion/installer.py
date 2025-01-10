@@ -3,7 +3,6 @@ import shutil
 import signal
 import subprocess
 import sys
-import tempfile
 from argparse import ArgumentParser, HelpFormatter
 from typing import Dict, Tuple
 
@@ -42,21 +41,21 @@ def run(program : ArgumentParser) -> None:
 		sys.stdout.write(wording.get('conda_not_activated') + os.linesep)
 		sys.exit(1)
 
-	subprocess.call([ shutil.which('pip'), 'install', '-r', 'requirements.txt', '--force-reinstall' ])
+	with open('requirements.txt') as file:
+
+		for line in file.readlines():
+			__line__ = line.strip()
+			if not __line__.startswith('onnxruntime'):
+				subprocess.call([ shutil.which('pip'), 'install', line, '--force-reinstall' ])
 
 	if args.onnxruntime == 'rocm':
 		python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
 		if python_id in [ 'cp310', 'cp312' ]:
 			wheel_name = 'onnxruntime_rocm-' + onnxruntime_version + '-' + python_id + '-' + python_id + '-linux_x86_64.whl'
-			wheel_path = os.path.join(tempfile.gettempdir(), wheel_name)
 			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.3.1/' + wheel_name
-			subprocess.call([ shutil.which('curl'), '--silent', '--location', '--continue-at', '-', '--output', wheel_path, wheel_url ])
-			subprocess.call([ shutil.which('pip'), 'uninstall', 'onnxruntime', wheel_path, '-y', '-q' ])
-			subprocess.call([ shutil.which('pip'), 'install', wheel_path, '--force-reinstall' ])
-			os.remove(wheel_path)
+			subprocess.call([ shutil.which('pip'), 'install', wheel_url, '--force-reinstall' ])
 	else:
-		subprocess.call([ shutil.which('pip'), 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
 		subprocess.call([ shutil.which('pip'), 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
 
 	if args.onnxruntime == 'cuda' and has_conda:
