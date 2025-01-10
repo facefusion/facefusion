@@ -16,7 +16,7 @@ def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgre
 	log_level = state_manager.get_item('log_level')
 	commands.extend(ffmpeg_builder.set_log_level('error'))
 	commands.extend(ffmpeg_builder.set_progress())
-	commands.extend(ffmpeg_builder.stream_output())
+	commands.extend(ffmpeg_builder.capture_stream())
 	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
@@ -123,7 +123,7 @@ def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int)
 		[ '-acodec', 'pcm_s16le' ],
 		[ '-ar', str(sample_rate) ],
 		[ '-ac', str(channel_total) ],
-		ffmpeg_builder.stream_output()
+		ffmpeg_builder.capture_stream()
 	)
 
 	process = open_ffmpeg(commands)

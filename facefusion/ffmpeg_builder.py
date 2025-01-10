@@ -33,7 +33,7 @@ def force_output(output_path : str) -> Commands:
 	return [ '-y', output_path ]
 
 
-def stream_output() -> Commands:
+def capture_stream() -> Commands:
 	return [ '-' ]
 
 
