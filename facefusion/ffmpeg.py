@@ -115,14 +115,14 @@ def finalize_image(target_path : str, output_path : str, output_image_resolution
 	return run_ffmpeg(commands).returncode == 0
 
 
-def read_audio_buffer(target_path : str, sample_rate : int, channel_total : int) -> Optional[AudioBuffer]:
+def read_audio_buffer(target_path : str, audio_sample_rate : int, audio_channel_total : int) -> Optional[AudioBuffer]:
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
 		[ '-vn' ],
 		[ '-f', 's16le' ],
 		[ '-acodec', 'pcm_s16le' ],
-		[ '-ar', str(sample_rate) ],
-		[ '-ac', str(channel_total) ],
+		ffmpeg_builder.set_audio_sample_rate(audio_sample_rate),
+		ffmpeg_builder.set_audio_channel_total(audio_channel_total),
 		ffmpeg_builder.capture_stream()
 	)
 

@@ -89,6 +89,14 @@ def copy_audio_encoder() -> Commands:
 	return set_audio_encoder('copy')
 
 
+def set_audio_sample_rate(audio_sample_rate : int) -> Commands:
+	return [ '-ar', str(audio_sample_rate) ]
+
+
+def set_audio_channel_total(audio_channel_total : int) -> Commands:
+	return [ '-ac', str(audio_channel_total) ]
+
+
 def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> Commands:
 	if audio_encoder in [ 'aac' ]:
 		audio_compression = round(10 - (audio_quality * 0.9))
