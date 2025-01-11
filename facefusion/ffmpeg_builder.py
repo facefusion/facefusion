@@ -93,6 +93,14 @@ def set_audio_sample_rate(audio_sample_rate : int) -> Commands:
 	return [ '-ar', str(audio_sample_rate) ]
 
 
+def set_audio_sample_size(audio_sample_size : int) -> Commands:
+	if audio_sample_size == 16:
+		return [ '-f', 's16le', '-acodec', 'pcm_s16le' ]
+	if audio_sample_size == 32:
+		return ['-f', 's32le', '-acodec', 'pcm_s32le' ]
+	return []
+
+
 def set_audio_channel_total(audio_channel_total : int) -> Commands:
 	return [ '-ac', str(audio_channel_total) ]
 
@@ -128,3 +136,7 @@ def set_video_quality(video_quality : int) -> Commands:
 
 def set_video_duration(video_duration : Duration) -> Commands:
 	return [ '-t', str(video_duration) ]
+
+
+def ignore_video_stream() -> Commands:
+	return [ '-vn' ]

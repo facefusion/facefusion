@@ -18,10 +18,11 @@ def read_static_audio(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]
 
 def read_audio(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
 	audio_sample_rate = 48000
+	audio_sample_size = 16
 	audio_channel_total = 2
 
 	if is_audio(audio_path):
-		audio_buffer = read_audio_buffer(audio_path, audio_sample_rate, audio_channel_total)
+		audio_buffer = read_audio_buffer(audio_path, audio_sample_rate, audio_sample_size, audio_channel_total)
 		audio = numpy.frombuffer(audio_buffer, dtype = numpy.int16).reshape(-1, 2)
 		audio = prepare_audio(audio)
 		spectrogram = create_spectrogram(audio)
@@ -37,13 +38,14 @@ def read_static_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]
 
 def read_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
 	voice_sample_rate = 48000
+	voice_sample_size = 16
 	voice_channel_total = 2
 	voice_chunk_size = 240 * 1024
 	voice_step_size = 180 * 1024
 
 	if is_audio(audio_path):
-		audio_buffer = read_audio_buffer(audio_path, voice_sample_rate, voice_channel_total)
-		audio = numpy.frombuffer(audio_buffer).astype(numpy.int16).reshape(-1, 2)
+		audio_buffer = read_audio_buffer(audio_path, voice_sample_rate, voice_sample_size, voice_channel_total)
+		audio = numpy.frombuffer(audio_buffer, dtype = numpy.int16).reshape(-1, 2)
 		audio = batch_extract_voice(audio, voice_chunk_size, voice_step_size)
 		audio = prepare_voice(audio)
 		spectrogram = create_spectrogram(audio)
