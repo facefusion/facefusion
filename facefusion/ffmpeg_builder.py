@@ -27,7 +27,7 @@ def set_input(input_path : str) -> Commands:
 
 
 def set_input_fps(input_fps : Fps) -> Commands:
-	return [ '-r', input_fps ]
+	return [ '-r', str(input_fps) ]
 
 
 def set_output(output_path : str) -> Commands:
@@ -58,7 +58,7 @@ def select_frame_range(frame_start : int, frame_end : int, video_fps : Fps) -> C
 	if isinstance(frame_start, int) and isinstance(frame_end, int):
 		return [ '-vf', 'trim=start_frame=' + str(frame_start) + ':end_frame=' + str(frame_end) + ',fps=' + str(video_fps) ]
 	if isinstance(frame_start, int):
-		return ['-vf', 'trim=start_frame=' + str(frame_start) + ',fps=' + str(video_fps) ]
+		return [ '-vf', 'trim=start_frame=' + str(frame_start) + ',fps=' + str(video_fps) ]
 	if isinstance(frame_end, int):
 		return [ '-vf', 'trim=end_frame=' + str(frame_end) + ',fps=' + str(video_fps) ]
 	return [ '-vf', 'fps=' + str(video_fps) ]
@@ -110,7 +110,7 @@ def set_audio_sample_size(audio_sample_size : int) -> Commands:
 	if audio_sample_size == 16:
 		return [ '-f', 's16le', '-acodec', 'pcm_s16le' ]
 	if audio_sample_size == 32:
-		return ['-f', 's32le', '-acodec', 'pcm_s32le' ]
+		return [ '-f', 's32le', '-acodec', 'pcm_s32le' ]
 	return []
 
 
@@ -119,12 +119,12 @@ def set_audio_channel_total(audio_channel_total : int) -> Commands:
 
 
 def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> Commands:
-	if audio_encoder in [ 'aac' ]:
+	if audio_encoder == 'aac':
 		audio_compression = round(10 - (audio_quality * 0.9))
-		return ['-q:a', str(audio_compression)]
-	if audio_encoder in [ 'libmp3lame' ]:
+		return [ '-q:a', str(audio_compression) ]
+	if audio_encoder == 'libmp3lame':
 		audio_compression = round(9 - (audio_quality * 0.9))
-		return ['-q:a', str(audio_compression)]
+		return [ '-q:a', str(audio_compression) ]
 	if audio_encoder in [ 'libopus', 'libvorbis' ]:
 		audio_compression = round((100 - audio_quality) / 10)
 		return [ '-q:a', str(audio_compression) ]
@@ -147,7 +147,7 @@ def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> Comm
 	if video_encoder in [ 'libx264', 'libx265' ]:
 		video_compression = round(51 - (video_quality * 0.51))
 		return [ '-crf', str(video_compression) ]
-	if video_encoder in [ 'libvpx-vp9' ]:
+	if video_encoder == 'libvpx-vp9':
 		video_compression = round(63 - (video_quality * 0.63))
 		return [ '-crf', str(video_compression) ]
 	if video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:

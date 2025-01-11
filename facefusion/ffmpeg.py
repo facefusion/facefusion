@@ -199,7 +199,6 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 		ffmpeg_builder.set_video_colorspace('bt709'),
 		ffmpeg_builder.force_output(temp_file_path)
 	)
-	print(commands)
 
 	with tqdm(total = merge_frame_total, desc = wording.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		process = run_ffmpeg_with_progress(commands, lambda frame_number: progress.update(frame_number - progress.n))
