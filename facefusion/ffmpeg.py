@@ -14,7 +14,6 @@ from facefusion.vision import count_trim_frame_total, detect_video_duration, res
 
 def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
-	commands.extend(ffmpeg_builder.set_log_level('error'))
 	commands.extend(ffmpeg_builder.set_progress())
 	commands.extend(ffmpeg_builder.capture_stream())
 	commands = ffmpeg_builder.run(commands)
@@ -42,7 +41,6 @@ def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgre
 
 def run_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
-	commands.extend(ffmpeg_builder.set_log_level('error'))
 	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
@@ -61,7 +59,6 @@ def run_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
 
 
 def open_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
-	commands.extend(ffmpeg_builder.set_log_level('quiet'))
 	commands = ffmpeg_builder.run(commands)
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 

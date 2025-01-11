@@ -7,15 +7,11 @@ from facefusion.typing import AudioEncoder, Commands, Duration, Fps, VideoEncode
 
 
 def run(commands : Commands) -> Commands:
-	return [ shutil.which('ffmpeg') ] + commands
+	return [ shutil.which('ffmpeg'), '-loglevel', 'error' ] + commands
 
 
 def chain(*commands : Commands) -> Commands:
 	return list(itertools.chain(*commands))
-
-
-def set_log_level(log_level : str) -> Commands:
-	return [ '-loglevel', log_level ]
 
 
 def set_progress() -> Commands:
