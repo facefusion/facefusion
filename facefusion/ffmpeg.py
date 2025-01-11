@@ -185,7 +185,7 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 		output_video_encoder = 'libvpx-vp9'
 
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_input_fps(temp_video_fps),
+		ffmpeg_builder.set_conditional_fps(temp_video_fps),
 		ffmpeg_builder.set_input(temp_frames_pattern),
 		ffmpeg_builder.set_video_encoder(output_video_encoder),
 		ffmpeg_builder.set_media_resolution(output_video_resolution),

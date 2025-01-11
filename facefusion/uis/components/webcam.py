@@ -8,7 +8,7 @@ import cv2
 import gradio
 from tqdm import tqdm
 
-from facefusion import logger, state_manager, wording
+from facefusion import ffmpeg_builder, logger, state_manager, wording
 from facefusion.audio import create_empty_audio_frame
 from facefusion.common_helper import get_first, is_windows
 from facefusion.content_analyser import analyse_stream
@@ -164,17 +164,29 @@ def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) 
 
 
 def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : Fps) -> subprocess.Popen[bytes]:
-	commands = [ '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', stream_resolution, '-r', str(stream_fps), '-i', '-']
+	commands = ffmpeg_builder.chain(
+		[ '-f', 'rawvideo' ],
+		ffmpeg_builder.set_media_resolution(stream_resolution),
+		ffmpeg_builder.set_conditional_fps(stream_fps),
+		ffmpeg_builder.set_pixel_format('bgr24'),
+		ffmpeg_builder.capture_stream()
+	)
 
 	if stream_mode == 'udp':
-		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000?pkt_size=1316' ])
+		commands.extend([ '-b:v', '2000k' ])
+		commands.extend([ '-f', 'mpegts' ])
+		commands.extend(ffmpeg_builder.set_output('udp://localhost:27000?pkt_size=1316')
+
 	if stream_mode == 'v4l2':
 		try:
 			device_name = get_first(os.listdir('/sys/devices/virtual/video4linux'))
 			if device_name:
-				commands.extend([ '-f', 'v4l2', '/dev/' + device_name ])
+				device_path = '/dev/' + device_name
+				commands.extend([ '-f', 'v4l2' ])
+				commands.extend(ffmpeg_builder.set_output(device_path))
 		except FileNotFoundError:
 			logger.error(wording.get('stream_not_loaded').format(stream_mode = stream_mode), __name__)
+
 	return open_ffmpeg(commands)
 
 

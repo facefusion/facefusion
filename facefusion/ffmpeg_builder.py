@@ -22,8 +22,8 @@ def set_input(input_path : str) -> Commands:
 	return [ '-i', input_path ]
 
 
-def set_input_fps(input_fps : Fps) -> Commands:
-	return [ '-r', str(input_fps) ]
+def set_conditional_fps(conditional_fps : Fps) -> Commands:
+	return [ '-r', str(conditional_fps) ]
 
 
 def set_output(output_path : str) -> Commands:
