@@ -81,6 +81,3 @@ ComponentName = Literal\
 
 JobManagerAction = Literal['job-create', 'job-submit', 'job-delete', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step']
 JobRunnerAction = Literal['job-run', 'job-run-all', 'job-retry', 'job-retry-all']
-
-WebcamMode = Literal['inline', 'udp', 'v4l2']
-StreamMode = Literal['udp', 'v4l2']

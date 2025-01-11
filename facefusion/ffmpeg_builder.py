@@ -3,7 +3,7 @@ import shutil
 from typing import Optional
 
 from facefusion.filesystem import get_file_format
-from facefusion.typing import AudioEncoder, Commands, Duration, Fps, VideoEncoder, VideoPreset
+from facefusion.typing import AudioEncoder, Commands, Duration, Fps, StreamMode, VideoEncoder, VideoPreset
 
 
 def run(commands : Commands) -> Commands:
@@ -32,6 +32,14 @@ def set_output(output_path : str) -> Commands:
 
 def force_output(output_path : str) -> Commands:
 	return [ '-y', output_path ]
+
+
+def set_stream_mode(stream_mode : StreamMode) -> Commands:
+	if stream_mode == 'udp':
+		return [ '-f', 'mpegts' ]
+	if stream_mode == 'v4l2':
+		return [ '-f', 'v4l2' ]
+	return []
 
 
 def capture_stream() -> Commands:

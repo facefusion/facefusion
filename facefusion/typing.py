@@ -121,6 +121,9 @@ AudioEncoder = Literal['aac', 'libmp3lame', 'libopus', 'libvorbis']
 VideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox']
 VideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
+WebcamMode = Literal['inline', 'udp', 'v4l2']
+StreamMode = Literal['udp', 'v4l2']
+
 ModelOptions = Dict[str, Any]
 ModelSet = Dict[str, ModelOptions]
 ModelInitializer = NDArray[Any]
