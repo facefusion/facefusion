@@ -8,7 +8,7 @@ from tqdm import tqdm
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern, resolve_temp_frame_paths
-from facefusion.typing import AudioBuffer, Commands, Fps, UpdateProgress, VideoPreset
+from facefusion.typing import AudioBuffer, Commands, Fps, UpdateProgress
 from facefusion.vision import count_trim_frame_total, detect_video_duration, restrict_video_fps
 
 
@@ -80,8 +80,8 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
-		ffmpeg_builder.set_video_quality(0),
 		ffmpeg_builder.set_media_resolution(temp_video_resolution),
+		ffmpeg_builder.set_frame_quality(0),
 		ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
 		ffmpeg_builder.prevent_frame_drop(),
 		ffmpeg_builder.set_output(temp_frames_pattern)
@@ -186,22 +186,20 @@ def merge_video(target_path : str, output_video_resolution : str, output_video_f
 
 	if get_file_format(target_path) == 'webm':
 		output_video_encoder = 'libvpx-vp9'
-	commands = [ '-r', str(temp_video_fps), '-i', temp_frames_pattern, '-s', str(output_video_resolution), '-c:v', output_video_encoder ]
-	if output_video_encoder in [ 'libx264', 'libx265' ]:
-		output_video_compression = round(51 - (output_video_quality * 0.51))
-		commands.extend([ '-crf', str(output_video_compression), '-preset', output_video_preset ])
-	if output_video_encoder in [ 'libvpx-vp9' ]:
-		output_video_compression = round(63 - (output_video_quality * 0.63))
-		commands.extend([ '-crf', str(output_video_compression) ])
-	if output_video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
-		output_video_compression = round(51 - (output_video_quality * 0.51))
-		commands.extend([ '-cq', str(output_video_compression), '-preset', map_nvenc_preset(output_video_preset) ])
-	if output_video_encoder in [ 'h264_amf', 'hevc_amf' ]:
-		output_video_compression = round(51 - (output_video_quality * 0.51))
-		commands.extend([ '-qp_i', str(output_video_compression), '-qp_p', str(output_video_compression), '-quality', map_amf_preset(output_video_preset) ])
-	if output_video_encoder in [ 'h264_videotoolbox', 'hevc_videotoolbox' ]:
-		commands.extend([ '-q:v', str(output_video_quality) ])
-	commands.extend([ '-vf', 'framerate=fps=' + str(output_video_fps), '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-y', temp_file_path ])
+
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input_fps(temp_video_fps),
+		ffmpeg_builder.set_input(temp_frames_pattern),
+		ffmpeg_builder.set_video_encoder(output_video_encoder),
+		ffmpeg_builder.set_media_resolution(output_video_resolution),
+		ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality),
+		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
+		ffmpeg_builder.set_video_fps(output_video_fps),
+		ffmpeg_builder.set_pixel_format('yuv420p'),
+		ffmpeg_builder.set_video_colorspace('bt709'),
+		ffmpeg_builder.force_output(temp_file_path)
+	)
+	print(commands)
 
 	with tqdm(total = merge_frame_total, desc = wording.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		process = run_ffmpeg_with_progress(commands, lambda frame_number: progress.update(frame_number - progress.n))
@@ -229,33 +227,3 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	process.communicate()
 	remove_file(concat_video_path)
 	return process.returncode == 0
-
-
-def map_nvenc_preset(output_video_preset : VideoPreset) -> Optional[str]:
-	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast' ]:
-		return 'fast'
-	if output_video_preset == 'medium':
-		return 'medium'
-	if output_video_preset in [ 'slow', 'slower', 'veryslow' ]:
-		return 'slow'
-	return None
-
-
-def map_amf_preset(output_video_preset : VideoPreset) -> Optional[str]:
-	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast' ]:
-		return 'speed'
-	if output_video_preset in [ 'faster', 'fast', 'medium' ]:
-		return 'balanced'
-	if output_video_preset in [ 'slow', 'slower', 'veryslow' ]:
-		return 'quality'
-	return None
-
-
-def map_qsv_preset(output_video_preset : VideoPreset) -> Optional[str]:
-	if output_video_preset in [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast' ]:
-		return 'fast'
-	if output_video_preset == 'medium':
-		return 'medium'
-	if output_video_preset in [ 'slow', 'slower', 'veryslow' ]:
-		return 'slow'
-	return None

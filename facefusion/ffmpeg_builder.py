@@ -1,8 +1,9 @@
 import itertools
 import shutil
+from typing import Optional
 
 from facefusion.filesystem import get_file_format
-from facefusion.typing import AudioEncoder, Commands, Duration, Fps
+from facefusion.typing import AudioEncoder, Commands, Duration, Fps, VideoEncoder, VideoPreset
 
 
 def run(commands : Commands) -> Commands:
@@ -25,6 +26,10 @@ def set_input(input_path : str) -> Commands:
 	return [ '-i', input_path ]
 
 
+def set_input_fps(input_fps : Fps) -> Commands:
+	return [ '-r', input_fps ]
+
+
 def set_output(output_path : str) -> Commands:
 	return [ output_path ]
 
@@ -39,6 +44,14 @@ def capture_stream() -> Commands:
 
 def unsafe_concat() -> Commands:
 	return [ '-f', 'concat', '-safe', '0' ]
+
+
+def set_pixel_format(pixel_format : str) -> Commands:
+	return [ '-pix_fmt', pixel_format ]
+
+
+def set_frame_quality(frame_quality : int) -> Commands:
+	return [ '-q:v', str(frame_quality) ]
 
 
 def select_frame_range(frame_start : int, frame_end : int, video_fps : Fps) -> Commands:
@@ -122,16 +135,51 @@ def set_audio_volume(audio_volume : int) -> Commands:
 	return [ '-filter:a', 'volume=' + str(audio_volume / 100) ]
 
 
-def set_video_codec(video_codec : str) -> Commands:
-	return [ '-c:v', video_codec ]
+def set_video_encoder(video_encoder : str) -> Commands:
+	return [ '-c:v', video_encoder ]
 
 
 def copy_video_encoder() -> Commands:
-	return set_video_codec('copy')
+	return set_video_encoder('copy')
 
 
-def set_video_quality(video_quality : int) -> Commands:
+def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> Commands:
+	if video_encoder in [ 'libx264', 'libx265' ]:
+		video_compression = round(51 - (video_quality * 0.51))
+		return [ '-crf', str(video_compression) ]
+	if video_encoder in [ 'libvpx-vp9' ]:
+		video_compression = round(63 - (video_quality * 0.63))
+		return [ '-crf', str(video_compression) ]
+	if video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
+		video_compression = round(51 - (video_quality * 0.51))
+		return [ '-cq', str(video_compression) ]
+	if video_encoder in [ 'h264_amf', 'hevc_amf' ]:
+		video_compression = round(51 - (video_quality * 0.51))
+		return [ '-qp_i', str(video_compression), '-qp_p', str(video_compression) ]
+	if video_encoder in [ 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox' ]:
+		video_compression = round(51 - (video_quality * 0.51))
+		return [ '-q:v', str(video_compression) ]
 	return [ '-q:v', str(video_quality) ]
+
+
+def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -> Commands:
+	if video_encoder in [ 'libx264', 'libx265' ]:
+		return [ '-preset', video_preset ]
+	if video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
+		return [ '-preset', map_nvenc_preset(video_preset) ]
+	if video_encoder in [ 'h264_amf', 'hevc_amf' ]:
+		return [ '-quality', map_amf_preset(video_preset) ]
+	if video_encoder in [ 'h264_qsv', 'hevc_qsv' ]:
+		return [ '-preset', map_qsv_preset(video_preset) ]
+	return []
+
+
+def set_video_colorspace(video_colorspace : str) -> Commands:
+	return [ '-colorspace', video_colorspace ]
+
+
+def set_video_fps(video_fps : Fps) -> Commands:
+	return [ '-vf', 'framerate=fps=' + str(video_fps) ]
 
 
 def set_video_duration(video_duration : Duration) -> Commands:
@@ -140,3 +188,31 @@ def set_video_duration(video_duration : Duration) -> Commands:
 
 def ignore_video_stream() -> Commands:
 	return [ '-vn' ]
+
+
+def map_nvenc_preset(video_preset : VideoPreset) -> Optional[str]:
+	if video_preset in [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast' ]:
+		return 'fast'
+	if video_preset == 'medium':
+		return 'medium'
+	if video_preset in [ 'slow', 'slower', 'veryslow' ]:
+		return 'slow'
+	return None
+
+
+def map_amf_preset(video_preset : VideoPreset) -> Optional[str]:
+	if video_preset in [ 'ultrafast', 'superfast', 'veryfast' ]:
+		return 'speed'
+	if video_preset in [ 'faster', 'fast', 'medium' ]:
+		return 'balanced'
+	if video_preset in [ 'slow', 'slower', 'veryslow' ]:
+		return 'quality'
+	return None
+
+
+def map_qsv_preset(video_preset : VideoPreset) -> Optional[str]:
+	if video_preset in [ 'ultrafast', 'superfast', 'veryfast' ]:
+		return 'veryfast'
+	if video_preset in [ 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow' ]:
+		return video_preset
+	return None
