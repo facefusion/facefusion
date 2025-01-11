@@ -76,9 +76,9 @@ def test_concat_video() -> None:
 
 
 def test_read_audio_buffer() -> None:
-	assert isinstance(read_audio_buffer(get_test_example_file('source.mp3'), 1, 1), bytes)
-	assert isinstance(read_audio_buffer(get_test_example_file('source.wav'), 1, 1), bytes)
-	assert read_audio_buffer(get_test_example_file('invalid.mp3'), 1, 1) is None
+	assert isinstance(read_audio_buffer(get_test_example_file('source.mp3'), 1, 16, 1), bytes)
+	assert isinstance(read_audio_buffer(get_test_example_file('source.wav'), 1, 16, 1), bytes)
+	assert read_audio_buffer(get_test_example_file('invalid.mp3'), 1, 16, 1) is None
 
 
 def test_restore_audio() -> None:
