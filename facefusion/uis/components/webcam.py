@@ -165,29 +165,31 @@ def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) 
 
 def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : Fps) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.capture_video(),
 		ffmpeg_builder.set_media_resolution(stream_resolution),
 		ffmpeg_builder.set_conditional_fps(stream_fps)
 	)
 
 	if stream_mode == 'udp':
+		commands.extend(ffmpeg_builder.set_input('-'))
 		commands.extend(ffmpeg_builder.set_stream_mode('udp'))
 		commands.extend(ffmpeg_builder.set_output('udp://localhost:27000?pkt_size=1316'))
 
 	if stream_mode == 'v4l2':
 		device_directory_path = '/sys/devices/virtual/video4linux'
 
+		commands.extend(ffmpeg_builder.set_input('-'))
+		commands.extend(ffmpeg_builder.set_stream_mode('v4l2'))
 		if is_directory(device_directory_path):
 			device_names = os.listdir(device_directory_path)
 
 			for device_name in device_names:
 				device_path = '/dev/' + device_name
-				commands.extend(ffmpeg_builder.set_stream_mode('v4l2'))
 				commands.extend(ffmpeg_builder.set_output(device_path))
 
 		else:
 			logger.error(wording.get('stream_not_loaded').format(stream_mode = stream_mode), __name__)
 
-	commands.extend(ffmpeg_builder.capture_stream())
 	return open_ffmpeg(commands)
 
 

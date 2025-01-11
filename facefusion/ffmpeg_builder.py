@@ -34,16 +34,16 @@ def force_output(output_path : str) -> Commands:
 	return [ '-y', output_path ]
 
 
+def cast_stream() -> Commands:
+	return [ '-' ]
+
+
 def set_stream_mode(stream_mode : StreamMode) -> Commands:
 	if stream_mode == 'udp':
 		return [ '-f', 'mpegts' ]
 	if stream_mode == 'v4l2':
 		return [ '-f', 'v4l2' ]
 	return []
-
-
-def capture_stream() -> Commands:
-	return [ '-' ]
 
 
 def unsafe_concat() -> Commands:
@@ -188,6 +188,10 @@ def set_video_fps(video_fps : Fps) -> Commands:
 
 def set_video_duration(video_duration : Duration) -> Commands:
 	return [ '-t', str(video_duration) ]
+
+
+def capture_video() -> Commands:
+	return [ '-f', 'rawvideo' ]
 
 
 def ignore_video_stream() -> Commands:

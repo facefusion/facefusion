@@ -15,7 +15,7 @@ from facefusion.vision import count_trim_frame_total, detect_video_duration, res
 def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
 	commands.extend(ffmpeg_builder.set_progress())
-	commands.extend(ffmpeg_builder.capture_stream())
+	commands.extend(ffmpeg_builder.cast_stream())
 	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
@@ -119,7 +119,7 @@ def read_audio_buffer(target_path : str, audio_sample_rate : int, audio_sample_s
 		ffmpeg_builder.set_audio_sample_rate(audio_sample_rate),
 		ffmpeg_builder.set_audio_sample_size(audio_sample_size),
 		ffmpeg_builder.set_audio_channel_total(audio_channel_total),
-		ffmpeg_builder.capture_stream()
+		ffmpeg_builder.cast_stream()
 	)
 
 	process = open_ffmpeg(commands)
