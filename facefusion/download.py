@@ -1,5 +1,4 @@
 import os
-import shutil
 import subprocess
 from functools import lru_cache
 from typing import List, Optional, Tuple
@@ -8,14 +7,14 @@ from urllib.parse import urlparse
 from tqdm import tqdm
 
 import facefusion.choices
-from facefusion import logger, process_manager, state_manager, wording
+from facefusion import curl_builder, logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_name, get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
 from facefusion.typing import Commands, DownloadProvider, DownloadSet
 
 
 def open_curl(commands : Commands) -> subprocess.Popen[bytes]:
-	commands = [ shutil.which('curl'), '--silent', '--insecure', '--location' ] + commands
+	commands = curl_builder.run(commands)
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
@@ -28,7 +27,10 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 
 		if initial_size < download_size:
 			with tqdm(total = download_size, initial = initial_size, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-				commands = [ '--create-dirs', '--continue-at', '-', '--output', download_file_path, url, '--connect-timeout', '10' ]
+				commands = curl_builder.chain(
+					curl_builder.download(url, download_file_path),
+					curl_builder.set_timeout(10)
+				)
 				open_curl(commands)
 				current_size = initial_size
 				progress.set_postfix(download_providers = state_manager.get_item('download_providers'), file_name = download_file_name)
@@ -41,7 +43,10 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 
 @lru_cache(maxsize = None)
 def get_static_download_size(url : str) -> int:
-	commands = [ '-I', url, '--connect-timeout', '5' ]
+	commands = curl_builder.chain(
+		curl_builder.head(url),
+		curl_builder.set_timeout(5)
+	)
 	process = open_curl(commands)
 	lines = reversed(process.stdout.readlines())
 
@@ -56,7 +61,10 @@ def get_static_download_size(url : str) -> int:
 
 @lru_cache(maxsize = None)
 def ping_static_url(url : str) -> bool:
-	commands = [ '-I', url, '--connect-timeout', '5' ]
+	commands = curl_builder.chain(
+		curl_builder.head(url),
+		curl_builder.set_timeout(5)
+	)
 	process = open_curl(commands)
 	process.communicate()
 	return process.returncode == 0

@@ -117,9 +117,12 @@ AudioTypeSet = Dict[AudioFormat, str]
 ImageTypeSet = Dict[ImageFormat, str]
 VideoTypeSet = Dict[VideoFormat, str]
 
-OutputAudioEncoder = Literal['aac', 'libmp3lame', 'libopus', 'libvorbis']
-OutputVideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf','h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox']
-OutputVideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
+AudioEncoder = Literal['aac', 'libmp3lame', 'libopus', 'libvorbis']
+VideoEncoder = Literal['libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox']
+VideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
+
+WebcamMode = Literal['inline', 'udp', 'v4l2']
+StreamMode = Literal['udp', 'v4l2']
 
 ModelOptions = Dict[str, Any]
 ModelSet = Dict[str, ModelOptions]
@@ -317,11 +320,11 @@ State = TypedDict('State',
 	'keep_temp' : bool,
 	'output_image_quality' : int,
 	'output_image_resolution' : str,
-	'output_audio_encoder' : OutputAudioEncoder,
+	'output_audio_encoder' : AudioEncoder,
 	'output_audio_quality' : int,
 	'output_audio_volume' : int,
-	'output_video_encoder' : OutputVideoEncoder,
-	'output_video_preset' : OutputVideoPreset,
+	'output_video_encoder' : VideoEncoder,
+	'output_video_preset' : VideoPreset,
 	'output_video_quality' : int,
 	'output_video_resolution' : str,
 	'output_video_fps' : float,
