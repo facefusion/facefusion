@@ -1,11 +1,14 @@
 import itertools
 import shutil
 
+from facefusion import metadata
 from facefusion.typing import Commands
 
 
 def run(commands : Commands) -> Commands:
-	return [ shutil.which('curl'), '--insecure', '--location', '--silent' ] + commands
+	user_agent = metadata.get('name') + '/' + metadata.get('version')
+
+	return [ shutil.which('curl'), '--user-agent', user_agent, '--insecure', '--location', '--silent' ] + commands
 
 
 def chain(*commands : Commands) -> Commands:
