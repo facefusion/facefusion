@@ -6,7 +6,7 @@ import facefusion.choices
 from facefusion import state_manager, wording
 from facefusion.common_helper import calc_int_step
 from facefusion.filesystem import is_image, is_video
-from facefusion.typing import Fps, OutputAudioEncoder, OutputVideoEncoder, OutputVideoPreset
+from facefusion.typing import AudioEncoder, Fps, VideoEncoder, VideoPreset
 from facefusion.uis.core import get_ui_components, register_ui_component
 from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, pack_resolution
 
@@ -159,7 +159,7 @@ def update_output_image_resolution(output_image_resolution : str) -> None:
 	state_manager.set_item('output_image_resolution', output_image_resolution)
 
 
-def update_output_audio_encoder(output_audio_encoder : OutputAudioEncoder) -> None:
+def update_output_audio_encoder(output_audio_encoder : AudioEncoder) -> None:
 	state_manager.set_item('output_audio_encoder', output_audio_encoder)
 
 
@@ -171,11 +171,11 @@ def update_output_audio_volume(output_audio_volume: float) -> None:
 	state_manager.set_item('output_audio_volume', int(output_audio_volume))
 
 
-def update_output_video_encoder(output_video_encoder : OutputVideoEncoder) -> None:
+def update_output_video_encoder(output_video_encoder : VideoEncoder) -> None:
 	state_manager.set_item('output_video_encoder', output_video_encoder)
 
 
-def update_output_video_preset(output_video_preset : OutputVideoPreset) -> None:
+def update_output_video_preset(output_video_preset : VideoPreset) -> None:
 	state_manager.set_item('output_video_preset', output_video_preset)
 
 
