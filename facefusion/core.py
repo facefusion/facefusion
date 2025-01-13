@@ -6,7 +6,7 @@ from time import time
 
 import numpy
 
-from facefusion import content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, voice_extractor, wording
+from facefusion import cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, voice_extractor, wording
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
@@ -154,7 +154,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		job_headers, job_contents = compose_job_list(state_manager.get_item('job_status'))
 
 		if job_contents:
-			logger.table(job_headers, job_contents)
+			cli_helper.render_table(job_headers, job_contents)
 			return 0
 		return 1
 	if state_manager.get_item('command') == 'job-create':
