@@ -11,8 +11,4 @@ def test_run() -> None:
 
 
 def test_chain() -> None:
-	commands = chain(
-		head(metadata.get('url'))
-	)
-
-	assert commands == [ '-I', metadata.get('url') ]
+	assert chain(head(metadata.get('url'))) == [ '-I', metadata.get('url') ]
