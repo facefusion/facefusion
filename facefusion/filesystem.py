@@ -32,6 +32,8 @@ def get_file_format(file_path : str) -> Optional[str]:
 	file_extension = get_file_extension(file_path)
 
 	if file_extension:
+		if file_extension == '.jpeg':
+			return 'jpg'
 		return file_extension.lower().lstrip('.')
 	return None
 

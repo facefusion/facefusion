@@ -45,7 +45,6 @@ image_type_set : ImageTypeSet =\
 {
 	'bmp': 'image/bmp',
 	'jpg': 'image/jpeg',
-	'jpeg': 'image/jpeg',
 	'png': 'image/png',
 	'webp': 'image/webp'
 }

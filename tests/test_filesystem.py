@@ -30,6 +30,7 @@ def test_get_file_extension() -> None:
 
 def test_get_file_format() -> None:
 	assert get_file_format('source.jpg') == 'jpg'
+	assert get_file_format('source.jpeg') == 'jpg'
 	assert get_file_format('source.mp3') == 'mp3'
 	assert get_file_format('invalid') is None
 
