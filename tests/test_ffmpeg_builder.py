@@ -31,7 +31,7 @@ def test_audio_sample_size() -> None:
 
 def test_set_audio_quality() -> None:
 	assert set_audio_quality('aac', 0) == [ '-q:a', '2.0' ]
-	assert set_audio_quality('aac', 50) == [ '-q:a', '1.1' ]
+	assert set_audio_quality('aac', 50) == [ '-q:a', '1.0' ]
 	assert set_audio_quality('aac', 100) == [ '-q:a', '0.1' ]
 	assert set_audio_quality('libmp3lame', 0) == [ '-q:a', '9' ]
 	assert set_audio_quality('libmp3lame', 50) == [ '-q:a', '4' ]
