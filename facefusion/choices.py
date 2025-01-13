@@ -44,7 +44,7 @@ audio_type_set : AudioTypeSet =\
 image_type_set : ImageTypeSet =\
 {
 	'bmp': 'image/bmp',
-	'jpg': 'image/jpeg',
+	'jpeg': 'image/jpeg',
 	'png': 'image/png',
 	'webp': 'image/webp'
 }
@@ -59,7 +59,7 @@ video_type_set : VideoTypeSet =\
 audio_formats : List[AudioFormat] = list(audio_type_set.keys())
 image_formats : List[ImageFormat] = list(image_type_set.keys())
 video_formats : List[VideoFormat] = list(video_type_set.keys())
-temp_frame_formats : List[ImageFormat] = [ 'bmp', 'jpg', 'png' ]
+temp_frame_formats : List[ImageFormat] = [ 'bmp', 'jpeg', 'png' ]
 
 output_audio_encoders : List[AudioEncoder] = [ 'aac', 'libmp3lame', 'libopus', 'libvorbis' ]
 output_video_encoders : List[VideoEncoder] = [ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox' ]
