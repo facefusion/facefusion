@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import chain, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_stream_mode
+from facefusion.ffmpeg_builder import chain, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_stream_mode, set_video_quality
 
 
 def test_run() -> None:
@@ -9,11 +9,7 @@ def test_run() -> None:
 
 
 def test_chain() -> None:
-	commands = chain(
-		ffmpeg_builder.set_progress()
-	)
-
-	assert commands == [ '-progress' ]
+	assert chain(ffmpeg_builder.set_progress()) == [ '-progress' ]
 
 
 def test_stream_mode() -> None:
@@ -46,3 +42,39 @@ def test_set_audio_quality() -> None:
 	assert set_audio_quality('libvorbis', 0) == [ '-q:a', '-1.0' ]
 	assert set_audio_quality('libvorbis', 50) == [ '-q:a', '4.5' ]
 	assert set_audio_quality('libvorbis', 100) == [ '-q:a', '10.0' ]
+
+
+def test_set_video_quality() -> None:
+	assert set_video_quality('libx264', 0) == [ '-crf', '51' ]
+	assert set_video_quality('libx264', 50) == [ '-crf', '26' ]
+	assert set_video_quality('libx264', 100) == [ '-crf', '0' ]
+	assert set_video_quality('libx265', 0) == [ '-crf', '51' ]
+	assert set_video_quality('libx265', 50) == [ '-crf', '26' ]
+	assert set_video_quality('libx265', 100) == [ '-crf', '0' ]
+	assert set_video_quality('libvpx-vp9', 0) == [ '-crf', '63' ]
+	assert set_video_quality('libvpx-vp9', 50) == [ '-crf', '32' ]
+	assert set_video_quality('libvpx-vp9', 100) == [ '-crf', '0' ]
+	assert set_video_quality('h264_nvenc', 0) == [ '-cq' , '51' ]
+	assert set_video_quality('h264_nvenc', 50) == [ '-cq' , '26' ]
+	assert set_video_quality('h264_nvenc', 100) == [ '-cq' , '0' ]
+	assert set_video_quality('hevc_nvenc', 0) == [ '-cq' , '51' ]
+	assert set_video_quality('hevc_nvenc', 50) == [ '-cq' , '26' ]
+	assert set_video_quality('hevc_nvenc', 100) == [ '-cq' , '0' ]
+	assert set_video_quality('h264_amf', 0) == [ '-qp_i', '51', '-qp_p', '51', '-qp_b', '51' ]
+	assert set_video_quality('h264_amf', 50) == [ '-qp_i', '26', '-qp_p', '26', '-qp_b', '26' ]
+	assert set_video_quality('h264_amf', 100) == [ '-qp_i', '0', '-qp_p', '0', '-qp_b', '0' ]
+	assert set_video_quality('hevc_amf', 0) == [ '-qp_i', '51', '-qp_p', '51', '-qp_b', '51' ]
+	assert set_video_quality('hevc_amf', 50) == [ '-qp_i', '26', '-qp_p', '26', '-qp_b', '26' ]
+	assert set_video_quality('hevc_amf', 100) == [ '-qp_i', '0', '-qp_p', '0', '-qp_b', '0' ]
+	assert set_video_quality('h264_qsv', 0) == [ '-qp', '51' ]
+	assert set_video_quality('h264_qsv', 50) == [ '-qp', '26' ]
+	assert set_video_quality('h264_qsv', 100) == [ '-qp', '0' ]
+	assert set_video_quality('hevc_qsv', 0) == [ '-qp', '51' ]
+	assert set_video_quality('hevc_qsv', 50) == [ '-qp', '26' ]
+	assert set_video_quality('hevc_qsv', 100) == [ '-qp', '0' ]
+	assert set_video_quality('h264_videotoolbox', 0) == [ '-b:v', '1024k' ]
+	assert set_video_quality('h264_videotoolbox', 50) == [ '-b:v', '25768k' ]
+	assert set_video_quality('h264_videotoolbox', 100) == [ '-b:v', '50512k' ]
+	assert set_video_quality('hevc_videotoolbox', 0) == [ '-b:v', '1024k' ]
+	assert set_video_quality('hevc_videotoolbox', 50) == [ '-b:v', '25768k' ]
+	assert set_video_quality('hevc_videotoolbox', 100) == [ '-b:v', '50512k' ]

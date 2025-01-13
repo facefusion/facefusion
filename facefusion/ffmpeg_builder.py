@@ -162,11 +162,14 @@ def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> Comm
 		return [ '-cq', str(video_compression) ]
 	if video_encoder in [ 'h264_amf', 'hevc_amf' ]:
 		video_compression = round(51 - (video_quality * 0.51))
-		return [ '-qp_i', str(video_compression), '-qp_p', str(video_compression) ]
-	if video_encoder in [ 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox' ]:
+		return [ '-qp_i', str(video_compression), '-qp_p', str(video_compression), '-qp_b', str(video_compression) ]
+	if video_encoder in [ 'h264_qsv', 'hevc_qsv' ]:
 		video_compression = round(51 - (video_quality * 0.51))
-		return [ '-q:v', str(video_compression) ]
-	return [ '-q:v', str(video_quality) ]
+		return [ '-qp', str(video_compression) ]
+	if video_encoder in [ 'h264_videotoolbox', 'hevc_videotoolbox' ]:
+		video_bit_rate = round((video_quality / 100) * (50512 - 1024) + 1024)
+		return [ '-b:v', str(video_bit_rate) + 'k' ]
+	return []
 
 
 def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -> Commands:
