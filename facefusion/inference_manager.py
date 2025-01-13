@@ -17,35 +17,22 @@ INFERENCE_POOLS : InferencePoolSet =\
 }
 
 
-def has_inference_model(model_context : str, model_name : str) -> bool:
+def get_inference_pool(model_context : str, model_sources : DownloadSet) -> InferencePool:
+	global INFERENCE_POOLS
+
 	while process_manager.is_checking():
 		sleep(0.5)
 	app_context = detect_app_context()
 	inference_context = get_inference_context(model_context)
-	inference_pool = INFERENCE_POOLS.get(app_context).get(inference_context)
 
-	if inference_pool:
-		return model_name in inference_pool
-	return False
+	if app_context == 'cli' and INFERENCE_POOLS.get('ui').get(inference_context):
+		INFERENCE_POOLS['cli'][inference_context] = INFERENCE_POOLS.get('ui').get(inference_context)
+	if app_context == 'ui' and INFERENCE_POOLS.get('cli').get(inference_context):
+		INFERENCE_POOLS['ui'][inference_context] = INFERENCE_POOLS.get('cli').get(inference_context)
+	if not INFERENCE_POOLS.get(app_context).get(inference_context):
+		INFERENCE_POOLS[app_context][inference_context] = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
 
-
-def get_inference_pool(model_context : str, model_sources : DownloadSet) -> InferencePool:
-	global INFERENCE_POOLS
-
-	with thread_lock():
-		while process_manager.is_checking():
-			sleep(0.5)
-		app_context = detect_app_context()
-		inference_context = get_inference_context(model_context)
-
-		if app_context == 'cli' and INFERENCE_POOLS.get('ui').get(inference_context):
-			INFERENCE_POOLS['cli'][inference_context] = INFERENCE_POOLS.get('ui').get(inference_context)
-		if app_context == 'ui' and INFERENCE_POOLS.get('cli').get(inference_context):
-			INFERENCE_POOLS['ui'][inference_context] = INFERENCE_POOLS.get('cli').get(inference_context)
-		if not INFERENCE_POOLS.get(app_context).get(inference_context):
-			INFERENCE_POOLS[app_context][inference_context] = create_inference_pool(model_sources, state_manager.get_item('execution_device_id'), state_manager.get_item('execution_providers'))
-
-		return INFERENCE_POOLS.get(app_context).get(inference_context)
+	return INFERENCE_POOLS.get(app_context).get(inference_context)
 
 
 def create_inference_pool(model_sources : DownloadSet, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferencePool:
