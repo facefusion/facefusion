@@ -124,13 +124,16 @@ def set_audio_channel_total(audio_channel_total : int) -> Commands:
 
 def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> Commands:
 	if audio_encoder == 'aac':
-		audio_compression = round(10 - (audio_quality * 0.9))
+		audio_compression = round(2.0 - ((audio_quality / 100) * 1.9), 1)
 		return [ '-q:a', str(audio_compression) ]
 	if audio_encoder == 'libmp3lame':
-		audio_compression = round(9 - (audio_quality * 0.9))
+		audio_compression = round(9 - (audio_quality / 100) * 9)
 		return [ '-q:a', str(audio_compression) ]
-	if audio_encoder in [ 'libopus', 'libvorbis' ]:
-		audio_compression = round((100 - audio_quality) / 10)
+	if audio_encoder == 'libopus':
+		audio_bit_rate = round(64 + (audio_quality / 100) * (320 - 64))
+		return [ '-b:a', str(audio_bit_rate) + 'k' ]
+	if audio_encoder == 'libvorbis':
+		audio_compression = round(-1.0 + (audio_quality / 100) * 11, 1)
 		return [ '-q:a', str(audio_compression) ]
 	return []
 
