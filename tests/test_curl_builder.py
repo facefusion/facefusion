@@ -14,4 +14,4 @@ def test_chain() -> None:
 		curl_builder.head(metadata.get('url'))
 	)
 
-	assert curl_builder.chain(commands) == [ '-I', metadata.get('url') ]
+	assert commands == [ '-I', metadata.get('url') ]
