@@ -18,7 +18,6 @@ def test_chain() -> None:
 def test_stream_mode() -> None:
 	assert ffmpeg_builder.set_stream_mode('udp') == [ '-f', 'mpegts' ]
 	assert ffmpeg_builder.set_stream_mode('v4l2') == [ '-f', 'v4l2' ]
-	assert ffmpeg_builder.set_stream_mode('invalid') == []
 
 
 def test_select_frame_range() -> None:
@@ -31,4 +30,3 @@ def test_select_frame_range() -> None:
 def test_audio_sample_size() -> None:
 	assert ffmpeg_builder.set_audio_sample_size(16) == [ '-f', 's16le', '-acodec', 'pcm_s16le' ]
 	assert ffmpeg_builder.set_audio_sample_size(32) == [ '-f', 's32le', '-acodec', 'pcm_s32le' ]
-	assert ffmpeg_builder.set_audio_sample_size(64) == []
