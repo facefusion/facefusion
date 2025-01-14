@@ -7,7 +7,6 @@ from facefusion import process_manager, state_manager
 from facefusion.app_context import detect_app_context
 from facefusion.execution import create_inference_execution_providers
 from facefusion.filesystem import is_file
-from facefusion.thread_helper import thread_lock
 from facefusion.typing import DownloadSet, ExecutionProvider, InferencePool, InferencePoolSet
 
 INFERENCE_POOLS : InferencePoolSet =\
