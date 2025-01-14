@@ -194,4 +194,4 @@ def get_theme() -> gradio.Theme:
 
 def get_css() -> str:
 	overrides_css_path = resolve_relative_path('uis/assets/overrides.css')
-	return open(overrides_css_path, 'r').read()
+	return open(overrides_css_path).read()

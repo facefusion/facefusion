@@ -11,7 +11,7 @@ from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.typing import Duration, Fps, Orientation, Resolution, VisionFrame
 
 
-@lru_cache(maxsize = 128)
+@lru_cache()
 def read_static_image(image_path : str) -> Optional[VisionFrame]:
 	return read_image(image_path)
 
