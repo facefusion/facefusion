@@ -11,7 +11,7 @@ from facefusion.typing import Audio, AudioFrame, Fps, Mel, MelFilterBank, Spectr
 from facefusion.voice_extractor import batch_extract_voice
 
 
-@lru_cache(maxsize = 128)
+@lru_cache()
 def read_static_audio(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
 	return read_audio(audio_path, fps)
 
@@ -31,7 +31,7 @@ def read_audio(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
 	return None
 
 
-@lru_cache(maxsize = 128)
+@lru_cache()
 def read_static_voice(audio_path : str, fps : Fps) -> Optional[List[AudioFrame]]:
 	return read_voice(audio_path, fps)
 
