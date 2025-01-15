@@ -110,9 +110,9 @@ FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'r
 FaceMaskRegionSet = Dict[FaceMaskRegion, int]
 
 AudioFormat = Literal['mp3', 'ogg', 'wav']
-ImageFormat = Literal['bmp', 'jpeg', 'png', 'webp']
+ImageFormat = Literal['bmp', 'jpeg', 'png', 'tiff', 'webp']
 VideoFormat = Literal['avi', 'mkv', 'mov', 'mp4', 'webm']
-TempFrameFormat = Literal['bmp', 'jpeg', 'png']
+TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
 AudioTypeSet = Dict[AudioFormat, str]
 ImageTypeSet = Dict[ImageFormat, str]
 VideoTypeSet = Dict[VideoFormat, str]
