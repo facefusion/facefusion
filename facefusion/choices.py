@@ -73,13 +73,13 @@ webcam_resolutions : List[str] = [ '320x240', '640x480', '800x600', '1024x768', 
 
 execution_provider_set : ExecutionProviderSet =\
 {
-	'cpu': 'CPUExecutionProvider',
-	'coreml': 'CoreMLExecutionProvider',
 	'cuda': 'CUDAExecutionProvider',
+	'tensorrt': 'TensorrtExecutionProvider',
 	'directml': 'DmlExecutionProvider',
-	'openvino': 'OpenVINOExecutionProvider',
 	'rocm': 'ROCMExecutionProvider',
-	'tensorrt': 'TensorrtExecutionProvider'
+	'openvino': 'OpenVINOExecutionProvider',
+	'coreml': 'CoreMLExecutionProvider',
+	'cpu': 'CPUExecutionProvider'
 }
 execution_providers : List[ExecutionProvider] = list(execution_provider_set.keys())
 download_provider_set : DownloadProviderSet =\

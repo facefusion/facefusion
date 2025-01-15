@@ -4,29 +4,28 @@ import signal
 import subprocess
 import sys
 from argparse import ArgumentParser, HelpFormatter
-from typing import Dict, Tuple
 
 from facefusion import metadata, wording
-from facefusion.common_helper import is_linux, is_macos, is_windows
+from facefusion.common_helper import is_linux, is_windows
 
-ONNXRUNTIMES : Dict[str, Tuple[str, str]] = {}
 
-if is_macos():
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.20.1')
-else:
-	ONNXRUNTIMES['default'] = ('onnxruntime', '1.20.1')
-	ONNXRUNTIMES['cuda'] = ('onnxruntime-gpu', '1.20.1')
-	ONNXRUNTIMES['openvino'] = ('onnxruntime-openvino', '1.20.0')
-if is_linux():
-	ONNXRUNTIMES['rocm'] = ('onnxruntime-rocm', '1.19.0')
+ONNXRUNTIME_SET =\
+{
+	'default': ('onnxruntime', '1.20.1')
+}
+if is_windows() or is_linux():
+	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.20.1')
+	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.20.0')
 if is_windows():
-	ONNXRUNTIMES['directml'] = ('onnxruntime-directml', '1.17.3')
+	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.17.3')
+if is_linux():
+	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.19.0')
 
 
 def cli() -> None:
 	signal.signal(signal.SIGINT, lambda signal_number, frame: sys.exit(0))
 	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 50))
-	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIMES.keys(), required = True)
+	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIME_SET.keys(), required = True)
 	program.add_argument('--skip-conda', help = wording.get('help.skip_conda'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	run(program)
@@ -35,7 +34,7 @@ def cli() -> None:
 def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	has_conda = 'CONDA_PREFIX' in os.environ
-	onnxruntime_name, onnxruntime_version = ONNXRUNTIMES.get(args.onnxruntime)
+	onnxruntime_name, onnxruntime_version = ONNXRUNTIME_SET.get(args.onnxruntime)
 
 	if not args.skip_conda and not has_conda:
 		sys.stdout.write(wording.get('conda_not_activated') + os.linesep)

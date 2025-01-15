@@ -7,6 +7,7 @@ from typing import Any, List, Optional
 from onnxruntime import get_available_providers, set_default_logger_severity
 
 import facefusion.choices
+from facefusion.common_helper import get_last
 from facefusion.typing import ExecutionDevice, ExecutionProvider, ValueAndUnit
 
 set_default_logger_severity(3)
@@ -14,6 +15,14 @@ set_default_logger_severity(3)
 
 def has_execution_provider(execution_provider : ExecutionProvider) -> bool:
 	return execution_provider in get_available_execution_providers()
+
+
+def suggest_execution_provider(execution_providers : List[ExecutionProvider]) -> ExecutionProvider:
+	for execution_provider in facefusion.choices.execution_providers:
+		if execution_provider in execution_providers:
+			return execution_provider
+
+	return get_last(facefusion.choices.execution_providers)
 
 
 def get_available_execution_providers() -> List[ExecutionProvider]:
@@ -47,16 +56,16 @@ def create_inference_execution_providers(execution_device_id : str, execution_pr
 				'trt_timing_cache_path': '.caches',
 				'trt_builder_optimization_level': 5
 			}))
+		if execution_provider in [ 'directml', 'rocm' ]:
+			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			{
+				'device_id': execution_device_id
+			}))
 		if execution_provider == 'openvino':
 			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_type': 'GPU' if execution_device_id == '0' else 'GPU.' + execution_device_id,
 				'precision': 'FP32'
-			}))
-		if execution_provider in [ 'directml', 'rocm' ]:
-			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
-			{
-				'device_id': execution_device_id
 			}))
 		if execution_provider == 'coreml':
 			inference_execution_providers.append(facefusion.choices.execution_provider_set.get(execution_provider))
