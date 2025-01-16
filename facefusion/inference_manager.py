@@ -66,7 +66,7 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 
 
 def get_inference_context(model_context : str, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> str:
-	inference_context = '.'.join([ model_context, execution_device_id ] + execution_providers)
+	inference_context = model_context + '.' + execution_device_id + '.' + '_'.join(execution_providers)
 	return inference_context
 
 
