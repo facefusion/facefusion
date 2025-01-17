@@ -24,7 +24,7 @@ def get_file_extension(file_path : str) -> Optional[str]:
 	_, file_extension = os.path.splitext(file_path)
 
 	if file_extension:
-		return file_extension
+		return file_extension.lower()
 	return None
 
 
@@ -36,7 +36,7 @@ def get_file_format(file_path : str) -> Optional[str]:
 			return 'jpeg'
 		if file_extension == 'tif':
 			return 'tiff'
-		return file_extension.lower().lstrip('.')
+		return file_extension.lstrip('.')
 	return None
 
 
