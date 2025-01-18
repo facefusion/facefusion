@@ -94,9 +94,8 @@ def forward(vision_frame : VisionFrame) -> float:
 def prepare_frame(vision_frame : VisionFrame) -> VisionFrame:
 	model_size = get_model_options().get('size')
 	vision_frame = cv2.resize(vision_frame, model_size).astype(numpy.float32)
+	vision_frame = numpy.transpose(vision_frame, (2, 0, 1)).astype(numpy.float32) / 255.0
 	vision_frame = numpy.expand_dims(vision_frame, axis = 0)
-	vision_frame = vision_frame / 255.0
-	vision_frame = numpy.rollaxis(vision_frame, 3, 1)
 	return vision_frame
 
 
