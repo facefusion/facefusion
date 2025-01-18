@@ -20,26 +20,25 @@ STREAM_COUNTER = 0
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
-		'open_nsfw':
+		'nudenet_classifier_2':
 		{
 			'hashes':
 			{
 				'content_analyser':
 				{
-					'url': resolve_download_url('models-3.0.0', 'open_nsfw.hash'),
-					'path': resolve_relative_path('../.assets/models/open_nsfw.hash')
+					'url': resolve_download_url('models-3.2.0', 'nudenet_classifier_2.hash'),
+					'path': resolve_relative_path('../.assets/models/nudenet_classifier_2.hash')
 				}
 			},
 			'sources':
 			{
 				'content_analyser':
 				{
-					'url': resolve_download_url('models-3.0.0', 'open_nsfw.onnx'),
-					'path': resolve_relative_path('../.assets/models/open_nsfw.onnx')
+					'url': resolve_download_url('models-3.2.0', 'nudenet_classifier_2.onnx'),
+					'path': resolve_relative_path('../.assets/models/nudenet_classifier_2.onnx')
 				}
 			},
-			'size': (224, 224),
-			'mean': [ 104, 117, 123 ]
+			'size': (256, 256)
 		}
 	}
 
@@ -54,7 +53,7 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return create_static_model_set('full').get('open_nsfw')
+	return create_static_model_set('full').get('nudenet_classifier_2')
 
 
 def pre_check() -> bool:
@@ -86,18 +85,18 @@ def forward(vision_frame : VisionFrame) -> float:
 	with conditional_thread_semaphore():
 		probability = content_analyser.run(None,
 		{
-			'input': vision_frame
-		})[0][0][1]
+			'input':  vision_frame
+		})[0][0][0]
 
 	return probability
 
 
 def prepare_frame(vision_frame : VisionFrame) -> VisionFrame:
 	model_size = get_model_options().get('size')
-	model_mean = get_model_options().get('mean')
 	vision_frame = cv2.resize(vision_frame, model_size).astype(numpy.float32)
-	vision_frame -= numpy.array(model_mean).astype(numpy.float32)
 	vision_frame = numpy.expand_dims(vision_frame, axis = 0)
+	vision_frame = vision_frame / 255.0
+	vision_frame = numpy.rollaxis(vision_frame, 3, 1)
 	return vision_frame
 
 
@@ -115,12 +114,14 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	counter = 0
 
 	with tqdm(total = len(frame_range), desc = wording.get('analysing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+
 		for frame_number in frame_range:
 			if frame_number % int(video_fps) == 0:
 				vision_frame = get_video_frame(video_path, frame_number)
 				if analyse_frame(vision_frame):
 					counter += 1
 			rate = counter * int(video_fps) / len(frame_range) * 100
-			progress.update()
 			progress.set_postfix(rate = rate)
+			progress.update()
+
 	return rate > RATE_LIMIT
