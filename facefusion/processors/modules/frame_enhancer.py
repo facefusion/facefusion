@@ -479,7 +479,7 @@ def forward(tile_vision_frame : VisionFrame) -> VisionFrame:
 def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
 	vision_tile_frame = numpy.expand_dims(vision_tile_frame[:, :, ::-1], axis = 0)
 	vision_tile_frame = vision_tile_frame.transpose(0, 3, 1, 2)
-	vision_tile_frame = vision_tile_frame.astype(numpy.float32) / 255
+	vision_tile_frame = vision_tile_frame.astype(numpy.float32) / 255.0
 	return vision_tile_frame
 
 
