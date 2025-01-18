@@ -171,7 +171,7 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 	face_occluder_model = state_manager.get_item('face_occluder_model')
 	model_size = create_static_model_set('full').get(face_occluder_model).get('size')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
-	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255
+	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255.0
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 1, 2, 3)
 	occlusion_mask = forward_occlude_face(prepare_vision_frame)
 	occlusion_mask = occlusion_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
@@ -184,7 +184,7 @@ def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List
 	face_parser_model = state_manager.get_item('face_parser_model')
 	model_size = create_static_model_set('full').get(face_parser_model).get('size')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
-	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255
+	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255.0
 	prepare_vision_frame = numpy.subtract(prepare_vision_frame, numpy.array([ 0.485, 0.456, 0.406 ]).astype(numpy.float32))
 	prepare_vision_frame = numpy.divide(prepare_vision_frame, numpy.array([ 0.229, 0.224, 0.225 ]).astype(numpy.float32))
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0)

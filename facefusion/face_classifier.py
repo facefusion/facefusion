@@ -67,7 +67,7 @@ def classify_face(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmar
 	model_mean = get_model_options().get('mean')
 	model_standard_deviation = get_model_options().get('standard_deviation')
 	crop_vision_frame, _ = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, model_size)
-	crop_vision_frame = crop_vision_frame.astype(numpy.float32)[:, :, ::-1] / 255
+	crop_vision_frame = crop_vision_frame.astype(numpy.float32)[:, :, ::-1] / 255.0
 	crop_vision_frame -= model_mean
 	crop_vision_frame /= model_standard_deviation
 	crop_vision_frame = crop_vision_frame.transpose(2, 0, 1)
