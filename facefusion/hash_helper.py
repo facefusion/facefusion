@@ -14,7 +14,7 @@ def validate_hash(validate_path : str) -> bool:
 
 	if is_file(hash_path):
 		with open(hash_path) as hash_file:
-			hash_content = hash_file.read().strip()
+			hash_content = hash_file.read()
 
 		with open(validate_path, 'rb') as validate_file:
 			validate_content = validate_file.read()
