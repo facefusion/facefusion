@@ -48,18 +48,23 @@ def cli() -> None:
 
 def route(args : Args) -> None:
 	system_memory_limit = state_manager.get_item('system_memory_limit')
+
 	if system_memory_limit and system_memory_limit > 0:
 		limit_system_memory(system_memory_limit)
+
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
 		return conditional_exit(error_code)
+
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_code = route_job_manager(args)
 		hard_exit(error_code)
+
 	if not pre_check():
 		return conditional_exit(2)
+
 	if state_manager.get_item('command') == 'run':
 		import facefusion.uis.core as ui
 
@@ -70,16 +75,19 @@ def route(args : Args) -> None:
 				return conditional_exit(2)
 		ui.init()
 		ui.launch()
+
 	if state_manager.get_item('command') == 'headless-run':
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_core = process_headless(args)
 		hard_exit(error_core)
+
 	if state_manager.get_item('command') == 'batch-run':
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
 		error_core = process_batch(args)
 		hard_exit(error_core)
+
 	if state_manager.get_item('command') in [ 'job-run', 'job-run-all', 'job-retry', 'job-retry-all' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
@@ -91,9 +99,11 @@ def pre_check() -> bool:
 	if sys.version_info < (3, 10):
 		logger.error(wording.get('python_not_supported').format(version = '3.10'), __name__)
 		return False
+
 	if not shutil.which('curl'):
 		logger.error(wording.get('curl_not_installed'), __name__)
 		return False
+
 	if not shutil.which('ffmpeg'):
 		logger.error(wording.get('ffmpeg_not_installed'), __name__)
 		return False
@@ -157,36 +167,42 @@ def route_job_manager(args : Args) -> ErrorCode:
 			cli_helper.render_table(job_headers, job_contents)
 			return 0
 		return 1
+
 	if state_manager.get_item('command') == 'job-create':
 		if job_manager.create_job(state_manager.get_item('job_id')):
 			logger.info(wording.get('job_created').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
 		logger.error(wording.get('job_not_created').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-submit':
 		if job_manager.submit_job(state_manager.get_item('job_id')):
 			logger.info(wording.get('job_submitted').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
 		logger.error(wording.get('job_not_submitted').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-submit-all':
 		if job_manager.submit_jobs():
 			logger.info(wording.get('job_all_submitted'), __name__)
 			return 0
 		logger.error(wording.get('job_all_not_submitted'), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-delete':
 		if job_manager.delete_job(state_manager.get_item('job_id')):
 			logger.info(wording.get('job_deleted').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
 		logger.error(wording.get('job_not_deleted').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-delete-all':
 		if job_manager.delete_jobs():
 			logger.info(wording.get('job_all_deleted'), __name__)
 			return 0
 		logger.error(wording.get('job_all_not_deleted'), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-add-step':
 		step_args = reduce_step_args(args)
 
@@ -195,6 +211,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 			return 0
 		logger.error(wording.get('job_step_not_added').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-remix-step':
 		step_args = reduce_step_args(args)
 
@@ -203,6 +220,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 			return 0
 		logger.error(wording.get('job_remix_step_not_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-insert-step':
 		step_args = reduce_step_args(args)
 
@@ -211,6 +229,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 			return 0
 		logger.error(wording.get('job_step_not_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-remove-step':
 		if job_manager.remove_step(state_manager.get_item('job_id'), state_manager.get_item('step_index')):
 			logger.info(wording.get('job_step_removed').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
@@ -228,6 +247,7 @@ def route_job_runner() -> ErrorCode:
 			return 0
 		logger.info(wording.get('processing_job_failed').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-run-all':
 		logger.info(wording.get('running_jobs'), __name__)
 		if job_runner.run_jobs(process_step):
@@ -235,6 +255,7 @@ def route_job_runner() -> ErrorCode:
 			return 0
 		logger.info(wording.get('processing_jobs_failed'), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-retry':
 		logger.info(wording.get('retrying_job').format(job_id = state_manager.get_item('job_id')), __name__)
 		if job_runner.retry_job(state_manager.get_item('job_id'), process_step):
@@ -242,6 +263,7 @@ def route_job_runner() -> ErrorCode:
 			return 0
 		logger.info(wording.get('processing_job_failed').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
+
 	if state_manager.get_item('command') == 'job-retry-all':
 		logger.info(wording.get('retrying_jobs'), __name__)
 		if job_runner.retry_jobs(process_step):
@@ -305,14 +327,18 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 def conditional_process() -> ErrorCode:
 	start_time = time()
+
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		if not processor_module.pre_process('output'):
 			return 2
+
 	conditional_append_reference_faces()
+
 	if is_image(state_manager.get_item('target_path')):
 		return process_image(start_time)
 	if is_video(state_manager.get_item('target_path')):
 		return process_video(start_time)
+
 	return 0
 
 
@@ -341,13 +367,12 @@ def conditional_append_reference_faces() -> None:
 def process_image(start_time : float) -> ErrorCode:
 	if analyse_image(state_manager.get_item('target_path')):
 		return 3
-	# clear temp
+
 	logger.debug(wording.get('clearing_temp'), __name__)
 	clear_temp_directory(state_manager.get_item('target_path'))
-	# create temp
 	logger.debug(wording.get('creating_temp'), __name__)
 	create_temp_directory(state_manager.get_item('target_path'))
-	# copy image
+
 	process_manager.start()
 	temp_image_resolution = pack_resolution(restrict_image_resolution(state_manager.get_item('target_path'), unpack_resolution(state_manager.get_item('output_image_resolution'))))
 	logger.info(wording.get('copying_image').format(resolution = temp_image_resolution), __name__)
@@ -357,7 +382,7 @@ def process_image(start_time : float) -> ErrorCode:
 		logger.error(wording.get('copying_image_failed'), __name__)
 		process_manager.end()
 		return 1
-	# process image
+
 	temp_file_path = get_temp_file_path(state_manager.get_item('target_path'))
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.info(wording.get('processing'), processor_module.__name__)
@@ -366,16 +391,16 @@ def process_image(start_time : float) -> ErrorCode:
 	if is_process_stopping():
 		process_manager.end()
 		return 4
-	# finalize image
+
 	logger.info(wording.get('finalizing_image').format(resolution = state_manager.get_item('output_image_resolution')), __name__)
 	if finalize_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), state_manager.get_item('output_image_resolution')):
 		logger.debug(wording.get('finalizing_image_succeed'), __name__)
 	else:
 		logger.warn(wording.get('finalizing_image_skipped'), __name__)
-	# clear temp
+
 	logger.debug(wording.get('clearing_temp'), __name__)
 	clear_temp_directory(state_manager.get_item('target_path'))
-	# validate image
+
 	if is_image(state_manager.get_item('output_path')):
 		seconds = '{:.2f}'.format((time() - start_time) % 60)
 		logger.info(wording.get('processing_image_succeed').format(seconds = seconds), __name__)
@@ -392,13 +417,12 @@ def process_video(start_time : float) -> ErrorCode:
 	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	if analyse_video(state_manager.get_item('target_path'), trim_frame_start, trim_frame_end):
 		return 3
-	# clear temp
+
 	logger.debug(wording.get('clearing_temp'), __name__)
 	clear_temp_directory(state_manager.get_item('target_path'))
-	# create temp
 	logger.debug(wording.get('creating_temp'), __name__)
 	create_temp_directory(state_manager.get_item('target_path'))
-	# extract frames
+
 	process_manager.start()
 	temp_video_resolution = pack_resolution(restrict_video_resolution(state_manager.get_item('target_path'), unpack_resolution(state_manager.get_item('output_video_resolution'))))
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
@@ -412,7 +436,7 @@ def process_video(start_time : float) -> ErrorCode:
 		logger.error(wording.get('extracting_frames_failed'), __name__)
 		process_manager.end()
 		return 1
-	# process frames
+
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
 	if temp_frame_paths:
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
@@ -425,7 +449,7 @@ def process_video(start_time : float) -> ErrorCode:
 		logger.error(wording.get('temp_frames_not_found'), __name__)
 		process_manager.end()
 		return 1
-	# merge video
+
 	logger.info(wording.get('merging_video').format(resolution = state_manager.get_item('output_video_resolution'), fps = state_manager.get_item('output_video_fps')), __name__)
 	if merge_video(state_manager.get_item('target_path'), state_manager.get_item('output_video_resolution'), state_manager.get_item('output_video_fps')):
 		logger.debug(wording.get('merging_video_succeed'), __name__)
@@ -436,7 +460,7 @@ def process_video(start_time : float) -> ErrorCode:
 		logger.error(wording.get('merging_video_failed'), __name__)
 		process_manager.end()
 		return 1
-	# handle audio
+
 	if state_manager.get_item('output_audio_volume') == 0:
 		logger.info(wording.get('skipping_audio'), __name__)
 		move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
@@ -460,10 +484,10 @@ def process_video(start_time : float) -> ErrorCode:
 					return 4
 				logger.warn(wording.get('restoring_audio_skipped'), __name__)
 				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
-	# clear temp
+
 	logger.debug(wording.get('clearing_temp'), __name__)
 	clear_temp_directory(state_manager.get_item('target_path'))
-	# validate video
+
 	if is_video(state_manager.get_item('output_path')):
 		seconds = '{:.2f}'.format((time() - start_time))
 		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__)
