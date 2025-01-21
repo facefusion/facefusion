@@ -75,6 +75,7 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'druuzil/seth_macfarlane_384',
 	'druuzil/thomas_cruise_320',
 	'druuzil/thomas_hanks_384',
+	'druuzil/william_murray_384',
 	'edel/emma_roberts_224',
 	'edel/ivanka_trump_224',
 	'edel/lize_dzjabrailova_224',
