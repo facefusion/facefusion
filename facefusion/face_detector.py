@@ -1,8 +1,8 @@
+from functools import lru_cache
 from typing import List, Tuple
 
 import cv2
 import numpy
-from charset_normalizer.md import lru_cache
 
 from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
