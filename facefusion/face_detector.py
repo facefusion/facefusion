@@ -158,7 +158,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 	detection = forward_with_retinaface(detect_vision_frame)
 
 	for index, feature_stride in enumerate(feature_strides):
-		keep_indices = numpy.ravel(numpy.where(detection[index] >= face_detector_score))
+		keep_indices = numpy.where(detection[index] >= face_detector_score)[0]
 
 		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
@@ -176,8 +176,8 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 					bounding_box_raw[3] * ratio_height
 				]))
 
-			for score in detection[index][keep_indices]:
-				face_scores.append(score[0])
+			for face_score_raw in detection[index][keep_indices]:
+				face_scores.append(face_score_raw[0])
 
 			for face_landmark_raw_5 in distance_to_face_landmark_5(anchors, face_landmarks_5_raw)[keep_indices]:
 				face_landmarks_5.append(face_landmark_raw_5 * [ ratio_width, ratio_height ])
@@ -201,7 +201,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 	detection = forward_with_scrfd(detect_vision_frame)
 
 	for index, feature_stride in enumerate(feature_strides):
-		keep_indices = numpy.ravel(numpy.where(detection[index] >= face_detector_score))
+		keep_indices = numpy.where(detection[index] >= face_detector_score)[0]
 
 		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
@@ -219,8 +219,8 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 					bounding_box_raw[3] * ratio_height
 				]))
 
-			for score in detection[index][keep_indices]:
-				face_scores.append(score[0])
+			for face_score_raw in detection[index][keep_indices]:
+				face_scores.append(face_score_raw[0])
 
 			for face_landmark_raw_5 in distance_to_face_landmark_5(anchors, face_landmarks_5_raw)[keep_indices]:
 				face_landmarks_5.append(face_landmark_raw_5 * [ ratio_width, ratio_height ])
@@ -241,7 +241,7 @@ def detect_with_yolo_face(vision_frame : VisionFrame, face_detector_size : str) 
 	detection = forward_with_yolo_face(detect_vision_frame)
 	detection = numpy.squeeze(detection).T
 	bounding_boxes_raw, face_scores_raw, face_landmarks_5_raw = numpy.split(detection, [ 4, 5 ], axis = 1)
-	keep_indices = numpy.ravel(numpy.where(face_scores_raw > face_detector_score))
+	keep_indices = numpy.where(face_scores_raw > face_detector_score)[0]
 
 	if numpy.any(keep_indices):
 		bounding_boxes_raw, face_scores_raw, face_landmarks_5_raw = bounding_boxes_raw[keep_indices], face_scores_raw[keep_indices], face_landmarks_5_raw[keep_indices]
