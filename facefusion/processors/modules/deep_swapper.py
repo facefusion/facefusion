@@ -101,6 +101,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			('druuzil', 'seth_macfarlane_384'),
 			('druuzil', 'thomas_cruise_320'),
 			('druuzil', 'thomas_hanks_384'),
+			('druuzil', 'william_murray_384'),
 			('edel', 'emma_roberts_224'),
 			('edel', 'ivanka_trump_224'),
 			('edel', 'lize_dzjabrailova_224'),
@@ -265,7 +266,7 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--deep-swapper-model', help = wording.get('help.deep_swapper_model'), default = config.get_str_value('processors.deep_swapper_model', 'iperov/elon_musk_224'), choices = processors_choices.deep_swapper_models)
-		group_processors.add_argument('--deep-swapper-morph', help = wording.get('help.deep_swapper_morph'), type = int, default = config.get_int_value('processors.deep_swapper_morph', '80'), choices = processors_choices.deep_swapper_morph_range, metavar = create_int_metavar(processors_choices.deep_swapper_morph_range))
+		group_processors.add_argument('--deep-swapper-morph', help = wording.get('help.deep_swapper_morph'), type = int, default = config.get_int_value('processors.deep_swapper_morph', '100'), choices = processors_choices.deep_swapper_morph_range, metavar = create_int_metavar(processors_choices.deep_swapper_morph_range))
 		facefusion.jobs.job_store.register_step_keys([ 'deep_swapper_model', 'deep_swapper_morph' ])
 
 
