@@ -6,10 +6,9 @@ from tqdm import tqdm
 
 from facefusion import inference_manager, state_manager, wording
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
-from facefusion.face_helper import apply_nms
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import BoundingBox, Detection, DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, Score, VisionFrame
+from facefusion.typing import Detection, DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, Score, VisionFrame
 from facefusion.vision import detect_video_fps, get_video_frame, read_image, resize_frame_resolution
 
 STREAM_COUNTER = 0
@@ -72,10 +71,9 @@ def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
 
 
 def analyse_frame(vision_frame : VisionFrame) -> bool:
-	bounding_boxes, nsfw_scores = detect_nsfw(vision_frame)
-	keep_indices = apply_nms(bounding_boxes, nsfw_scores, 0.2, 0.6)
+	nsfw_scores = detect_nsfw(vision_frame)
 
-	return len(keep_indices) > 0
+	return len(nsfw_scores) > 0
 
 
 @lru_cache(maxsize = None)
@@ -105,35 +103,21 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	return rate > 10.0
 
 
-def detect_nsfw(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[Score]]:
-	bounding_boxes = []
+def detect_nsfw(vision_frame : VisionFrame) -> Tuple[List[Score]]:
 	nsfw_scores = []
 	model_size = get_model_options().get('size')
 	temp_vision_frame = resize_frame_resolution(vision_frame, model_size)
-	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
-	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame)
 	detection = forward(detect_vision_frame)
 	detection = numpy.squeeze(detection).T
-	bounding_boxes_raw = detection[:, :4]
 	nsfw_scores_raw = numpy.amax(detection[:, 4:], axis = 1)
 	keep_indices = numpy.where(nsfw_scores_raw > 0.2)[0]
 
 	if numpy.any(keep_indices):
-		bounding_boxes_raw, nsfw_scores_raw = bounding_boxes_raw[keep_indices], nsfw_scores_raw[keep_indices]
-
-		for bounding_box_raw in bounding_boxes_raw:
-			bounding_boxes.append(numpy.array(
-			[
-				(bounding_box_raw[0] - bounding_box_raw[2] / 2) * ratio_width,
-				(bounding_box_raw[1] - bounding_box_raw[3] / 2) * ratio_height,
-				(bounding_box_raw[0] + bounding_box_raw[2] / 2) * ratio_width,
-				(bounding_box_raw[1] + bounding_box_raw[3] / 2) * ratio_height
-			]))
-
+		nsfw_scores_raw = nsfw_scores_raw[keep_indices]
 		nsfw_scores = nsfw_scores_raw.ravel().tolist()
 
-	return bounding_boxes, nsfw_scores
+	return nsfw_scores
 
 
 def forward(vision_frame : VisionFrame) -> Detection:
