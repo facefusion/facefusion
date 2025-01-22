@@ -131,6 +131,7 @@ ModelInitializer = NDArray[Any]
 ExecutionProvider = Literal['cpu', 'coreml', 'cuda', 'directml', 'openvino', 'rocm', 'tensorrt']
 ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
 ExecutionProviderSet = Dict[ExecutionProvider, ExecutionProviderValue]
+InferenceSessionProvider = Any
 ValueAndUnit = TypedDict('ValueAndUnit',
 {
 	'value' : int,

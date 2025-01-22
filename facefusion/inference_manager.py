@@ -6,7 +6,7 @@ from onnxruntime import InferenceSession
 
 from facefusion import process_manager, state_manager
 from facefusion.app_context import detect_app_context
-from facefusion.execution import create_inference_execution_providers
+from facefusion.execution import create_inference_session_providers
 from facefusion.filesystem import is_file
 from facefusion.typing import DownloadSet, ExecutionProvider, InferencePool, InferencePoolSet
 
@@ -61,8 +61,8 @@ def clear_inference_pool(model_context : str) -> None:
 
 
 def create_inference_session(model_path : str, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferenceSession:
-	inference_execution_providers = create_inference_execution_providers(execution_device_id, execution_providers)
-	return InferenceSession(model_path, providers = inference_execution_providers)
+	inference_session_providers = create_inference_session_providers(execution_device_id, execution_providers)
+	return InferenceSession(model_path, providers = inference_session_providers)
 
 
 def get_inference_context(model_context : str, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> str:
