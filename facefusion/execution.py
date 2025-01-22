@@ -2,7 +2,7 @@ import shutil
 import subprocess
 import xml.etree.ElementTree as ElementTree
 from functools import lru_cache
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from onnxruntime import get_available_providers, set_default_logger_severity
 
