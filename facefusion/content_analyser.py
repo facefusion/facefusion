@@ -9,7 +9,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import apply_nms
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import BoundingBox, DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, Score, VisionFrame
+from facefusion.typing import BoundingBox, Detection, DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, Score, VisionFrame
 from facefusion.vision import detect_video_fps, get_video_frame, read_image, resize_frame_resolution
 
 STREAM_COUNTER = 0
@@ -136,7 +136,7 @@ def detect_nsfw(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[Sco
 	return bounding_boxes, nsfw_scores
 
 
-def forward(vision_frame : VisionFrame) -> float:
+def forward(vision_frame : VisionFrame) -> Detection:
 	content_analyser = get_inference_pool().get('content_analyser')
 
 	with conditional_thread_semaphore():
