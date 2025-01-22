@@ -8,7 +8,7 @@ from onnxruntime import get_available_providers, set_default_logger_severity
 
 import facefusion.choices
 from facefusion.common_helper import get_last
-from facefusion.typing import ExecutionDevice, ExecutionProvider, ValueAndUnit
+from facefusion.typing import ExecutionDevice, ExecutionProvider, InferenceSessionProvider, ValueAndUnit
 
 set_default_logger_severity(3)
 
@@ -26,28 +26,28 @@ def suggest_execution_provider(execution_providers : List[ExecutionProvider]) ->
 
 
 def get_available_execution_providers() -> List[ExecutionProvider]:
-	inference_execution_providers = get_available_providers()
+	inference_session_providers = get_available_providers()
 	available_execution_providers = []
 
 	for execution_provider, execution_provider_value in facefusion.choices.execution_provider_set.items():
-		if execution_provider_value in inference_execution_providers:
+		if execution_provider_value in inference_session_providers:
 			available_execution_providers.append(execution_provider)
 
 	return available_execution_providers
 
 
-def create_inference_execution_providers(execution_device_id : str, execution_providers : List[ExecutionProvider]) -> List[Any]:
-	inference_execution_providers : List[Any] = []
+def create_inference_session_providers(execution_device_id : str, execution_providers : List[ExecutionProvider]) -> List[InferenceSessionProvider]:
+	inference_session_providers : List[InferenceSessionProvider] = []
 
 	for execution_provider in execution_providers:
 		if execution_provider == 'cuda':
-			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id,
 				'cudnn_conv_algo_search': 'DEFAULT' if is_geforce_16_series() else 'EXHAUSTIVE'
 			}))
 		if execution_provider == 'tensorrt':
-			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id,
 				'trt_engine_cache_enable': True,
@@ -57,23 +57,23 @@ def create_inference_execution_providers(execution_device_id : str, execution_pr
 				'trt_builder_optimization_level': 5
 			}))
 		if execution_provider in [ 'directml', 'rocm' ]:
-			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id
 			}))
 		if execution_provider == 'openvino':
-			inference_execution_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_type': 'GPU' if execution_device_id == '0' else 'GPU.' + execution_device_id,
 				'precision': 'FP32'
 			}))
 		if execution_provider == 'coreml':
-			inference_execution_providers.append(facefusion.choices.execution_provider_set.get(execution_provider))
+			inference_session_providers.append(facefusion.choices.execution_provider_set.get(execution_provider))
 
 	if 'cpu' in execution_providers:
-		inference_execution_providers.append(facefusion.choices.execution_provider_set.get('cpu'))
+		inference_session_providers.append(facefusion.choices.execution_provider_set.get('cpu'))
 
-	return inference_execution_providers
+	return inference_session_providers
 
 
 def is_geforce_16_series() -> bool:
