@@ -103,7 +103,7 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	return rate > 10.0
 
 
-def detect_nsfw(vision_frame : VisionFrame) -> Tuple[List[Score]]:
+def detect_nsfw(vision_frame : VisionFrame) -> List[Score]:
 	nsfw_scores = []
 	model_size = get_model_options().get('size')
 	temp_vision_frame = resize_frame_resolution(vision_frame, model_size)
