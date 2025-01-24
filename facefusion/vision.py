@@ -28,8 +28,8 @@ def read_static_images(image_paths : List[str]) -> List[VisionFrame]:
 def read_image(image_path : str) -> Optional[VisionFrame]:
 	if is_image(image_path):
 		if is_windows():
-			image_binary = numpy.fromfile(image_path, dtype = numpy.uint8)
-			return cv2.imdecode(image_binary, cv2.IMREAD_COLOR)
+			image_buffer = numpy.fromfile(image_path, dtype = numpy.uint8)
+			return cv2.imdecode(image_buffer, cv2.IMREAD_COLOR)
 		return cv2.imread(image_path)
 	return None
 
@@ -78,7 +78,7 @@ def create_image_resolutions(resolution : Resolution) -> List[str]:
 	return resolutions
 
 
-def get_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
+def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
 		video_capture = cv2.VideoCapture(video_path)
 		if video_capture.isOpened():

@@ -9,7 +9,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.typing import Detection, DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, Score, VisionFrame
-from facefusion.vision import detect_video_fps, get_video_frame, read_image, resize_frame_resolution
+from facefusion.vision import detect_video_fps, read_image, read_video_frame, resize_frame_resolution
 
 STREAM_COUNTER = 0
 
@@ -93,7 +93,7 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 
 		for frame_number in frame_range:
 			if frame_number % int(video_fps) == 0:
-				vision_frame = get_video_frame(video_path, frame_number)
+				vision_frame = read_video_frame(video_path, frame_number)
 				if analyse_frame(vision_frame):
 					counter += 1
 			rate = counter * int(video_fps) / len(frame_range) * 100

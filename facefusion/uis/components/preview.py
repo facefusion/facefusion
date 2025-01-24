@@ -18,7 +18,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.typing import AudioFrame, Face, FaceSet, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.typing import ComponentOptions
-from facefusion.vision import count_video_frame_total, detect_frame_orientation, get_video_frame, normalize_frame_color, read_static_image, read_static_images, resize_frame_resolution
+from facefusion.vision import count_video_frame_total, detect_frame_orientation, read_video_frame, normalize_frame_color, read_static_image, read_static_images, resize_frame_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 PREVIEW_FRAME_SLIDER : Optional[gradio.Slider] = None
@@ -60,7 +60,7 @@ def render() -> None:
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 
 	if is_video(state_manager.get_item('target_path')):
-		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
 		preview_image_options['value'] = normalize_frame_color(preview_vision_frame)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
@@ -184,7 +184,7 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 
 def slide_preview_image(frame_number : int = 0) -> gradio.Image:
 	if is_video(state_manager.get_item('target_path')):
-		preview_vision_frame = normalize_frame_color(get_video_frame(state_manager.get_item('target_path'), frame_number))
+		preview_vision_frame = normalize_frame_color(read_video_frame(state_manager.get_item('target_path'), frame_number))
 		preview_vision_frame = resize_frame_resolution(preview_vision_frame, (1024, 1024))
 		return gradio.Image(value = preview_vision_frame)
 	return gradio.Image(value = None)
@@ -222,7 +222,7 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
 
 	if is_video(state_manager.get_item('target_path')):
-		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), frame_number)
+		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
