@@ -14,7 +14,7 @@ from facefusion.typing import FaceSelectorMode, FaceSelectorOrder, Gender, Race,
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.typing import ComponentOptions
 from facefusion.uis.ui_helper import convert_str_none
-from facefusion.vision import get_video_frame, normalize_frame_color, read_static_image
+from facefusion.vision import read_video_frame, normalize_frame_color, read_static_image
 
 FACE_SELECTOR_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SELECTOR_ORDER_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -46,7 +46,7 @@ def render() -> None:
 		reference_frame = read_static_image(state_manager.get_item('target_path'))
 		reference_face_gallery_options['value'] = extract_gallery_frames(reference_frame)
 	if is_video(state_manager.get_item('target_path')):
-		reference_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		reference_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		reference_face_gallery_options['value'] = extract_gallery_frames(reference_frame)
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_selector_mode_dropdown'),
@@ -197,7 +197,7 @@ def update_reference_position_gallery() -> gradio.Gallery:
 		temp_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
 	if is_video(state_manager.get_item('target_path')):
-		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
 	if gallery_vision_frames:
 		return gradio.Gallery(value = gallery_vision_frames)

@@ -23,7 +23,7 @@ from facefusion.processors.typing import ExpressionRestorerInputs, LivePortraitE
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
 from facefusion.typing import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
-from facefusion.vision import get_video_frame, read_image, read_static_image, write_image
+from facefusion.vision import read_image, read_static_image, read_video_frame, write_image
 
 
 @lru_cache(maxsize = None)
@@ -264,7 +264,7 @@ def process_frames(source_path : List[str], queue_payloads : List[QueuePayload],
 		frame_number = queue_payload.get('frame_number')
 		if state_manager.get_item('trim_frame_start'):
 			frame_number += state_manager.get_item('trim_frame_start')
-		source_vision_frame = get_video_frame(state_manager.get_item('target_path'), frame_number)
+		source_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
 		target_vision_path = queue_payload.get('frame_path')
 		target_vision_frame = read_image(target_vision_path)
 		output_vision_frame = process_frame(
