@@ -5,10 +5,11 @@ from typing import List, Optional
 
 from tqdm import tqdm
 
+import facefusion.choices
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern, resolve_temp_frame_paths
-from facefusion.typing import AudioBuffer, Commands, Fps, UpdateProgress
+from facefusion.typing import AudioBuffer, Commands, EncoderSet, Fps, UpdateProgress
 from facefusion.vision import count_trim_frame_total, detect_video_duration, restrict_video_fps
 
 
@@ -70,6 +71,32 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 	for error in errors:
 		if error.strip():
 			logger.debug(error.strip(), __name__)
+
+
+def get_available_encoder_set() -> EncoderSet:
+	available_encoder_set =\
+	{
+		'audio': [],
+		'video': []
+	}
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.get_encoders()
+	)
+	process = run_ffmpeg(commands)
+
+	while line := process.stdout.readline().decode().lower():
+		if line.startswith(' a'):
+			audio_encoder = line.split()[1]
+
+			if audio_encoder in facefusion.choices.output_audio_encoders:
+				available_encoder_set['audio'].append(audio_encoder)
+		if line.startswith(' v'):
+			video_encoder = line.split()[1]
+
+			if video_encoder in facefusion.choices.output_video_encoders:
+				available_encoder_set['video'].append(video_encoder)
+
+	return available_encoder_set
 
 
 def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:

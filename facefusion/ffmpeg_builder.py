@@ -16,6 +16,10 @@ def chain(*commands : Commands) -> Commands:
 	return list(itertools.chain(*commands))
 
 
+def get_encoders() -> Commands:
+	return [ '-encoders' ]
+
+
 def set_progress() -> Commands:
 	return [ '-progress' ]
 

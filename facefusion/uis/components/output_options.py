@@ -5,6 +5,7 @@ import gradio
 import facefusion.choices
 from facefusion import state_manager, wording
 from facefusion.common_helper import calc_int_step
+from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import is_image, is_video
 from facefusion.typing import AudioEncoder, Fps, VideoEncoder, VideoPreset
 from facefusion.uis.core import get_ui_components, register_ui_component
@@ -36,6 +37,7 @@ def render() -> None:
 
 	output_image_resolutions = []
 	output_video_resolutions = []
+	available_encoder_set = get_available_encoder_set()
 	if is_image(state_manager.get_item('target_path')):
 		output_image_resolution = detect_image_resolution(state_manager.get_item('target_path'))
 		output_image_resolutions = create_image_resolutions(output_image_resolution)
@@ -58,7 +60,7 @@ def render() -> None:
 	)
 	OUTPUT_AUDIO_ENCODER_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.output_audio_encoder_dropdown'),
-		choices = facefusion.choices.output_audio_encoders,
+		choices = available_encoder_set.get('audio'),
 		value = state_manager.get_item('output_audio_encoder'),
 		visible = is_video(state_manager.get_item('target_path'))
 	)
@@ -80,7 +82,7 @@ def render() -> None:
 	)
 	OUTPUT_VIDEO_ENCODER_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.output_video_encoder_dropdown'),
-		choices = facefusion.choices.output_video_encoders,
+		choices = available_encoder_set.get('video'),
 		value = state_manager.get_item('output_video_encoder'),
 		visible = is_video(state_manager.get_item('target_path'))
 	)

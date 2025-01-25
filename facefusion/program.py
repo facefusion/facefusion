@@ -3,8 +3,9 @@ from argparse import ArgumentParser, HelpFormatter
 
 import facefusion.choices
 from facefusion import config, metadata, state_manager, wording
-from facefusion.common_helper import create_float_metavar, create_int_metavar, get_last
+from facefusion.common_helper import create_float_metavar, create_int_metavar, get_first, get_last
 from facefusion.execution import get_available_execution_providers, suggest_execution_provider
+from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.jobs import job_store
 from facefusion.processors.core import get_processors_modules
@@ -155,13 +156,14 @@ def create_frame_extraction_program() -> ArgumentParser:
 
 def create_output_creation_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
+	available_encoder_set = get_available_encoder_set()
 	group_output_creation = program.add_argument_group('output creation')
 	group_output_creation.add_argument('--output-image-quality', help = wording.get('help.output_image_quality'), type = int, default = config.get_int_value('output_creation.output_image_quality', '80'), choices = facefusion.choices.output_image_quality_range, metavar = create_int_metavar(facefusion.choices.output_image_quality_range))
 	group_output_creation.add_argument('--output-image-resolution', help = wording.get('help.output_image_resolution'), default = config.get_str_value('output_creation.output_image_resolution'))
-	group_output_creation.add_argument('--output-audio-encoder', help = wording.get('help.output_audio_encoder'), default = config.get_str_value('output_creation.output_audio_encoder', 'aac'), choices = facefusion.choices.output_audio_encoders)
+	group_output_creation.add_argument('--output-audio-encoder', help = wording.get('help.output_audio_encoder'), default = config.get_str_value('output_creation.output_audio_encoder', get_first(available_encoder_set.get('audio'))), choices = available_encoder_set.get('audio'))
 	group_output_creation.add_argument('--output-audio-quality', help = wording.get('help.output_audio_quality'), type = int, default = config.get_int_value('output_creation.output_audio_quality', '80'), choices = facefusion.choices.output_audio_quality_range, metavar = create_int_metavar(facefusion.choices.output_audio_quality_range))
 	group_output_creation.add_argument('--output-audio-volume', help = wording.get('help.output_audio_volume'), type = int, default = config.get_int_value('output_creation.output_audio_volume', '100'), choices = facefusion.choices.output_audio_volume_range, metavar = create_int_metavar(facefusion.choices.output_audio_volume_range))
-	group_output_creation.add_argument('--output-video-encoder', help = wording.get('help.output_video_encoder'), default = config.get_str_value('output_creation.output_video_encoder', 'libx264'), choices = facefusion.choices.output_video_encoders)
+	group_output_creation.add_argument('--output-video-encoder', help = wording.get('help.output_video_encoder'), default = config.get_str_value('output_creation.output_video_encoder', get_first(available_encoder_set.get('video'))), choices = available_encoder_set.get('video'))
 	group_output_creation.add_argument('--output-video-preset', help = wording.get('help.output_video_preset'), default = config.get_str_value('output_creation.output_video_preset', 'veryfast'), choices = facefusion.choices.output_video_presets)
 	group_output_creation.add_argument('--output-video-quality', help = wording.get('help.output_video_quality'), type = int, default = config.get_int_value('output_creation.output_video_quality', '80'), choices = facefusion.choices.output_video_quality_range, metavar = create_int_metavar(facefusion.choices.output_video_quality_range))
 	group_output_creation.add_argument('--output-video-resolution', help = wording.get('help.output_video_resolution'), default = config.get_str_value('output_creation.output_video_resolution'))
