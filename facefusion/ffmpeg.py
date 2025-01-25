@@ -74,7 +74,7 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 
 
 def get_available_encoder_set() -> EncoderSet:
-	available_encoder_set =\
+	available_encoder_set : EncoderSet =\
 	{
 		'audio': [],
 		'video': []
