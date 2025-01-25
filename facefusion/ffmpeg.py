@@ -89,12 +89,12 @@ def get_available_encoder_set() -> EncoderSet:
 			audio_encoder = line.split()[1]
 
 			if audio_encoder in facefusion.choices.output_audio_encoders:
-				available_encoder_set['audio'].append(audio_encoder)
+				available_encoder_set['audio'].append(audio_encoder) #type:ignore[arg-type]
 		if line.startswith(' v'):
 			video_encoder = line.split()[1]
 
 			if video_encoder in facefusion.choices.output_video_encoders:
-				available_encoder_set['video'].append(video_encoder)
+				available_encoder_set['video'].append(video_encoder) #type:ignore[arg-type]
 
 	return available_encoder_set
 
