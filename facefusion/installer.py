@@ -8,7 +8,6 @@ from argparse import ArgumentParser, HelpFormatter
 from facefusion import metadata, wording
 from facefusion.common_helper import is_linux, is_windows
 
-
 ONNXRUNTIME_SET =\
 {
 	'default': ('onnxruntime', '1.20.1')
