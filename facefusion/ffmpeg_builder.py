@@ -114,9 +114,9 @@ def set_audio_sample_rate(audio_sample_rate : int) -> Commands:
 
 def set_audio_sample_size(audio_sample_size : int) -> Commands:
 	if audio_sample_size == 16:
-		return [ '-f', 's16le', '-acodec', 'pcm_s16le' ]
+		return [ '-f', 's16le' ]
 	if audio_sample_size == 32:
-		return [ '-f', 's32le', '-acodec', 'pcm_s32le' ]
+		return [ '-f', 's32le' ]
 	return []
 
 

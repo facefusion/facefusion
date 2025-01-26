@@ -12,7 +12,7 @@ def test_chain() -> None:
 	assert chain(ffmpeg_builder.set_progress()) == [ '-progress' ]
 
 
-def test_stream_mode() -> None:
+def test_set_stream_mode() -> None:
 	assert set_stream_mode('udp') == [ '-f', 'mpegts' ]
 	assert set_stream_mode('v4l2') == [ '-f', 'v4l2' ]
 
@@ -24,9 +24,9 @@ def test_select_frame_range() -> None:
 	assert select_frame_range(None, None, 30) == [ '-vf', 'fps=30' ]
 
 
-def test_audio_sample_size() -> None:
-	assert set_audio_sample_size(16) == [ '-f', 's16le', '-acodec', 'pcm_s16le' ]
-	assert set_audio_sample_size(32) == [ '-f', 's32le', '-acodec', 'pcm_s32le' ]
+def test_set_audio_sample_size() -> None:
+	assert set_audio_sample_size(16) == [ '-f', 's16le' ]
+	assert set_audio_sample_size(32) == [ '-f', 's32le' ]
 
 
 def test_set_audio_quality() -> None:
