@@ -42,6 +42,9 @@ def test_set_audio_quality() -> None:
 	assert set_audio_quality('libvorbis', 0) == [ '-q:a', '-1.0' ]
 	assert set_audio_quality('libvorbis', 50) == [ '-q:a', '4.5' ]
 	assert set_audio_quality('libvorbis', 100) == [ '-q:a', '10.0' ]
+	assert set_audio_quality('flac', 0) == []
+	assert set_audio_quality('flac', 50) == []
+	assert set_audio_quality('flac', 100) == []
 
 
 def test_set_video_quality() -> None:
