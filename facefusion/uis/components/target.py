@@ -7,7 +7,7 @@ from facefusion.face_store import clear_reference_faces, clear_static_faces
 from facefusion.filesystem import get_file_size, is_image, is_video
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import ComponentOptions, File
-from facefusion.vision import read_video_frame, normalize_frame_color
+from facefusion.vision import normalize_frame_color, read_video_frame
 
 FILE_SIZE_LIMIT = 512 * 1024 * 1024
 
