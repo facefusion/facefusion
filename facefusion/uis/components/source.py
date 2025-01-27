@@ -50,10 +50,12 @@ def update(files : List[File]) -> Tuple[gradio.Audio, gradio.Image]:
 	file_names = [ file.name for file in files ] if files else None
 	has_source_audio = has_audio(file_names)
 	has_source_image = has_image(file_names)
+
 	if has_source_audio or has_source_image:
 		source_audio_path = get_first(filter_audio_paths(file_names))
 		source_image_path = get_first(filter_image_paths(file_names))
 		state_manager.set_item('source_paths', file_names)
 		return gradio.Audio(value = source_audio_path, visible = has_source_audio), gradio.Image(value = source_image_path, visible = has_source_image)
+
 	state_manager.clear_item('source_paths')
 	return gradio.Audio(value = None, visible = False), gradio.Image(value = None, visible = False)

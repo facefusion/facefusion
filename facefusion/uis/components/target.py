@@ -62,14 +62,17 @@ def listen() -> None:
 def update(file : File) -> Tuple[gradio.Image, gradio.Video]:
 	clear_reference_faces()
 	clear_static_faces()
+
 	if file and is_image(file.name):
 		state_manager.set_item('target_path', file.name)
 		return gradio.Image(value = file.name, visible = True), gradio.Video(value = None, visible = False)
+
 	if file and is_video(file.name):
 		state_manager.set_item('target_path', file.name)
 		if get_file_size(file.name) > FILE_SIZE_LIMIT:
 			preview_vision_frame = normalize_frame_color(read_video_frame(file.name))
 			return gradio.Image(value = preview_vision_frame, visible = True), gradio.Video(value = None, visible = False)
 		return gradio.Image(value = None, visible = False), gradio.Video(value = file.name, visible = True)
+
 	state_manager.clear_item('target_path')
 	return gradio.Image(value = None, visible = False), gradio.Video(value = None, visible = False)
