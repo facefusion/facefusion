@@ -4,12 +4,9 @@ import gradio
 
 from facefusion import state_manager, wording
 from facefusion.face_store import clear_reference_faces, clear_static_faces
-from facefusion.filesystem import get_file_size, is_image, is_video
+from facefusion.filesystem import is_image, is_video
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.typing import ComponentOptions, File
-from facefusion.vision import normalize_frame_color, read_video_frame
-
-FILE_SIZE_LIMIT = 512 * 1024 * 1024
 
 TARGET_FILE : Optional[gradio.File] = None
 TARGET_IMAGE : Optional[gradio.Image] = None
@@ -42,13 +39,8 @@ def render() -> None:
 		target_image_options['value'] = TARGET_FILE.value.get('path')
 		target_image_options['visible'] = True
 	if is_target_video:
-		if get_file_size(state_manager.get_item('target_path')) > FILE_SIZE_LIMIT:
-			preview_vision_frame = normalize_frame_color(read_video_frame(state_manager.get_item('target_path')))
-			target_image_options['value'] = preview_vision_frame
-			target_image_options['visible'] = True
-		else:
-			target_video_options['value'] = TARGET_FILE.value.get('path')
-			target_video_options['visible'] = True
+		target_video_options['value'] = TARGET_FILE.value.get('path')
+		target_video_options['visible'] = True
 	TARGET_IMAGE = gradio.Image(**target_image_options)
 	TARGET_VIDEO = gradio.Video(**target_video_options)
 	register_ui_component('target_image', TARGET_IMAGE)
@@ -69,9 +61,6 @@ def update(file : File) -> Tuple[gradio.Image, gradio.Video]:
 
 	if file and is_video(file.name):
 		state_manager.set_item('target_path', file.name)
-		if get_file_size(file.name) > FILE_SIZE_LIMIT:
-			preview_vision_frame = normalize_frame_color(read_video_frame(file.name))
-			return gradio.Image(value = preview_vision_frame, visible = True), gradio.Video(value = None, visible = False)
 		return gradio.Image(value = None, visible = False), gradio.Video(value = file.name, visible = True)
 
 	state_manager.clear_item('target_path')
