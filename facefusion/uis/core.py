@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 import gradio
 from gradio.themes import Size
 
+import facefusion.uis.overrides as uis_overrides
 from facefusion import logger, metadata, state_manager, wording
 from facefusion.exit_helper import hard_exit
 from facefusion.filesystem import resolve_relative_path
@@ -74,7 +75,8 @@ def init() -> None:
 	os.environ['GRADIO_TEMP_DIR'] = os.path.join(state_manager.get_item('temp_path'), 'gradio')
 
 	warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
-	gradio.processing_utils._check_allowed = lambda path, check_in_upload_folder: None
+	gradio.processing_utils._check_allowed = uis_overrides.check_allowed #type:ignore
+	gradio.processing_utils.convert_video_to_playable_mp4 = uis_overrides.convert_video_to_playable_mp4
 
 
 def launch() -> None:
