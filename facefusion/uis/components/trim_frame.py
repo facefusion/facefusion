@@ -39,7 +39,7 @@ def listen() -> None:
 		'target_image',
 		'target_video'
 	]):
-		for method in [ 'upload', 'change', 'clear' ]:
+		for method in [ 'change', 'clear' ]:
 			getattr(ui_component, method)(remote_update, outputs = [ TRIM_FRAME_RANGE_SLIDER ])
 
 

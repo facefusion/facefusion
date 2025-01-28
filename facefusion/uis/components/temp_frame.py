@@ -27,7 +27,7 @@ def listen() -> None:
 
 	target_video = get_ui_component('target_video')
 	if target_video:
-		for method in [ 'upload', 'change', 'clear' ]:
+		for method in [ 'change', 'clear' ]:
 			getattr(target_video, method)(remote_update, outputs = TEMP_FRAME_FORMAT_DROPDOWN)
 
 

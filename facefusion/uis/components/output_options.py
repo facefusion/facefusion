@@ -134,7 +134,7 @@ def listen() -> None:
 		'target_image',
 		'target_video'
 	]):
-		for method in [ 'upload', 'change', 'clear' ]:
+		for method in [ 'change', 'clear' ]:
 			getattr(ui_component, method)(remote_update, outputs = [ OUTPUT_IMAGE_QUALITY_SLIDER, OUTPUT_IMAGE_RESOLUTION_DROPDOWN, OUTPUT_AUDIO_ENCODER_DROPDOWN, OUTPUT_AUDIO_QUALITY_SLIDER, OUTPUT_AUDIO_VOLUME_SLIDER, OUTPUT_VIDEO_ENCODER_DROPDOWN, OUTPUT_VIDEO_PRESET_DROPDOWN, OUTPUT_VIDEO_QUALITY_SLIDER, OUTPUT_VIDEO_RESOLUTION_DROPDOWN, OUTPUT_VIDEO_FPS_SLIDER ])
 
 
