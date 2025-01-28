@@ -38,7 +38,7 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-@pytest.skip()
+@pytest.mark.skip()
 def test_get_available_encoder_set() -> None:
 	available_encoder_set = get_available_encoder_set()
 
