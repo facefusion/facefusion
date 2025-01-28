@@ -10,7 +10,7 @@ from facefusion.face_helper import create_rotated_matrix_and_size, create_static
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
 from facefusion.typing import Angle, BoundingBox, Detection, DownloadScope, DownloadSet, FaceLandmark5, InferencePool, ModelSet, Score, VisionFrame
-from facefusion.vision import resize_frame_resolution, unpack_resolution
+from facefusion.vision import restrict_frame, unpack_resolution
 
 
 @lru_cache(maxsize = None)
@@ -151,7 +151,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 	anchor_total = 2
 	face_detector_score = state_manager.get_item('face_detector_score')
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
-	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
+	temp_vision_frame = restrict_frame(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
@@ -194,7 +194,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 	anchor_total = 2
 	face_detector_score = state_manager.get_item('face_detector_score')
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
-	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
+	temp_vision_frame = restrict_frame(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
@@ -234,7 +234,7 @@ def detect_with_yolo_face(vision_frame : VisionFrame, face_detector_size : str) 
 	face_landmarks_5 = []
 	face_detector_score = state_manager.get_item('face_detector_score')
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
-	temp_vision_frame = resize_frame_resolution(vision_frame, (face_detector_width, face_detector_height))
+	temp_vision_frame = restrict_frame(vision_frame, (face_detector_width, face_detector_height))
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
@@ -305,6 +305,6 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	detect_vision_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
 	detect_vision_frame[:temp_vision_frame.shape[0], :temp_vision_frame.shape[1], :] = temp_vision_frame
-	detect_vision_frame = (detect_vision_frame - 127.5) / 128.0
+	detect_vision_frame = detect_vision_frame / 255.0
 	detect_vision_frame = numpy.expand_dims(detect_vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 	return detect_vision_frame
