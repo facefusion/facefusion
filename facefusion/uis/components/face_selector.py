@@ -112,7 +112,7 @@ def listen() -> None:
 		'target_image',
 		'target_video'
 	]):
-		for method in [ 'upload', 'change', 'clear' ]:
+		for method in [ 'change', 'clear' ]:
 			getattr(ui_component, method)(update_reference_face_position)
 			getattr(ui_component, method)(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
