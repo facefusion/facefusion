@@ -296,10 +296,12 @@ def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[Vi
 	for row_vision_frame in row_range:
 		top = row_vision_frame - size[2]
 		bottom = row_vision_frame + size[2] + tile_width
+
 		for column_vision_frame in col_range:
 			left = column_vision_frame - size[2]
 			right = column_vision_frame + size[2] + tile_width
 			tile_vision_frames.append(pad_vision_frame[top:bottom, left:right, :])
+
 	return tile_vision_frames, pad_width, pad_height
 
 
@@ -317,5 +319,6 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 		left = col_index * tile_vision_frame.shape[1]
 		right = left + tile_vision_frame.shape[1]
 		merge_vision_frame[top:bottom, left:right, :] = tile_vision_frame
+
 	merge_vision_frame = merge_vision_frame[size[1] : size[1] + temp_height, size[1]: size[1] + temp_width, :]
 	return merge_vision_frame
