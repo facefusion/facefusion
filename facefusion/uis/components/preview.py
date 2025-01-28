@@ -88,7 +88,7 @@ def listen() -> None:
 		'target_image',
 		'target_video'
 	]):
-		for method in [ 'upload', 'change', 'clear' ]:
+		for method in [ 'upload', 'clear' ]:
 			getattr(ui_component, method)(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
@@ -96,7 +96,7 @@ def listen() -> None:
 		'target_image',
 		'target_video'
 	]):
-		for method in [ 'upload', 'change', 'clear' ]:
+		for method in [ 'upload', 'clear' ]:
 			getattr(ui_component, method)(update_preview_frame_slider, outputs = PREVIEW_FRAME_SLIDER)
 
 	for ui_component in get_ui_components(
