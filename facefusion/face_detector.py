@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
 
 import cv2
 import numpy
@@ -155,6 +155,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
+	detect_vision_frame = normalize_detect_frame(detect_vision_frame, [ -1, 1 ])
 	detection = forward_with_retinaface(detect_vision_frame)
 
 	for index, feature_stride in enumerate(feature_strides):
@@ -198,6 +199,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
+	detect_vision_frame = normalize_detect_frame(detect_vision_frame, [ -1, 1 ])
 	detection = forward_with_scrfd(detect_vision_frame)
 
 	for index, feature_stride in enumerate(feature_strides):
@@ -238,6 +240,7 @@ def detect_with_yolo_face(vision_frame : VisionFrame, face_detector_size : str) 
 	ratio_height = vision_frame.shape[0] / temp_vision_frame.shape[0]
 	ratio_width = vision_frame.shape[1] / temp_vision_frame.shape[1]
 	detect_vision_frame = prepare_detect_frame(temp_vision_frame, face_detector_size)
+	detect_vision_frame = normalize_detect_frame(detect_vision_frame, [ 0, 1 ])
 	detection = forward_with_yolo_face(detect_vision_frame)
 	detection = numpy.squeeze(detection).T
 	bounding_boxes_raw, face_scores_raw, face_landmarks_5_raw = numpy.split(detection, [ 4, 5 ], axis = 1)
@@ -305,6 +308,13 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, face_detector_size : s
 	face_detector_width, face_detector_height = unpack_resolution(face_detector_size)
 	detect_vision_frame = numpy.zeros((face_detector_height, face_detector_width, 3))
 	detect_vision_frame[:temp_vision_frame.shape[0], :temp_vision_frame.shape[1], :] = temp_vision_frame
-	detect_vision_frame = detect_vision_frame / 255.0
 	detect_vision_frame = numpy.expand_dims(detect_vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
+	return detect_vision_frame
+
+
+def normalize_detect_frame(detect_vision_frame : VisionFrame, normalize_range : Sequence[int]) -> VisionFrame:
+	if normalize_range == [ -1, 1 ]:
+		return (detect_vision_frame - 127.5) / 128.0
+	if normalize_range == [ 0, 1 ]:
+		return detect_vision_frame / 255.0
 	return detect_vision_frame
