@@ -217,16 +217,29 @@ def detect_frame_orientation(vision_frame : VisionFrame) -> Orientation:
 	return 'portrait'
 
 
-def resize_frame_resolution(vision_frame : VisionFrame, max_resolution : Resolution) -> VisionFrame:
+def restrict_frame(vision_frame : VisionFrame, resolution : Resolution) -> VisionFrame:
 	height, width = vision_frame.shape[:2]
-	max_width, max_height = max_resolution
+	restrict_width, restrict_height = resolution
 
-	if height > max_height or width > max_width:
-		scale = min(max_height / height, max_width / width)
+	if height > restrict_height or width > restrict_width:
+		scale = min(restrict_height / height, restrict_width / width)
 		new_width = int(width * scale)
 		new_height = int(height * scale)
 		return cv2.resize(vision_frame, (new_width, new_height))
 	return vision_frame
+
+
+def fit_frame(vision_frame: VisionFrame, resolution: Resolution) -> VisionFrame:
+	fit_width, fit_height = resolution
+	height, width = vision_frame.shape[:2]
+	scale = min(fit_height / height, fit_width / width)
+	new_width = int(width * scale)
+	new_height = int(height * scale)
+	paste_vision_frame = cv2.resize(vision_frame, (new_width, new_height))
+	x_pad = (fit_width - new_width) // 2
+	y_pad = (fit_height - new_height) // 2
+	temp_vision_frame = numpy.pad(paste_vision_frame, ((y_pad, fit_height - new_height - y_pad), (x_pad, fit_width - new_width - x_pad), (0, 0)))
+	return temp_vision_frame
 
 
 def normalize_frame_color(vision_frame : VisionFrame) -> VisionFrame:
@@ -283,10 +296,12 @@ def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[Vi
 	for row_vision_frame in row_range:
 		top = row_vision_frame - size[2]
 		bottom = row_vision_frame + size[2] + tile_width
+
 		for column_vision_frame in col_range:
 			left = column_vision_frame - size[2]
 			right = column_vision_frame + size[2] + tile_width
 			tile_vision_frames.append(pad_vision_frame[top:bottom, left:right, :])
+
 	return tile_vision_frames, pad_width, pad_height
 
 
@@ -304,5 +319,6 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 		left = col_index * tile_vision_frame.shape[1]
 		right = left + tile_vision_frame.shape[1]
 		merge_vision_frame[top:bottom, left:right, :] = tile_vision_frame
+
 	merge_vision_frame = merge_vision_frame[size[1] : size[1] + temp_height, size[1]: size[1] + temp_width, :]
 	return merge_vision_frame

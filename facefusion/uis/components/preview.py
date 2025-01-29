@@ -18,7 +18,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.typing import AudioFrame, Face, FaceSet, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.typing import ComponentOptions
-from facefusion.vision import count_video_frame_total, detect_frame_orientation, normalize_frame_color, read_static_image, read_static_images, read_video_frame, resize_frame_resolution
+from facefusion.vision import count_video_frame_total, detect_frame_orientation, normalize_frame_color, read_static_image, read_static_images, read_video_frame, restrict_frame
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 PREVIEW_FRAME_SLIDER : Optional[gradio.Slider] = None
@@ -185,7 +185,7 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 def slide_preview_image(frame_number : int = 0) -> gradio.Image:
 	if is_video(state_manager.get_item('target_path')):
 		preview_vision_frame = normalize_frame_color(read_video_frame(state_manager.get_item('target_path'), frame_number))
-		preview_vision_frame = resize_frame_resolution(preview_vision_frame, (1024, 1024))
+		preview_vision_frame = restrict_frame(preview_vision_frame, (1024, 1024))
 		return gradio.Image(value = preview_vision_frame)
 	return gradio.Image(value = None)
 
@@ -237,7 +237,7 @@ def update_preview_frame_slider() -> gradio.Slider:
 
 
 def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_audio_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:
-	target_vision_frame = resize_frame_resolution(target_vision_frame, (1024, 1024))
+	target_vision_frame = restrict_frame(target_vision_frame, (1024, 1024))
 	source_vision_frame = target_vision_frame.copy()
 	if analyse_frame(target_vision_frame):
 		return cv2.GaussianBlur(target_vision_frame, (99, 99), 0)
