@@ -283,6 +283,7 @@ StateKey = Literal\
 	'video_memory_strategy',
 	'system_memory_limit',
 	'log_level',
+	'halt_on_error',
 	'job_id',
 	'job_status',
 	'step_index'
@@ -347,6 +348,7 @@ State = TypedDict('State',
 	'video_memory_strategy' : VideoMemoryStrategy,
 	'system_memory_limit' : int,
 	'log_level' : LogLevel,
+	'halt_on_error' : bool,
 	'job_id' : str,
 	'job_status' : JobStatus,
 	'step_index' : int

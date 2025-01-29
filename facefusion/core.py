@@ -183,7 +183,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-submit-all':
-		if job_manager.submit_jobs():
+		if job_manager.submit_jobs(state_manager.get_item('halt_on_error')):
 			logger.info(wording.get('job_all_submitted'), __name__)
 			return 0
 		logger.error(wording.get('job_all_not_submitted'), __name__)
@@ -197,7 +197,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-delete-all':
-		if job_manager.delete_jobs():
+		if job_manager.delete_jobs(state_manager.get_item('halt_on_error')):
 			logger.info(wording.get('job_all_deleted'), __name__)
 			return 0
 		logger.error(wording.get('job_all_not_deleted'), __name__)
@@ -250,7 +250,7 @@ def route_job_runner() -> ErrorCode:
 
 	if state_manager.get_item('command') == 'job-run-all':
 		logger.info(wording.get('running_jobs'), __name__)
-		if job_runner.run_jobs(process_step):
+		if job_runner.run_jobs(process_step, state_manager.get_item('halt_on_error')):
 			logger.info(wording.get('processing_jobs_succeed'), __name__)
 			return 0
 		logger.info(wording.get('processing_jobs_failed'), __name__)
@@ -266,7 +266,7 @@ def route_job_runner() -> ErrorCode:
 
 	if state_manager.get_item('command') == 'job-retry-all':
 		logger.info(wording.get('retrying_jobs'), __name__)
-		if job_runner.retry_jobs(process_step):
+		if job_runner.retry_jobs(process_step, state_manager.get_item('halt_on_error')):
 			logger.info(wording.get('processing_jobs_succeed'), __name__)
 			return 0
 		logger.info(wording.get('processing_jobs_failed'), __name__)

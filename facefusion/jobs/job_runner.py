@@ -16,14 +16,17 @@ def run_job(job_id : str, process_step : ProcessStep) -> bool:
 	return False
 
 
-def run_jobs(process_step : ProcessStep) -> bool:
+def run_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 	queued_job_ids = job_manager.find_job_ids('queued')
+	has_error = False
 
 	if queued_job_ids:
 		for job_id in queued_job_ids:
 			if not run_job(job_id, process_step):
-				return False
-		return True
+				has_error = True
+				if halt_on_error:
+					return False
+		return not has_error
 	return False
 
 
@@ -35,14 +38,17 @@ def retry_job(job_id : str, process_step : ProcessStep) -> bool:
 	return False
 
 
-def retry_jobs(process_step : ProcessStep) -> bool:
+def retry_jobs(process_step : ProcessStep, halt_on_error : bool) -> bool:
 	failed_job_ids = job_manager.find_job_ids('failed')
+	has_error = False
 
 	if failed_job_ids:
 		for job_id in failed_job_ids:
 			if not retry_job(job_id, process_step):
-				return False
-		return True
+				has_error = True
+				if halt_on_error:
+					return False
+		return not has_error
 	return False
 
 
