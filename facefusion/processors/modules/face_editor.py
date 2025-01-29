@@ -360,7 +360,7 @@ def edit_lip_open(motion_points : LivePortraitMotionPoints, face_landmark_68 : F
 	else:
 		lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 1.0 ] ])
 	lip_motion_points = lip_motion_points.reshape(1, -1).astype(numpy.float32)
-	lip_motion_points = forward_retarget_lip(lip_motion_points)	* numpy.abs(face_editor_lip_open_ratio)
+	lip_motion_points = forward_retarget_lip(lip_motion_points) * numpy.abs(face_editor_lip_open_ratio)
 	lip_motion_points = lip_motion_points.reshape(-1, 21, 3)
 	return lip_motion_points
 
