@@ -200,7 +200,7 @@ WORDING : Dict[str, Any] =\
 		'system_memory_limit': 'limit the available RAM that can be used while processing',
 		# misc
 		'log_level': 'adjust the message severity displayed in the terminal',
-		'halt_on_error': 'halt the program once an error occurs',
+		'halt_on_error': 'halt the program once an error occurred',
 		# run
 		'run': 'run the program',
 		'headless_run': 'run the program in headless mode',
