@@ -476,7 +476,7 @@ def process_video(start_time : float) -> ErrorCode:
 				logger.warn(wording.get('replacing_audio_skipped'), __name__)
 				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 		else:
-			if restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
+			if restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_video_fps, trim_frame_start, trim_frame_end):
 				logger.debug(wording.get('restoring_audio_succeed'), __name__)
 			else:
 				if is_process_stopping():
