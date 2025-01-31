@@ -48,14 +48,17 @@ def submit_job(job_id : str) -> bool:
 	return False
 
 
-def submit_jobs() -> bool:
+def submit_jobs(halt_on_error : bool) -> bool:
 	drafted_job_ids = find_job_ids('drafted')
+	has_error = False
 
 	if drafted_job_ids:
 		for job_id in drafted_job_ids:
 			if not submit_job(job_id):
-				return False
-		return True
+				has_error = True
+				if halt_on_error:
+					return False
+		return not has_error
 	return False
 
 
@@ -63,14 +66,17 @@ def delete_job(job_id : str) -> bool:
 	return delete_job_file(job_id)
 
 
-def delete_jobs() -> bool:
+def delete_jobs(halt_on_error : bool) -> bool:
 	job_ids = find_job_ids('drafted') + find_job_ids('queued') + find_job_ids('failed') + find_job_ids('completed')
+	has_error = False
 
 	if job_ids:
 		for job_id in job_ids:
 			if not delete_job(job_id):
-				return False
-		return True
+				has_error = True
+				if halt_on_error:
+					return False
+		return not has_error
 	return False
 
 
