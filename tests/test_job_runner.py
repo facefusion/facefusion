@@ -85,8 +85,9 @@ def test_run_jobs() -> None:
 		'target_path': get_test_example_file('target-240p.jpg'),
 		'output_path': get_test_output_file('output-1.jpg')
 	}
+	halt_on_error = True
 
-	assert run_jobs(process_step) is False
+	assert run_jobs(process_step, halt_on_error) is False
 
 	create_job('job-test-run-jobs-1')
 	create_job('job-test-run-jobs-2')
@@ -95,11 +96,11 @@ def test_run_jobs() -> None:
 	add_step('job-test-run-jobs-2', args_2)
 	add_step('job-test-run-jobs-3', args_3)
 
-	assert run_jobs(process_step) is False
+	assert run_jobs(process_step, halt_on_error) is False
 
-	submit_jobs()
+	submit_jobs(halt_on_error)
 
-	assert run_jobs(process_step) is True
+	assert run_jobs(process_step, halt_on_error) is True
 
 
 @pytest.mark.skip()

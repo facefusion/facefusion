@@ -63,19 +63,20 @@ def test_submit_jobs() -> None:
 		'target_path': 'target-2.jpg',
 		'output_path': 'output-2.jpg'
 	}
+	halt_on_error = True
 
-	assert submit_jobs() is False
+	assert submit_jobs(halt_on_error) is False
 
 	create_job('job-test-submit-jobs-1')
 	create_job('job-test-submit-jobs-2')
 
-	assert submit_jobs() is False
+	assert submit_jobs(halt_on_error) is False
 
 	add_step('job-test-submit-jobs-1', args_1)
 	add_step('job-test-submit-jobs-2', args_2)
 
-	assert submit_jobs() is True
-	assert submit_jobs() is False
+	assert submit_jobs(halt_on_error) is True
+	assert submit_jobs(halt_on_error) is False
 
 
 def test_delete_job() -> None:
@@ -88,12 +89,14 @@ def test_delete_job() -> None:
 
 
 def test_delete_jobs() -> None:
-	assert delete_jobs() is False
+	halt_on_error = True
+
+	assert delete_jobs(halt_on_error) is False
 
 	create_job('job-test-delete-jobs-1')
 	create_job('job-test-delete-jobs-2')
 
-	assert delete_jobs() is True
+	assert delete_jobs(halt_on_error) is True
 
 
 @pytest.mark.skip()
