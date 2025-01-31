@@ -101,7 +101,7 @@ def test_restore_audio() -> None:
 		create_temp_directory(target_path)
 		copy_file(target_path, get_temp_file_path(target_path))
 
-		assert restore_audio(target_path, output_path, 30, 0, 270) is True
+		assert restore_audio(target_path, output_path, 0, 270) is True
 
 		clear_temp_directory(target_path)
 
