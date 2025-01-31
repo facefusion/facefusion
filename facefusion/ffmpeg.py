@@ -156,7 +156,7 @@ def read_audio_buffer(target_path : str, audio_sample_rate : int, audio_sample_s
 	return None
 
 
-def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+def restore_audio(target_path : str, output_path : str, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
 	output_audio_encoder = state_manager.get_item('output_audio_encoder')
 	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_audio_volume = state_manager.get_item('output_audio_volume')
@@ -165,7 +165,7 @@ def restore_audio(target_path : str, output_path : str, output_video_fps : Fps, 
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_file_path),
-		ffmpeg_builder.select_media_range(trim_frame_start, trim_frame_end, output_video_fps),
+		ffmpeg_builder.select_media_range(trim_frame_start, trim_frame_end, temp_video_fps),
 		ffmpeg_builder.set_input(target_path),
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.set_audio_encoder(output_audio_encoder),
