@@ -38,8 +38,9 @@ def render() -> None:
 	{
 		'label': wording.get('uis.reference_face_gallery'),
 		'object_fit': 'cover',
-		'columns': 8,
+		'columns': 7,
 		'allow_preview': False,
+		'elem_classes': 'box-face-selector',
 		'visible': 'reference' in state_manager.get_item('face_selector_mode')
 	}
 	if is_image(state_manager.get_item('target_path')):
@@ -130,8 +131,9 @@ def listen() -> None:
 
 	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
-		preview_frame_slider.release(update_reference_frame_number, inputs = preview_frame_slider)
-		preview_frame_slider.release(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
+		for method in [ 'change', 'release' ]:
+			getattr(preview_frame_slider, method)(update_reference_frame_number, inputs = preview_frame_slider, show_progress = 'hidden')
+			getattr(preview_frame_slider, method)(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY, show_progress = 'hidden')
 
 
 def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gradio.Gallery, gradio.Slider]:

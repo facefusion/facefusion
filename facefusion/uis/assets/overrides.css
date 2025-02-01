@@ -65,6 +65,12 @@
 	min-height: unset;
 }
 
+:root:root:root:root .box-face-selector .empty,
+:root:root:root:root .box-face-selector .gallery-container
+{
+	min-height: 7.375rem;
+}
+
 :root:root:root:root .tab-wrapper
 {
 	padding: 0 0.625rem;
