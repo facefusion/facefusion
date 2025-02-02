@@ -18,7 +18,7 @@ def run_job(job_id : str, process_step : ProcessStep) -> bool:
 	return False
 
 
-def run_jobs(process_step : ProcessStep, batch_size = 5) -> bool:
+def run_jobs(process_step : ProcessStep, batch_size = 2) -> bool:
 	queued_job_ids = job_manager.find_job_ids('queued')
 
 	if queued_job_ids:
@@ -69,7 +69,7 @@ def run_step(job_id : str, step_index : int, step : JobStep, process_step : Proc
 
 		return success
 	job_manager.set_step_status(job_id, step_index, 'failed')
-	
+
 	gc.collect()
 
 	return False
