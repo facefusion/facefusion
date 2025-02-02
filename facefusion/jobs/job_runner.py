@@ -4,7 +4,13 @@ from facefusion.jobs import job_helper, job_manager
 from facefusion.typing import JobOutputSet, JobStep, ProcessStep
 
 import gc
+import psutil
 
+
+def print_memory_usage(label):
+    process = psutil.Process()
+    mem_info = process.memory_info()
+    print(f"[MEMORY] {label}: RSS={mem_info.rss / (1024 ** 3):.2f} GB, VMS={mem_info.vms / (1024 ** 3):.2f} GB")
 
 def run_job(job_id : str, process_step : ProcessStep) -> bool:
 	queued_job_ids = job_manager.find_job_ids('queued')
@@ -57,6 +63,8 @@ def retry_jobs(process_step : ProcessStep) -> bool:
 def run_step(job_id : str, step_index : int, step : JobStep, process_step : ProcessStep) -> bool:
 	step_args = step.get('args')
 
+	print_memory_usage(f"Before Step {step_index}")
+
 	if job_manager.set_step_status(job_id, step_index, 'started') and process_step(job_id, step_index, step_args):
 		output_path = step_args.get('output_path')
 		step_output_path = job_helper.get_step_output_path(job_id, step_index, output_path)
@@ -66,11 +74,13 @@ def run_step(job_id : str, step_index : int, step : JobStep, process_step : Proc
 		remove_file(output_path)
 
 		gc.collect()
+		print_memory_usage(f"After Step {step_index}")
 
 		return success
 	job_manager.set_step_status(job_id, step_index, 'failed')
 
 	gc.collect()
+	print_memory_usage(f"Failed Step {step_index}")
 
 	return False
 
