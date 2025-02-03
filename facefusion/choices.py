@@ -37,6 +37,7 @@ face_mask_regions : List[FaceMaskRegion] = list(face_mask_region_set.keys())
 
 audio_type_set : AudioTypeSet =\
 {
+	'm4a': 'audio/mp4',
 	'mp3': 'audio/mpeg',
 	'ogg': 'audio/ogg',
 	'wav': 'audio/x-wav'
@@ -52,6 +53,7 @@ image_type_set : ImageTypeSet =\
 video_type_set : VideoTypeSet =\
 {
 	'avi': 'video/x-msvideo',
+	'm4v': 'video/mp4',
 	'mkv': 'video/x-matroska',
 	'mp4': 'video/mp4',
 	'mov': 'video/quicktime',
