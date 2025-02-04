@@ -11,6 +11,7 @@ from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
 from facefusion.core import conditional_append_reference_faces
 from facefusion.face_analyser import get_average_face, get_many_faces
+from facefusion.face_selector import sort_faces_by_order
 from facefusion.face_store import clear_reference_faces, clear_static_faces, get_reference_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
@@ -74,7 +75,7 @@ def render() -> None:
 
 def listen() -> None:
 	PREVIEW_FRAME_SLIDER.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE, show_progress = 'hidden')
-	PREVIEW_FRAME_SLIDER.change(slide_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE, show_progress = 'hidden')
+	PREVIEW_FRAME_SLIDER.change(slide_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE, show_progress = 'hidden', trigger_mode = 'once')
 
 	reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
 	if reference_face_position_gallery:
@@ -110,6 +111,7 @@ def listen() -> None:
 	for ui_component in get_ui_components(
 	[
 		'age_modifier_direction_slider',
+		'deep_swapper_morph_slider',
 		'expression_restorer_factor_slider',
 		'face_editor_eyebrow_direction_slider',
 		'face_editor_eye_gaze_horizontal_slider',
@@ -126,6 +128,7 @@ def listen() -> None:
 		'face_editor_head_yaw_slider',
 		'face_editor_head_roll_slider',
 		'face_enhancer_blend_slider',
+		'face_enhancer_weight_slider',
 		'frame_colorizer_blend_slider',
 		'frame_enhancer_blend_slider',
 		'reference_face_distance_slider',
@@ -142,6 +145,7 @@ def listen() -> None:
 	for ui_component in get_ui_components(
 	[
 		'age_modifier_model_dropdown',
+		'deep_swapper_model_dropdown',
 		'expression_restorer_model_dropdown',
 		'processors_checkbox_group',
 		'face_editor_model_dropdown',
@@ -158,7 +162,9 @@ def listen() -> None:
 		'face_detector_model_dropdown',
 		'face_detector_size_dropdown',
 		'face_detector_angles_checkbox_group',
-		'face_landmarker_model_dropdown'
+		'face_landmarker_model_dropdown',
+		'face_occluder_model_dropdown',
+		'face_parser_model_dropdown'
 	]):
 		ui_component.change(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
@@ -190,7 +196,13 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	conditional_append_reference_faces()
 	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_frames = read_static_images(state_manager.get_item('source_paths'))
-	source_faces = get_many_faces(source_frames)
+	source_faces = []
+
+	for source_frame in source_frames:
+		temp_faces = get_many_faces([ source_frame ])
+		temp_faces = sort_faces_by_order(temp_faces, 'large-small')
+		if temp_faces:
+			source_faces.append(get_first(temp_faces))
 	source_face = get_average_face(source_faces)
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()

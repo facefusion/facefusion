@@ -1,10 +1,10 @@
 filetype==1.2.0
-gradio==4.44.0
-gradio-rangeslider==0.0.6
-numpy==2.1.0
-onnx==1.16.1
-onnxruntime==1.19.2
+gradio==5.9.1
+gradio-rangeslider==0.0.8
+numpy==2.2.0
+onnx==1.17.0
+onnxruntime==1.20.1
 opencv-python==4.10.0.84
-psutil==6.0.0
-tqdm==4.66.5
+psutil==6.1.1
+tqdm==4.67.1
 scipy==1.14.1

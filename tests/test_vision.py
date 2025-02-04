@@ -3,7 +3,7 @@ import subprocess
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.vision import count_video_frame_total, create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, get_video_frame, normalize_resolution, pack_resolution, restrict_image_resolution, restrict_video_fps, restrict_video_resolution, unpack_resolution
+from facefusion.vision import calc_histogram_difference, count_trim_frame_total, count_video_frame_total, create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, get_video_frame, match_frame_color, normalize_resolution, pack_resolution, read_image, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -17,6 +17,7 @@ def before_all() -> None:
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vframes', '1', get_test_example_file('target-1080p.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', '-vf', 'hue=s=0', get_test_example_file('target-240p-0sat.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', '-vf', 'transpose=0', get_test_example_file('target-240p-90deg.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-1080p.mp4'), '-vframes', '1', '-vf', 'transpose=0', get_test_example_file('target-1080p-90deg.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
@@ -49,7 +50,7 @@ def test_create_image_resolutions() -> None:
 
 
 def test_get_video_frame() -> None:
-	assert get_video_frame(get_test_example_file('target-240p-25fps.mp4')) is not None
+	assert hasattr(get_video_frame(get_test_example_file('target-240p-25fps.mp4')), '__array_interface__')
 	assert get_video_frame('invalid') is None
 
 
@@ -71,6 +72,31 @@ def test_restrict_video_fps() -> None:
 	assert restrict_video_fps(get_test_example_file('target-1080p.mp4'), 20.0) == 20.0
 	assert restrict_video_fps(get_test_example_file('target-1080p.mp4'), 25.0) == 25.0
 	assert restrict_video_fps(get_test_example_file('target-1080p.mp4'), 60.0) == 25.0
+
+
+def test_detect_video_duration() -> None:
+	assert detect_video_duration(get_test_example_file('target-240p.mp4')) == 10.8
+	assert detect_video_duration('invalid') == 0
+
+
+def test_count_trim_frame_total() -> None:
+	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), 0, 200) == 200
+	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), 70, 270) == 200
+	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), -10, None) == 270
+	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), None, -10) == 0
+	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), 280, None) == 0
+	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), None, 280) == 270
+	assert count_trim_frame_total(get_test_example_file('target-240p.mp4'), None, None) == 270
+
+
+def test_restrict_trim_frame() -> None:
+	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), 0, 200) == (0, 200)
+	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), 70, 270) == (70, 270)
+	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), -10, None) == (0, 270)
+	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), None, -10) == (0, 0)
+	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), 280, None) == (270, 270)
+	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), None, 280) == (0, 270)
+	assert restrict_trim_frame(get_test_example_file('target-240p.mp4'), None, None) == (0, 270)
 
 
 def test_detect_video_resolution() -> None:
@@ -109,3 +135,19 @@ def test_pack_resolution() -> None:
 def test_unpack_resolution() -> None:
 	assert unpack_resolution('0x0') == (0, 0)
 	assert unpack_resolution('2x2') == (2, 2)
+
+
+def test_calc_histogram_difference() -> None:
+	source_vision_frame = read_image(get_test_example_file('target-240p.jpg'))
+	target_vision_frame = read_image(get_test_example_file('target-240p-0sat.jpg'))
+
+	assert calc_histogram_difference(source_vision_frame, source_vision_frame) == 1.0
+	assert calc_histogram_difference(source_vision_frame, target_vision_frame) < 0.5
+
+
+def test_match_frame_color() -> None:
+	source_vision_frame = read_image(get_test_example_file('target-240p.jpg'))
+	target_vision_frame = read_image(get_test_example_file('target-240p-0sat.jpg'))
+	output_vision_frame = match_frame_color(source_vision_frame, target_vision_frame)
+
+	assert calc_histogram_difference(source_vision_frame, output_vision_frame) > 0.5

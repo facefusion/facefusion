@@ -1,114 +1,118 @@
+from functools import lru_cache
 from typing import Tuple
 
 import cv2
 import numpy
 
 from facefusion import inference_manager, state_manager
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_helper import create_rotated_matrix_and_size, estimate_matrix_by_face_landmark_5, transform_points, warp_face_by_translation
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Angle, BoundingBox, DownloadSet, FaceLandmark5, FaceLandmark68, InferencePool, ModelSet, Prediction, Score, VisionFrame
+from facefusion.typing import Angle, BoundingBox, DownloadScope, DownloadSet, FaceLandmark5, FaceLandmark68, InferencePool, ModelSet, Prediction, Score, VisionFrame
 
-MODEL_SET : ModelSet =\
-{
-	'2dfan4':
+
+@lru_cache(maxsize = None)
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
+	return\
 	{
-		'hashes':
+		'2dfan4':
 		{
-			'2dfan4':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.hash',
-				'path': resolve_relative_path('../.assets/models/2dfan4.hash')
-			}
+				'2dfan4':
+				{
+					'url': resolve_download_url('models-3.0.0', '2dfan4.hash'),
+					'path': resolve_relative_path('../.assets/models/2dfan4.hash')
+				}
+			},
+			'sources':
+			{
+				'2dfan4':
+				{
+					'url': resolve_download_url('models-3.0.0', '2dfan4.onnx'),
+					'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
+				}
+			},
+			'size': (256, 256)
 		},
-		'sources':
+		'peppa_wutz':
 		{
-			'2dfan4':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/2dfan4.onnx',
-				'path': resolve_relative_path('../.assets/models/2dfan4.onnx')
-			}
+				'peppa_wutz':
+				{
+					'url': resolve_download_url('models-3.0.0', 'peppa_wutz.hash'),
+					'path': resolve_relative_path('../.assets/models/peppa_wutz.hash')
+				}
+			},
+			'sources':
+			{
+				'peppa_wutz':
+				{
+					'url': resolve_download_url('models-3.0.0', 'peppa_wutz.onnx'),
+					'path': resolve_relative_path('../.assets/models/peppa_wutz.onnx')
+				}
+			},
+			'size': (256, 256)
 		},
-		'size': (256, 256)
-	},
-	'peppa_wutz':
-	{
-		'hashes':
+		'fan_68_5':
 		{
-			'peppa_wutz':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.hash',
-				'path': resolve_relative_path('../.assets/models/peppa_wutz.hash')
-			}
-		},
-		'sources':
-		{
-			'peppa_wutz':
+				'fan_68_5':
+				{
+					'url': resolve_download_url('models-3.0.0', 'fan_68_5.hash'),
+					'path': resolve_relative_path('../.assets/models/fan_68_5.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/peppa_wutz.onnx',
-				'path': resolve_relative_path('../.assets/models/peppa_wutz.onnx')
-			}
-		},
-		'size': (256, 256)
-	},
-	'fan_68_5':
-	{
-		'hashes':
-		{
-			'fan_68_5':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fan_68_5.hash',
-				'path': resolve_relative_path('../.assets/models/fan_68_5.hash')
-			}
-		},
-		'sources':
-		{
-			'fan_68_5':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fan_68_5.onnx',
-				'path': resolve_relative_path('../.assets/models/fan_68_5.onnx')
+				'fan_68_5':
+				{
+					'url': resolve_download_url('models-3.0.0', 'fan_68_5.onnx'),
+					'path': resolve_relative_path('../.assets/models/fan_68_5.onnx')
+				}
 			}
 		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
 	_, model_sources = collect_model_downloads()
-	model_context = __name__ + '.' + state_manager.get_item('face_landmarker_model')
-	return inference_manager.get_inference_pool(model_context, model_sources)
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
-	model_context = __name__ + '.' + state_manager.get_item('face_landmarker_model')
-	inference_manager.clear_inference_pool(model_context)
+	inference_manager.clear_inference_pool(__name__)
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
+	model_set = create_static_model_set('full')
 	model_hashes =\
 	{
-		'fan_68_5': MODEL_SET.get('fan_68_5').get('hashes').get('fan_68_5')
+		'fan_68_5': model_set.get('fan_68_5').get('hashes').get('fan_68_5')
 	}
 	model_sources =\
 	{
-		'fan_68_5': MODEL_SET.get('fan_68_5').get('sources').get('fan_68_5')
+		'fan_68_5': model_set.get('fan_68_5').get('sources').get('fan_68_5')
 	}
 
 	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
-		model_hashes['2dfan4'] = MODEL_SET.get('2dfan4').get('hashes').get('2dfan4')
-		model_sources['2dfan4'] = MODEL_SET.get('2dfan4').get('sources').get('2dfan4')
+		model_hashes['2dfan4'] = model_set.get('2dfan4').get('hashes').get('2dfan4')
+		model_sources['2dfan4'] = model_set.get('2dfan4').get('sources').get('2dfan4')
+
 	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
-		model_hashes['peppa_wutz'] = MODEL_SET.get('peppa_wutz').get('hashes').get('peppa_wutz')
-		model_sources['peppa_wutz'] = MODEL_SET.get('peppa_wutz').get('sources').get('peppa_wutz')
+		model_hashes['peppa_wutz'] = model_set.get('peppa_wutz').get('hashes').get('peppa_wutz')
+		model_sources['peppa_wutz'] = model_set.get('peppa_wutz').get('sources').get('peppa_wutz')
+
 	return model_hashes, model_sources
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	model_hashes, model_sources = collect_model_downloads()
 
-	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
 
 
 def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
@@ -119,6 +123,7 @@ def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox
 
 	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
 		face_landmark_2dfan4, face_landmark_score_2dfan4 = detect_with_2dfan4(vision_frame, bounding_box, face_angle)
+
 	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
 		face_landmark_peppa_wutz, face_landmark_score_peppa_wutz = detect_with_peppa_wutz(vision_frame, bounding_box, face_angle)
 
@@ -128,7 +133,7 @@ def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox
 
 
 def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox, face_angle: Angle) -> Tuple[FaceLandmark68, Score]:
-	model_size = MODEL_SET.get('2dfan4').get('size')
+	model_size = create_static_model_set('full').get('2dfan4').get('size')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, model_size)
@@ -147,7 +152,7 @@ def detect_with_2dfan4(temp_vision_frame: VisionFrame, bounding_box: BoundingBox
 
 
 def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
-	model_size = MODEL_SET.get('peppa_wutz').get('size')
+	model_size = create_static_model_set('full').get('peppa_wutz').get('size')
 	scale = 195 / numpy.subtract(bounding_box[2:], bounding_box[:2]).max().clip(1, None)
 	translation = (model_size[0] - numpy.add(bounding_box[2:], bounding_box[:2]) * scale) * 0.5
 	rotated_matrix, rotated_size = create_rotated_matrix_and_size(face_angle, model_size)
@@ -167,7 +172,7 @@ def detect_with_peppa_wutz(temp_vision_frame : VisionFrame, bounding_box : Bound
 
 def conditional_optimize_contrast(crop_vision_frame : VisionFrame) -> VisionFrame:
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_RGB2Lab)
-	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: # type:ignore[arg-type]
+	if numpy.mean(crop_vision_frame[:, :, 0]) < 30: #type:ignore[arg-type]
 		crop_vision_frame[:, :, 0] = cv2.createCLAHE(clipLimit = 2).apply(crop_vision_frame[:, :, 0])
 	crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_Lab2RGB)
 	return crop_vision_frame

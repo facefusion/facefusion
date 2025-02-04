@@ -5,39 +5,43 @@ import numpy
 from tqdm import tqdm
 
 from facefusion import inference_manager, state_manager, wording
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
-from facefusion.vision import count_video_frame_total, detect_video_fps, get_video_frame, read_image
+from facefusion.typing import DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, VisionFrame
+from facefusion.vision import detect_video_fps, get_video_frame, read_image
 
-MODEL_SET : ModelSet =\
-{
-	'open_nsfw':
-	{
-		'hashes':
-		{
-			'content_analyser':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/open_nsfw.hash',
-				'path': resolve_relative_path('../.assets/models/open_nsfw.hash')
-			}
-		},
-		'sources':
-		{
-			'content_analyser':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/open_nsfw.onnx',
-				'path': resolve_relative_path('../.assets/models/open_nsfw.onnx')
-			}
-		},
-		'size': (224, 224),
-		'mean': [ 104, 117, 123 ]
-	}
-}
 PROBABILITY_LIMIT = 0.80
 RATE_LIMIT = 10
 STREAM_COUNTER = 0
+
+
+@lru_cache(maxsize = None)
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
+	return\
+	{
+		'open_nsfw':
+		{
+			'hashes':
+			{
+				'content_analyser':
+				{
+					'url': resolve_download_url('models-3.0.0', 'open_nsfw.hash'),
+					'path': resolve_relative_path('../.assets/models/open_nsfw.hash')
+				}
+			},
+			'sources':
+			{
+				'content_analyser':
+				{
+					'url': resolve_download_url('models-3.0.0', 'open_nsfw.onnx'),
+					'path': resolve_relative_path('../.assets/models/open_nsfw.onnx')
+				}
+			},
+			'size': (224, 224),
+			'mean': [ 104, 117, 123 ]
+		}
+	}
 
 
 def get_inference_pool() -> InferencePool:
@@ -50,15 +54,14 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	return MODEL_SET.get('open_nsfw')
+	return create_static_model_set('full').get('open_nsfw')
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
 
 
 def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
@@ -100,23 +103,22 @@ def prepare_frame(vision_frame : VisionFrame) -> VisionFrame:
 
 @lru_cache(maxsize = None)
 def analyse_image(image_path : str) -> bool:
-	frame = read_image(image_path)
-	return analyse_frame(frame)
+	vision_frame = read_image(image_path)
+	return analyse_frame(vision_frame)
 
 
 @lru_cache(maxsize = None)
-def analyse_video(video_path : str, start_frame : int, end_frame : int) -> bool:
-	video_frame_total = count_video_frame_total(video_path)
+def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int) -> bool:
 	video_fps = detect_video_fps(video_path)
-	frame_range = range(start_frame or 0, end_frame or video_frame_total)
+	frame_range = range(trim_frame_start, trim_frame_end)
 	rate = 0.0
 	counter = 0
 
 	with tqdm(total = len(frame_range), desc = wording.get('analysing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		for frame_number in frame_range:
 			if frame_number % int(video_fps) == 0:
-				frame = get_video_frame(video_path, frame_number)
-				if analyse_frame(frame):
+				vision_frame = get_video_frame(video_path, frame_number)
+				if analyse_frame(vision_frame):
 					counter += 1
 			rate = counter * int(video_fps) / len(frame_range) * 100
 			progress.update()

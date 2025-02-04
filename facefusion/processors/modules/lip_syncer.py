@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from functools import lru_cache
 from typing import List
 
 import cv2
@@ -10,7 +11,7 @@ import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, voice_extractor, wording
 from facefusion.audio import create_empty_audio_frame, get_voice_frame, read_static_voice
 from facefusion.common_helper import get_first
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import create_bounding_box, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_mouth_mask, create_occlusion_mask, create_static_box_mask
@@ -21,68 +22,69 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.typing import LipSyncerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, AudioFrame, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
 
-MODEL_SET : ModelSet =\
-{
-	'wav2lip_96':
+
+@lru_cache(maxsize = None)
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
+	return\
 	{
-		'hashes':
+		'wav2lip_96':
 		{
-			'lip_syncer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_96.hash',
-				'path': resolve_relative_path('../.assets/models/wav2lip_96.hash')
-			}
+				'lip_syncer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'wav2lip_96.hash'),
+					'path': resolve_relative_path('../.assets/models/wav2lip_96.hash')
+				}
+			},
+			'sources':
+			{
+				'lip_syncer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'wav2lip_96.onnx'),
+					'path': resolve_relative_path('../.assets/models/wav2lip_96.onnx')
+				}
+			},
+			'size': (96, 96)
 		},
-		'sources':
+		'wav2lip_gan_96':
 		{
-			'lip_syncer':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_96.onnx',
-				'path': resolve_relative_path('../.assets/models/wav2lip_96.onnx')
-			}
-		},
-		'size': (96, 96)
-	},
-	'wav2lip_gan_96':
-	{
-		'hashes':
-		{
-			'lip_syncer':
+				'lip_syncer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'wav2lip_gan_96.hash'),
+					'path': resolve_relative_path('../.assets/models/wav2lip_gan_96.hash')
+				}
+			},
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_gan_96.hash',
-				'path': resolve_relative_path('../.assets/models/wav2lip_gan_96.hash')
-			}
-		},
-		'sources':
-		{
-			'lip_syncer':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/wav2lip_gan_96.onnx',
-				'path': resolve_relative_path('../.assets/models/wav2lip_gan_96.onnx')
-			}
-		},
-		'size': (96, 96)
+				'lip_syncer':
+				{
+					'url': resolve_download_url('models-3.0.0', 'wav2lip_gan_96.onnx'),
+					'path': resolve_relative_path('../.assets/models/wav2lip_gan_96.onnx')
+				}
+			},
+			'size': (96, 96)
+		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
-	model_context = __name__ + '.' + state_manager.get_item('lip_syncer_model')
-	return inference_manager.get_inference_pool(model_context, model_sources)
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
-	model_context = __name__ + '.' + state_manager.get_item('lip_syncer_model')
-	inference_manager.clear_inference_pool(model_context)
+	inference_manager.clear_inference_pool(__name__)
 
 
 def get_model_options() -> ModelOptions:
 	lip_syncer_model = state_manager.get_item('lip_syncer_model')
-	return MODEL_SET.get(lip_syncer_model)
+	return create_static_model_set('full').get(lip_syncer_model)
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -97,11 +99,10 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:

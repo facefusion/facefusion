@@ -3,11 +3,13 @@ from typing import List, Optional, Tuple
 import gradio
 
 import facefusion.choices
-from facefusion import state_manager, wording
+from facefusion import face_masker, state_manager, wording
 from facefusion.common_helper import calc_float_step, calc_int_step
-from facefusion.typing import FaceMaskRegion, FaceMaskType
+from facefusion.typing import FaceMaskRegion, FaceMaskType, FaceOccluderModel, FaceParserModel
 from facefusion.uis.core import register_ui_component
 
+FACE_OCCLUDER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
+FACE_PARSER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_MASK_TYPES_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 FACE_MASK_REGIONS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 FACE_MASK_BLUR_SLIDER : Optional[gradio.Slider] = None
@@ -18,6 +20,8 @@ FACE_MASK_PADDING_LEFT_SLIDER : Optional[gradio.Slider] = None
 
 
 def render() -> None:
+	global FACE_OCCLUDER_MODEL_DROPDOWN
+	global FACE_PARSER_MODEL_DROPDOWN
 	global FACE_MASK_TYPES_CHECKBOX_GROUP
 	global FACE_MASK_REGIONS_CHECKBOX_GROUP
 	global FACE_MASK_BLUR_SLIDER
@@ -28,6 +32,17 @@ def render() -> None:
 
 	has_box_mask = 'box' in state_manager.get_item('face_mask_types')
 	has_region_mask = 'region' in state_manager.get_item('face_mask_types')
+	with gradio.Row():
+		FACE_OCCLUDER_MODEL_DROPDOWN = gradio.Dropdown(
+			label = wording.get('uis.face_occluder_model_dropdown'),
+			choices = facefusion.choices.face_occluder_models,
+			value = state_manager.get_item('face_occluder_model')
+		)
+		FACE_PARSER_MODEL_DROPDOWN = gradio.Dropdown(
+			label = wording.get('uis.face_parser_model_dropdown'),
+			choices = facefusion.choices.face_parser_models,
+			value = state_manager.get_item('face_parser_model')
+		)
 	FACE_MASK_TYPES_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.face_mask_types_checkbox_group'),
 		choices = facefusion.choices.face_mask_types,
@@ -82,6 +97,8 @@ def render() -> None:
 				value = state_manager.get_item('face_mask_padding')[3],
 				visible = has_box_mask
 			)
+	register_ui_component('face_occluder_model_dropdown', FACE_OCCLUDER_MODEL_DROPDOWN)
+	register_ui_component('face_parser_model_dropdown', FACE_PARSER_MODEL_DROPDOWN)
 	register_ui_component('face_mask_types_checkbox_group', FACE_MASK_TYPES_CHECKBOX_GROUP)
 	register_ui_component('face_mask_regions_checkbox_group', FACE_MASK_REGIONS_CHECKBOX_GROUP)
 	register_ui_component('face_mask_blur_slider', FACE_MASK_BLUR_SLIDER)
@@ -92,12 +109,32 @@ def render() -> None:
 
 
 def listen() -> None:
+	FACE_OCCLUDER_MODEL_DROPDOWN.change(update_face_occluder_model, inputs = FACE_OCCLUDER_MODEL_DROPDOWN)
+	FACE_PARSER_MODEL_DROPDOWN.change(update_face_parser_model, inputs = FACE_PARSER_MODEL_DROPDOWN)
 	FACE_MASK_TYPES_CHECKBOX_GROUP.change(update_face_mask_types, inputs = FACE_MASK_TYPES_CHECKBOX_GROUP, outputs = [ FACE_MASK_TYPES_CHECKBOX_GROUP, FACE_MASK_REGIONS_CHECKBOX_GROUP, FACE_MASK_BLUR_SLIDER, FACE_MASK_PADDING_TOP_SLIDER, FACE_MASK_PADDING_RIGHT_SLIDER, FACE_MASK_PADDING_BOTTOM_SLIDER, FACE_MASK_PADDING_LEFT_SLIDER ])
 	FACE_MASK_REGIONS_CHECKBOX_GROUP.change(update_face_mask_regions, inputs = FACE_MASK_REGIONS_CHECKBOX_GROUP, outputs = FACE_MASK_REGIONS_CHECKBOX_GROUP)
 	FACE_MASK_BLUR_SLIDER.release(update_face_mask_blur, inputs = FACE_MASK_BLUR_SLIDER)
 	face_mask_padding_sliders = [ FACE_MASK_PADDING_TOP_SLIDER, FACE_MASK_PADDING_RIGHT_SLIDER, FACE_MASK_PADDING_BOTTOM_SLIDER, FACE_MASK_PADDING_LEFT_SLIDER ]
 	for face_mask_padding_slider in face_mask_padding_sliders:
 		face_mask_padding_slider.release(update_face_mask_padding, inputs = face_mask_padding_sliders)
+
+
+def update_face_occluder_model(face_occluder_model : FaceOccluderModel) -> gradio.Dropdown:
+	face_masker.clear_inference_pool()
+	state_manager.set_item('face_occluder_model', face_occluder_model)
+
+	if face_masker.pre_check():
+		return gradio.Dropdown(value = state_manager.get_item('face_occluder_model'))
+	return gradio.Dropdown()
+
+
+def update_face_parser_model(face_parser_model : FaceParserModel) -> gradio.Dropdown:
+	face_masker.clear_inference_pool()
+	state_manager.set_item('face_parser_model', face_parser_model)
+
+	if face_masker.pre_check():
+		return gradio.Dropdown(value = state_manager.get_item('face_parser_model'))
+	return gradio.Dropdown()
 
 
 def update_face_mask_types(face_mask_types : List[FaceMaskType]) -> Tuple[gradio.CheckboxGroup, gradio.CheckboxGroup, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider, gradio.Slider]:

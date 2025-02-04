@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from functools import lru_cache
 from typing import List, Tuple
 
 import cv2
@@ -9,7 +10,7 @@ import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
 from facefusion.common_helper import create_int_metavar
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
@@ -22,59 +23,61 @@ from facefusion.processors.typing import ExpressionRestorerInputs
 from facefusion.processors.typing import LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.typing import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import get_video_frame, read_image, read_static_image, write_image
 
-MODEL_SET : ModelSet =\
-{
-	'live_portrait':
+
+@lru_cache(maxsize = None)
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
+	return\
 	{
-		'hashes':
+		'live_portrait':
 		{
-			'feature_extractor':
+			'hashes':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_feature_extractor.hash',
-				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.hash')
+				'feature_extractor':
+				{
+					'url': resolve_download_url('models-3.0.0', 'live_portrait_feature_extractor.hash'),
+					'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.hash')
+				},
+				'motion_extractor':
+				{
+					'url': resolve_download_url('models-3.0.0', 'live_portrait_motion_extractor.hash'),
+					'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.hash')
+				},
+				'generator':
+				{
+					'url': resolve_download_url('models-3.0.0', 'live_portrait_generator.hash'),
+					'path': resolve_relative_path('../.assets/models/live_portrait_generator.hash')
+				}
 			},
-			'motion_extractor':
+			'sources':
 			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_motion_extractor.hash',
-				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.hash')
+				'feature_extractor':
+				{
+					'url': resolve_download_url('models-3.0.0', 'live_portrait_feature_extractor.onnx'),
+					'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.onnx')
+				},
+				'motion_extractor':
+				{
+					'url': resolve_download_url('models-3.0.0', 'live_portrait_motion_extractor.onnx'),
+					'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.onnx')
+				},
+				'generator':
+				{
+					'url': resolve_download_url('models-3.0.0', 'live_portrait_generator.onnx'),
+					'path': resolve_relative_path('../.assets/models/live_portrait_generator.onnx')
+				}
 			},
-			'generator':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_generator.hash',
-				'path': resolve_relative_path('../.assets/models/live_portrait_generator.hash')
-			}
-		},
-		'sources':
-		{
-			'feature_extractor':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_feature_extractor.onnx',
-				'path': resolve_relative_path('../.assets/models/live_portrait_feature_extractor.onnx')
-			},
-			'motion_extractor':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_motion_extractor.onnx',
-				'path': resolve_relative_path('../.assets/models/live_portrait_motion_extractor.onnx')
-			},
-			'generator':
-			{
-				'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/live_portrait_generator.onnx',
-				'path': resolve_relative_path('../.assets/models/live_portrait_generator.onnx')
-			}
-		},
-		'template': 'arcface_128_v2',
-		'size': (512, 512)
+			'template': 'arcface_128_v2',
+			'size': (512, 512)
+		}
 	}
-}
 
 
 def get_inference_pool() -> InferencePool:
 	model_sources = get_model_options().get('sources')
-	model_context = __name__ + '.' + state_manager.get_item('expression_restorer_model')
-	return inference_manager.get_inference_pool(model_context, model_sources)
+	return inference_manager.get_inference_pool(__name__, model_sources)
 
 
 def clear_inference_pool() -> None:
@@ -83,7 +86,7 @@ def clear_inference_pool() -> None:
 
 def get_model_options() -> ModelOptions:
 	expression_restorer_model = state_manager.get_item('expression_restorer_model')
-	return MODEL_SET.get(expression_restorer_model)
+	return create_static_model_set('full').get(expression_restorer_model)
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -100,14 +103,16 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 
 
 def pre_check() -> bool:
-	download_directory_path = resolve_relative_path('../.assets/models')
 	model_hashes = get_model_options().get('hashes')
 	model_sources = get_model_options().get('sources')
 
-	return conditional_download_hashes(download_directory_path, model_hashes) and conditional_download_sources(download_directory_path, model_sources)
+	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
 
 
 def pre_process(mode : ProcessMode) -> bool:
+	if mode == 'stream':
+		logger.error(wording.get('stream_not_supported') + wording.get('exclamation_mark'), __name__)
+		return False
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
 		return False
@@ -222,7 +227,7 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0).clip(0, 1)
-	crop_vision_frame = (crop_vision_frame * 255.0)
+	crop_vision_frame = crop_vision_frame * 255.0
 	crop_vision_frame = crop_vision_frame.astype(numpy.uint8)[:, :, ::-1]
 	return crop_vision_frame
 

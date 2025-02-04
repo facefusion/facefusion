@@ -17,8 +17,8 @@ def before_all() -> None:
 
 
 def test_get_audio_frame() -> None:
-	assert get_audio_frame(get_test_example_file('source.mp3'), 25) is not None
-	assert get_audio_frame(get_test_example_file('source.wav'), 25) is not None
+	assert hasattr(get_audio_frame(get_test_example_file('source.mp3'), 25), '__array_interface__')
+	assert hasattr(get_audio_frame(get_test_example_file('source.wav'), 25), '__array_interface__')
 	assert get_audio_frame('invalid', 25) is None
 
 

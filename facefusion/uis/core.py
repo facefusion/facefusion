@@ -10,15 +10,7 @@ from gradio.themes import Size
 from facefusion import logger, metadata, state_manager, wording
 from facefusion.exit_helper import hard_exit
 from facefusion.filesystem import resolve_relative_path
-from facefusion.uis import overrides
 from facefusion.uis.typing import Component, ComponentName
-
-os.environ['GRADIO_ANALYTICS_ENABLED'] = '0'
-
-warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
-
-gradio.processing_utils.encode_array_to_base64 = overrides.encode_array_to_base64
-gradio.processing_utils.encode_pil_to_base64 = overrides.encode_pil_to_base64
 
 UI_COMPONENTS: Dict[ComponentName, Component] = {}
 UI_LAYOUT_MODULES : List[ModuleType] = []
@@ -77,6 +69,14 @@ def register_ui_component(component_name : ComponentName, component: Component) 
 	UI_COMPONENTS[component_name] = component
 
 
+def init() -> None:
+	os.environ['GRADIO_ANALYTICS_ENABLED'] = '0'
+	os.environ['GRADIO_TEMP_DIR'] = os.path.join(state_manager.get_item('temp_path'), 'gradio')
+
+	warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
+	gradio.processing_utils._check_allowed = lambda path, check_in_upload_folder: None
+
+
 def launch() -> None:
 	ui_layouts_total = len(state_manager.get_item('ui_layouts'))
 	with gradio.Blocks(theme = get_theme(), css = get_css(), title = metadata.get('name') + ' ' + metadata.get('version'), fill_width = True) as ui:
@@ -99,7 +99,20 @@ def launch() -> None:
 def get_theme() -> gradio.Theme:
 	return gradio.themes.Base(
 		primary_hue = gradio.themes.colors.red,
-		secondary_hue = gradio.themes.colors.neutral,
+		secondary_hue = gradio.themes.Color(
+			name = 'neutral',
+			c50 = '#fafafa',
+			c100 = '#f5f5f5',
+			c200 = '#e5e5e5',
+			c300 = '#d4d4d4',
+			c400 = '#a3a3a3',
+			c500 = '#737373',
+			c600 = '#525252',
+			c700 = '#404040',
+			c800 = '#262626',
+			c900 = '#212121',
+			c950 = '#171717',
+		),
 		radius_size = Size(
 			xxs = '0.375rem',
 			xs = '0.375rem',
@@ -111,11 +124,18 @@ def get_theme() -> gradio.Theme:
 		),
 		font = gradio.themes.GoogleFont('Open Sans')
 	).set(
+		color_accent = 'transparent',
+		color_accent_soft = 'transparent',
+		color_accent_soft_dark = 'transparent',
 		background_fill_primary = '*neutral_100',
+		background_fill_primary_dark = '*neutral_950',
+		background_fill_secondary = '*neutral_50',
+		background_fill_secondary_dark = '*neutral_800',
 		block_background_fill = 'white',
+		block_background_fill_dark = '*neutral_900',
 		block_border_width = '0',
 		block_label_background_fill = '*neutral_100',
-		block_label_background_fill_dark = '*neutral_700',
+		block_label_background_fill_dark = '*neutral_800',
 		block_label_border_width = 'none',
 		block_label_margin = '0.5rem',
 		block_label_radius = '*radius_md',
@@ -124,39 +144,48 @@ def get_theme() -> gradio.Theme:
 		block_label_text_color_dark = 'white',
 		block_label_text_weight = '600',
 		block_title_background_fill = '*neutral_100',
-		block_title_background_fill_dark = '*neutral_700',
+		block_title_background_fill_dark = '*neutral_800',
 		block_title_padding = '*block_label_padding',
 		block_title_radius = '*block_label_radius',
 		block_title_text_color = '*neutral_700',
 		block_title_text_size = '*text_sm',
 		block_title_text_weight = '600',
 		block_padding = '0.5rem',
+		border_color_accent = 'transparent',
+		border_color_accent_dark = 'transparent',
+		border_color_accent_subdued = 'transparent',
+		border_color_accent_subdued_dark = 'transparent',
 		border_color_primary = 'transparent',
 		border_color_primary_dark = 'transparent',
 		button_large_padding = '2rem 0.5rem',
 		button_large_text_weight = 'normal',
 		button_primary_background_fill = '*primary_500',
+		button_primary_background_fill_dark = '*primary_600',
 		button_primary_text_color = 'white',
 		button_secondary_background_fill = 'white',
-		button_secondary_border_color = 'transparent',
-		button_secondary_border_color_dark = 'transparent',
-		button_secondary_border_color_hover = 'transparent',
-		button_secondary_border_color_hover_dark = 'transparent',
+		button_secondary_background_fill_dark = '*neutral_800',
+		button_secondary_background_fill_hover = 'white',
+		button_secondary_background_fill_hover_dark = '*neutral_800',
 		button_secondary_text_color = '*neutral_800',
 		button_small_padding = '0.75rem',
+		button_small_text_size = '0.875rem',
 		checkbox_background_color = '*neutral_200',
+		checkbox_background_color_dark = '*neutral_900',
 		checkbox_background_color_selected = '*primary_600',
 		checkbox_background_color_selected_dark = '*primary_700',
-		checkbox_border_color_focus = '*primary_500',
-		checkbox_border_color_focus_dark = '*primary_600',
-		checkbox_border_color_selected = '*primary_600',
-		checkbox_border_color_selected_dark = '*primary_700',
 		checkbox_label_background_fill = '*neutral_50',
+		checkbox_label_background_fill_dark = '*neutral_800',
 		checkbox_label_background_fill_hover = '*neutral_50',
+		checkbox_label_background_fill_hover_dark = '*neutral_800',
 		checkbox_label_background_fill_selected = '*primary_500',
 		checkbox_label_background_fill_selected_dark = '*primary_600',
 		checkbox_label_text_color_selected = 'white',
+		error_background_fill = 'white',
+		error_background_fill_dark = '*neutral_900',
+		error_text_color = '*primary_500',
+		error_text_color_dark = '*primary_600',
 		input_background_fill = '*neutral_50',
+		input_background_fill_dark = '*neutral_800',
 		shadow_drop = 'none',
 		slider_color = '*primary_500',
 		slider_color_dark = '*primary_600'

@@ -13,8 +13,6 @@ def render() -> None:
 
 	common_options = []
 
-	if state_manager.get_item('skip_download'):
-		common_options.append('skip-download')
 	if state_manager.get_item('keep_temp'):
 		common_options.append('keep-temp')
 	if state_manager.get_item('skip_audio'):
@@ -32,9 +30,7 @@ def listen() -> None:
 
 
 def update(common_options : List[str]) -> None:
-	skip_temp = 'skip-download' in common_options
 	keep_temp = 'keep-temp' in common_options
 	skip_audio = 'skip-audio' in common_options
-	state_manager.set_item('skip_download', skip_temp)
 	state_manager.set_item('keep_temp', keep_temp)
 	state_manager.set_item('skip_audio', skip_audio)

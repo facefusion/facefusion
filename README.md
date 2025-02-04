@@ -17,7 +17,7 @@ Preview
 Installation
 ------------
 
-Be aware, the [installation](https://docs.facefusion.io/installation) needs technical skills and is not recommended for beginners. In case you are not comfortable using a terminal, our [Windows Installer](https://windows-installer.facefusion.io) and [macOS Installer](https://macos-installer.facefusion.io) get you started.
+Be aware, the [installation](https://docs.facefusion.io/installation) needs technical skills and is not recommended for beginners. In case you are not comfortable using a terminal, our [Windows Installer](http://windows-installer.facefusion.io) and [macOS Installer](http://macos-installer.facefusion.io) get you started.
 
 
 Usage
@@ -35,6 +35,7 @@ options:
 commands:
     run                                           run the program
     headless-run                                  run the program in headless mode
+    batch-run                                     run the program in batch mode
     force-download                                force automate downloads and exit
     job-list                                      list jobs by status
     job-create                                    create a drafted job
