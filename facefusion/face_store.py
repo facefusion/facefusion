@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from typing import Optional, List
 import hashlib
 import numpy
@@ -5,12 +6,29 @@ import numpy
 from facefusion.typing import VisionFrame, Face, FaceStore, FaceSet
 
 FACE_STORE: FaceStore =\
+=======
+import hashlib
+from typing import List, Optional
+
+import numpy
+
+from facefusion.typing import Face, FaceSet, FaceStore, VisionFrame
+
+FACE_STORE : FaceStore =\
+>>>>>>> origin/master
 {
 	'static_faces': {},
 	'reference_faces': {}
 }
 
 
+<<<<<<< HEAD
+=======
+def get_face_store() -> FaceStore:
+	return FACE_STORE
+
+
+>>>>>>> origin/master
 def get_static_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 	frame_hash = create_frame_hash(vision_frame)
 	if frame_hash in FACE_STORE['static_faces']:

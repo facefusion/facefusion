@@ -8,6 +8,7 @@ jobs:
   steps:
   - name: Checkout
     uses: actions/checkout@v4
+<<<<<<< HEAD
   - name: Set up Python 3.10
     uses: actions/setup-python@v5
     with:
@@ -20,10 +21,28 @@ jobs:
   strategy:
    matrix:
     os: [ macos-13, ubuntu-latest, windows-latest ]
+=======
+  - name: Set up Python 3.12
+    uses: actions/setup-python@v5
+    with:
+     python-version: '3.12'
+  - run: pip install flake8
+  - run: pip install flake8-import-order
+  - run: pip install mypy
+  - run: flake8 facefusion.py install.py
+  - run: flake8 facefusion tests
+  - run: mypy facefusion.py install.py
+  - run: mypy facefusion tests
+ test:
+  strategy:
+   matrix:
+    os: [ macos-latest, ubuntu-latest, windows-latest ]
+>>>>>>> origin/master
   runs-on: ${{ matrix.os }}
   steps:
   - name: Checkout
     uses: actions/checkout@v4
+<<<<<<< HEAD
   - name: Set up FFMpeg
     uses: FedericoCarboni/setup-ffmpeg@v3
   - name: Set up Python 3.10
@@ -33,3 +52,34 @@ jobs:
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pytest
+=======
+  - name: Set up FFmpeg
+    uses: AnimMouse/setup-ffmpeg@v1
+  - name: Set up Python 3.12
+    uses: actions/setup-python@v5
+    with:
+     python-version: '3.12'
+  - run: python install.py --onnxruntime default --skip-conda
+  - run: pip install pytest
+  - run: pytest
+ report:
+  needs: test
+  runs-on: ubuntu-latest
+  steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+  - name: Set up FFmpeg
+    uses: FedericoCarboni/setup-ffmpeg@v3
+  - name: Set up Python 3.12
+    uses: actions/setup-python@v5
+    with:
+     python-version: '3.12'
+  - run: python install.py --onnxruntime default --skip-conda
+  - run: pip install coveralls
+  - run: pip install pytest
+  - run: pip install pytest-cov
+  - run: pytest tests --cov facefusion
+  - run: coveralls --service github
+    env:
+     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+>>>>>>> origin/master

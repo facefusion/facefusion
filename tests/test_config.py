@@ -1,4 +1,8 @@
 from configparser import ConfigParser
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
 import pytest
 
 from facefusion import config

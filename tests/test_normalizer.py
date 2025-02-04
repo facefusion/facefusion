@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from facefusion.common_helper import is_linux, is_macos
 from facefusion.normalizer import normalize_output_path, normalize_padding, normalize_fps
 
@@ -13,6 +14,9 @@ def test_normalize_output_path() -> None:
 	assert normalize_output_path('.assets/examples/target-240p.mp4', 'invalid') is None
 	assert normalize_output_path('.assets/examples/target-240p.mp4', None) is None
 	assert normalize_output_path(None, '.assets/examples/output.mp4') is None
+=======
+from facefusion.normalizer import normalize_fps, normalize_padding
+>>>>>>> origin/master
 
 
 def test_normalize_padding() -> None:

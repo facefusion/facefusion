@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from typing import Optional, List, Tuple
 import gradio
 
@@ -7,6 +8,17 @@ from facefusion.uis.typing import File
 from facefusion.common_helper import get_first
 from facefusion.filesystem import has_audio, has_image, filter_audio_paths, filter_image_paths
 from facefusion.uis.core import register_ui_component
+=======
+from typing import List, Optional, Tuple
+
+import gradio
+
+from facefusion import state_manager, wording
+from facefusion.common_helper import get_first
+from facefusion.filesystem import filter_audio_paths, filter_image_paths, has_audio, has_image
+from facefusion.uis.core import register_ui_component
+from facefusion.uis.typing import File
+>>>>>>> origin/master
 
 SOURCE_FILE : Optional[gradio.File] = None
 SOURCE_AUDIO : Optional[gradio.Audio] = None
@@ -18,6 +30,7 @@ def render() -> None:
 	global SOURCE_AUDIO
 	global SOURCE_IMAGE
 
+<<<<<<< HEAD
 	has_source_audio = has_audio(facefusion.globals.source_paths)
 	has_source_image = has_image(facefusion.globals.source_paths)
 	SOURCE_FILE = gradio.File(
@@ -34,6 +47,21 @@ def render() -> None:
 		value = facefusion.globals.source_paths if has_source_audio or has_source_image else None
 	)
 	source_file_names = [ source_file_value['name'] for source_file_value in SOURCE_FILE.value ] if SOURCE_FILE.value else None
+=======
+	has_source_audio = has_audio(state_manager.get_item('source_paths'))
+	has_source_image = has_image(state_manager.get_item('source_paths'))
+	SOURCE_FILE = gradio.File(
+		label = wording.get('uis.source_file'),
+		file_count = 'multiple',
+		file_types =
+		[
+			'audio',
+			'image'
+		],
+		value = state_manager.get_item('source_paths') if has_source_audio or has_source_image else None
+	)
+	source_file_names = [ source_file_value.get('path') for source_file_value in SOURCE_FILE.value ] if SOURCE_FILE.value else None
+>>>>>>> origin/master
 	source_audio_path = get_first(filter_audio_paths(source_file_names))
 	source_image_path = get_first(filter_image_paths(source_file_names))
 	SOURCE_AUDIO = gradio.Audio(
@@ -61,7 +89,13 @@ def update(files : List[File]) -> Tuple[gradio.Audio, gradio.Image]:
 	if has_source_audio or has_source_image:
 		source_audio_path = get_first(filter_audio_paths(file_names))
 		source_image_path = get_first(filter_image_paths(file_names))
+<<<<<<< HEAD
 		facefusion.globals.source_paths = file_names
 		return gradio.Audio(value = source_audio_path, visible = has_source_audio), gradio.Image(value = source_image_path, visible = has_source_image)
 	facefusion.globals.source_paths = None
+=======
+		state_manager.set_item('source_paths', file_names)
+		return gradio.Audio(value = source_audio_path, visible = has_source_audio), gradio.Image(value = source_image_path, visible = has_source_image)
+	state_manager.clear_item('source_paths')
+>>>>>>> origin/master
 	return gradio.Audio(value = None, visible = False), gradio.Image(value = None, visible = False)

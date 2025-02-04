@@ -1,3 +1,10 @@
+<<<<<<< HEAD
 .assets
+=======
+__pycache__
+.assets
+.caches
+.jobs
+>>>>>>> origin/master
 .idea
 .vscode

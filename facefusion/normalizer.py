@@ -1,4 +1,5 @@
 from typing import List, Optional
+<<<<<<< HEAD
 import hashlib
 import os
 
@@ -19,6 +20,10 @@ def normalize_output_path(target_path : Optional[str], output_path : Optional[st
 		if is_directory(output_directory_path) and output_extension:
 			return os.path.join(output_directory_path, output_name + target_extension)
 	return None
+=======
+
+from facefusion.typing import Fps, Padding
+>>>>>>> origin/master
 
 
 def normalize_padding(padding : Optional[List[int]]) -> Optional[Padding]:
@@ -34,6 +39,10 @@ def normalize_padding(padding : Optional[List[int]]) -> Optional[Padding]:
 
 
 def normalize_fps(fps : Optional[float]) -> Optional[Fps]:
+<<<<<<< HEAD
 	if fps is not None:
+=======
+	if isinstance(fps, (int, float)):
+>>>>>>> origin/master
 		return max(1.0, min(fps, 60.0))
 	return None

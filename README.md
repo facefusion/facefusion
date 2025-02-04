@@ -1,9 +1,16 @@
 FaceFusion
 ==========
 
+<<<<<<< HEAD
 > Next generation face swapper and enhancer.
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=master)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
+=======
+> Industry leading face manipulation platform.
+
+[![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=master)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
+[![Coverage Status](https://img.shields.io/coveralls/facefusion/facefusion.svg)](https://coveralls.io/r/facefusion/facefusion)
+>>>>>>> origin/master
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 
@@ -16,7 +23,11 @@ Preview
 Installation
 ------------
 
+<<<<<<< HEAD
 Be aware, the [installation](https://docs.facefusion.io/installation) needs technical skills and is not recommended for beginners. In case you are not comfortable using a terminal, our [Windows Installer](https://buymeacoffee.com/henryruhs/e/251939) can have you up and running in minutes.
+=======
+Be aware, the [installation](https://docs.facefusion.io/installation) needs technical skills and is not recommended for beginners. In case you are not comfortable using a terminal, our [Windows Installer](http://windows-installer.facefusion.io) and [macOS Installer](http://macos-installer.facefusion.io) get you started.
+>>>>>>> origin/master
 
 
 Usage
@@ -25,6 +36,7 @@ Usage
 Run the command:
 
 ```
+<<<<<<< HEAD
 python run.py [options]
 
 options:
@@ -104,6 +116,33 @@ frame processors:
 uis:
   --open-browser                                                                                                                                                                        open the browser once the program is ready
   --ui-layouts UI_LAYOUTS [UI_LAYOUTS ...]                                                                                                                                              launch a single or multiple UI layouts (choices: benchmark, default, webcam, ...)
+=======
+python facefusion.py [commands] [options]
+
+options:
+  -h, --help                                      show this help message and exit
+  -v, --version                                   show program's version number and exit
+
+commands:
+    run                                           run the program
+    headless-run                                  run the program in headless mode
+    batch-run                                     run the program in batch mode
+    force-download                                force automate downloads and exit
+    job-list                                      list jobs by status
+    job-create                                    create a drafted job
+    job-submit                                    submit a drafted job to become a queued job
+    job-submit-all                                submit all drafted jobs to become a queued jobs
+    job-delete                                    delete a drafted, queued, failed or completed job
+    job-delete-all                                delete all drafted, queued, failed and completed jobs
+    job-add-step                                  add a step to a drafted job
+    job-remix-step                                remix a previous step from a drafted job
+    job-insert-step                               insert a step to a drafted job
+    job-remove-step                               remove a step from a drafted job
+    job-run                                       run a queued job
+    job-run-all                                   run all queued jobs
+    job-retry                                     retry a failed job
+    job-retry-all                                 retry all failed jobs
+>>>>>>> origin/master
 ```
 
 

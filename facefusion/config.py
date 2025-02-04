@@ -1,7 +1,14 @@
 from configparser import ConfigParser
+<<<<<<< HEAD
 from typing import Any, Optional, List
 
 import facefusion.globals
+=======
+from typing import Any, List, Optional
+
+from facefusion import state_manager
+from facefusion.common_helper import cast_float, cast_int
+>>>>>>> origin/master
 
 CONFIG = None
 
@@ -11,7 +18,11 @@ def get_config() -> ConfigParser:
 
 	if CONFIG is None:
 		CONFIG = ConfigParser()
+<<<<<<< HEAD
 		CONFIG.read(facefusion.globals.config_path, encoding = 'utf-8')
+=======
+		CONFIG.read(state_manager.get_item('config_path'), encoding = 'utf-8')
+>>>>>>> origin/master
 	return CONFIG
 
 
@@ -33,7 +44,11 @@ def get_int_value(key : str, fallback : Optional[str] = None) -> Optional[int]:
 	value = get_value_by_notation(key)
 
 	if value or fallback:
+<<<<<<< HEAD
 		return int(value or fallback)
+=======
+		return cast_int(value or fallback)
+>>>>>>> origin/master
 	return None
 
 
@@ -41,7 +56,11 @@ def get_float_value(key : str, fallback : Optional[str] = None) -> Optional[floa
 	value = get_value_by_notation(key)
 
 	if value or fallback:
+<<<<<<< HEAD
 		return float(value or fallback)
+=======
+		return cast_float(value or fallback)
+>>>>>>> origin/master
 	return None
 
 
@@ -67,7 +86,11 @@ def get_int_list(key : str, fallback : Optional[str] = None) -> Optional[List[in
 	value = get_value_by_notation(key)
 
 	if value or fallback:
+<<<<<<< HEAD
 		return [ int(value) for value in (value or fallback).split(' ') ]
+=======
+		return [ cast_int(value) for value in (value or fallback).split(' ') ]
+>>>>>>> origin/master
 	return None
 
 
@@ -75,7 +98,11 @@ def get_float_list(key : str, fallback : Optional[str] = None) -> Optional[List[
 	value = get_value_by_notation(key)
 
 	if value or fallback:
+<<<<<<< HEAD
 		return [ float(value) for value in (value or fallback).split(' ') ]
+=======
+		return [ cast_float(value) for value in (value or fallback).split(' ') ]
+>>>>>>> origin/master
 	return None
 
 

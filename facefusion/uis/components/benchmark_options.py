@@ -1,9 +1,18 @@
 from typing import Optional
+<<<<<<< HEAD
 import gradio
 
 from facefusion import wording
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.components.benchmark import BENCHMARKS
+=======
+
+import gradio
+
+from facefusion import wording
+from facefusion.uis.components.benchmark import BENCHMARKS
+from facefusion.uis.core import register_ui_component
+>>>>>>> origin/master
 
 BENCHMARK_RUNS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 BENCHMARK_CYCLES_SLIDER : Optional[gradio.Button] = None
@@ -15,8 +24,13 @@ def render() -> None:
 
 	BENCHMARK_RUNS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.benchmark_runs_checkbox_group'),
+<<<<<<< HEAD
 		value = list(BENCHMARKS.keys()),
 		choices = list(BENCHMARKS.keys())
+=======
+		choices = list(BENCHMARKS.keys()),
+		value = list(BENCHMARKS.keys())
+>>>>>>> origin/master
 	)
 	BENCHMARK_CYCLES_SLIDER = gradio.Slider(
 		label = wording.get('uis.benchmark_cycles_slider'),
