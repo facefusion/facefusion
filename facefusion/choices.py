@@ -39,7 +39,6 @@ audio_type_set : AudioTypeSet =\
 {
 	'flac': 'audio/flac',
 	'm4a': 'audio/mp4',
-	'm4v': 'audio/m4v',
 	'mp3': 'audio/mpeg',
 	'ogg': 'audio/ogg',
 	'opus': 'audio/opus',
