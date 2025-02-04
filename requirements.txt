@@ -1,0 +1,9 @@
+filetype==1.2.0
+gradio==3.50.2
+numpy==1.26.4
+onnx==1.16.0
+onnxruntime==1.17.3
+opencv-python==4.9.0.80
+psutil==5.9.8
+tqdm==4.66.4
+scipy==1.13.0

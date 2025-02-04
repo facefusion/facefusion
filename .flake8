@@ -1,0 +1,3 @@
+[flake8]
+select = E3, E4, F
+per-file-ignores = facefusion/core.py:E402

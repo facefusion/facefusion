@@ -1,0 +1,35 @@
+name: ci
+
+on: [ push, pull_request ]
+
+jobs:
+ lint:
+  runs-on: ubuntu-latest
+  steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+  - name: Set up Python 3.10
+    uses: actions/setup-python@v5
+    with:
+     python-version: '3.10'
+  - run: pip install flake8
+  - run: pip install mypy
+  - run: flake8 run.py facefusion tests
+  - run: mypy run.py facefusion tests
+ test:
+  strategy:
+   matrix:
+    os: [ macos-13, ubuntu-latest, windows-latest ]
+  runs-on: ${{ matrix.os }}
+  steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+  - name: Set up FFMpeg
+    uses: FedericoCarboni/setup-ffmpeg@v3
+  - name: Set up Python 3.10
+    uses: actions/setup-python@v5
+    with:
+     python-version: '3.10'
+  - run: python install.py --onnxruntime default --skip-conda
+  - run: pip install pytest
+  - run: pytest
