@@ -8,7 +8,7 @@ from cv2.typing import Size
 import facefusion.choices
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
-from facefusion.typing import Duration, Fps, Orientation, Resolution, VisionFrame
+from facefusion.types import Duration, Fps, Orientation, Resolution, VisionFrame
 
 
 @lru_cache()

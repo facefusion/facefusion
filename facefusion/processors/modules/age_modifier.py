@@ -20,10 +20,10 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.typing import AgeModifierDirection, AgeModifierInputs
+from facefusion.processors.types import AgeModifierDirection, AgeModifierInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import match_frame_color, read_image, read_static_image, write_image
 
 
@@ -145,7 +145,7 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 
 	crop_vision_frame = prepare_vision_frame(crop_vision_frame)
 	extend_vision_frame = prepare_vision_frame(extend_vision_frame)
-	age_modifier_direction = numpy.array(numpy.interp(state_manager.get_item('age_modifier_direction'), [-100, 100], [2.5, -2.5])).astype(numpy.float32)
+	age_modifier_direction = numpy.array(numpy.interp(state_manager.get_item('age_modifier_direction'), [ -100, 100 ], [ 2.5, -2.5 ])).astype(numpy.float32)
 	extend_vision_frame = forward(crop_vision_frame, extend_vision_frame, age_modifier_direction)
 	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
 	extend_vision_frame = match_frame_color(extend_vision_frame_raw, extend_vision_frame)

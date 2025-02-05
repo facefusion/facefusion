@@ -2,7 +2,7 @@ import os
 import tempfile
 
 from facefusion.filesystem import create_directory, is_directory, is_file, remove_directory
-from facefusion.typing import JobStatus
+from facefusion.types import JobStatus
 
 
 def is_test_job_file(file_path : str, job_status : JobStatus) -> bool:

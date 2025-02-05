@@ -6,7 +6,7 @@ from facefusion import content_analyser, face_classifier, face_detector, face_la
 from facefusion.execution import get_available_execution_providers
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.processors.core import get_processors_modules
-from facefusion.typing import ExecutionProvider
+from facefusion.types import ExecutionProvider
 
 EXECUTION_PROVIDERS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 

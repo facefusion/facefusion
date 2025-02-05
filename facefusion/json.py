@@ -3,7 +3,7 @@ from json import JSONDecodeError
 from typing import Optional
 
 from facefusion.filesystem import is_file
-from facefusion.typing import Content
+from facefusion.types import Content
 
 
 def read_json(json_path : str) -> Optional[Content]:

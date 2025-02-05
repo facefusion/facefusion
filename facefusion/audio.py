@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.filesystem import is_audio
-from facefusion.typing import Audio, AudioFrame, Fps, Mel, MelFilterBank, Spectrogram
+from facefusion.types import Audio, AudioFrame, Fps, Mel, MelFilterBank, Spectrogram
 from facefusion.voice_extractor import batch_extract_voice
 
 

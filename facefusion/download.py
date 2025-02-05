@@ -10,7 +10,7 @@ import facefusion.choices
 from facefusion import curl_builder, logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_name, get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
-from facefusion.typing import Commands, DownloadProvider, DownloadSet
+from facefusion.types import Commands, DownloadProvider, DownloadSet
 
 
 def open_curl(commands : Commands) -> subprocess.Popen[bytes]:

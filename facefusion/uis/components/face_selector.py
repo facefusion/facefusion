@@ -10,9 +10,9 @@ from facefusion.face_analyser import get_many_faces
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import clear_reference_faces, clear_static_faces
 from facefusion.filesystem import is_image, is_video
-from facefusion.typing import FaceSelectorMode, FaceSelectorOrder, Gender, Race, VisionFrame
+from facefusion.types import FaceSelectorMode, FaceSelectorOrder, Gender, Race, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
-from facefusion.uis.typing import ComponentOptions
+from facefusion.uis.types import ComponentOptions
 from facefusion.uis.ui_helper import convert_str_none
 from facefusion.vision import normalize_frame_color, read_static_image, read_video_frame
 

@@ -5,7 +5,7 @@ from typing import Optional
 import numpy
 
 from facefusion.filesystem import get_file_format
-from facefusion.typing import AudioEncoder, Commands, Duration, Fps, StreamMode, VideoEncoder, VideoPreset
+from facefusion.types import AudioEncoder, Commands, Duration, Fps, StreamMode, VideoEncoder, VideoPreset
 
 
 def run(commands : Commands) -> Commands:

@@ -6,7 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import calc_float_step, calc_int_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.typing import FaceEnhancerModel
+from facefusion.processors.types import FaceEnhancerModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None

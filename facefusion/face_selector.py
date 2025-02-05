@@ -3,7 +3,7 @@ from typing import List
 import numpy
 
 from facefusion import state_manager
-from facefusion.typing import Face, FaceSelectorOrder, FaceSet, Gender, Race
+from facefusion.types import Face, FaceSelectorOrder, FaceSet, Gender, Race
 
 
 def find_similar_faces(faces : List[Face], reference_faces : FaceSet, face_distance : float) -> List[Face]:

@@ -5,7 +5,7 @@ import gradio
 from facefusion import state_manager, wording
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.typing import LipSyncerModel
+from facefusion.processors.types import LipSyncerModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 LIP_SYNCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None

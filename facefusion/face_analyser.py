@@ -10,7 +10,7 @@ from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, estima
 from facefusion.face_landmarker import detect_face_landmarks, estimate_face_landmark_68_5
 from facefusion.face_recognizer import calc_embedding
 from facefusion.face_store import get_static_faces, set_static_faces
-from facefusion.typing import BoundingBox, Face, FaceLandmark5, FaceLandmarkSet, FaceScoreSet, Score, VisionFrame
+from facefusion.types import BoundingBox, Face, FaceLandmark5, FaceLandmarkSet, FaceScoreSet, Score, VisionFrame
 
 
 def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox], face_scores : List[Score], face_landmarks_5 : List[FaceLandmark5]) -> List[Face]:

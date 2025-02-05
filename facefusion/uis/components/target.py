@@ -6,7 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.face_store import clear_reference_faces, clear_static_faces
 from facefusion.filesystem import is_image, is_video
 from facefusion.uis.core import register_ui_component
-from facefusion.uis.typing import ComponentOptions, File
+from facefusion.uis.types import ComponentOptions, File
 
 TARGET_FILE : Optional[gradio.File] = None
 TARGET_IMAGE : Optional[gradio.Image] = None

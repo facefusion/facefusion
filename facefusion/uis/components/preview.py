@@ -15,9 +15,9 @@ from facefusion.face_selector import sort_faces_by_order
 from facefusion.face_store import clear_reference_faces, clear_static_faces, get_reference_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.typing import AudioFrame, Face, FaceSet, VisionFrame
+from facefusion.types import AudioFrame, Face, FaceSet, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
-from facefusion.uis.typing import ComponentOptions
+from facefusion.uis.types import ComponentOptions
 from facefusion.vision import count_video_frame_total, detect_frame_orientation, normalize_frame_color, read_static_image, read_static_images, read_video_frame, restrict_frame
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None

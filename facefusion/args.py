@@ -3,7 +3,7 @@ from facefusion.filesystem import get_file_name, is_image, is_video, resolve_fil
 from facefusion.jobs import job_store
 from facefusion.normalizer import normalize_fps, normalize_padding
 from facefusion.processors.core import get_processors_modules
-from facefusion.typing import ApplyStateItem, Args
+from facefusion.types import ApplyStateItem, Args
 from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, pack_resolution
 
 

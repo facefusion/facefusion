@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from facefusion.logger import get_package_logger
-from facefusion.typing import TableContents, TableHeaders
+from facefusion.types import TableContents, TableHeaders
 
 
 def render_table(headers : TableHeaders, contents : TableContents) -> None:

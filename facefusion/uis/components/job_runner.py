@@ -7,10 +7,10 @@ from facefusion import logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first, get_last
 from facefusion.core import process_step
 from facefusion.jobs import job_manager, job_runner, job_store
-from facefusion.typing import UiWorkflow
+from facefusion.types import UiWorkflow
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component
-from facefusion.uis.typing import JobRunnerAction
+from facefusion.uis.types import JobRunnerAction
 from facefusion.uis.ui_helper import convert_str_none
 
 JOB_RUNNER_WRAPPER : Optional[gradio.Column] = None
