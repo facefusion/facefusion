@@ -7,7 +7,7 @@ from facefusion.date_helper import get_current_date_time
 from facefusion.filesystem import create_directory, get_file_name, is_directory, is_file, move_file, remove_directory, remove_file, resolve_file_pattern
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.json import read_json, write_json
-from facefusion.typing import Args, Job, JobSet, JobStatus, JobStep, JobStepStatus
+from facefusion.types import Args, Job, JobSet, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : Optional[str] = None
 

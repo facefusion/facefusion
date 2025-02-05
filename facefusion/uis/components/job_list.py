@@ -6,7 +6,7 @@ import facefusion.choices
 from facefusion import state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.jobs import job_list, job_manager
-from facefusion.typing import JobStatus
+from facefusion.types import JobStatus
 from facefusion.uis.core import get_ui_component
 
 JOB_LIST_JOBS_DATAFRAME : Optional[gradio.Dataframe] = None

@@ -9,7 +9,7 @@ import facefusion.choices
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern, resolve_temp_frame_paths
-from facefusion.typing import AudioBuffer, Commands, EncoderSet, Fps, UpdateProgress
+from facefusion.types import AudioBuffer, Commands, EncoderSet, Fps, UpdateProgress
 from facefusion.vision import count_trim_frame_total, detect_video_duration, detect_video_fps, restrict_video_fps
 
 

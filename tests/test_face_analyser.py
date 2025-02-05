@@ -5,7 +5,7 @@ import pytest
 from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
 from facefusion.download import conditional_download
 from facefusion.face_analyser import get_many_faces, get_one_face
-from facefusion.typing import Face
+from facefusion.types import Face
 from facefusion.vision import read_static_image
 from .helper import get_test_example_file, get_test_examples_directory
 

@@ -5,7 +5,7 @@ import gradio
 import facefusion.choices
 from facefusion import face_masker, state_manager, wording
 from facefusion.common_helper import calc_float_step, calc_int_step
-from facefusion.typing import FaceMaskRegion, FaceMaskType, FaceOccluderModel, FaceParserModel
+from facefusion.types import FaceMaskRegion, FaceMaskType, FaceOccluderModel, FaceParserModel
 from facefusion.uis.core import register_ui_component
 
 FACE_OCCLUDER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None

@@ -9,7 +9,7 @@ from facefusion.core import process_step
 from facefusion.filesystem import is_directory, is_image, is_video
 from facefusion.jobs import job_helper, job_manager, job_runner, job_store
 from facefusion.temp_helper import clear_temp_directory
-from facefusion.typing import Args, UiWorkflow
+from facefusion.types import Args, UiWorkflow
 from facefusion.uis.core import get_ui_component
 from facefusion.uis.ui_helper import suggest_output_path
 

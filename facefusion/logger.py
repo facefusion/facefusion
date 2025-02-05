@@ -2,7 +2,7 @@ from logging import Logger, basicConfig, getLogger
 
 import facefusion.choices
 from facefusion.common_helper import get_first, get_last
-from facefusion.typing import LogLevel
+from facefusion.types import LogLevel
 
 
 def init(log_level : LogLevel) -> None:

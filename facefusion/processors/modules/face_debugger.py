@@ -15,9 +15,9 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.typing import FaceDebuggerInputs
+from facefusion.processors.types import FaceDebuggerInputs
 from facefusion.program_helper import find_argument_group
-from facefusion.typing import ApplyStateItem, Args, Face, InferencePool, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.types import ApplyStateItem, Args, Face, InferencePool, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, write_image
 
 

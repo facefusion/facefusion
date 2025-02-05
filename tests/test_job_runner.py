@@ -6,7 +6,7 @@ from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file
 from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, submit_job, submit_jobs
 from facefusion.jobs.job_runner import collect_output_set, finalize_steps, run_job, run_jobs, run_steps
-from facefusion.typing import Args
+from facefusion.types import Args
 from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_output_file, prepare_test_output_directory
 
 

@@ -6,7 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import calc_float_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.typing import ExpressionRestorerModel
+from facefusion.processors.types import ExpressionRestorerModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 EXPRESSION_RESTORER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None

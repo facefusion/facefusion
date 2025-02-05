@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import numpy
 
-from facefusion.typing import Face, FaceSet, FaceStore, VisionFrame
+from facefusion.types import Face, FaceSet, FaceStore, VisionFrame
 
 FACE_STORE : FaceStore =\
 {

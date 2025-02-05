@@ -1,7 +1,7 @@
 from facefusion.ffmpeg import concat_video
 from facefusion.filesystem import are_images, are_videos, move_file, remove_file
 from facefusion.jobs import job_helper, job_manager
-from facefusion.typing import JobOutputSet, JobStep, ProcessStep
+from facefusion.types import JobOutputSet, JobStep, ProcessStep
 
 
 def run_job(job_id : str, process_step : ProcessStep) -> bool:

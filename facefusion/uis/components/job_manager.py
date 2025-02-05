@@ -7,10 +7,10 @@ from facefusion.args import collect_step_args
 from facefusion.common_helper import get_first, get_last
 from facefusion.filesystem import is_directory
 from facefusion.jobs import job_manager
-from facefusion.typing import UiWorkflow
+from facefusion.types import UiWorkflow
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component
-from facefusion.uis.typing import JobManagerAction
+from facefusion.uis.types import JobManagerAction
 from facefusion.uis.ui_helper import convert_int_none, convert_str_none, suggest_output_path
 
 JOB_MANAGER_WRAPPER : Optional[gradio.Column] = None

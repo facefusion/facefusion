@@ -5,9 +5,9 @@ import gradio
 import facefusion.choices
 from facefusion import face_detector, state_manager, wording
 from facefusion.common_helper import calc_float_step, get_last
-from facefusion.typing import Angle, FaceDetectorModel, Score
+from facefusion.types import Angle, FaceDetectorModel, Score
 from facefusion.uis.core import register_ui_component
-from facefusion.uis.typing import ComponentOptions
+from facefusion.uis.types import ComponentOptions
 
 FACE_DETECTOR_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_DETECTOR_SIZE_DROPDOWN : Optional[gradio.Dropdown] = None

@@ -1,8 +1,8 @@
 from typing import Any, Union
 
 from facefusion.app_context import detect_app_context
-from facefusion.processors.typing import ProcessorState, ProcessorStateKey
-from facefusion.typing import State, StateKey, StateSet
+from facefusion.processors.types import ProcessorState, ProcessorStateKey
+from facefusion.types import State, StateKey, StateSet
 
 STATES : Union[StateSet, ProcessorState] =\
 {

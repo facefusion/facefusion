@@ -6,7 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.filesystem import filter_audio_paths, filter_image_paths, has_audio, has_image
 from facefusion.uis.core import register_ui_component
-from facefusion.uis.typing import File
+from facefusion.uis.types import File
 
 SOURCE_FILE : Optional[gradio.File] = None
 SOURCE_AUDIO : Optional[gradio.Audio] = None

@@ -8,7 +8,7 @@ from facefusion import inference_manager, state_manager, wording
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Detection, DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, Score, VisionFrame
+from facefusion.types import Detection, DownloadScope, Fps, InferencePool, ModelOptions, ModelSet, Score, VisionFrame
 from facefusion.vision import detect_video_fps, fit_frame, read_image, read_video_frame
 
 STREAM_COUNTER = 0

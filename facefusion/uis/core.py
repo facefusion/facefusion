@@ -11,7 +11,7 @@ import facefusion.uis.overrides as uis_overrides
 from facefusion import logger, metadata, state_manager, wording
 from facefusion.exit_helper import hard_exit
 from facefusion.filesystem import resolve_relative_path
-from facefusion.uis.typing import Component, ComponentName
+from facefusion.uis.types import Component, ComponentName
 
 UI_COMPONENTS: Dict[ComponentName, Component] = {}
 UI_LAYOUT_MODULES : List[ModuleType] = []

@@ -8,7 +8,7 @@ from onnxruntime import get_available_providers, set_default_logger_severity
 
 import facefusion.choices
 from facefusion.common_helper import get_last
-from facefusion.typing import ExecutionDevice, ExecutionProvider, InferenceSessionProvider, ValueAndUnit
+from facefusion.types import ExecutionDevice, ExecutionProvider, InferenceSessionProvider, ValueAndUnit
 
 set_default_logger_severity(3)
 

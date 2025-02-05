@@ -10,7 +10,7 @@ from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
+from facefusion.types import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
 
 
 @lru_cache(maxsize = None)

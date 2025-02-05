@@ -16,7 +16,7 @@ from facefusion.face_analyser import get_average_face, get_many_faces
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.filesystem import filter_image_paths, is_directory
 from facefusion.processors.core import get_processors_modules
-from facefusion.typing import Face, Fps, StreamMode, VisionFrame, WebcamMode
+from facefusion.types import Face, Fps, StreamMode, VisionFrame, WebcamMode
 from facefusion.uis.core import get_ui_component
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
 

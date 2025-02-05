@@ -14,10 +14,10 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.typing import FrameColorizerInputs
+from facefusion.processors.types import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, DownloadScope, ExecutionProvider, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, unpack_resolution, write_image
 
 

@@ -6,7 +6,7 @@ import facefusion.choices
 from facefusion import content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, state_manager, voice_extractor, wording
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.processors.core import get_processors_modules
-from facefusion.typing import DownloadProvider
+from facefusion.types import DownloadProvider
 
 DOWNLOAD_PROVIDERS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 

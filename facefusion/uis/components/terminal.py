@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 import facefusion.choices
 from facefusion import logger, state_manager, wording
-from facefusion.typing import LogLevel
+from facefusion.types import LogLevel
 
 LOG_LEVEL_DROPDOWN : Optional[gradio.Dropdown] = None
 TERMINAL_TEXTBOX : Optional[gradio.Textbox] = None

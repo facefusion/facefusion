@@ -2,7 +2,7 @@ import itertools
 import shutil
 
 from facefusion import metadata
-from facefusion.typing import Commands
+from facefusion.types import Commands
 
 
 def run(commands : Commands) -> Commands:
