@@ -12,11 +12,6 @@ def hard_exit(error_code : ErrorCode) -> None:
 	sys.exit(error_code)
 
 
-def conditional_exit(error_code : ErrorCode) -> None:
-	if state_manager.get_item('command') == 'headless-run':
-		hard_exit(error_code)
-
-
 def graceful_exit(error_code : ErrorCode) -> None:
 	process_manager.stop()
 	while process_manager.is_processing():
