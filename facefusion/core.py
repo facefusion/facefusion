@@ -11,7 +11,7 @@ from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduc
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.exit_helper import conditional_exit, graceful_exit, hard_exit
+from facefusion.exit_helper import graceful_exit, hard_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
@@ -30,20 +30,21 @@ from facefusion.vision import pack_resolution, read_image, read_static_images, r
 
 
 def cli() -> None:
-	signal.signal(signal.SIGINT, lambda signal_number, frame: graceful_exit(0))
-	program = create_program()
+	if pre_check():
+		signal.signal(signal.SIGINT, lambda signal_number, frame: graceful_exit(0))
+		program = create_program()
 
-	if validate_args(program):
-		args = vars(program.parse_args())
-		apply_args(args, state_manager.init_item)
+		if validate_args(program):
+			args = vars(program.parse_args())
+			apply_args(args, state_manager.init_item)
 
-		if state_manager.get_item('command'):
-			logger.init(state_manager.get_item('log_level'))
-			route(args)
+			if state_manager.get_item('command'):
+				logger.init(state_manager.get_item('log_level'))
+				route(args)
+			else:
+				program.print_help()
 		else:
-			program.print_help()
-	else:
-		hard_exit(2)
+			hard_exit(2)
 
 
 def route(args : Args) -> None:
@@ -54,7 +55,7 @@ def route(args : Args) -> None:
 
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
-		return conditional_exit(error_code)
+		return hard_exit(error_code)
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
@@ -62,17 +63,14 @@ def route(args : Args) -> None:
 		error_code = route_job_manager(args)
 		hard_exit(error_code)
 
-	if not pre_check():
-		return conditional_exit(2)
-
 	if state_manager.get_item('command') == 'run':
 		import facefusion.uis.core as ui
 
 		if not common_pre_check() or not processors_pre_check():
-			return conditional_exit(2)
+			return hard_exit(2)
 		for ui_layout in ui.get_ui_layouts_modules(state_manager.get_item('ui_layouts')):
 			if not ui_layout.pre_check():
-				return conditional_exit(2)
+				return hard_exit(2)
 		ui.init()
 		ui.launch()
 
