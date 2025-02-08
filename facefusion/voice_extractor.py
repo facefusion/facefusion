@@ -43,7 +43,8 @@ def get_inference_pool() -> InferencePool:
 
 
 def clear_inference_pool() -> None:
-	inference_manager.clear_inference_pool(__name__)
+	model_sources = get_model_options().get('sources')
+	inference_manager.clear_inference_pool(__name__, model_sources)
 
 
 def get_model_options() -> ModelOptions:
