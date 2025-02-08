@@ -31,12 +31,12 @@ def error(message : str, module_name : str) -> None:
 
 
 def create_message(message : str, module_name : str) -> str:
-	scopes = module_name.split('.')
-	first_scope = get_first(scopes)
-	last_scope = get_last(scopes)
+	module_names = module_name.split('.')
+	first_module_name = get_first(module_names)
+	last_module_name = get_last(module_names)
 
-	if first_scope and last_scope:
-		return '[' + first_scope.upper() + '.' + last_scope.upper() + '] ' + message
+	if first_module_name and last_module_name:
+		return '[' + first_module_name.upper() + '.' + last_module_name.upper() + '] ' + message
 	return message
 
 
