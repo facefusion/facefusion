@@ -83,7 +83,8 @@ def get_inference_pool() -> InferencePool:
 
 
 def clear_inference_pool() -> None:
-	inference_manager.clear_inference_pool(__name__)
+	_, model_sources = collect_model_downloads()
+	inference_manager.clear_inference_pool(__name__, model_sources)
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:

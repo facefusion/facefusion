@@ -17,15 +17,15 @@ INFERENCE_POOLS : InferencePoolSet =\
 }
 
 
-def get_inference_pool(model_context : str, model_sources : DownloadSet) -> InferencePool:
+def get_inference_pool(module_name : str, model_sources : DownloadSet) -> InferencePool:
 	global INFERENCE_POOLS
 
 	while process_manager.is_checking():
 		sleep(0.5)
 	execution_device_id = state_manager.get_item('execution_device_id')
-	execution_providers = resolve_execution_providers(model_context)
+	execution_providers = resolve_execution_providers(module_name)
 	app_context = detect_app_context()
-	inference_context = get_inference_context(model_context, execution_device_id, execution_providers)
+	inference_context = get_inference_context(module_name, model_sources, execution_device_id, execution_providers)
 
 	if app_context == 'cli' and INFERENCE_POOLS.get('ui').get(inference_context):
 		INFERENCE_POOLS['cli'][inference_context] = INFERENCE_POOLS.get('ui').get(inference_context)
@@ -48,13 +48,13 @@ def create_inference_pool(model_sources : DownloadSet, execution_device_id : str
 	return inference_pool
 
 
-def clear_inference_pool(model_context : str) -> None:
+def clear_inference_pool(module_name : str, model_sources : DownloadSet) -> None:
 	global INFERENCE_POOLS
 
 	execution_device_id = state_manager.get_item('execution_device_id')
-	execution_providers = resolve_execution_providers(model_context)
+	execution_providers = resolve_execution_providers(module_name)
 	app_context = detect_app_context()
-	inference_context = get_inference_context(model_context, execution_device_id, execution_providers)
+	inference_context = get_inference_context(module_name, model_sources, execution_device_id, execution_providers)
 
 	if INFERENCE_POOLS.get(app_context).get(inference_context):
 		del INFERENCE_POOLS[app_context][inference_context]
@@ -65,13 +65,13 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 	return InferenceSession(model_path, providers = inference_session_providers)
 
 
-def get_inference_context(model_context : str, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> str:
-	inference_context = model_context + '.' + execution_device_id + '.' + '_'.join(execution_providers)
+def get_inference_context(module_name : str, model_sources : DownloadSet, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> str:
+	inference_context = '.'.join([ module_name ] + list(model_sources.keys()) + [ execution_device_id ] + list(execution_providers))
 	return inference_context
 
 
-def resolve_execution_providers(model_context : str) -> List[ExecutionProvider]:
-	module = importlib.import_module(model_context)
+def resolve_execution_providers(module_name : str) -> List[ExecutionProvider]:
+	module = importlib.import_module(module_name)
 
 	if hasattr(module, 'resolve_execution_providers'):
 		return getattr(module, 'resolve_execution_providers')()
