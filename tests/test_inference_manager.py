@@ -21,11 +21,11 @@ def test_get_inference_pool() -> None:
 	with patch('facefusion.inference_manager.detect_app_context', return_value = 'cli'):
 		get_inference_pool('test', model_sources)
 
-		assert isinstance(INFERENCE_POOLS.get('cli').get('test.0.cpu').get('content_analyser'), InferenceSession)
+		assert isinstance(INFERENCE_POOLS.get('cli').get('test.content_analyser.0.cpu').get('content_analyser'), InferenceSession)
 
 	with patch('facefusion.inference_manager.detect_app_context', return_value = 'ui'):
 		get_inference_pool('test', model_sources)
 
-		assert isinstance(INFERENCE_POOLS.get('ui').get('test.0.cpu').get('content_analyser'), InferenceSession)
+		assert isinstance(INFERENCE_POOLS.get('ui').get('test.content_analyser.0.cpu').get('content_analyser'), InferenceSession)
 
-	assert INFERENCE_POOLS.get('cli').get('test.0.cpu').get('content_analyser') == INFERENCE_POOLS.get('ui').get('test.0.cpu').get('content_analyser')
+	assert INFERENCE_POOLS.get('cli').get('test.content_analyser.0.cpu').get('content_analyser') == INFERENCE_POOLS.get('ui').get('test.content_analyser.0.cpu').get('content_analyser')
