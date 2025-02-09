@@ -80,8 +80,9 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 def get_inference_pool() -> InferencePool:
 	model_names = [ state_manager.get_item('face_landmarker_model'), 'fan_68_5' ]
-	_, model_sources = collect_model_downloads()
-	return inference_manager.get_inference_pool(__name__, model_names, model_sources)
+	_, model_source_set = collect_model_downloads()
+
+	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
@@ -91,27 +92,27 @@ def clear_inference_pool() -> None:
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	model_set = create_static_model_set('full')
-	model_hashes =\
+	model_hash_set =\
 	{
 		'fan_68_5': model_set.get('fan_68_5').get('hashes').get('fan_68_5')
 	}
-	model_sources =\
+	model_source_set =\
 	{
 		'fan_68_5': model_set.get('fan_68_5').get('sources').get('fan_68_5')
 	}
 
 	for face_landmarker_model in [ '2dfan4', 'peppa_wutz' ]:
 		if state_manager.get_item('face_landmarker_model') in [ 'many', face_landmarker_model ]:
-			model_hashes[face_landmarker_model] = model_set.get(face_landmarker_model).get('hashes').get(face_landmarker_model)
-			model_sources[face_landmarker_model] = model_set.get(face_landmarker_model).get('sources').get(face_landmarker_model)
+			model_hash_set[face_landmarker_model] = model_set.get(face_landmarker_model).get('hashes').get(face_landmarker_model)
+			model_source_set[face_landmarker_model] = model_set.get(face_landmarker_model).get('sources').get(face_landmarker_model)
 
-	return model_hashes, model_sources
+	return model_hash_set, model_source_set
 
 
 def pre_check() -> bool:
-	model_hashes, model_sources = collect_model_downloads()
+	model_hash_set, model_source_set = collect_model_downloads()
 
-	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
+	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
 
 def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:

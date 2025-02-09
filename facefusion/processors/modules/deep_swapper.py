@@ -241,8 +241,9 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 def get_inference_pool() -> InferencePool:
 	model_names = [ state_manager.get_item('deep_swapper_model') ]
-	model_sources = get_model_options().get('sources')
-	return inference_manager.get_inference_pool(__name__, model_names, model_sources)
+	model_source_set = get_model_options().get('sources')
+
+	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
@@ -278,11 +279,11 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 
 
 def pre_check() -> bool:
-	model_hashes = get_model_options().get('hashes')
-	model_sources = get_model_options().get('sources')
+	model_hash_set = get_model_options().get('hashes')
+	model_source_set = get_model_options().get('sources')
 
-	if model_hashes and model_sources:
-		return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
+	if model_hash_set and model_source_set:
+		return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 	return True
 
 
