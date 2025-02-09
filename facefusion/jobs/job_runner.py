@@ -101,12 +101,12 @@ def clean_steps(job_id: str) -> bool:
 
 def collect_output_set(job_id : str) -> JobOutputSet:
 	steps = job_manager.get_steps(job_id)
-	output_set : JobOutputSet = {}
+	job_output_set : JobOutputSet = {}
 
 	for index, step in enumerate(steps):
 		output_path = step.get('args').get('output_path')
 
 		if output_path:
 			step_output_path = job_manager.get_step_output_path(job_id, index, output_path)
-			output_set.setdefault(output_path, []).append(step_output_path)
-	return output_set
+			job_output_set.setdefault(output_path, []).append(step_output_path)
+	return job_output_set

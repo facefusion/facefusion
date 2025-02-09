@@ -84,7 +84,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 	job_id = convert_str_none(job_id)
 
 	for key in job_store.get_job_keys():
-		state_manager.sync_item(key) #type:ignore
+		state_manager.sync_item(key) #type:ignore[arg-type]
 
 	if job_action == 'job-run':
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__)
