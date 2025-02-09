@@ -386,26 +386,32 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
+	model_names = [ get_frame_enhancer_model() ]
 	model_sources = get_model_options().get('sources')
-	return inference_manager.get_inference_pool(__name__, model_sources)
+	return inference_manager.get_inference_pool(__name__, model_names, model_sources)
 
 
 def clear_inference_pool() -> None:
-	model_sources = get_model_options().get('sources')
-	inference_manager.clear_inference_pool(__name__, model_sources)
+	model_names = [ get_frame_enhancer_model() ]
+	inference_manager.clear_inference_pool(__name__, model_names)
 
 
 def get_model_options() -> ModelOptions:
+	frame_enhancer_model = get_frame_enhancer_model()
+	return create_static_model_set('full').get(frame_enhancer_model)
+
+
+def get_frame_enhancer_model() -> str:
 	frame_enhancer_model = state_manager.get_item('frame_enhancer_model')
 
 	if has_execution_provider('coreml'):
 		if frame_enhancer_model == 'real_esrgan_x2_fp16':
-			return create_static_model_set('full').get('real_esrgan_x2')
+			return 'real_esrgan_x2'
 		if frame_enhancer_model == 'real_esrgan_x4_fp16':
-			return create_static_model_set('full').get('real_esrgan_x4')
+			return 'real_esrgan_x4'
 		if frame_enhancer_model == 'real_esrgan_x8_fp16':
-			return create_static_model_set('full').get('real_esrgan_x8')
-	return create_static_model_set('full').get(frame_enhancer_model)
+			return 'real_esrgan_x8'
+	return frame_enhancer_model
 
 
 def register_args(program : ArgumentParser) -> None:
