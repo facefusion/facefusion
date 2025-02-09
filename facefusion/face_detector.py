@@ -78,13 +78,14 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
+	model_names = [ state_manager.get_item('face_detector_model') ]
 	_, model_sources = collect_model_downloads()
-	return inference_manager.get_inference_pool(__name__, model_sources)
+	return inference_manager.get_inference_pool(__name__, model_names, model_sources)
 
 
 def clear_inference_pool() -> None:
-	_, model_sources = collect_model_downloads()
-	inference_manager.clear_inference_pool(__name__, model_sources)
+	model_names = [ state_manager.get_item('face_detector_model') ]
+	inference_manager.clear_inference_pool(__name__, model_names)
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:

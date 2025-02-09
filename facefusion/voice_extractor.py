@@ -38,13 +38,14 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
+	model_names = [ 'kim_vocal_2' ]
 	model_sources = get_model_options().get('sources')
-	return inference_manager.get_inference_pool(__name__, model_sources)
+	return inference_manager.get_inference_pool(__name__, model_names, model_sources)
 
 
 def clear_inference_pool() -> None:
-	model_sources = get_model_options().get('sources')
-	inference_manager.clear_inference_pool(__name__, model_sources)
+	model_names = [ 'kim_vocal_2' ]
+	inference_manager.clear_inference_pool(__name__, model_names)
 
 
 def get_model_options() -> ModelOptions:
