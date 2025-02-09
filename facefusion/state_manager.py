@@ -6,8 +6,8 @@ from facefusion.types import State, StateKey, StateSet
 
 STATE_SET : Union[StateSet, ProcessorStateSet] =\
 {
-	'cli': {},
-	'ui': {}
+	'cli': {}, #type:ignore[typeddict-item]
+	'ui': {} #type:ignore[typeddict-item]
 }
 
 
