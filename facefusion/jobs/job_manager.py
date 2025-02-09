@@ -82,11 +82,11 @@ def delete_jobs(halt_on_error : bool) -> bool:
 
 def find_jobs(job_status : JobStatus) -> JobSet:
 	job_ids = find_job_ids(job_status)
-	jobs : JobSet = {}
+	job_set : JobSet = {}
 
 	for job_id in job_ids:
-		jobs[job_id] = read_job_file(job_id)
-	return jobs
+		job_set[job_id] = read_job_file(job_id)
+	return job_set
 
 
 def find_job_ids(job_status : JobStatus) -> List[str]:
@@ -188,7 +188,6 @@ def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus)
 
 	if job:
 		steps = job.get('steps')
-
 		if has_step(job_id, step_index):
 			steps[step_index]['status'] = step_status
 			return update_job_file(job_id, job)

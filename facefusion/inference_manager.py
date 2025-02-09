@@ -10,15 +10,15 @@ from facefusion.execution import create_inference_session_providers
 from facefusion.filesystem import is_file
 from facefusion.types import DownloadSet, ExecutionProvider, InferencePool, InferencePoolSet
 
-INFERENCE_POOLS : InferencePoolSet =\
+INFERENCE_POOL_SET : InferencePoolSet =\
 {
-	'cli': {}, #type:ignore[typeddict-item]
-	'ui': {} #type:ignore[typeddict-item]
+	'cli': {},
+	'ui': {}
 }
 
 
-def get_inference_pool(module_name : str, model_names : List[str], model_sources : DownloadSet) -> InferencePool:
-	global INFERENCE_POOLS
+def get_inference_pool(module_name : str, model_names : List[str], model_source_set : DownloadSet) -> InferencePool:
+	global INFERENCE_POOL_SET
 
 	while process_manager.is_checking():
 		sleep(0.5)
@@ -27,21 +27,21 @@ def get_inference_pool(module_name : str, model_names : List[str], model_sources
 	app_context = detect_app_context()
 	inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
-	if app_context == 'cli' and INFERENCE_POOLS.get('ui').get(inference_context):
-		INFERENCE_POOLS['cli'][inference_context] = INFERENCE_POOLS.get('ui').get(inference_context)
-	if app_context == 'ui' and INFERENCE_POOLS.get('cli').get(inference_context):
-		INFERENCE_POOLS['ui'][inference_context] = INFERENCE_POOLS.get('cli').get(inference_context)
-	if not INFERENCE_POOLS.get(app_context).get(inference_context):
-		INFERENCE_POOLS[app_context][inference_context] = create_inference_pool(model_sources, execution_device_id, execution_providers)
+	if app_context == 'cli' and INFERENCE_POOL_SET.get('ui').get(inference_context):
+		INFERENCE_POOL_SET['cli'][inference_context] = INFERENCE_POOL_SET.get('ui').get(inference_context)
+	if app_context == 'ui' and INFERENCE_POOL_SET.get('cli').get(inference_context):
+		INFERENCE_POOL_SET['ui'][inference_context] = INFERENCE_POOL_SET.get('cli').get(inference_context)
+	if not INFERENCE_POOL_SET.get(app_context).get(inference_context):
+		INFERENCE_POOL_SET[app_context][inference_context] = create_inference_pool(model_source_set, execution_device_id, execution_providers)
 
-	return INFERENCE_POOLS.get(app_context).get(inference_context)
+	return INFERENCE_POOL_SET.get(app_context).get(inference_context)
 
 
-def create_inference_pool(model_sources : DownloadSet, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferencePool:
+def create_inference_pool(model_source_set : DownloadSet, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferencePool:
 	inference_pool : InferencePool = {}
 
-	for model_name in model_sources.keys():
-		model_path = model_sources.get(model_name).get('path')
+	for model_name in model_source_set.keys():
+		model_path = model_source_set.get(model_name).get('path')
 		if is_file(model_path):
 			inference_pool[model_name] = create_inference_session(model_path, execution_device_id, execution_providers)
 
@@ -49,15 +49,15 @@ def create_inference_pool(model_sources : DownloadSet, execution_device_id : str
 
 
 def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
-	global INFERENCE_POOLS
+	global INFERENCE_POOL_SET
 
 	execution_device_id = state_manager.get_item('execution_device_id')
 	execution_providers = resolve_execution_providers(module_name)
 	app_context = detect_app_context()
 	inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
-	if INFERENCE_POOLS.get(app_context).get(inference_context):
-		del INFERENCE_POOLS[app_context][inference_context]
+	if INFERENCE_POOL_SET.get(app_context).get(inference_context):
+		del INFERENCE_POOL_SET[app_context][inference_context]
 
 
 def create_inference_session(model_path : str, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferenceSession:

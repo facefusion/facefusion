@@ -92,7 +92,7 @@ def create_and_run_job(step_args : Args) -> bool:
 	job_id = job_helper.suggest_job_id('ui')
 
 	for key in job_store.get_job_keys():
-		state_manager.sync_item(key) #type:ignore
+		state_manager.sync_item(key) #type:ignore[arg-type]
 
 	return job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step)
 

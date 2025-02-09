@@ -7,7 +7,7 @@ from cv2.typing import Size
 
 from facefusion.types import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
-WARP_TEMPLATES : WarpTemplateSet =\
+WARP_TEMPLATE_SET : WarpTemplateSet =\
 {
 	'arcface_112_v1': numpy.array(
 	[
@@ -69,7 +69,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 
 
 def estimate_matrix_by_face_landmark_5(face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Matrix:
-	normed_warp_template = WARP_TEMPLATES.get(warp_template) * crop_size
+	normed_warp_template = WARP_TEMPLATE_SET.get(warp_template) * crop_size
 	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	return affine_matrix
 

@@ -122,8 +122,9 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 def get_inference_pool() -> InferencePool:
 	model_names = [state_manager.get_item('face_occluder_model'), state_manager.get_item('face_parser_model')]
-	_, model_sources = collect_model_downloads()
-	return inference_manager.get_inference_pool(__name__, model_names, model_sources)
+	_, model_source_set = collect_model_downloads()
+
+	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
@@ -132,27 +133,27 @@ def clear_inference_pool() -> None:
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
-	model_hashes = {}
-	model_sources = {}
 	model_set = create_static_model_set('full')
+	model_hash_set = {}
+	model_source_set = {}
 
 	for face_occluder_model in [ 'xseg_1', 'xseg_2', 'xseg_3' ]:
 		if state_manager.get_item('face_occluder_model') == face_occluder_model:
-			model_hashes[face_occluder_model] = model_set.get(face_occluder_model).get('hashes').get('face_occluder')
-			model_sources[face_occluder_model] = model_set.get(face_occluder_model).get('sources').get('face_occluder')
+			model_hash_set[face_occluder_model] = model_set.get(face_occluder_model).get('hashes').get('face_occluder')
+			model_source_set[face_occluder_model] = model_set.get(face_occluder_model).get('sources').get('face_occluder')
 
 	for face_parser_model in [ 'bisenet_resnet_18', 'bisenet_resnet_34' ]:
 		if state_manager.get_item('face_parser_model') == face_parser_model:
-			model_hashes[face_parser_model] = model_set.get(face_parser_model).get('hashes').get('face_parser')
-			model_sources[face_parser_model] = model_set.get(face_parser_model).get('sources').get('face_parser')
+			model_hash_set[face_parser_model] = model_set.get(face_parser_model).get('hashes').get('face_parser')
+			model_source_set[face_parser_model] = model_set.get(face_parser_model).get('sources').get('face_parser')
 
-	return model_hashes, model_sources
+	return model_hash_set, model_source_set
 
 
 def pre_check() -> bool:
-	model_hashes, model_sources = collect_model_downloads()
+	model_hash_set, model_source_set = collect_model_downloads()
 
-	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
+	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
 
 @lru_cache(maxsize = None)
