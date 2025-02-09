@@ -133,9 +133,9 @@ def clear_inference_pool() -> None:
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
+	model_set = create_static_model_set('full')
 	model_hash_set = {}
 	model_source_set = {}
-	model_set = create_static_model_set('full')
 
 	for face_occluder_model in [ 'xseg_1', 'xseg_2', 'xseg_3' ]:
 		if state_manager.get_item('face_occluder_model') == face_occluder_model:

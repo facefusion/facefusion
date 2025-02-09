@@ -90,9 +90,9 @@ def clear_inference_pool() -> None:
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
+	model_set = create_static_model_set('full')
 	model_hash_set = {}
 	model_source_set = {}
-	model_set = create_static_model_set('full')
 
 	for face_detector_model in [ 'retinaface', 'scrfd', 'yolo_face' ]:
 		if state_manager.get_item('face_detector_model') in [ 'many', face_detector_model ]:
