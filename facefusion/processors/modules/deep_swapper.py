@@ -258,10 +258,11 @@ def get_model_options() -> ModelOptions:
 
 def get_model_size() -> Size:
 	deep_swapper = get_inference_pool().get('deep_swapper')
-	deep_swapper_outputs = deep_swapper.get_outputs()
 
-	for deep_swapper_output in deep_swapper_outputs:
-		return deep_swapper_output.shape[1:3]
+	for deep_swapper_input in deep_swapper.get_inputs():
+		if deep_swapper_input.name == 'in_face:0':
+			return deep_swapper_input.shape[1:3]
+
 	return 0, 0
 
 
