@@ -84,7 +84,7 @@ def test_predict_video_frame_total() -> None:
 	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 12.5, 0, 100) == 50
 	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 25, 0, 100) == 100
 	assert predict_video_frame_total(get_test_example_file('target-240p-25fps.mp4'), 25, 0, 200) == 200
-	assert predict_video_frame_total('invalid', 0, 0, 0) == 0
+	assert predict_video_frame_total('invalid', 25, 0, 100) == 0
 
 
 def test_detect_video_fps() -> None:
