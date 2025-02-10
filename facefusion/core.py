@@ -451,7 +451,7 @@ def process_video(start_time : float) -> ErrorCode:
 		return 1
 
 	logger.info(wording.get('merging_video').format(resolution = state_manager.get_item('output_video_resolution'), fps = state_manager.get_item('output_video_fps')), __name__)
-	if merge_video(state_manager.get_item('target_path'), state_manager.get_item('output_video_resolution'), state_manager.get_item('output_video_fps')):
+	if merge_video(state_manager.get_item('target_path'), temp_video_fps, state_manager.get_item('output_video_resolution'), state_manager.get_item('output_video_fps')):
 		logger.debug(wording.get('merging_video_succeed'), __name__)
 	else:
 		if is_process_stopping():

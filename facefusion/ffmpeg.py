@@ -10,7 +10,7 @@ from facefusion import ffmpeg_builder, logger, process_manager, state_manager, w
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern, resolve_temp_frame_paths
 from facefusion.types import AudioBuffer, Commands, EncoderSet, Fps, UpdateProgress
-from facefusion.vision import count_trim_frame_total, detect_video_duration, detect_video_fps, restrict_video_fps
+from facefusion.vision import count_trim_frame_total, detect_video_duration, detect_video_fps
 
 
 def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
@@ -200,12 +200,11 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	return run_ffmpeg(commands).returncode == 0
 
 
-def merge_video(target_path : str, output_video_resolution : str, output_video_fps : Fps) -> bool:
+def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution : str, output_video_fps : Fps) -> bool:
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
 	merge_frame_total = len(resolve_temp_frame_paths(target_path))
-	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
 	temp_file_path = get_temp_file_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 
