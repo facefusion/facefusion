@@ -90,6 +90,7 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 	video_fps = detect_video_fps(video_path)
 	frame_range = range(trim_frame_start, trim_frame_end)
 	rate = 0.0
+	total = 0
 	counter = 0
 
 	with tqdm(total = len(frame_range), desc = wording.get('analysing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
@@ -97,9 +98,11 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 		for frame_number in frame_range:
 			if frame_number % int(video_fps) == 0:
 				vision_frame = read_video_frame(video_path, frame_number)
+				total += 1
 				if analyse_frame(vision_frame):
 					counter += 1
-			rate = counter * int(video_fps) / len(frame_range) * 100
+			if counter > 0 and total > 0:
+				rate = counter / total * 100
 			progress.set_postfix(rate = rate)
 			progress.update()
 
