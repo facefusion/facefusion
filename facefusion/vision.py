@@ -106,7 +106,7 @@ def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : in
 	if is_video(video_path):
 		target_video_fps = detect_video_fps(video_path)
 		extract_frame_total = count_trim_frame_total(video_path, trim_frame_start, trim_frame_end) * fps / target_video_fps
-		return math.ceil(extract_frame_total)
+		return math.floor(extract_frame_total)
 	return 0
 
 
