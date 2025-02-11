@@ -1,3 +1,5 @@
+from gradio.processing_utils import video_is_playable
+
 from facefusion import ffmpeg_builder
 from facefusion.ffmpeg import run_ffmpeg
 from facefusion.filesystem import get_file_size
@@ -22,6 +24,21 @@ def convert_video_to_playable_mp4(video_path : str) -> str:
 
 		if process.returncode == 0:
 			return temp_video_path
+
+	if not video_is_playable(video_path):
+		create_temp_directory(video_path)
+		temp_video_path = get_temp_file_path(video_path)
+		commands = ffmpeg_builder.chain(
+			ffmpeg_builder.set_input(video_path),
+			ffmpeg_builder.force_output(temp_video_path)
+		)
+
+		process = run_ffmpeg(commands)
+		process.communicate()
+
+		if process.returncode == 0:
+			return temp_video_path
+
 	return video_path
 
 
