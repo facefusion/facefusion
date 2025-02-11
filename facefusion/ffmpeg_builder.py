@@ -130,7 +130,7 @@ def set_audio_channel_total(audio_channel_total : int) -> Commands:
 
 def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> Commands:
 	if audio_encoder == 'aac':
-		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 2.0, 0.1 ]), 1)
+		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 0.1, 2.0 ]), 1)
 		return [ '-q:a', str(audio_compression) ]
 	if audio_encoder == 'libmp3lame':
 		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 9, 0 ]))
