@@ -1,4 +1,4 @@
-gradio==5.13.1
+gradio==5.15.0
 gradio-rangeslider==0.0.8
 numpy==2.2.2
 onnx==1.17.0
