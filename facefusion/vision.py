@@ -1,3 +1,4 @@
+import math
 from functools import lru_cache
 from typing import List, Optional, Tuple
 
@@ -98,6 +99,14 @@ def count_video_frame_total(video_path : str) -> int:
 			video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 			video_capture.release()
 			return video_frame_total
+	return 0
+
+
+def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : int, trim_frame_end : int) -> int:
+	if is_video(video_path):
+		target_video_fps = detect_video_fps(video_path)
+		extract_frame_total = count_trim_frame_total(video_path, trim_frame_start, trim_frame_end) * fps / target_video_fps
+		return math.floor(extract_frame_total)
 	return 0
 
 
