@@ -31,6 +31,7 @@ def before_all() -> None:
 	state_manager.init_item('output_audio_encoder', 'aac')
 	state_manager.init_item('output_audio_quality', 80)
 	state_manager.init_item('output_audio_volume', 100)
+	state_manager.init_item('output_video_encoder', 'libx264')
 
 
 @pytest.fixture(scope = 'function', autouse = True)

@@ -169,10 +169,10 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 		ffmpeg_builder.set_input(temp_file_path),
 		ffmpeg_builder.select_media_range(trim_frame_start, trim_frame_end, target_video_fps),
 		ffmpeg_builder.set_input(target_path),
-		ffmpeg_builder.set_video_encoder(output_video_encoder),
 		ffmpeg_builder.set_audio_encoder(output_audio_encoder),
 		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality),
 		ffmpeg_builder.set_audio_volume(output_audio_volume),
+		ffmpeg_builder.set_video_encoder(output_video_encoder),
 		ffmpeg_builder.select_media_stream('0:v:0'),
 		ffmpeg_builder.select_media_stream('1:a:0'),
 		ffmpeg_builder.set_video_duration(temp_video_duration),
@@ -185,16 +185,17 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	output_audio_encoder = state_manager.get_item('output_audio_encoder')
 	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_audio_volume = state_manager.get_item('output_audio_volume')
+	output_video_encoder = state_manager.get_item('output_video_encoder')
 	temp_file_path = get_temp_file_path(target_path)
 	temp_video_duration = detect_video_duration(temp_file_path)
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_file_path),
 		ffmpeg_builder.set_input(audio_path),
-		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.set_audio_encoder(output_audio_encoder),
 		ffmpeg_builder.set_audio_quality(output_audio_encoder, output_audio_quality),
 		ffmpeg_builder.set_audio_volume(output_audio_volume),
+		ffmpeg_builder.set_video_encoder(output_video_encoder),
 		ffmpeg_builder.set_video_duration(temp_video_duration),
 		ffmpeg_builder.force_output(output_path)
 	)
