@@ -133,10 +133,10 @@ def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> Comm
 		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 0.1, 2.0 ]), 1)
 		return [ '-q:a', str(audio_compression) ]
 	if audio_encoder == 'libmp3lame':
-		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 9, 0 ]))
+		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 9, 0 ]), 1)
 		return [ '-q:a', str(audio_compression) ]
 	if audio_encoder == 'libopus':
-		audio_bit_rate = round(numpy.interp(audio_quality, [ 0, 100 ], [ 64, 320 ]))
+		audio_bit_rate = round(numpy.interp(audio_quality, [ 0, 100 ], [ 64, 320 ]), 1)
 		return [ '-b:a', str(audio_bit_rate) + 'k' ]
 	if audio_encoder == 'libvorbis':
 		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ -1, 10 ]), 1)
