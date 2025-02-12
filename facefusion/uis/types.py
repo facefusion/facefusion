@@ -1,8 +1,8 @@
-from typing import Any, Dict, IO, Literal
+from typing import Any, Dict, IO, Literal, TypeAlias
 
-File = IO[Any]
-Component = Any
-ComponentOptions = Dict[str, Any]
+File : TypeAlias = IO[Any]
+Component : TypeAlias = Any
+ComponentOptions : TypeAlias = Dict[str, Any]
 ComponentName = Literal\
 [
 	'age_modifier_direction_slider',
