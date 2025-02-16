@@ -17,21 +17,14 @@ def has_execution_provider(execution_provider : ExecutionProvider) -> bool:
 	return execution_provider in get_available_execution_providers()
 
 
-def suggest_execution_provider(execution_providers : List[ExecutionProvider]) -> ExecutionProvider:
-	for execution_provider in facefusion.choices.execution_providers:
-		if execution_provider in execution_providers:
-			return execution_provider
-
-	return get_last(facefusion.choices.execution_providers)
-
-
 def get_available_execution_providers() -> List[ExecutionProvider]:
 	inference_session_providers = get_available_providers()
 	available_execution_providers = []
 
 	for execution_provider, execution_provider_value in facefusion.choices.execution_provider_set.items():
 		if execution_provider_value in inference_session_providers:
-			available_execution_providers.append(execution_provider)
+			index = facefusion.choices.execution_providers.index(execution_provider)
+			available_execution_providers.insert(index, execution_provider)
 
 	return available_execution_providers
 
