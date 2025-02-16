@@ -18,7 +18,7 @@ def has_execution_provider(execution_provider : ExecutionProvider) -> bool:
 
 def get_available_execution_providers() -> List[ExecutionProvider]:
 	inference_session_providers = get_available_providers()
-	available_execution_providers = []
+	available_execution_providers : List[ExecutionProvider] = []
 
 	for execution_provider, execution_provider_value in facefusion.choices.execution_provider_set.items():
 		if execution_provider_value in inference_session_providers:
