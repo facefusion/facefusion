@@ -13,6 +13,12 @@ Preview
 
 ![Preview](https://raw.githubusercontent.com/facefusion/facefusion/master/.github/preview.png?sanitize=true)
 
+Parameter & Usage Deep Dive
+-------
+
+Please checkout this Guide on YouTube:
+
+[![YT Thumbnail](https://img.youtube.com/vi/nvPbdHVF12c/maxresdefault.jpg)](https://www.youtube.com/watch?v=nvPbdHVF12c)
 
 Installation
 ------------
