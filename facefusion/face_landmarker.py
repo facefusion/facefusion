@@ -115,7 +115,7 @@ def pre_check() -> bool:
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
 
-def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
+def detect_face_landmark(vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
 	face_landmark_2dfan4 = None
 	face_landmark_peppa_wutz = None
 	face_landmark_score_2dfan4 = 0.0
