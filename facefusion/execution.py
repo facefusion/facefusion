@@ -56,7 +56,7 @@ def create_inference_session_providers(execution_device_id : str, execution_prov
 		if execution_provider == 'openvino':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
-				'device_type': 'GPU' if execution_device_id == '0' else 'GPU.' + execution_device_id,
+				'device_type': resolve_openvino_device_type(execution_device_id),
 				'precision': 'FP32'
 			}))
 		if execution_provider == 'coreml':
@@ -66,6 +66,14 @@ def create_inference_session_providers(execution_device_id : str, execution_prov
 		inference_session_providers.append(facefusion.choices.execution_provider_set.get('cpu'))
 
 	return inference_session_providers
+
+
+def resolve_openvino_device_type(execution_device_id : str) -> str:
+	if execution_device_id == '0':
+		return 'GPU'
+	if execution_device_id == '∞':
+		return 'MULTI:GPU'
+	return 'GPU.' + device_id
 
 
 def is_geforce_16_series() -> bool:
