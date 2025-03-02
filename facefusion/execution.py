@@ -73,7 +73,7 @@ def resolve_openvino_device_type(execution_device_id : str) -> str:
 		return 'GPU'
 	if execution_device_id == '∞':
 		return 'MULTI:GPU'
-	return 'GPU.' + device_id
+	return 'GPU.' + execution_device_id
 
 
 def is_geforce_16_series() -> bool:
