@@ -39,6 +39,7 @@ def create_frame_hash(vision_frame : VisionFrame) -> Optional[str]:
 		return frame_hash
 	return None
 
+
 def get_reference_faces() -> Optional[FaceSet]:
 	if FACE_STORE['reference_faces']:
 		return FACE_STORE['reference_faces']
