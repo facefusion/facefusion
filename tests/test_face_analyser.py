@@ -52,6 +52,7 @@ def test_get_one_face_with_retinaface() -> None:
 		get_test_example_file('source-70crop.jpg'),
 		get_test_example_file('source-60crop.jpg')
 	]
+
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
 		many_faces = get_many_faces([ source_frame ])
@@ -72,6 +73,7 @@ def test_get_one_face_with_scrfd() -> None:
 		get_test_example_file('source-70crop.jpg'),
 		get_test_example_file('source-60crop.jpg')
 	]
+
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
 		many_faces = get_many_faces([ source_frame ])
@@ -92,6 +94,7 @@ def test_get_one_face_with_yoloface() -> None:
 		get_test_example_file('source-70crop.jpg'),
 		get_test_example_file('source-60crop.jpg')
 	]
+
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
 		many_faces = get_many_faces([ source_frame ])
