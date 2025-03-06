@@ -86,7 +86,7 @@ def get_value_by_notation(key : str) -> Optional[Any]:
 	if '.' in key:
 		section, name = key.split('.')
 		if section in config_parser and name in config_parser[section]:
-			return config_parser[section].get(name)
+			return config_parser[section][name]
 	if key in config_parser:
-		return config_parser.get(key)
+		return config_parser[key]
 	return None
