@@ -63,17 +63,17 @@ def test_get_int_value() -> None:
 
 
 def test_get_float_value() -> None:
-	assert config.get_float_value('float.valid') == 1.0
-	assert config.get_float_value('float.unset', '1.0') == 1.0
-	assert config.get_float_value('float.unset') is None
-	assert config.get_float_value('float.invalid') is None
+	assert config.get_float_value('float', 'valid') == 1.0
+	assert config.get_float_value('float', 'unset', '1.0') == 1.0
+	assert config.get_float_value('float', 'unset') is None
+	assert config.get_float_value('float', 'invalid') is None
 
 
 def test_get_bool_value() -> None:
-	assert config.get_bool_value('bool.valid') is True
-	assert config.get_bool_value('bool.unset', 'False') is False
-	assert config.get_bool_value('bool.unset') is None
-	assert config.get_bool_value('bool.invalid') is None
+	assert config.get_bool_value('bool', 'valid') is True
+	assert config.get_bool_value('bool', 'unset', 'False') is False
+	assert config.get_bool_value('bool', 'unset') is None
+	assert config.get_bool_value('bool', 'invalid') is None
 
 
 def test_get_str_list() -> None:
