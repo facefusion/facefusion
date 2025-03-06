@@ -7,8 +7,8 @@ from facefusion import config
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	config.CONFIG = ConfigParser()
-	config.CONFIG.read_dict(
+	config.CONFIG_PARSER = ConfigParser()
+	config.CONFIG_PARSER.read_dict(
 	{
 		'str':
 		{

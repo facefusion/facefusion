@@ -4,22 +4,22 @@ from typing import Any, List, Optional
 from facefusion import state_manager
 from facefusion.common_helper import cast_float, cast_int
 
-CONFIG = None
+CONFIG_PARSER = None
 
 
-def get_config() -> ConfigParser:
-	global CONFIG
+def get_config_parser() -> ConfigParser:
+	global CONFIG_PARSER
 
-	if CONFIG is None:
-		CONFIG = ConfigParser()
-		CONFIG.read(state_manager.get_item('config_path'), encoding = 'utf-8')
-	return CONFIG
+	if CONFIG_PARSER is None:
+		CONFIG_PARSER = ConfigParser()
+		CONFIG_PARSER.read(state_manager.get_item('config_path'), encoding = 'utf-8')
+	return CONFIG_PARSER
 
 
-def clear_config() -> None:
-	global CONFIG
+def clear_config_parser() -> None:
+	global CONFIG_PARSER
 
-	CONFIG = None
+	CONFIG_PARSER = None
 
 
 def get_str_value(key : str, fallback : Optional[str] = None) -> Optional[str]:
@@ -81,12 +81,12 @@ def get_float_list(key : str, fallback : Optional[str] = None) -> Optional[List[
 
 
 def get_value_by_notation(key : str) -> Optional[Any]:
-	config = get_config()
+	config_parser = get_config_parser()
 
 	if '.' in key:
 		section, name = key.split('.')
-		if section in config and name in config[section]:
-			return config[section][name]
-	if key in config:
-		return config[key]
+		if section in config_parser and name in config_parser[section]:
+			return config_parser[section].get(name)
+	if key in config_parser:
+		return config_parser.get(key)
 	return None
