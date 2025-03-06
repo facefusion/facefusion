@@ -1,8 +1,8 @@
 from configparser import ConfigParser
-from typing import Any, List, Optional
+from typing import Any, List, Optional, cast
 
 from facefusion import state_manager
-from facefusion.common_helper import cast_float, cast_int
+from facefusion.common_helper import cast_float, cast_int, cast_bool
 
 CONFIG_PARSER = None
 
@@ -38,22 +38,18 @@ def get_int_value(key : str, fallback : Optional[str] = None) -> Optional[int]:
 	return None
 
 
-def get_float_value(key : str, fallback : Optional[str] = None) -> Optional[float]:
-	value = get_value_by_notation(key)
+def get_float_value(section : str, option : str, fallback : Optional[str] = None) -> Optional[float]:
+	try:
+		return get_config_parser().getfloat(section, option)
+	except Exception:
+		return cast_float(fallback)
 
-	if value or fallback:
-		return cast_float(value or fallback)
-	return None
 
-
-def get_bool_value(key : str, fallback : Optional[str] = None) -> Optional[bool]:
-	value = get_value_by_notation(key)
-
-	if value == 'True' or fallback == 'True':
-		return True
-	if value == 'False' or fallback == 'False':
-		return False
-	return None
+def get_bool_value(section : str, option : str, fallback : Optional[str] = None) -> Optional[bool]:
+	try:
+		return get_config_parser().getboolean(section, option)
+	except Exception:
+		return cast_bool(fallback)
 
 
 def get_str_list(key : str, fallback : Optional[str] = None) -> Optional[List[str]]:

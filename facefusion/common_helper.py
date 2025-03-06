@@ -50,18 +50,26 @@ def calc_float_step(float_range : Sequence[float]) -> float:
 	return round(float_range[1] - float_range[0], 2)
 
 
-def cast_int(value : Any) -> Optional[Any]:
+def cast_int(value : Any) -> Optional[int]:
 	try:
 		return int(value)
 	except (ValueError, TypeError):
 		return None
 
 
-def cast_float(value : Any) -> Optional[Any]:
+def cast_float(value : Any) -> Optional[float]:
 	try:
 		return float(value)
 	except (ValueError, TypeError):
 		return None
+
+
+def cast_bool(value : Any) -> Optional[bool]:
+	if value == 'True':
+		return True
+	if value == 'False':
+		return False
+	return None
 
 
 def get_first(__list__ : Any) -> Any:
