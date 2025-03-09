@@ -22,34 +22,36 @@ def clear_config_parser() -> None:
 	CONFIG_PARSER = None
 
 
-def get_str_value(key : str, fallback : Optional[str] = None) -> Optional[str]:
-	value = get_value_by_notation(key)
+def get_str_value(section : str, option : str, fallback : Optional[str] = None) -> Optional[str]:
+	config_parser = get_config_parser()
 
-	if value or fallback:
-		return str(value or fallback)
-	return None
+	if config_parser.has_option(section, option) and config_parser.get(section, option).strip():
+		return config_parser.get(section, option)
+	return fallback
 
 
-def get_int_value(key : str, fallback : Optional[str] = None) -> Optional[int]:
-	value = get_value_by_notation(key)
+def get_int_value(section : str, option : str, fallback : Optional[str] = None) -> Optional[int]:
+	config_parser = get_config_parser()
 
-	if value or fallback:
-		return cast_int(value or fallback)
-	return None
+	if config_parser.has_option(section, option) and config_parser.get(section, option).strip():
+		return config_parser.getint(section, option)
+	return cast_int(fallback)
 
 
 def get_float_value(section : str, option : str, fallback : Optional[str] = None) -> Optional[float]:
-	try:
-		return get_config_parser().getfloat(section, option)
-	except Exception:
-		return cast_float(fallback)
+	config_parser = get_config_parser()
+
+	if config_parser.has_option(section, option) and config_parser.get(section, option).strip():
+		return config_parser.getfloat(section, option)
+	return cast_float(fallback)
 
 
 def get_bool_value(section : str, option : str, fallback : Optional[str] = None) -> Optional[bool]:
-	try:
-		return get_config_parser().getboolean(section, option)
-	except Exception:
-		return cast_bool(fallback)
+	config_parser = get_config_parser()
+
+	if config_parser.has_option(section, option) and config_parser.get(section, option).strip():
+		return config_parser.getboolean(section, option)
+	return cast_bool(fallback)
 
 
 def get_str_list(key : str, fallback : Optional[str] = None) -> Optional[List[str]]:
