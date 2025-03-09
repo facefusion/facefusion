@@ -5,7 +5,7 @@ METADATA =\
 	'name': 'FaceFusion',
 	'description': 'Industry leading face manipulation platform',
 	'version': 'NEXT',
-	'license': 'MIT',
+	'license': 'OpenRAIL-AS',
 	'author': 'Henry Ruhs',
 	'url': 'https://facefusion.io'
 }
