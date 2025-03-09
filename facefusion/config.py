@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from facefusion import state_manager
 from facefusion.common_helper import cast_bool, cast_float, cast_int
@@ -54,37 +54,21 @@ def get_bool_value(section : str, option : str, fallback : Optional[str] = None)
 	return cast_bool(fallback)
 
 
-def get_str_list(key : str, fallback : Optional[str] = None) -> Optional[List[str]]:
-	value = get_value_by_notation(key)
-
-	if value or fallback:
-		return [ str(value) for value in (value or fallback).split(' ') ]
-	return None
-
-
-def get_int_list(key : str, fallback : Optional[str] = None) -> Optional[List[int]]:
-	value = get_value_by_notation(key)
-
-	if value or fallback:
-		return [ cast_int(value) for value in (value or fallback).split(' ') ]
-	return None
-
-
-def get_float_list(key : str, fallback : Optional[str] = None) -> Optional[List[float]]:
-	value = get_value_by_notation(key)
-
-	if value or fallback:
-		return [ cast_float(value) for value in (value or fallback).split(' ') ]
-	return None
-
-
-def get_value_by_notation(key : str) -> Optional[Any]:
+def get_str_list(section : str, option : str, fallback : Optional[str] = None) -> Optional[List[str]]:
 	config_parser = get_config_parser()
 
-	if '.' in key:
-		section, name = key.split('.')
-		if section in config_parser and name in config_parser[section]:
-			return config_parser[section][name]
-	if key in config_parser:
-		return config_parser[key]
+	if config_parser.has_option(section, option) and config_parser.get(section, option).strip():
+		return config_parser.get(section, option).split()
+	if fallback:
+		return fallback.split()
+	return None
+
+
+def get_int_list(section : str, option : str, fallback : Optional[str] = None) -> Optional[List[int]]:
+	config_parser = get_config_parser()
+
+	if config_parser.has_option(section, option) and config_parser.get(section, option).strip():
+		return [ cast_int(value) for value in config_parser.get(section, option).split() ]
+	if fallback:
+		return [ cast_int(value) for value in fallback.split() ]
 	return None

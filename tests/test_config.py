@@ -77,21 +77,14 @@ def test_get_bool_value() -> None:
 
 
 def test_get_str_list() -> None:
-	assert config.get_str_list('str_list.valid') == [ 'a', 'b', 'c' ]
-	assert config.get_str_list('str_list.unset', 'c b a') == [ 'c', 'b', 'a' ]
-	assert config.get_str_list('str_list.unset') is None
-	assert config.get_str_list('str_list.invalid') is None
+	assert config.get_str_list('str_list', 'valid') == [ 'a', 'b', 'c' ]
+	assert config.get_str_list('str_list', 'unset', 'c b a') == [ 'c', 'b', 'a' ]
+	assert config.get_str_list('str_list', 'unset') is None
+	assert config.get_str_list('str_list', 'invalid') is None
 
 
 def test_get_int_list() -> None:
-	assert config.get_int_list('int_list.valid') == [ 1, 2, 3 ]
-	assert config.get_int_list('int_list.unset', '3 2 1') == [ 3, 2, 1 ]
-	assert config.get_int_list('int_list.unset') is None
-	assert config.get_int_list('int_list.invalid') is None
-
-
-def test_get_float_list() -> None:
-	assert config.get_float_list('float_list.valid') == [ 1.0, 2.0, 3.0 ]
-	assert config.get_float_list('float_list.unset', '3.0 2.0 1.0') == [ 3.0, 2.0, 1.0 ]
-	assert config.get_float_list('float_list.unset') is None
-	assert config.get_float_list('float_list.invalid') is None
+	assert config.get_int_list('int_list', 'valid') == [ 1, 2, 3 ]
+	assert config.get_int_list('int_list', 'unset', '3 2 1') == [ 3, 2, 1 ]
+	assert config.get_int_list('int_list', 'unset') is None
+	assert config.get_int_list('int_list', 'invalid') is None
