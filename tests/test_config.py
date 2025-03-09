@@ -49,17 +49,17 @@ def before_all() -> None:
 
 
 def test_get_str_value() -> None:
-	assert config.get_str_value('str.valid') == 'a'
-	assert config.get_str_value('str.unset', 'b') == 'b'
-	assert config.get_str_value('str.unset') is None
-	assert config.get_str_value('str.invalid') is None
+	assert config.get_str_value('str', 'valid') == 'a'
+	assert config.get_str_value('str', 'unset', 'b') == 'b'
+	assert config.get_str_value('str', 'unset') is None
+	assert config.get_str_value('str', 'invalid') is None
 
 
 def test_get_int_value() -> None:
-	assert config.get_int_value('int.valid') == 1
-	assert config.get_int_value('int.unset', '1') == 1
-	assert config.get_int_value('int.unset') is None
-	assert config.get_int_value('int.invalid') is None
+	assert config.get_int_value('int', 'valid') == 1
+	assert config.get_int_value('int', 'unset', '1') == 1
+	assert config.get_int_value('int', 'unset') is None
+	assert config.get_int_value('int', 'invalid') is None
 
 
 def test_get_float_value() -> None:
