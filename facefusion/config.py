@@ -68,7 +68,7 @@ def get_int_list(section : str, option : str, fallback : Optional[str] = None) -
 	config_parser = get_config_parser()
 
 	if config_parser.has_option(section, option) and config_parser.get(section, option).strip():
-		return [ cast_int(value) for value in config_parser.get(section, option).split() ]
+		return list(map(int, config_parser.get(section, option).split()))
 	if fallback:
-		return [ cast_int(value) for value in fallback.split() ]
+		return list(map(int, fallback.split()))
 	return None
