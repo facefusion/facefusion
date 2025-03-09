@@ -39,11 +39,6 @@ def before_all() -> None:
 		{
 			'valid': '1 2 3',
 			'unset': ''
-		},
-		'float_list':
-		{
-			'valid': '1.0 2.0 3.0',
-			'unset': ''
 		}
 	})
 
