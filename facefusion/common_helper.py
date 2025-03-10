@@ -1,5 +1,5 @@
 import platform
-from typing import Any, Optional, Sequence
+from typing import Any, Optional, Sequence, List
 
 
 def is_linux() -> bool:
@@ -73,8 +73,12 @@ def cast_bool(value : Any) -> Optional[bool]:
 
 
 def get_first(__list__ : Any) -> Any:
-	return next(iter(__list__), None)
+	if isinstance(__list__, List):
+		return next(iter(__list__), None)
+	return None
 
 
 def get_last(__list__ : Any) -> Any:
-	return next(reversed(__list__), None)
+	if isinstance(__list__, List):
+		return next(reversed(__list__), None)
+	return None
