@@ -73,12 +73,12 @@ def cast_bool(value : Any) -> Optional[bool]:
 
 
 def get_first(__list__ : Any) -> Any:
-	if isinstance(__list__, List):
+	if isinstance(__list__, list):
 		return next(iter(__list__), None)
 	return None
 
 
 def get_last(__list__ : Any) -> Any:
-	if isinstance(__list__, List):
+	if isinstance(__list__, list):
 		return next(reversed(__list__), None)
 	return None
