@@ -10,10 +10,10 @@ from facefusion.common_helper import is_linux, is_windows
 
 ONNXRUNTIME_SET =\
 {
-	'default': ('onnxruntime', '1.20.1')
+	'default': ('onnxruntime', '1.21.0')
 }
 if is_windows() or is_linux():
-	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.20.1')
+	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.21.0')
 	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.20.0')
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.17.3')
@@ -51,7 +51,7 @@ def run(program : ArgumentParser) -> None:
 
 		if python_id in [ 'cp310', 'cp312' ]:
 			wheel_name = 'onnxruntime_rocm-' + onnxruntime_version + '-' + python_id + '-' + python_id + '-linux_x86_64.whl'
-			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.3.1/' + wheel_name
+			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.3.4/' + wheel_name
 			subprocess.call([ shutil.which('pip'), 'install', wheel_url, '--force-reinstall' ])
 	else:
 		subprocess.call([ shutil.which('pip'), 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
