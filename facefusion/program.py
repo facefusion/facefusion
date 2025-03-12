@@ -133,8 +133,8 @@ def create_face_selector_program() -> ArgumentParser:
 def create_face_masker_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_masker = program.add_argument_group('face masker')
-	group_face_masker.add_argument('--face-occluder-model', help = wording.get('help.face_occluder_model'), default = config.get_str_value('face_detector', 'face_occluder_model', 'xseg_1'), choices = facefusion.choices.face_occluder_models)
-	group_face_masker.add_argument('--face-parser-model', help = wording.get('help.face_parser_model'), default = config.get_str_value('face_detector', 'face_parser_model', 'bisenet_resnet_34'), choices = facefusion.choices.face_parser_models)
+	group_face_masker.add_argument('--face-occluder-model', help = wording.get('help.face_occluder_model'), default = config.get_str_value('face_masker', 'face_occluder_model', 'xseg_1'), choices = facefusion.choices.face_occluder_models)
+	group_face_masker.add_argument('--face-parser-model', help = wording.get('help.face_parser_model'), default = config.get_str_value('face_masker', 'face_parser_model', 'bisenet_resnet_34'), choices = facefusion.choices.face_parser_models)
 	group_face_masker.add_argument('--face-mask-types', help = wording.get('help.face_mask_types').format(choices = ', '.join(facefusion.choices.face_mask_types)), default = config.get_str_list('face_masker', 'face_mask_types', 'box'), choices = facefusion.choices.face_mask_types, nargs = '+', metavar = 'FACE_MASK_TYPES')
 	group_face_masker.add_argument('--face-mask-blur', help = wording.get('help.face_mask_blur'), type = float, default = config.get_float_value('face_masker', 'face_mask_blur', '0.3'), choices = facefusion.choices.face_mask_blur_range, metavar = create_float_metavar(facefusion.choices.face_mask_blur_range))
 	group_face_masker.add_argument('--face-mask-padding', help = wording.get('help.face_mask_padding'), type = int, default = config.get_int_list('face_masker', 'face_mask_padding', '0 0 0 0'), nargs = '+')
