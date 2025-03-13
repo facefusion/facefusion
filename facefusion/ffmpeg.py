@@ -221,7 +221,7 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 		ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality),
 		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
 		ffmpeg_builder.set_video_fps(output_video_fps),
-		ffmpeg_builder.set_pixel_format('yuv420p'),
+		ffmpeg_builder.set_pixel_format(output_video_encoder),
 		ffmpeg_builder.set_video_colorspace('bt709'),
 		ffmpeg_builder.force_output(temp_file_path)
 	)

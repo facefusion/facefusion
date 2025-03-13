@@ -56,8 +56,10 @@ def unsafe_concat() -> Commands:
 	return [ '-f', 'concat', '-safe', '0' ]
 
 
-def set_pixel_format(pixel_format : str) -> Commands:
-	return [ '-pix_fmt', pixel_format ]
+def set_pixel_format(video_encoder : VideoEncoder) -> Commands:
+	if video_encoder == 'rawvideo':
+		return [ '-pix_fmt', 'rgb24' ]
+	return [ '-pix_fmt', 'yuv420p' ]
 
 
 def set_frame_quality(frame_quality : int) -> Commands:
