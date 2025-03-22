@@ -1,6 +1,6 @@
 [flake8]
 select = E3, E4, F, I1, I2
-per-file-ignores = facefusion.py:E402, install.py:E402
+per-file-ignores = weyfusion.py:E402, install.py:E402
 plugins = flake8-import-order
-application_import_names = facefusion
+application_import_names = weyfusion
 import-order-style = pycharm

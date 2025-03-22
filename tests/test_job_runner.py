@@ -2,12 +2,12 @@ import subprocess
 
 import pytest
 
-from facefusion import state_manager
-from facefusion.download import conditional_download
-from facefusion.filesystem import copy_file
-from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, submit_job, submit_jobs
-from facefusion.jobs.job_runner import collect_output_set, finalize_steps, run_job, run_jobs, run_steps
-from facefusion.typing import Args
+from weyfusion import state_manager
+from weyfusion.download import conditional_download
+from weyfusion.filesystem import copy_file
+from weyfusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, submit_job, submit_jobs
+from weyfusion.jobs.job_runner import collect_output_set, finalize_steps, run_job, run_jobs, run_steps
+from weyfusion.typing import Args
 from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_output_file, prepare_test_output_directory
 
 
@@ -15,8 +15,8 @@ from .helper import get_test_example_file, get_test_examples_directory, get_test
 def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
+		'https://github.com/weyfusion/weyfusion-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/weyfusion/weyfusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
 	state_manager.init_item('output_audio_encoder', 'aac')

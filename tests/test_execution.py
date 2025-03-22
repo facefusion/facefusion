@@ -1,4 +1,4 @@
-from facefusion.execution import create_inference_execution_providers, get_available_execution_providers, has_execution_provider
+from weyfusion.execution import create_inference_execution_providers, get_available_execution_providers, has_execution_provider
 
 
 def test_has_execution_provider() -> None:

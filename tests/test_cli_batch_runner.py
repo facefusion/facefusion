@@ -3,8 +3,8 @@ import sys
 
 import pytest
 
-from facefusion.download import conditional_download
-from facefusion.jobs.job_manager import clear_jobs, init_jobs
+from weyfusion.download import conditional_download
+from weyfusion.jobs.job_manager import clear_jobs, init_jobs
 from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_output_file, prepare_test_output_directory
 
 
@@ -12,7 +12,7 @@ from .helper import get_test_example_file, get_test_examples_directory, get_test
 def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
+		'https://github.com/weyfusion/weyfusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p-batch-1.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '2', get_test_example_file('target-240p-batch-2.jpg') ])
@@ -26,7 +26,7 @@ def before_each() -> None:
 
 
 def test_batch_run_targets() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'batch-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p-batch-*.jpg'), '-o', get_test_output_file('test-batch-run-targets-{index}.jpg') ]
+	commands = [ sys.executable, 'weyfusion.py', 'batch-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p-batch-*.jpg'), '-o', get_test_output_file('test-batch-run-targets-{index}.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test-batch-run-targets-0.jpg') is True
@@ -35,7 +35,7 @@ def test_batch_run_targets() -> None:
 
 
 def test_batch_run_sources_to_targets() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'batch-run', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('target-240p-batch-*.jpg'), '-t', get_test_example_file('target-240p-batch-*.jpg'), '-o', get_test_output_file('test-batch-run-sources-to-targets-{index}.jpg') ]
+	commands = [ sys.executable, 'weyfusion.py', 'batch-run', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('target-240p-batch-*.jpg'), '-t', get_test_example_file('target-240p-batch-*.jpg'), '-o', get_test_output_file('test-batch-run-sources-to-targets-{index}.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_file('test-batch-run-sources-to-targets-0.jpg') is True

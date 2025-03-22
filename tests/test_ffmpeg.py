@@ -3,11 +3,11 @@ import tempfile
 
 import pytest
 
-from facefusion import process_manager, state_manager
-from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, read_audio_buffer, replace_audio, restore_audio
-from facefusion.filesystem import copy_file
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths
+from weyfusion import process_manager, state_manager
+from weyfusion.download import conditional_download
+from weyfusion.ffmpeg import concat_video, extract_frames, read_audio_buffer, replace_audio, restore_audio
+from weyfusion.filesystem import copy_file
+from weyfusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -16,9 +16,9 @@ def before_all() -> None:
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
+		'https://github.com/weyfusion/weyfusion-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/weyfusion/weyfusion-assets/releases/download/examples-3.0.0/source.mp3',
+		'https://github.com/weyfusion/weyfusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), get_test_example_file('source.wav') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
