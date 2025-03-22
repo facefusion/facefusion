@@ -2,7 +2,7 @@ from configparser import ConfigParser
 
 import pytest
 
-from facefusion import config
+from weyfusion import config
 
 
 @pytest.fixture(scope = 'module', autouse = True)

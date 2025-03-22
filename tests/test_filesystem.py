@@ -2,9 +2,9 @@ import os.path
 
 import pytest
 
-from facefusion.common_helper import is_windows
-from facefusion.download import conditional_download
-from facefusion.filesystem import copy_file, create_directory, filter_audio_paths, filter_image_paths, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, list_directory, remove_directory, same_file_extension, sanitize_path_for_windows
+from weyfusion.common_helper import is_windows
+from weyfusion.download import conditional_download
+from weyfusion.filesystem import copy_file, create_directory, filter_audio_paths, filter_image_paths, get_file_size, has_audio, has_image, in_directory, is_audio, is_directory, is_file, is_image, is_video, list_directory, remove_directory, same_file_extension, sanitize_path_for_windows
 from .helper import get_test_example_file, get_test_examples_directory, get_test_outputs_directory
 
 
@@ -12,9 +12,9 @@ from .helper import get_test_example_file, get_test_examples_directory, get_test
 def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
+		'https://github.com/weyfusion/weyfusion-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/weyfusion/weyfusion-assets/releases/download/examples-3.0.0/source.mp3',
+		'https://github.com/weyfusion/weyfusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	copy_file(get_test_example_file('source.jpg'), get_test_example_file('söurce.jpg'))
 

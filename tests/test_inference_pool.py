@@ -3,8 +3,8 @@ from unittest.mock import patch
 import pytest
 from onnxruntime import InferenceSession
 
-from facefusion import content_analyser, state_manager
-from facefusion.inference_manager import INFERENCE_POOLS, get_inference_pool
+from weyfusion import content_analyser, state_manager
+from weyfusion.inference_manager import INFERENCE_POOLS, get_inference_pool
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -18,12 +18,12 @@ def before_all() -> None:
 def test_get_inference_pool() -> None:
 	model_sources = content_analyser.get_model_options().get('sources')
 
-	with patch('facefusion.inference_manager.detect_app_context', return_value = 'cli'):
+	with patch('weyfusion.inference_manager.detect_app_context', return_value = 'cli'):
 		get_inference_pool('test', model_sources)
 
 		assert isinstance(INFERENCE_POOLS.get('cli').get('test.cpu').get('content_analyser'), InferenceSession)
 
-	with patch('facefusion.inference_manager.detect_app_context', return_value = 'ui'):
+	with patch('weyfusion.inference_manager.detect_app_context', return_value = 'ui'):
 		get_inference_pool('test', model_sources)
 
 		assert isinstance(INFERENCE_POOLS.get('ui').get('test.cpu').get('content_analyser'), InferenceSession)

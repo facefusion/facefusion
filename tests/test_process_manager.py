@@ -1,4 +1,4 @@
-from facefusion.process_manager import end, is_pending, is_processing, is_stopping, set_process_state, start, stop
+from weyfusion.process_manager import end, is_pending, is_processing, is_stopping, set_process_state, start, stop
 
 
 def test_start() -> None:

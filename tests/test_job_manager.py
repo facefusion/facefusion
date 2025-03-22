@@ -2,8 +2,8 @@ from time import sleep
 
 import pytest
 
-from facefusion.jobs.job_helper import get_step_output_path
-from facefusion.jobs.job_manager import add_step, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, get_steps, init_jobs, insert_step, move_job_file, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
+from weyfusion.jobs.job_helper import get_step_output_path
+from weyfusion.jobs.job_manager import add_step, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, get_steps, init_jobs, insert_step, move_job_file, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
 from .helper import get_test_jobs_directory
 
 
