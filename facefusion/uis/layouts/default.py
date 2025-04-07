@@ -115,18 +115,49 @@ def listen() -> None:
 	common_options.listen()
 
 
-def run(ui : gradio.Blocks) -> None:
+def run(ui: gradio.Blocks) -> None:
+    server_name = '0.0.0.0'
+    server_port = 7860
+    open_browser = state_manager.get_item('open_browser')
+    
     try:
+        # Try the primary launch method
         ui.launch(
-            favicon_path = 'facefusion.ico', 
-            inbrowser = state_manager.get_item('open_browser'),
-            server_name = '0.0.0.0',
-            server_port = 7860,
-            show_error = True
+            favicon_path='facefusion.ico',
+            inbrowser=open_browser,
+            server_name=server_name,
+            server_port=server_port,
+            show_error=True
         )
     except Exception as e:
-        print(f"Error launching UI: {e}")
-        # Fallback to basic launch
-        import uvicorn
-        app = ui.app
-        uvicorn.run(app, host="0.0.0.0", port=7860)
+        print(f"Error launching Gradio UI: {e}")
+        
+        try:
+            # First fallback: Try with different launch parameters
+            print("Attempting fallback launch method...")
+            ui.launch(
+                inbrowser=False,  # Disable browser opening in fallback
+                server_name=server_name,
+                server_port=server_port,
+                show_error=True
+            )
+        except Exception as e2:
+            print(f"Fallback launch also failed: {e2}")
+            
+            try:
+                # Second fallback: Try with uvicorn directly
+                import uvicorn
+                from fastapi import FastAPI
+                
+                # Get the FastAPI app from Gradio if possible
+                if hasattr(ui, 'app') and isinstance(ui.app, FastAPI):
+                    app = ui.app
+                    print("Starting uvicorn server directly with the Gradio FastAPI app...")
+                    uvicorn.run(app, host=server_name, port=server_port)
+                else:
+                    print("Cannot start fallback server: Gradio app not accessible")
+            except ImportError:
+                print("Uvicorn not installed. Cannot start fallback server.")
+            except Exception as e3:
+                print(f"All launch methods failed. Last error: {e3}")
+                print("Please check your network settings and ensure port 7860 is available.")
