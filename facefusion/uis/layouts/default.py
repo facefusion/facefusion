@@ -120,5 +120,6 @@ def run(ui : gradio.Blocks) -> None:
         favicon_path = 'facefusion.ico', 
         inbrowser = state_manager.get_item('open_browser'),
         server_name = '0.0.0.0',
-        server_port = 7860
+        server_port = 7860,
+        share = True  # Add this to create a shareable link
     )
