@@ -116,10 +116,17 @@ def listen() -> None:
 
 
 def run(ui : gradio.Blocks) -> None:
-    ui.launch(
-        favicon_path = 'facefusion.ico', 
-        inbrowser = state_manager.get_item('open_browser'),
-        server_name = '0.0.0.0',
-        server_port = 7860,
-        share = True  # Add this to create a shareable link
-    )
+    try:
+        ui.launch(
+            favicon_path = 'facefusion.ico', 
+            inbrowser = state_manager.get_item('open_browser'),
+            server_name = '0.0.0.0',
+            server_port = 7860,
+            show_error = True
+        )
+    except Exception as e:
+        print(f"Error launching UI: {e}")
+        # Fallback to basic launch
+        import uvicorn
+        app = ui.app
+        uvicorn.run(app, host="0.0.0.0", port=7860)
