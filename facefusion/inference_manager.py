@@ -18,8 +18,6 @@ INFERENCE_POOL_SET : InferencePoolSet =\
 
 
 def get_inference_pool(module_name : str, model_names : List[str], model_source_set : DownloadSet) -> InferencePool:
-	global INFERENCE_POOL_SET
-
 	while process_manager.is_checking():
 		sleep(0.5)
 	execution_device_id = state_manager.get_item('execution_device_id')
@@ -49,8 +47,6 @@ def create_inference_pool(model_source_set : DownloadSet, execution_device_id : 
 
 
 def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
-	global INFERENCE_POOL_SET
-
 	execution_device_id = state_manager.get_item('execution_device_id')
 	execution_providers = resolve_execution_providers(module_name)
 	app_context = detect_app_context()
