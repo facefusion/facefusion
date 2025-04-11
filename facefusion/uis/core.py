@@ -41,8 +41,6 @@ def load_ui_layout_module(ui_layout : str) -> Any:
 
 
 def get_ui_layouts_modules(ui_layouts : List[str]) -> List[ModuleType]:
-	global UI_LAYOUT_MODULES
-
 	if not UI_LAYOUT_MODULES:
 		for ui_layout in ui_layouts:
 			ui_layout_module = load_ui_layout_module(ui_layout)

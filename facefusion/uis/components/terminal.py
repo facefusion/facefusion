@@ -38,8 +38,6 @@ def render() -> None:
 
 
 def listen() -> None:
-	global LOG_LEVEL_DROPDOWN
-
 	LOG_LEVEL_DROPDOWN.change(update_log_level, inputs = LOG_LEVEL_DROPDOWN)
 	logger.get_package_logger().addHandler(LOG_HANDLER)
 	tqdm.update = tqdm_update

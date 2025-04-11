@@ -16,7 +16,6 @@ from facefusion.vision import count_video_frame_total, detect_video_fps, detect_
 
 BENCHMARK_BENCHMARKS_DATAFRAME : Optional[gradio.Dataframe] = None
 BENCHMARK_START_BUTTON : Optional[gradio.Button] = None
-BENCHMARK_CLEAR_BUTTON : Optional[gradio.Button] = None
 BENCHMARKS : Dict[str, str] =\
 {
 	'240p': '.assets/examples/target-240p.mp4',
@@ -32,7 +31,6 @@ BENCHMARKS : Dict[str, str] =\
 def render() -> None:
 	global BENCHMARK_BENCHMARKS_DATAFRAME
 	global BENCHMARK_START_BUTTON
-	global BENCHMARK_CLEAR_BUTTON
 
 	BENCHMARK_BENCHMARKS_DATAFRAME = gradio.Dataframe(
 		headers =
