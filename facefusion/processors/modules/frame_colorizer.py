@@ -147,8 +147,8 @@ def resolve_execution_providers() -> List[ExecutionProvider]:
 
 
 def get_model_options() -> ModelOptions:
-	frame_colorizer_model = state_manager.get_item('frame_colorizer_model')
-	return create_static_model_set('full').get(frame_colorizer_model)
+	model_name = state_manager.get_item('frame_colorizer_model')
+	return create_static_model_set('full').get(model_name)
 
 
 def register_args(program : ArgumentParser) -> None:

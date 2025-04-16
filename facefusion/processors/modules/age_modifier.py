@@ -76,8 +76,8 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	age_modifier_model = state_manager.get_item('age_modifier_model')
-	return create_static_model_set('full').get(age_modifier_model)
+	model_name = state_manager.get_item('age_modifier_model')
+	return create_static_model_set('full').get(model_name)
 
 
 def register_args(program : ArgumentParser) -> None:

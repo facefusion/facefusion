@@ -171,8 +171,8 @@ def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_p
 
 
 def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
-	face_occluder_model = state_manager.get_item('face_occluder_model')
-	model_size = create_static_model_set('full').get(face_occluder_model).get('size')
+	model_name = state_manager.get_item('face_occluder_model')
+	model_size = create_static_model_set('full').get(model_name).get('size')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255.0
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 1, 2, 3)
@@ -184,8 +184,8 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 
 
 def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
-	face_parser_model = state_manager.get_item('face_parser_model')
-	model_size = create_static_model_set('full').get(face_parser_model).get('size')
+	model_name = state_manager.get_item('face_parser_model')
+	model_size = create_static_model_set('full').get(model_name).get('size')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
 	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255.0
 	prepare_vision_frame = numpy.subtract(prepare_vision_frame, numpy.array([ 0.485, 0.456, 0.406 ]).astype(numpy.float32))
@@ -209,8 +209,8 @@ def create_mouth_mask(face_landmark_68 : FaceLandmark68) -> Mask:
 
 
 def forward_occlude_face(prepare_vision_frame : VisionFrame) -> Mask:
-	face_occluder_model = state_manager.get_item('face_occluder_model')
-	face_occluder = get_inference_pool().get(face_occluder_model)
+	model_name = state_manager.get_item('face_occluder_model')
+	face_occluder = get_inference_pool().get(model_name)
 
 	with conditional_thread_semaphore():
 		occlusion_mask : Mask = face_occluder.run(None,
@@ -222,8 +222,8 @@ def forward_occlude_face(prepare_vision_frame : VisionFrame) -> Mask:
 
 
 def forward_parse_face(prepare_vision_frame : VisionFrame) -> Mask:
-	face_parser_model = state_manager.get_item('face_parser_model')
-	face_parser = get_inference_pool().get(face_parser_model)
+	model_name = state_manager.get_item('face_parser_model')
+	face_parser = get_inference_pool().get(model_name)
 
 	with conditional_thread_semaphore():
 		region_mask : Mask = face_parser.run(None,

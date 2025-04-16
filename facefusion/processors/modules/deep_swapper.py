@@ -252,8 +252,8 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	deep_swapper_model = state_manager.get_item('deep_swapper_model')
-	return create_static_model_set('full').get(deep_swapper_model)
+	model_name = state_manager.get_item('deep_swapper_model')
+	return create_static_model_set('full').get(model_name)
 
 
 def get_model_size() -> Size:

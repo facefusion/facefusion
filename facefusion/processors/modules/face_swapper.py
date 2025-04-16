@@ -336,28 +336,28 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
-	model_names = [ get_face_swapper_model() ]
+	model_names = [ get_model_name() ]
 	model_source_set = get_model_options().get('sources')
 
 	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
-	model_names = [ get_face_swapper_model() ]
+	model_names = [ get_model_name() ]
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
 def get_model_options() -> ModelOptions:
-	face_swapper_model = get_face_swapper_model()
-	return create_static_model_set('full').get(face_swapper_model)
+	model_name = get_model_name()
+	return create_static_model_set('full').get(model_name)
 
 
-def get_face_swapper_model() -> str:
-	face_swapper_model = state_manager.get_item('face_swapper_model')
+def get_model_name() -> str:
+	model_name = state_manager.get_item('face_swapper_model')
 
-	if has_execution_provider('coreml') and face_swapper_model == 'inswapper_128_fp16':
+	if has_execution_provider('coreml') and model_name == 'inswapper_128_fp16':
 		return 'inswapper_128'
-	return face_swapper_model
+	return model_name
 
 
 def register_args(program : ArgumentParser) -> None:

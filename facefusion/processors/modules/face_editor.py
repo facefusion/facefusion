@@ -117,8 +117,8 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	face_editor_model = state_manager.get_item('face_editor_model')
-	return create_static_model_set('full').get(face_editor_model)
+	model_name = state_manager.get_item('face_editor_model')
+	return create_static_model_set('full').get(model_name)
 
 
 def register_args(program : ArgumentParser) -> None:
