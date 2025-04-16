@@ -398,8 +398,8 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	frame_enhancer_model = get_frame_enhancer_model()
-	return create_static_model_set('full').get(frame_enhancer_model)
+	model_name = get_frame_enhancer_model()
+	return create_static_model_set('full').get(model_name)
 
 
 def get_frame_enhancer_model() -> str:
