@@ -10,15 +10,15 @@ from facefusion.common_helper import is_linux, is_windows
 
 ONNXRUNTIME_SET =\
 {
-	'default': ('onnxruntime', '1.21.0')
+	'default': ('onnxruntime', '1.21.1')
 }
 if is_windows() or is_linux():
-	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.21.0')
-	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.20.0')
+	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.21.1')
+	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.21.0')
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.17.3')
 if is_linux():
-	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.19.0')
+	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.21.0')
 
 
 def cli() -> None:
@@ -51,7 +51,7 @@ def run(program : ArgumentParser) -> None:
 
 		if python_id in [ 'cp310', 'cp312' ]:
 			wheel_name = 'onnxruntime_rocm-' + onnxruntime_version + '-' + python_id + '-' + python_id + '-linux_x86_64.whl'
-			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.3.4/' + wheel_name
+			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4/' + wheel_name
 			subprocess.call([ shutil.which('pip'), 'install', wheel_url, '--force-reinstall' ])
 	else:
 		subprocess.call([ shutil.which('pip'), 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
@@ -86,5 +86,5 @@ def run(program : ArgumentParser) -> None:
 
 			subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
 
-	if args.onnxruntime in [ 'directml', 'rocm' ]:
+	if args.onnxruntime == 'directml':
 		subprocess.call([ shutil.which('pip'), 'install', 'numpy==1.26.4', '--force-reinstall' ])
