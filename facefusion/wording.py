@@ -1,7 +1,5 @@
 from typing import Any, Dict, Optional
 
-from facefusion.types import Wording
-
 WORDING : Dict[str, Any] =\
 {
 	'conda_not_activated': 'Conda is not activated',
@@ -343,13 +341,13 @@ WORDING : Dict[str, Any] =\
 }
 
 
-def get(notation : str) -> Optional[Wording]:
-	wording = WORDING
+def get(notation : str) -> Optional[str]:
+	current = WORDING
 
 	for fragment in notation.split('.'):
-		if fragment in wording:
-			wording = wording.get(fragment)
-		else:
-			return None
+		if fragment in current:
+			current = current.get(fragment)
+			if isinstance(current, str):
+				return current
 
-	return wording
+	return None

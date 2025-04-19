@@ -355,4 +355,3 @@ State = TypedDict('State',
 })
 StateSet : TypeAlias = Dict[AppContext, State]
 
-Wording : TypeAlias = Union[str, Dict[str, str]]
