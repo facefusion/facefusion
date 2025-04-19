@@ -341,11 +341,13 @@ WORDING : Dict[str, Any] =\
 }
 
 
-def get(key : str) -> Optional[str]:
-	if '.' in key:
-		section, name = key.split('.')
-		if section in WORDING and name in WORDING.get(section):
-			return WORDING.get(section).get(name)
-	if key in WORDING:
-		return WORDING.get(key)
-	return None
+def get(key: str) -> Optional[str]:
+	current = WORDING
+
+	for fragment in key.split('.'):
+		if fragment in current:
+			current = current.get(fragment)
+		else:
+			return None
+
+	return current
