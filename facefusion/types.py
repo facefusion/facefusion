@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict, Union
 
 import numpy
 from numpy.typing import NDArray
@@ -354,3 +354,5 @@ State = TypedDict('State',
 	'step_index' : int
 })
 StateSet : TypeAlias = Dict[AppContext, State]
+
+Wording : TypeAlias = Union[str, Dict[str, str]]
