@@ -87,7 +87,7 @@ Content : TypeAlias = Dict[str, Any]
 
 Commands : TypeAlias = List[str]
 
-WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128_v2', 'dfl_whole_face', 'ffhq_512', 'mtcnn_512', 'styleganex_384']
+WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128', 'dfl_whole_face', 'ffhq_512', 'mtcnn_512', 'styleganex_384']
 WarpTemplateSet : TypeAlias = Dict[WarpTemplate, NDArray[Any]]
 ProcessMode = Literal['output', 'preview', 'stream']
 

@@ -68,7 +68,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/live_portrait_generator.onnx')
 				}
 			},
-			'template': 'arcface_128_v2',
+			'template': 'arcface_128',
 			'size': (512, 512)
 		}
 	}

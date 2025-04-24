@@ -131,7 +131,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/gpen_bfr_256.onnx')
 				}
 			},
-			'template': 'arcface_128_v2',
+			'template': 'arcface_128',
 			'size': (256, 256)
 		},
 		'gpen_bfr_512':

@@ -25,7 +25,7 @@ WARP_TEMPLATE_SET : WarpTemplateSet =\
 		[ 0.37097589, 0.82469196 ],
 		[ 0.63151696, 0.82325089 ]
 	]),
-	'arcface_128_v2': numpy.array(
+	'arcface_128': numpy.array(
 	[
 		[ 0.36167656, 0.40387734 ],
 		[ 0.63696719, 0.40235469 ],

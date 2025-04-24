@@ -211,7 +211,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				}
 			},
 			'type': 'inswapper',
-			'template': 'arcface_128_v2',
+			'template': 'arcface_128',
 			'size': (128, 128),
 			'mean': [ 0.0, 0.0, 0.0 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -235,7 +235,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				}
 			},
 			'type': 'inswapper',
-			'template': 'arcface_128_v2',
+			'template': 'arcface_128',
 			'size': (128, 128),
 			'mean': [ 0.0, 0.0, 0.0 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]

@@ -90,7 +90,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 			cv2.line(temp_vision_frame, (x1, y1), (x1, y2), primary_light_color, 3)
 
 	if 'face-mask' in face_debugger_items:
-		crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'arcface_128_v2', (512, 512))
+		crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'arcface_128', (512, 512))
 		inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 		temp_size = temp_vision_frame.shape[:2][::-1]
 		crop_masks = []
