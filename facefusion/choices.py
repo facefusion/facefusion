@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, WebcamMode
+from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, WebcamMode, TempFrameFormat
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -64,7 +64,7 @@ video_type_set : VideoTypeSet =\
 audio_formats : List[AudioFormat] = list(audio_type_set.keys())
 image_formats : List[ImageFormat] = list(image_type_set.keys())
 video_formats : List[VideoFormat] = list(video_type_set.keys())
-temp_frame_formats : List[ImageFormat] = [ 'bmp', 'jpeg', 'png', 'tiff' ]
+temp_frame_formats : List[TempFrameFormat] = [ 'bmp', 'jpeg', 'png', 'tiff' ]
 
 output_encoder_set : EncoderSet =\
 {
