@@ -5,7 +5,7 @@
 
 :root:root:root:root main
 {
-	width: 90%;
+	max-width: 110em;
 }
 
 :root:root:root:root input[type="number"]
