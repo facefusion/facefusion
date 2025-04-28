@@ -4,7 +4,7 @@ WORDING : Dict[str, Any] =\
 {
 	'conda_not_activated': 'Conda is not activated',
 	'python_not_supported': 'Python version is not supported, upgrade to {version} or higher',
-	'curl_not_installed': 'CURL is not installed',
+	'curl_not_installed': 'cURL is not installed',
 	'ffmpeg_not_installed': 'FFMpeg is not installed',
 	'creating_temp': 'Creating temporary resources',
 	'extracting_frames': 'Extracting frames with a resolution of {resolution} and {fps} frames per second',
