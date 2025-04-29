@@ -4,7 +4,7 @@ import numpy
 
 from facefusion import logger, state_manager
 from facefusion.face_store import get_face_store
-from facefusion.typing import FaceSet
+from facefusion.types import FaceSet
 
 
 def create_statistics(static_faces : FaceSet) -> Dict[str, Any]:

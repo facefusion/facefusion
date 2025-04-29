@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import numpy
 
-from facefusion.typing import Face, FaceSet, FaceStore, VisionFrame
+from facefusion.types import Face, FaceSet, FaceStore, VisionFrame
 
 FACE_STORE : FaceStore =\
 {
@@ -34,7 +34,10 @@ def clear_static_faces() -> None:
 
 
 def create_frame_hash(vision_frame : VisionFrame) -> Optional[str]:
-	return hashlib.sha1(vision_frame.tobytes()).hexdigest() if numpy.any(vision_frame) else None
+	if numpy.any(vision_frame):
+		frame_hash = hashlib.blake2b(vision_frame.tobytes(), digest_size = 16).hexdigest()
+		return frame_hash
+	return None
 
 
 def get_reference_faces() -> Optional[FaceSet]:

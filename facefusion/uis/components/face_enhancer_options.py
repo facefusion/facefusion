@@ -6,8 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import calc_float_step, calc_int_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.modules.face_enhancer import has_weight_input
-from facefusion.processors.typing import FaceEnhancerModel
+from facefusion.processors.types import FaceEnhancerModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -41,7 +40,7 @@ def render() -> None:
 		step = calc_float_step(processors_choices.face_enhancer_weight_range),
 		minimum = processors_choices.face_enhancer_weight_range[0],
 		maximum = processors_choices.face_enhancer_weight_range[-1],
-		visible = has_face_enhancer and has_weight_input()
+		visible = has_face_enhancer and load_processor_module('face_enhancer').get_inference_pool() and load_processor_module('face_enhancer').has_weight_input()
 	)
 	register_ui_component('face_enhancer_model_dropdown', FACE_ENHANCER_MODEL_DROPDOWN)
 	register_ui_component('face_enhancer_blend_slider', FACE_ENHANCER_BLEND_SLIDER)
@@ -60,7 +59,7 @@ def listen() -> None:
 
 def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Slider, gradio.Slider]:
 	has_face_enhancer = 'face_enhancer' in processors
-	return gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer and has_weight_input())
+	return gradio.Dropdown(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer), gradio.Slider(visible = has_face_enhancer and load_processor_module('face_enhancer').get_inference_pool() and load_processor_module('face_enhancer').has_weight_input())
 
 
 def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> Tuple[gradio.Dropdown, gradio.Slider]:
@@ -69,7 +68,7 @@ def update_face_enhancer_model(face_enhancer_model : FaceEnhancerModel) -> Tuple
 	state_manager.set_item('face_enhancer_model', face_enhancer_model)
 
 	if face_enhancer_module.pre_check():
-		return gradio.Dropdown(value = state_manager.get_item('face_enhancer_model')), gradio.Slider(visible = has_weight_input())
+		return gradio.Dropdown(value = state_manager.get_item('face_enhancer_model')), gradio.Slider(visible = face_enhancer_module.has_weight_input())
 	return gradio.Dropdown(), gradio.Slider()
 
 

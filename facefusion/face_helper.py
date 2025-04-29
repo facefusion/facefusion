@@ -5,9 +5,9 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-from facefusion.typing import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
+from facefusion.types import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
-WARP_TEMPLATES : WarpTemplateSet =\
+WARP_TEMPLATE_SET : WarpTemplateSet =\
 {
 	'arcface_112_v1': numpy.array(
 	[
@@ -25,7 +25,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 		[ 0.37097589, 0.82469196 ],
 		[ 0.63151696, 0.82325089 ]
 	]),
-	'arcface_128_v2': numpy.array(
+	'arcface_128': numpy.array(
 	[
 		[ 0.36167656, 0.40387734 ],
 		[ 0.63696719, 0.40235469 ],
@@ -69,7 +69,7 @@ WARP_TEMPLATES : WarpTemplateSet =\
 
 
 def estimate_matrix_by_face_landmark_5(face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Matrix:
-	normed_warp_template = WARP_TEMPLATES.get(warp_template) * crop_size
+	normed_warp_template = WARP_TEMPLATE_SET.get(warp_template) * crop_size
 	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	return affine_matrix
 
@@ -208,9 +208,9 @@ def estimate_face_angle(face_landmark_68 : FaceLandmark68) -> Angle:
 	return face_angle
 
 
-def apply_nms(bounding_boxes : List[BoundingBox], face_scores : List[Score], score_threshold : float, nms_threshold : float) -> Sequence[int]:
+def apply_nms(bounding_boxes : List[BoundingBox], scores : List[Score], score_threshold : float, nms_threshold : float) -> Sequence[int]:
 	normed_bounding_boxes = [ (x1, y1, x2 - x1, y2 - y1) for (x1, y1, x2, y2) in bounding_boxes ]
-	keep_indices = cv2.dnn.NMSBoxes(normed_bounding_boxes, face_scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
+	keep_indices = cv2.dnn.NMSBoxes(normed_bounding_boxes, scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
 	return keep_indices
 
 

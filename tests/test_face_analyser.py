@@ -5,7 +5,7 @@ import pytest
 from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
 from facefusion.download import conditional_download
 from facefusion.face_analyser import get_many_faces, get_one_face
-from facefusion.typing import Face
+from facefusion.types import Face
 from facefusion.vision import read_static_image
 from .helper import get_test_example_file, get_test_examples_directory
 
@@ -19,7 +19,7 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.8:ih*0.8', get_test_example_file('source-80crop.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.7:ih*0.7', get_test_example_file('source-70crop.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.6:ih*0.6', get_test_example_file('source-60crop.jpg') ])
-	state_manager.init_item('execution_device_id', 0)
+	state_manager.init_item('execution_device_id', '0')
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github' ])
 	state_manager.init_item('face_detector_angles', [ 0 ])
@@ -52,6 +52,7 @@ def test_get_one_face_with_retinaface() -> None:
 		get_test_example_file('source-70crop.jpg'),
 		get_test_example_file('source-60crop.jpg')
 	]
+
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
 		many_faces = get_many_faces([ source_frame ])
@@ -72,6 +73,7 @@ def test_get_one_face_with_scrfd() -> None:
 		get_test_example_file('source-70crop.jpg'),
 		get_test_example_file('source-60crop.jpg')
 	]
+
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
 		many_faces = get_many_faces([ source_frame ])
@@ -92,6 +94,7 @@ def test_get_one_face_with_yoloface() -> None:
 		get_test_example_file('source-70crop.jpg'),
 		get_test_example_file('source-60crop.jpg')
 	]
+
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
 		many_faces = get_many_faces([ source_frame ])

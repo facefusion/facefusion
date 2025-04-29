@@ -9,7 +9,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import create_rotated_matrix_and_size, estimate_matrix_by_face_landmark_5, transform_points, warp_face_by_translation
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import Angle, BoundingBox, DownloadScope, DownloadSet, FaceLandmark5, FaceLandmark68, InferencePool, ModelSet, Prediction, Score, VisionFrame
+from facefusion.types import Angle, BoundingBox, DownloadScope, DownloadSet, FaceLandmark5, FaceLandmark68, InferencePool, ModelSet, Prediction, Score, VisionFrame
 
 
 @lru_cache(maxsize = None)
@@ -79,43 +79,43 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
-	_, model_sources = collect_model_downloads()
-	return inference_manager.get_inference_pool(__name__, model_sources)
+	model_names = [ state_manager.get_item('face_landmarker_model'), 'fan_68_5' ]
+	_, model_source_set = collect_model_downloads()
+
+	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
-	inference_manager.clear_inference_pool(__name__)
+	model_names = [ state_manager.get_item('face_landmarker_model'), 'fan_68_5' ]
+	inference_manager.clear_inference_pool(__name__, model_names)
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	model_set = create_static_model_set('full')
-	model_hashes =\
+	model_hash_set =\
 	{
 		'fan_68_5': model_set.get('fan_68_5').get('hashes').get('fan_68_5')
 	}
-	model_sources =\
+	model_source_set =\
 	{
 		'fan_68_5': model_set.get('fan_68_5').get('sources').get('fan_68_5')
 	}
 
-	if state_manager.get_item('face_landmarker_model') in [ 'many', '2dfan4' ]:
-		model_hashes['2dfan4'] = model_set.get('2dfan4').get('hashes').get('2dfan4')
-		model_sources['2dfan4'] = model_set.get('2dfan4').get('sources').get('2dfan4')
+	for face_landmarker_model in [ '2dfan4', 'peppa_wutz' ]:
+		if state_manager.get_item('face_landmarker_model') in [ 'many', face_landmarker_model ]:
+			model_hash_set[face_landmarker_model] = model_set.get(face_landmarker_model).get('hashes').get(face_landmarker_model)
+			model_source_set[face_landmarker_model] = model_set.get(face_landmarker_model).get('sources').get(face_landmarker_model)
 
-	if state_manager.get_item('face_landmarker_model') in [ 'many', 'peppa_wutz' ]:
-		model_hashes['peppa_wutz'] = model_set.get('peppa_wutz').get('hashes').get('peppa_wutz')
-		model_sources['peppa_wutz'] = model_set.get('peppa_wutz').get('sources').get('peppa_wutz')
-
-	return model_hashes, model_sources
+	return model_hash_set, model_source_set
 
 
 def pre_check() -> bool:
-	model_hashes, model_sources = collect_model_downloads()
+	model_hash_set, model_source_set = collect_model_downloads()
 
-	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
+	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
 
-def detect_face_landmarks(vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
+def detect_face_landmark(vision_frame : VisionFrame, bounding_box : BoundingBox, face_angle : Angle) -> Tuple[FaceLandmark68, Score]:
 	face_landmark_2dfan4 = None
 	face_landmark_peppa_wutz = None
 	face_landmark_score_2dfan4 = 0.0

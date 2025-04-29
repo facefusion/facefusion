@@ -6,7 +6,7 @@ import facefusion.choices
 from facefusion import state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.jobs import job_manager
-from facefusion.typing import JobStatus
+from facefusion.types import JobStatus
 from facefusion.uis.core import register_ui_component
 
 JOB_LIST_JOB_STATUS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None

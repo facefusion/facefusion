@@ -2,7 +2,7 @@ import os
 import zlib
 from typing import Optional
 
-from facefusion.filesystem import is_file
+from facefusion.filesystem import get_file_name, is_file
 
 
 def create_hash(content : bytes) -> str:
@@ -13,8 +13,8 @@ def validate_hash(validate_path : str) -> bool:
 	hash_path = get_hash_path(validate_path)
 
 	if is_file(hash_path):
-		with open(hash_path, 'r') as hash_file:
-			hash_content = hash_file.read().strip()
+		with open(hash_path) as hash_file:
+			hash_content = hash_file.read()
 
 		with open(validate_path, 'rb') as validate_file:
 			validate_content = validate_file.read()
@@ -25,8 +25,8 @@ def validate_hash(validate_path : str) -> bool:
 
 def get_hash_path(validate_path : str) -> Optional[str]:
 	if is_file(validate_path):
-		validate_directory_path, _ = os.path.split(validate_path)
-		validate_file_name, _ = os.path.splitext(_)
+		validate_directory_path, file_name_and_extension = os.path.split(validate_path)
+		validate_file_name = get_file_name(file_name_and_extension)
 
 		return os.path.join(validate_directory_path, validate_file_name + '.hash')
 	return None

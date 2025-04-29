@@ -15,10 +15,10 @@ from facefusion.face_selector import sort_faces_by_order
 from facefusion.face_store import clear_reference_faces, clear_static_faces, get_reference_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.typing import AudioFrame, Face, FaceSet, VisionFrame
+from facefusion.types import AudioFrame, Face, FaceSet, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
-from facefusion.uis.typing import ComponentOptions
-from facefusion.vision import count_video_frame_total, detect_frame_orientation, get_video_frame, normalize_frame_color, read_static_image, read_static_images, resize_frame_resolution
+from facefusion.uis.types import ComponentOptions
+from facefusion.vision import count_video_frame_total, detect_frame_orientation, normalize_frame_color, read_static_image, read_static_images, read_video_frame, restrict_frame
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 PREVIEW_FRAME_SLIDER : Optional[gradio.Slider] = None
@@ -60,7 +60,7 @@ def render() -> None:
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 
 	if is_video(state_manager.get_item('target_path')):
-		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
 		preview_image_options['value'] = normalize_frame_color(preview_vision_frame)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
@@ -88,7 +88,7 @@ def listen() -> None:
 		'target_image',
 		'target_video'
 	]):
-		for method in [ 'upload', 'change', 'clear' ]:
+		for method in [ 'change', 'clear' ]:
 			getattr(ui_component, method)(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
@@ -96,7 +96,7 @@ def listen() -> None:
 		'target_image',
 		'target_video'
 	]):
-		for method in [ 'upload', 'change', 'clear' ]:
+		for method in [ 'change', 'clear' ]:
 			getattr(ui_component, method)(update_preview_frame_slider, outputs = PREVIEW_FRAME_SLIDER)
 
 	for ui_component in get_ui_components(
@@ -184,8 +184,8 @@ def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
 
 def slide_preview_image(frame_number : int = 0) -> gradio.Image:
 	if is_video(state_manager.get_item('target_path')):
-		preview_vision_frame = normalize_frame_color(get_video_frame(state_manager.get_item('target_path'), frame_number))
-		preview_vision_frame = resize_frame_resolution(preview_vision_frame, (1024, 1024))
+		preview_vision_frame = normalize_frame_color(read_video_frame(state_manager.get_item('target_path'), frame_number))
+		preview_vision_frame = restrict_frame(preview_vision_frame, (1024, 1024))
 		return gradio.Image(value = preview_vision_frame)
 	return gradio.Image(value = None)
 
@@ -222,7 +222,7 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
 
 	if is_video(state_manager.get_item('target_path')):
-		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), frame_number)
+		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
 		preview_vision_frame = process_preview_frame(reference_faces, source_face, source_audio_frame, temp_vision_frame)
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
@@ -237,7 +237,7 @@ def update_preview_frame_slider() -> gradio.Slider:
 
 
 def process_preview_frame(reference_faces : FaceSet, source_face : Face, source_audio_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:
-	target_vision_frame = resize_frame_resolution(target_vision_frame, (1024, 1024))
+	target_vision_frame = restrict_frame(target_vision_frame, (1024, 1024))
 	source_vision_frame = target_vision_frame.copy()
 	if analyse_frame(target_vision_frame):
 		return cv2.GaussianBlur(target_vision_frame, (99, 99), 0)

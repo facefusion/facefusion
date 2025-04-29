@@ -9,14 +9,13 @@ import gradio
 
 from facefusion import state_manager, wording
 from facefusion.core import conditional_process
-from facefusion.filesystem import is_video
+from facefusion.filesystem import get_file_extension, is_video
 from facefusion.memory import limit_system_memory
 from facefusion.uis.core import get_ui_component
 from facefusion.vision import count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution
 
 BENCHMARK_BENCHMARKS_DATAFRAME : Optional[gradio.Dataframe] = None
 BENCHMARK_START_BUTTON : Optional[gradio.Button] = None
-BENCHMARK_CLEAR_BUTTON : Optional[gradio.Button] = None
 BENCHMARKS : Dict[str, str] =\
 {
 	'240p': '.assets/examples/target-240p.mp4',
@@ -32,7 +31,6 @@ BENCHMARKS : Dict[str, str] =\
 def render() -> None:
 	global BENCHMARK_BENCHMARKS_DATAFRAME
 	global BENCHMARK_START_BUTTON
-	global BENCHMARK_CLEAR_BUTTON
 
 	BENCHMARK_BENCHMARKS_DATAFRAME = gradio.Dataframe(
 		headers =
@@ -72,8 +70,8 @@ def listen() -> None:
 
 def suggest_output_path(target_path : str) -> Optional[str]:
 	if is_video(target_path):
-		_, target_extension = os.path.splitext(target_path)
-		return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_extension)
+		target_file_extension = get_file_extension(target_path)
+		return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_file_extension)
 	return None
 
 
@@ -81,8 +79,8 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 	state_manager.init_item('source_paths', [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ])
 	state_manager.init_item('face_landmarker_score', 0)
 	state_manager.init_item('temp_frame_format', 'bmp')
+	state_manager.init_item('output_audio_volume', 0)
 	state_manager.init_item('output_video_preset', 'ultrafast')
-	state_manager.init_item('skip_audio', True)
 	state_manager.sync_item('execution_providers')
 	state_manager.sync_item('execution_thread_count')
 	state_manager.sync_item('execution_queue_count')

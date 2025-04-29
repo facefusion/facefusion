@@ -4,10 +4,10 @@ from typing import List, Optional
 
 import facefusion.choices
 from facefusion.date_helper import get_current_date_time
-from facefusion.filesystem import create_directory, is_directory, is_file, move_file, remove_directory, remove_file, resolve_file_pattern
+from facefusion.filesystem import create_directory, get_file_name, is_directory, is_file, move_file, remove_directory, remove_file, resolve_file_pattern
 from facefusion.jobs.job_helper import get_step_output_path
 from facefusion.json import read_json, write_json
-from facefusion.typing import Args, Job, JobSet, JobStatus, JobStep, JobStepStatus
+from facefusion.types import Args, Job, JobSet, JobStatus, JobStep, JobStepStatus
 
 JOBS_PATH : Optional[str] = None
 
@@ -48,14 +48,17 @@ def submit_job(job_id : str) -> bool:
 	return False
 
 
-def submit_jobs() -> bool:
+def submit_jobs(halt_on_error : bool) -> bool:
 	drafted_job_ids = find_job_ids('drafted')
+	has_error = False
 
 	if drafted_job_ids:
 		for job_id in drafted_job_ids:
 			if not submit_job(job_id):
-				return False
-		return True
+				has_error = True
+				if halt_on_error:
+					return False
+		return not has_error
 	return False
 
 
@@ -63,24 +66,27 @@ def delete_job(job_id : str) -> bool:
 	return delete_job_file(job_id)
 
 
-def delete_jobs() -> bool:
+def delete_jobs(halt_on_error : bool) -> bool:
 	job_ids = find_job_ids('drafted') + find_job_ids('queued') + find_job_ids('failed') + find_job_ids('completed')
+	has_error = False
 
 	if job_ids:
 		for job_id in job_ids:
 			if not delete_job(job_id):
-				return False
-		return True
+				has_error = True
+				if halt_on_error:
+					return False
+		return not has_error
 	return False
 
 
 def find_jobs(job_status : JobStatus) -> JobSet:
 	job_ids = find_job_ids(job_status)
-	jobs : JobSet = {}
+	job_set : JobSet = {}
 
 	for job_id in job_ids:
-		jobs[job_id] = read_job_file(job_id)
-	return jobs
+		job_set[job_id] = read_job_file(job_id)
+	return job_set
 
 
 def find_job_ids(job_status : JobStatus) -> List[str]:
@@ -90,7 +96,7 @@ def find_job_ids(job_status : JobStatus) -> List[str]:
 	job_ids = []
 
 	for job_path in job_paths:
-		job_id, _ = os.path.splitext(os.path.basename(job_path))
+		job_id = get_file_name(job_path)
 		job_ids.append(job_id)
 	return job_ids
 
@@ -182,7 +188,6 @@ def set_step_status(job_id : str, step_index : int, step_status : JobStepStatus)
 
 	if job:
 		steps = job.get('steps')
-
 		if has_step(job_id, step_index):
 			steps[step_index]['status'] = step_status
 			return update_job_file(job_id, job)

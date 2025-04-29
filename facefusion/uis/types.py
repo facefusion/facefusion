@@ -1,8 +1,8 @@
-from typing import Any, Dict, IO, Literal
+from typing import Any, Dict, IO, Literal, TypeAlias
 
-File = IO[Any]
-Component = Any
-ComponentOptions = Dict[str, Any]
+File : TypeAlias = IO[Any]
+Component : TypeAlias = Any
+ComponentOptions : TypeAlias = Dict[str, Any]
 ComponentName = Literal\
 [
 	'age_modifier_direction_slider',
@@ -81,6 +81,3 @@ ComponentName = Literal\
 
 JobManagerAction = Literal['job-create', 'job-submit', 'job-delete', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step']
 JobRunnerAction = Literal['job-run', 'job-run-all', 'job-retry', 'job-retry-all']
-
-WebcamMode = Literal['inline', 'udp', 'v4l2']
-StreamMode = Literal['udp', 'v4l2']

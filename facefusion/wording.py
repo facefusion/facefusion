@@ -138,15 +138,16 @@ WORDING : Dict[str, Any] =\
 		'temp_frame_format': 'specify the temporary resources format',
 		'keep_temp': 'keep the temporary resources after processing',
 		# output creation
-		'output_image_quality': 'specify the image quality which translates to the compression factor',
-		'output_image_resolution': 'specify the image output resolution based on the target image',
-		'output_audio_encoder': 'specify the encoder used for the audio output',
-		'output_video_encoder': 'specify the encoder used for the video output',
+		'output_image_quality': 'specify the image quality which translates to the image compression',
+		'output_image_resolution': 'specify the image resolution based on the target image',
+		'output_audio_encoder': 'specify the encoder used for the audio',
+		'output_audio_quality': 'specify the audio quality which translates to the audio compression',
+		'output_audio_volume': 'specify the audio volume based on the target video',
+		'output_video_encoder': 'specify the encoder used for the video',
 		'output_video_preset': 'balance fast video processing and video file size',
-		'output_video_quality': 'specify the video quality which translates to the compression factor',
-		'output_video_resolution': 'specify the video output resolution based on the target video',
-		'output_video_fps': 'specify the video output fps based on the target video',
-		'skip_audio': 'omit the audio from the target video',
+		'output_video_quality': 'specify the video quality which translates to the video compression',
+		'output_video_resolution': 'specify the video resolution based on the target video',
+		'output_video_fps': 'specify the video fps based on the target video',
 		# processors
 		'processors': 'load a single or multiple processors (choices: {choices}, ...)',
 		'age_modifier_model': 'choose the model responsible for aging the face',
@@ -199,6 +200,7 @@ WORDING : Dict[str, Any] =\
 		'system_memory_limit': 'limit the available RAM that can be used while processing',
 		# misc
 		'log_level': 'adjust the message severity displayed in the terminal',
+		'halt_on_error': 'halt the program once an error occurred',
 		# run
 		'run': 'run the program',
 		'headless_run': 'run the program in headless mode',
@@ -303,6 +305,8 @@ WORDING : Dict[str, Any] =\
 		'lip_syncer_model_dropdown': 'LIP SYNCER MODEL',
 		'log_level_dropdown': 'LOG LEVEL',
 		'output_audio_encoder_dropdown': 'OUTPUT AUDIO ENCODER',
+		'output_audio_quality_slider': 'OUTPUT AUDIO QUALITY',
+		'output_audio_volume_slider': 'OUTPUT AUDIO VOLUME',
 		'output_image_or_video': 'OUTPUT',
 		'output_image_quality_slider': 'OUTPUT IMAGE QUALITY',
 		'output_image_resolution_dropdown': 'OUTPUT IMAGE RESOLUTION',
@@ -337,11 +341,13 @@ WORDING : Dict[str, Any] =\
 }
 
 
-def get(key : str) -> Optional[str]:
-	if '.' in key:
-		section, name = key.split('.')
-		if section in WORDING and name in WORDING.get(section):
-			return WORDING.get(section).get(name)
-	if key in WORDING:
-		return WORDING.get(key)
+def get(notation : str) -> Optional[str]:
+	current = WORDING
+
+	for fragment in notation.split('.'):
+		if fragment in current:
+			current = current.get(fragment)
+			if isinstance(current, str):
+				return current
+
 	return None

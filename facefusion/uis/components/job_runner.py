@@ -7,10 +7,10 @@ from facefusion import logger, process_manager, state_manager, wording
 from facefusion.common_helper import get_first, get_last
 from facefusion.core import process_step
 from facefusion.jobs import job_manager, job_runner, job_store
-from facefusion.typing import UiWorkflow
+from facefusion.types import UiWorkflow
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component
-from facefusion.uis.typing import JobRunnerAction
+from facefusion.uis.types import JobRunnerAction
 from facefusion.uis.ui_helper import convert_str_none
 
 JOB_RUNNER_WRAPPER : Optional[gradio.Column] = None
@@ -84,7 +84,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 	job_id = convert_str_none(job_id)
 
 	for key in job_store.get_job_keys():
-		state_manager.sync_item(key) #type:ignore
+		state_manager.sync_item(key) #type:ignore[arg-type]
 
 	if job_action == 'job-run':
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__)
@@ -95,12 +95,15 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 		updated_job_ids = job_manager.find_job_ids('queued') or [ 'none' ]
 
 		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Dropdown(value = get_last(updated_job_ids), choices = updated_job_ids)
+
 	if job_action == 'job-run-all':
 		logger.info(wording.get('running_jobs'), __name__)
-		if job_runner.run_jobs(process_step):
+		halt_on_error = False
+		if job_runner.run_jobs(process_step, halt_on_error):
 			logger.info(wording.get('processing_jobs_succeed'), __name__)
 		else:
 			logger.info(wording.get('processing_jobs_failed'), __name__)
+
 	if job_action == 'job-retry':
 		logger.info(wording.get('retrying_job').format(job_id = job_id), __name__)
 		if job_id and job_runner.retry_job(job_id, process_step):
@@ -110,9 +113,11 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 		updated_job_ids = job_manager.find_job_ids('failed') or [ 'none' ]
 
 		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Dropdown(value = get_last(updated_job_ids), choices = updated_job_ids)
+
 	if job_action == 'job-retry-all':
 		logger.info(wording.get('retrying_jobs'), __name__)
-		if job_runner.retry_jobs(process_step):
+		halt_on_error = False
+		if job_runner.retry_jobs(process_step, halt_on_error):
 			logger.info(wording.get('processing_jobs_succeed'), __name__)
 		else:
 			logger.info(wording.get('processing_jobs_failed'), __name__)
@@ -129,6 +134,7 @@ def update_job_action(job_action : JobRunnerAction) -> gradio.Dropdown:
 		updated_job_ids = job_manager.find_job_ids('queued') or [ 'none' ]
 
 		return gradio.Dropdown(value = get_last(updated_job_ids), choices = updated_job_ids, visible = True)
+
 	if job_action == 'job-retry':
 		updated_job_ids = job_manager.find_job_ids('failed') or [ 'none' ]
 

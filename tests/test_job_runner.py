@@ -2,12 +2,11 @@ import subprocess
 
 import pytest
 
-from facefusion import state_manager
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file
 from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, submit_job, submit_jobs
 from facefusion.jobs.job_runner import collect_output_set, finalize_steps, run_job, run_jobs, run_steps
-from facefusion.typing import Args
+from facefusion.types import Args
 from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_output_file, prepare_test_output_directory
 
 
@@ -19,7 +18,6 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
-	state_manager.init_item('output_audio_encoder', 'aac')
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -87,8 +85,9 @@ def test_run_jobs() -> None:
 		'target_path': get_test_example_file('target-240p.jpg'),
 		'output_path': get_test_output_file('output-1.jpg')
 	}
+	halt_on_error = True
 
-	assert run_jobs(process_step) is False
+	assert run_jobs(process_step, halt_on_error) is False
 
 	create_job('job-test-run-jobs-1')
 	create_job('job-test-run-jobs-2')
@@ -97,11 +96,11 @@ def test_run_jobs() -> None:
 	add_step('job-test-run-jobs-2', args_2)
 	add_step('job-test-run-jobs-3', args_3)
 
-	assert run_jobs(process_step) is False
+	assert run_jobs(process_step, halt_on_error) is False
 
-	submit_jobs()
+	submit_jobs(halt_on_error)
 
-	assert run_jobs(process_step) is True
+	assert run_jobs(process_step, halt_on_error) is True
 
 
 @pytest.mark.skip()

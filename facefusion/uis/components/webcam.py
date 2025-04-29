@@ -8,17 +8,16 @@ import cv2
 import gradio
 from tqdm import tqdm
 
-from facefusion import logger, state_manager, wording
+from facefusion import ffmpeg_builder, logger, state_manager, wording
 from facefusion.audio import create_empty_audio_frame
-from facefusion.common_helper import get_first, is_windows
+from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream
 from facefusion.face_analyser import get_average_face, get_many_faces
 from facefusion.ffmpeg import open_ffmpeg
-from facefusion.filesystem import filter_image_paths
+from facefusion.filesystem import filter_image_paths, is_directory
 from facefusion.processors.core import get_processors_modules
-from facefusion.typing import Face, Fps, VisionFrame
+from facefusion.types import Face, Fps, StreamMode, VisionFrame, WebcamMode
 from facefusion.uis.core import get_ui_component
-from facefusion.uis.typing import StreamMode, WebcamMode
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
 
 WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
@@ -164,17 +163,32 @@ def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) 
 
 
 def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : Fps) -> subprocess.Popen[bytes]:
-	commands = [ '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', stream_resolution, '-r', str(stream_fps), '-i', '-']
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.capture_video(),
+		ffmpeg_builder.set_media_resolution(stream_resolution),
+		ffmpeg_builder.set_conditional_fps(stream_fps)
+	)
 
 	if stream_mode == 'udp':
-		commands.extend([ '-b:v', '2000k', '-f', 'mpegts', 'udp://localhost:27000?pkt_size=1316' ])
+		commands.extend(ffmpeg_builder.set_input('-'))
+		commands.extend(ffmpeg_builder.set_stream_mode('udp'))
+		commands.extend(ffmpeg_builder.set_output('udp://localhost:27000?pkt_size=1316'))
+
 	if stream_mode == 'v4l2':
-		try:
-			device_name = get_first(os.listdir('/sys/devices/virtual/video4linux'))
-			if device_name:
-				commands.extend([ '-f', 'v4l2', '/dev/' + device_name ])
-		except FileNotFoundError:
+		device_directory_path = '/sys/devices/virtual/video4linux'
+
+		commands.extend(ffmpeg_builder.set_input('-'))
+		commands.extend(ffmpeg_builder.set_stream_mode('v4l2'))
+		if is_directory(device_directory_path):
+			device_names = os.listdir(device_directory_path)
+
+			for device_name in device_names:
+				device_path = '/dev/' + device_name
+				commands.extend(ffmpeg_builder.set_output(device_path))
+
+		else:
 			logger.error(wording.get('stream_not_loaded').format(stream_mode = stream_mode), __name__)
+
 	return open_ffmpeg(commands)
 
 

@@ -17,12 +17,12 @@ from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
-from facefusion.filesystem import in_directory, is_image, is_video, list_directory, resolve_relative_path, same_file_extension
+from facefusion.filesystem import get_file_name, in_directory, is_image, is_video, resolve_file_paths, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.typing import DeepSwapperInputs, DeepSwapperMorph
+from facefusion.processors.types import DeepSwapperInputs, DeepSwapperMorph
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.typing import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import conditional_match_frame_color, read_image, read_static_image, write_image
 
 
@@ -101,6 +101,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			('druuzil', 'seth_macfarlane_384'),
 			('druuzil', 'thomas_cruise_320'),
 			('druuzil', 'thomas_hanks_384'),
+			('druuzil', 'william_murray_384'),
 			('edel', 'emma_roberts_224'),
 			('edel', 'ivanka_trump_224'),
 			('edel', 'lize_dzjabrailova_224'),
@@ -216,12 +217,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'template': 'dfl_whole_face'
 		}
 
-	custom_model_files = list_directory(resolve_relative_path('../.assets/models/custom'))
+	custom_model_file_paths = resolve_file_paths(resolve_relative_path('../.assets/models/custom'))
 
-	if custom_model_files:
+	if custom_model_file_paths:
 
-		for model_file in custom_model_files:
-			model_id = '/'.join([ 'custom', model_file.get('name') ])
+		for model_file_path in custom_model_file_paths:
+			model_id = '/'.join([ 'custom', get_file_name(model_file_path) ])
 
 			model_set[model_id] =\
 			{
@@ -229,7 +230,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				{
 					'deep_swapper':
 					{
-						'path': resolve_relative_path(model_file.get('path'))
+						'path': resolve_relative_path(model_file_path)
 					}
 				},
 				'template': 'dfl_whole_face'
@@ -239,33 +240,37 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
-	model_sources = get_model_options().get('sources')
-	return inference_manager.get_inference_pool(__name__, model_sources)
+	model_names = [ state_manager.get_item('deep_swapper_model') ]
+	model_source_set = get_model_options().get('sources')
+
+	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
-	inference_manager.clear_inference_pool(__name__)
+	model_names = [ state_manager.get_item('deep_swapper_model') ]
+	inference_manager.clear_inference_pool(__name__, model_names)
 
 
 def get_model_options() -> ModelOptions:
-	deep_swapper_model = state_manager.get_item('deep_swapper_model')
-	return create_static_model_set('full').get(deep_swapper_model)
+	model_name = state_manager.get_item('deep_swapper_model')
+	return create_static_model_set('full').get(model_name)
 
 
 def get_model_size() -> Size:
 	deep_swapper = get_inference_pool().get('deep_swapper')
-	deep_swapper_outputs = deep_swapper.get_outputs()
 
-	for deep_swapper_output in deep_swapper_outputs:
-		return deep_swapper_output.shape[1:3]
+	for deep_swapper_input in deep_swapper.get_inputs():
+		if deep_swapper_input.name == 'in_face:0':
+			return deep_swapper_input.shape[1:3]
+
 	return 0, 0
 
 
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--deep-swapper-model', help = wording.get('help.deep_swapper_model'), default = config.get_str_value('processors.deep_swapper_model', 'iperov/elon_musk_224'), choices = processors_choices.deep_swapper_models)
-		group_processors.add_argument('--deep-swapper-morph', help = wording.get('help.deep_swapper_morph'), type = int, default = config.get_int_value('processors.deep_swapper_morph', '80'), choices = processors_choices.deep_swapper_morph_range, metavar = create_int_metavar(processors_choices.deep_swapper_morph_range))
+		group_processors.add_argument('--deep-swapper-model', help = wording.get('help.deep_swapper_model'), default = config.get_str_value('processors', 'deep_swapper_model', 'iperov/elon_musk_224'), choices = processors_choices.deep_swapper_models)
+		group_processors.add_argument('--deep-swapper-morph', help = wording.get('help.deep_swapper_morph'), type = int, default = config.get_int_value('processors', 'deep_swapper_morph', '100'), choices = processors_choices.deep_swapper_morph_range, metavar = create_int_metavar(processors_choices.deep_swapper_morph_range))
 		facefusion.jobs.job_store.register_step_keys([ 'deep_swapper_model', 'deep_swapper_morph' ])
 
 
@@ -275,11 +280,11 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 
 
 def pre_check() -> bool:
-	model_hashes = get_model_options().get('hashes')
-	model_sources = get_model_options().get('sources')
+	model_hash_set = get_model_options().get('hashes')
+	model_source_set = get_model_options().get('sources')
 
-	if model_hashes and model_sources:
-		return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
+	if model_hash_set and model_source_set:
+		return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 	return True
 
 
@@ -290,7 +295,7 @@ def pre_process(mode : ProcessMode) -> bool:
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
 		return False
-	if mode == 'output' and not same_file_extension([ state_manager.get_item('target_path'), state_manager.get_item('output_path') ]):
+	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
 		return False
 	return True
@@ -362,6 +367,7 @@ def has_morph_input() -> bool:
 	for deep_swapper_input in deep_swapper.get_inputs():
 		if deep_swapper_input.name == 'morph_value:0':
 			return True
+
 	return False
 
 

@@ -1,9 +1,8 @@
 from logging import Logger, basicConfig, getLogger
-from typing import Tuple
 
 import facefusion.choices
 from facefusion.common_helper import get_first, get_last
-from facefusion.typing import LogLevel, TableContents, TableHeaders
+from facefusion.types import LogLevel
 
 
 def init(log_level : LogLevel) -> None:
@@ -32,44 +31,13 @@ def error(message : str, module_name : str) -> None:
 
 
 def create_message(message : str, module_name : str) -> str:
-	scopes = module_name.split('.')
-	first_scope = get_first(scopes)
-	last_scope = get_last(scopes)
+	module_names = module_name.split('.')
+	first_module_name = get_first(module_names)
+	last_module_name = get_last(module_names)
 
-	if first_scope and last_scope:
-		return '[' + first_scope.upper() + '.' + last_scope.upper() + '] ' + message
+	if first_module_name and last_module_name:
+		return '[' + first_module_name.upper() + '.' + last_module_name.upper() + '] ' + message
 	return message
-
-
-def table(headers : TableHeaders, contents : TableContents) -> None:
-	package_logger = get_package_logger()
-	table_column, table_separator = create_table_parts(headers, contents)
-
-	package_logger.info(table_separator)
-	package_logger.info(table_column.format(*headers))
-	package_logger.info(table_separator)
-
-	for content in contents:
-		content = [ value if value else '' for value in content ]
-		package_logger.info(table_column.format(*content))
-
-	package_logger.info(table_separator)
-
-
-def create_table_parts(headers : TableHeaders, contents : TableContents) -> Tuple[str, str]:
-	column_parts = []
-	separator_parts = []
-	widths = [ len(header) for header in headers ]
-
-	for content in contents:
-		for index, value in enumerate(content):
-			widths[index] = max(widths[index], len(str(value)))
-
-	for width in widths:
-		column_parts.append('{:<' + str(width) + '}')
-		separator_parts.append('-' * width)
-
-	return '| ' + ' | '.join(column_parts) + ' |', '+-' + '-+-'.join(separator_parts) + '-+'
 
 
 def enable() -> None:

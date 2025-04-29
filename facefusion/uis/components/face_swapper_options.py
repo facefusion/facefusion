@@ -6,7 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.typing import FaceSwapperModel
+from facefusion.processors.types import FaceSwapperModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_SWAPPER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None

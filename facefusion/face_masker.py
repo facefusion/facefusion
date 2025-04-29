@@ -10,7 +10,7 @@ from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.typing import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
+from facefusion.types import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
 
 
 @lru_cache(maxsize = None)
@@ -53,6 +53,26 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				{
 					'url': resolve_download_url('models-3.1.0', 'xseg_2.onnx'),
 					'path': resolve_relative_path('../.assets/models/xseg_2.onnx')
+				}
+			},
+			'size': (256, 256)
+		},
+		'xseg_3':
+		{
+			'hashes':
+			{
+				'face_occluder':
+				{
+					'url': resolve_download_url('models-3.2.0', 'xseg_3.hash'),
+					'path': resolve_relative_path('../.assets/models/xseg_3.hash')
+				}
+			},
+			'sources':
+			{
+				'face_occluder':
+				{
+					'url': resolve_download_url('models-3.2.0', 'xseg_3.onnx'),
+					'path': resolve_relative_path('../.assets/models/xseg_3.onnx')
 				}
 			},
 			'size': (256, 256)
@@ -101,42 +121,39 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
-	_, model_sources = collect_model_downloads()
-	return inference_manager.get_inference_pool(__name__, model_sources)
+	model_names = [state_manager.get_item('face_occluder_model'), state_manager.get_item('face_parser_model')]
+	_, model_source_set = collect_model_downloads()
+
+	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
-	inference_manager.clear_inference_pool(__name__)
+	model_names = [ state_manager.get_item('face_occluder_model'), state_manager.get_item('face_parser_model') ]
+	inference_manager.clear_inference_pool(__name__, model_names)
 
 
 def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
-	model_hashes = {}
-	model_sources = {}
 	model_set = create_static_model_set('full')
+	model_hash_set = {}
+	model_source_set = {}
 
-	if state_manager.get_item('face_occluder_model') == 'xseg_1':
-		model_hashes['xseg_1'] = model_set.get('xseg_1').get('hashes').get('face_occluder')
-		model_sources['xseg_1'] = model_set.get('xseg_1').get('sources').get('face_occluder')
+	for face_occluder_model in [ 'xseg_1', 'xseg_2', 'xseg_3' ]:
+		if state_manager.get_item('face_occluder_model') == face_occluder_model:
+			model_hash_set[face_occluder_model] = model_set.get(face_occluder_model).get('hashes').get('face_occluder')
+			model_source_set[face_occluder_model] = model_set.get(face_occluder_model).get('sources').get('face_occluder')
 
-	if state_manager.get_item('face_occluder_model') == 'xseg_2':
-		model_hashes['xseg_2'] = model_set.get('xseg_2').get('hashes').get('face_occluder')
-		model_sources['xseg_2'] = model_set.get('xseg_2').get('sources').get('face_occluder')
+	for face_parser_model in [ 'bisenet_resnet_18', 'bisenet_resnet_34' ]:
+		if state_manager.get_item('face_parser_model') == face_parser_model:
+			model_hash_set[face_parser_model] = model_set.get(face_parser_model).get('hashes').get('face_parser')
+			model_source_set[face_parser_model] = model_set.get(face_parser_model).get('sources').get('face_parser')
 
-	if state_manager.get_item('face_parser_model') == 'bisenet_resnet_18':
-		model_hashes['bisenet_resnet_18'] = model_set.get('bisenet_resnet_18').get('hashes').get('face_parser')
-		model_sources['bisenet_resnet_18'] = model_set.get('bisenet_resnet_18').get('sources').get('face_parser')
-
-	if state_manager.get_item('face_parser_model') == 'bisenet_resnet_34':
-		model_hashes['bisenet_resnet_34'] = model_set.get('bisenet_resnet_34').get('hashes').get('face_parser')
-		model_sources['bisenet_resnet_34'] = model_set.get('bisenet_resnet_34').get('sources').get('face_parser')
-
-	return model_hashes, model_sources
+	return model_hash_set, model_source_set
 
 
 def pre_check() -> bool:
-	model_hashes, model_sources = collect_model_downloads()
+	model_hash_set, model_source_set = collect_model_downloads()
 
-	return conditional_download_hashes(model_hashes) and conditional_download_sources(model_sources)
+	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
 
 @lru_cache(maxsize = None)
@@ -154,10 +171,10 @@ def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_p
 
 
 def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
-	face_occluder_model = state_manager.get_item('face_occluder_model')
-	model_size = create_static_model_set('full').get(face_occluder_model).get('size')
+	model_name = state_manager.get_item('face_occluder_model')
+	model_size = create_static_model_set('full').get(model_name).get('size')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
-	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255
+	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255.0
 	prepare_vision_frame = prepare_vision_frame.transpose(0, 1, 2, 3)
 	occlusion_mask = forward_occlude_face(prepare_vision_frame)
 	occlusion_mask = occlusion_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
@@ -167,10 +184,10 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 
 
 def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
-	face_parser_model = state_manager.get_item('face_parser_model')
-	model_size = create_static_model_set('full').get(face_parser_model).get('size')
+	model_name = state_manager.get_item('face_parser_model')
+	model_size = create_static_model_set('full').get(model_name).get('size')
 	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
-	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255
+	prepare_vision_frame = prepare_vision_frame[:, :, ::-1].astype(numpy.float32) / 255.0
 	prepare_vision_frame = numpy.subtract(prepare_vision_frame, numpy.array([ 0.485, 0.456, 0.406 ]).astype(numpy.float32))
 	prepare_vision_frame = numpy.divide(prepare_vision_frame, numpy.array([ 0.229, 0.224, 0.225 ]).astype(numpy.float32))
 	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0)
@@ -192,8 +209,8 @@ def create_mouth_mask(face_landmark_68 : FaceLandmark68) -> Mask:
 
 
 def forward_occlude_face(prepare_vision_frame : VisionFrame) -> Mask:
-	face_occluder_model = state_manager.get_item('face_occluder_model')
-	face_occluder = get_inference_pool().get(face_occluder_model)
+	model_name = state_manager.get_item('face_occluder_model')
+	face_occluder = get_inference_pool().get(model_name)
 
 	with conditional_thread_semaphore():
 		occlusion_mask : Mask = face_occluder.run(None,
@@ -205,8 +222,8 @@ def forward_occlude_face(prepare_vision_frame : VisionFrame) -> Mask:
 
 
 def forward_parse_face(prepare_vision_frame : VisionFrame) -> Mask:
-	face_parser_model = state_manager.get_item('face_parser_model')
-	face_parser = get_inference_pool().get(face_parser_model)
+	model_name = state_manager.get_item('face_parser_model')
+	face_parser = get_inference_pool().get(model_name)
 
 	with conditional_thread_semaphore():
 		region_mask : Mask = face_parser.run(None,

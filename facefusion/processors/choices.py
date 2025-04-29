@@ -1,8 +1,8 @@
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.filesystem import list_directory, resolve_relative_path
-from facefusion.processors.typing import AgeModifierModel, DeepSwapperModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
+from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_relative_path
+from facefusion.processors.types import AgeModifierModel, DeepSwapperModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
 deep_swapper_models : List[DeepSwapperModel] =\
@@ -75,6 +75,7 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'druuzil/seth_macfarlane_384',
 	'druuzil/thomas_cruise_320',
 	'druuzil/thomas_hanks_384',
+	'druuzil/william_murray_384',
 	'edel/emma_roberts_224',
 	'edel/ivanka_trump_224',
 	'edel/lize_dzjabrailova_224',
@@ -157,12 +158,12 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'rumateus/taylor_swift_224'
 ]
 
-custom_model_files = list_directory(resolve_relative_path('../.assets/models/custom'))
+custom_model_file_paths = resolve_file_paths(resolve_relative_path('../.assets/models/custom'))
 
-if custom_model_files:
+if custom_model_file_paths:
 
-	for model_file in custom_model_files:
-		model_id = '/'.join([ 'custom', model_file.get('name') ])
+	for model_file_path in custom_model_file_paths:
+		model_id = '/'.join([ 'custom', get_file_name(model_file_path) ])
 		deep_swapper_models.append(model_id)
 
 expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]

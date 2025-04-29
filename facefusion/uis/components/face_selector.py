@@ -10,11 +10,11 @@ from facefusion.face_analyser import get_many_faces
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import clear_reference_faces, clear_static_faces
 from facefusion.filesystem import is_image, is_video
-from facefusion.typing import FaceSelectorMode, FaceSelectorOrder, Gender, Race, VisionFrame
+from facefusion.types import FaceSelectorMode, FaceSelectorOrder, Gender, Race, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
-from facefusion.uis.typing import ComponentOptions
+from facefusion.uis.types import ComponentOptions
 from facefusion.uis.ui_helper import convert_str_none
-from facefusion.vision import get_video_frame, normalize_frame_color, read_static_image
+from facefusion.vision import normalize_frame_color, read_static_image, read_video_frame
 
 FACE_SELECTOR_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SELECTOR_ORDER_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -38,15 +38,16 @@ def render() -> None:
 	{
 		'label': wording.get('uis.reference_face_gallery'),
 		'object_fit': 'cover',
-		'columns': 8,
+		'columns': 7,
 		'allow_preview': False,
+		'elem_classes': 'box-face-selector',
 		'visible': 'reference' in state_manager.get_item('face_selector_mode')
 	}
 	if is_image(state_manager.get_item('target_path')):
 		reference_frame = read_static_image(state_manager.get_item('target_path'))
 		reference_face_gallery_options['value'] = extract_gallery_frames(reference_frame)
 	if is_video(state_manager.get_item('target_path')):
-		reference_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		reference_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		reference_face_gallery_options['value'] = extract_gallery_frames(reference_frame)
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_selector_mode_dropdown'),
@@ -112,7 +113,7 @@ def listen() -> None:
 		'target_image',
 		'target_video'
 	]):
-		for method in [ 'upload', 'change', 'clear' ]:
+		for method in [ 'change', 'clear' ]:
 			getattr(ui_component, method)(update_reference_face_position)
 			getattr(ui_component, method)(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
@@ -130,8 +131,9 @@ def listen() -> None:
 
 	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
-		preview_frame_slider.release(update_reference_frame_number, inputs = preview_frame_slider)
-		preview_frame_slider.release(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
+		for method in [ 'change', 'release' ]:
+			getattr(preview_frame_slider, method)(update_reference_frame_number, inputs = preview_frame_slider, show_progress = 'hidden')
+			getattr(preview_frame_slider, method)(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY, show_progress = 'hidden')
 
 
 def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gradio.Gallery, gradio.Slider]:
@@ -197,7 +199,7 @@ def update_reference_position_gallery() -> gradio.Gallery:
 		temp_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
 	if is_video(state_manager.get_item('target_path')):
-		temp_vision_frame = get_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
 	if gallery_vision_frames:
 		return gradio.Gallery(value = gallery_vision_frames)

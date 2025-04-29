@@ -5,7 +5,7 @@ import gradio
 import facefusion.choices
 from facefusion import face_landmarker, state_manager, wording
 from facefusion.common_helper import calc_float_step
-from facefusion.typing import FaceLandmarkerModel, Score
+from facefusion.types import FaceLandmarkerModel, Score
 from facefusion.uis.core import register_ui_component
 
 FACE_LANDMARKER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None

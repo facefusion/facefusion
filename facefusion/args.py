@@ -1,9 +1,9 @@
 from facefusion import state_manager
-from facefusion.filesystem import is_image, is_video, list_directory
+from facefusion.filesystem import get_file_name, is_image, is_video, resolve_file_paths
 from facefusion.jobs import job_store
 from facefusion.normalizer import normalize_fps, normalize_padding
 from facefusion.processors.core import get_processors_modules
-from facefusion.typing import ApplyStateItem, Args
+from facefusion.types import ApplyStateItem, Args
 from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, pack_resolution
 
 
@@ -92,6 +92,8 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 		else:
 			apply_state_item('output_image_resolution', pack_resolution(output_image_resolution))
 	apply_state_item('output_audio_encoder', args.get('output_audio_encoder'))
+	apply_state_item('output_audio_quality', args.get('output_audio_quality'))
+	apply_state_item('output_audio_volume', args.get('output_audio_volume'))
 	apply_state_item('output_video_encoder', args.get('output_video_encoder'))
 	apply_state_item('output_video_preset', args.get('output_video_preset'))
 	apply_state_item('output_video_quality', args.get('output_video_quality'))
@@ -105,9 +107,8 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	if args.get('output_video_fps') or is_video(args.get('target_path')):
 		output_video_fps = normalize_fps(args.get('output_video_fps')) or detect_video_fps(args.get('target_path'))
 		apply_state_item('output_video_fps', output_video_fps)
-	apply_state_item('skip_audio', args.get('skip_audio'))
 	# processors
-	available_processors = [ file.get('name') for file in list_directory('facefusion/processors/modules') ]
+	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	apply_state_item('processors', args.get('processors'))
 	for processor_module in get_processors_modules(available_processors):
 		processor_module.apply_args(args, apply_state_item)
@@ -128,6 +129,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('system_memory_limit', args.get('system_memory_limit'))
 	# misc
 	apply_state_item('log_level', args.get('log_level'))
+	apply_state_item('halt_on_error', args.get('halt_on_error'))
 	# jobs
 	apply_state_item('job_id', args.get('job_id'))
 	apply_state_item('job_status', args.get('job_status'))

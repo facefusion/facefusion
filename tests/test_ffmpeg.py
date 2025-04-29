@@ -5,9 +5,9 @@ import pytest
 
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, read_audio_buffer, replace_audio, restore_audio
+from facefusion.ffmpeg import concat_video, extract_frames, get_available_encoder_set, read_audio_buffer, replace_audio, restore_audio
 from facefusion.filesystem import copy_file
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_paths
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -29,11 +29,21 @@ def before_all() -> None:
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
 	state_manager.init_item('output_audio_encoder', 'aac')
+	state_manager.init_item('output_audio_quality', 80)
+	state_manager.init_item('output_audio_volume', 100)
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	prepare_test_output_directory()
+
+
+@pytest.mark.skip()
+def test_get_available_encoder_set() -> None:
+	available_encoder_set = get_available_encoder_set()
+
+	assert 'aac' in available_encoder_set.get('audio')
+	assert 'libx264' in available_encoder_set.get('video')
 
 
 def test_extract_frames() -> None:
@@ -57,7 +67,7 @@ def test_extract_frames() -> None:
 		create_temp_directory(target_path)
 
 		assert extract_frames(target_path, '452x240', 30.0, trim_frame_start, trim_frame_end) is True
-		assert len(get_temp_frame_paths(target_path)) == frame_total
+		assert len(resolve_temp_frame_paths(target_path)) == frame_total
 
 		clear_temp_directory(target_path)
 
@@ -74,9 +84,9 @@ def test_concat_video() -> None:
 
 
 def test_read_audio_buffer() -> None:
-	assert isinstance(read_audio_buffer(get_test_example_file('source.mp3'), 1, 1), bytes)
-	assert isinstance(read_audio_buffer(get_test_example_file('source.wav'), 1, 1), bytes)
-	assert read_audio_buffer(get_test_example_file('invalid.mp3'), 1, 1) is None
+	assert isinstance(read_audio_buffer(get_test_example_file('source.mp3'), 1, 16, 1), bytes)
+	assert isinstance(read_audio_buffer(get_test_example_file('source.wav'), 1, 16, 1), bytes)
+	assert read_audio_buffer(get_test_example_file('invalid.mp3'), 1, 16, 1) is None
 
 
 def test_restore_audio() -> None:
@@ -91,7 +101,7 @@ def test_restore_audio() -> None:
 		create_temp_directory(target_path)
 		copy_file(target_path, get_temp_file_path(target_path))
 
-		assert restore_audio(target_path, output_path, 30, 0, 270) is True
+		assert restore_audio(target_path, output_path, 0, 270) is True
 
 		clear_temp_directory(target_path)
 

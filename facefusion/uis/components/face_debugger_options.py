@@ -4,7 +4,7 @@ import gradio
 
 from facefusion import state_manager, wording
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.typing import FaceDebuggerItem
+from facefusion.processors.types import FaceDebuggerItem
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None

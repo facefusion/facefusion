@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 import facefusion.choices
 from facefusion import logger, state_manager, wording
-from facefusion.typing import LogLevel
+from facefusion.types import LogLevel
 
 LOG_LEVEL_DROPDOWN : Optional[gradio.Dropdown] = None
 TERMINAL_TEXTBOX : Optional[gradio.Textbox] = None
@@ -38,8 +38,6 @@ def render() -> None:
 
 
 def listen() -> None:
-	global LOG_LEVEL_DROPDOWN
-
 	LOG_LEVEL_DROPDOWN.change(update_log_level, inputs = LOG_LEVEL_DROPDOWN)
 	logger.get_package_logger().addHandler(LOG_HANDLER)
 	tqdm.update = tqdm_update
@@ -78,5 +76,5 @@ def create_tqdm_output(self : tqdm) -> Optional[str]:
 
 def read_logs() -> str:
 	LOG_BUFFER.seek(0)
-	logs = LOG_BUFFER.read().rstrip()
+	logs = LOG_BUFFER.read().strip()
 	return logs

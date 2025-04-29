@@ -1,11 +1,11 @@
-from typing import Any, Dict, List, Literal, TypedDict
+from typing import Any, Dict, List, Literal, TypeAlias, TypedDict
 
-from numpy._typing import NDArray
+from numpy.typing import NDArray
 
-from facefusion.typing import AppContext, AudioFrame, Face, FaceSet, VisionFrame
+from facefusion.types import AppContext, AudioFrame, Face, FaceSet, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
-DeepSwapperModel = str
+DeepSwapperModel : TypeAlias = str
 ExpressionRestorerModel = Literal['live_portrait']
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race']
 FaceEditorModel = Literal['live_portrait']
@@ -15,7 +15,7 @@ FrameColorizerModel = Literal['ddcolor', 'ddcolor_artistic', 'deoldify', 'deoldi
 FrameEnhancerModel = Literal['clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'real_hatgan_x4', 'real_web_photo_x4', 'realistic_rescaler_x4', 'remacri_x4', 'siax_x4', 'span_kendata_x4', 'swin2_sr_x4', 'ultra_sharp_x4']
 LipSyncerModel = Literal['wav2lip_96', 'wav2lip_gan_96']
 
-FaceSwapperSet = Dict[FaceSwapperModel, List[str]]
+FaceSwapperSet : TypeAlias = Dict[FaceSwapperModel, List[str]]
 
 AgeModifierInputs = TypedDict('AgeModifierInputs',
 {
@@ -141,17 +141,17 @@ ProcessorState = TypedDict('ProcessorState',
 	'frame_enhancer_blend' : int,
 	'lip_syncer_model' : LipSyncerModel
 })
-ProcessorStateSet = Dict[AppContext, ProcessorState]
+ProcessorStateSet : TypeAlias = Dict[AppContext, ProcessorState]
 
-AgeModifierDirection = NDArray[Any]
-DeepSwapperMorph = NDArray[Any]
-FaceEnhancerWeight = NDArray[Any]
-LivePortraitPitch = float
-LivePortraitYaw = float
-LivePortraitRoll = float
-LivePortraitExpression = NDArray[Any]
-LivePortraitFeatureVolume = NDArray[Any]
-LivePortraitMotionPoints = NDArray[Any]
-LivePortraitRotation = NDArray[Any]
-LivePortraitScale = NDArray[Any]
-LivePortraitTranslation = NDArray[Any]
+AgeModifierDirection : TypeAlias = NDArray[Any]
+DeepSwapperMorph : TypeAlias = NDArray[Any]
+FaceEnhancerWeight : TypeAlias = NDArray[Any]
+LivePortraitPitch : TypeAlias = float
+LivePortraitYaw : TypeAlias = float
+LivePortraitRoll : TypeAlias = float
+LivePortraitExpression : TypeAlias = NDArray[Any]
+LivePortraitFeatureVolume : TypeAlias = NDArray[Any]
+LivePortraitMotionPoints : TypeAlias = NDArray[Any]
+LivePortraitRotation : TypeAlias = NDArray[Any]
+LivePortraitScale : TypeAlias = NDArray[Any]
+LivePortraitTranslation : TypeAlias = NDArray[Any]

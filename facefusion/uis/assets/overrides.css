@@ -1,7 +1,11 @@
 :root:root:root:root .gradio-container
 {
-	max-width: 110em;
 	overflow: unset;
+}
+
+:root:root:root:root main
+{
+	max-width: 110em;
 }
 
 :root:root:root:root input[type="number"]
@@ -63,6 +67,12 @@
 :root:root:root:root .grid-wrap.fixed-height
 {
 	min-height: unset;
+}
+
+:root:root:root:root .box-face-selector .empty,
+:root:root:root:root .box-face-selector .gallery-container
+{
+	min-height: 7.375rem;
 }
 
 :root:root:root:root .tab-wrapper

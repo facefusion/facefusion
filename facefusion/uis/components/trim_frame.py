@@ -6,7 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import is_video
 from facefusion.uis.core import get_ui_components
-from facefusion.uis.typing import ComponentOptions
+from facefusion.uis.types import ComponentOptions
 from facefusion.vision import count_video_frame_total
 
 TRIM_FRAME_RANGE_SLIDER : Optional[RangeSlider] = None
@@ -39,7 +39,7 @@ def listen() -> None:
 		'target_image',
 		'target_video'
 	]):
-		for method in [ 'upload', 'change', 'clear' ]:
+		for method in [ 'change', 'clear' ]:
 			getattr(ui_component, method)(remote_update, outputs = [ TRIM_FRAME_RANGE_SLIDER ])
 
 
