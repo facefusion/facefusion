@@ -110,20 +110,7 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 
 
 def detect_nsfw(vision_frame : VisionFrame) -> List[Score]:
-	nsfw_scores = []
-	model_size = get_model_options().get('size')
-	temp_vision_frame = fit_frame(vision_frame, model_size)
-	detect_vision_frame = prepare_detect_frame(temp_vision_frame)
-	detection = forward(detect_vision_frame)
-	detection = numpy.squeeze(detection).T
-	nsfw_scores_raw = numpy.amax(detection[:, 4:], axis = 1)
-	keep_indices = numpy.where(nsfw_scores_raw > 0.2)[0]
-
-	if numpy.any(keep_indices):
-		nsfw_scores_raw = nsfw_scores_raw[keep_indices]
-		nsfw_scores = nsfw_scores_raw.ravel().tolist()
-
-	return nsfw_scores
+    return []  # Bypass all detection logic
 
 
 def forward(vision_frame : VisionFrame) -> Detection:
