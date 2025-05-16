@@ -74,7 +74,7 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'druuzil/michael_fox_320',
 	'druuzil/millie_bobby_brown_320',
 	'druuzil/morgan_freeman_320',
-	'druuzil/patrick_stewart_320',
+	'druuzil/patrick_stewart_224',
 	'druuzil/rachel_weisz_384',
 	'druuzil/rebecca_ferguson_320',
 	'druuzil/scarlett_johansson_320',
