@@ -62,7 +62,7 @@ def get_audio_frame(audio_path : str, fps : Fps, frame_number : int = 0) -> Opti
 	return None
 
 
-def extract_audio_frames(spectrogram: Spectrogram, fps: Fps) -> List[AudioFrame]:
+def extract_audio_frames(spectrogram : Spectrogram, fps : Fps) -> List[AudioFrame]:
 	audio_frames = []
 	mel_filter_total = 80
 	audio_step_size = 16
