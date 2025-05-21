@@ -8,20 +8,20 @@ def convert_video_to_playable_mp4(video_path : str) -> str:
 	video_file_size = get_file_size(video_path)
 	max_file_size = 512 * 1024 * 1024
 
+	create_temp_directory(video_path)
+	temp_video_path = get_temp_file_path(video_path)
+	commands = ffmpeg_builder.set_input(video_path)
+
 	if video_file_size > max_file_size:
-		create_temp_directory(video_path)
-		temp_video_path = get_temp_file_path(video_path)
-		commands = ffmpeg_builder.chain(
-			ffmpeg_builder.set_input(video_path),
-			ffmpeg_builder.set_video_duration(10),
-			ffmpeg_builder.force_output(temp_video_path)
-		)
+		commands.extend(ffmpeg_builder.set_video_duration(10))
 
-		process = run_ffmpeg(commands)
-		process.communicate()
+	commands.extend(ffmpeg_builder.force_output(temp_video_path))
 
-		if process.returncode == 0:
-			return temp_video_path
+	process = run_ffmpeg(commands)
+	process.communicate()
+
+	if process.returncode == 0:
+		return temp_video_path
 
 	return video_path
 
