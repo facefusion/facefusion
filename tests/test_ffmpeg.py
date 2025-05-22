@@ -5,7 +5,8 @@ import pytest
 
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, get_available_encoder_set, read_audio_buffer, replace_audio, restore_audio
+from facefusion.ffmpeg import concat_video, extract_frames, get_available_encoder_set, read_audio_buffer, replace_audio, \
+	restore_audio, merge_video
 from facefusion.filesystem import copy_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
@@ -21,6 +22,7 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), get_test_example_file('source.wav') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.webm') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
@@ -31,6 +33,9 @@ def before_all() -> None:
 	state_manager.init_item('output_audio_encoder', 'aac')
 	state_manager.init_item('output_audio_quality', 80)
 	state_manager.init_item('output_audio_volume', 100)
+	state_manager.init_item('output_video_encoder', 'libx264')
+	state_manager.init_item('output_video_quality', 80)
+	state_manager.init_item('output_video_preset', 'ultrafast')
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -70,6 +75,26 @@ def test_extract_frames() -> None:
 		assert len(resolve_temp_frame_paths(target_path)) == frame_total
 
 		clear_temp_directory(target_path)
+
+
+def test_merge_video() -> None:
+	merge_set =\
+	[
+		(get_test_example_file('target-240p.mp4'), 'libx264'),
+		(get_test_example_file('target-240p.mp4'), 'libx265'),
+		(get_test_example_file('target-240p.webm'), 'libx264')
+	]
+
+	for target_path, output_video_encoder in merge_set:
+		state_manager.init_item('output_video_encoder', output_video_encoder)
+		create_temp_directory(target_path)
+		extract_frames(target_path, '452x240', 25.0, 0, 1)
+
+		assert merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is True
+
+		clear_temp_directory(target_path)
+
+	state_manager.init_item('output_video_encoder', 'libx264')
 
 
 def test_concat_video() -> None:
