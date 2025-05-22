@@ -121,7 +121,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
-	model_names = [state_manager.get_item('face_occluder_model'), state_manager.get_item('face_parser_model')]
+	model_names = [ state_manager.get_item('face_occluder_model'), state_manager.get_item('face_parser_model') ]
 	_, model_source_set = collect_model_downloads()
 
 	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
