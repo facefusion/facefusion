@@ -6,7 +6,7 @@ from time import time
 
 import numpy
 
-from facefusion import cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, voice_extractor, wording
+from facefusion import cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, voice_extractor, wording, video_manager
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
@@ -468,8 +468,10 @@ def process_video(start_time : float) -> ErrorCode:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		if source_audio_path:
 			if replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
+				video_manager.clear_video_pool()
 				logger.debug(wording.get('replacing_audio_succeed'), __name__)
 			else:
+				video_manager.clear_video_pool()
 				if is_process_stopping():
 					process_manager.end()
 					return 4
@@ -477,8 +479,10 @@ def process_video(start_time : float) -> ErrorCode:
 				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 		else:
 			if restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), trim_frame_start, trim_frame_end):
+				video_manager.clear_video_pool()
 				logger.debug(wording.get('restoring_audio_succeed'), __name__)
 			else:
+				video_manager.clear_video_pool()
 				if is_process_stopping():
 					process_manager.end()
 					return 4
