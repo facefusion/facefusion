@@ -1,6 +1,7 @@
 from collections import namedtuple
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
 
+import cv2
 import numpy
 from numpy.typing import NDArray
 from onnxruntime import InferenceSession
@@ -49,6 +50,7 @@ FaceStore = TypedDict('FaceStore',
 	'static_faces' : FaceSet,
 	'reference_faces' : FaceSet
 })
+VideoPoolSet : TypeAlias = Dict[str, cv2.VideoCapture]
 
 VisionFrame : TypeAlias = NDArray[Any]
 Mask : TypeAlias = NDArray[Any]

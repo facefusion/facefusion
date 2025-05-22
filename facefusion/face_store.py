@@ -30,7 +30,7 @@ def set_static_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
 
 
 def clear_static_faces() -> None:
-	FACE_STORE['static_faces'] = {}
+	FACE_STORE['static_faces'].clear()
 
 
 def create_frame_hash(vision_frame : VisionFrame) -> Optional[str]:
@@ -53,4 +53,4 @@ def append_reference_face(name : str, face : Face) -> None:
 
 
 def clear_reference_faces() -> None:
-	FACE_STORE['reference_faces'] = {}
+	FACE_STORE['reference_faces'].clear()
