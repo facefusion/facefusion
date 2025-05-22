@@ -203,6 +203,7 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 
 
 def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution : str, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+	output_file_format = get_file_format(target_path)
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
@@ -210,7 +211,10 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 	temp_file_path = get_temp_file_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 
-	if get_file_format(target_path) == 'webm':
+	if output_file_format == 'mp4' and output_video_encoder == 'rawvideo':
+		output_video_encoder = 'libx264'
+
+	if output_file_format == 'webm':
 		output_video_encoder = 'libvpx-vp9'
 
 	commands = ffmpeg_builder.chain(

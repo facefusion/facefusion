@@ -81,7 +81,7 @@ def test_merge_video() -> None:
 	merge_set =\
 	[
 		(get_test_example_file('target-240p.mp4'), 'libx264'),
-		(get_test_example_file('target-240p.mp4'), 'libx265'),
+		(get_test_example_file('target-240p.mp4'), 'rawvideo'),
 		(get_test_example_file('target-240p.webm'), 'libx264')
 	]
 
