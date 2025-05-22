@@ -13,8 +13,6 @@ def get_video_capture(video_path : str) -> cv2.VideoCapture:
 
 
 def clear_video_pool() -> None:
-	global VIDEO_POOL_SET
-
 	for video_capture in VIDEO_POOL_SET.values():
 		video_capture.release()
 
