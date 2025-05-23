@@ -97,7 +97,10 @@ def test_merge_video() -> None:
 			create_temp_directory(target_path)
 			extract_frames(target_path, '452x240', 25.0, 0, 1)
 
-			assert merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is True
+			#assert merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is True
+
+			if merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is False:
+				assert 'this does not work' == output_video_encoder
 
 		clear_temp_directory(target_path)
 
