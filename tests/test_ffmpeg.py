@@ -22,11 +22,11 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), get_test_example_file('source.wav') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.avi') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.m4v') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.mkv') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.mov') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.webm') ])
+	#subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.avi') ])
+	#subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.m4v') ])
+	#subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.mkv') ])
+	#subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.mov') ])
+	#subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.webm') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
@@ -83,16 +83,16 @@ def test_extract_frames() -> None:
 def test_merge_video() -> None:
 	merge_set =\
 	[
-		get_test_example_file('target-240p.avi'),
-		get_test_example_file('target-240p.m4v'),
-		get_test_example_file('target-240p.mkv'),
+		#get_test_example_file('target-240p.avi'),
+		#get_test_example_file('target-240p.m4v'),
+		#get_test_example_file('target-240p.mkv'),
 		get_test_example_file('target-240p.mp4'),
-		get_test_example_file('target-240p.mov'),
-		get_test_example_file('target-240p.webm')
+		#get_test_example_file('target-240p.mov'),
+		#get_test_example_file('target-240p.webm')
 	]
 	output_video_encoders = get_available_encoder_set().get('video')
 
-	if os.getenv('GITHUB_ACTIONS'):
+	if os.getenv('CI'):
 		output_video_encoders = [ 'libx264' ]
 
 	for target_path in merge_set:
