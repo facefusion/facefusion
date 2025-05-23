@@ -91,10 +91,11 @@ def test_merge_video() -> None:
 		get_test_example_file('target-240p.mov'),
 		get_test_example_file('target-240p.webm')
 	]
-	output_video_encoders = get_available_encoder_set().get('video')
 
 	if os.getenv('CI'):
 		output_video_encoders = [ 'libx264' ]
+	else:
+		output_video_encoders = get_available_encoder_set().get('video')
 
 	for target_path in merge_set:
 		for output_video_encoder in output_video_encoders:
