@@ -214,6 +214,12 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 	if output_file_format in [ 'm4v', 'mkv', 'mp4' ] and output_video_encoder == 'rawvideo':
 		output_video_encoder = 'libx264'
 
+	if output_file_format == 'm4v':
+		output_video_encoder = 'libx264'
+
+	if output_file_format == 'mov' and output_video_encoder == 'libvpx-vp9':
+		output_video_encoder = 'libx264'
+
 	if output_file_format == 'webm':
 		output_video_encoder = 'libvpx-vp9'
 
