@@ -383,10 +383,10 @@ def process_image(start_time : float) -> ErrorCode:
 		process_manager.end()
 		return 1
 
-	temp_file_path = get_temp_file_path(state_manager.get_item('target_path'))
+	temp_image_path = get_temp_file_path(state_manager.get_item('target_path'))
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.info(wording.get('processing'), processor_module.__name__)
-		processor_module.process_image(state_manager.get_item('source_paths'), temp_file_path, temp_file_path)
+		processor_module.process_image(state_manager.get_item('source_paths'), temp_image_path, temp_image_path)
 		processor_module.post_process()
 	if is_process_stopping():
 		process_manager.end()

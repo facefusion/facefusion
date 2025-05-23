@@ -119,21 +119,21 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 
 
 def copy_image(target_path : str, temp_image_resolution : str) -> bool:
-	temp_file_path = get_temp_file_path(target_path)
+	temp_image_path = get_temp_file_path(target_path)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
 		ffmpeg_builder.set_media_resolution(temp_image_resolution),
 		ffmpeg_builder.set_image_quality(target_path, 100),
-		ffmpeg_builder.force_output(temp_file_path)
+		ffmpeg_builder.force_output(temp_image_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
 
 
 def finalize_image(target_path : str, output_path : str, output_image_resolution : str) -> bool:
 	output_image_quality = state_manager.get_item('output_image_quality')
-	temp_file_path = get_temp_file_path(target_path)
+	temp_image_path = get_temp_file_path(target_path)
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_input(temp_file_path),
+		ffmpeg_builder.set_input(temp_image_path),
 		ffmpeg_builder.set_media_resolution(output_image_resolution),
 		ffmpeg_builder.set_image_quality(target_path, output_image_quality),
 		ffmpeg_builder.force_output(output_path)
@@ -163,11 +163,11 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_audio_volume = state_manager.get_item('output_audio_volume')
 	target_video_fps = detect_video_fps(target_path)
-	temp_file_path = get_temp_file_path(target_path)
-	temp_video_duration = detect_video_duration(temp_file_path)
+	temp_video_path = get_temp_file_path(target_path)
+	temp_video_duration = detect_video_duration(temp_video_path)
 
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_input(temp_file_path),
+		ffmpeg_builder.set_input(temp_video_path),
 		ffmpeg_builder.select_media_range(trim_frame_start, trim_frame_end, target_video_fps),
 		ffmpeg_builder.set_input(target_path),
 		ffmpeg_builder.copy_video_encoder(),
@@ -186,11 +186,11 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	output_audio_encoder = state_manager.get_item('output_audio_encoder')
 	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_audio_volume = state_manager.get_item('output_audio_volume')
-	temp_file_path = get_temp_file_path(target_path)
-	temp_video_duration = detect_video_duration(temp_file_path)
+	temp_video_path = get_temp_file_path(target_path)
+	temp_video_duration = detect_video_duration(temp_video_path)
 
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_input(temp_file_path),
+		ffmpeg_builder.set_input(temp_video_path),
 		ffmpeg_builder.set_input(audio_path),
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.set_audio_encoder(output_audio_encoder),
@@ -203,24 +203,24 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 
 
 def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution : str, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
-	output_file_format = get_file_format(target_path)
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
 	merge_frame_total = predict_video_frame_total(target_path, output_video_fps, trim_frame_start, trim_frame_end)
-	temp_file_path = get_temp_file_path(target_path)
+	temp_video_path = get_temp_file_path(target_path)
+	temp_video_format = get_file_format(temp_video_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 
-	if output_file_format == 'm4v':
+	if temp_video_format == 'm4v':
 		output_video_encoder = 'libx264'
 
-	if output_file_format in [ 'mkv', 'mp4' ] and output_video_encoder == 'rawvideo':
+	if temp_video_format in [ 'mkv', 'mp4' ] and output_video_encoder == 'rawvideo':
 		output_video_encoder = 'libx264'
 
-	if output_file_format == 'mov' and output_video_encoder == 'libvpx-vp9':
+	if temp_video_format == 'mov' and output_video_encoder == 'libvpx-vp9':
 		output_video_encoder = 'libx264'
 
-	if output_file_format == 'webm':
+	if temp_video_format == 'webm':
 		output_video_encoder = 'libvpx-vp9'
 
 	commands = ffmpeg_builder.chain(
@@ -233,7 +233,7 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 		ffmpeg_builder.set_video_fps(output_video_fps),
 		ffmpeg_builder.set_pixel_format(output_video_encoder),
 		ffmpeg_builder.set_video_colorspace('bt709'),
-		ffmpeg_builder.force_output(temp_file_path)
+		ffmpeg_builder.force_output(temp_video_path)
 	)
 
 	with tqdm(total = merge_frame_total, desc = wording.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
