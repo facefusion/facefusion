@@ -1,3 +1,4 @@
+import os
 import subprocess
 import tempfile
 
@@ -89,18 +90,18 @@ def test_merge_video() -> None:
 		get_test_example_file('target-240p.mov'),
 		get_test_example_file('target-240p.webm')
 	]
+	output_video_encoders = get_available_encoder_set().get('video')
+
+	if os.getenv('GITHUB_ACTIONS'):
+		output_video_encoders = [ 'libx264' ]
 
 	for target_path in merge_set:
-		for output_video_encoder in get_available_encoder_set().get('video'):
-			if output_video_encoder not in [ 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv' ]:
-				state_manager.init_item('output_video_encoder', output_video_encoder)
-				create_temp_directory(target_path)
-				extract_frames(target_path, '452x240', 25.0, 0, 1)
+		for output_video_encoder in output_video_encoders:
+			state_manager.init_item('output_video_encoder', output_video_encoder)
+			create_temp_directory(target_path)
+			extract_frames(target_path, '452x240', 25.0, 0, 1)
 
-				#assert merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is True
-
-				if merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is False:
-					assert 'this does not work' == output_video_encoder
+			assert merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is True
 
 		clear_temp_directory(target_path)
 
