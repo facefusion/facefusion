@@ -4,11 +4,13 @@ import tempfile
 
 import pytest
 
+import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, get_available_encoder_set, merge_video, read_audio_buffer, replace_audio, restore_audio
+from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio
 from facefusion.filesystem import copy_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
+from facefusion.types import EncoderSet
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -47,7 +49,17 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-@pytest.mark.skip()
+@pytest.mark.stub
+def get_available_encoder_set() -> EncoderSet:
+	if os.getenv('CI'):
+		return\
+		{
+			'audio': [ 'aac' ],
+			'video': [ 'libx264' ]
+		}
+	return facefusion.ffmpeg.get_available_encoder_set()
+
+
 def test_get_available_encoder_set() -> None:
 	available_encoder_set = get_available_encoder_set()
 
@@ -91,11 +103,7 @@ def test_merge_video() -> None:
 		get_test_example_file('target-240p.mov'),
 		get_test_example_file('target-240p.webm')
 	]
-
-	if os.getenv('CI'):
-		output_video_encoders = [ 'libx264' ]
-	else:
-		output_video_encoders = get_available_encoder_set().get('video')
+	output_video_encoders = get_available_encoder_set().get('video')
 
 	for target_path in merge_set:
 		for output_video_encoder in output_video_encoders:
@@ -134,14 +142,19 @@ def test_restore_audio() -> None:
 		get_test_example_file('target-240p-48khz.mp4')
 	]
 	output_path = get_test_output_file('test-restore-audio.mp4')
+	output_video_encoders = get_available_encoder_set().get('video')
 
 	for target_path in target_paths:
-		create_temp_directory(target_path)
-		copy_file(target_path, get_temp_file_path(target_path))
+		for output_video_encoder in output_video_encoders:
+			state_manager.init_item('output_video_encoder', output_video_encoder)
+			create_temp_directory(target_path)
+			copy_file(target_path, get_temp_file_path(target_path))
 
-		assert restore_audio(target_path, output_path, 0, 270) is True
+			assert restore_audio(target_path, output_path, 0, 270) is True
 
 		clear_temp_directory(target_path)
+
+	state_manager.init_item('output_video_encoder', 'libx264')
 
 
 def test_replace_audio() -> None:
