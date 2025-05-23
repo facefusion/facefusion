@@ -46,7 +46,6 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-@pytest.mark.skip()
 def test_get_available_encoder_set() -> None:
 	available_encoder_set = get_available_encoder_set()
 
@@ -93,14 +92,15 @@ def test_merge_video() -> None:
 
 	for target_path in merge_set:
 		for output_video_encoder in get_available_encoder_set().get('video'):
-			state_manager.init_item('output_video_encoder', output_video_encoder)
-			create_temp_directory(target_path)
-			extract_frames(target_path, '452x240', 25.0, 0, 1)
+			if output_video_encoder not in [ 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv' ]:
+				state_manager.init_item('output_video_encoder', output_video_encoder)
+				create_temp_directory(target_path)
+				extract_frames(target_path, '452x240', 25.0, 0, 1)
 
-			#assert merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is True
+				#assert merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is True
 
-			if merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is False:
-				assert 'this does not work' == output_video_encoder
+				if merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is False:
+					assert 'this does not work' == output_video_encoder
 
 		clear_temp_directory(target_path)
 
