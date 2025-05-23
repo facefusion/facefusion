@@ -22,6 +22,8 @@ def before_all() -> None:
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), get_test_example_file('source.wav') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.avi') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.m4v') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.mkv') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.mov') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.webm') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
@@ -81,18 +83,19 @@ def test_extract_frames() -> None:
 def test_merge_video() -> None:
 	merge_set =\
 	[
-		(get_test_example_file('target-240p.avi'), 'libx264'),
-		(get_test_example_file('target-240p.mov'), 'libx264'),
-		(get_test_example_file('target-240p.mp4'), 'libx264'),
-		(get_test_example_file('target-240p.mp4'), 'rawvideo'),
-		(get_test_example_file('target-240p.webm'), 'libx264'),
-		(get_test_example_file('target-240p.webm'), 'rawvideo')
+		get_test_example_file('target-240p.avi'),
+		get_test_example_file('target-240p.m4v'),
+		get_test_example_file('target-240p.mkv'),
+		get_test_example_file('target-240p.mp4'),
+		get_test_example_file('target-240p.mov'),
+		get_test_example_file('target-240p.webm')
 	]
 
-	for target_path, output_video_encoder in merge_set:
-		state_manager.init_item('output_video_encoder', output_video_encoder)
-		create_temp_directory(target_path)
-		extract_frames(target_path, '452x240', 25.0, 0, 1)
+	for target_path in merge_set:
+		for output_video_encoder in get_available_encoder_set().get('video'):
+			state_manager.init_item('output_video_encoder', output_video_encoder)
+			create_temp_directory(target_path)
+			extract_frames(target_path, '452x240', 25.0, 0, 1)
 
 		assert merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is True
 

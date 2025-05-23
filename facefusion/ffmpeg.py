@@ -211,7 +211,7 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 	temp_file_path = get_temp_file_path(target_path)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 
-	if output_file_format == 'mp4' and output_video_encoder == 'rawvideo':
+	if output_file_format in [ 'm4v', 'mkv', 'mp4' ] and output_video_encoder == 'rawvideo':
 		output_video_encoder = 'libx264'
 
 	if output_file_format == 'webm':
