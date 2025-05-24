@@ -24,15 +24,11 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), get_test_example_file('source.wav') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.avi') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.m4v') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.mkv') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.mov') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.webm') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '16000', get_test_example_file('target-240p-16khz.mp4') ])
+	for output_video_format in [ 'avi', 'm4v', 'mkv', 'mov', 'mp4', 'webm' ]:
+		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '16000', get_test_example_file('target-240p-16khz.' + output_video_format) ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '48000', get_test_example_file('target-240p-48khz.mp4') ])
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
@@ -94,18 +90,18 @@ def test_extract_frames() -> None:
 
 
 def test_merge_video() -> None:
-	merge_set =\
+	target_paths =\
 	[
-		get_test_example_file('target-240p.avi'),
-		get_test_example_file('target-240p.m4v'),
-		get_test_example_file('target-240p.mkv'),
-		get_test_example_file('target-240p.mp4'),
-		get_test_example_file('target-240p.mov'),
-		get_test_example_file('target-240p.webm')
+		get_test_example_file('target-240p-16khz.avi'),
+		get_test_example_file('target-240p-16khz.m4v'),
+		get_test_example_file('target-240p-16khz.mkv'),
+		get_test_example_file('target-240p-16khz.mp4'),
+		get_test_example_file('target-240p-16khz.mov'),
+		get_test_example_file('target-240p-16khz.webm')
 	]
 	output_video_encoders = get_available_encoder_set().get('video')
 
-	for target_path in merge_set:
+	for target_path in target_paths:
 		for output_video_encoder in output_video_encoders:
 			state_manager.init_item('output_video_encoder', output_video_encoder)
 			create_temp_directory(target_path)
@@ -122,8 +118,8 @@ def test_concat_video() -> None:
 	output_path = get_test_output_file('test-concat-video.mp4')
 	temp_output_paths =\
 	[
-		get_test_example_file('target-240p.mp4'),
-		get_test_example_file('target-240p.mp4')
+		get_test_example_file('target-240p-16khz.mp4'),
+		get_test_example_file('target-240p-16khz.mp4')
 	]
 
 	assert concat_video(output_path, temp_output_paths) is True
@@ -138,15 +134,20 @@ def test_read_audio_buffer() -> None:
 def test_restore_audio() -> None:
 	target_paths =\
 	[
+		get_test_example_file('target-240p-16khz.avi'),
+		get_test_example_file('target-240p-16khz.m4v'),
+		get_test_example_file('target-240p-16khz.mkv'),
+		get_test_example_file('target-240p-16khz.mov'),
 		get_test_example_file('target-240p-16khz.mp4'),
-		get_test_example_file('target-240p-48khz.mp4')
+		get_test_example_file('target-240p-48khz.mp4'),
+		get_test_example_file('target-240p-16khz.webm')
 	]
 	output_path = get_test_output_file('test-restore-audio.mp4')
-	output_video_encoders = get_available_encoder_set().get('video')
+	output_audio_encoders = get_available_encoder_set().get('audio')
 
 	for target_path in target_paths:
-		for output_video_encoder in output_video_encoders:
-			state_manager.init_item('output_video_encoder', output_video_encoder)
+		for output_audio_encoder in output_audio_encoders:
+			state_manager.init_item('output_audio_encoder', output_audio_encoder)
 			create_temp_directory(target_path)
 			copy_file(target_path, get_temp_file_path(target_path))
 
@@ -154,17 +155,32 @@ def test_restore_audio() -> None:
 
 		clear_temp_directory(target_path)
 
-	state_manager.init_item('output_video_encoder', 'libx264')
+	state_manager.init_item('output_audio_encoder', 'aac')
 
 
 def test_replace_audio() -> None:
-	target_path = get_test_example_file('target-240p.mp4')
+	target_paths =\
+	[
+		get_test_example_file('target-240p-16khz.avi'),
+		get_test_example_file('target-240p-16khz.m4v'),
+		get_test_example_file('target-240p-16khz.mkv'),
+		get_test_example_file('target-240p-16khz.mov'),
+		get_test_example_file('target-240p-16khz.mp4'),
+		get_test_example_file('target-240p-48khz.mp4'),
+		get_test_example_file('target-240p-16khz.webm')
+	]
 	output_path = get_test_output_file('test-replace-audio.mp4')
+	output_audio_encoders = get_available_encoder_set().get('audio')
 
-	create_temp_directory(target_path)
-	copy_file(target_path, get_temp_file_path(target_path))
+	for target_path in target_paths:
+		for output_audio_encoder in output_audio_encoders:
+			state_manager.init_item('output_audio_encoder', output_audio_encoder)
+			create_temp_directory(target_path)
+			copy_file(target_path, get_temp_file_path(target_path))
 
-	assert replace_audio(target_path, get_test_example_file('source.mp3'), output_path) is True
-	assert replace_audio(target_path, get_test_example_file('source.wav'), output_path) is True
+			assert replace_audio(target_path, get_test_example_file('source.mp3'), output_path) is True
+			assert replace_audio(target_path, get_test_example_file('source.wav'), output_path) is True
 
-	clear_temp_directory(target_path)
+		clear_temp_directory(target_path)
+
+	state_manager.init_item('output_audio_encoder', 'aac')
