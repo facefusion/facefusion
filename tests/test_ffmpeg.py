@@ -131,20 +131,19 @@ def test_read_audio_buffer() -> None:
 
 
 def test_restore_audio() -> None:
-	target_paths =\
+	restore_set =\
 	[
-		get_test_example_file('target-240p-16khz.avi'),
-		get_test_example_file('target-240p-16khz.m4v'),
-		get_test_example_file('target-240p-16khz.mkv'),
-		get_test_example_file('target-240p-16khz.mov'),
-		get_test_example_file('target-240p-16khz.mp4'),
-		get_test_example_file('target-240p-48khz.mp4'),
-		get_test_example_file('target-240p-16khz.webm')
+		(get_test_example_file('target-240p-16khz.avi'), get_test_output_file('target-240p-16khz.avi')),
+		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_file('target-240p-16khz.m4v')),
+		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_file('target-240p-16khz.mkv')),
+		(get_test_example_file('target-240p-16khz.mov'), get_test_output_file('target-240p-16khz.mov')),
+		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_file('target-240p-16khz.mp4')),
+		(get_test_example_file('target-240p-48khz.mp4'), get_test_output_file('target-240p-48khz.mp4')),
+		(get_test_example_file('target-240p-16khz.webm'), get_test_output_file('target-240p-16khz.webm'))
 	]
-	output_path = get_test_output_file('test-restore-audio.mp4')
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
-	for target_path in target_paths:
+	for target_path, output_path in restore_set:
 		create_temp_directory(target_path)
 
 		for output_audio_encoder in output_audio_encoders:
@@ -160,20 +159,19 @@ def test_restore_audio() -> None:
 
 
 def test_replace_audio() -> None:
-	target_paths =\
+	replace_set =\
 	[
-		get_test_example_file('target-240p-16khz.avi'),
-		get_test_example_file('target-240p-16khz.m4v'),
-		get_test_example_file('target-240p-16khz.mkv'),
-		get_test_example_file('target-240p-16khz.mov'),
-		get_test_example_file('target-240p-16khz.mp4'),
-		get_test_example_file('target-240p-48khz.mp4'),
-		get_test_example_file('target-240p-16khz.webm')
+		(get_test_example_file('target-240p-16khz.avi'), get_test_output_file('target-240p-16khz.avi')),
+		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_file('target-240p-16khz.m4v')),
+		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_file('target-240p-16khz.mkv')),
+		(get_test_example_file('target-240p-16khz.mov'), get_test_output_file('target-240p-16khz.mov')),
+		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_file('target-240p-16khz.mp4')),
+		(get_test_example_file('target-240p-48khz.mp4'), get_test_output_file('target-240p-48khz.mp4')),
+		(get_test_example_file('target-240p-16khz.webm'), get_test_output_file('target-240p-16khz.webm'))
 	]
-	output_path = get_test_output_file('test-replace-audio.mp4')
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
-	for target_path in target_paths:
+	for target_path, output_path in replace_set:
 		create_temp_directory(target_path)
 
 		for output_audio_encoder in output_audio_encoders:

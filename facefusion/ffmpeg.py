@@ -167,8 +167,8 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 	temp_video_format = get_file_format(temp_video_path)
 	temp_video_duration = detect_video_duration(temp_video_path)
 
-	if temp_video_format in [ 'avi', 'mov' ] and output_audio_encoder == 'flac':
-		output_audio_encoder = 'aac'
+	if temp_video_format == 'webm':
+		output_audio_encoder = 'libopus'
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_video_path),
@@ -194,8 +194,8 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	temp_video_format = get_file_format(temp_video_path)
 	temp_video_duration = detect_video_duration(temp_video_path)
 
-	if temp_video_format in [ 'avi', 'mov' ] and output_audio_encoder == 'flac':
-		output_audio_encoder = 'aac'
+	if temp_video_format == 'webm':
+		output_audio_encoder = 'libopus'
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_video_path),
