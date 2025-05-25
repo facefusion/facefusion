@@ -1,5 +1,5 @@
-from facefusion.common_helper import is_linux, is_macos
-from facefusion.memory import limit_system_memory
+from testingss.common_helper import is_linux, is_macos
+from testingss.memory import limit_system_memory
 
 
 def test_limit_system_memory() -> None:

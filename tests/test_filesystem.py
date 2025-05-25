@@ -2,8 +2,8 @@ import os.path
 
 import pytest
 
-from facefusion.download import conditional_download
-from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_extension, get_file_format, get_file_size, has_audio, has_image, has_video, in_directory, is_audio, is_directory, is_file, is_image, is_video, remove_directory, resolve_file_paths, same_file_extension
+from testingss.download import conditional_download
+from testingss.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_extension, get_file_format, get_file_size, has_audio, has_image, has_video, in_directory, is_audio, is_directory, is_file, is_image, is_video, remove_directory, resolve_file_paths, same_file_extension
 from .helper import get_test_example_file, get_test_examples_directory, get_test_outputs_directory
 
 
@@ -11,9 +11,9 @@ from .helper import get_test_example_file, get_test_examples_directory, get_test
 def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
+		'https://github.com/testingss/testingss-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/testingss/testingss-assets/releases/download/examples-3.0.0/source.mp3',
+		'https://github.com/testingss/testingss-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 
 

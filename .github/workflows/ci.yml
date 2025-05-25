@@ -15,10 +15,10 @@ jobs:
   - run: pip install flake8
   - run: pip install flake8-import-order
   - run: pip install mypy
-  - run: flake8 facefusion.py install.py
-  - run: flake8 facefusion tests
-  - run: mypy facefusion.py install.py
-  - run: mypy facefusion tests
+  - run: flake8 testingss.py install.py
+  - run: flake8 testingss tests
+  - run: mypy testingss.py install.py
+  - run: mypy testingss tests
  test:
   strategy:
    matrix:
@@ -52,7 +52,7 @@ jobs:
   - run: pip install coveralls
   - run: pip install pytest
   - run: pip install pytest-cov
-  - run: pytest tests --cov facefusion
+  - run: pytest tests --cov testingss
   - run: coveralls --service github
     env:
      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

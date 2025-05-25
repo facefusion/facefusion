@@ -2,11 +2,11 @@ import subprocess
 
 import pytest
 
-from facefusion.download import conditional_download
-from facefusion.filesystem import copy_file
-from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, submit_job, submit_jobs
-from facefusion.jobs.job_runner import collect_output_set, finalize_steps, run_job, run_jobs, run_steps
-from facefusion.types import Args
+from testingss.download import conditional_download
+from testingss.filesystem import copy_file
+from testingss.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, submit_job, submit_jobs
+from testingss.jobs.job_runner import collect_output_set, finalize_steps, run_job, run_jobs, run_steps
+from testingss.types import Args
 from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_output_file, prepare_test_output_directory
 
 
@@ -14,8 +14,8 @@ from .helper import get_test_example_file, get_test_examples_directory, get_test
 def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
+		'https://github.com/testingss/testingss-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/testingss/testingss-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
 

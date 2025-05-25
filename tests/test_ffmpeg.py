@@ -3,11 +3,11 @@ import tempfile
 
 import pytest
 
-from facefusion import process_manager, state_manager
-from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, get_available_encoder_set, read_audio_buffer, replace_audio, restore_audio
-from facefusion.filesystem import copy_file
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
+from testingss import process_manager, state_manager
+from testingss.download import conditional_download
+from testingss.ffmpeg import concat_video, extract_frames, get_available_encoder_set, read_audio_buffer, replace_audio, restore_audio
+from testingss.filesystem import copy_file
+from testingss.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -16,9 +16,9 @@ def before_all() -> None:
 	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
+		'https://github.com/testingss/testingss-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/testingss/testingss-assets/releases/download/examples-3.0.0/source.mp3',
+		'https://github.com/testingss/testingss-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), get_test_example_file('source.wav') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])

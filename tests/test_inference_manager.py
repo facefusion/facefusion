@@ -3,8 +3,8 @@ from unittest.mock import patch
 import pytest
 from onnxruntime import InferenceSession
 
-from facefusion import content_analyser, state_manager
-from facefusion.inference_manager import INFERENCE_POOL_SET, get_inference_pool
+from testingss import content_analyser, state_manager
+from testingss.inference_manager import INFERENCE_POOL_SET, get_inference_pool
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -19,14 +19,14 @@ def test_get_inference_pool() -> None:
 	model_names = [ 'yolo_nsfw' ]
 	model_source_set = content_analyser.get_model_options().get('sources')
 
-	with patch('facefusion.inference_manager.detect_app_context', return_value = 'cli'):
-		get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
+	with patch('testingss.inference_manager.detect_app_context', return_value = 'cli'):
+		get_inference_pool('testingss.content_analyser', model_names, model_source_set)
 
-		assert isinstance(INFERENCE_POOL_SET.get('cli').get('facefusion.content_analyser.yolo_nsfw.0.cpu').get('content_analyser'), InferenceSession)
+		assert isinstance(INFERENCE_POOL_SET.get('cli').get('testingss.content_analyser.yolo_nsfw.0.cpu').get('content_analyser'), InferenceSession)
 
-	with patch('facefusion.inference_manager.detect_app_context', return_value = 'ui'):
-		get_inference_pool('facefusion.content_analyser', model_names, model_source_set)
+	with patch('testingss.inference_manager.detect_app_context', return_value = 'ui'):
+		get_inference_pool('testingss.content_analyser', model_names, model_source_set)
 
-		assert isinstance(INFERENCE_POOL_SET.get('ui').get('facefusion.content_analyser.yolo_nsfw.0.cpu').get('content_analyser'), InferenceSession)
+		assert isinstance(INFERENCE_POOL_SET.get('ui').get('testingss.content_analyser.yolo_nsfw.0.cpu').get('content_analyser'), InferenceSession)
 
-	assert INFERENCE_POOL_SET.get('cli').get('facefusion.content_analyser.yolo_nsfw.0.cpu').get('content_analyser') == INFERENCE_POOL_SET.get('ui').get('facefusion.content_analyser.yolo_nsfw.0.cpu').get('content_analyser')
+	assert INFERENCE_POOL_SET.get('cli').get('testingss.content_analyser.yolo_nsfw.0.cpu').get('content_analyser') == INFERENCE_POOL_SET.get('ui').get('testingss.content_analyser.yolo_nsfw.0.cpu').get('content_analyser')

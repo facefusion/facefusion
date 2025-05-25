@@ -2,11 +2,11 @@ import subprocess
 
 import pytest
 
-from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
-from facefusion.download import conditional_download
-from facefusion.face_analyser import get_many_faces, get_one_face
-from facefusion.types import Face
-from facefusion.vision import read_static_image
+from testingss import face_classifier, face_detector, face_landmarker, face_recognizer, state_manager
+from testingss.download import conditional_download
+from testingss.face_analyser import get_many_faces, get_one_face
+from testingss.types import Face
+from testingss.vision import read_static_image
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -14,7 +14,7 @@ from .helper import get_test_example_file, get_test_examples_directory
 def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
+		'https://github.com/testingss/testingss-assets/releases/download/examples-3.0.0/source.jpg'
 	])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.8:ih*0.8', get_test_example_file('source-80crop.jpg') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.7:ih*0.7', get_test_example_file('source-70crop.jpg') ])
