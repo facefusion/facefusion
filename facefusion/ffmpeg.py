@@ -1,7 +1,7 @@
 import os
 import subprocess
 import tempfile
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from tqdm import tqdm
 
@@ -9,7 +9,7 @@ import facefusion.choices
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
-from facefusion.types import AudioBuffer, Commands, EncoderSet, Fps, UpdateProgress
+from facefusion.types import AudioBuffer, AudioEncoder, Commands, EncoderSet, Fps, UpdateProgress, VideoEncoder, VideoFormat
 from facefusion.vision import detect_video_duration, detect_video_fps, predict_video_frame_total
 
 
@@ -164,12 +164,10 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 	output_audio_volume = state_manager.get_item('output_audio_volume')
 	target_video_fps = detect_video_fps(target_path)
 	temp_video_path = get_temp_file_path(target_path)
-	temp_video_format = get_file_format(temp_video_path)
+	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
 	temp_video_duration = detect_video_duration(temp_video_path)
 
-	if temp_video_format == 'webm':
-		output_audio_encoder = 'libopus'
-
+	output_audio_encoder = fix_audio_encoder(temp_video_format, output_audio_encoder)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_video_path),
 		ffmpeg_builder.select_media_range(trim_frame_start, trim_frame_end, target_video_fps),
@@ -191,12 +189,10 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_audio_volume = state_manager.get_item('output_audio_volume')
 	temp_video_path = get_temp_file_path(target_path)
-	temp_video_format = get_file_format(temp_video_path)
+	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
 	temp_video_duration = detect_video_duration(temp_video_path)
 
-	if temp_video_format == 'webm':
-		output_audio_encoder = 'libopus'
-
+	output_audio_encoder = fix_audio_encoder(temp_video_format, output_audio_encoder)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_video_path),
 		ffmpeg_builder.set_input(audio_path),
@@ -216,21 +212,10 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 	output_video_preset = state_manager.get_item('output_video_preset')
 	merge_frame_total = predict_video_frame_total(target_path, output_video_fps, trim_frame_start, trim_frame_end)
 	temp_video_path = get_temp_file_path(target_path)
-	temp_video_format = get_file_format(temp_video_path)
+	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 
-	if temp_video_format == 'm4v':
-		output_video_encoder = 'libx264'
-
-	if temp_video_format in [ 'mkv', 'mp4' ] and output_video_encoder == 'rawvideo':
-		output_video_encoder = 'libx264'
-
-	if temp_video_format == 'mov' and output_video_encoder == 'libvpx-vp9':
-		output_video_encoder = 'libx264'
-
-	if temp_video_format == 'webm':
-		output_video_encoder = 'libvpx-vp9'
-
+	output_video_encoder = fix_video_encoder(temp_video_format, output_video_encoder)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_conditional_fps(temp_video_fps),
 		ffmpeg_builder.set_input(temp_frames_pattern),
@@ -270,3 +255,35 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	process.communicate()
 	remove_file(concat_video_path)
 	return process.returncode == 0
+
+
+def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:
+	if video_format == 'avi' and audio_encoder == 'libopus':
+		return 'aac'
+
+	if video_format == 'm4v':
+		return 'aac'
+
+	if video_format == 'mov' and audio_encoder in [ 'flac', 'libopus' ]:
+		return 'aac'
+
+	if video_format == 'webm':
+		return 'libopus'
+
+	return audio_encoder
+
+
+def fix_video_encoder(video_format : VideoFormat, video_encoder : VideoEncoder) -> VideoEncoder:
+	if video_format == 'm4v':
+		return 'libx264'
+
+	if video_format in [ 'mkv', 'mp4' ] and video_encoder == 'rawvideo':
+		return 'libx264'
+
+	if video_format == 'mov' and video_encoder == 'libvpx-vp9':
+		return 'libx264'
+
+	if video_format == 'webm':
+		return 'libvpx-vp9'
+
+	return video_encoder

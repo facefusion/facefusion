@@ -9,9 +9,11 @@ from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio
 from facefusion.filesystem import copy_file
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, \
+	resolve_temp_frame_paths
 from facefusion.types import EncoderSet
-from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
+from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, \
+	prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -63,7 +65,7 @@ def test_get_available_encoder_set() -> None:
 
 
 def test_extract_frames() -> None:
-	extract_set =\
+	test_set =\
 	[
 		(get_test_example_file('target-240p-25fps.mp4'), 0, 270, 324),
 		(get_test_example_file('target-240p-25fps.mp4'), 224, 270, 55),
@@ -79,7 +81,7 @@ def test_extract_frames() -> None:
 		(get_test_example_file('target-240p-60fps.mp4'), 0, 100, 50)
 	]
 
-	for target_path, trim_frame_start, trim_frame_end, frame_total in extract_set:
+	for target_path, trim_frame_start, trim_frame_end, frame_total in test_set:
 		create_temp_directory(target_path)
 
 		assert extract_frames(target_path, '452x240', 30.0, trim_frame_start, trim_frame_end) is True
@@ -131,7 +133,7 @@ def test_read_audio_buffer() -> None:
 
 
 def test_restore_audio() -> None:
-	restore_set =\
+	test_set =\
 	[
 		(get_test_example_file('target-240p-16khz.avi'), get_test_output_file('target-240p-16khz.avi')),
 		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_file('target-240p-16khz.m4v')),
@@ -143,12 +145,11 @@ def test_restore_audio() -> None:
 	]
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
-	for target_path, output_path in restore_set:
+	for target_path, output_path in test_set:
 		create_temp_directory(target_path)
 
 		for output_audio_encoder in output_audio_encoders:
 			state_manager.init_item('output_audio_encoder', output_audio_encoder)
-
 			copy_file(target_path, get_temp_file_path(target_path))
 
 			assert restore_audio(target_path, output_path, 0, 270) is True
@@ -159,7 +160,7 @@ def test_restore_audio() -> None:
 
 
 def test_replace_audio() -> None:
-	replace_set =\
+	test_set =\
 	[
 		(get_test_example_file('target-240p-16khz.avi'), get_test_output_file('target-240p-16khz.avi')),
 		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_file('target-240p-16khz.m4v')),
@@ -171,7 +172,7 @@ def test_replace_audio() -> None:
 	]
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
-	for target_path, output_path in replace_set:
+	for target_path, output_path in test_set:
 		create_temp_directory(target_path)
 
 		for output_audio_encoder in output_audio_encoders:
