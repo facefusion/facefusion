@@ -260,30 +260,22 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:
 	if video_format == 'avi' and audio_encoder == 'libopus':
 		return 'aac'
-
 	if video_format == 'm4v':
 		return 'aac'
-
 	if video_format == 'mov' and audio_encoder in [ 'flac', 'libopus' ]:
 		return 'aac'
-
 	if video_format == 'webm':
 		return 'libopus'
-
 	return audio_encoder
 
 
 def fix_video_encoder(video_format : VideoFormat, video_encoder : VideoEncoder) -> VideoEncoder:
 	if video_format == 'm4v':
 		return 'libx264'
-
 	if video_format in [ 'mkv', 'mp4' ] and video_encoder == 'rawvideo':
 		return 'libx264'
-
 	if video_format == 'mov' and video_encoder == 'libvpx-vp9':
 		return 'libx264'
-
 	if video_format == 'webm':
 		return 'libvpx-vp9'
-
 	return video_encoder
