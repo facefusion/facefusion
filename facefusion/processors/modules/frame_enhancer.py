@@ -400,7 +400,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/ultra_sharp_2_x4.onnx')
 				}
 			},
-			'size': (128, 8, 4),
+			'size': (1024, 64, 32),
 			'scale': 4
 		}
 	}
