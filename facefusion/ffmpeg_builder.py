@@ -21,7 +21,7 @@ def get_encoders() -> Commands:
 
 
 def set_hardware_accelerator(value : str) -> Commands:
-	return  [ '-hwaccel', value ]
+	return [ '-hwaccel', value ]
 
 
 def set_progress() -> Commands:

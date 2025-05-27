@@ -105,7 +105,6 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 	extract_frame_total = predict_video_frame_total(target_path, temp_video_fps, trim_frame_start, trim_frame_end)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_hardware_accelerator('auto'),
 		ffmpeg_builder.set_input(target_path),
 		ffmpeg_builder.set_media_resolution(temp_video_resolution),
 		ffmpeg_builder.set_frame_quality(0),
@@ -170,7 +169,6 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 
 	output_audio_encoder = fix_audio_encoder(temp_video_format, output_audio_encoder)
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_hardware_accelerator('auto'),
 		ffmpeg_builder.set_input(temp_video_path),
 		ffmpeg_builder.select_media_range(trim_frame_start, trim_frame_end, target_video_fps),
 		ffmpeg_builder.set_input(target_path),
@@ -196,7 +194,6 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 
 	output_audio_encoder = fix_audio_encoder(temp_video_format, output_audio_encoder)
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_hardware_accelerator('auto'),
 		ffmpeg_builder.set_input(temp_video_path),
 		ffmpeg_builder.set_input(audio_path),
 		ffmpeg_builder.copy_video_encoder(),
@@ -220,7 +217,6 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 
 	output_video_encoder = fix_video_encoder(temp_video_format, output_video_encoder)
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_hardware_accelerator('auto'),
 		ffmpeg_builder.set_input_fps(temp_video_fps),
 		ffmpeg_builder.set_input(temp_frames_pattern),
 		ffmpeg_builder.set_media_resolution(output_video_resolution),
