@@ -20,6 +20,10 @@ def get_encoders() -> Commands:
 	return [ '-encoders' ]
 
 
+def set_hardware_accelerator(value : str) -> Commands:
+	return  [ '-hwaccel', value ]
+
+
 def set_progress() -> Commands:
 	return [ '-progress' ]
 
@@ -28,8 +32,8 @@ def set_input(input_path : str) -> Commands:
 	return [ '-i', input_path ]
 
 
-def set_conditional_fps(conditional_fps : Fps) -> Commands:
-	return [ '-r', str(conditional_fps) ]
+def set_input_fps(input_fps : Fps) -> Commands:
+	return [ '-r', str(input_fps)]
 
 
 def set_output(output_path : str) -> Commands:

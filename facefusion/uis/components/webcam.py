@@ -166,7 +166,7 @@ def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.capture_video(),
 		ffmpeg_builder.set_media_resolution(stream_resolution),
-		ffmpeg_builder.set_conditional_fps(stream_fps)
+		ffmpeg_builder.set_input_fps(stream_fps)
 	)
 
 	if stream_mode == 'udp':
