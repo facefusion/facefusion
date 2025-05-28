@@ -62,6 +62,8 @@ def create_inference_session_providers(execution_device_id : str, execution_prov
 		if execution_provider == 'coreml':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
+				'MLComputeUnits': 'ALL',
+				'EnableOnSubgraphs': '1',
 				'SpecializationStrategy': 'FastPrediction',
 				'ModelCacheDirectory': '.caches'
 			}))
