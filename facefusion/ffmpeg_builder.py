@@ -56,6 +56,10 @@ def set_stream_mode(stream_mode : StreamMode) -> Commands:
 	return []
 
 
+def set_stream_quality(stream_quality : int) -> Commands:
+	return [ '-b:v', str(stream_quality) + 'k' ]
+
+
 def unsafe_concat() -> Commands:
 	return [ '-f', 'concat', '-safe', '0' ]
 

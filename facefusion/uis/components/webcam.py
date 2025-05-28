@@ -173,6 +173,7 @@ def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : 
 	if stream_mode == 'udp':
 		commands.extend(ffmpeg_builder.set_input('-'))
 		commands.extend(ffmpeg_builder.set_stream_mode('udp'))
+		commands.extend(ffmpeg_builder.set_stream_quality(2000)),
 		commands.extend(ffmpeg_builder.set_output('udp://localhost:27000?pkt_size=1316'))
 
 	if stream_mode == 'v4l2':
