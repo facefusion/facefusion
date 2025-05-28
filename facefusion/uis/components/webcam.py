@@ -107,8 +107,9 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 		webcam_capture.set(cv2.CAP_PROP_FPS, webcam_fps)
 
 		for capture_frame in multi_process_capture(source_face, webcam_capture, webcam_fps):
+			capture_frame = normalize_frame_color(capture_frame)
 			if webcam_mode == 'inline':
-				yield normalize_frame_color(capture_frame)
+				yield capture_frame
 			else:
 				try:
 					stream.stdin.write(capture_frame.tobytes())
