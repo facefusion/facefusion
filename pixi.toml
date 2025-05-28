@@ -1,0 +1,61 @@
+[workspace]
+authors = ["Kazuki Nakai <48890992+kazukinakai@users.noreply.github.com>"]
+channels = ["conda-forge"]
+name = "facefusion"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[activation.env]
+ORT_COREML_FLAGS = "COREML_FLAG_ENABLE_ON_SUBGRAPH|COREML_FLAG_ONLY_ENABLE_DEVICE_WITH_ANE"
+ORT_COREML_EP_PRECISION = "fp16"
+COREML_PREFER_GPU = "1"
+PYTORCH_MPS_HIGH_WATERMARK_RATIO = "0.0"
+PYTORCH_ENABLE_MPS_FALLBACK = "1"
+NPY_BLAS_ORDER = "accelerate"
+NPY_LAPACK_ORDER = "accelerate"
+SCIPY_USE_ACCELERATE = "1"
+OPENCV_USE_ACCELERATE = "1"
+
+[tasks]
+run = "python facefusion.py run --open-browser"
+check-providers = "python -c 'import onnxruntime as ort; print(\"Available providers:\", ort.get_available_providers())'"
+check-versions = "python -c 'import sys, onnxruntime, torch, numpy, cv2, coremltools; print(f\"Python: {sys.version}\"); print(f\"ONNX Runtime: {onnxruntime.__version__}\"); print(f\"PyTorch: {torch.__version__}\"); print(f\"NumPy: {numpy.__version__}\"); print(f\"OpenCV: {cv2.__version__}\"); print(f\"CoreMLTools: {coremltools.__version__}\")'"
+check-accelerate = "python -c 'import numpy as np; config = np.__config__; print(\"NumPy BLAS info:\"); print(config.show())'"
+
+[dependencies]
+python = "3.12.*"
+libblas = { version = "*", build = "*accelerate" }
+libcblas = { version = "*", build = "*accelerate" }
+liblapack = { version = "*", build = "*accelerate" }
+numpy = "*"
+scipy = "*"
+psutil = ">=7.0.0,<8"
+tqdm = ">=4.67.1,<5"
+ffmpeg = "*"
+pip = "*"
+
+[pypi-dependencies]
+onnxruntime = ">=1.22.0"
+gradio = "==5.25.2"
+gradio-rangeslider = "==0.0.8"
+onnx = "==1.17.0"
+torch = ">=2.0"
+torchvision = "*"
+torchaudio = "*"
+insightface = "*"
+coremltools = ">=8.0"
+protobuf = ">=3.20.0"
+opencv-python = ">=4.10.0"
+filetype = "*"
+pydantic = "*"
+
+[feature.benchmark.dependencies]
+matplotlib = "*"
+seaborn = "*"
+
+[feature.benchmark.tasks]
+benchmark = "python -c 'import numpy as np, time; sizes=[512,1024,2048]; times=[]; [times.append((lambda s: (time.time(), np.dot(np.random.rand(s,s), np.random.rand(s,s)), time.time())[-1] - (lambda s: (time.time(), np.dot(np.random.rand(s,s), np.random.rand(s,s)), time.time()))[0])(s)) for s in sizes]; print(\"Matrix sizes:\", sizes); print(\"Times (s):\", times)'"
+
+[environments]
+default = { solve-group = "main" }
+benchmark = { features = ["benchmark"], solve-group = "main" }
