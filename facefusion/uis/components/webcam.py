@@ -176,9 +176,9 @@ def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : 
 
 	if stream_mode == 'v4l2':
 		device_directory_path = '/sys/devices/virtual/video4linux'
-
 		commands.extend(ffmpeg_builder.set_input('-'))
 		commands.extend(ffmpeg_builder.set_stream_mode('v4l2'))
+
 		if is_directory(device_directory_path):
 			device_names = os.listdir(device_directory_path)
 

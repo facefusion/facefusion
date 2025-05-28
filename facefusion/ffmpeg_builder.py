@@ -209,7 +209,7 @@ def set_video_duration(video_duration : Duration) -> Commands:
 
 
 def capture_video() -> Commands:
-	return [ '-f', 'rawvideo' ]
+	return [ '-f', 'rawvideo', '-pix_fmt', 'rgb24' ]
 
 
 def ignore_video_stream() -> Commands:
