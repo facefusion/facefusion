@@ -388,7 +388,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'frame_enhancer':
 				{
-					'url': resolve_download_url('models-3.2.1', 'ultra_sharp_2_x4.hash'),
+					'url': resolve_download_url('models-3.3.0', 'ultra_sharp_2_x4.hash'),
 					'path': resolve_relative_path('../.assets/models/ultra_sharp_2_x4.hash')
 				}
 			},
@@ -396,7 +396,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'frame_enhancer':
 				{
-					'url': resolve_download_url('models-3.2.1', 'ultra_sharp_2_x4.onnx'),
+					'url': resolve_download_url('models-3.3.0', 'ultra_sharp_2_x4.onnx'),
 					'path': resolve_relative_path('../.assets/models/ultra_sharp_2_x4.onnx')
 				}
 			},
