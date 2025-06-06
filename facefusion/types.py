@@ -1,9 +1,11 @@
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict, TypeVar
 
 import numpy
 from numpy.typing import NDArray
 from onnxruntime import InferenceSession
+
+T = TypeVar('T')
 
 Scale : TypeAlias = float
 Score : TypeAlias = float

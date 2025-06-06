@@ -1,7 +1,7 @@
 import platform
-from typing import Any, Iterable, Optional, Reversible, Sequence, TypeVar
+from typing import Any, Iterable, Optional, Reversible, Sequence
 
-T = TypeVar('T')
+from facefusion.types import T
 
 
 def is_linux() -> bool:
