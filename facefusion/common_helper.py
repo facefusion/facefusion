@@ -1,5 +1,7 @@
 import platform
-from typing import Any, Iterable, Optional, Reversible, Sequence
+from typing import Any, Iterable, Optional, Reversible, Sequence, TypeVar
+
+T = TypeVar('T')
 
 
 def is_linux() -> bool:
@@ -72,13 +74,13 @@ def cast_bool(value : Any) -> Optional[bool]:
 	return None
 
 
-def get_first(__list__ : Any) -> Any:
+def get_first(__list__ : Iterable[T]) -> Optional[T]:
 	if isinstance(__list__, Iterable):
 		return next(iter(__list__), None)
 	return None
 
 
-def get_last(__list__ : Any) -> Any:
+def get_last(__list__ : Reversible[T]) -> Optional[T]:
 	if isinstance(__list__, Reversible):
 		return next(reversed(__list__), None)
 	return None
