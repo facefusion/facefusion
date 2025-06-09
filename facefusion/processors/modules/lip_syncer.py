@@ -9,8 +9,8 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, video_manager, voice_extractor, wording
-from facefusion.common_helper import create_float_metavar
 from facefusion.audio import create_empty_audio_frame, get_voice_frame, read_static_voice
+from facefusion.common_helper import create_float_metavar
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import get_many_faces, get_one_face
