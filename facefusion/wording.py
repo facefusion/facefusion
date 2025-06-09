@@ -303,6 +303,7 @@ WORDING : Dict[str, Any] =\
 		'job_runner_job_action_dropdown': 'JOB ACTION',
 		'job_runner_job_id_dropdown': 'JOB ID',
 		'lip_syncer_model_dropdown': 'LIP SYNCER MODEL',
+		'lip_syncer_weight_slider': 'LIP SYNCER WEIGHT',
 		'log_level_dropdown': 'LOG LEVEL',
 		'output_audio_encoder_dropdown': 'OUTPUT AUDIO ENCODER',
 		'output_audio_quality_slider': 'OUTPUT AUDIO QUALITY',

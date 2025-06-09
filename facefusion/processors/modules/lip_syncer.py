@@ -9,6 +9,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, video_manager, voice_extractor, wording
+from facefusion.common_helper import create_float_metavar
 from facefusion.audio import create_empty_audio_frame, get_voice_frame, read_static_voice
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
@@ -94,11 +95,13 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = processors_choices.lip_syncer_models)
-		facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model' ])
+		group_processors.add_argument('--lip-syncer-weight', help = wording.get('help.lip_syncer_weight'), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = processors_choices.lip_syncer_weight_range, metavar = create_float_metavar(processors_choices.lip_syncer_weight_range))
+		facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model', 'lip_syncer_weight' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('lip_syncer_model', args.get('lip_syncer_model'))
+	apply_state_item('lip_syncer_weight', args.get('lip_syncer_weight'))
 
 
 def pre_check() -> bool:
@@ -186,6 +189,7 @@ def prepare_audio_frame(temp_audio_frame : AudioFrame) -> AudioFrame:
 	temp_audio_frame = numpy.maximum(numpy.exp(-5 * numpy.log(10)), temp_audio_frame)
 	temp_audio_frame = numpy.log10(temp_audio_frame) * 1.6 + 3.2
 	temp_audio_frame = temp_audio_frame.clip(-4, 4).astype(numpy.float32)
+	temp_audio_frame = temp_audio_frame * (state_manager.get_item('lip_syncer_weight') * 2.0)
 	temp_audio_frame = numpy.expand_dims(temp_audio_frame, axis = (0, 1))
 	return temp_audio_frame
 

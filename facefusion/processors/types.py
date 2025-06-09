@@ -103,7 +103,8 @@ ProcessorStateKey = Literal\
 	'frame_colorizer_blend',
 	'frame_enhancer_model',
 	'frame_enhancer_blend',
-	'lip_syncer_model'
+	'lip_syncer_model',
+	'lip_syncer_weight'
 ]
 ProcessorState = TypedDict('ProcessorState',
 {
