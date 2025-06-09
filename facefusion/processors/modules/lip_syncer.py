@@ -189,7 +189,7 @@ def prepare_audio_frame(temp_audio_frame : AudioFrame) -> AudioFrame:
 	temp_audio_frame = numpy.maximum(numpy.exp(-5 * numpy.log(10)), temp_audio_frame)
 	temp_audio_frame = numpy.log10(temp_audio_frame) * 1.6 + 3.2
 	temp_audio_frame = temp_audio_frame.clip(-4, 4).astype(numpy.float32)
-	temp_audio_frame = temp_audio_frame * (state_manager.get_item('lip_syncer_weight') * 2.0)
+	temp_audio_frame = temp_audio_frame * state_manager.get_item('lip_syncer_weight') * 2.0
 	temp_audio_frame = numpy.expand_dims(temp_audio_frame, axis = (0, 1))
 	return temp_audio_frame
 
