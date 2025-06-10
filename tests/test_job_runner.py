@@ -4,8 +4,8 @@ import pytest
 
 from facefusion.download import conditional_download
 from facefusion.filesystem import copy_file
-from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, submit_job, submit_jobs
-from facefusion.jobs.job_runner import collect_output_set, finalize_steps, run_job, run_jobs, run_steps
+from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, move_job_file, submit_job, submit_jobs
+from facefusion.jobs.job_runner import collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_steps
 from facefusion.types import Args
 from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_output_file, prepare_test_output_directory
 
@@ -103,14 +103,63 @@ def test_run_jobs() -> None:
 	assert run_jobs(process_step, halt_on_error) is True
 
 
-@pytest.mark.skip()
 def test_retry_job() -> None:
-	pass
+	args_1 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_file('output-1.mp4')
+	}
+
+	assert retry_job('job-invalid', process_step) is False
+
+	create_job('job-test-retry-job')
+	add_step('job-test-retry-job', args_1)
+	submit_job('job-test-retry-job')
+
+	assert retry_job('job-test-retry-job', process_step) is False
+
+	move_job_file('job-test-retry-job', 'failed')
+
+	assert retry_job('job-test-retry-job', process_step) is True
 
 
-@pytest.mark.skip()
 def test_retry_jobs() -> None:
-	pass
+	args_1 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_file('output-1.mp4')
+	}
+	args_2 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.mp4'),
+		'output_path': get_test_output_file('output-2.mp4')
+	}
+	args_3 =\
+	{
+		'source_path': get_test_example_file('source.jpg'),
+		'target_path': get_test_example_file('target-240p.jpg'),
+		'output_path': get_test_output_file('output-1.jpg')
+	}
+	halt_on_error = True
+
+	assert retry_jobs(process_step, halt_on_error) is False
+
+	create_job('job-test-retry-jobs-1')
+	create_job('job-test-retry-jobs-2')
+	add_step('job-test-retry-jobs-1', args_1)
+	add_step('job-test-retry-jobs-1', args_1)
+	add_step('job-test-retry-jobs-2', args_2)
+	add_step('job-test-retry-jobs-3', args_3)
+
+	assert retry_jobs(process_step, halt_on_error) is False
+
+	move_job_file('job-test-retry-jobs-1', 'failed')
+	move_job_file('job-test-retry-jobs-2', 'failed')
+
+	assert retry_jobs(process_step, halt_on_error) is True
 
 
 def test_run_steps() -> None:
