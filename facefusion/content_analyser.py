@@ -24,20 +24,20 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'content_analyser':
 				{
-					'url': resolve_download_url('models-3.2.0', 'yolo_11m_nsfw.hash'),
-					'path': resolve_relative_path('../.assets/models/yolo_11m_nsfw.hash')
+					'url': resolve_download_url('models-3.3.0', 'nsfw_1.hash'),
+					'path': resolve_relative_path('../.assets/models/nsfw_1.hash')
 				}
 			},
 			'sources':
 			{
 				'content_analyser':
 				{
-					'url': resolve_download_url('models-3.2.0', 'yolo_11m_nsfw.onnx'),
-					'path': resolve_relative_path('../.assets/models/yolo_11m_nsfw.onnx')
+					'url': resolve_download_url('models-3.3.0', 'nsfw_1.onnx'),
+					'path': resolve_relative_path('../.assets/models/nsfw_1.onnx')
 				}
 			},
-			'threshold': 0.2,
 			'size': (640, 640),
+			'threshold': 0.2,
 			'mean': (0.0, 0.0, 0.0),
 			'standard_deviation': (1.0, 1.0, 1.0)
 		},
@@ -47,20 +47,20 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'content_analyser':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/Models/resolve/main/nsfw_detectors/marqo_nsfw.hash',
-					'path': resolve_relative_path('../.assets/models/marqo_nsfw.hash')
+					'url': resolve_download_url('models-3.3.0', 'nsfw_2.hash'),
+					'path': resolve_relative_path('../.assets/models/nsfw_2.hash')
 				}
 			},
 			'sources':
 			{
 				'content_analyser':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/Models/resolve/main/nsfw_detectors/marqo_nsfw.onnx',
-					'path': resolve_relative_path('../.assets/models/marqo_nsfw.onnx')
+					'url': resolve_download_url('models-3.3.0', 'nsfw_2.onnx'),
+					'path': resolve_relative_path('../.assets/models/nsfw_2.onnx')
 				}
 			},
-			'threshold': 0.24,
 			'size': (384, 384),
+			'threshold': 0.25,
 			'mean': (0.5, 0.5, 0.5),
 			'standard_deviation': (0.5, 0.5, 0.5)
 		},
@@ -70,20 +70,20 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'content_analyser':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/Models/resolve/main/nsfw_detectors/freepik_nsfw.hash',
-					'path': resolve_relative_path('../.assets/models/freepik_nsfw.hash')
+					'url': resolve_download_url('models-3.3.0', 'nsfw_3.hash'),
+					'path': resolve_relative_path('../.assets/models/nsfw_3.hash')
 				}
 			},
 			'sources':
 			{
 				'content_analyser':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/Models/resolve/main/nsfw_detectors/freepik_nsfw.onnx',
-					'path': resolve_relative_path('../.assets/models/freepik_nsfw.onnx')
+					'url': resolve_download_url('models-3.3.0', 'nsfw_3.onnx'),
+					'path': resolve_relative_path('../.assets/models/nsfw_3.onnx')
 				}
 			},
-			'threshold': 10.5,
 			'size': (448, 448),
+			'threshold': 10.5,
 			'mean': (0.48145466, 0.4578275, 0.40821073),
 			'standard_deviation': (0.26862954, 0.26130258, 0.27577711)
 		}
