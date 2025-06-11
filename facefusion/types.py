@@ -292,7 +292,6 @@ StateKey = Literal\
 	'job_status',
 	'step_index'
 ]
-ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 State = TypedDict('State',
 {
 	'command' : str,
@@ -323,10 +322,10 @@ State = TypedDict('State',
 	'face_occluder_model' : FaceOccluderModel,
 	'face_parser_model' : FaceParserModel,
 	'face_mask_types' : List[FaceMaskType],
-	'face_mask_blur' : float,
-	'face_mask_padding' : Padding,
+	'face_mask_areas': List[FaceMaskArea],
 	'face_mask_regions' : List[FaceMaskRegion],
-	'face_mask_areas' : List[FaceMaskArea],
+	'face_mask_blur': float,
+	'face_mask_padding': Padding,
 	'trim_frame_start' : int,
 	'trim_frame_end' : int,
 	'temp_frame_format' : TempFrameFormat,
@@ -359,5 +358,6 @@ State = TypedDict('State',
 	'job_status' : JobStatus,
 	'step_index' : int
 })
+ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateSet : TypeAlias = Dict[AppContext, State]
 
