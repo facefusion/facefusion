@@ -74,9 +74,10 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_occluder_model', args.get('face_occluder_model'))
 	apply_state_item('face_parser_model', args.get('face_parser_model'))
 	apply_state_item('face_mask_types', args.get('face_mask_types'))
+	apply_state_item('face_mask_areas', args.get('face_mask_areas'))
+	apply_state_item('face_mask_regions', args.get('face_mask_regions'))
 	apply_state_item('face_mask_blur', args.get('face_mask_blur'))
 	apply_state_item('face_mask_padding', normalize_padding(args.get('face_mask_padding')))
-	apply_state_item('face_mask_regions', args.get('face_mask_regions'))
 	# frame extraction
 	apply_state_item('trim_frame_start', args.get('trim_frame_start'))
 	apply_state_item('trim_frame_end', args.get('trim_frame_end'))

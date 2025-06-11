@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, WebcamMode
+from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskRegionSet, FaceMaskArea, FaceMaskAreaSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, WebcamMode
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -19,7 +19,13 @@ face_selector_genders : List[Gender] = [ 'female', 'male' ]
 face_selector_races : List[Race] = [ 'white', 'black', 'latino', 'asian', 'indian', 'arabic' ]
 face_occluder_models : List[FaceOccluderModel] = [ 'xseg_1', 'xseg_2', 'xseg_3' ]
 face_parser_models : List[FaceParserModel] = [ 'bisenet_resnet_18', 'bisenet_resnet_34' ]
-face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'region' ]
+face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'area', 'region' ]
+face_mask_area_set : FaceMaskAreaSet =\
+{
+	'upper-head': [ 2, 14, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47 ],
+	'lower-head': [ 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67 ],
+	'mouth': [ 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67 ]
+}
 face_mask_region_set : FaceMaskRegionSet =\
 {
 	'skin': 1,
@@ -33,6 +39,7 @@ face_mask_region_set : FaceMaskRegionSet =\
 	'upper-lip': 12,
 	'lower-lip': 13
 }
+face_mask_areas : List[FaceMaskArea] = list(face_mask_area_set.keys())
 face_mask_regions : List[FaceMaskRegion] = list(face_mask_region_set.keys())
 
 audio_type_set : AudioTypeSet =\
