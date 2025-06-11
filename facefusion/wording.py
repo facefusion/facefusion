@@ -129,10 +129,10 @@ WORDING : Dict[str, Any] =\
 		'face_occluder_model': 'choose the model responsible for the occlusion mask',
 		'face_parser_model': 'choose the model responsible for the region mask',
 		'face_mask_types': 'mix and match different face mask types (choices: {choices})',
+		'face_mask_areas': 'choose the items used for the area mask (choices: {choices})',
+		'face_mask_regions': 'choose the items used for the region mask (choices: {choices})',
 		'face_mask_blur': 'specify the degree of blur applied to the box mask',
 		'face_mask_padding': 'apply top, right, bottom and left padding to the box mask',
-		'face_mask_areas': 'choose the facial features used for the area mask (choices: {choices})',
-		'face_mask_regions': 'choose the facial features used for the region mask (choices: {choices})',
 		# frame extraction
 		'trim_frame_start': 'specify the starting frame of the target video',
 		'trim_frame_end': 'specify the ending frame of the target video',

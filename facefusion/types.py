@@ -108,7 +108,7 @@ FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-to
 FaceOccluderModel = Literal['xseg_1', 'xseg_2', 'xseg_3']
 FaceParserModel = Literal['bisenet_resnet_18', 'bisenet_resnet_34']
 FaceMaskType = Literal['box', 'occlusion', 'area', 'region']
-FaceMaskArea = Literal['upper-head', 'lower-head', 'mouth', 'jaw']
+FaceMaskArea = Literal['upper-head', 'lower-head', 'mouth']
 FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip']
 FaceMaskRegionSet : TypeAlias = Dict[FaceMaskRegion, int]
 FaceMaskAreaSet : TypeAlias = Dict[FaceMaskArea, List[int]]
@@ -226,7 +226,6 @@ Job = TypedDict('Job',
 })
 JobSet : TypeAlias = Dict[str, Job]
 
-ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateKey = Literal\
 [
 	'command',
@@ -257,10 +256,10 @@ StateKey = Literal\
 	'face_occluder_model',
 	'face_parser_model',
 	'face_mask_types',
+	'face_mask_areas',
+	'face_mask_regions',
 	'face_mask_blur',
 	'face_mask_padding',
-	'face_mask_regions',
-	'face_mask_areas',
 	'trim_frame_start',
 	'trim_frame_end',
 	'temp_frame_format',
@@ -293,6 +292,7 @@ StateKey = Literal\
 	'job_status',
 	'step_index'
 ]
+ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 State = TypedDict('State',
 {
 	'command' : str,
