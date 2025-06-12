@@ -199,10 +199,10 @@ def prepare_audio_frame(temp_audio_frame : AudioFrame) -> AudioFrame:
 
 def prepare_close_frame(close_vision_frame : VisionFrame) -> VisionFrame:
 	model_size = get_model_options().get('size')
-	close_vision_frame = numpy.expand_dims(close_vision_frame, axis=0)
+	close_vision_frame = numpy.expand_dims(close_vision_frame, axis = 0)
 	prepare_vision_frame = close_vision_frame.copy()
 	prepare_vision_frame[:, model_size[0] // 2:] = 0
-	close_vision_frame = numpy.concatenate((prepare_vision_frame, close_vision_frame), axis=3)
+	close_vision_frame = numpy.concatenate((prepare_vision_frame, close_vision_frame), axis = 3)
 	close_vision_frame = close_vision_frame.transpose(0, 3, 1, 2).astype('float32') / 255.0
 	return close_vision_frame
 
