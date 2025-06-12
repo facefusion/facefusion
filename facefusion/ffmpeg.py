@@ -1,6 +1,7 @@
 import os
 import subprocess
 import tempfile
+from functools import partial
 from typing import List, Optional, cast
 
 from tqdm import tqdm
@@ -38,6 +39,10 @@ def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgre
 	if process_manager.is_stopping():
 		process.terminate()
 	return process
+
+
+def update_progress(progress : tqdm, frame_number : int):
+	progress.update(frame_number - progress.n)
 
 
 def run_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
@@ -114,7 +119,7 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 	)
 
 	with tqdm(total = extract_frame_total, desc = wording.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-		process = run_ffmpeg_with_progress(commands, lambda frame_number: progress.update(frame_number - progress.n))
+		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
 		return process.returncode == 0
 
 
@@ -230,7 +235,7 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 	)
 
 	with tqdm(total = merge_frame_total, desc = wording.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-		process = run_ffmpeg_with_progress(commands, lambda frame_number: progress.update(frame_number - progress.n))
+		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
 		return process.returncode == 0
 
 

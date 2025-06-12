@@ -2,6 +2,7 @@ import itertools
 import shutil
 import signal
 import sys
+from functools import partial
 from time import time
 
 import numpy
@@ -31,7 +32,7 @@ from facefusion.vision import pack_resolution, read_image, read_static_images, r
 
 def cli() -> None:
 	if pre_check():
-		signal.signal(signal.SIGINT, lambda signal_number, frame: graceful_exit(0))
+		signal.signal(signal.SIGINT, partial(graceful_exit, 0))
 		program = create_program()
 
 		if validate_args(program):
