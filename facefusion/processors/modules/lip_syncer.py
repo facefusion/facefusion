@@ -150,7 +150,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 	face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
 	bounding_box = create_bounding_box(face_landmark_68)
 	bounding_box[1] -= numpy.abs(bounding_box[3] - bounding_box[1]) * 0.125
-	area_mask = create_area_mask(face_landmark_68, [ 'lower-head' ])
+	area_mask = create_area_mask(face_landmark_68, [ 'lower-face' ])
 	crop_masks =\
 	[
 		area_mask
