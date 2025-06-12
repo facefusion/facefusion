@@ -107,9 +107,11 @@ FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
 FaceOccluderModel = Literal['xseg_1', 'xseg_2', 'xseg_3']
 FaceParserModel = Literal['bisenet_resnet_18', 'bisenet_resnet_34']
-FaceMaskType = Literal['box', 'occlusion', 'region']
+FaceMaskType = Literal['box', 'occlusion', 'area', 'region']
+FaceMaskArea = Literal['upper-face', 'lower-face', 'mouth']
 FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip']
 FaceMaskRegionSet : TypeAlias = Dict[FaceMaskRegion, int]
+FaceMaskAreaSet : TypeAlias = Dict[FaceMaskArea, List[int]]
 
 AudioFormat = Literal['flac', 'm4a', 'mp3', 'ogg', 'opus', 'wav']
 ImageFormat = Literal['bmp', 'jpeg', 'png', 'tiff', 'webp']
@@ -224,7 +226,6 @@ Job = TypedDict('Job',
 })
 JobSet : TypeAlias = Dict[str, Job]
 
-ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateKey = Literal\
 [
 	'command',
@@ -255,9 +256,10 @@ StateKey = Literal\
 	'face_occluder_model',
 	'face_parser_model',
 	'face_mask_types',
+	'face_mask_areas',
+	'face_mask_regions',
 	'face_mask_blur',
 	'face_mask_padding',
-	'face_mask_regions',
 	'trim_frame_start',
 	'trim_frame_end',
 	'temp_frame_format',
@@ -320,9 +322,10 @@ State = TypedDict('State',
 	'face_occluder_model' : FaceOccluderModel,
 	'face_parser_model' : FaceParserModel,
 	'face_mask_types' : List[FaceMaskType],
-	'face_mask_blur' : float,
-	'face_mask_padding' : Padding,
+	'face_mask_areas': List[FaceMaskArea],
 	'face_mask_regions' : List[FaceMaskRegion],
+	'face_mask_blur': float,
+	'face_mask_padding': Padding,
 	'trim_frame_start' : int,
 	'trim_frame_end' : int,
 	'temp_frame_format' : TempFrameFormat,
@@ -355,5 +358,6 @@ State = TypedDict('State',
 	'job_status' : JobStatus,
 	'step_index' : int
 })
+ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateSet : TypeAlias = Dict[AppContext, State]
 

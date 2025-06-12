@@ -1,8 +1,6 @@
 from typing import Any, Dict, IO, Literal, TypeAlias
 
 File : TypeAlias = IO[Any]
-Component : TypeAlias = Any
-ComponentOptions : TypeAlias = Dict[str, Any]
 ComponentName = Literal\
 [
 	'age_modifier_direction_slider',
@@ -38,13 +36,14 @@ ComponentName = Literal\
 	'face_enhancer_weight_slider',
 	'face_landmarker_model_dropdown',
 	'face_landmarker_score_slider',
+	'face_mask_types_checkbox_group',
+	'face_mask_areas_checkbox_group',
+	'face_mask_regions_checkbox_group',
 	'face_mask_blur_slider',
 	'face_mask_padding_bottom_slider',
 	'face_mask_padding_left_slider',
 	'face_mask_padding_right_slider',
 	'face_mask_padding_top_slider',
-	'face_mask_regions_checkbox_group',
-	'face_mask_types_checkbox_group',
 	'face_selector_age_range_slider',
 	'face_selector_gender_dropdown',
 	'face_selector_mode_dropdown',
@@ -79,6 +78,8 @@ ComponentName = Literal\
 	'webcam_mode_radio',
 	'webcam_resolution_dropdown'
 ]
+Component : TypeAlias = Any
+ComponentOptions : TypeAlias = Dict[str, Any]
 
 JobManagerAction = Literal['job-create', 'job-submit', 'job-delete', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step']
 JobRunnerAction = Literal['job-run', 'job-run-all', 'job-retry', 'job-retry-all']
