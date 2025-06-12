@@ -23,7 +23,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import LipSyncerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.types import ApplyStateItem, Args, AudioFrame, BoundingBox, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
 
 
@@ -144,12 +144,9 @@ def post_process() -> None:
 
 
 def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_size = get_model_options().get('size')
 	temp_audio_frame = prepare_audio_frame(temp_audio_frame)
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'ffhq_512', (512, 512))
 	face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-	bounding_box = create_bounding_box(face_landmark_68)
-	bounding_box[1] -= numpy.abs(bounding_box[3] - bounding_box[1]) * 0.125
 	area_mask = create_area_mask(face_landmark_68, [ 'lower-face' ])
 	crop_masks =\
 	[
@@ -160,14 +157,22 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 
-	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, model_size)
-	close_vision_frame = prepare_crop_frame(close_vision_frame)
-	close_vision_frame = forward(temp_audio_frame, close_vision_frame)
-	close_vision_frame = normalize_close_frame(close_vision_frame)
-	crop_vision_frame = cv2.warpAffine(close_vision_frame, cv2.invertAffineTransform(close_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
+	bounding_box = create_bounding_box(face_landmark_68)
+	bounding_box = prepare_bounding_box(bounding_box)
+	crop_vision_frame = process_wav2lip(crop_vision_frame, temp_audio_frame, bounding_box)
 	crop_mask = numpy.minimum.reduce(crop_masks)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return paste_vision_frame
+
+
+def process_wav2lip(crop_vision_frame : VisionFrame, temp_audio_frame : AudioFrame, bounding_box : BoundingBox) -> VisionFrame:
+	model_size = get_model_options().get('size')
+	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, model_size)
+	close_vision_frame = prepare_close_frame(close_vision_frame)
+	close_vision_frame = forward(temp_audio_frame, close_vision_frame)
+	close_vision_frame = normalize_close_frame(close_vision_frame)
+	crop_vision_frame = cv2.warpAffine(close_vision_frame, cv2.invertAffineTransform(close_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
+	return crop_vision_frame
 
 
 def forward(temp_audio_frame : AudioFrame, close_vision_frame : VisionFrame) -> VisionFrame:
@@ -192,13 +197,22 @@ def prepare_audio_frame(temp_audio_frame : AudioFrame) -> AudioFrame:
 	return temp_audio_frame
 
 
-def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
-	crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
-	prepare_vision_frame = crop_vision_frame.copy()
-	prepare_vision_frame[:, 48:] = 0
-	crop_vision_frame = numpy.concatenate((prepare_vision_frame, crop_vision_frame), axis = 3)
-	crop_vision_frame = crop_vision_frame.transpose(0, 3, 1, 2).astype('float32') / 255.0
-	return crop_vision_frame
+def prepare_close_frame(close_vision_frame : VisionFrame) -> VisionFrame:
+	model_size = get_model_options().get('size')
+	close_vision_frame = numpy.expand_dims(close_vision_frame, axis=0)
+	prepare_vision_frame = close_vision_frame.copy()
+	prepare_vision_frame[:, model_size[0] // 2:] = 0
+	close_vision_frame = numpy.concatenate((prepare_vision_frame, close_vision_frame), axis=3)
+	close_vision_frame = close_vision_frame.transpose(0, 3, 1, 2).astype('float32') / 255.0
+	return close_vision_frame
+
+
+def prepare_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
+	bounding_box[3] += min(8, 511)
+	x1, y1, x2, y2 = bounding_box
+	y1 = y2 - (4 / 3) * (x2 - x1)
+	bounding_box[1] = max(y1, 0)
+	return bounding_box
 
 
 def normalize_close_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
