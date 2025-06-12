@@ -2,7 +2,6 @@ import itertools
 import shutil
 import signal
 import sys
-from functools import partial
 from time import time
 
 import numpy
@@ -12,7 +11,7 @@ from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduc
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.exit_helper import graceful_exit, hard_exit
+from facefusion.exit_helper import signal_exit, hard_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
@@ -32,7 +31,7 @@ from facefusion.vision import pack_resolution, read_image, read_static_images, r
 
 def cli() -> None:
 	if pre_check():
-		signal.signal(signal.SIGINT, partial(graceful_exit, 0))
+		signal.signal(signal.SIGINT, signal_exit)
 		program = create_program()
 
 		if validate_args(program):
