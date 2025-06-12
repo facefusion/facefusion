@@ -41,7 +41,7 @@ def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgre
 	return process
 
 
-def update_progress(progress : tqdm, frame_number : int):
+def update_progress(progress : tqdm, frame_number : int) -> None:
 	progress.update(frame_number - progress.n)
 
 
