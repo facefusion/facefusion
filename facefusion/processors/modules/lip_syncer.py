@@ -190,28 +190,28 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 		crop_masks.append(area_mask)
 		bounding_box = create_bounding_box(face_landmark_68)
 		bounding_box = resize_bounding_box(bounding_box, 4 / 3)
-		temp_vision_frame, temp_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, model_size)
-		temp_vision_frame = prepare_crop_frame(temp_vision_frame)
-		temp_vision_frame = forward_wav2lip(temp_audio_frame, temp_vision_frame)
-		temp_vision_frame = normalize_crop_frame(temp_vision_frame)
-		crop_vision_frame = cv2.warpAffine(temp_vision_frame, cv2.invertAffineTransform(temp_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
+		area_vision_frame, area_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, model_size)
+		area_vision_frame = prepare_crop_frame(area_vision_frame)
+		area_vision_frame = forward_wav2lip(temp_audio_frame, area_vision_frame)
+		area_vision_frame = normalize_crop_frame(area_vision_frame)
+		crop_vision_frame = cv2.warpAffine(area_vision_frame, cv2.invertAffineTransform(area_matrix), (512, 512), borderMode=cv2.BORDER_REPLICATE)
 
 	crop_mask = numpy.minimum.reduce(crop_masks)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return paste_vision_frame
 
 
-def forward_wav2lip(temp_audio_frame : AudioFrame, crop_vision_frame : VisionFrame) -> VisionFrame:
+def forward_wav2lip(temp_audio_frame : AudioFrame, area_vision_frame : VisionFrame) -> VisionFrame:
 	lip_syncer = get_inference_pool().get('lip_syncer')
 
 	with conditional_thread_semaphore():
-		crop_vision_frame = lip_syncer.run(None,
+		area_vision_frame = lip_syncer.run(None,
 		{
 			'source': temp_audio_frame,
-			'target': crop_vision_frame
+			'target': area_vision_frame
 		})[0]
 
-	return crop_vision_frame
+	return area_vision_frame
 
 
 def forward_edtalk(temp_audio_frame : AudioFrame, crop_vision_frame : VisionFrame, lip_syncer_weight : LipSyncerWeight) -> VisionFrame:
