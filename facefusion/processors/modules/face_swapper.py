@@ -508,14 +508,17 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 	if model_type == 'ghost':
 		source_embedding, _ = convert_embedding(source_face)
 		source_embedding = source_embedding.reshape(1, -1)
-	elif model_type == 'inswapper':
+		return source_embedding
+
+	if model_type == 'inswapper':
 		model_path = get_model_options().get('sources').get('face_swapper').get('path')
 		model_initializer = get_static_model_initializer(model_path)
 		source_embedding = source_face.embedding.reshape((1, -1))
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
-	else:
-		_, source_normed_embedding = convert_embedding(source_face)
-		source_embedding = source_normed_embedding.reshape(1, -1)
+		return source_embedding
+
+	_, source_normed_embedding = convert_embedding(source_face)
+	source_embedding = source_normed_embedding.reshape(1, -1)
 	return source_embedding
 
 
