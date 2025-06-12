@@ -83,11 +83,11 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 
 		if target_face.angle == 0:
 			cv2.line(temp_vision_frame, (x1, y1), (x2, y1), primary_light_color, 3)
-		elif target_face.angle == 180:
+		if target_face.angle == 180:
 			cv2.line(temp_vision_frame, (x1, y2), (x2, y2), primary_light_color, 3)
-		elif target_face.angle == 90:
+		if target_face.angle == 90:
 			cv2.line(temp_vision_frame, (x2, y1), (x2, y2), primary_light_color, 3)
-		elif target_face.angle == 270:
+		if target_face.angle == 270:
 			cv2.line(temp_vision_frame, (x1, y1), (x1, y2), primary_light_color, 3)
 
 	if 'face-mask' in face_debugger_items:
