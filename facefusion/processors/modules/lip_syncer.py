@@ -15,7 +15,7 @@ from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import create_bounding_box, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
-from facefusion.face_masker import create_area_mask, create_occlusion_mask
+from facefusion.face_masker import create_area_mask, create_occlusion_mask, create_static_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import filter_audio_paths, has_audio, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -49,6 +49,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/wav2lip_96.onnx')
 				}
 			},
+			'type': 'wav2lip',
 			'size': (96, 96)
 		},
 		'wav2lip_gan_96':
@@ -69,7 +70,29 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/wav2lip_gan_96.onnx')
 				}
 			},
+			'type': 'wav2lip',
 			'size': (96, 96)
+		},
+		'edtalk_256':
+		{
+			'hashes':
+			{
+				'lip_syncer':
+				{
+					'url': resolve_download_url('models-3.3.0', 'edtalk_256.hash'),
+					'path': resolve_relative_path('../.assets/models/edtalk_256.hash')
+				}
+			},
+			'sources':
+			{
+				'lip_syncer':
+				{
+					'url': resolve_download_url('models-3.3.0', 'edtalk_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/edtalk_256.onnx')
+				}
+			},
+			'type': 'edtalk',
+			'size': (256, 256)
 		}
 	}
 
@@ -144,22 +167,29 @@ def post_process() -> None:
 
 
 def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
+	model_name = state_manager.get_item('lip_syncer_model')
 	temp_audio_frame = prepare_audio_frame(temp_audio_frame)
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'ffhq_512', (512, 512))
-	face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-	area_mask = create_area_mask(face_landmark_68, [ 'lower-face' ])
+	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 	crop_masks =\
 	[
-		area_mask
+		box_mask
 	]
 
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 
-	bounding_box = create_bounding_box(face_landmark_68)
-	bounding_box = prepare_bounding_box(bounding_box)
-	crop_vision_frame = process_wav2lip(crop_vision_frame, temp_audio_frame, bounding_box)
+	if model_name.startswith('wav2lip'):
+		face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+		area_mask = create_area_mask(face_landmark_68, [ 'lower-face' ])
+		crop_masks.append(area_mask)
+		bounding_box = create_bounding_box(face_landmark_68)
+		bounding_box = prepare_bounding_box(bounding_box)
+		crop_vision_frame = process_wav2lip(crop_vision_frame, temp_audio_frame, bounding_box)
+	elif model_name == 'edtalk_256':
+		crop_vision_frame = process_edtalk(crop_vision_frame, temp_audio_frame)
+
 	crop_mask = numpy.minimum.reduce(crop_masks)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
 	return paste_vision_frame
@@ -168,14 +198,22 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 def process_wav2lip(crop_vision_frame : VisionFrame, temp_audio_frame : AudioFrame, bounding_box : BoundingBox) -> VisionFrame:
 	model_size = get_model_options().get('size')
 	close_vision_frame, close_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, model_size)
-	close_vision_frame = prepare_close_frame(close_vision_frame)
-	close_vision_frame = forward(temp_audio_frame, close_vision_frame)
-	close_vision_frame = normalize_close_frame(close_vision_frame)
+	close_vision_frame = prepare_crop_frame(close_vision_frame)
+	close_vision_frame = forward_wav2lip(temp_audio_frame, close_vision_frame)
+	close_vision_frame = normalize_crop_frame(close_vision_frame)
 	crop_vision_frame = cv2.warpAffine(close_vision_frame, cv2.invertAffineTransform(close_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
 	return crop_vision_frame
 
 
-def forward(temp_audio_frame : AudioFrame, close_vision_frame : VisionFrame) -> VisionFrame:
+def process_edtalk(crop_vision_frame : VisionFrame, temp_audio_frame : AudioFrame) -> VisionFrame:
+	lip_syncer_weight = state_manager.get_item('lip_syncer_weight') * 1.25
+	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
+	crop_vision_frame = forward_edtalk(temp_audio_frame, crop_vision_frame, lip_syncer_weight)
+	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
+	return crop_vision_frame
+
+
+def forward_wav2lip(temp_audio_frame : AudioFrame, close_vision_frame : VisionFrame) -> VisionFrame:
 	lip_syncer = get_inference_pool().get('lip_syncer')
 
 	with conditional_thread_semaphore():
@@ -188,6 +226,20 @@ def forward(temp_audio_frame : AudioFrame, close_vision_frame : VisionFrame) -> 
 	return close_vision_frame
 
 
+def forward_edtalk(temp_audio_frame : AudioFrame, crop_vision_frame : VisionFrame, lip_syncer_weight : float) -> VisionFrame:
+	lip_syncer = get_inference_pool().get('lip_syncer')
+
+	with conditional_thread_semaphore():
+		crop_vision_frame = lip_syncer.run(None,
+		{
+			'source': temp_audio_frame,
+			'target': crop_vision_frame,
+			'weight': [ numpy.float32(lip_syncer_weight) ]
+		})[0]
+
+	return crop_vision_frame
+
+
 def prepare_audio_frame(temp_audio_frame : AudioFrame) -> AudioFrame:
 	temp_audio_frame = numpy.maximum(numpy.exp(-5 * numpy.log(10)), temp_audio_frame)
 	temp_audio_frame = numpy.log10(temp_audio_frame) * 1.6 + 3.2
@@ -197,14 +249,22 @@ def prepare_audio_frame(temp_audio_frame : AudioFrame) -> AudioFrame:
 	return temp_audio_frame
 
 
-def prepare_close_frame(close_vision_frame : VisionFrame) -> VisionFrame:
+def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
+	model_type = get_model_options().get('type')
 	model_size = get_model_options().get('size')
-	close_vision_frame = numpy.expand_dims(close_vision_frame, axis = 0)
-	prepare_vision_frame = close_vision_frame.copy()
-	prepare_vision_frame[:, model_size[0] // 2:] = 0
-	close_vision_frame = numpy.concatenate((prepare_vision_frame, close_vision_frame), axis = 3)
-	close_vision_frame = close_vision_frame.transpose(0, 3, 1, 2).astype('float32') / 255.0
-	return close_vision_frame
+
+	if model_type == 'wav2lip':
+		crop_vision_frame = numpy.expand_dims(crop_vision_frame, axis = 0)
+		prepare_vision_frame = crop_vision_frame.copy()
+		prepare_vision_frame[:, model_size[0] // 2:] = 0
+		crop_vision_frame = numpy.concatenate((prepare_vision_frame, crop_vision_frame), axis = 3)
+		crop_vision_frame = crop_vision_frame.transpose(0, 3, 1, 2).astype('float32') / 255.0
+	elif model_type == 'edtalk':
+		crop_vision_frame = cv2.resize(crop_vision_frame, (256, 256), interpolation = cv2.INTER_AREA)
+		crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
+		crop_vision_frame = numpy.expand_dims(crop_vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
+
+	return crop_vision_frame
 
 
 def prepare_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
@@ -215,10 +275,16 @@ def prepare_bounding_box(bounding_box : BoundingBox) -> BoundingBox:
 	return bounding_box
 
 
-def normalize_close_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
+def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
+	model_type = get_model_options().get('type')
 	crop_vision_frame = crop_vision_frame[0].transpose(1, 2, 0)
 	crop_vision_frame = crop_vision_frame.clip(0, 1) * 255
 	crop_vision_frame = crop_vision_frame.astype(numpy.uint8)
+
+	if model_type == 'edtalk':
+		crop_vision_frame = crop_vision_frame[:, :, ::-1]
+		crop_vision_frame = cv2.resize(crop_vision_frame, (512, 512), interpolation = cv2.INTER_CUBIC)
+
 	return crop_vision_frame
 
 
