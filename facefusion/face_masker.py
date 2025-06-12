@@ -188,7 +188,7 @@ def create_area_mask(face_landmark_68 : FaceLandmark68, face_mask_areas : List[F
 
 	for face_mask_area in face_mask_areas:
 		if face_mask_area in facefusion.choices.face_mask_area_set:
-			landmark_points.extend(facefusion.choices.face_mask_area_set[face_mask_area])
+			landmark_points.extend(facefusion.choices.face_mask_area_set.get(face_mask_area))
 
 	convex_hull = cv2.convexHull(face_landmark_68[landmark_points].astype(numpy.int32))
 	area_mask = numpy.zeros((512, 512)).astype(numpy.float32)
