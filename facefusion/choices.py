@@ -22,8 +22,8 @@ face_parser_models : List[FaceParserModel] = [ 'bisenet_resnet_18', 'bisenet_res
 face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'area', 'region' ]
 face_mask_area_set : FaceMaskAreaSet =\
 {
-	'upper-face': [ 2, 14, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47 ],
-	'lower-face': [ 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67 ],
+	'upper-face': [ 0, 1, 2, 31, 32, 33, 34, 35, 14, 15, 16, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17 ],
+	'lower-face': [ 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 35, 34, 33, 32, 31 ],
 	'mouth': [ 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67 ]
 }
 face_mask_region_set : FaceMaskRegionSet =\
