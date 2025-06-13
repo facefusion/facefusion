@@ -189,7 +189,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 		area_mask = create_area_mask(face_landmark_68, [ 'lower-face' ])
 		crop_masks.append(area_mask)
 		bounding_box = create_bounding_box(face_landmark_68)
-		bounding_box = resize_bounding_box(bounding_box, 4 / 3)
+		bounding_box = resize_bounding_box(bounding_box, 1 / 8)
 		area_vision_frame, area_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, model_size)
 		area_vision_frame = prepare_crop_frame(area_vision_frame)
 		area_vision_frame = forward_wav2lip(temp_audio_frame, area_vision_frame)
@@ -256,9 +256,8 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 
 def resize_bounding_box(bounding_box : BoundingBox, aspect_ratio : float) -> BoundingBox:
-	bounding_box[3] += min(8, 511)
 	x1, y1, x2, y2 = bounding_box
-	y1 = y2 - aspect_ratio * (x2 - x1)
+	y1 -= numpy.abs(y2 - y1) * aspect_ratio
 	bounding_box[1] = max(y1, 0)
 	return bounding_box
 
