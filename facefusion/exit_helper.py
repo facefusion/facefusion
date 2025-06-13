@@ -13,7 +13,7 @@ def hard_exit(error_code : ErrorCode) -> None:
 	sys.exit(error_code)
 
 
-def signal_exit(signum : int, frame : FrameType):
+def signal_exit(signum : int, frame : FrameType) -> None:
 	graceful_exit(0)
 
 

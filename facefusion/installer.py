@@ -32,7 +32,7 @@ def cli() -> None:
 	run(program)
 
 
-def signal_exit(signum : int, frame : FrameType):
+def signal_exit(signum : int, frame : FrameType) -> None:
 	sys.exit(0)
 
 
