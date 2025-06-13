@@ -13,7 +13,7 @@ from facefusion.common_helper import create_float_metavar, create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
-from facefusion.face_masker import create_occlusion_mask, create_box_mask
+from facefusion.face_masker import create_box_mask, create_occlusion_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
