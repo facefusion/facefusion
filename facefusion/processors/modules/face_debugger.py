@@ -10,7 +10,7 @@ import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, video_manager, wording
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
-from facefusion.face_masker import create_area_mask, create_occlusion_mask, create_region_mask, create_static_box_mask
+from facefusion.face_masker import create_area_mask, create_occlusion_mask, create_region_mask, create_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, same_file_extension
@@ -97,7 +97,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		crop_masks = []
 
 		if 'box' in state_manager.get_item('face_mask_types'):
-			box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], 0, state_manager.get_item('face_mask_padding'))
+			box_mask = create_box_mask(crop_vision_frame, 0, state_manager.get_item('face_mask_padding'))
 			crop_masks.append(box_mask)
 
 		if 'occlusion' in state_manager.get_item('face_mask_types'):
@@ -105,8 +105,8 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 			crop_masks.append(occlusion_mask)
 
 		if 'area' in state_manager.get_item('face_mask_types'):
-			landmarks_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-			area_mask = create_area_mask(landmarks_68, state_manager.get_item('face_mask_areas'))
+			face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+			area_mask = create_area_mask(crop_vision_frame, face_landmark_68, state_manager.get_item('face_mask_areas'))
 			crop_masks.append(area_mask)
 
 		if 'region' in state_manager.get_item('face_mask_types'):

@@ -13,7 +13,7 @@ from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
-from facefusion.face_masker import create_occlusion_mask, create_static_box_mask
+from facefusion.face_masker import create_occlusion_mask, create_box_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -148,7 +148,7 @@ def restore_expression(source_vision_frame : VisionFrame, target_face : Face, te
 	source_vision_frame = cv2.resize(source_vision_frame, temp_vision_frame.shape[:2][::-1])
 	source_crop_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
 	target_crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
-	box_mask = create_static_box_mask(target_crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
+	box_mask = create_box_mask(target_crop_vision_frame, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
 	[
 		box_mask
