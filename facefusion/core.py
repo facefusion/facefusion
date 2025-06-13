@@ -11,7 +11,7 @@ from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduc
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.exit_helper import signal_exit, hard_exit
+from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
