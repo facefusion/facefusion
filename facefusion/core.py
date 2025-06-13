@@ -59,6 +59,16 @@ def route(args : Args) -> None:
 		error_code = force_download()
 		return hard_exit(error_code)
 
+	if state_manager.get_item('command') == 'benchmark':
+		import facefusion.benchmarker as benchmarker
+		
+		if not common_pre_check() or not processors_pre_check():
+			return hard_exit(2)
+		if not benchmarker.pre_check():
+			return hard_exit(2)
+		benchmarker.run()
+		return
+
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)

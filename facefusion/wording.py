@@ -207,7 +207,11 @@ WORDING : Dict[str, Any] =\
 		'run': 'run the program',
 		'headless_run': 'run the program in headless mode',
 		'batch_run': 'run the program in batch mode',
+		'benchmark': 'run performance benchmarks and exit',
 		'force_download': 'force automate downloads and exit',
+		# benchmark
+		'benchmark_runs': 'choose the resolution for the benchmark runs (choices: {choices}, ...)',
+		'benchmark_cycles': 'specify the number of benchmark cycles',
 		# jobs
 		'job_id': 'specify the job id',
 		'job_status': 'specify the job status',
