@@ -84,7 +84,7 @@ def benchmark_target(benchmark_cycles : int) -> List[Any]:
 
 
 def run() -> None:
-	benchmark_runs = state_manager.get_item('benchmark_runs')
+	benchmark_resolutions = state_manager.get_item('benchmark_resolutions')
 	benchmark_cycles = state_manager.get_item('benchmark_cycles')
 
 	state_manager.set_item('source_paths', [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ])
@@ -95,7 +95,7 @@ def run() -> None:
 	state_manager.set_item('video_memory_strategy', 'tolerant')
 
 	benchmark_results = []
-	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
+	target_paths = [ BENCHMARKS[benchmark_resolution] for benchmark_resolution in benchmark_resolutions if benchmark_resolution in BENCHMARKS ]
 
 	if target_paths:
 		pre_process()

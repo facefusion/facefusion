@@ -43,14 +43,14 @@ def render() -> None:
 
 
 def listen() -> None:
-	benchmark_runs_checkbox_group = get_ui_component('benchmark_runs_checkbox_group')
+	benchmark_resolutions_checkbox_group = get_ui_component('benchmark_resolutions_checkbox_group')
 	benchmark_cycles_slider = get_ui_component('benchmark_cycles_slider')
 
-	if benchmark_runs_checkbox_group and benchmark_cycles_slider:
-		BENCHMARK_START_BUTTON.click(start, inputs = [ benchmark_runs_checkbox_group, benchmark_cycles_slider ], outputs = BENCHMARK_BENCHMARKS_DATAFRAME)
+	if benchmark_resolutions_checkbox_group and benchmark_cycles_slider:
+		BENCHMARK_START_BUTTON.click(start, inputs = [ benchmark_resolutions_checkbox_group, benchmark_cycles_slider ], outputs = BENCHMARK_BENCHMARKS_DATAFRAME)
 
 
-def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
+def start(benchmark_resolutions : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
 	state_manager.set_item('source_paths', [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ])
 	state_manager.set_item('face_landmarker_score', 0)
 	state_manager.set_item('temp_frame_format', 'bmp')
@@ -62,7 +62,7 @@ def start(benchmark_runs : List[str], benchmark_cycles : int) -> Generator[List[
 	state_manager.sync_item('execution_queue_count')
 	state_manager.sync_item('system_memory_limit')
 	benchmark_results = []
-	target_paths = [ BENCHMARKS[benchmark_run] for benchmark_run in benchmark_runs if benchmark_run in BENCHMARKS ]
+	target_paths = [ BENCHMARKS[benchmark_resolution] for benchmark_resolution in benchmark_resolutions if benchmark_resolution in BENCHMARKS ]
 
 	if target_paths:
 		pre_process()

@@ -207,10 +207,10 @@ WORDING : Dict[str, Any] =\
 		'run': 'run the program',
 		'headless_run': 'run the program in headless mode',
 		'batch_run': 'run the program in batch mode',
-		'benchmark': 'run performance benchmarks and exit',
 		'force_download': 'force automate downloads and exit',
+		'benchmark': 'run performance benchmarks and exit',
 		# benchmark
-		'benchmark_runs': 'choose the resolution for the benchmark runs (choices: {choices}, ...)',
+		'benchmark_resolutions': 'choose the resolution for the benchmark runs (choices: {choices}, ...)',
 		'benchmark_cycles': 'specify the number of benchmark cycles',
 		# jobs
 		'job_id': 'specify the job id',
@@ -245,7 +245,7 @@ WORDING : Dict[str, Any] =\
 		'age_modifier_model_dropdown': 'AGE MODIFIER MODEL',
 		'apply_button': 'APPLY',
 		'benchmark_cycles_slider': 'BENCHMARK CYCLES',
-		'benchmark_runs_checkbox_group': 'BENCHMARK RUNS',
+		'benchmark_resolutions_checkbox_group': 'BENCHMARK RESOLUTIONS',
 		'clear_button': 'CLEAR',
 		'common_options_checkbox_group': 'OPTIONS',
 		'download_providers_checkbox_group': 'DOWNLOAD PROVIDERS',
