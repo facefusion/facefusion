@@ -15,7 +15,7 @@ from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import create_bounding_box, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
-from facefusion.face_masker import create_area_mask, create_occlusion_mask, create_static_box_mask
+from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import filter_audio_paths, has_audio, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -179,14 +179,14 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 
 	if model_name == 'edtalk_256':
 		lip_syncer_weight = numpy.array([ state_manager.get_item('lip_syncer_weight') ]).astype(numpy.float32) * 1.25
-		box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
+		box_mask = create_box_mask(crop_vision_frame, state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 		crop_masks.append(box_mask)
 		crop_vision_frame = prepare_crop_frame(crop_vision_frame)
 		crop_vision_frame = forward_edtalk(temp_audio_frame, crop_vision_frame, lip_syncer_weight)
 		crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	if model_name.startswith('wav2lip'):
 		face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-		area_mask = create_area_mask(face_landmark_68, [ 'lower-face' ])
+		area_mask = create_area_mask(crop_vision_frame, face_landmark_68, [ 'lower-face' ])
 		crop_masks.append(area_mask)
 		bounding_box = create_bounding_box(face_landmark_68)
 		bounding_box = resize_bounding_box(bounding_box, 1 / 8)
