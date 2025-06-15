@@ -100,6 +100,16 @@ LogLevelSet : TypeAlias = Dict[LogLevel, int]
 TableHeaders = List[str]
 TableContents = List[List[Any]]
 
+BenchmarkSet = TypedDict('BenchmarkSet',
+{
+	'target_path' : str,
+	'benchmark_cycles' : int,
+	'average_run' : float,
+	'fastest_run' : float,
+	'slowest_run' : float,
+	'relative_fps' : float
+})
+
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yolo_face']
 FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
 FaceDetectorSet : TypeAlias = Dict[FaceDetectorModel, List[str]]
