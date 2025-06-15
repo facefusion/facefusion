@@ -3,17 +3,17 @@ import os
 import statistics
 import tempfile
 from time import perf_counter
-from typing import Any, Dict, List
+from typing import Any, Dict, Generator, List
 
-from facefusion import state_manager
+from facefusion import core, state_manager
 from facefusion.cli_helper import render_table
 from facefusion.download import conditional_download, resolve_download_url
-from facefusion.filesystem import get_file_extension, is_video
-from facefusion.memory import limit_system_memory
+from facefusion.filesystem import get_file_extension
 from facefusion.vision import count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution
 
 
-BENCHMARKS : Dict[str, str] = {
+BENCHMARKS : Dict[str, str] =\
+{
 	'240p': '.assets/examples/target-240p.mp4',
 	'360p': '.assets/examples/target-360p.mp4',
 	'540p': '.assets/examples/target-540p.mp4',
@@ -40,50 +40,7 @@ def pre_check() -> bool:
 	return True
 
 
-def suggest_output_path(target_path : str) -> str:
-	if is_video(target_path):
-		target_file_extension = get_file_extension(target_path)
-		return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_file_extension)
-	return ''
-
-
-def pre_process() -> None:
-	system_memory_limit = state_manager.get_item('system_memory_limit')
-	if system_memory_limit and system_memory_limit > 0:
-		limit_system_memory(system_memory_limit)
-
-
-def benchmark_target(benchmark_cycles : int) -> List[Any]:
-	from facefusion.core import conditional_process
-
-	process_times = []
-	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
-	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
-	state_manager.set_item('output_video_resolution', pack_resolution(output_video_resolution))
-	state_manager.set_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
-
-	conditional_process()
-	for index in range(benchmark_cycles):
-		start_time = perf_counter()
-		conditional_process()
-		end_time = perf_counter()
-		process_times.append(end_time - start_time)
-	average_run = round(statistics.mean(process_times), 2)
-	fastest_run = round(min(process_times), 2)
-	slowest_run = round(max(process_times), 2)
-	relative_fps = round(video_frame_total * benchmark_cycles / sum(process_times), 2)
-
-	return [
-		state_manager.get_item('target_path'),
-		benchmark_cycles,
-		average_run,
-		fastest_run,
-		slowest_run,
-		relative_fps
-	]
-
-
-def run() -> None:
+def run() -> Generator[List[Any], None, None]:
 	benchmark_resolutions = state_manager.get_item('benchmark_resolutions')
 	benchmark_cycles = state_manager.get_item('benchmark_cycles')
 
@@ -95,21 +52,64 @@ def run() -> None:
 	state_manager.set_item('video_memory_strategy', 'tolerant')
 
 	benchmark_results = []
-	target_paths = [ BENCHMARKS[benchmark_resolution] for benchmark_resolution in benchmark_resolutions if benchmark_resolution in BENCHMARKS ]
+	target_paths = [ BENCHMARKS.get(benchmark_resolution) for benchmark_resolution in benchmark_resolutions if benchmark_resolution in BENCHMARKS ]
 
-	if target_paths:
-		pre_process()
-		for target_path in target_paths:
-			state_manager.set_item('target_path', target_path)
-			state_manager.set_item('output_path', suggest_output_path(state_manager.get_item('target_path')))
-			benchmark_results.append(benchmark_target(benchmark_cycles))
+	for target_path in target_paths:
+		state_manager.set_item('target_path', target_path)
+		state_manager.set_item('output_path', suggest_output_path(state_manager.get_item('target_path')))
+		benchmark_results.append(cycle(benchmark_cycles))
+		yield benchmark_results
 
-	headers = [
-		'Target Path',
-		'Cycles',
-		'Average (s)',
-		'Fastest (s)',
-		'Slowest (s)',
-		'Relative FPS'
+
+def cycle(benchmark_cycles : int) -> List[Any]:
+	process_times = []
+	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
+	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
+	state_manager.set_item('output_video_resolution', pack_resolution(output_video_resolution))
+	state_manager.set_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
+
+	core.conditional_process()
+
+	for index in range(benchmark_cycles):
+		start_time = perf_counter()
+		core.conditional_process()
+		end_time = perf_counter()
+		process_times.append(end_time - start_time)
+
+	average_run = round(statistics.mean(process_times), 2)
+	fastest_run = round(min(process_times), 2)
+	slowest_run = round(max(process_times), 2)
+	relative_fps = round(video_frame_total * benchmark_cycles / sum(process_times), 2)
+
+	return\
+	[
+		state_manager.get_item('target_path'),
+		benchmark_cycles,
+		average_run,
+		fastest_run,
+		slowest_run,
+		relative_fps
 	]
+
+
+def suggest_output_path(target_path : str) -> str:
+	target_file_extension = get_file_extension(target_path)
+	return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_file_extension)
+
+
+def render() -> None:
+	benchmark_results = []
+	headers = \
+	[
+		'target_path',
+		'benchmark_cycles',
+		'average_run',
+		'fastest_run',
+		'slowest_run',
+		'relative_fps'
+	]
+
+	for cycle_result in run():
+		benchmark_results = cycle_result
+
 	render_table(headers, benchmark_results)

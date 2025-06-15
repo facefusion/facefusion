@@ -197,6 +197,9 @@ WORDING : Dict[str, Any] =\
 		# download
 		'download_providers': 'download using different providers (choices: {choices}, ...)',
 		'download_scope': 'specify the download scope',
+		# benchmark
+		'benchmark_resolutions': 'choose the resolution for the benchmarks (choices: {choices}, ...)',
+		'benchmark_cycles': 'specify the number of benchmark cycles',
 		# memory
 		'video_memory_strategy': 'balance fast processing and low VRAM usage',
 		'system_memory_limit': 'limit the available RAM that can be used while processing',
@@ -208,10 +211,7 @@ WORDING : Dict[str, Any] =\
 		'headless_run': 'run the program in headless mode',
 		'batch_run': 'run the program in batch mode',
 		'force_download': 'force automate downloads and exit',
-		'benchmark': 'run performance benchmarks and exit',
-		# benchmark
-		'benchmark_resolutions': 'choose the resolution for the benchmark runs (choices: {choices}, ...)',
-		'benchmark_cycles': 'specify the number of benchmark cycles',
+		'benchmark': 'run performance benchmarks',
 		# jobs
 		'job_id': 'specify the job id',
 		'job_status': 'specify the job status',
