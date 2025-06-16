@@ -2,8 +2,8 @@ from typing import Optional
 
 import gradio
 
-from facefusion import wording
 import facefusion.choices
+from facefusion import wording
 from facefusion.uis.core import register_ui_component
 
 BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
