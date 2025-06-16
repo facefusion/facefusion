@@ -56,4 +56,5 @@ def start(benchmark_resolutions : List[str], benchmark_cycles : int) -> Generato
 	state_manager.sync_item('execution_thread_count')
 	state_manager.sync_item('execution_queue_count')
 
-	yield from benchmarker.run()
+	for benchmark in benchmarker.run():
+		yield [ list(benchmark_set.values()) for benchmark_set in benchmark ]
