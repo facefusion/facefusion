@@ -6,7 +6,7 @@ from time import time
 
 import numpy
 
-from facefusion import cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, video_manager, voice_extractor, wording
+from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, video_manager, voice_extractor, wording
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
@@ -58,6 +58,11 @@ def route(args : Args) -> None:
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
 		return hard_exit(error_code)
+
+	if state_manager.get_item('command') == 'benchmark':
+		if not common_pre_check() or not processors_pre_check() or not benchmarker.pre_check():
+			return hard_exit(2)
+		benchmarker.render()
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):

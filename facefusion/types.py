@@ -130,6 +130,18 @@ EncoderSet = TypedDict('EncoderSet',
 })
 VideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
+BenchmarkResolution = Literal['240p', '360p', '540p', '720p', '1080p', '1440p', '2160p']
+BenchmarkSet : TypeAlias = Dict[BenchmarkResolution, str]
+BenchmarkCycleSet = TypedDict('BenchmarkCycleSet',
+{
+	'target_path' : str,
+	'benchmark_cycles' : int,
+	'average_run' : float,
+	'fastest_run' : float,
+	'slowest_run' : float,
+	'relative_fps' : float
+})
+
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']
 
@@ -238,6 +250,10 @@ StateKey = Literal\
 	'source_pattern',
 	'target_pattern',
 	'output_pattern',
+	'download_providers',
+	'download_scope',
+	'benchmark_resolutions',
+	'benchmark_cycles',
 	'face_detector_model',
 	'face_detector_size',
 	'face_detector_angles',
@@ -282,8 +298,6 @@ StateKey = Literal\
 	'execution_providers',
 	'execution_thread_count',
 	'execution_queue_count',
-	'download_providers',
-	'download_scope',
 	'video_memory_strategy',
 	'system_memory_limit',
 	'log_level',
@@ -304,6 +318,10 @@ State = TypedDict('State',
 	'source_pattern' : str,
 	'target_pattern' : str,
 	'output_pattern' : str,
+	'download_providers': List[DownloadProvider],
+	'download_scope': DownloadScope,
+	'benchmark_resolutions': List[BenchmarkResolution],
+	'benchmark_cycles': int,
 	'face_detector_model' : FaceDetectorModel,
 	'face_detector_size' : str,
 	'face_detector_angles' : List[Angle],
@@ -348,8 +366,6 @@ State = TypedDict('State',
 	'execution_providers' : List[ExecutionProvider],
 	'execution_thread_count' : int,
 	'execution_queue_count' : int,
-	'download_providers' : List[DownloadProvider],
-	'download_scope' : DownloadScope,
 	'video_memory_strategy' : VideoMemoryStrategy,
 	'system_memory_limit' : int,
 	'log_level' : LogLevel,

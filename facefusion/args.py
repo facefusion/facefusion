@@ -125,6 +125,9 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	# download
 	apply_state_item('download_providers', args.get('download_providers'))
 	apply_state_item('download_scope', args.get('download_scope'))
+	# benchmark
+	apply_state_item('benchmark_resolutions', args.get('benchmark_resolutions'))
+	apply_state_item('benchmark_cycles', args.get('benchmark_cycles'))
 	# memory
 	apply_state_item('video_memory_strategy', args.get('video_memory_strategy'))
 	apply_state_item('system_memory_limit', args.get('system_memory_limit'))
