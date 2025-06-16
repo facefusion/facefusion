@@ -3,9 +3,10 @@ import os
 import statistics
 import tempfile
 from time import perf_counter
-from typing import Any, Dict, Generator, List
+from typing import Dict, Generator, List
 
 from facefusion import core, state_manager
+from facefusion.types import BenchmarkSet
 from facefusion.cli_helper import render_table
 from facefusion.download import conditional_download, resolve_download_url
 from facefusion.filesystem import get_file_extension
@@ -40,7 +41,7 @@ def pre_check() -> bool:
 	return True
 
 
-def run() -> Generator[List[Any], None, None]:
+def run() -> Generator[List[BenchmarkSet], None, None]:
 	benchmark_resolutions = state_manager.get_item('benchmark_resolutions')
 	benchmark_cycles = state_manager.get_item('benchmark_cycles')
 
@@ -61,7 +62,7 @@ def run() -> Generator[List[Any], None, None]:
 		yield benchmark_results
 
 
-def cycle(benchmark_cycles : int) -> List[Any]:
+def cycle(benchmark_cycles : int) -> BenchmarkSet:
 	process_times = []
 	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
@@ -82,14 +83,14 @@ def cycle(benchmark_cycles : int) -> List[Any]:
 	relative_fps = round(video_frame_total * benchmark_cycles / sum(process_times), 2)
 
 	return\
-	[
-		state_manager.get_item('target_path'),
-		benchmark_cycles,
-		average_run,
-		fastest_run,
-		slowest_run,
-		relative_fps
-	]
+    {
+		'target_path': state_manager.get_item('target_path'),
+		'benchmark_cycles': benchmark_cycles,
+		'average_run': average_run,
+		'fastest_run': fastest_run,
+		'slowest_run': slowest_run,
+		'relative_fps': relative_fps
+	}
 
 
 def suggest_output_path(target_path : str) -> str:
