@@ -103,12 +103,13 @@ def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame,
 	x_min, y_min, x_max, y_max = paste_bounding_box
 	paste_width = x_max - x_min
 	paste_height = y_max - y_min
-	paste_frame = temp_vision_frame[y_min:y_max, x_min:x_max]
-	paste_inverse_mask = cv2.warpAffine(crop_mask, paste_matrix, (paste_width, paste_height)).clip(0, 1)[:, :, None]
-	paste_inverse_frame = cv2.warpAffine(crop_vision_frame, paste_matrix, (paste_width, paste_height), borderMode = cv2.BORDER_REPLICATE)
-	paste_frame = paste_frame * (1 - paste_inverse_mask) + paste_inverse_frame * paste_inverse_mask
+	inverse_mask = cv2.warpAffine(crop_mask, paste_matrix, (paste_width, paste_height)).clip(0, 1)
+	inverse_mask = numpy.expand_dims(inverse_mask, axis = -1)
+	inverse_vision_frame = cv2.warpAffine(crop_vision_frame, paste_matrix, (paste_width, paste_height), borderMode = cv2.BORDER_REPLICATE)
 	paste_vision_frame = temp_vision_frame.copy()
-	paste_vision_frame[y_min:y_max, x_min:x_max] = paste_frame.astype(temp_vision_frame.dtype)
+	paste_region_frame = paste_vision_frame[y_min:y_max, x_min:x_max]
+	paste_region_frame = paste_region_frame * (1 - inverse_mask) + inverse_vision_frame * inverse_mask
+	paste_vision_frame[y_min:y_max, x_min:x_max] = paste_region_frame.astype(temp_vision_frame.dtype)
 	return paste_vision_frame
 
 
