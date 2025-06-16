@@ -98,39 +98,35 @@ def warp_face_by_translation(temp_vision_frame : VisionFrame, translation : Tran
 	return crop_vision_frame, affine_matrix
 
 
-def find_paste_region(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, affine_matrix : Matrix) -> Tuple[BoundingBox, Matrix]:
-	temp_size = temp_vision_frame.shape[:2][::-1]
-	crop_size = crop_vision_frame.shape[:2][::-1]
-	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
-	crop_corners = numpy.array([ [ 0, 0 ], [ crop_size[0], 0 ], [ crop_size[0], crop_size[1] ], [ 0, crop_size[1] ] ], dtype = numpy.float32)
-	paste_region_corners = transform_points(crop_corners, inverse_matrix)
-	min_corner = numpy.floor(paste_region_corners.min(axis = 0)).astype(int)
-	max_corner = numpy.ceil(paste_region_corners.max(axis = 0)).astype(int)
-	x_min, y_min = numpy.clip(min_corner, 0, temp_size)
-	x_max, y_max = numpy.clip(max_corner, 0, temp_size)
-	paste_region_bounding_box = numpy.array([ x_min, y_min, x_max, y_max ])
-	paste_region_matrix = inverse_matrix.copy()
-	paste_region_matrix[0, 2] -= x_min
-	paste_region_matrix[1, 2] -= y_min
-	return paste_region_bounding_box, paste_region_matrix
-
-
 def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, crop_mask : Mask, affine_matrix : Matrix) -> VisionFrame:
-	paste_region_bounding_box, paste_region_matrix = find_paste_region(temp_vision_frame, crop_vision_frame, affine_matrix)
-	x_min, y_min, x_max, y_max = paste_region_bounding_box
-	paste_region_width = x_max - x_min
-	paste_region_height = y_max - y_min
+	paste_bounding_box, paste_matrix = calc_paste_area(temp_vision_frame, crop_vision_frame, affine_matrix)
+	x_min, y_min, x_max, y_max = paste_bounding_box
+	paste_width = x_max - x_min
+	paste_height = y_max - y_min
+	paste_frame = temp_vision_frame[y_min:y_max, x_min:x_max]
+	paste_inverse_mask = cv2.warpAffine(crop_mask, paste_matrix, (paste_width, paste_height)).clip(0, 1)[:, :, None]
+	paste_inverse_frame = cv2.warpAffine(crop_vision_frame, paste_matrix, (paste_width, paste_height), borderMode = cv2.BORDER_REPLICATE)
+	paste_frame = paste_frame * (1 - paste_inverse_mask) + paste_inverse_frame * paste_inverse_mask
+	paste_vision_frame = temp_vision_frame.copy()
+	paste_vision_frame[y_min:y_max, x_min:x_max] = paste_frame.astype(temp_vision_frame.dtype)
+	return paste_vision_frame
 
-	if paste_region_width > 0 and paste_region_height > 0:
-		paste_region_frame = temp_vision_frame[y_min:y_max, x_min:x_max]
-		paste_inverse_mask = cv2.warpAffine(crop_mask, paste_region_matrix, (paste_region_width, paste_region_height)).clip(0, 1)[:, :, None]
-		paste_inverse_region_frame = cv2.warpAffine(crop_vision_frame, paste_region_matrix, (paste_region_width, paste_region_height), borderMode = cv2.BORDER_REPLICATE)
-		paste_region_frame = paste_region_frame * (1 - paste_inverse_mask) + paste_inverse_region_frame * paste_inverse_mask
-		paste_vision_frame = temp_vision_frame.copy()
-		paste_vision_frame[y_min:y_max, x_min:x_max] = paste_region_frame.astype(temp_vision_frame.dtype)
-		return paste_vision_frame
 
-	return temp_vision_frame
+def calc_paste_area(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, affine_matrix : Matrix) -> Tuple[BoundingBox, Matrix]:
+	temp_height, temp_width = temp_vision_frame.shape[:2]
+	crop_height, crop_width = crop_vision_frame.shape[:2]
+	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
+	crop_points = numpy.array([ [ 0, 0 ], [ crop_width, 0 ], [ crop_width, crop_height ], [ 0, crop_height ] ])
+	paste_region_points = transform_points(crop_points, inverse_matrix)
+	min_point = numpy.floor(paste_region_points.min(axis = 0)).astype(int)
+	max_point = numpy.ceil(paste_region_points.max(axis = 0)).astype(int)
+	x_min, y_min = numpy.clip(min_point, 0, [ temp_width, temp_height ])
+	x_max, y_max = numpy.clip(max_point, 0, [ temp_width, temp_height ])
+	paste_bounding_box = numpy.array([ x_min, y_min, x_max, y_max ])
+	paste_matrix = inverse_matrix.copy()
+	paste_matrix[0, 2] -= x_min
+	paste_matrix[1, 2] -= y_min
+	return paste_bounding_box, paste_matrix
 
 
 @lru_cache(maxsize = None)
