@@ -215,11 +215,10 @@ def create_download_providers_program() -> ArgumentParser:
 
 
 def create_benchmark_program() -> ArgumentParser:
-	from facefusion.benchmarker import BENCHMARKS
 	program = ArgumentParser(add_help = False)
 	group_benchmark = program.add_argument_group('benchmark')
-	group_benchmark.add_argument('--benchmark-resolutions', help = wording.get('help.benchmark_resolutions'), default = config.get_str_list('benchmark', 'benchmark_resolutions', '240p'), choices = list(BENCHMARKS.keys()), nargs = '+')
-	group_benchmark.add_argument('--benchmark-cycles', help = wording.get('help.benchmark_cycles'), type = int, default = config.get_int_value('benchmark', 'benchmark_cycles', '5'), choices = range(1, 11))
+	group_benchmark.add_argument('--benchmark-resolutions', help = wording.get('help.benchmark_resolutions'), default = config.get_str_list('benchmark', 'benchmark_resolutions', get_first(facefusion.choices.benchmark_resolutions)), choices = facefusion.choices.benchmark_resolutions, nargs = '+')
+	group_benchmark.add_argument('--benchmark-cycles', help = wording.get('help.benchmark_cycles'), type = int, default = config.get_int_value('benchmark', 'benchmark_cycles', '5'), choices = facefusion.choices.benchmark_cycles_range)
 	return program
 
 

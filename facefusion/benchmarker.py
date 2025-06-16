@@ -3,25 +3,15 @@ import os
 import statistics
 import tempfile
 from time import perf_counter
-from typing import Dict, Generator, List
+from typing import Generator, List
 
+import facefusion.choices
 from facefusion import core, state_manager
 from facefusion.cli_helper import render_table
 from facefusion.download import conditional_download, resolve_download_url
 from facefusion.filesystem import get_file_extension
-from facefusion.types import BenchmarkSet
+from facefusion.types import BenchmarkCycleSet
 from facefusion.vision import count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution
-
-BENCHMARKS : Dict[str, str] =\
-{
-	'240p': '.assets/examples/target-240p.mp4',
-	'360p': '.assets/examples/target-360p.mp4',
-	'540p': '.assets/examples/target-540p.mp4',
-	'720p': '.assets/examples/target-720p.mp4',
-	'1080p': '.assets/examples/target-1080p.mp4',
-	'1440p': '.assets/examples/target-1440p.mp4',
-	'2160p': '.assets/examples/target-2160p.mp4'
-}
 
 
 def pre_check() -> bool:
@@ -40,7 +30,7 @@ def pre_check() -> bool:
 	return True
 
 
-def run() -> Generator[List[BenchmarkSet], None, None]:
+def run() -> Generator[List[BenchmarkCycleSet], None, None]:
 	benchmark_resolutions = state_manager.get_item('benchmark_resolutions')
 	benchmark_cycles = state_manager.get_item('benchmark_cycles')
 
@@ -52,7 +42,7 @@ def run() -> Generator[List[BenchmarkSet], None, None]:
 	state_manager.set_item('video_memory_strategy', 'tolerant')
 
 	benchmarks = []
-	target_paths = [ BENCHMARKS.get(benchmark_resolution) for benchmark_resolution in benchmark_resolutions if benchmark_resolution in BENCHMARKS ]
+	target_paths = [facefusion.choices.benchmark_set.get(benchmark_resolution) for benchmark_resolution in benchmark_resolutions if benchmark_resolution in facefusion.choices.benchmark_set]
 
 	for target_path in target_paths:
 		state_manager.set_item('target_path', target_path)
@@ -61,7 +51,7 @@ def run() -> Generator[List[BenchmarkSet], None, None]:
 		yield benchmarks
 
 
-def cycle(benchmark_cycles : int) -> BenchmarkSet:
+def cycle(benchmark_cycles : int) -> BenchmarkCycleSet:
 	process_times = []
 	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
@@ -112,4 +102,5 @@ def render() -> None:
 	for benchmark in run():
 		benchmarks = benchmark
 
-	render_table(headers, benchmarks)
+	contents = [ list(benchmark_set.values()) for benchmark_set in benchmarks ]
+	render_table(headers, contents)

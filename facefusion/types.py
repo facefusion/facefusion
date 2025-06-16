@@ -100,16 +100,6 @@ LogLevelSet : TypeAlias = Dict[LogLevel, int]
 TableHeaders = List[str]
 TableContents = List[List[Any]]
 
-BenchmarkSet = TypedDict('BenchmarkSet',
-{
-	'target_path' : str,
-	'benchmark_cycles' : int,
-	'average_run' : float,
-	'fastest_run' : float,
-	'slowest_run' : float,
-	'relative_fps' : float
-})
-
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yolo_face']
 FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
 FaceDetectorSet : TypeAlias = Dict[FaceDetectorModel, List[str]]
@@ -139,6 +129,18 @@ EncoderSet = TypedDict('EncoderSet',
 	'video' : List[VideoEncoder]
 })
 VideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
+
+BenchmarkResolution = Literal['240p', '360p', '540p', '720p', '1080p', '1440p', '2160p']
+BenchmarkSet : TypeAlias = Dict[BenchmarkResolution, str]
+BenchmarkCycleSet = TypedDict('BenchmarkCycleSet',
+{
+	'target_path' : str,
+	'benchmark_cycles' : int,
+	'average_run' : float,
+	'fastest_run' : float,
+	'slowest_run' : float,
+	'relative_fps' : float
+})
 
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']
