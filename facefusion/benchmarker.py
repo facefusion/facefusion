@@ -51,7 +51,7 @@ def run() -> Generator[List[BenchmarkCycleSet], None, None]:
 		yield benchmarks
 
 
-def cycle(benchmark_cycle_count : int) -> BenchmarkCycleSet:
+def cycle(cycle_count : int) -> BenchmarkCycleSet:
 	process_times = []
 	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
@@ -60,7 +60,7 @@ def cycle(benchmark_cycle_count : int) -> BenchmarkCycleSet:
 
 	core.conditional_process()
 
-	for index in range(benchmark_cycle_count):
+	for index in range(cycle_count):
 		start_time = perf_counter()
 		core.conditional_process()
 		end_time = perf_counter()
@@ -69,12 +69,12 @@ def cycle(benchmark_cycle_count : int) -> BenchmarkCycleSet:
 	average_run = round(statistics.mean(process_times), 2)
 	fastest_run = round(min(process_times), 2)
 	slowest_run = round(max(process_times), 2)
-	relative_fps = round(video_frame_total * benchmark_cycle_count / sum(process_times), 2)
+	relative_fps = round(video_frame_total * cycle_count / sum(process_times), 2)
 
 	return\
 	{
 		'target_path': state_manager.get_item('target_path'),
-		'benchmark_cycle_count': benchmark_cycle_count,
+		'cycle_count': cycle_count,
 		'average_run': average_run,
 		'fastest_run': fastest_run,
 		'slowest_run': slowest_run,
