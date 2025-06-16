@@ -3,6 +3,7 @@ from typing import Any, Generator, List, Optional
 import gradio
 
 from facefusion import benchmarker, state_manager, wording
+from facefusion.types import BenchmarkResolution
 from facefusion.uis.core import get_ui_component
 
 BENCHMARK_BENCHMARKS_DATAFRAME : Optional[gradio.Dataframe] = None
@@ -49,7 +50,7 @@ def listen() -> None:
 		BENCHMARK_START_BUTTON.click(start, inputs = [ benchmark_resolutions_checkbox_group, benchmark_cycles_slider ], outputs = BENCHMARK_BENCHMARKS_DATAFRAME)
 
 
-def start(benchmark_resolutions : List[str], benchmark_cycles : int) -> Generator[List[Any], None, None]:
+def start(benchmark_resolutions : List[BenchmarkResolution], benchmark_cycles : int) -> Generator[List[Any], None, None]:
 	state_manager.set_item('benchmark_resolutions', benchmark_resolutions)
 	state_manager.set_item('benchmark_cycles', benchmark_cycles)
 	state_manager.sync_item('execution_providers')
