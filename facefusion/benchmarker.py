@@ -32,14 +32,14 @@ def pre_check() -> bool:
 
 def run() -> Generator[List[BenchmarkCycleSet], None, None]:
 	benchmark_resolutions = state_manager.get_item('benchmark_resolutions')
-	benchmark_cycles = state_manager.get_item('benchmark_cycles')
+	benchmark_cycle_count = state_manager.get_item('benchmark_cycle_count')
 
-	state_manager.set_item('source_paths', [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ])
-	state_manager.set_item('face_landmarker_score', 0)
-	state_manager.set_item('temp_frame_format', 'bmp')
-	state_manager.set_item('output_audio_volume', 0)
-	state_manager.set_item('output_video_preset', 'ultrafast')
-	state_manager.set_item('video_memory_strategy', 'tolerant')
+	state_manager.init_item('source_paths', [ '.assets/examples/source.jpg', '.assets/examples/source.mp3' ])
+	state_manager.init_item('face_landmarker_score', 0)
+	state_manager.init_item('temp_frame_format', 'bmp')
+	state_manager.init_item('output_audio_volume', 0)
+	state_manager.init_item('output_video_preset', 'ultrafast')
+	state_manager.init_item('video_memory_strategy', 'tolerant')
 
 	benchmarks = []
 	target_paths = [facefusion.choices.benchmark_set.get(benchmark_resolution) for benchmark_resolution in benchmark_resolutions if benchmark_resolution in facefusion.choices.benchmark_set]
@@ -47,11 +47,11 @@ def run() -> Generator[List[BenchmarkCycleSet], None, None]:
 	for target_path in target_paths:
 		state_manager.set_item('target_path', target_path)
 		state_manager.set_item('output_path', suggest_output_path(state_manager.get_item('target_path')))
-		benchmarks.append(cycle(benchmark_cycles))
+		benchmarks.append(cycle(benchmark_cycle_count))
 		yield benchmarks
 
 
-def cycle(benchmark_cycles : int) -> BenchmarkCycleSet:
+def cycle(benchmark_cycle_count : int) -> BenchmarkCycleSet:
 	process_times = []
 	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
@@ -60,7 +60,7 @@ def cycle(benchmark_cycles : int) -> BenchmarkCycleSet:
 
 	core.conditional_process()
 
-	for index in range(benchmark_cycles):
+	for index in range(benchmark_cycle_count):
 		start_time = perf_counter()
 		core.conditional_process()
 		end_time = perf_counter()
@@ -69,12 +69,12 @@ def cycle(benchmark_cycles : int) -> BenchmarkCycleSet:
 	average_run = round(statistics.mean(process_times), 2)
 	fastest_run = round(min(process_times), 2)
 	slowest_run = round(max(process_times), 2)
-	relative_fps = round(video_frame_total * benchmark_cycles / sum(process_times), 2)
+	relative_fps = round(video_frame_total * benchmark_cycle_count / sum(process_times), 2)
 
 	return\
 	{
 		'target_path': state_manager.get_item('target_path'),
-		'benchmark_cycles': benchmark_cycles,
+		'benchmark_cycle_count': benchmark_cycle_count,
 		'average_run': average_run,
 		'fastest_run': fastest_run,
 		'slowest_run': slowest_run,
@@ -92,7 +92,7 @@ def render() -> None:
 	headers =\
 	[
 		'target_path',
-		'benchmark_cycles',
+		'benchmark_cycle_count',
 		'average_run',
 		'fastest_run',
 		'slowest_run',

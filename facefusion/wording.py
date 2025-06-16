@@ -189,17 +189,17 @@ WORDING : Dict[str, Any] =\
 		'open_browser': 'open the browser once the program is ready',
 		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)',
 		'ui_workflow': 'choose the ui workflow',
+		# download
+		'download_providers': 'download using different providers (choices: {choices}, ...)',
+		'download_scope': 'specify the download scope',
+		# benchmark
+		'benchmark_resolutions': 'choose the resolutions for the benchmarks (choices: {choices}, ...)',
+		'benchmark_cycle_count': 'specify the amount of cycles per benchmark',
 		# execution
 		'execution_device_id': 'specify the device used for processing',
 		'execution_providers': 'inference using different providers (choices: {choices}, ...)',
 		'execution_thread_count': 'specify the amount of parallel threads while processing',
 		'execution_queue_count': 'specify the amount of frames each thread is processing',
-		# download
-		'download_providers': 'download using different providers (choices: {choices}, ...)',
-		'download_scope': 'specify the download scope',
-		# benchmark
-		'benchmark_resolutions': 'choose the resolution for the benchmarks (choices: {choices}, ...)',
-		'benchmark_cycles': 'specify the number of benchmark cycles',
 		# memory
 		'video_memory_strategy': 'balance fast processing and low VRAM usage',
 		'system_memory_limit': 'limit the available RAM that can be used while processing',
@@ -244,7 +244,7 @@ WORDING : Dict[str, Any] =\
 		'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
 		'age_modifier_model_dropdown': 'AGE MODIFIER MODEL',
 		'apply_button': 'APPLY',
-		'benchmark_cycles_slider': 'BENCHMARK CYCLES',
+		'benchmark_cycle_count_slider': 'BENCHMARK CYCLE COUNT',
 		'benchmark_resolutions_checkbox_group': 'BENCHMARK RESOLUTIONS',
 		'clear_button': 'CLEAR',
 		'common_options_checkbox_group': 'OPTIONS',

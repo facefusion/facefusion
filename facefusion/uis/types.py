@@ -5,7 +5,7 @@ ComponentName = Literal\
 [
 	'age_modifier_direction_slider',
 	'age_modifier_model_dropdown',
-	'benchmark_cycles_slider',
+	'benchmark_cycle_count_slider',
 	'benchmark_resolutions_checkbox_group',
 	'deep_swapper_model_dropdown',
 	'deep_swapper_morph_slider',

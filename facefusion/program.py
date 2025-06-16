@@ -194,6 +194,30 @@ def create_uis_program() -> ArgumentParser:
 	return program
 
 
+def create_download_providers_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_download = program.add_argument_group('download')
+	group_download.add_argument('--download-providers', help = wording.get('help.download_providers').format(choices = ', '.join(facefusion.choices.download_providers)), default = config.get_str_list('download', 'download_providers', ' '.join(facefusion.choices.download_providers)), choices = facefusion.choices.download_providers, nargs = '+', metavar = 'DOWNLOAD_PROVIDERS')
+	job_store.register_job_keys([ 'download_providers' ])
+	return program
+
+
+def create_download_scope_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_download = program.add_argument_group('download')
+	group_download.add_argument('--download-scope', help = wording.get('help.download_scope'), default = config.get_str_value('download', 'download_scope', 'lite'), choices = facefusion.choices.download_scopes)
+	job_store.register_job_keys([ 'download_scope' ])
+	return program
+
+
+def create_benchmark_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_benchmark = program.add_argument_group('benchmark')
+	group_benchmark.add_argument('--benchmark-resolutions', help = wording.get('help.benchmark_resolutions'), default = config.get_str_list('benchmark', 'benchmark_resolutions', get_first(facefusion.choices.benchmark_resolutions)), choices = facefusion.choices.benchmark_resolutions, nargs = '+')
+	group_benchmark.add_argument('--benchmark-cycle-count', help = wording.get('help.benchmark_cycle_count'), type = int, default = config.get_int_value('benchmark', 'benchmark_cycle_count', '5'), choices = facefusion.choices.benchmark_cycle_count_range)
+	return program
+
+
 def create_execution_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	available_execution_providers = get_available_execution_providers()
@@ -203,30 +227,6 @@ def create_execution_program() -> ArgumentParser:
 	group_execution.add_argument('--execution-thread-count', help = wording.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution', 'execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_int_metavar(facefusion.choices.execution_thread_count_range))
 	group_execution.add_argument('--execution-queue-count', help = wording.get('help.execution_queue_count'), type = int, default = config.get_int_value('execution', 'execution_queue_count', '1'), choices = facefusion.choices.execution_queue_count_range, metavar = create_int_metavar(facefusion.choices.execution_queue_count_range))
 	job_store.register_job_keys([ 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count' ])
-	return program
-
-
-def create_download_providers_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	group_download = program.add_argument_group('download')
-	group_download.add_argument('--download-providers', help = wording.get('help.download_providers').format(choices = ', '.join(facefusion.choices.download_providers)), default = config.get_str_list('download', 'download_providers', ' '.join(facefusion.choices.download_providers)), choices = facefusion.choices.download_providers, nargs = '+', metavar = 'DOWNLOAD_PROVIDERS')
-	job_store.register_job_keys([ 'download_providers' ])
-	return program
-
-
-def create_benchmark_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	group_benchmark = program.add_argument_group('benchmark')
-	group_benchmark.add_argument('--benchmark-resolutions', help = wording.get('help.benchmark_resolutions'), default = config.get_str_list('benchmark', 'benchmark_resolutions', get_first(facefusion.choices.benchmark_resolutions)), choices = facefusion.choices.benchmark_resolutions, nargs = '+')
-	group_benchmark.add_argument('--benchmark-cycles', help = wording.get('help.benchmark_cycles'), type = int, default = config.get_int_value('benchmark', 'benchmark_cycles', '5'), choices = facefusion.choices.benchmark_cycles_range)
-	return program
-
-
-def create_download_scope_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	group_download = program.add_argument_group('download')
-	group_download.add_argument('--download-scope', help = wording.get('help.download_scope'), default = config.get_str_value('download', 'download_scope', 'lite'), choices = facefusion.choices.download_scopes)
-	job_store.register_job_keys([ 'download_scope' ])
 	return program
 
 
@@ -292,7 +292,7 @@ def create_program() -> ArgumentParser:
 	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('batch-run', help = wording.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('force-download', help = wording.get('help.force_download'), parents = [ create_download_providers_program(), create_download_scope_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('benchmark', help = wording.get('help.benchmark'), parents = [ create_temp_path_program(), create_benchmark_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('benchmark', help = wording.get('help.benchmark'), parents = [ create_temp_path_program(), collect_step_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	# job manager
 	sub_program.add_parser('job-list', help = wording.get('help.job_list'), parents = [ create_job_status_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-create', help = wording.get('help.job_create'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
