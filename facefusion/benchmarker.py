@@ -6,12 +6,11 @@ from time import perf_counter
 from typing import Dict, Generator, List
 
 from facefusion import core, state_manager
-from facefusion.types import BenchmarkSet
 from facefusion.cli_helper import render_table
 from facefusion.download import conditional_download, resolve_download_url
 from facefusion.filesystem import get_file_extension
+from facefusion.types import BenchmarkSet
 from facefusion.vision import count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution
-
 
 BENCHMARKS : Dict[str, str] =\
 {
@@ -52,14 +51,14 @@ def run() -> Generator[List[BenchmarkSet], None, None]:
 	state_manager.set_item('output_video_preset', 'ultrafast')
 	state_manager.set_item('video_memory_strategy', 'tolerant')
 
-	benchmark_results = []
+	benchmarks = []
 	target_paths = [ BENCHMARKS.get(benchmark_resolution) for benchmark_resolution in benchmark_resolutions if benchmark_resolution in BENCHMARKS ]
 
 	for target_path in target_paths:
 		state_manager.set_item('target_path', target_path)
 		state_manager.set_item('output_path', suggest_output_path(state_manager.get_item('target_path')))
-		benchmark_results.append(cycle(benchmark_cycles))
-		yield benchmark_results
+		benchmarks.append(cycle(benchmark_cycles))
+		yield benchmarks
 
 
 def cycle(benchmark_cycles : int) -> BenchmarkSet:
@@ -83,7 +82,7 @@ def cycle(benchmark_cycles : int) -> BenchmarkSet:
 	relative_fps = round(video_frame_total * benchmark_cycles / sum(process_times), 2)
 
 	return\
-    {
+	{
 		'target_path': state_manager.get_item('target_path'),
 		'benchmark_cycles': benchmark_cycles,
 		'average_run': average_run,
@@ -99,8 +98,8 @@ def suggest_output_path(target_path : str) -> str:
 
 
 def render() -> None:
-	benchmark_results = []
-	headers = \
+	benchmarks = []
+	headers =\
 	[
 		'target_path',
 		'benchmark_cycles',
@@ -110,7 +109,7 @@ def render() -> None:
 		'relative_fps'
 	]
 
-	for cycle_result in run():
-		benchmark_results = cycle_result
+	for benchmark in run():
+		benchmarks = benchmark
 
-	render_table(headers, benchmark_results)
+	render_table(headers, benchmarks)
