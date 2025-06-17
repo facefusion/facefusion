@@ -8,15 +8,15 @@ def render_table(headers : TableHeaders, contents : TableContents) -> None:
 	package_logger = get_package_logger()
 	table_column, table_separator = create_table_parts(headers, contents)
 
-	package_logger.info(table_separator)
-	package_logger.info(table_column.format(*headers))
-	package_logger.info(table_separator)
+	package_logger.critical(table_separator)
+	package_logger.critical(table_column.format(*headers))
+	package_logger.critical(table_separator)
 
 	for content in contents:
-		content = [ value if value else '' for value in content ]
-		package_logger.info(table_column.format(*content))
+		content = [ str(value) for value in content ]
+		package_logger.critical(table_column.format(*content))
 
-	package_logger.info(table_separator)
+	package_logger.critical(table_separator)
 
 
 def create_table_parts(headers : TableHeaders, contents : TableContents) -> Tuple[str, str]:
