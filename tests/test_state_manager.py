@@ -12,7 +12,7 @@ def get_state(app_context : AppContext) -> Union[State, ProcessorState]:
 
 
 def clear_state(app_context : AppContext) -> None:
-	STATE_SET[app_context] = {}
+	STATE_SET[app_context] = {} #type:ignore[typeddict-item]
 
 
 @pytest.fixture(scope = 'function', autouse = True)
