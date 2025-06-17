@@ -201,19 +201,6 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 	return paste_vision_frame
 
 
-def forward_wav2lip(temp_audio_frame : AudioFrame, area_vision_frame : VisionFrame) -> VisionFrame:
-	lip_syncer = get_inference_pool().get('lip_syncer')
-
-	with conditional_thread_semaphore():
-		area_vision_frame = lip_syncer.run(None,
-		{
-			'source': temp_audio_frame,
-			'target': area_vision_frame
-		})[0]
-
-	return area_vision_frame
-
-
 def forward_edtalk(temp_audio_frame : AudioFrame, crop_vision_frame : VisionFrame, lip_syncer_weight : LipSyncerWeight) -> VisionFrame:
 	lip_syncer = get_inference_pool().get('lip_syncer')
 
@@ -226,6 +213,19 @@ def forward_edtalk(temp_audio_frame : AudioFrame, crop_vision_frame : VisionFram
 		})[0]
 
 	return crop_vision_frame
+
+
+def forward_wav2lip(temp_audio_frame : AudioFrame, area_vision_frame : VisionFrame) -> VisionFrame:
+	lip_syncer = get_inference_pool().get('lip_syncer')
+
+	with conditional_thread_semaphore():
+		area_vision_frame = lip_syncer.run(None,
+		{
+			'source': temp_audio_frame,
+			'target': area_vision_frame
+		})[0]
+
+	return area_vision_frame
 
 
 def prepare_audio_frame(temp_audio_frame : AudioFrame) -> AudioFrame:
@@ -242,7 +242,7 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	model_size = get_model_options().get('size')
 
 	if model_type == 'edtalk':
-		crop_vision_frame = cv2.resize(crop_vision_frame, (256, 256), interpolation = cv2.INTER_AREA)
+		crop_vision_frame = cv2.resize(crop_vision_frame, model_size, interpolation = cv2.INTER_AREA)
 		crop_vision_frame = crop_vision_frame[:, :, ::-1] / 255.0
 		crop_vision_frame = numpy.expand_dims(crop_vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
 	if model_type == 'wav2lip':
