@@ -193,6 +193,30 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'mean': [ 0.5, 0.5, 0.5 ],
 			'standard_deviation': [ 0.5, 0.5, 0.5 ]
 		},
+		'hyperswap_256':
+		{
+			'hashes':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_256.hash'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_256.hash')
+				}
+			},
+			'sources':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_256.onnx')
+				}
+			},
+			'type': 'hyperswap',
+			'template': 'arcface_128',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
+		},
 		'inswapper_128':
 		{
 			'hashes':
@@ -516,6 +540,10 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 		source_embedding = source_embedding.reshape(1, -1)
 		return source_embedding
 
+	if model_type == 'hyperswap':
+		source_embedding = source_face.normed_embedding.reshape((1, -1))
+		return source_embedding
+
 	if model_type == 'inswapper':
 		model_path = get_model_options().get('sources').get('face_swapper').get('path')
 		model_initializer = get_static_model_initializer(model_path)
@@ -553,7 +581,7 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	model_standard_deviation = get_model_options().get('standard_deviation')
 
 	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
-	if model_type in [ 'ghost', 'hififace', 'uniface' ]:
+	if model_type in [ 'ghost', 'hififace', 'hyperswap', 'uniface' ]:
 		crop_vision_frame = crop_vision_frame * model_standard_deviation + model_mean
 	crop_vision_frame = crop_vision_frame.clip(0, 1)
 	crop_vision_frame = crop_vision_frame[:, :, ::-1] * 255
