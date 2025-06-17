@@ -1,8 +1,8 @@
-import hashlib
 from typing import List, Optional
 
 import numpy
 
+from facefusion.hash_helper import create_hash
 from facefusion.types import Face, FaceSet, FaceStore, VisionFrame
 
 FACE_STORE : FaceStore =\
@@ -35,7 +35,7 @@ def clear_static_faces() -> None:
 
 def create_frame_hash(vision_frame : VisionFrame) -> Optional[str]:
 	if numpy.any(vision_frame):
-		frame_hash = hashlib.blake2b(vision_frame.tobytes(), digest_size = 16).hexdigest()
+		frame_hash = create_hash(vision_frame.tobytes())
 		return frame_hash
 	return None
 
