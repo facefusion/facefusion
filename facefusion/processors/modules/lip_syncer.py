@@ -167,7 +167,7 @@ def post_process() -> None:
 
 
 def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_name = state_manager.get_item('lip_syncer_model')
+	model_type = get_model_options().get('type')
 	model_size = get_model_options().get('size')
 	temp_audio_frame = prepare_audio_frame(temp_audio_frame)
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), 'ffhq_512', (512, 512))
@@ -177,14 +177,14 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 
-	if model_name == 'edtalk_256':
+	if model_type == 'edtalk':
 		lip_syncer_weight = numpy.array([ state_manager.get_item('lip_syncer_weight') ]).astype(numpy.float32) * 1.25
 		box_mask = create_box_mask(crop_vision_frame, state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 		crop_masks.append(box_mask)
 		crop_vision_frame = prepare_crop_frame(crop_vision_frame)
 		crop_vision_frame = forward_edtalk(temp_audio_frame, crop_vision_frame, lip_syncer_weight)
 		crop_vision_frame = normalize_crop_frame(crop_vision_frame)
-	if model_name.startswith('wav2lip'):
+	if model_type == 'wav2lip':
 		face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
 		area_mask = create_area_mask(crop_vision_frame, face_landmark_68, [ 'lower-face' ])
 		crop_masks.append(area_mask)
@@ -229,10 +229,14 @@ def forward_wav2lip(temp_audio_frame : AudioFrame, area_vision_frame : VisionFra
 
 
 def prepare_audio_frame(temp_audio_frame : AudioFrame) -> AudioFrame:
+	model_type = get_model_options().get('type')
 	temp_audio_frame = numpy.maximum(numpy.exp(-5 * numpy.log(10)), temp_audio_frame)
 	temp_audio_frame = numpy.log10(temp_audio_frame) * 1.6 + 3.2
 	temp_audio_frame = temp_audio_frame.clip(-4, 4).astype(numpy.float32)
-	temp_audio_frame = temp_audio_frame * state_manager.get_item('lip_syncer_weight') * 2.0
+
+	if model_type == 'wav2lip':
+		temp_audio_frame = temp_audio_frame * state_manager.get_item('lip_syncer_weight') * 2.0
+
 	temp_audio_frame = numpy.expand_dims(temp_audio_frame, axis = (0, 1))
 	return temp_audio_frame
 
