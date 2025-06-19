@@ -194,7 +194,7 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 		area_vision_frame = prepare_crop_frame(area_vision_frame)
 		area_vision_frame = forward_wav2lip(temp_audio_frame, area_vision_frame)
 		area_vision_frame = normalize_crop_frame(area_vision_frame)
-		crop_vision_frame = cv2.warpAffine(area_vision_frame, cv2.invertAffineTransform(area_matrix), (512, 512), borderMode=cv2.BORDER_REPLICATE)
+		crop_vision_frame = cv2.warpAffine(area_vision_frame, cv2.invertAffineTransform(area_matrix), (512, 512), borderMode = cv2.BORDER_REPLICATE)
 
 	crop_mask = numpy.minimum.reduce(crop_masks)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
@@ -274,7 +274,7 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 	if model_type == 'edtalk':
 		crop_vision_frame = crop_vision_frame[:, :, ::-1]
-		crop_vision_frame = cv2.resize(crop_vision_frame, (512, 512), interpolation=cv2.INTER_CUBIC)
+		crop_vision_frame = cv2.resize(crop_vision_frame, (512, 512), interpolation = cv2.INTER_CUBIC)
 
 	return crop_vision_frame
 
