@@ -1,7 +1,5 @@
 from typing import List, Optional
 
-import numpy
-
 from facefusion.hash_helper import create_hash
 from facefusion.types import Face, FaceSet, FaceStore, VisionFrame
 
