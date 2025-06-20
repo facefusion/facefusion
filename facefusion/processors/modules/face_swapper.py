@@ -193,22 +193,70 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'mean': [ 0.5, 0.5, 0.5 ],
 			'standard_deviation': [ 0.5, 0.5, 0.5 ]
 		},
-		'hyperswap_256':
+		'hyperswap_1a_256':
 		{
 			'hashes':
 			{
 				'face_swapper':
 				{
-					'url': resolve_download_url('models-3.3.0', 'hyperswap_256.hash'),
-					'path': resolve_relative_path('../.assets/models/hyperswap_256.hash')
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_1a_256.hash'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_1a_256.hash')
 				}
 			},
 			'sources':
 			{
 				'face_swapper':
 				{
-					'url': resolve_download_url('models-3.3.0', 'hyperswap_256.onnx'),
-					'path': resolve_relative_path('../.assets/models/hyperswap_256.onnx')
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_1a_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_1a_256.onnx')
+				}
+			},
+			'type': 'hyperswap',
+			'template': 'arcface_128',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
+		},
+		'hyperswap_1b_256':
+		{
+			'hashes':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_1b_256.hash'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_1b_256.hash')
+				}
+			},
+			'sources':
+				{
+					'face_swapper':
+					{
+						'url': resolve_download_url('models-3.3.0', 'hyperswap_1b_256.onnx'),
+						'path': resolve_relative_path('../.assets/models/hyperswap_1b_256.onnx')
+					}
+				},
+			'type': 'hyperswap',
+			'template': 'arcface_128',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
+		},
+		'hyperswap_1c_256':
+		{
+			'hashes':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_1c_256.hash'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_1c_256.hash')
+				}
+			},
+			'sources':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_1c_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_1c_256.onnx')
 				}
 			},
 			'type': 'hyperswap',
