@@ -10,10 +10,10 @@ ExpressionRestorerModel = Literal['live_portrait']
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race']
 FaceEditorModel = Literal['live_portrait']
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']
-FaceSwapperModel = Literal['blendswap_256', 'ghost_1_256', 'ghost_2_256', 'ghost_3_256', 'hififace_unofficial_256', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_unofficial_512', 'uniface_256']
+FaceSwapperModel = Literal['blendswap_256', 'ghost_1_256', 'ghost_2_256', 'ghost_3_256', 'hififace_unofficial_256', 'hyperswap_1a_256', 'hyperswap_1b_256', 'hyperswap_1c_256', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_unofficial_512', 'uniface_256']
 FrameColorizerModel = Literal['ddcolor', 'ddcolor_artistic', 'deoldify', 'deoldify_artistic', 'deoldify_stable']
-FrameEnhancerModel = Literal['clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'real_hatgan_x4', 'real_web_photo_x4', 'realistic_rescaler_x4', 'remacri_x4', 'siax_x4', 'span_kendata_x4', 'swin2_sr_x4', 'ultra_sharp_x4']
-LipSyncerModel = Literal['wav2lip_96', 'wav2lip_gan_96']
+FrameEnhancerModel = Literal['clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'real_hatgan_x4', 'real_web_photo_x4', 'realistic_rescaler_x4', 'remacri_x4', 'siax_x4', 'span_kendata_x4', 'swin2_sr_x4', 'ultra_sharp_x4', 'ultra_sharp_2_x4']
+LipSyncerModel = Literal['edtalk_256', 'wav2lip_96', 'wav2lip_gan_96']
 
 FaceSwapperSet : TypeAlias = Dict[FaceSwapperModel, List[str]]
 
@@ -103,7 +103,8 @@ ProcessorStateKey = Literal\
 	'frame_colorizer_blend',
 	'frame_enhancer_model',
 	'frame_enhancer_blend',
-	'lip_syncer_model'
+	'lip_syncer_model',
+	'lip_syncer_weight'
 ]
 ProcessorState = TypedDict('ProcessorState',
 {
@@ -146,6 +147,7 @@ ProcessorStateSet : TypeAlias = Dict[AppContext, ProcessorState]
 AgeModifierDirection : TypeAlias = NDArray[Any]
 DeepSwapperMorph : TypeAlias = NDArray[Any]
 FaceEnhancerWeight : TypeAlias = NDArray[Any]
+LipSyncerWeight : TypeAlias = NDArray[Any]
 LivePortraitPitch : TypeAlias = float
 LivePortraitYaw : TypeAlias = float
 LivePortraitRoll : TypeAlias = float

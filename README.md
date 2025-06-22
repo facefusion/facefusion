@@ -37,6 +37,7 @@ commands:
     headless-run                                  run the program in headless mode
     batch-run                                     run the program in batch mode
     force-download                                force automate downloads and exit
+    benchmark                                     benchmark the program
     job-list                                      list jobs by status
     job-create                                    create a drafted job
     job-submit                                    submit a drafted job to become a queued job

@@ -4,7 +4,7 @@ WORDING : Dict[str, Any] =\
 {
 	'conda_not_activated': 'Conda is not activated',
 	'python_not_supported': 'Python version is not supported, upgrade to {version} or higher',
-	'curl_not_installed': 'CURL is not installed',
+	'curl_not_installed': 'cURL is not installed',
 	'ffmpeg_not_installed': 'FFMpeg is not installed',
 	'creating_temp': 'Creating temporary resources',
 	'extracting_frames': 'Extracting frames with a resolution of {resolution} and {fps} frames per second',
@@ -129,9 +129,10 @@ WORDING : Dict[str, Any] =\
 		'face_occluder_model': 'choose the model responsible for the occlusion mask',
 		'face_parser_model': 'choose the model responsible for the region mask',
 		'face_mask_types': 'mix and match different face mask types (choices: {choices})',
+		'face_mask_areas': 'choose the items used for the area mask (choices: {choices})',
+		'face_mask_regions': 'choose the items used for the region mask (choices: {choices})',
 		'face_mask_blur': 'specify the degree of blur applied to the box mask',
 		'face_mask_padding': 'apply top, right, bottom and left padding to the box mask',
-		'face_mask_regions': 'choose the facial features used for the region mask (choices: {choices})',
 		# frame extraction
 		'trim_frame_start': 'specify the starting frame of the target video',
 		'trim_frame_end': 'specify the ending frame of the target video',
@@ -183,18 +184,22 @@ WORDING : Dict[str, Any] =\
 		'frame_enhancer_model': 'choose the model responsible for enhancing the frame',
 		'frame_enhancer_blend': 'blend the enhanced into the previous frame',
 		'lip_syncer_model': 'choose the model responsible for syncing the lips',
+		'lip_syncer_weight': 'specify the degree of weight applied to the lips',
 		# uis
 		'open_browser': 'open the browser once the program is ready',
 		'ui_layouts': 'launch a single or multiple UI layouts (choices: {choices}, ...)',
 		'ui_workflow': 'choose the ui workflow',
+		# download
+		'download_providers': 'download using different providers (choices: {choices}, ...)',
+		'download_scope': 'specify the download scope',
+		# benchmark
+		'benchmark_resolutions': 'choose the resolutions for the benchmarks (choices: {choices}, ...)',
+		'benchmark_cycle_count': 'specify the amount of cycles per benchmark',
 		# execution
 		'execution_device_id': 'specify the device used for processing',
 		'execution_providers': 'inference using different providers (choices: {choices}, ...)',
 		'execution_thread_count': 'specify the amount of parallel threads while processing',
 		'execution_queue_count': 'specify the amount of frames each thread is processing',
-		# download
-		'download_providers': 'download using different providers (choices: {choices}, ...)',
-		'download_scope': 'specify the download scope',
 		# memory
 		'video_memory_strategy': 'balance fast processing and low VRAM usage',
 		'system_memory_limit': 'limit the available RAM that can be used while processing',
@@ -206,6 +211,7 @@ WORDING : Dict[str, Any] =\
 		'headless_run': 'run the program in headless mode',
 		'batch_run': 'run the program in batch mode',
 		'force_download': 'force automate downloads and exit',
+		'benchmark': 'benchmark the program',
 		# jobs
 		'job_id': 'specify the job id',
 		'job_status': 'specify the job status',
@@ -238,8 +244,8 @@ WORDING : Dict[str, Any] =\
 		'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
 		'age_modifier_model_dropdown': 'AGE MODIFIER MODEL',
 		'apply_button': 'APPLY',
-		'benchmark_cycles_slider': 'BENCHMARK CYCLES',
-		'benchmark_runs_checkbox_group': 'BENCHMARK RUNS',
+		'benchmark_cycle_count_slider': 'BENCHMARK CYCLE COUNT',
+		'benchmark_resolutions_checkbox_group': 'BENCHMARK RESOLUTIONS',
 		'clear_button': 'CLEAR',
 		'common_options_checkbox_group': 'OPTIONS',
 		'download_providers_checkbox_group': 'DOWNLOAD PROVIDERS',
@@ -280,6 +286,7 @@ WORDING : Dict[str, Any] =\
 		'face_mask_padding_left_slider': 'FACE MASK PADDING LEFT',
 		'face_mask_padding_right_slider': 'FACE MASK PADDING RIGHT',
 		'face_mask_padding_top_slider': 'FACE MASK PADDING TOP',
+		'face_mask_areas_checkbox_group': 'FACE MASK AREAS',
 		'face_mask_regions_checkbox_group': 'FACE MASK REGIONS',
 		'face_mask_types_checkbox_group': 'FACE MASK TYPES',
 		'face_selector_age_range_slider': 'FACE SELECTOR AGE',
@@ -303,6 +310,7 @@ WORDING : Dict[str, Any] =\
 		'job_runner_job_action_dropdown': 'JOB ACTION',
 		'job_runner_job_id_dropdown': 'JOB ID',
 		'lip_syncer_model_dropdown': 'LIP SYNCER MODEL',
+		'lip_syncer_weight_slider': 'LIP SYNCER WEIGHT',
 		'log_level_dropdown': 'LOG LEVEL',
 		'output_audio_encoder_dropdown': 'OUTPUT AUDIO ENCODER',
 		'output_audio_quality_slider': 'OUTPUT AUDIO QUALITY',

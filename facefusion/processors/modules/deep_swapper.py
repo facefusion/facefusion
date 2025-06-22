@@ -9,12 +9,12 @@ from cv2.typing import Size
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, video_manager, wording
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
-from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
+from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import get_file_name, in_directory, is_image, is_video, resolve_file_paths, resolve_relative_path, same_file_extension
@@ -33,6 +33,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	if download_scope == 'full':
 		model_config.extend(
 		[
+			('druuzil', 'adam_levine_320'),
 			('druuzil', 'adrianne_palicki_384'),
 			('druuzil', 'agnetha_falskog_224'),
 			('druuzil', 'alan_ritchson_320'),
@@ -40,6 +41,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			('druuzil', 'amber_midthunder_320'),
 			('druuzil', 'andras_arato_384'),
 			('druuzil', 'andrew_tate_320'),
+			('druuzil', 'angelina_jolie_384'),
 			('druuzil', 'anne_hathaway_320'),
 			('druuzil', 'anya_chalotra_320'),
 			('druuzil', 'arnold_schwarzenegger_320'),
@@ -47,6 +49,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			('druuzil', 'benjamin_stiller_384'),
 			('druuzil', 'bradley_pitt_224'),
 			('druuzil', 'brie_larson_384'),
+			('druuzil', 'bruce_campbell_384'),
 			('druuzil', 'bryan_cranston_320'),
 			('druuzil', 'catherine_blanchett_352'),
 			('druuzil', 'christian_bale_320'),
@@ -76,6 +79,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			('druuzil', 'hugh_jackman_384'),
 			('druuzil', 'idris_elba_320'),
 			('druuzil', 'jack_nicholson_320'),
+			('druuzil', 'james_carrey_384'),
 			('druuzil', 'james_mcavoy_320'),
 			('druuzil', 'james_varney_320'),
 			('druuzil', 'jason_momoa_320'),
@@ -87,6 +91,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			('druuzil', 'kate_beckinsale_384'),
 			('druuzil', 'laurence_fishburne_384'),
 			('druuzil', 'lili_reinhart_320'),
+			('druuzil', 'luke_evans_384'),
 			('druuzil', 'mads_mikkelsen_384'),
 			('druuzil', 'mary_winstead_320'),
 			('druuzil', 'margaret_qualley_384'),
@@ -95,13 +100,16 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			('druuzil', 'michael_fox_320'),
 			('druuzil', 'millie_bobby_brown_320'),
 			('druuzil', 'morgan_freeman_320'),
-			('druuzil', 'patrick_stewart_320'),
+			('druuzil', 'patrick_stewart_224'),
+			('druuzil', 'rachel_weisz_384'),
 			('druuzil', 'rebecca_ferguson_320'),
 			('druuzil', 'scarlett_johansson_320'),
+			('druuzil', 'shannen_doherty_384'),
 			('druuzil', 'seth_macfarlane_384'),
 			('druuzil', 'thomas_cruise_320'),
 			('druuzil', 'thomas_hanks_384'),
 			('druuzil', 'william_murray_384'),
+			('druuzil', 'zoe_saldana_384'),
 			('edel', 'emma_roberts_224'),
 			('edel', 'ivanka_trump_224'),
 			('edel', 'lize_dzjabrailova_224'),
@@ -303,6 +311,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
@@ -319,7 +328,7 @@ def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 	model_size = get_model_size()
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
 	crop_vision_frame_raw = crop_vision_frame.copy()
-	box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
+	box_mask = create_box_mask(crop_vision_frame, state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 	crop_masks =\
 	[
 		box_mask
@@ -335,6 +344,11 @@ def swap_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFram
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_vision_frame = conditional_match_frame_color(crop_vision_frame_raw, crop_vision_frame)
 	crop_masks.append(prepare_crop_mask(crop_source_mask, crop_target_mask))
+
+	if 'area' in state_manager.get_item('face_mask_types'):
+		face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+		area_mask = create_area_mask(crop_vision_frame, face_landmark_68, state_manager.get_item('face_mask_areas'))
+		crop_masks.append(area_mask)
 
 	if 'region' in state_manager.get_item('face_mask_types'):
 		region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))

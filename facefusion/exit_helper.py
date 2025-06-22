@@ -1,6 +1,7 @@
 import signal
 import sys
 from time import sleep
+from types import FrameType
 
 from facefusion import process_manager, state_manager
 from facefusion.temp_helper import clear_temp_directory
@@ -10,6 +11,10 @@ from facefusion.types import ErrorCode
 def hard_exit(error_code : ErrorCode) -> None:
 	signal.signal(signal.SIGINT, signal.SIG_IGN)
 	sys.exit(error_code)
+
+
+def signal_exit(signum : int, frame : FrameType) -> None:
+	graceful_exit(0)
 
 
 def graceful_exit(error_code : ErrorCode) -> None:

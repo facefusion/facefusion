@@ -40,4 +40,10 @@ def update_processors(processors : List[str]) -> gradio.CheckboxGroup:
 
 def sort_processors(processors : List[str]) -> List[str]:
 	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
-	return sorted(available_processors, key = lambda processor : processors.index(processor) if processor in processors else len(processors))
+	current_processors = []
+
+	for processor in processors + available_processors:
+		if processor in available_processors and processor not in current_processors:
+			current_processors.append(processor)
+
+	return current_processors

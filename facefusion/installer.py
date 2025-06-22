@@ -4,17 +4,19 @@ import signal
 import subprocess
 import sys
 from argparse import ArgumentParser, HelpFormatter
+from functools import partial
+from types import FrameType
 
 from facefusion import metadata, wording
 from facefusion.common_helper import is_linux, is_windows
 
 ONNXRUNTIME_SET =\
 {
-	'default': ('onnxruntime', '1.21.1')
+	'default': ('onnxruntime', '1.22.0')
 }
 if is_windows() or is_linux():
-	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.21.1')
-	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.21.0')
+	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.22.0')
+	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.22.0')
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.17.3')
 if is_linux():
@@ -22,12 +24,16 @@ if is_linux():
 
 
 def cli() -> None:
-	signal.signal(signal.SIGINT, lambda signal_number, frame: sys.exit(0))
-	program = ArgumentParser(formatter_class = lambda prog: HelpFormatter(prog, max_help_position = 50))
+	signal.signal(signal.SIGINT, signal_exit)
+	program = ArgumentParser(formatter_class = partial(HelpFormatter, max_help_position = 50))
 	program.add_argument('--onnxruntime', help = wording.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIME_SET.keys(), required = True)
 	program.add_argument('--skip-conda', help = wording.get('help.skip_conda'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	run(program)
+
+
+def signal_exit(signum : int, frame : FrameType) -> None:
+	sys.exit(0)
 
 
 def run(program : ArgumentParser) -> None:

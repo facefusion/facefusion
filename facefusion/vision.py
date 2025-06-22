@@ -9,7 +9,9 @@ from cv2.typing import Size
 import facefusion.choices
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
+from facefusion.thread_helper import thread_semaphore
 from facefusion.types import Duration, Fps, Orientation, Resolution, VisionFrame
+from facefusion.video_manager import get_video_capture
 
 
 @lru_cache()
@@ -81,42 +83,50 @@ def create_image_resolutions(resolution : Resolution) -> List[str]:
 
 def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
-		video_capture = cv2.VideoCapture(video_path)
+		video_capture = get_video_capture(video_path)
+
 		if video_capture.isOpened():
 			frame_total = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
-			video_capture.set(cv2.CAP_PROP_POS_FRAMES, min(frame_total, frame_number - 1))
-			has_vision_frame, vision_frame = video_capture.read()
-			video_capture.release()
+
+			with thread_semaphore():
+				video_capture.set(cv2.CAP_PROP_POS_FRAMES, min(frame_total, frame_number - 1))
+				has_vision_frame, vision_frame = video_capture.read()
+
 			if has_vision_frame:
 				return vision_frame
+
 	return None
 
 
 def count_video_frame_total(video_path : str) -> int:
 	if is_video(video_path):
-		video_capture = cv2.VideoCapture(video_path)
+		video_capture = get_video_capture(video_path)
+
 		if video_capture.isOpened():
-			video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-			video_capture.release()
-			return video_frame_total
+			with thread_semaphore():
+				video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+				return video_frame_total
+
 	return 0
 
 
 def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : int, trim_frame_end : int) -> int:
 	if is_video(video_path):
-		target_video_fps = detect_video_fps(video_path)
-		extract_frame_total = count_trim_frame_total(video_path, trim_frame_start, trim_frame_end) * fps / target_video_fps
+		video_fps = detect_video_fps(video_path)
+		extract_frame_total = count_trim_frame_total(video_path, trim_frame_start, trim_frame_end) * fps / video_fps
 		return math.floor(extract_frame_total)
 	return 0
 
 
 def detect_video_fps(video_path : str) -> Optional[float]:
 	if is_video(video_path):
-		video_capture = cv2.VideoCapture(video_path)
+		video_capture = get_video_capture(video_path)
+
 		if video_capture.isOpened():
-			video_fps = video_capture.get(cv2.CAP_PROP_FPS)
-			video_capture.release()
-			return video_fps
+			with thread_semaphore():
+				video_fps = video_capture.get(cv2.CAP_PROP_FPS)
+				return video_fps
+
 	return None
 
 
@@ -163,12 +173,14 @@ def restrict_trim_frame(video_path : str, trim_frame_start : Optional[int], trim
 
 def detect_video_resolution(video_path : str) -> Optional[Resolution]:
 	if is_video(video_path):
-		video_capture = cv2.VideoCapture(video_path)
+		video_capture = get_video_capture(video_path)
+
 		if video_capture.isOpened():
-			width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
-			height = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
-			video_capture.release()
-			return int(width), int(height)
+			with thread_semaphore():
+				width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+				height = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+				return int(width), int(height)
+
 	return None
 
 
@@ -238,7 +250,7 @@ def restrict_frame(vision_frame : VisionFrame, resolution : Resolution) -> Visio
 	return vision_frame
 
 
-def fit_frame(vision_frame: VisionFrame, resolution: Resolution) -> VisionFrame:
+def fit_frame(vision_frame : VisionFrame, resolution: Resolution) -> VisionFrame:
 	fit_width, fit_height = resolution
 	height, width = vision_frame.shape[:2]
 	scale = min(fit_height / height, fit_width / width)

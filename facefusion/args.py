@@ -74,9 +74,10 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_occluder_model', args.get('face_occluder_model'))
 	apply_state_item('face_parser_model', args.get('face_parser_model'))
 	apply_state_item('face_mask_types', args.get('face_mask_types'))
+	apply_state_item('face_mask_areas', args.get('face_mask_areas'))
+	apply_state_item('face_mask_regions', args.get('face_mask_regions'))
 	apply_state_item('face_mask_blur', args.get('face_mask_blur'))
 	apply_state_item('face_mask_padding', normalize_padding(args.get('face_mask_padding')))
-	apply_state_item('face_mask_regions', args.get('face_mask_regions'))
 	# frame extraction
 	apply_state_item('trim_frame_start', args.get('trim_frame_start'))
 	apply_state_item('trim_frame_end', args.get('trim_frame_end'))
@@ -124,6 +125,9 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	# download
 	apply_state_item('download_providers', args.get('download_providers'))
 	apply_state_item('download_scope', args.get('download_scope'))
+	# benchmark
+	apply_state_item('benchmark_resolutions', args.get('benchmark_resolutions'))
+	apply_state_item('benchmark_cycle_count', args.get('benchmark_cycle_count'))
 	# memory
 	apply_state_item('video_memory_strategy', args.get('video_memory_strategy'))
 	apply_state_item('system_memory_limit', args.get('system_memory_limit'))

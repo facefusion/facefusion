@@ -3,14 +3,13 @@ from typing import List, Tuple
 
 import cv2
 import numpy
-from cv2.typing import Size
 
 import facefusion.choices
 from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
+from facefusion.types import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskArea, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
 
 
 @lru_cache(maxsize = None)
@@ -121,7 +120,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
-	model_names = [state_manager.get_item('face_occluder_model'), state_manager.get_item('face_parser_model')]
+	model_names = [ state_manager.get_item('face_occluder_model'), state_manager.get_item('face_parser_model') ]
 	_, model_source_set = collect_model_downloads()
 
 	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
@@ -156,8 +155,8 @@ def pre_check() -> bool:
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
 
-@lru_cache(maxsize = None)
-def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_padding : Padding) -> Mask:
+def create_box_mask(crop_vision_frame : VisionFrame, face_mask_blur : float, face_mask_padding : Padding) -> Mask:
+	crop_size = crop_vision_frame.shape[:2][::-1]
 	blur_amount = int(crop_size[0] * 0.5 * face_mask_blur)
 	blur_area = max(blur_amount // 2, 1)
 	box_mask : Mask = numpy.ones(crop_size).astype(numpy.float32)
@@ -165,6 +164,7 @@ def create_static_box_mask(crop_size : Size, face_mask_blur : float, face_mask_p
 	box_mask[-max(blur_area, int(crop_size[1] * face_mask_padding[2] / 100)):, :] = 0
 	box_mask[:, :max(blur_area, int(crop_size[0] * face_mask_padding[3] / 100))] = 0
 	box_mask[:, -max(blur_area, int(crop_size[0] * face_mask_padding[1] / 100)):] = 0
+
 	if blur_amount > 0:
 		box_mask = cv2.GaussianBlur(box_mask, (0, 0), blur_amount * 0.25)
 	return box_mask
@@ -183,6 +183,21 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 	return occlusion_mask
 
 
+def create_area_mask(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLandmark68, face_mask_areas : List[FaceMaskArea]) -> Mask:
+	crop_size = crop_vision_frame.shape[:2][::-1]
+	landmark_points = []
+
+	for face_mask_area in face_mask_areas:
+		if face_mask_area in facefusion.choices.face_mask_area_set:
+			landmark_points.extend(facefusion.choices.face_mask_area_set.get(face_mask_area))
+
+	convex_hull = cv2.convexHull(face_landmark_68[landmark_points].astype(numpy.int32))
+	area_mask = numpy.zeros(crop_size).astype(numpy.float32)
+	cv2.fillConvexPoly(area_mask, convex_hull, 1.0) # type: ignore[call-overload]
+	area_mask = (cv2.GaussianBlur(area_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
+	return area_mask
+
+
 def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List[FaceMaskRegion]) -> Mask:
 	model_name = state_manager.get_item('face_parser_model')
 	model_size = create_static_model_set('full').get(model_name).get('size')
@@ -197,15 +212,6 @@ def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List
 	region_mask = cv2.resize(region_mask.astype(numpy.float32), crop_vision_frame.shape[:2][::-1])
 	region_mask = (cv2.GaussianBlur(region_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
 	return region_mask
-
-
-def create_mouth_mask(face_landmark_68 : FaceLandmark68) -> Mask:
-	convex_hull = cv2.convexHull(face_landmark_68[numpy.r_[3:14, 31:36]].astype(numpy.int32))
-	mouth_mask : Mask = numpy.zeros((512, 512)).astype(numpy.float32)
-	mouth_mask = cv2.fillConvexPoly(mouth_mask, convex_hull, 1.0) #type:ignore[call-overload]
-	mouth_mask = cv2.erode(mouth_mask.clip(0, 1), numpy.ones((21, 3)))
-	mouth_mask = cv2.GaussianBlur(mouth_mask, (0, 0), sigmaX = 1, sigmaY = 15)
-	return mouth_mask
 
 
 def forward_occlude_face(prepare_vision_frame : VisionFrame) -> Mask:

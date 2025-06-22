@@ -2,19 +2,20 @@ from argparse import ArgumentParser
 from functools import lru_cache
 from typing import List, Tuple
 
+import cv2
 import numpy
 
 import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, video_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
-from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
+from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces, sort_faces_by_order
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -188,6 +189,78 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			},
 			'type': 'hififace',
 			'template': 'mtcnn_512',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
+		},
+		'hyperswap_1a_256':
+		{
+			'hashes':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_1a_256.hash'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_1a_256.hash')
+				}
+			},
+			'sources':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_1a_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_1a_256.onnx')
+				}
+			},
+			'type': 'hyperswap',
+			'template': 'arcface_128',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
+		},
+		'hyperswap_1b_256':
+		{
+			'hashes':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_1b_256.hash'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_1b_256.hash')
+				}
+			},
+			'sources':
+				{
+					'face_swapper':
+					{
+						'url': resolve_download_url('models-3.3.0', 'hyperswap_1b_256.onnx'),
+						'path': resolve_relative_path('../.assets/models/hyperswap_1b_256.onnx')
+					}
+				},
+			'type': 'hyperswap',
+			'template': 'arcface_128',
+			'size': (256, 256),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
+		},
+		'hyperswap_1c_256':
+		{
+			'hashes':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_1c_256.hash'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_1c_256.hash')
+				}
+			},
+			'sources':
+			{
+				'face_swapper':
+				{
+					'url': resolve_download_url('models-3.3.0', 'hyperswap_1c_256.onnx'),
+					'path': resolve_relative_path('../.assets/models/hyperswap_1c_256.onnx')
+				}
+			},
+			'type': 'hyperswap',
+			'template': 'arcface_128',
 			'size': (256, 256),
 			'mean': [ 0.5, 0.5, 0.5 ],
 			'standard_deviation': [ 0.5, 0.5, 0.5 ]
@@ -406,9 +479,10 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
-		clear_inference_pool()
 		get_static_model_initializer.cache_clear()
+		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		content_analyser.clear_inference_pool()
 		face_classifier.clear_inference_pool()
@@ -428,7 +502,7 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	crop_masks = []
 
 	if 'box' in state_manager.get_item('face_mask_types'):
-		box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
+		box_mask = create_box_mask(crop_vision_frame, state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
 		crop_masks.append(box_mask)
 
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
@@ -442,6 +516,11 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 		pixel_boost_vision_frame = normalize_crop_frame(pixel_boost_vision_frame)
 		temp_vision_frames.append(pixel_boost_vision_frame)
 	crop_vision_frame = explode_pixel_boost(temp_vision_frames, pixel_boost_total, model_size, pixel_boost_size)
+
+	if 'area' in state_manager.get_item('face_mask_types'):
+		face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+		area_mask = create_area_mask(crop_vision_frame, face_landmark_68, state_manager.get_item('face_mask_areas'))
+		crop_masks.append(area_mask)
 
 	if 'region' in state_manager.get_item('face_mask_types'):
 		region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))
@@ -507,14 +586,21 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 	if model_type == 'ghost':
 		source_embedding, _ = convert_embedding(source_face)
 		source_embedding = source_embedding.reshape(1, -1)
-	elif model_type == 'inswapper':
+		return source_embedding
+
+	if model_type == 'hyperswap':
+		source_embedding = source_face.normed_embedding.reshape((1, -1))
+		return source_embedding
+
+	if model_type == 'inswapper':
 		model_path = get_model_options().get('sources').get('face_swapper').get('path')
 		model_initializer = get_static_model_initializer(model_path)
 		source_embedding = source_face.embedding.reshape((1, -1))
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
-	else:
-		_, source_normed_embedding = convert_embedding(source_face)
-		source_embedding = source_normed_embedding.reshape(1, -1)
+		return source_embedding
+
+	_, source_normed_embedding = convert_embedding(source_face)
+	source_embedding = source_normed_embedding.reshape(1, -1)
 	return source_embedding
 
 
@@ -543,7 +629,7 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	model_standard_deviation = get_model_options().get('standard_deviation')
 
 	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
-	if model_type in [ 'ghost', 'hififace', 'uniface' ]:
+	if model_type in [ 'ghost', 'hififace', 'hyperswap', 'uniface' ]:
 		crop_vision_frame = crop_vision_frame * model_standard_deviation + model_mean
 	crop_vision_frame = crop_vision_frame.clip(0, 1)
 	crop_vision_frame = crop_vision_frame[:, :, ::-1] * 255

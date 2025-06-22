@@ -6,12 +6,12 @@ from time import time
 
 import numpy
 
-from facefusion import cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, voice_extractor, wording
+from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, video_manager, voice_extractor, wording
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.exit_helper import graceful_exit, hard_exit
+from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
@@ -23,7 +23,6 @@ from facefusion.memory import limit_system_memory
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
-from facefusion.statistics import conditional_log_statistics
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, move_temp_file, resolve_temp_frame_paths
 from facefusion.types import Args, ErrorCode
 from facefusion.vision import pack_resolution, read_image, read_static_images, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution
@@ -31,7 +30,7 @@ from facefusion.vision import pack_resolution, read_image, read_static_images, r
 
 def cli() -> None:
 	if pre_check():
-		signal.signal(signal.SIGINT, lambda signal_number, frame: graceful_exit(0))
+		signal.signal(signal.SIGINT, signal_exit)
 		program = create_program()
 
 		if validate_args(program):
@@ -58,6 +57,11 @@ def route(args : Args) -> None:
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
 		return hard_exit(error_code)
+
+	if state_manager.get_item('command') == 'benchmark':
+		if not common_pre_check() or not processors_pre_check() or not benchmarker.pre_check():
+			return hard_exit(2)
+		benchmarker.render()
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
@@ -383,10 +387,10 @@ def process_image(start_time : float) -> ErrorCode:
 		process_manager.end()
 		return 1
 
-	temp_file_path = get_temp_file_path(state_manager.get_item('target_path'))
+	temp_image_path = get_temp_file_path(state_manager.get_item('target_path'))
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.info(wording.get('processing'), processor_module.__name__)
-		processor_module.process_image(state_manager.get_item('source_paths'), temp_file_path, temp_file_path)
+		processor_module.process_image(state_manager.get_item('source_paths'), temp_image_path, temp_image_path)
 		processor_module.post_process()
 	if is_process_stopping():
 		process_manager.end()
@@ -404,7 +408,6 @@ def process_image(start_time : float) -> ErrorCode:
 	if is_image(state_manager.get_item('output_path')):
 		seconds = '{:.2f}'.format((time() - start_time) % 60)
 		logger.info(wording.get('processing_image_succeed').format(seconds = seconds), __name__)
-		conditional_log_statistics()
 	else:
 		logger.error(wording.get('processing_image_failed'), __name__)
 		process_manager.end()
@@ -468,8 +471,10 @@ def process_video(start_time : float) -> ErrorCode:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		if source_audio_path:
 			if replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
+				video_manager.clear_video_pool()
 				logger.debug(wording.get('replacing_audio_succeed'), __name__)
 			else:
+				video_manager.clear_video_pool()
 				if is_process_stopping():
 					process_manager.end()
 					return 4
@@ -477,8 +482,10 @@ def process_video(start_time : float) -> ErrorCode:
 				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 		else:
 			if restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), trim_frame_start, trim_frame_end):
+				video_manager.clear_video_pool()
 				logger.debug(wording.get('restoring_audio_succeed'), __name__)
 			else:
+				video_manager.clear_video_pool()
 				if is_process_stopping():
 					process_manager.end()
 					return 4
@@ -491,7 +498,6 @@ def process_video(start_time : float) -> ErrorCode:
 	if is_video(state_manager.get_item('output_path')):
 		seconds = '{:.2f}'.format((time() - start_time))
 		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__)
-		conditional_log_statistics()
 	else:
 		logger.error(wording.get('processing_video_failed'), __name__)
 		process_manager.end()

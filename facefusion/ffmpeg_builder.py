@@ -20,6 +20,10 @@ def get_encoders() -> Commands:
 	return [ '-encoders' ]
 
 
+def set_hardware_accelerator(value : str) -> Commands:
+	return [ '-hwaccel', value ]
+
+
 def set_progress() -> Commands:
 	return [ '-progress' ]
 
@@ -28,8 +32,8 @@ def set_input(input_path : str) -> Commands:
 	return [ '-i', input_path ]
 
 
-def set_conditional_fps(conditional_fps : Fps) -> Commands:
-	return [ '-r', str(conditional_fps) ]
+def set_input_fps(input_fps : Fps) -> Commands:
+	return [ '-r', str(input_fps)]
 
 
 def set_output(output_path : str) -> Commands:
@@ -50,6 +54,10 @@ def set_stream_mode(stream_mode : StreamMode) -> Commands:
 	if stream_mode == 'v4l2':
 		return [ '-f', 'v4l2' ]
 	return []
+
+
+def set_stream_quality(stream_quality : int) -> Commands:
+	return [ '-b:v', str(stream_quality) + 'k' ]
 
 
 def unsafe_concat() -> Commands:
@@ -138,7 +146,7 @@ def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> Comm
 		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 9, 0 ]))
 		return [ '-q:a', str(audio_compression) ]
 	if audio_encoder == 'libopus':
-		audio_bit_rate = round(numpy.interp(audio_quality, [ 0, 100 ], [ 64, 320 ]))
+		audio_bit_rate = round(numpy.interp(audio_quality, [ 0, 100 ], [ 64, 256 ]))
 		return [ '-b:a', str(audio_bit_rate) + 'k' ]
 	if audio_encoder == 'libvorbis':
 		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ -1, 10 ]), 1)
@@ -205,7 +213,7 @@ def set_video_duration(video_duration : Duration) -> Commands:
 
 
 def capture_video() -> Commands:
-	return [ '-f', 'rawvideo' ]
+	return [ '-f', 'rawvideo', '-pix_fmt', 'rgb24' ]
 
 
 def ignore_video_stream() -> Commands:

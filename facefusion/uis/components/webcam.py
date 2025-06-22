@@ -107,8 +107,9 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 		webcam_capture.set(cv2.CAP_PROP_FPS, webcam_fps)
 
 		for capture_frame in multi_process_capture(source_face, webcam_capture, webcam_fps):
+			capture_frame = normalize_frame_color(capture_frame)
 			if webcam_mode == 'inline':
-				yield normalize_frame_color(capture_frame)
+				yield capture_frame
 			else:
 				try:
 					stream.stdin.write(capture_frame.tobytes())
@@ -166,19 +167,20 @@ def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.capture_video(),
 		ffmpeg_builder.set_media_resolution(stream_resolution),
-		ffmpeg_builder.set_conditional_fps(stream_fps)
+		ffmpeg_builder.set_input_fps(stream_fps)
 	)
 
 	if stream_mode == 'udp':
 		commands.extend(ffmpeg_builder.set_input('-'))
 		commands.extend(ffmpeg_builder.set_stream_mode('udp'))
+		commands.extend(ffmpeg_builder.set_stream_quality(2000))
 		commands.extend(ffmpeg_builder.set_output('udp://localhost:27000?pkt_size=1316'))
 
 	if stream_mode == 'v4l2':
 		device_directory_path = '/sys/devices/virtual/video4linux'
-
 		commands.extend(ffmpeg_builder.set_input('-'))
 		commands.extend(ffmpeg_builder.set_stream_mode('v4l2'))
+
 		if is_directory(device_directory_path):
 			device_names = os.listdir(device_directory_path)
 

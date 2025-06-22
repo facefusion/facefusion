@@ -7,10 +7,10 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, process_manager, state_manager, video_manager, wording
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
-from facefusion.face_masker import create_occlusion_mask, create_region_mask, create_static_box_mask
+from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, same_file_extension
@@ -56,6 +56,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		content_analyser.clear_inference_pool()
 		face_classifier.clear_inference_pool()
@@ -82,11 +83,11 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 
 		if target_face.angle == 0:
 			cv2.line(temp_vision_frame, (x1, y1), (x2, y1), primary_light_color, 3)
-		elif target_face.angle == 180:
+		if target_face.angle == 180:
 			cv2.line(temp_vision_frame, (x1, y2), (x2, y2), primary_light_color, 3)
-		elif target_face.angle == 90:
+		if target_face.angle == 90:
 			cv2.line(temp_vision_frame, (x2, y1), (x2, y2), primary_light_color, 3)
-		elif target_face.angle == 270:
+		if target_face.angle == 270:
 			cv2.line(temp_vision_frame, (x1, y1), (x1, y2), primary_light_color, 3)
 
 	if 'face-mask' in face_debugger_items:
@@ -96,12 +97,17 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 		crop_masks = []
 
 		if 'box' in state_manager.get_item('face_mask_types'):
-			box_mask = create_static_box_mask(crop_vision_frame.shape[:2][::-1], 0, state_manager.get_item('face_mask_padding'))
+			box_mask = create_box_mask(crop_vision_frame, 0, state_manager.get_item('face_mask_padding'))
 			crop_masks.append(box_mask)
 
 		if 'occlusion' in state_manager.get_item('face_mask_types'):
 			occlusion_mask = create_occlusion_mask(crop_vision_frame)
 			crop_masks.append(occlusion_mask)
+
+		if 'area' in state_manager.get_item('face_mask_types'):
+			face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
+			area_mask = create_area_mask(crop_vision_frame, face_landmark_68, state_manager.get_item('face_mask_areas'))
+			crop_masks.append(area_mask)
 
 		if 'region' in state_manager.get_item('face_mask_types'):
 			region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))

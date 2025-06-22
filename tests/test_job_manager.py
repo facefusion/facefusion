@@ -3,7 +3,7 @@ from time import sleep
 import pytest
 
 from facefusion.jobs.job_helper import get_step_output_path
-from facefusion.jobs.job_manager import add_step, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, get_steps, init_jobs, insert_step, move_job_file, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
+from facefusion.jobs.job_manager import add_step, clear_jobs, count_step_total, create_job, delete_job, delete_jobs, find_job_ids, find_jobs, get_steps, init_jobs, insert_step, move_job_file, remix_step, remove_step, set_step_status, set_steps_status, submit_job, submit_jobs
 from .helper import get_test_jobs_directory
 
 
@@ -99,9 +99,19 @@ def test_delete_jobs() -> None:
 	assert delete_jobs(halt_on_error) is True
 
 
-@pytest.mark.skip()
 def test_find_jobs() -> None:
-	pass
+	create_job('job-test-find-jobs-1')
+	sleep(0.5)
+	create_job('job-test-find-jobs-2')
+
+	assert 'job-test-find-jobs-1' in find_jobs('drafted')
+	assert 'job-test-find-jobs-2' in find_jobs('drafted')
+	assert not find_jobs('queued')
+
+	move_job_file('job-test-find-jobs-1', 'queued')
+
+	assert 'job-test-find-jobs-2' in find_jobs('drafted')
+	assert 'job-test-find-jobs-1' in find_jobs('queued')
 
 
 def test_find_job_ids() -> None:

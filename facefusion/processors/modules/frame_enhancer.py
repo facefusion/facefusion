@@ -8,7 +8,7 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
-from facefusion import config, content_analyser, inference_manager, logger, process_manager, state_manager, wording
+from facefusion import config, content_analyser, inference_manager, logger, process_manager, state_manager, video_manager, wording
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
@@ -381,6 +381,27 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			},
 			'size': (128, 8, 4),
 			'scale': 4
+		},
+		'ultra_sharp_2_x4':
+		{
+			'hashes':
+			{
+				'frame_enhancer':
+				{
+					'url': resolve_download_url('models-3.3.0', 'ultra_sharp_2_x4.hash'),
+					'path': resolve_relative_path('../.assets/models/ultra_sharp_2_x4.hash')
+				}
+			},
+			'sources':
+			{
+				'frame_enhancer':
+				{
+					'url': resolve_download_url('models-3.3.0', 'ultra_sharp_2_x4.onnx'),
+					'path': resolve_relative_path('../.assets/models/ultra_sharp_2_x4.onnx')
+				}
+			},
+			'size': (1024, 64, 32),
+			'scale': 4
 		}
 	}
 
@@ -450,6 +471,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':

@@ -1,6 +1,7 @@
 from collections import namedtuple
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
 
+import cv2
 import numpy
 from numpy.typing import NDArray
 from onnxruntime import InferenceSession
@@ -49,6 +50,7 @@ FaceStore = TypedDict('FaceStore',
 	'static_faces' : FaceSet,
 	'reference_faces' : FaceSet
 })
+VideoPoolSet : TypeAlias = Dict[str, cv2.VideoCapture]
 
 VisionFrame : TypeAlias = NDArray[Any]
 Mask : TypeAlias = NDArray[Any]
@@ -105,9 +107,11 @@ FaceSelectorMode = Literal['many', 'one', 'reference']
 FaceSelectorOrder = Literal['left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best']
 FaceOccluderModel = Literal['xseg_1', 'xseg_2', 'xseg_3']
 FaceParserModel = Literal['bisenet_resnet_18', 'bisenet_resnet_34']
-FaceMaskType = Literal['box', 'occlusion', 'region']
+FaceMaskType = Literal['box', 'occlusion', 'area', 'region']
+FaceMaskArea = Literal['upper-face', 'lower-face', 'mouth']
 FaceMaskRegion = Literal['skin', 'left-eyebrow', 'right-eyebrow', 'left-eye', 'right-eye', 'glasses', 'nose', 'mouth', 'upper-lip', 'lower-lip']
 FaceMaskRegionSet : TypeAlias = Dict[FaceMaskRegion, int]
+FaceMaskAreaSet : TypeAlias = Dict[FaceMaskArea, List[int]]
 
 AudioFormat = Literal['flac', 'm4a', 'mp3', 'ogg', 'opus', 'wav']
 ImageFormat = Literal['bmp', 'jpeg', 'png', 'tiff', 'webp']
@@ -125,6 +129,18 @@ EncoderSet = TypedDict('EncoderSet',
 	'video' : List[VideoEncoder]
 })
 VideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
+
+BenchmarkResolution = Literal['240p', '360p', '540p', '720p', '1080p', '1440p', '2160p']
+BenchmarkSet : TypeAlias = Dict[BenchmarkResolution, str]
+BenchmarkCycleSet = TypedDict('BenchmarkCycleSet',
+{
+	'target_path' : str,
+	'cycle_count' : int,
+	'average_run' : float,
+	'fastest_run' : float,
+	'slowest_run' : float,
+	'relative_fps' : float
+})
 
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']
@@ -222,7 +238,6 @@ Job = TypedDict('Job',
 })
 JobSet : TypeAlias = Dict[str, Job]
 
-ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateKey = Literal\
 [
 	'command',
@@ -235,6 +250,10 @@ StateKey = Literal\
 	'source_pattern',
 	'target_pattern',
 	'output_pattern',
+	'download_providers',
+	'download_scope',
+	'benchmark_resolutions',
+	'benchmark_cycle_count',
 	'face_detector_model',
 	'face_detector_size',
 	'face_detector_angles',
@@ -253,9 +272,10 @@ StateKey = Literal\
 	'face_occluder_model',
 	'face_parser_model',
 	'face_mask_types',
+	'face_mask_areas',
+	'face_mask_regions',
 	'face_mask_blur',
 	'face_mask_padding',
-	'face_mask_regions',
 	'trim_frame_start',
 	'trim_frame_end',
 	'temp_frame_format',
@@ -278,8 +298,6 @@ StateKey = Literal\
 	'execution_providers',
 	'execution_thread_count',
 	'execution_queue_count',
-	'download_providers',
-	'download_scope',
 	'video_memory_strategy',
 	'system_memory_limit',
 	'log_level',
@@ -300,6 +318,10 @@ State = TypedDict('State',
 	'source_pattern' : str,
 	'target_pattern' : str,
 	'output_pattern' : str,
+	'download_providers': List[DownloadProvider],
+	'download_scope': DownloadScope,
+	'benchmark_resolutions': List[BenchmarkResolution],
+	'benchmark_cycle_count': int,
 	'face_detector_model' : FaceDetectorModel,
 	'face_detector_size' : str,
 	'face_detector_angles' : List[Angle],
@@ -318,9 +340,10 @@ State = TypedDict('State',
 	'face_occluder_model' : FaceOccluderModel,
 	'face_parser_model' : FaceParserModel,
 	'face_mask_types' : List[FaceMaskType],
+	'face_mask_areas' : List[FaceMaskArea],
+	'face_mask_regions' : List[FaceMaskRegion],
 	'face_mask_blur' : float,
 	'face_mask_padding' : Padding,
-	'face_mask_regions' : List[FaceMaskRegion],
 	'trim_frame_start' : int,
 	'trim_frame_end' : int,
 	'temp_frame_format' : TempFrameFormat,
@@ -343,8 +366,6 @@ State = TypedDict('State',
 	'execution_providers' : List[ExecutionProvider],
 	'execution_thread_count' : int,
 	'execution_queue_count' : int,
-	'download_providers' : List[DownloadProvider],
-	'download_scope' : DownloadScope,
 	'video_memory_strategy' : VideoMemoryStrategy,
 	'system_memory_limit' : int,
 	'log_level' : LogLevel,
@@ -353,5 +374,6 @@ State = TypedDict('State',
 	'job_status' : JobStatus,
 	'step_index' : int
 })
+ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateSet : TypeAlias = Dict[AppContext, State]
 

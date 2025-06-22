@@ -7,6 +7,7 @@ from facefusion.processors.types import AgeModifierModel, DeepSwapperModel, Expr
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
 deep_swapper_models : List[DeepSwapperModel] =\
 [
+	'druuzil/adam_levine_320',
 	'druuzil/adrianne_palicki_384',
 	'druuzil/agnetha_falskog_224',
 	'druuzil/alan_ritchson_320',
@@ -14,6 +15,7 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'druuzil/amber_midthunder_320',
 	'druuzil/andras_arato_384',
 	'druuzil/andrew_tate_320',
+	'druuzil/angelina_jolie_384',
 	'druuzil/anne_hathaway_320',
 	'druuzil/anya_chalotra_320',
 	'druuzil/arnold_schwarzenegger_320',
@@ -21,6 +23,7 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'druuzil/benjamin_stiller_384',
 	'druuzil/bradley_pitt_224',
 	'druuzil/brie_larson_384',
+	'druuzil/bruce_campbell_384',
 	'druuzil/bryan_cranston_320',
 	'druuzil/catherine_blanchett_352',
 	'druuzil/christian_bale_320',
@@ -50,6 +53,7 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'druuzil/hugh_jackman_384',
 	'druuzil/idris_elba_320',
 	'druuzil/jack_nicholson_320',
+	'druuzil/james_carrey_384',
 	'druuzil/james_mcavoy_320',
 	'druuzil/james_varney_320',
 	'druuzil/jason_momoa_320',
@@ -61,6 +65,7 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'druuzil/kate_beckinsale_384',
 	'druuzil/laurence_fishburne_384',
 	'druuzil/lili_reinhart_320',
+	'druuzil/luke_evans_384',
 	'druuzil/mads_mikkelsen_384',
 	'druuzil/mary_winstead_320',
 	'druuzil/margaret_qualley_384',
@@ -69,13 +74,16 @@ deep_swapper_models : List[DeepSwapperModel] =\
 	'druuzil/michael_fox_320',
 	'druuzil/millie_bobby_brown_320',
 	'druuzil/morgan_freeman_320',
-	'druuzil/patrick_stewart_320',
+	'druuzil/patrick_stewart_224',
+	'druuzil/rachel_weisz_384',
 	'druuzil/rebecca_ferguson_320',
 	'druuzil/scarlett_johansson_320',
+	'druuzil/shannen_doherty_384',
 	'druuzil/seth_macfarlane_384',
 	'druuzil/thomas_cruise_320',
 	'druuzil/thomas_hanks_384',
 	'druuzil/william_murray_384',
+	'druuzil/zoe_saldana_384',
 	'edel/emma_roberts_224',
 	'edel/ivanka_trump_224',
 	'edel/lize_dzjabrailova_224',
@@ -177,6 +185,9 @@ face_swapper_set : FaceSwapperSet =\
 	'ghost_2_256': [ '256x256', '512x512', '768x768', '1024x1024' ],
 	'ghost_3_256': [ '256x256', '512x512', '768x768', '1024x1024' ],
 	'hififace_unofficial_256': [ '256x256', '512x512', '768x768', '1024x1024' ],
+	'hyperswap_1a_256': [ '256x256', '512x512', '768x768', '1024x1024' ],
+	'hyperswap_1b_256': [ '256x256', '512x512', '768x768', '1024x1024' ],
+	'hyperswap_1c_256': [ '256x256', '512x512', '768x768', '1024x1024' ],
 	'inswapper_128': [ '128x128', '256x256', '384x384', '512x512', '768x768', '1024x1024' ],
 	'inswapper_128_fp16': [ '128x128', '256x256', '384x384', '512x512', '768x768', '1024x1024' ],
 	'simswap_256': [ '256x256', '512x512', '768x768', '1024x1024' ],
@@ -186,8 +197,8 @@ face_swapper_set : FaceSwapperSet =\
 face_swapper_models : List[FaceSwapperModel] = list(face_swapper_set.keys())
 frame_colorizer_models : List[FrameColorizerModel] = [ 'ddcolor', 'ddcolor_artistic', 'deoldify', 'deoldify_artistic', 'deoldify_stable' ]
 frame_colorizer_sizes : List[str] = [ '192x192', '256x256', '384x384', '512x512' ]
-frame_enhancer_models : List[FrameEnhancerModel] = [ 'clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'real_hatgan_x4', 'real_web_photo_x4', 'realistic_rescaler_x4', 'remacri_x4', 'siax_x4', 'span_kendata_x4', 'swin2_sr_x4', 'ultra_sharp_x4' ]
-lip_syncer_models : List[LipSyncerModel] = [ 'wav2lip_96', 'wav2lip_gan_96' ]
+frame_enhancer_models : List[FrameEnhancerModel] = [ 'clear_reality_x4', 'lsdir_x4', 'nomos8k_sc_x4', 'real_esrgan_x2', 'real_esrgan_x2_fp16', 'real_esrgan_x4', 'real_esrgan_x4_fp16', 'real_esrgan_x8', 'real_esrgan_x8_fp16', 'real_hatgan_x4', 'real_web_photo_x4', 'realistic_rescaler_x4', 'remacri_x4', 'siax_x4', 'span_kendata_x4', 'swin2_sr_x4', 'ultra_sharp_x4', 'ultra_sharp_2_x4' ]
+lip_syncer_models : List[LipSyncerModel] = [ 'edtalk_256', 'wav2lip_96', 'wav2lip_gan_96' ]
 
 age_modifier_direction_range : Sequence[int] = create_int_range(-100, 100, 1)
 deep_swapper_morph_range : Sequence[int] = create_int_range(0, 100, 1)
@@ -210,3 +221,4 @@ face_enhancer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
 face_enhancer_weight_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
 frame_colorizer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
+lip_syncer_weight_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)

@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, WebcamMode
+from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, WebcamMode
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -19,7 +19,13 @@ face_selector_genders : List[Gender] = [ 'female', 'male' ]
 face_selector_races : List[Race] = [ 'white', 'black', 'latino', 'asian', 'indian', 'arabic' ]
 face_occluder_models : List[FaceOccluderModel] = [ 'xseg_1', 'xseg_2', 'xseg_3' ]
 face_parser_models : List[FaceParserModel] = [ 'bisenet_resnet_18', 'bisenet_resnet_34' ]
-face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'region' ]
+face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'area', 'region' ]
+face_mask_area_set : FaceMaskAreaSet =\
+{
+	'upper-face': [ 0, 1, 2, 31, 32, 33, 34, 35, 14, 15, 16, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17 ],
+	'lower-face': [ 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 35, 34, 33, 32, 31 ],
+	'mouth': [ 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67 ]
+}
 face_mask_region_set : FaceMaskRegionSet =\
 {
 	'skin': 1,
@@ -33,6 +39,7 @@ face_mask_region_set : FaceMaskRegionSet =\
 	'upper-lip': 12,
 	'lower-lip': 13
 }
+face_mask_areas : List[FaceMaskArea] = list(face_mask_area_set.keys())
 face_mask_regions : List[FaceMaskRegion] = list(face_mask_region_set.keys())
 
 audio_type_set : AudioTypeSet =\
@@ -77,6 +84,18 @@ output_video_presets : List[VideoPreset] = [ 'ultrafast', 'superfast', 'veryfast
 
 image_template_sizes : List[float] = [ 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 3.5, 4 ]
 video_template_sizes : List[int] = [ 240, 360, 480, 540, 720, 1080, 1440, 2160, 4320 ]
+
+benchmark_set : BenchmarkSet =\
+{
+	'240p': '.assets/examples/target-240p.mp4',
+	'360p': '.assets/examples/target-360p.mp4',
+	'540p': '.assets/examples/target-540p.mp4',
+	'720p': '.assets/examples/target-720p.mp4',
+	'1080p': '.assets/examples/target-1080p.mp4',
+	'1440p': '.assets/examples/target-1440p.mp4',
+	'2160p': '.assets/examples/target-2160p.mp4'
+}
+benchmark_resolutions : List[BenchmarkResolution] = list(benchmark_set.keys())
 
 webcam_modes : List[WebcamMode] = [ 'inline', 'udp', 'v4l2' ]
 webcam_resolutions : List[str] = [ '320x240', '640x480', '800x600', '1024x768', '1280x720', '1280x960', '1920x1080', '2560x1440', '3840x2160' ]
@@ -129,6 +148,7 @@ log_levels : List[LogLevel] = list(log_level_set.keys())
 ui_workflows : List[UiWorkflow] = [ 'instant_runner', 'job_runner', 'job_manager' ]
 job_statuses : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 
+benchmark_cycle_count_range : Sequence[int] = create_int_range(1, 10, 1)
 execution_thread_count_range : Sequence[int] = create_int_range(1, 32, 1)
 execution_queue_count_range : Sequence[int] = create_int_range(1, 4, 1)
 system_memory_limit_range : Sequence[int] = create_int_range(0, 128, 4)
