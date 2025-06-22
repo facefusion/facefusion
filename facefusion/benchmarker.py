@@ -92,7 +92,7 @@ def render() -> None:
 	headers =\
 	[
 		'target_path',
-		'benchmark_cycle_count',
+		'cycle_count',
 		'average_run',
 		'fastest_run',
 		'slowest_run',
