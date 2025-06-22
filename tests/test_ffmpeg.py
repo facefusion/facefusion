@@ -9,11 +9,9 @@ from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio
 from facefusion.filesystem import copy_file
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, \
-	resolve_temp_frame_paths
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
-from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, \
-	prepare_test_output_directory
+from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -29,8 +27,10 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=60', get_test_example_file('target-240p-60fps.mp4') ])
+
 	for output_video_format in [ 'avi', 'm4v', 'mkv', 'mov', 'mp4', 'webm' ]:
 		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '16000', get_test_example_file('target-240p-16khz.' + output_video_format) ])
+
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '48000', get_test_example_file('target-240p-48khz.mp4') ])
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
