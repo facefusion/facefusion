@@ -3,7 +3,7 @@ import subprocess
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.vision import calc_histogram_difference, count_trim_frame_total, count_video_frame_total, create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
+from facefusion.vision import calculate_histogram_difference, count_trim_frame_total, count_video_frame_total, create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -167,8 +167,8 @@ def test_calc_histogram_difference() -> None:
 	source_vision_frame = read_image(get_test_example_file('target-240p.jpg'))
 	target_vision_frame = read_image(get_test_example_file('target-240p-0sat.jpg'))
 
-	assert calc_histogram_difference(source_vision_frame, source_vision_frame) == 1.0
-	assert calc_histogram_difference(source_vision_frame, target_vision_frame) < 0.5
+	assert calculate_histogram_difference(source_vision_frame, source_vision_frame) == 1.0
+	assert calculate_histogram_difference(source_vision_frame, target_vision_frame) < 0.5
 
 
 def test_match_frame_color() -> None:
@@ -176,4 +176,4 @@ def test_match_frame_color() -> None:
 	target_vision_frame = read_image(get_test_example_file('target-240p-0sat.jpg'))
 	output_vision_frame = match_frame_color(source_vision_frame, target_vision_frame)
 
-	assert calc_histogram_difference(source_vision_frame, output_vision_frame) > 0.5
+	assert calculate_histogram_difference(source_vision_frame, output_vision_frame) > 0.5
