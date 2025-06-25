@@ -62,7 +62,7 @@ def pre_check() -> bool:
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
 
-def calc_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[Embedding, Embedding]:
+def calculate_embedding(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5) -> Tuple[Embedding, Embedding]:
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
 	crop_vision_frame, matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_template, model_size)

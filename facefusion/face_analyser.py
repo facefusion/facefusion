@@ -8,7 +8,7 @@ from facefusion.face_classifier import classify_face
 from facefusion.face_detector import detect_faces, detect_rotated_faces
 from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, estimate_face_angle, get_nms_threshold
 from facefusion.face_landmarker import detect_face_landmark, estimate_face_landmark_68_5
-from facefusion.face_recognizer import calc_embedding
+from facefusion.face_recognizer import calculate_embedding
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.types import BoundingBox, Face, FaceLandmark5, FaceLandmarkSet, FaceScoreSet, Score, VisionFrame
 
@@ -45,7 +45,7 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 			'detector': face_score,
 			'landmarker': face_landmark_score_68
 		}
-		embedding, normed_embedding = calc_embedding(vision_frame, face_landmark_set.get('5/68'))
+		embedding, normed_embedding = calculate_embedding(vision_frame, face_landmark_set.get('5/68'))
 		gender, age, race = classify_face(vision_frame, face_landmark_set.get('5/68'))
 		faces.append(Face(
 			bounding_box = bounding_box,

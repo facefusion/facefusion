@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 import gradio
 
 from facefusion import state_manager, wording
-from facefusion.common_helper import calc_float_step
+from facefusion.common_helper import calculate_float_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
 from facefusion.processors.types import LipSyncerModel
@@ -27,7 +27,7 @@ def render() -> None:
 	LIP_SYNCER_WEIGHT_SLIDER = gradio.Slider(
 		label = wording.get('uis.lip_syncer_weight_slider'),
 		value = state_manager.get_item('lip_syncer_weight'),
-		step = calc_float_step(processors_choices.lip_syncer_weight_range),
+		step = calculate_float_step(processors_choices.lip_syncer_weight_range),
 		minimum = processors_choices.lip_syncer_weight_range[0],
 		maximum = processors_choices.lip_syncer_weight_range[-1],
 		visible = has_lip_syncer

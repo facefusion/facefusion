@@ -18,7 +18,7 @@ from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
 from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.live_portrait import create_rotation, limit_euler_angles, limit_expression
+from facefusion.processors.live_portrait import create_rotation, limit_angle, limit_expression
 from facefusion.processors.types import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
@@ -342,8 +342,8 @@ def edit_eye_gaze(expression : LivePortraitExpression) -> LivePortraitExpression
 
 def edit_eye_open(motion_points : LivePortraitMotionPoints, face_landmark_68 : FaceLandmark68) -> LivePortraitMotionPoints:
 	face_editor_eye_open_ratio = state_manager.get_item('face_editor_eye_open_ratio')
-	left_eye_ratio = calc_distance_ratio(face_landmark_68, 37, 40, 39, 36)
-	right_eye_ratio = calc_distance_ratio(face_landmark_68, 43, 46, 45, 42)
+	left_eye_ratio = calculate_distance_ratio(face_landmark_68, 37, 40, 39, 36)
+	right_eye_ratio = calculate_distance_ratio(face_landmark_68, 43, 46, 45, 42)
 
 	if face_editor_eye_open_ratio < 0:
 		eye_motion_points = numpy.concatenate([ motion_points.ravel(), [ left_eye_ratio, right_eye_ratio, 0.0 ] ])
@@ -357,7 +357,7 @@ def edit_eye_open(motion_points : LivePortraitMotionPoints, face_landmark_68 : F
 
 def edit_lip_open(motion_points : LivePortraitMotionPoints, face_landmark_68 : FaceLandmark68) -> LivePortraitMotionPoints:
 	face_editor_lip_open_ratio = state_manager.get_item('face_editor_lip_open_ratio')
-	lip_ratio = calc_distance_ratio(face_landmark_68, 62, 66, 54, 48)
+	lip_ratio = calculate_distance_ratio(face_landmark_68, 62, 66, 54, 48)
 
 	if face_editor_lip_open_ratio < 0:
 		lip_motion_points = numpy.concatenate([ motion_points.ravel(), [ lip_ratio, 0.0 ] ])
@@ -450,12 +450,12 @@ def edit_head_rotation(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : 
 	edit_pitch = pitch + float(numpy.interp(face_editor_head_pitch, [ -1, 1 ], [ 20, -20 ]))
 	edit_yaw = yaw + float(numpy.interp(face_editor_head_yaw, [ -1, 1 ], [ 60, -60 ]))
 	edit_roll = roll + float(numpy.interp(face_editor_head_roll, [ -1, 1 ], [ -15, 15 ]))
-	edit_pitch, edit_yaw, edit_roll = limit_euler_angles(pitch, yaw, roll, edit_pitch, edit_yaw, edit_roll)
+	edit_pitch, edit_yaw, edit_roll = limit_angle(pitch, yaw, roll, edit_pitch, edit_yaw, edit_roll)
 	rotation = create_rotation(edit_pitch, edit_yaw, edit_roll)
 	return rotation
 
 
-def calc_distance_ratio(face_landmark_68 : FaceLandmark68, top_index : int, bottom_index : int, left_index : int, right_index : int) -> float:
+def calculate_distance_ratio(face_landmark_68 : FaceLandmark68, top_index : int, bottom_index : int, left_index : int, right_index : int) -> float:
 	vertical_direction = face_landmark_68[top_index] - face_landmark_68[bottom_index]
 	horizontal_direction = face_landmark_68[left_index] - face_landmark_68[right_index]
 	distance_ratio = float(numpy.linalg.norm(vertical_direction) / (numpy.linalg.norm(horizontal_direction) + 1e-6))
