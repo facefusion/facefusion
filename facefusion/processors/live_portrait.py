@@ -63,15 +63,15 @@ def limit_expression(expression : LivePortraitExpression) -> LivePortraitExpress
 	return numpy.clip(expression, EXPRESSION_MIN, EXPRESSION_MAX)
 
 
-def limit_euler_angles(target_pitch : LivePortraitPitch, target_yaw : LivePortraitYaw, target_roll : LivePortraitRoll, output_pitch : LivePortraitPitch, output_yaw : LivePortraitYaw, output_roll : LivePortraitRoll) -> Tuple[LivePortraitPitch, LivePortraitYaw, LivePortraitRoll]:
-	pitch_min, pitch_max, yaw_min, yaw_max, roll_min, roll_max = calc_euler_limits(target_pitch, target_yaw, target_roll)
+def limit_angle(target_pitch : LivePortraitPitch, target_yaw : LivePortraitYaw, target_roll : LivePortraitRoll, output_pitch : LivePortraitPitch, output_yaw : LivePortraitYaw, output_roll : LivePortraitRoll) -> Tuple[LivePortraitPitch, LivePortraitYaw, LivePortraitRoll]:
+	pitch_min, pitch_max, yaw_min, yaw_max, roll_min, roll_max = calculate_euler_limits(target_pitch, target_yaw, target_roll)
 	output_pitch = numpy.clip(output_pitch, pitch_min, pitch_max)
 	output_yaw = numpy.clip(output_yaw, yaw_min, yaw_max)
 	output_roll = numpy.clip(output_roll, roll_min, roll_max)
 	return output_pitch, output_yaw, output_roll
 
 
-def calc_euler_limits(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : LivePortraitRoll) -> Tuple[float, float, float, float, float, float]:
+def calculate_euler_limits(pitch : LivePortraitPitch, yaw : LivePortraitYaw, roll : LivePortraitRoll) -> Tuple[float, float, float, float, float, float]:
 	pitch_min = -30.0
 	pitch_max = 30.0
 	yaw_min = -60.0

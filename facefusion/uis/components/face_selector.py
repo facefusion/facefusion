@@ -5,7 +5,7 @@ from gradio_rangeslider import RangeSlider
 
 import facefusion.choices
 from facefusion import state_manager, wording
-from facefusion.common_helper import calc_float_step, calc_int_step
+from facefusion.common_helper import calculate_float_step, calculate_int_step
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import clear_reference_faces, clear_static_faces
@@ -80,12 +80,12 @@ def render() -> None:
 				minimum = facefusion.choices.face_selector_age_range[0],
 				maximum = facefusion.choices.face_selector_age_range[-1],
 				value = (face_selector_age_start, face_selector_age_end),
-				step = calc_int_step(facefusion.choices.face_selector_age_range)
+				step = calculate_int_step(facefusion.choices.face_selector_age_range)
 			)
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
 		label = wording.get('uis.reference_face_distance_slider'),
 		value = state_manager.get_item('reference_face_distance'),
-		step = calc_float_step(facefusion.choices.reference_face_distance_range),
+		step = calculate_float_step(facefusion.choices.reference_face_distance_range),
 		minimum = facefusion.choices.reference_face_distance_range[0],
 		maximum = facefusion.choices.reference_face_distance_range[-1],
 		visible = 'reference' in state_manager.get_item('face_selector_mode')

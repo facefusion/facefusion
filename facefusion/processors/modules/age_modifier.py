@@ -143,8 +143,8 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 
 	if 'occlusion' in state_manager.get_item('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
-		combined_matrix = merge_matrix([ extend_affine_matrix, cv2.invertAffineTransform(affine_matrix) ])
-		occlusion_mask = cv2.warpAffine(occlusion_mask, combined_matrix, model_sizes.get('target_with_background'))
+		temp_matrix = merge_matrix([ extend_affine_matrix, cv2.invertAffineTransform(affine_matrix) ])
+		occlusion_mask = cv2.warpAffine(occlusion_mask, temp_matrix, model_sizes.get('target_with_background'))
 		crop_masks.append(occlusion_mask)
 
 	crop_vision_frame = prepare_vision_frame(crop_vision_frame)

@@ -4,7 +4,7 @@ import gradio
 
 import facefusion.choices
 from facefusion import state_manager, wording
-from facefusion.common_helper import calc_int_step
+from facefusion.common_helper import calculate_int_step
 from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import is_image, is_video
 from facefusion.types import AudioEncoder, Fps, VideoEncoder, VideoPreset
@@ -47,7 +47,7 @@ def render() -> None:
 	OUTPUT_IMAGE_QUALITY_SLIDER = gradio.Slider(
 		label = wording.get('uis.output_image_quality_slider'),
 		value = state_manager.get_item('output_image_quality'),
-		step = calc_int_step(facefusion.choices.output_image_quality_range),
+		step = calculate_int_step(facefusion.choices.output_image_quality_range),
 		minimum = facefusion.choices.output_image_quality_range[0],
 		maximum = facefusion.choices.output_image_quality_range[-1],
 		visible = is_image(state_manager.get_item('target_path'))
@@ -67,7 +67,7 @@ def render() -> None:
 	OUTPUT_AUDIO_QUALITY_SLIDER = gradio.Slider(
 		label = wording.get('uis.output_audio_quality_slider'),
 		value = state_manager.get_item('output_audio_quality'),
-		step = calc_int_step(facefusion.choices.output_audio_quality_range),
+		step = calculate_int_step(facefusion.choices.output_audio_quality_range),
 		minimum = facefusion.choices.output_audio_quality_range[0],
 		maximum = facefusion.choices.output_audio_quality_range[-1],
 		visible = is_video(state_manager.get_item('target_path'))
@@ -75,7 +75,7 @@ def render() -> None:
 	OUTPUT_AUDIO_VOLUME_SLIDER = gradio.Slider(
 		label = wording.get('uis.output_audio_volume_slider'),
 		value = state_manager.get_item('output_audio_volume'),
-		step = calc_int_step(facefusion.choices.output_audio_volume_range),
+		step = calculate_int_step(facefusion.choices.output_audio_volume_range),
 		minimum = facefusion.choices.output_audio_volume_range[0],
 		maximum = facefusion.choices.output_audio_volume_range[-1],
 		visible = is_video(state_manager.get_item('target_path'))
@@ -95,7 +95,7 @@ def render() -> None:
 	OUTPUT_VIDEO_QUALITY_SLIDER = gradio.Slider(
 		label = wording.get('uis.output_video_quality_slider'),
 		value = state_manager.get_item('output_video_quality'),
-		step = calc_int_step(facefusion.choices.output_video_quality_range),
+		step = calculate_int_step(facefusion.choices.output_video_quality_range),
 		minimum = facefusion.choices.output_video_quality_range[0],
 		maximum = facefusion.choices.output_video_quality_range[-1],
 		visible = is_video(state_manager.get_item('target_path'))

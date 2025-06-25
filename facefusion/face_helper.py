@@ -99,7 +99,7 @@ def warp_face_by_translation(temp_vision_frame : VisionFrame, translation : Tran
 
 
 def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, crop_mask : Mask, affine_matrix : Matrix) -> VisionFrame:
-	paste_bounding_box, paste_matrix = calc_paste_area(temp_vision_frame, crop_vision_frame, affine_matrix)
+	paste_bounding_box, paste_matrix = calculate_paste_area(temp_vision_frame, crop_vision_frame, affine_matrix)
 	x_min, y_min, x_max, y_max = paste_bounding_box
 	paste_width = x_max - x_min
 	paste_height = y_max - y_min
@@ -113,7 +113,7 @@ def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame,
 	return temp_vision_frame
 
 
-def calc_paste_area(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, affine_matrix : Matrix) -> Tuple[BoundingBox, Matrix]:
+def calculate_paste_area(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, affine_matrix : Matrix) -> Tuple[BoundingBox, Matrix]:
 	temp_height, temp_width = temp_vision_frame.shape[:2]
 	crop_height, crop_width = crop_vision_frame.shape[:2]
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
@@ -246,9 +246,11 @@ def get_nms_threshold(face_detector_model : FaceDetectorModel, face_detector_ang
 	return 0.4
 
 
-def merge_matrix(matrices : List[Matrix]) -> Matrix:
-	merged_matrix = numpy.vstack([ matrices[0], [ 0, 0, 1 ] ])
-	for matrix in matrices[1:]:
-		matrix = numpy.vstack([ matrix, [ 0, 0, 1 ] ])
-		merged_matrix = numpy.dot(merged_matrix, matrix)
-	return merged_matrix[:2, :]
+def merge_matrix(temp_matrices : List[Matrix]) -> Matrix:
+	matrix = numpy.vstack([temp_matrices[0], [0, 0, 1]])
+
+	for temp_matrix in temp_matrices[1:]:
+		temp_matrix = numpy.vstack([ temp_matrix, [ 0, 0, 1 ] ])
+		matrix = numpy.dot(temp_matrix, matrix)
+
+	return matrix[:2, :]

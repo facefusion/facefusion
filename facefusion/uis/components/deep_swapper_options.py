@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 import gradio
 
 from facefusion import state_manager, wording
-from facefusion.common_helper import calc_int_step
+from facefusion.common_helper import calculate_int_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
 from facefusion.processors.types import DeepSwapperModel
@@ -27,7 +27,7 @@ def render() -> None:
 	DEEP_SWAPPER_MORPH_SLIDER = gradio.Slider(
 		label = wording.get('uis.deep_swapper_morph_slider'),
 		value = state_manager.get_item('deep_swapper_morph'),
-		step = calc_int_step(processors_choices.deep_swapper_morph_range),
+		step = calculate_int_step(processors_choices.deep_swapper_morph_range),
 		minimum = processors_choices.deep_swapper_morph_range[0],
 		maximum = processors_choices.deep_swapper_morph_range[-1],
 		visible = has_deep_swapper and load_processor_module('deep_swapper').get_inference_pool() and load_processor_module('deep_swapper').has_morph_input()

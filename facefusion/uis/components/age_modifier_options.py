@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 import gradio
 
 from facefusion import state_manager, wording
-from facefusion.common_helper import calc_float_step
+from facefusion.common_helper import calculate_float_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
 from facefusion.processors.types import AgeModifierModel
@@ -27,7 +27,7 @@ def render() -> None:
 	AGE_MODIFIER_DIRECTION_SLIDER = gradio.Slider(
 		label = wording.get('uis.age_modifier_direction_slider'),
 		value = state_manager.get_item('age_modifier_direction'),
-		step = calc_float_step(processors_choices.age_modifier_direction_range),
+		step = calculate_float_step(processors_choices.age_modifier_direction_range),
 		minimum = processors_choices.age_modifier_direction_range[0],
 		maximum = processors_choices.age_modifier_direction_range[-1],
 		visible = has_age_modifier
