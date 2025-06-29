@@ -48,10 +48,17 @@ def create_inference_session_providers(execution_device_id : str, execution_prov
 				'trt_timing_cache_path': '.caches',
 				'trt_builder_optimization_level': 5
 			}))
-		if execution_provider in [ 'directml', 'migraphx', 'rocm' ]:
+		if execution_provider in [ 'directml', 'rocm' ]:
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id
+			}))
+		if execution_provider in [ 'migraphx' ]:
+			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			{
+				'device_id': execution_device_id,
+				'migraphx_save_compiled_model': True,
+				'migraphx_save_compiled_path': '.caches'
 			}))
 		if execution_provider == 'openvino':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
