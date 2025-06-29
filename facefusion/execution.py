@@ -60,7 +60,8 @@ def create_inference_session_providers(execution_device_id : str, execution_prov
 				'migraphx_load_compiled_model': 1,
 				'migraphx_load_compiled_path': '.caches',
 				'migraphx_save_compiled_model': 1,
-				'migraphx_save_compiled_path': '.caches'
+				'migraphx_save_compiled_path': '.caches',
+				'migraphx_exhaustive_tune': 1
 			}))
 		if execution_provider == 'openvino':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
