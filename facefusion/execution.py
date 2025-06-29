@@ -53,7 +53,7 @@ def create_inference_session_providers(execution_device_id : str, execution_prov
 			{
 				'device_id': execution_device_id
 			}))
-		if execution_provider in [ 'migraphx' ]:
+		if execution_provider == 'migraphx':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id,
