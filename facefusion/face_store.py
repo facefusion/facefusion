@@ -17,8 +17,9 @@ def get_face_store() -> FaceStore:
 def get_static_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 	vision_area = crop_vision_area(vision_frame)
 	vision_hash = create_hash(vision_area.tobytes())
-	if vision_hash in FACE_STORE['static_faces']:
-		return FACE_STORE['static_faces'][vision_hash]
+	static_faces = FACE_STORE.get('static_faces')
+	if static_faces and vision_hash in static_faces:
+		return static_faces[vision_hash]
 	return None
 
 
@@ -34,9 +35,7 @@ def clear_static_faces() -> None:
 
 
 def get_reference_faces() -> Optional[FaceSet]:
-	if FACE_STORE['reference_faces']:
-		return FACE_STORE['reference_faces']
-	return None
+	return FACE_STORE.get('reference_faces')
 
 
 def append_reference_face(name : str, face : Face) -> None:
