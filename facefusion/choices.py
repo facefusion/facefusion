@@ -106,6 +106,7 @@ execution_provider_set : ExecutionProviderSet =\
 	'tensorrt': 'TensorrtExecutionProvider',
 	'directml': 'DmlExecutionProvider',
 	'rocm': 'ROCMExecutionProvider',
+	'migraphx': 'MIGraphXExecutionProvider',
 	'openvino': 'OpenVINOExecutionProvider',
 	'coreml': 'CoreMLExecutionProvider',
 	'cpu': 'CPUExecutionProvider'
