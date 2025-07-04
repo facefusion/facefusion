@@ -6,7 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import calculate_float_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.types import LipSyncerModel
+from facefusion.processors.types import LipSyncerModel, LipSyncerWeight
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 LIP_SYNCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -60,5 +60,5 @@ def update_lip_syncer_model(lip_syncer_model : LipSyncerModel) -> gradio.Dropdow
 	return gradio.Dropdown()
 
 
-def update_lip_syncer_weight(lip_syncer_weight : float) -> None:
+def update_lip_syncer_weight(lip_syncer_weight : LipSyncerWeight) -> None:
 	state_manager.set_item('lip_syncer_weight', lip_syncer_weight)
