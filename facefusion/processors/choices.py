@@ -2,7 +2,7 @@ from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
 from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_relative_path
-from facefusion.processors.types import AgeModifierModel, DeepSwapperModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
+from facefusion.processors.types import AgeModifierModel, DeepSwapperModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperModel, FaceSwapperSet, FaceSwapperWeight, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
 deep_swapper_models : List[DeepSwapperModel] =\
@@ -219,7 +219,7 @@ face_editor_head_yaw_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.0
 face_editor_head_roll_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.05)
 face_enhancer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
 face_enhancer_weight_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
-face_swapper_weight_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.05)
+face_swapper_weight_range : Sequence[FaceSwapperWeight] = create_float_range(-1.0, 1.0, 0.05)
 frame_colorizer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
 lip_syncer_weight_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
