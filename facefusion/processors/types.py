@@ -69,6 +69,21 @@ LipSyncerInputs = TypedDict('LipSyncerInputs',
 	'target_vision_frame' : VisionFrame
 })
 
+AgeModifierDirection : TypeAlias = NDArray[Any]
+DeepSwapperMorph : TypeAlias = NDArray[Any]
+FaceEnhancerWeight : TypeAlias = NDArray[Any]
+FaceSwapperWeight : TypeAlias = float
+LipSyncerWeight : TypeAlias = NDArray[Any]
+LivePortraitPitch : TypeAlias = float
+LivePortraitYaw : TypeAlias = float
+LivePortraitRoll : TypeAlias = float
+LivePortraitExpression : TypeAlias = NDArray[Any]
+LivePortraitFeatureVolume : TypeAlias = NDArray[Any]
+LivePortraitMotionPoints : TypeAlias = NDArray[Any]
+LivePortraitRotation : TypeAlias = NDArray[Any]
+LivePortraitScale : TypeAlias = NDArray[Any]
+LivePortraitTranslation : TypeAlias = NDArray[Any]
+
 ProcessorStateKey = Literal\
 [
 	'age_modifier_model',
@@ -133,30 +148,16 @@ ProcessorState = TypedDict('ProcessorState',
 	'face_editor_head_roll' : float,
 	'face_enhancer_model' : FaceEnhancerModel,
 	'face_enhancer_blend' : int,
-	'face_enhancer_weight' : float,
+	'face_enhancer_weight' : FaceEnhancerWeight,
 	'face_swapper_model' : FaceSwapperModel,
 	'face_swapper_pixel_boost' : str,
-	'face_swapper_weight' : float,
+	'face_swapper_weight' : FaceSwapperWeight,
 	'frame_colorizer_model' : FrameColorizerModel,
 	'frame_colorizer_size' : str,
 	'frame_colorizer_blend' : int,
 	'frame_enhancer_model' : FrameEnhancerModel,
 	'frame_enhancer_blend' : int,
-	'lip_syncer_model' : LipSyncerModel
+	'lip_syncer_model' : LipSyncerModel,
+	'lip_syncer_weight' : LipSyncerWeight
 })
 ProcessorStateSet : TypeAlias = Dict[AppContext, ProcessorState]
-
-AgeModifierDirection : TypeAlias = NDArray[Any]
-DeepSwapperMorph : TypeAlias = NDArray[Any]
-FaceEnhancerWeight : TypeAlias = NDArray[Any]
-FaceSwapperWeight : TypeAlias = float
-LipSyncerWeight : TypeAlias = NDArray[Any]
-LivePortraitPitch : TypeAlias = float
-LivePortraitYaw : TypeAlias = float
-LivePortraitRoll : TypeAlias = float
-LivePortraitExpression : TypeAlias = NDArray[Any]
-LivePortraitFeatureVolume : TypeAlias = NDArray[Any]
-LivePortraitMotionPoints : TypeAlias = NDArray[Any]
-LivePortraitRotation : TypeAlias = NDArray[Any]
-LivePortraitScale : TypeAlias = NDArray[Any]
-LivePortraitTranslation : TypeAlias = NDArray[Any]
