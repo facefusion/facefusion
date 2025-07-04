@@ -130,6 +130,7 @@ def listen() -> None:
 		'face_editor_head_roll_slider',
 		'face_enhancer_blend_slider',
 		'face_enhancer_weight_slider',
+		'face_swapper_weight_slider',
 		'frame_colorizer_blend_slider',
 		'frame_enhancer_blend_slider',
 		'lip_syncer_weight_slider',

@@ -98,6 +98,7 @@ ProcessorStateKey = Literal\
 	'face_enhancer_weight',
 	'face_swapper_model',
 	'face_swapper_pixel_boost',
+	'face_swapper_weight',
 	'frame_colorizer_model',
 	'frame_colorizer_size',
 	'frame_colorizer_blend',
@@ -135,6 +136,7 @@ ProcessorState = TypedDict('ProcessorState',
 	'face_enhancer_weight' : float,
 	'face_swapper_model' : FaceSwapperModel,
 	'face_swapper_pixel_boost' : str,
+	'face_swapper_weight' : float,
 	'frame_colorizer_model' : FrameColorizerModel,
 	'frame_colorizer_size' : str,
 	'frame_colorizer_blend' : int,
@@ -147,6 +149,7 @@ ProcessorStateSet : TypeAlias = Dict[AppContext, ProcessorState]
 AgeModifierDirection : TypeAlias = NDArray[Any]
 DeepSwapperMorph : TypeAlias = NDArray[Any]
 FaceEnhancerWeight : TypeAlias = NDArray[Any]
+FaceSwapperWeight : TypeAlias = float
 LipSyncerWeight : TypeAlias = NDArray[Any]
 LivePortraitPitch : TypeAlias = float
 LivePortraitYaw : TypeAlias = float

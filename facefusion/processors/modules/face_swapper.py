@@ -440,12 +440,14 @@ def register_args(program : ArgumentParser) -> None:
 		known_args, _ = program.parse_known_args()
 		face_swapper_pixel_boost_choices = processors_choices.face_swapper_set.get(known_args.face_swapper_model)
 		group_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
-		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost' ])
+		group_processors.add_argument('--face-swapper-weight', help = wording.get('help.face_swapper_weight'), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0.5'), choices = processors_choices.face_swapper_weight_range)
+		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_swapper_model', args.get('face_swapper_model'))
 	apply_state_item('face_swapper_pixel_boost', args.get('face_swapper_pixel_boost'))
+	apply_state_item('face_swapper_weight', args.get('face_swapper_weight'))
 
 
 def pre_check() -> bool:
@@ -512,7 +514,7 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	pixel_boost_vision_frames = implode_pixel_boost(crop_vision_frame, pixel_boost_total, model_size)
 	for pixel_boost_vision_frame in pixel_boost_vision_frames:
 		pixel_boost_vision_frame = prepare_crop_frame(pixel_boost_vision_frame)
-		pixel_boost_vision_frame = forward_swap_face(source_face, pixel_boost_vision_frame)
+		pixel_boost_vision_frame = forward_swap_face(source_face, target_face, pixel_boost_vision_frame)
 		pixel_boost_vision_frame = normalize_crop_frame(pixel_boost_vision_frame)
 		temp_vision_frames.append(pixel_boost_vision_frame)
 	crop_vision_frame = explode_pixel_boost(temp_vision_frames, pixel_boost_total, model_size, pixel_boost_size)
@@ -531,7 +533,7 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 	return temp_vision_frame
 
 
-def forward_swap_face(source_face : Face, crop_vision_frame : VisionFrame) -> VisionFrame:
+def forward_swap_face(source_face : Face, target_face : Face, crop_vision_frame : VisionFrame) -> VisionFrame:
 	face_swapper = get_inference_pool().get('face_swapper')
 	model_type = get_model_options().get('type')
 	face_swapper_inputs = {}
@@ -544,7 +546,9 @@ def forward_swap_face(source_face : Face, crop_vision_frame : VisionFrame) -> Vi
 			if model_type in [ 'blendswap', 'uniface' ]:
 				face_swapper_inputs[face_swapper_input.name] = prepare_source_frame(source_face)
 			else:
-				face_swapper_inputs[face_swapper_input.name] = prepare_source_embedding(source_face)
+				source_embedding = prepare_source_embedding(source_face)
+				source_embedding = balance_source_embedding(source_embedding, target_face.embedding)
+				face_swapper_inputs[face_swapper_input.name] = source_embedding
 		if face_swapper_input.name == 'target':
 			face_swapper_inputs[face_swapper_input.name] = crop_vision_frame
 
@@ -601,6 +605,20 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 
 	_, source_normed_embedding = convert_embedding(source_face)
 	source_embedding = source_normed_embedding.reshape(1, -1)
+	return source_embedding
+
+
+def balance_source_embedding(source_embedding : Embedding, target_embedding : Embedding) -> Embedding:
+	model_type = get_model_options().get('type')
+	face_swapper_weight = state_manager.get_item('face_swapper_weight')
+	face_swapper_weight = numpy.interp(face_swapper_weight, [ 0, 1 ], [ 0.35, -0.35 ]).astype(numpy.float32)
+
+	if model_type in [ 'hififace', 'hyperswap', 'inswapper', 'simswap' ]:
+		target_embedding = target_embedding / numpy.linalg.norm(target_embedding)
+
+	source_embedding = source_embedding.reshape(1, -1)
+	target_embedding = target_embedding.reshape(1, -1)
+	source_embedding = source_embedding * (1 - face_swapper_weight) + target_embedding * face_swapper_weight
 	return source_embedding
 
 
