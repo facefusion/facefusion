@@ -6,7 +6,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import calculate_float_step, calculate_int_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.types import FaceEnhancerModel
+from facefusion.processors.types import FaceEnhancerModel, FaceEnhancerWeight
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -76,6 +76,6 @@ def update_face_enhancer_blend(face_enhancer_blend : float) -> None:
 	state_manager.set_item('face_enhancer_blend', int(face_enhancer_blend))
 
 
-def update_face_enhancer_weight(face_enhancer_weight : float) -> None:
+def update_face_enhancer_weight(face_enhancer_weight : FaceEnhancerWeight) -> None:
 	state_manager.set_item('face_enhancer_weight', face_enhancer_weight)
 
