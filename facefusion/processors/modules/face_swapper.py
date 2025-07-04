@@ -440,7 +440,7 @@ def register_args(program : ArgumentParser) -> None:
 		known_args, _ = program.parse_known_args()
 		face_swapper_pixel_boost_choices = processors_choices.face_swapper_set.get(known_args.face_swapper_model)
 		group_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
-		group_processors.add_argument('--face-swapper-weight', help = wording.get('help.face_swapper_weight'), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0'), choices = processors_choices.face_swapper_weight_range)
+		group_processors.add_argument('--face-swapper-weight', help = wording.get('help.face_swapper_weight'), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0.5'), choices = processors_choices.face_swapper_weight_range)
 		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight' ])
 
 
@@ -611,7 +611,7 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 def balance_source_embedding(source_embedding : Embedding, target_embedding : Embedding) -> Embedding:
 	model_type = get_model_options().get('type')
 	face_swapper_weight = state_manager.get_item('face_swapper_weight')
-	face_swapper_weight = numpy.interp(face_swapper_weight, [ -1, 1 ], [ 0.35, -0.35 ]).astype(numpy.float32)
+	face_swapper_weight = numpy.interp(face_swapper_weight, [ 0, 1 ], [ 0.35, -0.35 ]).astype(numpy.float32)
 
 	if model_type in [ 'hififace', 'hyperswap', 'inswapper', 'simswap' ]:
 		target_embedding = target_embedding / numpy.linalg.norm(target_embedding)
