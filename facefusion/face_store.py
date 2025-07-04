@@ -15,8 +15,7 @@ def get_face_store() -> FaceStore:
 
 
 def get_static_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
-	vision_area = crop_vision_area(vision_frame)
-	vision_hash = create_hash(vision_area.tobytes())
+	vision_hash = create_hash(vision_frame.tobytes())
 	static_faces = FACE_STORE.get('static_faces')
 	if static_faces and vision_hash in static_faces:
 		return static_faces[vision_hash]
@@ -24,8 +23,7 @@ def get_static_faces(vision_frame : VisionFrame) -> Optional[List[Face]]:
 
 
 def set_static_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
-	vision_area = crop_vision_area(vision_frame)
-	vision_hash = create_hash(vision_area.tobytes())
+	vision_hash = create_hash(vision_frame.tobytes())
 	if vision_hash:
 		FACE_STORE['static_faces'][vision_hash] = faces
 
@@ -46,10 +44,3 @@ def append_reference_face(name : str, face : Face) -> None:
 
 def clear_reference_faces() -> None:
 	FACE_STORE['reference_faces'].clear()
-
-
-def crop_vision_area(vision_frame : VisionFrame) -> VisionFrame:
-	height, width = vision_frame.shape[:2]
-	center_y, center_x = height // 2, width // 2
-	vision_area = vision_frame[center_y - 64 : center_y + 64, center_x - 64 : center_x + 64]
-	return vision_area
