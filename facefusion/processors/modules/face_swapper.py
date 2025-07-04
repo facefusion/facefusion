@@ -546,7 +546,9 @@ def forward_swap_face(source_face : Face, target_face : Face, crop_vision_frame 
 			if model_type in [ 'blendswap', 'uniface' ]:
 				face_swapper_inputs[face_swapper_input.name] = prepare_source_frame(source_face)
 			else:
-				face_swapper_inputs[face_swapper_input.name] = prepare_source_embedding(source_face, target_face)
+				source_embedding = prepare_source_embedding(source_face)
+				source_embedding = balance_source_embedding(source_embedding, target_face.embedding)
+				face_swapper_inputs[face_swapper_input.name] = source_embedding
 		if face_swapper_input.name == 'target':
 			face_swapper_inputs[face_swapper_input.name] = crop_vision_frame
 
@@ -582,16 +584,16 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 	return source_vision_frame
 
 
-def prepare_source_embedding(source_face : Face, target_face : Face) -> Embedding:
+def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_model_options().get('type')
 
 	if model_type == 'ghost':
 		source_embedding, _ = convert_embedding(source_face)
-		source_embedding = apply_embedding_weight(source_embedding, target_face.embedding)
+		source_embedding = source_embedding.reshape(1, -1)
 		return source_embedding
 
 	if model_type == 'hyperswap':
-		source_embedding = apply_embedding_weight(source_face.normed_embedding, target_face.normed_embedding)
+		source_embedding = source_face.normed_embedding.reshape((1, -1))
 		return source_embedding
 
 	if model_type == 'inswapper':
@@ -599,17 +601,21 @@ def prepare_source_embedding(source_face : Face, target_face : Face) -> Embeddin
 		model_initializer = get_static_model_initializer(model_path)
 		source_embedding = source_face.embedding.reshape((1, -1))
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
-		source_embedding = apply_embedding_weight(source_embedding, target_face.normed_embedding)
 		return source_embedding
 
 	_, source_normed_embedding = convert_embedding(source_face)
-	source_embedding = apply_embedding_weight(source_normed_embedding, target_face.normed_embedding)
+	source_embedding = source_normed_embedding.reshape(1, -1)
 	return source_embedding
 
 
-def apply_embedding_weight(source_embedding : Embedding, target_embedding : Embedding) -> Embedding:
+def balance_source_embedding(source_embedding : Embedding, target_embedding : Embedding) -> Embedding:
+	model_type = get_model_options().get('type')
 	face_swapper_weight = state_manager.get_item('face_swapper_weight')
 	face_swapper_weight = numpy.interp(face_swapper_weight, [ -1, 1 ], [ 0.35, -0.35 ]).astype(numpy.float32)
+
+	if model_type in [ 'hififace', 'hyperswap', 'inswapper', 'simswap' ]:
+		target_embedding = target_embedding / numpy.linalg.norm(target_embedding)
+
 	source_embedding = source_embedding.reshape(1, -1)
 	target_embedding = target_embedding.reshape(1, -1)
 	source_embedding = source_embedding * (1 - face_swapper_weight) + target_embedding * face_swapper_weight

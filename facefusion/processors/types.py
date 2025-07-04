@@ -149,6 +149,7 @@ ProcessorStateSet : TypeAlias = Dict[AppContext, ProcessorState]
 AgeModifierDirection : TypeAlias = NDArray[Any]
 DeepSwapperMorph : TypeAlias = NDArray[Any]
 FaceEnhancerWeight : TypeAlias = NDArray[Any]
+FaceSwapperWeight : TypeAlias = float
 LipSyncerWeight : TypeAlias = NDArray[Any]
 LivePortraitPitch : TypeAlias = float
 LivePortraitYaw : TypeAlias = float
