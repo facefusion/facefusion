@@ -51,5 +51,5 @@ def clear_reference_faces() -> None:
 def crop_vision_area(vision_frame : VisionFrame) -> VisionFrame:
 	height, width = vision_frame.shape[:2]
 	center_y, center_x = height // 2, width // 2
-	vision_area = vision_frame[center_y - 16 : center_y + 16, center_x - 16 : center_x + 16]
+	vision_area = vision_frame[center_y - 64 : center_y + 64, center_x - 64 : center_x + 64]
 	return vision_area
