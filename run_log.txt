@@ -1,0 +1,4 @@
+  File "C:\facefusion\facefusion.py", line 1
+    @echo off
+          ^^^
+SyntaxError: invalid syntax

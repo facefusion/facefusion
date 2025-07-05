@@ -1,0 +1,4 @@
+Patch 11:
+- Scaffolded Expression/Age UI patch directory.
+- Added ExpressionRestorerOptionsPanel and AgeModifierOptionsPanel overrides.
+- Created test_expression_age_ui.py to verify UI overrides.

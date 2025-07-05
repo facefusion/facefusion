@@ -1,0 +1,5 @@
+Patch 09:
+- Scaffolded Video Region Selection patch directory.
+- Added RegionTracker override in face_masker.py.
+- Added RegionSelectorPanel override in uis/components/region_selector.py.
+- Created test_region_selection.py to verify overrides.
