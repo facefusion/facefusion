@@ -1,0 +1,5 @@
+Patch 08:
+- Scaffolded Clothing Selection & Color-Editing UI patch directory.
+- Added RegionMasker override in face_masker.py.
+- Added ClothingColorEditorPanel override in mask_transformer_options.py.
+- Created test_clothing_color_editor.py for override presence.

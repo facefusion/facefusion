@@ -1,0 +1,2 @@
+Patch 01:
+- Created enhancements/__init__.py and plugin‐hook stub.

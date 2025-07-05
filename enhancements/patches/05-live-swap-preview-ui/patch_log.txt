@@ -1,0 +1,8 @@
+Patch 05:
+- Scaffolded Live Swap Preview UI patch directory.
+- Added stub override for `video_preview.py`.
+- Created initial test for preview UI override.
+
+- Implemented LiveSwapPreview with scrub-slider and Play/Pause controls.
+- Added start_preview() with background thread consuming video_manager.run_preview().
+- Implemented toggle_playback() and on_slider_move() for seeking.

@@ -1,0 +1,2 @@
+Patch 02:
+- Scaffolded batch mapping UI stubs and initial test.

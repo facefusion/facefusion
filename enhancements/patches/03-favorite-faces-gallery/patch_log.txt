@@ -1,0 +1,2 @@
+Patch 03:
+- Scaffolded favorites gallery and multi-selector stubs.

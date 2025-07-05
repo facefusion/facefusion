@@ -1,58 +1,100 @@
-name: ci
+name: CI
 
-on: [ push, pull_request ]
+on:
+  push:
+    paths:
+      - 'facefusion/**'
+      - 'enhancements/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    paths:
+      - 'facefusion/**'
+      - 'enhancements/**'
+      - '.github/workflows/ci.yml'
 
 jobs:
- lint:
-  runs-on: ubuntu-latest
-  steps:
-  - name: Checkout
-    uses: actions/checkout@v4
-  - name: Set up Python 3.12
-    uses: actions/setup-python@v5
-    with:
-     python-version: '3.12'
-  - run: pip install flake8
-  - run: pip install flake8-import-order
-  - run: pip install mypy
-  - run: flake8 facefusion.py install.py
-  - run: flake8 facefusion tests
-  - run: mypy facefusion.py install.py
-  - run: mypy facefusion tests
- test:
-  strategy:
-   matrix:
-    os: [ macos-latest, ubuntu-latest, windows-latest ]
-  runs-on: ${{ matrix.os }}
-  steps:
-  - name: Checkout
-    uses: actions/checkout@v4
-  - name: Set up FFmpeg
-    uses: AnimMouse/setup-ffmpeg@v1
-  - name: Set up Python 3.12
-    uses: actions/setup-python@v5
-    with:
-     python-version: '3.12'
-  - run: python install.py --onnxruntime default --skip-conda
-  - run: pip install pytest
-  - run: pytest
- report:
-  needs: test
-  runs-on: ubuntu-latest
-  steps:
-  - name: Checkout
-    uses: actions/checkout@v4
-  - name: Set up FFmpeg
-    uses: FedericoCarboni/setup-ffmpeg@v3
-  - name: Set up Python 3.12
-    uses: actions/setup-python@v5
-    with:
-     python-version: '3.12'
-  - run: python install.py --onnxruntime default --skip-conda
-  - run: pip install coveralls
-  - run: pip install pytest
-  - run: pip install pytest-cov
-  - run: pytest tests --cov facefusion
-  - run: coveralls --service github
-    env:
-     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  lint:
+    name: Lint & Type-Check (Python ${{ matrix.python }})
+    strategy:
+      matrix:
+        python: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install linters & type-checker
+        run: |
+          pip install --upgrade pip
+          pip install flake8 flake8-import-order mypy
+
+      - name: Lint Python code
+        run: |
+          flake8 facefusion enhancements
+
+      - name: Type-check
+        run: |
+          mypy facefusion enhancements
+
+  test:
+    name: Test on ${{ matrix.os }} / Python ${{ matrix.python }}
+    needs: lint
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up FFmpeg
+        uses: AnimMouse/setup-ffmpeg@v1
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        run: pytest --maxfail=1 --disable-warnings -q
+
+  coverage:
+    name: Coverage Report
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up FFmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v3
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install coverage tools
+        run: |
+          pip install --upgrade pip
+          pip install pytest pytest-cov coveralls
+
+      - name: Run coverage
+        run: pytest tests --cov=facefusion --cov=enhancements
+
+      - name: Submit to Coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: coveralls --service=github

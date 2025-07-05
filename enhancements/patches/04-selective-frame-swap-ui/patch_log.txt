@@ -1,0 +1,6 @@
+Patch 04:
+- Scaffolded selective frame swap & trim UI patch directory.
+- Added override stubs and initial test for trim_frame UI module.
+
+- Implemented VideoManager.run override with trim hook in patch 04.
+- Added start/end sliders and Preview button in TrimFramePanel override.
