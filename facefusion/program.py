@@ -286,6 +286,8 @@ def create_program() -> ArgumentParser:
 	program = ArgumentParser(formatter_class = create_help_formatter_large, add_help = False)
 	program._positionals.title = 'commands'
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
+	program.add_argument('-P', '--port', help='Port to listen on', type=int, default=12001)
+	program.add_argument('-H', '--host', help='Host to bind to', default='127.0.0.1')
 	sub_program = program.add_subparsers(dest = 'command')
 	# general
 	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), collect_job_program() ], formatter_class = create_help_formatter_large)

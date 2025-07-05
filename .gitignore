@@ -4,3 +4,4 @@ __pycache__
 .jobs
 .idea
 .vscode
+venv/*
