@@ -6,10 +6,10 @@ from onnxruntime import InferenceSession
 
 from facefusion import logger, process_manager, state_manager, wording
 from facefusion.app_context import detect_app_context
-from facefusion.time_helper import calculate_end_time
 from facefusion.execution import create_inference_session_providers
 from facefusion.exit_helper import hard_exit
 from facefusion.filesystem import get_file_name, is_file
+from facefusion.time_helper import calculate_end_time
 from facefusion.types import DownloadSet, ExecutionProvider, InferencePool, InferencePoolSet
 
 INFERENCE_POOL_SET : InferencePoolSet =\
