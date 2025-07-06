@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from time import time
 from typing import Optional, Tuple
 
 from facefusion import wording
@@ -6,6 +7,10 @@ from facefusion import wording
 
 def get_current_date_time() -> datetime:
 	return datetime.now().astimezone()
+
+
+def calculate_end_time(start_time : float) -> float:
+	return round(time() - start_time, 2)
 
 
 def split_time_delta(time_delta : timedelta) -> Tuple[int, int, int, int]:

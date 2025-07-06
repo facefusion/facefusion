@@ -10,6 +10,7 @@ from facefusion import benchmarker, cli_helper, content_analyser, face_classifie
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
+from facefusion.time_helper import calculate_end_time
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
@@ -406,8 +407,7 @@ def process_image(start_time : float) -> ErrorCode:
 	clear_temp_directory(state_manager.get_item('target_path'))
 
 	if is_image(state_manager.get_item('output_path')):
-		seconds = '{:.2f}'.format((time() - start_time) % 60)
-		logger.info(wording.get('processing_image_succeed').format(seconds = seconds), __name__)
+		logger.info(wording.get('processing_image_succeed').format(seconds = calculate_end_time(start_time)), __name__)
 	else:
 		logger.error(wording.get('processing_image_failed'), __name__)
 		process_manager.end()
@@ -496,8 +496,7 @@ def process_video(start_time : float) -> ErrorCode:
 	clear_temp_directory(state_manager.get_item('target_path'))
 
 	if is_video(state_manager.get_item('output_path')):
-		seconds = '{:.2f}'.format((time() - start_time))
-		logger.info(wording.get('processing_video_succeed').format(seconds = seconds), __name__)
+		logger.info(wording.get('processing_video_succeed').format(seconds = calculate_end_time(start_time)), __name__)
 	else:
 		logger.error(wording.get('processing_video_failed'), __name__)
 		process_manager.end()
