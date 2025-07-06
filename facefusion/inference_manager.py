@@ -1,5 +1,4 @@
 import importlib
-from pathlib import Path
 from time import sleep, time
 from typing import List
 
@@ -10,7 +9,7 @@ from facefusion.app_context import detect_app_context
 from facefusion.time_helper import calculate_end_time
 from facefusion.execution import create_inference_session_providers
 from facefusion.exit_helper import hard_exit
-from facefusion.filesystem import is_file
+from facefusion.filesystem import get_file_name, is_file
 from facefusion.types import DownloadSet, ExecutionProvider, InferencePool, InferencePoolSet
 
 INFERENCE_POOL_SET : InferencePoolSet =\
@@ -60,17 +59,17 @@ def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
 
 
 def create_inference_session(model_path : str, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferenceSession:
-	model_name = Path(model_path).stem
+	model_file_name = get_file_name(model_path)
 	start_time = time()
 
 	try:
 		inference_session_providers = create_inference_session_providers(execution_device_id, execution_providers)
 		inference_session = InferenceSession(model_path, providers = inference_session_providers)
-		logger.info(wording.get('loading_model_succeed').format(model_name = model_name, seconds = calculate_end_time(start_time)), __name__)
+		logger.info(wording.get('loading_model_succeed').format(model_name = model_file_name, seconds = calculate_end_time(start_time)), __name__)
 		return inference_session
 
 	except Exception:
-		logger.error(wording.get('loading_model_failed').format(model_name = model_name), __name__)
+		logger.error(wording.get('loading_model_failed').format(model_name = model_file_name), __name__)
 		hard_exit(1)
 
 
