@@ -593,7 +593,7 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 		return source_embedding
 
 	if model_type == 'hyperswap':
-		source_embedding = source_face.normed_embedding.reshape((1, -1))
+		source_embedding = source_face.embedding_norm.reshape((1, -1))
 		return source_embedding
 
 	if model_type == 'inswapper':
@@ -603,8 +603,8 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
 		return source_embedding
 
-	_, source_normed_embedding = convert_embedding(source_face)
-	source_embedding = source_normed_embedding.reshape(1, -1)
+	_, source_embedding_norm = convert_embedding(source_face)
+	source_embedding = source_embedding_norm.reshape(1, -1)
 	return source_embedding
 
 
@@ -626,8 +626,8 @@ def convert_embedding(source_face : Face) -> Tuple[Embedding, Embedding]:
 	embedding = source_face.embedding.reshape(-1, 512)
 	embedding = forward_convert_embedding(embedding)
 	embedding = embedding.ravel()
-	normed_embedding = embedding / numpy.linalg.norm(embedding)
-	return embedding, normed_embedding
+	embedding_norm = embedding / numpy.linalg.norm(embedding)
+	return embedding, embedding_norm
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:

@@ -6,7 +6,7 @@ import numpy
 
 from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
-from facefusion.face_helper import create_rotated_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, normalize_bounding_box, transform_bounding_box, transform_points
+from facefusion.face_helper import create_rotation_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, normalize_bounding_box, transform_bounding_box, transform_points
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import Angle, BoundingBox, Detection, DownloadScope, DownloadSet, FaceLandmark5, InferencePool, ModelSet, Score, VisionFrame
@@ -135,13 +135,13 @@ def detect_faces(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[Sc
 	return all_bounding_boxes, all_face_scores, all_face_landmarks_5
 
 
-def detect_rotated_faces(vision_frame : VisionFrame, angle : Angle) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
-	rotated_matrix, rotated_size = create_rotated_matrix_and_size(angle, vision_frame.shape[:2][::-1])
-	rotated_vision_frame = cv2.warpAffine(vision_frame, rotated_matrix, rotated_size)
-	rotated_inverse_matrix = cv2.invertAffineTransform(rotated_matrix)
-	bounding_boxes, face_scores, face_landmarks_5 = detect_faces(rotated_vision_frame)
-	bounding_boxes = [ transform_bounding_box(bounding_box, rotated_inverse_matrix) for bounding_box in bounding_boxes ]
-	face_landmarks_5 = [ transform_points(face_landmark_5, rotated_inverse_matrix) for face_landmark_5 in face_landmarks_5 ]
+def detect_faces_by_angle(vision_frame : VisionFrame, angle : Angle) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
+	rotation_matrix, rotation_size = create_rotation_matrix_and_size(angle, vision_frame.shape[:2][::-1])
+	rotation_vision_frame = cv2.warpAffine(vision_frame, rotation_matrix, rotation_size)
+	rotation_inverse_matrix = cv2.invertAffineTransform(rotation_matrix)
+	bounding_boxes, face_scores, face_landmarks_5 = detect_faces(rotation_vision_frame)
+	bounding_boxes = [ transform_bounding_box(bounding_box, rotation_inverse_matrix) for bounding_box in bounding_boxes ]
+	face_landmarks_5 = [ transform_points(face_landmark_5, rotation_inverse_matrix) for face_landmark_5 in face_landmarks_5 ]
 	return bounding_boxes, face_scores, face_landmarks_5
 
 
