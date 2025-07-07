@@ -132,7 +132,7 @@ def calculate_paste_area(temp_vision_frame : VisionFrame, crop_vision_frame : Vi
 
 @lru_cache(maxsize = None)
 def create_static_anchors(feature_stride : int, anchor_total : int, stride_height : int, stride_width : int) -> Anchors:
-	y, x = numpy.mgrid[:stride_height, :stride_width][::-1]
+	x, y = numpy.mgrid[:stride_width, :stride_height]
 	anchors = numpy.stack((y, x), axis = -1)
 	anchors = (anchors * feature_stride).reshape((-1, 2))
 	anchors = numpy.stack([ anchors ] * anchor_total, axis = 1).reshape((-1, 2))
