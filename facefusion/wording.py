@@ -6,6 +6,7 @@ WORDING : Dict[str, Any] =\
 	'python_not_supported': 'Python version is not supported, upgrade to {version} or higher',
 	'curl_not_installed': 'cURL is not installed',
 	'ffmpeg_not_installed': 'FFMpeg is not installed',
+	'content_analyser_tampered': 'Content analyser integrity check failed - file has been modified',
 	'creating_temp': 'Creating temporary resources',
 	'extracting_frames': 'Extracting frames with a resolution of {resolution} and {fps} frames per second',
 	'extracting_frames_succeed': 'Extracting frames succeed',
