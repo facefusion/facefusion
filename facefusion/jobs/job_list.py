@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Optional, Tuple
 
-from facefusion.date_helper import describe_time_ago
 from facefusion.jobs import job_manager
+from facefusion.time_helper import describe_time_ago
 from facefusion.types import JobStatus, TableContents, TableHeaders
 
 
