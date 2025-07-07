@@ -100,16 +100,16 @@ def warp_face_by_translation(temp_vision_frame : VisionFrame, translation : Tran
 
 def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, crop_mask : Mask, affine_matrix : Matrix) -> VisionFrame:
 	paste_bounding_box, paste_matrix = calculate_paste_area(temp_vision_frame, crop_vision_frame, affine_matrix)
-	x_min, y_min, x_max, y_max = paste_bounding_box
-	paste_width = x_max - x_min
-	paste_height = y_max - y_min
+	x1, y1, x2, y2 = paste_bounding_box
+	paste_width = x2 - x1
+	paste_height = y2 - y1
 	inverse_mask = cv2.warpAffine(crop_mask, paste_matrix, (paste_width, paste_height)).clip(0, 1)
 	inverse_mask = numpy.expand_dims(inverse_mask, axis = -1)
 	inverse_vision_frame = cv2.warpAffine(crop_vision_frame, paste_matrix, (paste_width, paste_height), borderMode = cv2.BORDER_REPLICATE)
 	temp_vision_frame = temp_vision_frame.copy()
-	paste_vision_frame = temp_vision_frame[y_min:y_max, x_min:x_max]
+	paste_vision_frame = temp_vision_frame[y1:y2, x1:x2]
 	paste_vision_frame = paste_vision_frame * (1 - inverse_mask) + inverse_vision_frame * inverse_mask
-	temp_vision_frame[y_min:y_max, x_min:x_max] = paste_vision_frame.astype(temp_vision_frame.dtype)
+	temp_vision_frame[y1:y2, x1:x2] = paste_vision_frame.astype(temp_vision_frame.dtype)
 	return temp_vision_frame
 
 
@@ -119,14 +119,14 @@ def calculate_paste_area(temp_vision_frame : VisionFrame, crop_vision_frame : Vi
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	crop_points = numpy.array([ [ 0, 0 ], [ crop_width, 0 ], [ crop_width, crop_height ], [ 0, crop_height ] ])
 	paste_region_points = transform_points(crop_points, inverse_matrix)
-	min_point = numpy.floor(paste_region_points.min(axis = 0)).astype(int)
-	max_point = numpy.ceil(paste_region_points.max(axis = 0)).astype(int)
-	x_min, y_min = numpy.clip(min_point, 0, [ temp_width, temp_height ])
-	x_max, y_max = numpy.clip(max_point, 0, [ temp_width, temp_height ])
-	paste_bounding_box = numpy.array([ x_min, y_min, x_max, y_max ])
+	paste_region_point_min = numpy.floor(paste_region_points.min(axis = 0)).astype(int)
+	paste_region_point_max = numpy.ceil(paste_region_points.max(axis = 0)).astype(int)
+	x1, y1 = numpy.clip(paste_region_point_min, 0, [ temp_width, temp_height ])
+	x2, y2 = numpy.clip(paste_region_point_max, 0, [ temp_width, temp_height ])
+	paste_bounding_box = numpy.array([ x1, y1, x2, y2 ])
 	paste_matrix = inverse_matrix.copy()
-	paste_matrix[0, 2] -= x_min
-	paste_matrix[1, 2] -= y_min
+	paste_matrix[0, 2] -= x1
+	paste_matrix[1, 2] -= y1
 	return paste_bounding_box, paste_matrix
 
 
@@ -148,9 +148,9 @@ def create_rotated_matrix_and_size(angle : Angle, size : Size) -> Tuple[Matrix, 
 
 
 def create_bounding_box(face_landmark_68 : FaceLandmark68) -> BoundingBox:
-	min_x, min_y = numpy.min(face_landmark_68, axis = 0)
-	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
-	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y ]))
+	x1, y1 = numpy.min(face_landmark_68, axis = 0)
+	x2, y2 = numpy.max(face_landmark_68, axis = 0)
+	bounding_box = normalize_bounding_box(numpy.array([ x1, y1, x2, y2 ]))
 	return bounding_box
 
 
