@@ -558,16 +558,16 @@ def forward_swap_face(source_face : Face, target_face : Face, crop_vision_frame 
 	return crop_vision_frame
 
 
-def forward_convert_embedding(embedding : Embedding) -> Embedding:
+def forward_convert_embedding(face_embedding : Embedding) -> Embedding:
 	embedding_converter = get_inference_pool().get('embedding_converter')
 
 	with conditional_thread_semaphore():
-		embedding = embedding_converter.run(None,
+		face_embedding = embedding_converter.run(None,
 		{
-			'input': embedding
+			'input': face_embedding
 		})[0]
 
-	return embedding
+	return face_embedding
 
 
 def prepare_source_frame(source_face : Face) -> VisionFrame:
@@ -588,7 +588,8 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 	model_type = get_model_options().get('type')
 
 	if model_type == 'ghost':
-		source_embedding, _ = convert_embedding(source_face)
+		source_embedding = source_face.embedding.reshape(-1, 512)
+		source_embedding, _ = convert_source_embedding(source_embedding)
 		source_embedding = source_embedding.reshape(1, -1)
 		return source_embedding
 
@@ -603,7 +604,8 @@ def prepare_source_embedding(source_face : Face) -> Embedding:
 		source_embedding = numpy.dot(source_embedding, model_initializer) / numpy.linalg.norm(source_embedding)
 		return source_embedding
 
-	_, source_embedding_norm = convert_embedding(source_face)
+	source_embedding = source_face.embedding.reshape(-1, 512)
+	_, source_embedding_norm = convert_source_embedding(source_embedding)
 	source_embedding = source_embedding_norm.reshape(1, -1)
 	return source_embedding
 
@@ -622,12 +624,11 @@ def balance_source_embedding(source_embedding : Embedding, target_embedding : Em
 	return source_embedding
 
 
-def convert_embedding(source_face : Face) -> Tuple[Embedding, Embedding]:
-	embedding = source_face.embedding.reshape(-1, 512)
-	embedding = forward_convert_embedding(embedding)
-	embedding = embedding.ravel()
-	embedding_norm = embedding / numpy.linalg.norm(embedding)
-	return embedding, embedding_norm
+def convert_source_embedding(source_embedding : Embedding) -> Tuple[Embedding, Embedding]:
+	source_embedding = forward_convert_embedding(source_embedding)
+	source_embedding = source_embedding.ravel()
+	source_embedding_norm = source_embedding / numpy.linalg.norm(source_embedding)
+	return source_embedding, source_embedding_norm
 
 
 def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
