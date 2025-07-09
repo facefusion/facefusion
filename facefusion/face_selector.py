@@ -26,8 +26,8 @@ def compare_faces(face : Face, reference_face : Face, face_distance : float) -> 
 
 
 def calculate_face_distance(face : Face, reference_face : Face) -> float:
-	if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
-		return 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
+	if hasattr(face, 'embedding_norm') and hasattr(reference_face, 'embedding_norm'):
+		return 1 - numpy.dot(face.embedding_norm, reference_face.embedding_norm)
 	return 0
 
 
