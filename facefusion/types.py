@@ -39,7 +39,7 @@ Face = namedtuple('Face',
 	'landmark_set',
 	'angle',
 	'embedding',
-	'normed_embedding',
+	'embedding_norm',
 	'gender',
 	'age',
 	'race'
