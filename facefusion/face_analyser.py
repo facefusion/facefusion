@@ -70,14 +70,14 @@ def get_one_face(faces : List[Face], position : int = 0) -> Optional[Face]:
 
 def get_average_face(faces : List[Face]) -> Optional[Face]:
 	face_embeddings = []
-	face_embedding_norms = []
+	face_embeddings_norm = []
 
 	if faces:
 		first_face = get_first(faces)
 
 		for face in faces:
 			face_embeddings.append(face.embedding)
-			face_embedding_norms.append(face.embedding_norm)
+			face_embeddings_norm.append(face.embedding_norm)
 
 		return Face(
 			bounding_box = first_face.bounding_box,
@@ -85,7 +85,7 @@ def get_average_face(faces : List[Face]) -> Optional[Face]:
 			landmark_set = first_face.landmark_set,
 			angle = first_face.angle,
 			embedding = numpy.mean(face_embeddings, axis = 0),
-			embedding_norm = numpy.mean(face_embedding_norms, axis = 0),
+			embedding_norm = numpy.mean(face_embeddings_norm, axis = 0),
 			gender = first_face.gender,
 			age = first_face.age,
 			race = first_face.race
