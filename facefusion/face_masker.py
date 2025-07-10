@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 import cv2
 import numpy
@@ -188,7 +188,7 @@ def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
 		temp_mask = cv2.resize(temp_mask, crop_vision_frame.shape[:2][::-1])
 		temp_masks.append(temp_mask)
 
-	occlusion_mask = numpy.maximum.reduce(temp_masks)
+	occlusion_mask = numpy.minimum.reduce(temp_masks)
 	occlusion_mask = (cv2.GaussianBlur(occlusion_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
 	return occlusion_mask
 
