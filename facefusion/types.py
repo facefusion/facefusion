@@ -64,11 +64,11 @@ AudioBuffer : TypeAlias = bytes
 Audio : TypeAlias = NDArray[Any]
 AudioChunk : TypeAlias = NDArray[Any]
 AudioFrame : TypeAlias = NDArray[Any]
-Voice : TypeAlias = NDArray[Any]
-VoiceChunk : TypeAlias = NDArray[Any]
 Spectrogram : TypeAlias = NDArray[Any]
 Mel : TypeAlias = NDArray[Any]
 MelFilterBank : TypeAlias = NDArray[Any]
+Voice : TypeAlias = NDArray[Any]
+VoiceChunk : TypeAlias = NDArray[Any]
 
 Fps : TypeAlias = float
 Duration : TypeAlias = float
