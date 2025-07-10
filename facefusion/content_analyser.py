@@ -196,8 +196,8 @@ def detect_with_nsfw_3(vision_frame : VisionFrame) -> bool:
 	return bool(detection_score > 10.5)
 
 
-def forward_nsfw(vision_frame : VisionFrame, nsfw_model : str) -> Detection:
-	content_analyser = get_inference_pool().get(nsfw_model)
+def forward_nsfw(vision_frame : VisionFrame, model_name : str) -> Detection:
+	content_analyser = get_inference_pool().get(model_name)
 
 	with conditional_thread_semaphore():
 		detection = content_analyser.run(None,
@@ -205,7 +205,7 @@ def forward_nsfw(vision_frame : VisionFrame, nsfw_model : str) -> Detection:
 			'input': vision_frame
 		})[0]
 
-	if nsfw_model in [ 'nsfw_2', 'nsfw_3' ]:
+	if model_name in [ 'nsfw_2', 'nsfw_3' ]:
 		return detection[0]
 
 	return detection
