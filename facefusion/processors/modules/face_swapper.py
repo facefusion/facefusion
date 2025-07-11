@@ -10,7 +10,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, video_manager, wording
-from facefusion.common_helper import get_first
+from facefusion.common_helper import get_first, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
@@ -428,7 +428,7 @@ def get_model_options() -> ModelOptions:
 def get_model_name() -> str:
 	model_name = state_manager.get_item('face_swapper_model')
 
-	if has_execution_provider('coreml') and model_name == 'inswapper_128_fp16':
+	if is_macos() and has_execution_provider('coreml') and model_name == 'inswapper_128_fp16':
 		return 'inswapper_128'
 	return model_name
 
@@ -538,7 +538,7 @@ def forward_swap_face(source_face : Face, target_face : Face, crop_vision_frame 
 	model_type = get_model_options().get('type')
 	face_swapper_inputs = {}
 
-	if has_execution_provider('coreml') and model_type in [ 'ghost', 'uniface' ]:
+	if is_macos() and has_execution_provider('coreml') and model_type in [ 'ghost', 'uniface' ]:
 		face_swapper.set_providers([ facefusion.choices.execution_provider_set.get('cpu') ])
 
 	for face_swapper_input in face_swapper.get_inputs():

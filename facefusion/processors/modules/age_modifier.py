@@ -10,7 +10,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, video_manager, wording
-from facefusion.common_helper import create_int_metavar
+from facefusion.common_helper import create_int_metavar, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_many_faces, get_one_face
@@ -164,7 +164,7 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame, 
 	age_modifier = get_inference_pool().get('age_modifier')
 	age_modifier_inputs = {}
 
-	if has_execution_provider('coreml'):
+	if is_macos() and has_execution_provider('coreml'):
 		age_modifier.set_providers([ facefusion.choices.execution_provider_set.get('cpu') ])
 
 	for age_modifier_input in age_modifier.get_inputs():
