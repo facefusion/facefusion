@@ -98,7 +98,8 @@ def test_merge_video() -> None:
 		get_test_example_file('target-240p-16khz.mkv'),
 		get_test_example_file('target-240p-16khz.mp4'),
 		get_test_example_file('target-240p-16khz.mov'),
-		get_test_example_file('target-240p-16khz.webm')
+		get_test_example_file('target-240p-16khz.webm'),
+		get_test_example_file('target-240p-16khz.wmv')
 	]
 	output_video_encoders = get_available_encoder_set().get('video')
 
@@ -141,7 +142,8 @@ def test_restore_audio() -> None:
 		(get_test_example_file('target-240p-16khz.mov'), get_test_output_file('target-240p-16khz.mov')),
 		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_file('target-240p-16khz.mp4')),
 		(get_test_example_file('target-240p-48khz.mp4'), get_test_output_file('target-240p-48khz.mp4')),
-		(get_test_example_file('target-240p-16khz.webm'), get_test_output_file('target-240p-16khz.webm'))
+		(get_test_example_file('target-240p-16khz.webm'), get_test_output_file('target-240p-16khz.webm')),
+		(get_test_example_file('target-240p-16khz.wmv'), get_test_output_file('target-240p-16khz.wmv'))
 	]
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
