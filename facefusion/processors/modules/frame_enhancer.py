@@ -9,7 +9,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 import facefusion.processors.core as processors
 from facefusion import config, content_analyser, inference_manager, logger, process_manager, state_manager, video_manager, wording
-from facefusion.common_helper import create_int_metavar
+from facefusion.common_helper import create_int_metavar, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -426,7 +426,7 @@ def get_model_options() -> ModelOptions:
 def get_frame_enhancer_model() -> str:
 	frame_enhancer_model = state_manager.get_item('frame_enhancer_model')
 
-	if has_execution_provider('coreml'):
+	if is_macos() and has_execution_provider('coreml'):
 		if frame_enhancer_model == 'real_esrgan_x2_fp16':
 			return 'real_esrgan_x2'
 		if frame_enhancer_model == 'real_esrgan_x4_fp16':
