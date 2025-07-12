@@ -196,6 +196,7 @@ WORDING : Dict[str, Any] =\
 		'download_providers': 'download using different providers (choices: {choices}, ...)',
 		'download_scope': 'specify the download scope',
 		# benchmark
+		'benchmark_mode': 'choose the benchmark mode',
 		'benchmark_resolutions': 'choose the resolutions for the benchmarks (choices: {choices}, ...)',
 		'benchmark_cycle_count': 'specify the amount of cycles per benchmark',
 		# execution
@@ -247,6 +248,7 @@ WORDING : Dict[str, Any] =\
 		'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
 		'age_modifier_model_dropdown': 'AGE MODIFIER MODEL',
 		'apply_button': 'APPLY',
+		'benchmark_mode_dropdown': 'BENCHMARK MODE',
 		'benchmark_cycle_count_slider': 'BENCHMARK CYCLE COUNT',
 		'benchmark_resolutions_checkbox_group': 'BENCHMARK RESOLUTIONS',
 		'clear_button': 'CLEAR',

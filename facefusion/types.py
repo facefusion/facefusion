@@ -132,6 +132,7 @@ EncoderSet = TypedDict('EncoderSet',
 })
 VideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
+BenchmarkMode = Literal['warm', 'cold']
 BenchmarkResolution = Literal['240p', '360p', '540p', '720p', '1080p', '1440p', '2160p']
 BenchmarkSet : TypeAlias = Dict[BenchmarkResolution, str]
 BenchmarkCycleSet = TypedDict('BenchmarkCycleSet',
@@ -191,7 +192,7 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'framework' : ExecutionDeviceFramework,
 	'product' : ExecutionDeviceProduct,
 	'video_memory' : ExecutionDeviceVideoMemory,
-	'temperature': ExecutionDeviceTemperature,
+	'temperature' : ExecutionDeviceTemperature,
 	'utilization' : ExecutionDeviceUtilization
 })
 
@@ -254,6 +255,7 @@ StateKey = Literal\
 	'output_pattern',
 	'download_providers',
 	'download_scope',
+	'benchmark_mode',
 	'benchmark_resolutions',
 	'benchmark_cycle_count',
 	'face_detector_model',
@@ -320,10 +322,11 @@ State = TypedDict('State',
 	'source_pattern' : str,
 	'target_pattern' : str,
 	'output_pattern' : str,
-	'download_providers': List[DownloadProvider],
-	'download_scope': DownloadScope,
-	'benchmark_resolutions': List[BenchmarkResolution],
-	'benchmark_cycle_count': int,
+	'download_providers' : List[DownloadProvider],
+	'download_scope' : DownloadScope,
+	'benchmark_mode' : BenchmarkMode,
+	'benchmark_resolutions' : List[BenchmarkResolution],
+	'benchmark_cycle_count' : int,
 	'face_detector_model' : FaceDetectorModel,
 	'face_detector_size' : str,
 	'face_detector_angles' : List[Angle],
