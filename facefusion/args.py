@@ -126,6 +126,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('download_providers', args.get('download_providers'))
 	apply_state_item('download_scope', args.get('download_scope'))
 	# benchmark
+	apply_state_item('benchmark_mode', args.get('benchmark_mode'))
 	apply_state_item('benchmark_resolutions', args.get('benchmark_resolutions'))
 	apply_state_item('benchmark_cycle_count', args.get('benchmark_cycle_count'))
 	# memory

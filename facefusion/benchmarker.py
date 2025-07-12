@@ -6,7 +6,7 @@ from time import perf_counter
 from typing import Generator, List
 
 import facefusion.choices
-from facefusion import core, state_manager
+from facefusion import content_analyser, core, face_store, state_manager
 from facefusion.cli_helper import render_table
 from facefusion.download import conditional_download, resolve_download_url
 from facefusion.filesystem import get_file_extension
@@ -42,7 +42,7 @@ def run() -> Generator[List[BenchmarkCycleSet], None, None]:
 	state_manager.init_item('video_memory_strategy', 'tolerant')
 
 	benchmarks = []
-	target_paths = [facefusion.choices.benchmark_set.get(benchmark_resolution) for benchmark_resolution in benchmark_resolutions if benchmark_resolution in facefusion.choices.benchmark_set]
+	target_paths = [ facefusion.choices.benchmark_set.get(benchmark_resolution) for benchmark_resolution in benchmark_resolutions if benchmark_resolution in facefusion.choices.benchmark_set ]
 
 	for target_path in target_paths:
 		state_manager.set_item('target_path', target_path)
@@ -58,9 +58,16 @@ def cycle(cycle_count : int) -> BenchmarkCycleSet:
 	state_manager.set_item('output_video_resolution', pack_resolution(output_video_resolution))
 	state_manager.set_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
 
-	core.conditional_process()
+	if state_manager.get_item('benchmark_mode') == 'warm':
+		core.conditional_process()
 
 	for index in range(cycle_count):
+		if state_manager.get_item('benchmark_mode') == 'cold':
+			content_analyser.analyse_image.cache_clear()
+			content_analyser.analyse_video.cache_clear()
+			face_store.clear_static_faces()
+			face_store.clear_reference_faces()
+
 		start_time = perf_counter()
 		core.conditional_process()
 		end_time = perf_counter()
