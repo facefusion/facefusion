@@ -253,7 +253,7 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 		prepare_vision_frame = crop_vision_frame.copy()
 		prepare_vision_frame[:, model_size[0] // 2:] = 0
 		crop_vision_frame = numpy.concatenate((prepare_vision_frame, crop_vision_frame), axis = 3)
-		crop_vision_frame = crop_vision_frame.transpose(0, 3, 1, 2).astype('float32') / 255.0
+		crop_vision_frame = crop_vision_frame.transpose(0, 3, 1, 2).astype(numpy.float32) / 255.0
 
 	return crop_vision_frame
 
