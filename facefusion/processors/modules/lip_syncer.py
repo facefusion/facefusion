@@ -23,7 +23,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import LipSyncerInputs, LipSyncerWeight
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, AudioFrame, BoundingBox, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
+from facefusion.types import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, restrict_video_fps, write_image
 
 
@@ -189,7 +189,6 @@ def sync_lip(target_face : Face, temp_audio_frame : AudioFrame, temp_vision_fram
 		area_mask = create_area_mask(crop_vision_frame, face_landmark_68, [ 'lower-face' ])
 		crop_masks.append(area_mask)
 		bounding_box = create_bounding_box(face_landmark_68)
-		bounding_box = resize_bounding_box(bounding_box, 1 / 8)
 		area_vision_frame, area_matrix = warp_face_by_bounding_box(crop_vision_frame, bounding_box, model_size)
 		area_vision_frame = prepare_crop_frame(area_vision_frame)
 		area_vision_frame = forward_wav2lip(temp_audio_frame, area_vision_frame)
@@ -257,13 +256,6 @@ def prepare_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 		crop_vision_frame = crop_vision_frame.transpose(0, 3, 1, 2).astype('float32') / 255.0
 
 	return crop_vision_frame
-
-
-def resize_bounding_box(bounding_box : BoundingBox, aspect_ratio : float) -> BoundingBox:
-	x1, y1, x2, y2 = bounding_box
-	y1 -= numpy.abs(y2 - y1) * aspect_ratio
-	bounding_box[1] = max(y1, 0)
-	return bounding_box
 
 
 def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
