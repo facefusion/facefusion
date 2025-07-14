@@ -67,7 +67,8 @@ video_type_set : VideoTypeSet =\
 	'mp4': 'video/mp4',
 	'mov': 'video/quicktime',
 	'webm': 'video/webm',
-	'wmv': 'video/x-ms-wmv'
+	'wmv': 'video/x-ms-wmv',
+ 	'gif': 'video/gif'
 }
 audio_formats : List[AudioFormat] = list(audio_type_set.keys())
 image_formats : List[ImageFormat] = list(image_type_set.keys())

@@ -16,7 +16,7 @@ from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
-from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
+from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, merge_gif, replace_audio, restore_audio
 from facefusion.filesystem import filter_audio_paths, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
@@ -457,8 +457,29 @@ def process_video(start_time : float) -> ErrorCode:
 		process_manager.end()
 		return 1
 
-	logger.info(wording.get('merging_video').format(resolution = state_manager.get_item('output_video_resolution'), fps = state_manager.get_item('output_video_fps')), __name__)
-	if merge_video(state_manager.get_item('target_path'), temp_video_fps, state_manager.get_item('output_video_resolution'), state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
+	logger.info(wording.get('merging_video').format(
+		resolution=state_manager.get_item('output_video_resolution'),
+		fps=state_manager.get_item('output_video_fps')
+	), __name__)
+
+	if state_manager.get_item('target_path').lower().endswith('.gif'):
+		success = merge_gif(
+			state_manager.get_item('target_path'),
+			temp_video_fps,
+			state_manager.get_item('output_video_resolution'),
+			state_manager.get_item('output_video_fps')
+		)
+	else:
+		success = merge_video(
+			state_manager.get_item('target_path'),
+			temp_video_fps,
+			state_manager.get_item('output_video_resolution'),
+			state_manager.get_item('output_video_fps'),
+			trim_frame_start,
+			trim_frame_end
+		)
+
+	if success:
 		logger.debug(wording.get('merging_video_succeed'), __name__)
 	else:
 		if is_process_stopping():
