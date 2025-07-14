@@ -16,7 +16,7 @@ from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
-from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, merge_gif, replace_audio, restore_audio
+from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_gif, merge_video, replace_audio, restore_audio
 from facefusion.filesystem import filter_audio_paths, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
