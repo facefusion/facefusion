@@ -135,8 +135,8 @@ def detect_faces(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[Sc
 	return all_bounding_boxes, all_face_scores, all_face_landmarks_5
 
 
-def detect_faces_by_angle(vision_frame : VisionFrame, angle : Angle) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
-	rotation_matrix, rotation_size = create_rotation_matrix_and_size(angle, vision_frame.shape[:2][::-1])
+def detect_faces_by_angle(vision_frame : VisionFrame, face_angle : Angle) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
+	rotation_matrix, rotation_size = create_rotation_matrix_and_size(face_angle, vision_frame.shape[:2][::-1])
 	rotation_vision_frame = cv2.warpAffine(vision_frame, rotation_matrix, rotation_size)
 	rotation_inverse_matrix = cv2.invertAffineTransform(rotation_matrix)
 	bounding_boxes, face_scores, face_landmarks_5 = detect_faces(rotation_vision_frame)
