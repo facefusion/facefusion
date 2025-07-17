@@ -102,7 +102,7 @@ LogLevelSet : TypeAlias = Dict[LogLevel, int]
 TableHeaders = List[str]
 TableContents = List[List[Any]]
 
-FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yolo_face']
+FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yolo_face', 'yunet']
 FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
 FaceDetectorSet : TypeAlias = Dict[FaceDetectorModel, List[str]]
 FaceSelectorMode = Literal['many', 'one', 'reference']
