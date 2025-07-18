@@ -315,8 +315,8 @@ def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> T
 	detection = forward_with_yunet(detect_vision_frame)
 
 	for index, feature_stride in enumerate(feature_strides):
-		face_score_raw = (detection[index] * detection[index + feature_map_channel]).reshape(-1)
-		keep_indices = numpy.where(face_score_raw >= face_detector_score)[0]
+		face_scores_raw = (detection[index] * detection[index + feature_map_channel]).reshape(-1)
+		keep_indices = numpy.where(face_scores_raw >= face_detector_score)[0]
 
 		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
@@ -343,7 +343,7 @@ def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> T
 					bounding_box_raw[3] * ratio_height
 				]))
 
-			face_scores.extend(face_score_raw[keep_indices])
+			face_scores.extend(face_scores_raw[keep_indices])
 			face_landmarks_5_raw = numpy.concatenate(
 			[
 				face_landmarks_5_raw[:, [0, 1]] * feature_stride + anchors,
