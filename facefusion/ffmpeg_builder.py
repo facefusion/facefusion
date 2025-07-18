@@ -65,7 +65,7 @@ def unsafe_concat() -> Commands:
 
 
 def set_pixel_format(video_encoder : VideoEncoder) -> Commands:
-	if video_encoder == 'rawvideo':
+	if video_encoder in [ 'libx264rgb', 'rawvideo' ]:
 		return [ '-pix_fmt', 'rgb24' ]
 	return [ '-pix_fmt', 'yuv420p' ]
 
@@ -167,7 +167,7 @@ def copy_video_encoder() -> Commands:
 
 
 def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> Commands:
-	if video_encoder in [ 'libx264', 'libx265' ]:
+	if video_encoder in [ 'libx264rgb', 'libx264', 'libx265' ]:
 		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ]))
 		return [ '-crf', str(video_compression) ]
 	if video_encoder == 'libvpx-vp9':
@@ -189,7 +189,7 @@ def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> Comm
 
 
 def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -> Commands:
-	if video_encoder in [ 'libx264', 'libx265' ]:
+	if video_encoder in [ 'libx264rgb', 'libx264', 'libx265' ]:
 		return [ '-preset', video_preset ]
 	if video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
 		return [ '-preset', map_nvenc_preset(video_preset) ]
@@ -198,10 +198,6 @@ def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -
 	if video_encoder in [ 'h264_qsv', 'hevc_qsv' ]:
 		return [ '-preset', map_qsv_preset(video_preset) ]
 	return []
-
-
-def set_video_colorspace(video_colorspace : str) -> Commands:
-	return [ '-colorspace', video_colorspace ]
 
 
 def set_video_fps(video_fps : Fps) -> Commands:
