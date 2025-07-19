@@ -78,7 +78,7 @@ temp_frame_formats : List[TempFrameFormat] = [ 'bmp', 'jpeg', 'png', 'tiff' ]
 output_encoder_set : EncoderSet =\
 {
 	'audio': [ 'flac', 'aac', 'libmp3lame', 'libopus', 'libvorbis', 'pcm_s16le', 'pcm_s32le' ],
-	'video': [ 'libx264rgb', 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox', 'rawvideo' ]
+	'video': [ 'libx264', 'libx264rgb', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox', 'rawvideo' ]
 }
 output_audio_encoders : List[AudioEncoder] = output_encoder_set.get('audio')
 output_video_encoders : List[VideoEncoder] = output_encoder_set.get('video')
