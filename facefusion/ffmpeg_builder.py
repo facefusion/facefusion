@@ -65,7 +65,7 @@ def unsafe_concat() -> Commands:
 
 
 def set_pixel_format(video_encoder : VideoEncoder) -> Commands:
-	if video_encoder in [ 'libx264rgb', 'rawvideo' ]:
+	if video_encoder == 'rawvideo':
 		return [ '-pix_fmt', 'rgb24' ]
 	return [ '-pix_fmt', 'yuv420p' ]
 
