@@ -180,22 +180,23 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
 	reference_faces = inputs.get('reference_faces')
 	target_vision_frame = inputs.get('target_vision_frame')
+	temp_vision_frame = inputs.get('temp_vision_frame')
 	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		if many_faces:
 			for target_face in many_faces:
-				target_vision_frame = debug_face(target_face, target_vision_frame)
+				temp_vision_frame = debug_face(target_face, temp_vision_frame)
 	if state_manager.get_item('face_selector_mode') == 'one':
 		target_face = get_one_face(many_faces)
 		if target_face:
-			target_vision_frame = debug_face(target_face, target_vision_frame)
+			temp_vision_frame = debug_face(target_face, temp_vision_frame)
 	if state_manager.get_item('face_selector_mode') == 'reference':
 		similar_faces = find_similar_faces(many_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if similar_faces:
 			for similar_face in similar_faces:
-				target_vision_frame = debug_face(similar_face, target_vision_frame)
-	return target_vision_frame
+				temp_vision_frame = debug_face(similar_face, temp_vision_frame)
+	return temp_vision_frame
 
 
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
@@ -207,7 +208,8 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 		output_vision_frame = process_frame(
 		{
 			'reference_faces': reference_faces,
-			'target_vision_frame': target_vision_frame
+			'target_vision_frame': target_vision_frame,
+			'temp_vision_frame': target_vision_frame
 		})
 		write_image(target_vision_path, output_vision_frame)
 		update_progress(1)
@@ -219,7 +221,8 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 	output_vision_frame = process_frame(
 	{
 		'reference_faces': reference_faces,
-		'target_vision_frame': target_vision_frame
+		'target_vision_frame': target_vision_frame,
+		'temp_vision_frame': target_vision_frame
 	})
 	write_image(output_path, output_vision_frame)
 

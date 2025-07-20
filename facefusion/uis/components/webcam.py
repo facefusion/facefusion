@@ -149,18 +149,20 @@ def stop() -> gradio.Image:
 
 def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) -> VisionFrame:
 	source_audio_frame = create_empty_audio_frame()
+	temp_vision_frame = target_vision_frame.copy()
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.disable()
 		if processor_module.pre_process('stream'):
-			target_vision_frame = processor_module.process_frame(
+			temp_vision_frame = processor_module.process_frame(
 			{
 				'source_face': source_face,
 				'source_audio_frame': source_audio_frame,
-				'target_vision_frame': target_vision_frame
+				'target_vision_frame': target_vision_frame,
+				'temp_vision_frame': temp_vision_frame
 			})
 		logger.enable()
-	return target_vision_frame
+	return temp_vision_frame
 
 
 def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : Fps) -> subprocess.Popen[bytes]:

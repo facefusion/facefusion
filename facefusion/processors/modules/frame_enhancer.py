@@ -531,8 +531,8 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 
 
 def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
-	target_vision_frame = inputs.get('target_vision_frame')
-	return enhance_frame(target_vision_frame)
+	temp_vision_frame = inputs.get('temp_vision_frame')
+	return enhance_frame(temp_vision_frame)
 
 
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
@@ -541,7 +541,8 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 		target_vision_frame = read_image(target_vision_path)
 		output_vision_frame = process_frame(
 		{
-			'target_vision_frame': target_vision_frame
+			'target_vision_frame': target_vision_frame,
+			'temp_vision_frame': target_vision_frame
 		})
 		write_image(target_vision_path, output_vision_frame)
 		update_progress(1)
@@ -551,7 +552,8 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 	target_vision_frame = read_static_image(target_path)
 	output_vision_frame = process_frame(
 	{
-		'target_vision_frame': target_vision_frame
+		'target_vision_frame': target_vision_frame,
+		'temp_vision_frame': target_vision_frame
 	})
 	write_image(output_path, output_vision_frame)
 

@@ -243,22 +243,23 @@ def process_frame(inputs : ExpressionRestorerInputs) -> VisionFrame:
 	reference_faces = inputs.get('reference_faces')
 	source_vision_frame = inputs.get('source_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
+	temp_vision_frame = inputs.get('temp_vision_frame')
 	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		if many_faces:
 			for target_face in many_faces:
-				target_vision_frame = restore_expression(source_vision_frame, target_face, target_vision_frame)
+				temp_vision_frame = restore_expression(source_vision_frame, target_face, temp_vision_frame)
 	if state_manager.get_item('face_selector_mode') == 'one':
 		target_face = get_one_face(many_faces)
 		if target_face:
-			target_vision_frame = restore_expression(source_vision_frame, target_face, target_vision_frame)
+			temp_vision_frame = restore_expression(source_vision_frame, target_face, temp_vision_frame)
 	if state_manager.get_item('face_selector_mode') == 'reference':
 		similar_faces = find_similar_faces(many_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if similar_faces:
 			for similar_face in similar_faces:
-				target_vision_frame = restore_expression(source_vision_frame, similar_face, target_vision_frame)
-	return target_vision_frame
+				temp_vision_frame = restore_expression(source_vision_frame, similar_face, temp_vision_frame)
+	return temp_vision_frame
 
 
 def process_frames(source_path : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
@@ -275,7 +276,8 @@ def process_frames(source_path : List[str], queue_payloads : List[QueuePayload],
 		{
 			'reference_faces': reference_faces,
 			'source_vision_frame': source_vision_frame,
-			'target_vision_frame': target_vision_frame
+			'target_vision_frame': target_vision_frame,
+			'temp_vision_frame': target_vision_frame
 		})
 		write_image(target_vision_path, output_vision_frame)
 		update_progress(1)
@@ -289,7 +291,8 @@ def process_image(source_path : str, target_path : str, output_path : str) -> No
 	{
 		'reference_faces': reference_faces,
 		'source_vision_frame': source_vision_frame,
-		'target_vision_frame': target_vision_frame
+		'target_vision_frame': target_vision_frame,
+		'temp_vision_frame': target_vision_frame
 	})
 	write_image(output_path, output_vision_frame)
 

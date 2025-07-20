@@ -20,53 +20,63 @@ FaceSwapperSet : TypeAlias = Dict[FaceSwapperModel, List[str]]
 AgeModifierInputs = TypedDict('AgeModifierInputs',
 {
 	'reference_faces' : FaceSet,
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 DeepSwapperInputs = TypedDict('DeepSwapperInputs',
 {
 	'reference_faces' : FaceSet,
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 ExpressionRestorerInputs = TypedDict('ExpressionRestorerInputs',
 {
 	'reference_faces' : FaceSet,
 	'source_vision_frame' : VisionFrame,
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',
 {
 	'reference_faces' : FaceSet,
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FaceEditorInputs = TypedDict('FaceEditorInputs',
 {
 	'reference_faces' : FaceSet,
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FaceEnhancerInputs = TypedDict('FaceEnhancerInputs',
 {
 	'reference_faces' : FaceSet,
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FaceSwapperInputs = TypedDict('FaceSwapperInputs',
 {
 	'reference_faces' : FaceSet,
 	'source_face' : Face,
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FrameColorizerInputs = TypedDict('FrameColorizerInputs',
 {
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FrameEnhancerInputs = TypedDict('FrameEnhancerInputs',
 {
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 LipSyncerInputs = TypedDict('LipSyncerInputs',
 {
 	'reference_faces' : FaceSet,
 	'source_audio_frame' : AudioFrame,
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 
 AgeModifierDirection : TypeAlias = NDArray[Any]

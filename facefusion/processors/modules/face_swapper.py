@@ -576,8 +576,10 @@ def prepare_source_frame(source_face : Face) -> VisionFrame:
 
 	if model_type == 'blendswap':
 		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark_set.get('5/68'), 'arcface_112_v2', (112, 112))
+
 	if model_type == 'uniface':
 		source_vision_frame, _ = warp_face_by_face_landmark_5(source_vision_frame, source_face.landmark_set.get('5/68'), 'ffhq_512', (256, 256))
+
 	source_vision_frame = source_vision_frame[:, :, ::-1] / 255.0
 	source_vision_frame = source_vision_frame.transpose(2, 0, 1)
 	source_vision_frame = numpy.expand_dims(source_vision_frame, axis = 0).astype(numpy.float32)
@@ -648,8 +650,10 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	model_standard_deviation = get_model_options().get('standard_deviation')
 
 	crop_vision_frame = crop_vision_frame.transpose(1, 2, 0)
+
 	if model_type in [ 'ghost', 'hififace', 'hyperswap', 'uniface' ]:
 		crop_vision_frame = crop_vision_frame * model_standard_deviation + model_mean
+
 	crop_vision_frame = crop_vision_frame.clip(0, 1)
 	crop_vision_frame = crop_vision_frame[:, :, ::-1] * 255
 	return crop_vision_frame
@@ -663,22 +667,23 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 	reference_faces = inputs.get('reference_faces')
 	source_face = inputs.get('source_face')
 	target_vision_frame = inputs.get('target_vision_frame')
+	temp_vision_frame = inputs.get('temp_vision_frame')
 	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		if many_faces:
 			for target_face in many_faces:
-				target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
+				temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
 	if state_manager.get_item('face_selector_mode') == 'one':
 		target_face = get_one_face(many_faces)
 		if target_face:
-			target_vision_frame = swap_face(source_face, target_face, target_vision_frame)
+			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
 	if state_manager.get_item('face_selector_mode') == 'reference':
 		similar_faces = find_similar_faces(many_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if similar_faces:
 			for similar_face in similar_faces:
-				target_vision_frame = swap_face(source_face, similar_face, target_vision_frame)
-	return target_vision_frame
+				temp_vision_frame = swap_face(source_face, similar_face, temp_vision_frame)
+	return temp_vision_frame
 
 
 def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
@@ -700,7 +705,8 @@ def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload]
 		{
 			'reference_faces': reference_faces,
 			'source_face': source_face,
-			'target_vision_frame': target_vision_frame
+			'target_vision_frame': target_vision_frame,
+			'temp_vision_frame': target_vision_frame
 		})
 		write_image(target_vision_path, output_vision_frame)
 		update_progress(1)
@@ -722,7 +728,8 @@ def process_image(source_paths : List[str], target_path : str, output_path : str
 	{
 		'reference_faces': reference_faces,
 		'source_face': source_face,
-		'target_vision_frame': target_vision_frame
+		'target_vision_frame': target_vision_frame,
+		'temp_vision_frame': target_vision_frame
 	})
 	write_image(output_path, output_vision_frame)
 
