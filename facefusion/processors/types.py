@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Literal, TypeAlias, TypedDict
 
 from numpy.typing import NDArray
 
-from facefusion.types import AppContext, AudioFrame, Face, FaceSet, VisionFrame
+from facefusion.types import AppContext, AudioFrame, FaceSet, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
 DeepSwapperModel : TypeAlias = str
@@ -32,7 +32,7 @@ DeepSwapperInputs = TypedDict('DeepSwapperInputs',
 ExpressionRestorerInputs = TypedDict('ExpressionRestorerInputs',
 {
 	'reference_faces' : FaceSet,
-	'source_vision_frame' : VisionFrame,
+	'source_vision_frames' : List[VisionFrame],
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
@@ -57,7 +57,7 @@ FaceEnhancerInputs = TypedDict('FaceEnhancerInputs',
 FaceSwapperInputs = TypedDict('FaceSwapperInputs',
 {
 	'reference_faces' : FaceSet,
-	'source_face' : Face,
+	'source_vision_frames' : List[VisionFrame],
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
@@ -74,7 +74,7 @@ FrameEnhancerInputs = TypedDict('FrameEnhancerInputs',
 LipSyncerInputs = TypedDict('LipSyncerInputs',
 {
 	'reference_faces' : FaceSet,
-	'source_audio_frame' : AudioFrame,
+	'source_voice_frame' : AudioFrame,
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })

@@ -14,18 +14,18 @@ from facefusion.types import Duration, Fps, Orientation, Resolution, VisionFrame
 from facefusion.video_manager import get_video_capture
 
 
-@lru_cache()
-def read_static_image(image_path : str) -> Optional[VisionFrame]:
-	return read_image(image_path)
-
-
 def read_static_images(image_paths : List[str]) -> List[VisionFrame]:
-	frames = []
+	vision_frames = []
 
 	if image_paths:
 		for image_path in image_paths:
-			frames.append(read_static_image(image_path))
-	return frames
+			vision_frames.append(read_static_image(image_path))
+	return vision_frames
+
+
+@lru_cache()
+def read_static_image(image_path : str) -> Optional[VisionFrame]:
+	return read_image(image_path)
 
 
 def read_image(image_path : str) -> Optional[VisionFrame]:

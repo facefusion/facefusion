@@ -6,9 +6,11 @@ import sys
 from time import time
 
 import numpy
+from tqdm import tqdm
 
 from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, process_manager, state_manager, video_manager, voice_extractor, wording
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
+from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.download import conditional_download_hashes, conditional_download_sources
@@ -27,7 +29,9 @@ from facefusion.program_helper import validate_args
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import Args, ErrorCode
-from facefusion.vision import pack_resolution, read_image, read_static_images, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution
+from facefusion.vision import pack_resolution, read_image, read_static_images, read_video_frame, \
+	restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, \
+	write_image
 
 
 def cli() -> None:
@@ -393,10 +397,27 @@ def process_image(start_time : float) -> ErrorCode:
 		return 1
 
 	temp_image_path = get_temp_file_path(state_manager.get_item('target_path'))
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
+	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
+	source_audio_frame = create_empty_audio_frame()
+	source_voice_frame = create_empty_audio_frame()
+	target_vision_frame = read_image(temp_image_path)
+	temp_vision_frame = target_vision_frame.copy()
+
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.info(wording.get('processing'), processor_module.__name__)
-		processor_module.process_image(state_manager.get_item('source_paths'), temp_image_path, temp_image_path)
+		temp_vision_frame = processor_module.process_frame(
+		{
+			'reference_faces': reference_faces,
+			'source_vision_frames': source_vision_frames,
+			'source_audio_frame': source_audio_frame,
+			'source_voice_frame': source_voice_frame,
+			'target_vision_frame': target_vision_frame,
+			'temp_vision_frame': temp_vision_frame
+		})
 		processor_module.post_process()
+
+	write_image(temp_image_path, temp_vision_frame)
 	if is_process_stopping():
 		process_manager.end()
 		return 4
@@ -444,14 +465,43 @@ def process_video(start_time : float) -> ErrorCode:
 		process_manager.end()
 		return 1
 
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
+	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
+	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
+
 	if temp_frame_paths:
+		with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame', ascii =' =', disable =state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+			progress.set_postfix(execution_providers=state_manager.get_item('execution_providers'))
+
+			for frame_number, temp_frame_path in enumerate(temp_frame_paths):
+				source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
+				source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
+				if not numpy.any(source_audio_frame):
+					source_audio_frame = create_empty_audio_frame()
+				if not numpy.any(source_voice_frame):
+					source_audio_frame = create_empty_audio_frame()
+				target_vision_frame = read_image(temp_frame_path)
+				temp_vision_frame = target_vision_frame.copy()
+
+				for processor_module in get_processors_modules(state_manager.get_item('processors')):
+					temp_vision_frame = processor_module.process_frame(
+					{
+						'reference_faces': reference_faces,
+						'source_vision_frames': source_vision_frames,
+						'source_audio_frame': source_audio_frame,
+						'source_voice_frame': source_voice_frame,
+						'target_vision_frame': target_vision_frame,
+						'temp_vision_frame': temp_vision_frame
+					})
+
+				write_image(temp_frame_path, temp_vision_frame)
+				if is_process_stopping():
+					process_manager.end()
+					return 4
+
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
-			logger.info(wording.get('processing'), processor_module.__name__)
-			processor_module.process_video(state_manager.get_item('source_paths'), temp_frame_paths)
 			processor_module.post_process()
-		if is_process_stopping():
-			return 4
 	else:
 		logger.error(wording.get('temp_frames_not_found'), __name__)
 		process_manager.end()

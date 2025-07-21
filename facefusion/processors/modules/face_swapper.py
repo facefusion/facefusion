@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import cv2
 import numpy
@@ -8,8 +8,7 @@ import numpy
 import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, video_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, wording
 from facefusion.common_helper import get_first, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
@@ -17,7 +16,6 @@ from facefusion.face_analyser import get_average_face, get_many_faces, get_one_f
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import find_similar_faces, sort_and_filter_faces, sort_faces_by_order
-from facefusion.face_store import get_reference_faces
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors import choices as processors_choices
@@ -25,8 +23,8 @@ from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel
 from facefusion.processors.types import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
-from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
+from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.vision import read_static_image, read_static_images, unpack_resolution
 
 
 @lru_cache(maxsize = None)
@@ -461,21 +459,27 @@ def pre_process(mode : ProcessMode) -> bool:
 	if not has_image(state_manager.get_item('source_paths')):
 		logger.error(wording.get('choose_image_source') + wording.get('exclamation_mark'), __name__)
 		return False
+
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_frames)
+
 	if not get_one_face(source_faces):
 		logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), __name__)
 		return False
+
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
 		return False
+
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
 		return False
+
 	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
 		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
 		return False
+
 	return True
 
 
@@ -529,8 +533,8 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 		crop_masks.append(region_mask)
 
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
-	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
-	return temp_vision_frame
+	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
+	return paste_vision_frame
 
 
 def forward_swap_face(source_face : Face, target_face : Face, crop_vision_frame : VisionFrame) -> VisionFrame:
@@ -663,76 +667,42 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 	return swap_face(source_face, target_face, temp_vision_frame)
 
 
+def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Face]:
+	source_faces = []
+
+	if source_vision_frames:
+		for source_vision_frame in source_vision_frames:
+			temp_faces = get_many_faces([source_vision_frame])
+			temp_faces = sort_faces_by_order(temp_faces, 'large-small')
+
+			if temp_faces:
+				source_faces.append(get_first(temp_faces))
+
+	return get_average_face(source_faces)
+
+
 def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 	reference_faces = inputs.get('reference_faces')
-	source_face = inputs.get('source_face')
+	source_vision_frames = inputs.get('source_vision_frames')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
+	source_face = extract_source_face(source_vision_frames)
+	target_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
 
 	if state_manager.get_item('face_selector_mode') == 'many':
-		if many_faces:
-			for target_face in many_faces:
+		if source_face and target_faces:
+			for target_face in target_faces:
 				temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
+
 	if state_manager.get_item('face_selector_mode') == 'one':
-		target_face = get_one_face(many_faces)
-		if target_face:
+		target_face = get_one_face(target_faces)
+		if source_face and target_face:
 			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
+
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		similar_faces = find_similar_faces(many_faces, reference_faces, state_manager.get_item('reference_face_distance'))
-		if similar_faces:
+		similar_faces = find_similar_faces(target_faces, reference_faces, state_manager.get_item('reference_face_distance'))
+		if source_face and similar_faces:
 			for similar_face in similar_faces:
 				temp_vision_frame = swap_face(source_face, similar_face, temp_vision_frame)
+
 	return temp_vision_frame
-
-
-def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
-	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
-	source_frames = read_static_images(source_paths)
-	source_faces = []
-
-	for source_frame in source_frames:
-		temp_faces = get_many_faces([ source_frame ])
-		temp_faces = sort_faces_by_order(temp_faces, 'large-small')
-		if temp_faces:
-			source_faces.append(get_first(temp_faces))
-	source_face = get_average_face(source_faces)
-
-	for queue_payload in process_manager.manage(queue_payloads):
-		target_vision_path = queue_payload['frame_path']
-		target_vision_frame = read_image(target_vision_path)
-		output_vision_frame = process_frame(
-		{
-			'reference_faces': reference_faces,
-			'source_face': source_face,
-			'target_vision_frame': target_vision_frame,
-			'temp_vision_frame': target_vision_frame
-		})
-		write_image(target_vision_path, output_vision_frame)
-		update_progress(1)
-
-
-def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
-	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
-	source_frames = read_static_images(source_paths)
-	source_faces = []
-
-	for source_frame in source_frames:
-		temp_faces = get_many_faces([ source_frame ])
-		temp_faces = sort_faces_by_order(temp_faces, 'large-small')
-		if temp_faces:
-			source_faces.append(get_first(temp_faces))
-	source_face = get_average_face(source_faces)
-	target_vision_frame = read_static_image(target_path)
-	output_vision_frame = process_frame(
-	{
-		'reference_faces': reference_faces,
-		'source_face': source_face,
-		'target_vision_frame': target_vision_frame,
-		'temp_vision_frame': target_vision_frame
-	})
-	write_image(output_path, output_vision_frame)
-
-
-def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	processors.multi_process_frames(source_paths, temp_frame_paths, process_frames)
