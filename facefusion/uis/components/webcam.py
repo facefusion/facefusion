@@ -12,11 +12,10 @@ from facefusion import ffmpeg_builder, logger, state_manager, wording
 from facefusion.audio import create_empty_audio_frame
 from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream
-from facefusion.face_analyser import get_average_face, get_many_faces
 from facefusion.ffmpeg import open_ffmpeg
-from facefusion.filesystem import filter_image_paths, is_directory
+from facefusion.filesystem import is_directory
 from facefusion.processors.core import get_processors_modules
-from facefusion.types import Face, Fps, StreamMode, VisionFrame, WebcamMode
+from facefusion.types import Fps, StreamMode, VisionFrame, WebcamMode
 from facefusion.uis.core import get_ui_component
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
 
@@ -86,10 +85,6 @@ def listen() -> None:
 
 def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	state_manager.set_item('face_selector_mode', 'one')
-	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
-	source_frames = read_static_images(source_image_paths)
-	source_faces = get_many_faces(source_frames)
-	source_face = get_average_face(source_faces)
 	stream = None
 	webcam_capture = None
 
@@ -106,7 +101,7 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 		webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
 		webcam_capture.set(cv2.CAP_PROP_FPS, webcam_fps)
 
-		for capture_frame in multi_process_capture(source_face, webcam_capture, webcam_fps):
+		for capture_frame in multi_process_capture(webcam_capture, webcam_fps):
 			capture_frame = normalize_frame_color(capture_frame)
 			if webcam_mode == 'inline':
 				yield capture_frame
@@ -118,8 +113,8 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 				yield None
 
 
-def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
-	deque_capture_frames: Deque[VisionFrame] = deque()
+def multi_process_capture(webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
+	deque_capture_frames : Deque[VisionFrame] = deque()
 
 	with tqdm(desc = wording.get('streaming'), unit = 'frame', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
@@ -129,7 +124,8 @@ def multi_process_capture(source_face : Face, webcam_capture : cv2.VideoCapture,
 				_, capture_frame = webcam_capture.read()
 				if analyse_stream(capture_frame, webcam_fps):
 					yield None
-				future = executor.submit(process_stream_frame, source_face, capture_frame)
+
+				future = executor.submit(process_stream_frame, capture_frame)
 				futures.append(future)
 
 				for future_done in [ future for future in futures if future.done() ]:
@@ -147,8 +143,10 @@ def stop() -> gradio.Image:
 	return gradio.Image(value = None)
 
 
-def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) -> VisionFrame:
+def process_stream_frame(target_vision_frame : VisionFrame) -> VisionFrame:
+	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = create_empty_audio_frame()
+	source_voice_frame = create_empty_audio_frame()
 	temp_vision_frame = target_vision_frame.copy()
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
@@ -156,8 +154,9 @@ def process_stream_frame(source_face : Face, target_vision_frame : VisionFrame) 
 		if processor_module.pre_process('stream'):
 			temp_vision_frame = processor_module.process_frame(
 			{
-				'source_face': source_face,
+				'source_vision_frames': source_vision_frames,
 				'source_audio_frame': source_audio_frame,
+				'source_voice_frame': source_voice_frame,
 				'target_vision_frame': target_vision_frame,
 				'temp_vision_frame': temp_vision_frame
 			})
