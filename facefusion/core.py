@@ -480,6 +480,11 @@ def process_video(start_time : float) -> ErrorCode:
 				target_vision_frame = read_image(temp_frame_path)
 				temp_vision_frame = target_vision_frame.copy()
 
+				if not numpy.any(source_audio_frame):
+					source_audio_frame = create_empty_audio_frame()
+				if not numpy.any(source_voice_frame):
+					source_audio_frame = create_empty_audio_frame()
+
 				for processor_module in get_processors_modules(state_manager.get_item('processors')):
 					temp_vision_frame = processor_module.process_frame(
 					{
