@@ -473,13 +473,13 @@ def process_video(start_time : float) -> ErrorCode:
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
-	deque_temp_frames : Deque[VisionFrame] = deque(maxlen=(state_manager.get_item('execution_thread_count') or 1) * 2)
+	deque_temp_frames : Deque[VisionFrame] = deque()
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
 
-			with ThreadPoolExecutor(max_workers=state_manager.get_item('execution_thread_count')) as executor:
+			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 				futures = []
 
 				for frame_number, temp_frame_path in enumerate(temp_frame_paths):
@@ -512,8 +512,8 @@ def process_video(start_time : float) -> ErrorCode:
 
 				for future, temp_frame_path in futures:
 					output_vision_frame = future.result()
-					write_image(temp_frame_path, output_vision_frame)
 					deque_temp_frames.append(output_vision_frame)
+					write_image(temp_frame_path, output_vision_frame)
 					progress.update(1)
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
