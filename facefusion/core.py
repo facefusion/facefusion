@@ -29,9 +29,7 @@ from facefusion.program_helper import validate_args
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import Args, ErrorCode
-from facefusion.vision import pack_resolution, read_image, read_static_images, read_video_frame, \
-	restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, \
-	write_image
+from facefusion.vision import pack_resolution, read_image, read_static_images, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
 
 
 def cli() -> None:
@@ -406,6 +404,7 @@ def process_image(start_time : float) -> ErrorCode:
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.info(wording.get('processing'), processor_module.__name__)
+
 		temp_vision_frame = processor_module.process_frame(
 		{
 			'reference_faces': reference_faces,
@@ -415,6 +414,7 @@ def process_image(start_time : float) -> ErrorCode:
 			'target_vision_frame': target_vision_frame,
 			'temp_vision_frame': temp_vision_frame
 		})
+
 		processor_module.post_process()
 
 	write_image(temp_image_path, temp_vision_frame)
@@ -471,16 +471,12 @@ def process_video(start_time : float) -> ErrorCode:
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
 
 	if temp_frame_paths:
-		with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame', ascii =' =', disable =state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-			progress.set_postfix(execution_providers=state_manager.get_item('execution_providers'))
+		with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
 
 			for frame_number, temp_frame_path in enumerate(temp_frame_paths):
-				source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
-				source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
-				if not numpy.any(source_audio_frame):
-					source_audio_frame = create_empty_audio_frame()
-				if not numpy.any(source_voice_frame):
-					source_audio_frame = create_empty_audio_frame()
+				source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number) or create_empty_audio_frame()
+				source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number) or create_empty_audio_frame()
 				target_vision_frame = read_image(temp_frame_path)
 				temp_vision_frame = target_vision_frame.copy()
 

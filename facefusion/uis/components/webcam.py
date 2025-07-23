@@ -151,6 +151,7 @@ def process_stream_frame(target_vision_frame : VisionFrame) -> VisionFrame:
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.disable()
+
 		if processor_module.pre_process('stream'):
 			temp_vision_frame = processor_module.process_frame(
 			{
@@ -160,6 +161,7 @@ def process_stream_frame(target_vision_frame : VisionFrame) -> VisionFrame:
 				'target_vision_frame': target_vision_frame,
 				'temp_vision_frame': temp_vision_frame
 			})
+
 		logger.enable()
 	return temp_vision_frame
 
