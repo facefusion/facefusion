@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
 
 import cv2
 import numpy

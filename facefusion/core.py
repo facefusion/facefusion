@@ -6,7 +6,7 @@ import sys
 from collections import deque
 from concurrent.futures import Future, ThreadPoolExecutor
 from time import time
-from typing import Deque, Dict, List, Tuple
+from typing import Deque, Dict
 
 import numpy
 from tqdm import tqdm
