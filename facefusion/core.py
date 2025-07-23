@@ -3,7 +3,10 @@ import itertools
 import shutil
 import signal
 import sys
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor
 from time import time
+from typing import Deque
 
 import numpy
 from tqdm import tqdm
@@ -24,11 +27,12 @@ from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
 from facefusion.processors.core import get_processors_modules
+from facefusion.processors.types import ProcessorInputs
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
-from facefusion.types import Args, ErrorCode
+from facefusion.types import Args, ErrorCode, VisionFrame
 from facefusion.vision import pack_resolution, read_image, read_static_images, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
 
 
@@ -405,15 +409,15 @@ def process_image(start_time : float) -> ErrorCode:
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.info(wording.get('processing'), processor_module.__name__)
 
-		temp_vision_frame = processor_module.process_frame(
-		{
+		processor_inputs : ProcessorInputs = {
 			'reference_faces': reference_faces,
 			'source_vision_frames': source_vision_frames,
 			'source_audio_frame': source_audio_frame,
 			'source_voice_frame': source_voice_frame,
 			'target_vision_frame': target_vision_frame,
 			'temp_vision_frame': temp_vision_frame
-		})
+		}
+		temp_vision_frame = processor_module.process_frame(processor_inputs)
 
 		processor_module.post_process()
 
@@ -469,24 +473,33 @@ def process_video(start_time : float) -> ErrorCode:
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
+	deque_temp_frames : Deque[VisionFrame] = deque(maxlen=(state_manager.get_item('execution_thread_count') or 1) * 2)
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
 
-			for frame_number, temp_frame_path in enumerate(temp_frame_paths):
-				source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number) or create_empty_audio_frame()
-				source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number) or create_empty_audio_frame()
-				target_vision_frame = read_image(temp_frame_path)
-				temp_vision_frame = target_vision_frame.copy()
+			with ThreadPoolExecutor(max_workers=state_manager.get_item('execution_thread_count')) as executor:
+				futures = []
 
-				if not numpy.any(source_audio_frame):
-					source_audio_frame = create_empty_audio_frame()
-				if not numpy.any(source_voice_frame):
-					source_audio_frame = create_empty_audio_frame()
+				for frame_number, temp_frame_path in enumerate(temp_frame_paths):
+					if is_process_stopping():
+						for future in futures:
+							future.cancel()
+						process_manager.end()
+						return 4
 
-				for processor_module in get_processors_modules(state_manager.get_item('processors')):
-					temp_vision_frame = processor_module.process_frame(
+					source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
+					source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
+					target_vision_frame = read_image(temp_frame_path)
+					temp_vision_frame = target_vision_frame.copy()
+
+					if not numpy.any(source_audio_frame):
+						source_audio_frame = create_empty_audio_frame()
+					if not numpy.any(source_voice_frame):
+						source_voice_frame = create_empty_audio_frame()
+
+					future = executor.submit(process_video_frame,
 					{
 						'reference_faces': reference_faces,
 						'source_vision_frames': source_vision_frames,
@@ -495,11 +508,13 @@ def process_video(start_time : float) -> ErrorCode:
 						'target_vision_frame': target_vision_frame,
 						'temp_vision_frame': temp_vision_frame
 					})
+					futures.append((future, temp_frame_path))
 
-				write_image(temp_frame_path, temp_vision_frame)
-				if is_process_stopping():
-					process_manager.end()
-					return 4
+				for future, temp_frame_path in futures:
+					output_vision_frame = future.result()
+					write_image(temp_frame_path, output_vision_frame)
+					deque_temp_frames.append(output_vision_frame)
+					progress.update(1)
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
@@ -558,6 +573,15 @@ def process_video(start_time : float) -> ErrorCode:
 		return 1
 	process_manager.end()
 	return 0
+
+
+def process_video_frame(processor_inputs : ProcessorInputs) -> VisionFrame:
+	temp_vision_frame = processor_inputs.get('temp_vision_frame')
+
+	for processor_module in get_processors_modules(state_manager.get_item('processors')):
+		temp_vision_frame = processor_module.process_frame(processor_inputs)
+
+	return temp_vision_frame
 
 
 def is_process_stopping() -> bool:
