@@ -114,7 +114,7 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 
 
 def multi_process_capture(webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
-	deque_capture_frames : Deque[VisionFrame] = deque()
+	capture_deque : Deque[VisionFrame] = deque()
 
 	with tqdm(desc = wording.get('streaming'), unit = 'frame', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
@@ -130,12 +130,12 @@ def multi_process_capture(webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -
 
 				for future_done in [ future for future in futures if future.done() ]:
 					capture_frame = future_done.result()
-					deque_capture_frames.append(capture_frame)
+					capture_deque.append(capture_frame)
 					futures.remove(future_done)
 
-				while deque_capture_frames:
+				while capture_deque:
 					progress.update()
-					yield deque_capture_frames.popleft()
+					yield capture_deque.popleft()
 
 
 def stop() -> gradio.Image:
