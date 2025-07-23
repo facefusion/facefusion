@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict, Union
 
 import cv2
 import numpy
@@ -50,7 +50,14 @@ FaceStore = TypedDict('FaceStore',
 	'static_faces' : FaceSet,
 	'reference_faces' : FaceSet
 })
-VideoPoolSet : TypeAlias = Dict[str, cv2.VideoCapture]
+
+VideoCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
+VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
+VideoPoolSet = TypedDict('VideoPoolSet',
+{
+	'capture': VideoCaptureSet,
+	'writer': VideoWriterSet
+})
 
 VisionFrame : TypeAlias = NDArray[Any]
 Mask : TypeAlias = NDArray[Any]
