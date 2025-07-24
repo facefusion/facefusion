@@ -140,23 +140,23 @@ def set_audio_channel_total(audio_channel_total : int) -> Commands:
 
 def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> Commands:
 	if audio_encoder == 'aac':
-		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 0.1, 2.0 ]).item(), 1)
+		audio_compression = numpy.round(numpy.interp(audio_quality, [ 0, 100 ], [ 0.1, 2.0 ]), 1).astype(float).item()
 		return [ '-q:a', str(audio_compression) ]
 	if audio_encoder == 'libmp3lame':
-		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 9, 0 ]).item())
+		audio_compression = numpy.round(numpy.interp(audio_quality, [ 0, 100 ], [ 9, 0 ])).astype(int).item()
 		return [ '-q:a', str(audio_compression) ]
 	if audio_encoder == 'libopus':
-		audio_bit_rate = round(numpy.interp(audio_quality, [ 0, 100 ], [ 64, 256 ]).item())
+		audio_bit_rate = numpy.round(numpy.interp(audio_quality, [ 0, 100 ], [ 64, 256 ])).astype(int).item()
 		return [ '-b:a', str(audio_bit_rate) + 'k' ]
 	if audio_encoder == 'libvorbis':
-		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ -1, 10 ]).item(), 1)
+		audio_compression = numpy.round(numpy.interp(audio_quality, [ 0, 100 ], [ -1, 10 ]), 1).astype(float).item()
 		return [ '-q:a', str(audio_compression) ]
 	return []
 
 
 def set_audio_volume(audio_volume : int) -> Commands:
 	return [ '-filter:a', 'volume=' + str(audio_volume / 100) ]
-
+Fix
 
 def set_video_encoder(video_encoder : str) -> Commands:
 	return [ '-c:v', video_encoder ]
@@ -168,22 +168,22 @@ def copy_video_encoder() -> Commands:
 
 def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> Commands:
 	if video_encoder in [ 'libx264', 'libx264rgb', 'libx265' ]:
-		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ]).item())
+		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ])).astype(int).item()
 		return [ '-crf', str(video_compression) ]
 	if video_encoder == 'libvpx-vp9':
-		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 63, 0 ]).item())
+		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 63, 0 ])).astype(int).item()
 		return [ '-crf', str(video_compression) ]
 	if video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
-		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ]).item())
+		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ])).astype(int).item()
 		return [ '-cq', str(video_compression) ]
 	if video_encoder in [ 'h264_amf', 'hevc_amf' ]:
-		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ]).item())
+		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ])).astype(int).item()
 		return [ '-qp_i', str(video_compression), '-qp_p', str(video_compression), '-qp_b', str(video_compression) ]
 	if video_encoder in [ 'h264_qsv', 'hevc_qsv' ]:
-		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ]).item())
+		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ])).astype(int).item()
 		return [ '-qp', str(video_compression) ]
 	if video_encoder in [ 'h264_videotoolbox', 'hevc_videotoolbox' ]:
-		video_bit_rate = round(numpy.interp(video_quality, [ 0, 100 ], [ 1024, 50512 ]).item())
+		video_bit_rate = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 1024, 50512 ])).astype(int).item()
 		return [ '-b:v', str(video_bit_rate) + 'k' ]
 	return []
 
