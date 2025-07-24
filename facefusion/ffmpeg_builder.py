@@ -156,7 +156,7 @@ def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> Comm
 
 def set_audio_volume(audio_volume : int) -> Commands:
 	return [ '-filter:a', 'volume=' + str(audio_volume / 100) ]
-Fix
+
 
 def set_video_encoder(video_encoder : str) -> Commands:
 	return [ '-c:v', video_encoder ]
