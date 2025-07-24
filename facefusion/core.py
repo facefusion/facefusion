@@ -3,10 +3,9 @@ import itertools
 import shutil
 import signal
 import sys
-from collections import deque
 from concurrent.futures import Future, ThreadPoolExecutor
 from time import time
-from typing import Deque, Dict
+from typing import Dict
 
 import numpy
 from tqdm import tqdm
@@ -473,7 +472,6 @@ def process_video(start_time : float) -> ErrorCode:
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
-	deque_temp : Deque[VisionFrame] = deque()
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
@@ -510,7 +508,6 @@ def process_video(start_time : float) -> ErrorCode:
 
 				for temp_frame_path, future in futures.items():
 					output_vision_frame = future.result()
-					deque_temp.append(output_vision_frame)
 					write_image(temp_frame_path, output_vision_frame)
 					progress.update(1)
 
