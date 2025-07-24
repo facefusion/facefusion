@@ -3,7 +3,7 @@ import itertools
 import shutil
 import signal
 import sys
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from time import time
 from typing import Dict
 
@@ -33,6 +33,8 @@ from facefusion.temp_helper import clear_temp_directory, create_temp_directory, 
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import Args, ErrorCode, VisionFrame
 from facefusion.vision import pack_resolution, read_image, read_static_images, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
+
+
 
 
 def cli() -> None:
@@ -408,15 +410,15 @@ def process_image(start_time : float) -> ErrorCode:
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.info(wording.get('processing'), processor_module.__name__)
 
-		processor_inputs : ProcessorInputs = {
+		temp_vision_frame = processor_module.process_frame(
+		{
 			'reference_faces': reference_faces,
 			'source_vision_frames': source_vision_frames,
 			'source_audio_frame': source_audio_frame,
 			'source_voice_frame': source_voice_frame,
 			'target_vision_frame': target_vision_frame,
 			'temp_vision_frame': temp_vision_frame
-		}
-		temp_vision_frame = processor_module.process_frame(processor_inputs)
+		})
 
 		processor_module.post_process()
 
@@ -478,16 +480,27 @@ def process_video(start_time : float) -> ErrorCode:
 			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
-				futures : Dict[str, Future[VisionFrame]] = {}
+				futures =\
+				{
+					'reader': {},
+					'processor': {},
+					'writer': {}
+				}
 
 				for frame_number, temp_frame_path in enumerate(temp_frame_paths):
 					if is_process_stopping():
 						process_manager.end()
 						return 4
 
+					future = executor.submit(read_image, temp_frame_path)
+					futures['reader'][future] = temp_frame_path
+
+				for future_reader in as_completed(futures.get('reader').keys()):
+					temp_frame_path = futures['reader'][future_reader]
+					frame_number = temp_frame_paths.index(temp_frame_path)
 					source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
 					source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
-					target_vision_frame = read_image(temp_frame_path)
+					target_vision_frame = future_reader.result()
 					temp_vision_frame = target_vision_frame.copy()
 
 					if not numpy.any(source_audio_frame):
@@ -495,7 +508,7 @@ def process_video(start_time : float) -> ErrorCode:
 					if not numpy.any(source_voice_frame):
 						source_voice_frame = create_empty_audio_frame()
 
-					future : Future[VisionFrame] = executor.submit(process_video_frame,
+					future = executor.submit(process_video_frame,
 					{
 						'reference_faces': reference_faces,
 						'source_vision_frames': source_vision_frames,
@@ -504,11 +517,16 @@ def process_video(start_time : float) -> ErrorCode:
 						'target_vision_frame': target_vision_frame,
 						'temp_vision_frame': temp_vision_frame
 					})
-					futures[temp_frame_path] = future
+					futures['processor'][future] = temp_frame_path
 
-				for temp_frame_path, future in futures.items():
-					output_vision_frame = future.result()
-					write_image(temp_frame_path, output_vision_frame)
+				for future_processor in as_completed(futures.get('processor').keys()):
+					temp_frame_path = futures['processor'][future_processor]
+					output_vision_frame = future_processor.result()
+					future = executor.submit(write_image, temp_frame_path, output_vision_frame)
+					futures['writer'][future] = temp_frame_path
+
+				for future_writer in as_completed(futures.get('writer').keys()):
+					future_writer.result()
 					progress.update(1)
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
