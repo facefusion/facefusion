@@ -1,9 +1,8 @@
 import os
-import configparser
 from configparser import ConfigParser
 from typing import Any, Dict, List, Optional
 
-from facefusion import logger, state_manager
+from facefusion import state_manager
 from facefusion.common_helper import cast_bool, cast_float, cast_int
 
 CONFIG_PARSER = None
@@ -97,7 +96,7 @@ def get_int_list(section : str, option : str, fallback : Optional[str] = None) -
 
 def save_defaults() -> None:
 	config_path = state_manager.get_item('config_path')
-	config = configparser.ConfigParser()
+	config = ConfigParser()
 	if os.path.isfile(config_path):
 		config.read(config_path, encoding = 'utf-8')
 
