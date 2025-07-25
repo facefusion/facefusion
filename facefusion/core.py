@@ -492,11 +492,9 @@ def process_video(start_time : float) -> ErrorCode:
 						process_manager.end()
 						return 4
 
-					future = executor.submit(read_image, temp_frame_path)
-					futures['reader'][future] = temp_frame_path
+					futures['reader'][temp_frame_path] = executor.submit(read_image, temp_frame_path)
 
-				for future_reader in as_completed(futures.get('reader').keys()):
-					temp_frame_path = futures['reader'][future_reader]
+				for temp_frame_path, future_reader in futures.get('reader').items():
 					frame_number = temp_frame_paths.index(temp_frame_path)
 					source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
 					source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
@@ -508,7 +506,7 @@ def process_video(start_time : float) -> ErrorCode:
 					if not numpy.any(source_voice_frame):
 						source_voice_frame = create_empty_audio_frame()
 
-					future = executor.submit(process_video_frame,
+					futures['processor'][temp_frame_path] = executor.submit(process_video_frame,
 					{
 						'reference_faces': reference_faces,
 						'source_vision_frames': source_vision_frames,
@@ -517,15 +515,12 @@ def process_video(start_time : float) -> ErrorCode:
 						'target_vision_frame': target_vision_frame,
 						'temp_vision_frame': temp_vision_frame
 					})
-					futures['processor'][future] = temp_frame_path
 
-				for future_processor in as_completed(futures.get('processor').keys()):
-					temp_frame_path = futures['processor'][future_processor]
+				for temp_frame_path, future_processor in futures.get('processor').items():
 					output_vision_frame = future_processor.result()
-					future = executor.submit(write_image, temp_frame_path, output_vision_frame)
-					futures['writer'][future] = temp_frame_path
+					futures['writer'][temp_frame_path] = executor.submit(write_image, temp_frame_path, output_vision_frame)
 
-				for future_writer in as_completed(futures.get('writer').keys()):
+				for temp_frame_path, future_writer in futures.get('writer').items():
 					future_writer.result()
 					progress.update(1)
 
@@ -593,6 +588,7 @@ def process_video_frame(processor_inputs : ProcessorInputs) -> VisionFrame:
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		temp_vision_frame = processor_module.process_frame(processor_inputs)
+		processor_inputs['temp_vision_frame'] = temp_vision_frame
 
 	return temp_vision_frame
 
