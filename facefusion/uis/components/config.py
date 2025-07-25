@@ -22,21 +22,21 @@ def render() -> None:
 
 def listen() -> None:
 	"""
-	Listen for the click event on the config save button.
+	Listen for the click event on the config defaults button.
 	"""
-	CONFIG_SAVE_BUTTON.click(fn = save_configuration)
+	CONFIG_SAVE_BUTTON.click(fn = save_defaults)
 
 
-def save_configuration() -> None:
+def save_defaults() -> None:
 	"""
-	Save the current UI settings to the config file and provide feedback to the console.
+	Save the current UI settings as defaults to the config file and provide feedback to the console.
 	"""
-	from facefusion.config import save_defaults
+	from facefusion.config import save_defaults as save_defaults_to_file
 
 	try:
-		save_defaults()
-		success_message = "Settings saved successfully to facefusion.ini!"
+		save_defaults_to_file()
+		success_message = "Defaults saved successfully to facefusion.ini!"
 		logger.info(success_message, __name__)
 	except Exception as e:
-		error_message = "Could not save settings to facefusion.ini."
+		error_message = "Could not save defaults to facefusion.ini."
 		logger.error(f'{error_message} {e}', __name__)
