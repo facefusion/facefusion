@@ -10,10 +10,11 @@ from facefusion.filesystem import is_directory, is_image, is_video
 from facefusion.jobs import job_helper, job_manager, job_runner, job_store
 from facefusion.temp_helper import clear_temp_directory
 from facefusion.types import Args, UiWorkflow
+from facefusion.uis.components import config as config_component
 from facefusion.uis.core import get_ui_component
 from facefusion.uis.ui_helper import suggest_output_path
 
-INSTANT_RUNNER_WRAPPER : Optional[gradio.Row] = None
+INSTANT_RUNNER_WRAPPER : Optional[gradio.Column] = None
 INSTANT_RUNNER_START_BUTTON : Optional[gradio.Button] = None
 INSTANT_RUNNER_STOP_BUTTON : Optional[gradio.Button] = None
 INSTANT_RUNNER_CLEAR_BUTTON : Optional[gradio.Button] = None
@@ -28,22 +29,24 @@ def render() -> None:
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
 		is_instant_runner = state_manager.get_item('ui_workflow') == 'instant_runner'
 
-		with gradio.Row(visible = is_instant_runner) as INSTANT_RUNNER_WRAPPER:
-			INSTANT_RUNNER_START_BUTTON = gradio.Button(
-				value = wording.get('uis.start_button'),
-				variant = 'primary',
-				size = 'sm'
-			)
-			INSTANT_RUNNER_STOP_BUTTON = gradio.Button(
-				value = wording.get('uis.stop_button'),
-				variant = 'primary',
-				size = 'sm',
-				visible = False
-			)
-			INSTANT_RUNNER_CLEAR_BUTTON = gradio.Button(
-				value = wording.get('uis.clear_button'),
-				size = 'sm'
-			)
+		with gradio.Column(visible = is_instant_runner) as INSTANT_RUNNER_WRAPPER:
+			with gradio.Row():
+				INSTANT_RUNNER_START_BUTTON = gradio.Button(
+					value = wording.get('uis.start_button'),
+					variant = 'primary',
+					size = 'sm'
+				)
+				INSTANT_RUNNER_STOP_BUTTON = gradio.Button(
+					value = wording.get('uis.stop_button'),
+					variant = 'primary',
+					size = 'sm',
+					visible = False
+				)
+				INSTANT_RUNNER_CLEAR_BUTTON = gradio.Button(
+					value = wording.get('uis.clear_button'),
+					size = 'sm'
+				)
+			config_component.render()
 
 
 def listen() -> None:
@@ -58,12 +61,13 @@ def listen() -> None:
 		INSTANT_RUNNER_CLEAR_BUTTON.click(clear, outputs = [ output_image, output_video ])
 	if ui_workflow_dropdown:
 		ui_workflow_dropdown.change(remote_update, inputs = ui_workflow_dropdown, outputs = INSTANT_RUNNER_WRAPPER)
+	config_component.listen()
 
 
-def remote_update(ui_workflow : UiWorkflow) -> gradio.Row:
+def remote_update(ui_workflow : UiWorkflow) -> gradio.Column:
 	is_instant_runner = ui_workflow == 'instant_runner'
 
-	return gradio.Row(visible = is_instant_runner)
+	return gradio.Column(visible = is_instant_runner)
 
 
 def start() -> Tuple[gradio.Button, gradio.Button]:

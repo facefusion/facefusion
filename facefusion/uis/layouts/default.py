@@ -48,8 +48,6 @@ def render() -> gradio.Blocks:
 					temp_frame.render()
 				with gradio.Blocks():
 					output_options.render()
-				with gradio.Blocks():
-					config.render()
 			with gradio.Column(scale = 4):
 				with gradio.Blocks():
 					source.render()
@@ -83,7 +81,6 @@ def render() -> gradio.Blocks:
 
 
 def listen() -> None:
-	config.listen()
 	processors.listen()
 	age_modifier_options.listen()
 	deep_swapper_options.listen()
