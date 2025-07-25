@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, wording
+from facefusion import config, state_manager, wording
 from facefusion.common_helper import get_first
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
@@ -54,8 +54,13 @@ def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gr
 	state_manager.set_item('face_swapper_model', face_swapper_model)
 
 	if face_swapper_module.pre_check():
+		config.clear_config_parser()
 		face_swapper_pixel_boost_choices = processors_choices.face_swapper_set.get(state_manager.get_item('face_swapper_model'))
-		state_manager.set_item('face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices))
+		face_swapper_pixel_boost = config.get_str_value('processors', 'face_swapper_pixel_boost')
+
+		if not face_swapper_pixel_boost or face_swapper_pixel_boost not in face_swapper_pixel_boost_choices:
+			face_swapper_pixel_boost = get_first(face_swapper_pixel_boost_choices)
+		state_manager.set_item('face_swapper_pixel_boost', face_swapper_pixel_boost)
 		return gradio.Dropdown(value = state_manager.get_item('face_swapper_model')), gradio.Dropdown(value = state_manager.get_item('face_swapper_pixel_boost'), choices = face_swapper_pixel_boost_choices)
 	return gradio.Dropdown(), gradio.Dropdown()
 
