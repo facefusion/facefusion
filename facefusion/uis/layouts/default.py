@@ -15,8 +15,6 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					about.render()
 				with gradio.Blocks():
-					config.render()
-				with gradio.Blocks():
 					processors.render()
 				with gradio.Blocks():
 					age_modifier_options.render()
@@ -50,6 +48,8 @@ def render() -> gradio.Blocks:
 					temp_frame.render()
 				with gradio.Blocks():
 					output_options.render()
+				with gradio.Blocks():
+					config.render()
 			with gradio.Column(scale = 4):
 				with gradio.Blocks():
 					source.render()
