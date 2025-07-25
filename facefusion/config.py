@@ -92,25 +92,21 @@ def get_int_list(section : str, option : str, fallback : Optional[str] = None) -
 		value_from_config = config_parser.get(section, option)
 		cleaned_value = value_from_config.strip().strip('()').replace(',', ' ')
 		return list(map(int, cleaned_value.split()))
-	if fallback:
-		return list(map(int, fallback.split()))
 	return value
 
 
-def save_to_file() -> None:
+def save_defaults() -> None:
 	config_path = state_manager.get_item('config_path')
-	if not config_path or not os.path.isfile(config_path):
-		logger.error('Configuration file not found, skipping save.', __name__)
-		return
-
 	config = configparser.ConfigParser()
-	config.read(config_path, encoding = 'utf-8')
+	if os.path.isfile(config_path):
+		config.read(config_path, encoding = 'utf-8')
 
-	for section in config.sections():
-		for key in config.options(section):
+	for section, options in CONFIG_DEFAULTS.items():
+		if not config.has_section(section):
+			config.add_section(section)
+		for key, default_value in options.items():
 			try:
 				current_value = state_manager.get_item(key)
-				default_value = CONFIG_DEFAULTS.get(section, {}).get(key)
 
 				if current_value == default_value:
 					value_str = ''
@@ -119,13 +115,13 @@ def save_to_file() -> None:
 					if current_value is not None:
 						if isinstance(current_value, bool):
 							value_str = str(current_value).lower()
-						elif isinstance(current_value, list):
+						elif isinstance(current_value, (list, tuple)):
 							value_str = ' '.join(map(str, current_value))
 						else:
 							value_str = str(current_value)
 				config.set(section, key, value_str)
 			except (KeyError, TypeError):
-				pass
+				config.set(section, key, '')
 
 	with open(config_path, 'w', encoding = 'utf-8') as config_file:
 		config.write(config_file)

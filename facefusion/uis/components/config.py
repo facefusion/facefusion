@@ -14,7 +14,7 @@ def render() -> None:
 	global CONFIG_SAVE_BUTTON
 
 	CONFIG_SAVE_BUTTON = gradio.Button(
-		value = "Save Settings",
+		value = "Save Defaults",
 		variant = 'secondary',
 		size = 'sm'
 	)
@@ -31,10 +31,10 @@ def save_configuration() -> None:
 	"""
 	Save the current UI settings to the config file and provide feedback to the console.
 	"""
-	from facefusion.config import save_to_file
+	from facefusion.config import save_defaults
 
 	try:
-		save_to_file()
+		save_defaults()
 		success_message = "Settings saved successfully to facefusion.ini!"
 		logger.info(success_message, __name__)
 	except Exception as e:
