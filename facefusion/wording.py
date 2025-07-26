@@ -203,7 +203,6 @@ WORDING : Dict[str, Any] =\
 		'execution_device_id': 'specify the device used for processing',
 		'execution_providers': 'inference using different providers (choices: {choices}, ...)',
 		'execution_thread_count': 'specify the amount of parallel threads while processing',
-		'execution_queue_count': 'specify the amount of frames each thread is processing',
 		# memory
 		'video_memory_strategy': 'balance fast processing and low VRAM usage',
 		'system_memory_limit': 'limit the available RAM that can be used while processing',
@@ -257,7 +256,6 @@ WORDING : Dict[str, Any] =\
 		'deep_swapper_model_dropdown': 'DEEP SWAPPER MODEL',
 		'deep_swapper_morph_slider': 'DEEP SWAPPER MORPH',
 		'execution_providers_checkbox_group': 'EXECUTION PROVIDERS',
-		'execution_queue_count_slider': 'EXECUTION QUEUE COUNT',
 		'execution_thread_count_slider': 'EXECUTION THREAD COUNT',
 		'expression_restorer_factor_slider': 'EXPRESSION RESTORER FACTOR',
 		'expression_restorer_model_dropdown': 'EXPRESSION RESTORER MODEL',

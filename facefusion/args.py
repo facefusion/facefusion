@@ -121,7 +121,6 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('execution_device_id', args.get('execution_device_id'))
 	apply_state_item('execution_providers', args.get('execution_providers'))
 	apply_state_item('execution_thread_count', args.get('execution_thread_count'))
-	apply_state_item('execution_queue_count', args.get('execution_queue_count'))
 	# download
 	apply_state_item('download_providers', args.get('download_providers'))
 	apply_state_item('download_scope', args.get('download_scope'))
