@@ -3,9 +3,8 @@ import itertools
 import shutil
 import signal
 import sys
-from concurrent.futures import Future, ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
-from typing import Dict
 
 import numpy
 from tqdm import tqdm
@@ -33,8 +32,6 @@ from facefusion.temp_helper import clear_temp_directory, create_temp_directory, 
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import Args, ErrorCode, VisionFrame
 from facefusion.vision import pack_resolution, read_image, read_static_images, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
-
-
 
 
 def cli() -> None:
@@ -470,9 +467,6 @@ def process_video(start_time : float) -> ErrorCode:
 		process_manager.end()
 		return 1
 
-	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
-	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
-	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
 
 	if temp_frame_paths:
@@ -480,49 +474,19 @@ def process_video(start_time : float) -> ErrorCode:
 			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
-				futures =\
-				{
-					'reader': {},
-					'processor': {},
-					'writer': {}
-				}
+				futures = []
 
 				for frame_number, temp_frame_path in enumerate(temp_frame_paths):
 					if is_process_stopping():
 						process_manager.end()
 						return 4
 
-					futures['reader'][temp_frame_path] = executor.submit(read_image, temp_frame_path)
+					future = executor.submit(process_temp_frame, temp_frame_path, frame_number)
+					futures.append(future)
 
-				for temp_frame_path, future_reader in futures.get('reader').items():
-					frame_number = temp_frame_paths.index(temp_frame_path)
-					source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
-					source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
-					target_vision_frame = future_reader.result()
-					temp_vision_frame = target_vision_frame.copy()
-
-					if not numpy.any(source_audio_frame):
-						source_audio_frame = create_empty_audio_frame()
-					if not numpy.any(source_voice_frame):
-						source_voice_frame = create_empty_audio_frame()
-
-					futures['processor'][temp_frame_path] = executor.submit(process_video_frame,
-					{
-						'reference_faces': reference_faces,
-						'source_vision_frames': source_vision_frames,
-						'source_audio_frame': source_audio_frame,
-						'source_voice_frame': source_voice_frame,
-						'target_vision_frame': target_vision_frame,
-						'temp_vision_frame': temp_vision_frame
-					})
-
-				for temp_frame_path, future_processor in futures.get('processor').items():
-					output_vision_frame = future_processor.result()
-					futures['writer'][temp_frame_path] = executor.submit(write_image, temp_frame_path, output_vision_frame)
-
-				for temp_frame_path, future_writer in futures.get('writer').items():
-					future_writer.result()
-					progress.update(1)
+				for future in as_completed(futures):
+					future.result()
+					progress.update()
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
@@ -581,6 +545,35 @@ def process_video(start_time : float) -> ErrorCode:
 		return 1
 	process_manager.end()
 	return 0
+
+
+def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
+	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
+	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
+	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
+	target_vision_frame = read_image(temp_frame_path)
+	temp_vision_frame = target_vision_frame.copy()
+
+	source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
+	source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
+
+	if not numpy.any(source_audio_frame):
+		source_audio_frame = create_empty_audio_frame()
+	if not numpy.any(source_voice_frame):
+		source_voice_frame = create_empty_audio_frame()
+
+	output_vision_frame = process_video_frame(
+	{
+		'reference_faces': reference_faces,
+		'source_vision_frames': source_vision_frames,
+		'source_audio_frame': source_audio_frame,
+		'source_voice_frame': source_voice_frame,
+		'target_vision_frame': target_vision_frame,
+		'temp_vision_frame': temp_vision_frame
+	})
+
+	return write_image(temp_frame_path, output_vision_frame)
 
 
 def process_video_frame(processor_inputs : ProcessorInputs) -> VisionFrame:
