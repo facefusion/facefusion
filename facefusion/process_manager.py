@@ -1,6 +1,4 @@
-from typing import Generator, List
-
-from facefusion.types import ProcessState, QueuePayload
+from facefusion.types import ProcessState
 
 PROCESS_STATE : ProcessState = 'pending'
 
@@ -45,9 +43,3 @@ def stop() -> None:
 
 def end() -> None:
 	set_process_state('pending')
-
-
-def manage(queue_payloads : List[QueuePayload]) -> Generator[QueuePayload, None, None]:
-	for query_payload in queue_payloads:
-		if is_processing():
-			yield query_payload

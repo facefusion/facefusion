@@ -84,14 +84,8 @@ Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
-QueuePayload = TypedDict('QueuePayload',
-{
-	'frame_number' : int,
-	'frame_path' : str
-})
 Args : TypeAlias = Dict[str, Any]
 UpdateProgress : TypeAlias = Callable[[int], None]
-ProcessFrames : TypeAlias = Callable[[List[str], List[QueuePayload], UpdateProgress], None]
 ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 
 Content : TypeAlias = Dict[str, Any]
