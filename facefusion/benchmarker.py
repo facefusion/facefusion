@@ -6,9 +6,10 @@ from time import perf_counter
 from typing import Generator, List
 
 import facefusion.choices
-from facefusion import content_analyser, core, face_store, state_manager
+from facefusion import content_analyser, core, state_manager
 from facefusion.cli_helper import render_table
 from facefusion.download import conditional_download, resolve_download_url
+from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import get_file_extension
 from facefusion.types import BenchmarkCycleSet
 from facefusion.vision import count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution
@@ -65,8 +66,7 @@ def cycle(cycle_count : int) -> BenchmarkCycleSet:
 		if state_manager.get_item('benchmark_mode') == 'cold':
 			content_analyser.analyse_image.cache_clear()
 			content_analyser.analyse_video.cache_clear()
-			face_store.clear_static_faces()
-			face_store.clear_reference_faces()
+			clear_static_faces()
 
 		start_time = perf_counter()
 		core.conditional_process()

@@ -9,11 +9,10 @@ from facefusion import logger, process_manager, state_manager, wording
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
-from facefusion.core import conditional_append_reference_faces
-from facefusion.face_store import clear_reference_faces, clear_static_faces, get_reference_faces
+from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.types import AudioFrame, FaceSet, VisionFrame
+from facefusion.types import AudioFrame, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
 from facefusion.vision import count_video_frame_total, detect_frame_orientation, normalize_frame_color, read_static_image, read_static_images, read_video_frame, restrict_frame
@@ -38,8 +37,7 @@ def render() -> None:
 		'maximum': 100,
 		'visible': False
 	}
-	conditional_append_reference_faces()
-	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
+
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()
@@ -52,13 +50,13 @@ def render() -> None:
 
 	if is_image(state_manager.get_item('target_path')):
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		preview_vision_frame = process_preview_frame(reference_faces, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame)
+		preview_vision_frame = process_preview_frame(source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame)
 		preview_image_options['value'] = normalize_frame_color(preview_vision_frame)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 
 	if is_video(state_manager.get_item('target_path')):
 		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		preview_vision_frame = process_preview_frame(reference_faces, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame)
+		preview_vision_frame = process_preview_frame(source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame)
 		preview_image_options['value'] = normalize_frame_color(preview_vision_frame)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 		preview_image_options['visible'] = True
@@ -178,7 +176,6 @@ def listen() -> None:
 
 
 def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
-	clear_reference_faces()
 	clear_static_faces()
 	return update_preview_image(frame_number)
 
@@ -194,8 +191,7 @@ def slide_preview_image(frame_number : int = 0) -> gradio.Image:
 def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	while process_manager.is_checking():
 		sleep(0.5)
-	conditional_append_reference_faces()
-	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
+
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	source_audio_frame = create_empty_audio_frame()
@@ -211,13 +207,13 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 
 	if is_image(state_manager.get_item('target_path')):
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		preview_vision_frame = process_preview_frame(reference_faces, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame)
+		preview_vision_frame = process_preview_frame(source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame)
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
 
 	if is_video(state_manager.get_item('target_path')):
 		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
-		preview_vision_frame = process_preview_frame(reference_faces, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame)
+		preview_vision_frame = process_preview_frame(source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame)
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
 	return gradio.Image(value = None, elem_classes = None)
@@ -230,7 +226,7 @@ def update_preview_frame_slider() -> gradio.Slider:
 	return gradio.Slider(value = 0, visible = False)
 
 
-def process_preview_frame(reference_faces : FaceSet, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:
+def process_preview_frame(source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:
 	target_vision_frame = restrict_frame(target_vision_frame, (1024, 1024))
 	temp_vision_frame = target_vision_frame.copy()
 
@@ -242,7 +238,6 @@ def process_preview_frame(reference_faces : FaceSet, source_vision_frames : List
 		if processor_module.pre_process('preview'):
 			temp_vision_frame = processor_module.process_frame(
 			{
-				'reference_faces': reference_faces,
 				'source_audio_frame': source_audio_frame,
 				'source_voice_frame': source_voice_frame,
 				'source_vision_frames': source_vision_frames,

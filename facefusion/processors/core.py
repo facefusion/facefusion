@@ -14,7 +14,6 @@ PROCESSORS_METHODS =\
 	'pre_check',
 	'pre_process',
 	'post_process',
-	'get_reference_frame',
 	'process_frame'
 ]
 

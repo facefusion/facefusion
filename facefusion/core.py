@@ -18,7 +18,6 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_selector import sort_and_filter_faces
-from facefusion.face_store import append_reference_face, clear_reference_faces, get_reference_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
 from facefusion.filesystem import filter_audio_paths, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
@@ -325,7 +324,6 @@ def process_batch(args : Args) -> ErrorCode:
 
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
-	clear_reference_faces()
 	step_total = job_manager.count_step_total(job_id)
 	step_args.update(collect_job_args())
 	apply_args(step_args, state_manager.set_item)
@@ -344,36 +342,12 @@ def conditional_process() -> ErrorCode:
 		if not processor_module.pre_process('output'):
 			return 2
 
-	conditional_append_reference_faces()
-
 	if is_image(state_manager.get_item('target_path')):
 		return process_image(start_time)
 	if is_video(state_manager.get_item('target_path')):
 		return process_video(start_time)
 
 	return 0
-
-
-def conditional_append_reference_faces() -> None:
-	if 'reference' in state_manager.get_item('face_selector_mode') and not get_reference_faces():
-		source_frames = read_static_images(state_manager.get_item('source_paths'))
-		source_faces = get_many_faces(source_frames)
-		source_face = get_average_face(source_faces)
-		if is_video(state_manager.get_item('target_path')):
-			reference_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		else:
-			reference_frame = read_image(state_manager.get_item('target_path'))
-		reference_faces = sort_and_filter_faces(get_many_faces([ reference_frame ]))
-		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
-		append_reference_face('origin', reference_face)
-
-		if source_face and reference_face:
-			for processor_module in get_processors_modules(state_manager.get_item('processors')):
-				abstract_reference_frame = processor_module.get_reference_frame(source_face, reference_face, reference_frame)
-				if numpy.any(abstract_reference_frame):
-					abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame ]))
-					abstract_reference_face = get_one_face(abstract_reference_faces, state_manager.get_item('reference_face_position'))
-					append_reference_face(processor_module.__name__, abstract_reference_face)
 
 
 def process_image(start_time : float) -> ErrorCode:
@@ -396,7 +370,6 @@ def process_image(start_time : float) -> ErrorCode:
 		return 1
 
 	temp_image_path = get_temp_file_path(state_manager.get_item('target_path'))
-	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
@@ -408,7 +381,6 @@ def process_image(start_time : float) -> ErrorCode:
 
 		temp_vision_frame = processor_module.process_frame(
 		{
-			'reference_faces': reference_faces,
 			'source_vision_frames': source_vision_frames,
 			'source_audio_frame': source_audio_frame,
 			'source_voice_frame': source_voice_frame,
@@ -547,7 +519,6 @@ def process_video(start_time : float) -> ErrorCode:
 
 
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
-	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
@@ -565,7 +536,6 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		temp_vision_frame = processor_module.process_frame(
 		{
-			'reference_faces': reference_faces,
 			'source_vision_frames': source_vision_frames,
 			'source_audio_frame': source_audio_frame,
 			'source_voice_frame': source_voice_frame,

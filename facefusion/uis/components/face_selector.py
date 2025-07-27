@@ -8,7 +8,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import calculate_float_step, calculate_int_step
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_selector import sort_and_filter_faces
-from facefusion.face_store import clear_reference_faces, clear_static_faces
+from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import is_image, is_video
 from facefusion.types import FaceSelectorMode, FaceSelectorOrder, Gender, Race, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
@@ -169,7 +169,6 @@ def update_face_selector_age_range(face_selector_age_range : Tuple[float, float]
 
 
 def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradio.Gallery:
-	clear_reference_faces()
 	clear_static_faces()
 	update_reference_face_position(event.index)
 	return update_reference_position_gallery()
@@ -188,7 +187,6 @@ def update_reference_frame_number(reference_frame_number : int) -> None:
 
 
 def clear_and_update_reference_position_gallery() -> gradio.Gallery:
-	clear_reference_faces()
 	clear_static_faces()
 	return update_reference_position_gallery()
 

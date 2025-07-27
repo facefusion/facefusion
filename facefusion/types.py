@@ -47,8 +47,7 @@ Face = namedtuple('Face',
 FaceSet : TypeAlias = Dict[str, List[Face]]
 FaceStore = TypedDict('FaceStore',
 {
-	'static_faces' : FaceSet,
-	'reference_faces' : FaceSet
+	'static_faces' : FaceSet
 })
 
 VideoCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]

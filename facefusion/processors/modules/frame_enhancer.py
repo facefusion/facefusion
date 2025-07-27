@@ -524,12 +524,6 @@ def blend_frame(temp_vision_frame : VisionFrame, merge_vision_frame : VisionFram
 	return temp_vision_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	pass
-
-
 def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	return enhance_frame(temp_vision_frame)
-
-
