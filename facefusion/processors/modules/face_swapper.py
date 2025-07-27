@@ -663,16 +663,11 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def extract_reference_faces(target_vision_frame : VisionFrame) -> List[Face]:
-	reference_faces = []
-	target_faces = get_many_faces([ target_vision_frame ])
-	reference_face_position = state_manager.get_item('reference_face_position')
-	reference_face = get_one_face(target_faces, reference_face_position)
+def extract_reference_face(reference_vision_frame : VisionFrame) -> Face:
+	many_faces = get_many_faces([ reference_vision_frame ])
+	reference_face = get_one_face(many_faces, state_manager.get_item('reference_face_position'))
 
-	if reference_face:
-		reference_faces = [ reference_face ]
-
-	return reference_faces
+	return reference_face
 
 
 def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Face]:
@@ -690,6 +685,7 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 
 
 def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
+	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_vision_frames = inputs.get('source_vision_frames')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
@@ -708,7 +704,7 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		reference_faces = extract_reference_faces(target_vision_frame)
+		reference_faces = [ extract_reference_face(reference_vision_frame) ]
 		mutant_faces = find_mutant_faces(target_faces, temp_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if source_face and mutant_faces:
 			for mutant_face in mutant_faces:

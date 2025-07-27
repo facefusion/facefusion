@@ -29,7 +29,9 @@ from facefusion.program_helper import validate_args
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import Args, ErrorCode
-from facefusion.vision import pack_resolution, read_image, read_static_images, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
+from facefusion.vision import pack_resolution, read_image, read_static_image, read_static_images, read_video_frame, \
+	restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, \
+	write_image
 
 
 def cli() -> None:
@@ -370,10 +372,11 @@ def process_image(start_time : float) -> ErrorCode:
 		return 1
 
 	temp_image_path = get_temp_file_path(state_manager.get_item('target_path'))
+	reference_vision_frame = read_static_image(temp_image_path)
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
-	target_vision_frame = read_image(temp_image_path)
+	target_vision_frame = read_static_image(temp_image_path)
 	temp_vision_frame = target_vision_frame.copy()
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
@@ -381,6 +384,7 @@ def process_image(start_time : float) -> ErrorCode:
 
 		temp_vision_frame = processor_module.process_frame(
 		{
+			'reference_vision_frame': reference_vision_frame,
 			'source_vision_frames': source_vision_frames,
 			'source_audio_frame': source_audio_frame,
 			'source_voice_frame': source_voice_frame,
@@ -519,6 +523,7 @@ def process_video(start_time : float) -> ErrorCode:
 
 
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
+	reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
@@ -536,6 +541,7 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		temp_vision_frame = processor_module.process_frame(
 		{
+			'reference_vision_frame': reference_vision_frame,
 			'source_vision_frames': source_vision_frames,
 			'source_audio_frame': source_audio_frame,
 			'source_voice_frame': source_voice_frame,

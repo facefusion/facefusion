@@ -407,19 +407,15 @@ def prepare_crop_mask(crop_source_mask : Mask, crop_target_mask : Mask) -> Mask:
 	return crop_mask
 
 
-def extract_reference_faces(target_vision_frame : VisionFrame) -> List[Face]:
-	reference_faces = []
-	target_faces = get_many_faces([ target_vision_frame ])
-	reference_face_position = state_manager.get_item('reference_face_position')
-	reference_face = get_one_face(target_faces, reference_face_position)
+def extract_reference_face(reference_vision_frame : VisionFrame) -> Face:
+	many_faces = get_many_faces([ reference_vision_frame ])
+	reference_face = get_one_face(many_faces, state_manager.get_item('reference_face_position'))
 
-	if reference_face:
-		reference_faces = [ reference_face ]
-
-	return reference_faces
+	return reference_face
 
 
 def process_frame(inputs : DeepSwapperInputs) -> VisionFrame:
+	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	target_faces = get_many_faces([ target_vision_frame ])
@@ -436,7 +432,7 @@ def process_frame(inputs : DeepSwapperInputs) -> VisionFrame:
 			temp_vision_frame = swap_face(target_face, temp_vision_frame)
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		reference_faces = extract_reference_faces(target_vision_frame)
+		reference_faces = [ extract_reference_face(reference_vision_frame) ]
 		mutant_faces = find_mutant_faces(target_faces, temp_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if mutant_faces:
 			for mutant_face in mutant_faces:
