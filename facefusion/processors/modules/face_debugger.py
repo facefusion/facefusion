@@ -10,7 +10,7 @@ from facefusion import config, content_analyser, face_classifier, face_detector,
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
-from facefusion.face_selector import find_mutant_faces, find_similar_faces, sort_and_filter_faces
+from facefusion.face_selector import find_mutant_faces, sort_and_filter_faces
 from facefusion.filesystem import in_directory, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FaceDebuggerInputs
@@ -175,11 +175,11 @@ def extract_reference_faces(target_vision_frame : VisionFrame) -> List[Face]:
 	target_faces = get_many_faces([ target_vision_frame ])
 	reference_face_position = state_manager.get_item('reference_face_position')
 	reference_face = get_one_face(target_faces, reference_face_position)
-	
+
 	reference_faces = []
 	if reference_face:
 		reference_faces = [ reference_face ]
-	
+
 	return reference_faces
 
 
@@ -201,8 +201,7 @@ def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
 		reference_faces = extract_reference_faces(target_vision_frame)
-		similar_faces = find_similar_faces(target_faces, reference_faces, state_manager.get_item('reference_face_distance'))
-		mutant_faces = find_mutant_faces(target_faces, temp_faces, similar_faces)
+		mutant_faces = find_mutant_faces(target_faces, temp_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if mutant_faces:
 			for mutant_face in mutant_faces:
 				temp_vision_frame = debug_face(mutant_face, temp_vision_frame)

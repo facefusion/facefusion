@@ -14,7 +14,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import create_bounding_box, paste_back, warp_face_by_bounding_box, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask
-from facefusion.face_selector import find_mutant_faces, find_similar_faces, sort_and_filter_faces
+from facefusion.face_selector import find_mutant_faces, sort_and_filter_faces
 from facefusion.filesystem import has_audio, resolve_relative_path
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import LipSyncerInputs, LipSyncerWeight
@@ -292,8 +292,7 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
 		reference_faces = extract_reference_faces(target_vision_frame)
-		similar_faces = find_similar_faces(target_faces, reference_faces, state_manager.get_item('reference_face_distance'))
-		mutant_faces = find_mutant_faces(target_faces, temp_faces, similar_faces)
+		mutant_faces = find_mutant_faces(target_faces, temp_faces, reference_faces, state_manager.get_item('reference_face_distance'))
 		if mutant_faces:
 			for mutant_face in mutant_faces:
 				temp_vision_frame = sync_lip(mutant_face, source_voice_frame, temp_vision_frame)
