@@ -15,7 +15,7 @@ from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
-from facefusion.face_selector import find_similar_faces, sort_and_filter_faces, sort_faces_by_order, find_mutant_faces
+from facefusion.face_selector import find_mutant_faces, find_similar_faces, sort_and_filter_faces, sort_faces_by_order
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors import choices as processors_choices
