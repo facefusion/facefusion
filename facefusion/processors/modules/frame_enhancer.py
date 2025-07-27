@@ -15,7 +15,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FrameEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import create_tile_frames, merge_tile_frames, read_static_image
 
 
