@@ -50,7 +50,6 @@ def start() -> Generator[List[Any], None, None]:
 	state_manager.sync_item('benchmark_cycle_count')
 	state_manager.sync_item('execution_providers')
 	state_manager.sync_item('execution_thread_count')
-	state_manager.sync_item('execution_queue_count')
 
 	for benchmark in benchmarker.run():
 		yield [ list(benchmark_set.values()) for benchmark_set in benchmark ]

@@ -45,8 +45,8 @@ def run() -> Generator[List[BenchmarkCycleSet], None, None]:
 	target_paths = [ facefusion.choices.benchmark_set.get(benchmark_resolution) for benchmark_resolution in benchmark_resolutions if benchmark_resolution in facefusion.choices.benchmark_set ]
 
 	for target_path in target_paths:
-		state_manager.set_item('target_path', target_path)
-		state_manager.set_item('output_path', suggest_output_path(state_manager.get_item('target_path')))
+		state_manager.init_item('target_path', target_path)
+		state_manager.init_item('output_path', suggest_output_path(state_manager.get_item('target_path')))
 		benchmarks.append(cycle(benchmark_cycle_count))
 		yield benchmarks
 
@@ -55,8 +55,8 @@ def cycle(cycle_count : int) -> BenchmarkCycleSet:
 	process_times = []
 	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
-	state_manager.set_item('output_video_resolution', pack_resolution(output_video_resolution))
-	state_manager.set_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
+	state_manager.init_item('output_video_resolution', pack_resolution(output_video_resolution))
+	state_manager.init_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
 
 	if state_manager.get_item('benchmark_mode') == 'warm':
 		core.conditional_process()

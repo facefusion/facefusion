@@ -50,7 +50,14 @@ FaceStore = TypedDict('FaceStore',
 	'static_faces' : FaceSet,
 	'reference_faces' : FaceSet
 })
-VideoPoolSet : TypeAlias = Dict[str, cv2.VideoCapture]
+
+VideoCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
+VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
+VideoPoolSet = TypedDict('VideoPoolSet',
+{
+	'capture': VideoCaptureSet,
+	'writer': VideoWriterSet
+})
 
 VisionFrame : TypeAlias = NDArray[Any]
 Mask : TypeAlias = NDArray[Any]
@@ -77,14 +84,8 @@ Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
-QueuePayload = TypedDict('QueuePayload',
-{
-	'frame_number' : int,
-	'frame_path' : str
-})
 Args : TypeAlias = Dict[str, Any]
 UpdateProgress : TypeAlias = Callable[[int], None]
-ProcessFrames : TypeAlias = Callable[[List[str], List[QueuePayload], UpdateProgress], None]
 ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 
 Content : TypeAlias = Dict[str, Any]
@@ -301,7 +302,6 @@ StateKey = Literal\
 	'execution_device_id',
 	'execution_providers',
 	'execution_thread_count',
-	'execution_queue_count',
 	'video_memory_strategy',
 	'system_memory_limit',
 	'log_level',
@@ -370,7 +370,6 @@ State = TypedDict('State',
 	'execution_device_id' : str,
 	'execution_providers' : List[ExecutionProvider],
 	'execution_thread_count' : int,
-	'execution_queue_count' : int,
 	'video_memory_strategy' : VideoMemoryStrategy,
 	'system_memory_limit' : int,
 	'log_level' : LogLevel,
