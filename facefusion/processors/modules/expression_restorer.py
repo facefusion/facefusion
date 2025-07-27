@@ -247,8 +247,8 @@ def extract_reference_faces(target_vision_frame : VisionFrame) -> List[Face]:
 def process_frame(inputs : ExpressionRestorerInputs) -> VisionFrame:
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	target_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
-	temp_faces = sort_and_filter_faces(get_many_faces([ temp_vision_frame ]))
+	target_faces = get_many_faces([ target_vision_frame ])
+	temp_faces = get_many_faces([ temp_vision_frame ])
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		if target_faces:
@@ -256,7 +256,7 @@ def process_frame(inputs : ExpressionRestorerInputs) -> VisionFrame:
 				temp_vision_frame = restore_expression(target_face, target_vision_frame, temp_vision_frame)
 
 	if state_manager.get_item('face_selector_mode') == 'one':
-		target_face = get_one_face(target_faces)
+		target_face = get_one_face(sort_and_filter_faces(target_faces))
 		if target_face:
 			temp_vision_frame = restore_expression(target_face, target_vision_frame, temp_vision_frame)
 

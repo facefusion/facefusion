@@ -277,8 +277,8 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 	source_voice_frame = inputs.get('source_voice_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	target_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
-	temp_faces = sort_and_filter_faces(get_many_faces([ temp_vision_frame ]))
+	target_faces = get_many_faces([ target_vision_frame ])
+	temp_faces = get_many_faces([ temp_vision_frame ])
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		if target_faces:
@@ -286,7 +286,7 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 				temp_vision_frame = sync_lip(target_face, source_voice_frame, temp_vision_frame)
 
 	if state_manager.get_item('face_selector_mode') == 'one':
-		target_face = get_one_face(target_faces)
+		target_face = get_one_face(sort_and_filter_faces(target_faces))
 		if target_face:
 			temp_vision_frame = sync_lip(target_face, source_voice_frame, temp_vision_frame)
 
