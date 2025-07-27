@@ -7,20 +7,13 @@ from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score
 
 
 def find_mutant_faces(target_faces : List[Face], temp_faces : List[Face], reference_faces : List[Face], face_distance : float) -> List[Face]:
-	similar_faces : List[Face] = []
 	mutant_faces : List[Face] = []
 
-	if target_faces and reference_faces:
+	if target_faces and temp_faces and reference_faces:
 		for reference_face in reference_faces:
-			for target_face in target_faces:
+			for index, target_face in enumerate(target_faces):
 				if compare_faces(target_face, reference_face, face_distance):
-					similar_faces.append(target_face)
-
-	if similar_faces and temp_faces:
-		for similar_face in similar_faces:
-			for temp_face in temp_faces:
-				if numpy.array_equal(similar_face.bounding_box, temp_face.bounding_box):
-					mutant_faces.append(temp_face)
+					mutant_faces.append(temp_faces[index])
 
 	return mutant_faces
 
