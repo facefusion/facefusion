@@ -11,9 +11,10 @@ def find_mutant_faces(target_faces : List[Face], temp_faces : List[Face], refere
 
 	if target_faces and temp_faces and reference_faces:
 		for reference_face in reference_faces:
-			for index, target_face in enumerate(target_faces):
-				if compare_faces(target_face, reference_face, face_distance):
-					mutant_faces.append(temp_faces[index])
+			if reference_face:
+				for index, target_face in enumerate(target_faces):
+					if compare_faces(target_face, reference_face, face_distance):
+						mutant_faces.append(temp_faces[index])
 
 	return mutant_faces
 
