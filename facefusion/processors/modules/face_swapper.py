@@ -665,6 +665,7 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 
 def extract_reference_face(reference_vision_frame : VisionFrame) -> Face:
 	many_faces = get_many_faces([ reference_vision_frame ])
+	many_faces = sort_and_filter_faces(many_faces)
 	reference_face = get_one_face(many_faces, state_manager.get_item('reference_face_position'))
 
 	return reference_face
@@ -694,6 +695,7 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 	temp_faces = get_many_faces([ temp_vision_frame ])
 
 	if state_manager.get_item('face_selector_mode') == 'many':
+		target_faces = sort_and_filter_faces(target_faces)
 		if source_face and target_faces:
 			for target_face in target_faces:
 				temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
