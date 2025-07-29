@@ -16,7 +16,7 @@ from facefusion.processors.types import FrameEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import create_tile_frames, merge_tile_frames, read_static_image
+from facefusion.vision import create_tile_frames, merge_tile_frames, read_static_image, read_static_video_frame
 
 
 @lru_cache(maxsize = None)
@@ -469,6 +469,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()

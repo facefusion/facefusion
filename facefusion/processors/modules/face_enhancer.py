@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from functools import lru_cache
-from typing import List
 
 import cv2
 import numpy
@@ -20,7 +19,7 @@ from facefusion.processors.types import FaceEnhancerInputs, FaceEnhancerWeight
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image
+from facefusion.vision import read_static_image, read_static_video_frame
 
 
 @lru_cache(maxsize = None)
@@ -273,6 +272,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()

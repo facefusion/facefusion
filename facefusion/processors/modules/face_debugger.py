@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-from typing import List
 
 import cv2
 import numpy
@@ -11,12 +10,12 @@ from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import find_mutant_faces, sort_and_filter_faces
-from facefusion.filesystem import in_directory, is_video, same_file_extension
+from facefusion.filesystem import in_directory, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FaceDebuggerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.types import ApplyStateItem, Args, Face, InferencePool, ProcessMode, VisionFrame
-from facefusion.vision import read_image, read_static_image, read_video_frame
+from facefusion.vision import read_static_image, read_static_video_frame
 
 
 def get_inference_pool() -> InferencePool:
@@ -54,6 +53,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') == 'strict':
 		content_analyser.clear_inference_pool()
