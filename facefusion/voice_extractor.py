@@ -4,17 +4,36 @@ from typing import Tuple
 import numpy
 import scipy
 
-from facefusion import inference_manager
+from facefusion import inference_manager, state_manager
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Audio, AudioChunk, DownloadScope, InferencePool, ModelOptions, ModelSet, Voice, VoiceChunk
+from facefusion.types import Audio, AudioChunk, DownloadScope, DownloadSet, InferencePool, ModelSet, Voice, VoiceChunk
 
 
 @lru_cache(maxsize = None)
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
+		'kim_vocal_1':
+		{
+			'hashes':
+			{
+				'voice_extractor':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/voice_extractor/resolve/main/kim_vocal_1.hash',
+					'path': resolve_relative_path('../.assets/models/kim_vocal_1.hash')
+				}
+			},
+			'sources':
+			{
+				'voice_extractor':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/voice_extractor/resolve/main/kim_vocal_1.onnx',
+					'path': resolve_relative_path('../.assets/models/kim_vocal_1.onnx')
+				}
+			}
+		},
 		'kim_vocal_2':
 		{
 			'hashes':
@@ -33,29 +52,56 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/kim_vocal_2.onnx')
 				}
 			}
+		},
+		'uvr_mdxnet':
+		{
+			'hashes':
+			{
+				'voice_extractor':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/voice_extractor/resolve/main/uvr_mdxnet.hash',
+					'path': resolve_relative_path('../.assets/models/uvr_mdxnet.hash')
+				}
+			},
+			'sources':
+			{
+				'voice_extractor':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/voice_extractor/resolve/main/uvr_mdxnet.onnx',
+					'path': resolve_relative_path('../.assets/models/uvr_mdxnet.onnx')
+				}
+			}
 		}
 	}
 
 
 def get_inference_pool() -> InferencePool:
-	model_names = [ 'kim_vocal_2' ]
-	model_source_set = get_model_options().get('sources')
+	model_names = [ state_manager.get_item('voice_extractor_model') ]
+	_, model_source_set = collect_model_downloads()
 
 	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
-	model_names = [ 'kim_vocal_2' ]
+	model_names = [ state_manager.get_item('voice_extractor_model') ]
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def get_model_options() -> ModelOptions:
-	return create_static_model_set('full').get('kim_vocal_2')
+def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
+	model_set = create_static_model_set('full')
+	model_hash_set = {}
+	model_source_set = {}
+
+	for voice_extractor_model in [ 'kim_vocal_1', 'kim_vocal_2', 'uvr_mdxnet' ]:
+		if state_manager.get_item('voice_extractor_model') == voice_extractor_model:
+			model_hash_set[voice_extractor_model] = model_set.get(voice_extractor_model).get('hashes').get('voice_extractor')
+			model_source_set[voice_extractor_model] = model_set.get(voice_extractor_model).get('sources').get('voice_extractor')
+
+	return model_hash_set, model_source_set
 
 
 def pre_check() -> bool:
-	model_hash_set = get_model_options().get('hashes')
-	model_source_set = get_model_options().get('sources')
+	model_hash_set, model_source_set = collect_model_downloads()
 
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
@@ -74,7 +120,7 @@ def batch_extract_voice(audio : Audio, chunk_size : int, step_size : int) -> Voi
 
 
 def extract_voice(temp_audio_chunk : AudioChunk) -> VoiceChunk:
-	voice_extractor = get_inference_pool().get('voice_extractor')
+	voice_extractor = get_inference_pool().get(state_manager.get_item('voice_extractor_model'))
 	voice_trim_size = 3840
 	voice_chunk_size = (voice_extractor.get_inputs()[0].shape[3] - 1) * 1024
 	temp_audio_chunk, audio_pad_size = prepare_audio_chunk(temp_audio_chunk.T, voice_chunk_size, voice_trim_size)
@@ -86,7 +132,7 @@ def extract_voice(temp_audio_chunk : AudioChunk) -> VoiceChunk:
 
 
 def forward(temp_audio_chunk : AudioChunk) -> AudioChunk:
-	voice_extractor = get_inference_pool().get('voice_extractor')
+	voice_extractor = get_inference_pool().get(state_manager.get_item('voice_extractor_model'))
 
 	with thread_semaphore():
 		temp_audio_chunk = voice_extractor.run(None,

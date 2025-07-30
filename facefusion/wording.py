@@ -109,6 +109,8 @@ WORDING : Dict[str, Any] =\
 		'source_pattern': 'choose the image or audio pattern',
 		'target_pattern': 'choose the image or video pattern',
 		'output_pattern': 'specify the image or video pattern',
+		# voice extractor
+		'voice_extractor_model': 'choose the model responsible for extracting the voice',
 		# face detector
 		'face_detector_model': 'choose the model responsible for detecting the faces',
 		'face_detector_size': 'specify the frame size provided to the face detector',
