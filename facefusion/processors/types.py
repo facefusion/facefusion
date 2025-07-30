@@ -63,13 +63,11 @@ FaceSwapperInputs = TypedDict('FaceSwapperInputs',
 })
 FrameColorizerInputs = TypedDict('FrameColorizerInputs',
 {
-	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
 FrameEnhancerInputs = TypedDict('FrameEnhancerInputs',
 {
-	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
