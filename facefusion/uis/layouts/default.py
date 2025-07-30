@@ -37,6 +37,8 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					lip_syncer_options.render()
 				with gradio.Blocks():
+					voice_extractor.render()
+				with gradio.Blocks():
 					execution.render()
 					execution_thread_count.render()
 				with gradio.Blocks():
@@ -74,8 +76,6 @@ def render() -> gradio.Blocks:
 					face_detector.render()
 				with gradio.Blocks():
 					face_landmarker.render()
-				with gradio.Blocks():
-					voice_extractor.render()
 				with gradio.Blocks():
 					common_options.render()
 	return layout
