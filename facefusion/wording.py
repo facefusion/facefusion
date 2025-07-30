@@ -304,6 +304,7 @@ WORDING : Dict[str, Any] =\
 		'face_swapper_weight_slider': 'FACE SWAPPER WEIGHT',
 		'face_occluder_model_dropdown': 'FACE OCCLUDER MODEL',
 		'face_parser_model_dropdown': 'FACE PARSER MODEL',
+		'voice_extractor_model_dropdown': 'VOICE EXTRACTOR MODEL',
 		'frame_colorizer_blend_slider': 'FRAME COLORIZER BLEND',
 		'frame_colorizer_model_dropdown': 'FRAME COLORIZER MODEL',
 		'frame_colorizer_size_dropdown': 'FRAME COLORIZER SIZE',
