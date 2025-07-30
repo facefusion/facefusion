@@ -52,6 +52,7 @@ ComponentName = Literal\
 	'face_swapper_weight_slider',
 	'face_occluder_model_dropdown',
 	'face_parser_model_dropdown',
+	'voice_extractor_model_dropdown',
 	'frame_colorizer_blend_slider',
 	'frame_colorizer_model_dropdown',
 	'frame_colorizer_size_dropdown',
