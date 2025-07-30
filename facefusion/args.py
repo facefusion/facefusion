@@ -52,6 +52,8 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('source_pattern', args.get('source_pattern'))
 	apply_state_item('target_pattern', args.get('target_pattern'))
 	apply_state_item('output_pattern', args.get('output_pattern'))
+	# voice extractor
+	apply_state_item('voice_extractor_model', args.get('voice_extractor_model'))
 	# face detector
 	apply_state_item('face_detector_model', args.get('face_detector_model'))
 	apply_state_item('face_detector_size', args.get('face_detector_size'))
