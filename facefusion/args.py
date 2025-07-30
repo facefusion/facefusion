@@ -52,8 +52,6 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('source_pattern', args.get('source_pattern'))
 	apply_state_item('target_pattern', args.get('target_pattern'))
 	apply_state_item('output_pattern', args.get('output_pattern'))
-	# voice extractor
-	apply_state_item('voice_extractor_model', args.get('voice_extractor_model'))
 	# face detector
 	apply_state_item('face_detector_model', args.get('face_detector_model'))
 	apply_state_item('face_detector_size', args.get('face_detector_size'))
@@ -80,6 +78,8 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_mask_regions', args.get('face_mask_regions'))
 	apply_state_item('face_mask_blur', args.get('face_mask_blur'))
 	apply_state_item('face_mask_padding', normalize_padding(args.get('face_mask_padding')))
+	# voice extractor
+	apply_state_item('voice_extractor_model', args.get('voice_extractor_model'))
 	# frame extraction
 	apply_state_item('trim_frame_start', args.get('trim_frame_start'))
 	apply_state_item('trim_frame_end', args.get('trim_frame_end'))

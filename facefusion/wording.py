@@ -109,8 +109,6 @@ WORDING : Dict[str, Any] =\
 		'source_pattern': 'choose the image or audio pattern',
 		'target_pattern': 'choose the image or video pattern',
 		'output_pattern': 'specify the image or video pattern',
-		# voice extractor
-		'voice_extractor_model': 'choose the model responsible for extracting the voice',
 		# face detector
 		'face_detector_model': 'choose the model responsible for detecting the faces',
 		'face_detector_size': 'specify the frame size provided to the face detector',
@@ -137,6 +135,8 @@ WORDING : Dict[str, Any] =\
 		'face_mask_regions': 'choose the items used for the region mask (choices: {choices})',
 		'face_mask_blur': 'specify the degree of blur applied to the box mask',
 		'face_mask_padding': 'apply top, right, bottom and left padding to the box mask',
+		# voice extractor
+		'voice_extractor_model': 'choose the model responsible for extracting the voices',
 		# frame extraction
 		'trim_frame_start': 'specify the starting frame of the target video',
 		'trim_frame_end': 'specify the ending frame of the target video',

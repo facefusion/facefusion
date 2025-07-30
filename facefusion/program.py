@@ -92,14 +92,6 @@ def create_output_pattern_program() -> ArgumentParser:
 	return program
 
 
-def create_voice_extractor_program() -> ArgumentParser:
-	program = ArgumentParser(add_help = False)
-	group_voice_extractor = program.add_argument_group('voice extractor')
-	group_voice_extractor.add_argument('--voice-extractor-model', help = wording.get('help.voice_extractor_model'), default = config.get_str_value('voice_extractor', 'voice_extractor_model', 'kim_vocal_2'), choices = facefusion.choices.voice_extractor_models)
-	job_store.register_step_keys([ 'voice_extractor_model' ])
-	return program
-
-
 def create_face_detector_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_detector = program.add_argument_group('face detector')
@@ -149,6 +141,14 @@ def create_face_masker_program() -> ArgumentParser:
 	group_face_masker.add_argument('--face-mask-blur', help = wording.get('help.face_mask_blur'), type = float, default = config.get_float_value('face_masker', 'face_mask_blur', '0.3'), choices = facefusion.choices.face_mask_blur_range, metavar = create_float_metavar(facefusion.choices.face_mask_blur_range))
 	group_face_masker.add_argument('--face-mask-padding', help = wording.get('help.face_mask_padding'), type = int, default = config.get_int_list('face_masker', 'face_mask_padding', '0 0 0 0'), nargs = '+')
 	job_store.register_step_keys([ 'face_occluder_model', 'face_parser_model', 'face_mask_types', 'face_mask_areas', 'face_mask_regions', 'face_mask_blur', 'face_mask_padding' ])
+	return program
+
+
+def create_voice_extractor_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_voice_extractor = program.add_argument_group('voice extractor')
+	group_voice_extractor.add_argument('--voice-extractor-model', help = wording.get('help.voice_extractor_model'), default = config.get_str_value('voice_extractor', 'voice_extractor_model', 'kim_vocal_2'), choices = facefusion.choices.voice_extractor_models)
+	job_store.register_step_keys([ 'voice_extractor_model' ])
 	return program
 
 
@@ -283,7 +283,7 @@ def create_step_index_program() -> ArgumentParser:
 
 
 def collect_step_program() -> ArgumentParser:
-	return ArgumentParser(parents = [ create_voice_extractor_program(), create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
+	return ArgumentParser(parents = [ create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_masker_program(), create_voice_extractor_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
 
 
 def collect_job_program() -> ArgumentParser:
