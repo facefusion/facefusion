@@ -21,7 +21,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'voice_extractor':
 				{
-					'url': resolve_download_url('models-3.0.0', 'kim_vocal_1.hash'),
+					'url': resolve_download_url('models-3.4.0', 'kim_vocal_1.hash'),
 					'path': resolve_relative_path('../.assets/models/kim_vocal_1.hash')
 				}
 			},
@@ -29,7 +29,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'voice_extractor':
 				{
-					'url': resolve_download_url('models-3.0.0', 'kim_vocal_1.onnx'),
+					'url': resolve_download_url('models-3.4.0', 'kim_vocal_1.onnx'),
 					'path': resolve_relative_path('../.assets/models/kim_vocal_1.onnx')
 				}
 			}
