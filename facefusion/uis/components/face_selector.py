@@ -194,19 +194,20 @@ def clear_and_update_reference_position_gallery() -> gradio.Gallery:
 def update_reference_position_gallery() -> gradio.Gallery:
 	gallery_vision_frames = []
 	if is_image(state_manager.get_item('target_path')):
-		temp_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
+		reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
+		gallery_vision_frames = extract_gallery_frames(reference_vision_frame)
 	if is_video(state_manager.get_item('target_path')):
-		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		gallery_vision_frames = extract_gallery_frames(temp_vision_frame)
+		reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		gallery_vision_frames = extract_gallery_frames(reference_vision_frame)
 	if gallery_vision_frames:
 		return gradio.Gallery(value = gallery_vision_frames)
 	return gradio.Gallery(value = None)
 
 
-def extract_gallery_frames(temp_vision_frame : VisionFrame) -> List[VisionFrame]:
+def extract_gallery_frames(reference_vision_frame : VisionFrame) -> List[VisionFrame]:
 	gallery_vision_frames = []
-	faces = sort_and_filter_faces(get_many_faces([ temp_vision_frame ]))
+	faces = get_many_faces([ reference_vision_frame ])
+	faces = sort_and_filter_faces(faces)
 
 	for face in faces:
 		start_x, start_y, end_x, end_y = map(int, face.bounding_box)
@@ -216,7 +217,7 @@ def extract_gallery_frames(temp_vision_frame : VisionFrame) -> List[VisionFrame]
 		start_y = max(0, start_y - padding_y)
 		end_x = max(0, end_x + padding_x)
 		end_y = max(0, end_y + padding_y)
-		crop_vision_frame = temp_vision_frame[start_y:end_y, start_x:end_x]
+		crop_vision_frame = reference_vision_frame[start_y:end_y, start_x:end_x]
 		crop_vision_frame = normalize_frame_color(crop_vision_frame)
 		gallery_vision_frames.append(crop_vision_frame)
 	return gallery_vision_frames
