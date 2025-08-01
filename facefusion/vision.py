@@ -345,21 +345,16 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 	return merge_vision_frame
 
 
-def create_frame_pack(frame_paths : List[str], frame_number : int) -> List[Optional[VisionFrame]]:
+def create_static_frame_pack(frame_paths : List[str], frame_number : int) -> List[Optional[VisionFrame]]:
 	frames = []
 	total = len(frame_paths)
 	pack_range = range(frame_number - 2, frame_number + 3)
 
 	for index in pack_range:
-		if index < 0 or index > total - 1:
-			frames.append(None)
-		else:
-			vision_frame = read_image(frame_paths[index])
+		if -1 < index < total:
+			vision_frame = read_static_image(frame_paths[index])
 			frames.append(vision_frame)
+		else:
+			frames.append(None)
 
 	return frames
-
-
-@lru_cache()
-def create_static_frame_pack(frame_paths : List[str], frame_number : int) -> List[Optional[VisionFrame]]:
-	return create_frame_pack(frame_paths, frame_number)
