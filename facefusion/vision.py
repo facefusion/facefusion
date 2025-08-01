@@ -10,7 +10,7 @@ import facefusion.choices
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Duration, Fps, PartialList, Orientation, Resolution, VisionFrame
+from facefusion.types import Duration, Fps, Orientation, PartialList, Resolution, VisionFrame
 from facefusion.video_manager import get_video_capture
 
 
