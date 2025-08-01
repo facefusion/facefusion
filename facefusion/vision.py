@@ -10,7 +10,7 @@ import facefusion.choices
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Duration, Fps, Orientation, Resolution, VisionFrame
+from facefusion.types import Duration, Fps, PartialList, Orientation, Resolution, VisionFrame
 from facefusion.video_manager import get_video_capture
 
 
@@ -192,6 +192,21 @@ def restrict_video_resolution(video_path : str, resolution : Resolution) -> Reso
 	return resolution
 
 
+def bundle_static_frames(frame_paths : List[str], frame_number : int) -> PartialList[VisionFrame]:
+	frames = []
+	total = len(frame_paths)
+	pack_range = range(frame_number - 2, frame_number + 3)
+
+	for index in pack_range:
+		if -1 < index < total:
+			vision_frame = read_static_image(frame_paths[index])
+			frames.append(vision_frame)
+		else:
+			frames.append(None)
+
+	return frames
+
+
 def create_video_resolutions(resolution : Resolution) -> List[str]:
 	resolutions = []
 	temp_resolutions = []
@@ -343,18 +358,3 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 
 	merge_vision_frame = merge_vision_frame[size[1] : size[1] + temp_height, size[1]: size[1] + temp_width, :]
 	return merge_vision_frame
-
-
-def create_static_frame_pack(frame_paths : List[str], frame_number : int) -> List[Optional[VisionFrame]]:
-	frames = []
-	total = len(frame_paths)
-	pack_range = range(frame_number - 2, frame_number + 3)
-
-	for index in pack_range:
-		if -1 < index < total:
-			vision_frame = read_static_image(frame_paths[index])
-			frames.append(vision_frame)
-		else:
-			frames.append(None)
-
-	return frames

@@ -3,7 +3,7 @@ import subprocess
 import pytest
 
 from facefusion.download import conditional_download
-from facefusion.vision import calculate_histogram_difference, count_trim_frame_total, count_video_frame_total, create_image_resolutions, create_static_frame_pack, create_video_resolutions, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
+from facefusion.vision import calculate_histogram_difference, count_trim_frame_total, count_video_frame_total, create_image_resolutions, bundle_static_frames, create_video_resolutions, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -139,6 +139,52 @@ def test_restrict_video_resolution() -> None:
 	assert restrict_video_resolution(get_test_example_file('target-1080p.mp4'), (4096, 2160)) == (2048, 1080)
 
 
+def test_bundle_static_frames() -> None:
+	temp_frame_paths = [ get_test_example_file('target-240p.jpg') ] * 10
+
+	frames = bundle_static_frames(temp_frame_paths, 0)
+	assert frames[0] is None
+	assert frames[1] is None
+	assert frames[2].shape
+	assert frames[3].shape
+	assert frames[4].shape
+
+	frames = bundle_static_frames(temp_frame_paths, 1)
+	assert frames[0] is None
+	assert frames[1].shape
+	assert frames[2].shape
+	assert frames[3].shape
+	assert frames[4].shape
+
+	frames = bundle_static_frames(temp_frame_paths, 2)
+	assert frames[0].shape
+	assert frames[1].shape
+	assert frames[2].shape
+	assert frames[3].shape
+	assert frames[4].shape
+
+	frames = bundle_static_frames(temp_frame_paths, 7)
+	assert frames[0].shape
+	assert frames[1].shape
+	assert frames[2].shape
+	assert frames[3].shape
+	assert frames[4].shape
+
+	frames = bundle_static_frames(temp_frame_paths, 8)
+	assert frames[0].shape
+	assert frames[1].shape
+	assert frames[2].shape
+	assert frames[3].shape
+	assert frames[4] is None
+
+	frames = bundle_static_frames(temp_frame_paths, 9)
+	assert frames[0].shape
+	assert frames[1].shape
+	assert frames[2].shape
+	assert frames[3] is None
+	assert frames[4] is None
+
+
 def test_create_video_resolutions() -> None:
 	assert create_video_resolutions((426, 226)) == [ '426x226', '452x240', '678x360', '904x480', '1018x540', '1358x720', '2036x1080', '2714x1440', '4072x2160', '8144x4320' ]
 	assert create_video_resolutions((226, 426)) == [ '226x426', '240x452', '360x678', '480x904', '540x1018', '720x1358', '1080x2036', '1440x2714', '2160x4072', '4320x8144' ]
@@ -177,49 +223,3 @@ def test_match_frame_color() -> None:
 	output_vision_frame = match_frame_color(source_vision_frame, target_vision_frame)
 
 	assert calculate_histogram_difference(source_vision_frame, output_vision_frame) > 0.5
-
-
-def test_create_static_frame_pack() -> None:
-	temp_frame_paths = [ get_test_example_file('target-240p.jpg') ] * 10
-
-	frames = create_static_frame_pack(temp_frame_paths, 0)
-	assert frames[0] is None
-	assert frames[1] is None
-	assert frames[2].shape
-	assert frames[3].shape
-	assert frames[4].shape
-
-	frames = create_static_frame_pack(temp_frame_paths, 1)
-	assert frames[0] is None
-	assert frames[1].shape
-	assert frames[2].shape
-	assert frames[3].shape
-	assert frames[4].shape
-
-	frames = create_static_frame_pack(temp_frame_paths, 2)
-	assert frames[0].shape
-	assert frames[1].shape
-	assert frames[2].shape
-	assert frames[3].shape
-	assert frames[4].shape
-
-	frames = create_static_frame_pack(temp_frame_paths, 7)
-	assert frames[0].shape
-	assert frames[1].shape
-	assert frames[2].shape
-	assert frames[3].shape
-	assert frames[4].shape
-
-	frames = create_static_frame_pack(temp_frame_paths, 8)
-	assert frames[0].shape
-	assert frames[1].shape
-	assert frames[2].shape
-	assert frames[3].shape
-	assert frames[4] is None
-
-	frames = create_static_frame_pack(temp_frame_paths, 9)
-	assert frames[0].shape
-	assert frames[1].shape
-	assert frames[2].shape
-	assert frames[3] is None
-	assert frames[4] is None

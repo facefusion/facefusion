@@ -1,10 +1,13 @@
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict, TypeVar
 
 import cv2
 import numpy
 from numpy.typing import NDArray
 from onnxruntime import InferenceSession
+
+Partial = TypeVar('Partial')
+PartialList : TypeAlias = List[Optional[Partial]]
 
 Scale : TypeAlias = float
 Score : TypeAlias = float
@@ -382,6 +385,6 @@ State = TypedDict('State',
 	'job_status' : JobStatus,
 	'step_index' : int
 })
-ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateSet : TypeAlias = Dict[AppContext, State]
+ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 
