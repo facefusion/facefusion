@@ -345,7 +345,7 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 	return merge_vision_frame
 
 
-def create_frame_pack(frame_paths : List[str], frame_number : int) -> List[VisionFrame]:
+def create_frame_pack(frame_paths : List[str], frame_number : int) -> List[Optional[VisionFrame]]:
 	frames = []
 	total = len(frame_paths)
 	start = frame_number - 2
@@ -359,3 +359,8 @@ def create_frame_pack(frame_paths : List[str], frame_number : int) -> List[Visio
 			frames.append(vision_frame)
 
 	return frames
+
+
+@lru_cache()
+def create_static_frame_pack(frame_paths : List[str], frame_number : int) -> List[Optional[VisionFrame]]:
+	return create_frame_pack(frame_paths, frame_number)
