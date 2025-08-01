@@ -684,7 +684,8 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 	reference_faces = inputs.get('reference_faces')
 	source_vision_frames = inputs.get('source_vision_frames')
-	target_vision_frame = inputs.get('target_vision_frame')
+	target_vision_frames = inputs.get('target_vision_frames')
+	target_vision_frame = target_vision_frames[2]
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	source_face = extract_source_face(source_vision_frames)
 	target_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))

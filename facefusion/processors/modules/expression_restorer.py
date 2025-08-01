@@ -238,9 +238,10 @@ def get_reference_frame(source_face : Face, target_face : Face, temp_vision_fram
 
 def process_frame(inputs : ExpressionRestorerInputs) -> VisionFrame:
 	reference_faces = inputs.get('reference_faces')
-	target_vision_frame = inputs.get('target_vision_frame')
+	target_vision_frames = inputs.get('target_vision_frames')
+	target_vision_frame = target_vision_frames[2]
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	target_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
+	target_faces = sort_and_filter_faces(get_many_faces([ target_vision_frames[2] ]))
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		if target_faces:

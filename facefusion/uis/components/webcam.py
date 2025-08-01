@@ -147,6 +147,7 @@ def process_stream_frame(target_vision_frame : VisionFrame) -> VisionFrame:
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
+	target_vision_frames = [None, None, target_vision_frame, None, None]
 	temp_vision_frame = target_vision_frame.copy()
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
@@ -158,7 +159,7 @@ def process_stream_frame(target_vision_frame : VisionFrame) -> VisionFrame:
 				'source_vision_frames': source_vision_frames,
 				'source_audio_frame': source_audio_frame,
 				'source_voice_frame': source_voice_frame,
-				'target_vision_frame': target_vision_frame,
+				'target_vision_frames': target_vision_frames,
 				'temp_vision_frame': temp_vision_frame
 			})
 
