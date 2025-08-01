@@ -563,27 +563,18 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	if not numpy.any(source_voice_frame):
 		source_voice_frame = create_empty_audio_frame()
 
-	output_vision_frame = process_video_frame(
-	{
-		'reference_faces': reference_faces,
-		'source_vision_frames': source_vision_frames,
-		'source_audio_frame': source_audio_frame,
-		'source_voice_frame': source_voice_frame,
-		'target_vision_frame': target_vision_frame,
-		'temp_vision_frame': temp_vision_frame
-	})
-
-	return write_image(temp_frame_path, output_vision_frame)
-
-
-def process_video_frame(processor_inputs : ProcessorInputs) -> VisionFrame:
-	temp_vision_frame = processor_inputs.get('temp_vision_frame')
-
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		temp_vision_frame = processor_module.process_frame(processor_inputs)
-		processor_inputs['temp_vision_frame'] = temp_vision_frame
+		temp_vision_frame = processor_module.process_frame(
+		{
+			'reference_faces': reference_faces,
+			'source_vision_frames': source_vision_frames,
+			'source_audio_frame': source_audio_frame,
+			'source_voice_frame': source_voice_frame,
+			'target_vision_frame': target_vision_frame,
+			'temp_vision_frame': temp_vision_frame
+		})
 
-	return temp_vision_frame
+	return write_image(temp_frame_path, temp_vision_frame)
 
 
 def is_process_stopping() -> bool:
