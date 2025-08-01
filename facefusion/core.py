@@ -403,8 +403,7 @@ def process_image(start_time : float) -> ErrorCode:
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
 	target_vision_frame = read_image(temp_image_path)
-	target_vision_frames = [ None ] * 5
-	target_vision_frames[2] = target_vision_frame
+	target_vision_frames = [ None, None, target_vision_frame, None, None ]
 	temp_vision_frame = target_vision_frame.copy()
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):

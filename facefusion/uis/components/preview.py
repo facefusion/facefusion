@@ -232,7 +232,7 @@ def update_preview_frame_slider() -> gradio.Slider:
 
 def process_preview_frame(reference_faces : FaceSet, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:
 	target_vision_frame = restrict_frame(target_vision_frame, (1024, 1024))
-	target_vision_frames = [None, None, target_vision_frame, None, None]
+	target_vision_frames = [ None, None, target_vision_frame, None, None ]
 	temp_vision_frame = target_vision_frame.copy()
 
 	if analyse_frame(target_vision_frame):
