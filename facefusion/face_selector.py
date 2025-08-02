@@ -10,10 +10,10 @@ def find_mutant_faces(target_faces : List[Face], temp_faces : List[Face], refere
 	mutant_faces : List[Face] = []
 
 	if target_faces and temp_faces and reference_faces:
-		target_faces = sort_faces_by_order(target_faces, 'top-bottom')
 		target_faces = sort_faces_by_order(target_faces, 'left-right')
-		temp_faces = sort_faces_by_order(temp_faces, 'top-bottom')
+		target_faces = sort_faces_by_order(target_faces, 'top-bottom')
 		temp_faces = sort_faces_by_order(temp_faces, 'left-right')
+		temp_faces = sort_faces_by_order(temp_faces, 'top-bottom')
 
 		for reference_face in reference_faces:
 			if reference_face:
