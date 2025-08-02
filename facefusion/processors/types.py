@@ -78,15 +78,6 @@ LipSyncerInputs = TypedDict('LipSyncerInputs',
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
-ProcessorInputs = TypedDict('ProcessorInputs',
-{
-	'reference_faces' : FaceSet,
-	'source_vision_frames' : List[VisionFrame],
-	'source_audio_frame' : AudioFrame,
-	'source_voice_frame' : AudioFrame,
-	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
-})
 
 AgeModifierDirection : TypeAlias = NDArray[Any]
 DeepSwapperMorph : TypeAlias = NDArray[Any]
