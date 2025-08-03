@@ -13,8 +13,6 @@ from facefusion.types import Detection, DownloadScope, DownloadSet, ExecutionPro
 from facefusion.vision import detect_video_fps, fit_frame, read_image, read_video_frame
 
 STREAM_COUNTER = 0
-
-
 @lru_cache(maxsize = None)
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
