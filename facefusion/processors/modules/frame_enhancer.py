@@ -511,7 +511,7 @@ def prepare_tile_frame(tile_vision_frame : VisionFrame) -> VisionFrame:
 	tile_vision_frame = tile_vision_frame.astype(numpy.float32) / 255.0
 	return tile_vision_frame
 
-Fix
+
 def normalize_tile_frame(tile_vision_frame : VisionFrame) -> VisionFrame:
 	tile_vision_frame = tile_vision_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
 	tile_vision_frame = tile_vision_frame.clip(0, 255).astype(numpy.uint8)[:, :, ::-1]
