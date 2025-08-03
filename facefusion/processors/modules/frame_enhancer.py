@@ -505,17 +505,17 @@ def forward(tile_vision_frame : VisionFrame) -> VisionFrame:
 	return tile_vision_frame
 
 
-def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
-	vision_tile_frame = numpy.expand_dims(vision_tile_frame[:, :, ::-1], axis = 0)
-	vision_tile_frame = vision_tile_frame.transpose(0, 3, 1, 2)
-	vision_tile_frame = vision_tile_frame.astype(numpy.float32) / 255.0
-	return vision_tile_frame
+def prepare_tile_frame(tile_vision_frame : VisionFrame) -> VisionFrame:
+	tile_vision_frame = numpy.expand_dims(tile_vision_frame[:, :, ::-1], axis = 0)
+	tile_vision_frame = tile_vision_frame.transpose(0, 3, 1, 2)
+	tile_vision_frame = tile_vision_frame.astype(numpy.float32) / 255.0
+	return tile_vision_frame
 
-
-def normalize_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
-	vision_tile_frame = vision_tile_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
-	vision_tile_frame = vision_tile_frame.clip(0, 255).astype(numpy.uint8)[:, :, ::-1]
-	return vision_tile_frame
+Fix
+def normalize_tile_frame(tile_vision_frame : VisionFrame) -> VisionFrame:
+	tile_vision_frame = tile_vision_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
+	tile_vision_frame = tile_vision_frame.clip(0, 255).astype(numpy.uint8)[:, :, ::-1]
+	return tile_vision_frame
 
 
 def blend_frame(temp_vision_frame : VisionFrame, merge_vision_frame : VisionFrame) -> VisionFrame:
