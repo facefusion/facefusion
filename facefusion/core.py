@@ -9,15 +9,15 @@ from time import time
 import numpy
 from tqdm import tqdm
 
-from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, process_manager, state_manager, video_manager, voice_extractor, wording
+from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, \
+	face_masker, face_recognizer, hash_helper, logger, process_manager, state_manager, video_manager, voice_extractor, \
+	wording
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image, analyse_video
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
-from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
-from facefusion.face_selector import sort_and_filter_faces
 from facefusion.ffmpeg import copy_image, extract_frames, finalize_image, merge_video, replace_audio, restore_audio
 from facefusion.filesystem import filter_audio_paths, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
