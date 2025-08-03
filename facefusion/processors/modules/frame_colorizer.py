@@ -16,8 +16,8 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image, unpack_resolution
+from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.vision import read_static_image, read_static_video_frame, unpack_resolution
 
 
 @lru_cache(maxsize = None)
@@ -187,6 +187,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
@@ -260,12 +261,6 @@ def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFram
 	return temp_vision_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	pass
-
-
 def process_frame(inputs : FrameColorizerInputs) -> VisionFrame:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	return colorize_frame(temp_vision_frame)
-
-

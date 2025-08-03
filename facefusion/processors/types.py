@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Literal, TypeAlias, TypedDict
 
 from numpy.typing import NDArray
 
-from facefusion.types import AppContext, AudioFrame, FaceSet, VisionFrame
+from facefusion.types import AppContext, AudioFrame, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
 DeepSwapperModel : TypeAlias = str
@@ -19,44 +19,44 @@ FaceSwapperSet : TypeAlias = Dict[FaceSwapperModel, List[str]]
 
 AgeModifierInputs = TypedDict('AgeModifierInputs',
 {
-	'reference_faces' : FaceSet,
+	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
 DeepSwapperInputs = TypedDict('DeepSwapperInputs',
 {
-	'reference_faces' : FaceSet,
+	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
 ExpressionRestorerInputs = TypedDict('ExpressionRestorerInputs',
 {
-	'reference_faces' : FaceSet,
+	'reference_vision_frame' : VisionFrame,
 	'source_vision_frames' : List[VisionFrame],
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
 FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',
 {
-	'reference_faces' : FaceSet,
+	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
 FaceEditorInputs = TypedDict('FaceEditorInputs',
 {
-	'reference_faces' : FaceSet,
+	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
 FaceEnhancerInputs = TypedDict('FaceEnhancerInputs',
 {
-	'reference_faces' : FaceSet,
+	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
 FaceSwapperInputs = TypedDict('FaceSwapperInputs',
 {
-	'reference_faces' : FaceSet,
+	'reference_vision_frame' : VisionFrame,
 	'source_vision_frames' : List[VisionFrame],
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
@@ -73,7 +73,7 @@ FrameEnhancerInputs = TypedDict('FrameEnhancerInputs',
 })
 LipSyncerInputs = TypedDict('LipSyncerInputs',
 {
-	'reference_faces' : FaceSet,
+	'reference_vision_frame' : VisionFrame,
 	'source_voice_frame' : AudioFrame,
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame

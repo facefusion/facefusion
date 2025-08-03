@@ -12,14 +12,14 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_box_mask, create_occlusion_mask
-from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
+from facefusion.face_selector import find_mutant_faces, sort_and_filter_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FaceEnhancerInputs, FaceEnhancerWeight
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image
+from facefusion.vision import read_static_image, read_static_video_frame
 
 
 @lru_cache(maxsize = None)
@@ -272,6 +272,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
@@ -356,31 +357,38 @@ def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFram
 	return temp_vision_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	return enhance_face(target_face, temp_vision_frame)
+def extract_reference_face(reference_vision_frame : VisionFrame) -> Face:
+	faces = get_many_faces([ reference_vision_frame ])
+	faces = sort_and_filter_faces(faces)
+	reference_face = get_one_face(faces, state_manager.get_item('reference_face_position'))
+
+	return reference_face
 
 
 def process_frame(inputs : FaceEnhancerInputs) -> VisionFrame:
-	reference_faces = inputs.get('reference_faces')
+	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	target_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
+	target_faces = get_many_faces([ target_vision_frame ])
+	temp_faces = get_many_faces([ temp_vision_frame ])
 
 	if state_manager.get_item('face_selector_mode') == 'many':
+		target_faces = sort_and_filter_faces(target_faces)
 		if target_faces:
 			for target_face in target_faces:
 				temp_vision_frame = enhance_face(target_face, temp_vision_frame)
 
 	if state_manager.get_item('face_selector_mode') == 'one':
-		target_face = get_one_face(target_faces)
+		target_face = get_one_face(sort_and_filter_faces(target_faces))
 		if target_face:
 			temp_vision_frame = enhance_face(target_face, temp_vision_frame)
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		similar_faces = find_similar_faces(target_faces, reference_faces, state_manager.get_item('reference_face_distance'))
-		if similar_faces:
-			for similar_face in similar_faces:
-				temp_vision_frame = enhance_face(similar_face, temp_vision_frame)
+		reference_faces = [ extract_reference_face(reference_vision_frame) ]
+		mutant_faces = find_mutant_faces(target_faces, temp_faces, reference_faces, state_manager.get_item('reference_face_distance'))
+		if mutant_faces:
+			for mutant_face in mutant_faces:
+				temp_vision_frame = enhance_face(mutant_face, temp_vision_frame)
 
 	return temp_vision_frame
 

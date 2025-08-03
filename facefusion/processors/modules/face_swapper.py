@@ -15,7 +15,7 @@ from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
-from facefusion.face_selector import find_similar_faces, sort_and_filter_faces, sort_faces_by_order
+from facefusion.face_selector import find_mutant_faces, sort_and_filter_faces, sort_faces_by_order
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors import choices as processors_choices
@@ -24,7 +24,7 @@ from facefusion.processors.types import FaceSwapperInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image, read_static_images, unpack_resolution
+from facefusion.vision import read_static_image, read_static_images, read_static_video_frame, unpack_resolution
 
 
 @lru_cache(maxsize = None)
@@ -485,6 +485,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		get_static_model_initializer.cache_clear()
@@ -663,8 +664,12 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	return swap_face(source_face, target_face, temp_vision_frame)
+def extract_reference_face(reference_vision_frame : VisionFrame) -> Face:
+	faces = get_many_faces([ reference_vision_frame ])
+	faces = sort_and_filter_faces(faces)
+	reference_face = get_one_face(faces, state_manager.get_item('reference_face_position'))
+
+	return reference_face
 
 
 def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Face]:
@@ -682,27 +687,30 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 
 
 def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
-	reference_faces = inputs.get('reference_faces')
+	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_vision_frames = inputs.get('source_vision_frames')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	source_face = extract_source_face(source_vision_frames)
-	target_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
+	target_faces = get_many_faces([ target_vision_frame ])
+	temp_faces = get_many_faces([ temp_vision_frame ])
 
 	if state_manager.get_item('face_selector_mode') == 'many':
+		target_faces = sort_and_filter_faces(target_faces)
 		if source_face and target_faces:
 			for target_face in target_faces:
 				temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
 
 	if state_manager.get_item('face_selector_mode') == 'one':
-		target_face = get_one_face(target_faces)
+		target_face = get_one_face(sort_and_filter_faces(target_faces))
 		if source_face and target_face:
 			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		similar_faces = find_similar_faces(target_faces, reference_faces, state_manager.get_item('reference_face_distance'))
-		if source_face and similar_faces:
-			for similar_face in similar_faces:
-				temp_vision_frame = swap_face(source_face, similar_face, temp_vision_frame)
+		reference_faces = [ extract_reference_face(reference_vision_frame) ]
+		mutant_faces = find_mutant_faces(target_faces, temp_faces, reference_faces, state_manager.get_item('reference_face_distance'))
+		if source_face and mutant_faces:
+			for mutant_face in mutant_faces:
+				temp_vision_frame = swap_face(source_face, mutant_face, temp_vision_frame)
 
 	return temp_vision_frame
