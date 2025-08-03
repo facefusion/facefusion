@@ -54,8 +54,3 @@ commands:
     job-retry-all                                 retry all failed jobs
 ```
 
-
-Documentation
--------------
-
-Read the [documentation](https://docs.facefusion.io) for a deep dive.
