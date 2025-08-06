@@ -55,7 +55,8 @@ def render() -> None:
 	global WEBCAM_STOP_BUTTON
 
 	WEBCAM_IMAGE = gradio.Image(
-		label = wording.get('uis.webcam_image')
+		label = wording.get('uis.webcam_image'),
+		format = 'jpeg'
 	)
 	WEBCAM_START_BUTTON = gradio.Button(
 		value = wording.get('uis.start_button'),
