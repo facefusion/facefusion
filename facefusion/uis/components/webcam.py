@@ -2,7 +2,7 @@ import os
 import subprocess
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from typing import Deque, Generator, List, Optional
+from typing import Deque, Generator, Optional
 
 import cv2
 import gradio
@@ -10,43 +10,18 @@ from tqdm import tqdm
 
 from facefusion import ffmpeg_builder, logger, state_manager, wording
 from facefusion.audio import create_empty_audio_frame
-from facefusion.common_helper import is_windows
 from facefusion.content_analyser import analyse_stream
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.filesystem import is_directory
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import Fps, StreamMode, VisionFrame, WebcamMode
 from facefusion.uis.core import get_ui_component
+from facefusion.webcam_manager import clear_webcam_pool, get_webcam_capture
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
 
-WEBCAM_CAPTURE : Optional[cv2.VideoCapture] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
 WEBCAM_STOP_BUTTON : Optional[gradio.Button] = None
-
-
-def get_webcam_capture(webcam_device_id : int) -> Optional[cv2.VideoCapture]:
-	global WEBCAM_CAPTURE
-
-	if WEBCAM_CAPTURE is None:
-		cv2.setLogLevel(0)
-		if is_windows():
-			webcam_capture = cv2.VideoCapture(webcam_device_id, cv2.CAP_DSHOW)
-		else:
-			webcam_capture = cv2.VideoCapture(webcam_device_id)
-		cv2.setLogLevel(3)
-
-		if webcam_capture and webcam_capture.isOpened():
-			WEBCAM_CAPTURE = webcam_capture
-	return WEBCAM_CAPTURE
-
-
-def clear_webcam_capture() -> None:
-	global WEBCAM_CAPTURE
-
-	if WEBCAM_CAPTURE and WEBCAM_CAPTURE.isOpened():
-		WEBCAM_CAPTURE.release()
-	WEBCAM_CAPTURE = None
 
 
 def render() -> None:
@@ -110,7 +85,7 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 				try:
 					stream.stdin.write(capture_frame.tobytes())
 				except Exception:
-					clear_webcam_capture()
+					clear_webcam_pool()
 				yield None
 
 
@@ -140,7 +115,7 @@ def multi_process_capture(webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -
 
 
 def stop() -> gradio.Image:
-	clear_webcam_capture()
+	clear_webcam_pool()
 	return gradio.Image(value = None)
 
 
@@ -196,16 +171,3 @@ def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : 
 			logger.error(wording.get('stream_not_loaded').format(stream_mode = stream_mode), __name__)
 
 	return open_ffmpeg(commands)
-
-
-def get_available_webcam_ids(webcam_id_start : int, webcam_id_end : int) -> List[int]:
-	available_webcam_ids = []
-
-	for index in range(webcam_id_start, webcam_id_end):
-		webcam_capture = get_webcam_capture(index)
-
-		if webcam_capture and webcam_capture.isOpened():
-			available_webcam_ids.append(index)
-			clear_webcam_capture()
-
-	return available_webcam_ids
