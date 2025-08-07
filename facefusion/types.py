@@ -52,15 +52,15 @@ FaceStore = TypedDict('FaceStore',
 
 VideoCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
-WebcamCaptureSet : TypeAlias = Dict[int, cv2.VideoCapture]
+CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 VideoPoolSet = TypedDict('VideoPoolSet',
 {
 	'capture': VideoCaptureSet,
 	'writer': VideoWriterSet
 })
-WebcamPoolSet = TypedDict('WebcamPoolSet',
+CameraPoolSet = TypedDict('CameraPoolSet',
 {
-	'capture': WebcamCaptureSet
+	'capture': CameraCaptureSet
 })
 
 VisionFrame : TypeAlias = NDArray[Any]
