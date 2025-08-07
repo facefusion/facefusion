@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 import cv2
 
@@ -11,7 +11,7 @@ CAMERA_POOL_SET : CameraPoolSet =\
 }
 
 
-def get_local_camera_capture(camera_id : int) -> Optional[cv2.VideoCapture]:
+def get_local_camera_capture(camera_id : int) -> cv2.VideoCapture:
 	camera_key = str(camera_id)
 
 	if camera_key not in CAMERA_POOL_SET.get('capture'):
@@ -26,7 +26,7 @@ def get_local_camera_capture(camera_id : int) -> Optional[cv2.VideoCapture]:
 	return CAMERA_POOL_SET.get('capture').get(camera_key)
 
 
-def get_remote_camera_capture(camera_url : str) -> Optional[cv2.VideoCapture]:
+def get_remote_camera_capture(camera_url : str) -> cv2.VideoCapture:
 	if camera_url not in CAMERA_POOL_SET.get('capture'):
 		camera_capture = cv2.VideoCapture(camera_url)
 
