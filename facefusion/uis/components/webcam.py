@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from facefusion import ffmpeg_builder, logger, state_manager, wording
 from facefusion.audio import create_empty_audio_frame
+from facefusion.camera_manager import clear_camera_pool, get_local_camera_capture
 from facefusion.content_analyser import analyse_stream
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.filesystem import is_directory
@@ -17,7 +18,6 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.types import Fps, StreamMode, VisionFrame, WebcamMode
 from facefusion.uis.core import get_ui_component
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
-from facefusion.camera_manager import clear_camera_pool, get_local_camera_capture
 
 WEBCAM_IMAGE : Optional[gradio.Image] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
