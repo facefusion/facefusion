@@ -5,8 +5,8 @@ import gradio
 import facefusion.choices
 from facefusion import wording
 from facefusion.common_helper import get_first
-from facefusion.webcam_manager import detect_available_webcam_ids
 from facefusion.uis.core import register_ui_component
+from facefusion.webcam_manager import detect_available_webcam_ids
 
 WEBCAM_DEVICE_ID_DROPDOWN : Optional[gradio.Dropdown] = None
 WEBCAM_MODE_RADIO : Optional[gradio.Radio] = None

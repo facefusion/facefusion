@@ -16,8 +16,8 @@ from facefusion.filesystem import is_directory
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import Fps, StreamMode, VisionFrame, WebcamMode
 from facefusion.uis.core import get_ui_component
-from facefusion.webcam_manager import clear_webcam_pool, get_webcam_capture
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
+from facefusion.webcam_manager import clear_webcam_pool, get_webcam_capture
 
 WEBCAM_IMAGE : Optional[gradio.Image] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
