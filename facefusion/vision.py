@@ -309,11 +309,11 @@ def blend_vision_frames(source_vision_frame : VisionFrame, target_vision_frame :
 
 
 def create_tile_frames(vision_frame : VisionFrame, size : Size) -> Tuple[List[VisionFrame], int, int]:
-	vision_frame = numpy.pad(vision_frame, ((size[1], size[1]), (size[1], size[1]), (0, 0)))
 	tile_width = size[0] - 2 * size[2]
-	pad_size_bottom = size[2] + tile_width - vision_frame.shape[0] % tile_width
-	pad_size_right = size[2] + tile_width - vision_frame.shape[1] % tile_width
-	pad_vision_frame = numpy.pad(vision_frame, ((size[2], pad_size_bottom), (size[2], pad_size_right), (0, 0)))
+	pad_size_top = size[1] + size[2]
+	pad_size_bottom = pad_size_top + tile_width - (vision_frame.shape[0] + 2 * size[1]) % tile_width
+	pad_size_right = pad_size_top + tile_width - (vision_frame.shape[1] + 2 * size[1]) % tile_width
+	pad_vision_frame = numpy.pad(vision_frame, ((pad_size_top, pad_size_bottom), (pad_size_top, pad_size_right), (0, 0)))
 	pad_height, pad_width = pad_vision_frame.shape[:2]
 	row_range = range(size[2], pad_height - size[2], tile_width)
 	col_range = range(size[2], pad_width - size[2], tile_width)
