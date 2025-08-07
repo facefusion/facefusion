@@ -20,11 +20,11 @@ def render() -> None:
 	global WEBCAM_RESOLUTION_DROPDOWN
 	global WEBCAM_FPS_SLIDER
 
-	available_camera_ids = detect_local_camera_ids(0, 10) or [ 'none' ] #type:ignore[list-item]
+	local_camera_ids = detect_local_camera_ids(0, 10) or [ 'none' ] #type:ignore[list-item]
 	WEBCAM_DEVICE_ID_DROPDOWN = gradio.Dropdown(
-		value = get_first(available_camera_ids),
+		value = get_first(local_camera_ids),
 		label = wording.get('uis.webcam_device_id_dropdown'),
-		choices = available_camera_ids
+		choices = local_camera_ids
 	)
 	WEBCAM_MODE_RADIO = gradio.Radio(
 		label = wording.get('uis.webcam_mode_radio'),
