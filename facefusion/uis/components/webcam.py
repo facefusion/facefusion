@@ -17,7 +17,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.types import Fps, StreamMode, VisionFrame, WebcamMode
 from facefusion.uis.core import get_ui_component
 from facefusion.vision import normalize_frame_color, read_static_images, unpack_resolution
-from facefusion.webcam_manager import clear_webcam_pool, get_webcam_capture
+from facefusion.camera_manager import clear_camera_pool, get_local_camera_capture
 
 WEBCAM_IMAGE : Optional[gradio.Image] = None
 WEBCAM_START_BUTTON : Optional[gradio.Button] = None
@@ -62,22 +62,22 @@ def listen() -> None:
 def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	state_manager.set_item('face_selector_mode', 'one')
 	stream = None
-	webcam_capture = None
+	camera_capture = None
 
 	if webcam_mode in [ 'udp', 'v4l2' ]:
 		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) #type:ignore[arg-type]
 	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
 
 	if isinstance(webcam_device_id, int):
-		webcam_capture = get_webcam_capture(webcam_device_id)
+		camera_capture = get_local_camera_capture(webcam_device_id)
 
-	if webcam_capture and webcam_capture.isOpened():
-		webcam_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) #type:ignore[attr-defined]
-		webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
-		webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
-		webcam_capture.set(cv2.CAP_PROP_FPS, webcam_fps)
+	if camera_capture and camera_capture.isOpened():
+		camera_capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG')) #type:ignore[attr-defined]
+		camera_capture.set(cv2.CAP_PROP_FRAME_WIDTH, webcam_width)
+		camera_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, webcam_height)
+		camera_capture.set(cv2.CAP_PROP_FPS, webcam_fps)
 
-		for capture_frame in multi_process_capture(webcam_capture, webcam_fps):
+		for capture_frame in multi_process_capture(camera_capture, webcam_fps):
 			capture_frame = normalize_frame_color(capture_frame)
 			if webcam_mode == 'inline':
 				yield capture_frame
@@ -85,19 +85,19 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 				try:
 					stream.stdin.write(capture_frame.tobytes())
 				except Exception:
-					clear_webcam_pool()
+					clear_camera_pool()
 				yield None
 
 
-def multi_process_capture(webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
+def multi_process_capture(camera_capture : cv2.VideoCapture, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	capture_deque : Deque[VisionFrame] = deque()
 
 	with tqdm(desc = wording.get('streaming'), unit = 'frame', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 			futures = []
 
-			while webcam_capture and webcam_capture.isOpened():
-				_, capture_frame = webcam_capture.read()
+			while camera_capture and camera_capture.isOpened():
+				_, capture_frame = camera_capture.read()
 				if analyse_stream(capture_frame, webcam_fps):
 					yield None
 
@@ -115,7 +115,7 @@ def multi_process_capture(webcam_capture : cv2.VideoCapture, webcam_fps : Fps) -
 
 
 def stop() -> gradio.Image:
-	clear_webcam_pool()
+	clear_camera_pool()
 	return gradio.Image(value = None)
 
 

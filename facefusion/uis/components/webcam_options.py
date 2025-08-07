@@ -6,7 +6,7 @@ import facefusion.choices
 from facefusion import wording
 from facefusion.common_helper import get_first
 from facefusion.uis.core import register_ui_component
-from facefusion.webcam_manager import detect_available_webcam_ids
+from facefusion.camera_manager import detect_local_camera_ids
 
 WEBCAM_DEVICE_ID_DROPDOWN : Optional[gradio.Dropdown] = None
 WEBCAM_MODE_RADIO : Optional[gradio.Radio] = None
@@ -20,11 +20,11 @@ def render() -> None:
 	global WEBCAM_RESOLUTION_DROPDOWN
 	global WEBCAM_FPS_SLIDER
 
-	available_webcam_ids = detect_available_webcam_ids(0, 10) or [ 'none' ] #type:ignore[list-item]
+	available_camera_ids = detect_local_camera_ids(0, 10) or [ 'none' ] #type:ignore[list-item]
 	WEBCAM_DEVICE_ID_DROPDOWN = gradio.Dropdown(
-		value = get_first(available_webcam_ids),
+		value = get_first(available_camera_ids),
 		label = wording.get('uis.webcam_device_id_dropdown'),
-		choices = available_webcam_ids
+		choices = available_camera_ids
 	)
 	WEBCAM_MODE_RADIO = gradio.Radio(
 		label = wording.get('uis.webcam_mode_radio'),
