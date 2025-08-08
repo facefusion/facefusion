@@ -14,7 +14,7 @@ from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import merge_matrix, paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_box_mask, create_occlusion_mask
-from facefusion.face_selector import find_mutant_faces, sort_and_filter_faces
+from facefusion.face_selector import find_match_faces, sort_and_filter_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import AgeModifierDirection, AgeModifierInputs
@@ -210,7 +210,6 @@ def process_frame(inputs : AgeModifierInputs) -> VisionFrame:
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	target_faces = get_many_faces([ target_vision_frame ])
-	temp_faces = get_many_faces([ temp_vision_frame ])
 
 	if state_manager.get_item('face_selector_mode') == 'many':
 		target_faces = sort_and_filter_faces(target_faces)
@@ -225,9 +224,10 @@ def process_frame(inputs : AgeModifierInputs) -> VisionFrame:
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
 		reference_faces = [ extract_reference_face(reference_vision_frame) ]
-		mutant_faces = find_mutant_faces(target_faces, temp_faces, reference_faces, state_manager.get_item('reference_face_distance'))
-		if mutant_faces:
-			for mutant_face in mutant_faces:
-				temp_vision_frame = modify_age(mutant_face, temp_vision_frame)
+		match_faces = find_match_faces(target_faces, reference_faces, state_manager.get_item('reference_face_distance'))
+
+		if match_faces:
+			for match_face in match_faces:
+				temp_vision_frame = modify_age(match_face, temp_vision_frame)
 
 	return temp_vision_frame
