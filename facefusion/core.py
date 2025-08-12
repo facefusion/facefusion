@@ -427,7 +427,7 @@ def process_video(start_time : float) -> ErrorCode:
 	create_temp_directory(state_manager.get_item('target_path'))
 
 	process_manager.start()
-	temp_video_resolution = pack_resolution(restrict_video_resolution(state_manager.get_item('target_path'), unpack_resolution(state_manager.get_item('output_video_resolution'))))
+	temp_video_resolution = pack_resolution(restrict_video_resolution(state_manager.get_item('target_path'), state_manager.get_item('output_video_scale')))
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 	logger.info(wording.get('extracting_frames').format(resolution = temp_video_resolution, fps = temp_video_fps), __name__)
 	if extract_frames(state_manager.get_item('target_path'), temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end):
@@ -468,8 +468,8 @@ def process_video(start_time : float) -> ErrorCode:
 		process_manager.end()
 		return 1
 
-	logger.info(wording.get('merging_video').format(resolution = state_manager.get_item('output_video_resolution'), fps = state_manager.get_item('output_video_fps')), __name__)
-	if merge_video(state_manager.get_item('target_path'), temp_video_fps, state_manager.get_item('output_video_resolution'), state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
+	logger.info(wording.get('merging_video').format(resolution = temp_video_resolution, fps = state_manager.get_item('output_video_fps')), __name__)
+	if merge_video(state_manager.get_item('target_path'), temp_video_fps, temp_video_resolution, state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
 		logger.debug(wording.get('merging_video_succeed'), __name__)
 	else:
 		if is_process_stopping():

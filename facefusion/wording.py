@@ -151,7 +151,7 @@ WORDING : Dict[str, Any] =\
 		'output_video_encoder': 'specify the encoder used for the video',
 		'output_video_preset': 'balance fast video processing and video file size',
 		'output_video_quality': 'specify the video quality which translates to the video compression',
-		'output_video_resolution': 'specify the video resolution based on the target video',
+		'output_video_scale': 'specify the video scale based on the target video',
 		'output_video_fps': 'specify the video fps based on the target video',
 		# processors
 		'processors': 'load a single or multiple processors (choices: {choices}, ...)',
@@ -330,7 +330,7 @@ WORDING : Dict[str, Any] =\
 		'output_video_fps_slider': 'OUTPUT VIDEO FPS',
 		'output_video_preset_dropdown': 'OUTPUT VIDEO PRESET',
 		'output_video_quality_slider': 'OUTPUT VIDEO QUALITY',
-		'output_video_resolution_dropdown': 'OUTPUT VIDEO RESOLUTION',
+		'output_video_scale_slider': 'OUTPUT VIDEO SCALE',
 		'preview_frame_slider': 'PREVIEW FRAME',
 		'preview_image': 'PREVIEW',
 		'processors_checkbox_group': 'PROCESSORS',

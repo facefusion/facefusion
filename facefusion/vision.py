@@ -189,12 +189,16 @@ def detect_video_resolution(video_path : str) -> Optional[Resolution]:
 	return None
 
 
-def restrict_video_resolution(video_path : str, resolution : Resolution) -> Resolution:
+def restrict_video_resolution(video_path : str, scale : float) -> Resolution:
+	scale_video_resolution = (1, 1)
+
 	if is_video(video_path):
 		video_resolution = detect_video_resolution(video_path)
-		if video_resolution < resolution:
+		scale_video_resolution = normalize_resolution((video_resolution[0] * scale, video_resolution[1] * scale))
+
+		if video_resolution < scale_video_resolution:
 			return video_resolution
-	return resolution
+	return scale_video_resolution
 
 
 def create_video_resolutions(resolution : Resolution) -> List[str]:
