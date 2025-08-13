@@ -144,7 +144,7 @@ WORDING : Dict[str, Any] =\
 		'keep_temp': 'keep the temporary resources after processing',
 		# output creation
 		'output_image_quality': 'specify the image quality which translates to the image compression',
-		'output_image_resolution': 'specify the image resolution based on the target image',
+		'output_image_scale': 'specify the image scale based on the target image',
 		'output_audio_encoder': 'specify the encoder used for the audio',
 		'output_audio_quality': 'specify the audio quality which translates to the audio compression',
 		'output_audio_volume': 'specify the audio volume based on the target video',
@@ -324,7 +324,7 @@ WORDING : Dict[str, Any] =\
 		'output_audio_volume_slider': 'OUTPUT AUDIO VOLUME',
 		'output_image_or_video': 'OUTPUT',
 		'output_image_quality_slider': 'OUTPUT IMAGE QUALITY',
-		'output_image_resolution_dropdown': 'OUTPUT IMAGE RESOLUTION',
+		'output_image_scale_slider': 'OUTPUT IMAGE SCALE',
 		'output_path_textbox': 'OUTPUT PATH',
 		'output_video_encoder_dropdown': 'OUTPUT VIDEO ENCODER',
 		'output_video_fps_slider': 'OUTPUT VIDEO FPS',

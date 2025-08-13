@@ -29,7 +29,7 @@ from facefusion.program_helper import validate_args
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import Args, ErrorCode
-from facefusion.vision import pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, unpack_resolution, write_image
+from facefusion.vision import detect_image_resolution, detect_video_resolution, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_image_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
 
 
 def cli() -> None:
@@ -360,7 +360,9 @@ def process_image(start_time : float) -> ErrorCode:
 	create_temp_directory(state_manager.get_item('target_path'))
 
 	process_manager.start()
-	temp_image_resolution = pack_resolution(restrict_image_resolution(state_manager.get_item('target_path'), unpack_resolution(state_manager.get_item('output_image_resolution'))))
+
+	image_resolution = detect_image_resolution(state_manager.get_item('target_path'))
+	temp_image_resolution = pack_resolution(restrict_image_resolution(state_manager.get_item('target_path'), scale_resolution(image_resolution, state_manager.get_item('output_image_scale'))))
 	logger.info(wording.get('copying_image').format(resolution = temp_image_resolution), __name__)
 	if copy_image(state_manager.get_item('target_path'), temp_image_resolution):
 		logger.debug(wording.get('copying_image_succeed'), __name__)
@@ -397,8 +399,8 @@ def process_image(start_time : float) -> ErrorCode:
 		process_manager.end()
 		return 4
 
-	logger.info(wording.get('finalizing_image').format(resolution = state_manager.get_item('output_image_resolution')), __name__)
-	if finalize_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), state_manager.get_item('output_image_resolution')):
+	logger.info(wording.get('finalizing_image').format(resolution = temp_image_resolution), __name__)
+	if finalize_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_image_resolution):
 		logger.debug(wording.get('finalizing_image_succeed'), __name__)
 	else:
 		logger.warn(wording.get('finalizing_image_skipped'), __name__)
@@ -427,9 +429,11 @@ def process_video(start_time : float) -> ErrorCode:
 	create_temp_directory(state_manager.get_item('target_path'))
 
 	process_manager.start()
-	temp_video_resolution = pack_resolution(restrict_video_resolution(state_manager.get_item('target_path'), state_manager.get_item('output_video_scale')))
+	video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
+	temp_video_resolution = pack_resolution(restrict_video_resolution(state_manager.get_item('target_path'), scale_resolution(video_resolution, state_manager.get_item('output_video_scale'))))
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 	logger.info(wording.get('extracting_frames').format(resolution = temp_video_resolution, fps = temp_video_fps), __name__)
+
 	if extract_frames(state_manager.get_item('target_path'), temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end):
 		logger.debug(wording.get('extracting_frames_succeed'), __name__)
 	else:

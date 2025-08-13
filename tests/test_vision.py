@@ -134,9 +134,9 @@ def test_detect_video_resolution() -> None:
 
 
 def test_restrict_video_resolution() -> None:
-	assert restrict_video_resolution(get_test_example_file('target-1080p.mp4'), 0.25) == (512, 270)
-	assert restrict_video_resolution(get_test_example_file('target-1080p.mp4'), 1.0) == (2048, 1080)
-	assert restrict_video_resolution(get_test_example_file('target-1080p.mp4'), 2.0) == (2048, 1080)
+	assert restrict_video_resolution(get_test_example_file('target-1080p.mp4'), (426, 226)) == (426, 226)
+	assert restrict_video_resolution(get_test_example_file('target-1080p.mp4'), (2048, 1080)) == (2048, 1080)
+	assert restrict_video_resolution(get_test_example_file('target-1080p.mp4'), (4096, 2160)) == (2048, 1080)
 
 
 def test_create_video_resolutions() -> None:
