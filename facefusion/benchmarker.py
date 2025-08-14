@@ -12,7 +12,7 @@ from facefusion.download import conditional_download, resolve_download_url
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import get_file_extension
 from facefusion.types import BenchmarkCycleSet
-from facefusion.vision import count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution
+from facefusion.vision import count_video_frame_total, detect_video_fps
 
 
 def pre_check() -> bool:
@@ -55,8 +55,6 @@ def run() -> Generator[List[BenchmarkCycleSet], None, None]:
 def cycle(cycle_count : int) -> BenchmarkCycleSet:
 	process_times = []
 	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
-	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
-	state_manager.init_item('output_video_resolution', pack_resolution(output_video_resolution))
 	state_manager.init_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
 
 	if state_manager.get_item('benchmark_mode') == 'warm':

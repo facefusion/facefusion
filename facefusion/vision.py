@@ -6,11 +6,10 @@ import cv2
 import numpy
 from cv2.typing import Size
 
-import facefusion.choices
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Duration, Fps, Orientation, Resolution, VisionFrame
+from facefusion.types import Duration, Fps, Orientation, Resolution, Scale, VisionFrame
 from facefusion.video_manager import get_video_capture
 
 
@@ -64,21 +63,6 @@ def restrict_image_resolution(image_path : str, resolution : Resolution) -> Reso
 		if image_resolution < resolution:
 			return image_resolution
 	return resolution
-
-
-def create_image_resolutions(resolution : Resolution) -> List[str]:
-	resolutions = []
-	temp_resolutions = []
-
-	if resolution:
-		width, height = resolution
-		temp_resolutions.append(normalize_resolution(resolution))
-		for image_template_size in facefusion.choices.image_template_sizes:
-			temp_resolutions.append(normalize_resolution((width * image_template_size, height * image_template_size)))
-		temp_resolutions = sorted(set(temp_resolutions))
-		for temp_resolution in temp_resolutions:
-			resolutions.append(pack_resolution(temp_resolution))
-	return resolutions
 
 
 @lru_cache()
@@ -197,22 +181,10 @@ def restrict_video_resolution(video_path : str, resolution : Resolution) -> Reso
 	return resolution
 
 
-def create_video_resolutions(resolution : Resolution) -> List[str]:
-	resolutions = []
-	temp_resolutions = []
-
-	if resolution:
-		width, height = resolution
-		temp_resolutions.append(normalize_resolution(resolution))
-		for video_template_size in facefusion.choices.video_template_sizes:
-			if width > height:
-				temp_resolutions.append(normalize_resolution((video_template_size * width / height, video_template_size)))
-			else:
-				temp_resolutions.append(normalize_resolution((video_template_size, video_template_size * height / width)))
-		temp_resolutions = sorted(set(temp_resolutions))
-		for temp_resolution in temp_resolutions:
-			resolutions.append(pack_resolution(temp_resolution))
-	return resolutions
+def scale_resolution(resolution : Resolution, scale : Scale) -> Resolution:
+	resolution = (int(resolution[0] * scale), int(resolution[1] * scale))
+	resolution = normalize_resolution(resolution)
+	return resolution
 
 
 def normalize_resolution(resolution : Tuple[float, float]) -> Resolution:

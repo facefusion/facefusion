@@ -1,10 +1,10 @@
 from facefusion import state_manager
-from facefusion.filesystem import get_file_name, is_image, is_video, resolve_file_paths
+from facefusion.filesystem import get_file_name, is_video, resolve_file_paths
 from facefusion.jobs import job_store
 from facefusion.normalizer import normalize_fps, normalize_padding
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import ApplyStateItem, Args
-from facefusion.vision import create_image_resolutions, create_video_resolutions, detect_image_resolution, detect_video_fps, detect_video_resolution, pack_resolution
+from facefusion.vision import detect_video_fps
 
 
 def reduce_step_args(args : Args) -> Args:
@@ -87,26 +87,14 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('keep_temp', args.get('keep_temp'))
 	# output creation
 	apply_state_item('output_image_quality', args.get('output_image_quality'))
-	if is_image(args.get('target_path')):
-		output_image_resolution = detect_image_resolution(args.get('target_path'))
-		output_image_resolutions = create_image_resolutions(output_image_resolution)
-		if args.get('output_image_resolution') in output_image_resolutions:
-			apply_state_item('output_image_resolution', args.get('output_image_resolution'))
-		else:
-			apply_state_item('output_image_resolution', pack_resolution(output_image_resolution))
+	apply_state_item('output_image_scale', args.get('output_image_scale'))
 	apply_state_item('output_audio_encoder', args.get('output_audio_encoder'))
 	apply_state_item('output_audio_quality', args.get('output_audio_quality'))
 	apply_state_item('output_audio_volume', args.get('output_audio_volume'))
 	apply_state_item('output_video_encoder', args.get('output_video_encoder'))
 	apply_state_item('output_video_preset', args.get('output_video_preset'))
 	apply_state_item('output_video_quality', args.get('output_video_quality'))
-	if is_video(args.get('target_path')):
-		output_video_resolution = detect_video_resolution(args.get('target_path'))
-		output_video_resolutions = create_video_resolutions(output_video_resolution)
-		if args.get('output_video_resolution') in output_video_resolutions:
-			apply_state_item('output_video_resolution', args.get('output_video_resolution'))
-		else:
-			apply_state_item('output_video_resolution', pack_resolution(output_video_resolution))
+	apply_state_item('output_video_scale', args.get('output_video_scale'))
 	if args.get('output_video_fps') or is_video(args.get('target_path')):
 		output_video_fps = normalize_fps(args.get('output_video_fps')) or detect_video_fps(args.get('target_path'))
 		apply_state_item('output_video_fps', output_video_fps)
