@@ -10,8 +10,8 @@ import facefusion.choices
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
-from facefusion.types import AudioBuffer, AudioEncoder, Commands, EncoderSet, Fps, UpdateProgress, VideoEncoder, VideoFormat
-from facefusion.vision import detect_video_duration, detect_video_fps, predict_video_frame_total
+from facefusion.types import AudioBuffer, AudioEncoder, Commands, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
+from facefusion.vision import detect_video_duration, detect_video_fps, pack_resolution, predict_video_frame_total
 
 
 def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
@@ -106,12 +106,12 @@ def get_available_encoder_set() -> EncoderSet:
 	return available_encoder_set
 
 
-def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
 	extract_frame_total = predict_video_frame_total(target_path, temp_video_fps, trim_frame_start, trim_frame_end)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
-		ffmpeg_builder.set_media_resolution(temp_video_resolution),
+		ffmpeg_builder.set_media_resolution(pack_resolution(temp_video_resolution)),
 		ffmpeg_builder.set_frame_quality(0),
 		ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
 		ffmpeg_builder.prevent_frame_drop(),
@@ -123,23 +123,23 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 		return process.returncode == 0
 
 
-def copy_image(target_path : str, temp_image_resolution : str) -> bool:
+def copy_image(target_path : str, temp_image_resolution : Resolution) -> bool:
 	temp_image_path = get_temp_file_path(target_path)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
-		ffmpeg_builder.set_media_resolution(temp_image_resolution),
+		ffmpeg_builder.set_media_resolution(pack_resolution(temp_image_resolution)),
 		ffmpeg_builder.set_image_quality(target_path, 100),
 		ffmpeg_builder.force_output(temp_image_path)
 	)
 	return run_ffmpeg(commands).returncode == 0
 
 
-def finalize_image(target_path : str, output_path : str, output_image_resolution : str) -> bool:
+def finalize_image(target_path : str, output_path : str, output_image_resolution : Resolution) -> bool:
 	output_image_quality = state_manager.get_item('output_image_quality')
 	temp_image_path = get_temp_file_path(target_path)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_image_path),
-		ffmpeg_builder.set_media_resolution(output_image_resolution),
+		ffmpeg_builder.set_media_resolution(pack_resolution(output_image_resolution)),
 		ffmpeg_builder.set_image_quality(target_path, output_image_quality),
 		ffmpeg_builder.force_output(output_path)
 	)
@@ -211,7 +211,7 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	return run_ffmpeg(commands).returncode == 0
 
 
-def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution : str, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution : Resolution, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
@@ -224,7 +224,7 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input_fps(temp_video_fps),
 		ffmpeg_builder.set_input(temp_frames_pattern),
-		ffmpeg_builder.set_media_resolution(output_video_resolution),
+		ffmpeg_builder.set_media_resolution(pack_resolution(output_video_resolution)),
 		ffmpeg_builder.set_video_encoder(output_video_encoder),
 		ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality),
 		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
