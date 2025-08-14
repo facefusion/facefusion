@@ -84,7 +84,7 @@ def test_extract_frames() -> None:
 	for target_path, trim_frame_start, trim_frame_end, frame_total in test_set:
 		create_temp_directory(target_path)
 
-		assert extract_frames(target_path, '452x240', 30.0, trim_frame_start, trim_frame_end) is True
+		assert extract_frames(target_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
 		assert len(resolve_temp_frame_paths(target_path)) == frame_total
 
 		clear_temp_directory(target_path)
@@ -107,9 +107,9 @@ def test_merge_video() -> None:
 		for output_video_encoder in output_video_encoders:
 			state_manager.init_item('output_video_encoder', output_video_encoder)
 			create_temp_directory(target_path)
-			extract_frames(target_path, '452x240', 25.0, 0, 1)
+			extract_frames(target_path, (452, 240), 25.0, 0, 1)
 
-			assert merge_video(target_path, 25.0, '452x240', 25.0, 0, 1) is True
+			assert merge_video(target_path, 25.0, (452, 240), 25.0, 0, 1) is True
 
 		clear_temp_directory(target_path)
 
