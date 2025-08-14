@@ -1,11 +1,13 @@
 import subprocess
 import sys
+from typing import Optional
 
 import pytest
 
-from facefusion.vision import detect_video_resolution, detect_image_resolution
 from facefusion.download import conditional_download
 from facefusion.jobs.job_manager import clear_jobs, init_jobs
+from facefusion.types import Resolution, Scale
+from facefusion.vision import detect_image_resolution, detect_video_resolution
 from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_output_file, prepare_test_output_directory
 
 
@@ -26,76 +28,40 @@ def before_each() -> None:
 	prepare_test_output_directory()
 
 
-def test_original_scale_on_image() -> None:
+@pytest.mark.parametrize('scale, expected_resolution, test_name',
+[
+	(1.0, (426, 226), "original-scale"),
+	(0.5, (212, 112), "half-scale"),
+	(2.0, (852, 452), "double-scale"),
+	(8.0, (3408, 1808), "false-scale"),
+])
+def test_output_image_scale(scale : Scale, expected_resolution : Optional[Resolution], test_name : str) -> None:
 	target_file_path = get_test_example_file('target-240p.jpg')
-	output_file_path = get_test_output_file('test-original-scale-on-image.jpg')
-	commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'frame_enhancer', '-t', target_file_path, '-o', output_file_path, '--output-image-scale', '1.0' ]
+	output_file_path = get_test_output_file(f'test-{test_name}-on-image.jpg')
+	processor = 'face_debugger' if test_name == 'false-scale' else 'frame_enhancer'
+	commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--processors', processor, '-t', target_file_path, '-o', output_file_path, '--output-image-scale', str(scale) ]
 
 	assert subprocess.run(commands).returncode == 0
-	assert is_test_output_file('test-original-scale-on-image.jpg') is True
-	assert detect_image_resolution(target_file_path) == detect_image_resolution(output_file_path)
+	assert is_test_output_file(f'test-{test_name}-on-image.jpg') is True
+	assert detect_image_resolution(output_file_path) == expected_resolution
 
 
-def test_half_scale_on_image() -> None:
-	output_file_path = get_test_output_file('test-half-scale-on-image.jpg')
-	commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'frame_enhancer', '-t', get_test_example_file('target-240p.jpg'), '-o', output_file_path, '--output-image-scale', '0.5' ]
-
-	assert subprocess.run(commands).returncode == 0
-	assert is_test_output_file('test-half-scale-on-image.jpg') is True
-	assert detect_image_resolution(output_file_path) == (212, 112)
-
-
-def test_double_scale_on_image() -> None:
-	output_file_path = get_test_output_file('test-double-scale-on-image.jpg')
-	commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'frame_enhancer', '-t', get_test_example_file('target-240p.jpg'), '-o', output_file_path, '--output-image-scale', '2.0' ]
-
-	assert subprocess.run(commands).returncode == 0
-	assert is_test_output_file('test-double-scale-on-image.jpg') is True
-	assert detect_image_resolution(output_file_path) == (852, 452)
-
-
-def test_false_scale_on_image() -> None:
-	target_file_path = get_test_example_file('target-240p.jpg')
-	output_file_path = get_test_output_file('test-false-scale-on-image.jpg')
-	commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', target_file_path, '-o', output_file_path, '--output-image-scale', '8.0' ]
-
-	assert subprocess.run(commands).returncode == 0
-	assert is_test_output_file('test-false-scale-on-image.jpg') is True
-	assert detect_image_resolution(output_file_path) == (3408, 1808)
-
-
-def test_original_scale_to_video() -> None:
+@pytest.mark.parametrize('scale, expected_resolution, test_name',
+[
+	(1.0, (426, 226), 'original-scale'),
+	(0.5, (212, 112), 'half-scale'),
+	(2.0, (852, 452), 'double-scale'),
+	(8.0, (3408, 1808), 'false-scale'),
+])
+def test_output_video_scale(scale : Scale, expected_resolution : Optional[Resolution], test_name : str) -> None:
 	target_file_path = get_test_example_file('target-240p.mp4')
-	output_file_path = get_test_output_file('test-original-scale-on-video.mp4')
-	commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'frame_enhancer', '-t', target_file_path, '-o', output_file_path, '--trim-frame-end', '1' ]
+	output_file_path = get_test_output_file(f'test-{test_name}-on-video.mp4')
+	processor = 'face_debugger' if test_name == 'false-scale' else 'frame_enhancer'
+	commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--processors', processor, '-t', target_file_path, '-o', output_file_path, '--trim-frame-end', '1' ]
+
+	if scale:
+		commands.extend(['--output-video-scale', str(scale)])
 
 	assert subprocess.run(commands).returncode == 0
-	assert is_test_output_file('test-original-scale-on-video.mp4') is True
-	assert detect_video_resolution(target_file_path) == detect_video_resolution(output_file_path)
-
-
-def test_half_scale_to_video() -> None:
-	output_file_path = get_test_output_file('test-half-scale-on-video.mp4')
-	commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'frame_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', output_file_path, '--trim-frame-end', '1', '--output-video-scale', '0.5' ]
-
-	assert subprocess.run(commands).returncode == 0
-	assert is_test_output_file('test-half-scale-on-video.mp4') is True
-	assert detect_video_resolution(output_file_path) == (212, 112)
-
-
-def test_double_scale_to_video() -> None:
-	output_file_path = get_test_output_file('test-double-scale-on-video.mp4')
-	commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'frame_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', output_file_path, '--trim-frame-end', '1', '--output-video-scale', '2.0' ]
-
-	assert subprocess.run(commands).returncode == 0
-	assert is_test_output_file('test-double-scale-on-video.mp4') is True
-	assert detect_video_resolution(output_file_path) == (852, 452)
-
-
-def test_false_scale_to_video() -> None:
-	output_file_path = get_test_output_file('test-false-scale-on-video.mp4')
-	commands = [ sys.executable, 'facefusion.py', 'headless-run', '--jobs-path', get_test_jobs_directory(), '--processors', 'face_debugger', '-t', get_test_example_file('target-240p.mp4'), '-o', output_file_path, '--trim-frame-end', '1', '--output-video-scale', '8.0' ]
-
-	assert subprocess.run(commands).returncode == 0
-	assert is_test_output_file('test-false-scale-on-video.mp4') is True
-	assert detect_video_resolution(output_file_path) == (3408, 1808)
+	assert is_test_output_file(f'test-{test_name}-on-video.mp4') is True
+	assert detect_video_resolution(output_file_path) == expected_resolution

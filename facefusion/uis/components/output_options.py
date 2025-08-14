@@ -7,7 +7,7 @@ from facefusion import state_manager, wording
 from facefusion.common_helper import calculate_float_step, calculate_int_step
 from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import is_image, is_video
-from facefusion.types import AudioEncoder, Fps, VideoEncoder, VideoPreset
+from facefusion.types import AudioEncoder, Fps, Scale, VideoEncoder, VideoPreset
 from facefusion.uis.core import get_ui_components, register_ui_component
 from facefusion.vision import detect_video_fps
 
@@ -148,7 +148,7 @@ def update_output_image_quality(output_image_quality : float) -> None:
 	state_manager.set_item('output_image_quality', int(output_image_quality))
 
 
-def update_output_image_scale(output_image_scale : float) -> None:
+def update_output_image_scale(output_image_scale : Scale) -> None:
 	state_manager.set_item('output_image_scale', output_image_scale)
 
 
@@ -176,8 +176,8 @@ def update_output_video_quality(output_video_quality : float) -> None:
 	state_manager.set_item('output_video_quality', int(output_video_quality))
 
 
-def update_output_video_scale(output_video_resolution : float) -> None:
-	state_manager.set_item('output_video_scale', output_video_resolution)
+def update_output_video_scale(output_video_scale : Scale) -> None:
+	state_manager.set_item('output_video_scale', output_video_scale)
 
 
 def update_output_video_fps(output_video_fps : Fps) -> None:

@@ -95,7 +95,6 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('output_video_preset', args.get('output_video_preset'))
 	apply_state_item('output_video_quality', args.get('output_video_quality'))
 	apply_state_item('output_video_scale', args.get('output_video_scale'))
-
 	if args.get('output_video_fps') or is_video(args.get('target_path')):
 		output_video_fps = normalize_fps(args.get('output_video_fps')) or detect_video_fps(args.get('target_path'))
 		apply_state_item('output_video_fps', output_video_fps)

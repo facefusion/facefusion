@@ -9,7 +9,7 @@ from cv2.typing import Size
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Duration, Fps, Orientation, Resolution, VisionFrame
+from facefusion.types import Duration, Fps, Orientation, Resolution, Scale, VisionFrame
 from facefusion.video_manager import get_video_capture
 
 
@@ -181,7 +181,7 @@ def restrict_video_resolution(video_path : str, resolution : Resolution) -> Reso
 	return resolution
 
 
-def scale_resolution(resolution : Resolution, scale : float) -> Resolution:
+def scale_resolution(resolution : Resolution, scale : Scale) -> Resolution:
 	resolution = (int(resolution[0] * scale), int(resolution[1] * scale))
 	resolution = normalize_resolution(resolution)
 	return resolution

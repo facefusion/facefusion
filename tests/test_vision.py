@@ -132,9 +132,9 @@ def test_restrict_video_resolution() -> None:
 
 
 def test_scale_resolution() -> None:
-	assert scale_resolution((100, 100), 0.5) == (50, 50)
-	assert scale_resolution((100, 100), 1.0) == (100, 100)
-	assert scale_resolution((100, 100), 2.0) == (200, 200)
+	assert scale_resolution((426, 226), 0.5) == (212, 112)
+	assert scale_resolution((2048, 1080), 1.0) == (2048, 1080)
+	assert scale_resolution((4096, 2160), 2.0) == (8192, 4320)
 
 
 def test_normalize_resolution() -> None:
