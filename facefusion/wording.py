@@ -202,7 +202,7 @@ WORDING : Dict[str, Any] =\
 		'benchmark_resolutions': 'choose the resolutions for the benchmarks (choices: {choices}, ...)',
 		'benchmark_cycle_count': 'specify the amount of cycles per benchmark',
 		# execution
-		'execution_device_id': 'specify the device used for processing',
+		'execution_device_ids': 'specify the devices used for processing',
 		'execution_providers': 'inference using different providers (choices: {choices}, ...)',
 		'execution_thread_count': 'specify the amount of parallel threads while processing',
 		# memory

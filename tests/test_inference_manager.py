@@ -9,7 +9,7 @@ from facefusion.inference_manager import INFERENCE_POOL_SET, get_inference_pool
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	state_manager.init_item('execution_device_id', '0')
+	state_manager.init_item('execution_device_ids', [ '0' ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github' ])
 	content_analyser.pre_check()
