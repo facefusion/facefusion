@@ -4,6 +4,7 @@ import gradio
 
 import facefusion.choices
 from facefusion import state_manager, wording
+from facefusion.common_helper import calculate_int_step
 from facefusion.types import BenchmarkMode, BenchmarkResolution
 
 BENCHMARK_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -28,10 +29,10 @@ def render() -> None:
 	)
 	BENCHMARK_CYCLE_COUNT_SLIDER = gradio.Slider(
 		label = wording.get('uis.benchmark_cycle_count_slider'),
-		value = 5,
-		step = 1,
-		minimum = min(facefusion.choices.benchmark_cycle_count_range),
-		maximum = max(facefusion.choices.benchmark_cycle_count_range)
+		value = state_manager.get_item('benchmark_cycle_count'),
+		step = calculate_int_step(facefusion.choices.benchmark_cycle_count_range),
+		minimum = facefusion.choices.benchmark_cycle_count_range[0],
+		maximum = facefusion.choices.benchmark_cycle_count_range[-1]
 	)
 
 
