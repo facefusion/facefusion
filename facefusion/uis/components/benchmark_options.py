@@ -24,7 +24,7 @@ def render() -> None:
 	BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = wording.get('uis.benchmark_resolutions_checkbox_group'),
 		choices = facefusion.choices.benchmark_resolutions,
-		value = facefusion.choices.benchmark_resolutions
+		value = state_manager.get_item('benchmark_resolutions')
 	)
 	BENCHMARK_CYCLE_COUNT_SLIDER = gradio.Slider(
 		label = wording.get('uis.benchmark_cycle_count_slider'),
