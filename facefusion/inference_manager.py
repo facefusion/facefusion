@@ -1,4 +1,5 @@
 import importlib
+import random
 from time import sleep, time
 from typing import List
 
@@ -22,19 +23,22 @@ INFERENCE_POOL_SET : InferencePoolSet =\
 def get_inference_pool(module_name : str, model_names : List[str], model_source_set : DownloadSet) -> InferencePool:
 	while process_manager.is_checking():
 		sleep(0.5)
-	execution_device_id = state_manager.get_item('execution_device_id')
+	execution_device_ids = state_manager.get_item('execution_device_ids')
 	execution_providers = resolve_execution_providers(module_name)
 	app_context = detect_app_context()
-	inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
-	if app_context == 'cli' and INFERENCE_POOL_SET.get('ui').get(inference_context):
-		INFERENCE_POOL_SET['cli'][inference_context] = INFERENCE_POOL_SET.get('ui').get(inference_context)
-	if app_context == 'ui' and INFERENCE_POOL_SET.get('cli').get(inference_context):
-		INFERENCE_POOL_SET['ui'][inference_context] = INFERENCE_POOL_SET.get('cli').get(inference_context)
-	if not INFERENCE_POOL_SET.get(app_context).get(inference_context):
-		INFERENCE_POOL_SET[app_context][inference_context] = create_inference_pool(model_source_set, execution_device_id, execution_providers)
+	for execution_device_id in execution_device_ids:
+		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
-	return INFERENCE_POOL_SET.get(app_context).get(inference_context)
+		if app_context == 'cli' and INFERENCE_POOL_SET.get('ui').get(inference_context):
+			INFERENCE_POOL_SET['cli'][inference_context] = INFERENCE_POOL_SET.get('ui').get(inference_context)
+		if app_context == 'ui' and INFERENCE_POOL_SET.get('cli').get(inference_context):
+			INFERENCE_POOL_SET['ui'][inference_context] = INFERENCE_POOL_SET.get('cli').get(inference_context)
+		if not INFERENCE_POOL_SET.get(app_context).get(inference_context):
+			INFERENCE_POOL_SET[app_context][inference_context] = create_inference_pool(model_source_set, execution_device_id, execution_providers)
+
+	current_inference_context = get_inference_context(module_name, model_names, random.choice(execution_device_ids), execution_providers)
+	return INFERENCE_POOL_SET.get(app_context).get(current_inference_context)
 
 
 def create_inference_pool(model_source_set : DownloadSet, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferencePool:
@@ -49,13 +53,15 @@ def create_inference_pool(model_source_set : DownloadSet, execution_device_id : 
 
 
 def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
-	execution_device_id = state_manager.get_item('execution_device_id')
+	execution_device_ids = state_manager.get_item('execution_device_ids')
 	execution_providers = resolve_execution_providers(module_name)
 	app_context = detect_app_context()
-	inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
-	if INFERENCE_POOL_SET.get(app_context).get(inference_context):
-		del INFERENCE_POOL_SET[app_context][inference_context]
+	for execution_device_id in execution_device_ids:
+		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
+
+		if INFERENCE_POOL_SET.get(app_context).get(inference_context):
+			del INFERENCE_POOL_SET[app_context][inference_context]
 
 
 def create_inference_session(model_path : str, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferenceSession:

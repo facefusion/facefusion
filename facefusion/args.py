@@ -108,7 +108,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('ui_layouts', args.get('ui_layouts'))
 	apply_state_item('ui_workflow', args.get('ui_workflow'))
 	# execution
-	apply_state_item('execution_device_id', args.get('execution_device_id'))
+	apply_state_item('execution_device_ids', args.get('execution_device_ids'))
 	apply_state_item('execution_providers', args.get('execution_providers'))
 	apply_state_item('execution_thread_count', args.get('execution_thread_count'))
 	# download

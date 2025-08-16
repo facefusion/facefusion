@@ -96,8 +96,6 @@ def resolve_cudnn_conv_algo_search() -> str:
 def resolve_openvino_device_type(execution_device_id : str) -> str:
 	if execution_device_id == '0':
 		return 'GPU'
-	if execution_device_id == '∞':
-		return 'MULTI:GPU'
 	return 'GPU.' + execution_device_id
 
 
