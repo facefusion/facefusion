@@ -86,9 +86,6 @@ output_audio_encoders : List[AudioEncoder] = output_encoder_set.get('audio')
 output_video_encoders : List[VideoEncoder] = output_encoder_set.get('video')
 output_video_presets : List[VideoPreset] = [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow' ]
 
-image_template_sizes : List[float] = [ 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 3.5, 4 ]
-video_template_sizes : List[int] = [ 240, 360, 480, 540, 720, 1080, 1440, 2160, 4320 ]
-
 benchmark_modes : List[BenchmarkMode] = [ 'warm', 'cold' ]
 benchmark_set : BenchmarkSet =\
 {
