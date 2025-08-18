@@ -394,7 +394,6 @@ def process_image(start_time : float) -> ErrorCode:
 
 	write_image(temp_image_path, temp_vision_frame)
 	if is_process_stopping():
-		process_manager.end()
 		return 4
 
 	logger.info(wording.get('finalizing_image').format(resolution = pack_resolution(output_image_resolution)), __name__)
@@ -436,7 +435,6 @@ def process_video(start_time : float) -> ErrorCode:
 		logger.debug(wording.get('extracting_frames_succeed'), __name__)
 	else:
 		if is_process_stopping():
-			process_manager.end()
 			return 4
 		logger.error(wording.get('extracting_frames_failed'), __name__)
 		process_manager.end()
@@ -452,19 +450,23 @@ def process_video(start_time : float) -> ErrorCode:
 				futures = []
 
 				for frame_number, temp_frame_path in enumerate(temp_frame_paths):
-					if is_process_stopping():
-						process_manager.end()
-						return 4
-
 					future = executor.submit(process_temp_frame, temp_frame_path, frame_number)
 					futures.append(future)
 
 				for future in as_completed(futures):
-					future.result()
-					progress.update()
+					if is_process_stopping():
+						for __future__ in futures:
+							__future__.cancel()
+
+					if not future.cancelled():
+						future.result()
+						progress.update()
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()
+
+		if is_process_stopping():
+			return 4
 	else:
 		logger.error(wording.get('temp_frames_not_found'), __name__)
 		process_manager.end()
@@ -475,7 +477,6 @@ def process_video(start_time : float) -> ErrorCode:
 		logger.debug(wording.get('merging_video_succeed'), __name__)
 	else:
 		if is_process_stopping():
-			process_manager.end()
 			return 4
 		logger.error(wording.get('merging_video_failed'), __name__)
 		process_manager.end()
@@ -493,7 +494,6 @@ def process_video(start_time : float) -> ErrorCode:
 			else:
 				video_manager.clear_video_pool()
 				if is_process_stopping():
-					process_manager.end()
 					return 4
 				logger.warn(wording.get('replacing_audio_skipped'), __name__)
 				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
@@ -504,7 +504,6 @@ def process_video(start_time : float) -> ErrorCode:
 			else:
 				video_manager.clear_video_pool()
 				if is_process_stopping():
-					process_manager.end()
 					return 4
 				logger.warn(wording.get('restoring_audio_skipped'), __name__)
 				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
