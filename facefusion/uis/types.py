@@ -7,6 +7,7 @@ ComponentName = Literal\
 	'age_modifier_model_dropdown',
 	'deep_swapper_model_dropdown',
 	'deep_swapper_morph_slider',
+	'expression_restorer_areas_checkbox_group',
 	'expression_restorer_factor_slider',
 	'expression_restorer_model_dropdown',
 	'face_debugger_items_checkbox_group',

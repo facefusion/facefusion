@@ -6,6 +6,7 @@ from facefusion.types import AppContext, AudioFrame, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
 DeepSwapperModel : TypeAlias = str
+ExpressionRestorerArea = Literal['upper-face', 'lower-face']
 ExpressionRestorerModel = Literal['live_portrait']
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race']
 FaceEditorModel = Literal['live_portrait']
@@ -100,6 +101,7 @@ ProcessorStateKey = Literal\
 	'age_modifier_direction',
 	'deep_swapper_model',
 	'deep_swapper_morph',
+	'expression_restorer_areas',
 	'expression_restorer_model',
 	'expression_restorer_factor',
 	'face_debugger_items',
@@ -138,6 +140,7 @@ ProcessorState = TypedDict('ProcessorState',
 	'age_modifier_direction' : int,
 	'deep_swapper_model' : DeepSwapperModel,
 	'deep_swapper_morph' : int,
+	'expression_restorer_areas' : List[ExpressionRestorerArea],
 	'expression_restorer_model' : ExpressionRestorerModel,
 	'expression_restorer_factor' : int,
 	'face_debugger_items' : List[FaceDebuggerItem],

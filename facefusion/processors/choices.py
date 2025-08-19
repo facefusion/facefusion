@@ -2,7 +2,7 @@ from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
 from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_relative_path
-from facefusion.processors.types import AgeModifierModel, DeepSwapperModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperModel, FaceSwapperSet, FaceSwapperWeight, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
+from facefusion.processors.types import AgeModifierModel, DeepSwapperModel, ExpressionRestorerArea, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperModel, FaceSwapperSet, FaceSwapperWeight, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
 deep_swapper_models : List[DeepSwapperModel] =\
@@ -174,6 +174,7 @@ if custom_model_file_paths:
 		model_id = '/'.join([ 'custom', get_file_name(model_file_path) ])
 		deep_swapper_models.append(model_id)
 
+expression_restorer_areas : List[ExpressionRestorerArea] = [ 'upper-face', 'lower-face' ]
 expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]
 face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race' ]
 face_editor_models : List[FaceEditorModel] = [ 'live_portrait' ]

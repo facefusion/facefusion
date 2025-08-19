@@ -93,12 +93,14 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--expression-restorer-model', help = wording.get('help.expression_restorer_model'), default = config.get_str_value('processors', 'expression_restorer_model', 'live_portrait'), choices = processors_choices.expression_restorer_models)
+		group_processors.add_argument('--expression-restorer-areas', help = wording.get('help.expression_restorer_areas').format(choices = ', '.join(processors_choices.expression_restorer_areas)), default = config.get_str_list('processors', 'expression_restorer_areas', ' '.join(processors_choices.expression_restorer_areas)), choices = processors_choices.expression_restorer_areas, nargs = '+', metavar = 'EXPRESSION_RESTORER_AREAS')
 		group_processors.add_argument('--expression-restorer-factor', help = wording.get('help.expression_restorer_factor'), type = int, default = config.get_int_value('processors', 'expression_restorer_factor', '80'), choices = processors_choices.expression_restorer_factor_range, metavar = create_int_metavar(processors_choices.expression_restorer_factor_range))
-		facefusion.jobs.job_store.register_step_keys([ 'expression_restorer_model', 'expression_restorer_factor' ])
+		facefusion.jobs.job_store.register_step_keys([ 'expression_restorer_model', 'expression_restorer_areas', 'expression_restorer_factor' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('expression_restorer_model', args.get('expression_restorer_model'))
+	apply_state_item('expression_restorer_areas', args.get('expression_restorer_areas'))
 	apply_state_item('expression_restorer_factor', args.get('expression_restorer_factor'))
 
 
@@ -170,13 +172,26 @@ def apply_restore(target_crop_vision_frame : VisionFrame, temp_crop_vision_frame
 	target_expression = forward_extract_motion(target_crop_vision_frame)[5]
 	pitch, yaw, roll, scale, translation, temp_expression, motion_points = forward_extract_motion(temp_crop_vision_frame)
 	rotation = create_rotation(pitch, yaw, roll)
-	target_expression[:, [ 0, 4, 5, 8, 9 ]] = temp_expression[:, [ 0, 4, 5, 8, 9 ]]
+	target_expression = filter_expression_areas(temp_expression, target_expression)
 	target_expression = target_expression * expression_restorer_factor + temp_expression * (1 - expression_restorer_factor)
 	target_expression = limit_expression(target_expression)
 	target_motion_points = scale * (motion_points @ rotation.T + target_expression) + translation
 	temp_motion_points = scale * (motion_points @ rotation.T + temp_expression) + translation
 	crop_vision_frame = forward_generate_frame(feature_volume, target_motion_points, temp_motion_points)
 	return crop_vision_frame
+
+
+def filter_expression_areas(temp_expression : LivePortraitExpression, target_expression : LivePortraitExpression) -> LivePortraitExpression:
+	expression_restorer_areas = state_manager.get_item('expression_restorer_areas')
+
+	if 'upper-face' not in expression_restorer_areas:
+		target_expression[:, [1, 2, 6, 10, 11, 12, 13, 15, 16]] = temp_expression[:, [1, 2, 6, 10, 11, 12, 13, 15, 16]]
+
+	if 'lower-face' not in expression_restorer_areas:
+		target_expression[:, [3, 7, 14, 17, 18, 19, 20]] = temp_expression[:, [3, 7, 14, 17, 18, 19, 20]]
+
+	target_expression[:, [0, 4, 5, 8, 9]] = temp_expression[:, [0, 4, 5, 8, 9]]
+	return target_expression
 
 
 def forward_extract_feature(crop_vision_frame : VisionFrame) -> LivePortraitFeatureVolume:
