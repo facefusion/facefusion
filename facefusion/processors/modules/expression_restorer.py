@@ -172,7 +172,7 @@ def apply_restore(target_crop_vision_frame : VisionFrame, temp_crop_vision_frame
 	target_expression = forward_extract_motion(target_crop_vision_frame)[5]
 	pitch, yaw, roll, scale, translation, temp_expression, motion_points = forward_extract_motion(temp_crop_vision_frame)
 	rotation = create_rotation(pitch, yaw, roll)
-	target_expression = filter_expression_areas(temp_expression, target_expression)
+	target_expression = restrict_expression_areas(temp_expression, target_expression)
 	target_expression = target_expression * expression_restorer_factor + temp_expression * (1 - expression_restorer_factor)
 	target_expression = limit_expression(target_expression)
 	target_motion_points = scale * (motion_points @ rotation.T + target_expression) + translation
@@ -181,7 +181,7 @@ def apply_restore(target_crop_vision_frame : VisionFrame, temp_crop_vision_frame
 	return crop_vision_frame
 
 
-def filter_expression_areas(temp_expression : LivePortraitExpression, target_expression : LivePortraitExpression) -> LivePortraitExpression:
+def restrict_expression_areas(temp_expression : LivePortraitExpression, target_expression : LivePortraitExpression) -> LivePortraitExpression:
 	expression_restorer_areas = state_manager.get_item('expression_restorer_areas')
 
 	if 'upper-face' not in expression_restorer_areas:
