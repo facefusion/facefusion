@@ -7,6 +7,7 @@ from facefusion.types import AppContext, AudioFrame, VisionFrame
 AgeModifierModel = Literal['styleganex_age']
 DeepSwapperModel : TypeAlias = str
 ExpressionRestorerModel = Literal['live_portrait']
+ExpressionRestorerArea = Literal['upper-face', 'lower-face']
 FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race']
 FaceEditorModel = Literal['live_portrait']
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']
@@ -102,6 +103,7 @@ ProcessorStateKey = Literal\
 	'deep_swapper_morph',
 	'expression_restorer_model',
 	'expression_restorer_factor',
+	'expression_restorer_areas',
 	'face_debugger_items',
 	'face_editor_model',
 	'face_editor_eyebrow_direction',
@@ -140,6 +142,7 @@ ProcessorState = TypedDict('ProcessorState',
 	'deep_swapper_morph' : int,
 	'expression_restorer_model' : ExpressionRestorerModel,
 	'expression_restorer_factor' : int,
+	'expression_restorer_areas' : List[ExpressionRestorerArea],
 	'face_debugger_items' : List[FaceDebuggerItem],
 	'face_editor_model' : FaceEditorModel,
 	'face_editor_eyebrow_direction' : float,

@@ -9,6 +9,7 @@ ComponentName = Literal\
 	'deep_swapper_morph_slider',
 	'expression_restorer_factor_slider',
 	'expression_restorer_model_dropdown',
+	'expression_restorer_areas_checkbox_group',
 	'face_debugger_items_checkbox_group',
 	'face_detector_angles_checkbox_group',
 	'face_detector_model_dropdown',

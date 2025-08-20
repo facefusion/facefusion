@@ -102,7 +102,8 @@ def listen() -> None:
 		'frame_colorizer_size_dropdown',
 		'face_mask_types_checkbox_group',
 		'face_mask_areas_checkbox_group',
-		'face_mask_regions_checkbox_group'
+		'face_mask_regions_checkbox_group',
+		'expression_restorer_areas_checkbox_group'
 	]):
 		ui_component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
 
