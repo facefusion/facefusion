@@ -23,8 +23,10 @@ def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgre
 
 	while process_manager.is_processing():
 		try:
-
 			while __line__ := process.stdout.readline().decode().lower():
+				if process_manager.is_stopping():
+					process.terminate()
+
 				if 'frame=' in __line__:
 					_, frame_number = __line__.split('frame=')
 					update_progress(int(frame_number))
@@ -36,8 +38,6 @@ def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgre
 			continue
 		return process
 
-	if process_manager.is_stopping():
-		process.terminate()
 	return process
 
 
@@ -61,6 +61,7 @@ def run_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
 
 	if process_manager.is_stopping():
 		process.terminate()
+
 	return process
 
 
