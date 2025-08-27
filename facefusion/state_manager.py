@@ -17,9 +17,7 @@ def get_state() -> Union[State, ProcessorState]:
 
 
 def sync_state() -> None:
-	ui_state = STATE_SET.get('ui')
-	if ui_state is not None:
-		STATE_SET['cli'] = ui_state #type:ignore[assignment]
+	STATE_SET['cli'] = STATE_SET.get('ui') #type:ignore[assignment]
 
 
 def init_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
