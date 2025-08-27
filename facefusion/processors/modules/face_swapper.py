@@ -113,7 +113,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				},
 				'embedding_converter':
 				{
-					'url': resolve_download_url('models-3.0.0', 'arcface_converter_ghost.onnx'),
+					'url': resolve_download_url('models-3.4.0', 'crossface_ghost.onnx'),
 					'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
 				}
 			},
@@ -134,7 +134,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				},
 				'embedding_converter':
 				{
-					'url': resolve_download_url('models-3.0.0', 'arcface_converter_ghost.hash'),
+					'url': resolve_download_url('models-3.4.0', 'crossface_ghost.hash'),
 					'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.hash')
 				}
 			},
@@ -147,7 +147,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				},
 				'embedding_converter':
 				{
-					'url': resolve_download_url('models-3.0.0', 'arcface_converter_ghost.onnx'),
+					'url': resolve_download_url('models-3.4.0', 'crossface_ghost.onnx'),
 					'path': resolve_relative_path('../.assets/models/arcface_converter_ghost.onnx')
 				}
 			},
@@ -322,7 +322,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				},
 				'embedding_converter':
 				{
-					'url': resolve_download_url('models-3.0.0', 'arcface_converter_simswap.hash'),
+					'url': resolve_download_url('models-3.4.0', 'crossface_simswap.hash'),
 					'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.hash')
 				}
 			},
@@ -335,7 +335,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				},
 				'embedding_converter':
 				{
-					'url': resolve_download_url('models-3.0.0', 'arcface_converter_simswap.onnx'),
+					'url': resolve_download_url('models-3.4.0', 'crossface_simswap.onnx'),
 					'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.onnx')
 				}
 			},
@@ -356,7 +356,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				},
 				'embedding_converter':
 				{
-					'url': resolve_download_url('models-3.0.0', 'arcface_converter_simswap.hash'),
+					'url': resolve_download_url('models-3.4.0', 'crossface_simswap.hash'),
 					'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.hash')
 				}
 			},
@@ -369,7 +369,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 				},
 				'embedding_converter':
 				{
-					'url': resolve_download_url('models-3.0.0', 'arcface_converter_simswap.onnx'),
+					'url': resolve_download_url('models-3.4.0', 'crossface_simswap.onnx'),
 					'path': resolve_relative_path('../.assets/models/arcface_converter_simswap.onnx')
 				}
 			},
