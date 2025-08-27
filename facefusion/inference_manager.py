@@ -71,6 +71,7 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 	try:
 		inference_session_providers = create_inference_session_providers(execution_device_id, execution_providers)
 		inference_session = InferenceSession(model_path, providers = inference_session_providers)
+		logger.enable()
 		logger.info(wording.get('loading_model_succeed').format(model_name = model_file_name, seconds = calculate_end_time(start_time)), __name__)
 		return inference_session
 
