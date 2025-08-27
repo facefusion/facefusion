@@ -241,6 +241,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.disable()
 		if processor_module.pre_process('preview'):
+			logger.enable()
 			temp_vision_frame = processor_module.process_frame(
 			{
 				'reference_vision_frame': reference_vision_frame,
