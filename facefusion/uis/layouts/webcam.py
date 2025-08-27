@@ -15,6 +15,10 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					about.render()
 				with gradio.Blocks():
+					source.render()
+				with gradio.Blocks():
+					webcam_options.render()
+				with gradio.Blocks():
 					processors.render()
 				with gradio.Blocks():
 					age_modifier_options.render()
@@ -41,10 +45,6 @@ def render() -> gradio.Blocks:
 					execution_thread_count.render()
 				with gradio.Blocks():
 					download.render()
-				with gradio.Blocks():
-					webcam_options.render()
-				with gradio.Blocks():
-					source.render()
 			with gradio.Column(scale = 11):
 				with gradio.Blocks():
 					webcam.render()

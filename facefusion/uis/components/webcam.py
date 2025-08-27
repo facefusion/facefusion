@@ -31,7 +31,8 @@ def render() -> None:
 	)
 	WEBCAM_STOP_BUTTON = gradio.Button(
 		value = wording.get('uis.stop_button'),
-		size = 'sm'
+		size = 'sm',
+		visible = False
 	)
 
 
@@ -40,23 +41,31 @@ def listen() -> None:
 	webcam_mode_radio = get_ui_component('webcam_mode_radio')
 	webcam_resolution_dropdown = get_ui_component('webcam_resolution_dropdown')
 	webcam_fps_slider = get_ui_component('webcam_fps_slider')
-	source_image = get_ui_component('source_image')
 
 	if webcam_device_id_dropdown and webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
+		WEBCAM_START_BUTTON.click(pre_start, outputs = [ WEBCAM_START_BUTTON, WEBCAM_STOP_BUTTON ])
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_device_id_dropdown, webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
 		WEBCAM_STOP_BUTTON.click(stop, cancels = start_event, outputs = WEBCAM_IMAGE)
+		WEBCAM_STOP_BUTTON.click(pre_stop, outputs = [ WEBCAM_START_BUTTON, WEBCAM_STOP_BUTTON ])
 
-	if source_image:
-		source_image.change(stop, cancels = start_event, outputs = WEBCAM_IMAGE)
+
+def pre_start() -> tuple[gradio.Button, gradio.Button]:
+	return gradio.Button(visible = False), gradio.Button(visible = True)
+
+
+def pre_stop() -> tuple[gradio.Button, gradio.Button]:
+	return gradio.Button(visible = True), gradio.Button(visible = False)
 
 
 def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : str, webcam_fps : Fps) -> Generator[VisionFrame, None, None]:
 	state_manager.init_item('face_selector_mode', 'one')
+	state_manager.sync_state()
+
 	camera_capture = get_local_camera_capture(webcam_device_id)
 	stream = None
 
 	if webcam_mode in [ 'udp', 'v4l2' ]:
-		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) #type:ignore[arg-type]
+		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) # type:ignore[arg-type]
 	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
 
 	if camera_capture and camera_capture.isOpened():
@@ -73,7 +82,7 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 				try:
 					stream.stdin.write(capture_frame.tobytes())
 				except Exception:
-					clear_camera_pool()
+					pass
 
 
 def stop() -> gradio.Image:
