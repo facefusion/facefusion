@@ -37,9 +37,7 @@ def set_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
 
 
 def sync_item(key : Union[StateKey, ProcessorStateKey]) -> None:
-	ui_state = STATE_SET.get('ui')
-	if ui_state is not None:
-		STATE_SET['cli'][key] = ui_state.get(key) #type:ignore[literal-required]
+	STATE_SET['cli'][key] = STATE_SET.get('ui').get(key) #type:ignore[literal-required]
 
 
 def clear_item(key : Union[StateKey, ProcessorStateKey]) -> None:
