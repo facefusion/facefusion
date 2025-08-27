@@ -48,7 +48,7 @@ def render() -> None:
 
 
 def listen() -> None:
-	SOURCE_FILE.change(update_source, inputs = SOURCE_FILE)
+	SOURCE_FILE.change(update_source, inputs = SOURCE_FILE, outputs = SOURCE_FILE)
 	webcam_device_id_dropdown = get_ui_component('webcam_device_id_dropdown')
 	webcam_mode_radio = get_ui_component('webcam_mode_radio')
 	webcam_resolution_dropdown = get_ui_component('webcam_resolution_dropdown')
@@ -57,18 +57,21 @@ def listen() -> None:
 	if webcam_device_id_dropdown and webcam_mode_radio and webcam_resolution_dropdown and webcam_fps_slider:
 		WEBCAM_START_BUTTON.click(pre_start, outputs = [ SOURCE_FILE, WEBCAM_IMAGE, WEBCAM_START_BUTTON, WEBCAM_STOP_BUTTON ])
 		start_event = WEBCAM_START_BUTTON.click(start, inputs = [ webcam_device_id_dropdown, webcam_mode_radio, webcam_resolution_dropdown, webcam_fps_slider ], outputs = WEBCAM_IMAGE)
+		start_event.then(pre_stop)
 		WEBCAM_STOP_BUTTON.click(stop, cancels = start_event, outputs = WEBCAM_IMAGE)
 		WEBCAM_STOP_BUTTON.click(pre_stop, outputs = [ SOURCE_FILE, WEBCAM_IMAGE, WEBCAM_START_BUTTON, WEBCAM_STOP_BUTTON ])
 
 
-def update_source(files : List[File]) -> None:
+def update_source(files : List[File]) -> gradio.File:
 	file_names = [ file.name for file in files ] if files else None
 	has_source_image = has_image(file_names)
 
 	if has_source_image:
 		state_manager.set_item('source_paths', file_names)
-	else:
-		state_manager.clear_item('source_paths')
+		return gradio.File(value = file_names)
+
+	state_manager.clear_item('source_paths')
+	return gradio.File(value = None)
 
 
 def pre_start() -> Tuple[gradio.File, gradio.Image, gradio.Button, gradio.Button]:
