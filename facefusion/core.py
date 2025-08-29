@@ -361,7 +361,7 @@ def process_image(start_time : float) -> ErrorCode:
 
 	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
-	logger.info(wording.get('copying_image').format(resolution = temp_image_resolution), __name__)
+	logger.info(wording.get('copying_image').format(resolution = pack_resolution(temp_image_resolution)), __name__)
 	if copy_image(state_manager.get_item('target_path'), temp_image_resolution):
 		logger.debug(wording.get('copying_image_succeed'), __name__)
 	else:
@@ -429,7 +429,7 @@ def process_video(start_time : float) -> ErrorCode:
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-	logger.info(wording.get('extracting_frames').format(resolution = temp_video_resolution, fps = temp_video_fps), __name__)
+	logger.info(wording.get('extracting_frames').format(resolution = pack_resolution(temp_video_resolution), fps = temp_video_fps), __name__)
 
 	if extract_frames(state_manager.get_item('target_path'), temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end):
 		logger.debug(wording.get('extracting_frames_succeed'), __name__)
