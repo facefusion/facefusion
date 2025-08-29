@@ -5,12 +5,12 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Deque, Generator
 
 import cv2
+import numpy
 from tqdm import tqdm
 
 from facefusion import ffmpeg_builder, logger, state_manager, wording
 from facefusion.audio import create_empty_audio_frame
 from facefusion.content_analyser import analyse_stream
-from facefusion.exit_helper import hard_exit
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.filesystem import is_directory
 from facefusion.processors.core import get_processors_modules
@@ -30,8 +30,9 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 				if analyse_stream(capture_frame, camera_fps):
 					camera_capture.release()
 
-				future = executor.submit(process_stream_frame, capture_frame)
-				futures.append(future)
+				if numpy.any(capture_frame):
+					future = executor.submit(process_stream_frame, capture_frame)
+					futures.append(future)
 
 				for future_done in [ future for future in futures if future.done() ]:
 					capture_frame = future_done.result()
