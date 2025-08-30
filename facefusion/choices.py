@@ -62,7 +62,7 @@ image_type_set : ImageTypeSet =\
 	'tiff': 'image/tiff',
 	'webp': 'image/webp'
 }
-Dropvideo_type_set : VideoTypeSet =\
+video_type_set : VideoTypeSet =\
 {
 	'avi': 'video/x-msvideo',
 	'm4v': 'video/mp4',
