@@ -111,10 +111,6 @@ def set_image_quality(image_path : str, image_quality : int) -> Commands:
 		return [ '-q:v', str(image_quality) ]
 
 	image_compression = round(31 - (image_quality * 0.31))
-
-	if get_file_format(image_path) == 'avif':
-		return [ '-crf', str(image_compression) ]
-
 	return [ '-q:v', str(image_compression) ]
 
 

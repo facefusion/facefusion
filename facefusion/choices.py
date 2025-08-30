@@ -62,11 +62,7 @@ image_type_set : ImageTypeSet =\
 	'tiff': 'image/tiff',
 	'webp': 'image/webp'
 }
-
-if is_macos() or is_linux():
-	image_type_set['avif'] = 'image/avif'
-
-video_type_set : VideoTypeSet =\
+Dropvideo_type_set : VideoTypeSet =\
 {
 	'avi': 'video/x-msvideo',
 	'm4v': 'video/mp4',
