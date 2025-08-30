@@ -1,7 +1,7 @@
 import logging
 from typing import List, Sequence
 
-from facefusion.common_helper import create_float_range, create_int_range
+from facefusion.common_helper import create_float_range, create_int_range, is_linux, is_macos
 from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, VoiceExtractorModel, WebcamMode
 
 face_detector_set : FaceDetectorSet =\
@@ -56,13 +56,16 @@ audio_type_set : AudioTypeSet =\
 }
 image_type_set : ImageTypeSet =\
 {
-	'avif': 'image/avif',
 	'bmp': 'image/bmp',
 	'jpeg': 'image/jpeg',
 	'png': 'image/png',
 	'tiff': 'image/tiff',
 	'webp': 'image/webp'
 }
+
+if is_macos() or is_linux():
+	image_type_set['avif'] = 'image/avif'
+
 video_type_set : VideoTypeSet =\
 {
 	'avi': 'video/x-msvideo',
