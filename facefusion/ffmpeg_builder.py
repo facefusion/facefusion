@@ -108,9 +108,13 @@ def set_media_resolution(video_resolution : str) -> Commands:
 
 def set_image_quality(image_path : str, image_quality : int) -> Commands:
 	if get_file_format(image_path) == 'webp':
-		image_compression = image_quality
-	else:
-		image_compression = round(31 - (image_quality * 0.31))
+		return [ '-q:v', str(image_quality) ]
+
+	image_compression = round(31 - (image_quality * 0.31))
+
+	if get_file_format(image_path) == 'avif':
+		return [ '-crf', str(image_compression) ]
+
 	return [ '-q:v', str(image_compression) ]
 
 

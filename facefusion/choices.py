@@ -56,6 +56,7 @@ audio_type_set : AudioTypeSet =\
 }
 image_type_set : ImageTypeSet =\
 {
+	'avif': 'image/avif',
 	'bmp': 'image/bmp',
 	'jpeg': 'image/jpeg',
 	'png': 'image/png',
