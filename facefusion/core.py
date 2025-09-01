@@ -131,7 +131,7 @@ def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_analyser_hash = hash_helper.create_hash(content_analyser_content)
 
-	return all(module.pre_check() for module in common_modules) and content_analyser_hash == '1591e652'
+	return all(module.pre_check() for module in common_modules) and content_analyser_hash == '949caf09'
 
 
 def processors_pre_check() -> bool:

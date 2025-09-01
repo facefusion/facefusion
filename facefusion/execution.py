@@ -104,7 +104,7 @@ def run_nvidia_smi() -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stdout = subprocess.PIPE)
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def detect_static_execution_devices() -> List[ExecutionDevice]:
 	return detect_execution_devices()
 

@@ -11,7 +11,7 @@ from facefusion.thread_helper import thread_semaphore
 from facefusion.types import Audio, AudioChunk, DownloadScope, DownloadSet, InferencePool, ModelSet, Voice, VoiceChunk
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{

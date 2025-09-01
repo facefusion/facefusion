@@ -20,7 +20,7 @@ from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvi
 from facefusion.vision import read_static_image, read_static_video_frame, unpack_resolution
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{

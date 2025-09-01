@@ -13,7 +13,7 @@ from facefusion.types import Angle, BoundingBox, Detection, DownloadScope, Downl
 from facefusion.vision import restrict_frame, unpack_resolution
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{

@@ -24,7 +24,7 @@ from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, Inferenc
 from facefusion.vision import conditional_match_frame_color, read_static_image, read_static_video_frame
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	model_config = []
 
