@@ -252,7 +252,7 @@ def route_job_runner() -> ErrorCode:
 	if state_manager.get_item('command') == 'job-run':
 		logger.info(wording.get('running_job').format(job_id = state_manager.get_item('job_id')), __name__)
 		if job_runner.run_job(state_manager.get_item('job_id'), process_step):
-			logger.info(wording.get('processing_job_succeed').format(job_id = state_manager.get_item('job_id')), __name__)
+			logger.info(wording.get('processing_job_succeeded').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
 		logger.info(wording.get('processing_job_failed').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
@@ -260,7 +260,7 @@ def route_job_runner() -> ErrorCode:
 	if state_manager.get_item('command') == 'job-run-all':
 		logger.info(wording.get('running_jobs'), __name__)
 		if job_runner.run_jobs(process_step, state_manager.get_item('halt_on_error')):
-			logger.info(wording.get('processing_jobs_succeed'), __name__)
+			logger.info(wording.get('processing_jobs_succeeded'), __name__)
 			return 0
 		logger.info(wording.get('processing_jobs_failed'), __name__)
 		return 1
@@ -268,7 +268,7 @@ def route_job_runner() -> ErrorCode:
 	if state_manager.get_item('command') == 'job-retry':
 		logger.info(wording.get('retrying_job').format(job_id = state_manager.get_item('job_id')), __name__)
 		if job_runner.retry_job(state_manager.get_item('job_id'), process_step):
-			logger.info(wording.get('processing_job_succeed').format(job_id = state_manager.get_item('job_id')), __name__)
+			logger.info(wording.get('processing_job_succeeded').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
 		logger.info(wording.get('processing_job_failed').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
@@ -276,7 +276,7 @@ def route_job_runner() -> ErrorCode:
 	if state_manager.get_item('command') == 'job-retry-all':
 		logger.info(wording.get('retrying_jobs'), __name__)
 		if job_runner.retry_jobs(process_step, state_manager.get_item('halt_on_error')):
-			logger.info(wording.get('processing_jobs_succeed'), __name__)
+			logger.info(wording.get('processing_jobs_succeeded'), __name__)
 			return 0
 		logger.info(wording.get('processing_jobs_failed'), __name__)
 		return 1
@@ -363,7 +363,7 @@ def process_image(start_time : float) -> ErrorCode:
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
 	logger.info(wording.get('copying_image').format(resolution = pack_resolution(temp_image_resolution)), __name__)
 	if copy_image(state_manager.get_item('target_path'), temp_image_resolution):
-		logger.debug(wording.get('copying_image_succeed'), __name__)
+		logger.debug(wording.get('copying_image_succeeded'), __name__)
 	else:
 		logger.error(wording.get('copying_image_failed'), __name__)
 		process_manager.end()
@@ -398,7 +398,7 @@ def process_image(start_time : float) -> ErrorCode:
 
 	logger.info(wording.get('finalizing_image').format(resolution = pack_resolution(output_image_resolution)), __name__)
 	if finalize_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), output_image_resolution):
-		logger.debug(wording.get('finalizing_image_succeed'), __name__)
+		logger.debug(wording.get('finalizing_image_succeeded'), __name__)
 	else:
 		logger.warn(wording.get('finalizing_image_skipped'), __name__)
 
@@ -406,7 +406,7 @@ def process_image(start_time : float) -> ErrorCode:
 	clear_temp_directory(state_manager.get_item('target_path'))
 
 	if is_image(state_manager.get_item('output_path')):
-		logger.info(wording.get('processing_image_succeed').format(seconds = calculate_end_time(start_time)), __name__)
+		logger.info(wording.get('processing_image_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
 	else:
 		logger.error(wording.get('processing_image_failed'), __name__)
 		process_manager.end()
@@ -432,7 +432,7 @@ def process_video(start_time : float) -> ErrorCode:
 	logger.info(wording.get('extracting_frames').format(resolution = pack_resolution(temp_video_resolution), fps = temp_video_fps), __name__)
 
 	if extract_frames(state_manager.get_item('target_path'), temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end):
-		logger.debug(wording.get('extracting_frames_succeed'), __name__)
+		logger.debug(wording.get('extracting_frames_succeeded'), __name__)
 	else:
 		if is_process_stopping():
 			return 4
@@ -474,7 +474,7 @@ def process_video(start_time : float) -> ErrorCode:
 
 	logger.info(wording.get('merging_video').format(resolution = pack_resolution(output_video_resolution), fps = state_manager.get_item('output_video_fps')), __name__)
 	if merge_video(state_manager.get_item('target_path'), temp_video_fps, output_video_resolution, state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
-		logger.debug(wording.get('merging_video_succeed'), __name__)
+		logger.debug(wording.get('merging_video_succeeded'), __name__)
 	else:
 		if is_process_stopping():
 			return 4
@@ -490,7 +490,7 @@ def process_video(start_time : float) -> ErrorCode:
 		if source_audio_path:
 			if replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
 				video_manager.clear_video_pool()
-				logger.debug(wording.get('replacing_audio_succeed'), __name__)
+				logger.debug(wording.get('replacing_audio_succeeded'), __name__)
 			else:
 				video_manager.clear_video_pool()
 				if is_process_stopping():
@@ -500,7 +500,7 @@ def process_video(start_time : float) -> ErrorCode:
 		else:
 			if restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), trim_frame_start, trim_frame_end):
 				video_manager.clear_video_pool()
-				logger.debug(wording.get('restoring_audio_succeed'), __name__)
+				logger.debug(wording.get('restoring_audio_succeeded'), __name__)
 			else:
 				video_manager.clear_video_pool()
 				if is_process_stopping():
@@ -512,7 +512,7 @@ def process_video(start_time : float) -> ErrorCode:
 	clear_temp_directory(state_manager.get_item('target_path'))
 
 	if is_video(state_manager.get_item('output_path')):
-		logger.info(wording.get('processing_video_succeed').format(seconds = calculate_end_time(start_time)), __name__)
+		logger.info(wording.get('processing_video_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
 	else:
 		logger.error(wording.get('processing_video_failed'), __name__)
 		process_manager.end()

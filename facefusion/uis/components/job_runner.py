@@ -89,7 +89,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 	if job_action == 'job-run':
 		logger.info(wording.get('running_job').format(job_id = job_id), __name__)
 		if job_id and job_runner.run_job(job_id, process_step):
-			logger.info(wording.get('processing_job_succeed').format(job_id = job_id), __name__)
+			logger.info(wording.get('processing_job_succeeded').format(job_id = job_id), __name__)
 		else:
 			logger.info(wording.get('processing_job_failed').format(job_id = job_id), __name__)
 		updated_job_ids = job_manager.find_job_ids('queued') or [ 'none' ]
@@ -100,14 +100,14 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 		logger.info(wording.get('running_jobs'), __name__)
 		halt_on_error = False
 		if job_runner.run_jobs(process_step, halt_on_error):
-			logger.info(wording.get('processing_jobs_succeed'), __name__)
+			logger.info(wording.get('processing_jobs_succeeded'), __name__)
 		else:
 			logger.info(wording.get('processing_jobs_failed'), __name__)
 
 	if job_action == 'job-retry':
 		logger.info(wording.get('retrying_job').format(job_id = job_id), __name__)
 		if job_id and job_runner.retry_job(job_id, process_step):
-			logger.info(wording.get('processing_job_succeed').format(job_id = job_id), __name__)
+			logger.info(wording.get('processing_job_succeeded').format(job_id = job_id), __name__)
 		else:
 			logger.info(wording.get('processing_job_failed').format(job_id = job_id), __name__)
 		updated_job_ids = job_manager.find_job_ids('failed') or [ 'none' ]
@@ -118,7 +118,7 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 		logger.info(wording.get('retrying_jobs'), __name__)
 		halt_on_error = False
 		if job_runner.retry_jobs(process_step, halt_on_error):
-			logger.info(wording.get('processing_jobs_succeed'), __name__)
+			logger.info(wording.get('processing_jobs_succeeded'), __name__)
 		else:
 			logger.info(wording.get('processing_jobs_failed'), __name__)
 	return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Dropdown()
