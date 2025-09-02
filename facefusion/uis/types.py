@@ -65,6 +65,7 @@ ComponentName = Literal\
 	'output_image',
 	'output_video',
 	'output_video_fps_slider',
+	'preview_image',
 	'preview_frame_slider',
 	'processors_checkbox_group',
 	'reference_face_distance_slider',

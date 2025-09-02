@@ -15,27 +15,17 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.types import AudioFrame, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
-from facefusion.vision import count_video_frame_total, detect_frame_orientation, normalize_frame_color, read_static_image, read_static_images, read_video_frame, restrict_frame
+from facefusion.vision import detect_frame_orientation, normalize_frame_color, read_static_image, read_static_images, read_video_frame, restrict_frame
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
-PREVIEW_FRAME_SLIDER : Optional[gradio.Slider] = None
 
 
 def render() -> None:
 	global PREVIEW_IMAGE
-	global PREVIEW_FRAME_SLIDER
 
 	preview_image_options : ComponentOptions =\
 	{
 		'label': wording.get('uis.preview_image')
-	}
-	preview_frame_slider_options : ComponentOptions =\
-	{
-		'label': wording.get('uis.preview_frame_slider'),
-		'step': 1,
-		'minimum': 0,
-		'maximum': 100,
-		'visible': False
 	}
 
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
@@ -62,21 +52,20 @@ def render() -> None:
 		preview_image_options['value'] = normalize_frame_color(preview_vision_frame)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 		preview_image_options['visible'] = True
-		preview_frame_slider_options['value'] = state_manager.get_item('reference_frame_number')
-		preview_frame_slider_options['maximum'] = count_video_frame_total(state_manager.get_item('target_path'))
-		preview_frame_slider_options['visible'] = True
 	PREVIEW_IMAGE = gradio.Image(**preview_image_options)
-	PREVIEW_FRAME_SLIDER = gradio.Slider(**preview_frame_slider_options)
-	register_ui_component('preview_frame_slider', PREVIEW_FRAME_SLIDER)
+	register_ui_component('preview_image', PREVIEW_IMAGE)
 
 
 def listen() -> None:
-	PREVIEW_FRAME_SLIDER.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE, show_progress = 'hidden')
-	PREVIEW_FRAME_SLIDER.change(slide_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE, show_progress = 'hidden', trigger_mode = 'once')
+	preview_frame_slider = get_ui_component('preview_frame_slider')
 
-	reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
-	if reference_face_position_gallery:
-		reference_face_position_gallery.select(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+	if preview_frame_slider:
+		preview_frame_slider.release(update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE, show_progress = 'hidden')
+		preview_frame_slider.change(slide_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE, show_progress = 'hidden', trigger_mode = 'once')
+
+		reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
+		if reference_face_position_gallery:
+			reference_face_position_gallery.select(clear_and_update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
@@ -86,15 +75,7 @@ def listen() -> None:
 		'target_video'
 	]):
 		for method in [ 'change', 'clear' ]:
-			getattr(ui_component, method)(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
-
-	for ui_component in get_ui_components(
-	[
-		'target_image',
-		'target_video'
-	]):
-		for method in [ 'change', 'clear' ]:
-			getattr(ui_component, method)(update_preview_frame_slider, outputs = PREVIEW_FRAME_SLIDER)
+			getattr(ui_component, method)(update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
@@ -105,7 +86,7 @@ def listen() -> None:
 		'face_mask_regions_checkbox_group',
 		'expression_restorer_areas_checkbox_group'
 	]):
-		ui_component.change(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+		ui_component.change(update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
@@ -141,7 +122,7 @@ def listen() -> None:
 		'face_mask_padding_right_slider',
 		'output_video_fps_slider'
 	]):
-		ui_component.release(update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+		ui_component.release(update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
@@ -168,14 +149,14 @@ def listen() -> None:
 		'face_parser_model_dropdown',
 		'voice_extractor_model_dropdown'
 	]):
-		ui_component.change(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+		ui_component.change(clear_and_update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
 		'face_detector_score_slider',
 		'face_landmarker_score_slider'
 	]):
-		ui_component.release(clear_and_update_preview_image, inputs = PREVIEW_FRAME_SLIDER, outputs = PREVIEW_IMAGE)
+		ui_component.release(clear_and_update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
 
 
 def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
@@ -187,7 +168,9 @@ def slide_preview_image(frame_number : int = 0) -> gradio.Image:
 	if is_video(state_manager.get_item('target_path')):
 		preview_vision_frame = normalize_frame_color(read_video_frame(state_manager.get_item('target_path'), frame_number))
 		preview_vision_frame = restrict_frame(preview_vision_frame, (1024, 1024))
+
 		return gradio.Image(value = preview_vision_frame)
+
 	return gradio.Image(value = None)
 
 
@@ -222,13 +205,6 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 		preview_vision_frame = normalize_frame_color(preview_vision_frame)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
 	return gradio.Image(value = None, elem_classes = None)
-
-
-def update_preview_frame_slider() -> gradio.Slider:
-	if is_video(state_manager.get_item('target_path')):
-		video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
-		return gradio.Slider(maximum = video_frame_total, visible = True)
-	return gradio.Slider(value = 0, visible = False)
 
 
 def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:
