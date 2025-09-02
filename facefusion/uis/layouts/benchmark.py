@@ -15,6 +15,8 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					about.render()
 				with gradio.Blocks():
+					benchmark_options.render()
+				with gradio.Blocks():
 					processors.render()
 				with gradio.Blocks():
 					age_modifier_options.render()
@@ -40,13 +42,10 @@ def render() -> gradio.Blocks:
 					execution.render()
 					execution_thread_count.render()
 				with gradio.Blocks():
-					benchmark_options.render()
-				with gradio.Blocks():
 					download.render()
 				with gradio.Blocks():
 					state_manager.set_item('video_memory_strategy', 'tolerant')
 					memory.render()
-
 			with gradio.Column(scale = 11):
 				with gradio.Blocks():
 					benchmark.render()
