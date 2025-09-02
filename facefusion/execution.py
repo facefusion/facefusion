@@ -57,11 +57,7 @@ def create_inference_session_providers(execution_device_id : str, execution_prov
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id,
-				'migraphx_load_compiled_model': True,
-				'migraphx_load_compiled_path': '.caches',
-				'migraphx_save_compiled_model': True,
-				'migraphx_save_compiled_path': '.caches',
-				'migraphx_exhaustive_tune': True
+				'migraphx_model_cache_dir': '.caches'
 			}))
 		if execution_provider == 'openvino':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
