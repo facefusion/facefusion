@@ -105,8 +105,12 @@ def listen() -> None:
 	FACE_SELECTOR_GENDER_DROPDOWN.change(update_face_selector_gender, inputs = FACE_SELECTOR_GENDER_DROPDOWN, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	FACE_SELECTOR_RACE_DROPDOWN.change(update_face_selector_race, inputs = FACE_SELECTOR_RACE_DROPDOWN, outputs = REFERENCE_FACE_POSITION_GALLERY)
 	FACE_SELECTOR_AGE_RANGE_SLIDER.release(update_face_selector_age_range, inputs = FACE_SELECTOR_AGE_RANGE_SLIDER, outputs = REFERENCE_FACE_POSITION_GALLERY)
-	REFERENCE_FACE_POSITION_GALLERY.select(clear_and_update_reference_face_position)
 	REFERENCE_FACE_DISTANCE_SLIDER.release(update_reference_face_distance, inputs = REFERENCE_FACE_DISTANCE_SLIDER)
+
+	preview_frame_slider = get_ui_component('preview_frame_slider')
+	if preview_frame_slider:
+		REFERENCE_FACE_POSITION_GALLERY.select(update_reference_frame_number, inputs = preview_frame_slider)
+		REFERENCE_FACE_POSITION_GALLERY.select(update_reference_face_position)
 
 	for ui_component in get_ui_components(
 	[
@@ -114,7 +118,8 @@ def listen() -> None:
 		'target_video'
 	]):
 		for method in [ 'change', 'clear' ]:
-			getattr(ui_component, method)(update_reference_face_position)
+			getattr(ui_component, method)(clear_reference_frame_number)
+			getattr(ui_component, method)(clear_reference_face_position)
 			getattr(ui_component, method)(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
 	for ui_component in get_ui_components(
@@ -132,8 +137,7 @@ def listen() -> None:
 	preview_frame_slider = get_ui_component('preview_frame_slider')
 	if preview_frame_slider:
 		for method in [ 'change', 'release' ]:
-			getattr(preview_frame_slider, method)(update_reference_frame_number, inputs = preview_frame_slider, show_progress = 'hidden')
-			getattr(preview_frame_slider, method)(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY, show_progress = 'hidden')
+			getattr(preview_frame_slider, method)(update_reference_position_gallery, inputs = preview_frame_slider, outputs = REFERENCE_FACE_POSITION_GALLERY, show_progress = 'hidden')
 
 
 def update_face_selector_mode(face_selector_mode : FaceSelectorMode) -> Tuple[gradio.Gallery, gradio.Slider]:
@@ -168,22 +172,24 @@ def update_face_selector_age_range(face_selector_age_range : Tuple[float, float]
 	return update_reference_position_gallery()
 
 
-def clear_and_update_reference_face_position(event : gradio.SelectData) -> gradio.Gallery:
-	clear_static_faces()
-	update_reference_face_position(event.index)
-	return update_reference_position_gallery()
+def update_reference_face_position(event : gradio.SelectData) -> None:
+	state_manager.set_item('reference_face_position', event.index)
 
 
-def update_reference_face_position(reference_face_position : int = 0) -> None:
-	state_manager.set_item('reference_face_position', reference_face_position)
+def clear_reference_face_position() -> None:
+	state_manager.set_item('reference_face_position', 0)
 
 
 def update_reference_face_distance(reference_face_distance : float) -> None:
 	state_manager.set_item('reference_face_distance', reference_face_distance)
 
 
-def update_reference_frame_number(reference_frame_number : int) -> None:
+def update_reference_frame_number(reference_frame_number : int = 0) -> None:
 	state_manager.set_item('reference_frame_number', reference_frame_number)
+
+
+def clear_reference_frame_number() -> None:
+	state_manager.set_item('reference_frame_number', 0)
 
 
 def clear_and_update_reference_position_gallery() -> gradio.Gallery:
@@ -191,13 +197,13 @@ def clear_and_update_reference_position_gallery() -> gradio.Gallery:
 	return update_reference_position_gallery()
 
 
-def update_reference_position_gallery() -> gradio.Gallery:
+def update_reference_position_gallery(frame_number : int = 0) -> gradio.Gallery:
 	gallery_vision_frames = []
 	if is_image(state_manager.get_item('target_path')):
 		reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		gallery_vision_frames = extract_gallery_frames(reference_vision_frame)
 	if is_video(state_manager.get_item('target_path')):
-		reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
 		gallery_vision_frames = extract_gallery_frames(reference_vision_frame)
 	if gallery_vision_frames:
 		return gradio.Gallery(value = gallery_vision_frames)
