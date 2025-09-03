@@ -18,7 +18,7 @@ from facefusion.types import AudioFrame, Face, VisionFrame
 from facefusion.uis import choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
-from facefusion.vision import detect_frame_orientation, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
+from facefusion.vision import detect_frame_orientation, fit_frame, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
@@ -243,7 +243,9 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 
 		if preview_mode == 'face_by_face':
 			target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(target_vision_frame, temp_vision_frame)
-			temp_vision_frame = numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
+			target_crop_vision_frame = obscure_frame(target_crop_vision_frame)
+			output_crop_vision_frame = obscure_frame(output_crop_vision_frame)
+			return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
 
 		temp_vision_frame = obscure_frame(temp_vision_frame)
 		return temp_vision_frame
@@ -279,6 +281,8 @@ def create_face_by_face(target_vision_frame : VisionFrame, output_vision_frame :
 		output_crop_vision_frame = extract_crop_frame(output_vision_frame, output_face)
 
 		if numpy.any(target_crop_vision_frame) and numpy.any(output_crop_vision_frame):
+			target_crop_vision_frame = fit_frame(target_crop_vision_frame, (512, 512))
+			output_crop_vision_frame = fit_frame(output_crop_vision_frame, (512, 512))
 			return target_crop_vision_frame, output_crop_vision_frame
 
 	empty_vision_frame = numpy.zeros((512, 512, 3), dtype = numpy.uint8)
@@ -287,8 +291,8 @@ def create_face_by_face(target_vision_frame : VisionFrame, output_vision_frame :
 
 def extract_crop_frame(vision_frame : VisionFrame, face : Face) -> Optional[VisionFrame]:
 	start_x, start_y, end_x, end_y = map(int, face.bounding_box)
-	padding_x = int((end_x - start_x) * 0.25)
-	padding_y = int((end_y - start_y) * 0.25)
+	padding_x = int((end_x - start_x) * 0.5)
+	padding_y = int((end_y - start_y) * 0.5)
 	start_x = max(0, start_x - padding_x)
 	start_y = max(0, start_y - padding_y)
 	end_x = max(0, end_x + padding_x)
