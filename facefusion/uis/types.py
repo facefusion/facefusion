@@ -87,3 +87,5 @@ ComponentOptions : TypeAlias = Dict[str, Any]
 
 JobManagerAction = Literal['job-create', 'job-submit', 'job-delete', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step']
 JobRunnerAction = Literal['job-run', 'job-run-all', 'job-retry', 'job-retry-all']
+
+PreviewMode = Literal[ 'default', 'frame-by-frame', 'face-by-face', 'none' ]

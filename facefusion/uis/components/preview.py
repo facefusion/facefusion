@@ -17,7 +17,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.types import AudioFrame, Face, VisionFrame
 from facefusion.uis import choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
-from facefusion.uis.types import ComponentOptions
+from facefusion.uis.types import ComponentOptions, PreviewMode
 from facefusion.vision import detect_frame_orientation, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution, fit_cover_frame
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
@@ -170,7 +170,7 @@ def listen() -> None:
 		ui_component.release(clear_and_update_preview_image, inputs = [preview_frame_slider, preview_mode_dropdown, preview_resolution_dropdown], outputs = PREVIEW_IMAGE)
 
 
-def clear_and_update_preview_image(frame_number : int = 0, preview_mode : Optional[str] = None, preview_resolution : Optional[str] = None) -> gradio.Image:
+def clear_and_update_preview_image(frame_number : int = 0, preview_mode : PreviewMode = 'default', preview_resolution : str = '512x512') -> gradio.Image:
 	clear_static_faces()
 	return update_preview_image(frame_number, preview_mode, preview_resolution)
 
@@ -184,17 +184,11 @@ def update_preview_resolution_and_image(preview_resolution : str, frame_number :
 	return update_preview_image(frame_number, preview_resolution = preview_resolution)
 
 
-def slide_preview_image(frame_number : int = 0, preview_mode : Optional[str] = None, preview_resolution : Optional[str] = None) -> gradio.Image:
+def slide_preview_image(frame_number : int = 0, preview_mode : PreviewMode = 'default', preview_resolution : str = '512x512') -> gradio.Image:
 	return update_preview_image(frame_number, preview_mode, preview_resolution)
 
 
-def update_preview_image(frame_number : int = 0, preview_mode : Optional[str] = None, preview_resolution : Optional[str] = None) -> gradio.Image:
-	if preview_mode is None:
-		preview_mode = choices.preview_modes[0]
-
-	if preview_mode == 'none':
-		return gradio.Image(value = None, elem_classes = None)
-
+def update_preview_image(frame_number : int = 0, preview_mode : PreviewMode = 'default', preview_resolution : str = '512x512') -> gradio.Image:
 	while process_manager.is_checking():
 		sleep(0.5)
 
@@ -227,21 +221,16 @@ def update_preview_image(frame_number : int = 0, preview_mode : Optional[str] = 
 	return gradio.Image(value = None, elem_classes = None)
 
 
-def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame, preview_mode : Optional[str] = None, preview_resolution : Optional[str] = None) -> VisionFrame:
-	if preview_resolution is None:
-		preview_resolution = choices.preview_resolutions[2]
-	preview_resolution_parsed = unpack_resolution(preview_resolution)
-	target_vision_frame = restrict_frame(target_vision_frame, preview_resolution_parsed)
+def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame, preview_mode : PreviewMode = 'default', preview_resolution : str = '512x512') -> VisionFrame:
+	target_vision_frame = restrict_frame(target_vision_frame, unpack_resolution(preview_resolution))
 	temp_vision_frame = target_vision_frame.copy()
-	if preview_mode is None:
-		preview_mode = choices.preview_modes[0]
 
 	if analyse_frame(target_vision_frame):
-		if preview_mode == 'frame_by_frame':
+		if preview_mode == 'frame-by-frame':
 			temp_vision_frame = obscure_frame(temp_vision_frame)
 			return numpy.hstack((temp_vision_frame, temp_vision_frame))
 
-		if preview_mode == 'face_by_face':
+		if preview_mode == 'face-by-face':
 			target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(target_vision_frame, temp_vision_frame)
 			target_crop_vision_frame = obscure_frame(target_crop_vision_frame)
 			output_crop_vision_frame = obscure_frame(output_crop_vision_frame)
@@ -262,10 +251,10 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 				'temp_vision_frame': temp_vision_frame
 			})
 
-	if preview_mode == 'frame_by_frame':
+	if preview_mode == 'frame-by-frame':
 		return numpy.hstack((target_vision_frame, temp_vision_frame))
 
-	if preview_mode == 'face_by_face':
+	if preview_mode == 'face-by-face':
 		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(target_vision_frame, temp_vision_frame)
 		return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
 
