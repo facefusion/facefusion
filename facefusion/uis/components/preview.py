@@ -64,6 +64,12 @@ def listen() -> None:
 	preview_mode_dropdown = get_ui_component('preview_mode_dropdown')
 	preview_resolution_dropdown = get_ui_component('preview_resolution_dropdown')
 
+	if preview_mode_dropdown:
+		preview_mode_dropdown.change(update_preview_mode_and_image, inputs = [ preview_mode_dropdown, preview_frame_slider, preview_resolution_dropdown ], outputs = PREVIEW_IMAGE)
+
+	if preview_resolution_dropdown:
+		preview_resolution_dropdown.change(update_preview_resolution_and_image, inputs = [ preview_resolution_dropdown, preview_frame_slider, preview_mode_dropdown ], outputs = PREVIEW_IMAGE)
+
 	if preview_frame_slider:
 		preview_frame_slider.release(update_preview_image, inputs = [preview_frame_slider, preview_mode_dropdown, preview_resolution_dropdown], outputs = PREVIEW_IMAGE, show_progress = 'hidden')
 		preview_frame_slider.change(slide_preview_image, inputs = [preview_frame_slider, preview_mode_dropdown, preview_resolution_dropdown], outputs = PREVIEW_IMAGE, show_progress = 'hidden', trigger_mode = 'once')
@@ -71,12 +77,6 @@ def listen() -> None:
 		reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
 		if reference_face_position_gallery:
 			reference_face_position_gallery.select(clear_and_update_preview_image, inputs = [preview_frame_slider, preview_mode_dropdown, preview_resolution_dropdown], outputs = PREVIEW_IMAGE)
-
-	if preview_mode_dropdown:
-		preview_mode_dropdown.change(update_preview_mode_and_image, inputs = [preview_mode_dropdown, preview_frame_slider], outputs = PREVIEW_IMAGE)
-
-	if preview_resolution_dropdown:
-		preview_resolution_dropdown.change(update_preview_resolution_and_image, inputs = [preview_resolution_dropdown, preview_frame_slider], outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
@@ -175,13 +175,13 @@ def clear_and_update_preview_image(frame_number : int = 0, preview_mode : Previe
 	return update_preview_image(frame_number, preview_mode, preview_resolution)
 
 
-def update_preview_mode_and_image(preview_mode : str, frame_number : int = 0) -> gradio.Image:
-	return update_preview_image(frame_number, preview_mode)
+def update_preview_mode_and_image(preview_mode : PreviewMode, frame_number : int = 0, preview_resolution : str = '512x512') -> gradio.Image:
+	return update_preview_image(frame_number, preview_mode, preview_resolution)
 
 
-def update_preview_resolution_and_image(preview_resolution : str, frame_number : int = 0) -> gradio.Image:
+def update_preview_resolution_and_image(preview_resolution : str, frame_number : int = 0, preview_mode : PreviewMode = 'default') -> gradio.Image:
 	clear_static_faces()
-	return update_preview_image(frame_number, preview_resolution = preview_resolution)
+	return update_preview_image(frame_number, preview_mode, preview_resolution)
 
 
 def slide_preview_image(frame_number : int = 0, preview_mode : PreviewMode = 'default', preview_resolution : str = '512x512') -> gradio.Image:
@@ -280,8 +280,8 @@ def create_face_by_face(target_vision_frame : VisionFrame, output_vision_frame :
 
 def extract_crop_frame(vision_frame : VisionFrame, face : Face) -> Optional[VisionFrame]:
 	start_x, start_y, end_x, end_y = map(int, face.bounding_box)
-	padding_x = int((end_x - start_x) * 0.5)
-	padding_y = int((end_y - start_y) * 0.5)
+	padding_x = int((end_x - start_x) * 0.25)
+	padding_y = int((end_y - start_y) * 0.25)
 	start_x = max(0, start_x - padding_x)
 	start_y = max(0, start_y - padding_y)
 	end_x = max(0, end_x + padding_x)
