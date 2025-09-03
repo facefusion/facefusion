@@ -200,11 +200,11 @@ def clear_and_update_reference_position_gallery() -> gradio.Gallery:
 def update_reference_position_gallery(frame_number : int = 0) -> gradio.Gallery:
 	gallery_vision_frames = []
 	if is_image(state_manager.get_item('target_path')):
-		reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		gallery_vision_frames = extract_gallery_frames(reference_vision_frame)
+		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
+		gallery_vision_frames = extract_gallery_frames(target_vision_frame)
 	if is_video(state_manager.get_item('target_path')):
-		reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
-		gallery_vision_frames = extract_gallery_frames(reference_vision_frame)
+		target_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
+		gallery_vision_frames = extract_gallery_frames(target_vision_frame)
 	if gallery_vision_frames:
 		return gradio.Gallery(value = gallery_vision_frames)
 	return gradio.Gallery(value = None)
