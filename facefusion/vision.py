@@ -227,16 +227,29 @@ def restrict_frame(vision_frame : VisionFrame, resolution : Resolution) -> Visio
 	return vision_frame
 
 
-def fit_frame(vision_frame : VisionFrame, resolution: Resolution) -> VisionFrame:
-	fit_width, fit_height = resolution
+def fit_contain_frame(vision_frame : VisionFrame, resolution: Resolution) -> VisionFrame:
+	contain_width, contain_height = resolution
 	height, width = vision_frame.shape[:2]
-	scale = min(fit_height / height, fit_width / width)
+	scale = min(contain_height / height, contain_width / width)
 	new_width = int(width * scale)
 	new_height = int(height * scale)
-	paste_vision_frame = cv2.resize(vision_frame, (new_width, new_height))
-	x_pad = (fit_width - new_width) // 2
-	y_pad = (fit_height - new_height) // 2
-	temp_vision_frame = numpy.pad(paste_vision_frame, ((y_pad, fit_height - new_height - y_pad), (x_pad, fit_width - new_width - x_pad), (0, 0)))
+	x_pad = (contain_width - new_width) // 2
+	y_pad = (contain_height - new_height) // 2
+	temp_vision_frame = cv2.resize(vision_frame, (new_width, new_height))
+	temp_vision_frame = numpy.pad(temp_vision_frame, ((y_pad, contain_height - new_height - y_pad), (x_pad, contain_width - new_width - x_pad), (0, 0)))
+	return temp_vision_frame
+
+
+def fit_cover_frame(vision_frame : VisionFrame, resolution : Resolution) -> VisionFrame:
+	cover_width, cover_height = resolution
+	height, width = vision_frame.shape[:2]
+	scale = max(cover_width / width, cover_height / height)
+	new_width = int(width * scale)
+	new_height = int(height * scale)
+	start_x = (new_width - cover_width) // 2
+	start_y = (new_height - cover_height) // 2
+	temp_vision_frame = cv2.resize(vision_frame, (new_width, new_height))
+	temp_vision_frame = temp_vision_frame[start_y:start_y + cover_height, start_x:start_x + cover_width]
 	return temp_vision_frame
 
 

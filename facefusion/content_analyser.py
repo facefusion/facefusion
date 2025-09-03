@@ -11,7 +11,7 @@ from facefusion.execution import has_execution_provider
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import Detection, DownloadScope, DownloadSet, ExecutionProvider, Fps, InferencePool, ModelSet, VisionFrame
-from facefusion.vision import detect_video_fps, fit_frame, read_image, read_video_frame
+from facefusion.vision import detect_video_fps, fit_contain_frame, read_image, read_video_frame
 
 STREAM_COUNTER = 0
 
@@ -218,7 +218,7 @@ def prepare_detect_frame(temp_vision_frame : VisionFrame, model_name : str) -> V
 	model_mean = model_set.get('mean')
 	model_standard_deviation = model_set.get('standard_deviation')
 
-	detect_vision_frame = fit_frame(temp_vision_frame, model_size)
+	detect_vision_frame = fit_contain_frame(temp_vision_frame, model_size)
 	detect_vision_frame = detect_vision_frame[:, :, ::-1] / 255.0
 	detect_vision_frame -= model_mean
 	detect_vision_frame /= model_standard_deviation

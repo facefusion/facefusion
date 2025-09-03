@@ -18,7 +18,7 @@ from facefusion.types import AudioFrame, Face, VisionFrame
 from facefusion.uis import choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
-from facefusion.vision import detect_frame_orientation, fit_frame, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
+from facefusion.vision import detect_frame_orientation, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution, fit_cover_frame
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
@@ -281,8 +281,8 @@ def create_face_by_face(target_vision_frame : VisionFrame, output_vision_frame :
 		output_crop_vision_frame = extract_crop_frame(output_vision_frame, output_face)
 
 		if numpy.any(target_crop_vision_frame) and numpy.any(output_crop_vision_frame):
-			target_crop_vision_frame = fit_frame(target_crop_vision_frame, (512, 512))
-			output_crop_vision_frame = fit_frame(output_crop_vision_frame, (512, 512))
+			target_crop_vision_frame = fit_cover_frame(target_crop_vision_frame, (512, 512))
+			output_crop_vision_frame = fit_cover_frame(output_crop_vision_frame, (512, 512))
 			return target_crop_vision_frame, output_crop_vision_frame
 
 	empty_vision_frame = numpy.zeros((512, 512, 3), dtype = numpy.uint8)
