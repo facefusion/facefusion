@@ -10,10 +10,11 @@ from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
 from facefusion.face_analyser import get_many_faces, get_one_face
+from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.types import AudioFrame, VisionFrame
+from facefusion.types import AudioFrame, Face, VisionFrame
 from facefusion.uis import choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
@@ -270,19 +271,21 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 
 
 def create_face_by_face(target_vision_frame : VisionFrame, output_vision_frame : VisionFrame) -> Tuple[Optional[VisionFrame], Optional[VisionFrame]]:
-	target_face = get_one_face(get_many_faces([ target_vision_frame ]))
-	output_face = get_one_face(get_many_faces([ output_vision_frame ]))
-	target_crop_vision_frame = extract_crop_frame(target_vision_frame, target_face)
-	output_crop_vision_frame = extract_crop_frame(output_vision_frame, output_face)
+	target_face = get_one_face(sort_and_filter_faces(get_many_faces([ target_vision_frame ])))
+	output_face = get_one_face(sort_and_filter_faces(get_many_faces([ output_vision_frame ])))
 
-	if numpy.any(target_crop_vision_frame) and numpy.any(output_crop_vision_frame):
-		return target_crop_vision_frame, output_crop_vision_frame
+	if target_face and output_face:
+		target_crop_vision_frame = extract_crop_frame(target_vision_frame, target_face)
+		output_crop_vision_frame = extract_crop_frame(output_vision_frame, output_face)
 
-	empty_frame = numpy.zeros((512, 512, 3), dtype = numpy.uint8)
-	return empty_frame, empty_frame
+		if numpy.any(target_crop_vision_frame) and numpy.any(output_crop_vision_frame):
+			return target_crop_vision_frame, output_crop_vision_frame
+
+	empty_vision_frame = numpy.zeros((512, 512, 3), dtype = numpy.uint8)
+	return empty_vision_frame, empty_vision_frame
 
 
-def extract_crop_frame(vision_frame : VisionFrame, face) -> Optional[VisionFrame]:
+def extract_crop_frame(vision_frame : VisionFrame, face : Face) -> Optional[VisionFrame]:
 	start_x, start_y, end_x, end_y = map(int, face.bounding_box)
 	padding_x = int((end_x - start_x) * 0.25)
 	padding_y = int((end_y - start_y) * 0.25)
