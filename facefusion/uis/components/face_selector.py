@@ -215,7 +215,6 @@ def extract_gallery_frames(reference_vision_frame : VisionFrame) -> List[VisionF
 	gallery_vision_frames = []
 	faces = get_many_faces([ reference_vision_frame ])
 	faces = sort_and_filter_faces(faces)
-	gallery_size = (128, 128)
 
 	for face in faces:
 		start_x, start_y, end_x, end_y = map(int, face.bounding_box)
@@ -226,7 +225,7 @@ def extract_gallery_frames(reference_vision_frame : VisionFrame) -> List[VisionF
 		end_x = max(0, end_x + padding_x)
 		end_y = max(0, end_y + padding_y)
 		crop_vision_frame = reference_vision_frame[start_y:end_y, start_x:end_x]
-		crop_vision_frame = fit_cover_frame(crop_vision_frame, gallery_size)
+		crop_vision_frame = fit_cover_frame(crop_vision_frame, (128, 128))
 		crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_BGR2RGB)
 		gallery_vision_frames.append(crop_vision_frame)
 	return gallery_vision_frames
