@@ -15,7 +15,8 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.types import AudioFrame, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
-from facefusion.vision import detect_frame_orientation, normalize_frame_color, read_static_image, read_static_images, read_video_frame, restrict_frame
+from facefusion.vision import detect_frame_orientation, normalize_frame_color, obscure_frame, read_static_image, \
+	read_static_images, read_video_frame, restrict_frame
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
@@ -212,7 +213,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 	temp_vision_frame = target_vision_frame.copy()
 
 	if analyse_frame(target_vision_frame):
-		return cv2.GaussianBlur(target_vision_frame, (99, 99), 0)
+		return obscure_frame(target_vision_frame)
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		logger.disable()

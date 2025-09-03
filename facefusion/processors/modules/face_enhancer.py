@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache
 
-import cv2
 import numpy
 
 import facefusion.jobs.job_manager
@@ -19,7 +18,7 @@ from facefusion.processors.types import FaceEnhancerInputs, FaceEnhancerWeight
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image, read_static_video_frame
+from facefusion.vision import blend_frame, read_static_image, read_static_video_frame
 
 
 @lru_cache()
@@ -305,7 +304,7 @@ def enhance_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionF
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
-	temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame)
+	temp_vision_frame = blend_paste_frame(temp_vision_frame, paste_vision_frame)
 	return temp_vision_frame
 
 
@@ -351,9 +350,9 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
+def blend_paste_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
 	face_enhancer_blend = 1 - (state_manager.get_item('face_enhancer_blend') / 100)
-	temp_vision_frame = cv2.addWeighted(temp_vision_frame, face_enhancer_blend, paste_vision_frame, 1 - face_enhancer_blend, 0)
+	temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame, 1 - face_enhancer_blend)
 	return temp_vision_frame
 
 

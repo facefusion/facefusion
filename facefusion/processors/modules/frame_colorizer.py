@@ -17,7 +17,7 @@ from facefusion.processors.types import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import read_static_image, read_static_video_frame, unpack_resolution
+from facefusion.vision import blend_frame, read_static_image, read_static_video_frame, unpack_resolution
 
 
 @lru_cache()
@@ -199,7 +199,7 @@ def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	color_vision_frame = prepare_temp_frame(temp_vision_frame)
 	color_vision_frame = forward(color_vision_frame)
 	color_vision_frame = merge_color_frame(temp_vision_frame, color_vision_frame)
-	color_vision_frame = blend_frame(temp_vision_frame, color_vision_frame)
+	color_vision_frame = blend_color_frame(temp_vision_frame, color_vision_frame)
 	return color_vision_frame
 
 
@@ -255,9 +255,9 @@ def merge_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 	return color_vision_frame
 
 
-def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
+def blend_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : VisionFrame) -> VisionFrame:
 	frame_colorizer_blend = 1 - (state_manager.get_item('frame_colorizer_blend') / 100)
-	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_colorizer_blend, paste_vision_frame, 1 - frame_colorizer_blend, 0)
+	temp_vision_frame = blend_frame(temp_vision_frame, color_vision_frame, 1 - frame_colorizer_blend)
 	return temp_vision_frame
 
 

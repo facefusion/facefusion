@@ -16,7 +16,7 @@ from facefusion.processors.types import FrameEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
-from facefusion.vision import create_tile_frames, merge_tile_frames, read_static_image, read_static_video_frame
+from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_frame
 
 
 @lru_cache()
@@ -489,7 +489,7 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame)
 
 	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width * model_scale, temp_height * model_scale, pad_width * model_scale, pad_height * model_scale, (model_size[0] * model_scale, model_size[1] * model_scale, model_size[2] * model_scale))
-	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
+	temp_vision_frame = blend_merge_frame(temp_vision_frame, merge_vision_frame)
 	return temp_vision_frame
 
 
@@ -518,10 +518,10 @@ def normalize_tile_frame(tile_vision_frame : VisionFrame) -> VisionFrame:
 	return tile_vision_frame
 
 
-def blend_frame(temp_vision_frame : VisionFrame, merge_vision_frame : VisionFrame) -> VisionFrame:
+def blend_merge_frame(temp_vision_frame : VisionFrame, merge_vision_frame : VisionFrame) -> VisionFrame:
 	frame_enhancer_blend = 1 - (state_manager.get_item('frame_enhancer_blend') / 100)
 	temp_vision_frame = cv2.resize(temp_vision_frame, (merge_vision_frame.shape[1], merge_vision_frame.shape[0]))
-	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_enhancer_blend, merge_vision_frame, 1 - frame_enhancer_blend, 0)
+	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame, 1 - frame_enhancer_blend)
 	return temp_vision_frame
 
 
