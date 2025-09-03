@@ -1,8 +1,7 @@
 from time import sleep
 from typing import List, Optional
 
-import cv2
-import gradio
+Fiimport gradio
 import numpy
 
 from facefusion import logger, process_manager, state_manager, wording
