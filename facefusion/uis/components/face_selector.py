@@ -128,7 +128,7 @@ def listen() -> None:
 		'face_detector_size_dropdown',
 		'face_detector_angles_checkbox_group'
 	]):
-		ui_component.change(update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
+		ui_component.change(clear_and_update_reference_position_gallery, outputs = REFERENCE_FACE_POSITION_GALLERY)
 
 	face_detector_score_slider = get_ui_component('face_detector_score_slider')
 	if face_detector_score_slider:
@@ -190,6 +190,11 @@ def update_reference_frame_number(reference_frame_number : int = 0) -> None:
 
 def clear_reference_frame_number() -> None:
 	state_manager.set_item('reference_frame_number', 0)
+
+
+def clear_and_update_reference_position_gallery() -> gradio.Gallery:
+	clear_static_faces()
+	return update_reference_position_gallery()
 
 
 def update_reference_position_gallery(frame_number : int = 0) -> gradio.Gallery:
