@@ -4,7 +4,7 @@ from typing import List, Optional
 import gradio
 import numpy
 
-from facefusion import logger, process_manager, state_manager, wording
+from facefusion import process_manager, state_manager, wording
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
@@ -214,9 +214,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 		return obscure_frame(target_vision_frame)
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		logger.disable()
 		if processor_module.pre_process('preview'):
-			logger.enable()
 			temp_vision_frame = processor_module.process_frame(
 			{
 				'reference_vision_frame': reference_vision_frame,
@@ -226,6 +224,5 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 				'target_vision_frame': target_vision_frame,
 				'temp_vision_frame': temp_vision_frame
 			})
-		logger.enable()
 
 	return temp_vision_frame
