@@ -1,5 +1,6 @@
 from typing import List, Optional, Tuple
 
+import cv2
 import gradio
 from gradio_rangeslider import RangeSlider
 
@@ -14,7 +15,7 @@ from facefusion.types import FaceSelectorMode, FaceSelectorOrder, Gender, Race, 
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
 from facefusion.uis.ui_helper import convert_str_none
-from facefusion.vision import normalize_frame_color, read_static_image, read_video_frame
+from facefusion.vision import read_static_image, read_video_frame
 
 FACE_SELECTOR_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SELECTOR_ORDER_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -224,6 +225,6 @@ def extract_gallery_frames(reference_vision_frame : VisionFrame) -> List[VisionF
 		end_x = max(0, end_x + padding_x)
 		end_y = max(0, end_y + padding_y)
 		crop_vision_frame = reference_vision_frame[start_y:end_y, start_x:end_x]
-		crop_vision_frame = normalize_frame_color(crop_vision_frame)
+		crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_BGR2RGB)
 		gallery_vision_frames.append(crop_vision_frame)
 	return gallery_vision_frames

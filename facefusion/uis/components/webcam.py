@@ -10,7 +10,7 @@ from facefusion.streamer import multi_process_capture, open_stream
 from facefusion.types import Fps, VisionFrame, WebcamMode
 from facefusion.uis.core import get_ui_component
 from facefusion.uis.types import File
-from facefusion.vision import normalize_frame_color, unpack_resolution
+from facefusion.vision import unpack_resolution
 
 SOURCE_FILE : Optional[gradio.File] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None
@@ -99,7 +99,7 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 		camera_capture.set(cv2.CAP_PROP_FPS, webcam_fps)
 
 		for capture_frame in multi_process_capture(camera_capture, webcam_fps):
-			capture_frame = normalize_frame_color(capture_frame)
+			capture_frame = cv2.cvtColor(capture_frame, cv2.COLOR_BGR2RGB)
 
 			if webcam_mode == 'inline':
 				yield capture_frame
