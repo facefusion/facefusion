@@ -8,7 +8,7 @@ job_runner_actions : List[JobRunnerAction] = [ 'job-run', 'job-run-all', 'job-re
 
 common_options : List[str] = [ 'keep-temp' ]
 
-preview_modes : List[PreviewMode] = [ 'default', 'frame-by-frame', 'face-by-face', 'none' ]
+preview_modes : List[PreviewMode] = [ 'default', 'frame-by-frame', 'face-by-face' ]
 preview_resolutions : List[str] = [ '512x512', '768x768', '1024x1024' ]
 
 webcam_modes : List[WebcamMode] = [ 'inline', 'udp', 'v4l2' ]
