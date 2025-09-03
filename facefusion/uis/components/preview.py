@@ -18,7 +18,7 @@ from facefusion.types import AudioFrame, Face, VisionFrame
 from facefusion.uis import choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions, PreviewMode
-from facefusion.vision import detect_frame_orientation, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution, fit_cover_frame
+from facefusion.vision import detect_frame_orientation, fit_cover_frame, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
@@ -65,10 +65,10 @@ def listen() -> None:
 	preview_resolution_dropdown = get_ui_component('preview_resolution_dropdown')
 
 	if preview_mode_dropdown:
-		preview_mode_dropdown.change(update_preview_mode_and_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
+		preview_mode_dropdown.change(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
 
 	if preview_resolution_dropdown:
-		preview_resolution_dropdown.change(update_preview_resolution_and_image, inputs = [ preview_resolution_dropdown, preview_mode_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
+		preview_resolution_dropdown.change(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
 
 	if preview_frame_slider:
 		preview_frame_slider.release(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE, show_progress = 'hidden')
@@ -175,15 +175,6 @@ def clear_and_update_preview_image(preview_mode : PreviewMode, preview_resolutio
 	return update_preview_image(preview_mode, preview_resolution, frame_number)
 
 
-def update_preview_mode_and_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
-	return update_preview_image(preview_mode, preview_resolution, frame_number)
-
-
-def update_preview_resolution_and_image(preview_resolution : str, preview_mode : PreviewMode, frame_number : int = 0) -> gradio.Image:
-	clear_static_faces()
-	return update_preview_image(preview_mode, preview_resolution, frame_number)
-
-
 def slide_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
 	return update_preview_image(preview_mode, preview_resolution, frame_number)
 
@@ -217,7 +208,7 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
 		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame, preview_mode, preview_resolution)
 		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
-		return gradio.Image(value = preview_vision_frame, elem_classes = ['image-preview', 'is-' + detect_frame_orientation(preview_vision_frame)])
+		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
 	return gradio.Image(value = None, elem_classes = None)
 
 

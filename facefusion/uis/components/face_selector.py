@@ -15,7 +15,7 @@ from facefusion.types import FaceSelectorMode, FaceSelectorOrder, Gender, Race, 
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
 from facefusion.uis.ui_helper import convert_str_none
-from facefusion.vision import read_static_image, read_video_frame, fit_cover_frame
+from facefusion.vision import fit_cover_frame, read_static_image, read_video_frame
 
 FACE_SELECTOR_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SELECTOR_ORDER_DROPDOWN : Optional[gradio.Dropdown] = None
