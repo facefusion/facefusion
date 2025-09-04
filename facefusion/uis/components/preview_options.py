@@ -39,7 +39,7 @@ def render() -> None:
 		)
 		PREVIEW_RESOLUTION_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.preview_resolution_dropdown'),
-			value = choices.preview_resolutions[0],
+			value = choices.preview_resolutions[-1],
 			choices = choices.preview_resolutions,
 			visible = True
 		)
