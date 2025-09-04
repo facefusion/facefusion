@@ -233,10 +233,12 @@ def fit_contain_frame(vision_frame : VisionFrame, resolution: Resolution) -> Vis
 	scale = min(contain_height / height, contain_width / width)
 	new_width = int(width * scale)
 	new_height = int(height * scale)
-	x_pad = (contain_width - new_width) // 2
-	y_pad = (contain_height - new_height) // 2
+	start_x = max(0, (contain_width - new_width) // 2)
+	start_y = max(0, (contain_height - new_height) // 2)
+	end_x = max(0, contain_width - new_width - start_x)
+	end_y = max(0, contain_height - new_height - start_y)
 	temp_vision_frame = cv2.resize(vision_frame, (new_width, new_height))
-	temp_vision_frame = numpy.pad(temp_vision_frame, ((y_pad, contain_height - new_height - y_pad), (x_pad, contain_width - new_width - x_pad), (0, 0)))
+	temp_vision_frame = numpy.pad(temp_vision_frame, ((start_y, end_y), (start_x, end_x), (0, 0)))
 	return temp_vision_frame
 
 
