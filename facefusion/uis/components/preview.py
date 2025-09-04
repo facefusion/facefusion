@@ -15,7 +15,7 @@ from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import AudioFrame, Face, VisionFrame
-from facefusion.uis import choices
+from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions, PreviewMode
 from facefusion.vision import detect_frame_orientation, fit_cover_frame, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
@@ -44,14 +44,14 @@ def render() -> None:
 	if is_image(state_manager.get_item('target_path')):
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame, choices.preview_modes[0], choices.preview_resolutions[2])
+		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame, uis_choices.preview_modes[0], uis_choices.preview_resolutions[-1])
 		preview_image_options['value'] = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 
 	if is_video(state_manager.get_item('target_path')):
 		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame, choices.preview_modes[0], choices.preview_resolutions[2])
+		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame, uis_choices.preview_modes[0], uis_choices.preview_resolutions[-1])
 		preview_image_options['value'] = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 		preview_image_options['visible'] = True

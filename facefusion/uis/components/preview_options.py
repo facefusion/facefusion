@@ -4,7 +4,7 @@ import gradio
 
 from facefusion import state_manager, wording
 from facefusion.filesystem import is_video
-from facefusion.uis import choices
+from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
 from facefusion.vision import count_video_frame_total
@@ -33,14 +33,14 @@ def render() -> None:
 	with gradio.Row():
 		PREVIEW_MODE_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.preview_mode_dropdown'),
-			value = choices.preview_modes[0],
-			choices = choices.preview_modes,
+			value = uis_choices.preview_modes[0],
+			choices = uis_choices.preview_modes,
 			visible = True
 		)
 		PREVIEW_RESOLUTION_DROPDOWN = gradio.Dropdown(
 			label = wording.get('uis.preview_resolution_dropdown'),
-			value = choices.preview_resolutions[-1],
-			choices = choices.preview_resolutions,
+			value = uis_choices.preview_resolutions[-1],
+			choices = uis_choices.preview_resolutions,
 			visible = True
 		)
 	register_ui_component('preview_mode_dropdown', PREVIEW_MODE_DROPDOWN)
