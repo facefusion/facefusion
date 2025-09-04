@@ -45,11 +45,11 @@ def render() -> None:
 		'visible': 'reference' in state_manager.get_item('face_selector_mode')
 	}
 	if is_image(state_manager.get_item('target_path')):
-		reference_frame = read_static_image(state_manager.get_item('target_path'))
-		reference_face_gallery_options['value'] = extract_gallery_frames(reference_frame)
+		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
+		reference_face_gallery_options['value'] = extract_gallery_frames(target_vision_frame)
 	if is_video(state_manager.get_item('target_path')):
-		reference_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		reference_face_gallery_options['value'] = extract_gallery_frames(reference_frame)
+		target_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		reference_face_gallery_options['value'] = extract_gallery_frames(target_vision_frame)
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
 		label = wording.get('uis.face_selector_mode_dropdown'),
 		choices = facefusion.choices.face_selector_modes,
@@ -211,9 +211,9 @@ def update_reference_position_gallery(frame_number : int = 0) -> gradio.Gallery:
 	return gradio.Gallery(value = None)
 
 
-def extract_gallery_frames(reference_vision_frame : VisionFrame) -> List[VisionFrame]:
+def extract_gallery_frames(target_vision_frame : VisionFrame) -> List[VisionFrame]:
 	gallery_vision_frames = []
-	faces = get_many_faces([ reference_vision_frame ])
+	faces = get_many_faces([target_vision_frame])
 	faces = sort_and_filter_faces(faces)
 
 	for face in faces:
@@ -224,7 +224,7 @@ def extract_gallery_frames(reference_vision_frame : VisionFrame) -> List[VisionF
 		start_y = max(0, start_y - padding_y)
 		end_x = max(0, end_x + padding_x)
 		end_y = max(0, end_y + padding_y)
-		crop_vision_frame = reference_vision_frame[start_y:end_y, start_x:end_x]
+		crop_vision_frame = target_vision_frame[start_y:end_y, start_x:end_x]
 		crop_vision_frame = fit_cover_frame(crop_vision_frame, (128, 128))
 		crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_BGR2RGB)
 		gallery_vision_frames.append(crop_vision_frame)
