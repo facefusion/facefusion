@@ -335,6 +335,8 @@ WORDING : Dict[str, Any] =\
 		'output_video_scale_slider': 'OUTPUT VIDEO SCALE',
 		'preview_frame_slider': 'PREVIEW FRAME',
 		'preview_image': 'PREVIEW',
+		'preview_mode_dropdown': 'PREVIEW MODE',
+		'preview_resolution_dropdown': 'PREVIEW RESOLUTION',
 		'processors_checkbox_group': 'PROCESSORS',
 		'reference_face_distance_slider': 'REFERENCE FACE DISTANCE',
 		'reference_face_gallery': 'REFERENCE FACE',

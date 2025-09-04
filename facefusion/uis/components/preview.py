@@ -1,20 +1,24 @@
 from time import sleep
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
+import cv2
 import gradio
 import numpy
 
-from facefusion import process_manager, state_manager, wording
+from facefusion import logger, process_manager, state_manager, wording
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
+from facefusion.face_analyser import get_many_faces, get_one_face
+from facefusion.face_selector import sort_and_filter_faces
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.types import AudioFrame, VisionFrame
+from facefusion.types import AudioFrame, Face, VisionFrame
+from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
-from facefusion.uis.types import ComponentOptions
-from facefusion.vision import detect_frame_orientation, normalize_frame_color, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame
+from facefusion.uis.types import ComponentOptions, PreviewMode
+from facefusion.vision import detect_frame_orientation, fit_cover_frame, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
@@ -40,15 +44,15 @@ def render() -> None:
 	if is_image(state_manager.get_item('target_path')):
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame)
-		preview_image_options['value'] = normalize_frame_color(preview_vision_frame)
+		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame, uis_choices.preview_modes[0], uis_choices.preview_resolutions[-1])
+		preview_image_options['value'] = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 
 	if is_video(state_manager.get_item('target_path')):
 		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame)
-		preview_image_options['value'] = normalize_frame_color(preview_vision_frame)
+		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame, uis_choices.preview_modes[0], uis_choices.preview_resolutions[-1])
+		preview_image_options['value'] = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
 		preview_image_options['elem_classes'] = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ]
 		preview_image_options['visible'] = True
 	PREVIEW_IMAGE = gradio.Image(**preview_image_options)
@@ -57,14 +61,22 @@ def render() -> None:
 
 def listen() -> None:
 	preview_frame_slider = get_ui_component('preview_frame_slider')
+	preview_mode_dropdown = get_ui_component('preview_mode_dropdown')
+	preview_resolution_dropdown = get_ui_component('preview_resolution_dropdown')
+
+	if preview_mode_dropdown:
+		preview_mode_dropdown.change(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
+
+	if preview_resolution_dropdown:
+		preview_resolution_dropdown.change(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
 
 	if preview_frame_slider:
-		preview_frame_slider.release(update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE, show_progress = 'hidden')
-		preview_frame_slider.change(slide_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE, show_progress = 'hidden', trigger_mode = 'once')
+		preview_frame_slider.release(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE, show_progress = 'hidden')
+		preview_frame_slider.change(slide_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE, show_progress = 'hidden', trigger_mode = 'once')
 
 		reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
 		if reference_face_position_gallery:
-			reference_face_position_gallery.select(clear_and_update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
+			reference_face_position_gallery.select(clear_and_update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
@@ -74,7 +86,7 @@ def listen() -> None:
 		'target_video'
 	]):
 		for method in [ 'change', 'clear' ]:
-			getattr(ui_component, method)(update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
+			getattr(ui_component, method)(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
@@ -85,7 +97,7 @@ def listen() -> None:
 		'face_mask_regions_checkbox_group',
 		'expression_restorer_areas_checkbox_group'
 	]):
-		ui_component.change(update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
+		ui_component.change(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
@@ -121,7 +133,7 @@ def listen() -> None:
 		'face_mask_padding_right_slider',
 		'output_video_fps_slider'
 	]):
-		ui_component.release(update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
+		ui_component.release(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
@@ -148,32 +160,26 @@ def listen() -> None:
 		'face_parser_model_dropdown',
 		'voice_extractor_model_dropdown'
 	]):
-		ui_component.change(clear_and_update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
+		ui_component.change(clear_and_update_preview_image, inputs = [preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider], outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
 		'face_detector_score_slider',
 		'face_landmarker_score_slider'
 	]):
-		ui_component.release(clear_and_update_preview_image, inputs = preview_frame_slider, outputs = PREVIEW_IMAGE)
+		ui_component.release(clear_and_update_preview_image, inputs = [preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider], outputs = PREVIEW_IMAGE)
 
 
-def clear_and_update_preview_image(frame_number : int = 0) -> gradio.Image:
+def clear_and_update_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
 	clear_static_faces()
-	return update_preview_image(frame_number)
+	return update_preview_image(preview_mode, preview_resolution, frame_number)
 
 
-def slide_preview_image(frame_number : int = 0) -> gradio.Image:
-	if is_video(state_manager.get_item('target_path')):
-		preview_vision_frame = normalize_frame_color(read_video_frame(state_manager.get_item('target_path'), frame_number))
-		preview_vision_frame = restrict_frame(preview_vision_frame, (1024, 1024))
-
-		return gradio.Image(value = preview_vision_frame)
-
-	return gradio.Image(value = None)
+def slide_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
+	return update_preview_image(preview_mode, preview_resolution, frame_number)
 
 
-def update_preview_image(frame_number : int = 0) -> gradio.Image:
+def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
 	while process_manager.is_checking():
 		sleep(0.5)
 
@@ -193,28 +199,41 @@ def update_preview_image(frame_number : int = 0) -> gradio.Image:
 	if is_image(state_manager.get_item('target_path')):
 		reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame)
-		preview_vision_frame = normalize_frame_color(preview_vision_frame)
-		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
+		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame, preview_mode, preview_resolution)
+		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
+		return gradio.Image(value = preview_vision_frame, elem_classes = ['image-preview', 'is-' + detect_frame_orientation(preview_vision_frame)])
 
 	if is_video(state_manager.get_item('target_path')):
 		reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
-		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame)
-		preview_vision_frame = normalize_frame_color(preview_vision_frame)
+		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame, preview_mode, preview_resolution)
+		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
 	return gradio.Image(value = None, elem_classes = None)
 
 
-def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame) -> VisionFrame:
-	target_vision_frame = restrict_frame(target_vision_frame, (1024, 1024))
+def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame, preview_mode : PreviewMode, preview_resolution : str) -> VisionFrame:
+	target_vision_frame = restrict_frame(target_vision_frame, unpack_resolution(preview_resolution))
 	temp_vision_frame = target_vision_frame.copy()
 
 	if analyse_frame(target_vision_frame):
-		return obscure_frame(target_vision_frame)
+		if preview_mode == 'frame-by-frame':
+			temp_vision_frame = obscure_frame(temp_vision_frame)
+			return numpy.hstack((temp_vision_frame, temp_vision_frame))
+
+		if preview_mode == 'face-by-face':
+			target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(target_vision_frame, temp_vision_frame)
+			target_crop_vision_frame = obscure_frame(target_crop_vision_frame)
+			output_crop_vision_frame = obscure_frame(output_crop_vision_frame)
+			return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
+
+		temp_vision_frame = obscure_frame(temp_vision_frame)
+		return temp_vision_frame
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
+		logger.disable()
 		if processor_module.pre_process('preview'):
+			logger.enable()
 			temp_vision_frame = processor_module.process_frame(
 			{
 				'reference_vision_frame': reference_vision_frame,
@@ -224,5 +243,42 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 				'target_vision_frame': target_vision_frame,
 				'temp_vision_frame': temp_vision_frame
 			})
+		logger.enable()
+
+	if preview_mode == 'frame-by-frame':
+		return numpy.hstack((target_vision_frame, temp_vision_frame))
+
+	if preview_mode == 'face-by-face':
+		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(target_vision_frame, temp_vision_frame)
+		return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
 
 	return temp_vision_frame
+
+
+def create_face_by_face(target_vision_frame : VisionFrame, output_vision_frame : VisionFrame) -> Tuple[Optional[VisionFrame], Optional[VisionFrame]]:
+	target_face = get_one_face(sort_and_filter_faces(get_many_faces([ target_vision_frame ])))
+	output_face = get_one_face(sort_and_filter_faces(get_many_faces([ output_vision_frame ])))
+
+	if target_face and output_face:
+		target_crop_vision_frame = extract_crop_frame(target_vision_frame, target_face)
+		output_crop_vision_frame = extract_crop_frame(output_vision_frame, output_face)
+
+		if numpy.any(target_crop_vision_frame) and numpy.any(output_crop_vision_frame):
+			target_crop_vision_frame = fit_cover_frame(target_crop_vision_frame, (512, 512))
+			output_crop_vision_frame = fit_cover_frame(output_crop_vision_frame, (512, 512))
+			return target_crop_vision_frame, output_crop_vision_frame
+
+	empty_vision_frame = numpy.zeros((512, 512, 3), dtype = numpy.uint8)
+	return empty_vision_frame, empty_vision_frame
+
+
+def extract_crop_frame(vision_frame : VisionFrame, face : Face) -> Optional[VisionFrame]:
+	start_x, start_y, end_x, end_y = map(int, face.bounding_box)
+	padding_x = int((end_x - start_x) * 0.25)
+	padding_y = int((end_y - start_y) * 0.25)
+	start_x = max(0, start_x - padding_x)
+	start_y = max(0, start_y - padding_y)
+	end_x = max(0, end_x + padding_x)
+	end_y = max(0, end_y + padding_y)
+	crop_vision_frame = vision_frame[start_y:end_y, start_x:end_x]
+	return crop_vision_frame

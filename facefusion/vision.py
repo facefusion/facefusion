@@ -227,16 +227,33 @@ def restrict_frame(vision_frame : VisionFrame, resolution : Resolution) -> Visio
 	return vision_frame
 
 
-def fit_frame(vision_frame : VisionFrame, resolution: Resolution) -> VisionFrame:
-	fit_width, fit_height = resolution
+def fit_contain_frame(vision_frame : VisionFrame, resolution: Resolution) -> VisionFrame:
+	contain_width, contain_height = resolution
 	height, width = vision_frame.shape[:2]
-	scale = min(fit_height / height, fit_width / width)
+	scale = min(contain_height / height, contain_width / width)
 	new_width = int(width * scale)
 	new_height = int(height * scale)
-	paste_vision_frame = cv2.resize(vision_frame, (new_width, new_height))
-	x_pad = (fit_width - new_width) // 2
-	y_pad = (fit_height - new_height) // 2
-	temp_vision_frame = numpy.pad(paste_vision_frame, ((y_pad, fit_height - new_height - y_pad), (x_pad, fit_width - new_width - x_pad), (0, 0)))
+	start_x = max(0, (contain_width - new_width) // 2)
+	start_y = max(0, (contain_height - new_height) // 2)
+	end_x = max(0, contain_width - new_width - start_x)
+	end_y = max(0, contain_height - new_height - start_y)
+	temp_vision_frame = cv2.resize(vision_frame, (new_width, new_height))
+	temp_vision_frame = numpy.pad(temp_vision_frame, ((start_y, end_y), (start_x, end_x), (0, 0)))
+	return temp_vision_frame
+
+
+def fit_cover_frame(vision_frame : VisionFrame, resolution : Resolution) -> VisionFrame:
+	cover_width, cover_height = resolution
+	height, width = vision_frame.shape[:2]
+	scale = max(cover_width / width, cover_height / height)
+	new_width = int(width * scale)
+	new_height = int(height * scale)
+	start_x = max(0, (new_width - cover_width) // 2)
+	start_y = max(0, (new_height - cover_height) // 2)
+	end_x = min(new_width, start_x + cover_width)
+	end_y = min(new_height, start_y + cover_height)
+	temp_vision_frame = cv2.resize(vision_frame, (new_width, new_height))
+	temp_vision_frame = temp_vision_frame[start_y:end_y, start_x:end_x]
 	return temp_vision_frame
 
 
@@ -247,10 +264,6 @@ def obscure_frame(vision_frame : VisionFrame) -> VisionFrame:
 def blend_frame(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame, blend_factor : float) -> VisionFrame:
 	blend_vision_frame = cv2.addWeighted(source_vision_frame, 1 - blend_factor, target_vision_frame, blend_factor, 0)
 	return blend_vision_frame
-
-
-def normalize_frame_color(vision_frame : VisionFrame) -> VisionFrame:
-	return cv2.cvtColor(vision_frame, cv2.COLOR_BGR2RGB)
 
 
 def conditional_match_frame_color(source_vision_frame : VisionFrame, target_vision_frame : VisionFrame) -> VisionFrame:

@@ -67,6 +67,8 @@ ComponentName = Literal\
 	'output_video_fps_slider',
 	'preview_image',
 	'preview_frame_slider',
+	'preview_mode_dropdown',
+	'preview_resolution_dropdown',
 	'processors_checkbox_group',
 	'reference_face_distance_slider',
 	'reference_face_position_gallery',
@@ -85,3 +87,5 @@ ComponentOptions : TypeAlias = Dict[str, Any]
 
 JobManagerAction = Literal['job-create', 'job-submit', 'job-delete', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step']
 JobRunnerAction = Literal['job-run', 'job-run-all', 'job-retry', 'job-retry-all']
+
+PreviewMode = Literal[ 'default', 'frame-by-frame', 'face-by-face' ]
