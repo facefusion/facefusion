@@ -246,10 +246,12 @@ def fit_cover_frame(vision_frame : VisionFrame, resolution : Resolution) -> Visi
 	scale = max(cover_width / width, cover_height / height)
 	new_width = int(width * scale)
 	new_height = int(height * scale)
-	start_x = (new_width - cover_width) // 2
-	start_y = (new_height - cover_height) // 2
+	start_x = max(0, (new_width - cover_width) // 2)
+	start_y = max(0, (new_height - cover_height) // 2)
+	end_x = min(new_width, start_x + cover_width)
+	end_y = min(new_height, start_y + cover_height)
 	temp_vision_frame = cv2.resize(vision_frame, (new_width, new_height))
-	temp_vision_frame = temp_vision_frame[start_y:start_y + cover_height, start_x:start_x + cover_width]
+	temp_vision_frame = temp_vision_frame[start_y:end_y, start_x:end_x]
 	return temp_vision_frame
 
 
