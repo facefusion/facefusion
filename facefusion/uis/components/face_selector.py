@@ -213,7 +213,7 @@ def update_reference_position_gallery(frame_number : int = 0) -> gradio.Gallery:
 
 def extract_gallery_frames(target_vision_frame : VisionFrame) -> List[VisionFrame]:
 	gallery_vision_frames = []
-	faces = get_many_faces([target_vision_frame])
+	faces = get_many_faces([ target_vision_frame ])
 	faces = sort_and_filter_faces(faces)
 
 	for face in faces:
