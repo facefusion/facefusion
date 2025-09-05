@@ -89,9 +89,6 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	if 'face-landmark-68/5' in face_debugger_items:
 		temp_vision_frame = draw_face_landmark_68_5(target_face, temp_vision_frame)
 
-	temp_vision_frame = draw_face_scores(target_face, temp_vision_frame)
-	temp_vision_frame = draw_face_demographics(target_face, temp_vision_frame)
-
 	return temp_vision_frame
 
 
@@ -211,64 +208,6 @@ def draw_face_landmark_68_5(target_face : Face, temp_vision_frame : VisionFrame)
 
 		for point in face_landmark_68_5:
 			cv2.circle(temp_vision_frame, tuple(point), 3, point_color, -1)
-
-	return temp_vision_frame
-
-
-def draw_face_scores(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	primary_color = 0, 0, 255
-	secondary_color = 0, 255, 0
-	tertiary_color = 255, 255, 0
-	face_debugger_items = state_manager.get_item('face_debugger_items')
-	bounding_box = target_face.bounding_box.astype(numpy.int32)
-	has_face_landmark_5_fallback = numpy.array_equal(target_face.landmark_set.get('5'), target_face.landmark_set.get('5/68'))
-
-	if bounding_box[3] - bounding_box[1] > 50 and bounding_box[2] - bounding_box[0] > 50:
-		top = bounding_box[1]
-		left = bounding_box[0] - 20
-
-		if 'face-detector-score' in face_debugger_items:
-			face_score_text = str(round(target_face.score_set.get('detector'), 2))
-			top = top + 20
-			cv2.putText(temp_vision_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
-
-		if 'face-landmarker-score' in face_debugger_items:
-			face_score_text = str(round(target_face.score_set.get('landmarker'), 2))
-			top = top + 20
-			cv2.putText(temp_vision_frame, face_score_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, tertiary_color if has_face_landmark_5_fallback else secondary_color, 2)
-
-	return temp_vision_frame
-
-
-def draw_face_demographics(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	primary_color = 0, 0, 255
-	face_debugger_items = state_manager.get_item('face_debugger_items')
-	bounding_box = target_face.bounding_box.astype(numpy.int32)
-
-	if bounding_box[3] - bounding_box[1] > 50 and bounding_box[2] - bounding_box[0] > 50:
-		top = bounding_box[1]
-		left = bounding_box[0] - 20
-
-		if 'face-detector-score' in face_debugger_items:
-			top = top + 20
-
-		if 'face-landmarker-score' in face_debugger_items:
-			top = top + 20
-
-		if 'age' in face_debugger_items:
-			face_age_text = str(target_face.age.start) + '-' + str(target_face.age.stop)
-			top = top + 20
-			cv2.putText(temp_vision_frame, face_age_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
-
-		if 'gender' in face_debugger_items:
-			face_gender_text = target_face.gender
-			top = top + 20
-			cv2.putText(temp_vision_frame, face_gender_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
-
-		if 'race' in face_debugger_items:
-			face_race_text = target_face.race
-			top = top + 20
-			cv2.putText(temp_vision_frame, face_race_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
 
 	return temp_vision_frame
 
