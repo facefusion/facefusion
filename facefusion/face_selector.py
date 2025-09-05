@@ -19,22 +19,17 @@ def select_faces(reference_vision_frame : VisionFrame, target_vision_frame : Vis
 			return [ target_face ]
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		reference_faces = [ extract_reference_face(reference_vision_frame) ]
-		match_faces = find_match_faces(target_faces, reference_faces, state_manager.get_item('reference_face_distance'))
-		return match_faces
+		reference_faces = get_many_faces([ reference_vision_frame ])
+		reference_faces = sort_and_filter_faces(reference_faces)
+		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
+		if reference_face:
+			match_faces = find_match_faces([ reference_face ], target_faces, state_manager.get_item('reference_face_distance'))
+			return match_faces
 
 	return []
 
 
-def extract_reference_face(reference_vision_frame : VisionFrame) -> Face:
-	faces = get_many_faces([ reference_vision_frame ])
-	faces = sort_and_filter_faces(faces)
-	reference_face = get_one_face(faces, state_manager.get_item('reference_face_position'))
-
-	return reference_face
-
-
-def find_match_faces(target_faces : List[Face], reference_faces : List[Face], face_distance : float) -> List[Face]:
+def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:
 	match_faces : List[Face] = []
 
 	for reference_face in reference_faces:
