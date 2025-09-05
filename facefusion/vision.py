@@ -227,7 +227,7 @@ def restrict_frame(vision_frame : VisionFrame, resolution : Resolution) -> Visio
 	return vision_frame
 
 
-def fit_contain_frame(vision_frame : VisionFrame, resolution: Resolution) -> VisionFrame:
+def fit_contain_frame(vision_frame : VisionFrame, resolution : Resolution) -> VisionFrame:
 	contain_width, contain_height = resolution
 	height, width = vision_frame.shape[:2]
 	scale = min(contain_height / height, contain_width / width)
