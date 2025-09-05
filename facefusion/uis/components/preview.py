@@ -10,10 +10,10 @@ from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
 from facefusion.face_analyser import get_one_face
+from facefusion.face_selector import select_faces
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.face_selector import select_faces
 from facefusion.types import AudioFrame, Face, VisionFrame
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
