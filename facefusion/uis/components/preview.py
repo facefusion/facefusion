@@ -9,8 +9,8 @@ from facefusion import logger, process_manager, state_manager, wording
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
-from facefusion.face_analyser import get_many_faces, get_one_face
-from facefusion.face_selector import sort_and_filter_faces
+from facefusion.face_analyser import get_one_face
+from facefusion.face_selector import select_faces
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
@@ -222,7 +222,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 			return numpy.hstack((temp_vision_frame, temp_vision_frame))
 
 		if preview_mode == 'face-by-face':
-			target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(target_vision_frame, temp_vision_frame)
+			target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, target_vision_frame, temp_vision_frame)
 			target_crop_vision_frame = obscure_frame(target_crop_vision_frame)
 			output_crop_vision_frame = obscure_frame(output_crop_vision_frame)
 			return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
@@ -249,19 +249,19 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 		return numpy.hstack((target_vision_frame, temp_vision_frame))
 
 	if preview_mode == 'face-by-face':
-		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(target_vision_frame, temp_vision_frame)
+		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, target_vision_frame, temp_vision_frame)
 		return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
 
 	return temp_vision_frame
 
 
-def create_face_by_face(target_vision_frame : VisionFrame, output_vision_frame : VisionFrame) -> Tuple[Optional[VisionFrame], Optional[VisionFrame]]:
-	target_face = get_one_face(sort_and_filter_faces(get_many_faces([ target_vision_frame ])))
-	output_face = get_one_face(sort_and_filter_faces(get_many_faces([ output_vision_frame ])))
+def create_face_by_face(reference_vision_frame : VisionFrame, target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, VisionFrame]:
+	target_faces = select_faces(reference_vision_frame, target_vision_frame)
+	target_face = get_one_face(target_faces)
 
-	if target_face and output_face:
+	if target_face:
 		target_crop_vision_frame = extract_crop_frame(target_vision_frame, target_face)
-		output_crop_vision_frame = extract_crop_frame(output_vision_frame, output_face)
+		output_crop_vision_frame = extract_crop_frame(temp_vision_frame, target_face)
 
 		if numpy.any(target_crop_vision_frame) and numpy.any(output_crop_vision_frame):
 			target_crop_vision_frame = fit_cover_frame(target_crop_vision_frame, (512, 512))

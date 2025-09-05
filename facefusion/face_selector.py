@@ -3,10 +3,33 @@ from typing import List
 import numpy
 
 from facefusion import state_manager
-from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score
+from facefusion.face_analyser import get_many_faces, get_one_face
+from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 
-def find_match_faces(target_faces : List[Face], reference_faces : List[Face], face_distance : float) -> List[Face]:
+def select_faces(reference_vision_frame : VisionFrame, target_vision_frame : VisionFrame) -> List[Face]:
+	target_faces = get_many_faces([ target_vision_frame ])
+
+	if state_manager.get_item('face_selector_mode') == 'many':
+		return sort_and_filter_faces(target_faces)
+
+	if state_manager.get_item('face_selector_mode') == 'one':
+		target_face = get_one_face(sort_and_filter_faces(target_faces))
+		if target_face:
+			return [ target_face ]
+
+	if state_manager.get_item('face_selector_mode') == 'reference':
+		reference_faces = get_many_faces([ reference_vision_frame ])
+		reference_faces = sort_and_filter_faces(reference_faces)
+		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
+		if reference_face:
+			match_faces = find_match_faces([ reference_face ], target_faces, state_manager.get_item('reference_face_distance'))
+			return match_faces
+
+	return []
+
+
+def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:
 	match_faces : List[Face] = []
 
 	for reference_face in reference_faces:
