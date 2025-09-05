@@ -6,10 +6,9 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, state_manager, video_manager, wording
-from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
-from facefusion.face_selector import select_faces, sort_and_filter_faces
+from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FaceDebuggerInputs
@@ -172,14 +171,6 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 			cv2.putText(temp_vision_frame, face_race_text, (left, top), cv2.FONT_HERSHEY_SIMPLEX, 0.5, primary_color, 2)
 
 	return temp_vision_frame
-
-
-def extract_reference_face(reference_vision_frame : VisionFrame) -> Face:
-	faces = get_many_faces([ reference_vision_frame ])
-	faces = sort_and_filter_faces(faces)
-	reference_face = get_one_face(faces, state_manager.get_item('reference_face_position'))
-
-	return reference_face
 
 
 def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
