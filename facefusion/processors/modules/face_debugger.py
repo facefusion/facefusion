@@ -67,7 +67,6 @@ def post_process() -> None:
 
 
 def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	temp_vision_frame = temp_vision_frame.copy()
 	face_debugger_items = state_manager.get_item('face_debugger_items')
 
 	if 'bounding-box' in face_debugger_items:
