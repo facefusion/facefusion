@@ -72,7 +72,7 @@ def listen() -> None:
 
 	if preview_frame_slider:
 		preview_frame_slider.release(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE, show_progress = 'hidden')
-		preview_frame_slider.change(slide_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE, show_progress = 'hidden', trigger_mode = 'once')
+		preview_frame_slider.change(update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE, show_progress = 'hidden', trigger_mode = 'once')
 
 		reference_face_position_gallery = get_ui_component('reference_face_position_gallery')
 		if reference_face_position_gallery:
@@ -168,10 +168,6 @@ def listen() -> None:
 		'face_landmarker_score_slider'
 	]):
 		ui_component.release(clear_and_update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
-
-
-def slide_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
-	return update_preview_image(preview_mode, preview_resolution, frame_number)
 
 
 def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
