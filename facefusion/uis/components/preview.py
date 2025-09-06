@@ -160,19 +160,14 @@ def listen() -> None:
 		'face_parser_model_dropdown',
 		'voice_extractor_model_dropdown'
 	]):
-		ui_component.change(clear_and_update_preview_image, inputs = [preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider], outputs = PREVIEW_IMAGE)
+		ui_component.change(clear_and_update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
 
 	for ui_component in get_ui_components(
 	[
 		'face_detector_score_slider',
 		'face_landmarker_score_slider'
 	]):
-		ui_component.release(clear_and_update_preview_image, inputs = [preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider], outputs = PREVIEW_IMAGE)
-
-
-def clear_and_update_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
-	clear_static_faces()
-	return update_preview_image(preview_mode, preview_resolution, frame_number)
+		ui_component.release(clear_and_update_preview_image, inputs = [ preview_mode_dropdown, preview_resolution_dropdown, preview_frame_slider ], outputs = PREVIEW_IMAGE)
 
 
 def slide_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
@@ -210,6 +205,11 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
 	return gradio.Image(value = None, elem_classes = None)
+
+
+def clear_and_update_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
+	clear_static_faces()
+	return update_preview_image(preview_mode, preview_resolution, frame_number)
 
 
 def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame, preview_mode : PreviewMode, preview_resolution : str) -> VisionFrame:
