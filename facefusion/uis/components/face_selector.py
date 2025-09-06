@@ -70,7 +70,7 @@ def render() -> None:
 			)
 			FACE_SELECTOR_RACE_DROPDOWN = gradio.Dropdown(
 				label = wording.get('uis.face_selector_race_dropdown'),
-				choices = ['none'] + facefusion.choices.face_selector_races,
+				choices = [ 'none' ] + facefusion.choices.face_selector_races,
 				value = state_manager.get_item('face_selector_race') or 'none'
 			)
 		with gradio.Row():
