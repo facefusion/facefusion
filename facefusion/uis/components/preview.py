@@ -260,8 +260,9 @@ def create_face_by_face(reference_vision_frame : VisionFrame, target_vision_fram
 		output_crop_vision_frame = extract_crop_frame(temp_vision_frame, target_face)
 
 		if numpy.any(target_crop_vision_frame) and numpy.any(output_crop_vision_frame):
-			target_crop_vision_frame = fit_cover_frame(target_crop_vision_frame, (512, 512))
-			output_crop_vision_frame = fit_cover_frame(output_crop_vision_frame, (512, 512))
+			target_crop_dimension = min(target_crop_vision_frame.shape[:2])
+			target_crop_vision_frame = fit_cover_frame(target_crop_vision_frame, (target_crop_dimension, target_crop_dimension))
+			output_crop_vision_frame = fit_cover_frame(output_crop_vision_frame, (target_crop_dimension, target_crop_dimension))
 			return target_crop_vision_frame, output_crop_vision_frame
 
 	empty_vision_frame = numpy.zeros((512, 512, 3), dtype = numpy.uint8)
