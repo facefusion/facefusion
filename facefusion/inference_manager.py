@@ -8,7 +8,7 @@ from onnxruntime import InferenceSession
 from facefusion import logger, process_manager, state_manager, wording
 from facefusion.app_context import detect_app_context
 from facefusion.execution import create_inference_session_providers
-from facefusion.exit_helper import hard_exit
+from facefusion.exit_helper import fatal_exit
 from facefusion.filesystem import get_file_name, is_file
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import DownloadSet, ExecutionProvider, InferencePool, InferencePoolSet
@@ -76,7 +76,7 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 
 	except Exception:
 		logger.error(wording.get('loading_model_failed').format(model_name = model_file_name), __name__)
-		hard_exit(1)
+		fatal_exit(1)
 
 
 def get_inference_context(module_name : str, model_names : List[str], execution_device_id : str, execution_providers : List[ExecutionProvider]) -> str:

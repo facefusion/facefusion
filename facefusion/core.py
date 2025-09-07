@@ -58,11 +58,11 @@ def route(args : Args) -> None:
 
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
-		return hard_exit(error_code)
+		hard_exit(error_code)
 
 	if state_manager.get_item('command') == 'benchmark':
 		if not common_pre_check() or not processors_pre_check() or not benchmarker.pre_check():
-			return hard_exit(2)
+			hard_exit(2)
 		benchmarker.render()
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
@@ -75,10 +75,10 @@ def route(args : Args) -> None:
 		import facefusion.uis.core as ui
 
 		if not common_pre_check() or not processors_pre_check():
-			return hard_exit(2)
+			hard_exit(2)
 		for ui_layout in ui.get_ui_layouts_modules(state_manager.get_item('ui_layouts')):
 			if not ui_layout.pre_check():
-				return hard_exit(2)
+				hard_exit(2)
 		ui.init()
 		ui.launch()
 
