@@ -1,4 +1,5 @@
 import tempfile
+from pathlib import Path
 from typing import Optional
 
 import gradio
@@ -17,7 +18,12 @@ def render() -> None:
 	global OUTPUT_VIDEO
 
 	if not state_manager.get_item('output_path'):
-		state_manager.set_item('output_path', tempfile.gettempdir())
+		documents_directory = Path.home().joinpath('Documents')
+
+		if documents_directory.exists():
+			state_manager.set_item('output_path', documents_directory)
+		else:
+			state_manager.set_item('output_path', tempfile.gettempdir())
 	OUTPUT_PATH_TEXTBOX = gradio.Textbox(
 		label = wording.get('uis.output_path_textbox'),
 		value = state_manager.get_item('output_path'),

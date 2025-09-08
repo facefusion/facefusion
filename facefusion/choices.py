@@ -2,14 +2,15 @@ import logging
 from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, WebcamMode
+from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, VoiceExtractorModel
 
 face_detector_set : FaceDetectorSet =\
 {
 	'many': [ '640x640' ],
 	'retinaface': [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
 	'scrfd': [ '160x160', '320x320', '480x480', '512x512', '640x640' ],
-	'yolo_face': [ '640x640' ]
+	'yolo_face': [ '640x640' ],
+	'yunet': [ '640x640' ]
 }
 face_detector_models : List[FaceDetectorModel] = list(face_detector_set.keys())
 face_landmarker_models : List[FaceLandmarkerModel] = [ 'many', '2dfan4', 'peppa_wutz' ]
@@ -17,7 +18,7 @@ face_selector_modes : List[FaceSelectorMode] = [ 'many', 'one', 'reference' ]
 face_selector_orders : List[FaceSelectorOrder] = [ 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small', 'best-worst', 'worst-best' ]
 face_selector_genders : List[Gender] = [ 'female', 'male' ]
 face_selector_races : List[Race] = [ 'white', 'black', 'latino', 'asian', 'indian', 'arabic' ]
-face_occluder_models : List[FaceOccluderModel] = [ 'xseg_1', 'xseg_2', 'xseg_3' ]
+face_occluder_models : List[FaceOccluderModel] = [ 'many', 'xseg_1', 'xseg_2', 'xseg_3' ]
 face_parser_models : List[FaceParserModel] = [ 'bisenet_resnet_18', 'bisenet_resnet_34' ]
 face_mask_types : List[FaceMaskType] = [ 'box', 'occlusion', 'area', 'region' ]
 face_mask_area_set : FaceMaskAreaSet =\
@@ -41,6 +42,8 @@ face_mask_region_set : FaceMaskRegionSet =\
 }
 face_mask_areas : List[FaceMaskArea] = list(face_mask_area_set.keys())
 face_mask_regions : List[FaceMaskRegion] = list(face_mask_region_set.keys())
+
+voice_extractor_models : List[VoiceExtractorModel] = [ 'kim_vocal_1', 'kim_vocal_2', 'uvr_mdxnet' ]
 
 audio_type_set : AudioTypeSet =\
 {
@@ -66,7 +69,8 @@ video_type_set : VideoTypeSet =\
 	'mkv': 'video/x-matroska',
 	'mp4': 'video/mp4',
 	'mov': 'video/quicktime',
-	'webm': 'video/webm'
+	'webm': 'video/webm',
+	'wmv': 'video/x-ms-wmv'
 }
 audio_formats : List[AudioFormat] = list(audio_type_set.keys())
 image_formats : List[ImageFormat] = list(image_type_set.keys())
@@ -76,15 +80,13 @@ temp_frame_formats : List[TempFrameFormat] = [ 'bmp', 'jpeg', 'png', 'tiff' ]
 output_encoder_set : EncoderSet =\
 {
 	'audio': [ 'flac', 'aac', 'libmp3lame', 'libopus', 'libvorbis', 'pcm_s16le', 'pcm_s32le' ],
-	'video': [ 'libx264', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox', 'rawvideo' ]
+	'video': [ 'libx264', 'libx264rgb', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox', 'rawvideo' ]
 }
 output_audio_encoders : List[AudioEncoder] = output_encoder_set.get('audio')
 output_video_encoders : List[VideoEncoder] = output_encoder_set.get('video')
 output_video_presets : List[VideoPreset] = [ 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow' ]
 
-image_template_sizes : List[float] = [ 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 3.5, 4 ]
-video_template_sizes : List[int] = [ 240, 360, 480, 540, 720, 1080, 1440, 2160, 4320 ]
-
+benchmark_modes : List[BenchmarkMode] = [ 'warm', 'cold' ]
 benchmark_set : BenchmarkSet =\
 {
 	'240p': '.assets/examples/target-240p.mp4',
@@ -97,15 +99,13 @@ benchmark_set : BenchmarkSet =\
 }
 benchmark_resolutions : List[BenchmarkResolution] = list(benchmark_set.keys())
 
-webcam_modes : List[WebcamMode] = [ 'inline', 'udp', 'v4l2' ]
-webcam_resolutions : List[str] = [ '320x240', '640x480', '800x600', '1024x768', '1280x720', '1280x960', '1920x1080', '2560x1440', '3840x2160' ]
-
 execution_provider_set : ExecutionProviderSet =\
 {
 	'cuda': 'CUDAExecutionProvider',
 	'tensorrt': 'TensorrtExecutionProvider',
 	'directml': 'DmlExecutionProvider',
 	'rocm': 'ROCMExecutionProvider',
+	'migraphx': 'MIGraphXExecutionProvider',
 	'openvino': 'OpenVINOExecutionProvider',
 	'coreml': 'CoreMLExecutionProvider',
 	'cpu': 'CPUExecutionProvider'
@@ -150,7 +150,6 @@ job_statuses : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 
 benchmark_cycle_count_range : Sequence[int] = create_int_range(1, 10, 1)
 execution_thread_count_range : Sequence[int] = create_int_range(1, 32, 1)
-execution_queue_count_range : Sequence[int] = create_int_range(1, 4, 1)
 system_memory_limit_range : Sequence[int] = create_int_range(0, 128, 4)
 face_detector_angles : Sequence[Angle] = create_int_range(0, 270, 90)
 face_detector_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
@@ -160,6 +159,8 @@ face_mask_padding_range : Sequence[int] = create_int_range(0, 100, 1)
 face_selector_age_range : Sequence[int] = create_int_range(0, 100, 1)
 reference_face_distance_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
 output_image_quality_range : Sequence[int] = create_int_range(0, 100, 1)
+output_image_scale_range : Sequence[float] = create_float_range(0.25, 8.0, 0.25)
 output_audio_quality_range : Sequence[int] = create_int_range(0, 100, 1)
 output_audio_volume_range : Sequence[int] = create_int_range(0, 100, 1)
 output_video_quality_range : Sequence[int] = create_int_range(0, 100, 1)
+output_video_scale_range : Sequence[float] = create_float_range(0.25, 8.0, 0.25)

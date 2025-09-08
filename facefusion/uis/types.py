@@ -5,12 +5,11 @@ ComponentName = Literal\
 [
 	'age_modifier_direction_slider',
 	'age_modifier_model_dropdown',
-	'benchmark_cycle_count_slider',
-	'benchmark_resolutions_checkbox_group',
 	'deep_swapper_model_dropdown',
 	'deep_swapper_morph_slider',
 	'expression_restorer_factor_slider',
 	'expression_restorer_model_dropdown',
+	'expression_restorer_areas_checkbox_group',
 	'face_debugger_items_checkbox_group',
 	'face_detector_angles_checkbox_group',
 	'face_detector_model_dropdown',
@@ -51,8 +50,10 @@ ComponentName = Literal\
 	'face_selector_race_dropdown',
 	'face_swapper_model_dropdown',
 	'face_swapper_pixel_boost_dropdown',
+	'face_swapper_weight_slider',
 	'face_occluder_model_dropdown',
 	'face_parser_model_dropdown',
+	'voice_extractor_model_dropdown',
 	'frame_colorizer_blend_slider',
 	'frame_colorizer_model_dropdown',
 	'frame_colorizer_size_dropdown',
@@ -64,7 +65,10 @@ ComponentName = Literal\
 	'output_image',
 	'output_video',
 	'output_video_fps_slider',
+	'preview_image',
 	'preview_frame_slider',
+	'preview_mode_dropdown',
+	'preview_resolution_dropdown',
 	'processors_checkbox_group',
 	'reference_face_distance_slider',
 	'reference_face_position_gallery',
@@ -83,3 +87,5 @@ ComponentOptions : TypeAlias = Dict[str, Any]
 
 JobManagerAction = Literal['job-create', 'job-submit', 'job-delete', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step']
 JobRunnerAction = Literal['job-run', 'job-run-all', 'job-retry', 'job-retry-all']
+
+PreviewMode = Literal[ 'default', 'frame-by-frame', 'face-by-face' ]

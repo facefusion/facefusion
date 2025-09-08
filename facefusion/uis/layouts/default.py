@@ -1,7 +1,7 @@
 import gradio
 
 from facefusion import state_manager
-from facefusion.uis.components import about, age_modifier_options, common_options, deep_swapper_options, download, execution, execution_queue_count, execution_thread_count, expression_restorer_options, face_debugger_options, face_detector, face_editor_options, face_enhancer_options, face_landmarker, face_masker, face_selector, face_swapper_options, frame_colorizer_options, frame_enhancer_options, instant_runner, job_manager, job_runner, lip_syncer_options, memory, output, output_options, preview, processors, source, target, temp_frame, terminal, trim_frame, ui_workflow
+from facefusion.uis.components import about, age_modifier_options, common_options, deep_swapper_options, download, execution, execution_thread_count, expression_restorer_options, face_debugger_options, face_detector, face_editor_options, face_enhancer_options, face_landmarker, face_masker, face_selector, face_swapper_options, frame_colorizer_options, frame_enhancer_options, instant_runner, job_manager, job_runner, lip_syncer_options, memory, output, output_options, preview, preview_options, processors, source, target, temp_frame, terminal, trim_frame, ui_workflow, voice_extractor
 
 
 def pre_check() -> bool:
@@ -37,9 +37,10 @@ def render() -> gradio.Blocks:
 				with gradio.Blocks():
 					lip_syncer_options.render()
 				with gradio.Blocks():
+					voice_extractor.render()
+				with gradio.Blocks():
 					execution.render()
 					execution_thread_count.render()
-					execution_queue_count.render()
 				with gradio.Blocks():
 					download.render()
 				with gradio.Blocks():
@@ -65,6 +66,7 @@ def render() -> gradio.Blocks:
 			with gradio.Column(scale = 7):
 				with gradio.Blocks():
 					preview.render()
+					preview_options.render()
 				with gradio.Blocks():
 					trim_frame.render()
 				with gradio.Blocks():
@@ -94,7 +96,6 @@ def listen() -> None:
 	lip_syncer_options.listen()
 	execution.listen()
 	execution_thread_count.listen()
-	execution_queue_count.listen()
 	download.listen()
 	memory.listen()
 	temp_frame.listen()
@@ -107,11 +108,13 @@ def listen() -> None:
 	job_manager.listen()
 	terminal.listen()
 	preview.listen()
+	preview_options.listen()
 	trim_frame.listen()
 	face_selector.listen()
 	face_masker.listen()
 	face_detector.listen()
 	face_landmarker.listen()
+	voice_extractor.listen()
 	common_options.listen()
 
 

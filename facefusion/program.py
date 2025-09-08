@@ -144,6 +144,14 @@ def create_face_masker_program() -> ArgumentParser:
 	return program
 
 
+def create_voice_extractor_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_voice_extractor = program.add_argument_group('voice extractor')
+	group_voice_extractor.add_argument('--voice-extractor-model', help = wording.get('help.voice_extractor_model'), default = config.get_str_value('voice_extractor', 'voice_extractor_model', 'kim_vocal_2'), choices = facefusion.choices.voice_extractor_models)
+	job_store.register_step_keys([ 'voice_extractor_model' ])
+	return program
+
+
 def create_frame_extraction_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_frame_extraction = program.add_argument_group('frame extraction')
@@ -160,16 +168,16 @@ def create_output_creation_program() -> ArgumentParser:
 	available_encoder_set = get_available_encoder_set()
 	group_output_creation = program.add_argument_group('output creation')
 	group_output_creation.add_argument('--output-image-quality', help = wording.get('help.output_image_quality'), type = int, default = config.get_int_value('output_creation', 'output_image_quality', '80'), choices = facefusion.choices.output_image_quality_range, metavar = create_int_metavar(facefusion.choices.output_image_quality_range))
-	group_output_creation.add_argument('--output-image-resolution', help = wording.get('help.output_image_resolution'), default = config.get_str_value('output_creation', 'output_image_resolution'))
+	group_output_creation.add_argument('--output-image-scale', help = wording.get('help.output_image_scale'), type = float, default = config.get_float_value('output_creation', 'output_image_scale', '1.0'), choices = facefusion.choices.output_image_scale_range)
 	group_output_creation.add_argument('--output-audio-encoder', help = wording.get('help.output_audio_encoder'), default = config.get_str_value('output_creation', 'output_audio_encoder', get_first(available_encoder_set.get('audio'))), choices = available_encoder_set.get('audio'))
 	group_output_creation.add_argument('--output-audio-quality', help = wording.get('help.output_audio_quality'), type = int, default = config.get_int_value('output_creation', 'output_audio_quality', '80'), choices = facefusion.choices.output_audio_quality_range, metavar = create_int_metavar(facefusion.choices.output_audio_quality_range))
 	group_output_creation.add_argument('--output-audio-volume', help = wording.get('help.output_audio_volume'), type = int, default = config.get_int_value('output_creation', 'output_audio_volume', '100'), choices = facefusion.choices.output_audio_volume_range, metavar = create_int_metavar(facefusion.choices.output_audio_volume_range))
 	group_output_creation.add_argument('--output-video-encoder', help = wording.get('help.output_video_encoder'), default = config.get_str_value('output_creation', 'output_video_encoder', get_first(available_encoder_set.get('video'))), choices = available_encoder_set.get('video'))
 	group_output_creation.add_argument('--output-video-preset', help = wording.get('help.output_video_preset'), default = config.get_str_value('output_creation', 'output_video_preset', 'veryfast'), choices = facefusion.choices.output_video_presets)
 	group_output_creation.add_argument('--output-video-quality', help = wording.get('help.output_video_quality'), type = int, default = config.get_int_value('output_creation', 'output_video_quality', '80'), choices = facefusion.choices.output_video_quality_range, metavar = create_int_metavar(facefusion.choices.output_video_quality_range))
-	group_output_creation.add_argument('--output-video-resolution', help = wording.get('help.output_video_resolution'), default = config.get_str_value('output_creation', 'output_video_resolution'))
-	group_output_creation.add_argument('--output-video-fps', help = wording.get('help.output_video_fps'), type = float, default = config.get_str_value('output_creation', 'output_video_fps'))
-	job_store.register_step_keys([ 'output_image_quality', 'output_image_resolution', 'output_audio_encoder', 'output_audio_quality', 'output_audio_volume', 'output_video_encoder', 'output_video_preset', 'output_video_quality', 'output_video_resolution', 'output_video_fps' ])
+	group_output_creation.add_argument('--output-video-scale', help = wording.get('help.output_video_scale'), type = float, default = config.get_float_value('output_creation', 'output_video_scale', '1.0'), choices = facefusion.choices.output_video_scale_range)
+	group_output_creation.add_argument('--output-video-fps', help = wording.get('help.output_video_fps'), type = float, default = config.get_float_value('output_creation', 'output_video_fps'))
+	job_store.register_step_keys([ 'output_image_quality', 'output_image_scale', 'output_audio_encoder', 'output_audio_quality', 'output_audio_volume', 'output_video_encoder', 'output_video_preset', 'output_video_quality', 'output_video_scale', 'output_video_fps' ])
 	return program
 
 
@@ -213,6 +221,7 @@ def create_download_scope_program() -> ArgumentParser:
 def create_benchmark_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_benchmark = program.add_argument_group('benchmark')
+	group_benchmark.add_argument('--benchmark-mode', help = wording.get('help.benchmark_mode'), default = config.get_str_value('benchmark', 'benchmark_mode', 'warm'), choices = facefusion.choices.benchmark_modes)
 	group_benchmark.add_argument('--benchmark-resolutions', help = wording.get('help.benchmark_resolutions'), default = config.get_str_list('benchmark', 'benchmark_resolutions', get_first(facefusion.choices.benchmark_resolutions)), choices = facefusion.choices.benchmark_resolutions, nargs = '+')
 	group_benchmark.add_argument('--benchmark-cycle-count', help = wording.get('help.benchmark_cycle_count'), type = int, default = config.get_int_value('benchmark', 'benchmark_cycle_count', '5'), choices = facefusion.choices.benchmark_cycle_count_range)
 	return program
@@ -222,11 +231,10 @@ def create_execution_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	available_execution_providers = get_available_execution_providers()
 	group_execution = program.add_argument_group('execution')
-	group_execution.add_argument('--execution-device-id', help = wording.get('help.execution_device_id'), default = config.get_str_value('execution', 'execution_device_id', '0'))
+	group_execution.add_argument('--execution-device-ids', help = wording.get('help.execution_device_ids'), default = config.get_str_list('execution', 'execution_device_ids', '0'), nargs = '+', metavar = 'EXECUTION_DEVICE_IDS')
 	group_execution.add_argument('--execution-providers', help = wording.get('help.execution_providers').format(choices = ', '.join(available_execution_providers)), default = config.get_str_list('execution', 'execution_providers', get_first(available_execution_providers)), choices = available_execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
 	group_execution.add_argument('--execution-thread-count', help = wording.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution', 'execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_int_metavar(facefusion.choices.execution_thread_count_range))
-	group_execution.add_argument('--execution-queue-count', help = wording.get('help.execution_queue_count'), type = int, default = config.get_int_value('execution', 'execution_queue_count', '1'), choices = facefusion.choices.execution_queue_count_range, metavar = create_int_metavar(facefusion.choices.execution_queue_count_range))
-	job_store.register_job_keys([ 'execution_device_id', 'execution_providers', 'execution_thread_count', 'execution_queue_count' ])
+	job_store.register_job_keys([ 'execution_device_ids', 'execution_providers', 'execution_thread_count' ])
 	return program
 
 
@@ -275,7 +283,7 @@ def create_step_index_program() -> ArgumentParser:
 
 
 def collect_step_program() -> ArgumentParser:
-	return ArgumentParser(parents = [ create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
+	return ArgumentParser(parents = [ create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_masker_program(), create_voice_extractor_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
 
 
 def collect_job_program() -> ArgumentParser:
@@ -288,7 +296,7 @@ def create_program() -> ArgumentParser:
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	sub_program = program.add_subparsers(dest = 'command')
 	# general
-	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('batch-run', help = wording.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('force-download', help = wording.get('help.force_download'), parents = [ create_download_providers_program(), create_download_scope_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)

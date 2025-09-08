@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache
-from typing import List, Tuple
+from typing import Tuple
 
 import cv2
 import numpy
@@ -8,25 +8,22 @@ from cv2.typing import Size
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-import facefusion.processors.core as processors
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, process_manager, state_manager, video_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, wording
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
-from facefusion.face_analyser import get_many_faces, get_one_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
-from facefusion.face_selector import find_similar_faces, sort_and_filter_faces
-from facefusion.face_store import get_reference_faces
+from facefusion.face_selector import select_faces
 from facefusion.filesystem import get_file_name, in_directory, is_image, is_video, resolve_file_paths, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import DeepSwapperInputs, DeepSwapperMorph
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
-from facefusion.vision import conditional_match_frame_color, read_image, read_static_image, write_image
+from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.vision import conditional_match_frame_color, read_static_image, read_static_video_frame
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	model_config = []
 
@@ -311,6 +308,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
@@ -409,56 +407,16 @@ def prepare_crop_mask(crop_source_mask : Mask, crop_target_mask : Mask) -> Mask:
 	return crop_mask
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	return swap_face(target_face, temp_vision_frame)
-
-
 def process_frame(inputs : DeepSwapperInputs) -> VisionFrame:
-	reference_faces = inputs.get('reference_faces')
+	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
-	many_faces = sort_and_filter_faces(get_many_faces([ target_vision_frame ]))
+	temp_vision_frame = inputs.get('temp_vision_frame')
+	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
-	if state_manager.get_item('face_selector_mode') == 'many':
-		if many_faces:
-			for target_face in many_faces:
-				target_vision_frame = swap_face(target_face, target_vision_frame)
-	if state_manager.get_item('face_selector_mode') == 'one':
-		target_face = get_one_face(many_faces)
-		if target_face:
-			target_vision_frame = swap_face(target_face, target_vision_frame)
-	if state_manager.get_item('face_selector_mode') == 'reference':
-		similar_faces = find_similar_faces(many_faces, reference_faces, state_manager.get_item('reference_face_distance'))
-		if similar_faces:
-			for similar_face in similar_faces:
-				target_vision_frame = swap_face(similar_face, target_vision_frame)
-	return target_vision_frame
+	if target_faces:
+		for target_face in target_faces:
+			temp_vision_frame = swap_face(target_face, temp_vision_frame)
+
+	return temp_vision_frame
 
 
-def process_frames(source_path : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
-	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
-
-	for queue_payload in process_manager.manage(queue_payloads):
-		target_vision_path = queue_payload['frame_path']
-		target_vision_frame = read_image(target_vision_path)
-		output_vision_frame = process_frame(
-		{
-			'reference_faces': reference_faces,
-			'target_vision_frame': target_vision_frame
-		})
-		write_image(target_vision_path, output_vision_frame)
-		update_progress(1)
-
-
-def process_image(source_path : str, target_path : str, output_path : str) -> None:
-	reference_faces = get_reference_faces() if 'reference' in state_manager.get_item('face_selector_mode') else None
-	target_vision_frame = read_static_image(target_path)
-	output_vision_frame = process_frame(
-	{
-		'reference_faces': reference_faces,
-		'target_vision_frame': target_vision_frame
-	})
-	write_image(output_path, output_vision_frame)
-
-
-def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	processors.multi_process_frames(None, temp_frame_paths, process_frames)

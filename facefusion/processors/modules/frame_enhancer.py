@@ -1,15 +1,13 @@
 from argparse import ArgumentParser
 from functools import lru_cache
-from typing import List
 
 import cv2
 import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-import facefusion.processors.core as processors
-from facefusion import config, content_analyser, inference_manager, logger, process_manager, state_manager, video_manager, wording
-from facefusion.common_helper import create_int_metavar
+from facefusion import config, content_analyser, inference_manager, logger, state_manager, video_manager, wording
+from facefusion.common_helper import create_int_metavar, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -17,11 +15,11 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FrameEnhancerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
-from facefusion.vision import create_tile_frames, merge_tile_frames, read_image, read_static_image, write_image
+from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_frame
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
@@ -426,7 +424,7 @@ def get_model_options() -> ModelOptions:
 def get_frame_enhancer_model() -> str:
 	frame_enhancer_model = state_manager.get_item('frame_enhancer_model')
 
-	if has_execution_provider('coreml'):
+	if is_macos() and has_execution_provider('coreml'):
 		if frame_enhancer_model == 'real_esrgan_x2_fp16':
 			return 'real_esrgan_x2'
 		if frame_enhancer_model == 'real_esrgan_x4_fp16':
@@ -471,6 +469,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
@@ -490,7 +489,7 @@ def enhance_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 		tile_vision_frames[index] = normalize_tile_frame(tile_vision_frame)
 
 	merge_vision_frame = merge_tile_frames(tile_vision_frames, temp_width * model_scale, temp_height * model_scale, pad_width * model_scale, pad_height * model_scale, (model_size[0] * model_scale, model_size[1] * model_scale, model_size[2] * model_scale))
-	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame)
+	temp_vision_frame = blend_merge_frame(temp_vision_frame, merge_vision_frame)
 	return temp_vision_frame
 
 
@@ -506,55 +505,26 @@ def forward(tile_vision_frame : VisionFrame) -> VisionFrame:
 	return tile_vision_frame
 
 
-def prepare_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
-	vision_tile_frame = numpy.expand_dims(vision_tile_frame[:, :, ::-1], axis = 0)
-	vision_tile_frame = vision_tile_frame.transpose(0, 3, 1, 2)
-	vision_tile_frame = vision_tile_frame.astype(numpy.float32) / 255.0
-	return vision_tile_frame
+def prepare_tile_frame(tile_vision_frame : VisionFrame) -> VisionFrame:
+	tile_vision_frame = numpy.expand_dims(tile_vision_frame[:, :, ::-1], axis = 0)
+	tile_vision_frame = tile_vision_frame.transpose(0, 3, 1, 2)
+	tile_vision_frame = tile_vision_frame.astype(numpy.float32) / 255.0
+	return tile_vision_frame
 
 
-def normalize_tile_frame(vision_tile_frame : VisionFrame) -> VisionFrame:
-	vision_tile_frame = vision_tile_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
-	vision_tile_frame = vision_tile_frame.clip(0, 255).astype(numpy.uint8)[:, :, ::-1]
-	return vision_tile_frame
+def normalize_tile_frame(tile_vision_frame : VisionFrame) -> VisionFrame:
+	tile_vision_frame = tile_vision_frame.transpose(0, 2, 3, 1).squeeze(0) * 255
+	tile_vision_frame = tile_vision_frame.clip(0, 255).astype(numpy.uint8)[:, :, ::-1]
+	return tile_vision_frame
 
 
-def blend_frame(temp_vision_frame : VisionFrame, merge_vision_frame : VisionFrame) -> VisionFrame:
+def blend_merge_frame(temp_vision_frame : VisionFrame, merge_vision_frame : VisionFrame) -> VisionFrame:
 	frame_enhancer_blend = 1 - (state_manager.get_item('frame_enhancer_blend') / 100)
 	temp_vision_frame = cv2.resize(temp_vision_frame, (merge_vision_frame.shape[1], merge_vision_frame.shape[0]))
-	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_enhancer_blend, merge_vision_frame, 1 - frame_enhancer_blend, 0)
+	temp_vision_frame = blend_frame(temp_vision_frame, merge_vision_frame, 1 - frame_enhancer_blend)
 	return temp_vision_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	pass
-
-
 def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
-	target_vision_frame = inputs.get('target_vision_frame')
-	return enhance_frame(target_vision_frame)
-
-
-def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
-	for queue_payload in process_manager.manage(queue_payloads):
-		target_vision_path = queue_payload['frame_path']
-		target_vision_frame = read_image(target_vision_path)
-		output_vision_frame = process_frame(
-		{
-			'target_vision_frame': target_vision_frame
-		})
-		write_image(target_vision_path, output_vision_frame)
-		update_progress(1)
-
-
-def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
-	target_vision_frame = read_static_image(target_path)
-	output_vision_frame = process_frame(
-	{
-		'target_vision_frame': target_vision_frame
-	})
-	write_image(output_path, output_vision_frame)
-
-
-def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	processors.multi_process_frames(None, temp_frame_paths, process_frames)
+	temp_vision_frame = inputs.get('temp_vision_frame')
+	return enhance_frame(temp_vision_frame)

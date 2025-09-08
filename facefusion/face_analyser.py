@@ -5,10 +5,10 @@ import numpy
 from facefusion import state_manager
 from facefusion.common_helper import get_first
 from facefusion.face_classifier import classify_face
-from facefusion.face_detector import detect_faces, detect_rotated_faces
+from facefusion.face_detector import detect_faces, detect_faces_by_angle
 from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, estimate_face_angle, get_nms_threshold
 from facefusion.face_landmarker import detect_face_landmark, estimate_face_landmark_68_5
-from facefusion.face_recognizer import calc_embedding
+from facefusion.face_recognizer import calculate_face_embedding
 from facefusion.face_store import get_static_faces, set_static_faces
 from facefusion.types import BoundingBox, Face, FaceLandmark5, FaceLandmarkSet, FaceScoreSet, Score, VisionFrame
 
@@ -45,15 +45,15 @@ def create_faces(vision_frame : VisionFrame, bounding_boxes : List[BoundingBox],
 			'detector': face_score,
 			'landmarker': face_landmark_score_68
 		}
-		embedding, normed_embedding = calc_embedding(vision_frame, face_landmark_set.get('5/68'))
+		face_embedding, face_embedding_norm = calculate_face_embedding(vision_frame, face_landmark_set.get('5/68'))
 		gender, age, race = classify_face(vision_frame, face_landmark_set.get('5/68'))
 		faces.append(Face(
 			bounding_box = bounding_box,
 			score_set = face_score_set,
 			landmark_set = face_landmark_set,
 			angle = face_angle,
-			embedding = embedding,
-			normed_embedding = normed_embedding,
+			embedding = face_embedding,
+			embedding_norm = face_embedding_norm,
 			gender = gender,
 			age = age,
 			race = race
@@ -69,23 +69,23 @@ def get_one_face(faces : List[Face], position : int = 0) -> Optional[Face]:
 
 
 def get_average_face(faces : List[Face]) -> Optional[Face]:
-	embeddings = []
-	normed_embeddings = []
+	face_embeddings = []
+	face_embeddings_norm = []
 
 	if faces:
 		first_face = get_first(faces)
 
 		for face in faces:
-			embeddings.append(face.embedding)
-			normed_embeddings.append(face.normed_embedding)
+			face_embeddings.append(face.embedding)
+			face_embeddings_norm.append(face.embedding_norm)
 
 		return Face(
 			bounding_box = first_face.bounding_box,
 			score_set = first_face.score_set,
 			landmark_set = first_face.landmark_set,
 			angle = first_face.angle,
-			embedding = numpy.mean(embeddings, axis = 0),
-			normed_embedding = numpy.mean(normed_embeddings, axis = 0),
+			embedding = numpy.mean(face_embeddings, axis = 0),
+			embedding_norm = numpy.mean(face_embeddings_norm, axis = 0),
 			gender = first_face.gender,
 			age = first_face.age,
 			race = first_face.race
@@ -110,7 +110,7 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 					if face_detector_angle == 0:
 						bounding_boxes, face_scores, face_landmarks_5 = detect_faces(vision_frame)
 					else:
-						bounding_boxes, face_scores, face_landmarks_5 = detect_rotated_faces(vision_frame, face_detector_angle)
+						bounding_boxes, face_scores, face_landmarks_5 = detect_faces_by_angle(vision_frame, face_detector_angle)
 					all_bounding_boxes.extend(bounding_boxes)
 					all_face_scores.extend(face_scores)
 					all_face_landmarks_5.extend(face_landmarks_5)

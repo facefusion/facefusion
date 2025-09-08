@@ -108,9 +108,9 @@ def set_media_resolution(video_resolution : str) -> Commands:
 
 def set_image_quality(image_path : str, image_quality : int) -> Commands:
 	if get_file_format(image_path) == 'webp':
-		image_compression = image_quality
-	else:
-		image_compression = round(31 - (image_quality * 0.31))
+		return [ '-q:v', str(image_quality) ]
+
+	image_compression = round(31 - (image_quality * 0.31))
 	return [ '-q:v', str(image_compression) ]
 
 
@@ -140,16 +140,16 @@ def set_audio_channel_total(audio_channel_total : int) -> Commands:
 
 def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> Commands:
 	if audio_encoder == 'aac':
-		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 0.1, 2.0 ]), 1)
+		audio_compression = numpy.round(numpy.interp(audio_quality, [ 0, 100 ], [ 0.1, 2.0 ]), 1).astype(float).item()
 		return [ '-q:a', str(audio_compression) ]
 	if audio_encoder == 'libmp3lame':
-		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ 9, 0 ]))
+		audio_compression = numpy.round(numpy.interp(audio_quality, [ 0, 100 ], [ 9, 0 ])).astype(int).item()
 		return [ '-q:a', str(audio_compression) ]
 	if audio_encoder == 'libopus':
-		audio_bit_rate = round(numpy.interp(audio_quality, [ 0, 100 ], [ 64, 256 ]))
+		audio_bit_rate = numpy.round(numpy.interp(audio_quality, [ 0, 100 ], [ 64, 256 ])).astype(int).item()
 		return [ '-b:a', str(audio_bit_rate) + 'k' ]
 	if audio_encoder == 'libvorbis':
-		audio_compression = round(numpy.interp(audio_quality, [ 0, 100 ], [ -1, 10 ]), 1)
+		audio_compression = numpy.round(numpy.interp(audio_quality, [ 0, 100 ], [ -1, 10 ]), 1).astype(float).item()
 		return [ '-q:a', str(audio_compression) ]
 	return []
 
@@ -167,29 +167,29 @@ def copy_video_encoder() -> Commands:
 
 
 def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> Commands:
-	if video_encoder in [ 'libx264', 'libx265' ]:
-		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ]))
+	if video_encoder in [ 'libx264', 'libx264rgb', 'libx265' ]:
+		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ])).astype(int).item()
 		return [ '-crf', str(video_compression) ]
 	if video_encoder == 'libvpx-vp9':
-		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 63, 0 ]))
+		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 63, 0 ])).astype(int).item()
 		return [ '-crf', str(video_compression) ]
 	if video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
-		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ]))
+		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ])).astype(int).item()
 		return [ '-cq', str(video_compression) ]
 	if video_encoder in [ 'h264_amf', 'hevc_amf' ]:
-		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ]))
+		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ])).astype(int).item()
 		return [ '-qp_i', str(video_compression), '-qp_p', str(video_compression), '-qp_b', str(video_compression) ]
 	if video_encoder in [ 'h264_qsv', 'hevc_qsv' ]:
-		video_compression = round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ]))
+		video_compression = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 51, 0 ])).astype(int).item()
 		return [ '-qp', str(video_compression) ]
 	if video_encoder in [ 'h264_videotoolbox', 'hevc_videotoolbox' ]:
-		video_bit_rate = round(numpy.interp(video_quality, [ 0, 100 ], [ 1024, 50512 ]))
+		video_bit_rate = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 1024, 50512 ])).astype(int).item()
 		return [ '-b:v', str(video_bit_rate) + 'k' ]
 	return []
 
 
 def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -> Commands:
-	if video_encoder in [ 'libx264', 'libx265' ]:
+	if video_encoder in [ 'libx264', 'libx264rgb', 'libx265' ]:
 		return [ '-preset', video_preset ]
 	if video_encoder in [ 'h264_nvenc', 'hevc_nvenc' ]:
 		return [ '-preset', map_nvenc_preset(video_preset) ]
@@ -198,10 +198,6 @@ def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -
 	if video_encoder in [ 'h264_qsv', 'hevc_qsv' ]:
 		return [ '-preset', map_qsv_preset(video_preset) ]
 	return []
-
-
-def set_video_colorspace(video_colorspace : str) -> Commands:
-	return [ '-colorspace', video_colorspace ]
 
 
 def set_video_fps(video_fps : Fps) -> Commands:

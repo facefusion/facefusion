@@ -2,12 +2,13 @@ from typing import Any, Dict, List, Literal, TypeAlias, TypedDict
 
 from numpy.typing import NDArray
 
-from facefusion.types import AppContext, AudioFrame, Face, FaceSet, VisionFrame
+from facefusion.types import AppContext, AudioFrame, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
 DeepSwapperModel : TypeAlias = str
 ExpressionRestorerModel = Literal['live_portrait']
-FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race']
+ExpressionRestorerArea = Literal['upper-face', 'lower-face']
+FaceDebuggerItem = Literal['bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask']
 FaceEditorModel = Literal['live_portrait']
 FaceEnhancerModel = Literal['codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus']
 FaceSwapperModel = Literal['blendswap_256', 'ghost_1_256', 'ghost_2_256', 'ghost_3_256', 'hififace_unofficial_256', 'hyperswap_1a_256', 'hyperswap_1b_256', 'hyperswap_1c_256', 'inswapper_128', 'inswapper_128_fp16', 'simswap_256', 'simswap_unofficial_512', 'uniface_256']
@@ -19,55 +20,80 @@ FaceSwapperSet : TypeAlias = Dict[FaceSwapperModel, List[str]]
 
 AgeModifierInputs = TypedDict('AgeModifierInputs',
 {
-	'reference_faces' : FaceSet,
-	'target_vision_frame' : VisionFrame
+	'reference_vision_frame' : VisionFrame,
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 DeepSwapperInputs = TypedDict('DeepSwapperInputs',
 {
-	'reference_faces' : FaceSet,
-	'target_vision_frame' : VisionFrame
+	'reference_vision_frame' : VisionFrame,
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 ExpressionRestorerInputs = TypedDict('ExpressionRestorerInputs',
 {
-	'reference_faces' : FaceSet,
-	'source_vision_frame' : VisionFrame,
-	'target_vision_frame' : VisionFrame
+	'reference_vision_frame' : VisionFrame,
+	'source_vision_frames' : List[VisionFrame],
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',
 {
-	'reference_faces' : FaceSet,
-	'target_vision_frame' : VisionFrame
+	'reference_vision_frame' : VisionFrame,
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FaceEditorInputs = TypedDict('FaceEditorInputs',
 {
-	'reference_faces' : FaceSet,
-	'target_vision_frame' : VisionFrame
+	'reference_vision_frame' : VisionFrame,
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FaceEnhancerInputs = TypedDict('FaceEnhancerInputs',
 {
-	'reference_faces' : FaceSet,
-	'target_vision_frame' : VisionFrame
+	'reference_vision_frame' : VisionFrame,
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FaceSwapperInputs = TypedDict('FaceSwapperInputs',
 {
-	'reference_faces' : FaceSet,
-	'source_face' : Face,
-	'target_vision_frame' : VisionFrame
+	'reference_vision_frame' : VisionFrame,
+	'source_vision_frames' : List[VisionFrame],
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FrameColorizerInputs = TypedDict('FrameColorizerInputs',
 {
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 FrameEnhancerInputs = TypedDict('FrameEnhancerInputs',
 {
-	'target_vision_frame' : VisionFrame
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
 LipSyncerInputs = TypedDict('LipSyncerInputs',
 {
-	'reference_faces' : FaceSet,
-	'source_audio_frame' : AudioFrame,
-	'target_vision_frame' : VisionFrame
+	'reference_vision_frame' : VisionFrame,
+	'source_voice_frame' : AudioFrame,
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
 })
+
+AgeModifierDirection : TypeAlias = NDArray[Any]
+DeepSwapperMorph : TypeAlias = NDArray[Any]
+FaceEnhancerWeight : TypeAlias = NDArray[Any]
+FaceSwapperWeight : TypeAlias = float
+LipSyncerWeight : TypeAlias = NDArray[Any]
+LivePortraitPitch : TypeAlias = float
+LivePortraitYaw : TypeAlias = float
+LivePortraitRoll : TypeAlias = float
+LivePortraitExpression : TypeAlias = NDArray[Any]
+LivePortraitFeatureVolume : TypeAlias = NDArray[Any]
+LivePortraitMotionPoints : TypeAlias = NDArray[Any]
+LivePortraitRotation : TypeAlias = NDArray[Any]
+LivePortraitScale : TypeAlias = NDArray[Any]
+LivePortraitTranslation : TypeAlias = NDArray[Any]
 
 ProcessorStateKey = Literal\
 [
@@ -77,6 +103,7 @@ ProcessorStateKey = Literal\
 	'deep_swapper_morph',
 	'expression_restorer_model',
 	'expression_restorer_factor',
+	'expression_restorer_areas',
 	'face_debugger_items',
 	'face_editor_model',
 	'face_editor_eyebrow_direction',
@@ -98,6 +125,7 @@ ProcessorStateKey = Literal\
 	'face_enhancer_weight',
 	'face_swapper_model',
 	'face_swapper_pixel_boost',
+	'face_swapper_weight',
 	'frame_colorizer_model',
 	'frame_colorizer_size',
 	'frame_colorizer_blend',
@@ -114,6 +142,7 @@ ProcessorState = TypedDict('ProcessorState',
 	'deep_swapper_morph' : int,
 	'expression_restorer_model' : ExpressionRestorerModel,
 	'expression_restorer_factor' : int,
+	'expression_restorer_areas' : List[ExpressionRestorerArea],
 	'face_debugger_items' : List[FaceDebuggerItem],
 	'face_editor_model' : FaceEditorModel,
 	'face_editor_eyebrow_direction' : float,
@@ -132,28 +161,16 @@ ProcessorState = TypedDict('ProcessorState',
 	'face_editor_head_roll' : float,
 	'face_enhancer_model' : FaceEnhancerModel,
 	'face_enhancer_blend' : int,
-	'face_enhancer_weight' : float,
+	'face_enhancer_weight' : FaceEnhancerWeight,
 	'face_swapper_model' : FaceSwapperModel,
 	'face_swapper_pixel_boost' : str,
+	'face_swapper_weight' : FaceSwapperWeight,
 	'frame_colorizer_model' : FrameColorizerModel,
 	'frame_colorizer_size' : str,
 	'frame_colorizer_blend' : int,
 	'frame_enhancer_model' : FrameEnhancerModel,
 	'frame_enhancer_blend' : int,
-	'lip_syncer_model' : LipSyncerModel
+	'lip_syncer_model' : LipSyncerModel,
+	'lip_syncer_weight' : LipSyncerWeight
 })
 ProcessorStateSet : TypeAlias = Dict[AppContext, ProcessorState]
-
-AgeModifierDirection : TypeAlias = NDArray[Any]
-DeepSwapperMorph : TypeAlias = NDArray[Any]
-FaceEnhancerWeight : TypeAlias = NDArray[Any]
-LipSyncerWeight : TypeAlias = NDArray[Any]
-LivePortraitPitch : TypeAlias = float
-LivePortraitYaw : TypeAlias = float
-LivePortraitRoll : TypeAlias = float
-LivePortraitExpression : TypeAlias = NDArray[Any]
-LivePortraitFeatureVolume : TypeAlias = NDArray[Any]
-LivePortraitMotionPoints : TypeAlias = NDArray[Any]
-LivePortraitRotation : TypeAlias = NDArray[Any]
-LivePortraitScale : TypeAlias = NDArray[Any]
-LivePortraitTranslation : TypeAlias = NDArray[Any]

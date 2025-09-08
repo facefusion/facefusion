@@ -3,31 +3,53 @@ from typing import List
 import numpy
 
 from facefusion import state_manager
-from facefusion.types import Face, FaceSelectorOrder, FaceSet, Gender, Race, Score
+from facefusion.face_analyser import get_many_faces, get_one_face
+from facefusion.types import Face, FaceSelectorOrder, Gender, Race, Score, VisionFrame
 
 
-def find_similar_faces(faces : List[Face], reference_faces : FaceSet, face_distance : float) -> List[Face]:
-	similar_faces : List[Face] = []
+def select_faces(reference_vision_frame : VisionFrame, target_vision_frame : VisionFrame) -> List[Face]:
+	target_faces = get_many_faces([ target_vision_frame ])
 
-	if faces and reference_faces:
-		for reference_set in reference_faces:
-			if not similar_faces:
-				for reference_face in reference_faces[reference_set]:
-					for face in faces:
-						if compare_faces(face, reference_face, face_distance):
-							similar_faces.append(face)
-	return similar_faces
+	if state_manager.get_item('face_selector_mode') == 'many':
+		return sort_and_filter_faces(target_faces)
+
+	if state_manager.get_item('face_selector_mode') == 'one':
+		target_face = get_one_face(sort_and_filter_faces(target_faces))
+		if target_face:
+			return [ target_face ]
+
+	if state_manager.get_item('face_selector_mode') == 'reference':
+		reference_faces = get_many_faces([ reference_vision_frame ])
+		reference_faces = sort_and_filter_faces(reference_faces)
+		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
+		if reference_face:
+			match_faces = find_match_faces([ reference_face ], target_faces, state_manager.get_item('reference_face_distance'))
+			return match_faces
+
+	return []
+
+
+def find_match_faces(reference_faces : List[Face], target_faces : List[Face], face_distance : float) -> List[Face]:
+	match_faces : List[Face] = []
+
+	for reference_face in reference_faces:
+		if reference_face:
+			for index, target_face in enumerate(target_faces):
+				if compare_faces(target_face, reference_face, face_distance):
+					match_faces.append(target_faces[index])
+
+	return match_faces
 
 
 def compare_faces(face : Face, reference_face : Face, face_distance : float) -> bool:
-	current_face_distance = calc_face_distance(face, reference_face)
+	current_face_distance = calculate_face_distance(face, reference_face)
 	current_face_distance = float(numpy.interp(current_face_distance, [ 0, 2 ], [ 0, 1 ]))
 	return current_face_distance < face_distance
 
 
-def calc_face_distance(face : Face, reference_face : Face) -> float:
-	if hasattr(face, 'normed_embedding') and hasattr(reference_face, 'normed_embedding'):
-		return 1 - numpy.dot(face.normed_embedding, reference_face.normed_embedding)
+def calculate_face_distance(face : Face, reference_face : Face) -> float:
+	if hasattr(face, 'embedding_norm') and hasattr(reference_face, 'embedding_norm'):
+		return 1 - numpy.dot(face.embedding_norm, reference_face.embedding_norm)
 	return 0
 
 

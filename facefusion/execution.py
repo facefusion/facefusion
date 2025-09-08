@@ -53,6 +53,12 @@ def create_inference_session_providers(execution_device_id : str, execution_prov
 			{
 				'device_id': execution_device_id
 			}))
+		if execution_provider == 'migraphx':
+			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			{
+				'device_id': execution_device_id,
+				'migraphx_model_cache_dir': '.caches'
+			}))
 		if execution_provider == 'openvino':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
@@ -86,8 +92,6 @@ def resolve_cudnn_conv_algo_search() -> str:
 def resolve_openvino_device_type(execution_device_id : str) -> str:
 	if execution_device_id == '0':
 		return 'GPU'
-	if execution_device_id == '∞':
-		return 'MULTI:GPU'
 	return 'GPU.' + execution_device_id
 
 
@@ -96,7 +100,7 @@ def run_nvidia_smi() -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stdout = subprocess.PIPE)
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def detect_static_execution_devices() -> List[ExecutionDevice]:
 	return detect_execution_devices()
 

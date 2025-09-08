@@ -6,12 +6,13 @@ from time import perf_counter
 from typing import Generator, List
 
 import facefusion.choices
-from facefusion import core, state_manager
+from facefusion import content_analyser, core, state_manager
 from facefusion.cli_helper import render_table
 from facefusion.download import conditional_download, resolve_download_url
+from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import get_file_extension
 from facefusion.types import BenchmarkCycleSet
-from facefusion.vision import count_video_frame_total, detect_video_fps, detect_video_resolution, pack_resolution
+from facefusion.vision import count_video_frame_total, detect_video_fps
 
 
 def pre_check() -> bool:
@@ -42,11 +43,11 @@ def run() -> Generator[List[BenchmarkCycleSet], None, None]:
 	state_manager.init_item('video_memory_strategy', 'tolerant')
 
 	benchmarks = []
-	target_paths = [facefusion.choices.benchmark_set.get(benchmark_resolution) for benchmark_resolution in benchmark_resolutions if benchmark_resolution in facefusion.choices.benchmark_set]
+	target_paths = [ facefusion.choices.benchmark_set.get(benchmark_resolution) for benchmark_resolution in benchmark_resolutions if benchmark_resolution in facefusion.choices.benchmark_set ]
 
 	for target_path in target_paths:
-		state_manager.set_item('target_path', target_path)
-		state_manager.set_item('output_path', suggest_output_path(state_manager.get_item('target_path')))
+		state_manager.init_item('target_path', target_path)
+		state_manager.init_item('output_path', suggest_output_path(state_manager.get_item('target_path')))
 		benchmarks.append(cycle(benchmark_cycle_count))
 		yield benchmarks
 
@@ -54,13 +55,17 @@ def run() -> Generator[List[BenchmarkCycleSet], None, None]:
 def cycle(cycle_count : int) -> BenchmarkCycleSet:
 	process_times = []
 	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
-	output_video_resolution = detect_video_resolution(state_manager.get_item('target_path'))
-	state_manager.set_item('output_video_resolution', pack_resolution(output_video_resolution))
-	state_manager.set_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
+	state_manager.init_item('output_video_fps', detect_video_fps(state_manager.get_item('target_path')))
 
-	core.conditional_process()
+	if state_manager.get_item('benchmark_mode') == 'warm':
+		core.conditional_process()
 
 	for index in range(cycle_count):
+		if state_manager.get_item('benchmark_mode') == 'cold':
+			content_analyser.analyse_image.cache_clear()
+			content_analyser.analyse_video.cache_clear()
+			clear_static_faces()
+
 		start_time = perf_counter()
 		core.conditional_process()
 		end_time = perf_counter()

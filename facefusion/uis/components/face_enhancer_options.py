@@ -3,10 +3,10 @@ from typing import List, Optional, Tuple
 import gradio
 
 from facefusion import state_manager, wording
-from facefusion.common_helper import calc_float_step, calc_int_step
+from facefusion.common_helper import calculate_float_step, calculate_int_step
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.types import FaceEnhancerModel
+from facefusion.processors.types import FaceEnhancerModel, FaceEnhancerWeight
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -29,7 +29,7 @@ def render() -> None:
 	FACE_ENHANCER_BLEND_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_enhancer_blend_slider'),
 		value = state_manager.get_item('face_enhancer_blend'),
-		step = calc_int_step(processors_choices.face_enhancer_blend_range),
+		step = calculate_int_step(processors_choices.face_enhancer_blend_range),
 		minimum = processors_choices.face_enhancer_blend_range[0],
 		maximum = processors_choices.face_enhancer_blend_range[-1],
 		visible = has_face_enhancer
@@ -37,7 +37,7 @@ def render() -> None:
 	FACE_ENHANCER_WEIGHT_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_enhancer_weight_slider'),
 		value = state_manager.get_item('face_enhancer_weight'),
-		step = calc_float_step(processors_choices.face_enhancer_weight_range),
+		step = calculate_float_step(processors_choices.face_enhancer_weight_range),
 		minimum = processors_choices.face_enhancer_weight_range[0],
 		maximum = processors_choices.face_enhancer_weight_range[-1],
 		visible = has_face_enhancer and load_processor_module('face_enhancer').get_inference_pool() and load_processor_module('face_enhancer').has_weight_input()
@@ -76,6 +76,6 @@ def update_face_enhancer_blend(face_enhancer_blend : float) -> None:
 	state_manager.set_item('face_enhancer_blend', int(face_enhancer_blend))
 
 
-def update_face_enhancer_weight(face_enhancer_weight : float) -> None:
+def update_face_enhancer_weight(face_enhancer_weight : FaceEnhancerWeight) -> None:
 	state_manager.set_item('face_enhancer_weight', face_enhancer_weight)
 
