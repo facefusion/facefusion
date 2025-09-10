@@ -4,24 +4,19 @@ from facefusion.content_analyser import analyse_image
 from facefusion.ffmpeg import copy_image, finalize_image
 from facefusion.filesystem import is_image
 from facefusion.processors.core import get_processors_modules
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path
+from facefusion.temp_helper import clear_temp_directory, get_temp_file_path
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_image_resolution, pack_resolution, read_static_image, read_static_images, restrict_image_resolution, scale_resolution, write_image
-from facefusion.workflows.core import is_process_stopping
+from facefusion.workflows.core import is_process_stopping, prepare_temp_directory
 
 
 def process_image(start_time : float) -> ErrorCode:
 	if analyse_image(state_manager.get_item('target_path')):
 		return 3
 
-	logger.debug(wording.get('clearing_temp'), __name__)
-	clear_temp_directory(state_manager.get_item('target_path'))
-	logger.debug(wording.get('creating_temp'), __name__)
-	create_temp_directory(state_manager.get_item('target_path'))
-
+	prepare_temp_directory(state_manager.get_item('target_path'))
 	process_manager.start()
-
 	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
 	logger.info(wording.get('copying_image').format(resolution = pack_resolution(temp_image_resolution)), __name__)

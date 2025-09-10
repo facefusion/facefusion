@@ -10,11 +10,11 @@ from facefusion.content_analyser import analyse_video
 from facefusion.ffmpeg import extract_frames, merge_video, replace_audio, restore_audio
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
+from facefusion.temp_helper import clear_temp_directory, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_video_resolution, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
-from facefusion.workflows.core import is_process_stopping
+from facefusion.workflows.core import is_process_stopping, prepare_temp_directory
 
 
 def process_video(start_time : float) -> ErrorCode:
@@ -22,11 +22,7 @@ def process_video(start_time : float) -> ErrorCode:
 	if analyse_video(state_manager.get_item('target_path'), trim_frame_start, trim_frame_end):
 		return 3
 
-	logger.debug(wording.get('clearing_temp'), __name__)
-	clear_temp_directory(state_manager.get_item('target_path'))
-	logger.debug(wording.get('creating_temp'), __name__)
-	create_temp_directory(state_manager.get_item('target_path'))
-
+	prepare_temp_directory(state_manager.get_item('target_path'))
 	process_manager.start()
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)
