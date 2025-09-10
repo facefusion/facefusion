@@ -11,7 +11,7 @@ from facefusion.vision import detect_image_resolution, pack_resolution, read_sta
 from facefusion.workflows.core import is_process_stopping, prepare_temp_directory
 
 
-def process_image(start_time : float) -> ErrorCode:
+def process(start_time : float) -> ErrorCode:
 	if analyse_image(state_manager.get_item('target_path')):
 		return 3
 

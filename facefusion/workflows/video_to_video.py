@@ -17,7 +17,7 @@ from facefusion.vision import detect_video_resolution, pack_resolution, read_sta
 from facefusion.workflows.core import is_process_stopping, prepare_temp_directory
 
 
-def process_video(start_time : float) -> ErrorCode:
+def process(start_time : float) -> ErrorCode:
 	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	if analyse_video(state_manager.get_item('target_path'), trim_frame_start, trim_frame_end):
 		return 3
