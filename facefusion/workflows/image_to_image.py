@@ -51,6 +51,7 @@ def process_image(start_time : float) -> ErrorCode:
 		processor_module.post_process()
 
 	write_image(temp_image_path, temp_vision_frame)
+
 	if is_process_stopping():
 		return 4
 
