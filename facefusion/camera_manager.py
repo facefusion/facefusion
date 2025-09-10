@@ -2,7 +2,6 @@ from typing import List
 
 import cv2
 
-from facefusion.common_helper import is_windows
 from facefusion.types import CameraPoolSet
 
 CAMERA_POOL_SET : CameraPoolSet =\
@@ -15,10 +14,7 @@ def get_local_camera_capture(camera_id : int) -> cv2.VideoCapture:
 	camera_key = str(camera_id)
 
 	if camera_key not in CAMERA_POOL_SET.get('capture'):
-		if is_windows():
-			camera_capture = cv2.VideoCapture(camera_id, cv2.CAP_DSHOW)
-		else:
-			camera_capture = cv2.VideoCapture(camera_id)
+		camera_capture = cv2.VideoCapture(camera_id)
 
 		if camera_capture.isOpened():
 			CAMERA_POOL_SET['capture'][camera_key] = camera_capture
