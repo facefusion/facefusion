@@ -8,6 +8,7 @@ import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, wording
 from facefusion.common_helper import create_float_metavar, create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.face_analyser import scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
@@ -363,6 +364,7 @@ def process_frame(inputs : FaceEnhancerInputs) -> VisionFrame:
 
 	if target_faces:
 		for target_face in target_faces:
+			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = enhance_face(target_face, temp_vision_frame)
 
 	return temp_vision_frame
