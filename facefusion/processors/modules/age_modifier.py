@@ -11,6 +11,7 @@ from facefusion import config, content_analyser, face_classifier, face_detector,
 from facefusion.common_helper import create_int_metavar, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
+from facefusion.face_analyser import scale_face
 from facefusion.face_helper import merge_matrix, paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
@@ -204,6 +205,7 @@ def process_frame(inputs : AgeModifierInputs) -> VisionFrame:
 
 	if target_faces:
 		for target_face in target_faces:
+			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = modify_age(target_face, temp_vision_frame)
 
 	return temp_vision_frame

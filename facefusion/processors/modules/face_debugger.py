@@ -6,6 +6,7 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, state_manager, video_manager, wording
+from facefusion.face_analyser import scale_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces
@@ -218,6 +219,7 @@ def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
 
 	if target_faces:
 		for target_face in target_faces:
+			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = debug_face(target_face, temp_vision_frame)
 
 	return temp_vision_frame

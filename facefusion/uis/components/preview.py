@@ -241,6 +241,8 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 			})
 		logger.enable()
 
+	temp_vision_frame = cv2.resize(temp_vision_frame, target_vision_frame.shape[1::-1])
+
 	if preview_mode == 'frame-by-frame':
 		return numpy.hstack((target_vision_frame, temp_vision_frame))
 

@@ -122,3 +122,28 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 						many_faces.extend(faces)
 						set_static_faces(vision_frame, faces)
 	return many_faces
+
+
+def scale_face(target_face : Face, target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> Face:
+	scale_x = temp_vision_frame.shape[1] / target_vision_frame.shape[1]
+	scale_y = temp_vision_frame.shape[0] / target_vision_frame.shape[0]
+
+	bounding_box =\
+	[
+		target_face.bounding_box * scale_x,
+		target_face.bounding_box * scale_y,
+		target_face.bounding_box * scale_x,
+		target_face.bounding_box * scale_y
+	]
+	landmark_set =\
+	{
+		'5': target_face.landmark_set.get('5') * numpy.array([ scale_x, scale_y ]),
+		'5/68': target_face.landmark_set.get('5/68') * numpy.array([ scale_x, scale_y ]),
+		'68': target_face.landmark_set.get('68') * numpy.array([ scale_x, scale_y ]),
+		'68/5': target_face.landmark_set.get('68/5') * numpy.array([ scale_x, scale_y ])
+	}
+
+	return target_face._replace(
+		bounding_box = bounding_box,
+		landmark_set = landmark_set
+	)

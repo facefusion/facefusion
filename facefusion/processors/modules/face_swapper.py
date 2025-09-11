@@ -12,7 +12,7 @@ from facefusion import config, content_analyser, face_classifier, face_detector,
 from facefusion.common_helper import get_first, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
-from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face
+from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face, scale_face
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces, sort_faces_by_order
@@ -688,6 +688,7 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 
 	if source_face and target_faces:
 		for target_face in target_faces:
+			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
 
 	return temp_vision_frame
