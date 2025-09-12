@@ -2,6 +2,7 @@ import threading
 from contextlib import nullcontext
 from typing import ContextManager, Union
 
+from facefusion.common_helper import is_linux, is_windows
 from facefusion.execution import has_execution_provider
 
 THREAD_LOCK : threading.Lock = threading.Lock()
@@ -18,6 +19,6 @@ def thread_semaphore() -> threading.Semaphore:
 
 
 def conditional_thread_semaphore() -> Union[threading.Semaphore, ContextManager[None]]:
-	if has_execution_provider('directml') or has_execution_provider('rocm'):
+	if is_windows() and has_execution_provider('directml') or is_linux() and has_execution_provider('migraphx') or is_linux() and has_execution_provider('rocm'):
 		return THREAD_SEMAPHORE
 	return NULL_CONTEXT

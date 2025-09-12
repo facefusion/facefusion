@@ -12,7 +12,7 @@ from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import DownloadScope, DownloadSet, FaceLandmark68, FaceMaskArea, FaceMaskRegion, InferencePool, Mask, ModelSet, Padding, VisionFrame
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
@@ -137,7 +137,7 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 	model_source_set = {}
 
 	for face_occluder_model in [ 'xseg_1', 'xseg_2', 'xseg_3' ]:
-		if state_manager.get_item('face_occluder_model') == face_occluder_model:
+		if state_manager.get_item('face_occluder_model') in [ 'many', face_occluder_model ]:
 			model_hash_set[face_occluder_model] = model_set.get(face_occluder_model).get('hashes').get('face_occluder')
 			model_source_set[face_occluder_model] = model_set.get(face_occluder_model).get('sources').get('face_occluder')
 
@@ -171,14 +171,24 @@ def create_box_mask(crop_vision_frame : VisionFrame, face_mask_blur : float, fac
 
 
 def create_occlusion_mask(crop_vision_frame : VisionFrame) -> Mask:
-	model_name = state_manager.get_item('face_occluder_model')
-	model_size = create_static_model_set('full').get(model_name).get('size')
-	prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
-	prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255.0
-	prepare_vision_frame = prepare_vision_frame.transpose(0, 1, 2, 3)
-	occlusion_mask = forward_occlude_face(prepare_vision_frame)
-	occlusion_mask = occlusion_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
-	occlusion_mask = cv2.resize(occlusion_mask, crop_vision_frame.shape[:2][::-1])
+	temp_masks = []
+
+	if state_manager.get_item('face_occluder_model') == 'many':
+		model_names = [ 'xseg_1', 'xseg_2', 'xseg_3' ]
+	else:
+		model_names = [ state_manager.get_item('face_occluder_model') ]
+
+	for model_name in model_names:
+		model_size = create_static_model_set('full').get(model_name).get('size')
+		prepare_vision_frame = cv2.resize(crop_vision_frame, model_size)
+		prepare_vision_frame = numpy.expand_dims(prepare_vision_frame, axis = 0).astype(numpy.float32) / 255.0
+		prepare_vision_frame = prepare_vision_frame.transpose(0, 1, 2, 3)
+		temp_mask = forward_occlude_face(prepare_vision_frame, model_name)
+		temp_mask = temp_mask.transpose(0, 1, 2).clip(0, 1).astype(numpy.float32)
+		temp_mask = cv2.resize(temp_mask, crop_vision_frame.shape[:2][::-1])
+		temp_masks.append(temp_mask)
+
+	occlusion_mask = numpy.minimum.reduce(temp_masks)
 	occlusion_mask = (cv2.GaussianBlur(occlusion_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
 	return occlusion_mask
 
@@ -214,8 +224,7 @@ def create_region_mask(crop_vision_frame : VisionFrame, face_mask_regions : List
 	return region_mask
 
 
-def forward_occlude_face(prepare_vision_frame : VisionFrame) -> Mask:
-	model_name = state_manager.get_item('face_occluder_model')
+def forward_occlude_face(prepare_vision_frame : VisionFrame, model_name : str) -> Mask:
 	face_occluder = get_inference_pool().get(model_name)
 
 	with conditional_thread_semaphore():

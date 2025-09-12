@@ -69,8 +69,8 @@ WARP_TEMPLATE_SET : WarpTemplateSet =\
 
 
 def estimate_matrix_by_face_landmark_5(face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Matrix:
-	normed_warp_template = WARP_TEMPLATE_SET.get(warp_template) * crop_size
-	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, normed_warp_template, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
+	warp_template_norm = WARP_TEMPLATE_SET.get(warp_template) * crop_size
+	affine_matrix = cv2.estimateAffinePartial2D(face_landmark_5, warp_template_norm, method = cv2.RANSAC, ransacReprojThreshold = 100)[0]
 	return affine_matrix
 
 
@@ -99,58 +99,58 @@ def warp_face_by_translation(temp_vision_frame : VisionFrame, translation : Tran
 
 
 def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, crop_mask : Mask, affine_matrix : Matrix) -> VisionFrame:
-	paste_bounding_box, paste_matrix = calc_paste_area(temp_vision_frame, crop_vision_frame, affine_matrix)
-	x_min, y_min, x_max, y_max = paste_bounding_box
-	paste_width = x_max - x_min
-	paste_height = y_max - y_min
+	paste_bounding_box, paste_matrix = calculate_paste_area(temp_vision_frame, crop_vision_frame, affine_matrix)
+	x1, y1, x2, y2 = paste_bounding_box
+	paste_width = x2 - x1
+	paste_height = y2 - y1
 	inverse_mask = cv2.warpAffine(crop_mask, paste_matrix, (paste_width, paste_height)).clip(0, 1)
 	inverse_mask = numpy.expand_dims(inverse_mask, axis = -1)
 	inverse_vision_frame = cv2.warpAffine(crop_vision_frame, paste_matrix, (paste_width, paste_height), borderMode = cv2.BORDER_REPLICATE)
 	temp_vision_frame = temp_vision_frame.copy()
-	paste_vision_frame = temp_vision_frame[y_min:y_max, x_min:x_max]
+	paste_vision_frame = temp_vision_frame[y1:y2, x1:x2]
 	paste_vision_frame = paste_vision_frame * (1 - inverse_mask) + inverse_vision_frame * inverse_mask
-	temp_vision_frame[y_min:y_max, x_min:x_max] = paste_vision_frame.astype(temp_vision_frame.dtype)
+	temp_vision_frame[y1:y2, x1:x2] = paste_vision_frame.astype(temp_vision_frame.dtype)
 	return temp_vision_frame
 
 
-def calc_paste_area(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, affine_matrix : Matrix) -> Tuple[BoundingBox, Matrix]:
+def calculate_paste_area(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame, affine_matrix : Matrix) -> Tuple[BoundingBox, Matrix]:
 	temp_height, temp_width = temp_vision_frame.shape[:2]
 	crop_height, crop_width = crop_vision_frame.shape[:2]
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	crop_points = numpy.array([ [ 0, 0 ], [ crop_width, 0 ], [ crop_width, crop_height ], [ 0, crop_height ] ])
 	paste_region_points = transform_points(crop_points, inverse_matrix)
-	min_point = numpy.floor(paste_region_points.min(axis = 0)).astype(int)
-	max_point = numpy.ceil(paste_region_points.max(axis = 0)).astype(int)
-	x_min, y_min = numpy.clip(min_point, 0, [ temp_width, temp_height ])
-	x_max, y_max = numpy.clip(max_point, 0, [ temp_width, temp_height ])
-	paste_bounding_box = numpy.array([ x_min, y_min, x_max, y_max ])
+	paste_region_point_min = numpy.floor(paste_region_points.min(axis = 0)).astype(int)
+	paste_region_point_max = numpy.ceil(paste_region_points.max(axis = 0)).astype(int)
+	x1, y1 = numpy.clip(paste_region_point_min, 0, [ temp_width, temp_height ])
+	x2, y2 = numpy.clip(paste_region_point_max, 0, [ temp_width, temp_height ])
+	paste_bounding_box = numpy.array([ x1, y1, x2, y2 ])
 	paste_matrix = inverse_matrix.copy()
-	paste_matrix[0, 2] -= x_min
-	paste_matrix[1, 2] -= y_min
+	paste_matrix[0, 2] -= x1
+	paste_matrix[1, 2] -= y1
 	return paste_bounding_box, paste_matrix
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def create_static_anchors(feature_stride : int, anchor_total : int, stride_height : int, stride_width : int) -> Anchors:
-	y, x = numpy.mgrid[:stride_height, :stride_width][::-1]
+	x, y = numpy.mgrid[:stride_width, :stride_height]
 	anchors = numpy.stack((y, x), axis = -1)
 	anchors = (anchors * feature_stride).reshape((-1, 2))
 	anchors = numpy.stack([ anchors ] * anchor_total, axis = 1).reshape((-1, 2))
 	return anchors
 
 
-def create_rotated_matrix_and_size(angle : Angle, size : Size) -> Tuple[Matrix, Size]:
-	rotated_matrix = cv2.getRotationMatrix2D((size[0] / 2, size[1] / 2), angle, 1)
-	rotated_size = numpy.dot(numpy.abs(rotated_matrix[:, :2]), size)
-	rotated_matrix[:, -1] += (rotated_size - size) * 0.5 #type:ignore[misc]
-	rotated_size = int(rotated_size[0]), int(rotated_size[1])
-	return rotated_matrix, rotated_size
+def create_rotation_matrix_and_size(angle : Angle, size : Size) -> Tuple[Matrix, Size]:
+	rotation_matrix = cv2.getRotationMatrix2D((size[0] / 2, size[1] / 2), angle, 1)
+	rotation_size = numpy.dot(numpy.abs(rotation_matrix[:, :2]), size)
+	rotation_matrix[:, -1] += (rotation_size - size) * 0.5 #type:ignore[misc]
+	rotation_size = int(rotation_size[0]), int(rotation_size[1])
+	return rotation_matrix, rotation_size
 
 
 def create_bounding_box(face_landmark_68 : FaceLandmark68) -> BoundingBox:
-	min_x, min_y = numpy.min(face_landmark_68, axis = 0)
-	max_x, max_y = numpy.max(face_landmark_68, axis = 0)
-	bounding_box = normalize_bounding_box(numpy.array([ min_x, min_y, max_x, max_y ]))
+	x1, y1 = numpy.min(face_landmark_68, axis = 0)
+	x2, y2 = numpy.max(face_landmark_68, axis = 0)
+	bounding_box = normalize_bounding_box(numpy.array([ x1, y1, x2, y2 ]))
 	return bounding_box
 
 
@@ -229,8 +229,8 @@ def estimate_face_angle(face_landmark_68 : FaceLandmark68) -> Angle:
 
 
 def apply_nms(bounding_boxes : List[BoundingBox], scores : List[Score], score_threshold : float, nms_threshold : float) -> Sequence[int]:
-	normed_bounding_boxes = [ (x1, y1, x2 - x1, y2 - y1) for (x1, y1, x2, y2) in bounding_boxes ]
-	keep_indices = cv2.dnn.NMSBoxes(normed_bounding_boxes, scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
+	bounding_boxes_norm = [ (x1, y1, x2 - x1, y2 - y1) for (x1, y1, x2, y2) in bounding_boxes ]
+	keep_indices = cv2.dnn.NMSBoxes(bounding_boxes_norm, scores, score_threshold = score_threshold, nms_threshold = nms_threshold)
 	return keep_indices
 
 
@@ -246,9 +246,11 @@ def get_nms_threshold(face_detector_model : FaceDetectorModel, face_detector_ang
 	return 0.4
 
 
-def merge_matrix(matrices : List[Matrix]) -> Matrix:
-	merged_matrix = numpy.vstack([ matrices[0], [ 0, 0, 1 ] ])
-	for matrix in matrices[1:]:
-		matrix = numpy.vstack([ matrix, [ 0, 0, 1 ] ])
-		merged_matrix = numpy.dot(merged_matrix, matrix)
-	return merged_matrix[:2, :]
+def merge_matrix(temp_matrices : List[Matrix]) -> Matrix:
+	matrix = numpy.vstack([temp_matrices[0], [0, 0, 1]])
+
+	for temp_matrix in temp_matrices[1:]:
+		temp_matrix = numpy.vstack([ temp_matrix, [ 0, 0, 1 ] ])
+		matrix = numpy.dot(temp_matrix, matrix)
+
+	return matrix[:2, :]

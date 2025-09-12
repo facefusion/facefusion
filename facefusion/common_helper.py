@@ -15,11 +15,11 @@ def is_windows() -> bool:
 
 
 def create_int_metavar(int_range : Sequence[int]) -> str:
-	return '[' + str(int_range[0]) + '..' + str(int_range[-1]) + ':' + str(calc_int_step(int_range)) + ']'
+	return '[' + str(int_range[0]) + '..' + str(int_range[-1]) + ':' + str(calculate_int_step(int_range)) + ']'
 
 
 def create_float_metavar(float_range : Sequence[float]) -> str:
-	return '[' + str(float_range[0]) + '..' + str(float_range[-1]) + ':' + str(calc_float_step(float_range)) + ']'
+	return '[' + str(float_range[0]) + '..' + str(float_range[-1]) + ':' + str(calculate_float_step(float_range)) + ']'
 
 
 def create_int_range(start : int, end : int, step : int) -> Sequence[int]:
@@ -42,11 +42,11 @@ def create_float_range(start : float, end : float, step : float) -> Sequence[flo
 	return float_range
 
 
-def calc_int_step(int_range : Sequence[int]) -> int:
+def calculate_int_step(int_range : Sequence[int]) -> int:
 	return int_range[1] - int_range[0]
 
 
-def calc_float_step(float_range : Sequence[float]) -> float:
+def calculate_float_step(float_range : Sequence[float]) -> float:
 	return round(float_range[1] - float_range[0], 2)
 
 

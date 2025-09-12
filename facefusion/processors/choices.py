@@ -2,7 +2,7 @@ from typing import List, Sequence
 
 from facefusion.common_helper import create_float_range, create_int_range
 from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_relative_path
-from facefusion.processors.types import AgeModifierModel, DeepSwapperModel, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperModel, FaceSwapperSet, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
+from facefusion.processors.types import AgeModifierModel, DeepSwapperModel, ExpressionRestorerArea, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperModel, FaceSwapperSet, FaceSwapperWeight, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
 deep_swapper_models : List[DeepSwapperModel] =\
@@ -175,7 +175,8 @@ if custom_model_file_paths:
 		deep_swapper_models.append(model_id)
 
 expression_restorer_models : List[ExpressionRestorerModel] = [ 'live_portrait' ]
-face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask', 'face-detector-score', 'face-landmarker-score', 'age', 'gender', 'race' ]
+expression_restorer_areas : List[ExpressionRestorerArea] = [ 'upper-face', 'lower-face' ]
+face_debugger_items : List[FaceDebuggerItem] = [ 'bounding-box', 'face-landmark-5', 'face-landmark-5/68', 'face-landmark-68', 'face-landmark-68/5', 'face-mask' ]
 face_editor_models : List[FaceEditorModel] = [ 'live_portrait' ]
 face_enhancer_models : List[FaceEnhancerModel] = [ 'codeformer', 'gfpgan_1.2', 'gfpgan_1.3', 'gfpgan_1.4', 'gpen_bfr_256', 'gpen_bfr_512', 'gpen_bfr_1024', 'gpen_bfr_2048', 'restoreformer_plus_plus' ]
 face_swapper_set : FaceSwapperSet =\
@@ -219,6 +220,7 @@ face_editor_head_yaw_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.0
 face_editor_head_roll_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.05)
 face_enhancer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
 face_enhancer_weight_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)
+face_swapper_weight_range : Sequence[FaceSwapperWeight] = create_float_range(0.0, 1.0, 0.05)
 frame_colorizer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
 frame_enhancer_blend_range : Sequence[int] = create_int_range(0, 100, 1)
 lip_syncer_weight_range : Sequence[float] = create_float_range(0.0, 1.0, 0.05)

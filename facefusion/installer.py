@@ -12,7 +12,7 @@ from facefusion.common_helper import is_linux, is_windows
 
 ONNXRUNTIME_SET =\
 {
-	'default': ('onnxruntime', '1.22.0')
+	'default': ('onnxruntime', '1.22.1')
 }
 if is_windows() or is_linux():
 	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.22.0')

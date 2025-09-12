@@ -29,7 +29,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 			with tqdm(total = download_size, initial = initial_size, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 				commands = curl_builder.chain(
 					curl_builder.download(url, download_file_path),
-					curl_builder.set_timeout(10)
+					curl_builder.set_timeout(5)
 				)
 				open_curl(commands)
 				current_size = initial_size
@@ -41,7 +41,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 						progress.update(current_size - progress.n)
 
 
-@lru_cache(maxsize = None)
+@lru_cache(maxsize = 1024)
 def get_static_download_size(url : str) -> int:
 	commands = curl_builder.chain(
 		curl_builder.head(url),
@@ -59,7 +59,7 @@ def get_static_download_size(url : str) -> int:
 	return 0
 
 
-@lru_cache(maxsize = None)
+@lru_cache(maxsize = 1024)
 def ping_static_url(url : str) -> bool:
 	commands = curl_builder.chain(
 		curl_builder.head(url),
@@ -87,7 +87,7 @@ def conditional_download_hashes(hash_set : DownloadSet) -> bool:
 
 	for valid_hash_path in valid_hash_paths:
 		valid_hash_file_name = get_file_name(valid_hash_path)
-		logger.debug(wording.get('validating_hash_succeed').format(hash_file_name = valid_hash_file_name), __name__)
+		logger.debug(wording.get('validating_hash_succeeded').format(hash_file_name = valid_hash_file_name), __name__)
 	for invalid_hash_path in invalid_hash_paths:
 		invalid_hash_file_name = get_file_name(invalid_hash_path)
 		logger.error(wording.get('validating_hash_failed').format(hash_file_name = invalid_hash_file_name), __name__)
@@ -114,7 +114,7 @@ def conditional_download_sources(source_set : DownloadSet) -> bool:
 
 	for valid_source_path in valid_source_paths:
 		valid_source_file_name = get_file_name(valid_source_path)
-		logger.debug(wording.get('validating_source_succeed').format(source_file_name = valid_source_file_name), __name__)
+		logger.debug(wording.get('validating_source_succeeded').format(source_file_name = valid_source_file_name), __name__)
 	for invalid_source_path in invalid_source_paths:
 		invalid_source_file_name = get_file_name(invalid_source_path)
 		logger.error(wording.get('validating_source_failed').format(source_file_name = invalid_source_file_name), __name__)

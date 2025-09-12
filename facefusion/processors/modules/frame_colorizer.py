@@ -7,9 +7,8 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-import facefusion.processors.core as processors
-from facefusion import config, content_analyser, inference_manager, logger, process_manager, state_manager, video_manager, wording
-from facefusion.common_helper import create_int_metavar
+from facefusion import config, content_analyser, inference_manager, logger, state_manager, video_manager, wording
+from facefusion.common_helper import create_int_metavar, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -17,11 +16,11 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
-from facefusion.vision import read_image, read_static_image, unpack_resolution, write_image
+from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.vision import blend_frame, read_static_image, read_static_video_frame, unpack_resolution
 
 
-@lru_cache(maxsize = None)
+@lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
@@ -141,7 +140,7 @@ def clear_inference_pool() -> None:
 
 
 def resolve_execution_providers() -> List[ExecutionProvider]:
-	if has_execution_provider('coreml'):
+	if is_macos() and has_execution_provider('coreml'):
 		return [ 'cpu' ]
 	return state_manager.get_item('execution_providers')
 
@@ -188,6 +187,7 @@ def pre_process(mode : ProcessMode) -> bool:
 
 def post_process() -> None:
 	read_static_image.cache_clear()
+	read_static_video_frame.cache_clear()
 	video_manager.clear_video_pool()
 	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
 		clear_inference_pool()
@@ -199,7 +199,7 @@ def colorize_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	color_vision_frame = prepare_temp_frame(temp_vision_frame)
 	color_vision_frame = forward(color_vision_frame)
 	color_vision_frame = merge_color_frame(temp_vision_frame, color_vision_frame)
-	color_vision_frame = blend_frame(temp_vision_frame, color_vision_frame)
+	color_vision_frame = blend_color_frame(temp_vision_frame, color_vision_frame)
 	return color_vision_frame
 
 
@@ -255,41 +255,12 @@ def merge_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 	return color_vision_frame
 
 
-def blend_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
+def blend_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : VisionFrame) -> VisionFrame:
 	frame_colorizer_blend = 1 - (state_manager.get_item('frame_colorizer_blend') / 100)
-	temp_vision_frame = cv2.addWeighted(temp_vision_frame, frame_colorizer_blend, paste_vision_frame, 1 - frame_colorizer_blend, 0)
+	temp_vision_frame = blend_frame(temp_vision_frame, color_vision_frame, 1 - frame_colorizer_blend)
 	return temp_vision_frame
 
 
-def get_reference_frame(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	pass
-
-
 def process_frame(inputs : FrameColorizerInputs) -> VisionFrame:
-	target_vision_frame = inputs.get('target_vision_frame')
-	return colorize_frame(target_vision_frame)
-
-
-def process_frames(source_paths : List[str], queue_payloads : List[QueuePayload], update_progress : UpdateProgress) -> None:
-	for queue_payload in process_manager.manage(queue_payloads):
-		target_vision_path = queue_payload['frame_path']
-		target_vision_frame = read_image(target_vision_path)
-		output_vision_frame = process_frame(
-		{
-			'target_vision_frame': target_vision_frame
-		})
-		write_image(target_vision_path, output_vision_frame)
-		update_progress(1)
-
-
-def process_image(source_paths : List[str], target_path : str, output_path : str) -> None:
-	target_vision_frame = read_static_image(target_path)
-	output_vision_frame = process_frame(
-	{
-		'target_vision_frame': target_vision_frame
-	})
-	write_image(output_path, output_vision_frame)
-
-
-def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	processors.multi_process_frames(None, temp_frame_paths, process_frames)
+	temp_vision_frame = inputs.get('temp_vision_frame')
+	return colorize_frame(temp_vision_frame)

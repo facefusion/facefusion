@@ -4,7 +4,7 @@ import gradio
 
 import facefusion.choices
 from facefusion import face_detector, state_manager, wording
-from facefusion.common_helper import calc_float_step, get_last
+from facefusion.common_helper import calculate_float_step, get_last
 from facefusion.types import Angle, FaceDetectorModel, Score
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.types import ComponentOptions
@@ -43,7 +43,7 @@ def render() -> None:
 	FACE_DETECTOR_SCORE_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_detector_score_slider'),
 		value = state_manager.get_item('face_detector_score'),
-		step = calc_float_step(facefusion.choices.face_detector_score_range),
+		step = calculate_float_step(facefusion.choices.face_detector_score_range),
 		minimum = facefusion.choices.face_detector_score_range[0],
 		maximum = facefusion.choices.face_detector_score_range[-1]
 	)

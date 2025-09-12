@@ -1,12 +1,11 @@
 from typing import List, Optional
 
 from facefusion.hash_helper import create_hash
-from facefusion.types import Face, FaceSet, FaceStore, VisionFrame
+from facefusion.types import Face, FaceStore, VisionFrame
 
 FACE_STORE : FaceStore =\
 {
-	'static_faces': {},
-	'reference_faces': {}
+	'static_faces': {}
 }
 
 
@@ -27,17 +26,3 @@ def set_static_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
 
 def clear_static_faces() -> None:
 	FACE_STORE['static_faces'].clear()
-
-
-def get_reference_faces() -> Optional[FaceSet]:
-	return FACE_STORE.get('reference_faces')
-
-
-def append_reference_face(name : str, face : Face) -> None:
-	if name not in FACE_STORE.get('reference_faces'):
-		FACE_STORE['reference_faces'][name] = []
-	FACE_STORE['reference_faces'][name].append(face)
-
-
-def clear_reference_faces() -> None:
-	FACE_STORE['reference_faces'].clear()

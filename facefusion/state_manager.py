@@ -16,6 +16,10 @@ def get_state() -> Union[State, ProcessorState]:
 	return STATE_SET.get(app_context)
 
 
+def sync_state() -> None:
+	STATE_SET['cli'] = STATE_SET.get('ui') #type:ignore[assignment]
+
+
 def init_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
 	STATE_SET['cli'][key] = value #type:ignore[literal-required]
 	STATE_SET['ui'][key] = value #type:ignore[literal-required]

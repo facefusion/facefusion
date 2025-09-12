@@ -118,12 +118,12 @@ def convert_mel_to_hertz(mel : Mel) -> NDArray[Any]:
 
 def create_mel_filter_bank() -> MelFilterBank:
 	audio_sample_rate = 16000
-	audio_min_frequency = 55.0
-	audio_max_frequency = 7600.0
+	audio_frequency_min = 55.0
+	audio_frequency_max = 7600.0
 	mel_filter_total = 80
 	mel_bin_total = 800
 	mel_filter_bank = numpy.zeros((mel_filter_total, mel_bin_total // 2 + 1))
-	mel_frequency_range = numpy.linspace(convert_hertz_to_mel(audio_min_frequency), convert_hertz_to_mel(audio_max_frequency), mel_filter_total + 2)
+	mel_frequency_range = numpy.linspace(convert_hertz_to_mel(audio_frequency_min), convert_hertz_to_mel(audio_frequency_max), mel_filter_total + 2)
 	indices = numpy.floor((mel_bin_total + 1) * convert_mel_to_hertz(mel_frequency_range) / audio_sample_rate).astype(numpy.int16)
 
 	for index in range(mel_filter_total):
