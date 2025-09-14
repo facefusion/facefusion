@@ -303,6 +303,8 @@ StateKey = Literal\
 	'output_video_scale',
 	'output_video_fps',
 	'processors',
+	'face_swapper_batching',
+	'skip_content_analysis',
 	'open_browser',
 	'ui_layouts',
 	'ui_workflow',
@@ -388,4 +390,3 @@ State = TypedDict('State',
 })
 ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateSet : TypeAlias = Dict[AppContext, State]
-

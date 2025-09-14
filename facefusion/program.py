@@ -254,6 +254,13 @@ def create_log_level_program() -> ArgumentParser:
 	job_store.register_job_keys([ 'log_level' ])
 	return program
 
+def create_content_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_content = program.add_argument_group('content')
+	group_content.add_argument('--skip-content-analysis', help = 'Skip content (NSFW) analysis for faster processing', action = 'store_true', default = True)
+	job_store.register_job_keys([ 'skip_content_analysis' ])
+	return program
+
 
 def create_halt_on_error_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
@@ -296,9 +303,9 @@ def create_program() -> ArgumentParser:
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	sub_program = program.add_subparsers(dest = 'command')
 	# general
-	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('batch-run', help = wording.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), create_benchmark_program(), create_content_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_content_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('batch-run', help = wording.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), create_content_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('force-download', help = wording.get('help.force_download'), parents = [ create_download_providers_program(), create_download_scope_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('benchmark', help = wording.get('help.benchmark'), parents = [ create_temp_path_program(), collect_step_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	# job manager

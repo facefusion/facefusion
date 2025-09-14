@@ -195,7 +195,7 @@ def forward_with_2dfan4(crop_vision_frame : VisionFrame) -> Tuple[Prediction, Pr
 			'input': [ crop_vision_frame ]
 		})
 
-	return prediction
+		return prediction
 
 
 def forward_with_peppa_wutz(crop_vision_frame : VisionFrame) -> Prediction:
@@ -207,7 +207,7 @@ def forward_with_peppa_wutz(crop_vision_frame : VisionFrame) -> Prediction:
 			'input': crop_vision_frame
 		})[0]
 
-	return prediction
+		return prediction
 
 
 def forward_fan_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
@@ -219,4 +219,4 @@ def forward_fan_68_5(face_landmark_5 : FaceLandmark5) -> FaceLandmark68:
 			'input': [ face_landmark_5 ]
 		})[0][0]
 
-	return face_landmark_68_5
+		return face_landmark_68_5

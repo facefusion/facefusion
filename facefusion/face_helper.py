@@ -7,6 +7,13 @@ from cv2.typing import Size
 
 from facefusion.types import Anchors, Angle, BoundingBox, Distance, FaceDetectorModel, FaceLandmark5, FaceLandmark68, Mask, Matrix, Points, Scale, Score, Translation, VisionFrame, WarpTemplate, WarpTemplateSet
 
+# Detect CUDA support in OpenCV if available
+def _has_cv2_cuda() -> bool:
+    try:
+        return hasattr(cv2, 'cuda') and cv2.cuda.getCudaEnabledDeviceCount() > 0
+    except Exception:
+        return False
+
 WARP_TEMPLATE_SET : WarpTemplateSet =\
 {
 	'arcface_112_v1': numpy.array(
@@ -75,9 +82,19 @@ def estimate_matrix_by_face_landmark_5(face_landmark_5 : FaceLandmark5, warp_tem
 
 
 def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_5 : FaceLandmark5, warp_template : WarpTemplate, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
-	affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, warp_template, crop_size)
-	crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
-	return crop_vision_frame, affine_matrix
+    affine_matrix = estimate_matrix_by_face_landmark_5(face_landmark_5, warp_template, crop_size)
+    if _has_cv2_cuda():
+        try:
+            gpu_img = cv2.cuda_GpuMat()
+            gpu_img.upload(temp_vision_frame)
+            # INTER_AREA for downscale; replicate border to mimic CPU path
+            crop_gpu = cv2.cuda.warpAffine(gpu_img, affine_matrix, crop_size, flags=cv2.INTER_AREA, borderMode=cv2.BORDER_REPLICATE)
+            crop_vision_frame = crop_gpu.download()
+            return crop_vision_frame, affine_matrix
+        except Exception:
+            pass
+    crop_vision_frame = cv2.warpAffine(temp_vision_frame, affine_matrix, crop_size, borderMode = cv2.BORDER_REPLICATE, flags = cv2.INTER_AREA)
+    return crop_vision_frame, affine_matrix
 
 
 def warp_face_by_bounding_box(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
@@ -103,13 +120,44 @@ def paste_back(temp_vision_frame : VisionFrame, crop_vision_frame : VisionFrame,
 	x1, y1, x2, y2 = paste_bounding_box
 	paste_width = x2 - x1
 	paste_height = y2 - y1
-	inverse_mask = cv2.warpAffine(crop_mask, paste_matrix, (paste_width, paste_height)).clip(0, 1)
-	inverse_mask = numpy.expand_dims(inverse_mask, axis = -1)
+
+	if _has_cv2_cuda():
+		try:
+			# Warp on GPU, blend on CPU for simplicity and correctness
+			gpu_mask = cv2.cuda_GpuMat()
+			gpu_mask.upload(crop_mask.astype(numpy.float32))
+			inv_mask_gpu = cv2.cuda.warpAffine(gpu_mask, paste_matrix, (paste_width, paste_height))
+			inverse_mask = inv_mask_gpu.download().clip(0, 1)
+			inverse_mask = numpy.expand_dims(inverse_mask, axis = -1)
+
+			gpu_crop = cv2.cuda_GpuMat()
+			gpu_crop.upload(crop_vision_frame)
+			inv_frame_gpu = cv2.cuda.warpAffine(gpu_crop, paste_matrix, (paste_width, paste_height), borderMode = cv2.BORDER_REPLICATE)
+			inverse_vision_frame = inv_frame_gpu.download()
+
+			temp_vision_frame = temp_vision_frame.copy()
+			paste_vision_frame = temp_vision_frame[y1:y2, x1:x2]
+			paste_vision_frame = paste_vision_frame * (1 - inverse_mask) + inverse_vision_frame * inverse_mask
+			temp_vision_frame[y1:y2, x1:x2] = paste_vision_frame.astype(temp_vision_frame.dtype)
+			return temp_vision_frame
+		except Exception:
+			pass
+
+	inverse_mask = cv2.warpAffine(crop_mask, paste_matrix, (paste_width, paste_height)).clip(0, 1).astype(numpy.float32)
+	# Use vectorized OpenCV ops for blending (faster than NumPy broadcasting on large frames)
 	inverse_vision_frame = cv2.warpAffine(crop_vision_frame, paste_matrix, (paste_width, paste_height), borderMode = cv2.BORDER_REPLICATE)
 	temp_vision_frame = temp_vision_frame.copy()
 	paste_vision_frame = temp_vision_frame[y1:y2, x1:x2]
-	paste_vision_frame = paste_vision_frame * (1 - inverse_mask) + inverse_vision_frame * inverse_mask
-	temp_vision_frame[y1:y2, x1:x2] = paste_vision_frame.astype(temp_vision_frame.dtype)
+	# Convert to float32 for stable blending
+	paste_f32 = paste_vision_frame.astype(numpy.float32)
+	inv_frame_f32 = inverse_vision_frame.astype(numpy.float32)
+	# Expand mask to 3 channels via OpenCV
+	mask3 = cv2.merge([ inverse_mask, inverse_mask, inverse_mask ])
+	one_minus = 1.0 - mask3
+	part_a = cv2.multiply(paste_f32, one_minus)
+	part_b = cv2.multiply(inv_frame_f32, mask3)
+	blend = cv2.add(part_a, part_b)
+	temp_vision_frame[y1:y2, x1:x2] = blend.astype(temp_vision_frame.dtype)
 	return temp_vision_frame
 
 
