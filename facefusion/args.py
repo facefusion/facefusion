@@ -57,6 +57,12 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_detector_size', args.get('face_detector_size'))
 	apply_state_item('face_detector_angles', args.get('face_detector_angles'))
 	apply_state_item('face_detector_score', args.get('face_detector_score'))
+	# face tracker
+	apply_state_item('enable_face_tracking', args.get('enable_face_tracking'))
+	apply_state_item('face_tracker_detection_interval', args.get('face_tracker_detection_interval'))
+	apply_state_item('face_tracker_max_missed', args.get('face_tracker_max_missed'))
+	apply_state_item('face_tracker_min_points', args.get('face_tracker_min_points'))
+	apply_state_item('face_tracker_match_iou', args.get('face_tracker_match_iou'))
 	# face landmarker
 	apply_state_item('face_landmarker_model', args.get('face_landmarker_model'))
 	apply_state_item('face_landmarker_score', args.get('face_landmarker_score'))

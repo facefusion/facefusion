@@ -19,7 +19,7 @@ def select_faces(reference_vision_frame : VisionFrame, target_vision_frame : Vis
 			return [ target_face ]
 
 	if state_manager.get_item('face_selector_mode') == 'reference':
-		reference_faces = get_many_faces([ reference_vision_frame ])
+		reference_faces = get_many_faces([ reference_vision_frame ], use_tracking = False)
 		reference_faces = sort_and_filter_faces(reference_faces)
 		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
 		if reference_face:

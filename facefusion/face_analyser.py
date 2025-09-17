@@ -2,7 +2,7 @@ from typing import List, Optional
 
 import numpy
 
-from facefusion import state_manager
+from facefusion import face_tracker, state_manager
 from facefusion.common_helper import get_first
 from facefusion.face_classifier import classify_face
 from facefusion.face_detector import detect_faces, detect_faces_by_angle
@@ -93,35 +93,60 @@ def get_average_face(faces : List[Face]) -> Optional[Face]:
 	return None
 
 
-def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
+def detect_faces_in_frame(vision_frame : VisionFrame, cache_result : bool = False) -> List[Face]:
+	"""Run full detection pipeline on a single frame."""
+	if not numpy.any(vision_frame):
+		return []
+	if cache_result:
+		static_faces = get_static_faces(vision_frame)
+		if static_faces:
+			return list(static_faces)
+	faces = _run_face_detection(vision_frame)
+	if cache_result and faces:
+		set_static_faces(vision_frame, faces)
+	return faces
+
+
+def _run_face_detection(vision_frame : VisionFrame) -> List[Face]:
+	all_bounding_boxes : List[BoundingBox] = []
+	all_face_scores : List[Score] = []
+	all_face_landmarks_5 : List[FaceLandmark5] = []
+
+	for face_detector_angle in state_manager.get_item('face_detector_angles'):
+		if face_detector_angle == 0:
+			bounding_boxes, face_scores, face_landmarks_5 = detect_faces(vision_frame)
+		else:
+			bounding_boxes, face_scores, face_landmarks_5 = detect_faces_by_angle(vision_frame, face_detector_angle)
+		all_bounding_boxes.extend(bounding_boxes)
+		all_face_scores.extend(face_scores)
+		all_face_landmarks_5.extend(face_landmarks_5)
+
+	if all_bounding_boxes and all_face_scores and all_face_landmarks_5 and state_manager.get_item('face_detector_score') > 0:
+		faces = create_faces(vision_frame, all_bounding_boxes, all_face_scores, all_face_landmarks_5)
+		return faces
+	return []
+
+
+def get_many_faces(vision_frames : List[VisionFrame], use_tracking : bool = True) -> List[Face]:
 	many_faces : List[Face] = []
+	tracking_enabled = use_tracking and face_tracker.is_enabled() and len(vision_frames) == 1
+	tracker = face_tracker.get_tracker() if tracking_enabled else None
 
 	for vision_frame in vision_frames:
-		if numpy.any(vision_frame):
-			static_faces = get_static_faces(vision_frame)
-			if static_faces:
-				many_faces.extend(static_faces)
-			else:
-				all_bounding_boxes = []
-				all_face_scores = []
-				all_face_landmarks_5 = []
-
-				for face_detector_angle in state_manager.get_item('face_detector_angles'):
-					if face_detector_angle == 0:
-						bounding_boxes, face_scores, face_landmarks_5 = detect_faces(vision_frame)
-					else:
-						bounding_boxes, face_scores, face_landmarks_5 = detect_faces_by_angle(vision_frame, face_detector_angle)
-					all_bounding_boxes.extend(bounding_boxes)
-					all_face_scores.extend(face_scores)
-					all_face_landmarks_5.extend(face_landmarks_5)
-
-				if all_bounding_boxes and all_face_scores and all_face_landmarks_5 and state_manager.get_item('face_detector_score') > 0:
-					faces = create_faces(vision_frame, all_bounding_boxes, all_face_scores, all_face_landmarks_5)
-
-					if faces:
-						many_faces.extend(faces)
-						set_static_faces(vision_frame, faces)
+		if not numpy.any(vision_frame):
+			continue
+		if tracker:
+			faces = tracker.process_frame(vision_frame, _detect_for_tracking)
+		else:
+			faces = detect_faces_in_frame(vision_frame, cache_result = not use_tracking)
+		if faces:
+			many_faces.extend(faces)
 	return many_faces
+
+
+
+def _detect_for_tracking(vision_frame : VisionFrame) -> List[Face]:
+	return detect_faces_in_frame(vision_frame, cache_result = False)
 
 
 def scale_face(target_face : Face, target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> Face:

@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from facefusion import face_tracker
 from facefusion.hash_helper import create_hash
 from facefusion.types import Face, FaceStore, VisionFrame
 
@@ -26,3 +27,4 @@ def set_static_faces(vision_frame : VisionFrame, faces : List[Face]) -> None:
 
 def clear_static_faces() -> None:
 	FACE_STORE['static_faces'].clear()
+	face_tracker.reset_tracker()

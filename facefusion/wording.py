@@ -127,6 +127,13 @@ WORDING : Dict[str, Any] =\
 		'reference_face_position': 'specify the position used to create the reference face',
 		'reference_face_distance': 'specify the similarity between the reference face and target face',
 		'reference_frame_number': 'specify the frame used to create the reference face',
+		# face tracker
+		'enable_face_tracking': 'enable LK-based landmark tracking to skip redundant detections',
+		'disable_face_tracking': 'disable the landmark tracker and detect every frame',
+		'face_tracker_detection_interval': 'run a full detector every N frames to refresh tracks',
+		'face_tracker_max_missed': 'number of consecutive tracking failures before forcing re-detect',
+		'face_tracker_min_points': 'minimum tracked landmarks required to keep a face alive',
+		'face_tracker_match_iou': 'IoU threshold used to associate detections with existing tracks',
 		# face masker
 		'face_occluder_model': 'choose the model responsible for the occlusion mask',
 		'face_parser_model': 'choose the model responsible for the region mask',
@@ -158,6 +165,8 @@ WORDING : Dict[str, Any] =\
 		'age_modifier_model': 'choose the model responsible for aging the face',
 		'age_modifier_direction': 'specify the direction in which the age should be modified',
 		'deep_swapper_model': 'choose the model responsible for swapping the face',
+		'face_swapper_use_trt': 'enable TensorRT acceleration when the engine can be built',
+		'face_swapper_disable_trt': 'disable TensorRT and fall back to ONNX Runtime execution',
 		'deep_swapper_morph': 'morph between source face and target faces',
 		'expression_restorer_model': 'choose the model responsible for restoring the expression',
 		'expression_restorer_factor': 'restore factor of expression from the target face',

@@ -130,6 +130,21 @@ def create_face_selector_program() -> ArgumentParser:
 	return program
 
 
+def create_face_tracker_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_face_tracker = program.add_argument_group('face tracker')
+	default_enable = config.get_bool_value('face_tracker', 'enable_face_tracking', 'true')
+	enable_default = True if default_enable is None else default_enable
+	group_face_tracker.add_argument('--enable-face-tracking', dest = 'enable_face_tracking', help = wording.get('help.enable_face_tracking'), action = 'store_true', default = enable_default)
+	group_face_tracker.add_argument('--disable-face-tracking', dest = 'enable_face_tracking', help = wording.get('help.disable_face_tracking'), action = 'store_false')
+	group_face_tracker.add_argument('--face-tracker-detection-interval', help = wording.get('help.face_tracker_detection_interval'), type = int, default = config.get_int_value('face_tracker', 'face_tracker_detection_interval', '6'), choices = facefusion.choices.face_tracker_detection_interval_range, metavar = create_int_metavar(facefusion.choices.face_tracker_detection_interval_range))
+	group_face_tracker.add_argument('--face-tracker-max-missed', help = wording.get('help.face_tracker_max_missed'), type = int, default = config.get_int_value('face_tracker', 'face_tracker_max_missed', '2'), choices = facefusion.choices.face_tracker_max_missed_range, metavar = create_int_metavar(facefusion.choices.face_tracker_max_missed_range))
+	group_face_tracker.add_argument('--face-tracker-min-points', help = wording.get('help.face_tracker_min_points'), type = int, default = config.get_int_value('face_tracker', 'face_tracker_min_points', '12'), choices = facefusion.choices.face_tracker_min_points_range, metavar = create_int_metavar(facefusion.choices.face_tracker_min_points_range))
+	group_face_tracker.add_argument('--face-tracker-match-iou', help = wording.get('help.face_tracker_match_iou'), type = float, default = config.get_float_value('face_tracker', 'face_tracker_match_iou', '0.35'), choices = facefusion.choices.face_tracker_match_iou_range, metavar = create_float_metavar(facefusion.choices.face_tracker_match_iou_range))
+	job_store.register_step_keys([ 'enable_face_tracking', 'face_tracker_detection_interval', 'face_tracker_max_missed', 'face_tracker_min_points', 'face_tracker_match_iou' ])
+	return program
+
+
 def create_face_masker_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_masker = program.add_argument_group('face masker')
@@ -290,7 +305,7 @@ def create_step_index_program() -> ArgumentParser:
 
 
 def collect_step_program() -> ArgumentParser:
-	return ArgumentParser(parents = [ create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_masker_program(), create_voice_extractor_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
+	return ArgumentParser(parents = [ create_face_detector_program(), create_face_tracker_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_masker_program(), create_voice_extractor_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
 
 
 def collect_job_program() -> ArgumentParser:

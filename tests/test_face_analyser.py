@@ -54,7 +54,7 @@ def test_get_one_face_with_retinaface() -> None:
 
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
+		many_faces = get_many_faces([ source_frame ], use_tracking = False)
 
 		assert len(many_faces) == 1
 
@@ -74,7 +74,7 @@ def test_get_one_face_with_scrfd() -> None:
 
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
+		many_faces = get_many_faces([ source_frame ], use_tracking = False)
 
 		assert len(many_faces) == 1
 
@@ -94,7 +94,7 @@ def test_get_one_face_with_yoloface() -> None:
 
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
+		many_faces = get_many_faces([ source_frame ], use_tracking = False)
 
 		assert len(many_faces) == 1
 
@@ -114,7 +114,7 @@ def test_get_one_face_with_yunet() -> None:
 
 	for source_path in source_paths:
 		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
+		many_faces = get_many_faces([ source_frame ], use_tracking = False)
 
 		assert len(many_faces) == 1
 
@@ -122,6 +122,6 @@ def test_get_one_face_with_yunet() -> None:
 def test_get_many_faces() -> None:
 	source_path = get_test_example_file('source.jpg')
 	source_frame = read_static_image(source_path)
-	many_faces = get_many_faces([ source_frame, source_frame, source_frame ])
+	many_faces = get_many_faces([ source_frame, source_frame, source_frame ], use_tracking = False)
 
 	assert len(many_faces) == 3

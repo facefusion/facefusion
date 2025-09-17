@@ -11,7 +11,7 @@ import numpy
 import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, face_tracker, inference_manager, logger, state_manager, tensorrt_runner, video_manager, wording
 from facefusion.common_helper import get_first, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
@@ -41,6 +41,8 @@ try:
     _HAS_CUPY = True
 except Exception:
     _HAS_CUPY = False
+
+_GPU_MODEL_STATS: Dict[Tuple[float, ...], Any] = {}
 
 # Dynamic strategy heuristic for CPU/CoreML
 _HEURISTIC_FRAMES_TO_OBSERVE = 12
@@ -477,23 +479,27 @@ def get_model_name() -> str:
 
 
 def register_args(program : ArgumentParser) -> None:
-    group_processors = find_argument_group(program, 'processors')
-    if group_processors:
-        group_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('processors', 'face_swapper_model', 'hyperswap_1a_256'), choices = processors_choices.face_swapper_models)
-        known_args, _ = program.parse_known_args()
-        face_swapper_pixel_boost_choices = processors_choices.face_swapper_set.get(known_args.face_swapper_model)
-        group_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
-        group_processors.add_argument('--face-swapper-weight', help = wording.get('help.face_swapper_weight'), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0.5'), choices = processors_choices.face_swapper_weight_range)
-        # Batching control: auto|always|never
-        group_processors.add_argument('--face-swapper-batching', help = 'Batching strategy for face swapper: auto, always or never', default = config.get_str_value('processors', 'face_swapper_batching', 'auto'), choices = [ 'auto', 'always', 'never' ])
-        facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight', 'face_swapper_batching' ])
+	group_processors = find_argument_group(program, 'processors')
+	if group_processors:
+		group_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('processors', 'face_swapper_model', 'hyperswap_1a_256'), choices = processors_choices.face_swapper_models)
+		known_args, _ = program.parse_known_args()
+		face_swapper_pixel_boost_choices = processors_choices.face_swapper_set.get(known_args.face_swapper_model)
+		group_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
+		group_processors.add_argument('--face-swapper-weight', help = wording.get('help.face_swapper_weight'), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0.5'), choices = processors_choices.face_swapper_weight_range)
+		# Batching control: auto|always|never
+		group_processors.add_argument('--face-swapper-batching', help = 'Batching strategy for face swapper: auto, always or never', default = config.get_str_value('processors', 'face_swapper_batching', 'auto'), choices = [ 'auto', 'always', 'never' ])
+		default_trt = config.get_bool_value('processors', 'face_swapper_use_trt', 'true')
+		group_processors.add_argument('--face-swapper-use-trt', dest = 'face_swapper_use_trt', help = wording.get('help.face_swapper_use_trt'), action = 'store_true', default = True if default_trt is None else default_trt)
+		group_processors.add_argument('--face-swapper-disable-trt', dest = 'face_swapper_use_trt', help = wording.get('help.face_swapper_disable_trt'), action = 'store_false')
+		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight', 'face_swapper_batching', 'face_swapper_use_trt' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
-    apply_state_item('face_swapper_model', args.get('face_swapper_model'))
-    apply_state_item('face_swapper_pixel_boost', args.get('face_swapper_pixel_boost'))
-    apply_state_item('face_swapper_weight', args.get('face_swapper_weight'))
-    apply_state_item('face_swapper_batching', args.get('face_swapper_batching'))
+	apply_state_item('face_swapper_model', args.get('face_swapper_model'))
+	apply_state_item('face_swapper_pixel_boost', args.get('face_swapper_pixel_boost'))
+	apply_state_item('face_swapper_weight', args.get('face_swapper_weight'))
+	apply_state_item('face_swapper_batching', args.get('face_swapper_batching'))
+	apply_state_item('face_swapper_use_trt', args.get('face_swapper_use_trt'))
 
 
 def pre_check() -> bool:
@@ -508,9 +514,11 @@ def pre_process(mode : ProcessMode) -> bool:
 		logger.error(wording.get('choose_image_source') + wording.get('exclamation_mark'), __name__)
 		return False
 
+	face_tracker.reset_tracker()
+
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_frames = read_static_images(source_image_paths)
-	source_faces = get_many_faces(source_frames)
+	source_faces = get_many_faces(source_frames, use_tracking = False)
 
 	if not get_one_face(source_faces):
 		logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), __name__)
@@ -549,13 +557,14 @@ def post_process() -> None:
 	with CACHE_LOCK:
 		_SOURCE_FACE_CACHE.clear()
 		_SOURCE_EMBEDDING_CACHE.clear()
+	face_tracker.reset_tracker()
 
 def _build_prepared_source_for_face(source_face: Face, target_face: Face) -> Dict[str, Any]:
 	"""Precompute the 'source' tensor once per target face.
 	- For frame-based models (blendswap/uniface): returns the prepared source frame (1,C,H,W)
 	- For embedding-based models: returns the balanced source embedding (1,D)
 	"""
-	model_type = get_model_options().get('type')
+	model_type = model_options.get('type')
 	if model_type in [ 'blendswap', 'uniface' ]:
 		return { 'kind': 'frame', 'tensor': prepare_source_frame(source_face) }
 	# embedding-based path
@@ -693,33 +702,78 @@ def _supports_batch() -> bool:
 			batch_ok = False
 	return batch_ok
 
-def _prepare_crop_frame_batch(frames : List[VisionFrame]) -> numpy.ndarray:
+def _prepare_crop_frame_batch(frames : List[VisionFrame], as_gpu : bool = False) -> Any:
+	if as_gpu and _HAS_CUPY:
+		return _prepare_crop_frame_batch_gpu(frames)
+	return _prepare_crop_frame_batch_cpu(frames)
+
+
+
+def _prepare_crop_frame_batch_cpu(frames : List[VisionFrame]) -> numpy.ndarray:
 	model_mean = get_model_options().get('mean')
 	model_standard_deviation = get_model_options().get('standard_deviation')
-	arr = numpy.stack([(f[:, :, ::-1] / 255.0) for f in frames], axis=0)
+	arr = numpy.stack([(f[:, :, ::-1] / 255.0) for f in frames], axis = 0)
 	arr = (arr - model_mean) / model_standard_deviation
-	# NHWC -> NCHW
 	arr = arr.transpose(0, 3, 1, 2).astype(numpy.float32)
 	return arr
 
-def _normalize_crop_frame_batch(batch : numpy.ndarray) -> List[VisionFrame]:
+
+
+def _prepare_crop_frame_batch_gpu(frames : List[VisionFrame]) -> "cp.ndarray":
+	model_mean = get_model_options().get('mean')
+	model_standard_deviation = get_model_options().get('standard_deviation')
+	mean_gpu, std_gpu, inv_std_gpu = _get_model_stats_gpu(model_mean, model_standard_deviation)
+	arr_gpu = cp.stack([cp.asarray(frame, dtype = cp.float32) for frame in frames], axis = 0)
+	arr_gpu = arr_gpu[:, :, :, ::-1] * (1.0 / 255.0)
+	arr_gpu = (arr_gpu - mean_gpu) * inv_std_gpu
+	arr_gpu = cp.transpose(arr_gpu, (0, 3, 1, 2)).astype(cp.float32, copy = False)
+	return arr_gpu
+
+
+
+def _get_model_stats_gpu(model_mean : Any, model_standard_deviation : Any) -> Tuple["cp.ndarray", "cp.ndarray", "cp.ndarray"]:
+	key = tuple(map(float, model_mean)) + tuple(map(float, model_standard_deviation))
+	stats = _GPU_MODEL_STATS.get(key)
+	if stats is None:
+		mean_gpu = cp.asarray(model_mean, dtype = cp.float32).reshape(1, 1, 1, 3)
+		std_gpu = cp.asarray(model_standard_deviation, dtype = cp.float32).reshape(1, 1, 1, 3)
+		inv_std_gpu = 1.0 / std_gpu
+		stats = (mean_gpu, std_gpu, inv_std_gpu)
+		_GPU_MODEL_STATS[key] = stats
+	return stats
+
+
+
+def _normalize_crop_frame_batch(batch : Any) -> List[VisionFrame]:
 	model_type = get_model_options().get('type')
 	model_mean = get_model_options().get('mean')
 	model_standard_deviation = get_model_options().get('standard_deviation')
-	# NCHW -> NHWC
-	arr = batch.transpose(0, 2, 3, 1)
+
+	if _HAS_CUPY and isinstance(batch, cp.ndarray):
+		arr_gpu = cp.transpose(batch, (0, 2, 3, 1))
+		if model_type in [ 'ghost', 'hififace', 'hyperswap', 'uniface' ]:
+			mean_gpu, std_gpu, _ = _get_model_stats_gpu(model_mean, model_standard_deviation)
+			arr_gpu = arr_gpu * std_gpu + mean_gpu
+		arr_gpu = cp.clip(arr_gpu, 0.0, 1.0)
+		arr_gpu = cp.flip(arr_gpu, axis = -1) * 255.0
+		arr_np = cp.asnumpy(arr_gpu)
+		return [arr_np[i] for i in range(arr_np.shape[0])]
+
+	arr_np = batch.transpose(0, 2, 3, 1)
 	if model_type in [ 'ghost', 'hififace', 'hyperswap', 'uniface' ]:
-		arr = arr * model_standard_deviation + model_mean
-	arr = arr.clip(0, 1)
-	arr = (arr[:, :, :, ::-1] * 255.0)
-	return [arr[i] for i in range(arr.shape[0])]
+		arr_np = arr_np * model_standard_deviation + model_mean
+	arr_np = arr_np.clip(0, 1)
+	arr_np = (arr_np[:, :, :, ::-1] * 255.0)
+	return [arr_np[i] for i in range(arr_np.shape[0])]
 
 def swap_faces_batch(source_face : Face, target_faces : List[Face], target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> VisionFrame:
 	"""Batch all crops (including pixel boost tiles) across all faces into one ONNX run."""
 	if not target_faces:
 		return temp_vision_frame
-	model_template = get_model_options().get('template')
-	model_size = get_model_options().get('size')
+	model_options = get_model_options()
+	model_template = model_options.get('template')
+	model_size = model_options.get('size')
+	model_path = model_options.get('sources').get('face_swapper').get('path')
 	pixel_boost_size = unpack_resolution(state_manager.get_item('face_swapper_pixel_boost'))
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
 
@@ -804,51 +858,64 @@ def swap_faces_batch(source_face : Face, target_faces : List[Face], target_visio
 			emb_list.append(per_face_src[fi])
 		source_inputs_batch = numpy.vstack(emb_list).astype(numpy.float32, copy = False)
 
-	# Prepare target batch
-	target_inputs_batch = _prepare_crop_frame_batch(tile_inputs)
+	# Prepare target batch (CPU/GPU aware)
+	target_inputs_batch_cpu : Optional[numpy.ndarray] = None
+	target_inputs_batch_gpu : Optional['cp.ndarray'] = None
 
 	# Detect batch capability; if unsupported, fallback per-tile
 	batched = _supports_batch()
-	outputs_batch : Optional[numpy.ndarray] = None
-	if batched:
-		# Try CUDA IO Binding via CuPy when available to minimize copies
+	outputs_batch : Optional[Any] = None
+	use_trt = False
+
+	# Attempt TensorRT execution when available and requested
+	if batched and tensorrt_runner.is_available() and state_manager.get_item('face_swapper_use_trt') and 'tensorrt' in providers and _HAS_CUPY:
+		if target_inputs_batch_gpu is None:
+			target_inputs_batch_gpu = _prepare_crop_frame_batch(tile_inputs, as_gpu = True)
+		src_cu = cp.asarray(source_inputs_batch, dtype = cp.float32)
+		runner = tensorrt_runner.get_runner(model_path, tuple(source_inputs_batch.shape), tuple(target_inputs_batch_gpu.shape), len(tile_inputs))
+		if runner:
+			outputs_batch = runner.run(src_cu, target_inputs_batch_gpu)
+			use_trt = True
+
+	if batched and not use_trt:
 		use_iobinding = _HAS_CUPY and ('cuda' in state_manager.get_item('execution_providers'))
 		if use_iobinding:
 			try:
+				if target_inputs_batch_gpu is None:
+					target_inputs_batch_gpu = _prepare_crop_frame_batch(tile_inputs, as_gpu = True)
 				device_id = int(get_first(state_manager.get_item('execution_device_ids')))
 				io_binding = face_swapper.io_binding()
-				# Move inputs to GPU
-				src_cu = cp.asarray(source_inputs_batch, dtype=cp.float32)
-				tgt_cu = cp.asarray(target_inputs_batch, dtype=cp.float32)
-				N, C, H, W = target_inputs_batch.shape
-				out_cu = cp.empty((N, C, H, W), dtype=cp.float32)
-				# Bind by input names
+				src_cu = cp.asarray(source_inputs_batch, dtype = cp.float32)
+				tgt_cu = target_inputs_batch_gpu
+				N, C, H, W = tgt_cu.shape
+				out_cu = cp.empty((N, C, H, W), dtype = cp.float32)
 				inputs_by_name = { i.name: i for i in face_swapper.get_inputs() }
 				outputs_by_name = { o.name: o for o in face_swapper.get_outputs() }
 				src_name = 'source' if 'source' in inputs_by_name else list(inputs_by_name.keys())[0]
 				tgt_name = 'target' if 'target' in inputs_by_name else list(inputs_by_name.keys())[1]
 				out_name = list(outputs_by_name.keys())[0]
-				io_binding.bind_input(name=src_name, device_type='cuda', device_id=device_id, element_type=numpy.float32, shape=tuple(source_inputs_batch.shape), buffer_ptr=src_cu.data.ptr)
-				io_binding.bind_input(name=tgt_name, device_type='cuda', device_id=device_id, element_type=numpy.float32, shape=tuple(target_inputs_batch.shape), buffer_ptr=tgt_cu.data.ptr)
-				io_binding.bind_output(name=out_name, device_type='cuda', device_id=device_id, shape=(N, C, H, W), buffer_ptr=out_cu.data.ptr)
+				io_binding.bind_input(name = src_name, device_type = 'cuda', device_id = device_id, element_type = numpy.float32, shape = tuple(source_inputs_batch.shape), buffer_ptr = src_cu.data.ptr)
+				io_binding.bind_input(name = tgt_name, device_type = 'cuda', device_id = device_id, element_type = numpy.float32, shape = tuple(tgt_cu.shape), buffer_ptr = tgt_cu.data.ptr)
+				io_binding.bind_output(name = out_name, device_type = 'cuda', device_id = device_id, shape = (N, C, H, W), buffer_ptr = out_cu.data.ptr)
 				t_run_start = time()
 				with conditional_thread_semaphore():
 					face_swapper.run_with_iobinding(io_binding)
 				t_run_end = time()
-				outputs_batch = cp.asnumpy(out_cu)
+				outputs_batch = out_cu
 			except Exception:
-				# Fallback to standard run if IO binding fails
 				use_iobinding = False
+				target_inputs_batch_cpu = _prepare_crop_frame_batch(tile_inputs)
 		if not use_iobinding:
+			if target_inputs_batch_cpu is None:
+				target_inputs_batch_cpu = _prepare_crop_frame_batch(tile_inputs)
 			face_swapper_inputs = {}
 			for face_swapper_input in face_swapper.get_inputs():
 				if face_swapper_input.name == 'source':
 					face_swapper_inputs[face_swapper_input.name] = source_inputs_batch
 				if face_swapper_input.name == 'target':
-					face_swapper_inputs[face_swapper_input.name] = target_inputs_batch
+					face_swapper_inputs[face_swapper_input.name] = target_inputs_batch_cpu
 			t_run_start = time()
 			with conditional_thread_semaphore():
-				# Expect output shape (N, C, H, W)
 				outputs_batch = face_swapper.run(None, face_swapper_inputs)[0]
 			t_run_end = time()
 	else:
@@ -866,6 +933,9 @@ def swap_faces_batch(source_face : Face, target_faces : List[Face], target_visio
 		for fi in range(len(scaled_faces)):
 			crop_swapped, crop_mask, affine_matrix = results[fi]
 			temp_vision_frame = paste_back(temp_vision_frame, crop_swapped, crop_mask, affine_matrix)
+		return temp_vision_frame
+
+	if outputs_batch is None:
 		return temp_vision_frame
 
 	# Post-process outputs and paste back face-by-face
@@ -1090,7 +1160,7 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 
 	if source_vision_frames:
 		for source_vision_frame in source_vision_frames:
-			temp_faces = get_many_faces([source_vision_frame])
+			temp_faces = get_many_faces([source_vision_frame], use_tracking = False)
 			temp_faces = sort_faces_by_order(temp_faces, 'large-small')
 
 			if temp_faces:
