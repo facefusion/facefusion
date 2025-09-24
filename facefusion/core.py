@@ -8,10 +8,10 @@ from collections import deque
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from functools import lru_cache
 from time import time
-from typing import Deque, List, Optional, Tuple
+from typing import Callable, Deque, Iterator, List, Optional, Tuple
 
-import numpy
 import cv2
+import numpy
 from tqdm import tqdm
 
 from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, process_manager, state_manager, video_manager, voice_extractor, wording
@@ -623,12 +623,147 @@ def _flush_stream_future(inflight : Deque[Tuple[int, Future[numpy.ndarray]]], wr
 	return True
 
 
-def process_video_streaming(temp_video_resolution : Tuple[int, int], temp_video_fps : float, trim_frame_start : int, trim_frame_end : int) -> bool:
+def _build_stream_generator_pyav(target_path : str, temp_video_resolution : Tuple[int, int], temp_video_fps : float, trim_frame_start : int, trim_frame_end : int) -> Optional[Tuple[Iterator[Tuple[int, numpy.ndarray]], Callable[[], None]]]:
 	try:
 		import av  # type: ignore
 	except Exception:
-		return False
+		return None
 
+	container = av.open(target_path)
+	video_stream = next((stream for stream in container.streams if stream.type == 'video'), None)
+	if video_stream is None:
+		container.close()
+		return None
+	video_stream.thread_type = 'AUTO'
+
+	width, height = temp_video_resolution
+
+	def iterator() -> Iterator[Tuple[int, numpy.ndarray]]:
+		frame_index = -1
+		for frame in container.decode(video = video_stream.index):
+			frame_index += 1
+			if trim_frame_start and frame_index < trim_frame_start:
+				continue
+			if trim_frame_end and frame_index > trim_frame_end:
+				break
+			frame_ndarray = frame.to_ndarray(format = 'bgr24')
+			if frame_ndarray.shape[0] != height or frame_ndarray.shape[1] != width:
+				frame_ndarray = cv2.resize(frame_ndarray, (width, height), interpolation = cv2.INTER_AREA)
+			yield frame_index, frame_ndarray
+
+	def cleanup() -> None:
+		container.close()
+
+	return iterator(), cleanup
+
+
+def _build_stream_generator_ffmpeg(target_path : str, temp_video_resolution : Tuple[int, int], temp_video_fps : float, trim_frame_start : int, trim_frame_end : int) -> Optional[Tuple[Iterator[Tuple[int, numpy.ndarray]], Callable[[], None]]]:
+	ffmpeg_bin = shutil.which('ffmpeg')
+	if not ffmpeg_bin:
+		return None
+	width, height = temp_video_resolution
+	filters : List[str] = []
+	trim_parts : List[str] = []
+	if isinstance(trim_frame_start, int) and trim_frame_start > 0:
+		trim_parts.append(f'start_frame={trim_frame_start}')
+	if isinstance(trim_frame_end, int) and trim_frame_end > 0:
+		trim_parts.append(f'end_frame={trim_frame_end}')
+	if trim_parts:
+		filters.append('trim=' + ':'.join(trim_parts))
+	filters.append(f'fps={temp_video_fps}')
+	filters.append(f'scale={width}:{height}')
+	filter_str = ','.join(filters)
+	command : List[str] = [
+		ffmpeg_bin,
+		'-loglevel', 'error',
+		'-i', target_path,
+		'-an',
+		'-vsync', '0'
+	]
+	if filter_str:
+		command.extend(['-vf', filter_str])
+	command.extend(['-pix_fmt', 'bgr24', '-f', 'rawvideo', '-'])
+
+	process = subprocess.Popen(command, stdout = subprocess.PIPE)
+	if process.stdout is None:
+		process.terminate()
+		return None
+	frame_size = width * height * 3
+
+	def iterator() -> Iterator[Tuple[int, numpy.ndarray]]:
+		frame_index = -1
+		while True:
+			if is_process_stopping():
+				break
+			buffer = process.stdout.read(frame_size)
+			if not buffer or len(buffer) < frame_size:
+				break
+			frame_index += 1
+			frame_array = numpy.frombuffer(buffer, dtype = numpy.uint8)
+			frame_ndarray = frame_array.reshape((height, width, 3))
+			yield frame_index, frame_ndarray
+
+	def cleanup() -> None:
+		if process.stdout:
+			try:
+				process.stdout.close()
+			except Exception:
+				pass
+		if process.poll() is None:
+			try:
+				process.terminate()
+			except Exception:
+				pass
+		try:
+			process.wait()
+		except Exception:
+			pass
+
+	return iterator(), cleanup
+
+
+def _run_streaming_loop(
+	frame_iterator : Iterator[Tuple[int, numpy.ndarray]],
+	cleanup : Callable[[], None],
+	writer : subprocess.Popen[bytes],
+	frame_total : int,
+	providers : List[str],
+	pipeline_depth : int,
+	reference_vision_frame : numpy.ndarray,
+	source_vision_frames : List[numpy.ndarray],
+	source_audio_path : Optional[str],
+	temp_video_fps : float
+) -> int:
+	processed = 0
+	inflight : Deque[Tuple[int, Future[numpy.ndarray]]] = deque()
+
+	try:
+		with tqdm(total = frame_total, desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+			progress.set_postfix(execution_providers = providers)
+			with ThreadPoolExecutor(max_workers = pipeline_depth) as executor:
+				for frame_index, frame_ndarray in frame_iterator:
+					if is_process_stopping():
+						break
+					future = executor.submit(process_frame_runtime, frame_ndarray, frame_index, reference_vision_frame, source_vision_frames, source_audio_path, temp_video_fps)
+					inflight.append((frame_index, future))
+					while len(inflight) >= pipeline_depth:
+						if is_process_stopping():
+							break
+						if not _flush_stream_future(inflight, writer, progress):
+							break
+						processed += 1
+			if not is_process_stopping():
+				while inflight:
+					if not _flush_stream_future(inflight, writer, progress):
+						break
+					processed += 1
+	finally:
+		for _, future in inflight:
+			future.cancel()
+		cleanup()
+
+	return processed
+def process_video_streaming(temp_video_resolution : Tuple[int, int], temp_video_fps : float, trim_frame_start : int, trim_frame_end : int) -> bool:
 	target_path = state_manager.get_item('target_path')
 	temp_video_path = get_temp_file_path(target_path)
 	writer = open_rawvideo_writer(temp_video_path, temp_video_resolution, temp_video_fps)
@@ -644,50 +779,13 @@ def process_video_streaming(temp_video_resolution : Tuple[int, int], temp_video_
 	frame_total = predict_video_frame_total(target_path, temp_video_fps, trim_frame_start, trim_frame_end)
 	providers = state_manager.get_item('execution_providers')
 	pipeline_depth = max(2, state_manager.get_item('execution_thread_count') or 1)
-	container = av.open(target_path)
-	video_stream = next((stream for stream in container.streams if stream.type == 'video'), None)
-	if video_stream is None:
-		writer.stdin.close()
-		writer.wait()
-		container.close()
-		return False
-	video_stream.thread_type = 'AUTO'
 
-	processed = 0
-	inflight : Deque[Tuple[int, Future[numpy.ndarray]]] = deque()
-
-	try:
-		with tqdm(total = frame_total, desc = wording.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-			progress.set_postfix(execution_providers = providers)
-			with ThreadPoolExecutor(max_workers = pipeline_depth) as executor:
-				frame_index = -1
-				for frame in container.decode(video = video_stream.index):
-					frame_index += 1
-					if trim_frame_start and frame_index < trim_frame_start:
-						continue
-					if trim_frame_end and frame_index > trim_frame_end:
-						break
-					if is_process_stopping():
-						break
-					frame_ndarray = frame.to_ndarray(format = 'bgr24')
-					if (frame_ndarray.shape[1], frame_ndarray.shape[0]) != temp_video_resolution:
-						frame_ndarray = cv2.resize(frame_ndarray, temp_video_resolution, interpolation = cv2.INTER_AREA)
-					future = executor.submit(process_frame_runtime, frame_ndarray, frame_index, reference_vision_frame, source_vision_frames, source_audio_path, temp_video_fps)
-					inflight.append((frame_index, future))
-					while len(inflight) >= pipeline_depth:
-						if is_process_stopping():
-							break
-						if not _flush_stream_future(inflight, writer, progress):
-							break
-						processed += 1
-				if not is_process_stopping():
-					while inflight:
-						if not _flush_stream_future(inflight, writer, progress):
-							break
-						processed += 1
-	finally:
-		for _, future in inflight:
-			future.cancel()
+	decoder = _build_stream_generator_pyav(target_path, temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end)
+	backend = 'pyav'
+	if decoder is None:
+		decoder = _build_stream_generator_ffmpeg(target_path, temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end)
+		backend = 'ffmpeg'
+	if decoder is None:
 		if writer.stdin:
 			try:
 				writer.stdin.close()
@@ -697,13 +795,27 @@ def process_video_streaming(temp_video_resolution : Tuple[int, int], temp_video_
 			writer.wait()
 		except Exception:
 			pass
-		container.close()
+		logger.debug('No streaming decoder available; reverting to temp-frame pipeline', __name__)
+		return False
+
+	frame_iterator, cleanup = decoder
+	processed = _run_streaming_loop(frame_iterator, cleanup, writer, frame_total, providers, pipeline_depth, reference_vision_frame, source_vision_frames, source_audio_path, temp_video_fps)
+
+	if writer.stdin:
+		try:
+			writer.stdin.close()
+		except Exception:
+			pass
+	try:
+		writer.wait()
+	except Exception:
+		pass
 
 	if writer.returncode not in (0, None):
 		logger.debug(f'ffmpeg writer exited with code {writer.returncode}', __name__)
-		return False
+		processed = 0
 
 	if processed <= 0:
-		logger.debug('Streaming pipeline did not process any frames', __name__)
+		logger.debug(f'Streaming pipeline ({backend}) did not process any frames', __name__)
 		return False
 	return True
