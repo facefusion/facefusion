@@ -491,7 +491,8 @@ def register_args(program : ArgumentParser) -> None:
 		default_trt = config.get_bool_value('processors', 'face_swapper_use_trt', 'true')
 		group_processors.add_argument('--face-swapper-use-trt', dest = 'face_swapper_use_trt', help = wording.get('help.face_swapper_use_trt'), action = 'store_true', default = True if default_trt is None else default_trt)
 		group_processors.add_argument('--face-swapper-disable-trt', dest = 'face_swapper_use_trt', help = wording.get('help.face_swapper_disable_trt'), action = 'store_false')
-		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight', 'face_swapper_batching', 'face_swapper_use_trt' ])
+		group_processors.add_argument('--face-swapper-trt-max-batch', help = wording.get('help.face_swapper_trt_max_batch'), type = int, default = config.get_int_value('processors', 'face_swapper_trt_max_batch', '64'), choices = processors_choices.face_swapper_trt_max_batch_range)
+		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight', 'face_swapper_batching', 'face_swapper_use_trt', 'face_swapper_trt_max_batch' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
@@ -500,6 +501,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_swapper_weight', args.get('face_swapper_weight'))
 	apply_state_item('face_swapper_batching', args.get('face_swapper_batching'))
 	apply_state_item('face_swapper_use_trt', args.get('face_swapper_use_trt'))
+	apply_state_item('face_swapper_trt_max_batch', args.get('face_swapper_trt_max_batch'))
 
 
 def pre_check() -> bool:
@@ -797,6 +799,11 @@ def swap_faces_batch(source_face : Face, target_faces : List[Face], target_visio
 	# Scale faces to temp_vision_frame size for correct warping
 	scaled_faces : List[Face] = [scale_face(tf, target_vision_frame, temp_vision_frame) for tf in target_faces]
 
+	# The common single-face / no-tiling case gains nothing from the batch path and
+	# pays extra Cupy/IO-binding setup cost, so keep the lean sequential swap.
+	if len(scaled_faces) == 1 and pixel_boost_total <= 1:
+		return swap_face(source_face, scaled_faces[0], temp_vision_frame)
+
 	for face_index, tface in enumerate(scaled_faces):
 		crop_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, tface.landmark_set.get('5/68'), model_template, pixel_boost_size)
 		# Precompute content-agnostic masks
@@ -872,10 +879,29 @@ def swap_faces_batch(source_face : Face, target_faces : List[Face], target_visio
 		if target_inputs_batch_gpu is None:
 			target_inputs_batch_gpu = _prepare_crop_frame_batch(tile_inputs, as_gpu = True)
 		src_cu = cp.asarray(source_inputs_batch, dtype = cp.float32)
-		runner = tensorrt_runner.get_runner(model_path, tuple(source_inputs_batch.shape), tuple(target_inputs_batch_gpu.shape), len(tile_inputs))
+		trt_limit = state_manager.get_item('face_swapper_trt_max_batch') or 64
+		try:
+			tensorrt_runner.set_max_batch_limit(int(trt_limit))
+		except Exception:
+			pass
+		batch_total = len(tile_inputs)
+		engine_batch = max(1, tensorrt_runner.canonicalize_batch_size(batch_total))
+		source_engine_shape = (engine_batch, *source_inputs_batch.shape[1:])
+		target_engine_shape = (engine_batch, *target_inputs_batch_gpu.shape[1:])
+		runner = tensorrt_runner.get_runner(model_path, source_engine_shape, target_engine_shape, engine_batch)
 		if runner:
-			outputs_batch = runner.run(src_cu, target_inputs_batch_gpu)
 			use_trt = True
+			outputs_parts : List["cp.ndarray"] = []
+			cursor = 0
+			while cursor < batch_total:
+				end = min(cursor + runner.max_batch, batch_total)
+				src_slice = src_cu[cursor:end]
+				tgt_slice = target_inputs_batch_gpu[cursor:end]
+				run_out = runner.run(src_slice, tgt_slice)
+				outputs_parts.append(run_out)
+				cursor = end
+			if outputs_parts:
+				outputs_batch = cp.concatenate(outputs_parts, axis = 0)
 
 	if batched and not use_trt:
 		use_iobinding = _HAS_CUPY and ('cuda' in state_manager.get_item('execution_providers'))

@@ -21,15 +21,35 @@ except Exception:
 LOGGER = trt.Logger(trt.Logger.WARNING) if _HAS_TRT else None
 _ENGINE_CACHE: Dict[Tuple[str, Tuple[int, ...], Tuple[int, ...], int], "TensorRTRunner"] = {}
 _CACHE_DIR = Path('.caches/trt')
+_MAX_BATCH_LIMIT = 64
 
 
 def is_available() -> bool:
     return _HAS_TRT and cp is not None
 
 
+def set_max_batch_limit(limit: int) -> None:
+    global _MAX_BATCH_LIMIT
+    _MAX_BATCH_LIMIT = max(1, int(limit))
+
+
+def get_max_batch_limit() -> int:
+    return _MAX_BATCH_LIMIT
+
+
+def canonicalize_batch_size(batch: int) -> int:
+    if batch <= 0:
+        return 1
+    size = 1
+    while size < batch:
+        size <<= 1
+    return min(size, _MAX_BATCH_LIMIT)
+
+
 def get_runner(model_path: str, source_shape: Tuple[int, ...], target_shape: Tuple[int, ...], max_batch: int, enable_fp16: bool = True) -> Optional["TensorRTRunner"]:
     if not is_available():
         return None
+    max_batch = canonicalize_batch_size(max_batch)
     key = (model_path, tuple(source_shape[1:]), tuple(target_shape[1:]), max_batch)
     runner = _ENGINE_CACHE.get(key)
     if runner and runner.max_batch >= source_shape[0]:

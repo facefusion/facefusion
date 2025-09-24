@@ -167,6 +167,7 @@ WORDING : Dict[str, Any] =\
 		'deep_swapper_model': 'choose the model responsible for swapping the face',
 		'face_swapper_use_trt': 'enable TensorRT acceleration when the engine can be built',
 		'face_swapper_disable_trt': 'disable TensorRT and fall back to ONNX Runtime execution',
+		'face_swapper_trt_max_batch': 'cap TensorRT engine batch size to balance build-time and VRAM',
 		'deep_swapper_morph': 'morph between source face and target faces',
 		'expression_restorer_model': 'choose the model responsible for restoring the expression',
 		'expression_restorer_factor': 'restore factor of expression from the target face',
@@ -215,6 +216,8 @@ WORDING : Dict[str, Any] =\
 		'execution_device_ids': 'specify the devices used for processing',
 		'execution_providers': 'inference using different providers (choices: {choices}, ...)',
 		'execution_thread_count': 'specify the amount of parallel threads while processing',
+		'enable_streaming_pipeline': 'stream decoded frames directly through the pipeline (best for CUDA)',
+		'disable_streaming_pipeline': 'fallback to the legacy temp-frame pipeline',
 		# memory
 		'video_memory_strategy': 'balance fast processing and low VRAM usage',
 		'system_memory_limit': 'limit the available RAM that can be used while processing',

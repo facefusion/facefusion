@@ -75,19 +75,22 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
         # Maximize graph optimizations
         sess_options.graph_optimization_level = GraphOptimizationLevel.ORT_ENABLE_ALL
         sess_options.enable_mem_pattern = True
-        # Adaptive threading: keep CPU/CoreML parallel, constrain for CUDA/TRT
+
         lower_providers = [p.lower() for p in execution_providers]
         uses_gpu = any(p in ('cuda', 'tensorrt') for p in lower_providers)
-        if uses_gpu:
-            # GPU-bound: avoid CPU contention
-            sess_options.intra_op_num_threads = 1
-            sess_options.inter_op_num_threads = 1
-        else:
-            # Let ORT parallelize on CPU; keep defaults or set PARALLEL mode
+
+        thread_count = state_manager.get_item('execution_thread_count')
+        configured_threads = thread_count if isinstance(thread_count, int) and thread_count > 0 else None
+
+        if not uses_gpu:
             try:
                 sess_options.execution_mode = ExecutionMode.ORT_PARALLEL
             except Exception:
                 pass
+
+        if configured_threads:
+            sess_options.intra_op_num_threads = configured_threads
+            sess_options.inter_op_num_threads = max(1, configured_threads // 2)
         inference_session = InferenceSession(model_path, sess_options = sess_options, providers = inference_session_providers)
     except Exception as exception:
         logger.error(wording.get('loading_model_failed').format(model_name = model_file_name), __name__)

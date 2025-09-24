@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import tempfile
 from functools import partial
@@ -284,3 +285,29 @@ def fix_video_encoder(video_format : VideoFormat, video_encoder : VideoEncoder) 
 	if video_format == 'webm':
 		return 'libvpx-vp9'
 	return video_encoder
+
+def open_rawvideo_writer(output_path : str, video_resolution : Resolution, video_fps : Fps) -> Optional[subprocess.Popen[bytes]]:
+	ffmpeg_bin = shutil.which('ffmpeg')
+	if not ffmpeg_bin:
+		return None
+	width, height = video_resolution
+	output_video_encoder = state_manager.get_item('output_video_encoder')
+	output_video_quality = state_manager.get_item('output_video_quality')
+	output_video_preset = state_manager.get_item('output_video_preset')
+	commands : List[str] = [
+		ffmpeg_bin,
+		'-y',
+		'-loglevel', 'error',
+		'-f', 'rawvideo',
+		'-pix_fmt', 'bgr24',
+		'-s', f'{width}x{height}',
+		'-r', str(video_fps),
+		'-i', '-',
+		'-an'
+	]
+	commands += ffmpeg_builder.set_video_encoder(output_video_encoder)
+	commands += ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality)
+	commands += ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset)
+	commands += ffmpeg_builder.set_pixel_format(output_video_encoder)
+	commands += [ '-vsync', '0', output_path ]
+	return subprocess.Popen(commands, stdin = subprocess.PIPE)

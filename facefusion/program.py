@@ -249,7 +249,11 @@ def create_execution_program() -> ArgumentParser:
 	group_execution.add_argument('--execution-device-ids', help = wording.get('help.execution_device_ids'), default = config.get_str_list('execution', 'execution_device_ids', '0'), nargs = '+', metavar = 'EXECUTION_DEVICE_IDS')
 	group_execution.add_argument('--execution-providers', help = wording.get('help.execution_providers').format(choices = ', '.join(available_execution_providers)), default = config.get_str_list('execution', 'execution_providers', get_first(available_execution_providers)), choices = available_execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
 	group_execution.add_argument('--execution-thread-count', help = wording.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution', 'execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_int_metavar(facefusion.choices.execution_thread_count_range))
-	job_store.register_job_keys([ 'execution_device_ids', 'execution_providers', 'execution_thread_count' ])
+	default_streaming = config.get_bool_value('execution', 'enable_streaming_pipeline', 'true')
+	streaming_default = True if default_streaming is None else default_streaming
+	group_execution.add_argument('--enable-streaming-pipeline', dest = 'enable_streaming_pipeline', help = wording.get('help.enable_streaming_pipeline'), action = 'store_true', default = streaming_default)
+	group_execution.add_argument('--disable-streaming-pipeline', dest = 'enable_streaming_pipeline', help = wording.get('help.disable_streaming_pipeline'), action = 'store_false')
+	job_store.register_job_keys([ 'execution_device_ids', 'execution_providers', 'execution_thread_count', 'enable_streaming_pipeline' ])
 	return program
 
 
