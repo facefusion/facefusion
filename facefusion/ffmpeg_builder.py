@@ -70,6 +70,10 @@ def set_pixel_format(video_encoder : VideoEncoder) -> Commands:
 	return [ '-pix_fmt', 'yuv420p' ]
 
 
+def set_png_fast() -> Commands:
+	return [ '-compression_level', '0', '-pred', '0' ]
+
+
 def set_frame_quality(frame_quality : int) -> Commands:
 	return [ '-q:v', str(frame_quality) ]
 

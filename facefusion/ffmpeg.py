@@ -14,6 +14,8 @@ from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.types import AudioBuffer, AudioEncoder, Commands, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
 from facefusion.vision import detect_video_duration, detect_video_fps, pack_resolution, predict_video_frame_total
 
+_ENCODER_CACHE : Optional[EncoderSet] = None
+
 
 def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
@@ -81,8 +83,10 @@ def log_debug(process : subprocess.Popen[bytes]) -> None:
 
 
 def get_available_encoder_set() -> EncoderSet:
-	available_encoder_set : EncoderSet =\
-	{
+	global _ENCODER_CACHE
+	if _ENCODER_CACHE is not None:
+		return _ENCODER_CACHE
+	available_encoder_set : EncoderSet = {
 		'audio': [],
 		'video': []
 	}
@@ -105,7 +109,22 @@ def get_available_encoder_set() -> EncoderSet:
 				index = facefusion.choices.output_video_encoders.index(video_encoder) #type:ignore[arg-type]
 				available_encoder_set['video'].insert(index, video_encoder) #type:ignore[arg-type]
 
+	_ENCODER_CACHE = available_encoder_set
 	return available_encoder_set
+
+
+def _is_cuda_encoder_preferred(video_encoder : VideoEncoder) -> bool:
+	exec_providers = state_manager.get_item('execution_providers') or []
+	wants_cuda = any(str(provider).lower() in ( 'cuda', 'tensorrt' ) for provider in exec_providers)
+	if not wants_cuda:
+		return False
+	if video_encoder not in [ 'libx264', 'libx264rgb' ]:
+		return False
+	try:
+		available = get_available_encoder_set()
+	except Exception:
+		return False
+	return 'h264_nvenc' in available.get('video', [])
 
 
 def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
@@ -116,9 +135,13 @@ def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_v
 		ffmpeg_builder.set_media_resolution(pack_resolution(temp_video_resolution)),
 		ffmpeg_builder.set_frame_quality(0),
 		ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
-		ffmpeg_builder.prevent_frame_drop(),
-		ffmpeg_builder.set_output(temp_frames_pattern)
+		ffmpeg_builder.prevent_frame_drop()
 	)
+
+	if state_manager.get_item('temp_frame_format') == 'png':
+		commands.extend(ffmpeg_builder.set_png_fast())
+
+	commands.extend(ffmpeg_builder.set_output(temp_frames_pattern))
 
 	with tqdm(total = extract_frame_total, desc = wording.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
@@ -221,6 +244,10 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 	temp_video_path = get_temp_file_path(target_path)
 	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
+
+	if _is_cuda_encoder_preferred(output_video_encoder):
+		output_video_encoder = 'h264_nvenc'
+		state_manager.set_item('output_video_encoder', output_video_encoder)
 
 	output_video_encoder = fix_video_encoder(temp_video_format, output_video_encoder)
 	commands = ffmpeg_builder.chain(

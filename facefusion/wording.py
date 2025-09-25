@@ -216,8 +216,6 @@ WORDING : Dict[str, Any] =\
 		'execution_device_ids': 'specify the devices used for processing',
 		'execution_providers': 'inference using different providers (choices: {choices}, ...)',
 		'execution_thread_count': 'specify the amount of parallel threads while processing',
-		'enable_streaming_pipeline': 'stream decoded frames directly through the pipeline (best for CUDA)',
-		'disable_streaming_pipeline': 'fallback to the legacy temp-frame pipeline',
 		# memory
 		'video_memory_strategy': 'balance fast processing and low VRAM usage',
 		'system_memory_limit': 'limit the available RAM that can be used while processing',

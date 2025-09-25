@@ -87,6 +87,11 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
                 sess_options.execution_mode = ExecutionMode.ORT_PARALLEL
             except Exception:
                 pass
+        else:
+            try:
+                sess_options.enable_cuda_graph = True
+            except AttributeError:
+                pass
 
         if configured_threads:
             sess_options.intra_op_num_threads = configured_threads
