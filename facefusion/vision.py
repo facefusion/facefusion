@@ -70,7 +70,6 @@ def read_static_video_frame(video_path : str, frame_number : int = 0) -> Optiona
 	return read_video_frame(video_path, frame_number)
 
 
-
 def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	if is_video(video_path):
 		video_capture = get_video_capture(video_path)
