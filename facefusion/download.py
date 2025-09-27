@@ -41,7 +41,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 						progress.update(current_size - progress.n)
 
 
-@lru_cache(maxsize = 1024)
+@lru_cache(maxsize = 128)
 def get_static_download_size(url : str) -> int:
 	commands = curl_builder.chain(
 		curl_builder.head(url),
@@ -59,7 +59,7 @@ def get_static_download_size(url : str) -> int:
 	return 0
 
 
-@lru_cache(maxsize = 1024)
+@lru_cache(maxsize = 128)
 def ping_static_url(url : str) -> bool:
 	commands = curl_builder.chain(
 		curl_builder.head(url),
