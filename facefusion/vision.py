@@ -22,7 +22,7 @@ def read_static_images(image_paths : List[str]) -> List[VisionFrame]:
 	return vision_frames
 
 
-@lru_cache(maxsize = 128)
+@lru_cache(maxsize = 64)
 def read_static_image(image_path : str) -> Optional[VisionFrame]:
 	return read_image(image_path)
 
@@ -65,9 +65,10 @@ def restrict_image_resolution(image_path : str, resolution : Resolution) -> Reso
 	return resolution
 
 
-@lru_cache(maxsize = 128)
+@lru_cache(maxsize = 64)
 def read_static_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
 	return read_video_frame(video_path, frame_number)
+
 
 
 def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[VisionFrame]:
