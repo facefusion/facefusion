@@ -1,9 +1,9 @@
 from functools import partial
 
+from facefusion import ffmpeg
 from facefusion import logger, process_manager, state_manager, wording
 from facefusion.audio import create_empty_audio_frame
 from facefusion.content_analyser import analyse_image
-from facefusion.ffmpeg import copy_image, finalize_image
 from facefusion.filesystem import is_image
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path
@@ -11,6 +11,27 @@ from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_image_resolution, pack_resolution, read_static_image, read_static_images, restrict_image_resolution, scale_resolution, write_image
 from facefusion.workflows.core import is_process_stopping
+
+
+def process(start_time : float) -> ErrorCode:
+	tasks =\
+	[
+		setup,
+		prepare_image,
+		process_image,
+		partial(finalize_image, start_time),
+	]
+	process_manager.start()
+
+	for task in tasks:
+		error_code = task() # type:ignore[operator]
+
+		if error_code > 0:
+			process_manager.end()
+			return error_code
+
+	process_manager.end()
+	return 0
 
 
 def setup() -> ErrorCode:
@@ -24,12 +45,12 @@ def setup() -> ErrorCode:
 	return 0
 
 
-def prepare_temp_image() -> ErrorCode:
+def prepare_image() -> ErrorCode:
 	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))  # TODO caching
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
 
 	logger.info(wording.get('copying_image').format(resolution = pack_resolution(temp_image_resolution)), __name__)
-	if copy_image(state_manager.get_item('target_path'), temp_image_resolution):
+	if ffmpeg.copy_image(state_manager.get_item('target_path'), temp_image_resolution):
 		logger.debug(wording.get('copying_image_succeeded'), __name__)
 	else:
 		logger.error(wording.get('copying_image_failed'), __name__)
@@ -69,11 +90,11 @@ def process_image() -> ErrorCode:
 	return 0
 
 
-def finalize_process(start_time : float) -> ErrorCode:
+def finalize_image(start_time : float) -> ErrorCode:
 	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale')) # TODO caching
 
 	logger.info(wording.get('finalizing_image').format(resolution = pack_resolution(output_image_resolution)), __name__)
-	if finalize_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), output_image_resolution):
+	if ffmpeg.finalize_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), output_image_resolution):
 		logger.debug(wording.get('finalizing_image_succeeded'), __name__)
 	else:
 		logger.warn(wording.get('finalizing_image_skipped'), __name__)
@@ -86,25 +107,4 @@ def finalize_process(start_time : float) -> ErrorCode:
 	else:
 		logger.error(wording.get('processing_image_failed'), __name__)
 		return 1
-	return 0
-
-
-def process(start_time : float) -> ErrorCode:
-	tasks =\
-	[
-		setup,
-		prepare_temp_image,
-		process_image,
-		partial(finalize_process, start_time),
-	]
-	process_manager.start()
-
-	for task in tasks:
-		error_code = task() # type:ignore[operator]
-
-		if error_code > 0:
-			process_manager.end()
-			return error_code
-
-	process_manager.end()
 	return 0
