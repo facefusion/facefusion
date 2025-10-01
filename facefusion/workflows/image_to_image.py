@@ -46,7 +46,7 @@ def setup() -> ErrorCode:
 
 
 def prepare_image() -> ErrorCode:
-	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))  # TODO caching
+	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
 
 	logger.info(wording.get('copying_image').format(resolution = pack_resolution(temp_image_resolution)), __name__)
@@ -91,7 +91,7 @@ def process_image() -> ErrorCode:
 
 
 def finalize_image(start_time : float) -> ErrorCode:
-	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale')) # TODO caching
+	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
 
 	logger.info(wording.get('finalizing_image').format(resolution = pack_resolution(output_image_resolution)), __name__)
 	if ffmpeg.finalize_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), output_image_resolution):
