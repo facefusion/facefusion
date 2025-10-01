@@ -4,11 +4,11 @@ from functools import partial
 import numpy
 from tqdm import tqdm
 
+from facefusion import ffmpeg
 from facefusion import logger, process_manager, state_manager, video_manager, wording
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_video
-from facefusion.ffmpeg import extract_frames, merge_video, replace_audio, restore_audio
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
@@ -16,6 +16,29 @@ from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_video_resolution, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
 from facefusion.workflows.core import is_process_stopping
+
+
+def process(start_time : float) -> ErrorCode:
+	tasks =\
+	[
+		setup,
+		extract_frames,
+		process_video,
+		merge_frames,
+		restore_audio,
+		partial(finalize_video, start_time)
+	]
+	process_manager.start()
+
+	for task in tasks:
+		error_code = task() # type:ignore[operator]
+
+		if error_code > 0:
+			process_manager.end()
+			return error_code
+
+	process_manager.end()
+	return 0
 
 
 def setup() -> ErrorCode:
@@ -31,20 +54,19 @@ def setup() -> ErrorCode:
 	return 0
 
 
-def extract_temp_frames() -> ErrorCode:
+def extract_frames() -> ErrorCode:
 	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end')) # TODO caching
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale')) # TODO caching
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps')) # TODO caching
 	logger.info(wording.get('extracting_frames').format(resolution=pack_resolution(temp_video_resolution), fps=temp_video_fps), __name__)
 
-	if extract_frames(state_manager.get_item('target_path'), temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end):
+	if ffmpeg.extract_frames(state_manager.get_item('target_path'), temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end):
 		logger.debug(wording.get('extracting_frames_succeeded'), __name__)
 	else:
 		if is_process_stopping():
 			return 4
 		logger.error(wording.get('extracting_frames_failed'), __name__)
-		process_manager.end()
 		return 1
 	return 0
 
@@ -79,29 +101,27 @@ def process_video() -> ErrorCode:
 			return 4
 	else:
 		logger.error(wording.get('temp_frames_not_found'), __name__)
-		process_manager.end()
 		return 1
 	return 0
 
 
-def merge_temp_frames() -> ErrorCode:
+def merge_frames() -> ErrorCode:
 	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end')) # TODO caching
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale')) # TODO caching
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps')) # TODO caching
 
 	logger.info(wording.get('merging_video').format(resolution = pack_resolution(output_video_resolution), fps = state_manager.get_item('output_video_fps')), __name__)
-	if merge_video(state_manager.get_item('target_path'), temp_video_fps, output_video_resolution, state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
+	if ffmpeg.merge_video(state_manager.get_item('target_path'), temp_video_fps, output_video_resolution, state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
 		logger.debug(wording.get('merging_video_succeeded'), __name__)
 	else:
 		if is_process_stopping():
 			return 4
 		logger.error(wording.get('merging_video_failed'), __name__)
-		process_manager.end()
 		return 1
 	return 0
 
 
-def restore_temp_audio() -> ErrorCode:
+def restore_audio() -> ErrorCode:
 	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end')) # TODO caching
 
 	if state_manager.get_item('output_audio_volume') == 0:
@@ -110,7 +130,7 @@ def restore_temp_audio() -> ErrorCode:
 	else:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		if source_audio_path:
-			if replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
+			if ffmpeg.replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
 				video_manager.clear_video_pool()
 				logger.debug(wording.get('replacing_audio_succeeded'), __name__)
 			else:
@@ -120,7 +140,7 @@ def restore_temp_audio() -> ErrorCode:
 				logger.warn(wording.get('replacing_audio_skipped'), __name__)
 				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
 		else:
-			if restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), trim_frame_start, trim_frame_end):
+			if ffmpeg.restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), trim_frame_start, trim_frame_end):
 				video_manager.clear_video_pool()
 				logger.debug(wording.get('restoring_audio_succeeded'), __name__)
 			else:
@@ -132,7 +152,7 @@ def restore_temp_audio() -> ErrorCode:
 	return 0
 
 
-def finalize_process(start_time : float) -> ErrorCode:
+def finalize_video(start_time : float) -> ErrorCode:
 	logger.debug(wording.get('clearing_temp'), __name__)
 	clear_temp_directory(state_manager.get_item('target_path'))
 
@@ -172,26 +192,3 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 		})
 
 	return write_image(temp_frame_path, temp_vision_frame)
-
-
-def process(start_time : float) -> ErrorCode:
-	tasks =\
-	[
-		setup,
-		extract_temp_frames,
-		process_video,
-		merge_temp_frames,
-		restore_temp_audio,
-		partial(finalize_process, start_time)
-	]
-	process_manager.start()
-
-	for task in tasks:
-		error_code = task() # type:ignore[operator]
-
-		if error_code > 0:
-			process_manager.end()
-			return error_code
-
-	process_manager.end()
-	return 0
