@@ -13,7 +13,7 @@ ComponentName = Literal\
 	'face_debugger_items_checkbox_group',
 	'face_detector_angles_checkbox_group',
 	'face_detector_model_dropdown',
-	'face_detector_pad_factor_slider',
+	'face_detector_margin_slider',
 	'face_detector_score_slider',
 	'face_detector_size_dropdown',
 	'face_editor_eyebrow_direction_slider',

@@ -42,7 +42,7 @@ def before_each() -> None:
 def test_get_one_face_with_retinaface() -> None:
 	state_manager.init_item('face_detector_model', 'retinaface')
 	state_manager.init_item('face_detector_size', '320x320')
-	state_manager.init_item('face_detector_pad_factor', 0.2)
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
 	face_detector.pre_check()
 
 	source_paths =\
@@ -63,7 +63,7 @@ def test_get_one_face_with_retinaface() -> None:
 def test_get_one_face_with_scrfd() -> None:
 	state_manager.init_item('face_detector_model', 'scrfd')
 	state_manager.init_item('face_detector_size', '640x640')
-	state_manager.init_item('face_detector_pad_factor', 0.2)
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
 	face_detector.pre_check()
 
 	source_paths =\
@@ -84,7 +84,7 @@ def test_get_one_face_with_scrfd() -> None:
 def test_get_one_face_with_yoloface() -> None:
 	state_manager.init_item('face_detector_model', 'yoloface')
 	state_manager.init_item('face_detector_size', '640x640')
-	state_manager.init_item('face_detector_pad_factor', 0.2)
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
 	face_detector.pre_check()
 
 	source_paths =\
@@ -105,7 +105,7 @@ def test_get_one_face_with_yoloface() -> None:
 def test_get_one_face_with_yunet() -> None:
 	state_manager.init_item('face_detector_model', 'yunet')
 	state_manager.init_item('face_detector_size', '640x640')
-	state_manager.init_item('face_detector_pad_factor', 0.2)
+	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
 	face_detector.pre_check()
 
 	source_paths =\
