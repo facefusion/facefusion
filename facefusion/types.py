@@ -84,6 +84,7 @@ VoiceChunk : TypeAlias = NDArray[Any]
 Fps : TypeAlias = float
 Duration : TypeAlias = float
 Padding : TypeAlias = Tuple[int, int, int, int]
+Margin : TypeAlias = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
@@ -268,7 +269,7 @@ StateKey = Literal\
 	'face_detector_model',
 	'face_detector_size',
 	'face_detector_angles',
-	'face_detector_pad_factor',
+	'face_detector_margin',
 	'face_detector_score',
 	'face_landmarker_model',
 	'face_landmarker_score',
@@ -338,7 +339,7 @@ State = TypedDict('State',
 	'face_detector_model' : FaceDetectorModel,
 	'face_detector_size' : str,
 	'face_detector_angles' : List[Angle],
-	'face_detector_pad_factor': float,
+	'face_detector_margin': Margin,
 	'face_detector_score' : Score,
 	'face_landmarker_model' : FaceLandmarkerModel,
 	'face_landmarker_score' : Score,

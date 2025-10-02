@@ -112,8 +112,8 @@ WORDING : Dict[str, Any] =\
 		# face detector
 		'face_detector_model': 'choose the model responsible for detecting the faces',
 		'face_detector_size': 'specify the frame size provided to the face detector',
+		'face_detector_margin': 'apply top, right, bottom and left margin to the frame',
 		'face_detector_angles': 'specify the angles to rotate the frame before detecting faces',
-		'face_detector_pad_factor': 'specify the factor to pad the frame before detecting faces',
 		'face_detector_score': 'filter the detected faces based on the confidence score',
 		# face landmarker
 		'face_landmarker_model': 'choose the model responsible for detecting the face landmarks',
@@ -267,7 +267,7 @@ WORDING : Dict[str, Any] =\
 		'face_debugger_items_checkbox_group': 'FACE DEBUGGER ITEMS',
 		'face_detector_angles_checkbox_group': 'FACE DETECTOR ANGLES',
 		'face_detector_model_dropdown': 'FACE DETECTOR MODEL',
-		'face_detector_pad_factor_slider': 'FACE DETECTOR PAD FACTOR',
+		'face_detector_margin_slider': 'FACE DETECTOR MARGIN',
 		'face_detector_score_slider': 'FACE DETECTOR SCORE',
 		'face_detector_size_dropdown': 'FACE DETECTOR SIZE',
 		'face_editor_eyebrow_direction_slider': 'FACE EDITOR EYEBROW DIRECTION',
