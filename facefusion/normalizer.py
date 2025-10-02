@@ -3,7 +3,7 @@ from typing import List, Optional
 from facefusion.types import Fps, Padding
 
 
-def normalize_padding(padding : Optional[List[int]]) -> Optional[Padding]:
+def normalize_space(padding : Optional[List[int]]) -> Optional[Padding]:
 	if padding and len(padding) == 1:
 		return tuple([ padding[0] ] * 4) #type:ignore[return-value]
 	if padding and len(padding) == 2:

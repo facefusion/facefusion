@@ -1,7 +1,7 @@
 from facefusion import state_manager
 from facefusion.filesystem import get_file_name, is_video, resolve_file_paths
 from facefusion.jobs import job_store
-from facefusion.normalizer import normalize_fps, normalize_padding
+from facefusion.normalizer import normalize_fps, normalize_space
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import ApplyStateItem, Args
 from facefusion.vision import detect_video_fps
@@ -55,8 +55,8 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	# face detector
 	apply_state_item('face_detector_model', args.get('face_detector_model'))
 	apply_state_item('face_detector_size', args.get('face_detector_size'))
+	apply_state_item('face_detector_margin', normalize_space(args.get('face_detector_margin')))
 	apply_state_item('face_detector_angles', args.get('face_detector_angles'))
-	apply_state_item('face_detector_pad_factor', args.get('face_detector_pad_factor'))
 	apply_state_item('face_detector_score', args.get('face_detector_score'))
 	# face landmarker
 	apply_state_item('face_landmarker_model', args.get('face_landmarker_model'))
@@ -78,7 +78,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_mask_areas', args.get('face_mask_areas'))
 	apply_state_item('face_mask_regions', args.get('face_mask_regions'))
 	apply_state_item('face_mask_blur', args.get('face_mask_blur'))
-	apply_state_item('face_mask_padding', normalize_padding(args.get('face_mask_padding')))
+	apply_state_item('face_mask_padding', normalize_space(args.get('face_mask_padding')))
 	# voice extractor
 	apply_state_item('voice_extractor_model', args.get('voice_extractor_model'))
 	# frame extraction
