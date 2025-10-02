@@ -9,7 +9,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import create_rotation_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, normalize_bounding_box, transform_bounding_box, transform_points
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Angle, BoundingBox, Detection, DownloadScope, DownloadSet, FaceLandmark5, InferencePool, ModelSet, Score, VisionFrame
+from facefusion.types import Angle, BoundingBox, Detection, DownloadScope, DownloadSet, FaceLandmark5, InferencePool, Margin, ModelSet, Score, VisionFrame
 from facefusion.vision import restrict_frame, unpack_resolution
 
 
@@ -128,10 +128,7 @@ def pre_check() -> bool:
 
 
 def detect_faces(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
-	margin_top = int(vision_frame.shape[0] * state_manager.get_item('face_detector_margin')[0] / 100)
-	margin_right = int(vision_frame.shape[1] * state_manager.get_item('face_detector_margin')[1] / 100)
-	margin_bottom = int(vision_frame.shape[0] * state_manager.get_item('face_detector_margin')[2] / 100)
-	margin_left = int(vision_frame.shape[1] * state_manager.get_item('face_detector_margin')[3] / 100)
+	margin_top, margin_right, margin_bottom, margin_left = prepare_margin(vision_frame)
 	margin_vision_frame = numpy.pad(vision_frame, ((margin_top, margin_bottom), (margin_left, margin_right), (0, 0)))
 	all_bounding_boxes : List[BoundingBox] = []
 	all_face_scores : List[Score] = []
@@ -164,6 +161,14 @@ def detect_faces(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[Sc
 	all_bounding_boxes = [ normalize_bounding_box(all_bounding_box) - numpy.array([ margin_left, margin_top, margin_left, margin_top ]) for all_bounding_box in all_bounding_boxes ]
 	all_face_landmarks_5 = [ all_face_landmark_5 - numpy.array([ margin_left, margin_top ]) for all_face_landmark_5 in all_face_landmarks_5 ]
 	return all_bounding_boxes, all_face_scores, all_face_landmarks_5
+
+
+def prepare_margin(vision_frame : VisionFrame) -> Margin:
+	margin_top = int(vision_frame.shape[0] * state_manager.get_item('face_detector_margin')[0] / 100)
+	margin_right = int(vision_frame.shape[1] * state_manager.get_item('face_detector_margin')[1] / 100)
+	margin_bottom = int(vision_frame.shape[0] * state_manager.get_item('face_detector_margin')[2] / 100)
+	margin_left = int(vision_frame.shape[1] * state_manager.get_item('face_detector_margin')[3] / 100)
+	return margin_top, margin_right, margin_bottom, margin_left
 
 
 def detect_faces_by_angle(vision_frame : VisionFrame, face_angle : Angle) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
