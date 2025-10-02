@@ -12,6 +12,7 @@ from facefusion.uis.types import ComponentOptions
 FACE_DETECTOR_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_DETECTOR_SIZE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_DETECTOR_ANGLES_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
+FACE_DETECTOR_PAD_FACTOR_SLIDER : Optional[gradio.Slider] = None
 FACE_DETECTOR_SCORE_SLIDER : Optional[gradio.Slider] = None
 
 
@@ -19,6 +20,7 @@ def render() -> None:
 	global FACE_DETECTOR_MODEL_DROPDOWN
 	global FACE_DETECTOR_SIZE_DROPDOWN
 	global FACE_DETECTOR_ANGLES_CHECKBOX_GROUP
+	global FACE_DETECTOR_PAD_FACTOR_SLIDER
 	global FACE_DETECTOR_SCORE_SLIDER
 
 	face_detector_size_dropdown_options : ComponentOptions =\
@@ -40,6 +42,13 @@ def render() -> None:
 		choices = facefusion.choices.face_detector_angles,
 		value = state_manager.get_item('face_detector_angles')
 	)
+	FACE_DETECTOR_PAD_FACTOR_SLIDER = gradio.Slider(
+		label = wording.get('uis.face_detector_pad_factor_slider'),
+		value = state_manager.get_item('face_detector_pad_factor'),
+		step = calculate_float_step(facefusion.choices.face_detector_pad_factor_range),
+		minimum = facefusion.choices.face_detector_pad_factor_range[0],
+		maximum = facefusion.choices.face_detector_pad_factor_range[-1]
+	)
 	FACE_DETECTOR_SCORE_SLIDER = gradio.Slider(
 		label = wording.get('uis.face_detector_score_slider'),
 		value = state_manager.get_item('face_detector_score'),
@@ -50,6 +59,7 @@ def render() -> None:
 	register_ui_component('face_detector_model_dropdown', FACE_DETECTOR_MODEL_DROPDOWN)
 	register_ui_component('face_detector_size_dropdown', FACE_DETECTOR_SIZE_DROPDOWN)
 	register_ui_component('face_detector_angles_checkbox_group', FACE_DETECTOR_ANGLES_CHECKBOX_GROUP)
+	register_ui_component('face_detector_pad_factor_slider', FACE_DETECTOR_PAD_FACTOR_SLIDER)
 	register_ui_component('face_detector_score_slider', FACE_DETECTOR_SCORE_SLIDER)
 
 
@@ -57,6 +67,7 @@ def listen() -> None:
 	FACE_DETECTOR_MODEL_DROPDOWN.change(update_face_detector_model, inputs = FACE_DETECTOR_MODEL_DROPDOWN, outputs = [ FACE_DETECTOR_MODEL_DROPDOWN, FACE_DETECTOR_SIZE_DROPDOWN ])
 	FACE_DETECTOR_SIZE_DROPDOWN.change(update_face_detector_size, inputs = FACE_DETECTOR_SIZE_DROPDOWN)
 	FACE_DETECTOR_ANGLES_CHECKBOX_GROUP.change(update_face_detector_angles, inputs = FACE_DETECTOR_ANGLES_CHECKBOX_GROUP, outputs = FACE_DETECTOR_ANGLES_CHECKBOX_GROUP)
+	FACE_DETECTOR_PAD_FACTOR_SLIDER.release(update_face_detector_pad_factor, inputs = FACE_DETECTOR_PAD_FACTOR_SLIDER)
 	FACE_DETECTOR_SCORE_SLIDER.release(update_face_detector_score, inputs = FACE_DETECTOR_SCORE_SLIDER)
 
 
@@ -79,6 +90,10 @@ def update_face_detector_angles(face_detector_angles : Sequence[Angle]) -> gradi
 	face_detector_angles = face_detector_angles or facefusion.choices.face_detector_angles
 	state_manager.set_item('face_detector_angles', face_detector_angles)
 	return gradio.CheckboxGroup(value = state_manager.get_item('face_detector_angles'))
+
+
+def update_face_detector_pad_factor(face_detector_pad_factor : float) -> None:
+	state_manager.set_item('face_detector_pad_factor', face_detector_pad_factor)
 
 
 def update_face_detector_score(face_detector_score : Score) -> None:

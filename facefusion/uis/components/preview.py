@@ -164,6 +164,7 @@ def listen() -> None:
 
 	for ui_component in get_ui_components(
 	[
+		'face_detector_pad_factor_slider',
 		'face_detector_score_slider',
 		'face_landmarker_score_slider'
 	]):

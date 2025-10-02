@@ -56,6 +56,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('face_detector_model', args.get('face_detector_model'))
 	apply_state_item('face_detector_size', args.get('face_detector_size'))
 	apply_state_item('face_detector_angles', args.get('face_detector_angles'))
+	apply_state_item('face_detector_pad_factor', args.get('face_detector_pad_factor'))
 	apply_state_item('face_detector_score', args.get('face_detector_score'))
 	# face landmarker
 	apply_state_item('face_landmarker_model', args.get('face_landmarker_model'))
