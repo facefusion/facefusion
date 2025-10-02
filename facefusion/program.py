@@ -100,8 +100,9 @@ def create_face_detector_program() -> ArgumentParser:
 	face_detector_size_choices = facefusion.choices.face_detector_set.get(known_args.face_detector_model)
 	group_face_detector.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_detector', 'face_detector_size', get_last(face_detector_size_choices)), choices = face_detector_size_choices)
 	group_face_detector.add_argument('--face-detector-angles', help = wording.get('help.face_detector_angles'), type = int, default = config.get_int_list('face_detector', 'face_detector_angles', '0'), choices = facefusion.choices.face_detector_angles, nargs = '+', metavar = 'FACE_DETECTOR_ANGLES')
-	group_face_detector.add_argument('--face-detector-score', help = wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_detector', 'face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_float_metavar(facefusion.choices.face_detector_score_range))
-	job_store.register_step_keys([ 'face_detector_model', 'face_detector_angles', 'face_detector_size', 'face_detector_score' ])
+	group_face_detector.add_argument('--face-detector-pad-factor', help = wording.get('help.face_detector_pad_factor'), type = float, default = config.get_float_value('face_detector', 'face_detector_pad_factor', '0.2'), choices = facefusion.choices.face_detector_pad_factor_range, metavar = create_float_metavar(facefusion.choices.face_detector_pad_factor_range))
+	group_face_detector.add_argument('--face-detector-score', help=wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_detector', 'face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_float_metavar(facefusion.choices.face_detector_score_range))
+	job_store.register_step_keys([ 'face_detector_model', 'face_detector_angles', 'face_detector_size', 'face-detector-pad-factor', 'face_detector_score' ])
 	return program
 
 
