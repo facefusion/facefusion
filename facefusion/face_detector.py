@@ -128,35 +128,38 @@ def pre_check() -> bool:
 
 
 def detect_faces(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
+	face_detector_pad = int(max(vision_frame.shape[:2]) * state_manager.get_item('face_detector_pad_factor'))
+	pad_vision_frame = numpy.pad(vision_frame, ((face_detector_pad, face_detector_pad), (face_detector_pad, face_detector_pad), (0, 0)), mode = 'constant', constant_values = 0)
 	all_bounding_boxes : List[BoundingBox] = []
 	all_face_scores : List[Score] = []
 	all_face_landmarks_5 : List[FaceLandmark5] = []
 
 	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
-		bounding_boxes, face_scores, face_landmarks_5 = detect_with_retinaface(vision_frame, state_manager.get_item('face_detector_size'))
+		bounding_boxes, face_scores, face_landmarks_5 = detect_with_retinaface(pad_vision_frame, state_manager.get_item('face_detector_size'))
 		all_bounding_boxes.extend(bounding_boxes)
 		all_face_scores.extend(face_scores)
 		all_face_landmarks_5.extend(face_landmarks_5)
 
 	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
-		bounding_boxes, face_scores, face_landmarks_5 = detect_with_scrfd(vision_frame, state_manager.get_item('face_detector_size'))
+		bounding_boxes, face_scores, face_landmarks_5 = detect_with_scrfd(pad_vision_frame, state_manager.get_item('face_detector_size'))
 		all_bounding_boxes.extend(bounding_boxes)
 		all_face_scores.extend(face_scores)
 		all_face_landmarks_5.extend(face_landmarks_5)
 
 	if state_manager.get_item('face_detector_model') in [ 'many', 'yolo_face' ]:
-		bounding_boxes, face_scores, face_landmarks_5 = detect_with_yolo_face(vision_frame, state_manager.get_item('face_detector_size'))
+		bounding_boxes, face_scores, face_landmarks_5 = detect_with_yolo_face(pad_vision_frame, state_manager.get_item('face_detector_size'))
 		all_bounding_boxes.extend(bounding_boxes)
 		all_face_scores.extend(face_scores)
 		all_face_landmarks_5.extend(face_landmarks_5)
 
 	if state_manager.get_item('face_detector_model') == 'yunet':
-		bounding_boxes, face_scores, face_landmarks_5 = detect_with_yunet(vision_frame, state_manager.get_item('face_detector_size'))
+		bounding_boxes, face_scores, face_landmarks_5 = detect_with_yunet(pad_vision_frame, state_manager.get_item('face_detector_size'))
 		all_bounding_boxes.extend(bounding_boxes)
 		all_face_scores.extend(face_scores)
 		all_face_landmarks_5.extend(face_landmarks_5)
 
-	all_bounding_boxes = [ normalize_bounding_box(all_bounding_box) for all_bounding_box in all_bounding_boxes ]
+	all_bounding_boxes = [ normalize_bounding_box(all_bounding_box) - face_detector_pad for all_bounding_box in all_bounding_boxes ]
+	all_face_landmarks_5 = [ all_face_landmark_5 - face_detector_pad for all_face_landmark_5 in all_face_landmarks_5 ]
 	return all_bounding_boxes, all_face_scores, all_face_landmarks_5
 
 
