@@ -164,10 +164,10 @@ def detect_faces(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[Sc
 
 
 def prepare_margin(vision_frame : VisionFrame) -> Margin:
-	margin_top = int(vision_frame.shape[0] * state_manager.get_item('face_detector_margin')[0] / 100)
-	margin_right = int(vision_frame.shape[1] * state_manager.get_item('face_detector_margin')[1] / 100)
-	margin_bottom = int(vision_frame.shape[0] * state_manager.get_item('face_detector_margin')[2] / 100)
-	margin_left = int(vision_frame.shape[1] * state_manager.get_item('face_detector_margin')[3] / 100)
+	margin_top = int(vision_frame.shape[0] * numpy.interp(state_manager.get_item('face_detector_margin')[0], [ 0, 100 ], [ 0, 0.5 ]))
+	margin_right = int(vision_frame.shape[1] * numpy.interp(state_manager.get_item('face_detector_margin')[1], [ 0, 100 ], [ 0, 0.5 ]))
+	margin_bottom = int(vision_frame.shape[0] * numpy.interp(state_manager.get_item('face_detector_margin')[2], [ 0, 100 ], [ 0, 0.5 ]))
+	margin_left = int(vision_frame.shape[1] * numpy.interp(state_manager.get_item('face_detector_margin')[3], [ 0, 100 ], [ 0, 0.5 ]))
 	return margin_top, margin_right, margin_bottom, margin_left
 
 
