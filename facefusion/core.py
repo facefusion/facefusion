@@ -85,14 +85,14 @@ def route(args : Args) -> None:
 	if state_manager.get_item('command') == 'headless-run':
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
-		error_core = process_headless(args)
-		hard_exit(error_core)
+		error_code = process_headless(args)
+		hard_exit(error_code)
 
 	if state_manager.get_item('command') == 'batch-run':
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)
-		error_core = process_batch(args)
-		hard_exit(error_core)
+		error_code = process_batch(args)
+		hard_exit(error_code)
 
 	if state_manager.get_item('command') in [ 'job-run', 'job-run-all', 'job-retry', 'job-retry-all' ]:
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
