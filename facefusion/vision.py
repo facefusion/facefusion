@@ -74,7 +74,7 @@ def read_video_frame(video_path : str, frame_number : int = 0) -> Optional[Visio
 	if is_video(video_path):
 		video_capture = get_video_capture(video_path)
 
-		if video_capture.isOpened():
+		if video_capture and video_capture.isOpened():
 			frame_total = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
 
 			with thread_semaphore():
@@ -91,7 +91,7 @@ def count_video_frame_total(video_path : str) -> int:
 	if is_video(video_path):
 		video_capture = get_video_capture(video_path)
 
-		if video_capture.isOpened():
+		if video_capture and video_capture.isOpened():
 			with thread_semaphore():
 				video_frame_total = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 				return video_frame_total
@@ -111,7 +111,7 @@ def detect_video_fps(video_path : str) -> Optional[float]:
 	if is_video(video_path):
 		video_capture = get_video_capture(video_path)
 
-		if video_capture.isOpened():
+		if video_capture and video_capture.isOpened():
 			with thread_semaphore():
 				video_fps = video_capture.get(cv2.CAP_PROP_FPS)
 				return video_fps
@@ -164,7 +164,7 @@ def detect_video_resolution(video_path : str) -> Optional[Resolution]:
 	if is_video(video_path):
 		video_capture = get_video_capture(video_path)
 
-		if video_capture.isOpened():
+		if video_capture and video_capture.isOpened():
 			with thread_semaphore():
 				width = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
 				height = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
