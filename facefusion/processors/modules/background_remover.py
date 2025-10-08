@@ -1,0 +1,167 @@
+from argparse import ArgumentParser
+from functools import lru_cache
+from typing import List
+
+import cv2
+import numpy
+
+import facefusion.jobs.job_manager
+import facefusion.jobs.job_store
+from facefusion import config, content_analyser, inference_manager, logger, state_manager, video_manager, wording
+from facefusion.common_helper import is_macos
+from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.execution import has_execution_provider
+from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.processors import choices as processors_choices
+from facefusion.processors.types import BackgroundRemoverInputs
+from facefusion.program_helper import find_argument_group
+from facefusion.thread_helper import thread_semaphore
+from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.vision import read_static_image, read_static_video_frame
+
+
+@lru_cache()
+def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
+	return\
+	{
+		'birefnet_general_244':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/BiRefNet-general-epoch_244.hash',
+					'path': resolve_relative_path('../.assets/models/BiRefNet-general-epoch_244.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/BiRefNet-general-epoch_244.onnx',
+					'path': resolve_relative_path('../.assets/models/BiRefNet-general-epoch_244.onnx')
+				}
+			},
+			'size': (1024, 1024),
+			'mean': [ 0.0, 0.0, 0.0 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		}
+	}
+
+
+def get_inference_pool() -> InferencePool:
+	model_names = [ state_manager.get_item('background_remover_model') ]
+	model_source_set = get_model_options().get('sources')
+
+	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
+
+
+def clear_inference_pool() -> None:
+	model_names = [ state_manager.get_item('background_remover_model') ]
+	inference_manager.clear_inference_pool(__name__, model_names)
+
+
+def resolve_execution_providers() -> List[ExecutionProvider]:
+	if is_macos() and has_execution_provider('coreml'):
+		return [ 'cpu' ]
+	return state_manager.get_item('execution_providers')
+
+
+def get_model_options() -> ModelOptions:
+	model_name = state_manager.get_item('background_remover_model')
+	return create_static_model_set('full').get(model_name)
+
+
+def register_args(program : ArgumentParser) -> None:
+	group_processors = find_argument_group(program, 'processors')
+	if group_processors:
+		group_processors.add_argument('--background-remover-model', help = wording.get('help.background_remover_model'), default = config.get_str_value('processors', 'background_remover_model', 'birefnet_general_244'), choices = processors_choices.background_remover_models)
+		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model' ])
+
+
+def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
+	apply_state_item('background_remover_model', args.get('background_remover_model'))
+
+
+def pre_check() -> bool:
+	model_hash_set = get_model_options().get('hashes')
+	model_source_set = get_model_options().get('sources')
+
+	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
+
+
+def pre_process(mode : ProcessMode) -> bool:
+	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
+		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
+		return False
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
+		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
+		return False
+	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
+		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
+		return False
+	return True
+
+
+def post_process() -> None:
+	read_static_image.cache_clear()
+	read_static_video_frame.cache_clear()
+	video_manager.clear_video_pool()
+	if state_manager.get_item('video_memory_strategy') in [ 'strict', 'moderate' ]:
+		clear_inference_pool()
+	if state_manager.get_item('video_memory_strategy') == 'strict':
+		content_analyser.clear_inference_pool()
+
+
+def remove_background(temp_vision_frame : VisionFrame) -> VisionFrame:
+	mask_frame = forward(prepare_temp_frame(temp_vision_frame))
+	mask_frame = normalize_mask_frame(mask_frame)
+	temp_vision_frame = replace_with_color(temp_vision_frame, mask_frame)
+	return temp_vision_frame
+
+
+def forward(temp_vision_frame : VisionFrame) -> VisionFrame:
+	frame_colorizer = get_inference_pool().get('background_remover')
+
+	with thread_semaphore():
+		temp_vision_frame = frame_colorizer.run(None,
+		{
+			'input_image': temp_vision_frame
+		})[0]
+
+	return temp_vision_frame
+
+
+def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
+	model_size = get_model_options().get('size')
+	model_mean = get_model_options().get('mean')
+	model_standard_deviation = get_model_options().get('standard_deviation')
+
+	temp_vision_frame = cv2.resize(temp_vision_frame, model_size)
+	temp_vision_frame = temp_vision_frame[:, :, ::-1] / 255.0
+	temp_vision_frame = (temp_vision_frame - model_mean) / model_standard_deviation
+	temp_vision_frame = temp_vision_frame.transpose(2, 0, 1)
+	temp_vision_frame = numpy.expand_dims(temp_vision_frame, axis = 0).astype(numpy.float32)
+	return temp_vision_frame
+
+
+def normalize_mask_frame(mask_frame : Mask) -> Mask:
+	mask_frame = numpy.squeeze(mask_frame) * 255
+	mask_frame = numpy.clip(mask_frame, 0, 255).astype(numpy.uint8)
+	return mask_frame
+
+
+def replace_with_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -> VisionFrame:
+	mask_frame = cv2.resize(mask_frame, temp_vision_frame.shape[:2][::-1])
+	mask_frame = mask_frame.astype(numpy.float32) / 255
+	mask_frame = numpy.expand_dims(mask_frame, axis = 2)
+	green_frame = numpy.zeros_like(temp_vision_frame)
+	green_frame[:, :, 1] = 255
+	temp_vision_frame = temp_vision_frame * mask_frame + green_frame * (1 - mask_frame)
+	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
+	return temp_vision_frame
+
+
+def process_frame(inputs : BackgroundRemoverInputs) -> VisionFrame:
+	temp_vision_frame = inputs.get('temp_vision_frame')
+	return remove_background(temp_vision_frame)
