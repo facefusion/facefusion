@@ -5,6 +5,7 @@ from numpy.typing import NDArray
 from facefusion.types import AppContext, AudioFrame, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
+BackgroundRemoverModel = Literal['birefnet_general_244']
 DeepSwapperModel : TypeAlias = str
 ExpressionRestorerModel = Literal['live_portrait']
 ExpressionRestorerArea = Literal['upper-face', 'lower-face']
@@ -21,6 +22,11 @@ FaceSwapperSet : TypeAlias = Dict[FaceSwapperModel, List[str]]
 AgeModifierInputs = TypedDict('AgeModifierInputs',
 {
 	'reference_vision_frame' : VisionFrame,
+	'target_vision_frame' : VisionFrame,
+	'temp_vision_frame' : VisionFrame
+})
+BackgroundRemoverInputs = TypedDict('BackgroundRemoverInputs',
+{
 	'target_vision_frame' : VisionFrame,
 	'temp_vision_frame' : VisionFrame
 })
@@ -99,6 +105,7 @@ ProcessorStateKey = Literal\
 [
 	'age_modifier_model',
 	'age_modifier_direction',
+	'background_remover_model',
 	'deep_swapper_model',
 	'deep_swapper_morph',
 	'expression_restorer_model',
@@ -138,6 +145,7 @@ ProcessorState = TypedDict('ProcessorState',
 {
 	'age_modifier_model' : AgeModifierModel,
 	'age_modifier_direction' : int,
+	'background_remover_model': BackgroundRemoverModel,
 	'deep_swapper_model' : DeepSwapperModel,
 	'deep_swapper_morph' : int,
 	'expression_restorer_model' : ExpressionRestorerModel,

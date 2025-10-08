@@ -12,10 +12,10 @@ from facefusion.common_helper import is_linux, is_windows
 
 ONNXRUNTIME_SET =\
 {
-	'default': ('onnxruntime', '1.23.0')
+	'default': ('onnxruntime', '1.22.1')
 }
 if is_windows() or is_linux():
-	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.23.0')
+	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.22.1')
 	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.22.0')
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.17.3')
