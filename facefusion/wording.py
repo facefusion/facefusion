@@ -252,6 +252,7 @@ WORDING : Dict[str, Any] =\
 		'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
 		'age_modifier_model_dropdown': 'AGE MODIFIER MODEL',
 		'apply_button': 'APPLY',
+		'background_remover_model_dropdown': 'BACKGROUND REMOVER MODEL',
 		'benchmark_mode_dropdown': 'BENCHMARK MODE',
 		'benchmark_cycle_count_slider': 'BENCHMARK CYCLE COUNT',
 		'benchmark_resolutions_checkbox_group': 'BENCHMARK RESOLUTIONS',
