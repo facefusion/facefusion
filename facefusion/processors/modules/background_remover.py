@@ -30,21 +30,65 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/BiRefNet-general-epoch_244.hash',
-					'path': resolve_relative_path('../.assets/models/BiRefNet-general-epoch_244.hash')
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_general_244.hash',
+					'path': resolve_relative_path('../.assets/models/birefnet_general_244.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/BiRefNet-general-epoch_244.onnx',
-					'path': resolve_relative_path('../.assets/models/BiRefNet-general-epoch_244.onnx')
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_general_244.onnx',
+					'path': resolve_relative_path('../.assets/models/birefnet_general_244.onnx')
 				}
 			},
 			'size': (1024, 1024),
 			'mean': [ 0.0, 0.0, 0.0 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		},
+		'rmbg_1.4':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/rembg_1.4.hash',
+					'path': resolve_relative_path('../.assets/models/rembg_1.4.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/rembg_1.4.onnx',
+					'path': resolve_relative_path('../.assets/models/rembg_1.4.onnx')
+				}
+			},
+			'size': (1024, 1024),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		},
+		'rmbg_2.0':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/rembg_2.0.hash',
+					'path': resolve_relative_path('../.assets/models/rembg_2.0.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/rembg_2.0.onnx',
+					'path': resolve_relative_path('../.assets/models/rembg_2.0.onnx')
+				}
+			},
+			'size': (1024, 1024),
+			'mean': [ 0.485, 0.456, 0.406 ],
+			'standard_deviation': [ 0.229, 0.224, 0.225 ]
 		}
 	}
 
@@ -75,7 +119,7 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--background-remover-model', help = wording.get('help.background_remover_model'), default = config.get_str_value('processors', 'background_remover_model', 'birefnet_general_244'), choices = processors_choices.background_remover_models)
+		group_processors.add_argument('--background-remover-model', help = wording.get('help.background_remover_model'), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = processors_choices.background_remover_models)
 		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model' ])
 
 
@@ -126,7 +170,7 @@ def forward(temp_vision_frame : VisionFrame) -> VisionFrame:
 	with thread_semaphore():
 		temp_vision_frame = frame_colorizer.run(None,
 		{
-			'input_image': temp_vision_frame
+			'input': temp_vision_frame
 		})[0]
 
 	return temp_vision_frame
