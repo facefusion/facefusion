@@ -15,12 +15,12 @@ ONNXRUNTIME_SET =\
 	'default': ('onnxruntime', '1.22.1')
 }
 if is_windows() or is_linux():
-	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.22.1')
+	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.22.0')
 	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.22.0')
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.17.3')
 if is_linux():
-	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.22.1')
+	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.21.0')
 
 
 def cli() -> None:
