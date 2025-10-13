@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Literal, TypeAlias, TypedDict
 
 from numpy.typing import NDArray
 
-from facefusion.types import AppContext, AudioFrame, VisionFrame
+from facefusion.types import AppContext, AudioFrame, Color, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
 BackgroundRemoverModel = Literal['birefnet_general_244', 'rmbg_1.4', 'rmbg_2.0']
@@ -106,6 +106,7 @@ ProcessorStateKey = Literal\
 	'age_modifier_model',
 	'age_modifier_direction',
 	'background_remover_model',
+	'background_remover_color',
 	'deep_swapper_model',
 	'deep_swapper_morph',
 	'expression_restorer_model',
@@ -146,6 +147,7 @@ ProcessorState = TypedDict('ProcessorState',
 	'age_modifier_model' : AgeModifierModel,
 	'age_modifier_direction' : int,
 	'background_remover_model': BackgroundRemoverModel,
+	'background_remover_color' : Color,
 	'deep_swapper_model' : DeepSwapperModel,
 	'deep_swapper_morph' : int,
 	'expression_restorer_model' : ExpressionRestorerModel,

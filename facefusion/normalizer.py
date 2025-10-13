@@ -1,6 +1,18 @@
 from typing import List, Optional
 
-from facefusion.types import Fps, Padding
+from facefusion.types import Color, Fps, Padding
+
+
+def normalize_color(channels : Optional[List[int]]) -> Optional[Color]:
+	if channels and len(channels) == 1:
+		return tuple([ channels[0], channels[0], channels[0], 255 ]) #type:ignore[return-value]
+	if channels and len(channels) == 2:
+		return tuple([ channels[0], channels[1], channels[0], 255 ]) #type:ignore[return-value]
+	if channels and len(channels) == 3:
+		return tuple([ channels[0], channels[1], channels[2], 255 ]) #type:ignore[return-value]
+	if channels and len(channels) == 4:
+		return tuple(channels) #type:ignore[return-value]
+	return None
 
 
 def normalize_space(padding : Optional[List[int]]) -> Optional[Padding]:
