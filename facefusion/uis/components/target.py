@@ -7,6 +7,7 @@ from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import is_image, is_video
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.types import ComponentOptions, File
+from facefusion.video_manager import VIDEO_POOL_SET
 
 TARGET_FILE : Optional[gradio.File] = None
 TARGET_IMAGE : Optional[gradio.Image] = None
@@ -58,6 +59,12 @@ def update(file : File) -> Tuple[gradio.Image, gradio.Video]:
 		return gradio.Image(value = file.name, visible = True), gradio.Video(value = None, visible = False)
 
 	if file and is_video(file.name):
+		capture = VIDEO_POOL_SET.get('capture')
+		video_capture = capture.get(file.name)
+		if (video_capture):
+			video_capture.release()
+			capture.pop(file.name, None)
+		#
 		state_manager.set_item('target_path', file.name)
 		return gradio.Image(value = None, visible = False), gradio.Video(value = file.name, visible = True)
 
