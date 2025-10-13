@@ -139,6 +139,7 @@ def listen() -> None:
 	[
 		'age_modifier_model_dropdown',
 		'background_remover_model_dropdown',
+		'background_remover_color_dropdown',
 		'deep_swapper_model_dropdown',
 		'expression_restorer_model_dropdown',
 		'processors_checkbox_group',

@@ -6,6 +6,7 @@ ComponentName = Literal\
 	'age_modifier_direction_slider',
 	'age_modifier_model_dropdown',
 	'background_remover_model_dropdown',
+	'background_remover_color_dropdown',
 	'deep_swapper_model_dropdown',
 	'deep_swapper_morph_slider',
 	'expression_restorer_factor_slider',
