@@ -83,6 +83,7 @@ VoiceChunk : TypeAlias = NDArray[Any]
 
 Fps : TypeAlias = float
 Duration : TypeAlias = float
+Color : TypeAlias = Tuple[int, int, int, int]
 Padding : TypeAlias = Tuple[int, int, int, int]
 Margin : TypeAlias = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']

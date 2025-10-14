@@ -12,6 +12,7 @@ from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.normalizer import normalize_color
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import BackgroundRemoverInputs
 from facefusion.program_helper import find_argument_group
@@ -120,11 +121,13 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--background-remover-model', help = wording.get('help.background_remover_model'), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = processors_choices.background_remover_models)
-		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model' ])
+		group_processors.add_argument('--background-remover-color', help = wording.get('help.background_remover_color'), type = int, default = config.get_int_list('processors', 'background_remover_color', '0 255 0 255'), nargs = '+')
+		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model', 'background_remover_color' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('background_remover_model', args.get('background_remover_model'))
+	apply_state_item('background_remover_color', normalize_color(args.get('background_remover_color')))
 
 
 def pre_check() -> bool:
@@ -160,7 +163,7 @@ def post_process() -> None:
 def remove_background(temp_vision_frame : VisionFrame) -> VisionFrame:
 	mask_frame = forward(prepare_temp_frame(temp_vision_frame))
 	mask_frame = normalize_mask_frame(mask_frame)
-	temp_vision_frame = replace_with_color(temp_vision_frame, mask_frame)
+	temp_vision_frame = apply_background_color(temp_vision_frame, mask_frame)
 	return temp_vision_frame
 
 
@@ -195,13 +198,16 @@ def normalize_mask_frame(mask_frame : Mask) -> Mask:
 	return mask_frame
 
 
-def replace_with_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -> VisionFrame:
+def apply_background_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -> VisionFrame:
+	background_remover_color = state_manager.get_item('background_remover_color')
 	mask_frame = cv2.resize(mask_frame, temp_vision_frame.shape[:2][::-1])
 	mask_frame = mask_frame.astype(numpy.float32) / 255
 	mask_frame = numpy.expand_dims(mask_frame, axis = 2)
-	green_frame = numpy.zeros_like(temp_vision_frame)
-	green_frame[:, :, 1] = 255
-	temp_vision_frame = temp_vision_frame * mask_frame + green_frame * (1 - mask_frame)
+	color_frame = numpy.zeros_like(temp_vision_frame)
+	color_frame[:, :, 0] = background_remover_color[2]
+	color_frame[:, :, 1] = background_remover_color[1]
+	color_frame[:, :, 2] = background_remover_color[0]
+	temp_vision_frame = temp_vision_frame * mask_frame + color_frame * (1 - mask_frame)
 	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
 	return temp_vision_frame
 
@@ -209,3 +215,4 @@ def replace_with_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -> Vi
 def process_frame(inputs : BackgroundRemoverInputs) -> VisionFrame:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	return remove_background(temp_vision_frame)
+
