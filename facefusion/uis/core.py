@@ -73,8 +73,9 @@ def init() -> None:
 	os.environ['GRADIO_TEMP_DIR'] = os.path.join(state_manager.get_item('temp_path'), 'gradio')
 
 	warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
-	gradio.processing_utils._check_allowed = uis_overrides.check_allowed #type:ignore
+	gradio.processing_utils._check_allowed = uis_overrides.mock
 	gradio.processing_utils.convert_video_to_playable_mp4 = uis_overrides.convert_video_to_playable_mp4
+	gradio.components.Number.raise_if_out_of_bounds = uis_overrides.mock
 
 
 def launch() -> None:

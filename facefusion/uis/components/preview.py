@@ -90,6 +90,10 @@ def listen() -> None:
 
 	for ui_component in get_ui_components(
 	[
+		'background_remover_color_red_number',
+		'background_remover_color_green_number',
+		'background_remover_color_blue_number',
+		'background_remover_color_alpha_number',
 		'face_debugger_items_checkbox_group',
 		'frame_colorizer_size_dropdown',
 		'face_mask_types_checkbox_group',
@@ -139,7 +143,6 @@ def listen() -> None:
 	[
 		'age_modifier_model_dropdown',
 		'background_remover_model_dropdown',
-		'background_remover_color_dropdown',
 		'deep_swapper_model_dropdown',
 		'expression_restorer_model_dropdown',
 		'processors_checkbox_group',

@@ -2,6 +2,7 @@ from facefusion import ffmpeg_builder
 from facefusion.ffmpeg import run_ffmpeg
 from facefusion.filesystem import get_file_size
 from facefusion.temp_helper import create_temp_directory, get_temp_file_path
+from facefusion.uis.types import MockArgs
 
 
 def convert_video_to_playable_mp4(video_path : str) -> str:
@@ -26,5 +27,5 @@ def convert_video_to_playable_mp4(video_path : str) -> str:
 	return video_path
 
 
-def check_allowed(path : str, check_in_upload_folder : bool) -> None:
-	return None
+def mock(*args : MockArgs, **kwargs : MockArgs) -> None:
+	pass
