@@ -100,9 +100,4 @@ def update_background_remover_model(background_remover_model : BackgroundRemover
 
 
 def update_background_remover_color(red : int, green : int, blue : int, alpha : int) -> None:
-	red = max(0, min(255, int(red)))
-	green = max(0, min(255, int(green)))
-	blue = max(0, min(255, int(blue)))
-	alpha = max(0, min(255, int(alpha)))
-
-	state_manager.set_item('background_remover_color', (red, green, blue, alpha))
+	state_manager.set_item('background_remover_color', (int(red), int(green), int(blue), int(alpha)))
