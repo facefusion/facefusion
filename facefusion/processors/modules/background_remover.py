@@ -90,6 +90,204 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'size': (1024, 1024),
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
+		},
+		'ben2':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/ben2.hash',
+					'path': resolve_relative_path('../.assets/models/ben2.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/ben2.onnx',
+					'path': resolve_relative_path('../.assets/models/ben2.onnx')
+				}
+			},
+			'size': (1024, 1024),
+			'mean': [ 0.0, 0.0, 0.0 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		},
+		'birefnet_portrait':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_portrait.hash',
+					'path': resolve_relative_path('../.assets/models/birefnet_portrait.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_portrait.onnx',
+					'path': resolve_relative_path('../.assets/models/birefnet_portrait.onnx')
+				}
+			},
+			'size': (1024, 1024),
+			'mean': [ 0.0, 0.0, 0.0 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		},
+		'birefnet_swin_tiny':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_swin_tiny.hash',
+					'path': resolve_relative_path('../.assets/models/birefnet_swin_tiny.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_swin_tiny.onnx',
+					'path': resolve_relative_path('../.assets/models/birefnet_swin_tiny.onnx')
+				}
+			},
+			'size': (1024, 1024),
+			'mean': [ 0.0, 0.0, 0.0 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		},
+		'isnet_general':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/isnet-general-use.hash',
+					'path': resolve_relative_path('../.assets/models/isnet-general-use.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/isnet-general-use.onnx',
+					'path': resolve_relative_path('../.assets/models/isnet-general-use.onnx')
+				}
+			},
+			'size': (1024, 1024),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		},
+		'modnet':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/modnet.hash',
+					'path': resolve_relative_path('../.assets/models/modnet.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/modnet.onnx',
+					'path': resolve_relative_path('../.assets/models/modnet.onnx')
+				}
+			},
+			'size': (512, 512),
+			'mean': [ 0.5, 0.5, 0.5 ],
+			'standard_deviation': [ 0.5, 0.5, 0.5 ]
+		},
+		'silueta':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/silueta.hash',
+					'path': resolve_relative_path('../.assets/models/silueta.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/silueta.onnx',
+					'path': resolve_relative_path('../.assets/models/silueta.onnx')
+				}
+			},
+			'size': (320, 320),
+			'mean': [ 0.485, 0.456, 0.406 ],
+			'standard_deviation': [ 0.229, 0.224, 0.225 ]
+		},
+		'u2net':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2net.hash',
+					'path': resolve_relative_path('../.assets/models/u2net.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2net.onnx',
+					'path': resolve_relative_path('../.assets/models/u2net.onnx')
+				}
+			},
+			'size': (320, 320),
+			'mean': [ 0.485, 0.456, 0.406 ],
+			'standard_deviation': [ 0.229, 0.224, 0.225 ]
+		},
+		'u2net_human_seg':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2net_human_seg.hash',
+					'path': resolve_relative_path('../.assets/models/u2net_human_seg.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2net_human_seg.onnx',
+					'path': resolve_relative_path('../.assets/models/u2net_human_seg.onnx')
+				}
+			},
+			'size': (320, 320),
+			'mean': [ 0.485, 0.456, 0.406 ],
+			'standard_deviation': [ 0.229, 0.224, 0.225 ]
+		},
+		'u2netp':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2netp.hash',
+					'path': resolve_relative_path('../.assets/models/u2netp.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2netp.onnx',
+					'path': resolve_relative_path('../.assets/models/u2netp.onnx')
+				}
+			},
+			'size': (320, 320),
+			'mean': [ 0.485, 0.456, 0.406 ],
+			'standard_deviation': [ 0.229, 0.224, 0.225 ]
 		}
 	}
 
