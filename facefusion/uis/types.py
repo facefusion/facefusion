@@ -95,3 +95,5 @@ JobManagerAction = Literal['job-create', 'job-submit', 'job-delete', 'job-add-st
 JobRunnerAction = Literal['job-run', 'job-run-all', 'job-retry', 'job-retry-all']
 
 PreviewMode = Literal[ 'default', 'frame-by-frame', 'face-by-face' ]
+
+MockArgs : TypeAlias = Any
