@@ -15,15 +15,15 @@ def normalize_color(channels : Optional[List[int]]) -> Optional[Color]:
 	return None
 
 
-def normalize_space(padding : Optional[List[int]]) -> Optional[Padding]:
-	if padding and len(padding) == 1:
-		return tuple([ padding[0] ] * 4) #type:ignore[return-value]
-	if padding and len(padding) == 2:
-		return tuple([ padding[0], padding[1], padding[0], padding[1] ]) #type:ignore[return-value]
-	if padding and len(padding) == 3:
-		return tuple([ padding[0], padding[1], padding[2], padding[1] ]) #type:ignore[return-value]
-	if padding and len(padding) == 4:
-		return tuple(padding) #type:ignore[return-value]
+def normalize_space(spaces : Optional[List[int]]) -> Optional[Padding]:
+	if spaces and len(spaces) == 1:
+		return tuple([spaces[0]] * 4) #type:ignore[return-value]
+	if spaces and len(spaces) == 2:
+		return tuple([spaces[0], spaces[1], spaces[0], spaces[1]]) #type:ignore[return-value]
+	if spaces and len(spaces) == 3:
+		return tuple([spaces[0], spaces[1], spaces[2], spaces[1]]) #type:ignore[return-value]
+	if spaces and len(spaces) == 4:
+		return tuple(spaces) #type:ignore[return-value]
 	return None
 
 
