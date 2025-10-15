@@ -31,39 +31,41 @@ def render() -> None:
 		value = state_manager.get_item('background_remover_model'),
 		visible = has_background_remover
 	)
-	with gradio.Row():
-		BACKGROUND_REMOVER_COLOR_RED_NUMBER = gradio.Number(
-			label = wording.get('uis.background_remover_color_red_number'),
-			value = background_remover_color[0],
-			minimum = processors_choices.background_remover_color_range[0],
-			maximum = processors_choices.background_remover_color_range[-1],
-			step = calculate_int_step(processors_choices.background_remover_color_range),
-			visible = has_background_remover,
-		)
-		BACKGROUND_REMOVER_COLOR_GREEN_NUMBER = gradio.Number(
-			label = wording.get('uis.background_remover_color_green_number'),
-			value = background_remover_color[1],
-			minimum = processors_choices.background_remover_color_range[0],
-			maximum = processors_choices.background_remover_color_range[-1],
-			step = calculate_int_step(processors_choices.background_remover_color_range),
-			visible = has_background_remover,
-		)
-		BACKGROUND_REMOVER_COLOR_BLUE_NUMBER = gradio.Number(
-			label = wording.get('uis.background_remover_color_blue_number'),
-			value = background_remover_color[2],
-			minimum = processors_choices.background_remover_color_range[0],
-			maximum = processors_choices.background_remover_color_range[-1],
-			step = calculate_int_step(processors_choices.background_remover_color_range),
-			visible = has_background_remover,
-		)
-		BACKGROUND_REMOVER_COLOR_ALPHA_NUMBER = gradio.Number(
-			label = wording.get('uis.background_remover_color_alpha_number'),
-			value = background_remover_color[3],
-			minimum = processors_choices.background_remover_color_range[0],
-			maximum = processors_choices.background_remover_color_range[-1],
-			step = calculate_int_step(processors_choices.background_remover_color_range),
-			visible = has_background_remover,
-		)
+	with gradio.Group():
+		with gradio.Row():
+			BACKGROUND_REMOVER_COLOR_RED_NUMBER = gradio.Number(
+				label = wording.get('uis.background_remover_color_red_number'),
+				value = background_remover_color[0],
+				minimum = processors_choices.background_remover_color_range[0],
+				maximum = processors_choices.background_remover_color_range[-1],
+				step = calculate_int_step(processors_choices.background_remover_color_range),
+				visible = has_background_remover,
+			)
+			BACKGROUND_REMOVER_COLOR_GREEN_NUMBER = gradio.Number(
+				label = wording.get('uis.background_remover_color_green_number'),
+				value = background_remover_color[1],
+				minimum = processors_choices.background_remover_color_range[0],
+				maximum = processors_choices.background_remover_color_range[-1],
+				step = calculate_int_step(processors_choices.background_remover_color_range),
+				visible = has_background_remover,
+			)
+		with gradio.Row():
+			BACKGROUND_REMOVER_COLOR_BLUE_NUMBER = gradio.Number(
+				label = wording.get('uis.background_remover_color_blue_number'),
+				value = background_remover_color[2],
+				minimum = processors_choices.background_remover_color_range[0],
+				maximum = processors_choices.background_remover_color_range[-1],
+				step = calculate_int_step(processors_choices.background_remover_color_range),
+				visible = has_background_remover,
+			)
+			BACKGROUND_REMOVER_COLOR_ALPHA_NUMBER = gradio.Number(
+				label = wording.get('uis.background_remover_color_alpha_number'),
+				value = background_remover_color[3],
+				minimum = processors_choices.background_remover_color_range[0],
+				maximum = processors_choices.background_remover_color_range[-1],
+				step = calculate_int_step(processors_choices.background_remover_color_range),
+				visible = has_background_remover,
+			)
 	register_ui_component('background_remover_model_dropdown', BACKGROUND_REMOVER_MODEL_DROPDOWN)
 	register_ui_component('background_remover_color_red_number', BACKGROUND_REMOVER_COLOR_RED_NUMBER)
 	register_ui_component('background_remover_color_green_number', BACKGROUND_REMOVER_COLOR_GREEN_NUMBER)

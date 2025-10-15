@@ -26,5 +26,5 @@ def convert_video_to_playable_mp4(video_path : str) -> str:
 	return video_path
 
 
-def check_allowed(path : str, check_in_upload_folder : bool) -> None:
-	return None
+def mock(*args, **kwargs) -> None:
+	pass
