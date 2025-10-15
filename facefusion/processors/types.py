@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 from facefusion.types import AppContext, AudioFrame, Color, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
-BackgroundRemoverModel = Literal['birefnet_general_244', 'rmbg_1.4', 'rmbg_2.0']
+BackgroundRemoverModel = Literal['birefnet_general_244', 'rmbg_1.4', 'rmbg_2.0', 'ben2', 'birefnet_portrait', 'birefnet_swin_tiny', 'isnet_general', 'modnet', 'silueta', 'u2net', 'u2net_human_seg', 'u2netp']
 DeepSwapperModel : TypeAlias = str
 ExpressionRestorerModel = Literal['live_portrait']
 ExpressionRestorerArea = Literal['upper-face', 'lower-face']

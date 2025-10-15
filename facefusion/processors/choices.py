@@ -5,7 +5,7 @@ from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_rel
 from facefusion.processors.types import AgeModifierModel, BackgroundRemoverModel, DeepSwapperModel, ExpressionRestorerArea, ExpressionRestorerModel, FaceDebuggerItem, FaceEditorModel, FaceEnhancerModel, FaceSwapperModel, FaceSwapperSet, FaceSwapperWeight, FrameColorizerModel, FrameEnhancerModel, LipSyncerModel
 
 age_modifier_models : List[AgeModifierModel] = [ 'styleganex_age' ]
-background_remover_models : List[BackgroundRemoverModel] = [ 'birefnet_general_244', 'rmbg_1.4', 'rmbg_2.0' ]
+background_remover_models : List[BackgroundRemoverModel] = [ 'birefnet_general_244', 'rmbg_1.4', 'rmbg_2.0', 'ben2', 'birefnet_portrait', 'birefnet_swin_tiny', 'isnet_general', 'modnet', 'silueta', 'u2net', 'u2net_human_seg', 'u2netp' ]
 deep_swapper_models : List[DeepSwapperModel] =\
 [
 	'druuzil/adam_levine_320',
