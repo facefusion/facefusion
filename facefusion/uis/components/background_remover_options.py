@@ -5,6 +5,7 @@ import gradio
 from facefusion import state_manager, wording
 from facefusion.common_helper import calculate_int_step
 from facefusion.processors import choices as processors_choices
+from facefusion.sanitizer import sanitize_int_range
 from facefusion.processors.core import load_processor_module
 from facefusion.processors.types import BackgroundRemoverModel
 from facefusion.uis.core import get_ui_component, register_ui_component
@@ -100,4 +101,8 @@ def update_background_remover_model(background_remover_model : BackgroundRemover
 
 
 def update_background_remover_color(red : int, green : int, blue : int, alpha : int) -> None:
-	state_manager.set_item('background_remover_color', (int(red), int(green), int(blue), int(alpha)))
+	red = sanitize_int_range(red, processors_choices.background_remover_color_range)
+	green = sanitize_int_range(green, processors_choices.background_remover_color_range)
+	blue = sanitize_int_range(blue, processors_choices.background_remover_color_range)
+	alpha = sanitize_int_range(alpha, processors_choices.background_remover_color_range)
+	state_manager.set_item('background_remover_color', (red, green, blue, alpha))
