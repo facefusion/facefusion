@@ -5,9 +5,9 @@ import gradio
 from facefusion import state_manager, wording
 from facefusion.common_helper import calculate_int_step
 from facefusion.processors import choices as processors_choices
-from facefusion.sanitizer import sanitize_int_range
 from facefusion.processors.core import load_processor_module
 from facefusion.processors.types import BackgroundRemoverModel
+from facefusion.sanitizer import sanitize_int_range
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 BACKGROUND_REMOVER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
