@@ -1,7 +1,6 @@
 import importlib
 import os
 import warnings
-from functools import partial
 from types import ModuleType
 from typing import Any, Dict, List, Optional
 
