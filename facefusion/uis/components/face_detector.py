@@ -5,6 +5,7 @@ import gradio
 import facefusion.choices
 from facefusion import face_detector, state_manager, wording
 from facefusion.common_helper import calculate_float_step, get_last
+from facefusion.sanitizer import sanitize_int_range
 from facefusion.types import Angle, FaceDetectorModel, Score
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.types import ComponentOptions
@@ -87,11 +88,13 @@ def update_face_detector_size(face_detector_size : str) -> None:
 
 
 def update_face_detector_margin(face_detector_margin : int) -> None:
+	face_detector_margin = sanitize_int_range(face_detector_margin, facefusion.choices.face_detector_margin_range)
 	state_manager.set_item('face_detector_margin', (face_detector_margin, face_detector_margin, face_detector_margin, face_detector_margin))
 
 
 def update_face_detector_angles(face_detector_angles : Sequence[Angle]) -> gradio.CheckboxGroup:
 	face_detector_angles = face_detector_angles or facefusion.choices.face_detector_angles
+
 	state_manager.set_item('face_detector_angles', face_detector_angles)
 	return gradio.CheckboxGroup(value = state_manager.get_item('face_detector_angles'))
 
