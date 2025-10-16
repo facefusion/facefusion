@@ -1,7 +1,7 @@
 from shutil import which
 
-from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import chain, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_stream_mode, set_video_quality
+from facefusion.ffmpeg_builder import chain, run, select_frame_range, set_audio_quality, set_audio_sample_size, \
+	set_stream_mode, set_video_quality, set_video_fps, set_video_encoder
 
 
 def test_run() -> None:
@@ -9,18 +9,10 @@ def test_run() -> None:
 
 
 def test_chain() -> None:
-	assert ffmpeg_builder.chain(
-		[ '-vf', 'framerate=fps=30' ],
-		[ '-vf', 'format=yuva420p' ],
-		[ '-f', 's16le' ]
-	) == [ '-vf', 'framerate=fps=30,format=yuva420p', '-f', 's16le' ]
-	assert ffmpeg_builder.chain(
-		[ '-vf', 'framerate=fps=30' ],
-		[ '-vf', 'format=yuv420p' ],
-		[ '-f', 's16le' ],
-		[ '-vf', 'framerate=fps=60' ],
-		[ '-vf', 'format=yuva420p' ],
-	) == [ '-vf', 'framerate=fps=30,format=yuv420p', '-f', 's16le', '-vf', 'framerate=fps=60,format=yuva420p' ]
+	assert chain(
+		set_video_encoder('libx264'),
+		set_video_fps(30)
+	) == [ '-c:v', 'libx264', '-vf', 'framerate=fps=30' ]
 
 
 def test_set_stream_mode() -> None:
