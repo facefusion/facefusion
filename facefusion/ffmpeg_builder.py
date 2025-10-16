@@ -13,7 +13,43 @@ def run(commands : Commands) -> Commands:
 
 
 def chain(*commands : Commands) -> Commands:
-	return list(itertools.chain(*commands))
+	flattened = list(itertools.chain(*commands))
+	processed = set()
+	groups = []
+
+	for i in range(len(flattened)):
+		if i not in processed and flattened[i].startswith('-') and i + 1 < len(flattened) and not flattened[i + 1].startswith('-'):
+			arg_name = flattened[i]
+			values = [flattened[i + 1]]
+			processed.add(i)
+			processed.add(i + 1)
+			next_expected = i + 2
+
+			for j in range(i + 2, len(flattened), 2):
+				if j == next_expected and flattened[j] == arg_name and j + 1 < len(flattened) and not flattened[j + 1].startswith('-'):
+					values.append(flattened[j + 1])
+					processed.add(j)
+					processed.add(j + 1)
+					next_expected = j + 2
+
+			groups.append((i, arg_name, values))
+
+	result = []
+
+	for i in range(len(flattened)):
+		group_found = None
+
+		for group in groups:
+			if group[0] == i:
+				group_found = group
+
+		if group_found:
+			result.extend([group_found[1], ','.join(group_found[2])])
+
+		if i not in processed:
+			result.append(flattened[i])
+
+	return result
 
 
 def get_encoders() -> Commands:
@@ -67,6 +103,8 @@ def unsafe_concat() -> Commands:
 def set_pixel_format(video_encoder : VideoEncoder) -> Commands:
 	if video_encoder == 'rawvideo':
 		return [ '-pix_fmt', 'rgb24' ]
+	if video_encoder == 'libvpx-vp9':
+		return [ '-pix_fmt', 'yuva420p' ]
 	return [ '-pix_fmt', 'yuv420p' ]
 
 
@@ -202,6 +240,10 @@ def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -
 
 def set_video_fps(video_fps : Fps) -> Commands:
 	return [ '-vf', 'framerate=fps=' + str(video_fps) ]
+
+
+def set_video_alpha() -> Commands:
+	return [ '-vf', 'format=yuva420p' ]
 
 
 def set_video_duration(video_duration : Duration) -> Commands:

@@ -9,7 +9,18 @@ def test_run() -> None:
 
 
 def test_chain() -> None:
-	assert chain(ffmpeg_builder.set_progress()) == [ '-progress' ]
+	assert ffmpeg_builder.chain(
+		[ '-vf', 'framerate=fps=30' ],
+		[ '-vf', 'format=yuva420p' ],
+		[ '-f', 's16le' ]
+	) == [ '-vf', 'framerate=fps=30,format=yuva420p', '-f', 's16le' ]
+	assert ffmpeg_builder.chain(
+		[ '-vf', 'framerate=fps=30' ],
+		[ '-vf', 'format=yuv420p' ],
+		[ '-f', 's16le' ],
+		[ '-vf', 'framerate=fps=60' ],
+		[ '-vf', 'format=yuva420p' ],
+	) == [ '-vf', 'framerate=fps=30,format=yuv420p', '-f', 's16le', '-vf', 'framerate=fps=60,format=yuva420p' ]
 
 
 def test_set_stream_mode() -> None:
