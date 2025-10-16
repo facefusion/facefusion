@@ -5,6 +5,7 @@ import gradio
 import facefusion.choices
 from facefusion import face_masker, state_manager, wording
 from facefusion.common_helper import calculate_float_step, calculate_int_step
+from facefusion.sanitizer import sanitize_int_range
 from facefusion.types import FaceMaskArea, FaceMaskRegion, FaceMaskType, FaceOccluderModel, FaceParserModel
 from facefusion.uis.core import register_ui_component
 
@@ -175,5 +176,8 @@ def update_face_mask_blur(face_mask_blur : float) -> None:
 
 
 def update_face_mask_padding(face_mask_padding_top : float, face_mask_padding_right : float, face_mask_padding_bottom : float, face_mask_padding_left : float) -> None:
-	face_mask_padding = (int(face_mask_padding_top), int(face_mask_padding_right), int(face_mask_padding_bottom), int(face_mask_padding_left))
-	state_manager.set_item('face_mask_padding', face_mask_padding)
+	face_mask_padding_top = sanitize_int_range(int(face_mask_padding_top), facefusion.choices.face_mask_padding_range)
+	face_mask_padding_right = sanitize_int_range(int(face_mask_padding_right), facefusion.choices.face_mask_padding_range)
+	face_mask_padding_bottom = sanitize_int_range(int(face_mask_padding_bottom), facefusion.choices.face_mask_padding_range)
+	face_mask_padding_left = sanitize_int_range(int(face_mask_padding_left), facefusion.choices.face_mask_padding_range)
+	state_manager.set_item('face_mask_padding', (face_mask_padding_top, face_mask_padding_right, face_mask_padding_bottom, face_mask_padding_left))

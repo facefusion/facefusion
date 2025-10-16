@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import List
 
 import cv2
@@ -16,6 +16,7 @@ from facefusion.normalizer import normalize_color
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import BackgroundRemoverInputs
 from facefusion.program_helper import find_argument_group
+from facefusion.sanitizer import sanitize_int_range
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
@@ -319,7 +320,7 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--background-remover-model', help = wording.get('help.background_remover_model'), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = processors_choices.background_remover_models)
-		group_processors.add_argument('--background-remover-color', help = wording.get('help.background_remover_color'), type = int, default = config.get_int_list('processors', 'background_remover_color', '0 255 0 255'), nargs = '+')
+		group_processors.add_argument('--background-remover-color', help = wording.get('help.background_remover_color'), type = partial(sanitize_int_range, int_range = processors_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 255 0 255'), nargs = '+')
 		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model', 'background_remover_color' ])
 
 

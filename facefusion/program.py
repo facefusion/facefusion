@@ -1,5 +1,6 @@
 import tempfile
 from argparse import ArgumentParser, HelpFormatter
+from functools import partial
 
 import facefusion.choices
 from facefusion import config, metadata, state_manager, wording
@@ -9,6 +10,7 @@ from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.jobs import job_store
 from facefusion.processors.core import get_processors_modules
+from facefusion.sanitizer import sanitize_int_range
 
 
 def create_help_formatter_small(prog : str) -> HelpFormatter:
@@ -99,7 +101,7 @@ def create_face_detector_program() -> ArgumentParser:
 	known_args, _ = program.parse_known_args()
 	face_detector_size_choices = facefusion.choices.face_detector_set.get(known_args.face_detector_model)
 	group_face_detector.add_argument('--face-detector-size', help = wording.get('help.face_detector_size'), default = config.get_str_value('face_detector', 'face_detector_size', get_last(face_detector_size_choices)), choices = face_detector_size_choices)
-	group_face_detector.add_argument('--face-detector-margin', help = wording.get('help.face_detector_margin'), type = int, default = config.get_int_list('face_detector', 'face_detector_margin', '0 0 0 0'), nargs = '+')
+	group_face_detector.add_argument('--face-detector-margin', help = wording.get('help.face_detector_margin'), type = partial(sanitize_int_range, int_range = facefusion.choices.face_detector_margin_range), default = config.get_int_list('face_detector', 'face_detector_margin', '0 0 0 0'), nargs = '+')
 	group_face_detector.add_argument('--face-detector-angles', help = wording.get('help.face_detector_angles'), type = int, default = config.get_int_list('face_detector', 'face_detector_angles', '0'), choices = facefusion.choices.face_detector_angles, nargs = '+', metavar = 'FACE_DETECTOR_ANGLES')
 	group_face_detector.add_argument('--face-detector-score', help = wording.get('help.face_detector_score'), type = float, default = config.get_float_value('face_detector', 'face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_float_metavar(facefusion.choices.face_detector_score_range))
 	job_store.register_step_keys([ 'face_detector_model', 'face_detector_size', 'face_detector_margin', 'face_detector_angles', 'face_detector_score' ])
@@ -140,7 +142,7 @@ def create_face_masker_program() -> ArgumentParser:
 	group_face_masker.add_argument('--face-mask-areas', help = wording.get('help.face_mask_areas').format(choices = ', '.join(facefusion.choices.face_mask_areas)), default = config.get_str_list('face_masker', 'face_mask_areas', ' '.join(facefusion.choices.face_mask_areas)), choices = facefusion.choices.face_mask_areas, nargs = '+', metavar = 'FACE_MASK_AREAS')
 	group_face_masker.add_argument('--face-mask-regions', help = wording.get('help.face_mask_regions').format(choices = ', '.join(facefusion.choices.face_mask_regions)), default = config.get_str_list('face_masker', 'face_mask_regions', ' '.join(facefusion.choices.face_mask_regions)), choices = facefusion.choices.face_mask_regions, nargs = '+', metavar = 'FACE_MASK_REGIONS')
 	group_face_masker.add_argument('--face-mask-blur', help = wording.get('help.face_mask_blur'), type = float, default = config.get_float_value('face_masker', 'face_mask_blur', '0.3'), choices = facefusion.choices.face_mask_blur_range, metavar = create_float_metavar(facefusion.choices.face_mask_blur_range))
-	group_face_masker.add_argument('--face-mask-padding', help = wording.get('help.face_mask_padding'), type = int, default = config.get_int_list('face_masker', 'face_mask_padding', '0 0 0 0'), nargs = '+')
+	group_face_masker.add_argument('--face-mask-padding', help = wording.get('help.face_mask_padding'), type = partial(sanitize_int_range, int_range = facefusion.choices.face_mask_padding_range), default = config.get_int_list('face_masker', 'face_mask_padding', '0 0 0 0'), nargs = '+')
 	job_store.register_step_keys([ 'face_occluder_model', 'face_parser_model', 'face_mask_types', 'face_mask_areas', 'face_mask_regions', 'face_mask_blur', 'face_mask_padding' ])
 	return program
 
@@ -232,7 +234,7 @@ def create_execution_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	available_execution_providers = get_available_execution_providers()
 	group_execution = program.add_argument_group('execution')
-	group_execution.add_argument('--execution-device-ids', help = wording.get('help.execution_device_ids'), default = config.get_str_list('execution', 'execution_device_ids', '0'), nargs = '+', metavar = 'EXECUTION_DEVICE_IDS')
+	group_execution.add_argument('--execution-device-ids', help = wording.get('help.execution_device_ids'), type = int, default = config.get_str_list('execution', 'execution_device_ids', '0'), nargs = '+', metavar = 'EXECUTION_DEVICE_IDS')
 	group_execution.add_argument('--execution-providers', help = wording.get('help.execution_providers').format(choices = ', '.join(available_execution_providers)), default = config.get_str_list('execution', 'execution_providers', get_first(available_execution_providers)), choices = available_execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
 	group_execution.add_argument('--execution-thread-count', help = wording.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution', 'execution_thread_count', '4'), choices = facefusion.choices.execution_thread_count_range, metavar = create_int_metavar(facefusion.choices.execution_thread_count_range))
 	job_store.register_job_keys([ 'execution_device_ids', 'execution_providers', 'execution_thread_count' ])
