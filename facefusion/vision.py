@@ -36,6 +36,21 @@ def read_image(image_path : str) -> Optional[VisionFrame]:
 	return None
 
 
+@lru_cache(maxsize = 64)
+def read_static_mask(image_path: str) -> Optional[Mask]:
+	return read_mask(image_path)
+
+
+def read_mask(image_path: str) -> Optional[Mask]:
+	if is_image(image_path):
+		vision_frame = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+
+		if vision_frame.ndim == 3 and vision_frame.shape[2] == 4:
+			alpha = vision_frame[:, :, 3]
+			return alpha
+	return None
+
+
 def write_image(image_path : str, vision_frame : VisionFrame) -> bool:
 	if image_path:
 		if is_windows():
