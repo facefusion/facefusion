@@ -1,5 +1,6 @@
 import inspect
 import itertools
+import os
 import shutil
 import signal
 import sys
@@ -302,9 +303,10 @@ def process_batch(args : Args) -> ErrorCode:
 	if job_manager.create_job(job_id):
 		if source_paths and target_paths:
 			for index, (source_path, target_path) in enumerate(itertools.product(source_paths, target_paths)):
+				name = os.path.basename(target_path)
 				step_args['source_paths'] = [ source_path ]
 				step_args['target_path'] = target_path
-				step_args['output_path'] = job_args.get('output_pattern').format(index = index)
+				step_args['output_path'] = job_args.get('output_pattern').format(index = index, name = name)
 				if not job_manager.add_step(job_id, step_args):
 					return 1
 			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
@@ -312,8 +314,9 @@ def process_batch(args : Args) -> ErrorCode:
 
 		if not source_paths and target_paths:
 			for index, target_path in enumerate(target_paths):
+				name = os.path.basename(target_path)
 				step_args['target_path'] = target_path
-				step_args['output_path'] = job_args.get('output_pattern').format(index = index)
+				step_args['output_path'] = job_args.get('output_pattern').format(index = index, name = name)
 				if not job_manager.add_step(job_id, step_args):
 					return 1
 			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
