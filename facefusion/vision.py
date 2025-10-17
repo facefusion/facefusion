@@ -9,7 +9,7 @@ from cv2.typing import Size
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Duration, Fps, Orientation, Resolution, Scale, VisionFrame
+from facefusion.types import Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
 from facefusion.video_manager import get_video_capture
 
 
@@ -342,3 +342,15 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 
 	merge_vision_frame = merge_vision_frame[size[1] : size[1] + temp_height, size[1]: size[1] + temp_width, :]
 	return merge_vision_frame
+
+
+def separate_vision_frame_mask(temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mask]:
+	blue_channel, green_channel, red_channel, alpha_channel = cv2.split(temp_vision_frame)
+	temp_vision_frame = cv2.merge([ blue_channel, green_channel, red_channel ])
+	return temp_vision_frame, alpha_channel
+
+
+def merge_vision_frame_mask(temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -> VisionFrame:
+	temp_vision_mask = cv2.resize(temp_vision_mask, temp_vision_frame.shape[:2][::-1])
+	temp_vision_frame = cv2.merge([temp_vision_frame[:, :, 0], temp_vision_frame[:, :, 1], temp_vision_frame[:, :, 2], temp_vision_mask])
+	return temp_vision_frame

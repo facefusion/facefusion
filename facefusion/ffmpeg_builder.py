@@ -13,43 +13,26 @@ def run(commands : Commands) -> Commands:
 
 
 def chain(*commands : Commands) -> Commands:
-	flattened = list(itertools.chain(*commands))
-	processed = set()
-	groups = []
+	return list(itertools.chain(*commands))
 
-	for i in range(len(flattened)):
-		if i not in processed and flattened[i].startswith('-') and i + 1 < len(flattened) and not flattened[i + 1].startswith('-'):
-			arg_name = flattened[i]
-			values = [flattened[i + 1]]
-			processed.add(i)
-			processed.add(i + 1)
-			next_expected = i + 2
 
-			for j in range(i + 2, len(flattened), 2):
-				if j == next_expected and flattened[j] == arg_name and j + 1 < len(flattened) and not flattened[j + 1].startswith('-'):
-					values.append(flattened[j + 1])
-					processed.add(j)
-					processed.add(j + 1)
-					next_expected = j + 2
+def concat(*commands : Commands) -> Commands:
+	argument_values = {} # type:ignore[var-annotated]
 
-			groups.append((i, arg_name, values))
+	for command_list in commands:
+		commands_total = len(command_list)
 
-	result = []
+		for index in range(0, commands_total, 2):
+			if index + 1 < commands_total:
+				argument = command_list[index]
+				argument_value = command_list[index + 1]
+				argument_values.setdefault(argument, []).append(argument_value)
 
-	for i in range(len(flattened)):
-		group_found = None
+	concat_commands = []
+	for argument, values in argument_values.items():
+		concat_commands.extend([ argument, ','.join(values) ])
 
-		for group in groups:
-			if group[0] == i:
-				group_found = group
-
-		if group_found:
-			result.extend([group_found[1], ','.join(group_found[2])])
-
-		if i not in processed:
-			result.append(flattened[i])
-
-	return result
+	return concat_commands
 
 
 def get_encoders() -> Commands:
@@ -239,15 +222,17 @@ def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -
 
 
 def set_video_fps(video_fps : Fps) -> Commands:
-	return [ '-vf', 'framerate=fps=' + str(video_fps) ]
-
-
-def set_video_alpha() -> Commands:
-	return [ '-vf', 'format=yuva420p' ]
+	return [ '-vf', 'fps=' + str(video_fps) ]
 
 
 def set_video_duration(video_duration : Duration) -> Commands:
 	return [ '-t', str(video_duration) ]
+
+
+def keep_video_alpha(video_encoder : VideoEncoder) -> Commands:
+	if video_encoder == 'libvpx-vp9':
+		return [ '-vf', 'format=yuva420p' ]
+	return []
 
 
 def capture_video() -> Commands:

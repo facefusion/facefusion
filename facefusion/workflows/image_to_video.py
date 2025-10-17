@@ -14,7 +14,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
-from facefusion.vision import detect_video_resolution, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
+from facefusion.vision import detect_video_resolution, merge_vision_frame_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, separate_vision_frame_mask, write_image
 from facefusion.workflows.core import is_process_stopping
 
 
@@ -171,6 +171,7 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 	target_vision_frame = read_static_image(temp_frame_path)
 	temp_vision_frame = target_vision_frame.copy()
+	temp_vision_mask = None
 
 	source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
 	source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
@@ -188,7 +189,15 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 			'source_audio_frame': source_audio_frame,
 			'source_voice_frame': source_voice_frame,
 			'target_vision_frame': target_vision_frame,
-			'temp_vision_frame': temp_vision_frame
+			'temp_vision_frame': temp_vision_frame,
+			'temp_vision_mask': temp_vision_mask
 		})
 
+		if temp_vision_frame.shape[2] == 4:
+			temp_vision_frame, temp_vision_mask = separate_vision_frame_mask(temp_vision_frame)
+
+	if temp_vision_mask is None:
+		return write_image(temp_frame_path, temp_vision_frame)
+
+	temp_vision_frame = merge_vision_frame_mask(temp_vision_frame, temp_vision_mask)
 	return write_image(temp_frame_path, temp_vision_frame)

@@ -399,6 +399,7 @@ def normalize_mask_frame(mask_frame : Mask) -> Mask:
 
 def apply_background_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -> VisionFrame:
 	background_remover_color = state_manager.get_item('background_remover_color')
+	temp_vision_frame = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2BGRA)
 	mask_frame = cv2.resize(mask_frame, temp_vision_frame.shape[:2][::-1])
 	mask_frame = mask_frame.astype(numpy.float32) / 255
 	mask_frame = numpy.expand_dims(mask_frame, axis = 2)
@@ -406,6 +407,7 @@ def apply_background_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -
 	color_frame[:, :, 0] = background_remover_color[2]
 	color_frame[:, :, 1] = background_remover_color[1]
 	color_frame[:, :, 2] = background_remover_color[0]
+	color_frame[:, :, 3] = background_remover_color[3]
 	temp_vision_frame = temp_vision_frame * mask_frame + color_frame * (1 - mask_frame)
 	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
 	return temp_vision_frame
@@ -414,4 +416,3 @@ def apply_background_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -
 def process_frame(inputs : BackgroundRemoverInputs) -> VisionFrame:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	return remove_background(temp_vision_frame)
-
