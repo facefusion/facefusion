@@ -3,9 +3,13 @@ from typing import Optional
 import gradio
 
 import facefusion.choices
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_int_step
 from facefusion.types import VideoMemoryStrategy
+from facefusion.locals import LOCALS
+
+
+translator.load(LOCALS, __name__)
 
 VIDEO_MEMORY_STRATEGY_DROPDOWN : Optional[gradio.Dropdown] = None
 SYSTEM_MEMORY_LIMIT_SLIDER : Optional[gradio.Slider] = None
@@ -16,12 +20,12 @@ def render() -> None:
 	global SYSTEM_MEMORY_LIMIT_SLIDER
 
 	VIDEO_MEMORY_STRATEGY_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.video_memory_strategy_dropdown'),
+		label = translator.get('uis.video_memory_strategy_dropdown', __name__),
 		choices = facefusion.choices.video_memory_strategies,
 		value = state_manager.get_item('video_memory_strategy')
 	)
 	SYSTEM_MEMORY_LIMIT_SLIDER = gradio.Slider(
-		label = wording.get('uis.system_memory_limit_slider'),
+		label = translator.get('uis.system_memory_limit_slider', __name__),
 		step = calculate_int_step(facefusion.choices.system_memory_limit_range),
 		minimum = facefusion.choices.system_memory_limit_range[0],
 		maximum = facefusion.choices.system_memory_limit_range[-1],

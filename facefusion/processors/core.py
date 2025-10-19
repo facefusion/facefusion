@@ -2,8 +2,11 @@ import importlib
 from types import ModuleType
 from typing import Any, List
 
-from facefusion import logger, wording
+from facefusion import logger, translator
 from facefusion.exit_helper import hard_exit
+from facefusion.locals import LOCALS
+
+translator.load(LOCALS, __name__)
 
 PROCESSORS_METHODS =\
 [
@@ -25,11 +28,11 @@ def load_processor_module(processor : str) -> Any:
 			if not hasattr(processor_module, method_name):
 				raise NotImplementedError
 	except ModuleNotFoundError as exception:
-		logger.error(wording.get('processor_not_loaded').format(processor = processor), __name__)
+		logger.error(translator.get('processor_not_loaded').format(processor = processor), __name__)
 		logger.debug(exception.msg, __name__)
 		hard_exit(1)
 	except NotImplementedError:
-		logger.error(wording.get('processor_not_implemented').format(processor = processor), __name__)
+		logger.error(translator.get('processor_not_implemented').format(processor = processor), __name__)
 		hard_exit(1)
 	return processor_module
 

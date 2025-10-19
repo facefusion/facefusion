@@ -8,7 +8,7 @@ from cv2.typing import Size
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
 from facefusion.face_analyser import scale_face
@@ -18,6 +18,8 @@ from facefusion.face_selector import select_faces
 from facefusion.filesystem import get_file_name, in_directory, is_image, is_video, resolve_file_paths, resolve_relative_path, same_file_extension
 from facefusion.processors.modules.deep_swapper.types import DeepSwapperInputs, DeepSwapperMorph
 from facefusion.processors.modules.deep_swapper import choices as processor_choices
+from facefusion import translator
+from facefusion.processors.modules.deep_swapper.locals import LOCALS
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import DeepSwapperInputs, DeepSwapperMorph, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
@@ -25,6 +27,9 @@ from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import conditional_match_frame_color, read_static_image, read_static_video_frame
 
+
+
+translator.load(LOCALS, __name__)
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
@@ -277,8 +282,8 @@ def get_model_size() -> Size:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--deep-swapper-model', help = wording.get('help.deep_swapper_model'), default = config.get_str_value('processors', 'deep_swapper_model', 'iperov/elon_musk_224'), choices = processor_choices.deep_swapper_models)
-		group_processors.add_argument('--deep-swapper-morph', help = wording.get('help.deep_swapper_morph'), type = int, default = config.get_int_value('processors', 'deep_swapper_morph', '100'), choices = processor_choices.deep_swapper_morph_range, metavar = create_int_metavar(processor_choices.deep_swapper_morph_range))
+		group_processors.add_argument('--deep-swapper-model', help = translator.get('deep_swapper_help.model', __name__), default = config.get_str_value('processors', 'deep_swapper_model', 'iperov/elon_musk_224'), choices = processor_choices.deep_swapper_models)
+		group_processors.add_argument('--deep-swapper-morph', help = translator.get('deep_swapper_help.morph', __name__), type = int, default = config.get_int_value('processors', 'deep_swapper_morph', '100'), choices = processor_choices.deep_swapper_morph_range, metavar = create_int_metavar(processor_choices.deep_swapper_morph_range))
 		facefusion.jobs.job_store.register_step_keys([ 'deep_swapper_model', 'deep_swapper_morph' ])
 
 
@@ -298,13 +303,13 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
-		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
-		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('match_target_and_output_extension') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 

@@ -2,12 +2,12 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, wording
-from facefusion.common_helper import calculate_int_step
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.core import load_processor_module
-from facefusion.processors.types import DeepSwapperModel
-from facefusion.uis.core import get_ui_component, register_ui_component
+from facefusion import state_manager, register_ui_component, translator
+
+
+from facefusion.processors.modules.deep_swapper.locals import LOCALS
+
+translator.load(LOCALS, __name__)
 
 DEEP_SWAPPER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 DEEP_SWAPPER_MORPH_SLIDER : Optional[gradio.Slider] = None
@@ -19,13 +19,13 @@ def render() -> None:
 
 	has_deep_swapper = 'deep_swapper' in state_manager.get_item('processors')
 	DEEP_SWAPPER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.deep_swapper_model_dropdown'),
+		label = translator.get('deep_swapper_uis.model_dropdown', __name__),
 		choices = processors_choices.deep_swapper_models,
 		value = state_manager.get_item('deep_swapper_model'),
 		visible = has_deep_swapper
 	)
 	DEEP_SWAPPER_MORPH_SLIDER = gradio.Slider(
-		label = wording.get('uis.deep_swapper_morph_slider'),
+		label = translator.get('deep_swapper_uis.morph_slider', __name__),
 		value = state_manager.get_item('deep_swapper_morph'),
 		step = calculate_int_step(processors_choices.deep_swapper_morph_range),
 		minimum = processors_choices.deep_swapper_morph_range[0],

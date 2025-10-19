@@ -3,11 +3,15 @@ from typing import List, Optional
 import gradio
 
 import facefusion.choices
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.common_helper import get_first
 from facefusion.jobs import job_list, job_manager
 from facefusion.types import JobStatus
 from facefusion.uis.core import get_ui_component
+from facefusion.locals import LOCALS
+
+
+translator.load(LOCALS, __name__)
 
 JOB_LIST_JOBS_DATAFRAME : Optional[gradio.Dataframe] = None
 JOB_LIST_REFRESH_BUTTON : Optional[gradio.Button] = None
@@ -28,7 +32,7 @@ def render() -> None:
 			show_label = False
 		)
 		JOB_LIST_REFRESH_BUTTON = gradio.Button(
-			value = wording.get('uis.refresh_button'),
+			value = translator.get('uis.refresh_button', __name__),
 			variant = 'primary',
 			size = 'sm'
 		)

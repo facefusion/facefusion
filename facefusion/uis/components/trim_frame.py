@@ -2,12 +2,16 @@ from typing import Optional, Tuple
 
 from gradio_rangeslider import RangeSlider
 
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import is_video
 from facefusion.uis.core import get_ui_components
 from facefusion.uis.types import ComponentOptions
 from facefusion.vision import count_video_frame_total
+from facefusion.locals import LOCALS
+
+
+translator.load(LOCALS, __name__)
 
 TRIM_FRAME_RANGE_SLIDER : Optional[RangeSlider] = None
 
@@ -17,7 +21,7 @@ def render() -> None:
 
 	trim_frame_range_slider_options : ComponentOptions =\
 	{
-		'label': wording.get('uis.trim_frame_slider'),
+		'label': translator.get('uis.trim_frame_slider', __name__),
 		'minimum': 0,
 		'step': 1,
 		'visible': False

@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 
 import gradio
 
-from facefusion import process_manager, state_manager, wording
+from facefusion import process_manager, state_manager, translator
 from facefusion.args import collect_step_args
 from facefusion.core import process_step
 from facefusion.filesystem import is_directory, is_image, is_video
@@ -12,6 +12,10 @@ from facefusion.temp_helper import clear_temp_directory
 from facefusion.types import Args, UiWorkflow
 from facefusion.uis.core import get_ui_component
 from facefusion.uis.ui_helper import suggest_output_path
+from facefusion.locals import LOCALS
+
+
+translator.load(LOCALS, __name__)
 
 INSTANT_RUNNER_WRAPPER : Optional[gradio.Row] = None
 INSTANT_RUNNER_START_BUTTON : Optional[gradio.Button] = None
@@ -30,18 +34,18 @@ def render() -> None:
 
 		with gradio.Row(visible = is_instant_runner) as INSTANT_RUNNER_WRAPPER:
 			INSTANT_RUNNER_START_BUTTON = gradio.Button(
-				value = wording.get('uis.start_button'),
+				value = translator.get('uis.start_button', __name__),
 				variant = 'primary',
 				size = 'sm'
 			)
 			INSTANT_RUNNER_STOP_BUTTON = gradio.Button(
-				value = wording.get('uis.stop_button'),
+				value = translator.get('uis.stop_button', __name__),
 				variant = 'primary',
 				size = 'sm',
 				visible = False
 			)
 			INSTANT_RUNNER_CLEAR_BUTTON = gradio.Button(
-				value = wording.get('uis.clear_button'),
+				value = translator.get('uis.clear_button', __name__),
 				size = 'sm'
 			)
 

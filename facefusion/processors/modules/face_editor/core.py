@@ -7,7 +7,7 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager
 from facefusion.common_helper import create_float_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import scale_face
@@ -18,6 +18,8 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.processors.live_portrait import create_rotation, limit_angle, limit_expression
 from facefusion.processors.modules.face_editor.types import FaceEditorInputs
 from facefusion.processors.modules.face_editor import choices as processor_choices
+from facefusion import translator
+from facefusion.processors.modules.face_editor.locals import LOCALS
 from facefusion.processors.types import LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.processors.types import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
@@ -25,6 +27,9 @@ from facefusion.thread_helper import conditional_thread_semaphore, thread_semaph
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
+
+
+translator.load(LOCALS, __name__)
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
@@ -124,21 +129,21 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--face-editor-model', help = wording.get('help.face_editor_model'), default = config.get_str_value('processors', 'face_editor_model', 'live_portrait'), choices = processor_choices.face_editor_models)
-		group_processors.add_argument('--face-editor-eyebrow-direction', help = wording.get('help.face_editor_eyebrow_direction'), type = float, default = config.get_float_value('processors', 'face_editor_eyebrow_direction', '0'), choices = processor_choices.face_editor_eyebrow_direction_range, metavar = create_float_metavar(processor_choices.face_editor_eyebrow_direction_range))
-		group_processors.add_argument('--face-editor-eye-gaze-horizontal', help = wording.get('help.face_editor_eye_gaze_horizontal'), type = float, default = config.get_float_value('processors', 'face_editor_eye_gaze_horizontal', '0'), choices = processor_choices.face_editor_eye_gaze_horizontal_range, metavar = create_float_metavar(processor_choices.face_editor_eye_gaze_horizontal_range))
-		group_processors.add_argument('--face-editor-eye-gaze-vertical', help = wording.get('help.face_editor_eye_gaze_vertical'), type = float, default = config.get_float_value('processors', 'face_editor_eye_gaze_vertical', '0'), choices = processor_choices.face_editor_eye_gaze_vertical_range, metavar = create_float_metavar(processor_choices.face_editor_eye_gaze_vertical_range))
-		group_processors.add_argument('--face-editor-eye-open-ratio', help = wording.get('help.face_editor_eye_open_ratio'), type = float, default = config.get_float_value('processors', 'face_editor_eye_open_ratio', '0'), choices = processor_choices.face_editor_eye_open_ratio_range, metavar = create_float_metavar(processor_choices.face_editor_eye_open_ratio_range))
-		group_processors.add_argument('--face-editor-lip-open-ratio', help = wording.get('help.face_editor_lip_open_ratio'), type = float, default = config.get_float_value('processors', 'face_editor_lip_open_ratio', '0'), choices = processor_choices.face_editor_lip_open_ratio_range, metavar = create_float_metavar(processor_choices.face_editor_lip_open_ratio_range))
-		group_processors.add_argument('--face-editor-mouth-grim', help = wording.get('help.face_editor_mouth_grim'), type = float, default = config.get_float_value('processors', 'face_editor_mouth_grim', '0'), choices = processor_choices.face_editor_mouth_grim_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_grim_range))
-		group_processors.add_argument('--face-editor-mouth-pout', help = wording.get('help.face_editor_mouth_pout'), type = float, default = config.get_float_value('processors', 'face_editor_mouth_pout', '0'), choices = processor_choices.face_editor_mouth_pout_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_pout_range))
-		group_processors.add_argument('--face-editor-mouth-purse', help = wording.get('help.face_editor_mouth_purse'), type = float, default = config.get_float_value('processors', 'face_editor_mouth_purse', '0'), choices = processor_choices.face_editor_mouth_purse_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_purse_range))
-		group_processors.add_argument('--face-editor-mouth-smile', help = wording.get('help.face_editor_mouth_smile'), type = float, default = config.get_float_value('processors', 'face_editor_mouth_smile', '0'), choices = processor_choices.face_editor_mouth_smile_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_smile_range))
-		group_processors.add_argument('--face-editor-mouth-position-horizontal', help = wording.get('help.face_editor_mouth_position_horizontal'), type = float, default = config.get_float_value('processors', 'face_editor_mouth_position_horizontal', '0'), choices = processor_choices.face_editor_mouth_position_horizontal_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_position_horizontal_range))
-		group_processors.add_argument('--face-editor-mouth-position-vertical', help = wording.get('help.face_editor_mouth_position_vertical'), type = float, default = config.get_float_value('processors', 'face_editor_mouth_position_vertical', '0'), choices = processor_choices.face_editor_mouth_position_vertical_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_position_vertical_range))
-		group_processors.add_argument('--face-editor-head-pitch', help = wording.get('help.face_editor_head_pitch'), type = float, default = config.get_float_value('processors', 'face_editor_head_pitch', '0'), choices = processor_choices.face_editor_head_pitch_range, metavar = create_float_metavar(processor_choices.face_editor_head_pitch_range))
-		group_processors.add_argument('--face-editor-head-yaw', help = wording.get('help.face_editor_head_yaw'), type = float, default = config.get_float_value('processors', 'face_editor_head_yaw', '0'), choices = processor_choices.face_editor_head_yaw_range, metavar = create_float_metavar(processor_choices.face_editor_head_yaw_range))
-		group_processors.add_argument('--face-editor-head-roll', help = wording.get('help.face_editor_head_roll'), type = float, default = config.get_float_value('processors', 'face_editor_head_roll', '0'), choices = processor_choices.face_editor_head_roll_range, metavar = create_float_metavar(processor_choices.face_editor_head_roll_range))
+		group_processors.add_argument('--face-editor-model', help = translator.get('face_editor_help.model', __name__), default = config.get_str_value('processors', 'face_editor_model', 'live_portrait'), choices = processor_choices.face_editor_models)
+		group_processors.add_argument('--face-editor-eyebrow-direction', help = translator.get('face_editor_help.eyebrow_direction', __name__), type = float, default = config.get_float_value('processors', 'face_editor_eyebrow_direction', '0'), choices = processor_choices.face_editor_eyebrow_direction_range, metavar = create_float_metavar(processor_choices.face_editor_eyebrow_direction_range))
+		group_processors.add_argument('--face-editor-eye-gaze-horizontal', help = translator.get('face_editor_help.eye_gaze_horizontal', __name__), type = float, default = config.get_float_value('processors', 'face_editor_eye_gaze_horizontal', '0'), choices = processor_choices.face_editor_eye_gaze_horizontal_range, metavar = create_float_metavar(processor_choices.face_editor_eye_gaze_horizontal_range))
+		group_processors.add_argument('--face-editor-eye-gaze-vertical', help = translator.get('face_editor_help.eye_gaze_vertical', __name__), type = float, default = config.get_float_value('processors', 'face_editor_eye_gaze_vertical', '0'), choices = processor_choices.face_editor_eye_gaze_vertical_range, metavar = create_float_metavar(processor_choices.face_editor_eye_gaze_vertical_range))
+		group_processors.add_argument('--face-editor-eye-open-ratio', help = translator.get('face_editor_help.eye_open_ratio', __name__), type = float, default = config.get_float_value('processors', 'face_editor_eye_open_ratio', '0'), choices = processor_choices.face_editor_eye_open_ratio_range, metavar = create_float_metavar(processor_choices.face_editor_eye_open_ratio_range))
+		group_processors.add_argument('--face-editor-lip-open-ratio', help = translator.get('face_editor_help.lip_open_ratio', __name__), type = float, default = config.get_float_value('processors', 'face_editor_lip_open_ratio', '0'), choices = processor_choices.face_editor_lip_open_ratio_range, metavar = create_float_metavar(processor_choices.face_editor_lip_open_ratio_range))
+		group_processors.add_argument('--face-editor-mouth-grim', help = translator.get('face_editor_help.mouth_grim', __name__), type = float, default = config.get_float_value('processors', 'face_editor_mouth_grim', '0'), choices = processor_choices.face_editor_mouth_grim_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_grim_range))
+		group_processors.add_argument('--face-editor-mouth-pout', help = translator.get('face_editor_help.mouth_pout', __name__), type = float, default = config.get_float_value('processors', 'face_editor_mouth_pout', '0'), choices = processor_choices.face_editor_mouth_pout_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_pout_range))
+		group_processors.add_argument('--face-editor-mouth-purse', help = translator.get('face_editor_help.mouth_purse', __name__), type = float, default = config.get_float_value('processors', 'face_editor_mouth_purse', '0'), choices = processor_choices.face_editor_mouth_purse_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_purse_range))
+		group_processors.add_argument('--face-editor-mouth-smile', help = translator.get('face_editor_help.mouth_smile', __name__), type = float, default = config.get_float_value('processors', 'face_editor_mouth_smile', '0'), choices = processor_choices.face_editor_mouth_smile_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_smile_range))
+		group_processors.add_argument('--face-editor-mouth-position-horizontal', help = translator.get('face_editor_help.mouth_position_horizontal', __name__), type = float, default = config.get_float_value('processors', 'face_editor_mouth_position_horizontal', '0'), choices = processor_choices.face_editor_mouth_position_horizontal_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_position_horizontal_range))
+		group_processors.add_argument('--face-editor-mouth-position-vertical', help = translator.get('face_editor_help.mouth_position_vertical', __name__), type = float, default = config.get_float_value('processors', 'face_editor_mouth_position_vertical', '0'), choices = processor_choices.face_editor_mouth_position_vertical_range, metavar = create_float_metavar(processor_choices.face_editor_mouth_position_vertical_range))
+		group_processors.add_argument('--face-editor-head-pitch', help = translator.get('face_editor_help.head_pitch', __name__), type = float, default = config.get_float_value('processors', 'face_editor_head_pitch', '0'), choices = processor_choices.face_editor_head_pitch_range, metavar = create_float_metavar(processor_choices.face_editor_head_pitch_range))
+		group_processors.add_argument('--face-editor-head-yaw', help = translator.get('face_editor_help.head_yaw', __name__), type = float, default = config.get_float_value('processors', 'face_editor_head_yaw', '0'), choices = processor_choices.face_editor_head_yaw_range, metavar = create_float_metavar(processor_choices.face_editor_head_yaw_range))
+		group_processors.add_argument('--face-editor-head-roll', help = translator.get('face_editor_help.head_roll', __name__), type = float, default = config.get_float_value('processors', 'face_editor_head_roll', '0'), choices = processor_choices.face_editor_head_roll_range, metavar = create_float_metavar(processor_choices.face_editor_head_roll_range))
 		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio', 'face_editor_mouth_grim', 'face_editor_mouth_pout', 'face_editor_mouth_purse', 'face_editor_mouth_smile', 'face_editor_mouth_position_horizontal', 'face_editor_mouth_position_vertical', 'face_editor_head_pitch', 'face_editor_head_yaw', 'face_editor_head_roll' ])
 
 
@@ -169,13 +174,13 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
-		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
-		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('match_target_and_output_extension') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 

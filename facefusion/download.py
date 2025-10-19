@@ -7,11 +7,15 @@ from urllib.parse import urlparse
 from tqdm import tqdm
 
 import facefusion.choices
-from facefusion import curl_builder, logger, process_manager, state_manager, wording
+from facefusion import curl_builder, logger, process_manager, state_manager, translator
 from facefusion.filesystem import get_file_name, get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
 from facefusion.types import Command, DownloadProvider, DownloadSet
+from facefusion.locals import LOCALS
 
+
+
+translator.load(LOCALS, __name__)
 
 def open_curl(commands : List[Command]) -> subprocess.Popen[bytes]:
 	commands = curl_builder.run(commands)
@@ -26,7 +30,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		download_size = get_static_download_size(url)
 
 		if initial_size < download_size:
-			with tqdm(total = download_size, initial = initial_size, desc = wording.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+			with tqdm(total = download_size, initial = initial_size, desc = translator.get('downloading', __name__), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 				commands = curl_builder.chain(
 					curl_builder.download(url, download_file_path),
 					curl_builder.set_timeout(5)
@@ -87,10 +91,10 @@ def conditional_download_hashes(hash_set : DownloadSet) -> bool:
 
 	for valid_hash_path in valid_hash_paths:
 		valid_hash_file_name = get_file_name(valid_hash_path)
-		logger.debug(wording.get('validating_hash_succeeded').format(hash_file_name = valid_hash_file_name), __name__)
+		logger.debug(translator.get('validating_hash_succeeded', __name__).format(hash_file_name = valid_hash_file_name), __name__)
 	for invalid_hash_path in invalid_hash_paths:
 		invalid_hash_file_name = get_file_name(invalid_hash_path)
-		logger.error(wording.get('validating_hash_failed').format(hash_file_name = invalid_hash_file_name), __name__)
+		logger.error(translator.get('validating_hash_failed', __name__).format(hash_file_name = invalid_hash_file_name), __name__)
 
 	if not invalid_hash_paths:
 		process_manager.end()
@@ -114,13 +118,13 @@ def conditional_download_sources(source_set : DownloadSet) -> bool:
 
 	for valid_source_path in valid_source_paths:
 		valid_source_file_name = get_file_name(valid_source_path)
-		logger.debug(wording.get('validating_source_succeeded').format(source_file_name = valid_source_file_name), __name__)
+		logger.debug(translator.get('validating_source_succeeded', __name__).format(source_file_name = valid_source_file_name), __name__)
 	for invalid_source_path in invalid_source_paths:
 		invalid_source_file_name = get_file_name(invalid_source_path)
-		logger.error(wording.get('validating_source_failed').format(source_file_name = invalid_source_file_name), __name__)
+		logger.error(translator.get('validating_source_failed', __name__).format(source_file_name = invalid_source_file_name), __name__)
 
 		if remove_file(invalid_source_path):
-			logger.error(wording.get('deleting_corrupt_source').format(source_file_name = invalid_source_file_name), __name__)
+			logger.error(translator.get('deleting_corrupt_source', __name__).format(source_file_name = invalid_source_file_name), __name__)
 
 	if not invalid_source_paths:
 		process_manager.end()

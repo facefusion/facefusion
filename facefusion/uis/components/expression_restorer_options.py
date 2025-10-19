@@ -2,12 +2,13 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, wording
-from facefusion.common_helper import calculate_float_step
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.core import load_processor_module
-from facefusion.processors.types import ExpressionRestorerArea, ExpressionRestorerModel
+from facefusion import state_manager, ExpressionRestorerModel, translator
 from facefusion.uis.core import get_ui_component, register_ui_component
+
+
+from facefusion.processors.modules.expression_restorer.locals import LOCALS
+
+translator.load(LOCALS, __name__)
 
 EXPRESSION_RESTORER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 EXPRESSION_RESTORER_FACTOR_SLIDER : Optional[gradio.Slider] = None
@@ -21,13 +22,13 @@ def render() -> None:
 
 	has_expression_restorer = 'expression_restorer' in state_manager.get_item('processors')
 	EXPRESSION_RESTORER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.expression_restorer_model_dropdown'),
+		label = translator.get('expression_restorer_uis.model_dropdown', __name__),
 		choices = processors_choices.expression_restorer_models,
 		value = state_manager.get_item('expression_restorer_model'),
 		visible = has_expression_restorer
 	)
 	EXPRESSION_RESTORER_FACTOR_SLIDER = gradio.Slider(
-		label = wording.get('uis.expression_restorer_factor_slider'),
+		label = translator.get('expression_restorer_uis.factor_slider', __name__),
 		value = state_manager.get_item('expression_restorer_factor'),
 		step = calculate_float_step(processors_choices.expression_restorer_factor_range),
 		minimum = processors_choices.expression_restorer_factor_range[0],
@@ -35,7 +36,7 @@ def render() -> None:
 		visible = has_expression_restorer
 	)
 	EXPRESSION_RESTORER_AREAS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-		label = wording.get('uis.expression_restorer_areas_checkbox_group'),
+		label = translator.get('expression_restorer_uis.areas_checkbox_group', __name__),
 		choices = processors_choices.expression_restorer_areas,
 		value = state_manager.get_item('expression_restorer_areas'),
 		visible = has_expression_restorer

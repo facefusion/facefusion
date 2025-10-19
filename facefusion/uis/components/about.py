@@ -3,7 +3,11 @@ from typing import Optional
 
 import gradio
 
-from facefusion import metadata, wording
+from facefusion import metadata, translator
+from facefusion.locals import LOCALS
+
+
+translator.load(LOCALS, __name__)
 
 METADATA_BUTTON : Optional[gradio.Button] = None
 ACTION_BUTTON : Optional[gradio.Button] = None
@@ -16,15 +20,15 @@ def render() -> None:
 	action = random.choice(
 	[
 		{
-			'wording': wording.get('about.become_a_member'),
+			'wording': translator.get('about.become_a_member', __name__),
 			'url': 'https://subscribe.facefusion.io'
 		},
 		{
-			'wording': wording.get('about.join_our_community'),
+			'wording': translator.get('about.join_our_community', __name__),
 			'url': 'https://join.facefusion.io'
 		},
 		{
-			'wording': wording.get('about.read_the_documentation'),
+			'wording': translator.get('about.read_the_documentation', __name__),
 			'url': 'https://docs.facefusion.io'
 		}
 	])

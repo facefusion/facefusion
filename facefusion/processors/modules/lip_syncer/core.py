@@ -6,7 +6,7 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, voice_extractor, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, voice_extractor
 from facefusion.audio import read_static_voice
 from facefusion.common_helper import create_float_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
@@ -19,11 +19,16 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import LipSyncerInputs, LipSyncerWeight, ProcessorOutputs
 from facefusion.processors.modules.lip_syncer.types import LipSyncerInputs, LipSyncerWeight
 from facefusion.processors.modules.lip_syncer import choices as processor_choices
+from facefusion import translator
+from facefusion.processors.modules.lip_syncer.locals import LOCALS
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
+
+
+translator.load(LOCALS, __name__)
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
@@ -115,8 +120,8 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = processor_choices.lip_syncer_models)
-		group_processors.add_argument('--lip-syncer-weight', help = wording.get('help.lip_syncer_weight'), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = processor_choices.lip_syncer_weight_range, metavar = create_float_metavar(processor_choices.lip_syncer_weight_range))
+		group_processors.add_argument('--lip-syncer-model', help = translator.get('lip_syncer_help.model', __name__), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = processor_choices.lip_syncer_models)
+		group_processors.add_argument('--lip-syncer-weight', help = translator.get('lip_syncer_help.weight', __name__), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = processor_choices.lip_syncer_weight_range, metavar = create_float_metavar(processor_choices.lip_syncer_weight_range))
 		facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model', 'lip_syncer_weight' ])
 
 
@@ -134,7 +139,7 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if not has_audio(state_manager.get_item('source_paths')):
-		logger.error(wording.get('choose_audio_source') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_audio_source') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 

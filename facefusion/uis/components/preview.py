@@ -5,7 +5,7 @@ import cv2
 import gradio
 import numpy
 
-from facefusion import logger, process_manager, state_manager, wording
+from facefusion import logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
@@ -19,6 +19,11 @@ from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions, PreviewMode
 from facefusion.vision import detect_frame_orientation, fit_cover_frame, merge_vision_mask, obscure_frame, read_static_alpha_image, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
+from facefusion.vision import detect_frame_orientation, fit_cover_frame, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
+from facefusion.locals import LOCALS
+
+
+translator.load(LOCALS, __name__)
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
@@ -28,7 +33,7 @@ def render() -> None:
 
 	preview_image_options : ComponentOptions =\
 	{
-		'label': wording.get('uis.preview_image')
+		'label': translator.get('uis.preview_image', __name__)
 	}
 
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))

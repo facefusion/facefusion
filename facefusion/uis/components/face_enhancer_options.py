@@ -2,12 +2,16 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, wording
-from facefusion.common_helper import calculate_float_step, calculate_int_step
+from facefusion import state_manager, calculate_int_step, translator
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
 from facefusion.processors.types import FaceEnhancerModel, FaceEnhancerWeight
 from facefusion.uis.core import get_ui_component, register_ui_component
+
+
+from facefusion.processors.modules.face_enhancer.locals import LOCALS
+
+translator.load(LOCALS, __name__)
 
 FACE_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_ENHANCER_BLEND_SLIDER : Optional[gradio.Slider] = None
@@ -21,13 +25,13 @@ def render() -> None:
 
 	has_face_enhancer = 'face_enhancer' in state_manager.get_item('processors')
 	FACE_ENHANCER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.face_enhancer_model_dropdown'),
+		label = translator.get('face_enhancer_uis.model_dropdown', __name__),
 		choices = processors_choices.face_enhancer_models,
 		value = state_manager.get_item('face_enhancer_model'),
 		visible = has_face_enhancer
 	)
 	FACE_ENHANCER_BLEND_SLIDER = gradio.Slider(
-		label = wording.get('uis.face_enhancer_blend_slider'),
+		label = translator.get('face_enhancer_uis.blend_slider', __name__),
 		value = state_manager.get_item('face_enhancer_blend'),
 		step = calculate_int_step(processors_choices.face_enhancer_blend_range),
 		minimum = processors_choices.face_enhancer_blend_range[0],
@@ -35,7 +39,7 @@ def render() -> None:
 		visible = has_face_enhancer
 	)
 	FACE_ENHANCER_WEIGHT_SLIDER = gradio.Slider(
-		label = wording.get('uis.face_enhancer_weight_slider'),
+		label = translator.get('face_enhancer_uis.weight_slider', __name__),
 		value = state_manager.get_item('face_enhancer_weight'),
 		step = calculate_float_step(processors_choices.face_enhancer_weight_range),
 		minimum = processors_choices.face_enhancer_weight_range[0],

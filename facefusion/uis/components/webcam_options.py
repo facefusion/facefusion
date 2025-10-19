@@ -2,11 +2,14 @@ from typing import Optional
 
 import gradio
 
-from facefusion import wording
+from facefusion import translator
 from facefusion.camera_manager import detect_local_camera_ids
 from facefusion.common_helper import get_first
+from facefusion.locals import LOCALS
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import register_ui_component
+
+translator.load(LOCALS, __name__)
 
 WEBCAM_DEVICE_ID_DROPDOWN : Optional[gradio.Dropdown] = None
 WEBCAM_MODE_RADIO : Optional[gradio.Radio] = None
@@ -23,21 +26,21 @@ def render() -> None:
 	local_camera_ids = detect_local_camera_ids(0, 10) or [ 'none' ] #type:ignore[list-item]
 	WEBCAM_DEVICE_ID_DROPDOWN = gradio.Dropdown(
 		value = get_first(local_camera_ids),
-		label = wording.get('uis.webcam_device_id_dropdown'),
+		label = translator.get('uis.webcam_device_id_dropdown', __name__),
 		choices = local_camera_ids
 	)
 	WEBCAM_MODE_RADIO = gradio.Radio(
-		label = wording.get('uis.webcam_mode_radio'),
+		label = translator.get('uis.webcam_mode_radio', __name__),
 		choices = uis_choices.webcam_modes,
 		value = uis_choices.webcam_modes[0]
 	)
 	WEBCAM_RESOLUTION_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.webcam_resolution_dropdown'),
+		label = translator.get('uis.webcam_resolution_dropdown', __name__),
 		choices = uis_choices.webcam_resolutions,
 		value = uis_choices.webcam_resolutions[0]
 	)
 	WEBCAM_FPS_SLIDER = gradio.Slider(
-		label = wording.get('uis.webcam_fps_slider'),
+		label = translator.get('uis.webcam_fps_slider', __name__),
 		value = 30,
 		step = 1,
 		minimum = 1,
