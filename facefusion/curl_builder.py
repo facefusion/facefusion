@@ -1,6 +1,5 @@
 import itertools
 import shutil
-
 from typing import List
 
 from facefusion import metadata
