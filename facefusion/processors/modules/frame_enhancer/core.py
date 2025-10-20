@@ -18,6 +18,8 @@ from facefusion.processors.modules.frame_enhancer.locals import LOCALS
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FrameEnhancerInputs, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
+
+MODULE_SCOPE = 'facefusion.processors.modules.frame_enhancer'
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_frame
@@ -441,8 +443,8 @@ def get_frame_enhancer_model() -> str:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--frame-enhancer-model', help = translator.get('frame_enhancer_help.model', __name__), default = config.get_str_value('processors', 'frame_enhancer_model', 'span_kendata_x4'), choices = processor_choices.frame_enhancer_models)
-		group_processors.add_argument('--frame-enhancer-blend', help = translator.get('frame_enhancer_help.blend', __name__), type = int, default = config.get_int_value('processors', 'frame_enhancer_blend', '80'), choices = processor_choices.frame_enhancer_blend_range, metavar = create_int_metavar(processor_choices.frame_enhancer_blend_range))
+		group_processors.add_argument('--frame-enhancer-model', help = translator.get('help.model', MODULE_SCOPE), default = config.get_str_value('processors', 'frame_enhancer_model', 'span_kendata_x4'), choices = processor_choices.frame_enhancer_models)
+		group_processors.add_argument('--frame-enhancer-blend', help = translator.get('help.blend', MODULE_SCOPE), type = int, default = config.get_int_value('processors', 'frame_enhancer_blend', '80'), choices = processor_choices.frame_enhancer_blend_range, metavar = create_int_metavar(processor_choices.frame_enhancer_blend_range))
 		facefusion.jobs.job_store.register_step_keys([ 'frame_enhancer_model', 'frame_enhancer_blend' ])
 
 

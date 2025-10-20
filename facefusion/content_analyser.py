@@ -12,10 +12,6 @@ from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import Detection, DownloadScope, DownloadSet, ExecutionProvider, Fps, InferencePool, ModelSet, VisionFrame
 from facefusion.vision import detect_video_fps, fit_contain_frame, read_image, read_video_frame
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 STREAM_COUNTER = 0
 

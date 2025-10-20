@@ -16,11 +16,7 @@ from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_video_resolution, merge_vision_mask, pack_resolution, read_static_alpha_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
 from facefusion.workflows.core import is_process_stopping
-from facefusion.locals import LOCALS
 
-
-
-translator.load(LOCALS, __name__)
 
 def process(start_time : float) -> ErrorCode:
 	tasks =\

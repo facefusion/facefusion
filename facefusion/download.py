@@ -87,10 +87,10 @@ def conditional_download_hashes(hash_set : DownloadSet) -> bool:
 
 	for valid_hash_path in valid_hash_paths:
 		valid_hash_file_name = get_file_name(valid_hash_path)
-		logger.debug(translator.get('validating_hash_succeeded', __name__).format(hash_file_name = valid_hash_file_name), __name__)
+		logger.debug(translator.get('validating_hash_succeeded').format(hash_file_name = valid_hash_file_name), __name__)
 	for invalid_hash_path in invalid_hash_paths:
 		invalid_hash_file_name = get_file_name(invalid_hash_path)
-		logger.error(translator.get('validating_hash_failed', __name__).format(hash_file_name = invalid_hash_file_name), __name__)
+		logger.error(translator.get('validating_hash_failed').format(hash_file_name = invalid_hash_file_name), __name__)
 
 	if not invalid_hash_paths:
 		process_manager.end()
@@ -114,13 +114,13 @@ def conditional_download_sources(source_set : DownloadSet) -> bool:
 
 	for valid_source_path in valid_source_paths:
 		valid_source_file_name = get_file_name(valid_source_path)
-		logger.debug(translator.get('validating_source_succeeded', __name__).format(source_file_name = valid_source_file_name), __name__)
+		logger.debug(translator.get('validating_source_succeeded').format(source_file_name = valid_source_file_name), __name__)
 	for invalid_source_path in invalid_source_paths:
 		invalid_source_file_name = get_file_name(invalid_source_path)
-		logger.error(translator.get('validating_source_failed', __name__).format(source_file_name = invalid_source_file_name), __name__)
+		logger.error(translator.get('validating_source_failed').format(source_file_name = invalid_source_file_name), __name__)
 
 		if remove_file(invalid_source_path):
-			logger.error(translator.get('deleting_corrupt_source', __name__).format(source_file_name = invalid_source_file_name), __name__)
+			logger.error(translator.get('deleting_corrupt_source').format(source_file_name = invalid_source_file_name), __name__)
 
 	if not invalid_source_paths:
 		process_manager.end()

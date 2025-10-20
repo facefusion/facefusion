@@ -20,6 +20,8 @@ from facefusion.processors.modules.face_enhancer.locals import LOCALS
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FaceEnhancerInputs, FaceEnhancerWeight, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
+
+MODULE_SCOPE = 'facefusion.processors.modules.face_enhancer'
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, read_static_image, read_static_video_frame
@@ -241,9 +243,9 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--face-enhancer-model', help = translator.get('face_enhancer_help.model', __name__), default = config.get_str_value('processors', 'face_enhancer_model', 'gfpgan_1.4'), choices = processor_choices.face_enhancer_models)
-		group_processors.add_argument('--face-enhancer-blend', help = translator.get('face_enhancer_help.blend', __name__), type = int, default = config.get_int_value('processors', 'face_enhancer_blend', '80'), choices = processor_choices.face_enhancer_blend_range, metavar = create_int_metavar(processor_choices.face_enhancer_blend_range))
-		group_processors.add_argument('--face-enhancer-weight', help = translator.get('face_enhancer_help.weight', __name__), type = float, default = config.get_float_value('processors', 'face_enhancer_weight', '0.5'), choices = processor_choices.face_enhancer_weight_range, metavar = create_float_metavar(processor_choices.face_enhancer_weight_range))
+		group_processors.add_argument('--face-enhancer-model', help = translator.get('help.model', MODULE_SCOPE), default = config.get_str_value('processors', 'face_enhancer_model', 'gfpgan_1.4'), choices = processor_choices.face_enhancer_models)
+		group_processors.add_argument('--face-enhancer-blend', help = translator.get('help.blend', MODULE_SCOPE), type = int, default = config.get_int_value('processors', 'face_enhancer_blend', '80'), choices = processor_choices.face_enhancer_blend_range, metavar = create_int_metavar(processor_choices.face_enhancer_blend_range))
+		group_processors.add_argument('--face-enhancer-weight', help = translator.get('help.weight', MODULE_SCOPE), type = float, default = config.get_float_value('processors', 'face_enhancer_weight', '0.5'), choices = processor_choices.face_enhancer_weight_range, metavar = create_float_metavar(processor_choices.face_enhancer_weight_range))
 		facefusion.jobs.job_store.register_step_keys([ 'face_enhancer_model', 'face_enhancer_blend', 'face_enhancer_weight' ])
 
 

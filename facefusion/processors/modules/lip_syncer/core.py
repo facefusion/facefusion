@@ -21,6 +21,8 @@ from facefusion.processors.modules.lip_syncer.types import LipSyncerInputs, LipS
 from facefusion.processors.modules.lip_syncer import choices as processor_choices
 from facefusion import translator
 from facefusion.program_helper import find_argument_group
+
+MODULE_SCOPE = 'facefusion.processors.modules.lip_syncer'
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
@@ -116,8 +118,8 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--lip-syncer-model', help = translator.get('lip_syncer_help.model', __name__), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = processor_choices.lip_syncer_models)
-		group_processors.add_argument('--lip-syncer-weight', help = translator.get('lip_syncer_help.weight', __name__), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = processor_choices.lip_syncer_weight_range, metavar = create_float_metavar(processor_choices.lip_syncer_weight_range))
+		group_processors.add_argument('--lip-syncer-model', help = translator.get('help.model', MODULE_SCOPE), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = processor_choices.lip_syncer_models)
+		group_processors.add_argument('--lip-syncer-weight', help = translator.get('help.weight', MODULE_SCOPE), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = processor_choices.lip_syncer_weight_range, metavar = create_float_metavar(processor_choices.lip_syncer_weight_range))
 		facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model', 'lip_syncer_weight' ])
 
 

@@ -1,9 +1,5 @@
 from facefusion import logger, process_manager, translator
-from facefusion.locals import LOCALS
 
-
-
-translator.load(LOCALS, __name__)
 
 def is_process_stopping() -> bool:
 	if process_manager.is_stopping():

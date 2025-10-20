@@ -16,6 +16,8 @@ from facefusion.processors.modules.face_debugger import choices as processor_cho
 from facefusion.processors.types import FaceDebuggerInputs, ProcessorOutputs
 from facefusion import translator
 from facefusion.program_helper import find_argument_group
+
+MODULE_SCOPE = 'facefusion.processors.modules.face_debugger'
 from facefusion.types import ApplyStateItem, Args, Face, InferencePool, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
@@ -31,7 +33,7 @@ def clear_inference_pool() -> None:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--face-debugger-items', help = translator.get('face_debugger_help.items', __name__).format(choices = ', '.join(processor_choices.face_debugger_items)), default = config.get_str_list('processors', 'face_debugger_items', 'face-landmark-5/68 face-mask'), choices = processor_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
+		group_processors.add_argument('--face-debugger-items', help = translator.get('help.items', MODULE_SCOPE).format(choices = ', '.join(processor_choices.face_debugger_items)), default = config.get_str_list('processors', 'face_debugger_items', 'face-landmark-5/68 face-mask'), choices = processor_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
 		facefusion.jobs.job_store.register_step_keys([ 'face_debugger_items' ])
 
 
