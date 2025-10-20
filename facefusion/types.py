@@ -108,7 +108,7 @@ LogLevel = Literal['error', 'warn', 'info', 'debug']
 LogLevelSet : TypeAlias = Dict[LogLevel, int]
 
 TableHeader : TypeAlias = str
-TableContent : TypeAlias = int | str
+TableContent : TypeAlias = Any
 
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yolo_face', 'yunet']
 FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
