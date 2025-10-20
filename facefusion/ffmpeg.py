@@ -10,11 +10,11 @@ import facefusion.choices
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, wording
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
-from facefusion.types import AudioBuffer, AudioEncoder, Commands, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
+from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
 from facefusion.vision import detect_video_duration, detect_video_fps, pack_resolution, predict_video_frame_total
 
 
-def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
+def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
 	commands.extend(ffmpeg_builder.set_progress())
 	commands.extend(ffmpeg_builder.cast_stream())
@@ -45,7 +45,7 @@ def update_progress(progress : tqdm, frame_number : int) -> None:
 	progress.update(frame_number - progress.n)
 
 
-def run_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
+def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
 	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
@@ -65,7 +65,7 @@ def run_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
 	return process
 
 
-def open_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
+def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.run(commands)
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
