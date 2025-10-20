@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import chain, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_stream_mode, set_video_quality
+from facefusion.ffmpeg_builder import chain, concat, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality
 
 
 def test_run() -> None:
@@ -10,6 +10,31 @@ def test_run() -> None:
 
 def test_chain() -> None:
 	assert chain(ffmpeg_builder.set_progress()) == [ '-progress' ]
+	assert chain(
+		ffmpeg_builder.set_input('input.mp4'),
+		ffmpeg_builder.set_output('output.mp4')
+	) == [ '-i', 'input.mp4', 'output.mp4' ]
+	assert chain(
+		ffmpeg_builder.set_video_encoder('libx264'),
+		ffmpeg_builder.set_video_fps(30),
+		ffmpeg_builder.set_audio_encoder('aac')
+	) == [ '-c:v', 'libx264', '-vf', 'framerate=fps=30', '-c:a', 'aac' ]
+
+
+def test_concat() -> None:
+	assert concat(
+		set_video_encoder('libvpx-vp9'),
+		set_video_fps(30)
+	) == [ '-c:v', 'libvpx-vp9', '-vf', 'framerate=fps=30' ]
+	assert concat(
+		set_video_encoder('libvpx-vp9'),
+		set_video_fps(30),
+		keep_video_alpha('libvpx-vp9')
+	) == [ '-c:v', 'libvpx-vp9', '-vf', 'framerate=fps=30,format=yuva420p' ]
+	assert concat(
+		select_frame_range(0, 100, 30),
+		keep_video_alpha('libvpx-vp9')
+	) == [ '-vf', 'trim=start_frame=0:end_frame=100,fps=30,format=yuva420p' ]
 
 
 def test_set_stream_mode() -> None:
