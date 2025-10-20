@@ -5,7 +5,7 @@ from typing import Optional
 import numpy
 
 from facefusion.filesystem import get_file_format
-from facefusion.types import AudioEncoder, Commands, Duration, Fps, StreamMode, VideoEncoder, VideoPreset
+from facefusion.types import AudioEncoder, Commands, CommandsArgumentSet, Duration, Fps, StreamMode, VideoEncoder, VideoPreset
 
 
 def run(commands : Commands) -> Commands:
@@ -14,6 +14,21 @@ def run(commands : Commands) -> Commands:
 
 def chain(*commands : Commands) -> Commands:
 	return list(itertools.chain(*commands))
+
+
+def concat(*commands: Commands) -> Commands:
+	commands_argument_set : CommandsArgumentSet = {}
+
+	for command in commands:
+		for argument, value in zip(command[::2], command[1::2]):
+			commands_argument_set.setdefault(argument, []).append(value)
+
+	concat_commands = []
+	for argument, values in commands_argument_set.items():
+		concat_commands.append(argument)
+		concat_commands.append(','.join(values))
+
+	return concat_commands
 
 
 def get_encoders() -> Commands:
@@ -67,6 +82,8 @@ def unsafe_concat() -> Commands:
 def set_pixel_format(video_encoder : VideoEncoder) -> Commands:
 	if video_encoder == 'rawvideo':
 		return [ '-pix_fmt', 'rgb24' ]
+	if video_encoder == 'libvpx-vp9':
+		return [ '-pix_fmt', 'yuva420p' ]
 	return [ '-pix_fmt', 'yuv420p' ]
 
 
@@ -206,6 +223,12 @@ def set_video_fps(video_fps : Fps) -> Commands:
 
 def set_video_duration(video_duration : Duration) -> Commands:
 	return [ '-t', str(video_duration) ]
+
+
+def keep_video_alpha(video_encoder : VideoEncoder) -> Commands:
+	if video_encoder == 'libvpx-vp9':
+		return [ '-vf', 'format=yuva420p' ]
+	return []
 
 
 def capture_video() -> Commands:
