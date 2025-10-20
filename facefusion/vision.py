@@ -370,3 +370,7 @@ def merge_vision_frame_mask(temp_vision_frame : VisionFrame, temp_vision_mask : 
 	temp_vision_mask = cv2.resize(temp_vision_mask, temp_vision_frame.shape[:2][::-1])
 	temp_vision_frame = cv2.merge([temp_vision_frame[:, :, 0], temp_vision_frame[:, :, 1], temp_vision_frame[:, :, 2], temp_vision_mask])
 	return temp_vision_frame
+
+
+def has_alpha_channel(temp_vision_frame : VisionFrame) -> bool:
+	return temp_vision_frame.ndim == 3 and temp_vision_frame.shape[2] == 4
