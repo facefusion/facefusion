@@ -97,7 +97,6 @@ ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 Content : TypeAlias = Dict[str, Any]
 
 Command : TypeAlias = str
-Commands : TypeAlias = List[str]
 CommandSet : TypeAlias = Dict[str, List[Command]]
 
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128', 'dfl_whole_face', 'ffhq_512', 'mtcnn_512', 'styleganex_384']
@@ -108,8 +107,8 @@ ErrorCode = Literal[0, 1, 2, 3, 4]
 LogLevel = Literal['error', 'warn', 'info', 'debug']
 LogLevelSet : TypeAlias = Dict[LogLevel, int]
 
-TableHeaders : TypeAlias = List[str]
-TableContents : TypeAlias = List[List[Any]]
+TableHeader : TypeAlias = str
+TableContent : TypeAlias = Any
 
 FaceDetectorModel = Literal['many', 'retinaface', 'scrfd', 'yolo_face', 'yunet']
 FaceLandmarkerModel = Literal['many', '2dfan4', 'peppa_wutz']
