@@ -5,12 +5,9 @@ import gradio
 from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_float_step
 from facefusion.processors.modules.lip_syncer import choices as lip_syncer_choices
-from facefusion.processors.modules.lip_syncer.locals import LOCALS
-from facefusion.processors.modules.lip_syncer.types import LipSyncerModel, LipSyncerWeight
 from facefusion.processors.core import load_processor_module
+from facefusion.processors.modules.lip_syncer.types import LipSyncerModel, LipSyncerWeight
 from facefusion.uis.core import get_ui_component, register_ui_component
-
-translator.load(LOCALS, __name__)
 
 LIP_SYNCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 LIP_SYNCER_WEIGHT_SLIDER : Optional[gradio.Slider] = None
@@ -22,13 +19,13 @@ def render() -> None:
 
 	has_lip_syncer = 'lip_syncer' in state_manager.get_item('processors')
 	LIP_SYNCER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = translator.get('lip_syncer_uis.model_dropdown', __name__),
+		label = translator.get('uis.lip_syncer_model_dropdown'),
 		choices = lip_syncer_choices.lip_syncer_models,
 		value = state_manager.get_item('lip_syncer_model'),
 		visible = has_lip_syncer
 	)
 	LIP_SYNCER_WEIGHT_SLIDER = gradio.Slider(
-		label = translator.get('lip_syncer_uis.weight_slider', __name__),
+		label = translator.get('uis.lip_syncer_weight_slider'),
 		value = state_manager.get_item('lip_syncer_weight'),
 		step = calculate_float_step(lip_syncer_choices.lip_syncer_weight_range),
 		minimum = lip_syncer_choices.lip_syncer_weight_range[0],

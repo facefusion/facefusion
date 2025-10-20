@@ -23,9 +23,6 @@ from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool,
 from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_frame
 
 
-
-translator.load(LOCALS, __name__)
-
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\

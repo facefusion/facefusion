@@ -8,10 +8,6 @@ from facefusion.filesystem import is_video
 from facefusion.uis.core import get_ui_components
 from facefusion.uis.types import ComponentOptions
 from facefusion.vision import count_video_frame_total
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 TRIM_FRAME_RANGE_SLIDER : Optional[RangeSlider] = None
 
@@ -21,7 +17,7 @@ def render() -> None:
 
 	trim_frame_range_slider_options : ComponentOptions =\
 	{
-		'label': translator.get('uis.trim_frame_slider', __name__),
+		'label': translator.get('uis.trim_frame_slider'),
 		'minimum': 0,
 		'step': 1,
 		'visible': False

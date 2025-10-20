@@ -6,13 +6,13 @@ LOCALS : Locals =\
 	{
 		'help':
 		{
-			'deep_swapper_model': 'choose the model responsible for swapping the face',
-			'deep_swapper_morph': 'morph between source face and target faces'
+			'model': 'choose the model responsible for swapping the face',
+			'morph': 'morph between source face and target faces'
 		},
 		'uis':
 		{
-			'deep_swapper_model_dropdown': 'DEEP SWAPPER MODEL',
-			'deep_swapper_morph_slider': 'DEEP SWAPPER MORPH'
+			'model_dropdown': 'DEEP SWAPPER MODEL',
+			'morph_slider': 'DEEP SWAPPER MORPH'
 		}
 	}
 }

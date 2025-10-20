@@ -6,13 +6,13 @@ LOCALS : Locals =\
 	{
 		'help':
 		{
-			'age_modifier_model': 'choose the model responsible for aging the face',
-			'age_modifier_direction': 'specify the direction in which the age should be modified'
+			'model': 'choose the model responsible for aging the face',
+			'direction': 'specify the direction in which the age should be modified'
 		},
 		'uis':
 		{
-			'age_modifier_direction_slider': 'AGE MODIFIER DIRECTION',
-			'age_modifier_model_dropdown': 'AGE MODIFIER MODEL'
+			'direction_slider': 'AGE MODIFIER DIRECTION',
+			'model_dropdown': 'AGE MODIFIER MODEL'
 		}
 	}
 }

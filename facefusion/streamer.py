@@ -16,10 +16,6 @@ from facefusion.filesystem import is_directory
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import Fps, StreamMode, VisionFrame
 from facefusion.vision import read_static_images
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 
 def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -> Generator[VisionFrame, None, None]:

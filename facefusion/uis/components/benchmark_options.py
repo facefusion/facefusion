@@ -6,10 +6,6 @@ import facefusion.choices
 from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_int_step
 from facefusion.types import BenchmarkMode, BenchmarkResolution
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 BENCHMARK_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
 BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
@@ -22,17 +18,17 @@ def render() -> None:
 	global BENCHMARK_CYCLE_COUNT_SLIDER
 
 	BENCHMARK_MODE_DROPDOWN = gradio.Dropdown(
-		label = translator.get('uis.benchmark_mode_dropdown', __name__),
+		label = translator.get('uis.benchmark_mode_dropdown'),
 		choices = facefusion.choices.benchmark_modes,
 		value = state_manager.get_item('benchmark_mode')
 	)
 	BENCHMARK_RESOLUTIONS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-		label = translator.get('uis.benchmark_resolutions_checkbox_group', __name__),
+		label = translator.get('uis.benchmark_resolutions_checkbox_group'),
 		choices = facefusion.choices.benchmark_resolutions,
 		value = state_manager.get_item('benchmark_resolutions')
 	)
 	BENCHMARK_CYCLE_COUNT_SLIDER = gradio.Slider(
-		label = translator.get('uis.benchmark_cycle_count_slider', __name__),
+		label = translator.get('uis.benchmark_cycle_count_slider'),
 		value = state_manager.get_item('benchmark_cycle_count'),
 		step = calculate_int_step(facefusion.choices.benchmark_cycle_count_range),
 		minimum = facefusion.choices.benchmark_cycle_count_range[0],

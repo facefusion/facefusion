@@ -6,13 +6,13 @@ LOCALS : Locals =\
 	{
 		'help':
 		{
-			'frame_enhancer_model': 'choose the model responsible for enhancing the frame',
-			'frame_enhancer_blend': 'blend the enhanced into the previous frame'
+			'model': 'choose the model responsible for enhancing the frame',
+			'blend': 'blend the enhanced into the previous frame'
 		},
 		'uis':
 		{
-			'frame_enhancer_blend_slider': 'FRAME ENHANCER BLEND',
-			'frame_enhancer_model_dropdown': 'FRAME ENHANCER MODEL'
+			'blend_slider': 'FRAME ENHANCER BLEND',
+			'model_dropdown': 'FRAME ENHANCER MODEL'
 		}
 	}
 }

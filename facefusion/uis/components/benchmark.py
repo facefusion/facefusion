@@ -3,10 +3,6 @@ from typing import Any, Generator, List, Optional
 import gradio
 
 from facefusion import benchmarker, state_manager, translator
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 BENCHMARK_BENCHMARKS_DATAFRAME : Optional[gradio.Dataframe] = None
 BENCHMARK_START_BUTTON : Optional[gradio.Button] = None
@@ -38,7 +34,7 @@ def render() -> None:
 		show_label = False
 	)
 	BENCHMARK_START_BUTTON = gradio.Button(
-		value = translator.get('uis.start_button', __name__),
+		value = translator.get('uis.start_button'),
 		variant = 'primary',
 		size = 'sm'
 	)

@@ -11,10 +11,6 @@ from facefusion.types import Fps, VisionFrame, WebcamMode
 from facefusion.uis.core import get_ui_component
 from facefusion.uis.types import File
 from facefusion.vision import unpack_resolution
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 SOURCE_FILE : Optional[gradio.File] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None
@@ -30,22 +26,22 @@ def render() -> None:
 
 	has_source_image = has_image(state_manager.get_item('source_paths'))
 	SOURCE_FILE = gradio.File(
-		label = translator.get('uis.source_file', __name__),
+		label = translator.get('uis.source_file'),
 		file_count = 'multiple',
 		value = state_manager.get_item('source_paths') if has_source_image else None
 	)
 	WEBCAM_IMAGE = gradio.Image(
-		label = translator.get('uis.webcam_image', __name__),
+		label = translator.get('uis.webcam_image'),
 		format = 'jpeg',
 		visible = False
 	)
 	WEBCAM_START_BUTTON = gradio.Button(
-		value = translator.get('uis.start_button', __name__),
+		value = translator.get('uis.start_button'),
 		variant = 'primary',
 		size = 'sm'
 	)
 	WEBCAM_STOP_BUTTON = gradio.Button(
-		value = translator.get('uis.stop_button', __name__),
+		value = translator.get('uis.stop_button'),
 		size = 'sm',
 		visible = False
 	)

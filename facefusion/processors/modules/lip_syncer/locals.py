@@ -6,13 +6,13 @@ LOCALS : Locals =\
 	{
 		'help':
 		{
-			'lip_syncer_model': 'choose the model responsible for syncing the lips',
-			'lip_syncer_weight': 'specify the degree of weight applied to the lips'
+			'model': 'choose the model responsible for syncing the lips',
+			'weight': 'specify the degree of weight applied to the lips'
 		},
 		'uis':
 		{
-			'lip_syncer_model_dropdown': 'LIP SYNCER MODEL',
-			'lip_syncer_weight_slider': 'LIP SYNCER WEIGHT'
+			'model_dropdown': 'LIP SYNCER MODEL',
+			'weight_slider': 'LIP SYNCER WEIGHT'
 		}
 	}
 }

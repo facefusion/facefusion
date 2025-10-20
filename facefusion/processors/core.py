@@ -4,9 +4,7 @@ from typing import Any, List
 
 from facefusion import logger, translator
 from facefusion.exit_helper import hard_exit
-from facefusion.locals import LOCALS
 
-translator.load(LOCALS, __name__)
 
 PROCESSORS_METHODS =\
 [

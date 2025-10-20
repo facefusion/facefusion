@@ -12,10 +12,6 @@ from facefusion import logger, metadata, state_manager, translator
 from facefusion.exit_helper import hard_exit
 from facefusion.filesystem import resolve_relative_path
 from facefusion.uis.types import Component, ComponentName
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 UI_COMPONENTS: Dict[ComponentName, Component] = {}
 UI_LAYOUT_MODULES : List[ModuleType] = []

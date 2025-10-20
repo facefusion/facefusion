@@ -11,11 +11,7 @@ from facefusion import curl_builder, logger, process_manager, state_manager, tra
 from facefusion.filesystem import get_file_name, get_file_size, is_file, remove_file
 from facefusion.hash_helper import validate_hash
 from facefusion.types import Command, DownloadProvider, DownloadSet
-from facefusion.locals import LOCALS
 
-
-
-translator.load(LOCALS, __name__)
 
 def open_curl(commands : List[Command]) -> subprocess.Popen[bytes]:
 	commands = curl_builder.run(commands)

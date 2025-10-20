@@ -8,10 +8,6 @@ from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
 from facefusion.vision import count_video_frame_total
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 PREVIEW_FRAME_SLIDER: Optional[gradio.Slider] = None
 PREVIEW_MODE_DROPDOWN: Optional[gradio.Dropdown] = None
@@ -23,7 +19,7 @@ def render() -> None:
 
 	preview_frame_slider_options : ComponentOptions =\
 	{
-		'label': translator.get('uis.preview_frame_slider', __name__),
+		'label': translator.get('uis.preview_frame_slider'),
 		'step': 1,
 		'minimum': 0,
 		'maximum': 100,
@@ -36,13 +32,13 @@ def render() -> None:
 	PREVIEW_FRAME_SLIDER = gradio.Slider(**preview_frame_slider_options)
 	with gradio.Row():
 		PREVIEW_MODE_DROPDOWN = gradio.Dropdown(
-			label = translator.get('uis.preview_mode_dropdown', __name__),
+			label = translator.get('uis.preview_mode_dropdown'),
 			value = uis_choices.preview_modes[0],
 			choices = uis_choices.preview_modes,
 			visible = True
 		)
 		PREVIEW_RESOLUTION_DROPDOWN = gradio.Dropdown(
-			label = translator.get('uis.preview_resolution_dropdown', __name__),
+			label = translator.get('uis.preview_resolution_dropdown'),
 			value = uis_choices.preview_resolutions[-1],
 			choices = uis_choices.preview_resolutions,
 			visible = True

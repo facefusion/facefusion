@@ -9,10 +9,6 @@ from types import FrameType
 
 from facefusion import metadata, translator
 from facefusion.common_helper import is_linux, is_windows
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 ONNXRUNTIME_SET =\
 {

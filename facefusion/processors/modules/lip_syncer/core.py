@@ -20,15 +20,11 @@ from facefusion.processors.types import LipSyncerInputs, LipSyncerWeight, Proces
 from facefusion.processors.modules.lip_syncer.types import LipSyncerInputs, LipSyncerWeight
 from facefusion.processors.modules.lip_syncer import choices as processor_choices
 from facefusion import translator
-from facefusion.processors.modules.lip_syncer.locals import LOCALS
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
-
-
-translator.load(LOCALS, __name__)
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:

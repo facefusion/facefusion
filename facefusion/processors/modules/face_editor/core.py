@@ -19,7 +19,6 @@ from facefusion.processors.live_portrait import create_rotation, limit_angle, li
 from facefusion.processors.modules.face_editor.types import FaceEditorInputs
 from facefusion.processors.modules.face_editor import choices as processor_choices
 from facefusion import translator
-from facefusion.processors.modules.face_editor.locals import LOCALS
 from facefusion.processors.types import LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
 from facefusion.processors.types import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
@@ -27,9 +26,6 @@ from facefusion.thread_helper import conditional_thread_semaphore, thread_semaph
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
-
-
-translator.load(LOCALS, __name__)
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:

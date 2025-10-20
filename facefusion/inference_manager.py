@@ -12,10 +12,6 @@ from facefusion.exit_helper import fatal_exit
 from facefusion.filesystem import get_file_name, is_file
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import DownloadSet, ExecutionProvider, InferencePool, InferencePoolSet
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 INFERENCE_POOL_SET : InferencePoolSet =\
 {

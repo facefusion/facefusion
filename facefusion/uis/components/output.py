@@ -6,10 +6,6 @@ import gradio
 
 from facefusion import state_manager, translator
 from facefusion.uis.core import register_ui_component
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 OUTPUT_PATH_TEXTBOX : Optional[gradio.Textbox] = None
 OUTPUT_IMAGE : Optional[gradio.Image] = None
@@ -29,16 +25,16 @@ def render() -> None:
 		else:
 			state_manager.set_item('output_path', tempfile.gettempdir())
 	OUTPUT_PATH_TEXTBOX = gradio.Textbox(
-		label = translator.get('uis.output_path_textbox', __name__),
+		label = translator.get('uis.output_path_textbox'),
 		value = state_manager.get_item('output_path'),
 		max_lines = 1
 	)
 	OUTPUT_IMAGE = gradio.Image(
-		label = translator.get('uis.output_image_or_video', __name__),
+		label = translator.get('uis.output_image_or_video'),
 		visible = False
 	)
 	OUTPUT_VIDEO = gradio.Video(
-		label = translator.get('uis.output_image_or_video', __name__)
+		label = translator.get('uis.output_image_or_video')
 	)
 
 

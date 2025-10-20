@@ -3,9 +3,6 @@ from time import time
 from typing import Optional, Tuple
 
 from facefusion import translator
-from facefusion.locals import LOCALS
-
-translator.load(LOCALS, __name__)
 
 
 def get_current_date_time() -> datetime:

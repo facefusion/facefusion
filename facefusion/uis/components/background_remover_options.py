@@ -2,12 +2,13 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, register_ui_component, translator
-
-
-from facefusion.processors.modules.background_remover.locals import LOCALS
-
-translator.load(LOCALS, __name__)
+from facefusion import state_manager, translator
+from facefusion.common_helper import calculate_int_step
+from facefusion.processors.modules.background_remover import choices as background_remover_choices
+from facefusion.processors.core import load_processor_module
+from facefusion.processors.modules.background_remover.types import BackgroundRemoverModel
+from facefusion.sanitizer import sanitize_int_range
+from facefusion.uis.core import get_ui_component, register_ui_component
 
 BACKGROUND_REMOVER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
 BACKGROUND_REMOVER_COLOR_RED_NUMBER : Optional[gradio.Number] = None
@@ -26,44 +27,44 @@ def render() -> None:
 	has_background_remover = 'background_remover' in state_manager.get_item('processors')
 	background_remover_color = state_manager.get_item('background_remover_color')
 	BACKGROUND_REMOVER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = translator.get('background_remover_uis.model_dropdown', __name__),
-		choices = processors_choices.background_remover_models,
+		label = translator.get('uis.background_remover_model_dropdown'),
+		choices = background_remover_choices.background_remover_models,
 		value = state_manager.get_item('background_remover_model'),
 		visible = has_background_remover
 	)
 	with gradio.Group():
 		with gradio.Row():
 			BACKGROUND_REMOVER_COLOR_RED_NUMBER = gradio.Number(
-				label = translator.get('background_remover_uis.color_red_number', __name__),
+				label = translator.get('uis.background_remover_color_red_number'),
 				value = background_remover_color[0],
-				minimum = processors_choices.background_remover_color_range[0],
-				maximum = processors_choices.background_remover_color_range[-1],
-				step = calculate_int_step(processors_choices.background_remover_color_range),
+				minimum = background_remover_choices.background_remover_color_range[0],
+				maximum = background_remover_choices.background_remover_color_range[-1],
+				step = calculate_int_step(background_remover_choices.background_remover_color_range),
 				visible = has_background_remover,
 			)
 			BACKGROUND_REMOVER_COLOR_GREEN_NUMBER = gradio.Number(
-				label = translator.get('background_remover_uis.color_green_number', __name__),
+				label = translator.get('uis.background_remover_color_green_number'),
 				value = background_remover_color[1],
-				minimum = processors_choices.background_remover_color_range[0],
-				maximum = processors_choices.background_remover_color_range[-1],
-				step = calculate_int_step(processors_choices.background_remover_color_range),
+				minimum = background_remover_choices.background_remover_color_range[0],
+				maximum = background_remover_choices.background_remover_color_range[-1],
+				step = calculate_int_step(background_remover_choices.background_remover_color_range),
 				visible = has_background_remover,
 			)
 		with gradio.Row():
 			BACKGROUND_REMOVER_COLOR_BLUE_NUMBER = gradio.Number(
-				label = translator.get('background_remover_uis.color_blue_number', __name__),
+				label = translator.get('uis.background_remover_color_blue_number'),
 				value = background_remover_color[2],
-				minimum = processors_choices.background_remover_color_range[0],
-				maximum = processors_choices.background_remover_color_range[-1],
-				step = calculate_int_step(processors_choices.background_remover_color_range),
+				minimum = background_remover_choices.background_remover_color_range[0],
+				maximum = background_remover_choices.background_remover_color_range[-1],
+				step = calculate_int_step(background_remover_choices.background_remover_color_range),
 				visible = has_background_remover,
 			)
 			BACKGROUND_REMOVER_COLOR_ALPHA_NUMBER = gradio.Number(
-				label = translator.get('background_remover_uis.color_alpha_number', __name__),
+				label = translator.get('uis.background_remover_color_alpha_number'),
 				value = background_remover_color[3],
-				minimum = processors_choices.background_remover_color_range[0],
-				maximum = processors_choices.background_remover_color_range[-1],
-				step = calculate_int_step(processors_choices.background_remover_color_range),
+				minimum = background_remover_choices.background_remover_color_range[0],
+				maximum = background_remover_choices.background_remover_color_range[-1],
+				step = calculate_int_step(background_remover_choices.background_remover_color_range),
 				visible = has_background_remover,
 			)
 	register_ui_component('background_remover_model_dropdown', BACKGROUND_REMOVER_MODEL_DROPDOWN)
@@ -100,8 +101,8 @@ def update_background_remover_model(background_remover_model : BackgroundRemover
 
 
 def update_background_remover_color(red : int, green : int, blue : int, alpha : int) -> None:
-	red = sanitize_int_range(red, processors_choices.background_remover_color_range)
-	green = sanitize_int_range(green, processors_choices.background_remover_color_range)
-	blue = sanitize_int_range(blue, processors_choices.background_remover_color_range)
-	alpha = sanitize_int_range(alpha, processors_choices.background_remover_color_range)
+	red = sanitize_int_range(red, background_remover_choices.background_remover_color_range)
+	green = sanitize_int_range(green, background_remover_choices.background_remover_color_range)
+	blue = sanitize_int_range(blue, background_remover_choices.background_remover_color_range)
+	alpha = sanitize_int_range(alpha, background_remover_choices.background_remover_color_range)
 	state_manager.set_item('background_remover_color', (red, green, blue, alpha))

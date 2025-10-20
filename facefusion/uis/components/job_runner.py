@@ -12,10 +12,6 @@ from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component
 from facefusion.uis.types import JobRunnerAction
 from facefusion.uis.ui_helper import convert_str_none
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 JOB_RUNNER_WRAPPER : Optional[gradio.Column] = None
 JOB_RUNNER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -37,23 +33,23 @@ def render() -> None:
 
 		with gradio.Column(visible = is_job_runner) as JOB_RUNNER_WRAPPER:
 			JOB_RUNNER_JOB_ACTION_DROPDOWN = gradio.Dropdown(
-				label = translator.get('uis.job_runner_job_action_dropdown', __name__),
+				label = translator.get('uis.job_runner_job_action_dropdown'),
 				choices = uis_choices.job_runner_actions,
 				value = get_first(uis_choices.job_runner_actions)
 			)
 			JOB_RUNNER_JOB_ID_DROPDOWN = gradio.Dropdown(
-				label = translator.get('uis.job_runner_job_id_dropdown', __name__),
+				label = translator.get('uis.job_runner_job_id_dropdown'),
 				choices = queued_job_ids,
 				value = get_last(queued_job_ids)
 			)
 			with gradio.Row():
 				JOB_RUNNER_START_BUTTON = gradio.Button(
-					value = translator.get('uis.start_button', __name__),
+					value = translator.get('uis.start_button'),
 					variant = 'primary',
 					size = 'sm'
 				)
 				JOB_RUNNER_STOP_BUTTON = gradio.Button(
-					value = translator.get('uis.stop_button', __name__),
+					value = translator.get('uis.stop_button'),
 					variant = 'primary',
 					size = 'sm',
 					visible = False
@@ -91,40 +87,40 @@ def run(job_action : JobRunnerAction, job_id : str) -> Tuple[gradio.Button, grad
 		state_manager.sync_item(key) #type:ignore[arg-type]
 
 	if job_action == 'job-run':
-		logger.info(translator.get('running_job', __name__).format(job_id = job_id), __name__)
+		logger.info(translator.get('running_job').format(job_id = job_id), __name__)
 		if job_id and job_runner.run_job(job_id, process_step):
-			logger.info(translator.get('processing_job_succeeded', __name__).format(job_id = job_id), __name__)
+			logger.info(translator.get('processing_job_succeeded').format(job_id = job_id), __name__)
 		else:
-			logger.info(translator.get('processing_job_failed', __name__).format(job_id = job_id), __name__)
+			logger.info(translator.get('processing_job_failed').format(job_id = job_id), __name__)
 		updated_job_ids = job_manager.find_job_ids('queued') or [ 'none' ]
 
 		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Dropdown(value = get_last(updated_job_ids), choices = updated_job_ids)
 
 	if job_action == 'job-run-all':
-		logger.info(translator.get('running_jobs', __name__), __name__)
+		logger.info(translator.get('running_jobs'), __name__)
 		halt_on_error = False
 		if job_runner.run_jobs(process_step, halt_on_error):
-			logger.info(translator.get('processing_jobs_succeeded', __name__), __name__)
+			logger.info(translator.get('processing_jobs_succeeded'), __name__)
 		else:
-			logger.info(translator.get('processing_jobs_failed', __name__), __name__)
+			logger.info(translator.get('processing_jobs_failed'), __name__)
 
 	if job_action == 'job-retry':
-		logger.info(translator.get('retrying_job', __name__).format(job_id = job_id), __name__)
+		logger.info(translator.get('retrying_job').format(job_id = job_id), __name__)
 		if job_id and job_runner.retry_job(job_id, process_step):
-			logger.info(translator.get('processing_job_succeeded', __name__).format(job_id = job_id), __name__)
+			logger.info(translator.get('processing_job_succeeded').format(job_id = job_id), __name__)
 		else:
-			logger.info(translator.get('processing_job_failed', __name__).format(job_id = job_id), __name__)
+			logger.info(translator.get('processing_job_failed').format(job_id = job_id), __name__)
 		updated_job_ids = job_manager.find_job_ids('failed') or [ 'none' ]
 
 		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Dropdown(value = get_last(updated_job_ids), choices = updated_job_ids)
 
 	if job_action == 'job-retry-all':
-		logger.info(translator.get('retrying_jobs', __name__), __name__)
+		logger.info(translator.get('retrying_jobs'), __name__)
 		halt_on_error = False
 		if job_runner.retry_jobs(process_step, halt_on_error):
-			logger.info(translator.get('processing_jobs_succeeded', __name__), __name__)
+			logger.info(translator.get('processing_jobs_succeeded'), __name__)
 		else:
-			logger.info(translator.get('processing_jobs_failed', __name__), __name__)
+			logger.info(translator.get('processing_jobs_failed'), __name__)
 	return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Dropdown()
 
 

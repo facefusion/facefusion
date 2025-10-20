@@ -18,7 +18,6 @@ from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.modules.age_modifier import choices as processor_choices
 from facefusion import translator
-from facefusion.processors.modules.age_modifier.locals import LOCALS
 from facefusion.processors.modules.age_modifier.types import AgeModifierDirection, AgeModifierInputs
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import AgeModifierDirection, AgeModifierInputs, ProcessorOutputs
@@ -27,9 +26,6 @@ from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import match_frame_color, read_static_image, read_static_video_frame
 
-
-
-translator.load(LOCALS, __name__)
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:

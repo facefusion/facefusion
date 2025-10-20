@@ -11,11 +11,7 @@ from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.jobs import job_store
 from facefusion.processors.core import get_processors_modules
 from facefusion.sanitizer import sanitize_int_range
-from facefusion.locals import LOCALS
 
-
-
-translator.load(LOCALS, __name__)
 
 def create_help_formatter_small(prog : str) -> HelpFormatter:
 	return HelpFormatter(prog, max_help_position = 50)

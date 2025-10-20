@@ -4,10 +4,6 @@ import gradio
 
 from facefusion import state_manager, translator
 from facefusion.uis import choices as uis_choices
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 COMMON_OPTIONS_CHECKBOX_GROUP : Optional[gradio.Checkboxgroup] = None
 
@@ -21,7 +17,7 @@ def render() -> None:
 		common_options.append('keep-temp')
 
 	COMMON_OPTIONS_CHECKBOX_GROUP = gradio.Checkboxgroup(
-		label = translator.get('uis.common_options_checkbox_group', __name__),
+		label = translator.get('uis.common_options_checkbox_group'),
 		choices = uis_choices.common_options,
 		value = common_options
 	)

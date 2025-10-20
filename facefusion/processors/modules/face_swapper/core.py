@@ -20,7 +20,6 @@ from facefusion.filesystem import filter_image_paths, has_image, in_directory, i
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors.modules.face_swapper import choices as processor_choices
 from facefusion import translator
-from facefusion.processors.modules.face_swapper.locals import LOCALS
 from facefusion.processors.modules.face_swapper.types import FaceSwapperInputs
 from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.processors.types import FaceSwapperInputs, ProcessorOutputs
@@ -29,9 +28,6 @@ from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_images, read_static_video_frame, unpack_resolution
 
-
-
-translator.load(LOCALS, __name__)
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:

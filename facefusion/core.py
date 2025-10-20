@@ -18,11 +18,7 @@ from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode
 from facefusion.workflows import image_to_image, image_to_video
-from facefusion.locals import LOCALS
 
-
-
-translator.load(LOCALS, __name__)
 
 def cli() -> None:
 	if pre_check():

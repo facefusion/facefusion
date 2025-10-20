@@ -12,10 +12,6 @@ from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component
 from facefusion.uis.types import JobManagerAction
 from facefusion.uis.ui_helper import convert_int_none, convert_str_none, suggest_output_path
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 JOB_MANAGER_WRAPPER : Optional[gradio.Column] = None
 JOB_MANAGER_JOB_ACTION_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -39,31 +35,31 @@ def render() -> None:
 
 		with gradio.Column(visible = is_job_manager) as JOB_MANAGER_WRAPPER:
 			JOB_MANAGER_JOB_ACTION_DROPDOWN = gradio.Dropdown(
-				label = translator.get('uis.job_manager_job_action_dropdown', __name__),
+				label = translator.get('uis.job_manager_job_action_dropdown'),
 				choices = uis_choices.job_manager_actions,
 				value = get_first(uis_choices.job_manager_actions)
 			)
 			JOB_MANAGER_JOB_ID_TEXTBOX = gradio.Textbox(
-				label = translator.get('uis.job_manager_job_id_dropdown', __name__),
+				label = translator.get('uis.job_manager_job_id_dropdown'),
 				max_lines = 1,
 				interactive = True
 			)
 			JOB_MANAGER_JOB_ID_DROPDOWN = gradio.Dropdown(
-				label = translator.get('uis.job_manager_job_id_dropdown', __name__),
+				label = translator.get('uis.job_manager_job_id_dropdown'),
 				choices = drafted_job_ids,
 				value = get_last(drafted_job_ids),
 				interactive = True,
 				visible = False
 			)
 			JOB_MANAGER_STEP_INDEX_DROPDOWN = gradio.Dropdown(
-				label = translator.get('uis.job_manager_step_index_dropdown', __name__),
+				label = translator.get('uis.job_manager_step_index_dropdown'),
 				choices = [ 'none' ],
 				value = 'none',
 				interactive = True,
 				visible = False
 			)
 			JOB_MANAGER_APPLY_BUTTON = gradio.Button(
-				value = translator.get('uis.apply_button', __name__),
+				value = translator.get('uis.apply_button'),
 				variant = 'primary',
 				size = 'sm'
 			)
@@ -98,68 +94,68 @@ def apply(job_action : JobManagerAction, created_job_id : str, selected_job_id :
 		if created_job_id and job_manager.create_job(created_job_id):
 			updated_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 
-			logger.info(translator.get('job_created', __name__).format(job_id = created_job_id), __name__)
+			logger.info(translator.get('job_created').format(job_id = created_job_id), __name__)
 			return gradio.Dropdown(value = 'job-add-step'), gradio.Textbox(visible = False), gradio.Dropdown(value = created_job_id, choices = updated_job_ids, visible = True), gradio.Dropdown()
 		else:
-			logger.error(translator.get('job_not_created', __name__).format(job_id = created_job_id), __name__)
+			logger.error(translator.get('job_not_created').format(job_id = created_job_id), __name__)
 
 	if job_action == 'job-submit':
 		if selected_job_id and job_manager.submit_job(selected_job_id):
 			updated_job_ids = job_manager.find_job_ids('drafted') or [ 'none' ]
 
-			logger.info(translator.get('job_submitted', __name__).format(job_id = selected_job_id), __name__)
+			logger.info(translator.get('job_submitted').format(job_id = selected_job_id), __name__)
 			return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(value = get_last(updated_job_ids), choices = updated_job_ids, visible = True), gradio.Dropdown()
 		else:
-			logger.error(translator.get('job_not_submitted', __name__).format(job_id = selected_job_id), __name__)
+			logger.error(translator.get('job_not_submitted').format(job_id = selected_job_id), __name__)
 
 	if job_action == 'job-delete':
 		if selected_job_id and job_manager.delete_job(selected_job_id):
 			updated_job_ids = job_manager.find_job_ids('drafted') + job_manager.find_job_ids('queued') + job_manager.find_job_ids('failed') + job_manager.find_job_ids('completed') or [ 'none' ]
 
-			logger.info(translator.get('job_deleted', __name__).format(job_id = selected_job_id), __name__)
+			logger.info(translator.get('job_deleted').format(job_id = selected_job_id), __name__)
 			return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(value = get_last(updated_job_ids), choices = updated_job_ids, visible = True), gradio.Dropdown()
 		else:
-			logger.error(translator.get('job_not_deleted', __name__).format(job_id = selected_job_id), __name__)
+			logger.error(translator.get('job_not_deleted').format(job_id = selected_job_id), __name__)
 
 	if job_action == 'job-add-step':
 		if selected_job_id and job_manager.add_step(selected_job_id, step_args):
 			state_manager.set_item('output_path', output_path)
-			logger.info(translator.get('job_step_added', __name__).format(job_id = selected_job_id), __name__)
+			logger.info(translator.get('job_step_added').format(job_id = selected_job_id), __name__)
 			return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(visible = True), gradio.Dropdown(visible = False)
 		else:
 			state_manager.set_item('output_path', output_path)
-			logger.error(translator.get('job_step_not_added', __name__).format(job_id = selected_job_id), __name__)
+			logger.error(translator.get('job_step_not_added').format(job_id = selected_job_id), __name__)
 
 	if job_action == 'job-remix-step':
 		if selected_job_id and job_manager.has_step(selected_job_id, selected_step_index) and job_manager.remix_step(selected_job_id, selected_step_index, step_args):
 			updated_step_choices = get_step_choices(selected_job_id) or [ 'none' ] #type:ignore[list-item]
 
 			state_manager.set_item('output_path', output_path)
-			logger.info(translator.get('job_remix_step_added', __name__).format(job_id = selected_job_id, step_index = selected_step_index), __name__)
+			logger.info(translator.get('job_remix_step_added').format(job_id = selected_job_id, step_index = selected_step_index), __name__)
 			return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(visible = True), gradio.Dropdown(value = get_last(updated_step_choices), choices = updated_step_choices, visible = True)
 		else:
 			state_manager.set_item('output_path', output_path)
-			logger.error(translator.get('job_remix_step_not_added', __name__).format(job_id = selected_job_id, step_index = selected_step_index), __name__)
+			logger.error(translator.get('job_remix_step_not_added').format(job_id = selected_job_id, step_index = selected_step_index), __name__)
 
 	if job_action == 'job-insert-step':
 		if selected_job_id and job_manager.has_step(selected_job_id, selected_step_index) and job_manager.insert_step(selected_job_id, selected_step_index, step_args):
 			updated_step_choices = get_step_choices(selected_job_id) or [ 'none' ] #type:ignore[list-item]
 
 			state_manager.set_item('output_path', output_path)
-			logger.info(translator.get('job_step_inserted', __name__).format(job_id = selected_job_id, step_index = selected_step_index), __name__)
+			logger.info(translator.get('job_step_inserted').format(job_id = selected_job_id, step_index = selected_step_index), __name__)
 			return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(visible = True), gradio.Dropdown(value = get_last(updated_step_choices), choices = updated_step_choices, visible = True)
 		else:
 			state_manager.set_item('output_path', output_path)
-			logger.error(translator.get('job_step_not_inserted', __name__).format(job_id = selected_job_id, step_index = selected_step_index), __name__)
+			logger.error(translator.get('job_step_not_inserted').format(job_id = selected_job_id, step_index = selected_step_index), __name__)
 
 	if job_action == 'job-remove-step':
 		if selected_job_id and job_manager.has_step(selected_job_id, selected_step_index) and job_manager.remove_step(selected_job_id, selected_step_index):
 			updated_step_choices = get_step_choices(selected_job_id) or [ 'none' ] #type:ignore[list-item]
 
-			logger.info(translator.get('job_step_removed', __name__).format(job_id = selected_job_id, step_index = selected_step_index), __name__)
+			logger.info(translator.get('job_step_removed').format(job_id = selected_job_id, step_index = selected_step_index), __name__)
 			return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(visible = True), gradio.Dropdown(value = get_last(updated_step_choices), choices = updated_step_choices, visible = True)
 		else:
-			logger.error(translator.get('job_step_not_removed', __name__).format(job_id = selected_job_id, step_index = selected_step_index), __name__)
+			logger.error(translator.get('job_step_not_removed').format(job_id = selected_job_id, step_index = selected_step_index), __name__)
 	return gradio.Dropdown(), gradio.Textbox(), gradio.Dropdown(), gradio.Dropdown()
 
 

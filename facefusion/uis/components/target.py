@@ -7,10 +7,6 @@ from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import is_image, is_video
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.types import ComponentOptions, File
-from facefusion.locals import LOCALS
-
-
-translator.load(LOCALS, __name__)
 
 TARGET_FILE : Optional[gradio.File] = None
 TARGET_IMAGE : Optional[gradio.Image] = None
@@ -25,7 +21,7 @@ def render() -> None:
 	is_target_image = is_image(state_manager.get_item('target_path'))
 	is_target_video = is_video(state_manager.get_item('target_path'))
 	TARGET_FILE = gradio.File(
-		label = translator.get('uis.target_file', __name__),
+		label = translator.get('uis.target_file'),
 		value = state_manager.get_item('target_path') if is_target_image or is_target_video else None
 	)
 	target_image_options : ComponentOptions =\

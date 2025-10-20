@@ -6,11 +6,11 @@ LOCALS : Locals =\
 	{
 		'help':
 		{
-			'face_debugger_items': 'load a single or multiple processors (choices: {choices})'
+			'items': 'load a single or multiple processors (choices: {choices})'
 		},
 		'uis':
 		{
-			'face_debugger_items_checkbox_group': 'FACE DEBUGGER ITEMS'
+			'items_checkbox_group': 'FACE DEBUGGER ITEMS'
 		}
 	}
 }
