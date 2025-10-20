@@ -5,7 +5,7 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import create_float_metavar, create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import scale_face
@@ -13,18 +13,18 @@ from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
-from facefusion.processors.modules.face_enhancer.types import FaceEnhancerInputs, FaceEnhancerWeight
 from facefusion.processors.modules.face_enhancer import choices as processor_choices
+from facefusion.processors.modules.face_enhancer.types import FaceEnhancerInputs, FaceEnhancerWeight
 from facefusion import translator
 from facefusion.processors.modules.face_enhancer.locals import LOCALS
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FaceEnhancerInputs, FaceEnhancerWeight, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
-
-MODULE_SCOPE = 'facefusion.processors.modules.face_enhancer'
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, read_static_image, read_static_video_frame
+
+MODULE_SCOPE = 'facefusion.processors.modules.face_enhancer'
 
 
 @lru_cache()

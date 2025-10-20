@@ -8,7 +8,7 @@ from cv2.typing import Size
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
 from facefusion.face_analyser import scale_face
@@ -16,18 +16,18 @@ from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import get_file_name, in_directory, is_image, is_video, resolve_file_paths, resolve_relative_path, same_file_extension
-from facefusion.processors.modules.deep_swapper.types import DeepSwapperInputs, DeepSwapperMorph
 from facefusion.processors.modules.deep_swapper import choices as processor_choices
+from facefusion.processors.modules.deep_swapper.types import DeepSwapperInputs, DeepSwapperMorph
 from facefusion import translator
 from facefusion.processors.modules.deep_swapper.locals import LOCALS
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import DeepSwapperInputs, DeepSwapperMorph, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
-
-MODULE_SCOPE = 'facefusion.processors.modules.deep_swapper'
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import conditional_match_frame_color, read_static_image, read_static_video_frame
+
+MODULE_SCOPE = 'facefusion.processors.modules.deep_swapper'
 
 
 @lru_cache()

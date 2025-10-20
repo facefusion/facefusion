@@ -4,10 +4,10 @@ from facefusion.processors.modules.deep_swapper.choices import deep_swapper_mode
 from facefusion.processors.modules.expression_restorer.choices import expression_restorer_areas, expression_restorer_factor_range, expression_restorer_models  # noqa: F401
 from facefusion.processors.modules.face_debugger.choices import face_debugger_items  # noqa: F401
 from facefusion.processors.modules.face_editor.choices import (  # noqa: F401
-	face_editor_eyebrow_direction_range,
 	face_editor_eye_gaze_horizontal_range,
 	face_editor_eye_gaze_vertical_range,
 	face_editor_eye_open_ratio_range,
+	face_editor_eyebrow_direction_range,
 	face_editor_head_pitch_range,
 	face_editor_head_roll_range,
 	face_editor_head_yaw_range,

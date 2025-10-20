@@ -4,8 +4,8 @@ import gradio
 
 from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_float_step
-from facefusion.processors.modules.face_editor import choices as face_editor_choices
 from facefusion.processors.core import load_processor_module
+from facefusion.processors.modules.face_editor import choices as face_editor_choices
 from facefusion.processors.modules.face_editor.types import FaceEditorModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 

@@ -3,7 +3,7 @@ from typing import List, Optional
 import gradio
 
 import facefusion.choices
-from facefusion import content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, state_manager, voice_extractor, translator
+from facefusion import content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, state_manager, translator, voice_extractor
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import DownloadProvider

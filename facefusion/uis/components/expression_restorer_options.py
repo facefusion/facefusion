@@ -4,8 +4,8 @@ import gradio
 
 from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_float_step
-from facefusion.processors.modules.expression_restorer import choices as expression_restorer_choices
 from facefusion.processors.core import load_processor_module
+from facefusion.processors.modules.expression_restorer import choices as expression_restorer_choices
 from facefusion.processors.modules.expression_restorer.types import ExpressionRestorerArea, ExpressionRestorerModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 

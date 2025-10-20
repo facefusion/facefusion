@@ -3,7 +3,7 @@ from typing import Optional
 import gradio
 
 import facefusion.choices
-from facefusion import state_manager, voice_extractor, translator
+from facefusion import state_manager, translator, voice_extractor
 from facefusion.filesystem import is_video
 from facefusion.types import VoiceExtractorModel
 from facefusion.uis.core import get_ui_components, register_ui_component

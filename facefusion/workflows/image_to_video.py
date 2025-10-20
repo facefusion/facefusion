@@ -5,7 +5,7 @@ import numpy
 from tqdm import tqdm
 
 from facefusion import ffmpeg
-from facefusion import logger, process_manager, state_manager, video_manager, translator
+from facefusion import logger, process_manager, state_manager, translator, video_manager
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_video

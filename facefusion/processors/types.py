@@ -1,6 +1,7 @@
 from typing import Any, Dict, TypeAlias
 
 from numpy.typing import NDArray
+
 from facefusion.types import AppContext
 
 LivePortraitPitch : TypeAlias = float

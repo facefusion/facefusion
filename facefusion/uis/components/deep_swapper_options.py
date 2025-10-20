@@ -4,8 +4,8 @@ import gradio
 
 from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_int_step
-from facefusion.processors.modules.deep_swapper import choices as deep_swapper_choices
 from facefusion.processors.core import load_processor_module
+from facefusion.processors.modules.deep_swapper import choices as deep_swapper_choices
 from facefusion.processors.modules.deep_swapper.types import DeepSwapperModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 
