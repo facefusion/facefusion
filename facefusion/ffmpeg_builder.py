@@ -1,11 +1,12 @@
 import itertools
 import shutil
-from typing import Optional
+from typing import List, Optional
 
 import numpy
 
 from facefusion.filesystem import get_file_format
-from facefusion.types import AudioEncoder, Commands, CommandsArgumentSet, Duration, Fps, StreamMode, VideoEncoder, VideoPreset
+from facefusion.types import AudioEncoder, Command, Commands, CommandSet, Duration, Fps, StreamMode, VideoEncoder, \
+	VideoPreset
 
 
 def run(commands : Commands) -> Commands:
@@ -16,19 +17,19 @@ def chain(*commands : Commands) -> Commands:
 	return list(itertools.chain(*commands))
 
 
-def concat(*commands: Commands) -> Commands:
-	commands_argument_set : CommandsArgumentSet = {}
+def concat(*commands : List[Command]) -> List[Command]:
+	command_set : CommandSet = {}
+	__commands__ = []
 
 	for command in commands:
 		for argument, value in zip(command[::2], command[1::2]):
-			commands_argument_set.setdefault(argument, []).append(value)
+			command_set.setdefault(argument, []).append(value)
 
-	concat_commands = []
-	for argument, values in commands_argument_set.items():
-		concat_commands.append(argument)
-		concat_commands.append(','.join(values))
+	for argument, values in command_set.items():
+		__commands__.append(argument)
+		__commands__.append(','.join(values))
 
-	return concat_commands
+	return __commands__
 
 
 def get_encoders() -> Commands:

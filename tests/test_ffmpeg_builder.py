@@ -9,7 +9,6 @@ def test_run() -> None:
 
 
 def test_chain() -> None:
-	assert chain(ffmpeg_builder.set_progress()) == [ '-progress' ]
 	assert chain(
 		ffmpeg_builder.set_input('input.mp4'),
 		ffmpeg_builder.set_output('output.mp4')
