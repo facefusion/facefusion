@@ -37,17 +37,16 @@ def read_image(image_path : str) -> Optional[VisionFrame]:
 
 
 @lru_cache(maxsize = 64)
-def read_static_mask(image_path: str) -> Optional[Mask]:
-	return read_mask(image_path)
+def read_static_alpha_image(image_path : str) -> Optional[VisionFrame]:
+	return read_alpha_image(image_path)
 
 
-def read_mask(image_path: str) -> Optional[Mask]:
+def read_alpha_image(image_path : str) -> Optional[VisionFrame]:
 	if is_image(image_path):
-		vision_frame = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-
-		if vision_frame.ndim == 3 and vision_frame.shape[2] == 4:
-			alpha = vision_frame[:, :, 3]
-			return alpha
+		if is_windows():
+			image_buffer = numpy.fromfile(image_path, dtype = numpy.uint8)
+			return cv2.imdecode(image_buffer, cv2.IMREAD_UNCHANGED)
+		return cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
 	return None
 
 
@@ -359,10 +358,12 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 	return merge_vision_frame
 
 
-def separate_vision_frame_mask(temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mask]:
-	blue_channel, green_channel, red_channel, alpha_channel = cv2.split(temp_vision_frame)
-	temp_vision_frame = cv2.merge([ blue_channel, green_channel, red_channel ])
-	return temp_vision_frame, alpha_channel
+def separate_vision_frame_mask(temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, Optional[Mask]]:
+	if temp_vision_frame.ndim == 3 and temp_vision_frame.shape[2] == 4:
+		blue_channel, green_channel, red_channel, alpha_channel = cv2.split(temp_vision_frame)
+		temp_vision_frame = cv2.merge([ blue_channel, green_channel, red_channel ])
+		return temp_vision_frame, alpha_channel
+	return temp_vision_frame, None
 
 
 def merge_vision_frame_mask(temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -> VisionFrame:
