@@ -17,19 +17,19 @@ def chain(*commands : Commands) -> Commands:
 	return list(itertools.chain(*commands))
 
 
-def concat(*commands : List[Command]) -> List[Command]:
+def concat(*__commands__ : List[Command]) -> List[Command]:
+	commands = []
 	command_set : CommandSet = {}
-	__commands__ = []
 
-	for command in commands:
+	for command in __commands__:
 		for argument, value in zip(command[::2], command[1::2]):
 			command_set.setdefault(argument, []).append(value)
 
 	for argument, values in command_set.items():
-		__commands__.append(argument)
-		__commands__.append(','.join(values))
+		commands.append(argument)
+		commands.append(','.join(values))
 
-	return __commands__
+	return commands
 
 
 def get_encoders() -> Commands:
