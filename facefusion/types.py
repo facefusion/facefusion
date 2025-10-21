@@ -127,7 +127,7 @@ VoiceExtractorModel = Literal['kim_vocal_1', 'kim_vocal_2', 'uvr_mdxnet']
 
 AudioFormat = Literal['flac', 'm4a', 'mp3', 'ogg', 'opus', 'wav']
 ImageFormat = Literal['bmp', 'jpeg', 'png', 'tiff', 'webp']
-VideoFormat = Literal['avi', 'm4v', 'mkv', 'mov', 'mp4', 'mpeg', 'webm', 'wmv']
+VideoFormat = Literal['avi', 'm4v', 'mkv', 'mov', 'mp4', 'mpeg', 'mxf', 'webm', 'wmv']
 TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
 AudioTypeSet : TypeAlias = Dict[AudioFormat, str]
 ImageTypeSet : TypeAlias = Dict[ImageFormat, str]
