@@ -7,7 +7,7 @@ from argparse import ArgumentParser, HelpFormatter
 from functools import partial
 from types import FrameType
 
-from facefusion import metadata, translator
+from facefusion import metadata
 from facefusion.common_helper import is_linux, is_windows
 
 ONNXRUNTIME_SET =\
@@ -26,8 +26,8 @@ if is_linux():
 def cli() -> None:
 	signal.signal(signal.SIGINT, signal_exit)
 	program = ArgumentParser(formatter_class = partial(HelpFormatter, max_help_position = 50))
-	program.add_argument('--onnxruntime', help = translator.get('help.install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIME_SET.keys(), required = True)
-	program.add_argument('--skip-conda', help = translator.get('help.skip_conda'), action = 'store_true')
+	program.add_argument('--onnxruntime', choices = ONNXRUNTIME_SET.keys(), required = True)
+	program.add_argument('--skip-conda', action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	run(program)
 
@@ -42,7 +42,6 @@ def run(program : ArgumentParser) -> None:
 	onnxruntime_name, onnxruntime_version = ONNXRUNTIME_SET.get(args.onnxruntime)
 
 	if not args.skip_conda and not has_conda:
-		sys.stdout.write(translator.get('conda_not_activated') + os.linesep)
 		sys.exit(1)
 
 	with open('requirements.txt') as file:

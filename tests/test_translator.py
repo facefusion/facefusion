@@ -9,6 +9,6 @@ def test_load() -> None:
 
 
 def test_get() -> None:
-	assert translator.get('conda_not_activated', 'facefusion') == 'conda is not activated'
-	assert translator.get('help.skip_conda', 'facefusion') == 'skip the conda environment check'
-	assert translator.get('invalid', 'facefusion') is None
+	assert translator.get('conda_not_activated') == 'conda is not activated'
+	assert translator.get('help.skip_conda') == 'skip the conda environment check'
+	assert translator.get('invalid') is None
