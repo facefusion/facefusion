@@ -25,8 +25,6 @@ from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import match_frame_color, read_static_image, read_static_video_frame
 
-MODULE_SCOPE = 'facefusion.processors.modules.age_modifier'
-
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
@@ -84,8 +82,8 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--age-modifier-model', help = translator.get('help.model', MODULE_SCOPE), default = config.get_str_value('processors', 'age_modifier_model', 'styleganex_age'), choices = processor_choices.age_modifier_models)
-		group_processors.add_argument('--age-modifier-direction', help = translator.get('help.direction', MODULE_SCOPE), type = int, default = config.get_int_value('processors', 'age_modifier_direction', '0'), choices = processor_choices.age_modifier_direction_range, metavar = create_int_metavar(processor_choices.age_modifier_direction_range))
+		group_processors.add_argument('--age-modifier-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'age_modifier_model', 'styleganex_age'), choices = processor_choices.age_modifier_models)
+		group_processors.add_argument('--age-modifier-direction', help = translator.get('help.direction', __package__), type = int, default = config.get_int_value('processors', 'age_modifier_direction', '0'), choices = processor_choices.age_modifier_direction_range, metavar = create_int_metavar(processor_choices.age_modifier_direction_range))
 		facefusion.jobs.job_store.register_step_keys([ 'age_modifier_model', 'age_modifier_direction' ])
 
 

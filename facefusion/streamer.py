@@ -21,7 +21,7 @@ from facefusion.vision import read_static_images
 def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -> Generator[VisionFrame, None, None]:
 	capture_deque : Deque[VisionFrame] = deque()
 
-	with tqdm(desc = translator.get('streaming', __name__), unit = 'frame', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+	with tqdm(desc = translator.get('streaming'), unit = 'frame', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
 			futures = []
 
@@ -95,6 +95,6 @@ def open_stream(stream_mode : StreamMode, stream_resolution : str, stream_fps : 
 				commands.extend(ffmpeg_builder.set_output(device_path))
 
 		else:
-			logger.error(translator.get('stream_not_loaded', __name__).format(stream_mode = stream_mode), __name__)
+			logger.error(translator.get('stream_not_loaded').format(stream_mode = stream_mode), __name__)
 
 	return open_ffmpeg(commands)

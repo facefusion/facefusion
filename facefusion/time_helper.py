@@ -25,9 +25,9 @@ def describe_time_ago(date_time : datetime) -> Optional[str]:
 	days, hours, minutes, _ = split_time_delta(time_ago)
 
 	if timedelta(days = 1) < time_ago:
-		return translator.get('time_ago_days', __name__).format(days = days, hours = hours, minutes = minutes)
+		return translator.get('time_ago_days').format(days = days, hours = hours, minutes = minutes)
 	if timedelta(hours = 1) < time_ago:
-		return translator.get('time_ago_hours', __name__).format(hours = hours, minutes = minutes)
+		return translator.get('time_ago_hours').format(hours = hours, minutes = minutes)
 	if timedelta(minutes = 1) < time_ago:
-		return translator.get('time_ago_minutes', __name__).format(minutes = minutes)
-	return translator.get('time_ago_now', __name__)
+		return translator.get('time_ago_minutes').format(minutes = minutes)
+	return translator.get('time_ago_now')

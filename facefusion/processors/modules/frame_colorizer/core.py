@@ -23,8 +23,6 @@ from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, read_static_image, read_static_video_frame, unpack_resolution
 
-MODULE_SCOPE = 'facefusion.processors.modules.frame_colorizer'
-
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
@@ -159,9 +157,9 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--frame-colorizer-model', help = translator.get('help.model', MODULE_SCOPE), default = config.get_str_value('processors', 'frame_colorizer_model', 'ddcolor'), choices = processor_choices.frame_colorizer_models)
-		group_processors.add_argument('--frame-colorizer-size', help = translator.get('help.size', MODULE_SCOPE), type = str, default = config.get_str_value('processors', 'frame_colorizer_size', '256x256'), choices = processor_choices.frame_colorizer_sizes)
-		group_processors.add_argument('--frame-colorizer-blend', help = translator.get('help.blend', MODULE_SCOPE), type = int, default = config.get_int_value('processors', 'frame_colorizer_blend', '100'), choices = processor_choices.frame_colorizer_blend_range, metavar = create_int_metavar(processor_choices.frame_colorizer_blend_range))
+		group_processors.add_argument('--frame-colorizer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'frame_colorizer_model', 'ddcolor'), choices = processor_choices.frame_colorizer_models)
+		group_processors.add_argument('--frame-colorizer-size', help = translator.get('help.size', __package__), type = str, default = config.get_str_value('processors', 'frame_colorizer_size', '256x256'), choices = processor_choices.frame_colorizer_sizes)
+		group_processors.add_argument('--frame-colorizer-blend', help = translator.get('help.blend', __package__), type = int, default = config.get_int_value('processors', 'frame_colorizer_blend', '100'), choices = processor_choices.frame_colorizer_blend_range, metavar = create_int_metavar(processor_choices.frame_colorizer_blend_range))
 		facefusion.jobs.job_store.register_step_keys([ 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size' ])
 
 

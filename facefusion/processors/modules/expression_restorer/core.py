@@ -25,8 +25,6 @@ from facefusion.thread_helper import conditional_thread_semaphore, thread_semaph
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
-MODULE_SCOPE = 'facefusion.processors.modules.expression_restorer'
-
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
@@ -96,9 +94,9 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--expression-restorer-model', help = translator.get('help.model', MODULE_SCOPE), default = config.get_str_value('processors', 'expression_restorer_model', 'live_portrait'), choices = processor_choices.expression_restorer_models)
-		group_processors.add_argument('--expression-restorer-factor', help = translator.get('help.factor', MODULE_SCOPE), type = int, default = config.get_int_value('processors', 'expression_restorer_factor', '80'), choices = processor_choices.expression_restorer_factor_range, metavar = create_int_metavar(processor_choices.expression_restorer_factor_range))
-		group_processors.add_argument('--expression-restorer-areas', help = translator.get('help.areas', MODULE_SCOPE).format(choices = ', '.join(processor_choices.expression_restorer_areas)), default = config.get_str_list('processors', 'expression_restorer_areas', ' '.join(processor_choices.expression_restorer_areas)), choices = processor_choices.expression_restorer_areas, nargs = '+', metavar = 'EXPRESSION_RESTORER_AREAS')
+		group_processors.add_argument('--expression-restorer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'expression_restorer_model', 'live_portrait'), choices = processor_choices.expression_restorer_models)
+		group_processors.add_argument('--expression-restorer-factor', help = translator.get('help.factor', __package__), type = int, default = config.get_int_value('processors', 'expression_restorer_factor', '80'), choices = processor_choices.expression_restorer_factor_range, metavar = create_int_metavar(processor_choices.expression_restorer_factor_range))
+		group_processors.add_argument('--expression-restorer-areas', help = translator.get('help.areas', __package__).format(choices = ', '.join(processor_choices.expression_restorer_areas)), default = config.get_str_list('processors', 'expression_restorer_areas', ' '.join(processor_choices.expression_restorer_areas)), choices = processor_choices.expression_restorer_areas, nargs = '+', metavar = 'EXPRESSION_RESTORER_AREAS')
 		facefusion.jobs.job_store.register_step_keys([ 'expression_restorer_model', 'expression_restorer_factor', 'expression_restorer_areas' ])
 
 

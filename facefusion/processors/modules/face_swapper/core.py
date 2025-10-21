@@ -27,8 +27,6 @@ from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_images, read_static_video_frame, unpack_resolution
 
-MODULE_SCOPE = 'facefusion.processors.modules.face_swapper'
-
 
 @lru_cache()
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
@@ -437,11 +435,11 @@ def get_model_name() -> str:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--face-swapper-model', help = translator.get('help.model', MODULE_SCOPE), default = config.get_str_value('processors', 'face_swapper_model', 'hyperswap_1a_256'), choices = processor_choices.face_swapper_models)
+		group_processors.add_argument('--face-swapper-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'face_swapper_model', 'hyperswap_1a_256'), choices = processor_choices.face_swapper_models)
 		known_args, _ = program.parse_known_args()
 		face_swapper_pixel_boost_choices = processor_choices.face_swapper_set.get(known_args.face_swapper_model)
-		group_processors.add_argument('--face-swapper-pixel-boost', help = translator.get('help.pixel_boost', MODULE_SCOPE), default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
-		group_processors.add_argument('--face-swapper-weight', help = translator.get('help.weight', MODULE_SCOPE), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0.5'), choices = processor_choices.face_swapper_weight_range)
+		group_processors.add_argument('--face-swapper-pixel-boost', help = translator.get('help.pixel_boost', __package__), default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
+		group_processors.add_argument('--face-swapper-weight', help = translator.get('help.weight', __package__), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0.5'), choices = processor_choices.face_swapper_weight_range)
 		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight' ])
 
 

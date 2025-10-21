@@ -26,7 +26,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 		download_size = get_static_download_size(url)
 
 		if initial_size < download_size:
-			with tqdm(total = download_size, initial = initial_size, desc = translator.get('downloading', __name__), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+			with tqdm(total = download_size, initial = initial_size, desc = translator.get('downloading'), unit = 'B', unit_scale = True, unit_divisor = 1024, ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 				commands = curl_builder.chain(
 					curl_builder.download(url, download_file_path),
 					curl_builder.set_timeout(5)

@@ -71,11 +71,11 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 	try:
 		inference_session_providers = create_inference_session_providers(execution_device_id, execution_providers)
 		inference_session = InferenceSession(model_path, providers = inference_session_providers)
-		logger.debug(translator.get('loading_model_succeeded', __name__).format(model_name = model_file_name, seconds = calculate_end_time(start_time)), __name__)
+		logger.debug(translator.get('loading_model_succeeded').format(model_name = model_file_name, seconds = calculate_end_time(start_time)), __name__)
 		return inference_session
 
 	except Exception:
-		logger.error(translator.get('loading_model_failed', __name__).format(model_name = model_file_name), __name__)
+		logger.error(translator.get('loading_model_failed').format(model_name = model_file_name), __name__)
 		fatal_exit(1)
 
 
