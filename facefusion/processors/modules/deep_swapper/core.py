@@ -16,12 +16,9 @@ from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import get_file_name, in_directory, is_image, is_video, resolve_file_paths, resolve_relative_path, same_file_extension
-from facefusion.processors.modules.deep_swapper import choices as processor_choices
+from facefusion.processors.modules.deep_swapper import choices as deep_swapper_choices
 from facefusion.processors.modules.deep_swapper.types import DeepSwapperInputs, DeepSwapperMorph
-from facefusion import translator
-from facefusion.processors.modules.deep_swapper.locals import LOCALS
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import DeepSwapperInputs, DeepSwapperMorph, ProcessorOutputs
+from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -279,8 +276,8 @@ def get_model_size() -> Size:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--deep-swapper-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'deep_swapper_model', 'iperov/elon_musk_224'), choices = processor_choices.deep_swapper_models)
-		group_processors.add_argument('--deep-swapper-morph', help = translator.get('help.morph', __package__), type = int, default = config.get_int_value('processors', 'deep_swapper_morph', '100'), choices = processor_choices.deep_swapper_morph_range, metavar = create_int_metavar(processor_choices.deep_swapper_morph_range))
+		group_processors.add_argument('--deep-swapper-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'deep_swapper_model', 'iperov/elon_musk_224'), choices = deep_swapper_choices.deep_swapper_models)
+		group_processors.add_argument('--deep-swapper-morph', help = translator.get('help.morph', __package__), type = int, default = config.get_int_value('processors', 'deep_swapper_morph', '100'), choices = deep_swapper_choices.deep_swapper_morph_range, metavar = create_int_metavar(deep_swapper_choices.deep_swapper_morph_range))
 		facefusion.jobs.job_store.register_step_keys([ 'deep_swapper_model', 'deep_swapper_morph' ])
 
 

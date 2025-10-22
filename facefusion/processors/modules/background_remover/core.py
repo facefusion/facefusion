@@ -13,12 +13,9 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.normalizer import normalize_color
-from facefusion.processors.modules.background_remover import choices as processor_choices
+from facefusion.processors.modules.background_remover import choices as background_remover_choices
 from facefusion.processors.modules.background_remover.types import BackgroundRemoverInputs
-from facefusion import translator
-from facefusion.processors.modules.background_remover.locals import LOCALS
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import BackgroundRemoverInputs, ProcessorOutputs
+from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.sanitizer import sanitize_int_range
 from facefusion.thread_helper import thread_semaphore
@@ -323,8 +320,8 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = processor_choices.background_remover_models)
-		group_processors.add_argument('--background-remover-color', help = translator.get('help.color', __package__), type = partial(sanitize_int_range, int_range = processor_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 255 0 255'), nargs = '+')
+		group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = background_remover_choices.background_remover_models)
+		group_processors.add_argument('--background-remover-color', help = translator.get('help.color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 255 0 255'), nargs ='+')
 		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model', 'background_remover_color' ])
 
 

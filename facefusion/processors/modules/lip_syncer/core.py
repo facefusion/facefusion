@@ -15,11 +15,9 @@ from facefusion.face_helper import create_bounding_box, paste_back, warp_face_by
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import has_audio, resolve_relative_path
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import LipSyncerInputs, LipSyncerWeight, ProcessorOutputs
+from facefusion.processors.modules.lip_syncer import choices as lip_syncer_choices
 from facefusion.processors.modules.lip_syncer.types import LipSyncerInputs, LipSyncerWeight
-from facefusion.processors.modules.lip_syncer import choices as processor_choices
-from facefusion.processors.modules.lip_syncer.types import LipSyncerInputs, LipSyncerWeight
+from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -116,8 +114,8 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--lip-syncer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = processor_choices.lip_syncer_models)
-		group_processors.add_argument('--lip-syncer-weight', help = translator.get('help.weight', __package__), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = processor_choices.lip_syncer_weight_range, metavar = create_float_metavar(processor_choices.lip_syncer_weight_range))
+		group_processors.add_argument('--lip-syncer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = lip_syncer_choices.lip_syncer_models)
+		group_processors.add_argument('--lip-syncer-weight', help = translator.get('help.weight', __package__), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = lip_syncer_choices.lip_syncer_weight_range, metavar = create_float_metavar(lip_syncer_choices.lip_syncer_weight_range))
 		facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model', 'lip_syncer_weight' ])
 
 

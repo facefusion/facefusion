@@ -16,10 +16,9 @@ from facefusion.face_masker import create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.live_portrait import create_rotation, limit_expression
-from facefusion.processors.modules.expression_restorer import choices as processor_choices
+from facefusion.processors.modules.expression_restorer import choices as expression_restorer_choices
 from facefusion.processors.modules.expression_restorer.types import ExpressionRestorerInputs
-from facefusion.processors.types import LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
-from facefusion.processors.types import ExpressionRestorerInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw, ProcessorOutputs
+from facefusion.processors.types import LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -94,9 +93,9 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--expression-restorer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'expression_restorer_model', 'live_portrait'), choices = processor_choices.expression_restorer_models)
-		group_processors.add_argument('--expression-restorer-factor', help = translator.get('help.factor', __package__), type = int, default = config.get_int_value('processors', 'expression_restorer_factor', '80'), choices = processor_choices.expression_restorer_factor_range, metavar = create_int_metavar(processor_choices.expression_restorer_factor_range))
-		group_processors.add_argument('--expression-restorer-areas', help = translator.get('help.areas', __package__).format(choices = ', '.join(processor_choices.expression_restorer_areas)), default = config.get_str_list('processors', 'expression_restorer_areas', ' '.join(processor_choices.expression_restorer_areas)), choices = processor_choices.expression_restorer_areas, nargs = '+', metavar = 'EXPRESSION_RESTORER_AREAS')
+		group_processors.add_argument('--expression-restorer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'expression_restorer_model', 'live_portrait'), choices = expression_restorer_choices.expression_restorer_models)
+		group_processors.add_argument('--expression-restorer-factor', help = translator.get('help.factor', __package__), type = int, default = config.get_int_value('processors', 'expression_restorer_factor', '80'), choices = expression_restorer_choices.expression_restorer_factor_range, metavar = create_int_metavar(expression_restorer_choices.expression_restorer_factor_range))
+		group_processors.add_argument('--expression-restorer-areas', help = translator.get('help.areas', __package__).format(choices = ', '.join(expression_restorer_choices.expression_restorer_areas)), default = config.get_str_list('processors', 'expression_restorer_areas', ' '.join(expression_restorer_choices.expression_restorer_areas)), choices = expression_restorer_choices.expression_restorer_areas, nargs ='+', metavar ='EXPRESSION_RESTORER_AREAS')
 		facefusion.jobs.job_store.register_step_keys([ 'expression_restorer_model', 'expression_restorer_factor', 'expression_restorer_areas' ])
 
 

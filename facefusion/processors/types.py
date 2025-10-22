@@ -1,8 +1,8 @@
-from typing import Any, Dict, TypeAlias
+from typing import Any, Dict, Tuple, TypeAlias
 
 from numpy.typing import NDArray
 
-from facefusion.types import AppContext
+from facefusion.types import AppContext, Mask, VisionFrame
 
 LivePortraitPitch : TypeAlias = float
 LivePortraitYaw : TypeAlias = float
