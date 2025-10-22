@@ -49,15 +49,11 @@ def read_alpha_image(image_path : str) -> Optional[VisionFrame]:
 		else:
 			vision_frame = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
 
-		if has_alpha_channel(vision_frame):
+		if has_vision_mask(vision_frame):
 			return vision_frame
 		vision_mask = numpy.full(vision_frame.shape[:2], 255, dtype = numpy.uint8)
 		return merge_vision_mask(vision_frame, vision_mask)
 	return None
-
-
-def has_alpha_channel(vision_frame : VisionFrame) -> bool:
-	return vision_frame.ndim == 3 and vision_frame.shape[2] == 4
 
 
 def write_image(image_path : str, vision_frame : VisionFrame) -> bool:
@@ -366,6 +362,10 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 
 	merge_vision_frame = merge_vision_frame[size[1] : size[1] + temp_height, size[1]: size[1] + temp_width, :]
 	return merge_vision_frame
+
+
+def has_vision_mask(vision_frame : VisionFrame) -> bool:
+	return vision_frame.ndim == 3 and vision_frame.shape[2] == 4
 
 
 def merge_vision_mask(vision_frame : VisionFrame, mask : Mask) -> VisionFrame:

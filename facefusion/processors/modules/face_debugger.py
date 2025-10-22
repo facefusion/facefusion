@@ -114,8 +114,8 @@ def draw_bounding_box(target_face : Face, temp_vision_frame : VisionFrame) -> Vi
 
 
 def draw_face_mask(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	crop_masks = []
+	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_5 = target_face.landmark_set.get('5')
 	face_landmark_68 = target_face.landmark_set.get('68')
 	face_landmark_5_68 = target_face.landmark_set.get('5/68')

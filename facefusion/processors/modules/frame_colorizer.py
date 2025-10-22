@@ -264,4 +264,5 @@ def blend_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 def process_frame(inputs : FrameColorizerInputs) -> Tuple[VisionFrame, Mask]:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
-	return colorize_frame(temp_vision_frame), temp_vision_mask
+	temp_vision_frame = colorize_frame(temp_vision_frame)
+	return temp_vision_frame, temp_vision_mask
