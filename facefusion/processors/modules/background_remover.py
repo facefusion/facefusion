@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache, partial
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy
@@ -359,11 +359,12 @@ def post_process() -> None:
 		content_analyser.clear_inference_pool()
 
 
-def remove_background(temp_vision_frame : VisionFrame) -> VisionFrame:
-	mask_frame = forward(prepare_temp_frame(temp_vision_frame))
-	mask_frame = normalize_mask_frame(mask_frame)
-	temp_vision_frame = apply_background_color(temp_vision_frame, mask_frame)
-	return temp_vision_frame
+def remove_background(temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mask]:
+	temp_vision_mask = forward(prepare_temp_frame(temp_vision_frame))
+	temp_vision_mask = normalize_vision_mask(temp_vision_mask)
+	temp_vision_mask = cv2.resize(temp_vision_mask, temp_vision_frame.shape[:2][::-1])
+	temp_vision_frame = apply_background_color(temp_vision_frame, temp_vision_mask)
+	return temp_vision_frame, temp_vision_mask
 
 
 def forward(temp_vision_frame : VisionFrame) -> VisionFrame:
@@ -391,28 +392,28 @@ def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	return temp_vision_frame
 
 
-def normalize_mask_frame(mask_frame : Mask) -> Mask:
-	mask_frame = numpy.squeeze(mask_frame) * 255
-	mask_frame = numpy.clip(mask_frame, 0, 255).astype(numpy.uint8)
-	return mask_frame
+def normalize_vision_mask(temp_vision_mask : Mask) -> Mask:
+	temp_vision_mask = numpy.squeeze(temp_vision_mask).clip(0, 1) * 255
+	temp_vision_mask = numpy.clip(temp_vision_mask, 0, 255).astype(numpy.uint8)
+	return temp_vision_mask
 
 
-def apply_background_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -> VisionFrame:
+def apply_background_color(temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -> VisionFrame:
 	background_remover_color = state_manager.get_item('background_remover_color')
-	mask_frame = cv2.resize(mask_frame, temp_vision_frame.shape[:2][::-1])
-	mask_frame = mask_frame.astype(numpy.float32) / 255
-	mask_frame = numpy.expand_dims(mask_frame, axis = 2)
+	temp_vision_mask = temp_vision_mask.astype(numpy.float32) / 255
+	temp_vision_mask = numpy.expand_dims(temp_vision_mask, axis = 2)
+	temp_vision_mask = (1 - temp_vision_mask) * background_remover_color[-1] / 255
 	color_frame = numpy.zeros_like(temp_vision_frame)
 	color_frame[:, :, 0] = background_remover_color[2]
 	color_frame[:, :, 1] = background_remover_color[1]
 	color_frame[:, :, 2] = background_remover_color[0]
-	temp_vision_frame = temp_vision_frame * mask_frame + color_frame * (1 - mask_frame)
+	temp_vision_frame = temp_vision_frame * (1 - temp_vision_mask) + color_frame * temp_vision_mask
 	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
 	return temp_vision_frame
 
 
 def process_frame(inputs : BackgroundRemoverInputs) -> ProcessorOutputs:
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	temp_vision_mask = inputs.get('temp_vision_mask')
-	temp_vision_frame = remove_background(temp_vision_frame)
+	temp_vision_frame, temp_vision_mask = remove_background(temp_vision_frame)
+	temp_vision_mask = numpy.minimum.reduce([ temp_vision_mask, inputs.get('temp_vision_mask') ])
 	return temp_vision_frame, temp_vision_mask
