@@ -36,6 +36,8 @@ def get_file_format(file_path : str) -> Optional[str]:
 			return 'jpeg'
 		if file_extension == '.tif':
 			return 'tiff'
+		if file_extension == '.mpg':
+			return 'mpeg'
 		return file_extension.lstrip('.')
 	return None
 
