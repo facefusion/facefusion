@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache, partial
-from typing import List, Tuple
+from typing import List
 
 import cv2
 import numpy
@@ -14,7 +14,7 @@ from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.normalizer import normalize_color
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import BackgroundRemoverInputs
+from facefusion.processors.types import BackgroundRemoverInputs, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.sanitizer import sanitize_int_range
 from facefusion.thread_helper import thread_semaphore
@@ -411,7 +411,7 @@ def apply_background_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -
 	return temp_vision_frame
 
 
-def process_frame(inputs : BackgroundRemoverInputs) -> Tuple[VisionFrame, Mask]:
+def process_frame(inputs : BackgroundRemoverInputs) -> ProcessorOutputs:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
 	temp_vision_frame = remove_background(temp_vision_frame)

@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-from typing import Tuple
 
 import cv2
 import numpy
@@ -13,9 +12,9 @@ from facefusion.face_masker import create_area_mask, create_box_mask, create_occ
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FaceDebuggerInputs
+from facefusion.processors.types import FaceDebuggerInputs, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
-from facefusion.types import ApplyStateItem, Args, Face, InferencePool, Mask, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, Face, InferencePool, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
 
@@ -218,7 +217,7 @@ def draw_face_landmark_68_5(target_face : Face, temp_vision_frame : VisionFrame)
 	return temp_vision_frame
 
 
-def process_frame(inputs : FaceDebuggerInputs) -> Tuple[VisionFrame, Mask]:
+def process_frame(inputs : FaceDebuggerInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')

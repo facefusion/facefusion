@@ -17,7 +17,7 @@ from facefusion.face_masker import create_area_mask, create_box_mask, create_occ
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import get_file_name, in_directory, is_image, is_video, resolve_file_paths, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import DeepSwapperInputs, DeepSwapperMorph
+from facefusion.processors.types import DeepSwapperInputs, DeepSwapperMorph, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -408,7 +408,7 @@ def prepare_crop_mask(crop_source_mask : Mask, crop_target_mask : Mask) -> Mask:
 	return crop_mask
 
 
-def process_frame(inputs : DeepSwapperInputs) -> Tuple[VisionFrame, Mask]:
+def process_frame(inputs : DeepSwapperInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')

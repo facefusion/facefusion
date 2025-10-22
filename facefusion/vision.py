@@ -368,5 +368,5 @@ def has_vision_mask(vision_frame : VisionFrame) -> bool:
 	return vision_frame.ndim == 3 and vision_frame.shape[2] == 4
 
 
-def merge_vision_mask(vision_frame : VisionFrame, mask : Mask) -> VisionFrame:
-	return numpy.dstack((vision_frame[:, :, :3], mask))
+def merge_vision_mask(vision_frame : VisionFrame, vision_mask : Mask) -> VisionFrame:
+	return numpy.dstack((vision_frame[:, :, :3], vision_mask))

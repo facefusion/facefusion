@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache
-from typing import List, Tuple
+from typing import List
 
 import cv2
 import numpy
@@ -13,10 +13,10 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FrameColorizerInputs
+from facefusion.processors.types import FrameColorizerInputs, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, read_static_image, read_static_video_frame, unpack_resolution
 
 
@@ -261,7 +261,7 @@ def blend_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 	return temp_vision_frame
 
 
-def process_frame(inputs : FrameColorizerInputs) -> Tuple[VisionFrame, Mask]:
+def process_frame(inputs : FrameColorizerInputs) -> ProcessorOutputs:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
 	temp_vision_frame = colorize_frame(temp_vision_frame)
