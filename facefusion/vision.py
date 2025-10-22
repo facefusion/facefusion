@@ -44,15 +44,15 @@ def read_static_alpha_image(image_path : str) -> Optional[VisionFrame]:
 def read_alpha_image(image_path : str) -> Optional[VisionFrame]:
 	if is_image(image_path):
 		if is_windows():
-			image_buffer = numpy.fromfile(image_path, dtype=numpy.uint8)
+			image_buffer = numpy.fromfile(image_path, dtype = numpy.uint8)
 			vision_frame = cv2.imdecode(image_buffer, cv2.IMREAD_UNCHANGED)
 		else:
 			vision_frame = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
 
 		if has_alpha_channel(vision_frame):
 			return vision_frame
-		vision_mask = numpy.full(vision_frame.shape[:2], 255, dtype=numpy.uint8)
-		return cv2.merge([vision_frame[:, :, 0], vision_frame[:, :, 1], vision_frame[:, :, 2], vision_mask])
+		vision_mask = numpy.full(vision_frame.shape[:2], 255, dtype = numpy.uint8)
+		return merge_vision_mask(vision_frame, vision_mask)
 	return None
 
 
