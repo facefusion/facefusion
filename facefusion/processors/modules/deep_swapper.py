@@ -408,10 +408,11 @@ def prepare_crop_mask(crop_source_mask : Mask, crop_target_mask : Mask) -> Mask:
 	return crop_mask
 
 
-def process_frame(inputs : DeepSwapperInputs) -> VisionFrame:
+def process_frame(inputs : DeepSwapperInputs) -> Tuple[VisionFrame, Mask]:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
+	temp_vision_mask = inputs.get('temp_vision_mask')
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
 	if target_faces:
@@ -419,6 +420,4 @@ def process_frame(inputs : DeepSwapperInputs) -> VisionFrame:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = swap_face(target_face, temp_vision_frame)
 
-	return temp_vision_frame
-
-
+	return temp_vision_frame, temp_vision_mask

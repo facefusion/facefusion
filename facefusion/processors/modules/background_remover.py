@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache, partial
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy
@@ -411,7 +411,8 @@ def apply_background_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -
 	return temp_vision_frame
 
 
-def process_frame(inputs : BackgroundRemoverInputs) -> VisionFrame:
+def process_frame(inputs : BackgroundRemoverInputs) -> Tuple[VisionFrame, Mask]:
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	return remove_background(temp_vision_frame)
+	temp_vision_mask = inputs.get('temp_vision_mask')
+	return remove_background(temp_vision_frame), temp_vision_mask
 

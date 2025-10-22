@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy
@@ -16,7 +16,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FrameColorizerInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, read_static_image, read_static_video_frame, unpack_resolution
 
 
@@ -261,6 +261,7 @@ def blend_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 	return temp_vision_frame
 
 
-def process_frame(inputs : FrameColorizerInputs) -> VisionFrame:
+def process_frame(inputs : FrameColorizerInputs) -> Tuple[VisionFrame, Mask]:
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	return colorize_frame(temp_vision_frame)
+	temp_vision_mask = inputs.get('temp_vision_mask')
+	return colorize_frame(temp_vision_frame), temp_vision_mask
