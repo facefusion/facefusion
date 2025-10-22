@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache
+from typing import Tuple
 
 import numpy
 
@@ -17,7 +18,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import FaceEnhancerInputs, FaceEnhancerWeight
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, read_static_image, read_static_video_frame
 
 
@@ -356,10 +357,11 @@ def blend_paste_frame(temp_vision_frame : VisionFrame, paste_vision_frame : Visi
 	return temp_vision_frame
 
 
-def process_frame(inputs : FaceEnhancerInputs) -> VisionFrame:
+def process_frame(inputs : FaceEnhancerInputs) -> Tuple[VisionFrame, Mask]:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
+	temp_vision_mask = inputs.get('temp_vision_mask')
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
 	if target_faces:
@@ -367,4 +369,4 @@ def process_frame(inputs : FaceEnhancerInputs) -> VisionFrame:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = enhance_face(target_face, temp_vision_frame)
 
-	return temp_vision_frame
+	return temp_vision_frame, temp_vision_mask

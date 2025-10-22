@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from functools import lru_cache
+from typing import Tuple
 
 import cv2
 import numpy
@@ -20,7 +21,7 @@ from facefusion.processors import choices as processors_choices
 from facefusion.processors.types import AgeModifierDirection, AgeModifierInputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import match_frame_color, read_static_image, read_static_video_frame
 
 
@@ -197,10 +198,11 @@ def normalize_extend_frame(extend_vision_frame : VisionFrame) -> VisionFrame:
 	return extend_vision_frame
 
 
-def process_frame(inputs : AgeModifierInputs) -> VisionFrame:
+def process_frame(inputs : AgeModifierInputs) -> Tuple[VisionFrame, Mask]:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
+	temp_vision_mask = inputs.get('temp_vision_mask')
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
 	if target_faces:
@@ -208,4 +210,4 @@ def process_frame(inputs : AgeModifierInputs) -> VisionFrame:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = modify_age(target_face, temp_vision_frame)
 
-	return temp_vision_frame
+	return temp_vision_frame, temp_vision_mask
