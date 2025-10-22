@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal, TypeAlias, TypedDict
+from typing import Any, Dict, List, Literal, Tuple, TypeAlias, TypedDict
 
 from numpy.typing import NDArray
 
@@ -195,3 +195,4 @@ ProcessorState = TypedDict('ProcessorState',
 	'lip_syncer_weight' : LipSyncerWeight
 })
 ProcessorStateSet : TypeAlias = Dict[AppContext, ProcessorState]
+ProcessorOutputs : TypeAlias = Tuple[VisionFrame, Mask]

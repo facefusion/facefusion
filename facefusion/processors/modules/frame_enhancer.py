@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from functools import lru_cache
-from typing import Tuple
 
 import cv2
 import numpy
@@ -13,10 +12,10 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FrameEnhancerInputs
+from facefusion.processors.types import FrameEnhancerInputs, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_frame
 
 
@@ -526,7 +525,7 @@ def blend_merge_frame(temp_vision_frame : VisionFrame, merge_vision_frame : Visi
 	return temp_vision_frame
 
 
-def process_frame(inputs : FrameEnhancerInputs) -> Tuple[VisionFrame, Mask]:
+def process_frame(inputs : FrameEnhancerInputs) -> ProcessorOutputs:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
 	temp_vision_frame = enhance_frame(temp_vision_frame)

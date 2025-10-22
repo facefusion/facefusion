@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from functools import lru_cache
-from typing import Tuple
 
 import numpy
 
@@ -15,10 +14,10 @@ from facefusion.face_masker import create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FaceEnhancerInputs, FaceEnhancerWeight
+from facefusion.processors.types import FaceEnhancerInputs, FaceEnhancerWeight, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, read_static_image, read_static_video_frame
 
 
@@ -357,7 +356,7 @@ def blend_paste_frame(temp_vision_frame : VisionFrame, paste_vision_frame : Visi
 	return temp_vision_frame
 
 
-def process_frame(inputs : FaceEnhancerInputs) -> Tuple[VisionFrame, Mask]:
+def process_frame(inputs : FaceEnhancerInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
