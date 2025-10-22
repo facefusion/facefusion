@@ -17,7 +17,7 @@ from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.live_portrait import create_rotation, limit_angle, limit_expression
-from facefusion.processors.types import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw
+from facefusion.processors.types import FaceEditorInputs, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitRotation, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, FaceLandmark68, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -477,10 +477,11 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def process_frame(inputs : FaceEditorInputs) -> VisionFrame:
+def process_frame(inputs : FaceEditorInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
+	temp_vision_mask = inputs.get('temp_vision_mask')
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
 	if target_faces:
@@ -488,4 +489,4 @@ def process_frame(inputs : FaceEditorInputs) -> VisionFrame:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = edit_face(target_face, temp_vision_frame)
 
-	return temp_vision_frame
+	return temp_vision_frame, temp_vision_mask

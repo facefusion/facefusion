@@ -13,7 +13,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FrameColorizerInputs
+from facefusion.processors.types import FrameColorizerInputs, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -261,6 +261,8 @@ def blend_color_frame(temp_vision_frame : VisionFrame, color_vision_frame : Visi
 	return temp_vision_frame
 
 
-def process_frame(inputs : FrameColorizerInputs) -> VisionFrame:
+def process_frame(inputs : FrameColorizerInputs) -> ProcessorOutputs:
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	return colorize_frame(temp_vision_frame)
+	temp_vision_mask = inputs.get('temp_vision_mask')
+	temp_vision_frame = colorize_frame(temp_vision_frame)
+	return temp_vision_frame, temp_vision_mask

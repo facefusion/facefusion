@@ -12,7 +12,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FrameEnhancerInputs
+from facefusion.processors.types import FrameEnhancerInputs, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -525,6 +525,9 @@ def blend_merge_frame(temp_vision_frame : VisionFrame, merge_vision_frame : Visi
 	return temp_vision_frame
 
 
-def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
+def process_frame(inputs : FrameEnhancerInputs) -> ProcessorOutputs:
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	return enhance_frame(temp_vision_frame)
+	temp_vision_mask = inputs.get('temp_vision_mask')
+	temp_vision_frame = enhance_frame(temp_vision_frame)
+	temp_vision_mask = cv2.resize(temp_vision_mask, temp_vision_frame.shape[:2][::-1])
+	return temp_vision_frame, temp_vision_mask

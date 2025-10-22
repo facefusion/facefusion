@@ -12,7 +12,7 @@ from facefusion.face_masker import create_area_mask, create_box_mask, create_occ
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, same_file_extension
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FaceDebuggerInputs
+from facefusion.processors.types import FaceDebuggerInputs, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.types import ApplyStateItem, Args, Face, InferencePool, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
@@ -92,6 +92,7 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 
 
 def draw_bounding_box(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	box_color = 0, 0, 255
 	border_color = 100, 100, 255
 	bounding_box = target_face.bounding_box.astype(numpy.int32)
@@ -113,6 +114,7 @@ def draw_bounding_box(target_face : Face, temp_vision_frame : VisionFrame) -> Vi
 
 def draw_face_mask(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	crop_masks = []
+	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_5 = target_face.landmark_set.get('5')
 	face_landmark_68 = target_face.landmark_set.get('68')
 	face_landmark_5_68 = target_face.landmark_set.get('5/68')
@@ -152,6 +154,7 @@ def draw_face_mask(target_face : Face, temp_vision_frame : VisionFrame) -> Visio
 
 
 def draw_face_landmark_5(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_5 = target_face.landmark_set.get('5')
 	point_color = 0, 0, 255
 
@@ -165,6 +168,7 @@ def draw_face_landmark_5(target_face : Face, temp_vision_frame : VisionFrame) ->
 
 
 def draw_face_landmark_5_68(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_5 = target_face.landmark_set.get('5')
 	face_landmark_5_68 = target_face.landmark_set.get('5/68')
 	point_color = 0, 255, 0
@@ -182,6 +186,7 @@ def draw_face_landmark_5_68(target_face : Face, temp_vision_frame : VisionFrame)
 
 
 def draw_face_landmark_68(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_68 = target_face.landmark_set.get('68')
 	face_landmark_68_5 = target_face.landmark_set.get('68/5')
 	point_color = 0, 255, 0
@@ -199,6 +204,7 @@ def draw_face_landmark_68(target_face : Face, temp_vision_frame : VisionFrame) -
 
 
 def draw_face_landmark_68_5(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_68_5 = target_face.landmark_set.get('68/5')
 	point_color = 255, 255, 0
 
@@ -211,10 +217,11 @@ def draw_face_landmark_68_5(target_face : Face, temp_vision_frame : VisionFrame)
 	return temp_vision_frame
 
 
-def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
+def process_frame(inputs : FaceDebuggerInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
+	temp_vision_mask = inputs.get('temp_vision_mask')
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
 	if target_faces:
@@ -222,6 +229,6 @@ def process_frame(inputs : FaceDebuggerInputs) -> VisionFrame:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = debug_face(target_face, temp_vision_frame)
 
-	return temp_vision_frame
+	return temp_vision_frame, temp_vision_mask
 
 

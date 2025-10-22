@@ -16,7 +16,7 @@ from facefusion.face_masker import create_area_mask, create_box_mask, create_occ
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import has_audio, resolve_relative_path
 from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import LipSyncerInputs, LipSyncerWeight
+from facefusion.processors.types import LipSyncerInputs, LipSyncerWeight, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -261,11 +261,12 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
+def process_frame(inputs : LipSyncerInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_voice_frame = inputs.get('source_voice_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
+	temp_vision_mask = inputs.get('temp_vision_mask')
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
 	if target_faces:
@@ -273,5 +274,5 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = sync_lip(target_face, source_voice_frame, temp_vision_frame)
 
-	return temp_vision_frame
+	return temp_vision_frame, temp_vision_mask
 

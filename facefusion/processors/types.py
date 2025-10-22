@@ -1,8 +1,8 @@
-from typing import Any, Dict, List, Literal, TypeAlias, TypedDict
+from typing import Any, Dict, List, Literal, Tuple, TypeAlias, TypedDict
 
 from numpy.typing import NDArray
 
-from facefusion.types import AppContext, AudioFrame, Color, VisionFrame
+from facefusion.types import AppContext, AudioFrame, Color, Mask, VisionFrame
 
 AgeModifierModel = Literal['styleganex_age']
 BackgroundRemoverModel = Literal['birefnet_general_244', 'rmbg_1.4', 'rmbg_2.0', 'ben2', 'birefnet_portrait', 'birefnet_swin_tiny', 'isnet_general', 'modnet', 'silueta', 'u2net', 'u2net_human_seg', 'u2netp']
@@ -23,67 +23,78 @@ AgeModifierInputs = TypedDict('AgeModifierInputs',
 {
 	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 BackgroundRemoverInputs = TypedDict('BackgroundRemoverInputs',
 {
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 DeepSwapperInputs = TypedDict('DeepSwapperInputs',
 {
 	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 ExpressionRestorerInputs = TypedDict('ExpressionRestorerInputs',
 {
 	'reference_vision_frame' : VisionFrame,
 	'source_vision_frames' : List[VisionFrame],
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 FaceDebuggerInputs = TypedDict('FaceDebuggerInputs',
 {
 	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 FaceEditorInputs = TypedDict('FaceEditorInputs',
 {
 	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 FaceEnhancerInputs = TypedDict('FaceEnhancerInputs',
 {
 	'reference_vision_frame' : VisionFrame,
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 FaceSwapperInputs = TypedDict('FaceSwapperInputs',
 {
 	'reference_vision_frame' : VisionFrame,
 	'source_vision_frames' : List[VisionFrame],
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 FrameColorizerInputs = TypedDict('FrameColorizerInputs',
 {
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 FrameEnhancerInputs = TypedDict('FrameEnhancerInputs',
 {
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 LipSyncerInputs = TypedDict('LipSyncerInputs',
 {
 	'reference_vision_frame' : VisionFrame,
 	'source_voice_frame' : AudioFrame,
 	'target_vision_frame' : VisionFrame,
-	'temp_vision_frame' : VisionFrame
+	'temp_vision_frame' : VisionFrame,
+	'temp_vision_mask': Mask
 })
 
 AgeModifierDirection : TypeAlias = NDArray[Any]
@@ -184,3 +195,4 @@ ProcessorState = TypedDict('ProcessorState',
 	'lip_syncer_weight' : LipSyncerWeight
 })
 ProcessorStateSet : TypeAlias = Dict[AppContext, ProcessorState]
+ProcessorOutputs : TypeAlias = Tuple[VisionFrame, Mask]

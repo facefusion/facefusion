@@ -9,7 +9,7 @@ from cv2.typing import Size
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Duration, Fps, Orientation, Resolution, Scale, VisionFrame
+from facefusion.types import Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
 from facefusion.video_manager import get_video_capture
 
 
@@ -33,6 +33,26 @@ def read_image(image_path : str) -> Optional[VisionFrame]:
 			image_buffer = numpy.fromfile(image_path, dtype = numpy.uint8)
 			return cv2.imdecode(image_buffer, cv2.IMREAD_COLOR)
 		return cv2.imread(image_path)
+	return None
+
+
+@lru_cache(maxsize = 64)
+def read_static_alpha_image(image_path : str) -> Optional[VisionFrame]:
+	return read_alpha_image(image_path)
+
+
+def read_alpha_image(image_path : str) -> Optional[VisionFrame]:
+	if is_image(image_path):
+		if is_windows():
+			image_buffer = numpy.fromfile(image_path, dtype = numpy.uint8)
+			vision_frame = cv2.imdecode(image_buffer, cv2.IMREAD_UNCHANGED)
+		else:
+			vision_frame = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+
+		if has_vision_mask(vision_frame):
+			return vision_frame
+		vision_mask = numpy.full(vision_frame.shape[:2], 255, dtype = numpy.uint8)
+		return merge_vision_mask(vision_frame, vision_mask)
 	return None
 
 
@@ -342,3 +362,11 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 
 	merge_vision_frame = merge_vision_frame[size[1] : size[1] + temp_height, size[1]: size[1] + temp_width, :]
 	return merge_vision_frame
+
+
+def has_vision_mask(vision_frame : VisionFrame) -> bool:
+	return vision_frame.ndim == 3 and vision_frame.shape[2] == 4
+
+
+def merge_vision_mask(vision_frame : VisionFrame, vision_mask : Mask) -> VisionFrame:
+	return numpy.dstack((vision_frame[:, :, :3], vision_mask))

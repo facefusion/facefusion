@@ -20,7 +20,7 @@ from facefusion.filesystem import filter_image_paths, has_image, in_directory, i
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors import choices as processors_choices
 from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel_boost
-from facefusion.processors.types import FaceSwapperInputs
+from facefusion.processors.types import FaceSwapperInputs, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -678,11 +678,12 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 	return get_average_face(source_faces)
 
 
-def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
+def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_vision_frames = inputs.get('source_vision_frames')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
+	temp_vision_mask = inputs.get('temp_vision_mask')
 	source_face = extract_source_face(source_vision_frames)
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
@@ -691,4 +692,4 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
 
-	return temp_vision_frame
+	return temp_vision_frame, temp_vision_mask
