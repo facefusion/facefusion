@@ -414,5 +414,5 @@ def apply_background_color(temp_vision_frame : VisionFrame, mask_frame : Mask) -
 def process_frame(inputs : BackgroundRemoverInputs) -> Tuple[VisionFrame, Mask]:
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
-	return remove_background(temp_vision_frame), temp_vision_mask
-
+	temp_vision_frame = remove_background(temp_vision_frame)
+	return temp_vision_frame, temp_vision_mask
