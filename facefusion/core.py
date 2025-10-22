@@ -9,7 +9,7 @@ from facefusion import benchmarker, cli_helper, content_analyser, face_classifie
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
-from facefusion.filesystem import get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
+from facefusion.filesystem import get_file_extension, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.memory import limit_system_memory
@@ -294,7 +294,12 @@ def process_batch(args : Args) -> ErrorCode:
 			for index, (source_path, target_path) in enumerate(itertools.product(source_paths, target_paths)):
 				step_args['source_paths'] = [ source_path ]
 				step_args['target_path'] = target_path
-				step_args['output_path'] = job_args.get('output_pattern').format(index = index)
+
+				try:
+					step_args['output_path'] = job_args.get('output_pattern').format(index = index, source_name = get_file_name(source_path), target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
+				except KeyError:
+					return 0
+
 				if not job_manager.add_step(job_id, step_args):
 					return 1
 			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
@@ -303,7 +308,12 @@ def process_batch(args : Args) -> ErrorCode:
 		if not source_paths and target_paths:
 			for index, target_path in enumerate(target_paths):
 				step_args['target_path'] = target_path
-				step_args['output_path'] = job_args.get('output_pattern').format(index = index)
+
+				try:
+					step_args['output_path'] = job_args.get('output_pattern').format(index = index, target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
+				except KeyError:
+					return 0
+
 				if not job_manager.add_step(job_id, step_args):
 					return 1
 			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
