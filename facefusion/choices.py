@@ -68,7 +68,9 @@ video_type_set : VideoTypeSet =\
 	'm4v': 'video/mp4',
 	'mkv': 'video/x-matroska',
 	'mp4': 'video/mp4',
+	'mpeg': 'video/mpeg',
 	'mov': 'video/quicktime',
+	'mxf': 'application/mxf',
 	'webm': 'video/webm',
 	'wmv': 'video/x-ms-wmv'
 }
