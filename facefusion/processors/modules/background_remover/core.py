@@ -7,14 +7,15 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, inference_manager, logger, state_manager, video_manager, wording
+from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.normalizer import normalize_color
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import BackgroundRemoverInputs, ProcessorOutputs
+from facefusion.processors.modules.background_remover import choices as background_remover_choices
+from facefusion.processors.modules.background_remover.types import BackgroundRemoverInputs
+from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.sanitizer import sanitize_int_range
 from facefusion.thread_helper import thread_semaphore
@@ -319,8 +320,8 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--background-remover-model', help = wording.get('help.background_remover_model'), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = processors_choices.background_remover_models)
-		group_processors.add_argument('--background-remover-color', help = wording.get('help.background_remover_color'), type = partial(sanitize_int_range, int_range = processors_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 255 0 255'), nargs = '+')
+		group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = background_remover_choices.background_remover_models)
+		group_processors.add_argument('--background-remover-color', help = translator.get('help.color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 255 0 255'), nargs ='+')
 		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model', 'background_remover_color' ])
 
 
@@ -338,13 +339,13 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
-		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
-		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('match_target_and_output_extension') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 

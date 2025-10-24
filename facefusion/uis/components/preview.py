@@ -5,7 +5,7 @@ import cv2
 import gradio
 import numpy
 
-from facefusion import logger, process_manager, state_manager, wording
+from facefusion import logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
@@ -28,7 +28,7 @@ def render() -> None:
 
 	preview_image_options : ComponentOptions =\
 	{
-		'label': wording.get('uis.preview_image')
+		'label': translator.get('uis.preview_image')
 	}
 
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))

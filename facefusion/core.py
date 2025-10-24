@@ -5,7 +5,7 @@ import signal
 import sys
 from time import time
 
-from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, state_manager, voice_extractor, wording
+from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, state_manager, translator, voice_extractor
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -93,15 +93,15 @@ def route(args : Args) -> None:
 
 def pre_check() -> bool:
 	if sys.version_info < (3, 10):
-		logger.error(wording.get('python_not_supported').format(version = '3.10'), __name__)
+		logger.error(translator.get('python_not_supported').format(version = '3.10'), __name__)
 		return False
 
 	if not shutil.which('curl'):
-		logger.error(wording.get('curl_not_installed'), __name__)
+		logger.error(translator.get('curl_not_installed'), __name__)
 		return False
 
 	if not shutil.which('ffmpeg'):
-		logger.error(wording.get('ffmpeg_not_installed'), __name__)
+		logger.error(translator.get('ffmpeg_not_installed'), __name__)
 		return False
 	return True
 
@@ -121,7 +121,7 @@ def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_analyser_hash = hash_helper.create_hash(content_analyser_content)
 
-	return all(module.pre_check() for module in common_modules) and content_analyser_hash == '803b5ec7'
+	return all(module.pre_check() for module in common_modules) and content_analyser_hash == '2d597005'
 
 
 def processors_pre_check() -> bool:
@@ -169,106 +169,106 @@ def route_job_manager(args : Args) -> ErrorCode:
 
 	if state_manager.get_item('command') == 'job-create':
 		if job_manager.create_job(state_manager.get_item('job_id')):
-			logger.info(wording.get('job_created').format(job_id = state_manager.get_item('job_id')), __name__)
+			logger.info(translator.get('job_created').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
-		logger.error(wording.get('job_not_created').format(job_id = state_manager.get_item('job_id')), __name__)
+		logger.error(translator.get('job_not_created').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-submit':
 		if job_manager.submit_job(state_manager.get_item('job_id')):
-			logger.info(wording.get('job_submitted').format(job_id = state_manager.get_item('job_id')), __name__)
+			logger.info(translator.get('job_submitted').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
-		logger.error(wording.get('job_not_submitted').format(job_id = state_manager.get_item('job_id')), __name__)
+		logger.error(translator.get('job_not_submitted').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-submit-all':
 		if job_manager.submit_jobs(state_manager.get_item('halt_on_error')):
-			logger.info(wording.get('job_all_submitted'), __name__)
+			logger.info(translator.get('job_all_submitted'), __name__)
 			return 0
-		logger.error(wording.get('job_all_not_submitted'), __name__)
+		logger.error(translator.get('job_all_not_submitted'), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-delete':
 		if job_manager.delete_job(state_manager.get_item('job_id')):
-			logger.info(wording.get('job_deleted').format(job_id = state_manager.get_item('job_id')), __name__)
+			logger.info(translator.get('job_deleted').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
-		logger.error(wording.get('job_not_deleted').format(job_id = state_manager.get_item('job_id')), __name__)
+		logger.error(translator.get('job_not_deleted').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-delete-all':
 		if job_manager.delete_jobs(state_manager.get_item('halt_on_error')):
-			logger.info(wording.get('job_all_deleted'), __name__)
+			logger.info(translator.get('job_all_deleted'), __name__)
 			return 0
-		logger.error(wording.get('job_all_not_deleted'), __name__)
+		logger.error(translator.get('job_all_not_deleted'), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-add-step':
 		step_args = reduce_step_args(args)
 
 		if job_manager.add_step(state_manager.get_item('job_id'), step_args):
-			logger.info(wording.get('job_step_added').format(job_id = state_manager.get_item('job_id')), __name__)
+			logger.info(translator.get('job_step_added').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
-		logger.error(wording.get('job_step_not_added').format(job_id = state_manager.get_item('job_id')), __name__)
+		logger.error(translator.get('job_step_not_added').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-remix-step':
 		step_args = reduce_step_args(args)
 
 		if job_manager.remix_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
-			logger.info(wording.get('job_remix_step_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
+			logger.info(translator.get('job_remix_step_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 			return 0
-		logger.error(wording.get('job_remix_step_not_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
+		logger.error(translator.get('job_remix_step_not_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-insert-step':
 		step_args = reduce_step_args(args)
 
 		if job_manager.insert_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
-			logger.info(wording.get('job_step_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
+			logger.info(translator.get('job_step_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 			return 0
-		logger.error(wording.get('job_step_not_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
+		logger.error(translator.get('job_step_not_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-remove-step':
 		if job_manager.remove_step(state_manager.get_item('job_id'), state_manager.get_item('step_index')):
-			logger.info(wording.get('job_step_removed').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
+			logger.info(translator.get('job_step_removed').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 			return 0
-		logger.error(wording.get('job_step_not_removed').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
+		logger.error(translator.get('job_step_not_removed').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
 		return 1
 	return 1
 
 
 def route_job_runner() -> ErrorCode:
 	if state_manager.get_item('command') == 'job-run':
-		logger.info(wording.get('running_job').format(job_id = state_manager.get_item('job_id')), __name__)
+		logger.info(translator.get('running_job').format(job_id = state_manager.get_item('job_id')), __name__)
 		if job_runner.run_job(state_manager.get_item('job_id'), process_step):
-			logger.info(wording.get('processing_job_succeeded').format(job_id = state_manager.get_item('job_id')), __name__)
+			logger.info(translator.get('processing_job_succeeded').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
-		logger.info(wording.get('processing_job_failed').format(job_id = state_manager.get_item('job_id')), __name__)
+		logger.info(translator.get('processing_job_failed').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-run-all':
-		logger.info(wording.get('running_jobs'), __name__)
+		logger.info(translator.get('running_jobs'), __name__)
 		if job_runner.run_jobs(process_step, state_manager.get_item('halt_on_error')):
-			logger.info(wording.get('processing_jobs_succeeded'), __name__)
+			logger.info(translator.get('processing_jobs_succeeded'), __name__)
 			return 0
-		logger.info(wording.get('processing_jobs_failed'), __name__)
+		logger.info(translator.get('processing_jobs_failed'), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-retry':
-		logger.info(wording.get('retrying_job').format(job_id = state_manager.get_item('job_id')), __name__)
+		logger.info(translator.get('retrying_job').format(job_id = state_manager.get_item('job_id')), __name__)
 		if job_runner.retry_job(state_manager.get_item('job_id'), process_step):
-			logger.info(wording.get('processing_job_succeeded').format(job_id = state_manager.get_item('job_id')), __name__)
+			logger.info(translator.get('processing_job_succeeded').format(job_id = state_manager.get_item('job_id')), __name__)
 			return 0
-		logger.info(wording.get('processing_job_failed').format(job_id = state_manager.get_item('job_id')), __name__)
+		logger.info(translator.get('processing_job_failed').format(job_id = state_manager.get_item('job_id')), __name__)
 		return 1
 
 	if state_manager.get_item('command') == 'job-retry-all':
-		logger.info(wording.get('retrying_jobs'), __name__)
+		logger.info(translator.get('retrying_jobs'), __name__)
 		if job_runner.retry_jobs(process_step, state_manager.get_item('halt_on_error')):
-			logger.info(wording.get('processing_jobs_succeeded'), __name__)
+			logger.info(translator.get('processing_jobs_succeeded'), __name__)
 			return 0
-		logger.info(wording.get('processing_jobs_failed'), __name__)
+		logger.info(translator.get('processing_jobs_failed'), __name__)
 		return 1
 	return 2
 
@@ -326,7 +326,7 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_args.update(collect_job_args())
 	apply_args(step_args, state_manager.set_item)
 
-	logger.info(wording.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
+	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
 	if common_pre_check() and processors_pre_check():
 		error_code = conditional_process()
 		return error_code == 0

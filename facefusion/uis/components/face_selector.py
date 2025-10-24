@@ -5,7 +5,7 @@ import gradio
 from gradio_rangeslider import RangeSlider
 
 import facefusion.choices
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_float_step, calculate_int_step
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_selector import sort_and_filter_faces
@@ -37,7 +37,7 @@ def render() -> None:
 
 	reference_face_gallery_options : ComponentOptions =\
 	{
-		'label': wording.get('uis.reference_face_gallery'),
+		'label': translator.get('uis.reference_face_gallery'),
 		'object_fit': 'cover',
 		'columns': 7,
 		'allow_preview': False,
@@ -51,7 +51,7 @@ def render() -> None:
 		target_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		reference_face_gallery_options['value'] = extract_gallery_frames(target_vision_frame)
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.face_selector_mode_dropdown'),
+		label = translator.get('uis.face_selector_mode_dropdown'),
 		choices = facefusion.choices.face_selector_modes,
 		value = state_manager.get_item('face_selector_mode')
 	)
@@ -59,17 +59,17 @@ def render() -> None:
 	with gradio.Group():
 		with gradio.Row():
 			FACE_SELECTOR_ORDER_DROPDOWN = gradio.Dropdown(
-				label = wording.get('uis.face_selector_order_dropdown'),
+				label = translator.get('uis.face_selector_order_dropdown'),
 				choices = facefusion.choices.face_selector_orders,
 				value = state_manager.get_item('face_selector_order')
 			)
 			FACE_SELECTOR_GENDER_DROPDOWN = gradio.Dropdown(
-				label = wording.get('uis.face_selector_gender_dropdown'),
+				label = translator.get('uis.face_selector_gender_dropdown'),
 				choices = [ 'none' ] + facefusion.choices.face_selector_genders,
 				value = state_manager.get_item('face_selector_gender') or 'none'
 			)
 			FACE_SELECTOR_RACE_DROPDOWN = gradio.Dropdown(
-				label = wording.get('uis.face_selector_race_dropdown'),
+				label = translator.get('uis.face_selector_race_dropdown'),
 				choices = [ 'none' ] + facefusion.choices.face_selector_races,
 				value = state_manager.get_item('face_selector_race') or 'none'
 			)
@@ -77,14 +77,14 @@ def render() -> None:
 			face_selector_age_start = state_manager.get_item('face_selector_age_start') or facefusion.choices.face_selector_age_range[0]
 			face_selector_age_end = state_manager.get_item('face_selector_age_end') or facefusion.choices.face_selector_age_range[-1]
 			FACE_SELECTOR_AGE_RANGE_SLIDER = RangeSlider(
-				label = wording.get('uis.face_selector_age_range_slider'),
+				label = translator.get('uis.face_selector_age_range_slider'),
 				minimum = facefusion.choices.face_selector_age_range[0],
 				maximum = facefusion.choices.face_selector_age_range[-1],
 				value = (face_selector_age_start, face_selector_age_end),
 				step = calculate_int_step(facefusion.choices.face_selector_age_range)
 			)
 	REFERENCE_FACE_DISTANCE_SLIDER = gradio.Slider(
-		label = wording.get('uis.reference_face_distance_slider'),
+		label = translator.get('uis.reference_face_distance_slider'),
 		value = state_manager.get_item('reference_face_distance'),
 		step = calculate_float_step(facefusion.choices.reference_face_distance_range),
 		minimum = facefusion.choices.reference_face_distance_range[0],

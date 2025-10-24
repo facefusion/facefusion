@@ -7,13 +7,14 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, inference_manager, logger, state_manager, video_manager, wording
+from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import create_int_metavar, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FrameColorizerInputs, ProcessorOutputs
+from facefusion.processors.modules.frame_colorizer import choices as frame_colorizer_choices
+from facefusion.processors.modules.frame_colorizer.types import FrameColorizerInputs
+from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -153,9 +154,9 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--frame-colorizer-model', help = wording.get('help.frame_colorizer_model'), default = config.get_str_value('processors', 'frame_colorizer_model', 'ddcolor'), choices = processors_choices.frame_colorizer_models)
-		group_processors.add_argument('--frame-colorizer-size', help = wording.get('help.frame_colorizer_size'), type = str, default = config.get_str_value('processors', 'frame_colorizer_size', '256x256'), choices = processors_choices.frame_colorizer_sizes)
-		group_processors.add_argument('--frame-colorizer-blend', help = wording.get('help.frame_colorizer_blend'), type = int, default = config.get_int_value('processors', 'frame_colorizer_blend', '100'), choices = processors_choices.frame_colorizer_blend_range, metavar = create_int_metavar(processors_choices.frame_colorizer_blend_range))
+		group_processors.add_argument('--frame-colorizer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'frame_colorizer_model', 'ddcolor'), choices = frame_colorizer_choices.frame_colorizer_models)
+		group_processors.add_argument('--frame-colorizer-size', help = translator.get('help.size', __package__), type = str, default = config.get_str_value('processors', 'frame_colorizer_size', '256x256'), choices = frame_colorizer_choices.frame_colorizer_sizes)
+		group_processors.add_argument('--frame-colorizer-blend', help = translator.get('help.blend', __package__), type = int, default = config.get_int_value('processors', 'frame_colorizer_blend', '100'), choices = frame_colorizer_choices.frame_colorizer_blend_range, metavar = create_int_metavar(frame_colorizer_choices.frame_colorizer_blend_range))
 		facefusion.jobs.job_store.register_step_keys([ 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size' ])
 
 
@@ -174,13 +175,13 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
-		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
-		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('match_target_and_output_extension') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 
