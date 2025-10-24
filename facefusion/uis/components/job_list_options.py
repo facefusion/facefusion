@@ -3,7 +3,7 @@ from typing import List, Optional
 import gradio
 
 import facefusion.choices
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.common_helper import get_first
 from facefusion.jobs import job_manager
 from facefusion.types import JobStatus
@@ -19,7 +19,7 @@ def render() -> None:
 		job_status = get_first(facefusion.choices.job_statuses)
 
 		JOB_LIST_JOB_STATUS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-			label = wording.get('uis.job_list_status_checkbox_group'),
+			label = translator.get('uis.job_list_status_checkbox_group'),
 			choices = facefusion.choices.job_statuses,
 			value = job_status
 		)

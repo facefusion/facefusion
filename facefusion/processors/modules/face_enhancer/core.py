@@ -5,7 +5,7 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import create_float_metavar, create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.face_analyser import scale_face
@@ -13,8 +13,9 @@ from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FaceEnhancerInputs, FaceEnhancerWeight, ProcessorOutputs
+from facefusion.processors.modules.face_enhancer import choices as face_enhancer_choices
+from facefusion.processors.modules.face_enhancer.types import FaceEnhancerInputs, FaceEnhancerWeight
+from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -237,9 +238,9 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--face-enhancer-model', help = wording.get('help.face_enhancer_model'), default = config.get_str_value('processors', 'face_enhancer_model', 'gfpgan_1.4'), choices = processors_choices.face_enhancer_models)
-		group_processors.add_argument('--face-enhancer-blend', help = wording.get('help.face_enhancer_blend'), type = int, default = config.get_int_value('processors', 'face_enhancer_blend', '80'), choices = processors_choices.face_enhancer_blend_range, metavar = create_int_metavar(processors_choices.face_enhancer_blend_range))
-		group_processors.add_argument('--face-enhancer-weight', help = wording.get('help.face_enhancer_weight'), type = float, default = config.get_float_value('processors', 'face_enhancer_weight', '0.5'), choices = processors_choices.face_enhancer_weight_range, metavar = create_float_metavar(processors_choices.face_enhancer_weight_range))
+		group_processors.add_argument('--face-enhancer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'face_enhancer_model', 'gfpgan_1.4'), choices = face_enhancer_choices.face_enhancer_models)
+		group_processors.add_argument('--face-enhancer-blend', help = translator.get('help.blend', __package__), type = int, default = config.get_int_value('processors', 'face_enhancer_blend', '80'), choices = face_enhancer_choices.face_enhancer_blend_range, metavar = create_int_metavar(face_enhancer_choices.face_enhancer_blend_range))
+		group_processors.add_argument('--face-enhancer-weight', help = translator.get('help.weight', __package__), type = float, default = config.get_float_value('processors', 'face_enhancer_weight', '0.5'), choices = face_enhancer_choices.face_enhancer_weight_range, metavar = create_float_metavar(face_enhancer_choices.face_enhancer_weight_range))
 		facefusion.jobs.job_store.register_step_keys([ 'face_enhancer_model', 'face_enhancer_blend', 'face_enhancer_weight' ])
 
 
@@ -258,13 +259,13 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
-		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
-		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('match_target_and_output_extension') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 

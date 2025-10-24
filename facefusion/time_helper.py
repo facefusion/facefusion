@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from time import time
 from typing import Optional, Tuple
 
-from facefusion import wording
+from facefusion import translator
 
 
 def get_current_date_time() -> datetime:
@@ -25,9 +25,9 @@ def describe_time_ago(date_time : datetime) -> Optional[str]:
 	days, hours, minutes, _ = split_time_delta(time_ago)
 
 	if timedelta(days = 1) < time_ago:
-		return wording.get('time_ago_days').format(days = days, hours = hours, minutes = minutes)
+		return translator.get('time_ago_days').format(days = days, hours = hours, minutes = minutes)
 	if timedelta(hours = 1) < time_ago:
-		return wording.get('time_ago_hours').format(hours = hours, minutes = minutes)
+		return translator.get('time_ago_hours').format(hours = hours, minutes = minutes)
 	if timedelta(minutes = 1) < time_ago:
-		return wording.get('time_ago_minutes').format(minutes = minutes)
-	return wording.get('time_ago_now')
+		return translator.get('time_ago_minutes').format(minutes = minutes)
+	return translator.get('time_ago_now')

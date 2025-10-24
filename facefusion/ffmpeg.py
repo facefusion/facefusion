@@ -7,7 +7,7 @@ from typing import List, Optional, cast
 from tqdm import tqdm
 
 import facefusion.choices
-from facefusion import ffmpeg_builder, logger, process_manager, state_manager, wording
+from facefusion import ffmpeg_builder, logger, process_manager, state_manager, translator
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
@@ -119,7 +119,7 @@ def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_v
 		ffmpeg_builder.set_output(temp_frames_pattern)
 	)
 
-	with tqdm(total = extract_frame_total, desc = wording.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+	with tqdm(total = extract_frame_total, desc = translator.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
 		return process.returncode == 0
 
@@ -237,7 +237,7 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 		ffmpeg_builder.force_output(temp_video_path)
 	)
 
-	with tqdm(total = merge_frame_total, desc = wording.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+	with tqdm(total = merge_frame_total, desc = translator.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
 		return process.returncode == 0
 

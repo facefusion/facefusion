@@ -12,6 +12,4 @@ METADATA =\
 
 
 def get(key : str) -> Optional[str]:
-	if key in METADATA:
-		return METADATA.get(key)
-	return None
+	return METADATA.get(key)

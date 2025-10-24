@@ -5,14 +5,15 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, state_manager, video_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, state_manager, translator, video_manager
 from facefusion.face_analyser import scale_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, same_file_extension
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FaceDebuggerInputs, ProcessorOutputs
+from facefusion.processors.modules.face_debugger import choices as face_debugger_choices
+from facefusion.processors.modules.face_debugger.types import FaceDebuggerInputs
+from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.types import ApplyStateItem, Args, Face, InferencePool, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
@@ -29,7 +30,7 @@ def clear_inference_pool() -> None:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--face-debugger-items', help = wording.get('help.face_debugger_items').format(choices = ', '.join(processors_choices.face_debugger_items)), default = config.get_str_list('processors', 'face_debugger_items', 'face-landmark-5/68 face-mask'), choices = processors_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
+		group_processors.add_argument('--face-debugger-items', help = translator.get('help.items', __package__).format(choices = ', '.join(face_debugger_choices.face_debugger_items)), default = config.get_str_list('processors', 'face_debugger_items', 'face-landmark-5/68 face-mask'), choices = face_debugger_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
 		facefusion.jobs.job_store.register_step_keys([ 'face_debugger_items' ])
 
 
@@ -43,13 +44,13 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
-		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
-		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('match_target_and_output_extension') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 

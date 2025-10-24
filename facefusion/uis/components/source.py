@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.common_helper import get_first
 from facefusion.filesystem import filter_audio_paths, filter_image_paths, has_audio, has_image
 from facefusion.uis.core import register_ui_component
@@ -21,7 +21,7 @@ def render() -> None:
 	has_source_audio = has_audio(state_manager.get_item('source_paths'))
 	has_source_image = has_image(state_manager.get_item('source_paths'))
 	SOURCE_FILE = gradio.File(
-		label = wording.get('uis.source_file'),
+		label = translator.get('uis.source_file'),
 		file_count = 'multiple',
 		value = state_manager.get_item('source_paths') if has_source_audio or has_source_image else None
 	)
