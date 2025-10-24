@@ -19,13 +19,13 @@ def render() -> None:
 
 	has_age_modifier = 'age_modifier' in state_manager.get_item('processors')
 	AGE_MODIFIER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = translator.get('uis.age_modifier_model_dropdown'),
+		label = translator.get('uis.model_dropdown', 'facefusion.processors.modules.age_modifier'),
 		choices = age_modifier_choices.age_modifier_models,
 		value = state_manager.get_item('age_modifier_model'),
 		visible = has_age_modifier
 	)
 	AGE_MODIFIER_DIRECTION_SLIDER = gradio.Slider(
-		label = translator.get('uis.age_modifier_direction_slider'),
+		label = translator.get('uis.direction_slider', 'facefusion.processors.modules.age_modifier'),
 		value = state_manager.get_item('age_modifier_direction'),
 		step = calculate_float_step(age_modifier_choices.age_modifier_direction_range),
 		minimum = age_modifier_choices.age_modifier_direction_range[0],

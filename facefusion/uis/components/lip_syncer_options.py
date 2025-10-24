@@ -19,13 +19,13 @@ def render() -> None:
 
 	has_lip_syncer = 'lip_syncer' in state_manager.get_item('processors')
 	LIP_SYNCER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = translator.get('uis.lip_syncer_model_dropdown'),
+		label = translator.get('uis.model_dropdown', 'facefusion.processors.modules.lip_syncer'),
 		choices = lip_syncer_choices.lip_syncer_models,
 		value = state_manager.get_item('lip_syncer_model'),
 		visible = has_lip_syncer
 	)
 	LIP_SYNCER_WEIGHT_SLIDER = gradio.Slider(
-		label = translator.get('uis.lip_syncer_weight_slider'),
+		label = translator.get('uis.weight_slider', 'facefusion.processors.modules.lip_syncer'),
 		value = state_manager.get_item('lip_syncer_weight'),
 		step = calculate_float_step(lip_syncer_choices.lip_syncer_weight_range),
 		minimum = lip_syncer_choices.lip_syncer_weight_range[0],

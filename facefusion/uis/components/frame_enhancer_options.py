@@ -19,13 +19,13 @@ def render() -> None:
 
 	has_frame_enhancer = 'frame_enhancer' in state_manager.get_item('processors')
 	FRAME_ENHANCER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = translator.get('uis.frame_enhancer_model_dropdown'),
+		label = translator.get('uis.model_dropdown', 'facefusion.processors.modules.frame_enhancer'),
 		choices = frame_enhancer_choices.frame_enhancer_models,
 		value = state_manager.get_item('frame_enhancer_model'),
 		visible = has_frame_enhancer
 	)
 	FRAME_ENHANCER_BLEND_SLIDER = gradio.Slider(
-		label = translator.get('uis.frame_enhancer_blend_slider'),
+		label = translator.get('uis.blend_slider', 'facefusion.processors.modules.frame_enhancer'),
 		value = state_manager.get_item('frame_enhancer_blend'),
 		step = calculate_int_step(frame_enhancer_choices.frame_enhancer_blend_range),
 		minimum = frame_enhancer_choices.frame_enhancer_blend_range[0],

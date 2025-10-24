@@ -19,13 +19,13 @@ def render() -> None:
 
 	has_deep_swapper = 'deep_swapper' in state_manager.get_item('processors')
 	DEEP_SWAPPER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = translator.get('uis.deep_swapper_model_dropdown'),
+		label = translator.get('uis.model_dropdown', 'facefusion.processors.modules.deep_swapper'),
 		choices = deep_swapper_choices.deep_swapper_models,
 		value = state_manager.get_item('deep_swapper_model'),
 		visible = has_deep_swapper
 	)
 	DEEP_SWAPPER_MORPH_SLIDER = gradio.Slider(
-		label = translator.get('uis.deep_swapper_morph_slider'),
+		label = translator.get('uis.morph_slider', 'facefusion.processors.modules.deep_swapper'),
 		value = state_manager.get_item('deep_swapper_morph'),
 		step = calculate_int_step(deep_swapper_choices.deep_swapper_morph_range),
 		minimum = deep_swapper_choices.deep_swapper_morph_range[0],

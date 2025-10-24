@@ -27,7 +27,7 @@ def render() -> None:
 	has_background_remover = 'background_remover' in state_manager.get_item('processors')
 	background_remover_color = state_manager.get_item('background_remover_color')
 	BACKGROUND_REMOVER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = translator.get('uis.background_remover_model_dropdown'),
+		label = translator.get('uis.model_dropdown', 'facefusion.processors.modules.background_remover'),
 		choices = background_remover_choices.background_remover_models,
 		value = state_manager.get_item('background_remover_model'),
 		visible = has_background_remover
@@ -35,7 +35,7 @@ def render() -> None:
 	with gradio.Group():
 		with gradio.Row():
 			BACKGROUND_REMOVER_COLOR_RED_NUMBER = gradio.Number(
-				label = translator.get('uis.background_remover_color_red_number'),
+				label = translator.get('uis.color_red_number', 'facefusion.processors.modules.background_remover'),
 				value = background_remover_color[0],
 				minimum = background_remover_choices.background_remover_color_range[0],
 				maximum = background_remover_choices.background_remover_color_range[-1],
@@ -43,7 +43,7 @@ def render() -> None:
 				visible = has_background_remover,
 			)
 			BACKGROUND_REMOVER_COLOR_GREEN_NUMBER = gradio.Number(
-				label = translator.get('uis.background_remover_color_green_number'),
+				label = translator.get('uis.color_green_number', 'facefusion.processors.modules.background_remover'),
 				value = background_remover_color[1],
 				minimum = background_remover_choices.background_remover_color_range[0],
 				maximum = background_remover_choices.background_remover_color_range[-1],
@@ -52,7 +52,7 @@ def render() -> None:
 			)
 		with gradio.Row():
 			BACKGROUND_REMOVER_COLOR_BLUE_NUMBER = gradio.Number(
-				label = translator.get('uis.background_remover_color_blue_number'),
+				label = translator.get('uis.color_blue_number', 'facefusion.processors.modules.background_remover'),
 				value = background_remover_color[2],
 				minimum = background_remover_choices.background_remover_color_range[0],
 				maximum = background_remover_choices.background_remover_color_range[-1],
@@ -60,7 +60,7 @@ def render() -> None:
 				visible = has_background_remover,
 			)
 			BACKGROUND_REMOVER_COLOR_ALPHA_NUMBER = gradio.Number(
-				label = translator.get('uis.background_remover_color_alpha_number'),
+				label = translator.get('uis.color_alpha_number', 'facefusion.processors.modules.background_remover'),
 				value = background_remover_color[3],
 				minimum = background_remover_choices.background_remover_color_range[0],
 				maximum = background_remover_choices.background_remover_color_range[-1],
