@@ -1,7 +1,5 @@
 from functools import partial
 
-import numpy
-
 from facefusion import ffmpeg
 from facefusion import logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame
@@ -11,9 +9,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
-from facefusion.vision import extract_vision_mask, detect_image_resolution, merge_vision_mask, pack_resolution, \
-	read_static_image, \
-	read_static_images, restrict_image_resolution, scale_resolution, write_image
+from facefusion.vision import extract_vision_mask, detect_image_resolution, merge_vision_mask, pack_resolution, read_static_image, read_static_images, restrict_image_resolution, scale_resolution, write_image
 from facefusion.workflows.core import is_process_stopping
 
 
