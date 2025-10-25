@@ -67,6 +67,7 @@ CameraPoolSet = TypedDict('CameraPoolSet',
 	'capture': CameraCaptureSet
 })
 
+ColorMode = Literal['rgb', 'rgba']
 VisionFrame : TypeAlias = NDArray[Any]
 Mask : TypeAlias = NDArray[Any]
 Points : TypeAlias = NDArray[Any]
