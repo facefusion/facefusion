@@ -24,7 +24,7 @@ if is_windows() or is_linux():
 	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.22.0')
 	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.22.0')
 if is_windows():
-	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.17.3')
+	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.23.0')
 if is_linux():
 	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.21.0')
 
