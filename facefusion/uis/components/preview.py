@@ -18,7 +18,7 @@ from facefusion.types import AudioFrame, Face, VisionFrame
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions, PreviewMode
-from facefusion.vision import detect_frame_orientation, fit_cover_frame, merge_vision_mask, obscure_frame, read_static_alpha_image, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
+from facefusion.vision import detect_frame_orientation, fit_cover_frame, merge_vision_mask, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
@@ -195,7 +195,7 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 
 	if is_image(state_manager.get_item('target_path')):
 		reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		target_vision_frame = read_static_alpha_image(state_manager.get_item('target_path'))
+		target_vision_frame = read_static_image(state_manager.get_item('target_path'), 'rgba')
 		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame, preview_mode, preview_resolution)
 		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGR2RGB)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])

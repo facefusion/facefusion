@@ -9,50 +9,35 @@ from cv2.typing import Size
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
+from facefusion.types import ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
 from facefusion.video_manager import get_video_capture
 
 
-def read_static_images(image_paths : List[str]) -> List[VisionFrame]:
+def read_static_images(image_paths : List[str], color_mode : ColorMode = 'rgb') -> List[VisionFrame]:
 	vision_frames = []
 
 	if image_paths:
 		for image_path in image_paths:
-			vision_frames.append(read_static_image(image_path))
+			vision_frames.append(read_static_image(image_path, color_mode))
 	return vision_frames
 
 
 @lru_cache(maxsize = 64)
-def read_static_image(image_path : str) -> Optional[VisionFrame]:
-	return read_image(image_path)
+def read_static_image(image_path : str, color_mode : ColorMode = 'rgb') -> Optional[VisionFrame]:
+	return read_image(image_path, color_mode)
 
 
-def read_image(image_path : str) -> Optional[VisionFrame]:
+def read_image(image_path : str, color_mode : ColorMode = 'rgb') -> Optional[VisionFrame]:
 	if is_image(image_path):
+		flag = cv2.IMREAD_COLOR
+
+		if color_mode == 'rgba':
+			flag = cv2.IMREAD_UNCHANGED
+
 		if is_windows():
 			image_buffer = numpy.fromfile(image_path, dtype = numpy.uint8)
-			return cv2.imdecode(image_buffer, cv2.IMREAD_COLOR)
-		return cv2.imread(image_path)
-	return None
-
-
-@lru_cache(maxsize = 64)
-def read_static_alpha_image(image_path : str) -> Optional[VisionFrame]:
-	return read_alpha_image(image_path)
-
-
-def read_alpha_image(image_path : str) -> Optional[VisionFrame]:
-	if is_image(image_path):
-		if is_windows():
-			image_buffer = numpy.fromfile(image_path, dtype = numpy.uint8)
-			vision_frame = cv2.imdecode(image_buffer, cv2.IMREAD_UNCHANGED)
-		else:
-			vision_frame = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-
-		if has_vision_mask(vision_frame):
-			return vision_frame
-		vision_mask = numpy.full(vision_frame.shape[:2], 255, dtype = numpy.uint8)
-		return merge_vision_mask(vision_frame, vision_mask)
+			return cv2.imdecode(image_buffer, flag)
+		return cv2.imread(image_path, flag)
 	return None
 
 
@@ -364,8 +349,10 @@ def merge_tile_frames(tile_vision_frames : List[VisionFrame], temp_width : int, 
 	return merge_vision_frame
 
 
-def has_vision_mask(vision_frame : VisionFrame) -> bool:
-	return vision_frame.ndim == 3 and vision_frame.shape[2] == 4
+def extract_vision_mask(vision_frame : VisionFrame) -> Mask:
+	if vision_frame.ndim == 3 and vision_frame.shape[2] == 4:
+		return vision_frame[:, :, 3]
+	return numpy.full(vision_frame.shape[:2], 255, dtype = numpy.uint8)
 
 
 def merge_vision_mask(vision_frame : VisionFrame, vision_mask : Mask) -> VisionFrame:
