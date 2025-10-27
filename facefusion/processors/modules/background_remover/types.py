@@ -9,4 +9,4 @@ BackgroundRemoverInputs = TypedDict('BackgroundRemoverInputs',
 	'temp_vision_mask' : Mask
 })
 
-BackgroundRemoverModel = Literal['birefnet_general_244', 'rmbg_1.4', 'rmbg_2.0', 'ben2', 'birefnet_portrait', 'birefnet_swin_tiny', 'isnet_general', 'modnet', 'silueta', 'u2net', 'u2net_human_seg', 'u2netp']
+BackgroundRemoverModel = Literal['ben_2', 'birefnet_general', 'birefnet_portrait', 'birefnet_swin_tiny', 'isnet_general', 'modnet', 'rmbg_1.4', 'rmbg_2.0', 'silueta', 'u2net_general', 'u2net_human_seg', 'u2netp']
