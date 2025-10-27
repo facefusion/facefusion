@@ -17,19 +17,19 @@ def test_chain() -> None:
 		ffmpeg_builder.set_video_encoder('libx264'),
 		ffmpeg_builder.set_video_fps(30),
 		ffmpeg_builder.set_audio_encoder('aac')
-	) == [ '-c:v', 'libx264', '-vf', 'framerate=fps=30', '-c:a', 'aac' ]
+	) == [ '-c:v', 'libx264', '-vf', 'fps=30', '-c:a', 'aac' ]
 
 
 def test_concat() -> None:
 	assert concat(
 		set_video_encoder('libvpx-vp9'),
 		set_video_fps(30)
-	) == [ '-c:v', 'libvpx-vp9', '-vf', 'framerate=fps=30' ]
+	) == [ '-c:v', 'libvpx-vp9', '-vf', 'fps=30' ]
 	assert concat(
 		set_video_encoder('libvpx-vp9'),
 		set_video_fps(30),
 		keep_video_alpha('libvpx-vp9')
-	) == [ '-c:v', 'libvpx-vp9', '-vf', 'framerate=fps=30,format=yuva420p' ]
+	) == [ '-c:v', 'libvpx-vp9', '-vf', 'fps=30,format=yuva420p' ]
 	assert concat(
 		select_frame_range(0, 100, 30),
 		keep_video_alpha('libvpx-vp9')
