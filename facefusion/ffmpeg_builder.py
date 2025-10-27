@@ -218,7 +218,7 @@ def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -
 
 
 def set_video_fps(video_fps : Fps) -> List[Command]:
-	return [ '-vf', 'framerate=fps=' + str(video_fps) ]
+	return [ '-vf', 'fps=' + str(video_fps) ]
 
 
 def set_video_duration(video_duration : Duration) -> List[Command]:
