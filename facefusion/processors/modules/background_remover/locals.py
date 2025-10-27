@@ -7,7 +7,7 @@ LOCALS : Locals =\
 		'help':
 		{
 			'model': 'choose the model responsible for removing the background',
-			'color': 'apply red, green blue and alpha values of the background'
+			'color': 'apply red, green blue and alpha values to the background'
 		},
 		'uis':
 		{
