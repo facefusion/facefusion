@@ -18,7 +18,7 @@ from facefusion.types import AudioFrame, Face, VisionFrame
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions, PreviewMode
-from facefusion.vision import detect_frame_orientation, fit_cover_frame, merge_vision_mask, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
+from facefusion.vision import detect_frame_orientation, extract_vision_mask, fit_cover_frame, merge_vision_mask, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
@@ -219,7 +219,7 @@ def clear_and_update_preview_image(preview_mode : PreviewMode, preview_resolutio
 def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frame : VisionFrame, preview_mode : PreviewMode, preview_resolution : str) -> VisionFrame:
 	target_vision_frame = restrict_frame(target_vision_frame, unpack_resolution(preview_resolution))
 	temp_vision_frame = target_vision_frame.copy()
-	temp_vision_mask = temp_vision_frame[:, :, 3]
+	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
 	if analyse_frame(target_vision_frame[:, :, :3]):
 		if preview_mode == 'frame-by-frame':
