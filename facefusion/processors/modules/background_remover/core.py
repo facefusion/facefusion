@@ -203,6 +203,28 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
 		},
+		'u2net_cloth':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': resolve_download_url('models-3.5.0', 'u2net_cloth.hash'),
+					'path': resolve_relative_path('../.assets/models/u2net_cloth.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': resolve_download_url('models-3.5.0', 'u2net_cloth.onnx'),
+					'path': resolve_relative_path('../.assets/models/u2net_cloth.onnx')
+				}
+			},
+			'size': (768, 768),
+			'mean': [ 0.485, 0.456, 0.406 ],
+			'standard_deviation': [ 0.229, 0.224, 0.225 ]
+		},
 		'u2net_general':
 		{
 			'hashes':
@@ -348,14 +370,18 @@ def remove_background(temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mas
 
 def forward(temp_vision_frame : VisionFrame) -> VisionFrame:
 	frame_colorizer = get_inference_pool().get('background_remover')
+	model_name = state_manager.get_item('background_remover_model')
 
 	with thread_semaphore():
-		temp_vision_frame = frame_colorizer.run(None,
+		remove_vision_frame = frame_colorizer.run(None,
 		{
 			'input': temp_vision_frame
 		})[0]
 
-	return temp_vision_frame
+		if model_name == 'u2net_cloth':
+			remove_vision_frame = numpy.argmax(remove_vision_frame, axis = 1)
+
+	return remove_vision_frame
 
 
 def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
