@@ -256,7 +256,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 	temp_vision_frame = apply_checkerboard_background(temp_vision_frame, temp_vision_mask)
 
 	if preview_mode == 'frame-by-frame':
-		return numpy.hstack((target_vision_frame, temp_vision_frame))
+		return numpy.hstack((target_vision_frame[:, :, :3], temp_vision_frame))
 
 	if preview_mode == 'face-by-face':
 		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, target_vision_frame[:, :, :3], temp_vision_frame)
