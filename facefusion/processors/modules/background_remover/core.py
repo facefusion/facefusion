@@ -9,7 +9,7 @@ import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import is_macos
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.normalizer import normalize_color
@@ -33,16 +33,16 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/ben2.hash',
-					'path': resolve_relative_path('../.assets/models/ben2.hash')
+					'url': resolve_download_url('models-3.5.0', 'ben_2.hash'),
+					'path': resolve_relative_path('../.assets/models/ben_2.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/ben2.onnx',
-					'path': resolve_relative_path('../.assets/models/ben2.onnx')
+					'url': resolve_download_url('models-3.5.0', 'ben_2.onnx'),
+					'path': resolve_relative_path('../.assets/models/ben_2.onnx')
 				}
 			},
 			'size': (1024, 1024),
@@ -55,16 +55,16 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_general_244.hash',
-					'path': resolve_relative_path('../.assets/models/birefnet_general_244.hash')
+					'url': resolve_download_url('models-3.5.0', 'birefnet_general.hash'),
+					'path': resolve_relative_path('../.assets/models/birefnet_general.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_general_244.onnx',
-					'path': resolve_relative_path('../.assets/models/birefnet_general_244.onnx')
+					'url': resolve_download_url('models-3.5.0', 'birefnet_general.onnx'),
+					'path': resolve_relative_path('../.assets/models/birefnet_general.onnx')
 				}
 			},
 			'size': (1024, 1024),
@@ -77,7 +77,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_portrait.hash',
+					'url': resolve_download_url('models-3.5.0', 'birefnet_portrait.hash'),
 					'path': resolve_relative_path('../.assets/models/birefnet_portrait.hash')
 				}
 			},
@@ -85,30 +85,8 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_portrait.onnx',
+					'url': resolve_download_url('models-3.5.0', 'birefnet_portrait.onnx'),
 					'path': resolve_relative_path('../.assets/models/birefnet_portrait.onnx')
-				}
-			},
-			'size': (1024, 1024),
-			'mean': [ 0.0, 0.0, 0.0 ],
-			'standard_deviation': [ 1.0, 1.0, 1.0 ]
-		},
-		'birefnet_swin_tiny':
-		{
-			'hashes':
-			{
-				'background_remover':
-				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_swin_tiny.hash',
-					'path': resolve_relative_path('../.assets/models/birefnet_swin_tiny.hash')
-				}
-			},
-			'sources':
-			{
-				'background_remover':
-				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/birefnet_swin_tiny.onnx',
-					'path': resolve_relative_path('../.assets/models/birefnet_swin_tiny.onnx')
 				}
 			},
 			'size': (1024, 1024),
@@ -121,16 +99,16 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/isnet-general-use.hash',
-					'path': resolve_relative_path('../.assets/models/isnet-general-use.hash')
+					'url': resolve_download_url('models-3.5.0', 'isnet_general.hash'),
+					'path': resolve_relative_path('../.assets/models/isnet_general.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/isnet-general-use.onnx',
-					'path': resolve_relative_path('../.assets/models/isnet-general-use.onnx')
+					'url': resolve_download_url('models-3.5.0', 'isnet_general.onnx'),
+					'path': resolve_relative_path('../.assets/models/isnet_general.onnx')
 				}
 			},
 			'size': (1024, 1024),
@@ -143,7 +121,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/modnet.hash',
+					'url': resolve_download_url('models-3.5.0', 'modnet.hash'),
 					'path': resolve_relative_path('../.assets/models/modnet.hash')
 				}
 			},
@@ -151,7 +129,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/modnet.onnx',
+					'url': resolve_download_url('models-3.5.0', 'modnet.onnx'),
 					'path': resolve_relative_path('../.assets/models/modnet.onnx')
 				}
 			},
@@ -165,16 +143,16 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/rembg_1.4.hash',
-					'path': resolve_relative_path('../.assets/models/rembg_1.4.hash')
+					'url': resolve_download_url('models-3.5.0', 'rmbg_1.4.hash'),
+					'path': resolve_relative_path('../.assets/models/rmbg_1.4.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/rembg_1.4.onnx',
-					'path': resolve_relative_path('../.assets/models/rembg_1.4.onnx')
+					'url': resolve_download_url('models-3.5.0', 'rmbg_1.4.onnx'),
+					'path': resolve_relative_path('../.assets/models/rmbg_1.4.onnx')
 				}
 			},
 			'size': (1024, 1024),
@@ -187,16 +165,16 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/rembg_2.0.hash',
-					'path': resolve_relative_path('../.assets/models/rembg_2.0.hash')
+					'url': resolve_download_url('models-3.5.0', 'rmbg_2.0.hash'),
+					'path': resolve_relative_path('../.assets/models/rmbg_2.0.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/rembg_2.0.onnx',
-					'path': resolve_relative_path('../.assets/models/rembg_2.0.onnx')
+					'url': resolve_download_url('models-3.5.0', 'rmbg_2.0.onnx'),
+					'path': resolve_relative_path('../.assets/models/rmbg_2.0.onnx')
 				}
 			},
 			'size': (1024, 1024),
@@ -209,7 +187,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/silueta.hash',
+					'url': resolve_download_url('models-3.5.0', 'silueta.hash'),
 					'path': resolve_relative_path('../.assets/models/silueta.hash')
 				}
 			},
@@ -217,7 +195,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/silueta.onnx',
+					'url': resolve_download_url('models-3.5.0', 'silueta.onnx'),
 					'path': resolve_relative_path('../.assets/models/silueta.onnx')
 				}
 			},
@@ -231,60 +209,60 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2net.hash',
-					'path': resolve_relative_path('../.assets/models/u2net.hash')
+					'url': resolve_download_url('models-3.5.0', 'u2net_general.hash'),
+					'path': resolve_relative_path('../.assets/models/u2net_general.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2net.onnx',
-					'path': resolve_relative_path('../.assets/models/u2net.onnx')
+					'url': resolve_download_url('models-3.5.0', 'u2net_general.onnx'),
+					'path': resolve_relative_path('../.assets/models/u2net_general.onnx')
 				}
 			},
 			'size': (320, 320),
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
 		},
-		'u2net_human_seg':
+		'u2net_human':
 		{
 			'hashes':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2net_human_seg.hash',
-					'path': resolve_relative_path('../.assets/models/u2net_human_seg.hash')
+					'url': resolve_download_url('models-3.5.0', 'u2net_human.hash'),
+					'path': resolve_relative_path('../.assets/models/u2net_human.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2net_human_seg.onnx',
-					'path': resolve_relative_path('../.assets/models/u2net_human_seg.onnx')
+					'url': resolve_download_url('models-3.5.0', 'u2net_human.onnx'),
+					'path': resolve_relative_path('../.assets/models/u2net_human.onnx')
 				}
 			},
 			'size': (320, 320),
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
 		},
-		'u2netp':
+		'u2net_portable':
 		{
 			'hashes':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2netp.hash',
-					'path': resolve_relative_path('../.assets/models/u2netp.hash')
+					'url': resolve_download_url('models-3.5.0', 'u2net_portable.hash'),
+					'path': resolve_relative_path('../.assets/models/u2net_portable.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/background-removers/resolve/main/u2netp.onnx',
-					'path': resolve_relative_path('../.assets/models/u2netp.onnx')
+					'url': resolve_download_url('models-3.5.0', 'u2net_portable.onnx'),
+					'path': resolve_relative_path('../.assets/models/u2net_portable.onnx')
 				}
 			},
 			'size': (320, 320),
