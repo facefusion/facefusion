@@ -1,3 +1,4 @@
+from functools import lru_cache
 from time import sleep
 from typing import List, Optional, Tuple
 
@@ -14,7 +15,7 @@ from facefusion.face_selector import select_faces
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.types import AudioFrame, Face, VisionFrame
+from facefusion.types import AudioFrame, Face, Mask, VisionFrame
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions, PreviewMode
@@ -251,13 +252,14 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 			})
 		logger.enable()
 
-	temp_vision_frame = cv2.resize(temp_vision_frame, target_vision_frame.shape[1::-1])
+	temp_vision_frame = cv2.resize(temp_vision_frame[:, :, :3], target_vision_frame.shape[1::-1])
+	temp_vision_frame = apply_checkerboard_background(temp_vision_frame, temp_vision_mask)
 
 	if preview_mode == 'frame-by-frame':
-		return numpy.hstack((target_vision_frame[:, :, :3], temp_vision_frame[:, :, :3]))
+		return numpy.hstack((target_vision_frame, temp_vision_frame))
 
 	if preview_mode == 'face-by-face':
-		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, target_vision_frame[:, :, :3], temp_vision_frame[:, :, :3])
+		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, target_vision_frame[:, :, :3], temp_vision_frame)
 		return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
 
 	return temp_vision_frame
@@ -291,3 +293,35 @@ def extract_crop_frame(vision_frame : VisionFrame, face : Face) -> Optional[Visi
 	end_y = max(0, end_y + padding_y)
 	crop_vision_frame = vision_frame[start_y:end_y, start_x:end_x]
 	return crop_vision_frame
+
+
+@lru_cache(maxsize = 8)
+def create_static_checkerboard_frame(width: int, height: int, tile_size : int) -> VisionFrame:
+	return create_checkerboard_frame(width, height, tile_size)
+
+
+def create_checkerboard_frame(width: int, height: int, tile_size : int) -> VisionFrame:
+	color_light = (200, 200, 200)
+	color_dark = (120, 120, 120)
+	tile = numpy.array(
+	[
+		[ color_light, color_dark ],
+		[ color_dark, color_light ]
+	], dtype = numpy.uint8)
+
+	tile_pattern = numpy.tile(tile, (height // tile_size // 2 + 1, width // tile_size // 2 + 1, 1))
+	checkerboard_frame = tile_pattern.repeat(tile_size, axis = 0).repeat(tile_size, axis = 1)
+	checkerboard_frame = checkerboard_frame[:height, :width]
+	return checkerboard_frame
+
+
+def apply_checkerboard_background(temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -> VisionFrame:
+	blend_factor = state_manager.get_item('background_remover_color')[-1] / 255
+	temp_vision_mask = cv2.resize(temp_vision_mask, temp_vision_frame.shape[1::-1])
+	temp_vision_mask = 1 - numpy.expand_dims(temp_vision_mask, axis = -1) / 255
+	checkerboard_frame = create_static_checkerboard_frame(temp_vision_mask.shape[1], temp_vision_mask.shape[0], 12)
+	temp_vision_frame_weight = ((1 - temp_vision_mask) * (1 - blend_factor)) + blend_factor
+	checkerboard_frame_weight = temp_vision_mask * (1 - blend_factor)
+	temp_vision_frame = temp_vision_frame * temp_vision_frame_weight + checkerboard_frame * checkerboard_frame_weight
+	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
+	return temp_vision_frame
