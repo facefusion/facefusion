@@ -14,7 +14,7 @@ from facefusion.face_selector import select_faces
 from facefusion.face_store import clear_static_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.types import AudioFrame, Face, VisionFrame
+from facefusion.types import AudioFrame, Face, Mask, VisionFrame
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions, PreviewMode
@@ -196,6 +196,8 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 	if is_image(state_manager.get_item('target_path')):
 		reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'), 'rgba')
+		target_vision_mask = extract_vision_mask(target_vision_frame)
+		target_vision_frame = merge_vision_mask(target_vision_frame, target_vision_mask)
 		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, target_vision_frame, preview_mode, preview_resolution)
 		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGRA2RGBA)
 		return gradio.Image(value = preview_vision_frame, elem_classes = [ 'image-preview', 'is-' + detect_frame_orientation(preview_vision_frame) ])
@@ -203,7 +205,7 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 	if is_video(state_manager.get_item('target_path')):
 		reference_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 		temp_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
-		temp_vision_mask = numpy.full(temp_vision_frame.shape[:2], 255, dtype = numpy.uint8)
+		temp_vision_mask = extract_vision_mask(temp_vision_frame)
 		temp_vision_frame = merge_vision_mask(temp_vision_frame, temp_vision_mask)
 		preview_vision_frame = process_preview_frame(reference_vision_frame, source_vision_frames, source_audio_frame, source_voice_frame, temp_vision_frame, preview_mode, preview_resolution)
 		preview_vision_frame = cv2.cvtColor(preview_vision_frame, cv2.COLOR_BGRA2RGBA)
@@ -251,23 +253,20 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 			})
 		logger.enable()
 
-	temp_vision_mask = temp_vision_mask.clip(state_manager.get_item('background_remover_color')[-1], 255)
-	temp_vision_frame = cv2.resize(temp_vision_frame[:, :, :3], target_vision_frame.shape[1::-1])
-	temp_vision_mask = cv2.resize(temp_vision_mask, target_vision_frame.shape[1::-1])
-	temp_vision_frame = merge_vision_mask(temp_vision_frame, temp_vision_mask)
+	temp_vision_frame = prepare_output_frame(target_vision_frame, temp_vision_frame, temp_vision_mask)
 
 	if preview_mode == 'frame-by-frame':
 		return numpy.hstack((target_vision_frame, temp_vision_frame))
 
 	if preview_mode == 'face-by-face':
-		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, target_vision_frame[:, :, :3], temp_vision_frame[:, :, :3])
+		target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, target_vision_frame, temp_vision_frame)
 		return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
 
 	return temp_vision_frame
 
 
 def create_face_by_face(reference_vision_frame : VisionFrame, target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, VisionFrame]:
-	target_faces = select_faces(reference_vision_frame, target_vision_frame)
+	target_faces = select_faces(reference_vision_frame[:, :, :3], target_vision_frame[:, :, :3])
 	target_face = get_one_face(target_faces)
 
 	if target_face:
@@ -280,7 +279,7 @@ def create_face_by_face(reference_vision_frame : VisionFrame, target_vision_fram
 			output_crop_vision_frame = fit_cover_frame(output_crop_vision_frame, (target_crop_dimension, target_crop_dimension))
 			return target_crop_vision_frame, output_crop_vision_frame
 
-	empty_vision_frame = numpy.zeros((512, 512, 3), dtype = numpy.uint8)
+	empty_vision_frame = numpy.zeros((512, 512, 4), dtype = numpy.uint8)
 	return empty_vision_frame, empty_vision_frame
 
 
@@ -294,3 +293,10 @@ def extract_crop_frame(vision_frame : VisionFrame, face : Face) -> Optional[Visi
 	end_y = max(0, end_y + padding_y)
 	crop_vision_frame = vision_frame[start_y:end_y, start_x:end_x]
 	return crop_vision_frame
+
+
+def prepare_output_frame(target_vision_frame : VisionFrame, temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -> VisionFrame:
+	temp_vision_mask = temp_vision_mask.clip(state_manager.get_item('background_remover_color')[-1], 255)
+	temp_vision_frame = merge_vision_mask(temp_vision_frame, temp_vision_mask)
+	temp_vision_frame = cv2.resize(temp_vision_frame, target_vision_frame.shape[1::-1])
+	return temp_vision_frame
