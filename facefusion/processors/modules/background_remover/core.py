@@ -369,11 +369,11 @@ def remove_background(temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mas
 
 
 def forward(temp_vision_frame : VisionFrame) -> VisionFrame:
-	frame_colorizer = get_inference_pool().get('background_remover')
+	background_remover = get_inference_pool().get('background_remover')
 	model_name = state_manager.get_item('background_remover_model')
 
 	with thread_semaphore():
-		remove_vision_frame = frame_colorizer.run(None,
+		remove_vision_frame = background_remover.run(None,
 		{
 			'input': temp_vision_frame
 		})[0]
