@@ -45,22 +45,22 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'size': (128, 8, 4),
 			'scale': 4
 		},
-		'lsdir_x4':
+		'face_dat_x4':
 		{
 			'hashes':
 			{
 				'frame_enhancer':
 				{
-					'url': resolve_download_url('models-3.0.0', 'lsdir_x4.hash'),
-					'path': resolve_relative_path('../.assets/models/lsdir_x4.hash')
+					'url': resolve_download_url('models-3.5.0', 'face_dat_x4.hash'),
+					'path': resolve_relative_path('../.assets/models/face_dat_x4.hash')
 				}
 			},
 			'sources':
 			{
 				'frame_enhancer':
 				{
-					'url': resolve_download_url('models-3.0.0', 'lsdir_x4.onnx'),
-					'path': resolve_relative_path('../.assets/models/lsdir_x4.onnx')
+					'url': resolve_download_url('models-3.5.0', 'face_dat_x4.onnx'),
+					'path': resolve_relative_path('../.assets/models/face_dat_x4.onnx')
 				}
 			},
 			'size': (128, 8, 4),
@@ -359,6 +359,27 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			},
 			'size': (128, 8, 4),
 			'scale': 4
+		},
+		'tghq_face_x8':
+		{
+			'hashes':
+			{
+				'frame_enhancer':
+				{
+					'url': resolve_download_url('models-3.5.0', 'tghq_face_x8.hash'),
+					'path': resolve_relative_path('../.assets/models/tghq_face_x8.hash')
+				}
+			},
+			'sources':
+			{
+				'frame_enhancer':
+				{
+					'url': resolve_download_url('models-3.5.0', 'tghq_face_x8.onnx'),
+					'path': resolve_relative_path('../.assets/models/tghq_face_x8.onnx')
+				}
+			},
+			'size': (128, 8, 4),
+			'scale': 8
 		},
 		'ultra_sharp_x4':
 		{

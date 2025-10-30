@@ -137,6 +137,28 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'mean': [ 0.5, 0.5, 0.5 ],
 			'standard_deviation': [ 0.5, 0.5, 0.5 ]
 		},
+		'ormbg':
+		{
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': resolve_download_url('models-3.5.0', 'ormbg.hash'),
+					'path': resolve_relative_path('../.assets/models/ormbg.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': resolve_download_url('models-3.5.0', 'ormbg.onnx'),
+					'path': resolve_relative_path('../.assets/models/ormbg.onnx')
+				}
+			},
+			'size': (1024, 1024),
+			'mean': [ 0.0, 0.0, 0.0 ],
+			'standard_deviation': [ 1.0, 1.0, 1.0 ]
+		},
 		'rmbg_1.4':
 		{
 			'hashes':
