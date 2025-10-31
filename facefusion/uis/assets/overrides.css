@@ -136,8 +136,8 @@
 
 :root:root:root:root .image-frame
 {
-	background-image: conic-gradient(#fff 90deg, #666 90deg 180deg, #fff 180deg 270deg, #666 270deg);
-	background-size: 1em 1em;
+	background-image: conic-gradient(#fff 90deg, #999 90deg 180deg, #fff 180deg 270deg, #999 270deg);
+	background-size: 1.25rem 1.25rem;
 	background-repeat: repeat;
 	width: 100%;
 }

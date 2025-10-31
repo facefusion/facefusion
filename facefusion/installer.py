@@ -22,7 +22,7 @@ ONNXRUNTIME_SET =\
 }
 if is_windows() or is_linux():
 	ONNXRUNTIME_SET['cuda'] = ('onnxruntime-gpu', '1.23.2')
-	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.22.0')
+	ONNXRUNTIME_SET['openvino'] = ('onnxruntime-openvino', '1.23.0')
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.23.0')
 if is_linux():
@@ -98,5 +98,3 @@ def run(program : ArgumentParser) -> None:
 
 			subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
 
-	if args.onnxruntime == 'directml':
-		subprocess.call([ shutil.which('pip'), 'install', 'numpy==1.26.4', '--force-reinstall' ])
