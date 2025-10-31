@@ -17,6 +17,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'arcface':
 		{
+			'__metadata__':
+			{
+				'vendor': 'InsightFace',
+				'license': 'Non-Commercial',
+				'year': 2018
+			},
 			'hashes':
 			{
 				'face_recognizer':

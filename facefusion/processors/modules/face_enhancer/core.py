@@ -28,6 +28,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'codeformer':
 		{
+			'__metadata__':
+			{
+				'vendor': 'sczhou',
+				'license': 'S-Lab-1.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_enhancer':
@@ -49,6 +55,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'gfpgan_1.2':
 		{
+			'__metadata__':
+			{
+				'vendor': 'TencentARC',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_enhancer':
@@ -70,6 +82,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'gfpgan_1.3':
 		{
+			'__metadata__':
+			{
+				'vendor': 'TencentARC',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_enhancer':
@@ -91,6 +109,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'gfpgan_1.4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'TencentARC',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_enhancer':
@@ -112,6 +136,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'gpen_bfr_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'yangxy',
+				'license': 'Non-Commercial',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'face_enhancer':
@@ -133,6 +163,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'gpen_bfr_512':
 		{
+			'__metadata__':
+			{
+				'vendor': 'yangxy',
+				'license': 'Non-Commercial',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'face_enhancer':
@@ -154,6 +190,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'gpen_bfr_1024':
 		{
+			'__metadata__':
+			{
+				'vendor': 'yangxy',
+				'license': 'Non-Commercial',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'face_enhancer':
@@ -175,6 +217,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'gpen_bfr_2048':
 		{
+			'__metadata__':
+			{
+				'vendor': 'yangxy',
+				'license': 'Non-Commercial',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'face_enhancer':
@@ -196,6 +244,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'restoreformer_plus_plus':
 		{
+			'__metadata__':
+			{
+				'vendor': 'wzhouxiff',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_enhancer':

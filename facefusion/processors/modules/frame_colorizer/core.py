@@ -27,6 +27,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'ddcolor':
 		{
+			'__metadata__':
+			{
+				'vendor': 'piddnad',
+				'license': 'Apache-2.0',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_colorizer':
@@ -47,6 +53,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ddcolor_artistic':
 		{
+			'__metadata__':
+			{
+				'vendor': 'piddnad',
+				'license': 'Apache-2.0',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_colorizer':
@@ -67,6 +79,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'deoldify':
 		{
+			'__metadata__':
+			{
+				'vendor': 'jantic',
+				'license': 'MIT',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'frame_colorizer':
@@ -87,6 +105,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'deoldify_artistic':
 		{
+			'__metadata__':
+			{
+				'vendor': 'jantic',
+				'license': 'MIT',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'frame_colorizer':
@@ -107,6 +131,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'deoldify_stable':
 		{
+			'__metadata__':
+			{
+				'vendor': 'jantic',
+				'license': 'MIT',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'frame_colorizer':

@@ -19,6 +19,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'retinaface':
 		{
+			'__metadata__':
+			{
+				'vendor': 'InsightFace',
+				'license': 'Non-Commercial',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'retinaface':
@@ -38,6 +44,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'scrfd':
 		{
+			'__metadata__':
+			{
+				'vendor': 'InsightFace',
+				'license': 'Non-Commercial',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'scrfd':
@@ -57,6 +69,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'yolo_face':
 		{
+			'__metadata__':
+			{
+				'vendor': 'derronqi',
+				'license': 'GPL-3.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'yolo_face':
@@ -76,6 +94,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'yunet':
 		{
+			'__metadata__':
+			{
+				'vendor': 'OpenCV',
+				'license': 'MIT',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'yunet':

@@ -22,6 +22,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'nsfw_1':
 		{
+			'__metadata__':
+			{
+				'vendor': 'EraX',
+				'license': 'Apache-2.0',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'content_analyser':
@@ -44,6 +50,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'nsfw_2':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Marqo',
+				'license': 'Apache-2.0',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'content_analyser':
@@ -66,6 +78,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'nsfw_3':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Freepik',
+				'license': 'MIT',
+				'year': 2025
+			},
 			'hashes':
 			{
 				'content_analyser':

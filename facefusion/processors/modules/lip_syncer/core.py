@@ -30,6 +30,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'edtalk_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'tanshuai0219',
+				'license': 'Apache-2.0',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'lip_syncer':
@@ -51,6 +57,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'wav2lip_96':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Rudrabha',
+				'license': 'Non-Commercial',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'lip_syncer':
@@ -72,6 +84,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'wav2lip_gan_96':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Rudrabha',
+				'license': 'Non-Commercial',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'lip_syncer':
@@ -276,4 +294,3 @@ def process_frame(inputs : LipSyncerInputs) -> ProcessorOutputs:
 			temp_vision_frame = sync_lip(target_face, source_voice_frame, temp_vision_frame)
 
 	return temp_vision_frame, temp_vision_mask
-

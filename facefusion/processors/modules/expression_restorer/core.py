@@ -31,6 +31,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'live_portrait':
 		{
+			'__metadata__':
+			{
+				'vendor': 'KwaiVGI',
+				'license': 'MIT',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'feature_extractor':

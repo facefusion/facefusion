@@ -34,6 +34,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'blendswap_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'mapooon',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -58,6 +64,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ghost_1_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'ai-forever',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -92,6 +104,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ghost_2_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'ai-forever',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -126,6 +144,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ghost_3_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'ai-forever',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -160,6 +184,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'hififace_unofficial_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'GuijiAI',
+				'license': 'Unknown',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -194,6 +224,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'hyperswap_1a_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'FaceFusion',
+				'license': 'ResearchRAIL',
+				'year': 2025
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -218,6 +254,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'hyperswap_1b_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'FaceFusion',
+				'license': 'ResearchRAIL',
+				'year': 2025
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -242,6 +284,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'hyperswap_1c_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'FaceFusion',
+				'license': 'ResearchRAIL',
+				'year': 2025
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -266,6 +314,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'inswapper_128':
 		{
+			'__metadata__':
+			{
+				'vendor': 'InsightFace',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -290,6 +344,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'inswapper_128_fp16':
 		{
+			'__metadata__':
+			{
+				'vendor': 'InsightFace',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -314,6 +374,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'simswap_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'neuralchen',
+				'license': 'Non-Commercial',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -348,6 +414,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'simswap_unofficial_512':
 		{
+			'__metadata__':
+			{
+				'vendor': 'neuralchen',
+				'license': 'Non-Commercial',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -382,6 +454,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'uniface_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xc-csc101',
+				'license': 'Unknown',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_swapper':

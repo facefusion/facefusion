@@ -31,6 +31,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'styleganex_age':
 		{
+			'__metadata__':
+			{
+				'vendor': 'williamyang1991',
+				'license': 'S-Lab-1.0',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'age_modifier':

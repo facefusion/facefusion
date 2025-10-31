@@ -26,6 +26,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'clear_reality_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Kim2091',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -47,6 +53,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'face_dat_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Helaman',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -68,6 +80,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'nomos8k_sc_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Phhofm',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -89,6 +107,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x2':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -110,6 +134,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x2_fp16':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -131,6 +161,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -152,6 +188,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x4_fp16':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -173,6 +215,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x8':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -194,6 +242,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x8_fp16':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -215,6 +269,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_hatgan_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'XPixelGroup',
+				'license': 'Apache-2.0',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -236,6 +296,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_web_photo_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Helaman',
+				'license': 'Non-Commercial',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -257,6 +323,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'realistic_rescaler_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Mutin Choler',
+				'license': 'WTFPL',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -278,6 +350,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'remacri_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'FoolhardyVEVO',
+				'license': 'Non-Commercial',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -299,6 +377,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'siax_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'NMKD',
+				'license': 'WTFPL',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -320,6 +404,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'span_kendata_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'terrainer',
+				'license': 'Non-Commercial',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -341,6 +431,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'swin2_sr_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'mv-lab',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -362,6 +458,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'tghq_face_x8':
 		{
+			'__metadata__':
+			{
+				'vendor': 'TorrentGuy',
+				'license': 'GPL-3.0',
+				'year': 2019
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -383,6 +485,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ultra_sharp_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Kim2091',
+				'license': 'Non-Commercial',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -404,6 +512,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ultra_sharp_2_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Kim2091',
+				'license': 'Non-Commercial',
+				'year': 2025
+			},
 			'hashes':
 			{
 				'frame_enhancer':

@@ -29,6 +29,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'ben_2':
 		{
+			'__metadata__':
+			{
+				'vendor': 'PramaLLC',
+				'license': 'MIT',
+				'year': 2025
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -51,6 +57,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'birefnet_general':
 		{
+			'__metadata__':
+			{
+				'vendor': 'ZhengPeng7',
+				'license': 'MIT',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -73,6 +85,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'birefnet_portrait':
 		{
+			'__metadata__':
+			{
+				'vendor': 'ZhengPeng7',
+				'license': 'MIT',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -95,6 +113,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'isnet_general':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xuebinqin',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -117,6 +141,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'modnet':
 		{
+			'__metadata__':
+			{
+				'vendor': 'ZHKKKe',
+				'license': 'Apache-2.0',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -139,6 +169,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ormbg':
 		{
+			'__metadata__':
+			{
+				'vendor': 'schirrmacher',
+				'license': 'Apache-2.0',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -161,6 +197,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'rmbg_1.4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Bria',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -183,6 +225,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'rmbg_2.0':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Bria',
+				'license': 'Non-Commercial',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -205,6 +253,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'silueta':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Kikedao',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -227,6 +281,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'u2net_cloth':
 		{
+			'__metadata__':
+			{
+				'vendor': 'levindabhi',
+				'license': 'MIT',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -249,6 +309,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'u2net_general':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xuebinqin',
+				'license': 'Apache-2.0',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -271,6 +337,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'u2net_human':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xuebinqin',
+				'license': 'Apache-2.0',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'background_remover':
@@ -291,22 +363,28 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
 		},
-		'u2net_portable':
+		'u2netp':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xuebinqin',
+				'license': 'Apache-2.0',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'background_remover':
 				{
-					'url': resolve_download_url('models-3.5.0', 'u2net_portable.hash'),
-					'path': resolve_relative_path('../.assets/models/u2net_portable.hash')
+					'url': resolve_download_url('models-3.5.0', 'u2netp.hash'),
+					'path': resolve_relative_path('../.assets/models/u2netp.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': resolve_download_url('models-3.5.0', 'u2net_portable.onnx'),
-					'path': resolve_relative_path('../.assets/models/u2net_portable.onnx')
+					'url': resolve_download_url('models-3.5.0', 'u2netp.onnx'),
+					'path': resolve_relative_path('../.assets/models/u2netp.onnx')
 				}
 			},
 			'size': (320, 320),
