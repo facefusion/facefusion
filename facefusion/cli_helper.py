@@ -1,10 +1,10 @@
-from typing import Tuple
+from typing import List, Tuple
 
 from facefusion.logger import get_package_logger
-from facefusion.types import TableContents, TableHeaders
+from facefusion.types import TableContent, TableHeader
 
 
-def render_table(headers : TableHeaders, contents : TableContents) -> None:
+def render_table(headers : List[TableHeader], contents : List[List[TableContent]]) -> None:
 	package_logger = get_package_logger()
 	table_column, table_separator = create_table_parts(headers, contents)
 
@@ -19,7 +19,7 @@ def render_table(headers : TableHeaders, contents : TableContents) -> None:
 	package_logger.critical(table_separator)
 
 
-def create_table_parts(headers : TableHeaders, contents : TableContents) -> Tuple[str, str]:
+def create_table_parts(headers : List[TableHeader], contents : List[List[TableContent]]) -> Tuple[str, str]:
 	column_parts = []
 	separator_parts = []
 	widths = [ len(header) for header in headers ]

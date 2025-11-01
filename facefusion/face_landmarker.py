@@ -18,6 +18,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'2dfan4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'breadbread1984',
+				'license': 'MIT',
+				'year': 2018
+			},
 			'hashes':
 			{
 				'2dfan4':
@@ -38,6 +44,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'peppa_wutz':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Unknown',
+				'license': 'Apache-2.0',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'peppa_wutz':
@@ -58,6 +70,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'fan_68_5':
 		{
+			'__metadata__':
+			{
+				'vendor': 'FaceFusion',
+				'license': 'OpenRAIL-M',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'fan_68_5':

@@ -8,7 +8,7 @@ import gradio
 from gradio.themes import Size
 
 import facefusion.uis.overrides as uis_overrides
-from facefusion import logger, metadata, state_manager, wording
+from facefusion import logger, metadata, state_manager, translator
 from facefusion.exit_helper import hard_exit
 from facefusion.filesystem import resolve_relative_path
 from facefusion.uis.types import Component, ComponentName
@@ -31,11 +31,11 @@ def load_ui_layout_module(ui_layout : str) -> Any:
 			if not hasattr(ui_layout_module, method_name):
 				raise NotImplementedError
 	except ModuleNotFoundError as exception:
-		logger.error(wording.get('ui_layout_not_loaded').format(ui_layout = ui_layout), __name__)
+		logger.error(translator.get('ui_layout_not_loaded').format(ui_layout = ui_layout), __name__)
 		logger.debug(exception.msg, __name__)
 		hard_exit(1)
 	except NotImplementedError:
-		logger.error(wording.get('ui_layout_not_implemented').format(ui_layout = ui_layout), __name__)
+		logger.error(translator.get('ui_layout_not_implemented').format(ui_layout = ui_layout), __name__)
 		hard_exit(1)
 	return ui_layout_module
 
@@ -73,8 +73,9 @@ def init() -> None:
 	os.environ['GRADIO_TEMP_DIR'] = os.path.join(state_manager.get_item('temp_path'), 'gradio')
 
 	warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
-	gradio.processing_utils._check_allowed = uis_overrides.check_allowed #type:ignore
+	gradio.processing_utils._check_allowed = uis_overrides.mock
 	gradio.processing_utils.convert_video_to_playable_mp4 = uis_overrides.convert_video_to_playable_mp4
+	gradio.components.Number.raise_if_out_of_bounds = uis_overrides.mock
 
 
 def launch() -> None:

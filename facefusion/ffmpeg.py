@@ -7,14 +7,14 @@ from typing import List, Optional, cast
 from tqdm import tqdm
 
 import facefusion.choices
-from facefusion import ffmpeg_builder, logger, process_manager, state_manager, wording
+from facefusion import ffmpeg_builder, logger, process_manager, state_manager, translator
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
-from facefusion.types import AudioBuffer, AudioEncoder, Commands, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
+from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
 from facefusion.vision import detect_video_duration, detect_video_fps, pack_resolution, predict_video_frame_total
 
 
-def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
+def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
 	commands.extend(ffmpeg_builder.set_progress())
 	commands.extend(ffmpeg_builder.cast_stream())
@@ -45,7 +45,7 @@ def update_progress(progress : tqdm, frame_number : int) -> None:
 	progress.update(frame_number - progress.n)
 
 
-def run_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
+def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
 	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
@@ -65,7 +65,7 @@ def run_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
 	return process
 
 
-def open_ffmpeg(commands : Commands) -> subprocess.Popen[bytes]:
+def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.run(commands)
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
@@ -119,7 +119,7 @@ def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_v
 		ffmpeg_builder.set_output(temp_frames_pattern)
 	)
 
-	with tqdm(total = extract_frame_total, desc = wording.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+	with tqdm(total = extract_frame_total, desc = translator.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
 		return process.returncode == 0
 
@@ -229,12 +229,15 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 		ffmpeg_builder.set_video_encoder(output_video_encoder),
 		ffmpeg_builder.set_video_quality(output_video_encoder, output_video_quality),
 		ffmpeg_builder.set_video_preset(output_video_encoder, output_video_preset),
-		ffmpeg_builder.set_video_fps(output_video_fps),
+		ffmpeg_builder.concat(
+			ffmpeg_builder.set_video_fps(output_video_fps),
+			ffmpeg_builder.keep_video_alpha(output_video_encoder)
+		),
 		ffmpeg_builder.set_pixel_format(output_video_encoder),
 		ffmpeg_builder.force_output(temp_video_path)
 	)
 
-	with tqdm(total = merge_frame_total, desc = wording.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+	with tqdm(total = merge_frame_total, desc = translator.get('merging'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
 		return process.returncode == 0
 
@@ -265,17 +268,19 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:
 	if video_format == 'avi' and audio_encoder == 'libopus':
 		return 'aac'
-	if video_format in [ 'm4v', 'wmv' ]:
+	if video_format in [ 'm4v', 'mpeg', 'wmv' ]:
 		return 'aac'
 	if video_format == 'mov' and audio_encoder in [ 'flac', 'libopus' ]:
 		return 'aac'
+	if video_format == 'mxf':
+		return 'pcm_s16le'
 	if video_format == 'webm':
 		return 'libopus'
 	return audio_encoder
 
 
 def fix_video_encoder(video_format : VideoFormat, video_encoder : VideoEncoder) -> VideoEncoder:
-	if video_format in [ 'm4v', 'wmv' ]:
+	if video_format in [ 'm4v', 'mpeg', 'mxf', 'wmv' ]:
 		return 'libx264'
 	if video_format in [ 'mkv', 'mp4' ] and video_encoder == 'rawvideo':
 		return 'libx264'

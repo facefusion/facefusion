@@ -8,13 +8,17 @@
 	max-width: 110em;
 }
 
-:root:root:root:root input[type="number"]
+:root:root:root:root .tab-like-container input[type="number"]
 {
-	appearance: textfield;
 	border-radius: unset;
 	text-align: center;
 	order: 1;
 	padding: unset
+}
+
+:root:root:root:root input[type="number"]
+{
+	appearance: textfield;
 }
 
 :root:root:root:root input[type="number"]::-webkit-inner-spin-button
@@ -132,6 +136,9 @@
 
 :root:root:root:root .image-frame
 {
+	background-image: conic-gradient(#fff 90deg, #999 90deg 180deg, #fff 180deg 270deg, #999 270deg);
+	background-size: 1.25rem 1.25rem;
+	background-repeat: repeat;
 	width: 100%;
 }
 

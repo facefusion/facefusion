@@ -68,7 +68,9 @@ video_type_set : VideoTypeSet =\
 	'm4v': 'video/mp4',
 	'mkv': 'video/x-matroska',
 	'mp4': 'video/mp4',
+	'mpeg': 'video/mpeg',
 	'mov': 'video/quicktime',
+	'mxf': 'application/mxf',
 	'webm': 'video/webm',
 	'wmv': 'video/x-ms-wmv'
 }
@@ -151,6 +153,7 @@ job_statuses : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 benchmark_cycle_count_range : Sequence[int] = create_int_range(1, 10, 1)
 execution_thread_count_range : Sequence[int] = create_int_range(1, 32, 1)
 system_memory_limit_range : Sequence[int] = create_int_range(0, 128, 4)
+face_detector_margin_range : Sequence[int] = create_int_range(0, 100, 1)
 face_detector_angles : Sequence[Angle] = create_int_range(0, 270, 90)
 face_detector_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
 face_landmarker_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)

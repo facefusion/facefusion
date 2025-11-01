@@ -2,11 +2,11 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_float_step, get_first
-from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.types import FaceSwapperModel, FaceSwapperWeight
+from facefusion.processors.modules.face_swapper import choices as face_swapper_choices
+from facefusion.processors.modules.face_swapper.types import FaceSwapperModel, FaceSwapperWeight
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_SWAPPER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -21,23 +21,23 @@ def render() -> None:
 
 	has_face_swapper = 'face_swapper' in state_manager.get_item('processors')
 	FACE_SWAPPER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.face_swapper_model_dropdown'),
-		choices = processors_choices.face_swapper_models,
+		label = translator.get('uis.model_dropdown', 'facefusion.processors.modules.face_swapper'),
+		choices = face_swapper_choices.face_swapper_models,
 		value = state_manager.get_item('face_swapper_model'),
 		visible = has_face_swapper
 	)
 	FACE_SWAPPER_PIXEL_BOOST_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.face_swapper_pixel_boost_dropdown'),
-		choices = processors_choices.face_swapper_set.get(state_manager.get_item('face_swapper_model')),
+		label = translator.get('uis.pixel_boost_dropdown', 'facefusion.processors.modules.face_swapper'),
+		choices = face_swapper_choices.face_swapper_set.get(state_manager.get_item('face_swapper_model')),
 		value = state_manager.get_item('face_swapper_pixel_boost'),
 		visible = has_face_swapper
 	)
 	FACE_SWAPPER_WEIGHT_SLIDER = gradio.Slider(
-		label = wording.get('uis.face_swapper_weight_slider'),
+		label = translator.get('uis.weight_slider', 'facefusion.processors.modules.face_swapper'),
 		value = state_manager.get_item('face_swapper_weight'),
-		minimum = processors_choices.face_swapper_weight_range[0],
-		maximum = processors_choices.face_swapper_weight_range[-1],
-		step = calculate_float_step(processors_choices.face_swapper_weight_range),
+		minimum = face_swapper_choices.face_swapper_weight_range[0],
+		maximum = face_swapper_choices.face_swapper_weight_range[-1],
+		step = calculate_float_step(face_swapper_choices.face_swapper_weight_range),
 		visible = has_face_swapper and has_face_swapper_weight()
 	)
 	register_ui_component('face_swapper_model_dropdown', FACE_SWAPPER_MODEL_DROPDOWN)
@@ -66,9 +66,9 @@ def update_face_swapper_model(face_swapper_model : FaceSwapperModel) -> Tuple[gr
 	state_manager.set_item('face_swapper_model', face_swapper_model)
 
 	if face_swapper_module.pre_check():
-		face_swapper_pixel_boost_choices = processors_choices.face_swapper_set.get(state_manager.get_item('face_swapper_model'))
-		state_manager.set_item('face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices))
-		return gradio.Dropdown(value = state_manager.get_item('face_swapper_model')), gradio.Dropdown(value = state_manager.get_item('face_swapper_pixel_boost'), choices = face_swapper_pixel_boost_choices), gradio.Slider(visible = has_face_swapper_weight())
+		face_swapper_pixel_boost_dropdown_choices = face_swapper_choices.face_swapper_set.get(state_manager.get_item('face_swapper_model'))
+		state_manager.set_item('face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_dropdown_choices))
+		return gradio.Dropdown(value = state_manager.get_item('face_swapper_model')), gradio.Dropdown(value = state_manager.get_item('face_swapper_pixel_boost'), choices = face_swapper_pixel_boost_dropdown_choices), gradio.Slider(visible = has_face_swapper_weight())
 	return gradio.Dropdown(), gradio.Dropdown(), gradio.Slider()
 
 

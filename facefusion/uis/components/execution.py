@@ -2,7 +2,7 @@ from typing import List, Optional
 
 import gradio
 
-from facefusion import content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, state_manager, voice_extractor, wording
+from facefusion import content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, state_manager, translator, voice_extractor
 from facefusion.execution import get_available_execution_providers
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.processors.core import get_processors_modules
@@ -15,7 +15,7 @@ def render() -> None:
 	global EXECUTION_PROVIDERS_CHECKBOX_GROUP
 
 	EXECUTION_PROVIDERS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-		label = wording.get('uis.execution_providers_checkbox_group'),
+		label = translator.get('uis.execution_providers_checkbox_group'),
 		choices = get_available_execution_providers(),
 		value = state_manager.get_item('execution_providers')
 	)

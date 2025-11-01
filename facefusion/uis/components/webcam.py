@@ -3,7 +3,7 @@ from typing import Generator, List, Optional, Tuple
 import cv2
 import gradio
 
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.camera_manager import clear_camera_pool, get_local_camera_capture
 from facefusion.filesystem import has_image
 from facefusion.streamer import multi_process_capture, open_stream
@@ -26,22 +26,22 @@ def render() -> None:
 
 	has_source_image = has_image(state_manager.get_item('source_paths'))
 	SOURCE_FILE = gradio.File(
-		label = wording.get('uis.source_file'),
+		label = translator.get('uis.source_file'),
 		file_count = 'multiple',
 		value = state_manager.get_item('source_paths') if has_source_image else None
 	)
 	WEBCAM_IMAGE = gradio.Image(
-		label = wording.get('uis.webcam_image'),
+		label = translator.get('uis.webcam_image'),
 		format = 'jpeg',
 		visible = False
 	)
 	WEBCAM_START_BUTTON = gradio.Button(
-		value = wording.get('uis.start_button'),
+		value = translator.get('uis.start_button'),
 		variant = 'primary',
 		size = 'sm'
 	)
 	WEBCAM_STOP_BUTTON = gradio.Button(
-		value = wording.get('uis.stop_button'),
+		value = translator.get('uis.stop_button'),
 		size = 'sm',
 		visible = False
 	)

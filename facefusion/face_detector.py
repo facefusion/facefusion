@@ -9,7 +9,7 @@ from facefusion.download import conditional_download_hashes, conditional_downloa
 from facefusion.face_helper import create_rotation_matrix_and_size, create_static_anchors, distance_to_bounding_box, distance_to_face_landmark_5, normalize_bounding_box, transform_bounding_box, transform_points
 from facefusion.filesystem import resolve_relative_path
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import Angle, BoundingBox, Detection, DownloadScope, DownloadSet, FaceLandmark5, InferencePool, ModelSet, Score, VisionFrame
+from facefusion.types import Angle, BoundingBox, Detection, DownloadScope, DownloadSet, FaceLandmark5, InferencePool, Margin, ModelSet, Score, VisionFrame
 from facefusion.vision import restrict_frame, unpack_resolution
 
 
@@ -19,6 +19,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'retinaface':
 		{
+			'__metadata__':
+			{
+				'vendor': 'InsightFace',
+				'license': 'Non-Commercial',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'retinaface':
@@ -38,6 +44,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'scrfd':
 		{
+			'__metadata__':
+			{
+				'vendor': 'InsightFace',
+				'license': 'Non-Commercial',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'scrfd':
@@ -57,6 +69,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'yolo_face':
 		{
+			'__metadata__':
+			{
+				'vendor': 'derronqi',
+				'license': 'GPL-3.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'yolo_face':
@@ -76,6 +94,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'yunet':
 		{
+			'__metadata__':
+			{
+				'vendor': 'OpenCV',
+				'license': 'MIT',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'yunet':
@@ -128,36 +152,47 @@ def pre_check() -> bool:
 
 
 def detect_faces(vision_frame : VisionFrame) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:
+	margin_top, margin_right, margin_bottom, margin_left = prepare_margin(vision_frame)
+	margin_vision_frame = numpy.pad(vision_frame, ((margin_top, margin_bottom), (margin_left, margin_right), (0, 0)))
 	all_bounding_boxes : List[BoundingBox] = []
 	all_face_scores : List[Score] = []
 	all_face_landmarks_5 : List[FaceLandmark5] = []
 
 	if state_manager.get_item('face_detector_model') in [ 'many', 'retinaface' ]:
-		bounding_boxes, face_scores, face_landmarks_5 = detect_with_retinaface(vision_frame, state_manager.get_item('face_detector_size'))
+		bounding_boxes, face_scores, face_landmarks_5 = detect_with_retinaface(margin_vision_frame, state_manager.get_item('face_detector_size'))
 		all_bounding_boxes.extend(bounding_boxes)
 		all_face_scores.extend(face_scores)
 		all_face_landmarks_5.extend(face_landmarks_5)
 
 	if state_manager.get_item('face_detector_model') in [ 'many', 'scrfd' ]:
-		bounding_boxes, face_scores, face_landmarks_5 = detect_with_scrfd(vision_frame, state_manager.get_item('face_detector_size'))
+		bounding_boxes, face_scores, face_landmarks_5 = detect_with_scrfd(margin_vision_frame, state_manager.get_item('face_detector_size'))
 		all_bounding_boxes.extend(bounding_boxes)
 		all_face_scores.extend(face_scores)
 		all_face_landmarks_5.extend(face_landmarks_5)
 
 	if state_manager.get_item('face_detector_model') in [ 'many', 'yolo_face' ]:
-		bounding_boxes, face_scores, face_landmarks_5 = detect_with_yolo_face(vision_frame, state_manager.get_item('face_detector_size'))
+		bounding_boxes, face_scores, face_landmarks_5 = detect_with_yolo_face(margin_vision_frame, state_manager.get_item('face_detector_size'))
 		all_bounding_boxes.extend(bounding_boxes)
 		all_face_scores.extend(face_scores)
 		all_face_landmarks_5.extend(face_landmarks_5)
 
 	if state_manager.get_item('face_detector_model') == 'yunet':
-		bounding_boxes, face_scores, face_landmarks_5 = detect_with_yunet(vision_frame, state_manager.get_item('face_detector_size'))
+		bounding_boxes, face_scores, face_landmarks_5 = detect_with_yunet(margin_vision_frame, state_manager.get_item('face_detector_size'))
 		all_bounding_boxes.extend(bounding_boxes)
 		all_face_scores.extend(face_scores)
 		all_face_landmarks_5.extend(face_landmarks_5)
 
-	all_bounding_boxes = [ normalize_bounding_box(all_bounding_box) for all_bounding_box in all_bounding_boxes ]
+	all_bounding_boxes = [ normalize_bounding_box(all_bounding_box) - numpy.array([ margin_left, margin_top, margin_left, margin_top ]) for all_bounding_box in all_bounding_boxes ]
+	all_face_landmarks_5 = [ all_face_landmark_5 - numpy.array([ margin_left, margin_top ]) for all_face_landmark_5 in all_face_landmarks_5 ]
 	return all_bounding_boxes, all_face_scores, all_face_landmarks_5
+
+
+def prepare_margin(vision_frame : VisionFrame) -> Margin:
+	margin_top = int(vision_frame.shape[0] * numpy.interp(state_manager.get_item('face_detector_margin')[0], [ 0, 100 ], [ 0, 0.5 ]))
+	margin_right = int(vision_frame.shape[1] * numpy.interp(state_manager.get_item('face_detector_margin')[1], [ 0, 100 ], [ 0, 0.5 ]))
+	margin_bottom = int(vision_frame.shape[0] * numpy.interp(state_manager.get_item('face_detector_margin')[2], [ 0, 100 ], [ 0, 0.5 ]))
+	margin_left = int(vision_frame.shape[1] * numpy.interp(state_manager.get_item('face_detector_margin')[3], [ 0, 100 ], [ 0, 0.5 ]))
+	return margin_top, margin_right, margin_bottom, margin_left
 
 
 def detect_faces_by_angle(vision_frame : VisionFrame, face_angle : Angle) -> Tuple[List[BoundingBox], List[Score], List[FaceLandmark5]]:

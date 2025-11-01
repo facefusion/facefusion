@@ -1,6 +1,7 @@
 __pycache__
 .assets
+.claude
 .caches
-.jobs
 .idea
+.jobs
 .vscode

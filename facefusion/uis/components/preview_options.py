@@ -2,7 +2,7 @@ from typing import Optional
 
 import gradio
 
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.filesystem import is_video
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_components, register_ui_component
@@ -19,7 +19,7 @@ def render() -> None:
 
 	preview_frame_slider_options : ComponentOptions =\
 	{
-		'label': wording.get('uis.preview_frame_slider'),
+		'label': translator.get('uis.preview_frame_slider'),
 		'step': 1,
 		'minimum': 0,
 		'maximum': 100,
@@ -32,13 +32,13 @@ def render() -> None:
 	PREVIEW_FRAME_SLIDER = gradio.Slider(**preview_frame_slider_options)
 	with gradio.Row():
 		PREVIEW_MODE_DROPDOWN = gradio.Dropdown(
-			label = wording.get('uis.preview_mode_dropdown'),
+			label = translator.get('uis.preview_mode_dropdown'),
 			value = uis_choices.preview_modes[0],
 			choices = uis_choices.preview_modes,
 			visible = True
 		)
 		PREVIEW_RESOLUTION_DROPDOWN = gradio.Dropdown(
-			label = wording.get('uis.preview_resolution_dropdown'),
+			label = translator.get('uis.preview_resolution_dropdown'),
 			value = uis_choices.preview_resolutions[-1],
 			choices = uis_choices.preview_resolutions,
 			visible = True

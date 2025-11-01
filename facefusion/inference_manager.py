@@ -5,9 +5,10 @@ from typing import List
 
 from onnxruntime import InferenceSession
 
-from facefusion import logger, process_manager, state_manager, wording
+from facefusion import logger, process_manager, state_manager, translator
 from facefusion.app_context import detect_app_context
-from facefusion.execution import create_inference_session_providers
+from facefusion.common_helper import is_windows
+from facefusion.execution import create_inference_session_providers, has_execution_provider
 from facefusion.exit_helper import fatal_exit
 from facefusion.filesystem import get_file_name, is_file
 from facefusion.time_helper import calculate_end_time
@@ -57,9 +58,11 @@ def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
 	execution_providers = resolve_execution_providers(module_name)
 	app_context = detect_app_context()
 
+	if is_windows() and has_execution_provider('directml'):
+		INFERENCE_POOL_SET[app_context].clear()
+
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
-
 		if INFERENCE_POOL_SET.get(app_context).get(inference_context):
 			del INFERENCE_POOL_SET[app_context][inference_context]
 
@@ -71,11 +74,11 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 	try:
 		inference_session_providers = create_inference_session_providers(execution_device_id, execution_providers)
 		inference_session = InferenceSession(model_path, providers = inference_session_providers)
-		logger.debug(wording.get('loading_model_succeeded').format(model_name = model_file_name, seconds = calculate_end_time(start_time)), __name__)
+		logger.debug(translator.get('loading_model_succeeded').format(model_name = model_file_name, seconds = calculate_end_time(start_time)), __name__)
 		return inference_session
 
 	except Exception:
-		logger.error(wording.get('loading_model_failed').format(model_name = model_file_name), __name__)
+		logger.error(translator.get('loading_model_failed').format(model_name = model_file_name), __name__)
 		fatal_exit(1)
 
 

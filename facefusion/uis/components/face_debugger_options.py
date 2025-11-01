@@ -2,9 +2,9 @@ from typing import List, Optional
 
 import gradio
 
-from facefusion import state_manager, wording
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FaceDebuggerItem
+from facefusion import state_manager, translator
+from facefusion.processors.modules.face_debugger import choices as face_debugger_choices
+from facefusion.processors.modules.face_debugger.types import FaceDebuggerItem
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
@@ -15,8 +15,8 @@ def render() -> None:
 
 	has_face_debugger = 'face_debugger' in state_manager.get_item('processors')
 	FACE_DEBUGGER_ITEMS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-		label = wording.get('uis.face_debugger_items_checkbox_group'),
-		choices = processors_choices.face_debugger_items,
+		label = translator.get('uis.items_checkbox_group', 'facefusion.processors.modules.face_debugger'),
+		choices = face_debugger_choices.face_debugger_items,
 		value = state_manager.get_item('face_debugger_items'),
 		visible = has_face_debugger
 	)

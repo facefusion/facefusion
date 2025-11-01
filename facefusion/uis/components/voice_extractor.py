@@ -3,7 +3,7 @@ from typing import Optional
 import gradio
 
 import facefusion.choices
-from facefusion import state_manager, voice_extractor, wording
+from facefusion import state_manager, translator, voice_extractor
 from facefusion.filesystem import is_video
 from facefusion.types import VoiceExtractorModel
 from facefusion.uis.core import get_ui_components, register_ui_component
@@ -15,7 +15,7 @@ def render() -> None:
 	global VOICE_EXTRACTOR_MODEL_DROPDOWN
 
 	VOICE_EXTRACTOR_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.voice_extractor_model_dropdown'),
+		label = translator.get('uis.voice_extractor_model_dropdown'),
 		choices = facefusion.choices.voice_extractor_models,
 		value = state_manager.get_item('voice_extractor_model'),
 		visible = is_video(state_manager.get_item('target_path'))

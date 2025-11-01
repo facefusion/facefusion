@@ -8,7 +8,7 @@ import gradio
 from tqdm import tqdm
 
 import facefusion.choices
-from facefusion import logger, state_manager, wording
+from facefusion import logger, state_manager, translator
 from facefusion.types import LogLevel
 
 LOG_LEVEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -23,12 +23,12 @@ def render() -> None:
 	global TERMINAL_TEXTBOX
 
 	LOG_LEVEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.log_level_dropdown'),
+		label = translator.get('uis.log_level_dropdown'),
 		choices = facefusion.choices.log_levels,
 		value = state_manager.get_item('log_level')
 	)
 	TERMINAL_TEXTBOX = gradio.Textbox(
-		label = wording.get('uis.terminal_textbox'),
+		label = translator.get('uis.terminal_textbox'),
 		value = read_logs,
 		lines = 8,
 		max_lines = 8,
@@ -68,9 +68,9 @@ def tqdm_update(self : tqdm, n : int = 1) -> None:
 def create_tqdm_output(self : tqdm) -> Optional[str]:
 	if not self.disable and self.desc and self.total:
 		percentage = math.floor(self.n / self.total * 100)
-		return self.desc + wording.get('colon') + ' ' + str(percentage) + '% (' + str(self.n) + '/' + str(self.total) + ')'
+		return self.desc + translator.get('colon') + ' ' + str(percentage) + '% (' + str(self.n) + '/' + str(self.total) + ')'
 	if not self.disable and self.desc and self.unit:
-		return self.desc + wording.get('colon') + ' ' + str(self.n) + ' ' + self.unit
+		return self.desc + translator.get('colon') + ' ' + str(self.n) + ' ' + self.unit
 	return None
 
 
