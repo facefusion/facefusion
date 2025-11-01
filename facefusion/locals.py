@@ -189,9 +189,9 @@ LOCALS : Locals =\
 		},
 		'about':
 		{
-			'become_a_member': 'become a member',
-			'join_our_community': 'join our community',
-			'read_the_documentation': 'read the documentation'
+			'fund': 'fund training server',
+			'subscribe': 'become a member',
+			'join': 'join our community'
 		},
 		'uis':
 		{

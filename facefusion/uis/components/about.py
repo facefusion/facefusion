@@ -16,16 +16,16 @@ def render() -> None:
 	action = random.choice(
 	[
 		{
-			'translator': translator.get('about.become_a_member'),
+			'translator': translator.get('about.fund'),
+			'url': 'https://fund.facefusion.io'
+		},
+		{
+			'translator': translator.get('about.subscribe'),
 			'url': 'https://subscribe.facefusion.io'
 		},
 		{
-			'translator': translator.get('about.join_our_community'),
+			'translator': translator.get('about.join'),
 			'url': 'https://join.facefusion.io'
-		},
-		{
-			'translator': translator.get('about.read_the_documentation'),
-			'url': 'https://docs.facefusion.io'
 		}
 	])
 
