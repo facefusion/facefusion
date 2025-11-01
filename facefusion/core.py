@@ -298,7 +298,7 @@ def process_batch(args : Args) -> ErrorCode:
 				try:
 					step_args['output_path'] = job_args.get('output_pattern').format(index = index, source_name = get_file_name(source_path), target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
 				except KeyError:
-					return 0
+					return 1
 
 				if not job_manager.add_step(job_id, step_args):
 					return 1
@@ -312,7 +312,7 @@ def process_batch(args : Args) -> ErrorCode:
 				try:
 					step_args['output_path'] = job_args.get('output_pattern').format(index = index, target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
 				except KeyError:
-					return 0
+					return 1
 
 				if not job_manager.add_step(job_id, step_args):
 					return 1
