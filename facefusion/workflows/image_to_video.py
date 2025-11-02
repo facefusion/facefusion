@@ -75,7 +75,7 @@ def process_video() -> ErrorCode:
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
 
 	if temp_frame_paths:
-		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in ['warn', 'error']) as progress:
+		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
 			progress.set_postfix(execution_providers = state_manager.get_item('execution_providers'))
 
 			with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
