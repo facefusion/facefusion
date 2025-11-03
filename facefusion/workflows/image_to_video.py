@@ -14,7 +14,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
-from facefusion.vision import detect_video_resolution, extract_vision_mask, merge_vision_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
+from facefusion.vision import detect_video_resolution, extract_vision_mask, conditional_merge_vision_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, write_image
 from facefusion.workflows.core import is_process_stopping
 
 
@@ -193,5 +193,5 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 			'temp_vision_mask': temp_vision_mask
 		})
 
-	temp_vision_frame = merge_vision_mask(temp_vision_frame, temp_vision_mask)
+	temp_vision_frame = conditional_merge_vision_mask(temp_vision_frame, temp_vision_mask)
 	return write_image(temp_frame_path, temp_vision_frame)
