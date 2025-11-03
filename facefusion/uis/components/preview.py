@@ -18,7 +18,7 @@ from facefusion.types import AudioFrame, Face, Mask, VisionFrame
 from facefusion.uis import choices as uis_choices
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions, PreviewMode
-from facefusion.vision import detect_frame_orientation, extract_vision_mask, fit_cover_frame, conditional_merge_vision_mask, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
+from facefusion.vision import conditional_merge_vision_mask, detect_frame_orientation, extract_vision_mask, fit_cover_frame, obscure_frame, read_static_image, read_static_images, read_video_frame, restrict_frame, unpack_resolution
 
 PREVIEW_IMAGE : Optional[gradio.Image] = None
 
