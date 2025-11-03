@@ -2,11 +2,11 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_int_step
-from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.types import DeepSwapperModel
+from facefusion.processors.modules.deep_swapper import choices as deep_swapper_choices
+from facefusion.processors.modules.deep_swapper.types import DeepSwapperModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 DEEP_SWAPPER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -19,17 +19,17 @@ def render() -> None:
 
 	has_deep_swapper = 'deep_swapper' in state_manager.get_item('processors')
 	DEEP_SWAPPER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.deep_swapper_model_dropdown'),
-		choices = processors_choices.deep_swapper_models,
+		label = translator.get('uis.model_dropdown', 'facefusion.processors.modules.deep_swapper'),
+		choices = deep_swapper_choices.deep_swapper_models,
 		value = state_manager.get_item('deep_swapper_model'),
 		visible = has_deep_swapper
 	)
 	DEEP_SWAPPER_MORPH_SLIDER = gradio.Slider(
-		label = wording.get('uis.deep_swapper_morph_slider'),
+		label = translator.get('uis.morph_slider', 'facefusion.processors.modules.deep_swapper'),
 		value = state_manager.get_item('deep_swapper_morph'),
-		step = calculate_int_step(processors_choices.deep_swapper_morph_range),
-		minimum = processors_choices.deep_swapper_morph_range[0],
-		maximum = processors_choices.deep_swapper_morph_range[-1],
+		step = calculate_int_step(deep_swapper_choices.deep_swapper_morph_range),
+		minimum = deep_swapper_choices.deep_swapper_morph_range[0],
+		maximum = deep_swapper_choices.deep_swapper_morph_range[-1],
 		visible = has_deep_swapper and load_processor_module('deep_swapper').get_inference_pool() and load_processor_module('deep_swapper').has_morph_input()
 	)
 	register_ui_component('deep_swapper_model_dropdown', DEEP_SWAPPER_MODEL_DROPDOWN)

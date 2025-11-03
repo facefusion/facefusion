@@ -2,11 +2,11 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_int_step
-from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.types import FrameEnhancerModel
+from facefusion.processors.modules.frame_enhancer import choices as frame_enhancer_choices
+from facefusion.processors.modules.frame_enhancer.types import FrameEnhancerModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 FRAME_ENHANCER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -19,17 +19,17 @@ def render() -> None:
 
 	has_frame_enhancer = 'frame_enhancer' in state_manager.get_item('processors')
 	FRAME_ENHANCER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.frame_enhancer_model_dropdown'),
-		choices = processors_choices.frame_enhancer_models,
+		label = translator.get('uis.model_dropdown', 'facefusion.processors.modules.frame_enhancer'),
+		choices = frame_enhancer_choices.frame_enhancer_models,
 		value = state_manager.get_item('frame_enhancer_model'),
 		visible = has_frame_enhancer
 	)
 	FRAME_ENHANCER_BLEND_SLIDER = gradio.Slider(
-		label = wording.get('uis.frame_enhancer_blend_slider'),
+		label = translator.get('uis.blend_slider', 'facefusion.processors.modules.frame_enhancer'),
 		value = state_manager.get_item('frame_enhancer_blend'),
-		step = calculate_int_step(processors_choices.frame_enhancer_blend_range),
-		minimum = processors_choices.frame_enhancer_blend_range[0],
-		maximum = processors_choices.frame_enhancer_blend_range[-1],
+		step = calculate_int_step(frame_enhancer_choices.frame_enhancer_blend_range),
+		minimum = frame_enhancer_choices.frame_enhancer_blend_range[0],
+		maximum = frame_enhancer_choices.frame_enhancer_blend_range[-1],
 		visible = has_frame_enhancer
 	)
 	register_ui_component('frame_enhancer_model_dropdown', FRAME_ENHANCER_MODEL_DROPDOWN)

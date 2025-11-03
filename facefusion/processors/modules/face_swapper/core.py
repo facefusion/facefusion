@@ -8,7 +8,7 @@ import numpy
 import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import get_first, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
@@ -18,9 +18,10 @@ from facefusion.face_masker import create_area_mask, create_box_mask, create_occ
 from facefusion.face_selector import select_faces, sort_faces_by_order
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.model_helper import get_static_model_initializer
-from facefusion.processors import choices as processors_choices
+from facefusion.processors.modules.face_swapper import choices as face_swapper_choices
+from facefusion.processors.modules.face_swapper.types import FaceSwapperInputs
 from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel_boost
-from facefusion.processors.types import FaceSwapperInputs
+from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -33,6 +34,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'blendswap_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'mapooon',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -57,6 +64,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ghost_1_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'ai-forever',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -91,6 +104,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ghost_2_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'ai-forever',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -125,6 +144,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ghost_3_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'ai-forever',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -159,6 +184,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'hififace_unofficial_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'GuijiAI',
+				'license': 'Unknown',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -193,6 +224,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'hyperswap_1a_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'FaceFusion',
+				'license': 'ResearchRAIL',
+				'year': 2025
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -217,6 +254,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'hyperswap_1b_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'FaceFusion',
+				'license': 'ResearchRAIL',
+				'year': 2025
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -241,6 +284,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'hyperswap_1c_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'FaceFusion',
+				'license': 'ResearchRAIL',
+				'year': 2025
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -265,6 +314,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'inswapper_128':
 		{
+			'__metadata__':
+			{
+				'vendor': 'InsightFace',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -289,6 +344,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'inswapper_128_fp16':
 		{
+			'__metadata__':
+			{
+				'vendor': 'InsightFace',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -313,6 +374,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'simswap_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'neuralchen',
+				'license': 'Non-Commercial',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -347,6 +414,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'simswap_unofficial_512':
 		{
+			'__metadata__':
+			{
+				'vendor': 'neuralchen',
+				'license': 'Non-Commercial',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -381,6 +454,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'uniface_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xc-csc101',
+				'license': 'Unknown',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'face_swapper':
@@ -434,11 +513,11 @@ def get_model_name() -> str:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--face-swapper-model', help = wording.get('help.face_swapper_model'), default = config.get_str_value('processors', 'face_swapper_model', 'hyperswap_1a_256'), choices = processors_choices.face_swapper_models)
+		group_processors.add_argument('--face-swapper-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'face_swapper_model', 'hyperswap_1a_256'), choices = face_swapper_choices.face_swapper_models)
 		known_args, _ = program.parse_known_args()
-		face_swapper_pixel_boost_choices = processors_choices.face_swapper_set.get(known_args.face_swapper_model)
-		group_processors.add_argument('--face-swapper-pixel-boost', help = wording.get('help.face_swapper_pixel_boost'), default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
-		group_processors.add_argument('--face-swapper-weight', help = wording.get('help.face_swapper_weight'), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0.5'), choices = processors_choices.face_swapper_weight_range)
+		face_swapper_pixel_boost_choices = face_swapper_choices.face_swapper_set.get(known_args.face_swapper_model)
+		group_processors.add_argument('--face-swapper-pixel-boost', help = translator.get('help.pixel_boost', __package__), default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
+		group_processors.add_argument('--face-swapper-weight', help = translator.get('help.weight', __package__), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0.5'), choices = face_swapper_choices.face_swapper_weight_range)
 		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight' ])
 
 
@@ -457,7 +536,7 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if not has_image(state_manager.get_item('source_paths')):
-		logger.error(wording.get('choose_image_source') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_image_source') + translator.get('exclamation_mark'), __name__)
 		return False
 
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
@@ -465,19 +544,19 @@ def pre_process(mode : ProcessMode) -> bool:
 	source_faces = get_many_faces(source_frames)
 
 	if not get_one_face(source_faces):
-		logger.error(wording.get('no_source_face_detected') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('no_source_face_detected') + translator.get('exclamation_mark'), __name__)
 		return False
 
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
-		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
 		return False
 
 	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
-		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('match_target_and_output_extension') + translator.get('exclamation_mark'), __name__)
 		return False
 
 	return True
@@ -678,11 +757,12 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 	return get_average_face(source_faces)
 
 
-def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
+def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_vision_frames = inputs.get('source_vision_frames')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
+	temp_vision_mask = inputs.get('temp_vision_mask')
 	source_face = extract_source_face(source_vision_frames)
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
@@ -691,4 +771,4 @@ def process_frame(inputs : FaceSwapperInputs) -> VisionFrame:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
 
-	return temp_vision_frame
+	return temp_vision_frame, temp_vision_mask

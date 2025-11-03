@@ -36,6 +36,8 @@ def get_file_format(file_path : str) -> Optional[str]:
 			return 'jpeg'
 		if file_extension == '.tif':
 			return 'tiff'
+		if file_extension == '.mpg':
+			return 'mpeg'
 		return file_extension.lstrip('.')
 	return None
 
@@ -99,7 +101,7 @@ def has_video(video_paths : List[str]) -> bool:
 
 def are_videos(video_paths : List[str]) -> bool:
 	if video_paths:
-		return any(map(is_video, video_paths))
+		return all(map(is_video, video_paths))
 	return False
 
 

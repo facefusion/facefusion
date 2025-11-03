@@ -2,11 +2,11 @@ from typing import List, Optional, Tuple
 
 import gradio
 
-from facefusion import state_manager, wording
+from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_float_step
-from facefusion.processors import choices as processors_choices
 from facefusion.processors.core import load_processor_module
-from facefusion.processors.types import ExpressionRestorerArea, ExpressionRestorerModel
+from facefusion.processors.modules.expression_restorer import choices as expression_restorer_choices
+from facefusion.processors.modules.expression_restorer.types import ExpressionRestorerArea, ExpressionRestorerModel
 from facefusion.uis.core import get_ui_component, register_ui_component
 
 EXPRESSION_RESTORER_MODEL_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -21,22 +21,22 @@ def render() -> None:
 
 	has_expression_restorer = 'expression_restorer' in state_manager.get_item('processors')
 	EXPRESSION_RESTORER_MODEL_DROPDOWN = gradio.Dropdown(
-		label = wording.get('uis.expression_restorer_model_dropdown'),
-		choices = processors_choices.expression_restorer_models,
+		label = translator.get('uis.model_dropdown', 'facefusion.processors.modules.expression_restorer'),
+		choices = expression_restorer_choices.expression_restorer_models,
 		value = state_manager.get_item('expression_restorer_model'),
 		visible = has_expression_restorer
 	)
 	EXPRESSION_RESTORER_FACTOR_SLIDER = gradio.Slider(
-		label = wording.get('uis.expression_restorer_factor_slider'),
+		label = translator.get('uis.factor_slider', 'facefusion.processors.modules.expression_restorer'),
 		value = state_manager.get_item('expression_restorer_factor'),
-		step = calculate_float_step(processors_choices.expression_restorer_factor_range),
-		minimum = processors_choices.expression_restorer_factor_range[0],
-		maximum = processors_choices.expression_restorer_factor_range[-1],
+		step = calculate_float_step(expression_restorer_choices.expression_restorer_factor_range),
+		minimum = expression_restorer_choices.expression_restorer_factor_range[0],
+		maximum = expression_restorer_choices.expression_restorer_factor_range[-1],
 		visible = has_expression_restorer
 	)
 	EXPRESSION_RESTORER_AREAS_CHECKBOX_GROUP = gradio.CheckboxGroup(
-		label = wording.get('uis.expression_restorer_areas_checkbox_group'),
-		choices = processors_choices.expression_restorer_areas,
+		label = translator.get('uis.areas_checkbox_group', 'facefusion.processors.modules.expression_restorer'),
+		choices = expression_restorer_choices.expression_restorer_areas,
 		value = state_manager.get_item('expression_restorer_areas'),
 		visible = has_expression_restorer
 	)
@@ -75,6 +75,6 @@ def update_expression_restorer_factor(expression_restorer_factor : float) -> Non
 
 
 def update_expression_restorer_areas(expression_restorer_areas : List[ExpressionRestorerArea]) -> gradio.CheckboxGroup:
-	expression_restorer_areas = expression_restorer_areas or processors_choices.expression_restorer_areas
+	expression_restorer_areas = expression_restorer_areas or expression_restorer_choices.expression_restorer_areas
 	state_manager.set_item('expression_restorer_areas', expression_restorer_areas)
 	return gradio.CheckboxGroup(value = state_manager.get_item('expression_restorer_areas'))

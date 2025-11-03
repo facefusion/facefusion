@@ -5,6 +5,11 @@ ComponentName = Literal\
 [
 	'age_modifier_direction_slider',
 	'age_modifier_model_dropdown',
+	'background_remover_model_dropdown',
+	'background_remover_color_red_number',
+	'background_remover_color_green_number',
+	'background_remover_color_blue_number',
+	'background_remover_color_alpha_number',
 	'deep_swapper_model_dropdown',
 	'deep_swapper_morph_slider',
 	'expression_restorer_factor_slider',
@@ -13,6 +18,7 @@ ComponentName = Literal\
 	'face_debugger_items_checkbox_group',
 	'face_detector_angles_checkbox_group',
 	'face_detector_model_dropdown',
+	'face_detector_margin_slider',
 	'face_detector_score_slider',
 	'face_detector_size_dropdown',
 	'face_editor_eyebrow_direction_slider',
@@ -89,3 +95,5 @@ JobManagerAction = Literal['job-create', 'job-submit', 'job-delete', 'job-add-st
 JobRunnerAction = Literal['job-run', 'job-run-all', 'job-retry', 'job-retry-all']
 
 PreviewMode = Literal[ 'default', 'frame-by-frame', 'face-by-face' ]
+
+MockArgs : TypeAlias = Any

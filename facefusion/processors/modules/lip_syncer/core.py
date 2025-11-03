@@ -6,7 +6,7 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, video_manager, voice_extractor, wording
+from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager, voice_extractor
 from facefusion.audio import read_static_voice
 from facefusion.common_helper import create_float_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
@@ -15,8 +15,9 @@ from facefusion.face_helper import create_bounding_box, paste_back, warp_face_by
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import has_audio, resolve_relative_path
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import LipSyncerInputs, LipSyncerWeight
+from facefusion.processors.modules.lip_syncer import choices as lip_syncer_choices
+from facefusion.processors.modules.lip_syncer.types import LipSyncerInputs, LipSyncerWeight
+from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -29,6 +30,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'edtalk_256':
 		{
+			'__metadata__':
+			{
+				'vendor': 'tanshuai0219',
+				'license': 'Apache-2.0',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'lip_syncer':
@@ -50,6 +57,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'wav2lip_96':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Rudrabha',
+				'license': 'Non-Commercial',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'lip_syncer':
@@ -71,6 +84,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'wav2lip_gan_96':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Rudrabha',
+				'license': 'Non-Commercial',
+				'year': 2020
+			},
 			'hashes':
 			{
 				'lip_syncer':
@@ -113,8 +132,8 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--lip-syncer-model', help = wording.get('help.lip_syncer_model'), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = processors_choices.lip_syncer_models)
-		group_processors.add_argument('--lip-syncer-weight', help = wording.get('help.lip_syncer_weight'), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = processors_choices.lip_syncer_weight_range, metavar = create_float_metavar(processors_choices.lip_syncer_weight_range))
+		group_processors.add_argument('--lip-syncer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = lip_syncer_choices.lip_syncer_models)
+		group_processors.add_argument('--lip-syncer-weight', help = translator.get('help.weight', __package__), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = lip_syncer_choices.lip_syncer_weight_range, metavar = create_float_metavar(lip_syncer_choices.lip_syncer_weight_range))
 		facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model', 'lip_syncer_weight' ])
 
 
@@ -132,7 +151,7 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if not has_audio(state_manager.get_item('source_paths')):
-		logger.error(wording.get('choose_audio_source') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_audio_source') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 
@@ -261,11 +280,12 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
+def process_frame(inputs : LipSyncerInputs) -> ProcessorOutputs:
 	reference_vision_frame = inputs.get('reference_vision_frame')
 	source_voice_frame = inputs.get('source_voice_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
+	temp_vision_mask = inputs.get('temp_vision_mask')
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
 	if target_faces:
@@ -273,5 +293,4 @@ def process_frame(inputs : LipSyncerInputs) -> VisionFrame:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = sync_lip(target_face, source_voice_frame, temp_vision_frame)
 
-	return temp_vision_frame
-
+	return temp_vision_frame, temp_vision_mask

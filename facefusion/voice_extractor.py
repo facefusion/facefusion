@@ -17,6 +17,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'kim_vocal_1':
 		{
+			'__metadata__':
+			{
+				'vendor': 'KimberleyJensen',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'voice_extractor':
@@ -36,6 +42,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'kim_vocal_2':
 		{
+			'__metadata__':
+			{
+				'vendor': 'KimberleyJensen',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'voice_extractor':
@@ -55,6 +67,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'uvr_mdxnet':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Unknown',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'voice_extractor':

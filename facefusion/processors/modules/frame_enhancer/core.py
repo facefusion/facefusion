@@ -6,13 +6,14 @@ import numpy
 
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
-from facefusion import config, content_analyser, inference_manager, logger, state_manager, video_manager, wording
+from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import create_int_metavar, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
-from facefusion.processors import choices as processors_choices
-from facefusion.processors.types import FrameEnhancerInputs
+from facefusion.processors.modules.frame_enhancer import choices as frame_enhancer_choices
+from facefusion.processors.modules.frame_enhancer.types import FrameEnhancerInputs
+from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -25,6 +26,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	{
 		'clear_reality_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Kim2091',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -44,22 +51,28 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'size': (128, 8, 4),
 			'scale': 4
 		},
-		'lsdir_x4':
+		'face_dat_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Helaman',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_enhancer':
 				{
-					'url': resolve_download_url('models-3.0.0', 'lsdir_x4.hash'),
-					'path': resolve_relative_path('../.assets/models/lsdir_x4.hash')
+					'url': resolve_download_url('models-3.5.0', 'face_dat_x4.hash'),
+					'path': resolve_relative_path('../.assets/models/face_dat_x4.hash')
 				}
 			},
 			'sources':
 			{
 				'frame_enhancer':
 				{
-					'url': resolve_download_url('models-3.0.0', 'lsdir_x4.onnx'),
-					'path': resolve_relative_path('../.assets/models/lsdir_x4.onnx')
+					'url': resolve_download_url('models-3.5.0', 'face_dat_x4.onnx'),
+					'path': resolve_relative_path('../.assets/models/face_dat_x4.onnx')
 				}
 			},
 			'size': (128, 8, 4),
@@ -67,6 +80,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'nomos8k_sc_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Phhofm',
+				'license': 'Non-Commercial',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -88,6 +107,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x2':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -109,6 +134,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x2_fp16':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -130,6 +161,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -151,6 +188,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x4_fp16':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -172,6 +215,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x8':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -193,6 +242,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_esrgan_x8_fp16':
 		{
+			'__metadata__':
+			{
+				'vendor': 'xinntao',
+				'license': 'BSD-3-Clause',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -214,6 +269,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_hatgan_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'XPixelGroup',
+				'license': 'Apache-2.0',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -235,6 +296,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'real_web_photo_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Helaman',
+				'license': 'Non-Commercial',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -256,6 +323,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'realistic_rescaler_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Mutin Choler',
+				'license': 'WTFPL',
+				'year': 2023
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -277,6 +350,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'remacri_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'FoolhardyVEVO',
+				'license': 'Non-Commercial',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -298,6 +377,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'siax_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'NMKD',
+				'license': 'WTFPL',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -319,6 +404,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'span_kendata_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'terrainer',
+				'license': 'Non-Commercial',
+				'year': 2024
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -340,6 +431,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'swin2_sr_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'mv-lab',
+				'license': 'Apache-2.0',
+				'year': 2022
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -359,8 +456,41 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'size': (128, 8, 4),
 			'scale': 4
 		},
+		'tghq_face_x8':
+		{
+			'__metadata__':
+			{
+				'vendor': 'TorrentGuy',
+				'license': 'GPL-3.0',
+				'year': 2019
+			},
+			'hashes':
+			{
+				'frame_enhancer':
+				{
+					'url': resolve_download_url('models-3.5.0', 'tghq_face_x8.hash'),
+					'path': resolve_relative_path('../.assets/models/tghq_face_x8.hash')
+				}
+			},
+			'sources':
+			{
+				'frame_enhancer':
+				{
+					'url': resolve_download_url('models-3.5.0', 'tghq_face_x8.onnx'),
+					'path': resolve_relative_path('../.assets/models/tghq_face_x8.onnx')
+				}
+			},
+			'size': (128, 8, 4),
+			'scale': 8
+		},
 		'ultra_sharp_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Kim2091',
+				'license': 'Non-Commercial',
+				'year': 2021
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -382,6 +512,12 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 		},
 		'ultra_sharp_2_x4':
 		{
+			'__metadata__':
+			{
+				'vendor': 'Kim2091',
+				'license': 'Non-Commercial',
+				'year': 2025
+			},
 			'hashes':
 			{
 				'frame_enhancer':
@@ -437,8 +573,8 @@ def get_frame_enhancer_model() -> str:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--frame-enhancer-model', help = wording.get('help.frame_enhancer_model'), default = config.get_str_value('processors', 'frame_enhancer_model', 'span_kendata_x4'), choices = processors_choices.frame_enhancer_models)
-		group_processors.add_argument('--frame-enhancer-blend', help = wording.get('help.frame_enhancer_blend'), type = int, default = config.get_int_value('processors', 'frame_enhancer_blend', '80'), choices = processors_choices.frame_enhancer_blend_range, metavar = create_int_metavar(processors_choices.frame_enhancer_blend_range))
+		group_processors.add_argument('--frame-enhancer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'frame_enhancer_model', 'span_kendata_x4'), choices = frame_enhancer_choices.frame_enhancer_models)
+		group_processors.add_argument('--frame-enhancer-blend', help = translator.get('help.blend', __package__), type = int, default = config.get_int_value('processors', 'frame_enhancer_blend', '80'), choices = frame_enhancer_choices.frame_enhancer_blend_range, metavar = create_int_metavar(frame_enhancer_choices.frame_enhancer_blend_range))
 		facefusion.jobs.job_store.register_step_keys([ 'frame_enhancer_model', 'frame_enhancer_blend' ])
 
 
@@ -456,13 +592,13 @@ def pre_check() -> bool:
 
 def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
-		logger.error(wording.get('choose_image_or_video_target') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(wording.get('specify_image_or_video_output') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
 		return False
 	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
-		logger.error(wording.get('match_target_and_output_extension') + wording.get('exclamation_mark'), __name__)
+		logger.error(translator.get('match_target_and_output_extension') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 
@@ -525,6 +661,9 @@ def blend_merge_frame(temp_vision_frame : VisionFrame, merge_vision_frame : Visi
 	return temp_vision_frame
 
 
-def process_frame(inputs : FrameEnhancerInputs) -> VisionFrame:
+def process_frame(inputs : FrameEnhancerInputs) -> ProcessorOutputs:
 	temp_vision_frame = inputs.get('temp_vision_frame')
-	return enhance_frame(temp_vision_frame)
+	temp_vision_mask = inputs.get('temp_vision_mask')
+	temp_vision_frame = enhance_frame(temp_vision_frame)
+	temp_vision_mask = cv2.resize(temp_vision_mask, temp_vision_frame.shape[:2][::-1])
+	return temp_vision_frame, temp_vision_mask
