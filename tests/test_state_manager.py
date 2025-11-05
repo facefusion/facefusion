@@ -18,18 +18,18 @@ def clear_state(app_context : AppContext) -> None:
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	clear_state('cli')
-	clear_state('ui')
+	clear_state('api')
 
 
 def test_init_item() -> None:
 	init_item('video_memory_strategy', 'tolerant')
 
 	assert get_state('cli').get('video_memory_strategy') == 'tolerant'
-	assert get_state('ui').get('video_memory_strategy') == 'tolerant'
+	assert get_state('api').get('video_memory_strategy') == 'tolerant'
 
 
 def test_get_item_and_set_item() -> None:
 	set_item('video_memory_strategy', 'tolerant')
 
 	assert get_item('video_memory_strategy') == 'tolerant'
-	assert get_state('ui').get('video_memory_strategy') is None
+	assert get_state('api').get('video_memory_strategy') is None

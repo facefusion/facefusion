@@ -10,7 +10,7 @@ def detect_app_context() -> AppContext:
 	while frame:
 		if os.path.join('facefusion', 'jobs') in frame.f_code.co_filename:
 			return 'cli'
-		if os.path.join('facefusion', 'uis') in frame.f_code.co_filename:
-			return 'ui'
+		if os.path.join('facefusion', 'apis') in frame.f_code.co_filename:
+			return 'api'
 		frame = frame.f_back
 	return 'cli'
