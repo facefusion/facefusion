@@ -7,7 +7,7 @@ from facefusion.types import State, StateKey, StateSet
 STATE_SET : Union[StateSet, ProcessorStateSet] =\
 {
 	'cli': {}, #type:ignore[assignment]
-	'ui': {} #type:ignore[assignment]
+	'api': {} #type:ignore[assignment]
 }
 
 
@@ -17,12 +17,12 @@ def get_state() -> Union[State, ProcessorState]:
 
 
 def sync_state() -> None:
-	STATE_SET['cli'] = STATE_SET.get('ui') #type:ignore[assignment]
+	STATE_SET['cli'] = STATE_SET.get('api') #type:ignore[assignment]
 
 
 def init_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
 	STATE_SET['cli'][key] = value #type:ignore[literal-required]
-	STATE_SET['ui'][key] = value #type:ignore[literal-required]
+	STATE_SET['api'][key] = value #type:ignore[literal-required]
 
 
 def get_item(key : Union[StateKey, ProcessorStateKey]) -> Any:
@@ -35,7 +35,7 @@ def set_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
 
 
 def sync_item(key : Union[StateKey, ProcessorStateKey]) -> None:
-	STATE_SET['cli'][key] = STATE_SET.get('ui').get(key) #type:ignore[literal-required]
+	STATE_SET['cli'][key] = STATE_SET.get('api').get(key) #type:ignore[literal-required]
 
 
 def clear_item(key : Union[StateKey, ProcessorStateKey]) -> None:
