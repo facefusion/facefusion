@@ -17,7 +17,7 @@ from facefusion.types import DownloadSet, ExecutionProvider, InferencePool, Infe
 INFERENCE_POOL_SET : InferencePoolSet =\
 {
 	'cli': {},
-	'ui': {}
+	'api': {}
 }
 
 
@@ -31,10 +31,10 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 	for execution_device_id in execution_device_ids:
 		inference_context = get_inference_context(module_name, model_names, execution_device_id, execution_providers)
 
-		if app_context == 'cli' and INFERENCE_POOL_SET.get('ui').get(inference_context):
-			INFERENCE_POOL_SET['cli'][inference_context] = INFERENCE_POOL_SET.get('ui').get(inference_context)
-		if app_context == 'ui' and INFERENCE_POOL_SET.get('cli').get(inference_context):
-			INFERENCE_POOL_SET['ui'][inference_context] = INFERENCE_POOL_SET.get('cli').get(inference_context)
+		if app_context == 'cli' and INFERENCE_POOL_SET.get('api').get(inference_context):
+			INFERENCE_POOL_SET['cli'][inference_context] = INFERENCE_POOL_SET.get('api').get(inference_context)
+		if app_context == 'api' and INFERENCE_POOL_SET.get('cli').get(inference_context):
+			INFERENCE_POOL_SET['api'][inference_context] = INFERENCE_POOL_SET.get('cli').get(inference_context)
 		if not INFERENCE_POOL_SET.get(app_context).get(inference_context):
 			INFERENCE_POOL_SET[app_context][inference_context] = create_inference_pool(model_source_set, execution_device_id, execution_providers)
 

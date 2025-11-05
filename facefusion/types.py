@@ -227,12 +227,10 @@ Download = TypedDict('Download',
 DownloadSet : TypeAlias = Dict[str, Download]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
-AppContext = Literal['cli', 'ui']
+AppContext = Literal['cli', 'api']
 
 InferencePool : TypeAlias = Dict[str, InferenceSession]
 InferencePoolSet : TypeAlias = Dict[AppContext, Dict[str, InferencePool]]
-
-UiWorkflow = Literal['instant_runner', 'job_runner', 'job_manager']
 
 JobStore = TypedDict('JobStore',
 {
@@ -312,9 +310,6 @@ StateKey = Literal\
 	'output_video_scale',
 	'output_video_fps',
 	'processors',
-	'open_browser',
-	'ui_layouts',
-	'ui_workflow',
 	'execution_device_ids',
 	'execution_providers',
 	'execution_thread_count',
@@ -382,9 +377,6 @@ State = TypedDict('State',
 	'output_video_scale' : Scale,
 	'output_video_fps' : float,
 	'processors' : List[str],
-	'open_browser' : bool,
-	'ui_layouts' : List[str],
-	'ui_workflow' : UiWorkflow,
 	'execution_device_ids' : List[int],
 	'execution_providers' : List[ExecutionProvider],
 	'execution_thread_count' : int,
