@@ -8,12 +8,6 @@ FaceFusion
 ![License](https://img.shields.io/badge/license-OpenRAIL--AS-green)
 
 
-Preview
--------
-
-![Preview](https://raw.githubusercontent.com/facefusion/facefusion/master/.github/preview.png?sanitize=true)
-
-
 Installation
 ------------
 
@@ -34,7 +28,6 @@ options:
 
 commands:
     run                                           run the program
-    headless-run                                  run the program in headless mode
     batch-run                                     run the program in batch mode
     force-download                                force automate downloads and exit
     benchmark                                     benchmark the program
