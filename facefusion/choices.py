@@ -148,7 +148,6 @@ log_level_set : LogLevelSet =\
 }
 log_levels : List[LogLevel] = list(get_args(LogLevel))
 
-ui_workflows : List[UiWorkflow] = list(get_args(UiWorkflow))
 job_statuses : List[JobStatus] = list(get_args(JobStatus))
 
 benchmark_cycle_count_range : Sequence[int] = create_int_range(1, 10, 1)
