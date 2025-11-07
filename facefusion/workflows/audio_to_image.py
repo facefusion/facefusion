@@ -9,9 +9,9 @@ from facefusion import ffmpeg, logger, process_manager, state_manager, translato
 from facefusion.audio import count_audio_frame_total, create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image
-from facefusion.filesystem import filter_audio_paths, is_file, is_video, move_file
+from facefusion.filesystem import filter_audio_paths, is_video, move_file
 from facefusion.processors.core import get_processors_modules
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_directory_path, get_temp_file_path
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, get_temp_frame_sequence_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import conditional_merge_vision_mask, detect_image_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, restrict_image_resolution, scale_resolution, write_image
@@ -69,13 +69,8 @@ def prepare_image() -> ErrorCode:
 def process_frames() -> ErrorCode:
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	audio_frame_total = count_audio_frame_total(source_audio_path, 25.0)
-	output_video_fps = state_manager.get_item('output_video_fps') or 25.0
-	temp_directory_path = get_temp_directory_path(state_manager.get_item('target_path'))
-	temp_frame_paths = []
-
-	for frame_number in range(audio_frame_total):
-		temp_frame_path = os.path.join(temp_directory_path, f'{frame_number + 1:08d}.png')
-		temp_frame_paths.append(temp_frame_path)
+	output_video_fps = state_manager.get_item('output_video_fps')
+	temp_frame_paths = get_temp_frame_sequence_paths(state_manager.get_item('target_path'), audio_frame_total, '%08d')
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
@@ -142,7 +137,7 @@ def process_temp_frame(temp_frame_path : str, frame_number : int, output_video_f
 
 def merge_video() -> ErrorCode:
 	target_path = state_manager.get_item('target_path')
-	output_video_fps = state_manager.get_item('output_video_fps') or 25.0
+	output_video_fps = state_manager.get_item('output_video_fps')
 	output_video_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
 	temp_video_fps = 25
 	trim_frame_start, trim_frame_end = state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end')
@@ -174,21 +169,12 @@ def replace_audio() -> ErrorCode:
 
 
 def finalize_video(start_time : float) -> ErrorCode:
-	output_path = state_manager.get_item('output_path')
-
-	if not is_file(output_path):
-		logger.error(translator.get('output_file_not_found').format(output_path = output_path), __name__)
-		logger.debug(translator.get('clearing_temp'), __name__)
-		clear_temp_directory(state_manager.get_item('target_path'))
-		return 1
-
-	if not is_video(output_path):
-		logger.error(translator.get('output_file_not_valid_video').format(output_path = output_path), __name__)
-		logger.debug(translator.get('clearing_temp'), __name__)
-		clear_temp_directory(state_manager.get_item('target_path'))
-		return 1
-
 	logger.debug(translator.get('clearing_temp'), __name__)
 	clear_temp_directory(state_manager.get_item('target_path'))
-	logger.info(translator.get('processing_video_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
+
+	if is_video(state_manager.get_item('output_path')):
+		logger.info(translator.get('processing_video_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
+	else:
+		logger.error(translator.get('processing_video_failed'), __name__)
+		return 1
 	return 0

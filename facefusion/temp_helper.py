@@ -41,3 +41,15 @@ def clear_temp_directory(file_path : str) -> bool:
 		temp_directory_path = get_temp_directory_path(file_path)
 		return remove_directory(temp_directory_path)
 	return True
+
+
+def get_temp_frame_sequence_paths(target_path : str, frame_total : int, temp_frame_prefix : str) -> List[str]:
+	temp_frame_format = state_manager.get_item('temp_frame_format')
+	temp_directory_path = get_temp_directory_path(target_path)
+	temp_frame_paths = []
+
+	for frame_number in range(frame_total):
+		temp_file_name = temp_frame_prefix % (frame_number + 1) + '.' + temp_frame_format
+		temp_frame_path = os.path.join(temp_directory_path, temp_file_name)
+		temp_frame_paths.append(temp_frame_path)
+	return temp_frame_paths
