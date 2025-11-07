@@ -9,6 +9,7 @@ from tqdm import tqdm
 import facefusion.choices
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, translator
 from facefusion.filesystem import get_file_format, remove_file
+from facefusion.filesystem import is_image, is_video
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
 from facefusion.vision import detect_video_duration, detect_video_fps, pack_resolution, predict_video_frame_total
@@ -195,6 +196,10 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_audio_volume = state_manager.get_item('output_audio_volume')
 	temp_video_path = get_temp_file_path(target_path)
+
+	if is_image(target_path):
+		temp_video_path = os.path.splitext(temp_video_path)[0] + '.mp4'
+
 	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
 	temp_video_duration = detect_video_duration(temp_video_path)
 
@@ -216,8 +221,16 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
-	merge_frame_total = predict_video_frame_total(target_path, output_video_fps, trim_frame_start, trim_frame_end)
 	temp_video_path = get_temp_file_path(target_path)
+
+	if is_video(target_path):
+		merge_frame_total = predict_video_frame_total(target_path, output_video_fps, trim_frame_start, trim_frame_end)
+
+	if is_image(target_path):
+		from facefusion.audio import predict_audio_frame_total
+		merge_frame_total = predict_audio_frame_total(target_path, output_video_fps, trim_frame_start, trim_frame_end)
+		temp_video_path = os.path.splitext(temp_video_path)[0] + '.mp4'
+
 	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 
