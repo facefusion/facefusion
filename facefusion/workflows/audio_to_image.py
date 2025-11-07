@@ -8,7 +8,7 @@ from facefusion import ffmpeg, logger, process_manager, state_manager, translato
 from facefusion.audio import count_audio_frame_total
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image
-from facefusion.filesystem import filter_audio_paths, is_video, move_file
+from facefusion.filesystem import copy_file, filter_audio_paths, is_video, move_file
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, get_temp_file_path, get_temp_frame_sequence_paths
 from facefusion.time_helper import calculate_end_time
@@ -64,9 +64,13 @@ def prepare_image() -> ErrorCode:
 
 def process_frames() -> ErrorCode:
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+	target_path = state_manager.get_item('target_path')
 	audio_frame_total = count_audio_frame_total(source_audio_path, 25.0)
 	output_video_fps = state_manager.get_item('output_video_fps')
-	temp_frame_paths = get_temp_frame_sequence_paths(state_manager.get_item('target_path'), audio_frame_total, '%08d')
+	temp_frame_paths = get_temp_frame_sequence_paths(target_path, audio_frame_total, '%08d')
+
+	for temp_frame_path in temp_frame_paths:
+		copy_file(target_path, temp_frame_path)
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
