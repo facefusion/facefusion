@@ -6,11 +6,11 @@ from facefusion.audio import create_empty_audio_frame
 from facefusion.content_analyser import analyse_image
 from facefusion.filesystem import is_image
 from facefusion.processors.core import get_processors_modules
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path
+from facefusion.temp_helper import clear_temp_directory, get_temp_file_path
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import conditional_merge_vision_mask, detect_image_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, restrict_image_resolution, scale_resolution, write_image
-from facefusion.workflows.core import is_process_stopping
+from facefusion.workflows.core import is_process_stopping, prepare_temp
 
 
 def process(start_time : float) -> ErrorCode:
@@ -38,10 +38,7 @@ def setup() -> ErrorCode:
 	if analyse_image(state_manager.get_item('target_path')):
 		return 3
 
-	logger.debug(translator.get('clearing_temp'), __name__)
-	clear_temp_directory(state_manager.get_item('target_path'))
-	logger.debug(translator.get('creating_temp'), __name__)
-	create_temp_directory(state_manager.get_item('target_path'))
+	prepare_temp()
 	return 0
 
 
