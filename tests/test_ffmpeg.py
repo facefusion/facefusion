@@ -11,6 +11,7 @@ from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_au
 from facefusion.filesystem import copy_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
+from facefusion.vision import predict_video_frame_total
 from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
 
 
@@ -108,8 +109,10 @@ def test_merge_video() -> None:
 			state_manager.init_item('output_video_encoder', output_video_encoder)
 			create_temp_directory(target_path)
 			extract_frames(target_path, (452, 240), 25.0, 0, 1)
+			temp_video_path = get_temp_file_path(target_path)
+			merge_frame_total = predict_video_frame_total(target_path, 25.0, 0, 1)
 
-			assert merge_video(target_path, 25.0, (452, 240), 25.0, 0, 1) is True
+			assert merge_video(target_path, temp_video_path, 25.0, (452, 240), 25.0, merge_frame_total) is True
 
 		clear_temp_directory(target_path)
 

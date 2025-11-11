@@ -9,10 +9,10 @@ from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_video
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.temp_helper import clear_temp_directory, move_temp_file, resolve_temp_frame_paths
+from facefusion.temp_helper import clear_temp_directory, get_temp_file_path, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
-from facefusion.vision import detect_video_resolution, pack_resolution, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution
+from facefusion.vision import detect_video_resolution, pack_resolution, predict_video_frame_total, restrict_trim_frame, restrict_video_fps, restrict_video_resolution, scale_resolution
 from facefusion.workflows.core import conditional_process_temp_frame, is_process_stopping, prepare_temp
 
 
@@ -102,12 +102,16 @@ def process_video() -> ErrorCode:
 
 
 def merge_frames() -> ErrorCode:
-	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	target_path = state_manager.get_item('target_path')
+	output_video_fps = state_manager.get_item('output_video_fps')
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
-	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
+	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	temp_video_fps = restrict_video_fps(target_path, output_video_fps)
+	temp_video_path = get_temp_file_path(target_path)
+	merge_frame_total = predict_video_frame_total(target_path, output_video_fps, trim_frame_start, trim_frame_end)
 
-	logger.info(translator.get('merging_video').format(resolution = pack_resolution(output_video_resolution), fps = state_manager.get_item('output_video_fps')), __name__)
-	if ffmpeg.merge_video(state_manager.get_item('target_path'), temp_video_fps, output_video_resolution, state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
+	logger.info(translator.get('merging_video').format(resolution = pack_resolution(output_video_resolution), fps = output_video_fps), __name__)
+	if ffmpeg.merge_video(target_path, temp_video_path, temp_video_fps, output_video_resolution, output_video_fps, merge_frame_total):
 		logger.debug(translator.get('merging_video_succeeded'), __name__)
 	else:
 		if is_process_stopping():

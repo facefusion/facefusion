@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from facefusion import ffmpeg, logger, process_manager, state_manager, translator
 from facefusion.audio import count_audio_frame_total
+from facefusion.audio import predict_audio_frame_total
 from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_image
 from facefusion.filesystem import copy_file, filter_audio_paths, is_video, move_file
@@ -23,7 +24,7 @@ def process(start_time : float) -> ErrorCode:
 		setup,
 		prepare_image,
 		process_frames,
-		merge_video,
+		merge_frames,
 		replace_audio,
 		partial(finalize_video, start_time)
 	]
@@ -103,15 +104,17 @@ def process_frames() -> ErrorCode:
 	return 0
 
 
-def merge_video() -> ErrorCode:
+def merge_frames() -> ErrorCode:
 	target_path = state_manager.get_item('target_path')
 	output_video_fps = state_manager.get_item('output_video_fps')
 	output_video_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
 	temp_video_fps = 25
-	trim_frame_start, trim_frame_end = state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end')
+	temp_video_path = get_temp_file_path(target_path)
+	temp_video_path = os.path.splitext(temp_video_path)[0] + '.mp4' # TODO
+	merge_frame_total = predict_audio_frame_total(target_path, output_video_fps, state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 
 	logger.info(translator.get('merging_video').format(resolution = pack_resolution(output_video_resolution), fps = output_video_fps), __name__)
-	if ffmpeg.merge_video(target_path, temp_video_fps, output_video_resolution, output_video_fps, trim_frame_start, trim_frame_end):
+	if ffmpeg.merge_video(target_path, temp_video_path, temp_video_fps, output_video_resolution, output_video_fps, merge_frame_total):
 		logger.debug(translator.get('merging_video_succeeded'), __name__)
 	else:
 		if is_process_stopping():
