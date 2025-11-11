@@ -19,113 +19,113 @@ def before_each() -> None:
 
 
 def test_create_session(test_client : TestClient) -> None:
-	create_response = test_client.post('/session', json =
+	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
 	})
-	create_data = create_response.json()
+	create_session_data = create_session_response.json()
 
-	assert session_manager.get_session(create_data.get('access_token'))
-	assert session_manager.get_session(create_data.get('refresh_token'))
-	assert create_response.status_code == 201
+	assert session_manager.get_session(create_session_data.get('access_token'))
+	assert session_manager.get_session(create_session_data.get('refresh_token'))
+	assert create_session_response.status_code == 201
 
-	create_response = test_client.post('/session', json =
+	create_session_response = test_client.post('/session', json =
 	{
 		'api_key': 'TEST',
 		'client_version': metadata.get('version')
 	})
 
-	assert create_response.status_code == 401
+	assert create_session_response.status_code == 401
 
 	os.environ['FACEFUSION_API_KEY'] = 'TEST'
-	create_response = test_client.post('/session', json =
+	create_session_response = test_client.post('/session', json =
 	{
 		'api_key': 'INVALID',
 		'client_version': metadata.get('version')
 	})
 
-	assert create_response.status_code == 401
+	assert create_session_response.status_code == 401
 
 	os.environ['FACEFUSION_API_KEY'] = 'TEST'
-	create_response = test_client.post('/session', json =
+	create_session_response = test_client.post('/session', json =
 	{
 		'api_key': 'TEST',
 		'client_version': metadata.get('version')
 	})
 
-	assert create_response.status_code == 201
+	assert create_session_response.status_code == 201
 
 	del os.environ['FACEFUSION_API_KEY']
 
 
 def test_get_session(test_client : TestClient) -> None:
-	get_response = test_client.get('/session')
+	get_session_response = test_client.get('/session')
 
-	assert get_response.status_code == 401
+	assert get_session_response.status_code == 401
 
-	create_response = test_client.post('/session', json =
+	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
 	})
-	create_data = create_response.json()
+	create_session_data = create_session_response.json()
 
-	get_response = test_client.get('/session', headers =
+	get_session_response = test_client.get('/session', headers =
 	{
-		'Authorization': 'Bearer ' + create_data.get('access_token')
+		'Authorization': 'Bearer ' + create_session_data.get('access_token')
 	})
 
-	assert get_response.status_code == 200
+	assert get_session_response.status_code == 200
 
 
 def test_refresh_session(test_client : TestClient) -> None:
-	create_response = test_client.post('/session', json =
+	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
 	})
-	create_data = create_response.json()
+	create_session_data = create_session_response.json()
 
-	refresh_response = test_client.put('/session', json =
+	refresh_session_response = test_client.put('/session', json =
 	{
 		'refresh_token': 'INVALID'
 	})
 
-	assert refresh_response.status_code == 401
+	assert refresh_session_response.status_code == 401
 
-	refresh_response = test_client.put('/session', json =
+	refresh_session_response = test_client.put('/session', json =
 	{
-		'refresh_token': create_data.get('refresh_token')
+		'refresh_token': create_session_data.get('refresh_token')
 	})
-	refresh_data = refresh_response.json()
+	refresh_session_data = refresh_session_response.json()
 
-	assert not session_manager.get_session(create_data.get('access_token'))
-	assert not session_manager.get_session(create_data.get('refresh_token'))
+	assert not session_manager.get_session(create_session_data.get('access_token'))
+	assert not session_manager.get_session(create_session_data.get('refresh_token'))
 
-	assert session_manager.get_session(refresh_data.get('access_token'))
-	assert session_manager.get_session(refresh_data.get('refresh_token'))
+	assert session_manager.get_session(refresh_session_data.get('access_token'))
+	assert session_manager.get_session(refresh_session_data.get('refresh_token'))
 
-	assert refresh_response.status_code == 200
+	assert refresh_session_response.status_code == 200
 
 
 def test_destroy_session(test_client : TestClient) -> None:
-	create_response = test_client.post('/session', json =
+	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
 	})
-	create_data = create_response.json()
+	create_session_data = create_session_response.json()
 
-	delete_response = test_client.delete('/session', headers =
+	delete_session_response = test_client.delete('/session', headers =
 	{
 		'Authorization': 'Bearer INVALID'
 	})
 
-	assert delete_response.status_code == 401
+	assert delete_session_response.status_code == 401
 
-	delete_response = test_client.delete('/session', headers =
+	delete_session_response = test_client.delete('/session', headers =
 	{
-		'Authorization': 'Bearer ' + create_data.get('access_token')
+		'Authorization': 'Bearer ' + create_session_data.get('access_token')
 	})
 
-	assert not session_manager.get_session(create_data.get('access_token'))
-	assert not session_manager.get_session(create_data.get('refresh_token'))
+	assert not session_manager.get_session(create_session_data.get('access_token'))
+	assert not session_manager.get_session(create_session_data.get('refresh_token'))
 
-	assert delete_response.status_code == 204
+	assert delete_session_response.status_code == 204

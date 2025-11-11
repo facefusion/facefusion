@@ -1,12 +1,9 @@
 import time
-from typing import Awaitable
-from typing import Callable
-from typing import Dict
+from typing import Optional
 from typing import TypeAlias
 
 from starlette.datastructures import Headers
 from starlette.responses import JSONResponse
-from starlette.responses import Response
 from starlette.status import HTTP_401_UNAUTHORIZED
 from starlette.types import ASGIApp
 from starlette.types import Receive
@@ -14,31 +11,34 @@ from starlette.types import Scope
 from starlette.types import Send
 
 from facefusion import session_manager
+from facefusion import translator
 
 
-JSON : TypeAlias = Dict[str, object]
+Token : TypeAlias = str
 
 
-def error_response(message : str) -> Response:
-	return JSONResponse({ "error": { "code": "UNAUTHORIZED", "message": message, "details": {} } }, status_code = HTTP_401_UNAUTHORIZED)
-
-
-def validate_bearer_token(headers : Headers) -> str:
+def get_valid_bearer_token(headers : Headers) -> Optional[Token]:
 	auth_header = headers.get('Authorization', '')
 	if not auth_header:
-		raise ValueError('Missing Authorization header')
+		return None
 	parts = auth_header.split(' ', 1)
-	if len(parts) != 2 or parts[0].lower() != 'bearer':
-		raise ValueError('Invalid Authorization header format')
+	if len(parts) != 2:
+		return None
+	if parts[0].lower() != 'bearer':
+		return None
 	token = parts[1]
 	session_data = session_manager.get_session(token)
 	if not session_data:
-		raise ValueError('Invalid or expired token')
+		return None
 	if int(time.time()) > int(session_data.get('expires_at')):
 		session_manager.clear_session(token)
 		session_manager.clear_session(str(session_data.get('refresh_token')))
-		raise ValueError('Token expired')
+		return None
 	return token
+
+
+def error_response(message : str) -> JSONResponse:
+	return JSONResponse({ "error": { "code": "UNAUTHORIZED", "message": message, "details": {} } }, status_code = HTTP_401_UNAUTHORIZED)
 
 
 class SessionMiddleware:
@@ -49,11 +49,17 @@ class SessionMiddleware:
 		if scope['type'] != 'http':
 			await self.app(scope, receive, send)
 			return
-		headers = Headers(scope=scope)
-		try:
-			token = validate_bearer_token(headers)
-			scope['auth_token'] = token
-			await self.app(scope, receive, send)
-		except ValueError as e:
-			response = error_response(str(e))
+		headers = Headers(scope = scope)
+		token = get_valid_bearer_token(headers) or ''
+		if not token:
+			if headers.get('Authorization', ''):
+				message = translator.get('errors.invalid_or_expired', __package__) or 'Invalid or expired token'
+				response = error_response(message)
+				await response(scope, receive, send)
+				return
+			message = translator.get('errors.missing_auth', __package__) or 'Missing Authorization header'
+			response = error_response(message)
 			await response(scope, receive, send)
+			return
+		scope['auth_token'] = token
+		await self.app(scope, receive, send)
