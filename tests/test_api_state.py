@@ -27,13 +27,13 @@ def test_get_state(test_client : TestClient) -> None:
 	{
 		'client_version': metadata.get('version')
 	})
-	create_session_data = create_session_response.json()
+	create_session_body = create_session_response.json()
 
 	get_state_response = test_client.get('/state', headers =
 	{
-		'Authorization': 'Bearer ' + create_session_data.get('access_token')
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
 	})
-	get_state_data = get_state_response.json()
+	get_state_body = get_state_response.json()
 
-	assert get_state_data.get('execution_providers') == [ 'cpu' ]
+	assert get_state_body.get('execution_providers') == [ 'cpu' ]
 	assert get_state_response.status_code == 200

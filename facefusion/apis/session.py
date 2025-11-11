@@ -27,12 +27,15 @@ def error_response(message : str) -> Response:
 
 async def create_session(request : Request) -> Response:
 	body = await request.json()
-	api_key = os.getenv('FACEFUSION_API_KEY')
-	request_api_key = str(body.get('api_key', ''))
-	if request_api_key and not api_key:
+
+	env_api_key = os.getenv('FACEFUSION_API_KEY')
+	request_api_key = body.get('api_key')
+
+	if request_api_key and not env_api_key:
 		message = translator.get('errors.invalid_api_key', __package__) or 'Invalid API key'
 		return error_response(message)
-	if api_key and request_api_key != api_key:
+
+	if env_api_key and request_api_key != env_api_key:
 		message = translator.get('errors.invalid_api_key', __package__) or 'Invalid API key'
 		return error_response(message)
 	token = secrets.token_urlsafe(32)

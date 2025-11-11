@@ -23,10 +23,10 @@ def test_create_session(test_client : TestClient) -> None:
 	{
 		'client_version': metadata.get('version')
 	})
-	create_session_data = create_session_response.json()
+	create_session_body = create_session_response.json()
 
-	assert session_manager.get_session(create_session_data.get('access_token'))
-	assert session_manager.get_session(create_session_data.get('refresh_token'))
+	assert session_manager.get_session(create_session_body.get('access_token'))
+	assert session_manager.get_session(create_session_body.get('refresh_token'))
 	assert create_session_response.status_code == 201
 
 	create_session_response = test_client.post('/session', json =
@@ -67,11 +67,11 @@ def test_get_session(test_client : TestClient) -> None:
 	{
 		'client_version': metadata.get('version')
 	})
-	create_session_data = create_session_response.json()
+	create_session_body = create_session_response.json()
 
 	get_session_response = test_client.get('/session', headers =
 	{
-		'Authorization': 'Bearer ' + create_session_data.get('access_token')
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
 	})
 
 	assert get_session_response.status_code == 200
@@ -82,7 +82,7 @@ def test_refresh_session(test_client : TestClient) -> None:
 	{
 		'client_version': metadata.get('version')
 	})
-	create_session_data = create_session_response.json()
+	create_session_body = create_session_response.json()
 
 	refresh_session_response = test_client.put('/session', json =
 	{
@@ -93,15 +93,15 @@ def test_refresh_session(test_client : TestClient) -> None:
 
 	refresh_session_response = test_client.put('/session', json =
 	{
-		'refresh_token': create_session_data.get('refresh_token')
+		'refresh_token': create_session_body.get('refresh_token')
 	})
-	refresh_session_data = refresh_session_response.json()
+	refresh_session_body = refresh_session_response.json()
 
-	assert not session_manager.get_session(create_session_data.get('access_token'))
-	assert not session_manager.get_session(create_session_data.get('refresh_token'))
+	assert not session_manager.get_session(create_session_body.get('access_token'))
+	assert not session_manager.get_session(create_session_body.get('refresh_token'))
 
-	assert session_manager.get_session(refresh_session_data.get('access_token'))
-	assert session_manager.get_session(refresh_session_data.get('refresh_token'))
+	assert session_manager.get_session(refresh_session_body.get('access_token'))
+	assert session_manager.get_session(refresh_session_body.get('refresh_token'))
 
 	assert refresh_session_response.status_code == 200
 
@@ -111,7 +111,7 @@ def test_destroy_session(test_client : TestClient) -> None:
 	{
 		'client_version': metadata.get('version')
 	})
-	create_session_data = create_session_response.json()
+	create_session_body = create_session_response.json()
 
 	delete_session_response = test_client.delete('/session', headers =
 	{
@@ -122,10 +122,10 @@ def test_destroy_session(test_client : TestClient) -> None:
 
 	delete_session_response = test_client.delete('/session', headers =
 	{
-		'Authorization': 'Bearer ' + create_session_data.get('access_token')
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
 	})
 
-	assert not session_manager.get_session(create_session_data.get('access_token'))
-	assert not session_manager.get_session(create_session_data.get('refresh_token'))
+	assert not session_manager.get_session(create_session_body.get('access_token'))
+	assert not session_manager.get_session(create_session_body.get('refresh_token'))
 
 	assert delete_session_response.status_code == 204
