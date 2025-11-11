@@ -126,8 +126,10 @@ def merge_frames() -> ErrorCode:
 
 def replace_audio() -> ErrorCode:
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+	temp_video_path = get_temp_file_path(state_manager.get_item('target_path'))
+	temp_video_path = os.path.splitext(temp_video_path)[0] + '.mp4' # TODO
 
-	if ffmpeg.replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
+	if ffmpeg.replace_audio(temp_video_path, source_audio_path, state_manager.get_item('output_path')):
 		logger.debug(translator.get('replacing_audio_succeeded'), __name__)
 	else:
 		if is_process_stopping():

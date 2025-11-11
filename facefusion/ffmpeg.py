@@ -9,7 +9,6 @@ from tqdm import tqdm
 import facefusion.choices
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, translator
 from facefusion.filesystem import get_file_format, remove_file
-from facefusion.filesystem import is_image
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
 from facefusion.vision import detect_video_duration, detect_video_fps, pack_resolution, predict_video_frame_total
@@ -191,15 +190,10 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 	return run_ffmpeg(commands).returncode == 0
 
 
-def replace_audio(target_path : str, audio_path : str, output_path : str) -> bool:
+def replace_audio(temp_video_path : str, audio_path : str, output_path : str) -> bool:
 	output_audio_encoder = state_manager.get_item('output_audio_encoder')
 	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_audio_volume = state_manager.get_item('output_audio_volume')
-	temp_video_path = get_temp_file_path(target_path)
-
-	if is_image(target_path):
-		temp_video_path = os.path.splitext(temp_video_path)[0] + '.mp4'
-
 	temp_video_format = cast(VideoFormat, get_file_format(temp_video_path))
 	temp_video_duration = detect_video_duration(temp_video_path)
 
