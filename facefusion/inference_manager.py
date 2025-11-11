@@ -42,7 +42,7 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 	return INFERENCE_POOL_SET.get(app_context).get(current_inference_context)
 
 
-def create_inference_pool(model_source_set : DownloadSet, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferencePool:
+def create_inference_pool(model_source_set : DownloadSet, execution_device_id : int, execution_providers : List[ExecutionProvider]) -> InferencePool:
 	inference_pool : InferencePool = {}
 
 	for model_name in model_source_set.keys():
@@ -67,7 +67,7 @@ def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
 			del INFERENCE_POOL_SET[app_context][inference_context]
 
 
-def create_inference_session(model_path : str, execution_device_id : str, execution_providers : List[ExecutionProvider]) -> InferenceSession:
+def create_inference_session(model_path : str, execution_device_id : int, execution_providers : List[ExecutionProvider]) -> InferenceSession:
 	model_file_name = get_file_name(model_path)
 	start_time = time()
 
@@ -82,8 +82,8 @@ def create_inference_session(model_path : str, execution_device_id : str, execut
 		fatal_exit(1)
 
 
-def get_inference_context(module_name : str, model_names : List[str], execution_device_id : str, execution_providers : List[ExecutionProvider]) -> str:
-	inference_context = '.'.join([ module_name ] + model_names + [ execution_device_id ] + list(execution_providers))
+def get_inference_context(module_name : str, model_names : List[str], execution_device_id : int, execution_providers : List[ExecutionProvider]) -> str:
+	inference_context = '.'.join([ module_name ] + model_names + [ str(execution_device_id) ] + list(execution_providers))
 	return inference_context
 
 
