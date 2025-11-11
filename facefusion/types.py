@@ -101,6 +101,15 @@ ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 
 Content : TypeAlias = Dict[str, Any]
 
+Timestamp : TypeAlias = int
+Session = TypedDict('Session',
+{
+	'access_token': str,
+	'refresh_token': str,
+	'created_at': Timestamp,
+	'expires_at': Timestamp
+})
+
 Command : TypeAlias = str
 CommandSet : TypeAlias = Dict[str, List[Command]]
 
