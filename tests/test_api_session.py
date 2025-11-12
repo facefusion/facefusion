@@ -5,6 +5,7 @@ from starlette.testclient import TestClient
 
 from facefusion import metadata, session_manager
 from facefusion.apis.core import create_api
+from facefusion.types import Session
 
 
 @pytest.fixture(scope = 'module')
@@ -76,6 +77,23 @@ def test_get_session(test_client : TestClient) -> None:
 
 	assert get_session_response.status_code == 200
 
+	access_token = create_session_body.get('access_token')
+	session : Session = session_manager.get_session(access_token)
+	session_manager.set_session(access_token,
+	{
+		'access_token': session.get('access_token'),
+		'refresh_token': session.get('refresh_token'),
+		'created_at': session.get('created_at'),
+		'expires_at': session.get('expires_at') - 3600 - 1
+	})
+
+	get_session_response = test_client.get('/session', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert get_session_response.status_code == 401
+
 
 def test_refresh_session(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
@@ -104,6 +122,14 @@ def test_refresh_session(test_client : TestClient) -> None:
 	assert session_manager.get_session(refresh_session_body.get('refresh_token'))
 
 	assert refresh_session_response.status_code == 200
+
+	refresh_session_response = test_client.put('/session', json =
+	{
+		'refresh_token': create_session_body.get('refresh_token')
+	})
+
+	assert refresh_session_response.status_code == 401
+
 
 
 def test_destroy_session(test_client : TestClient) -> None:
