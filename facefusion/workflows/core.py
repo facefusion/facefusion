@@ -1,4 +1,6 @@
-from facefusion import logger, process_manager, translator
+from facefusion import logger, process_manager, state_manager, translator
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory
+from facefusion.types import ErrorCode
 
 
 def is_process_stopping() -> bool:
@@ -6,3 +8,15 @@ def is_process_stopping() -> bool:
 		process_manager.end()
 		logger.info(translator.get('processing_stopped'), __name__)
 	return process_manager.is_pending()
+
+
+def setup() -> ErrorCode:
+	create_temp_directory(state_manager.get_item('target_path'))
+	logger.debug(translator.get('creating_temp'), __name__)
+	return 0
+
+
+def clear() -> ErrorCode:
+	clear_temp_directory(state_manager.get_item('target_path'))
+	logger.debug(translator.get('clearing_temp'), __name__)
+	return 0
