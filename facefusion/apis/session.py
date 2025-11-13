@@ -1,8 +1,6 @@
 import os
 import secrets
 import time
-# from typing import Dict
-# from typing import TypeAlias
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -13,12 +11,9 @@ from starlette.status import HTTP_204_NO_CONTENT
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 # from facefusion import logger
-from facefusion import session_manager
+from facefusion import session_manager, translator
 # from facefusion import translator
-from facefusion.apis.session_middleware import get_valid_bearer_token
-
-
-# JSON : TypeAlias = Dict[str, object]
+from facefusion.apis.session_middleware import extract_access_token
 
 
 async def create_session(request : Request) -> Response:
@@ -34,15 +29,20 @@ async def create_session(request : Request) -> Response:
 	if os.getenv('FACEFUSION_API_KEY') and request_api_key != os.getenv('FACEFUSION_API_KEY'):
 		# message = translator.get('errors.invalid_api_key', __package__) or 'Invalid API key'
 		# message = 'Invalid API key'
-		return JSONResponse({ "error": { "message": "Invalid API key" } }, status_code = HTTP_401_UNAUTHORIZED)
+		return JSONResponse(
+		{
+			"error":
+			{
+				"message": "Invalid API key"
+			}
+		}, status_code = HTTP_401_UNAUTHORIZED)
 
 	# Create session
 	token = secrets.token_urlsafe(32)
 	refresh_token = secrets.token_urlsafe(32)
 	# expires_at = int(time.time()) + 3600
-	session_data = {"token": token, "refresh_token": refresh_token, "expires_at": int(time.time()) + 3600}
+	session_data = {"access_token": token, "refresh_token": refresh_token, "created_at": int(time.time()), "expires_at": int(time.time()) + 3600}
 	session_manager.set_session(token, session_data)
-	session_manager.set_session(refresh_token, session_data)
 	# payload : JSON =\
 	# {
 	# 	"access_token": token,
@@ -56,37 +56,31 @@ async def create_session(request : Request) -> Response:
 
 
 async def get_session(request : Request) -> Response:
-	token = get_valid_bearer_token(request.headers) or ''
-	if token:
-		# session_data = session_manager.get_session(token)
-		# payload : JSON =\
-		# {
-		# 	"created_at": int(session_data.get('created_at')),
-		# 	"expires_at": int(session_data.get('expires_at')),
-		# 	"last_activity": int(time.time())
-		# }
-		# logger.info('GET ' + str(request.url.path), __package__)
-		return JSONResponse({}, status_code = HTTP_200_OK)
+	access_token = extract_access_token(request.headers)
 
-	# message = translator.get('errors.missing_auth', __package__) or 'Missing Authorization header'
-	# message = 'Missing Authorization header'
-	return JSONResponse({ "error": { "message": "Missing Authorization header" } }, status_code = HTTP_401_UNAUTHORIZED)
+	if access_token and session_manager.get_session(access_token):
+		return JSONResponse(session_manager.get_session(access_token), status_code = HTTP_200_OK)
+
+	return Response(status_code = HTTP_401_UNAUTHORIZED)
 
 
 async def refresh_session(request : Request) -> Response:
 	body = await request.json()
 	old_refresh_token = str(body.get('refresh_token', ''))
-	session_data = session_manager.get_session(old_refresh_token)
-	if session_data:
-		if str(session_data.get('token')) in session_manager.SESSIONS:
-			session_manager.clear_session(str(session_data.get('token')))
-		session_manager.clear_session(old_refresh_token)
+	old_access_token = None
+	old_session_data = None
+	for access_token, session_data in session_manager.SESSIONS.items():
+		if session_data.get('refresh_token') == old_refresh_token:
+			old_access_token = access_token
+			old_session_data = session_data
+			break
+	if old_session_data and old_access_token:
+		session_manager.clear_session(old_access_token)
 		new_token = secrets.token_urlsafe(32)
 		new_refresh_token = secrets.token_urlsafe(32)
 		# expires_at = int(time.time()) + 3600
-		new_session_data = {"token": new_token, "refresh_token": new_refresh_token, "expires_at": int(time.time()) + 3600}
+		new_session_data = {"access_token": new_token, "refresh_token": new_refresh_token, "created_at": int(time.time()), "expires_at": int(time.time()) + 3600}
 		session_manager.set_session(new_token, new_session_data)
-		session_manager.set_session(new_refresh_token, new_session_data)
 		# payload : JSON =\
 		# {
 		# 	"access_token": new_token,
@@ -104,16 +98,10 @@ async def refresh_session(request : Request) -> Response:
 
 
 async def destroy_session(request : Request) -> Response:
-	token = get_valid_bearer_token(request.headers) or ''
-	if token:
-		session_data = session_manager.get_session(token)
-		# if session_data:
-		refresh_tok = str(session_data.get('refresh_token'))
-		session_manager.clear_session(token)
-		session_manager.clear_session(refresh_tok)
-		# logger.info('DELETE ' + str(request.url.path), __package__)
+	access_token = extract_access_token(request.headers)
+
+	if access_token and session_manager.get_session(access_token):
+		session_manager.clear_session(access_token)
 		return Response(status_code = HTTP_204_NO_CONTENT)
 
-	# message = translator.get('errors.invalid_or_expired', __package__) or 'Invalid or expired token'
-	# message = 'Invalid or expired token'
-	return JSONResponse({ "error": { "message": "Invalid or expired token" } }, status_code = HTTP_401_UNAUTHORIZED)
+	return Response(status_code = HTTP_401_UNAUTHORIZED)

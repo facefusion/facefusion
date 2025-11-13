@@ -17,7 +17,7 @@ from facefusion import session_manager
 Token : TypeAlias = str
 
 
-def get_valid_bearer_token(headers : Headers) -> Optional[Token]:
+def extract_access_token(headers : Headers) -> Optional[Token]:
 	auth_header = headers.get('Authorization', '')
 	if not auth_header:
 		return None
@@ -51,7 +51,7 @@ class SessionMiddleware:
 		# 	return
 
 		headers = Headers(scope = scope)
-		token = get_valid_bearer_token(headers)
+		token = extract_access_token(headers)
 
 		if token:
 			# scope['auth_token'] = token
