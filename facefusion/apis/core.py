@@ -10,8 +10,8 @@ from facefusion.apis.session import create_session
 from facefusion.apis.session import destroy_session
 from facefusion.apis.session import get_session
 from facefusion.apis.session import refresh_session
-from facefusion.apis.state import get_state
 from facefusion.apis.session_middleware import SessionMiddleware
+from facefusion.apis.state import get_state
 
 
 async def root(request : Request) -> Response:

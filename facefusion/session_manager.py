@@ -1,5 +1,6 @@
 from typing import Dict
 from typing import Optional
+
 from facefusion.types import Session
 
 
