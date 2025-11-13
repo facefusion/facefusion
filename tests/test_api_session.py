@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 import pytest
 from starlette.testclient import TestClient
@@ -83,7 +84,7 @@ def test_get_session(test_client : TestClient) -> None:
 		'access_token': session.get('access_token'),
 		'refresh_token': session.get('refresh_token'),
 		'created_at': session.get('created_at'),
-		'expires_at': session.get('expires_at') - 3600 - 1
+		'expires_at': session.get('expires_at') - timedelta(seconds = 3610)
 	})
 
 	get_session_response = test_client.get('/session', headers =

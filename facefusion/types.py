@@ -1,4 +1,5 @@
 from collections import namedtuple
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
 
 import cv2
@@ -101,13 +102,13 @@ ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 
 Content : TypeAlias = Dict[str, Any]
 
-Timestamp : TypeAlias = int
+Token = TypeAlias = str
 Session = TypedDict('Session',
 {
-	'access_token': str,
-	'refresh_token': str,
-	'created_at': Timestamp,
-	'expires_at': Timestamp
+	'access_token': Token,
+	'refresh_token': Token,
+	'created_at': datetime,
+	'expires_at': datetime
 })
 
 Command : TypeAlias = str
