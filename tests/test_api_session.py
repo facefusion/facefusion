@@ -10,7 +10,7 @@ from facefusion.types import Session
 
 
 @pytest.fixture(scope = 'module')
-def test_client():
+def test_client() -> TestClient:
 	with TestClient(create_api()) as test_client:
 		yield test_client
 

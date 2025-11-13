@@ -6,7 +6,7 @@ from facefusion.apis.core import create_api
 
 
 @pytest.fixture(scope = 'module')
-def test_client():
+def test_client() -> TestClient:
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 
 	with TestClient(create_api()) as test_client:
