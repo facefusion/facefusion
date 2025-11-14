@@ -47,7 +47,7 @@ def prepare_image() -> ErrorCode:
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
 
 	logger.info(translator.get('copying_image').format(resolution = pack_resolution(temp_image_resolution)), __name__)
-	if ffmpeg.copy_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_image_resolution):
+	if ffmpeg.copy_image(state_manager.get_item('target_path'), temp_image_resolution):
 		logger.debug(translator.get('copying_image_succeeded'), __name__)
 	else:
 		logger.error(translator.get('copying_image_failed'), __name__)
@@ -57,7 +57,7 @@ def prepare_image() -> ErrorCode:
 
 
 def process_image() -> ErrorCode:
-	temp_image_path = get_temp_file_path(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
+	temp_image_path = get_temp_file_path(state_manager.get_item('target_path'))
 	reference_vision_frame = read_static_image(temp_image_path)
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = create_empty_audio_frame()
