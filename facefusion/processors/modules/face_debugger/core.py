@@ -10,7 +10,7 @@ from facefusion.face_analyser import scale_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces
-from facefusion.filesystem import in_directory, is_image, is_video, same_file_extension
+from facefusion.filesystem import in_directory, is_image, is_video
 from facefusion.processors.modules.face_debugger import choices as face_debugger_choices
 from facefusion.processors.modules.face_debugger.types import FaceDebuggerInputs
 from facefusion.processors.types import ProcessorOutputs
@@ -48,9 +48,6 @@ def pre_process(mode : ProcessMode) -> bool:
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
-		return False
-	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
-		logger.error(translator.get('match_target_and_output_extension') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 
