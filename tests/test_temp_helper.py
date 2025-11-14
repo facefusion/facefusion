@@ -20,8 +20,9 @@ def before_all() -> None:
 
 
 def test_get_temp_file_path() -> None:
+	state_manager.init_item('output_path', 'temp.mp4')
 	temp_directory = tempfile.gettempdir()
-	assert get_temp_file_path(get_test_example_file('target-240p.mp4'), get_test_example_file('target-240p.mp4')) == os.path.join(temp_directory, 'facefusion', 'target-240p', 'temp.mp4')
+	assert get_temp_file_path(get_test_example_file('target-240p.mp4')) == os.path.join(temp_directory, 'facefusion', 'target-240p', 'temp.mp4')
 
 
 def test_get_temp_directory_path() -> None:
