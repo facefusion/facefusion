@@ -18,7 +18,7 @@ from facefusion.types import Fps, StreamMode, VisionFrame
 from facefusion.vision import extract_vision_mask, read_static_images
 
 
-def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -> Generator[VisionFrame, None, None]:
+def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -> [VisionFrame, None, None]:
 	capture_deque : Deque[VisionFrame] = deque()
 
 	with tqdm(desc = translator.get('streaming'), unit = 'frame', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
