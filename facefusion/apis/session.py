@@ -1,6 +1,4 @@
 import os
-import secrets
-from datetime import datetime, timedelta
 from typing import Optional
 
 from starlette.datastructures import Headers
@@ -10,14 +8,14 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT,
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from facefusion import session_manager, translator
-from facefusion.types import Session, Token
+from facefusion.types import Token
 
 
 async def create_session(request : Request) -> Response:
 	body = await request.json()
 
 	if not body.get('api_key') or body.get('api_key') == os.getenv('FACEFUSION_API_KEY'):
-		session = build_session()
+		session = session_manager.create_session()
 		session_manager.set_session(session.get('access_token'), session)
 
 		return JSONResponse(
@@ -53,7 +51,7 @@ async def refresh_session(request : Request) -> Response:
 	for access_token, session in session_manager.SESSIONS.items():
 		if session.get('refresh_token') == body.get('refresh_token'):
 			session_manager.clear_session(access_token)
-			session = build_session()
+			session = session_manager.create_session()
 			session_manager.set_session(session.get('access_token'), session)
 
 			return JSONResponse(
@@ -104,18 +102,6 @@ def create_session_guard(app : ASGIApp) -> ASGIApp:
 		return await response(scope, receive, send)
 
 	return middleware
-
-
-def build_session() -> Session:
-	session : Session =\
-	{
-		'access_token': secrets.token_urlsafe(128),
-		'refresh_token': secrets.token_urlsafe(128),
-		'created_at': datetime.now(),
-		'expires_at': datetime.now() + timedelta(seconds = 3600)
-	}
-
-	return session
 
 
 def extract_access_token(headers : Headers) -> Optional[Token]:

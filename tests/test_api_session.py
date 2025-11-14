@@ -85,7 +85,7 @@ def test_get_session(test_client : TestClient) -> None:
 		'access_token': session.get('access_token'),
 		'refresh_token': session.get('refresh_token'),
 		'created_at': session.get('created_at'),
-		'expires_at': session.get('expires_at') - timedelta(seconds = 3610)
+		'expires_at': session.get('expires_at') - timedelta(hours = 1)
 	})
 
 	get_session_response = test_client.get('/session', headers =
@@ -116,7 +116,7 @@ def test_refresh_session(test_client : TestClient) -> None:
 	})
 	refresh_session_body = refresh_session_response.json()
 
-	assert not session_manager.get_session(create_session_body.get('access_token'))
+	assert session_manager.get_session(create_session_body.get('access_token')) is None
 
 	assert session_manager.get_session(refresh_session_body.get('access_token'))
 
@@ -149,6 +149,6 @@ def test_destroy_session(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + create_session_body.get('access_token')
 	})
 
-	assert not session_manager.get_session(create_session_body.get('access_token'))
+	assert session_manager.get_session(create_session_body.get('access_token')) is None
 
 	assert delete_session_response.status_code == 204
