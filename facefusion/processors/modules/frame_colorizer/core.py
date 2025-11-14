@@ -11,7 +11,7 @@ from facefusion import config, content_analyser, inference_manager, logger, stat
 from facefusion.common_helper import create_int_metavar, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
-from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
+from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path
 from facefusion.processors.modules.frame_colorizer import choices as frame_colorizer_choices
 from facefusion.processors.modules.frame_colorizer.types import FrameColorizerInputs
 from facefusion.processors.types import ProcessorOutputs
@@ -209,9 +209,6 @@ def pre_process(mode : ProcessMode) -> bool:
 		return False
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
-		return False
-	if mode == 'output' and not same_file_extension(state_manager.get_item('target_path'), state_manager.get_item('output_path')):
-		logger.error(translator.get('match_target_and_output_extension') + translator.get('exclamation_mark'), __name__)
 		return False
 	return True
 
