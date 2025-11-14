@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+from typing import Iterator
 
 import pytest
 from starlette.testclient import TestClient
@@ -10,7 +11,7 @@ from facefusion.types import Session
 
 
 @pytest.fixture(scope = 'module')
-def test_client() -> TestClient:
+def test_client() -> Iterator[TestClient]:
 	with TestClient(create_api()) as test_client:
 		yield test_client
 
@@ -92,7 +93,7 @@ def test_get_session(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	assert get_session_response.status_code == 401
+	assert get_session_response.status_code == 426
 
 
 def test_refresh_session(test_client : TestClient) -> None:
