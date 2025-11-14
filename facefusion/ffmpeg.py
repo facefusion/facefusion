@@ -124,8 +124,8 @@ def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_v
 		return process.returncode == 0
 
 
-def copy_image(target_path : str, output_path : str, temp_image_resolution : Resolution) -> bool:
-	temp_image_path = get_temp_file_path(target_path, output_path)
+def copy_image(target_path : str, temp_image_resolution : Resolution) -> bool:
+	temp_image_path = get_temp_file_path(target_path)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
 		ffmpeg_builder.set_media_resolution(pack_resolution(temp_image_resolution)),
@@ -137,7 +137,7 @@ def copy_image(target_path : str, output_path : str, temp_image_resolution : Res
 
 def finalize_image(target_path : str, output_path : str, output_image_resolution : Resolution) -> bool:
 	output_image_quality = state_manager.get_item('output_image_quality')
-	temp_image_path = get_temp_file_path(target_path, output_path)
+	temp_image_path = get_temp_file_path(target_path)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(temp_image_path),
 		ffmpeg_builder.set_media_resolution(pack_resolution(output_image_resolution)),
@@ -169,7 +169,7 @@ def restore_audio(target_path : str, output_path : str, trim_frame_start : int, 
 	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_audio_volume = state_manager.get_item('output_audio_volume')
 	target_video_fps = detect_video_fps(target_path)
-	temp_video_path = get_temp_file_path(target_path, output_path)
+	temp_video_path = get_temp_file_path(target_path)
 	temp_video_format = cast(VideoFormat, get_file_format(output_path))
 	temp_video_duration = detect_video_duration(temp_video_path)
 
@@ -194,7 +194,7 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	output_audio_encoder = state_manager.get_item('output_audio_encoder')
 	output_audio_quality = state_manager.get_item('output_audio_quality')
 	output_audio_volume = state_manager.get_item('output_audio_volume')
-	temp_video_path = get_temp_file_path(target_path, output_path)
+	temp_video_path = get_temp_file_path(target_path)
 	temp_video_format = cast(VideoFormat, get_file_format(output_path))
 	temp_video_duration = detect_video_duration(temp_video_path)
 
@@ -219,7 +219,7 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
 	merge_frame_total = predict_video_frame_total(target_path, output_video_fps, trim_frame_start, trim_frame_end)
-	temp_video_path = get_temp_file_path(target_path, output_path)
+	temp_video_path = get_temp_file_path(target_path)
 	temp_video_format = cast(VideoFormat, get_file_format(output_path))
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 

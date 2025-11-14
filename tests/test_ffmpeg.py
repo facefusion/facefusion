@@ -154,7 +154,7 @@ def test_restore_audio() -> None:
 
 		for output_audio_encoder in output_audio_encoders:
 			state_manager.init_item('output_audio_encoder', output_audio_encoder)
-			copy_file(target_path, get_temp_file_path(target_path, output_path))
+			copy_file(target_path, get_temp_file_path(target_path))
 
 			assert restore_audio(target_path, output_path, 0, 270) is True
 
@@ -181,7 +181,7 @@ def test_replace_audio() -> None:
 
 		for output_audio_encoder in output_audio_encoders:
 			state_manager.init_item('output_audio_encoder', output_audio_encoder)
-			copy_file(target_path, get_temp_file_path(target_path, output_path))
+			copy_file(target_path, get_temp_file_path(target_path))
 
 			assert replace_audio(target_path, get_test_example_file('source.mp3'), output_path) is True
 			assert replace_audio(target_path, get_test_example_file('source.wav'), output_path) is True
