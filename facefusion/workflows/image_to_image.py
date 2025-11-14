@@ -47,7 +47,7 @@ def prepare_image() -> ErrorCode:
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
 
 	logger.info(translator.get('copying_image').format(resolution = pack_resolution(temp_image_resolution)), __name__)
-	if ffmpeg.copy_image(state_manager.get_item('target_path'), temp_image_resolution, state_manager.get_item('output_path')):
+	if ffmpeg.copy_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_image_resolution):
 		logger.debug(translator.get('copying_image_succeeded'), __name__)
 	else:
 		logger.error(translator.get('copying_image_failed'), __name__)
