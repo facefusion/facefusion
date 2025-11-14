@@ -109,7 +109,7 @@ def test_merge_video() -> None:
 			create_temp_directory(target_path)
 			extract_frames(target_path, (452, 240), 25.0, 0, 1)
 
-			assert merge_video(target_path, 25.0, (452, 240), 25.0, 0, 1, target_path) is True
+			assert merge_video(target_path, target_path, 25.0, (452, 240), 25.0, 0, 1) is True
 
 		clear_temp_directory(target_path)
 

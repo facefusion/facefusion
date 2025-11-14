@@ -42,15 +42,6 @@ def get_file_format(file_path : str) -> Optional[str]:
 	return None
 
 
-def same_file_extension(first_file_path : str, second_file_path : str) -> bool:
-	first_file_extension = get_file_extension(first_file_path)
-	second_file_extension = get_file_extension(second_file_path)
-
-	if first_file_extension and second_file_extension:
-		return get_file_extension(first_file_path) == get_file_extension(second_file_path)
-	return False
-
-
 def is_file(file_path : str) -> bool:
 	if file_path:
 		return os.path.isfile(file_path)
