@@ -7,10 +7,10 @@ from starlette.routing import Route
 from starlette.status import HTTP_204_NO_CONTENT
 
 from facefusion.apis.session import create_session
+from facefusion.apis.session import create_session_guard
 from facefusion.apis.session import destroy_session
 from facefusion.apis.session import get_session
 from facefusion.apis.session import refresh_session
-from facefusion.apis.session_middleware import SessionMiddleware
 from facefusion.apis.state import get_state
 
 
@@ -19,14 +19,15 @@ async def root(request : Request) -> Response:
 
 
 def create_api() -> Starlette:
+	session_guard = Middleware(create_session_guard)
 	routes =\
 	[
 		Route('/', root),
 		Route('/session', create_session, methods = [ 'POST' ]),
-		Route('/session', get_session, methods = [ 'GET' ], middleware = [ Middleware(SessionMiddleware) ]),
+		Route('/session', get_session, methods = [ 'GET' ], middleware = [ session_guard ]),
 		Route('/session', refresh_session, methods = [ 'PUT' ]),
-		Route('/session', destroy_session, methods = [ 'DELETE' ], middleware = [ Middleware(SessionMiddleware) ]),
-		Route('/state', get_state, methods = [ 'GET' ], middleware = [ Middleware(SessionMiddleware) ])
+		Route('/session', destroy_session, methods = [ 'DELETE' ], middleware = [ session_guard ]),
+		Route('/state', get_state, methods = [ 'GET' ], middleware = [ session_guard ])
 	]
 
 	api = Starlette(routes = routes)

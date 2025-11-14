@@ -1,26 +1,16 @@
 import os
 import secrets
 from datetime import datetime, timedelta
+from typing import Optional
 
+from starlette.datastructures import Headers
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_401_UNAUTHORIZED
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from facefusion import session_manager
-from facefusion.apis.session_middleware import extract_access_token
-from facefusion.types import Session
-
-
-def build_session() -> Session:
-	session : Session =\
-	{
-		'access_token': secrets.token_urlsafe(128),
-		'refresh_token': secrets.token_urlsafe(128),
-		'created_at': datetime.now(),
-		'expires_at': datetime.now() + timedelta(seconds = 3600)
-	}
-
-	return session
+from facefusion.types import Session, Token
 
 
 async def create_session(request : Request) -> Response:
@@ -86,3 +76,50 @@ async def destroy_session(request : Request) -> Response:
 			return Response(status_code = HTTP_204_NO_CONTENT)
 
 	return Response(status_code = HTTP_401_UNAUTHORIZED)
+
+
+def build_session() -> Session:
+	session : Session =\
+	{
+		'access_token': secrets.token_urlsafe(128),
+		'refresh_token': secrets.token_urlsafe(128),
+		'created_at': datetime.now(),
+		'expires_at': datetime.now() + timedelta(seconds = 3600)
+	}
+
+	return session
+
+
+def extract_access_token(headers : Headers) -> Optional[Token]:
+	auth_header = headers.get('Authorization')
+
+	if auth_header:
+		_, _, access_token = auth_header.partition(' ')
+
+		if access_token:
+			return access_token
+
+	return None
+
+
+def create_session_guard(app : ASGIApp) -> ASGIApp:
+	async def middleware(scope : Scope, receive : Receive, send : Send) -> None:
+		access_token = extract_access_token(Headers(scope = scope))
+
+		if access_token and session_manager.validate_session(access_token):
+			await app(scope, receive, send)
+		else:
+			if access_token:
+				session = session_manager.get_session(access_token)
+
+				if session:
+					session_manager.clear_session(access_token)
+					refresh_token = str(session.get('refresh_token'))
+
+					if refresh_token in session_manager.SESSIONS:
+						session_manager.clear_session(refresh_token)
+
+			response = Response(status_code = HTTP_401_UNAUTHORIZED)
+			await response(scope, receive, send)
+
+	return middleware
