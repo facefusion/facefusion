@@ -109,7 +109,7 @@ def test_merge_video() -> None:
 			create_temp_directory(target_path)
 			extract_frames(target_path, (452, 240), 25.0, 0, 1)
 
-			assert merge_video(target_path, 25.0, (452, 240), 25.0, 0, 1) is True
+			assert merge_video(target_path, 25.0, (452, 240), 25.0, 0, 1, target_path) is True
 
 		clear_temp_directory(target_path)
 
@@ -152,7 +152,7 @@ def test_restore_audio() -> None:
 
 		for output_audio_encoder in output_audio_encoders:
 			state_manager.init_item('output_audio_encoder', output_audio_encoder)
-			copy_file(target_path, get_temp_file_path(target_path))
+			copy_file(target_path, get_temp_file_path(target_path, output_path))
 
 			assert restore_audio(target_path, output_path, 0, 270) is True
 
@@ -179,7 +179,7 @@ def test_replace_audio() -> None:
 
 		for output_audio_encoder in output_audio_encoders:
 			state_manager.init_item('output_audio_encoder', output_audio_encoder)
-			copy_file(target_path, get_temp_file_path(target_path))
+			copy_file(target_path, get_temp_file_path(target_path, output_path))
 
 			assert replace_audio(target_path, get_test_example_file('source.mp3'), output_path) is True
 			assert replace_audio(target_path, get_test_example_file('source.wav'), output_path) is True
