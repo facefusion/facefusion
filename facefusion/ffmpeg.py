@@ -212,7 +212,8 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	return run_ffmpeg(commands).returncode == 0
 
 
-def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, output_video_resolution : Resolution, trim_frame_start : int, trim_frame_end : int) -> bool:
+def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution : Resolution, trim_frame_start : int, trim_frame_end : int) -> bool:
+	output_path = state_manager.get_item('output_path')
 	output_video_fps = state_manager.get_item('output_video_fps')
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
