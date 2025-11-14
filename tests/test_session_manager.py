@@ -1,7 +1,7 @@
 import secrets
 from datetime import timedelta
 
-from facefusion.session_manager import create_session, clear_session, get_session, set_session, validate_session
+from facefusion.session_manager import clear_session, create_session, get_session, set_session, validate_session
 
 
 def test_get_and_set_session() -> None:
