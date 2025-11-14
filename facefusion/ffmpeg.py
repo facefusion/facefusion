@@ -124,7 +124,7 @@ def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_v
 		return process.returncode == 0
 
 
-def copy_image(target_path : str, temp_image_resolution : Resolution, output_path : str) -> bool:
+def copy_image(target_path : str, output_path : str, temp_image_resolution : Resolution) -> bool:
 	temp_image_path = get_temp_file_path(target_path, output_path)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
@@ -212,7 +212,7 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 	return run_ffmpeg(commands).returncode == 0
 
 
-def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution : Resolution, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int, output_path : str) -> bool:
+def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, output_video_resolution : Resolution, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')
