@@ -105,12 +105,13 @@ def test_merge_video() -> None:
 
 	for target_path in target_paths:
 		for output_video_encoder in output_video_encoders:
+			state_manager.init_item('output_path', target_path)
 			state_manager.init_item('output_video_fps', 25.0)
 			state_manager.init_item('output_video_encoder', output_video_encoder)
 			create_temp_directory(target_path)
 			extract_frames(target_path, (452, 240), 25.0, 0, 1)
 
-			assert merge_video(target_path, target_path, 25.0, (452, 240), 0, 1) is True
+			assert merge_video(target_path, 25.0, (452, 240), 0, 1) is True
 
 		clear_temp_directory(target_path)
 
