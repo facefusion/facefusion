@@ -1,8 +1,7 @@
-from datetime import datetime
 from typing import Optional
 
 from starlette.datastructures import Headers
-from starlette.responses import JSONResponse
+from starlette.responses import Response
 from starlette.status import HTTP_401_UNAUTHORIZED
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -13,21 +12,14 @@ from facefusion.types import Token
 def extract_access_token(headers : Headers) -> Optional[Token]:
 	auth_header = headers.get('Authorization')
 
-	if not auth_header:
-		return None
-	parts = auth_header.split(' ', 1)
+	if auth_header:
+		_, _, access_token = auth_header.partition(' ')
 
-	token = parts[1] if len(parts) == 2 else parts[0]
-	session_data = session_manager.get_session(token)
-	if not session_data:
-		return None
+		if access_token:
+			return access_token
 
-	if datetime.now() > session_data.get('expires_at'):
-		session_manager.clear_session(token)
-		if str(session_data.get('refresh_token')) in session_manager.SESSIONS:
-			session_manager.clear_session(str(session_data.get('refresh_token')))
-		return None
-	return token
+	return None
+
 
 
 class SessionMiddleware:
@@ -35,12 +27,20 @@ class SessionMiddleware:
 		self.app = app
 
 	async def __call__(self, scope : Scope, receive : Receive, send : Send) -> None:
-		headers = Headers(scope = scope)
-		token = extract_access_token(headers)
+		access_token = extract_access_token(Headers(scope = scope))
 
-		if token:
+		if access_token and session_manager.validate_session(access_token):
 			await self.app(scope, receive, send)
-			return
+		else:
+			if access_token:
+				session = session_manager.get_session(access_token)
 
-		response = JSONResponse({ "error": { "message": "Missing Authorization header" } }, status_code = HTTP_401_UNAUTHORIZED)
-		await response(scope, receive, send)
+				if session:
+					session_manager.clear_session(access_token)
+					refresh_token = str(session.get('refresh_token'))
+
+					if refresh_token in session_manager.SESSIONS:
+						session_manager.clear_session(refresh_token)
+
+			response = Response(status_code = HTTP_401_UNAUTHORIZED)
+			await response(scope, receive, send)

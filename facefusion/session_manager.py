@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Dict
 from typing import Optional
 
@@ -15,5 +16,12 @@ def set_session(key : str, session : Session) -> None:
 	SESSIONS[key] = session
 
 
+def validate_session(key : str) -> bool:
+	session = get_session(key)
+	return session and datetime.now() <= session.get('expires_at')
+
+
 def clear_session(key : str) -> None:
-	del SESSIONS[key]
+	if key in SESSIONS:
+		del SESSIONS[key]
+
