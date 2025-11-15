@@ -66,3 +66,15 @@ def test_set_state(test_client : TestClient) -> None:
 
 	assert set_state_body.get('execution_providers') == [ 'cuda' ]
 	assert set_state_response.status_code == 200
+
+	set_state_response = test_client.put('/state', json =
+	{
+		'invalid': 'invalid'
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
+	})
+	set_state_body = set_state_response.json()
+
+	assert set_state_body.get('invalid') is None
+	assert set_state_response.status_code == 200
