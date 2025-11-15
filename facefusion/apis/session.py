@@ -123,9 +123,9 @@ def extract_access_token(headers : Headers) -> Optional[Token]:
 	auth_header = headers.get('Authorization')
 
 	if auth_header:
-		_, _, access_token = auth_header.partition(' ')
+		auth_prefix, _, access_token = auth_header.partition(' ')
 
-		if access_token:
+		if auth_prefix.lower() == 'bearer' and access_token:
 			return access_token
 
 	return None
