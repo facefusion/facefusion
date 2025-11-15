@@ -3,15 +3,15 @@ from typing import Optional
 
 from starlette.datastructures import Headers
 from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_401_UNAUTHORIZED, HTTP_426_UPGRADE_REQUIRED
+from starlette.responses import JSONResponse
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_426_UPGRADE_REQUIRED
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from facefusion import session_manager, translator
 from facefusion.types import Token
 
 
-async def create_session(request : Request) -> Response:
+async def create_session(request : Request) -> JSONResponse:
 	body = await request.json()
 
 	if not body.get('api_key') or body.get('api_key') == os.getenv('FACEFUSION_API_KEY'):
@@ -24,10 +24,13 @@ async def create_session(request : Request) -> Response:
 			'refresh_token': session.get('refresh_token')
 		}, status_code = HTTP_201_CREATED)
 
-	return Response(status_code = HTTP_401_UNAUTHORIZED)
+	return JSONResponse(
+	{
+		'message': translator.get('errors.something_went_wrong', __package__)
+	}, status_code = HTTP_401_UNAUTHORIZED)
 
 
-async def get_session(request : Request) -> Response:
+async def get_session(request : Request) -> JSONResponse:
 	access_token = extract_access_token(request.headers)
 
 	if access_token:
@@ -42,10 +45,13 @@ async def get_session(request : Request) -> Response:
 				'expires_at': session.get('expires_at').isoformat()
 			}, status_code = HTTP_200_OK)
 
-	return Response(status_code = HTTP_401_UNAUTHORIZED)
+	return JSONResponse(
+	{
+		'message': translator.get('errors.something_went_wrong', __package__)
+	}, status_code = HTTP_401_UNAUTHORIZED)
 
 
-async def refresh_session(request : Request) -> Response:
+async def refresh_session(request : Request) -> JSONResponse:
 	body = await request.json()
 
 	for access_token, session in session_manager.SESSIONS.items():
@@ -60,10 +66,13 @@ async def refresh_session(request : Request) -> Response:
 				'refresh_token': session.get('refresh_token')
 			}, status_code = HTTP_200_OK)
 
-	return Response(status_code = HTTP_401_UNAUTHORIZED)
+	return JSONResponse(
+	{
+		'message': translator.get('errors.something_went_wrong', __package__)
+	}, status_code = HTTP_401_UNAUTHORIZED)
 
 
-async def destroy_session(request : Request) -> Response:
+async def destroy_session(request : Request) -> JSONResponse:
 	access_token = extract_access_token(request.headers)
 
 	if access_token:
@@ -71,9 +80,15 @@ async def destroy_session(request : Request) -> Response:
 
 		if session:
 			session_manager.clear_session(access_token)
-			return Response(status_code = HTTP_204_NO_CONTENT)
+			return JSONResponse(
+			{
+				'message': 'session destroyed'
+			}, status_code = HTTP_200_OK)
 
-	return Response(status_code = HTTP_401_UNAUTHORIZED)
+	return JSONResponse(
+	{
+		'message': translator.get('errors.something_went_wrong', __package__)
+	}, status_code = HTTP_401_UNAUTHORIZED)
 
 
 def create_session_guard(app : ASGIApp) -> ASGIApp:

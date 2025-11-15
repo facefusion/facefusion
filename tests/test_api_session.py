@@ -151,4 +151,4 @@ def test_destroy_session(test_client : TestClient) -> None:
 
 	assert session_manager.get_session(create_session_body.get('access_token')) is None
 
-	assert delete_session_response.status_code == 204
+	assert delete_session_response.status_code == 200
