@@ -26,7 +26,7 @@ async def create_session(request : Request) -> JSONResponse:
 
 	return JSONResponse(
 	{
-		'message': translator.get('errors.something_went_wrong', __package__)
+		'message': translator.get('something_went_wrong', __package__)
 	}, status_code = HTTP_401_UNAUTHORIZED)
 
 
@@ -47,7 +47,7 @@ async def get_session(request : Request) -> JSONResponse:
 
 	return JSONResponse(
 	{
-		'message': translator.get('errors.something_went_wrong', __package__)
+		'message': translator.get('something_went_wrong', __package__)
 	}, status_code = HTTP_401_UNAUTHORIZED)
 
 
@@ -68,7 +68,7 @@ async def refresh_session(request : Request) -> JSONResponse:
 
 	return JSONResponse(
 	{
-		'message': translator.get('errors.something_went_wrong', __package__)
+		'message': translator.get('something_went_wrong', __package__)
 	}, status_code = HTTP_401_UNAUTHORIZED)
 
 
@@ -82,12 +82,12 @@ async def destroy_session(request : Request) -> JSONResponse:
 			session_manager.clear_session(access_token)
 			return JSONResponse(
 			{
-				'message': 'session destroyed'
+				'message': translator.get('ok', __package__)
 			}, status_code = HTTP_200_OK)
 
 	return JSONResponse(
 	{
-		'message': translator.get('errors.something_went_wrong', __package__)
+		'message': translator.get('something_went_wrong', __package__)
 	}, status_code = HTTP_401_UNAUTHORIZED)
 
 
@@ -104,14 +104,14 @@ def create_session_guard(app : ASGIApp) -> ASGIApp:
 			if session:
 				response = JSONResponse(
 				{
-					'message': translator.get('errors.invalid_access_token', __package__)
+					'message': translator.get('invalid_access_token', __package__)
 				}, status_code = HTTP_426_UPGRADE_REQUIRED)
 
 				return await response(scope, receive, send)
 
 		response = JSONResponse(
 		{
-			'message': translator.get('errors.invalid_access_token', __package__)
+			'message': translator.get('invalid_access_token', __package__)
 		}, status_code = HTTP_401_UNAUTHORIZED)
 
 		return await response(scope, receive, send)
