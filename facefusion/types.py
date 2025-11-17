@@ -1,4 +1,5 @@
 from collections import namedtuple
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
 
 import cv2
@@ -100,6 +101,15 @@ UpdateProgress : TypeAlias = Callable[[int], None]
 ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 
 Content : TypeAlias = Dict[str, Any]
+
+Token : TypeAlias = str
+Session = TypedDict('Session',
+{
+	'access_token': Token,
+	'refresh_token': Token,
+	'created_at': datetime,
+	'expires_at': datetime
+})
 
 Command : TypeAlias = str
 CommandSet : TypeAlias = Dict[str, List[Command]]
