@@ -40,12 +40,6 @@ def validate_session(session_id : SessionId) -> bool:
 	return session and datetime.now() <= session.get('expires_at')
 
 
-def refresh_session(session_id : SessionId) -> Session:
-	session = create_session()
-	set_session(session_id, session)
-	return session
-
-
 def clear_session(session_id : SessionId) -> None:
 	if session_id in SESSIONS:
 		del SESSIONS[session_id]

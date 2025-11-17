@@ -60,7 +60,8 @@ async def refresh_session(request : Request) -> JSONResponse:
 
 	for session_id, session in session_manager.SESSIONS.items():
 		if session.get('refresh_token') == body.get('refresh_token'):
-			__session__ = session_manager.refresh_session(session_id)
+			__session__ = session_manager.create_session()
+			session_manager.set_session(session_id, __session__)
 
 			return JSONResponse(
 			{
