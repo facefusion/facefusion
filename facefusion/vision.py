@@ -359,3 +359,9 @@ def conditional_merge_vision_mask(vision_frame : VisionFrame, vision_mask : Mask
 	if numpy.any(vision_mask < 255):
 		return numpy.dstack((vision_frame[:, :, :3], vision_mask))
 	return vision_frame
+
+
+def conditional_remove_vision_mask(vision_frame : VisionFrame) -> VisionFrame:
+	if vision_frame.ndim == 3 and vision_frame.shape[2] == 4:
+		return vision_frame[:, :, :3]
+	return vision_frame
