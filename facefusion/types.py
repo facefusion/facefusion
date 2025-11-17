@@ -103,6 +103,7 @@ ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 Content : TypeAlias = Dict[str, Any]
 
 Token : TypeAlias = str
+SessionId : TypeAlias = str
 Session = TypedDict('Session',
 {
 	'access_token': Token,
