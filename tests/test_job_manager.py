@@ -106,7 +106,7 @@ def test_find_jobs() -> None:
 
 	assert 'job-test-find-jobs-1' in find_jobs('drafted')
 	assert 'job-test-find-jobs-2' in find_jobs('drafted')
-	assert not find_jobs('queued')
+	assert find_jobs('queued') == {}
 
 	move_job_file('job-test-find-jobs-1', 'queued')
 
