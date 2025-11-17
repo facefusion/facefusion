@@ -6,22 +6,22 @@ from facefusion.session_manager import clear_session, create_session, get_sessio
 
 def test_get_and_set_session() -> None:
 	session = create_session()
-	access_token = secrets.token_urlsafe(128)
+	session_id = secrets.token_urlsafe(16)
 
-	set_session(access_token, session)
+	set_session(session_id, session)
 
-	assert get_session(access_token) == session
+	assert get_session(session_id) == session
 
 
 def test_validate_session() -> None:
 	session = create_session()
-	access_token = secrets.token_urlsafe(128)
+	session_id = secrets.token_urlsafe(16)
 
-	set_session(access_token, session)
+	set_session(session_id, session)
 
-	assert validate_session(access_token) is True
+	assert validate_session(session_id) is True
 
-	set_session(access_token,
+	set_session(session_id,
 	{
 		'access_token': session.get('access_token'),
 		'refresh_token': session.get('refresh_token'),
@@ -29,17 +29,17 @@ def test_validate_session() -> None:
 		'expires_at': session.get('expires_at') - timedelta(hours = 1)
 	})
 
-	assert validate_session(access_token) is False
+	assert validate_session(session_id) is False
 
 
 def test_clear_session() -> None:
 	session = create_session()
-	access_token = secrets.token_urlsafe(128)
+	session_id = secrets.token_urlsafe(16)
 
-	set_session(access_token, session)
+	set_session(session_id, session)
 
-	assert validate_session(access_token) is True
+	assert validate_session(session_id) is True
 
-	clear_session(access_token)
+	clear_session(session_id)
 
-	assert validate_session(access_token) is None
+	assert validate_session(session_id) is None
