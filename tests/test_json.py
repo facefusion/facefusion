@@ -8,7 +8,7 @@ def test_read_json() -> None:
 	file_descriptor, json_path = tempfile.mkstemp(suffix = '.json')
 	os.close(file_descriptor)
 
-	assert not read_json(json_path)
+	assert read_json(json_path) is None
 
 	write_json(json_path, {})
 
