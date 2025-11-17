@@ -30,6 +30,14 @@ def create_config_path_program() -> ArgumentParser:
 	return program
 
 
+def create_workflow_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_paths = program.add_argument_group('paths')
+	group_paths.add_argument('-w', '--workflow', help = translator.get('help.workflow'), choices = facefusion.choices.workflows)
+	job_store.register_step_keys([ 'workflow' ])
+	return program
+
+
 def create_temp_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
@@ -288,7 +296,7 @@ def collect_step_program() -> ArgumentParser:
 
 
 def collect_job_program() -> ArgumentParser:
-	return ArgumentParser(parents = [ create_execution_program(), create_download_providers_program(), create_memory_program(), create_log_level_program() ], add_help = False)
+	return ArgumentParser(parents = [ create_workflow_program(), create_execution_program(), create_download_providers_program(), create_memory_program(), create_log_level_program() ], add_help = False)
 
 
 def create_program() -> ArgumentParser:
