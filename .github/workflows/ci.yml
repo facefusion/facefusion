@@ -35,6 +35,7 @@ jobs:
      python-version: '3.12'
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
+  - run: pip install httpx
   - run: pytest
  report:
   needs: test
@@ -52,6 +53,7 @@ jobs:
   - run: pip install coveralls
   - run: pip install pytest
   - run: pip install pytest-cov
+  - run: pip install httpx
   - run: pytest tests --cov facefusion
   - run: coveralls --service github
     env:
