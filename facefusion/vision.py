@@ -355,7 +355,11 @@ def extract_vision_mask(vision_frame : VisionFrame) -> Mask:
 	return numpy.full(vision_frame.shape[:2], 255, dtype = numpy.uint8)
 
 
+def merge_vision_mask(vision_frame : VisionFrame, vision_mask : Mask) -> VisionFrame:
+	return numpy.dstack((vision_frame[:, :, :3], vision_mask))
+
+
 def conditional_merge_vision_mask(vision_frame : VisionFrame, vision_mask : Mask) -> VisionFrame:
 	if numpy.any(vision_mask < 255):
-		return numpy.dstack((vision_frame[:, :, :3], vision_mask))
+		return merge_vision_mask(vision_frame, vision_mask)
 	return vision_frame
