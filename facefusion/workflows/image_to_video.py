@@ -152,18 +152,6 @@ def restore_audio() -> ErrorCode:
 	return 0
 
 
-def finalize_video(start_time : float) -> ErrorCode:
-	logger.debug(translator.get('clearing_temp'), __name__)
-	clear_temp_directory(state_manager.get_item('target_path'))
-
-	if is_video(state_manager.get_item('output_path')):
-		logger.info(translator.get('processing_video_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
-	else:
-		logger.error(translator.get('processing_video_failed'), __name__)
-		return 1
-	return 0
-
-
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	reference_vision_frame = read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
@@ -195,3 +183,15 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 
 	temp_vision_frame = conditional_merge_vision_mask(temp_vision_frame, temp_vision_mask)
 	return write_image(temp_frame_path, temp_vision_frame)
+
+
+def finalize_video(start_time : float) -> ErrorCode:
+	logger.debug(translator.get('clearing_temp'), __name__)
+	clear_temp_directory(state_manager.get_item('target_path'))
+
+	if is_video(state_manager.get_item('output_path')):
+		logger.info(translator.get('processing_video_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
+	else:
+		logger.error(translator.get('processing_video_failed'), __name__)
+		return 1
+	return 0

@@ -3,7 +3,7 @@ import os
 import statistics
 import tempfile
 from time import perf_counter
-from typing import Generator, List
+from typing import Iterator, List
 
 import facefusion.choices
 from facefusion import content_analyser, core, state_manager
@@ -31,7 +31,7 @@ def pre_check() -> bool:
 	return True
 
 
-def run() -> Generator[List[BenchmarkCycleSet], None, None]:
+def run() -> Iterator[List[BenchmarkCycleSet]]:
 	benchmark_resolutions = state_manager.get_item('benchmark_resolutions')
 	benchmark_cycle_count = state_manager.get_item('benchmark_cycle_count')
 

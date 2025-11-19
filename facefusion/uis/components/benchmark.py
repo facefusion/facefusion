@@ -1,4 +1,4 @@
-from typing import Any, Generator, List, Optional
+from typing import Any, Iterator, List, Optional
 
 import gradio
 
@@ -44,7 +44,7 @@ def listen() -> None:
 	BENCHMARK_START_BUTTON.click(start, outputs = BENCHMARK_BENCHMARKS_DATAFRAME)
 
 
-def start() -> Generator[List[Any], None, None]:
+def start() -> Iterator[List[Any]]:
 	state_manager.sync_state()
 
 	for benchmark in benchmarker.run():

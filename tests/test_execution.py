@@ -15,10 +15,10 @@ def test_create_inference_session_providers() -> None:
 	[
 		('CUDAExecutionProvider',
 		{
-			'device_id': '1',
+			'device_id': 1,
 			'cudnn_conv_algo_search': 'EXHAUSTIVE'
 		}),
 		'CPUExecutionProvider'
 	]
 
-	assert create_inference_session_providers('1', [ 'cpu', 'cuda' ]) == inference_session_providers
+	assert create_inference_session_providers(1, [ 'cpu', 'cuda' ]) == inference_session_providers

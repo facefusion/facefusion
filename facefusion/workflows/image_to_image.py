@@ -19,7 +19,7 @@ def process(start_time : float) -> ErrorCode:
 		setup,
 		prepare_image,
 		process_image,
-		partial(finalize_image, start_time),
+		partial(finalize_image, start_time)
 	]
 	process_manager.start()
 
