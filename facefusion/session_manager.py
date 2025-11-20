@@ -3,16 +3,16 @@ from datetime import datetime, timedelta
 from typing import Dict
 from typing import Optional
 
-from facefusion.types import Session, SessionId
+from facefusion.types import Session, Token
 
-SESSIONS : Dict[SessionId, Session] = {}
+SESSIONS : Dict[Token, Session] = {}
 
 
 def create_session() -> Session:
 	session : Session =\
 	{
-		'access_token': secrets.token_urlsafe(64),
-		'refresh_token': secrets.token_urlsafe(64),
+		'access_token': secrets.token_urlsafe(128),
+		'refresh_token': secrets.token_urlsafe(128),
 		'created_at': datetime.now(),
 		'expires_at': datetime.now() + timedelta(minutes = 10)
 	}
@@ -20,27 +20,20 @@ def create_session() -> Session:
 	return session
 
 
-def get_session(session_id : SessionId) -> Optional[Session]:
-	return SESSIONS.get(session_id)
+def get_session(access_token : Token) -> Optional[Session]:
+	return SESSIONS.get(access_token)
 
 
-def find_session_id(access_token : str) -> Optional[SessionId]:
-	for session_id, session in SESSIONS.items():
-		if session.get('access_token') == access_token:
-			return session_id
-	return None
+def set_session(access_token : Token, session : Session) -> None:
+	SESSIONS[access_token] = session
 
 
-def set_session(session_id : SessionId, session : Session) -> None:
-	SESSIONS[session_id] = session
-
-
-def validate_session(session_id : SessionId) -> bool:
-	session = get_session(session_id)
+def validate_session(access_token : Token) -> bool:
+	session = get_session(access_token)
 	return session and datetime.now() <= session.get('expires_at')
 
 
-def clear_session(session_id : SessionId) -> None:
-	if session_id in SESSIONS:
-		del SESSIONS[session_id]
+def clear_session(access_token : Token) -> None:
+	if access_token in SESSIONS:
+		del SESSIONS[access_token]
 

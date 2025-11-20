@@ -103,7 +103,6 @@ ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 Content : TypeAlias = Dict[str, Any]
 
 Token : TypeAlias = str
-SessionId : TypeAlias = str
 Session = TypedDict('Session',
 {
 	'access_token': Token,
@@ -243,8 +242,9 @@ AppContext = Literal['cli', 'api']
 InferencePool : TypeAlias = Dict[str, InferenceSession]
 InferencePoolSet : TypeAlias = Dict[AppContext, Dict[str, InferencePool]]
 
-JobStore = TypedDict('JobStore',
+ArgsStore = TypedDict('ArgsStore',
 {
+	'api_keys' : List[str],
 	'job_keys' : List[str],
 	'step_keys' : List[str]
 })
@@ -325,6 +325,7 @@ StateKey = Literal\
 	'execution_providers',
 	'execution_thread_count',
 	'video_memory_strategy',
+	'system_memory_limit',
 	'log_level',
 	'halt_on_error',
 	'job_id',
@@ -387,10 +388,11 @@ State = TypedDict('State',
 	'output_video_scale' : Scale,
 	'output_video_fps' : float,
 	'processors' : List[str],
-	'execution_device_ids' : List[int],
+	'execution_device_ids' : List[str],
 	'execution_providers' : List[ExecutionProvider],
 	'execution_thread_count' : int,
 	'video_memory_strategy' : VideoMemoryStrategy,
+	'system_memory_limit' : int,
 	'log_level' : LogLevel,
 	'halt_on_error' : bool,
 	'job_id' : str,

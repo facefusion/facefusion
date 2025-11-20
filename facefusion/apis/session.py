@@ -1,5 +1,4 @@
 import os
-import secrets
 from typing import Optional
 
 from starlette.datastructures import Headers
@@ -16,9 +15,8 @@ async def create_session(request : Request) -> JSONResponse:
 	body = await request.json()
 
 	if not body.get('api_key') or body.get('api_key') == os.getenv('FACEFUSION_API_KEY'):
-		session_id = secrets.token_urlsafe(16)
 		session = session_manager.create_session()
-		session_manager.set_session(session_id, session)
+		session_manager.set_session(session.get('access_token'), session)
 
 		return JSONResponse(
 		{
@@ -36,11 +34,9 @@ async def get_session(request : Request) -> JSONResponse:
 	access_token = extract_access_token(request.headers)
 
 	if access_token:
-		session_id = session_manager.find_session_id(access_token)
+		session = session_manager.get_session(access_token)
 
-		if session_id:
-			session = session_manager.get_session(session_id)
-
+		if session:
 			return JSONResponse(
 			{
 				'access_token': session.get('access_token'),
@@ -58,15 +54,16 @@ async def get_session(request : Request) -> JSONResponse:
 async def refresh_session(request : Request) -> JSONResponse:
 	body = await request.json()
 
-	for session_id, session in session_manager.SESSIONS.items():
+	for access_token, session in session_manager.SESSIONS.items():
 		if session.get('refresh_token') == body.get('refresh_token'):
-			__session__ = session_manager.create_session()
-			session_manager.set_session(session_id, __session__)
+			session_manager.clear_session(access_token)
+			session = session_manager.create_session()
+			session_manager.set_session(session.get('access_token'), session)
 
 			return JSONResponse(
 			{
-				'access_token': __session__.get('access_token'),
-				'refresh_token': __session__.get('refresh_token')
+				'access_token': session.get('access_token'),
+				'refresh_token': session.get('refresh_token')
 			}, status_code = HTTP_200_OK)
 
 	return JSONResponse(
@@ -79,11 +76,10 @@ async def destroy_session(request : Request) -> JSONResponse:
 	access_token = extract_access_token(request.headers)
 
 	if access_token:
-		session_id = session_manager.find_session_id(access_token)
+		session = session_manager.get_session(access_token)
 
-		if session_id:
-			session_manager.clear_session(session_id)
-
+		if session:
+			session_manager.clear_session(access_token)
 			return JSONResponse(
 			{
 				'message': translator.get('ok', __package__)
@@ -99,13 +95,13 @@ def create_session_guard(app : ASGIApp) -> ASGIApp:
 	async def middleware(scope : Scope, receive : Receive, send : Send) -> None:
 		access_token = extract_access_token(Headers(scope = scope))
 
+		if access_token and session_manager.validate_session(access_token):
+			return await app(scope, receive, send)
+
 		if access_token:
-			session_id = session_manager.find_session_id(access_token)
+			session = session_manager.get_session(access_token)
 
-			if session_id:
-				if session_manager.validate_session(session_id):
-					return await app(scope, receive, send)
-
+			if session:
 				response = JSONResponse(
 				{
 					'message': translator.get('invalid_access_token', __package__)

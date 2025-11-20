@@ -7,14 +7,15 @@ from time import time
 
 import uvicorn
 
-from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, state_manager, translator, voice_extractor
+from facefusion import args_store, benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, state_manager, translator, voice_extractor
 from facefusion.apis.core import create_api
-from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
+from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.filesystem import get_file_extension, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
+from facefusion.memory import limit_system_memory
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
@@ -43,6 +44,11 @@ def cli() -> None:
 
 
 def route(args : Args) -> None:
+	system_memory_limit = state_manager.get_item('system_memory_limit')
+
+	if system_memory_limit and system_memory_limit > 0:
+		limit_system_memory(system_memory_limit)
+
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
 		hard_exit(error_code)
@@ -194,7 +200,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-add-step':
-		step_args = reduce_step_args(args)
+		step_args = args_store.filter_step_args(args)
 
 		if job_manager.add_step(state_manager.get_item('job_id'), step_args):
 			logger.info(translator.get('job_step_added').format(job_id = state_manager.get_item('job_id')), __name__)
@@ -203,7 +209,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-remix-step':
-		step_args = reduce_step_args(args)
+		step_args = args_store.filter_step_args(args)
 
 		if job_manager.remix_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(translator.get('job_remix_step_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
@@ -212,7 +218,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-insert-step':
-		step_args = reduce_step_args(args)
+		step_args = args_store.filter_step_args(args)
 
 		if job_manager.insert_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(translator.get('job_step_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
@@ -266,7 +272,7 @@ def route_job_runner() -> ErrorCode:
 
 def process_headless(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('headless')
-	step_args = reduce_step_args(args)
+	step_args = args_store.filter_step_args(args)
 
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0
@@ -275,8 +281,8 @@ def process_headless(args : Args) -> ErrorCode:
 
 def process_batch(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('batch')
-	step_args = reduce_step_args(args)
-	job_args = reduce_job_args(args)
+	step_args = args_store.filter_step_args(args)
+	job_args = args_store.filter_job_args(args)
 	source_paths = resolve_file_pattern(job_args.get('source_pattern'))
 	target_paths = resolve_file_pattern(job_args.get('target_pattern'))
 
@@ -314,7 +320,8 @@ def process_batch(args : Args) -> ErrorCode:
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_total = job_manager.count_step_total(job_id)
-	step_args.update(collect_job_args())
+	job_args = args_store.filter_job_args(state_manager.get_state())
+	step_args.update(state_manager.collect_state(job_args))
 	apply_args(step_args, state_manager.set_item)
 
 	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
