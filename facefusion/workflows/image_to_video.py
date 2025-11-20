@@ -102,39 +102,6 @@ def process_video() -> ErrorCode:
 	return 0
 
 
-def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
-	reference_vision_frame = read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
-	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
-	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-	target_vision_frame = read_static_image(temp_frame_path, 'rgba')
-	temp_vision_frame = target_vision_frame.copy()
-	temp_vision_mask = extract_vision_mask(temp_vision_frame)
-
-	source_audio_frame = get_audio_frame(source_audio_path, temp_video_fps, frame_number)
-	source_voice_frame = get_voice_frame(source_audio_path, temp_video_fps, frame_number)
-
-	if not numpy.any(source_audio_frame):
-		source_audio_frame = create_empty_audio_frame()
-	if not numpy.any(source_voice_frame):
-		source_voice_frame = create_empty_audio_frame()
-
-	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		temp_vision_frame, temp_vision_mask = processor_module.process_frame(
-		{
-			'reference_vision_frame': reference_vision_frame,
-			'source_vision_frames': source_vision_frames,
-			'source_audio_frame': source_audio_frame,
-			'source_voice_frame': source_voice_frame,
-			'target_vision_frame': target_vision_frame[:, :, :3],
-			'temp_vision_frame': temp_vision_frame[:, :, :3],
-			'temp_vision_mask': temp_vision_mask
-		})
-
-	temp_vision_frame = conditional_merge_vision_mask(temp_vision_frame, temp_vision_mask)
-	return write_image(temp_frame_path, temp_vision_frame)
-
-
 def merge_frames() -> ErrorCode:
 	trim_frame_start, trim_frame_end = restrict_trim_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
