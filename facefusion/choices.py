@@ -151,7 +151,6 @@ job_statuses : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 
 benchmark_cycle_count_range : Sequence[int] = create_int_range(1, 10, 1)
 execution_thread_count_range : Sequence[int] = create_int_range(1, 32, 1)
-system_memory_limit_range : Sequence[int] = create_int_range(0, 128, 4)
 face_detector_margin_range : Sequence[int] = create_int_range(0, 100, 1)
 face_detector_angles : Sequence[Angle] = create_int_range(0, 270, 90)
 face_detector_score_range : Sequence[Score] = create_float_range(0.0, 1.0, 0.05)
