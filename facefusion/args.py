@@ -120,7 +120,6 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('api_port', args.get('api_port'))
 	# memory
 	apply_state_item('video_memory_strategy', args.get('video_memory_strategy'))
-	apply_state_item('system_memory_limit', args.get('system_memory_limit'))
 	# misc
 	apply_state_item('log_level', args.get('log_level'))
 	apply_state_item('halt_on_error', args.get('halt_on_error'))

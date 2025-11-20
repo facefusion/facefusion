@@ -15,7 +15,6 @@ from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.filesystem import get_file_extension, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
-from facefusion.memory import limit_system_memory
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
@@ -44,11 +43,6 @@ def cli() -> None:
 
 
 def route(args : Args) -> None:
-	system_memory_limit = state_manager.get_item('system_memory_limit')
-
-	if system_memory_limit and system_memory_limit > 0:
-		limit_system_memory(system_memory_limit)
-
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
 		hard_exit(error_code)
