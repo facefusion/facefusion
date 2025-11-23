@@ -7,12 +7,12 @@ from facefusion.filesystem import create_directory, get_file_extension, get_file
 
 def get_temp_file_path(file_path : str) -> str:
 	temp_directory_path = get_temp_directory_path(file_path)
-	temp_file_extension = get_file_extension(state_manager.get_item('output_path'))
+	temp_file_extension = get_file_extension(file_path)
 	return os.path.join(temp_directory_path, 'temp' + temp_file_extension)
 
 
-def move_temp_file(file_path : str, move_path : str) -> bool:
-	temp_file_path = get_temp_file_path(file_path)
+def move_temp_file(move_path : str) -> bool:
+	temp_file_path = get_temp_file_path(move_path)
 	return move_file(temp_file_path, move_path)
 
 

@@ -47,7 +47,7 @@ def prepare_image() -> ErrorCode:
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
 
 	logger.info(translator.get('copying_image').format(resolution = pack_resolution(temp_image_resolution)), __name__)
-	if ffmpeg.copy_image(state_manager.get_item('target_path'), temp_image_resolution):
+	if ffmpeg.copy_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_image_resolution):
 		logger.debug(translator.get('copying_image_succeeded'), __name__)
 	else:
 		logger.error(translator.get('copying_image_failed'), __name__)
@@ -57,12 +57,13 @@ def prepare_image() -> ErrorCode:
 
 
 def process_image() -> ErrorCode:
-	temp_image_path = get_temp_file_path(state_manager.get_item('target_path'))
-	reference_vision_frame = read_static_image(temp_image_path)
+	target_image_path = state_manager.get_item('target_path')
+	temp_image_path = get_temp_file_path(state_manager.get_item('output_path'))
+	reference_vision_frame = read_static_image(target_image_path)
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
-	target_vision_frame = read_static_image(temp_image_path, 'rgba')
+	target_vision_frame = read_static_image(target_image_path, 'rgba')
 	temp_vision_frame = target_vision_frame.copy()
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
@@ -94,7 +95,7 @@ def finalize_image(start_time : float) -> ErrorCode:
 	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
 
 	logger.info(translator.get('finalizing_image').format(resolution = pack_resolution(output_image_resolution)), __name__)
-	if ffmpeg.finalize_image(state_manager.get_item('target_path'), state_manager.get_item('output_path'), output_image_resolution):
+	if ffmpeg.finalize_image(state_manager.get_item('output_path'), output_image_resolution):
 		logger.debug(translator.get('finalizing_image_succeeded'), __name__)
 	else:
 		logger.warn(translator.get('finalizing_image_skipped'), __name__)
