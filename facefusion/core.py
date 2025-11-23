@@ -319,9 +319,9 @@ def process_batch(args : Args) -> ErrorCode:
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_total = job_manager.count_step_total(job_id)
-	sys_args = args_store.filter_sys_args(state_manager.get_state()) #type:ignore[arg-type]
-	args = step_args.copy()
-	args.update(state_manager.collect_state(sys_args))
+	cli_args = args_store.filter_cli_args(state_manager.get_state())
+	args = cli_args.copy()
+	args.update(step_args)
 	apply_args(args, state_manager.set_item)
 
 	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
