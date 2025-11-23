@@ -24,7 +24,7 @@ def create_config_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('--config-path', help = translator.get('help.config_path'), default = 'facefusion.ini')
-	args_store.register_args([ 'config_path' ], scopes = [ 'cli' ])
+	args_store.register_args([ 'config_path' ], scopes = [ 'cli', 'sys' ])
 	apply_config_path(program)
 	return program
 
@@ -33,7 +33,7 @@ def create_temp_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('--temp-path', help = translator.get('help.temp_path'), default = config.get_str_value('paths', 'temp_path', tempfile.gettempdir()))
-	args_store.register_args([ 'temp_path' ], scopes = [ 'cli' ])
+	args_store.register_args([ 'temp_path' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
@@ -41,7 +41,7 @@ def create_jobs_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('--jobs-path', help = translator.get('help.jobs_path'), default = config.get_str_value('paths', 'jobs_path', '.jobs'))
-	args_store.register_args([ 'jobs_path' ], scopes = [ 'cli' ])
+	args_store.register_args([ 'jobs_path' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
