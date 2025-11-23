@@ -518,7 +518,7 @@ def register_args(program : ArgumentParser) -> None:
 		face_swapper_pixel_boost_choices = face_swapper_choices.face_swapper_set.get(known_args.face_swapper_model)
 		group_processors.add_argument('--face-swapper-pixel-boost', help = translator.get('help.pixel_boost', __package__), default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
 		group_processors.add_argument('--face-swapper-weight', help = translator.get('help.weight', __package__), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0.5'), choices = face_swapper_choices.face_swapper_weight_range)
-		facefusion.args_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight' ])
+		facefusion.args_store.register_args([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight' ], scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
@@ -554,7 +554,6 @@ def pre_process(mode : ProcessMode) -> bool:
 	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
 		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
 		return False
-
 
 	return True
 

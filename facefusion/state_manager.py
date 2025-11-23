@@ -6,8 +6,8 @@ from facefusion.types import Args, State, StateKey, StateSet
 
 STATE_SET : Union[StateSet, ProcessorStateSet] =\
 {
-	'cli': {}, #type:ignore[assignment]
-	'api': {} #type:ignore[assignment]
+	'api': {},  # type:ignore[assignment]
+	'cli': {} #type:ignore[assignment]
 }
 
 
@@ -29,8 +29,8 @@ def sync_state() -> None:
 
 
 def init_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
-	STATE_SET['cli'][key] = value #type:ignore[literal-required]
 	STATE_SET['api'][key] = value #type:ignore[literal-required]
+	STATE_SET['cli'][key] = value #type:ignore[literal-required]
 
 
 def get_item(key : Union[StateKey, ProcessorStateKey]) -> Any:
