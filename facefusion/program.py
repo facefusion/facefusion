@@ -198,7 +198,7 @@ def create_download_providers_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_download = program.add_argument_group('download')
 	group_download.add_argument('--download-providers', help = translator.get('help.download_providers').format(choices = ', '.join(facefusion.choices.download_providers)), default = config.get_str_list('download', 'download_providers', ' '.join(facefusion.choices.download_providers)), choices = facefusion.choices.download_providers, nargs = '+', metavar = 'DOWNLOAD_PROVIDERS')
-	args_store.register_args([ 'download_providers' ], scopes = [ 'sys' ])
+	args_store.register_args([ 'download_providers' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
@@ -206,7 +206,7 @@ def create_download_scope_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_download = program.add_argument_group('download')
 	group_download.add_argument('--download-scope', help = translator.get('help.download_scope'), default = config.get_str_value('download', 'download_scope', 'lite'), choices = facefusion.choices.download_scopes)
-	args_store.register_args([ 'download_scope' ], scopes = [ 'sys' ])
+	args_store.register_args([ 'download_scope' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
@@ -234,7 +234,7 @@ def create_execution_program() -> ArgumentParser:
 	group_execution.add_argument('--execution-device-ids', help = translator.get('help.execution_device_ids'), type = int, default = config.get_str_list('execution', 'execution_device_ids', '0'), nargs = '+', metavar = 'EXECUTION_DEVICE_IDS')
 	group_execution.add_argument('--execution-providers', help = translator.get('help.execution_providers').format(choices = ', '.join(available_execution_providers)), default = config.get_str_list('execution', 'execution_providers', get_first(available_execution_providers)), choices = available_execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
 	group_execution.add_argument('--execution-thread-count', help = translator.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution', 'execution_thread_count', '8'), choices = facefusion.choices.execution_thread_count_range, metavar = create_int_metavar(facefusion.choices.execution_thread_count_range))
-	args_store.register_args([ 'execution_device_ids', 'execution_providers', 'execution_thread_count' ], scopes = [ 'api', 'sys' ])
+	args_store.register_args([ 'execution_device_ids', 'execution_providers', 'execution_thread_count' ], scopes = [ 'api', 'cli', 'sys' ])
 	return program
 
 
@@ -243,7 +243,7 @@ def create_memory_program() -> ArgumentParser:
 	group_memory = program.add_argument_group('memory')
 	group_memory.add_argument('--video-memory-strategy', help = translator.get('help.video_memory_strategy'), default = config.get_str_value('memory', 'video_memory_strategy', 'strict'), choices = facefusion.choices.video_memory_strategies)
 	group_memory.add_argument('--system-memory-limit', help = translator.get('help.system_memory_limit'), type = int, default = config.get_int_value('memory', 'system_memory_limit', '0'), choices = facefusion.choices.system_memory_limit_range, metavar = create_int_metavar(facefusion.choices.system_memory_limit_range))
-	args_store.register_args([ 'video_memory_strategy', 'system_memory_limit' ], scopes = [ 'sys' ])
+	args_store.register_args([ 'video_memory_strategy', 'system_memory_limit' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
@@ -251,7 +251,7 @@ def create_log_level_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
 	group_misc.add_argument('--log-level', help = translator.get('help.log_level'), default = config.get_str_value('misc', 'log_level', 'info'), choices = facefusion.choices.log_levels)
-	args_store.register_args([ 'log_level' ], scopes = [ 'sys' ])
+	args_store.register_args([ 'log_level' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
@@ -259,14 +259,14 @@ def create_halt_on_error_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
 	group_misc.add_argument('--halt-on-error', help = translator.get('help.halt_on_error'), action = 'store_true', default = config.get_bool_value('misc', 'halt_on_error'))
-	args_store.register_args([ 'halt_on_error' ], scopes = [ 'sys' ])
+	args_store.register_args([ 'halt_on_error' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
 def create_job_id_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	program.add_argument('job_id', help = translator.get('help.job_id'))
-	args_store.register_args([ 'job_id' ], scopes = [ 'sys' ])
+	args_store.register_args([ 'job_id' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 

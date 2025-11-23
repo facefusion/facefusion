@@ -11,21 +11,16 @@ ARGS_STORE : ArgsStore =\
 }
 
 
-def get_api_keys() -> List[str]:
+def get_api_args() -> List[str]:
 	return ARGS_STORE.get('api')
 
 
-def get_job_keys() -> List[str]:
+def get_sys_args() -> List[str]:
 	return ARGS_STORE.get('sys')
 
 
-def get_step_keys() -> List[str]:
+def get_cli_args() -> List[str]:
 	return ARGS_STORE.get('cli')
-
-
-def register_api_keys(api_keys : List[str]) -> None:
-	for api_key in api_keys:
-		ARGS_STORE['api'].append(api_key)
 
 
 def register_args(keys : List[str], scopes : List[Scope]) -> None:
@@ -39,35 +34,33 @@ def register_args(keys : List[str], scopes : List[Scope]) -> None:
 				ARGS_STORE['sys'].append(key)
 
 
-def get_scope_args(scope : Scope) -> List[str]:
-	if scope == 'api':
-		return ARGS_STORE.get('api', [])
-	if scope == 'cli':
-		return ARGS_STORE.get('cli', [])
-	if scope == 'sys':
-		return ARGS_STORE.get('sys', [])
-	return []
-
-
 def filter_api_args(args : Args) -> Args:
 	api_args =\
 	{
-		key: args[key] for key in args if key in get_api_keys() #type:ignore[literal-required]
+		key: args.get(key) for key in args if key in get_api_args() #type:ignore[literal-required]
 	}
 	return api_args
 
 
-def filter_job_args(args : Args) -> Args:
-	job_args =\
+def filter_sys_args(args : Args) -> Args:
+	sys_args =\
 	{
-		key: args[key] for key in args if key in get_job_keys() #type:ignore[literal-required]
+		key: args.get(key) for key in args if key in get_sys_args() #type:ignore[literal-required]
 	}
-	return job_args
+	return sys_args
+
+
+def filter_cli_args(args : Args) -> Args:
+	cli_args =\
+	{
+		key: args.get(key) for key in args if key in get_cli_args() #type:ignore[literal-required]
+	}
+	return cli_args
 
 
 def filter_step_args(args : Args) -> Args:
 	step_args =\
 	{
-		key: args[key] for key in args if key in get_step_keys() #type:ignore[literal-required]
+		key: args.get(key) for key in args if key in get_cli_args() and key not in get_sys_args() #type:ignore[literal-required]
 	}
 	return step_args

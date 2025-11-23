@@ -282,9 +282,8 @@ def process_headless(args : Args) -> ErrorCode:
 def process_batch(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('batch')
 	step_args = args_store.filter_step_args(args)
-	job_args = args_store.filter_job_args(args)
-	source_paths = resolve_file_pattern(job_args.get('source_pattern'))
-	target_paths = resolve_file_pattern(job_args.get('target_pattern'))
+	source_paths = resolve_file_pattern(step_args.get('source_pattern'))
+	target_paths = resolve_file_pattern(step_args.get('target_pattern'))
 
 	if job_manager.create_job(job_id):
 		if source_paths and target_paths:
@@ -293,7 +292,7 @@ def process_batch(args : Args) -> ErrorCode:
 				step_args['target_path'] = target_path
 
 				try:
-					step_args['output_path'] = job_args.get('output_pattern').format(index = index, source_name = get_file_name(source_path), target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
+					step_args['output_path'] = step_args.get('output_pattern').format(index = index, source_name = get_file_name(source_path), target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
 				except KeyError:
 					return 1
 
@@ -307,7 +306,7 @@ def process_batch(args : Args) -> ErrorCode:
 				step_args['target_path'] = target_path
 
 				try:
-					step_args['output_path'] = job_args.get('output_pattern').format(index = index, target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
+					step_args['output_path'] = step_args.get('output_pattern').format(index = index, target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
 				except KeyError:
 					return 1
 
@@ -320,9 +319,10 @@ def process_batch(args : Args) -> ErrorCode:
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_total = job_manager.count_step_total(job_id)
-	job_args = args_store.filter_job_args(state_manager.get_state())
-	step_args.update(state_manager.collect_state(job_args))
-	apply_args(step_args, state_manager.set_item)
+	sys_args = args_store.filter_sys_args(state_manager.get_state()) #type:ignore[arg-type]
+	args = step_args.copy()
+	args.update(state_manager.collect_state(sys_args))
+	apply_args(args, state_manager.set_item)
 
 	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
 	if common_pre_check() and processors_pre_check():

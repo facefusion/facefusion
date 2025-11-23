@@ -9,7 +9,7 @@ from facefusion.apis.core import create_api
 
 @pytest.fixture(scope = 'module')
 def test_client() -> Iterator[TestClient]:
-	args_store.register_api_keys([ 'execution_providers' ])
+	args_store.register_args([ 'execution_providers' ], scopes = [ 'api' ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 
 	with TestClient(create_api()) as test_client:

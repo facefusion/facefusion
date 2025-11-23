@@ -13,7 +13,7 @@ STATE_SET : Union[StateSet, ProcessorStateSet] =\
 
 def get_state() -> Union[State, ProcessorState]:
 	app_context = detect_app_context()
-	return STATE_SET.get(app_context)
+	return STATE_SET.get(app_context) #type:ignore[return-value]
 
 
 def collect_state(args : Args) -> Union[State, ProcessorState]:
@@ -22,10 +22,6 @@ def collect_state(args : Args) -> Union[State, ProcessorState]:
 		key: get_item(key) for key in args #type:ignore[arg-type]
 	}
 	return state #type:ignore[return-value]
-
-
-def sync_state() -> None:
-	STATE_SET['cli'] = STATE_SET.get('api') #type:ignore[assignment]
 
 
 def init_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
@@ -40,10 +36,6 @@ def get_item(key : Union[StateKey, ProcessorStateKey]) -> Any:
 def set_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
 	app_context = detect_app_context()
 	STATE_SET[app_context][key] = value #type:ignore[literal-required]
-
-
-def sync_item(key : Union[StateKey, ProcessorStateKey]) -> None:
-	STATE_SET['cli'][key] = STATE_SET.get('api').get(key) #type:ignore[literal-required]
 
 
 def clear_item(key : Union[StateKey, ProcessorStateKey]) -> None:
