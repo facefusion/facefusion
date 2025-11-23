@@ -57,13 +57,13 @@ def prepare_image() -> ErrorCode:
 
 
 def process_image() -> ErrorCode:
-	target_image_path = state_manager.get_item('target_path')
+	target_path = state_manager.get_item('target_path')
 	temp_image_path = get_temp_file_path(state_manager.get_item('output_path'))
-	reference_vision_frame = read_static_image(target_image_path)
+	reference_vision_frame = read_static_image(target_path)
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
-	target_vision_frame = read_static_image(target_image_path, 'rgba')
+	target_vision_frame = read_static_image(target_path, 'rgba')
 	temp_vision_frame = target_vision_frame.copy()
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
