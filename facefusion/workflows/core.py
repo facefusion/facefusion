@@ -11,12 +11,12 @@ def is_process_stopping() -> bool:
 
 
 def setup() -> ErrorCode:
-	create_temp_directory(state_manager.get_item('target_path'))
+	create_temp_directory(state_manager.get_item('output_path'))
 	logger.debug(translator.get('creating_temp'), __name__)
 	return 0
 
 
 def clear() -> ErrorCode:
-	clear_temp_directory(state_manager.get_item('target_path'))
+	clear_temp_directory(state_manager.get_item('output_path'))
 	logger.debug(translator.get('clearing_temp'), __name__)
 	return 0

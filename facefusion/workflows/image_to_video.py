@@ -58,7 +58,7 @@ def extract_frames() -> ErrorCode:
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 	logger.info(translator.get('extracting_frames').format(resolution=pack_resolution(temp_video_resolution), fps=temp_video_fps), __name__)
 
-	if ffmpeg.extract_frames(state_manager.get_item('target_path'), temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end):
+	if ffmpeg.extract_frames(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_video_resolution, temp_video_fps, trim_frame_start, trim_frame_end):
 		logger.debug(translator.get('extracting_frames_succeeded'), __name__)
 	else:
 		if is_process_stopping():
@@ -69,7 +69,7 @@ def extract_frames() -> ErrorCode:
 
 
 def process_video() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('target_path'))
+	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('output_path'))
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
@@ -108,7 +108,7 @@ def merge_frames() -> ErrorCode:
 	temp_video_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 
 	logger.info(translator.get('merging_video').format(resolution = pack_resolution(output_video_resolution), fps = state_manager.get_item('output_video_fps')), __name__)
-	if ffmpeg.merge_video(state_manager.get_item('target_path'), temp_video_fps, output_video_resolution, trim_frame_start, trim_frame_end):
+	if ffmpeg.merge_video(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_video_fps, output_video_resolution, trim_frame_start, trim_frame_end):
 		logger.debug(translator.get('merging_video_succeeded'), __name__)
 	else:
 		if is_process_stopping():
@@ -123,11 +123,11 @@ def restore_audio() -> ErrorCode:
 
 	if state_manager.get_item('output_audio_volume') == 0:
 		logger.info(translator.get('skipping_audio'), __name__)
-		move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
+		move_temp_file(state_manager.get_item('output_path'))
 	else:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		if source_audio_path:
-			if ffmpeg.replace_audio(state_manager.get_item('target_path'), source_audio_path, state_manager.get_item('output_path')):
+			if ffmpeg.replace_audio(source_audio_path, state_manager.get_item('output_path')):
 				video_manager.clear_video_pool()
 				logger.debug(translator.get('replacing_audio_succeeded'), __name__)
 			else:
@@ -135,7 +135,7 @@ def restore_audio() -> ErrorCode:
 				if is_process_stopping():
 					return 4
 				logger.warn(translator.get('replacing_audio_skipped'), __name__)
-				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
+				move_temp_file(state_manager.get_item('output_path'))
 		else:
 			if ffmpeg.restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), trim_frame_start, trim_frame_end):
 				video_manager.clear_video_pool()
@@ -145,7 +145,7 @@ def restore_audio() -> ErrorCode:
 				if is_process_stopping():
 					return 4
 				logger.warn(translator.get('restoring_audio_skipped'), __name__)
-				move_temp_file(state_manager.get_item('target_path'), state_manager.get_item('output_path'))
+				move_temp_file(state_manager.get_item('output_path'))
 	return 0
 
 
