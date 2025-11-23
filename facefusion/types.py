@@ -96,7 +96,7 @@ Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
 Args : TypeAlias = Dict[str, Any]
-Scope : TypeAlias = Literal['api', 'cli', 'step', 'sys']
+Scope : TypeAlias = Literal['api', 'cli', 'sys']
 
 ArgsStore = TypedDict('ArgsStore',
 {
