@@ -24,7 +24,7 @@ def create_config_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('--config-path', help = translator.get('help.config_path'), default = 'facefusion.ini')
-	args_store.register_args([ 'config_path' ], scopes = [ 'cli', 'sys' ])
+	args_store.register_args([ 'config_path' ], scopes = [ 'cli' ])
 	apply_config_path(program)
 	return program
 
@@ -33,7 +33,7 @@ def create_temp_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('--temp-path', help = translator.get('help.temp_path'), default = config.get_str_value('paths', 'temp_path', tempfile.gettempdir()))
-	args_store.register_args([ 'temp_path' ], scopes = [ 'cli', 'sys' ])
+	args_store.register_args([ 'temp_path' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -41,7 +41,7 @@ def create_jobs_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('--jobs-path', help = translator.get('help.jobs_path'), default = config.get_str_value('paths', 'jobs_path', '.jobs'))
-	args_store.register_args([ 'jobs_path' ], scopes = [ 'cli', 'sys' ])
+	args_store.register_args([ 'jobs_path' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -234,7 +234,7 @@ def create_execution_program() -> ArgumentParser:
 	group_execution.add_argument('--execution-device-ids', help = translator.get('help.execution_device_ids'), type = int, default = config.get_str_list('execution', 'execution_device_ids', '0'), nargs = '+', metavar = 'EXECUTION_DEVICE_IDS')
 	group_execution.add_argument('--execution-providers', help = translator.get('help.execution_providers').format(choices = ', '.join(available_execution_providers)), default = config.get_str_list('execution', 'execution_providers', get_first(available_execution_providers)), choices = available_execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
 	group_execution.add_argument('--execution-thread-count', help = translator.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution', 'execution_thread_count', '8'), choices = facefusion.choices.execution_thread_count_range, metavar = create_int_metavar(facefusion.choices.execution_thread_count_range))
-	args_store.register_args([ 'execution_device_ids', 'execution_providers', 'execution_thread_count' ], scopes = [ 'api', 'cli', 'sys' ])
+	args_store.register_args([ 'execution_device_ids', 'execution_providers', 'execution_thread_count' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
@@ -251,7 +251,7 @@ def create_log_level_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
 	group_misc.add_argument('--log-level', help = translator.get('help.log_level'), default = config.get_str_value('misc', 'log_level', 'info'), choices = facefusion.choices.log_levels)
-	args_store.register_args([ 'log_level' ], scopes = [ 'cli', 'sys' ])
+	args_store.register_args([ 'log_level' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -259,14 +259,13 @@ def create_halt_on_error_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
 	group_misc.add_argument('--halt-on-error', help = translator.get('help.halt_on_error'), action = 'store_true', default = config.get_bool_value('misc', 'halt_on_error'))
-	args_store.register_args([ 'halt_on_error' ], scopes = [ 'cli', 'sys' ])
+	args_store.register_args([ 'halt_on_error' ], scopes = [ 'cli' ])
 	return program
 
 
 def create_job_id_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	program.add_argument('job_id', help = translator.get('help.job_id'))
-	args_store.register_args([ 'job_id' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
