@@ -23,12 +23,12 @@ def resolve_temp_frame_paths(target_path : str) -> List[str]:
 
 def get_temp_frames_pattern(target_path : str, temp_frame_prefix : str) -> str:
 	temp_directory_path = get_temp_directory_path(target_path)
-	return os.path.join(temp_directory_path, temp_frame_prefix + '.' + state_manager.get_item('temp_frame_format'))
+	return os.path.join(temp_directory_path, temp_frame_prefix + '.' + state_manager.get_item('temp_frame_format')) # TODO: remove state_manager.get
 
 
 def get_temp_directory_path(file_path : str) -> str:
 	temp_file_name = get_file_name(file_path)
-	return os.path.join(state_manager.get_item('temp_path'), 'facefusion', temp_file_name)
+	return os.path.join(state_manager.get_item('temp_path'), 'facefusion', temp_file_name) # TODO: remove state_manager.get
 
 
 def create_temp_directory(file_path : str) -> bool:
@@ -37,7 +37,18 @@ def create_temp_directory(file_path : str) -> bool:
 
 
 def clear_temp_directory(file_path : str) -> bool:
-	if not state_manager.get_item('keep_temp'):
+	if not state_manager.get_item('keep_temp'): # TODO: remove state_manager.get
 		temp_directory_path = get_temp_directory_path(file_path)
 		return remove_directory(temp_directory_path)
 	return True
+
+
+def get_temp_sequence_paths(file_path : str, frame_total : int, temp_frame_prefix : str, temp_frame_format : str) -> List[str]:
+	temp_directory_path = get_temp_directory_path(file_path)
+	temp_frame_paths = []
+
+	for frame_number in range(frame_total):
+		temp_file_name = temp_frame_prefix % (frame_number + 1) + '.' + temp_frame_format
+		temp_frame_path = os.path.join(temp_directory_path, temp_file_name)
+		temp_frame_paths.append(temp_frame_path)
+	return temp_frame_paths

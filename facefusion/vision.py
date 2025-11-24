@@ -8,6 +8,7 @@ from cv2.typing import Size
 
 from facefusion.common_helper import is_windows
 from facefusion.filesystem import get_file_extension, is_image, is_video
+from facefusion.media_helper import restrict_trim_frame
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import ColorMode, Duration, Fps, Mask, Orientation, Resolution, Scale, VisionFrame
 from facefusion.video_manager import get_video_capture
@@ -107,7 +108,8 @@ def count_video_frame_total(video_path : str) -> int:
 def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : int, trim_frame_end : int) -> int:
 	if is_video(video_path):
 		video_fps = detect_video_fps(video_path)
-		extract_frame_total = count_trim_frame_total(video_path, trim_frame_start, trim_frame_end) * fps / video_fps
+		trim_frame_start, trim_frame_end = restrict_trim_video_frame(video_path, trim_frame_start, trim_frame_end)
+		extract_frame_total = (trim_frame_end - trim_frame_start) * fps / video_fps
 		return math.floor(extract_frame_total)
 	return 0
 
@@ -141,28 +143,9 @@ def detect_video_duration(video_path : str) -> Duration:
 	return 0
 
 
-def count_trim_frame_total(video_path : str, trim_frame_start : Optional[int], trim_frame_end : Optional[int]) -> int:
-	trim_frame_start, trim_frame_end = restrict_trim_frame(video_path, trim_frame_start, trim_frame_end)
-
-	return trim_frame_end - trim_frame_start
-
-
-def restrict_trim_frame(video_path : str, trim_frame_start : Optional[int], trim_frame_end : Optional[int]) -> Tuple[int, int]:
+def restrict_trim_video_frame(video_path : str, trim_frame_start : Optional[int], trim_frame_end : Optional[int]) -> Tuple[int, int]:
 	video_frame_total = count_video_frame_total(video_path)
-
-	if isinstance(trim_frame_start, int):
-		trim_frame_start = max(0, min(trim_frame_start, video_frame_total))
-	if isinstance(trim_frame_end, int):
-		trim_frame_end = max(0, min(trim_frame_end, video_frame_total))
-
-	if isinstance(trim_frame_start, int) and isinstance(trim_frame_end, int):
-		return trim_frame_start, trim_frame_end
-	if isinstance(trim_frame_start, int):
-		return trim_frame_start, video_frame_total
-	if isinstance(trim_frame_end, int):
-		return 0, trim_frame_end
-
-	return 0, video_frame_total
+	return restrict_trim_frame(video_frame_total, trim_frame_start, trim_frame_end)
 
 
 def detect_video_resolution(video_path : str) -> Optional[Resolution]:

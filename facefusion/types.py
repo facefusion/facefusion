@@ -55,6 +55,8 @@ Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]
 LocalePoolSet : TypeAlias = Dict[str, Locales]
 
+WorkFlow = Literal['audio-to-image', 'image-to-image', 'image-to-video']
+
 VideoCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
 CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
