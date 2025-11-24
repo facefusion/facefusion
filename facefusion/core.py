@@ -7,9 +7,9 @@ from time import time
 
 import uvicorn
 
-from facefusion import benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, state_manager, translator, voice_extractor
+from facefusion import args_store, benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, state_manager, translator, voice_extractor
 from facefusion.apis.core import create_api
-from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
+from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.filesystem import get_file_extension, get_file_name, is_image, is_video, resolve_file_paths, resolve_file_pattern
@@ -194,7 +194,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-add-step':
-		step_args = reduce_step_args(args)
+		step_args = args_store.filter_step_args(args)
 
 		if job_manager.add_step(state_manager.get_item('job_id'), step_args):
 			logger.info(translator.get('job_step_added').format(job_id = state_manager.get_item('job_id')), __name__)
@@ -203,7 +203,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-remix-step':
-		step_args = reduce_step_args(args)
+		step_args = args_store.filter_step_args(args)
 
 		if job_manager.remix_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(translator.get('job_remix_step_added').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
@@ -212,7 +212,7 @@ def route_job_manager(args : Args) -> ErrorCode:
 		return 1
 
 	if state_manager.get_item('command') == 'job-insert-step':
-		step_args = reduce_step_args(args)
+		step_args = args_store.filter_step_args(args)
 
 		if job_manager.insert_step(state_manager.get_item('job_id'), state_manager.get_item('step_index'), step_args):
 			logger.info(translator.get('job_step_inserted').format(job_id = state_manager.get_item('job_id'), step_index = state_manager.get_item('step_index')), __name__)
@@ -266,7 +266,7 @@ def route_job_runner() -> ErrorCode:
 
 def process_headless(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('headless')
-	step_args = reduce_step_args(args)
+	step_args = args_store.filter_step_args(args)
 
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0
@@ -275,10 +275,9 @@ def process_headless(args : Args) -> ErrorCode:
 
 def process_batch(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('batch')
-	step_args = reduce_step_args(args)
-	job_args = reduce_job_args(args)
-	source_paths = resolve_file_pattern(job_args.get('source_pattern'))
-	target_paths = resolve_file_pattern(job_args.get('target_pattern'))
+	step_args = args_store.filter_step_args(args)
+	source_paths = resolve_file_pattern(step_args.get('source_pattern'))
+	target_paths = resolve_file_pattern(step_args.get('target_pattern'))
 
 	if job_manager.create_job(job_id):
 		if source_paths and target_paths:
@@ -287,7 +286,7 @@ def process_batch(args : Args) -> ErrorCode:
 				step_args['target_path'] = target_path
 
 				try:
-					step_args['output_path'] = job_args.get('output_pattern').format(index = index, source_name = get_file_name(source_path), target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
+					step_args['output_path'] = step_args.get('output_pattern').format(index = index, source_name = get_file_name(source_path), target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
 				except KeyError:
 					return 1
 
@@ -301,7 +300,7 @@ def process_batch(args : Args) -> ErrorCode:
 				step_args['target_path'] = target_path
 
 				try:
-					step_args['output_path'] = job_args.get('output_pattern').format(index = index, target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
+					step_args['output_path'] = step_args.get('output_pattern').format(index = index, target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
 				except KeyError:
 					return 1
 
@@ -314,8 +313,10 @@ def process_batch(args : Args) -> ErrorCode:
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_total = job_manager.count_step_total(job_id)
-	step_args.update(collect_job_args())
-	apply_args(step_args, state_manager.set_item)
+	cli_args = args_store.filter_cli_args(state_manager.get_state()) #type:ignore[arg-type]
+	args = cli_args.copy()
+	args.update(step_args)
+	apply_args(args, state_manager.set_item)
 
 	logger.info(translator.get('processing_step').format(step_current = step_index + 1, step_total = step_total), __name__)
 	if common_pre_check() and processors_pre_check():

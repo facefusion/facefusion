@@ -3,8 +3,8 @@ from argparse import ArgumentParser
 import cv2
 import numpy
 
+import facefusion.args_store
 import facefusion.jobs.job_manager
-import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, state_manager, translator, video_manager
 from facefusion.face_analyser import scale_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
@@ -31,7 +31,7 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--face-debugger-items', help = translator.get('help.items', __package__).format(choices = ', '.join(face_debugger_choices.face_debugger_items)), default = config.get_str_list('processors', 'face_debugger_items', 'face-landmark-5/68 face-mask'), choices = face_debugger_choices.face_debugger_items, nargs = '+', metavar = 'FACE_DEBUGGER_ITEMS')
-		facefusion.jobs.job_store.register_step_keys([ 'face_debugger_items' ])
+		facefusion.args_store.register_args([ 'face_debugger_items' ], scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:

@@ -5,8 +5,8 @@ from typing import Tuple
 import cv2
 import numpy
 
+import facefusion.args_store
 import facefusion.jobs.job_manager
-import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import create_float_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
@@ -144,7 +144,7 @@ def register_args(program : ArgumentParser) -> None:
 		group_processors.add_argument('--face-editor-head-pitch', help = translator.get('help.head_pitch', __package__), type = float, default = config.get_float_value('processors', 'face_editor_head_pitch', '0'), choices = face_editor_choices.face_editor_head_pitch_range, metavar = create_float_metavar(face_editor_choices.face_editor_head_pitch_range))
 		group_processors.add_argument('--face-editor-head-yaw', help = translator.get('help.head_yaw', __package__), type = float, default = config.get_float_value('processors', 'face_editor_head_yaw', '0'), choices = face_editor_choices.face_editor_head_yaw_range, metavar = create_float_metavar(face_editor_choices.face_editor_head_yaw_range))
 		group_processors.add_argument('--face-editor-head-roll', help = translator.get('help.head_roll', __package__), type = float, default = config.get_float_value('processors', 'face_editor_head_roll', '0'), choices = face_editor_choices.face_editor_head_roll_range, metavar = create_float_metavar(face_editor_choices.face_editor_head_roll_range))
-		facefusion.jobs.job_store.register_step_keys([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio', 'face_editor_mouth_grim', 'face_editor_mouth_pout', 'face_editor_mouth_purse', 'face_editor_mouth_smile', 'face_editor_mouth_position_horizontal', 'face_editor_mouth_position_vertical', 'face_editor_head_pitch', 'face_editor_head_yaw', 'face_editor_head_roll' ])
+		facefusion.args_store.register_args([ 'face_editor_model', 'face_editor_eyebrow_direction', 'face_editor_eye_gaze_horizontal', 'face_editor_eye_gaze_vertical', 'face_editor_eye_open_ratio', 'face_editor_lip_open_ratio', 'face_editor_mouth_grim', 'face_editor_mouth_pout', 'face_editor_mouth_purse', 'face_editor_mouth_smile', 'face_editor_mouth_position_horizontal', 'face_editor_mouth_position_vertical', 'face_editor_head_pitch', 'face_editor_head_yaw', 'face_editor_head_roll' ], scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:

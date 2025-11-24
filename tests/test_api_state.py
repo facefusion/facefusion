@@ -3,12 +3,13 @@ from typing import Iterator
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager, state_manager
+from facefusion import args_store, metadata, session_manager, state_manager
 from facefusion.apis.core import create_api
 
 
 @pytest.fixture(scope = 'module')
 def test_client() -> Iterator[TestClient]:
+	args_store.register_args([ 'execution_providers' ], scopes = [ 'api' ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 
 	with TestClient(create_api()) as test_client:
