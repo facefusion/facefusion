@@ -67,53 +67,53 @@ def test_get_available_encoder_set() -> None:
 def test_extract_frames() -> None:
 	test_set =\
 	[
-		(get_test_example_file('target-240p-25fps.mp4'), 0, 270, 324),
-		(get_test_example_file('target-240p-25fps.mp4'), 224, 270, 55),
-		(get_test_example_file('target-240p-25fps.mp4'), 124, 224, 120),
-		(get_test_example_file('target-240p-25fps.mp4'), 0, 100, 120),
-		(get_test_example_file('target-240p-30fps.mp4'), 0, 324, 324),
-		(get_test_example_file('target-240p-30fps.mp4'), 224, 324, 100),
-		(get_test_example_file('target-240p-30fps.mp4'), 124, 224, 100),
-		(get_test_example_file('target-240p-30fps.mp4'), 0, 100, 100),
-		(get_test_example_file('target-240p-60fps.mp4'), 0, 648, 324),
-		(get_test_example_file('target-240p-60fps.mp4'), 224, 648, 212),
-		(get_test_example_file('target-240p-60fps.mp4'), 124, 224, 50),
-		(get_test_example_file('target-240p-60fps.mp4'), 0, 100, 50)
+		(get_test_example_file('target-240p-25fps.mp4'), get_test_example_file('test-extract-frames-0-270.mp4'), 0, 270, 324),
+		(get_test_example_file('target-240p-25fps.mp4'), get_test_example_file('test-extract-frames-224-270.mp4'), 224, 270, 55),
+		(get_test_example_file('target-240p-25fps.mp4'), get_test_example_file('test-extract-frames-124-224.mp4'), 124, 224, 120),
+		(get_test_example_file('target-240p-25fps.mp4'), get_test_example_file('test-extract-frames-0-100.mp4'), 0, 100, 120),
+		(get_test_example_file('target-240p-30fps.mp4'), get_test_example_file('test-extract-frames-0-324.mp4'), 0, 324, 324),
+		(get_test_example_file('target-240p-30fps.mp4'), get_test_example_file('test-extract-frames-224-324.mp4'), 224, 324, 100),
+		(get_test_example_file('target-240p-30fps.mp4'), get_test_example_file('test-extract-frames-124-224.mp4'), 124, 224, 100),
+		(get_test_example_file('target-240p-30fps.mp4'), get_test_example_file('test-extract-frames-0-100.mp4'), 0, 100, 100),
+		(get_test_example_file('target-240p-60fps.mp4'), get_test_example_file('test-extract-frames-0-648.mp4'), 0, 648, 324),
+		(get_test_example_file('target-240p-60fps.mp4'), get_test_example_file('test-extract-frames-224-648.mp4'), 224, 648, 212),
+		(get_test_example_file('target-240p-60fps.mp4'), get_test_example_file('test-extract-frames-124-224.mp4'), 124, 224, 50),
+		(get_test_example_file('target-240p-60fps.mp4'), get_test_example_file('test-extract-frames-0-100.mp4'), 0, 100, 50)
 	]
 
-	for target_path, trim_frame_start, trim_frame_end, frame_total in test_set:
-		create_temp_directory(target_path)
+	for target_path, output_path, trim_frame_start, trim_frame_end, frame_total in test_set:
+		create_temp_directory(output_path)
 
-		assert extract_frames(target_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
-		assert len(resolve_temp_frame_paths(target_path)) == frame_total
+		assert extract_frames(target_path, output_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
+		assert len(resolve_temp_frame_paths(output_path)) == frame_total
 
-		clear_temp_directory(target_path)
+		clear_temp_directory(output_path)
 
 
 def test_merge_video() -> None:
-	target_paths =\
+	test_set =\
 	[
-		get_test_example_file('target-240p-16khz.avi'),
-		get_test_example_file('target-240p-16khz.m4v'),
-		get_test_example_file('target-240p-16khz.mkv'),
-		get_test_example_file('target-240p-16khz.mp4'),
-		get_test_example_file('target-240p-16khz.mov'),
-		get_test_example_file('target-240p-16khz.webm'),
-		get_test_example_file('target-240p-16khz.wmv')
+		(get_test_example_file('target-240p-16khz.avi'), get_test_output_file('test-merge-video-240p-16khz.avi')),
+		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_file('test-merge-video-240p-16khz.m4v')),
+		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_file('test-merge-video-240p-16khz.mkv')),
+		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_file('test-merge-video-240p-16khz.mp4')),
+		(get_test_example_file('target-240p-16khz.mov'), get_test_output_file('test-merge-video-240p-16khz.mov')),
+		(get_test_example_file('target-240p-16khz.webm'), get_test_output_file('test-merge-video-240p-16khz.webm')),
+		(get_test_example_file('target-240p-16khz.wmv'), get_test_output_file('test-merge-video-240p-16khz.wmv'))
 	]
 	output_video_encoders = get_available_encoder_set().get('video')
 
-	for target_path in target_paths:
+	for target_path, output_path in test_set:
 		for output_video_encoder in output_video_encoders:
 			state_manager.init_item('output_path', target_path)
 			state_manager.init_item('output_video_fps', 25.0)
 			state_manager.init_item('output_video_encoder', output_video_encoder)
-			create_temp_directory(target_path)
-			extract_frames(target_path, (452, 240), 25.0, 0, 1)
+			create_temp_directory(output_path)
+			extract_frames(target_path, output_path, (452, 240), 25.0, 0, 1)
 
-			assert merge_video(target_path, 25.0, (452, 240), 0, 1) is True
+			assert merge_video(target_path, output_path, 25.0, (452, 240), 0, 1) is True
 
-		clear_temp_directory(target_path)
+			clear_temp_directory(output_path)
 
 	state_manager.init_item('output_video_encoder', 'libx264')
 
@@ -150,15 +150,15 @@ def test_restore_audio() -> None:
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
 	for target_path, output_path in test_set:
-		create_temp_directory(target_path)
+		create_temp_directory(output_path)
 
 		for output_audio_encoder in output_audio_encoders:
 			state_manager.init_item('output_audio_encoder', output_audio_encoder)
-			copy_file(target_path, get_temp_file_path(target_path))
+			copy_file(target_path, get_temp_file_path(output_path))
 
 			assert restore_audio(target_path, output_path, 0, 270) is True
 
-		clear_temp_directory(target_path)
+		clear_temp_directory(output_path)
 
 	state_manager.init_item('output_audio_encoder', 'aac')
 
@@ -177,15 +177,15 @@ def test_replace_audio() -> None:
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
 	for target_path, output_path in test_set:
-		create_temp_directory(target_path)
+		create_temp_directory(output_path)
 
 		for output_audio_encoder in output_audio_encoders:
 			state_manager.init_item('output_audio_encoder', output_audio_encoder)
-			copy_file(target_path, get_temp_file_path(target_path))
+			copy_file(target_path, get_temp_file_path(output_path))
 
-			assert replace_audio(target_path, get_test_example_file('source.mp3'), output_path) is True
-			assert replace_audio(target_path, get_test_example_file('source.wav'), output_path) is True
+			assert replace_audio(get_test_example_file('source.mp3'), output_path) is True
+			assert replace_audio(get_test_example_file('source.wav'), output_path) is True
 
-		clear_temp_directory(target_path)
+		clear_temp_directory(output_path)
 
 	state_manager.init_item('output_audio_encoder', 'aac')
