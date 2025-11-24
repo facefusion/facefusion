@@ -6,7 +6,7 @@ from facefusion.types import Args, State, StateKey, StateSet
 
 STATE_SET : Union[StateSet, ProcessorStateSet] =\
 {
-	'api': {},  #type:ignore[assignment]
+	'api': {}, #type:ignore[assignment]
 	'cli': {} #type:ignore[assignment]
 }
 

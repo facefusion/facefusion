@@ -18,6 +18,5 @@ async def set_state(request : Request) -> JSONResponse:
 		if key in api_args:
 			state_manager.set_item(key, value)
 
-	api_args = args_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
-	return JSONResponse(state_manager.collect_state(api_args), status_code = HTTP_200_OK)
-
+	__api_args__ = args_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
+	return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
