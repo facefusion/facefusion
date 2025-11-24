@@ -8,6 +8,8 @@ from facefusion.vision import detect_video_fps
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	# general
 	apply_state_item('command', args.get('command'))
+	# workflow
+	apply_state_item('workflow', args.get('workflow'))
 	# paths
 	apply_state_item('temp_path', args.get('temp_path'))
 	apply_state_item('jobs_path', args.get('jobs_path'))
