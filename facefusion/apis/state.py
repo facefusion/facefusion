@@ -12,10 +12,10 @@ async def get_state(request : Request) -> JSONResponse:
 
 async def set_state(request : Request) -> JSONResponse:
 	body = await request.json()
-	api_args_keys = args_store.get_api_args()
+	api_args = args_store.get_api_args()
 
 	for key, value in body.items():
-		if key in api_args_keys:
+		if key in api_args:
 			state_manager.set_item(key, value)
 
 	api_args = args_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
