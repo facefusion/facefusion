@@ -33,7 +33,7 @@ def process(start_time : float) -> ErrorCode:
 	process_manager.start()
 
 	for task in tasks:
-		error_code = task() # type:ignore[operator]
+		error_code = task() #type:ignore[operator]
 
 		if error_code > 0:
 			process_manager.end()

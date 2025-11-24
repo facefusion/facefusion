@@ -3,12 +3,11 @@ from argparse import ArgumentParser, HelpFormatter
 from functools import partial
 
 import facefusion.choices
-from facefusion import config, metadata, state_manager, translator
+from facefusion import args_store, config, metadata, state_manager, translator
 from facefusion.common_helper import create_float_metavar, create_int_metavar, get_first, get_last
 from facefusion.execution import get_available_execution_providers
 from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import get_file_name, resolve_file_paths
-from facefusion.jobs import job_store
 from facefusion.processors.core import get_processors_modules
 from facefusion.sanitizer import sanitize_int_range
 
@@ -25,7 +24,7 @@ def create_config_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('--config-path', help = translator.get('help.config_path'), default = 'facefusion.ini')
-	job_store.register_job_keys([ 'config_path' ])
+	args_store.register_args([ 'config_path' ], scopes = [ 'cli' ])
 	apply_config_path(program)
 	return program
 
@@ -34,7 +33,7 @@ def create_temp_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('--temp-path', help = translator.get('help.temp_path'), default = config.get_str_value('paths', 'temp_path', tempfile.gettempdir()))
-	job_store.register_job_keys([ 'temp_path' ])
+	args_store.register_args([ 'temp_path' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -42,7 +41,7 @@ def create_jobs_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('--jobs-path', help = translator.get('help.jobs_path'), default = config.get_str_value('paths', 'jobs_path', '.jobs'))
-	job_store.register_job_keys([ 'jobs_path' ])
+	args_store.register_args([ 'jobs_path' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -50,7 +49,7 @@ def create_source_paths_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('-s', '--source-paths', help = translator.get('help.source_paths'), default = config.get_str_list('paths', 'source_paths'), nargs = '+')
-	job_store.register_step_keys([ 'source_paths' ])
+	args_store.register_args([ 'source_paths' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -58,7 +57,7 @@ def create_target_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('-t', '--target-path', help = translator.get('help.target_path'), default = config.get_str_value('paths', 'target_path'))
-	job_store.register_step_keys([ 'target_path' ])
+	args_store.register_args([ 'target_path' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -66,7 +65,7 @@ def create_output_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 	group_paths.add_argument('-o', '--output-path', help = translator.get('help.output_path'), default = config.get_str_value('paths', 'output_path'))
-	job_store.register_step_keys([ 'output_path' ])
+	args_store.register_args([ 'output_path' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -74,7 +73,7 @@ def create_source_pattern_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_patterns = program.add_argument_group('patterns')
 	group_patterns.add_argument('-s', '--source-pattern', help = translator.get('help.source_pattern'), default = config.get_str_value('patterns', 'source_pattern'))
-	job_store.register_job_keys([ 'source_pattern' ])
+	args_store.register_args([ 'source_pattern' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -82,7 +81,7 @@ def create_target_pattern_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_patterns = program.add_argument_group('patterns')
 	group_patterns.add_argument('-t', '--target-pattern', help = translator.get('help.target_pattern'), default = config.get_str_value('patterns', 'target_pattern'))
-	job_store.register_job_keys([ 'target_pattern' ])
+	args_store.register_args([ 'target_pattern' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -90,7 +89,7 @@ def create_output_pattern_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_patterns = program.add_argument_group('patterns')
 	group_patterns.add_argument('-o', '--output-pattern', help = translator.get('help.output_pattern'), default = config.get_str_value('patterns', 'output_pattern'))
-	job_store.register_job_keys([ 'output_pattern' ])
+	args_store.register_args([ 'output_pattern' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -104,7 +103,7 @@ def create_face_detector_program() -> ArgumentParser:
 	group_face_detector.add_argument('--face-detector-margin', help = translator.get('help.face_detector_margin'), type = partial(sanitize_int_range, int_range = facefusion.choices.face_detector_margin_range), default = config.get_int_list('face_detector', 'face_detector_margin', '0 0 0 0'), nargs = '+')
 	group_face_detector.add_argument('--face-detector-angles', help = translator.get('help.face_detector_angles'), type = int, default = config.get_int_list('face_detector', 'face_detector_angles', '0'), choices = facefusion.choices.face_detector_angles, nargs = '+', metavar = 'FACE_DETECTOR_ANGLES')
 	group_face_detector.add_argument('--face-detector-score', help = translator.get('help.face_detector_score'), type = float, default = config.get_float_value('face_detector', 'face_detector_score', '0.5'), choices = facefusion.choices.face_detector_score_range, metavar = create_float_metavar(facefusion.choices.face_detector_score_range))
-	job_store.register_step_keys([ 'face_detector_model', 'face_detector_size', 'face_detector_margin', 'face_detector_angles', 'face_detector_score' ])
+	args_store.register_args([ 'face_detector_model', 'face_detector_size', 'face_detector_margin', 'face_detector_angles', 'face_detector_score' ], scopes = [ 'api', 'cli' ])
 	return program
 
 
@@ -113,7 +112,7 @@ def create_face_landmarker_program() -> ArgumentParser:
 	group_face_landmarker = program.add_argument_group('face landmarker')
 	group_face_landmarker.add_argument('--face-landmarker-model', help = translator.get('help.face_landmarker_model'), default = config.get_str_value('face_landmarker', 'face_landmarker_model', '2dfan4'), choices = facefusion.choices.face_landmarker_models)
 	group_face_landmarker.add_argument('--face-landmarker-score', help = translator.get('help.face_landmarker_score'), type = float, default = config.get_float_value('face_landmarker', 'face_landmarker_score', '0.5'), choices = facefusion.choices.face_landmarker_score_range, metavar = create_float_metavar(facefusion.choices.face_landmarker_score_range))
-	job_store.register_step_keys([ 'face_landmarker_model', 'face_landmarker_score' ])
+	args_store.register_args([ 'face_landmarker_model', 'face_landmarker_score' ], scopes = [ 'api', 'cli' ])
 	return program
 
 
@@ -129,7 +128,7 @@ def create_face_selector_program() -> ArgumentParser:
 	group_face_selector.add_argument('--reference-face-position', help = translator.get('help.reference_face_position'), type = int, default = config.get_int_value('face_selector', 'reference_face_position', '0'))
 	group_face_selector.add_argument('--reference-face-distance', help = translator.get('help.reference_face_distance'), type = float, default = config.get_float_value('face_selector', 'reference_face_distance', '0.3'), choices = facefusion.choices.reference_face_distance_range, metavar = create_float_metavar(facefusion.choices.reference_face_distance_range))
 	group_face_selector.add_argument('--reference-frame-number', help = translator.get('help.reference_frame_number'), type = int, default = config.get_int_value('face_selector', 'reference_frame_number', '0'))
-	job_store.register_step_keys([ 'face_selector_mode', 'face_selector_order', 'face_selector_gender', 'face_selector_race', 'face_selector_age_start', 'face_selector_age_end', 'reference_face_position', 'reference_face_distance', 'reference_frame_number' ])
+	args_store.register_args([ 'face_selector_mode', 'face_selector_order', 'face_selector_gender', 'face_selector_race', 'face_selector_age_start', 'face_selector_age_end', 'reference_face_position', 'reference_face_distance', 'reference_frame_number' ], scopes = [ 'api', 'cli' ])
 	return program
 
 
@@ -143,7 +142,7 @@ def create_face_masker_program() -> ArgumentParser:
 	group_face_masker.add_argument('--face-mask-regions', help = translator.get('help.face_mask_regions').format(choices = ', '.join(facefusion.choices.face_mask_regions)), default = config.get_str_list('face_masker', 'face_mask_regions', ' '.join(facefusion.choices.face_mask_regions)), choices = facefusion.choices.face_mask_regions, nargs = '+', metavar = 'FACE_MASK_REGIONS')
 	group_face_masker.add_argument('--face-mask-blur', help = translator.get('help.face_mask_blur'), type = float, default = config.get_float_value('face_masker', 'face_mask_blur', '0.3'), choices = facefusion.choices.face_mask_blur_range, metavar = create_float_metavar(facefusion.choices.face_mask_blur_range))
 	group_face_masker.add_argument('--face-mask-padding', help = translator.get('help.face_mask_padding'), type = partial(sanitize_int_range, int_range = facefusion.choices.face_mask_padding_range), default = config.get_int_list('face_masker', 'face_mask_padding', '0 0 0 0'), nargs = '+')
-	job_store.register_step_keys([ 'face_occluder_model', 'face_parser_model', 'face_mask_types', 'face_mask_areas', 'face_mask_regions', 'face_mask_blur', 'face_mask_padding' ])
+	args_store.register_args([ 'face_occluder_model', 'face_parser_model', 'face_mask_types', 'face_mask_areas', 'face_mask_regions', 'face_mask_blur', 'face_mask_padding' ], scopes = [ 'api', 'cli' ])
 	return program
 
 
@@ -151,7 +150,7 @@ def create_voice_extractor_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_voice_extractor = program.add_argument_group('voice extractor')
 	group_voice_extractor.add_argument('--voice-extractor-model', help = translator.get('help.voice_extractor_model'), default = config.get_str_value('voice_extractor', 'voice_extractor_model', 'kim_vocal_2'), choices = facefusion.choices.voice_extractor_models)
-	job_store.register_step_keys([ 'voice_extractor_model' ])
+	args_store.register_args([ 'voice_extractor_model' ], scopes = [ 'api', 'cli' ])
 	return program
 
 
@@ -162,7 +161,7 @@ def create_frame_extraction_program() -> ArgumentParser:
 	group_frame_extraction.add_argument('--trim-frame-end', help = translator.get('help.trim_frame_end'), type = int, default = facefusion.config.get_int_value('frame_extraction', 'trim_frame_end'))
 	group_frame_extraction.add_argument('--temp-frame-format', help = translator.get('help.temp_frame_format'), default = config.get_str_value('frame_extraction', 'temp_frame_format', 'png'), choices = facefusion.choices.temp_frame_formats)
 	group_frame_extraction.add_argument('--keep-temp', help = translator.get('help.keep_temp'), action = 'store_true', default = config.get_bool_value('frame_extraction', 'keep_temp'))
-	job_store.register_step_keys([ 'trim_frame_start', 'trim_frame_end', 'temp_frame_format', 'keep_temp' ])
+	args_store.register_args([ 'trim_frame_start', 'trim_frame_end', 'temp_frame_format', 'keep_temp' ], scopes = [ 'api', 'cli' ])
 	return program
 
 
@@ -180,7 +179,7 @@ def create_output_creation_program() -> ArgumentParser:
 	group_output_creation.add_argument('--output-video-quality', help = translator.get('help.output_video_quality'), type = int, default = config.get_int_value('output_creation', 'output_video_quality', '80'), choices = facefusion.choices.output_video_quality_range, metavar = create_int_metavar(facefusion.choices.output_video_quality_range))
 	group_output_creation.add_argument('--output-video-scale', help = translator.get('help.output_video_scale'), type = float, default = config.get_float_value('output_creation', 'output_video_scale', '1.0'), choices = facefusion.choices.output_video_scale_range)
 	group_output_creation.add_argument('--output-video-fps', help = translator.get('help.output_video_fps'), type = float, default = config.get_float_value('output_creation', 'output_video_fps'))
-	job_store.register_step_keys([ 'output_image_quality', 'output_image_scale', 'output_audio_encoder', 'output_audio_quality', 'output_audio_volume', 'output_video_encoder', 'output_video_preset', 'output_video_quality', 'output_video_scale', 'output_video_fps' ])
+	args_store.register_args([ 'output_image_quality', 'output_image_scale', 'output_audio_encoder', 'output_audio_quality', 'output_audio_volume', 'output_video_encoder', 'output_video_preset', 'output_video_quality', 'output_video_scale', 'output_video_fps' ], scopes = [ 'api', 'cli' ])
 	return program
 
 
@@ -189,7 +188,7 @@ def create_processors_program() -> ArgumentParser:
 	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	group_processors = program.add_argument_group('processors')
 	group_processors.add_argument('--processors', help = translator.get('help.processors').format(choices = ', '.join(available_processors)), default = config.get_str_list('processors', 'processors', 'face_swapper'), nargs = '+')
-	job_store.register_step_keys([ 'processors' ])
+	args_store.register_args([ 'processors' ], scopes = [ 'api', 'cli' ])
 	for processor_module in get_processors_modules(available_processors):
 		processor_module.register_args(program)
 	return program
@@ -199,7 +198,7 @@ def create_download_providers_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_download = program.add_argument_group('download')
 	group_download.add_argument('--download-providers', help = translator.get('help.download_providers').format(choices = ', '.join(facefusion.choices.download_providers)), default = config.get_str_list('download', 'download_providers', ' '.join(facefusion.choices.download_providers)), choices = facefusion.choices.download_providers, nargs = '+', metavar = 'DOWNLOAD_PROVIDERS')
-	job_store.register_job_keys([ 'download_providers' ])
+	args_store.register_args([ 'download_providers' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
@@ -207,7 +206,7 @@ def create_download_scope_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_download = program.add_argument_group('download')
 	group_download.add_argument('--download-scope', help = translator.get('help.download_scope'), default = config.get_str_value('download', 'download_scope', 'lite'), choices = facefusion.choices.download_scopes)
-	job_store.register_job_keys([ 'download_scope' ])
+	args_store.register_args([ 'download_scope' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
@@ -232,10 +231,10 @@ def create_execution_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	available_execution_providers = get_available_execution_providers()
 	group_execution = program.add_argument_group('execution')
-	group_execution.add_argument('--execution-device-ids', help = translator.get('help.execution_device_ids'), type = int, default = config.get_int_list('execution', 'execution_device_ids', '0'), nargs = '+', metavar = 'EXECUTION_DEVICE_IDS')
+	group_execution.add_argument('--execution-device-ids', help = translator.get('help.execution_device_ids'), type = int, default = config.get_str_list('execution', 'execution_device_ids', '0'), nargs = '+', metavar = 'EXECUTION_DEVICE_IDS')
 	group_execution.add_argument('--execution-providers', help = translator.get('help.execution_providers').format(choices = ', '.join(available_execution_providers)), default = config.get_str_list('execution', 'execution_providers', get_first(available_execution_providers)), choices = available_execution_providers, nargs = '+', metavar = 'EXECUTION_PROVIDERS')
 	group_execution.add_argument('--execution-thread-count', help = translator.get('help.execution_thread_count'), type = int, default = config.get_int_value('execution', 'execution_thread_count', '8'), choices = facefusion.choices.execution_thread_count_range, metavar = create_int_metavar(facefusion.choices.execution_thread_count_range))
-	job_store.register_job_keys([ 'execution_device_ids', 'execution_providers', 'execution_thread_count' ])
+	args_store.register_args([ 'execution_device_ids', 'execution_providers', 'execution_thread_count' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
@@ -243,7 +242,7 @@ def create_memory_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_memory = program.add_argument_group('memory')
 	group_memory.add_argument('--video-memory-strategy', help = translator.get('help.video_memory_strategy'), default = config.get_str_value('memory', 'video_memory_strategy', 'strict'), choices = facefusion.choices.video_memory_strategies)
-	job_store.register_job_keys([ 'video_memory_strategy' ])
+	args_store.register_args([ 'video_memory_strategy' ], scopes = [ 'cli', 'sys' ])
 	return program
 
 
@@ -251,7 +250,7 @@ def create_log_level_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
 	group_misc.add_argument('--log-level', help = translator.get('help.log_level'), default = config.get_str_value('misc', 'log_level', 'info'), choices = facefusion.choices.log_levels)
-	job_store.register_job_keys([ 'log_level' ])
+	args_store.register_args([ 'log_level' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -259,7 +258,7 @@ def create_halt_on_error_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
 	group_misc.add_argument('--halt-on-error', help = translator.get('help.halt_on_error'), action = 'store_true', default = config.get_bool_value('misc', 'halt_on_error'))
-	job_store.register_job_keys([ 'halt_on_error' ])
+	args_store.register_args([ 'halt_on_error' ], scopes = [ 'cli' ])
 	return program
 
 
@@ -299,7 +298,7 @@ def create_program() -> ArgumentParser:
 	sub_program.add_parser('batch-run', help = translator.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('force-download', help = translator.get('help.force_download'), parents = [ create_download_providers_program(), create_download_scope_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('benchmark', help = translator.get('help.benchmark'), parents = [ create_temp_path_program(), collect_step_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('api', help = translator.get('help.api'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_api_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('api', help = translator.get('help.api'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_api_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	# job manager
 	sub_program.add_parser('job-list', help = translator.get('help.job_list'), parents = [ create_job_status_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-create', help = translator.get('help.job_create'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)

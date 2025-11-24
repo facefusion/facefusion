@@ -4,8 +4,8 @@ from functools import lru_cache
 import cv2
 import numpy
 
+import facefusion.args_store
 import facefusion.jobs.job_manager
-import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager, voice_extractor
 from facefusion.audio import read_static_voice
 from facefusion.common_helper import create_float_metavar
@@ -134,7 +134,7 @@ def register_args(program : ArgumentParser) -> None:
 	if group_processors:
 		group_processors.add_argument('--lip-syncer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = lip_syncer_choices.lip_syncer_models)
 		group_processors.add_argument('--lip-syncer-weight', help = translator.get('help.weight', __package__), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = lip_syncer_choices.lip_syncer_weight_range, metavar = create_float_metavar(lip_syncer_choices.lip_syncer_weight_range))
-		facefusion.jobs.job_store.register_step_keys([ 'lip_syncer_model', 'lip_syncer_weight' ])
+		facefusion.args_store.register_args([ 'lip_syncer_model', 'lip_syncer_weight' ], scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:

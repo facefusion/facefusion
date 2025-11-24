@@ -5,8 +5,8 @@ from typing import List, Tuple
 import cv2
 import numpy
 
+import facefusion.args_store
 import facefusion.jobs.job_manager
-import facefusion.jobs.job_store
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
@@ -422,7 +422,7 @@ def register_args(program : ArgumentParser) -> None:
 	if group_processors:
 		group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = background_remover_choices.background_remover_models)
 		group_processors.add_argument('--background-remover-color', help = translator.get('help.color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 0 0 0'), nargs = '+')
-		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model', 'background_remover_color' ])
+		facefusion.args_store.register_args([ 'background_remover_model', 'background_remover_color' ], scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
