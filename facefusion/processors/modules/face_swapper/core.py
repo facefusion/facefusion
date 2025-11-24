@@ -5,9 +5,9 @@ from typing import List, Optional, Tuple
 import cv2
 import numpy
 
+import facefusion.args_store
 import facefusion.choices
 import facefusion.jobs.job_manager
-import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import get_first, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
@@ -518,7 +518,7 @@ def register_args(program : ArgumentParser) -> None:
 		face_swapper_pixel_boost_choices = face_swapper_choices.face_swapper_set.get(known_args.face_swapper_model)
 		group_processors.add_argument('--face-swapper-pixel-boost', help = translator.get('help.pixel_boost', __package__), default = config.get_str_value('processors', 'face_swapper_pixel_boost', get_first(face_swapper_pixel_boost_choices)), choices = face_swapper_pixel_boost_choices)
 		group_processors.add_argument('--face-swapper-weight', help = translator.get('help.weight', __package__), type = float, default = config.get_float_value('processors', 'face_swapper_weight', '0.5'), choices = face_swapper_choices.face_swapper_weight_range)
-		facefusion.jobs.job_store.register_step_keys([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight' ])
+		facefusion.args_store.register_args([ 'face_swapper_model', 'face_swapper_pixel_boost', 'face_swapper_weight' ], scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:

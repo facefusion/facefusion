@@ -60,12 +60,12 @@ VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
 CameraCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 VideoPoolSet = TypedDict('VideoPoolSet',
 {
-	'capture': VideoCaptureSet,
-	'writer': VideoWriterSet
+	'capture' : VideoCaptureSet,
+	'writer' : VideoWriterSet
 })
 CameraPoolSet = TypedDict('CameraPoolSet',
 {
-	'capture': CameraCaptureSet
+	'capture' : CameraCaptureSet
 })
 
 ColorMode = Literal['rgb', 'rgba']
@@ -95,8 +95,17 @@ Margin : TypeAlias = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
-ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 Args : TypeAlias = Dict[str, Any]
+Scope : TypeAlias = Literal['api', 'cli', 'sys']
+
+ArgsStore = TypedDict('ArgsStore',
+{
+	'api' : List[str],
+	'cli' : List[str],
+	'sys' : List[str]
+})
+
+ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 UpdateProgress : TypeAlias = Callable[[int], None]
 ProcessStep : TypeAlias = Callable[[str, int, Args], bool]
 
@@ -106,10 +115,10 @@ Token : TypeAlias = str
 SessionId : TypeAlias = str
 Session = TypedDict('Session',
 {
-	'access_token': Token,
-	'refresh_token': Token,
-	'created_at': datetime,
-	'expires_at': datetime
+	'access_token' : Token,
+	'refresh_token' : Token,
+	'created_at' : datetime,
+	'expires_at' : datetime
 })
 
 Command : TypeAlias = str
@@ -243,11 +252,6 @@ AppContext = Literal['cli', 'api']
 InferencePool : TypeAlias = Dict[str, InferenceSession]
 InferencePoolSet : TypeAlias = Dict[AppContext, Dict[str, InferencePool]]
 
-JobStore = TypedDict('JobStore',
-{
-	'job_keys' : List[str],
-	'step_keys' : List[str]
-})
 JobOutputSet : TypeAlias = Dict[str, List[str]]
 JobStatus = Literal['drafted', 'queued', 'completed', 'failed']
 JobStepStatus = Literal['drafted', 'queued', 'started', 'completed', 'failed']
@@ -350,7 +354,7 @@ State = TypedDict('State',
 	'benchmark_cycle_count' : int,
 	'face_detector_model' : FaceDetectorModel,
 	'face_detector_size' : str,
-	'face_detector_margin': Margin,
+	'face_detector_margin' : Margin,
 	'face_detector_angles' : List[Angle],
 	'face_detector_score' : Score,
 	'face_landmarker_model' : FaceLandmarkerModel,
@@ -371,7 +375,7 @@ State = TypedDict('State',
 	'face_mask_regions' : List[FaceMaskRegion],
 	'face_mask_blur' : float,
 	'face_mask_padding' : Padding,
-	'voice_extractor_model': VoiceExtractorModel,
+	'voice_extractor_model' : VoiceExtractorModel,
 	'trim_frame_start' : int,
 	'trim_frame_end' : int,
 	'temp_frame_format' : TempFrameFormat,
@@ -399,4 +403,3 @@ State = TypedDict('State',
 })
 ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateSet : TypeAlias = Dict[AppContext, State]
-
