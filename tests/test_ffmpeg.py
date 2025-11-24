@@ -91,20 +91,19 @@ def test_extract_frames() -> None:
 
 
 def test_merge_video() -> None:
-	target_paths =\
+	test_set =\
 	[
-		get_test_example_file('target-240p-16khz.avi'),
-		get_test_example_file('target-240p-16khz.m4v'),
-		get_test_example_file('target-240p-16khz.mkv'),
-		get_test_example_file('target-240p-16khz.mp4'),
-		get_test_example_file('target-240p-16khz.mov'),
-		get_test_example_file('target-240p-16khz.webm'),
-		get_test_example_file('target-240p-16khz.wmv')
+		(get_test_example_file('target-240p-16khz.avi'), get_test_output_file('test-merge-video-240p-16khz.avi')),
+		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_file('test-merge-video-240p-16khz.m4v')),
+		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_file('test-merge-video-240p-16khz.mkv')),
+		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_file('test-merge-video-240p-16khz.mp4')),
+		(get_test_example_file('target-240p-16khz.mov'), get_test_output_file('test-merge-video-240p-16khz.mov')),
+		(get_test_example_file('target-240p-16khz.webm'), get_test_output_file('test-merge-video-240p-16khz.webm')),
+		(get_test_example_file('target-240p-16khz.wmv'), get_test_output_file('test-merge-video-240p-16khz.wmv'))
 	]
-	output_path = get_test_output_file('test-merge-video.mp4')
 	output_video_encoders = get_available_encoder_set().get('video')
 
-	for target_path in target_paths:
+	for target_path, output_path in test_set:
 		for output_video_encoder in output_video_encoders:
 			state_manager.init_item('output_path', target_path)
 			state_manager.init_item('output_video_fps', 25.0)
