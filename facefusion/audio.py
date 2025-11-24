@@ -1,5 +1,6 @@
+import math
 from functools import lru_cache
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 import numpy
 import scipy
@@ -7,7 +8,8 @@ from numpy.typing import NDArray
 
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.filesystem import is_audio
-from facefusion.types import Audio, AudioFrame, Fps, Mel, MelFilterBank, Spectrogram
+from facefusion.media_helper import restrict_trim_frame
+from facefusion.types import Audio, AudioFrame, Duration, Fps, Mel, MelFilterBank, Spectrogram
 from facefusion.voice_extractor import batch_extract_voice
 
 
@@ -141,3 +143,29 @@ def create_spectrogram(audio : Audio) -> Spectrogram:
 	spectrogram = scipy.signal.stft(audio, nperseg = mel_bin_total, nfft = mel_bin_total, noverlap = mel_bin_overlap)[2]
 	spectrogram = numpy.dot(mel_filter_bank, numpy.abs(spectrogram))
 	return spectrogram
+
+
+def count_audio_frame_total(audio_path : str, fps : Fps) -> int:
+	audio_duration = detect_audio_duration(audio_path)
+	if audio_duration > 0:
+		return math.ceil(audio_duration * fps)
+	return 0
+
+
+def detect_audio_duration(audio_path : str) -> Duration:
+	audio_sample_rate = 48000
+	audio_sample_size = 16
+	audio_channel_total = 2
+
+	if is_audio(audio_path):
+		audio_buffer = read_audio_buffer(audio_path, audio_sample_rate, audio_sample_size, audio_channel_total)
+		if audio_buffer:
+			audio = numpy.frombuffer(audio_buffer, dtype = numpy.int16).reshape(-1, audio_channel_total)
+			audio_duration = len(audio) / audio_sample_rate
+			return audio_duration
+	return 0
+
+
+def restrict_trim_audio_frame(audio_path : str, fps : Fps, trim_frame_start : Optional[int], trim_frame_end : Optional[int]) -> Tuple[int, int]:
+	audio_frame_total = count_audio_frame_total(audio_path, fps)
+	return restrict_trim_frame(audio_frame_total, trim_frame_start, trim_frame_end)

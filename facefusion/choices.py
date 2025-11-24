@@ -45,6 +45,8 @@ face_mask_regions : List[FaceMaskRegion] = list(get_args(FaceMaskRegion))
 
 voice_extractor_models : List[VoiceExtractorModel] = list(get_args(VoiceExtractorModel))
 
+workflows : List[WorkFlow] = [ 'audio-to-image', 'image-to-image', 'image-to-video' ]
+
 audio_type_set : AudioTypeSet =\
 {
 	'flac': 'audio/flac',
