@@ -5,8 +5,8 @@ from typing import Tuple
 import cv2
 import numpy
 
+import facefusion.args_store
 import facefusion.jobs.job_manager
-import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
@@ -102,7 +102,7 @@ def register_args(program : ArgumentParser) -> None:
 		group_processors.add_argument('--expression-restorer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'expression_restorer_model', 'live_portrait'), choices = expression_restorer_choices.expression_restorer_models)
 		group_processors.add_argument('--expression-restorer-factor', help = translator.get('help.factor', __package__), type = int, default = config.get_int_value('processors', 'expression_restorer_factor', '80'), choices = expression_restorer_choices.expression_restorer_factor_range, metavar = create_int_metavar(expression_restorer_choices.expression_restorer_factor_range))
 		group_processors.add_argument('--expression-restorer-areas', help = translator.get('help.areas', __package__).format(choices = ', '.join(expression_restorer_choices.expression_restorer_areas)), default = config.get_str_list('processors', 'expression_restorer_areas', ' '.join(expression_restorer_choices.expression_restorer_areas)), choices = expression_restorer_choices.expression_restorer_areas, nargs = '+', metavar = 'EXPRESSION_RESTORER_AREAS')
-		facefusion.jobs.job_store.register_step_keys([ 'expression_restorer_model', 'expression_restorer_factor', 'expression_restorer_areas' ])
+		facefusion.args_store.register_args([ 'expression_restorer_model', 'expression_restorer_factor', 'expression_restorer_areas' ], scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:

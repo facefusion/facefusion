@@ -1,42 +1,8 @@
-from facefusion import state_manager
 from facefusion.filesystem import get_file_name, is_video, resolve_file_paths
-from facefusion.jobs import job_store
 from facefusion.normalizer import normalize_fps, normalize_space
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import ApplyStateItem, Args
 from facefusion.vision import detect_video_fps
-
-
-def reduce_step_args(args : Args) -> Args:
-	step_args =\
-	{
-		key: args[key] for key in args if key in job_store.get_step_keys()
-	}
-	return step_args
-
-
-def reduce_job_args(args : Args) -> Args:
-	job_args =\
-	{
-		key: args[key] for key in args if key in job_store.get_job_keys()
-	}
-	return job_args
-
-
-def collect_step_args() -> Args:
-	step_args =\
-	{
-		key: state_manager.get_item(key) for key in job_store.get_step_keys() #type:ignore[arg-type]
-	}
-	return step_args
-
-
-def collect_job_args() -> Args:
-	job_args =\
-	{
-		key: state_manager.get_item(key) for key in job_store.get_job_keys() #type:ignore[arg-type]
-	}
-	return job_args
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:

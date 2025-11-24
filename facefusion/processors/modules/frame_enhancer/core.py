@@ -4,8 +4,8 @@ from functools import lru_cache
 import cv2
 import numpy
 
+import facefusion.args_store
 import facefusion.jobs.job_manager
-import facefusion.jobs.job_store
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import create_int_metavar, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
@@ -575,7 +575,7 @@ def register_args(program : ArgumentParser) -> None:
 	if group_processors:
 		group_processors.add_argument('--frame-enhancer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'frame_enhancer_model', 'span_kendata_x4'), choices = frame_enhancer_choices.frame_enhancer_models)
 		group_processors.add_argument('--frame-enhancer-blend', help = translator.get('help.blend', __package__), type = int, default = config.get_int_value('processors', 'frame_enhancer_blend', '80'), choices = frame_enhancer_choices.frame_enhancer_blend_range, metavar = create_int_metavar(frame_enhancer_choices.frame_enhancer_blend_range))
-		facefusion.jobs.job_store.register_step_keys([ 'frame_enhancer_model', 'frame_enhancer_blend' ])
+		facefusion.args_store.register_args([ 'frame_enhancer_model', 'frame_enhancer_blend' ], scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:

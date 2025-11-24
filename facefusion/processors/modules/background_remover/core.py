@@ -5,10 +5,10 @@ from typing import List, Tuple
 import cv2
 import numpy
 
+import facefusion.args_store
 import facefusion.jobs.job_manager
-import facefusion.jobs.job_store
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
-from facefusion.common_helper import is_macos, is_windows
+from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path
@@ -51,7 +51,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/ben_2.onnx')
 				}
 			},
-			'type': 'ben',
 			'size': (1024, 1024),
 			'mean': [ 0.0, 0.0, 0.0 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -80,7 +79,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/birefnet_general.onnx')
 				}
 			},
-			'type': 'birefnet',
 			'size': (1024, 1024),
 			'mean': [ 0.0, 0.0, 0.0 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -109,68 +107,9 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/birefnet_portrait.onnx')
 				}
 			},
-			'type': 'birefnet',
 			'size': (1024, 1024),
 			'mean': [ 0.0, 0.0, 0.0 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]
-		},
-		'corridor_key_1024':
-		{
-			'__metadata__':
-			{
-				'vendor': 'nikopueringer',
-				'license': 'Non-Commercial',
-				'year': 2025
-			},
-			'hashes':
-			{
-				'background_remover':
-				{
-					'url': resolve_download_url('models-3.6.0', 'corridor_key_1024.hash'),
-					'path': resolve_relative_path('../.assets/models/corridor_key_1024.hash')
-				}
-			},
-			'sources':
-			{
-				'background_remover':
-				{
-					'url': resolve_download_url('models-3.6.0', 'corridor_key_1024.onnx'),
-					'path': resolve_relative_path('../.assets/models/corridor_key_1024.onnx')
-				}
-			},
-			'type': 'corridor_key',
-			'size': (1024, 1024),
-			'mean': [ 0.485, 0.456, 0.406 ],
-			'standard_deviation': [ 0.229, 0.224, 0.225 ]
-		},
-		'corridor_key_2048':
-		{
-			'__metadata__':
-			{
-				'vendor': 'nikopueringer',
-				'license': 'Non-Commercial',
-				'year': 2025
-			},
-			'hashes':
-			{
-				'background_remover':
-				{
-					'url': resolve_download_url('models-3.6.0', 'corridor_key_2048.hash'),
-					'path': resolve_relative_path('../.assets/models/corridor_key_2048.hash')
-				}
-			},
-			'sources':
-			{
-				'background_remover':
-				{
-					'url': resolve_download_url('models-3.6.0', 'corridor_key_2048.onnx'),
-					'path': resolve_relative_path('../.assets/models/corridor_key_2048.onnx')
-				}
-			},
-			'type': 'corridor_key',
-			'size': (2048, 2048),
-			'mean': [ 0.485, 0.456, 0.406 ],
-			'standard_deviation': [ 0.229, 0.224, 0.225 ]
 		},
 		'isnet_general':
 		{
@@ -196,7 +135,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/isnet_general.onnx')
 				}
 			},
-			'type': 'isnet',
 			'size': (1024, 1024),
 			'mean': [ 0.5, 0.5, 0.5 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -225,7 +163,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/modnet.onnx')
 				}
 			},
-			'type': 'modnet',
 			'size': (512, 512),
 			'mean': [ 0.5, 0.5, 0.5 ],
 			'standard_deviation': [ 0.5, 0.5, 0.5 ]
@@ -254,7 +191,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/ormbg.onnx')
 				}
 			},
-			'type': 'ormbg',
 			'size': (1024, 1024),
 			'mean': [ 0.0, 0.0, 0.0 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -283,7 +219,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/rmbg_1.4.onnx')
 				}
 			},
-			'type': 'rmbg',
 			'size': (1024, 1024),
 			'mean': [ 0.5, 0.5, 0.5 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]
@@ -312,7 +247,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/rmbg_2.0.onnx')
 				}
 			},
-			'type': 'rmbg',
 			'size': (1024, 1024),
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
@@ -341,7 +275,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/silueta.onnx')
 				}
 			},
-			'type': 'silueta',
 			'size': (320, 320),
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
@@ -370,7 +303,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/u2net_cloth.onnx')
 				}
 			},
-			'type': 'u2net_cloth',
 			'size': (768, 768),
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
@@ -399,7 +331,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/u2net_general.onnx')
 				}
 			},
-			'type': 'u2net',
 			'size': (320, 320),
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
@@ -428,7 +359,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/u2net_human.onnx')
 				}
 			},
-			'type': 'u2net',
 			'size': (320, 320),
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
@@ -457,7 +387,6 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/u2netp.onnx')
 				}
 			},
-			'type': 'u2netp',
 			'size': (320, 320),
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
@@ -478,9 +407,7 @@ def clear_inference_pool() -> None:
 
 
 def resolve_execution_providers() -> List[ExecutionProvider]:
-	model_type = get_model_options().get('type')
-
-	if is_macos() and has_execution_provider('coreml') or is_windows() and has_execution_provider('directml') and model_type == 'corridor_key':
+	if is_macos() and has_execution_provider('coreml'):
 		return [ 'cpu' ]
 	return state_manager.get_item('execution_providers')
 
@@ -493,16 +420,14 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'modnet'), choices = background_remover_choices.background_remover_models)
-		group_processors.add_argument('--background-remover-fill-color', help = translator.get('help.fill_color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_fill_color', '0 0 0 0'), nargs = '+')
-		group_processors.add_argument('--background-remover-despill-color', help = translator.get('help.despill_color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_despill_color', '0 0 0 0'), nargs = '+')
-		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model', 'background_remover_fill_color', 'background_remover_despill_color' ])
+		group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = background_remover_choices.background_remover_models)
+		group_processors.add_argument('--background-remover-color', help = translator.get('help.color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 0 0 0'), nargs = '+')
+		facefusion.args_store.register_args([ 'background_remover_model', 'background_remover_color' ], scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('background_remover_model', args.get('background_remover_model'))
-	apply_state_item('background_remover_fill_color', normalize_color(args.get('background_remover_fill_color')))
-	apply_state_item('background_remover_despill_color', normalize_color(args.get('background_remover_despill_color')))
+	apply_state_item('background_remover_color', normalize_color(args.get('background_remover_color')))
 
 
 def pre_check() -> bool:
@@ -533,26 +458,16 @@ def post_process() -> None:
 
 
 def remove_background(temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mask]:
-	model_type = get_model_options().get('type')
-
-	if model_type == 'corridor_key':
-		remove_vision_mask, remove_vision_frame = forward_corridor_key(prepare_temp_frame(temp_vision_frame))
-		remove_vision_frame = numpy.squeeze(remove_vision_frame).transpose(1, 2, 0)
-		remove_vision_frame = numpy.clip(remove_vision_frame * 255, 0, 255).astype(numpy.uint8)
-		temp_vision_frame = cv2.resize(remove_vision_frame[:, :, ::-1], temp_vision_frame.shape[:2][::-1])
-	else:
-		remove_vision_mask = forward(prepare_temp_frame(temp_vision_frame))
-
-	remove_vision_mask = normalize_vision_mask(remove_vision_mask)
-	remove_vision_mask = cv2.resize(remove_vision_mask, temp_vision_frame.shape[:2][::-1])
-	temp_vision_frame = apply_despill_color(temp_vision_frame)
-	temp_vision_frame = apply_fill_color(temp_vision_frame, remove_vision_mask)
-	return temp_vision_frame, remove_vision_mask
+	temp_vision_mask = forward(prepare_temp_frame(temp_vision_frame))
+	temp_vision_mask = normalize_vision_mask(temp_vision_mask)
+	temp_vision_mask = cv2.resize(temp_vision_mask, temp_vision_frame.shape[:2][::-1])
+	temp_vision_frame = apply_background_color(temp_vision_frame, temp_vision_mask)
+	return temp_vision_frame, temp_vision_mask
 
 
 def forward(temp_vision_frame : VisionFrame) -> VisionFrame:
 	background_remover = get_inference_pool().get('background_remover')
-	model_type = get_model_options().get('type')
+	model_name = state_manager.get_item('background_remover_model')
 
 	with thread_semaphore():
 		remove_vision_frame = background_remover.run(None,
@@ -560,42 +475,20 @@ def forward(temp_vision_frame : VisionFrame) -> VisionFrame:
 			'input': temp_vision_frame
 		})[0]
 
-		if model_type == 'u2net_cloth':
+		if model_name == 'u2net_cloth':
 			remove_vision_frame = numpy.argmax(remove_vision_frame, axis = 1)
 
 	return remove_vision_frame
 
 
-def forward_corridor_key(temp_vision_frame : VisionFrame) -> Tuple[Mask, VisionFrame]:
-	background_remover = get_inference_pool().get('background_remover')
-
-	with thread_semaphore():
-		remove_vision_mask, remove_vision_frame = background_remover.run(None,
-		{
-			'input': temp_vision_frame
-		})
-
-	return remove_vision_mask, remove_vision_frame
-
-
 def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
-	model_type = get_model_options().get('type')
 	model_size = get_model_options().get('size')
 	model_mean = get_model_options().get('mean')
 	model_standard_deviation = get_model_options().get('standard_deviation')
 
-	if model_type == 'corridor_key':
-		coarse_color = temp_vision_frame[:, :, ::-1].astype(numpy.float32) / 255.0
-		coarse_bias = coarse_color[:, :, 1] - numpy.maximum(coarse_color[:, :, 0], coarse_color[:, :, 2])
-		coarse_vision_mask = cv2.resize(1.0 - numpy.clip(coarse_bias * 2.0, 0, 1), model_size)[:, :, numpy.newaxis]
-
 	temp_vision_frame = cv2.resize(temp_vision_frame, model_size)
 	temp_vision_frame = temp_vision_frame[:, :, ::-1] / 255.0
 	temp_vision_frame = (temp_vision_frame - model_mean) / model_standard_deviation
-
-	if model_type == 'corridor_key':
-		temp_vision_frame = numpy.concatenate([ temp_vision_frame, coarse_vision_mask ], axis = 2)
-
 	temp_vision_frame = temp_vision_frame.transpose(2, 0, 1)
 	temp_vision_frame = numpy.expand_dims(temp_vision_frame, axis = 0).astype(numpy.float32)
 	return temp_vision_frame
@@ -607,32 +500,16 @@ def normalize_vision_mask(temp_vision_mask : Mask) -> Mask:
 	return temp_vision_mask
 
 
-def apply_fill_color(temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -> VisionFrame:
-	background_remover_fill_color = state_manager.get_item('background_remover_fill_color')
+def apply_background_color(temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -> VisionFrame:
+	background_remover_color = state_manager.get_item('background_remover_color')
 	temp_vision_mask = temp_vision_mask.astype(numpy.float32) / 255
 	temp_vision_mask = numpy.expand_dims(temp_vision_mask, axis = 2)
-	temp_vision_mask = (1 - temp_vision_mask) * background_remover_fill_color[-1] / 255
-	fill_vision_frame = numpy.zeros_like(temp_vision_frame)
-	fill_vision_frame[:, :, 0] = background_remover_fill_color[2]
-	fill_vision_frame[:, :, 1] = background_remover_fill_color[1]
-	fill_vision_frame[:, :, 2] = background_remover_fill_color[0]
-	temp_vision_frame = temp_vision_frame * (1 - temp_vision_mask) + fill_vision_frame * temp_vision_mask
-	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
-	return temp_vision_frame
-
-
-def apply_despill_color(temp_vision_frame : VisionFrame) -> VisionFrame:
-	background_remover_despill_color = state_manager.get_item('background_remover_despill_color')
-	temp_vision_frame = temp_vision_frame.astype(numpy.float32)
-	color_alpha = background_remover_despill_color[3] / 255.0
-	despill_vision_frame = numpy.zeros_like(temp_vision_frame)
-	despill_vision_frame[:, :, 0] = background_remover_despill_color[2]
-	despill_vision_frame[:, :, 1] = background_remover_despill_color[1]
-	despill_vision_frame[:, :, 2] = background_remover_despill_color[0]
-	color_weight = despill_vision_frame / numpy.maximum(numpy.max(background_remover_despill_color[:3]), 1)
-	color_limit = numpy.roll(temp_vision_frame, 1, 2) + numpy.roll(temp_vision_frame, -1, 2)
-	limit_vision_frame = numpy.minimum(temp_vision_frame, color_limit * 0.5)
-	temp_vision_frame = temp_vision_frame + (limit_vision_frame - temp_vision_frame) * color_alpha * color_weight
+	temp_vision_mask = (1 - temp_vision_mask) * background_remover_color[-1] / 255
+	color_frame = numpy.zeros_like(temp_vision_frame)
+	color_frame[:, :, 0] = background_remover_color[2]
+	color_frame[:, :, 1] = background_remover_color[1]
+	color_frame[:, :, 2] = background_remover_color[0]
+	temp_vision_frame = temp_vision_frame * (1 - temp_vision_mask) + color_frame * temp_vision_mask
 	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
 	return temp_vision_frame
 
