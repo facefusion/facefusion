@@ -269,7 +269,6 @@ def create_halt_on_error_program() -> ArgumentParser:
 def create_job_id_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	program.add_argument('job_id', help = translator.get('help.job_id'))
-	job_store.register_job_keys([ 'job_id' ])
 	return program
 
 
