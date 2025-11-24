@@ -82,7 +82,7 @@ def test_extract_frames() -> None:
 	]
 
 	for target_path, trim_frame_start, trim_frame_end, frame_total in test_set:
-		output_path = get_test_output_file(f'test-extract-frames-{trim_frame_start}-{trim_frame_end}.mp4')
+		output_path = get_test_output_file('test-extract-frames-{}-{}.mp4'.format(trim_frame_start, trim_frame_end))
 		create_temp_directory(output_path)
 
 		assert extract_frames(target_path, output_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
@@ -106,7 +106,7 @@ def test_merge_video() -> None:
 
 	for target_path in target_paths:
 		for output_video_encoder in output_video_encoders:
-			output_path = get_test_output_file(f'test-merge-video-{output_video_encoder}.mp4')
+			output_path = get_test_output_file('test-merge-video-{}.mp4'.format(output_video_encoder))
 			state_manager.init_item('output_path', target_path)
 			state_manager.init_item('output_video_fps', 25.0)
 			state_manager.init_item('output_video_encoder', output_video_encoder)
