@@ -67,22 +67,21 @@ def test_get_available_encoder_set() -> None:
 def test_extract_frames() -> None:
 	test_set =\
 	[
-		(get_test_example_file('target-240p-25fps.mp4'), 0, 270, 324),
-		(get_test_example_file('target-240p-25fps.mp4'), 224, 270, 55),
-		(get_test_example_file('target-240p-25fps.mp4'), 124, 224, 120),
-		(get_test_example_file('target-240p-25fps.mp4'), 0, 100, 120),
-		(get_test_example_file('target-240p-30fps.mp4'), 0, 324, 324),
-		(get_test_example_file('target-240p-30fps.mp4'), 224, 324, 100),
-		(get_test_example_file('target-240p-30fps.mp4'), 124, 224, 100),
-		(get_test_example_file('target-240p-30fps.mp4'), 0, 100, 100),
-		(get_test_example_file('target-240p-60fps.mp4'), 0, 648, 324),
-		(get_test_example_file('target-240p-60fps.mp4'), 224, 648, 212),
-		(get_test_example_file('target-240p-60fps.mp4'), 124, 224, 50),
-		(get_test_example_file('target-240p-60fps.mp4'), 0, 100, 50)
+		(get_test_example_file('target-240p-25fps.mp4'), get_test_example_file('test-extract-frames-0-270.mp4'), 0, 270, 324),
+		(get_test_example_file('target-240p-25fps.mp4'), get_test_example_file('test-extract-frames-224-270.mp4'), 224, 270, 55),
+		(get_test_example_file('target-240p-25fps.mp4'), get_test_example_file('test-extract-frames-124-224.mp4'), 124, 224, 120),
+		(get_test_example_file('target-240p-25fps.mp4'), get_test_example_file('test-extract-frames-0-100.mp4'), 0, 100, 120),
+		(get_test_example_file('target-240p-30fps.mp4'), get_test_example_file('test-extract-frames-0-324.mp4'), 0, 324, 324),
+		(get_test_example_file('target-240p-30fps.mp4'), get_test_example_file('test-extract-frames-224-324.mp4'), 224, 324, 100),
+		(get_test_example_file('target-240p-30fps.mp4'), get_test_example_file('test-extract-frames-124-224.mp4'), 124, 224, 100),
+		(get_test_example_file('target-240p-30fps.mp4'), get_test_example_file('test-extract-frames-0-100.mp4'), 0, 100, 100),
+		(get_test_example_file('target-240p-60fps.mp4'), get_test_example_file('test-extract-frames-0-648.mp4'), 0, 648, 324),
+		(get_test_example_file('target-240p-60fps.mp4'), get_test_example_file('test-extract-frames-224-648.mp4'), 224, 648, 212),
+		(get_test_example_file('target-240p-60fps.mp4'), get_test_example_file('test-extract-frames-124-224.mp4'), 124, 224, 50),
+		(get_test_example_file('target-240p-60fps.mp4'), get_test_example_file('test-extract-frames-0-100.mp4'), 0, 100, 50)
 	]
 
-	for target_path, trim_frame_start, trim_frame_end, frame_total in test_set:
-		output_path = get_test_output_file('test-extract-frames-{}-{}.mp4'.format(trim_frame_start, trim_frame_end))
+	for target_path, output_path, trim_frame_start, trim_frame_end, frame_total in test_set:
 		create_temp_directory(output_path)
 
 		assert extract_frames(target_path, output_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
@@ -102,11 +101,11 @@ def test_merge_video() -> None:
 		get_test_example_file('target-240p-16khz.webm'),
 		get_test_example_file('target-240p-16khz.wmv')
 	]
+	output_path = get_test_output_file('test-merge-video.mp4')
 	output_video_encoders = get_available_encoder_set().get('video')
 
 	for target_path in target_paths:
 		for output_video_encoder in output_video_encoders:
-			output_path = get_test_output_file('test-merge-video-{}.mp4'.format(output_video_encoder))
 			state_manager.init_item('output_path', target_path)
 			state_manager.init_item('output_video_fps', 25.0)
 			state_manager.init_item('output_video_encoder', output_video_encoder)
