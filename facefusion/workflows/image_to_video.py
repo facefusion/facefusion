@@ -69,7 +69,7 @@ def extract_frames() -> ErrorCode:
 
 
 def process_video() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('output_path'), state_manager.get_item('temp_path'))
+	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('output_path'), state_manager.get_item('temp_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:

@@ -109,7 +109,7 @@ def get_available_encoder_set() -> EncoderSet:
 
 def extract_frames(target_path : str, output_path : str, temp_video_resolution : Resolution, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
 	extract_frame_total = predict_video_frame_total(target_path, temp_video_fps, trim_frame_start, trim_frame_end)
-	temp_frames_pattern = get_temp_frames_pattern(output_path, '%08d', state_manager.get_item('temp_path'))
+	temp_frames_pattern = get_temp_frames_pattern(output_path, '%08d', state_manager.get_item('temp_path'), state_manager.get_item('temp_frame_format'))
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input(target_path),
 		ffmpeg_builder.set_media_resolution(pack_resolution(temp_video_resolution)),
@@ -220,7 +220,7 @@ def merge_video(target_path : str, output_path : str, temp_video_fps : Fps, outp
 	merge_frame_total = predict_video_frame_total(target_path, output_video_fps, trim_frame_start, trim_frame_end)
 	temp_video_path = get_temp_file_path(output_path, state_manager.get_item('temp_path'))
 	temp_video_format = cast(VideoFormat, get_file_format(output_path))
-	temp_frames_pattern = get_temp_frames_pattern(output_path, '%08d', state_manager.get_item('temp_path'))
+	temp_frames_pattern = get_temp_frames_pattern(output_path, '%08d', state_manager.get_item('temp_path'), state_manager.get_item('temp_frame_format'))
 
 	output_video_encoder = fix_video_encoder(temp_video_format, output_video_encoder)
 	commands = ffmpeg_builder.chain(

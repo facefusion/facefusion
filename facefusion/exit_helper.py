@@ -28,7 +28,7 @@ def graceful_exit(error_code : ErrorCode) -> None:
 	while process_manager.is_processing():
 		sleep(0.5)
 
-	if state_manager.get_item('output_path'):
+	if state_manager.get_item('output_path') and not state_manager.get_item('keep_temp'):
 		clear_temp_directory(state_manager.get_item('output_path'), state_manager.get_item('temp_path'))
 
 	hard_exit(error_code)
