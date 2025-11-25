@@ -21,15 +21,12 @@ def before_all() -> None:
 
 def test_get_temp_file_path() -> None:
 	state_manager.init_item('output_path', 'temp.mp4')
-	temp_directory = tempfile.gettempdir()
-	assert get_temp_file_path(get_test_example_file('target-240p.mp4')) == os.path.join(temp_directory, 'facefusion', 'target-240p', 'temp.mp4')
+	assert get_temp_file_path(get_test_example_file('target-240p.mp4'), state_manager.get_item('temp_path')) == os.path.join(temp_directory, 'facefusion', 'target-240p', 'temp.mp4')
 
 
 def test_get_temp_directory_path() -> None:
-	temp_directory = tempfile.gettempdir()
-	assert get_temp_directory_path(get_test_example_file('target-240p.mp4')) == os.path.join(temp_directory, 'facefusion', 'target-240p')
+	assert get_temp_directory_path(get_test_example_file('target-240p.mp4'), state_manager.get_item('temp_path')) == os.path.join(temp_directory, 'facefusion', 'target-240p')
 
 
 def test_get_temp_frames_pattern() -> None:
-	temp_directory = tempfile.gettempdir()
-	assert get_temp_frames_pattern(get_test_example_file('target-240p.mp4'), '%04d') == os.path.join(temp_directory, 'facefusion', 'target-240p', '%04d.png')
+	assert get_temp_frames_pattern(get_test_example_file('target-240p.mp4'), '%04d', state_manager.get_item('temp_path')) == os.path.join(temp_directory, 'facefusion', 'target-240p', '%04d.png')
