@@ -17,6 +17,7 @@ def setup() -> ErrorCode:
 
 
 def clear() -> ErrorCode:
-	clear_temp_directory(state_manager.get_item('output_path'), state_manager.get_item('temp_path'))
-	logger.debug(translator.get('clearing_temp'), __name__)
+	if not state_manager.get_item('keep_temp'):
+		clear_temp_directory(state_manager.get_item('output_path'), state_manager.get_item('temp_path'))
+		logger.debug(translator.get('clearing_temp'), __name__)
 	return 0
