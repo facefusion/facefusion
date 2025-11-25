@@ -85,7 +85,7 @@ def test_extract_frames() -> None:
 		create_temp_directory(output_path, state_manager.get_item('temp_path'))
 
 		assert extract_frames(target_path, output_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
-		assert len(resolve_temp_frame_paths(output_path, state_manager.get_item('temp_path'))) == frame_total
+		assert len(resolve_temp_frame_paths(output_path, state_manager.get_item('temp_path'), state_manager.get_item('temp_frame_format'))) == frame_total
 
 		clear_temp_directory(output_path, state_manager.get_item('temp_path'))
 
