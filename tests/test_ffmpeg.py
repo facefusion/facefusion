@@ -82,12 +82,12 @@ def test_extract_frames() -> None:
 	]
 
 	for target_path, output_path, trim_frame_start, trim_frame_end, frame_total in test_set:
-		create_temp_directory(output_path, state_manager.get_item('temp_path'))
+		create_temp_directory(state_manager.get_item('temp_path'), output_path)
 
 		assert extract_frames(target_path, output_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
-		assert len(resolve_temp_frame_paths(output_path, state_manager.get_item('temp_path'), state_manager.get_item('temp_frame_format'))) == frame_total
+		assert len(resolve_temp_frame_paths(state_manager.get_item('temp_path'), output_path, state_manager.get_item('temp_frame_format'))) == frame_total
 
-		clear_temp_directory(output_path, state_manager.get_item('temp_path'))
+		clear_temp_directory(state_manager.get_item('temp_path'), output_path)
 
 
 def test_merge_video() -> None:
@@ -108,12 +108,12 @@ def test_merge_video() -> None:
 			state_manager.init_item('output_path', target_path)
 			state_manager.init_item('output_video_fps', 25.0)
 			state_manager.init_item('output_video_encoder', output_video_encoder)
-			create_temp_directory(output_path, state_manager.get_item('temp_path'))
+			create_temp_directory(state_manager.get_item('temp_path'), output_path)
 			extract_frames(target_path, output_path, (452, 240), 25.0, 0, 1)
 
 			assert merge_video(target_path, output_path, 25.0, (452, 240), 0, 1) is True
 
-			clear_temp_directory(output_path, state_manager.get_item('temp_path'))
+			clear_temp_directory(state_manager.get_item('temp_path'), output_path)
 
 	state_manager.init_item('output_video_encoder', 'libx264')
 
@@ -150,15 +150,15 @@ def test_restore_audio() -> None:
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
 	for target_path, output_path in test_set:
-		create_temp_directory(output_path, state_manager.get_item('temp_path'))
+		create_temp_directory(state_manager.get_item('temp_path'), output_path)
 
 		for output_audio_encoder in output_audio_encoders:
 			state_manager.init_item('output_audio_encoder', output_audio_encoder)
-			copy_file(target_path, get_temp_file_path(output_path, state_manager.get_item('temp_path')))
+			copy_file(target_path, get_temp_file_path(state_manager.get_item('temp_path'), output_path))
 
 			assert restore_audio(target_path, output_path, 0, 270) is True
 
-		clear_temp_directory(output_path, state_manager.get_item('temp_path'))
+		clear_temp_directory(state_manager.get_item('temp_path'), output_path)
 
 	state_manager.init_item('output_audio_encoder', 'aac')
 
@@ -177,15 +177,15 @@ def test_replace_audio() -> None:
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
 	for target_path, output_path in test_set:
-		create_temp_directory(output_path, state_manager.get_item('temp_path'))
+		create_temp_directory(state_manager.get_item('temp_path'), output_path)
 
 		for output_audio_encoder in output_audio_encoders:
 			state_manager.init_item('output_audio_encoder', output_audio_encoder)
-			copy_file(target_path, get_temp_file_path(output_path, state_manager.get_item('temp_path')))
+			copy_file(target_path, get_temp_file_path(state_manager.get_item('temp_path'), output_path))
 
 			assert replace_audio(get_test_example_file('source.mp3'), output_path) is True
 			assert replace_audio(get_test_example_file('source.wav'), output_path) is True
 
-		clear_temp_directory(output_path, state_manager.get_item('temp_path'))
+		clear_temp_directory(state_manager.get_item('temp_path'), output_path)
 
 	state_manager.init_item('output_audio_encoder', 'aac')
