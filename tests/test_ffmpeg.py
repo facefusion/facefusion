@@ -7,7 +7,7 @@ import pytest
 import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio
+from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, spawn_frames
 from facefusion.filesystem import copy_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
@@ -85,6 +85,25 @@ def test_extract_frames() -> None:
 		create_temp_directory(state_manager.get_item('temp_path'), output_path)
 
 		assert extract_frames(target_path, output_path, (452, 240), 30.0, trim_frame_start, trim_frame_end) is True
+		assert len(resolve_temp_frame_paths(state_manager.get_item('temp_path'), output_path, state_manager.get_item('temp_frame_format'))) == frame_total
+
+		clear_temp_directory(state_manager.get_item('temp_path'), output_path)
+
+
+def test_spawn_frames() -> None:
+	test_set =\
+	[
+		(get_test_example_file('source.jpg'), get_test_example_file('test-spawn-frames-0-100.mp4'), 0, 100, 30.0, 100),
+		(get_test_example_file('source.jpg'), get_test_example_file('test-spawn-frames-0-150.mp4'), 0, 150, 30.0, 150),
+		(get_test_example_file('source.jpg'), get_test_example_file('test-spawn-frames-50-100.mp4'), 50, 100, 25.0, 50),
+		(get_test_example_file('source.jpg'), get_test_example_file('test-spawn-frames-0-300.mp4'), 0, 300, 60.0, 300),
+		(get_test_example_file('source.jpg'), get_test_example_file('test-spawn-frames-100-200.mp4'), 100, 200, 30.0, 100)
+	]
+
+	for target_path, output_path, trim_frame_start, trim_frame_end, temp_video_fps, frame_total in test_set:
+		create_temp_directory(state_manager.get_item('temp_path'), output_path)
+
+		assert spawn_frames(target_path, output_path, (452, 240), temp_video_fps, trim_frame_start, trim_frame_end) is True
 		assert len(resolve_temp_frame_paths(state_manager.get_item('temp_path'), output_path, state_manager.get_item('temp_frame_format'))) == frame_total
 
 		clear_temp_directory(state_manager.get_item('temp_path'), output_path)

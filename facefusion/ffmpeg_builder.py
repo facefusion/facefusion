@@ -59,6 +59,10 @@ def force_output(output_path : str) -> List[Command]:
 	return [ '-y', output_path ]
 
 
+def set_loop() -> List[Command]:
+	return [ '-loop', '1' ]
+
+
 def cast_stream() -> List[Command]:
 	return [ '-' ]
 
