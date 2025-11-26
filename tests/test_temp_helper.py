@@ -29,4 +29,4 @@ def test_get_temp_directory_path() -> None:
 
 
 def test_get_temp_frames_pattern() -> None:
-	assert get_temp_frames_pattern(state_manager.get_item('temp_path'), get_test_example_file('target-240p.mp4'), '%04d', state_manager.get_item('temp_frame_format')) == os.path.join(state_manager.get_item('temp_path'), 'facefusion', 'target-240p', '%04d.png')
+	assert get_temp_frames_pattern(state_manager.get_item('temp_path'), get_test_example_file('target-240p.mp4'), state_manager.get_item('temp_frame_format'), '%04d') == os.path.join(state_manager.get_item('temp_path'), 'facefusion', 'target-240p', '%04d.png')
