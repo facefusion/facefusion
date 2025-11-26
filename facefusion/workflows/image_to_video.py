@@ -22,7 +22,7 @@ def process(start_time : float) -> ErrorCode:
 		analyse_video,
 		clear,
 		setup,
-		extract_frames,
+		create_temp_frames,
 		process_video,
 		merge_frames,
 		restore_audio,
@@ -51,7 +51,7 @@ def analyse_video() -> ErrorCode:
 	return 0
 
 
-def extract_frames() -> ErrorCode:
+def create_temp_frames() -> ErrorCode:
 	trim_frame_start, trim_frame_end = restrict_trim_video_frame(state_manager.get_item('target_path'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	output_video_resolution = scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 	temp_video_resolution = restrict_video_resolution(state_manager.get_item('target_path'), output_video_resolution)

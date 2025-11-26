@@ -38,14 +38,3 @@ def create_temp_directory(temp_path : str, output_path : str) -> bool:
 def clear_temp_directory(temp_path : str, output_path : str) -> bool:
 	temp_directory_path = get_temp_directory_path(temp_path, output_path)
 	return remove_directory(temp_directory_path)
-
-
-def get_temp_sequence_paths(temp_path : str, output_path : str, temp_frame_format : str, temp_frame_prefix : str, frame_total : int) -> List[str]:
-	temp_directory_path = get_temp_directory_path(temp_path, output_path)
-	temp_frame_paths = []
-
-	for frame_number in range(frame_total):
-		temp_file_name = temp_frame_prefix % (frame_number + 1) + '.' + temp_frame_format
-		temp_frame_path = os.path.join(temp_directory_path, temp_file_name)
-		temp_frame_paths.append(temp_frame_path)
-	return temp_frame_paths
