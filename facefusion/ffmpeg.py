@@ -124,6 +124,24 @@ def extract_frames(target_path : str, output_path : str, temp_video_resolution :
 		return process.returncode == 0
 
 
+def spawn_frames(target_path : str, output_path : str, temp_video_resolution : Resolution, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+	spawn_frame_total = trim_frame_end - trim_frame_start
+	duration = spawn_frame_total / temp_video_fps
+	temp_frames_pattern = get_temp_frames_pattern(state_manager.get_item('temp_path'), output_path, state_manager.get_item('temp_frame_format'), '%08d')
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_loop(),
+		ffmpeg_builder.set_input(target_path),
+		ffmpeg_builder.set_video_duration(duration),
+		ffmpeg_builder.set_video_fps(temp_video_fps),
+		ffmpeg_builder.set_media_resolution(pack_resolution(temp_video_resolution)),
+		ffmpeg_builder.set_output(temp_frames_pattern)
+	)
+
+	with tqdm(total = spawn_frame_total, desc = translator.get('spawning'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
+		process = run_ffmpeg_with_progress(commands, partial(update_progress, progress))
+		return process.returncode == 0
+
+
 def copy_image(target_path : str, output_path : str, temp_image_resolution : Resolution) -> bool:
 	temp_image_path = get_temp_file_path(state_manager.get_item('temp_path'), output_path)
 	commands = ffmpeg_builder.chain(

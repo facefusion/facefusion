@@ -9,10 +9,10 @@ from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voic
 from facefusion.common_helper import get_first
 from facefusion.filesystem import filter_audio_paths, is_video
 from facefusion.processors.core import get_processors_modules
-from facefusion.temp_helper import get_temp_sequence_paths, move_temp_file
+from facefusion.temp_helper import move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
-from facefusion.vision import conditional_merge_vision_mask, detect_image_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, restrict_trim_video_frame, scale_resolution, write_image
+from facefusion.vision import conditional_merge_vision_mask, detect_image_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, restrict_image_resolution, restrict_trim_video_frame, scale_resolution, write_image
 from facefusion.workflows.core import clear, is_process_stopping, setup
 
 
@@ -22,6 +22,7 @@ def process(start_time : float) -> ErrorCode:
 		analyse_image,
 		clear,
 		setup,
+		create_temp_frames,
 		process_image,
 		merge_frames,
 		restore_audio,
@@ -48,12 +49,25 @@ def analyse_image() -> ErrorCode: # TODO: reusable block
 	return 0
 
 
-def process_image() -> ErrorCode:
-	state_manager.set_item('output_video_fps', 25.0) # TODO: set default fps value
+def create_temp_frames() -> ErrorCode:
+	state_manager.set_item('output_video_fps', 25.0)  # TODO: set default fps value
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
+	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
 	trim_frame_start, trim_frame_end = restrict_trim_audio_frame(source_audio_path, state_manager.get_item('output_video_fps'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
-	audio_frame_total = trim_frame_end - trim_frame_start
-	temp_frame_paths = get_temp_sequence_paths(state_manager.get_item('temp_path'), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'), '%08d', audio_frame_total)
+
+	if ffmpeg.spawn_frames(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_image_resolution, state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
+		logger.debug(translator.get('spawning_frames_succeeded'), __name__)
+	else:
+		if is_process_stopping():
+			return 4
+		logger.error(translator.get('spawning_frames_failed'), __name__)
+		return 1
+	return 0
+
+
+def process_image() -> ErrorCode:
+	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('temp_path'), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
