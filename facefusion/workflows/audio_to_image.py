@@ -53,7 +53,7 @@ def process_image() -> ErrorCode:
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	trim_frame_start, trim_frame_end = restrict_trim_audio_frame(source_audio_path, state_manager.get_item('output_video_fps'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	audio_frame_total = trim_frame_end - trim_frame_start
-	temp_frame_paths = get_temp_sequence_paths(state_manager.get_item('temp_path'), state_manager.get_item('output_path'), audio_frame_total, '%08d', state_manager.get_item('temp_frame_format'))
+	temp_frame_paths = get_temp_sequence_paths(state_manager.get_item('temp_path'), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'), '%08d', audio_frame_total)
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
