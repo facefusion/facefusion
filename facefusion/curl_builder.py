@@ -16,7 +16,7 @@ def chain(*commands : List[Command]) -> List[Command]:
 	return list(itertools.chain(*commands))
 
 
-def head(url : str) -> List[Command]:
+def ping(url : str) -> List[Command]:
 	return [ '-I', url ]
 
 
@@ -26,3 +26,7 @@ def download(url : str, download_file_path : str) -> List[Command]:
 
 def set_timeout(timeout : int) -> List[Command]:
 	return [ '--connect-timeout', str(timeout) ]
+
+
+def set_retry(retry : int) -> List[Command]:
+	return [ '--retry', str(retry) ]

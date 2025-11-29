@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import metadata
-from facefusion.curl_builder import chain, head, run
+from facefusion.curl_builder import chain, ping, run, set_timeout
 
 
 def test_run() -> None:
@@ -11,4 +11,7 @@ def test_run() -> None:
 
 
 def test_chain() -> None:
-	assert chain(head(metadata.get('url'))) == [ '-I', metadata.get('url') ]
+	assert chain(
+		ping(metadata.get('url')),
+		set_timeout(5)
+	) == [ '-I', metadata.get('url'), '--connect-timeout', '5' ]
