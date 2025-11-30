@@ -1,3 +1,4 @@
+import os
 from typing import Any, Union
 
 from facefusion.app_context import detect_app_context
@@ -40,3 +41,21 @@ def set_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
 
 def clear_item(key : Union[StateKey, ProcessorStateKey]) -> None:
 	set_item(key, None)
+
+
+def get_jobs_path() -> str:
+	jobs_path = get_item('jobs_path')
+	session_id = get_item('session_id')
+
+	if session_id:
+		return os.path.join(jobs_path, session_id)
+	return jobs_path
+
+
+def get_temp_path() -> str:
+	temp_path = get_item('temp_path')
+	session_id = get_item('session_id')
+
+	if session_id:
+		return os.path.join(temp_path, session_id)
+	return temp_path

@@ -58,25 +58,25 @@ def route(args : Args) -> None:
 		hard_exit(1)
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
-		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
+		if not job_manager.init_jobs(state_manager.get_jobs_path()):
 			hard_exit(1)
 		error_code = route_job_manager(args)
 		hard_exit(error_code)
 
 	if state_manager.get_item('command') == 'run':
-		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
+		if not job_manager.init_jobs(state_manager.get_jobs_path()):
 			hard_exit(1)
 		error_code = process_headless(args)
 		hard_exit(error_code)
 
 	if state_manager.get_item('command') == 'batch-run':
-		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
+		if not job_manager.init_jobs(state_manager.get_jobs_path()):
 			hard_exit(1)
 		error_code = process_batch(args)
 		hard_exit(error_code)
 
 	if state_manager.get_item('command') in [ 'job-run', 'job-run-all', 'job-retry', 'job-retry-all' ]:
-		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
+		if not job_manager.init_jobs(state_manager.get_jobs_path()):
 			hard_exit(1)
 		error_code = route_job_runner()
 		hard_exit(error_code)
