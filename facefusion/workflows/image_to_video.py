@@ -69,7 +69,7 @@ def create_temp_frames() -> ErrorCode:
 
 
 def process_video() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_item('temp_path'), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
+	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
@@ -123,7 +123,7 @@ def restore_audio() -> ErrorCode:
 
 	if state_manager.get_item('output_audio_volume') == 0:
 		logger.info(translator.get('skipping_audio'), __name__)
-		move_temp_file(state_manager.get_item('temp_path'), state_manager.get_item('output_path'))
+		move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
 	else:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		if source_audio_path:
@@ -135,7 +135,7 @@ def restore_audio() -> ErrorCode:
 				if is_process_stopping():
 					return 4
 				logger.warn(translator.get('replacing_audio_skipped'), __name__)
-				move_temp_file(state_manager.get_item('temp_path'), state_manager.get_item('output_path'))
+				move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
 		else:
 			if ffmpeg.restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), trim_frame_start, trim_frame_end):
 				video_manager.clear_video_pool()
@@ -145,7 +145,7 @@ def restore_audio() -> ErrorCode:
 				if is_process_stopping():
 					return 4
 				logger.warn(translator.get('restoring_audio_skipped'), __name__)
-				move_temp_file(state_manager.get_item('temp_path'), state_manager.get_item('output_path'))
+				move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
 	return 0
 
 
