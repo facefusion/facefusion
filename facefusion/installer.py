@@ -26,7 +26,8 @@ if is_windows() or is_linux():
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.23.0')
 if is_linux():
-	ONNXRUNTIME_SET['rocm'] = ('onnxruntime-rocm', '1.21.0')
+	ONNXRUNTIME_SET['migraphx'] = ('onnxruntime_migraphx', '1.23.1', '7.1.1')
+	ONNXRUNTIME_SET['rocm'] = ('onnxruntime_rocm', '1.22.1', '7.0.2')
 
 
 def cli() -> None:
@@ -45,28 +46,30 @@ def signal_exit(signum : int, frame : FrameType) -> None:
 def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	has_conda = 'CONDA_PREFIX' in os.environ
-	onnxruntime_name, onnxruntime_version = ONNXRUNTIME_SET.get(args.onnxruntime)
+	requirements = []
 
 	if not args.skip_conda and not has_conda:
 		sys.stdout.write(LOCALS.get('conda_not_activated') + os.linesep)
 		sys.exit(1)
 
-	requirements = []
-
 	with open('requirements.txt') as file:
+
 		for line in file.readlines():
 			__line__ = line.strip()
-			if __line__ and not __line__.startswith('onnxruntime'):
+			if not __line__.startswith('onnxruntime'):
 				requirements.append(__line__)
 
-	if args.onnxruntime == 'rocm':
+	if args.onnxruntime in [ 'migraphx', 'rocm' ]:
+		onnxruntime_name, onnxruntime_version, rocm_version = ONNXRUNTIME_SET.get(args.onnxruntime)
 		python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
 		if python_id in [ 'cp310', 'cp312' ]:
-			wheel_name = 'onnxruntime_rocm-' + onnxruntime_version + '-' + python_id + '-' + python_id + '-linux_x86_64.whl'
-			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4/' + wheel_name
+			wheel_name = onnxruntime_name + '-' + onnxruntime_version + '-' + python_id + '-' + python_id + '-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl'
+			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-' + rocm_version + '/' + wheel_name
+
 			requirements.append(wheel_url)
 	else:
+		onnxruntime_name, onnxruntime_version = ONNXRUNTIME_SET.get(args.onnxruntime)
 		requirements.append(onnxruntime_name + '==' + onnxruntime_version)
 
 	subprocess.call([ shutil.which('pip'), 'install' ] + requirements + [ '--force-reinstall' ])
