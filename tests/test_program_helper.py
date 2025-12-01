@@ -1,8 +1,6 @@
 from argparse import ArgumentParser
 
-import pytest
-
-from facefusion.program_helper import find_argument_group, validate_actions
+from facefusion.program_helper import find_argument_group, validate_actions, validate_args
 
 
 def test_find_argument_group() -> None:
@@ -12,12 +10,26 @@ def test_find_argument_group() -> None:
 
 	assert find_argument_group(program, 'test-1')
 	assert find_argument_group(program, 'test-2')
-	assert find_argument_group(program, 'invalid') is None
+	assert find_argument_group(program, 'test-3') is None
 
 
-@pytest.mark.skip()
 def test_validate_args() -> None:
-	pass
+	program = ArgumentParser()
+	program.add_argument('--test-1', default = 'test_1', choices = [ 'test_1', 'test_2' ])
+
+	assert validate_args(program) is True
+
+	subparsers = program.add_subparsers()
+	sub_program = subparsers.add_parser('sub-command')
+	sub_program.add_argument('--test-2', default = 'test_2', choices = [ 'test_1', 'test_2' ])
+
+	assert validate_args(program) is True
+
+	for action in sub_program._actions:
+		if action.dest == 'test_2':
+			action.default = 'test_3'
+
+	assert validate_args(program) is False
 
 
 def test_validate_actions() -> None:
