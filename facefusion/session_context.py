@@ -1,10 +1,9 @@
-import secrets
 from contextvars import ContextVar
 from typing import Optional
 
 from facefusion.types import SessionId
 
-SESSION_ID : ContextVar[Optional[SessionId]] = ContextVar('SESSION_ID', default = secrets.token_urlsafe(16))
+SESSION_ID : ContextVar[Optional[SessionId]] = ContextVar('SESSION_ID', default = None)
 
 
 def set_session_id(session_id : SessionId) -> None:
@@ -16,4 +15,4 @@ def get_session_id() -> Optional[SessionId]:
 
 
 def clear_session_id() -> None:
-	SESSION_ID.set(secrets.token_urlsafe(16))
+	SESSION_ID.set(None)
