@@ -26,7 +26,7 @@ if is_windows() or is_linux():
 if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.23.0')
 if is_linux():
-	ONNXRUNTIME_SET['migraphx'] = ('onnxruntime_migraphx', '1.23.1', '7.1.1')
+	ONNXRUNTIME_SET['migraphx'] = ('onnxruntime-migraphx', '1.23.0')
 	ONNXRUNTIME_SET['rocm'] = ('onnxruntime_rocm', '1.22.1', '7.0.2')
 
 
@@ -59,14 +59,13 @@ def run(program : ArgumentParser) -> None:
 			if not __line__.startswith('onnxruntime'):
 				requirements.append(__line__)
 
-	if args.onnxruntime in [ 'migraphx', 'rocm' ]:
+	if args.onnxruntime == 'rocm':
 		onnxruntime_name, onnxruntime_version, rocm_version = ONNXRUNTIME_SET.get(args.onnxruntime)
 		python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
 		if python_id in [ 'cp310', 'cp312' ]:
 			wheel_name = onnxruntime_name + '-' + onnxruntime_version + '-' + python_id + '-' + python_id + '-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl'
 			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-' + rocm_version + '/' + wheel_name
-
 			requirements.append(wheel_url)
 	else:
 		onnxruntime_name, onnxruntime_version = ONNXRUNTIME_SET.get(args.onnxruntime)
