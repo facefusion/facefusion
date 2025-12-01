@@ -51,12 +51,13 @@ def run(program : ArgumentParser) -> None:
 		sys.stdout.write(LOCALS.get('conda_not_activated') + os.linesep)
 		sys.exit(1)
 
-	with open('requirements.txt') as file:
+	requirements = []
 
+	with open('requirements.txt') as file:
 		for line in file.readlines():
 			__line__ = line.strip()
-			if not __line__.startswith('onnxruntime'):
-				subprocess.call([ shutil.which('pip'), 'install', line, '--force-reinstall' ])
+			if __line__ and not __line__.startswith('onnxruntime'):
+				requirements.append(__line__)
 
 	if args.onnxruntime == 'rocm':
 		python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
@@ -64,9 +65,11 @@ def run(program : ArgumentParser) -> None:
 		if python_id in [ 'cp310', 'cp312' ]:
 			wheel_name = 'onnxruntime_rocm-' + onnxruntime_version + '-' + python_id + '-' + python_id + '-linux_x86_64.whl'
 			wheel_url = 'https://repo.radeon.com/rocm/manylinux/rocm-rel-6.4/' + wheel_name
-			subprocess.call([ shutil.which('pip'), 'install', wheel_url, '--force-reinstall' ])
+			requirements.append(wheel_url)
 	else:
-		subprocess.call([ shutil.which('pip'), 'install', onnxruntime_name + '==' + onnxruntime_version, '--force-reinstall' ])
+		requirements.append(onnxruntime_name + '==' + onnxruntime_version)
+
+	subprocess.call([ shutil.which('pip'), 'install' ] + requirements + [ '--force-reinstall' ])
 
 	if args.onnxruntime == 'cuda' and has_conda:
 		library_paths = []
