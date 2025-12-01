@@ -8,7 +8,7 @@ from starlette.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_426_UPGRADE_REQUIRED
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from facefusion import session_manager, translator
+from facefusion import session_context, session_manager, translator
 from facefusion.types import Token
 
 
@@ -18,6 +18,7 @@ async def create_session(request : Request) -> JSONResponse:
 	if not body.get('api_key') or body.get('api_key') == os.getenv('FACEFUSION_API_KEY'):
 		session_id = secrets.token_urlsafe(16)
 		session = session_manager.create_session()
+		session_context.set_session_id(session_id)
 		session_manager.set_session(session_id, session)
 
 		return JSONResponse(
