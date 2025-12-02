@@ -60,7 +60,7 @@ def run(program : ArgumentParser) -> None:
 				requirements.append(__line__)
 
 	if args.onnxruntime == 'rocm':
-		onnxruntime_name, onnxruntime_version, rocm_version = ONNXRUNTIME_SET.get(args.onnxruntime)
+		onnxruntime_name, onnxruntime_version, rocm_version = ONNXRUNTIME_SET.get(args.onnxruntime) #type:ignore[misc]
 		python_id = 'cp' + str(sys.version_info.major) + str(sys.version_info.minor)
 
 		if python_id in [ 'cp310', 'cp312' ]:
