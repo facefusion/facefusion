@@ -27,7 +27,7 @@ if is_windows():
 	ONNXRUNTIME_SET['directml'] = ('onnxruntime-directml', '1.23.0')
 if is_linux():
 	ONNXRUNTIME_SET['migraphx'] = ('onnxruntime-migraphx', '1.23.0')
-	ONNXRUNTIME_SET['rocm'] = ('onnxruntime_rocm', '1.22.1', '7.0.2')
+	ONNXRUNTIME_SET['rocm'] = ('onnxruntime_rocm', '1.22.1', '7.0.2') #type:ignore[assignment]
 
 
 def cli() -> None:
