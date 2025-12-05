@@ -1,14 +1,12 @@
 from functools import partial
 
 from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator
-from facefusion.audio import create_empty_audio_frame
 from facefusion.filesystem import is_image
-from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import get_temp_file_path
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
-from facefusion.vision import conditional_merge_vision_mask, detect_image_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, restrict_image_resolution, scale_resolution, write_image
-from facefusion.workflows.core import clear, is_process_stopping, setup
+from facefusion.vision import detect_image_resolution, pack_resolution, restrict_image_resolution, scale_resolution
+from facefusion.workflows.core import clear, is_process_stopping, process_temp_frame, setup
 
 
 def process(start_time : float) -> ErrorCode:
@@ -58,32 +56,7 @@ def prepare_image() -> ErrorCode:
 
 def process_image() -> ErrorCode:
 	temp_image_path = get_temp_file_path(state_manager.get_temp_path(), state_manager.get_item('output_path'))
-	reference_vision_frame = read_static_image(state_manager.get_item('target_path'))
-	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
-	source_audio_frame = create_empty_audio_frame()
-	source_voice_frame = create_empty_audio_frame()
-	target_vision_frame = read_static_image(state_manager.get_item('target_path'), 'rgba')
-	temp_vision_frame = target_vision_frame.copy()
-	temp_vision_mask = extract_vision_mask(temp_vision_frame)
-
-	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		logger.info(translator.get('processing'), processor_module.__name__)
-
-		temp_vision_frame, temp_vision_mask = processor_module.process_frame(
-		{
-			'reference_vision_frame': reference_vision_frame,
-			'source_vision_frames': source_vision_frames,
-			'source_audio_frame': source_audio_frame,
-			'source_voice_frame': source_voice_frame,
-			'target_vision_frame': target_vision_frame[:, :, :3],
-			'temp_vision_frame': temp_vision_frame[:, :, :3],
-			'temp_vision_mask': temp_vision_mask
-		})
-
-		processor_module.post_process()
-
-	temp_vision_frame = conditional_merge_vision_mask(temp_vision_frame, temp_vision_mask)
-	write_image(temp_image_path, temp_vision_frame)
+	process_temp_frame(temp_image_path, 0)
 
 	if is_process_stopping():
 		return 4
