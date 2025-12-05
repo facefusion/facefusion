@@ -32,7 +32,7 @@ def create_config_path_program() -> ArgumentParser:
 def create_workflow_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
-	group_paths.add_argument('--workflow', help = translator.get('help.workflow'), choices = facefusion.choices.workflows)
+	group_paths.add_argument('--workflow', help = translator.get('help.workflow'), default = config.get_str_value('workflow', 'workflow', 'auto'), choices = facefusion.choices.workflows)
 	args_store.register_args([ 'workflow' ], scopes = [ 'api', 'cli' ])
 	return program
 

@@ -13,12 +13,13 @@ from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
 from facefusion.filesystem import get_file_extension, get_file_name, resolve_file_paths, resolve_file_pattern
+from facefusion.filesystem import has_audio, has_image, has_video
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
-from facefusion.types import Args, ErrorCode
+from facefusion.types import Args, ErrorCode, WorkFlow
 from facefusion.workflows import audio_to_image, image_to_image, image_to_video
 
 
@@ -328,6 +329,9 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 def conditional_process() -> ErrorCode:
 	start_time = time()
 
+	if state_manager.get_item('workflow') == 'auto':
+		state_manager.set_item('workflow', detect_workflow())
+
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
 		if not processor_module.pre_process('output'):
 			return 2
@@ -342,3 +346,11 @@ def conditional_process() -> ErrorCode:
 	return 0
 
 
+def detect_workflow() -> WorkFlow:
+	if has_video([ state_manager.get_item('target_path') ]):
+		return 'image-to-video'
+
+	if has_audio(state_manager.get_item('source_paths')) and has_image([ state_manager.get_item('target_path') ]):
+		return 'audio-to-image'
+
+	return 'image-to-image'
