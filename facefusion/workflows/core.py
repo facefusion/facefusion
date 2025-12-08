@@ -11,8 +11,8 @@ from facefusion.media_helper import restrict_trim_frame
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
 from facefusion.time_helper import calculate_end_time
-from facefusion.types import AudioFrame, ErrorCode, Fps, VisionFrame
-from facefusion.vision import conditional_merge_vision_mask, detect_image_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_video_fps, scale_resolution, write_image
+from facefusion.types import AudioFrame, ErrorCode, Fps, Resolution, VisionFrame
+from facefusion.vision import conditional_merge_vision_mask, detect_image_resolution, detect_video_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_video_fps, scale_resolution, write_image
 
 
 def is_process_stopping() -> bool:
@@ -68,6 +68,12 @@ def conditional_get_reference_vision_frame() -> VisionFrame:
 	if state_manager.get_item('workflow') == 'image-to-video':
 		return read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	return read_static_image(state_manager.get_item('target_path'))
+
+
+def conditional_scale_resolution() -> Resolution:
+	if state_manager.get_item('workflow') == 'image-to-video':
+		return scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
+	return scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
 
 
 def conditional_restrict_video_fps() -> Fps:
@@ -143,7 +149,7 @@ def process_video() -> ErrorCode:
 def merge_frames() -> ErrorCode:
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 	trim_frame_start, trim_frame_end = restrict_trim_frame(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
-	output_video_resolution = scale_resolution(detect_image_resolution(get_first(temp_frame_paths)), state_manager.get_item('output_video_scale'))
+	output_video_resolution = conditional_scale_resolution()
 	temp_video_fps = conditional_restrict_video_fps()
 
 	logger.info(translator.get('merging_video').format(resolution = pack_resolution(output_video_resolution), fps = state_manager.get_item('output_video_fps')), __name__)
