@@ -1,0 +1,14 @@
+services:
+  facefusion-mac:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: facefusion-mac
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./:/app
+    environment:
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_SERVER_PORT=7860
+    command: ["python3", "facefusion.py", "run", "--ui-layouts", "default"]

@@ -1,125 +1,107 @@
-import gradio
+import gradio as gr
 
 from facefusion import state_manager
-from facefusion.uis.components import about, age_modifier_options, background_remover_options, common_options, deep_swapper_options, download, execution, execution_thread_count, expression_restorer_options, face_debugger_options, face_detector, face_editor_options, face_enhancer_options, face_landmarker, face_masker, face_selector, face_swapper_options, frame_colorizer_options, frame_enhancer_options, instant_runner, job_manager, job_runner, lip_syncer_options, memory, output, output_options, preview, preview_options, processors, source, target, temp_frame, terminal, trim_frame, ui_workflow, voice_extractor
+from facefusion.uis.components import (
+    face_selector,
+    instant_runner,
+    job_manager,
+    job_runner,
+    output,
+    preview,
+    preview_options,
+    source,
+    target,
+    ui_workflow,
+)
 
 
-def pre_check() -> bool:
-	return True
+def preload_defaults():
+    # Processor defaults (required)
+    state_manager.set_item("processors", ["face_swapper"])
+
+    # Face swapper defaults
+    state_manager.set_item("face_swapper_model", "inswapper_128")
+    state_manager.set_item("face_swapper_pixel_boost", "128x128")
+    state_manager.set_item("face_swapper_weight", 0.90)
+
+    # Mask defaults
+    state_manager.set_item("face_mask_types", ["box", "occlusion"])
+
+    # Preview
+    state_manager.set_item("preview_mode", "default")
+    state_manager.set_item("preview_resolution", "1024x1024")
+
+    # Face selector
+    state_manager.set_item("face_selector_mode", "reference")
+    state_manager.set_item("reference_face_position", 0)
+    state_manager.set_item("reference_frame_number", 0)
+    state_manager.set_item("reference_face_distance", 0.33)
 
 
-def render() -> gradio.Blocks:
-	with gradio.Blocks() as layout:
-		with gradio.Row():
-			with gradio.Column(scale = 4):
-				with gradio.Blocks():
-					about.render()
-				with gradio.Blocks():
-					processors.render()
-				with gradio.Blocks():
-					age_modifier_options.render()
-				with gradio.Blocks():
-					background_remover_options.render()
-				with gradio.Blocks():
-					deep_swapper_options.render()
-				with gradio.Blocks():
-					expression_restorer_options.render()
-				with gradio.Blocks():
-					face_debugger_options.render()
-				with gradio.Blocks():
-					face_editor_options.render()
-				with gradio.Blocks():
-					face_enhancer_options.render()
-				with gradio.Blocks():
-					face_swapper_options.render()
-				with gradio.Blocks():
-					frame_colorizer_options.render()
-				with gradio.Blocks():
-					frame_enhancer_options.render()
-				with gradio.Blocks():
-					lip_syncer_options.render()
-				with gradio.Blocks():
-					voice_extractor.render()
-				with gradio.Blocks():
-					execution.render()
-					execution_thread_count.render()
-				with gradio.Blocks():
-					download.render()
-				with gradio.Blocks():
-					memory.render()
-				with gradio.Blocks():
-					temp_frame.render()
-				with gradio.Blocks():
-					output_options.render()
-			with gradio.Column(scale = 4):
-				with gradio.Blocks():
-					source.render()
-				with gradio.Blocks():
-					target.render()
-				with gradio.Blocks():
-					output.render()
-				with gradio.Blocks():
-					terminal.render()
-				with gradio.Blocks():
-					ui_workflow.render()
-					instant_runner.render()
-					job_runner.render()
-					job_manager.render()
-			with gradio.Column(scale = 7):
-				with gradio.Blocks():
-					preview.render()
-					preview_options.render()
-				with gradio.Blocks():
-					trim_frame.render()
-				with gradio.Blocks():
-					face_selector.render()
-				with gradio.Blocks():
-					face_masker.render()
-				with gradio.Blocks():
-					face_detector.render()
-				with gradio.Blocks():
-					face_landmarker.render()
-				with gradio.Blocks():
-					common_options.render()
-	return layout
+def pre_check():
+    return True
 
 
-def listen() -> None:
-	processors.listen()
-	age_modifier_options.listen()
-	background_remover_options.listen()
-	deep_swapper_options.listen()
-	expression_restorer_options.listen()
-	face_debugger_options.listen()
-	face_editor_options.listen()
-	face_enhancer_options.listen()
-	face_swapper_options.listen()
-	frame_colorizer_options.listen()
-	frame_enhancer_options.listen()
-	lip_syncer_options.listen()
-	execution.listen()
-	execution_thread_count.listen()
-	download.listen()
-	memory.listen()
-	temp_frame.listen()
-	output_options.listen()
-	source.listen()
-	target.listen()
-	output.listen()
-	instant_runner.listen()
-	job_runner.listen()
-	job_manager.listen()
-	terminal.listen()
-	preview.listen()
-	preview_options.listen()
-	trim_frame.listen()
-	face_selector.listen()
-	face_masker.listen()
-	face_detector.listen()
-	face_landmarker.listen()
-	voice_extractor.listen()
-	common_options.listen()
+def render():
+    preload_defaults()
+
+    with gr.Blocks() as layout:
+
+        with gr.Row():
+
+            # ---------------------------------
+            # LEFT PANEL: source + target
+            # ---------------------------------
+            with gr.Column(scale=4):
+                source.render()
+                target.render()
+
+            # ---------------------------------
+            # MIDDLE PANEL: output + job systems
+            # ---------------------------------
+            with gr.Column(scale=4):
+                output.render()  # Output path + output preview
+                ui_workflow.render()  # Workflow dropdown
+                instant_runner.render()  # START & CLEAR
+                job_runner.render()  # Job Runner panel
+                job_manager.render()  # Job Manager
+
+            # ---------------------------------
+            # RIGHT PANEL: preview & face selector
+            # ---------------------------------
+            with gr.Column(scale=8):
+                preview.render()
+                preview_options.render()
+                face_selector.render()
+
+    return layout
 
 
-def run(ui : gradio.Blocks) -> None:
-	ui.launch(favicon_path = 'facefusion.ico', inbrowser = state_manager.get_item('open_browser'))
+def listen():
+    # Input handlers
+    source.listen()
+    target.listen()
+
+    # 🔥 OUTPUT HARUS SEBELUM PREVIEW — agar video muncul
+    output.listen()
+
+    # Preview updates
+    preview.listen()
+    preview_options.listen()
+
+    # Face selector (setelah preview options)
+    face_selector.listen()
+
+    # Workflow + process runners
+    instant_runner.listen()
+    job_runner.listen()
+    job_manager.listen()
+
+
+def run(ui):
+    ui.launch(
+        favicon_path="facefusion.ico",
+        server_name="0.0.0.0",
+        server_port=7860,
+        inbrowser=False,
+    )
