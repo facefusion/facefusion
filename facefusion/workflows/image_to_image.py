@@ -1,12 +1,12 @@
 from functools import partial
 
-from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator
+from facefusion import ffmpeg, logger, process_manager, state_manager, translator
 from facefusion.filesystem import is_image
 from facefusion.temp_helper import get_temp_file_path
 from facefusion.time_helper import calculate_end_time
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_image_resolution, pack_resolution, restrict_image_resolution, scale_resolution
-from facefusion.workflows.core import clear, is_process_stopping, process_temp_frame, setup
+from facefusion.workflows.core import analyse_image, clear, is_process_stopping, process_temp_frame, setup
 
 
 def process(start_time : float) -> ErrorCode:
@@ -31,12 +31,6 @@ def process(start_time : float) -> ErrorCode:
 			return error_code
 
 	process_manager.end()
-	return 0
-
-
-def analyse_image() -> ErrorCode:
-	if content_analyser.analyse_image(state_manager.get_item('target_path')):
-		return 3
 	return 0
 
 

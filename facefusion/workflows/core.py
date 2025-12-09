@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy
 from tqdm import tqdm
 
-from facefusion import ffmpeg, logger, process_manager, state_manager, translator, video_manager
+from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator, video_manager
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
 from facefusion.filesystem import filter_audio_paths, is_video
@@ -31,6 +31,12 @@ def setup() -> ErrorCode:
 def clear() -> ErrorCode:
 	clear_temp_directory(state_manager.get_temp_path(), state_manager.get_item('output_path'))
 	logger.debug(translator.get('clearing_temp'), __name__)
+	return 0
+
+
+def analyse_image() -> ErrorCode:
+	if content_analyser.analyse_image(state_manager.get_item('target_path')):
+		return 3
 	return 0
 
 
