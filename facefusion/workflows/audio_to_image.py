@@ -1,12 +1,12 @@
 from functools import partial
 
-from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator
+from facefusion import ffmpeg, logger, process_manager, state_manager, translator
 from facefusion.audio import restrict_trim_audio_frame
 from facefusion.common_helper import get_first
 from facefusion.filesystem import filter_audio_paths
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_image_resolution, restrict_image_resolution, scale_resolution
-from facefusion.workflows.core import clear, finalize_video, is_process_stopping, merge_frames, process_video, restore_audio, setup
+from facefusion.workflows.core import analyse_image, clear, finalize_video, is_process_stopping, merge_frames, process_video, restore_audio, setup
 
 
 def process(start_time : float) -> ErrorCode:
@@ -33,12 +33,6 @@ def process(start_time : float) -> ErrorCode:
 			return error_code
 
 	process_manager.end()
-	return 0
-
-
-def analyse_image() -> ErrorCode: # TODO: reusable block
-	if content_analyser.analyse_image(state_manager.get_item('target_path')):
-		return 3
 	return 0
 
 
