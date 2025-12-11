@@ -6,7 +6,7 @@ from facefusion.common_helper import get_first
 from facefusion.filesystem import filter_audio_paths
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_image_resolution, restrict_image_resolution, scale_resolution
-from facefusion.workflows.core import analyse_image, clear, finalize_video, is_process_stopping, merge_frames, process_video, restore_audio, setup
+from facefusion.workflows.core import analyse_image, clear, finalize_video, is_process_stopping, merge_frames, process_frames, restore_audio, setup
 
 
 def process(start_time : float) -> ErrorCode:
@@ -16,7 +16,7 @@ def process(start_time : float) -> ErrorCode:
 		clear,
 		setup,
 		create_temp_frames,
-		process_video,
+		process_frames,
 		merge_frames,
 		restore_audio,
 		partial(finalize_video, start_time),

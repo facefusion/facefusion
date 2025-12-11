@@ -3,7 +3,7 @@ from functools import partial
 from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator
 from facefusion.types import ErrorCode
 from facefusion.vision import detect_video_resolution, pack_resolution, restrict_trim_video_frame, restrict_video_fps, restrict_video_resolution, scale_resolution
-from facefusion.workflows.core import clear, finalize_video, is_process_stopping, merge_frames, process_video, restore_audio, setup
+from facefusion.workflows.core import clear, finalize_video, is_process_stopping, merge_frames, process_frames, restore_audio, setup
 
 
 def process(start_time : float) -> ErrorCode:
@@ -13,7 +13,7 @@ def process(start_time : float) -> ErrorCode:
 		clear,
 		setup,
 		create_temp_frames,
-		process_video,
+		process_frames,
 		merge_frames,
 		restore_audio,
 		partial(finalize_video, start_time),

@@ -8,7 +8,7 @@ from facefusion import inference_manager, state_manager, translator
 from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
-from facefusion.filesystem import resolve_relative_path
+from facefusion.filesystem import resolve_file_pattern, resolve_relative_path
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import Detection, DownloadScope, DownloadSet, ExecutionProvider, Fps, InferencePool, ModelSet, VisionFrame
 from facefusion.vision import detect_video_fps, fit_contain_frame, read_image, read_video_frame
@@ -187,6 +187,23 @@ def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int
 			progress.update()
 
 	return bool(rate > 10.0)
+
+
+@lru_cache()
+def analyse_sequence(sequence_pattern : str, trim_frame_start : int, trim_frame_end : int) -> bool:
+	sequence_frame_paths = resolve_file_pattern(sequence_pattern)
+	frame_range = range(trim_frame_start, trim_frame_end)
+
+	with tqdm(total = len(frame_range), desc = translator.get('analysing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in ['warn', 'error']) as progress:
+
+		for frame_number in frame_range:
+			vision_frame = read_image(sequence_frame_paths[frame_number])
+
+			if analyse_frame(vision_frame):
+				return True
+			progress.update()
+
+	return False
 
 
 def detect_nsfw(vision_frame : VisionFrame) -> bool:

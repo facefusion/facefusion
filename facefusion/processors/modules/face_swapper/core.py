@@ -16,7 +16,7 @@ from facefusion.face_analyser import get_average_face, get_many_faces, get_one_f
 from facefusion.face_helper import paste_back, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
 from facefusion.face_selector import select_faces, sort_faces_by_order
-from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path
+from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_sequence, is_video, resolve_relative_path
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors.modules.face_swapper import choices as face_swapper_choices
 from facefusion.processors.modules.face_swapper.types import FaceSwapperInputs
@@ -547,11 +547,11 @@ def pre_process(mode : ProcessMode) -> bool:
 		logger.error(translator.get('no_source_face_detected') + translator.get('exclamation_mark'), __name__)
 		return False
 
-	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
+	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')) and not is_sequence(state_manager.get_item('target_path')):
 		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 
-	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')) and not is_sequence(state_manager.get_item('target_path')):
 		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
 		return False
 

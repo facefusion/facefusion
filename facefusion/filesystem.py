@@ -80,6 +80,11 @@ def are_images(image_paths : List[str]) -> bool:
 	return False
 
 
+def is_sequence(sequence_pattern : str) -> bool:
+	image_paths = resolve_file_pattern(sequence_pattern)
+	return are_images(image_paths)
+
+
 def is_video(video_path : str) -> bool:
 	return is_file(video_path) and get_file_format(video_path) in facefusion.choices.video_formats
 

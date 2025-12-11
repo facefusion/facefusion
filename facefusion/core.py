@@ -20,7 +20,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode, WorkFlow
-from facefusion.workflows import audio_to_image, image_to_image, image_to_video
+from facefusion.workflows import audio_to_image, image_to_image, image_to_sequence, image_to_video
 
 
 def cli() -> None:
@@ -113,7 +113,7 @@ def common_pre_check() -> bool:
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 	content_analyser_hash = hash_helper.create_hash(content_analyser_content)
 
-	return all(module.pre_check() for module in common_modules) and content_analyser_hash == 'b14e7b92'
+	return all(module.pre_check() for module in common_modules) and content_analyser_hash == '2650ceca'
 
 
 def processors_pre_check() -> bool:
@@ -340,6 +340,8 @@ def conditional_process() -> ErrorCode:
 		return audio_to_image.process(start_time)
 	if state_manager.get_item('workflow') == 'image-to-image':
 		return image_to_image.process(start_time)
+	if state_manager.get_item('workflow') == 'image-to-sequence':
+		return image_to_sequence.process(start_time)
 	if state_manager.get_item('workflow') == 'image-to-video':
 		return image_to_video.process(start_time)
 

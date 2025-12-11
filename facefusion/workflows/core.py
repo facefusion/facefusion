@@ -73,6 +73,9 @@ def conditional_get_source_voice_frame(frame_number: int) -> AudioFrame:
 def conditional_get_reference_vision_frame() -> VisionFrame:
 	if state_manager.get_item('workflow') == 'image-to-video':
 		return read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+	if state_manager.get_item('workflow') == 'image-to-sequence':
+		temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
+		return read_static_image(temp_frame_paths[state_manager.get_item('reference_frame_number')])
 	return read_static_image(state_manager.get_item('target_path'))
 
 
@@ -118,7 +121,7 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	return write_image(temp_frame_path, temp_vision_frame)
 
 
-def process_video() -> ErrorCode:
+def process_frames() -> ErrorCode:
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_paths:
