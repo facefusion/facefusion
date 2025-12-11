@@ -9,6 +9,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZE
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from facefusion import session_context, session_manager, translator
+from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.types import Token
 
 
@@ -34,7 +35,7 @@ async def create_session(request : Request) -> JSONResponse:
 
 
 async def get_session(request : Request) -> JSONResponse:
-	access_token = extract_access_token(request.headers)
+	access_token = extract_access_token(request.scope)
 
 	if access_token:
 		session_id = session_manager.find_session_id(access_token)
@@ -77,7 +78,7 @@ async def refresh_session(request : Request) -> JSONResponse:
 
 
 async def destroy_session(request : Request) -> JSONResponse:
-	access_token = extract_access_token(request.headers)
+	access_token = extract_access_token(request.scope)
 
 	if access_token:
 		session_id = session_manager.find_session_id(access_token)
@@ -98,7 +99,7 @@ async def destroy_session(request : Request) -> JSONResponse:
 
 def create_session_guard(app : ASGIApp) -> ASGIApp:
 	async def middleware(scope : Scope, receive : Receive, send : Send) -> None:
-		access_token = extract_access_token(Headers(scope = scope))
+		access_token = extract_access_token(scope)
 
 		if access_token:
 			session_id = session_manager.find_session_id(access_token)
@@ -124,13 +125,23 @@ def create_session_guard(app : ASGIApp) -> ASGIApp:
 	return middleware
 
 
-def extract_access_token(headers : Headers) -> Optional[Token]:
-	auth_header = headers.get('Authorization')
+def extract_access_token(scope : Scope) -> Optional[Token]:
+	if scope.get('type') == 'http':
+		auth_header = Headers(scope = scope).get('Authorization')
 
-	if auth_header:
-		auth_prefix, _, access_token = auth_header.partition(' ')
+		if auth_header:
+			auth_prefix, _, access_token = auth_header.partition(' ')
 
-		if auth_prefix.lower() == 'bearer' and access_token:
-			return access_token
+			if auth_prefix.lower() == 'bearer' and access_token:
+				return access_token
+
+	if scope.get('type') == 'websocket':
+		subprotocol = get_sec_websocket_protocol(scope)
+
+		if subprotocol:
+			protocol_prefix, _, access_token = subprotocol.partition('.')
+
+			if protocol_prefix == 'access_token' and access_token:
+				return access_token
 
 	return None
