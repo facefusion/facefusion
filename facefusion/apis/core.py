@@ -3,6 +3,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
+from facefusion.apis.ping import websocket_ping
 from facefusion.apis.session import create_session
 from facefusion.apis.session import create_session_guard
 from facefusion.apis.session import destroy_session
@@ -10,7 +11,6 @@ from facefusion.apis.session import get_session
 from facefusion.apis.session import refresh_session
 from facefusion.apis.state import get_state
 from facefusion.apis.state import set_state
-from facefusion.apis.ping import websocket_ping
 
 
 def create_api() -> Starlette:

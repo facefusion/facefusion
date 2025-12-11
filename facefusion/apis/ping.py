@@ -1,4 +1,5 @@
-from starlette.websockets import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocket
+
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 
 
