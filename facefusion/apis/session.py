@@ -9,6 +9,7 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZE
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from facefusion import session_context, session_manager, translator
+from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.types import Token
 
 
@@ -135,11 +136,10 @@ def extract_access_token(scope : Scope) -> Optional[Token]:
 				return access_token
 
 	if scope.get('type') == 'websocket':
-		protocol_header = Headers(scope = scope).get('Sec-WebSocket-Protocol')
+		subprotocol = get_sec_websocket_protocol(scope)
 
-		if protocol_header:
-			protocol, _, _ = protocol_header.partition(',')
-			protocol_prefix, _, access_token = protocol.partition('.')
+		if subprotocol:
+			protocol_prefix, _, access_token = subprotocol.partition('.')
 
 			if protocol_prefix == 'access_token' and access_token:
 				return access_token

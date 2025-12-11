@@ -1,28 +1,15 @@
-from typing import Optional
-
-from starlette.datastructures import Headers
 from starlette.websockets import WebSocket, WebSocketDisconnect
+from facefusion.apis.api_helper import get_sec_websocket_protocol
 
 
-async def websocket_ping(websocket: WebSocket) -> None:
-    subprotocol = get_requested_subprotocol(websocket)
-    await websocket.accept(subprotocol=subprotocol)
+async def websocket_ping(websocket : WebSocket) -> None:
+	subprotocol = get_sec_websocket_protocol(websocket.scope)
 
-    try:
-        while True:
-            await websocket.receive()
+	await websocket.accept(subprotocol = subprotocol)
 
-    except (WebSocketDisconnect, Exception):
-        pass
+	try:
+		while True:
+			await websocket.receive()
 
-
-def get_requested_subprotocol(websocket: WebSocket) -> Optional[str]:
-    headers = Headers(scope=websocket.scope)
-    protocol_header = headers.get('Sec-WebSocket-Protocol')
-
-    if protocol_header:
-        protocol, _, _ = protocol_header.partition(',')
-        return protocol.strip()
-
-    return None
-
+	except Exception:
+		pass
