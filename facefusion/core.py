@@ -332,9 +332,10 @@ def conditional_process() -> ErrorCode:
 	if state_manager.get_item('workflow') == 'auto':
 		state_manager.set_item('workflow', detect_workflow())
 
-	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		if not processor_module.pre_process('output'):
-			return 2
+	if state_manager.get_item('workflow') != 'image-to-sequence': # TODO: remove this check
+		for processor_module in get_processors_modules(state_manager.get_item('processors')):
+			if not processor_module.pre_process('output'):
+				return 2
 
 	if state_manager.get_item('workflow') == 'audio-to-image':
 		return audio_to_image.process(start_time)

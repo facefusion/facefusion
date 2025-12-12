@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List
 
 import numpy
 from tqdm import tqdm
@@ -6,7 +7,7 @@ from tqdm import tqdm
 from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator, video_manager
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
-from facefusion.filesystem import filter_audio_paths, is_video
+from facefusion.filesystem import filter_audio_paths, get_file_format, get_file_name, is_video, resolve_file_pattern
 from facefusion.media_helper import restrict_trim_frame
 from facefusion.processors.core import get_processors_modules
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
@@ -23,13 +24,13 @@ def is_process_stopping() -> bool:
 
 
 def setup() -> ErrorCode:
-	create_temp_directory(state_manager.get_temp_path(), state_manager.get_item('output_path'))
+	create_temp_directory(state_manager.get_temp_path(), conditional_get_output_path())
 	logger.debug(translator.get('creating_temp'), __name__)
 	return 0
 
 
 def clear() -> ErrorCode:
-	clear_temp_directory(state_manager.get_temp_path(), state_manager.get_item('output_path'))
+	clear_temp_directory(state_manager.get_temp_path(), conditional_get_output_path())
 	logger.debug(translator.get('clearing_temp'), __name__)
 	return 0
 
@@ -40,9 +41,22 @@ def analyse_image() -> ErrorCode:
 	return 0
 
 
+def conditional_get_source_paths() -> List[str]:
+	if state_manager.get_item('workflow') == 'image-to-sequence':
+		return resolve_file_pattern(state_manager.get_item('source_pattern'))
+	return state_manager.get_item('source_paths')
+
+
+def conditional_get_output_path() -> str:
+	if state_manager.get_item('workflow') == 'image-to-sequence':
+		target_paths = resolve_file_pattern(state_manager.get_item('target_pattern'))
+		return state_manager.get_item('output_pattern').format(index = 0, target_name = get_file_name(get_first(target_paths)), target_extension = get_file_format(get_first(target_paths)))
+	return state_manager.get_item('output_path')
+
+
 def conditional_get_source_audio_frame(frame_number : int) -> AudioFrame:
 	if state_manager.get_item('workflow') in [ 'audio-to-image', 'image-to-video' ]:
-		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+		source_audio_path = get_first(filter_audio_paths(conditional_get_source_paths()))
 		output_video_fps = state_manager.get_item('output_video_fps')
 
 		if state_manager.get_item('workflow') == 'image-to-video':
@@ -57,7 +71,7 @@ def conditional_get_source_audio_frame(frame_number : int) -> AudioFrame:
 
 def conditional_get_source_voice_frame(frame_number: int) -> AudioFrame:
 	if state_manager.get_item('workflow') in [ 'audio-to-image', 'image-to-video' ]:
-		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+		source_audio_path = get_first(filter_audio_paths(conditional_get_source_paths()))
 		output_video_fps = state_manager.get_item('output_video_fps')
 
 		if state_manager.get_item('workflow') == 'image-to-video':
@@ -74,7 +88,7 @@ def conditional_get_reference_vision_frame() -> VisionFrame:
 	if state_manager.get_item('workflow') == 'image-to-video':
 		return read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	if state_manager.get_item('workflow') == 'image-to-sequence':
-		temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
+		temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), conditional_get_output_path(), state_manager.get_item('temp_frame_format'))
 		return read_static_image(temp_frame_paths[state_manager.get_item('reference_frame_number')])
 	return read_static_image(state_manager.get_item('target_path'))
 
@@ -96,9 +110,16 @@ def conditional_clear_video_pool() -> None:
 		video_manager.clear_video_pool()
 
 
+def conditional_resolve_temp_frame_paths() -> List[str]:
+	if state_manager.get_item('workflow') == 'image-to-sequence':
+		target_paths = resolve_file_pattern(state_manager.get_item('target_pattern'))
+		return resolve_temp_frame_paths(state_manager.get_temp_path(), conditional_get_output_path(), get_file_format(get_first(target_paths)))
+	return resolve_temp_frame_paths(state_manager.get_temp_path(), conditional_get_output_path(), state_manager.get_item('temp_frame_format'))
+
+
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	reference_vision_frame = conditional_get_reference_vision_frame()
-	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
+	source_vision_frames = read_static_images(conditional_get_source_paths())
 	target_vision_frame = read_static_image(temp_frame_path, 'rgba')
 	source_audio_frame = conditional_get_source_audio_frame(frame_number)
 	source_voice_frame = conditional_get_source_voice_frame(frame_number)
@@ -122,7 +143,7 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 
 
 def process_frames() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
+	temp_frame_paths = conditional_resolve_temp_frame_paths()
 
 	if temp_frame_paths:
 		with tqdm(total = len(temp_frame_paths), desc = translator.get('processing'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
@@ -180,7 +201,7 @@ def restore_audio() -> ErrorCode:
 		logger.info(translator.get('skipping_audio'), __name__)
 		move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
 	else:
-		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
+		source_audio_path = get_first(filter_audio_paths(conditional_get_source_paths()))
 		if source_audio_path:
 			if ffmpeg.replace_audio(source_audio_path, state_manager.get_item('output_path')):
 				conditional_clear_video_pool()
