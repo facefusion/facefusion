@@ -7,7 +7,7 @@ from facefusion.filesystem import copy_file
 from facefusion.jobs.job_manager import add_step, clear_jobs, create_job, init_jobs, move_job_file, submit_job, submit_jobs
 from facefusion.jobs.job_runner import collect_output_set, finalize_steps, retry_job, retry_jobs, run_job, run_jobs, run_steps
 from facefusion.types import Args
-from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_output_file, prepare_test_output_directory
+from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_output_file, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -36,19 +36,19 @@ def test_run_job() -> None:
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-1.mp4')
+		'output_path': get_test_output_path('output-1.mp4')
 	}
 	args_2 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-2.mp4')
+		'output_path': get_test_output_path('output-2.mp4')
 	}
 	args_3 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.jpg'),
-		'output_path': get_test_output_file('output-3.jpg')
+		'output_path': get_test_output_path('output-3.jpg')
 	}
 
 	assert run_job('job-invalid', process_step) is False
@@ -71,19 +71,19 @@ def test_run_jobs() -> None:
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-1.mp4')
+		'output_path': get_test_output_path('output-1.mp4')
 	}
 	args_2 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-2.mp4')
+		'output_path': get_test_output_path('output-2.mp4')
 	}
 	args_3 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.jpg'),
-		'output_path': get_test_output_file('output-3.jpg')
+		'output_path': get_test_output_path('output-3.jpg')
 	}
 	halt_on_error = True
 
@@ -108,7 +108,7 @@ def test_retry_job() -> None:
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-1.mp4')
+		'output_path': get_test_output_path('output-1.mp4')
 	}
 
 	assert retry_job('job-invalid', process_step) is False
@@ -129,19 +129,19 @@ def test_retry_jobs() -> None:
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-1.mp4')
+		'output_path': get_test_output_path('output-1.mp4')
 	}
 	args_2 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-2.mp4')
+		'output_path': get_test_output_path('output-2.mp4')
 	}
 	args_3 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.jpg'),
-		'output_path': get_test_output_file('output-3.jpg')
+		'output_path': get_test_output_path('output-3.jpg')
 	}
 	halt_on_error = True
 
@@ -167,19 +167,19 @@ def test_run_steps() -> None:
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-1.mp4')
+		'output_path': get_test_output_path('output-1.mp4')
 	}
 	args_2 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-2.mp4')
+		'output_path': get_test_output_path('output-2.mp4')
 	}
 	args_3 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.jpg'),
-		'output_path': get_test_output_file('output-3.jpg')
+		'output_path': get_test_output_path('output-3.jpg')
 	}
 
 	assert run_steps('job-invalid', process_step) is False
@@ -198,19 +198,19 @@ def test_finalize_steps() -> None:
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-1.mp4')
+		'output_path': get_test_output_path('output-1.mp4')
 	}
 	args_2 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-2.mp4')
+		'output_path': get_test_output_path('output-2.mp4')
 	}
 	args_3 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.jpg'),
-		'output_path': get_test_output_file('output-3.jpg')
+		'output_path': get_test_output_path('output-3.jpg')
 	}
 
 	create_job('job-test-finalize-steps')
@@ -219,10 +219,10 @@ def test_finalize_steps() -> None:
 	add_step('job-test-finalize-steps', args_2)
 	add_step('job-test-finalize-steps', args_3)
 
-	copy_file(args_1.get('target_path'), get_test_output_file('output-1-job-test-finalize-steps-0.mp4'))
-	copy_file(args_1.get('target_path'), get_test_output_file('output-1-job-test-finalize-steps-1.mp4'))
-	copy_file(args_2.get('target_path'), get_test_output_file('output-2-job-test-finalize-steps-2.mp4'))
-	copy_file(args_3.get('target_path'), get_test_output_file('output-3-job-test-finalize-steps-3.jpg'))
+	copy_file(args_1.get('target_path'), get_test_output_path('output-1-job-test-finalize-steps-0.mp4'))
+	copy_file(args_1.get('target_path'), get_test_output_path('output-1-job-test-finalize-steps-1.mp4'))
+	copy_file(args_2.get('target_path'), get_test_output_path('output-2-job-test-finalize-steps-2.mp4'))
+	copy_file(args_3.get('target_path'), get_test_output_path('output-3-job-test-finalize-steps-3.jpg'))
 
 	assert finalize_steps('job-test-finalize-steps') is True
 	assert is_test_output_file('output-1.mp4') is True
@@ -235,19 +235,19 @@ def test_collect_output_set() -> None:
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-1.mp4')
+		'output_path': get_test_output_path('output-1.mp4')
 	}
 	args_2 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.mp4'),
-		'output_path': get_test_output_file('output-2.mp4')
+		'output_path': get_test_output_path('output-2.mp4')
 	}
 	args_3 =\
 	{
 		'source_path': get_test_example_file('source.jpg'),
 		'target_path': get_test_example_file('target-240p.jpg'),
-		'output_path': get_test_output_file('output-3.jpg')
+		'output_path': get_test_output_path('output-3.jpg')
 	}
 
 	create_job('job-test-collect-output-set')
@@ -258,18 +258,18 @@ def test_collect_output_set() -> None:
 
 	output_set =\
 	{
-		get_test_output_file('output-1.mp4'):
+		get_test_output_path('output-1.mp4'):
 		[
-			get_test_output_file('output-1-job-test-collect-output-set-0.mp4'),
-			get_test_output_file('output-1-job-test-collect-output-set-1.mp4')
+			get_test_output_path('output-1-job-test-collect-output-set-0.mp4'),
+			get_test_output_path('output-1-job-test-collect-output-set-1.mp4')
 		],
-		get_test_output_file('output-2.mp4'):
+		get_test_output_path('output-2.mp4'):
 		[
-			get_test_output_file('output-2-job-test-collect-output-set-2.mp4')
+			get_test_output_path('output-2-job-test-collect-output-set-2.mp4')
 		],
-		get_test_output_file('output-3.jpg'):
+		get_test_output_path('output-3.jpg'):
 		[
-			get_test_output_file('output-3-job-test-collect-output-set-3.jpg')
+			get_test_output_path('output-3-job-test-collect-output-set-3.jpg')
 		]
 	}
 
