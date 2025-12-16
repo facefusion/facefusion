@@ -3,16 +3,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy
 from tqdm import tqdm
 
-from facefusion import content_analyser, ffmpeg, logger, process_manager, state_manager, translator, video_manager
+from facefusion import content_analyser, logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first
-from facefusion.filesystem import filter_audio_paths, is_video
-from facefusion.media_helper import restrict_trim_frame
+from facefusion.filesystem import filter_audio_paths
 from facefusion.processors.core import get_processors_modules
-from facefusion.temp_helper import clear_temp_directory, create_temp_directory, move_temp_file, resolve_temp_frame_paths
-from facefusion.time_helper import calculate_end_time
-from facefusion.types import AudioFrame, ErrorCode, Fps, Resolution, VisionFrame
-from facefusion.vision import conditional_merge_vision_mask, detect_image_resolution, detect_video_resolution, extract_vision_mask, pack_resolution, read_static_image, read_static_images, read_static_video_frame, restrict_video_fps, scale_resolution, write_image
+from facefusion.temp_helper import clear_temp_directory, create_temp_directory, resolve_temp_frame_paths
+from facefusion.types import AudioFrame, ErrorCode, VisionFrame
+from facefusion.vision import conditional_merge_vision_mask, extract_vision_mask, read_static_image, read_static_images, read_static_video_frame, restrict_video_fps, write_image
 
 
 def is_process_stopping() -> bool:
@@ -71,26 +69,9 @@ def conditional_get_source_voice_frame(frame_number: int) -> AudioFrame:
 
 
 def conditional_get_reference_vision_frame() -> VisionFrame:
-	if state_manager.get_item('workflow') == 'image-to-video':
+	if state_manager.get_item('workflow') in [ 'image-to-video', 'image-to-video-as-sequence' ]:
 		return read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	return read_static_image(state_manager.get_item('target_path'))
-
-
-def conditional_scale_resolution() -> Resolution:
-	if state_manager.get_item('workflow') == 'image-to-video':
-		return scale_resolution(detect_video_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
-	return scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_video_scale'))
-
-
-def conditional_restrict_video_fps() -> Fps:
-	if state_manager.get_item('workflow') == 'image-to-video':
-		return restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-	return state_manager.get_item('output_video_fps')
-
-
-def conditional_clear_video_pool() -> None:
-	if state_manager.get_item('workflow') == 'image-to-video':
-		video_manager.clear_video_pool()
 
 
 def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
@@ -118,7 +99,7 @@ def process_temp_frame(temp_frame_path : str, frame_number : int) -> bool:
 	return write_image(temp_frame_path, temp_vision_frame)
 
 
-def process_video() -> ErrorCode:
+def process_frames() -> ErrorCode:
 	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
 
 	if temp_frame_paths:
@@ -148,63 +129,5 @@ def process_video() -> ErrorCode:
 			return 4
 	else:
 		logger.error(translator.get('temp_frames_not_found'), __name__)
-		return 1
-	return 0
-
-
-def merge_frames() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
-	trim_frame_start, trim_frame_end = restrict_trim_frame(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
-	output_video_resolution = conditional_scale_resolution()
-	temp_video_fps = conditional_restrict_video_fps()
-
-	logger.info(translator.get('merging_video').format(resolution = pack_resolution(output_video_resolution), fps = state_manager.get_item('output_video_fps')), __name__)
-	if ffmpeg.merge_video(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_video_fps, output_video_resolution, trim_frame_start, trim_frame_end):
-		logger.debug(translator.get('merging_video_succeeded'), __name__)
-	else:
-		if is_process_stopping():
-			return 4
-		logger.error(translator.get('merging_video_failed'), __name__)
-		return 1
-	return 0
-
-
-def restore_audio() -> ErrorCode:
-	temp_frame_paths = resolve_temp_frame_paths(state_manager.get_temp_path(), state_manager.get_item('output_path'), state_manager.get_item('temp_frame_format'))
-	trim_frame_start, trim_frame_end = restrict_trim_frame(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
-
-	if state_manager.get_item('output_audio_volume') == 0:
-		logger.info(translator.get('skipping_audio'), __name__)
-		move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
-	else:
-		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
-		if source_audio_path:
-			if ffmpeg.replace_audio(source_audio_path, state_manager.get_item('output_path')):
-				conditional_clear_video_pool()
-				logger.debug(translator.get('replacing_audio_succeeded'), __name__)
-			else:
-				conditional_clear_video_pool()
-				if is_process_stopping():
-					return 4
-				logger.warn(translator.get('replacing_audio_skipped'), __name__)
-				move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
-		else:
-			if ffmpeg.restore_audio(state_manager.get_item('target_path'), state_manager.get_item('output_path'), trim_frame_start, trim_frame_end):
-				conditional_clear_video_pool()
-				logger.debug(translator.get('restoring_audio_succeeded'), __name__)
-			else:
-				conditional_clear_video_pool()
-				if is_process_stopping():
-					return 4
-				logger.warn(translator.get('restoring_audio_skipped'), __name__)
-				move_temp_file(state_manager.get_temp_path(), state_manager.get_item('output_path'))
-	return 0
-
-
-def finalize_video(start_time : float) -> ErrorCode:
-	if is_video(state_manager.get_item('output_path')):
-		logger.info(translator.get('processing_video_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
-	else:
-		logger.error(translator.get('processing_video_failed'), __name__)
 		return 1
 	return 0

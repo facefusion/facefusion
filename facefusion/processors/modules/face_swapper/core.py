@@ -551,9 +551,10 @@ def pre_process(mode : ProcessMode) -> bool:
 		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 
-	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
-		return False
+	if state_manager.get_item('workflow') in [ 'audio-to-image', 'image-to-image', 'image-to-video' ]:
+		if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
+			logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
+			return False
 
 	return True
 

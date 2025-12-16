@@ -37,6 +37,12 @@ def test_submit_job() -> None:
 		'target_path': 'target-1.jpg',
 		'output_path': 'output-1.jpg'
 	}
+	args_2 =\
+	{
+		'source_path': 'source-2.jpg',
+		'target_path': 'target-2.mp4',
+		'output_path': 'output-sequence-2'
+	}
 
 	assert submit_job('job-invalid') is False
 
@@ -45,6 +51,7 @@ def test_submit_job() -> None:
 	assert submit_job('job-test-submit-job') is False
 
 	add_step('job-test-submit-job', args_1)
+	add_step('job-test-submit-job', args_2)
 
 	assert submit_job('job-test-submit-job') is True
 	assert submit_job('job-test-submit-job') is False
@@ -170,6 +177,18 @@ def test_add_step() -> None:
 		'target_path': 'target-2.jpg',
 		'output_path': 'output-2.jpg'
 	}
+	args_3 =\
+	{
+		'source_path': 'source-3.jpg',
+		'target_path': 'target-3.mp4',
+		'output_path': 'output-sequence-1'
+	}
+	args_4 =\
+	{
+		'source_path': 'source-4.jpg',
+		'target_path': 'target-4.mp4',
+		'output_path': 'output-sequence-1'
+	}
 
 	assert add_step('job-invalid', args_1) is False
 
@@ -177,12 +196,16 @@ def test_add_step() -> None:
 
 	assert add_step('job-test-add-step', args_1) is True
 	assert add_step('job-test-add-step', args_2) is True
+	assert add_step('job-test-add-step', args_3) is True
+	assert add_step('job-test-add-step', args_4) is True
 
 	steps = get_steps('job-test-add-step')
 
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_2
-	assert count_step_total('job-test-add-step') == 2
+	assert steps[2].get('args') == args_3
+	assert steps[3].get('args') == args_4
+	assert count_step_total('job-test-add-step') == 4
 
 
 def test_remix_step() -> None:
@@ -198,28 +221,40 @@ def test_remix_step() -> None:
 		'target_path': 'target-2.jpg',
 		'output_path': 'output-2.jpg'
 	}
+	args_3 =\
+	{
+		'source_path': 'source-3.jpg',
+		'target_path': 'target-3.mp4',
+		'output_path': 'output-sequence-3'
+	}
 
 	assert remix_step('job-invalid', 0, args_1) is False
 
 	create_job('job-test-remix-step')
 	add_step('job-test-remix-step', args_1)
 	add_step('job-test-remix-step', args_2)
+	add_step('job-test-remix-step', args_3)
 
 	assert remix_step('job-test-remix-step', 99, args_1) is False
 	assert remix_step('job-test-remix-step', 0, args_2) is True
 	assert remix_step('job-test-remix-step', -1, args_2) is True
+	assert remix_step('job-test-remix-step', 2, args_3) is True
 
 	steps = get_steps('job-test-remix-step')
 
 	assert steps[0].get('args') == args_1
 	assert steps[1].get('args') == args_2
-	assert steps[2].get('args').get('source_path') == args_2.get('source_path')
-	assert steps[2].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 0, args_1.get('output_path'))
-	assert steps[2].get('args').get('output_path') == args_2.get('output_path')
+	assert steps[2].get('args') == args_3
 	assert steps[3].get('args').get('source_path') == args_2.get('source_path')
-	assert steps[3].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 2, args_2.get('output_path'))
+	assert steps[3].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 0, args_1.get('output_path'))
 	assert steps[3].get('args').get('output_path') == args_2.get('output_path')
-	assert count_step_total('job-test-remix-step') == 4
+	assert steps[4].get('args').get('source_path') == args_2.get('source_path')
+	assert steps[4].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 3, args_2.get('output_path'))
+	assert steps[4].get('args').get('output_path') == args_2.get('output_path')
+	assert steps[5].get('args').get('source_path') == args_3.get('source_path')
+	assert steps[5].get('args').get('target_path') == get_step_output_path('job-test-remix-step', 2, args_3.get('output_path'))
+	assert steps[5].get('args').get('output_path') == args_3.get('output_path')
+	assert count_step_total('job-test-remix-step') == 6
 
 
 def test_insert_step() -> None:
@@ -241,6 +276,12 @@ def test_insert_step() -> None:
 		'target_path': 'target-3.jpg',
 		'output_path': 'output-3.jpg'
 	}
+	args_4 =\
+	{
+		'source_path': 'source-4.jpg',
+		'target_path': 'target-4.mp4',
+		'output_path': 'output-sequence-4'
+	}
 
 	assert insert_step('job-invalid', 0, args_1) is False
 
@@ -251,14 +292,16 @@ def test_insert_step() -> None:
 	assert insert_step('job-test-insert-step', 99, args_1) is False
 	assert insert_step('job-test-insert-step', 0, args_2) is True
 	assert insert_step('job-test-insert-step', -1, args_3) is True
+	assert insert_step('job-test-insert-step', 2, args_4) is True
 
 	steps = get_steps('job-test-insert-step')
 
 	assert steps[0].get('args') == args_2
 	assert steps[1].get('args') == args_1
-	assert steps[2].get('args') == args_3
-	assert steps[3].get('args') == args_1
-	assert count_step_total('job-test-insert-step') == 4
+	assert steps[2].get('args') == args_4
+	assert steps[3].get('args') == args_3
+	assert steps[4].get('args') == args_1
+	assert count_step_total('job-test-insert-step') == 5
 
 
 def test_remove_step() -> None:

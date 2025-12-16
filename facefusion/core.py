@@ -12,15 +12,15 @@ from facefusion.apis.core import create_api
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
-from facefusion.filesystem import get_file_extension, get_file_name, resolve_file_paths, resolve_file_pattern
-from facefusion.filesystem import has_audio, has_image, has_video
+from facefusion.filesystem import get_file_extension, has_audio, has_image, has_video
+from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode, WorkFlow
-from facefusion.workflows import audio_to_image, image_to_image, image_to_video
+from facefusion.workflows import audio_to_image, image_to_image, image_to_video, image_to_video_as_sequence
 
 
 def cli() -> None:
@@ -342,13 +342,17 @@ def conditional_process() -> ErrorCode:
 		return image_to_image.process(start_time)
 	if state_manager.get_item('workflow') == 'image-to-video':
 		return image_to_video.process(start_time)
+	if state_manager.get_item('workflow') == 'image-to-video-as-sequence':
+		return image_to_video_as_sequence.process(start_time)
 
 	return 0
 
 
 def detect_workflow() -> WorkFlow:
 	if has_video([ state_manager.get_item('target_path') ]):
-		return 'image-to-video'
+		if get_file_extension(state_manager.get_item('output_path')):
+			return 'image-to-video'
+		return 'image-to-video-as-sequence'
 
 	if has_audio(state_manager.get_item('source_paths')) and has_image([ state_manager.get_item('target_path') ]):
 		return 'audio-to-image'

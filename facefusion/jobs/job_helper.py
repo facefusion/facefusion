@@ -13,6 +13,8 @@ def get_step_output_path(job_id : str, step_index : int, output_path : str) -> O
 
 		if output_file_name and output_file_extension:
 			return os.path.join(output_directory_path, output_file_name + '-' + job_id + '-' + str(step_index) + output_file_extension)
+		if output_file_path and output_directory_path:
+			return os.path.join(output_directory_path, output_file_path + '-' + job_id + '-' + str(step_index))
 	return None
 
 

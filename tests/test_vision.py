@@ -4,7 +4,7 @@ import pytest
 
 from facefusion.download import conditional_download
 from facefusion.vision import calculate_histogram_difference, count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, match_frame_color, normalize_resolution, pack_resolution, predict_video_frame_total, read_image, read_video_frame, restrict_image_resolution, restrict_trim_video_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, unpack_resolution, write_image
-from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
+from .helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -42,8 +42,8 @@ def test_read_image() -> None:
 def test_write_image() -> None:
 	vision_frame = read_image(get_test_example_file('target-240p.jpg'))
 
-	assert write_image(get_test_output_file('target-240p.jpg'), vision_frame) is True
-	assert write_image(get_test_output_file('目标-240p.webp'), vision_frame) is True
+	assert write_image(get_test_output_path('target-240p.jpg'), vision_frame) is True
+	assert write_image(get_test_output_path('目标-240p.webp'), vision_frame) is True
 
 
 def test_detect_image_resolution() -> None:
