@@ -170,6 +170,13 @@ def create_directory(directory_path : str) -> bool:
 	return False
 
 
+def move_directory(directory_path : str, move_path : str) -> bool:
+	if is_directory(directory_path):
+		shutil.move(directory_path, move_path)
+		return is_directory(move_path)
+	return False
+
+
 def remove_directory(directory_path : str) -> bool:
 	if is_directory(directory_path):
 		shutil.rmtree(directory_path, ignore_errors = True)
