@@ -19,7 +19,6 @@ from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode
 from facefusion.workflows import image_to_image, image_to_video
 
-
 def cli() -> None:
 	if pre_check():
 		signal.signal(signal.SIGINT, signal_exit)
@@ -41,6 +40,7 @@ def cli() -> None:
 
 
 def route(args : Args) -> None:
+	
 	system_memory_limit = state_manager.get_item('system_memory_limit')
 
 	if system_memory_limit and system_memory_limit > 0:
@@ -280,6 +280,27 @@ def process_headless(args : Args) -> ErrorCode:
 	if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
 		return 0
 	return 1
+
+def process_headless_v2(args : Args) -> ErrorCode:
+	job_id = job_helper.suggest_job_id('headless')
+	step_args = reduce_step_args(args)
+
+	err = job_manager.create_job(job_id) 
+	print(f"create_job err :{err}")
+
+	err = job_manager.add_step(job_id, step_args)
+	print(f"add_step err :{err}")
+
+	err = job_manager.submit_job(job_id)
+	print(f"submit_job err :{err}")
+
+	err = job_runner.run_job(job_id, process_step)
+	print(f"run_job err :{err}")
+
+	# if job_manager.create_job(job_id) and job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
+	# 	return 0
+	return err
+
 
 
 def process_batch(args : Args) -> ErrorCode:
