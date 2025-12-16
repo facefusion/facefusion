@@ -40,6 +40,8 @@ LOCALES : Locales =\
 		'processing_stopped': 'processing stopped',
 		'processing_image_succeeded': 'processing to image succeeded in {seconds} seconds',
 		'processing_image_failed': 'processing to image failed',
+		'processing_sequence_succeeded': 'processing to sequence succeeded in {seconds} seconds',
+		'processing_sequence_failed': 'processing to sequence failed',
 		'processing_video_succeeded': 'processing to video succeeded in {seconds} seconds',
 		'processing_video_failed': 'processing to video failed',
 		'choose_image_source': 'choose an image for the source',
