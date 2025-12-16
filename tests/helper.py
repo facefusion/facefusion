@@ -1,7 +1,7 @@
 import os
 import tempfile
 
-from facefusion.filesystem import create_directory, is_directory, is_file, remove_directory
+from facefusion.filesystem import are_images, create_directory, is_directory, is_file, remove_directory, resolve_file_paths
 from facefusion.types import JobStatus
 
 
@@ -26,10 +26,14 @@ def get_test_examples_directory() -> str:
 
 
 def is_test_output_file(file_path : str) -> bool:
-	return is_file(get_test_output_file(file_path))
+	return is_file(get_test_output_path(file_path))
 
 
-def get_test_output_file(file_path : str) -> str:
+def is_test_output_sequence(directory_path : str) -> bool:
+	return are_images(resolve_file_paths(directory_path))
+
+
+def get_test_output_path(file_path : str) -> str:
 	return os.path.join(get_test_outputs_directory(), file_path)
 
 

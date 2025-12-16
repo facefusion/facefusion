@@ -5,7 +5,7 @@ import pytest
 
 from facefusion.download import conditional_download
 from facefusion.jobs.job_manager import clear_jobs, count_step_total, init_jobs
-from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_file, is_test_job_file
+from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, is_test_job_file
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -50,7 +50,7 @@ def test_job_submit() -> None:
 
 	assert subprocess.run(commands).returncode == 1
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-submit', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-submit', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 	subprocess.run(commands)
 
 	commands = [ sys.executable, 'facefusion.py', 'job-submit', 'test-job-submit', '--jobs-path', get_test_jobs_directory() ]
@@ -73,10 +73,10 @@ def test_submit_all() -> None:
 
 	assert subprocess.run(commands).returncode == 1
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-submit-all-1', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-submit-all-1', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-submit-all-2', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-submit-all-2', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 	subprocess.run(commands)
 
 	commands = [ sys.executable, 'facefusion.py', 'job-submit-all', '--jobs-path', get_test_jobs_directory(), '--halt-on-error' ]
@@ -122,7 +122,7 @@ def test_job_delete_all() -> None:
 
 
 def test_job_add_step() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-add-step', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-add-step', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 
 	assert subprocess.run(commands).returncode == 1
 	assert count_step_total('test-job-add-step') == 0
@@ -130,14 +130,14 @@ def test_job_add_step() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-add-step', '--jobs-path', get_test_jobs_directory() ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-add-step', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-add-step', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert count_step_total('test-job-add-step') == 1
 
 
 def test_job_remix() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'job-remix-step', 'test-job-remix-step', '0', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-remix-step', 'test-job-remix-step', '0', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 
 	assert subprocess.run(commands).returncode == 1
 	assert count_step_total('test-job-remix-step') == 0
@@ -145,23 +145,23 @@ def test_job_remix() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-remix-step', '--jobs-path', get_test_jobs_directory() ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-remix-step', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-remix-step', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-remix-step', 'test-job-remix-step', '0', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-remix-step', 'test-job-remix-step', '0', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 
 	assert count_step_total('test-job-remix-step') == 1
 	assert subprocess.run(commands).returncode == 0
 	assert count_step_total('test-job-remix-step') == 2
 
-	commands = [ sys.executable, 'facefusion.py', 'job-remix-step', 'test-job-remix-step', '-1', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-remix-step', 'test-job-remix-step', '-1', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert count_step_total('test-job-remix-step') == 3
 
 
 def test_job_insert_step() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'job-insert-step', 'test-job-insert-step', '0', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-insert-step', 'test-job-insert-step', '0', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 
 	assert subprocess.run(commands).returncode == 1
 	assert count_step_total('test-job-insert-step') == 0
@@ -169,16 +169,16 @@ def test_job_insert_step() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-insert-step', '--jobs-path', get_test_jobs_directory() ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-insert-step', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-insert-step', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-insert-step', 'test-job-insert-step', '0', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-insert-step', 'test-job-insert-step', '0', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 
 	assert count_step_total('test-job-insert-step') == 1
 	assert subprocess.run(commands).returncode == 0
 	assert count_step_total('test-job-insert-step') == 2
 
-	commands = [ sys.executable, 'facefusion.py', 'job-insert-step', 'test-job-insert-step', '-1', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-insert-step', 'test-job-insert-step', '-1', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert count_step_total('test-job-insert-step') == 3
@@ -192,7 +192,7 @@ def test_job_remove_step() -> None:
 	commands = [ sys.executable, 'facefusion.py', 'job-create', 'test-job-remove-step', '--jobs-path', get_test_jobs_directory() ]
 	subprocess.run(commands)
 
-	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-remove-step', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_file('test-job-remix-step.jpg') ]
+	commands = [ sys.executable, 'facefusion.py', 'job-add-step', 'test-job-remove-step', '--workflow', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '-s', get_test_example_file('source.jpg'), '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_output_path('test-job-remix-step.jpg') ]
 	subprocess.run(commands)
 	subprocess.run(commands)
 

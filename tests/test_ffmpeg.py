@@ -11,7 +11,7 @@ from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_au
 from facefusion.filesystem import copy_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
-from .helper import get_test_example_file, get_test_examples_directory, get_test_output_file, prepare_test_output_directory
+from .helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -112,13 +112,13 @@ def test_spawn_frames() -> None:
 def test_merge_video() -> None:
 	test_set =\
 	[
-		(get_test_example_file('target-240p-16khz.avi'), get_test_output_file('test-merge-video-240p-16khz.avi')),
-		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_file('test-merge-video-240p-16khz.m4v')),
-		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_file('test-merge-video-240p-16khz.mkv')),
-		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_file('test-merge-video-240p-16khz.mp4')),
-		(get_test_example_file('target-240p-16khz.mov'), get_test_output_file('test-merge-video-240p-16khz.mov')),
-		(get_test_example_file('target-240p-16khz.webm'), get_test_output_file('test-merge-video-240p-16khz.webm')),
-		(get_test_example_file('target-240p-16khz.wmv'), get_test_output_file('test-merge-video-240p-16khz.wmv'))
+		(get_test_example_file('target-240p-16khz.avi'), get_test_output_path('test-merge-video-240p-16khz.avi')),
+		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_path('test-merge-video-240p-16khz.m4v')),
+		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_path('test-merge-video-240p-16khz.mkv')),
+		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_path('test-merge-video-240p-16khz.mp4')),
+		(get_test_example_file('target-240p-16khz.mov'), get_test_output_path('test-merge-video-240p-16khz.mov')),
+		(get_test_example_file('target-240p-16khz.webm'), get_test_output_path('test-merge-video-240p-16khz.webm')),
+		(get_test_example_file('target-240p-16khz.wmv'), get_test_output_path('test-merge-video-240p-16khz.wmv'))
 	]
 	output_video_encoders = get_available_encoder_set().get('video')
 
@@ -138,7 +138,7 @@ def test_merge_video() -> None:
 
 
 def test_concat_video() -> None:
-	output_path = get_test_output_file('test-concat-video.mp4')
+	output_path = get_test_output_path('test-concat-video.mp4')
 	temp_output_paths =\
 	[
 		get_test_example_file('target-240p-16khz.mp4'),
@@ -157,14 +157,14 @@ def test_read_audio_buffer() -> None:
 def test_restore_audio() -> None:
 	test_set =\
 	[
-		(get_test_example_file('target-240p-16khz.avi'), get_test_output_file('target-240p-16khz.avi')),
-		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_file('target-240p-16khz.m4v')),
-		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_file('target-240p-16khz.mkv')),
-		(get_test_example_file('target-240p-16khz.mov'), get_test_output_file('target-240p-16khz.mov')),
-		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_file('target-240p-16khz.mp4')),
-		(get_test_example_file('target-240p-48khz.mp4'), get_test_output_file('target-240p-48khz.mp4')),
-		(get_test_example_file('target-240p-16khz.webm'), get_test_output_file('target-240p-16khz.webm')),
-		(get_test_example_file('target-240p-16khz.wmv'), get_test_output_file('target-240p-16khz.wmv'))
+		(get_test_example_file('target-240p-16khz.avi'), get_test_output_path('target-240p-16khz.avi')),
+		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_path('target-240p-16khz.m4v')),
+		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_path('target-240p-16khz.mkv')),
+		(get_test_example_file('target-240p-16khz.mov'), get_test_output_path('target-240p-16khz.mov')),
+		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_path('target-240p-16khz.mp4')),
+		(get_test_example_file('target-240p-48khz.mp4'), get_test_output_path('target-240p-48khz.mp4')),
+		(get_test_example_file('target-240p-16khz.webm'), get_test_output_path('target-240p-16khz.webm')),
+		(get_test_example_file('target-240p-16khz.wmv'), get_test_output_path('target-240p-16khz.wmv'))
 	]
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
@@ -185,13 +185,13 @@ def test_restore_audio() -> None:
 def test_replace_audio() -> None:
 	test_set =\
 	[
-		(get_test_example_file('target-240p-16khz.avi'), get_test_output_file('target-240p-16khz.avi')),
-		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_file('target-240p-16khz.m4v')),
-		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_file('target-240p-16khz.mkv')),
-		(get_test_example_file('target-240p-16khz.mov'), get_test_output_file('target-240p-16khz.mov')),
-		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_file('target-240p-16khz.mp4')),
-		(get_test_example_file('target-240p-48khz.mp4'), get_test_output_file('target-240p-48khz.mp4')),
-		(get_test_example_file('target-240p-16khz.webm'), get_test_output_file('target-240p-16khz.webm'))
+		(get_test_example_file('target-240p-16khz.avi'), get_test_output_path('target-240p-16khz.avi')),
+		(get_test_example_file('target-240p-16khz.m4v'), get_test_output_path('target-240p-16khz.m4v')),
+		(get_test_example_file('target-240p-16khz.mkv'), get_test_output_path('target-240p-16khz.mkv')),
+		(get_test_example_file('target-240p-16khz.mov'), get_test_output_path('target-240p-16khz.mov')),
+		(get_test_example_file('target-240p-16khz.mp4'), get_test_output_path('target-240p-16khz.mp4')),
+		(get_test_example_file('target-240p-48khz.mp4'), get_test_output_path('target-240p-48khz.mp4')),
+		(get_test_example_file('target-240p-16khz.webm'), get_test_output_path('target-240p-16khz.webm'))
 	]
 	output_audio_encoders = get_available_encoder_set().get('audio')
 
