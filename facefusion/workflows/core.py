@@ -39,7 +39,7 @@ def analyse_image() -> ErrorCode:
 
 
 def conditional_get_source_audio_frame(frame_number : int) -> AudioFrame:
-	if state_manager.get_item('workflow') in [ 'audio-to-image', 'image-to-video' ]:
+	if state_manager.get_item('workflow') in [ 'audio-to-image:video', 'image-to-video' ]:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		output_video_fps = state_manager.get_item('output_video_fps')
 
@@ -54,7 +54,7 @@ def conditional_get_source_audio_frame(frame_number : int) -> AudioFrame:
 
 
 def conditional_get_source_voice_frame(frame_number: int) -> AudioFrame:
-	if state_manager.get_item('workflow') in [ 'audio-to-image', 'image-to-video' ]:
+	if state_manager.get_item('workflow') in [ 'audio-to-image:video', 'image-to-video' ]:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 		output_video_fps = state_manager.get_item('output_video_fps')
 
@@ -69,7 +69,7 @@ def conditional_get_source_voice_frame(frame_number: int) -> AudioFrame:
 
 
 def conditional_get_reference_vision_frame() -> VisionFrame:
-	if state_manager.get_item('workflow') in [ 'image-to-video', 'image-to-video-as-sequence' ]:
+	if state_manager.get_item('workflow') in [ 'image-to-video', 'image-to-video:frame' ]:
 		return read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	return read_static_image(state_manager.get_item('target_path'))
 

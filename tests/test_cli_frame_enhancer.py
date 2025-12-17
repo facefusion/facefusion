@@ -40,7 +40,7 @@ def test_enhance_frame_to_video() -> None:
 
 
 def test_enhance_frame_to_video_as_sequence() -> None:
-	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow', 'image-to-video-as-sequence', '--jobs-path', get_test_jobs_directory(), '--processors', 'frame_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_path('test-enhance-frame-to-video-as-sequence'), '--trim-frame-end', '1' ]
+	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow', 'image-to-video:frame', '--jobs-path', get_test_jobs_directory(), '--processors', 'frame_enhancer', '-t', get_test_example_file('target-240p.mp4'), '-o', get_test_output_path('test-enhance-frame-to-video-as-sequence'), '--trim-frame-end', '1' ]
 
 	assert subprocess.run(commands).returncode == 0
 	assert is_test_output_sequence(get_test_output_path('test-enhance-frame-to-video-as-sequence')) is True
