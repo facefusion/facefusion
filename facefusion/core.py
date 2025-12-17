@@ -20,7 +20,7 @@ from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode, WorkFlow
-from facefusion.workflows import audio_to_image, image_to_image, image_to_video, image_to_video_as_sequence
+from facefusion.workflows import audio_to_image, image_to_image, image_to_video, image_to_video_as_frames
 
 
 def cli() -> None:
@@ -342,8 +342,8 @@ def conditional_process() -> ErrorCode:
 		return image_to_image.process(start_time)
 	if state_manager.get_item('workflow') == 'image-to-video':
 		return image_to_video.process(start_time)
-	if state_manager.get_item('workflow') == 'image-to-video:frame':
-		return image_to_video_as_sequence.process(start_time)
+	if state_manager.get_item('workflow') == 'image-to-video:frames':
+		return image_to_video_as_frames.process(start_time)
 
 	return 0
 
@@ -352,7 +352,7 @@ def detect_workflow() -> WorkFlow:
 	if has_video([ state_manager.get_item('target_path') ]):
 		if get_file_extension(state_manager.get_item('output_path')):
 			return 'image-to-video'
-		return 'image-to-video:frame'
+		return 'image-to-video:frames'
 
 	if has_audio(state_manager.get_item('source_paths')) and has_image([ state_manager.get_item('target_path') ]):
 		return 'audio-to-image:video'
