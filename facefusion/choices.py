@@ -45,7 +45,7 @@ face_mask_regions : List[FaceMaskRegion] = list(face_mask_region_set.keys())
 
 voice_extractor_models : List[VoiceExtractorModel] = [ 'kim_vocal_1', 'kim_vocal_2', 'uvr_mdxnet' ]
 
-workflows : List[WorkFlow] = [ 'auto', 'audio-to-image:video', 'image-to-image', 'image-to-video', 'image-to-video:frame' ]
+workflows : List[WorkFlow] = [ 'auto', 'audio-to-image:video', 'image-to-image', 'image-to-video', 'image-to-video:frames' ]
 
 audio_type_set : AudioTypeSet =\
 {
