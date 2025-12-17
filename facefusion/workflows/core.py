@@ -69,7 +69,7 @@ def conditional_get_source_voice_frame(frame_number: int) -> AudioFrame:
 
 
 def conditional_get_reference_vision_frame() -> VisionFrame:
-	if state_manager.get_item('workflow') in [ 'image-to-video', 'image-to-video:frame' ]:
+	if state_manager.get_item('workflow') in [ 'image-to-video', 'image-to-video:frames' ]:
 		return read_static_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
 	return read_static_image(state_manager.get_item('target_path'))
 

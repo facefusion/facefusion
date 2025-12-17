@@ -19,7 +19,7 @@ def process(start_time : float) -> ErrorCode:
 		create_temp_frames,
 		process_frames,
 		copy_temp_frames,
-		partial(finalize_sequence, start_time),
+		partial(finalize_frames, start_time),
 		clear
 	]
 
@@ -45,10 +45,10 @@ def copy_temp_frames() -> ErrorCode:
 	return 0
 
 
-def finalize_sequence(start_time : float) -> ErrorCode:
+def finalize_frames(start_time : float) -> ErrorCode:
 	if are_images(resolve_file_paths(state_manager.get_item('output_path'))):
-		logger.info(translator.get('processing_sequence_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
+		logger.info(translator.get('processing_frames_succeeded').format(seconds = calculate_end_time(start_time)), __name__)
 	else:
-		logger.error(translator.get('processing_sequence_failed'), __name__)
+		logger.error(translator.get('processing_frames_failed'), __name__)
 		return 1
 	return 0
