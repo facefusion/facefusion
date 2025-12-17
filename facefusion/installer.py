@@ -10,7 +10,7 @@ from types import FrameType
 from facefusion import metadata
 from facefusion.common_helper import is_linux, is_windows
 
-LOCALS =\
+LOCALES =\
 {
 	'install_dependency': 'install the {dependency} package',
 	'force_reinstall': 'force reinstall of packages',
@@ -34,9 +34,9 @@ if is_linux():
 def cli() -> None:
 	signal.signal(signal.SIGINT, signal_exit)
 	program = ArgumentParser(formatter_class = partial(HelpFormatter, max_help_position = 50))
-	program.add_argument('--onnxruntime', help = LOCALS.get('install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIME_SET.keys(), required = True)
-	program.add_argument('--force-reinstall', help = LOCALS.get('force_reinstall'), action = 'store_true')
-	program.add_argument('--skip-conda', help = LOCALS.get('skip_conda'), action = 'store_true')
+	program.add_argument('--onnxruntime', help = LOCALES.get('install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIME_SET.keys(), required = True)
+	program.add_argument('--force-reinstall', help = LOCALES.get('force_reinstall'), action = 'store_true')
+	program.add_argument('--skip-conda', help = LOCALES.get('skip_conda'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	run(program)
 
@@ -54,7 +54,7 @@ def run(program : ArgumentParser) -> None:
 		commands.append('--force-reinstall')
 
 	if not args.skip_conda and not has_conda:
-		sys.stdout.write(LOCALS.get('conda_not_activated') + os.linesep)
+		sys.stdout.write(LOCALES.get('conda_not_activated') + os.linesep)
 		sys.exit(1)
 
 	with open('requirements.txt') as file:

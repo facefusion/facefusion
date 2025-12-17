@@ -1,11 +1,11 @@
 from facefusion import translator
-from facefusion.locals import LOCALS
+from facefusion.locales import LOCALES
 
 
 def test_load() -> None:
-	translator.load(LOCALS, __name__)
+	translator.load(LOCALES, __name__)
 
-	assert __name__ in translator.LOCAL_POOL_SET
+	assert __name__ in translator.LOCALE_POOL_SET
 
 
 def test_get() -> None:

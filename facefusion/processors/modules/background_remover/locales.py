@@ -1,6 +1,6 @@
-from facefusion.types import Locals
+from facefusion.types import Locales
 
-LOCALS : Locals =\
+LOCALES : Locales =\
 {
 	'en':
 	{

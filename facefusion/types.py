@@ -51,8 +51,8 @@ FaceStore = TypedDict('FaceStore',
 })
 
 Language = Literal['en']
-Locals : TypeAlias = Dict[Language, Dict[str, Any]]
-LocalPoolSet : TypeAlias = Dict[str, Locals]
+Locales : TypeAlias = Dict[Language, Dict[str, Any]]
+LocalePoolSet : TypeAlias = Dict[str, Locales]
 
 VideoCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
