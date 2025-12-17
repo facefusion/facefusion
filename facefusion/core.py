@@ -336,13 +336,13 @@ def conditional_process() -> ErrorCode:
 		if not processor_module.pre_process('output'):
 			return 2
 
-	if state_manager.get_item('workflow') == 'audio-to-image':
+	if state_manager.get_item('workflow') == 'audio-to-image:video':
 		return audio_to_image.process(start_time)
 	if state_manager.get_item('workflow') == 'image-to-image':
 		return image_to_image.process(start_time)
 	if state_manager.get_item('workflow') == 'image-to-video':
 		return image_to_video.process(start_time)
-	if state_manager.get_item('workflow') == 'image-to-video-as-sequence':
+	if state_manager.get_item('workflow') == 'image-to-video:frame':
 		return image_to_video_as_sequence.process(start_time)
 
 	return 0
@@ -352,9 +352,9 @@ def detect_workflow() -> WorkFlow:
 	if has_video([ state_manager.get_item('target_path') ]):
 		if get_file_extension(state_manager.get_item('output_path')):
 			return 'image-to-video'
-		return 'image-to-video-as-sequence'
+		return 'image-to-video:frame'
 
 	if has_audio(state_manager.get_item('source_paths')) and has_image([ state_manager.get_item('target_path') ]):
-		return 'audio-to-image'
+		return 'audio-to-image:video'
 
 	return 'image-to-image'
