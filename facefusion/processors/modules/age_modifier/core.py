@@ -248,7 +248,7 @@ def modify_age_with_fran(target_face : Face, temp_vision_frame : VisionFrame) ->
 	age_modifier_direction = numpy.array(numpy.interp(state_manager.get_item('age_modifier_direction'), [ -100, 100 ], [ -1, 1 ])).astype(numpy.float32)
 	target_age = numpy.mean(target_face.age) / 100
 	start_age_channel = numpy.full_like(crop_vision_frame[0][:1, :, :], target_age)
-	end_age_channel = numpy.full_like(crop_vision_frame[0][:1, :, :],  target_age + age_modifier_direction)
+	end_age_channel = numpy.full_like(crop_vision_frame[0][:1, :, :], target_age + age_modifier_direction)
 	crop_vision_frame = numpy.concatenate([ crop_vision_frame[0], start_age_channel, end_age_channel ], axis = 0)[ numpy.newaxis, ... ]
 	crop_vision_frame = forward(crop_vision_frame.astype(numpy.float32), crop_vision_frame, age_modifier_direction)
 	crop_vision_frame = normalize_vision_frame(crop_vision_frame)
