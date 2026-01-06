@@ -286,10 +286,26 @@ def process_batch(args : Args) -> ErrorCode:
 	job_id = job_helper.suggest_job_id('batch')
 	step_args = reduce_step_args(args)
 	job_args = reduce_job_args(args)
+	source_same = job_args.get('source_same', False)
 	source_paths = resolve_file_pattern(job_args.get('source_pattern'))
 	target_paths = resolve_file_pattern(job_args.get('target_pattern'))
 
 	if job_manager.create_job(job_id):
+		if source_same and source_paths and target_paths:
+			for index, target_path in enumerate(target_paths):
+				step_args['source_paths'] = source_paths
+				step_args['target_path'] = target_path
+
+				try:
+					step_args['output_path'] = job_args.get('output_pattern').format(index = index, target_name = get_file_name(target_path), target_extension = get_file_extension(target_path))
+				except KeyError:
+					return 1
+
+				if not job_manager.add_step(job_id, step_args):
+					return 1
+			if job_manager.submit_job(job_id) and job_runner.run_job(job_id, process_step):
+				return 0
+
 		if source_paths and target_paths:
 			for index, (source_path, target_path) in enumerate(itertools.product(source_paths, target_paths)):
 				step_args['source_paths'] = [ source_path ]

@@ -70,6 +70,14 @@ def create_output_path_program() -> ArgumentParser:
 	return program
 
 
+def create_source_same_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_patterns = program.add_argument_group('patterns')
+	group_patterns.add_argument('-ss', '--source-same', help = translator.get('help.source_same'), action='store_false', default = config.get_bool_value('patterns', 'source_same'))
+	job_store.register_job_keys([ 'source_same' ])
+	return program
+
+
 def create_source_pattern_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_patterns = program.add_argument_group('patterns')
@@ -300,7 +308,7 @@ def create_program() -> ArgumentParser:
 	# general
 	sub_program.add_parser('run', help = translator.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('headless-run', help = translator.get('help.headless_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('batch-run', help = translator.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('batch-run', help = translator.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_source_same_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('force-download', help = translator.get('help.force_download'), parents = [ create_download_providers_program(), create_download_scope_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('benchmark', help = translator.get('help.benchmark'), parents = [ create_temp_path_program(), collect_step_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	# job manager

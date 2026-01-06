@@ -105,6 +105,7 @@ LOCALES : Locales =\
 			'source_paths': 'choose the image or audio paths',
 			'target_path': 'choose the image or video path',
 			'output_path': 'specify the image or video within a directory',
+			'source_same': 'treat all image(s) of "--source_pattern" as same person',
 			'source_pattern': 'choose the image or audio pattern',
 			'target_pattern': 'choose the image or video pattern',
 			'output_pattern': 'specify the image or video pattern',
