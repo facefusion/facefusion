@@ -1,7 +1,7 @@
 import uuid
 from typing import Dict, Optional
 
-ASSET_STORE: Dict[str, Dict[str, str]] = {}
+ASSET_STORE : Dict[str, Dict[str, str]] = {}
 
 
 def get_asset(asset_id : str) -> Optional[Dict[str, str]]:

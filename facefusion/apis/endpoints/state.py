@@ -13,15 +13,13 @@ async def get_state(request : Request) -> JSONResponse:
 
 async def set_state(request : Request) -> JSONResponse:
 	action = request.query_params.get('action')
+	asset_type = request.query_params.get('type')
 
-	if action == 'select':
-		asset_type = request.query_params.get('type')
+	if action == 'select' and asset_type == 'source':
+		return await select_source(request)
 
-		if asset_type == 'source':
-			return await select_source(request)
-
-		if asset_type == 'target':
-			return await select_target(request)
+	if action == 'select' and asset_type == 'target':
+		return await select_target(request)
 
 	body = await request.json()
 	api_args = args_store.get_api_args()
