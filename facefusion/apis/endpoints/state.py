@@ -30,8 +30,8 @@ async def set_state(request : Request) -> JSONResponse:
 		if key in api_args:
 			state_manager.set_item(key, value)
 
-	api_args = args_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type,assignment]
-	return JSONResponse(state_manager.collect_state(api_args), status_code = HTTP_200_OK) #type:ignore[arg-type]
+	__api_args__ = args_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
+	return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK) #type:ignore[arg-type]
 
 
 async def select_source(request : Request) -> JSONResponse:
@@ -49,8 +49,8 @@ async def select_source(request : Request) -> JSONResponse:
 
 		state_manager.set_item('source_paths', source_paths)
 
-		api_args = args_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
-		return JSONResponse(state_manager.collect_state(api_args), status_code = HTTP_200_OK)
+		__api_args__ = args_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
+		return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
 	return JSONResponse(
 	{
@@ -68,8 +68,8 @@ async def select_target(request : Request) -> JSONResponse:
 		if asset:
 			state_manager.set_item('target_path', asset.get('path'))
 
-			api_args = args_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
-			return JSONResponse(state_manager.collect_state(api_args), status_code = HTTP_200_OK)
+			__api_args__ = args_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
+			return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
 	return JSONResponse(
 	{
