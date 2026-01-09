@@ -85,7 +85,11 @@ def test_set_state(test_client : TestClient) -> None:
 
 
 def test_select_source_assets(test_client : TestClient) -> None:
-	asset_ids = [ asset_store.register_asset('/path/to/source1.jpg'), asset_store.register_asset('/path/to/source2.jpg') ]
+	asset_ids =\
+	[
+		asset_store.register_asset('/path/to/source1.jpg'),
+		asset_store.register_asset('/path/to/source2.jpg')
+	]
 
 	select_response = test_client.put('/state?action=select&type=source', json =
 	{
