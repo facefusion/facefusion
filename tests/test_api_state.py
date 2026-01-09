@@ -85,12 +85,11 @@ def test_set_state(test_client : TestClient) -> None:
 
 
 def test_select_source_assets(test_client : TestClient) -> None:
-	asset_id_1 = asset_store.register_asset('/path/to/source1.jpg')
-	asset_id_2 = asset_store.register_asset('/path/to/source2.jpg')
+	asset_ids = [ asset_store.register_asset('/path/to/source1.jpg'), asset_store.register_asset('/path/to/source2.jpg') ]
 
 	select_response = test_client.put('/state?action=select&type=source', json =
 	{
-		'asset_ids': [ asset_id_1, asset_id_2 ]
+		'asset_ids': asset_ids
 	})
 
 	assert select_response.status_code == 401
@@ -103,7 +102,7 @@ def test_select_source_assets(test_client : TestClient) -> None:
 
 	select_response = test_client.put('/state?action=select&type=source', json =
 	{
-		'asset_ids': 'invalid_string_not_list'
+		'asset_ids': 'invalid'
 	}, headers =
 	{
 		'Authorization': 'Bearer ' + create_session_body.get('access_token')
@@ -113,7 +112,7 @@ def test_select_source_assets(test_client : TestClient) -> None:
 
 	select_response = test_client.put('/state?action=select&type=source', json =
 	{
-		'asset_ids': [ asset_id_1, asset_id_2 ]
+		'asset_ids': asset_ids
 	}, headers =
 	{
 		'Authorization': 'Bearer ' + create_session_body.get('access_token')
@@ -125,11 +124,11 @@ def test_select_source_assets(test_client : TestClient) -> None:
 
 
 def test_select_target_assets(test_client : TestClient) -> None:
-	asset_id_1 = asset_store.register_asset('/path/to/target1.jpg')
+	asset_id = asset_store.register_asset('/path/to/target.jpg')
 
 	select_response = test_client.put('/state?action=select&type=target', json =
 	{
-		'asset_id': asset_id_1
+		'asset_id': asset_id
 	})
 
 	assert select_response.status_code == 401
@@ -142,7 +141,7 @@ def test_select_target_assets(test_client : TestClient) -> None:
 
 	select_response = test_client.put('/state?action=select&type=target', json =
 	{
-		'asset_id': 'invalid_asset_id'
+		'asset_id': 'invalid'
 	}, headers =
 	{
 		'Authorization': 'Bearer ' + create_session_body.get('access_token')
@@ -152,12 +151,12 @@ def test_select_target_assets(test_client : TestClient) -> None:
 
 	select_response = test_client.put('/state?action=select&type=target', json =
 	{
-		'asset_id': asset_id_1
+		'asset_id': asset_id
 	}, headers =
 	{
 		'Authorization': 'Bearer ' + create_session_body.get('access_token')
 	})
 	select_body = select_response.json()
 
-	assert select_body.get('target_path') == '/path/to/target1.jpg'
+	assert select_body.get('target_path') == '/path/to/target.jpg'
 	assert select_response.status_code == 200
