@@ -4,8 +4,8 @@ import pytest
 from starlette.testclient import TestClient
 
 from facefusion import args_store, metadata, session_manager, state_manager
-from facefusion.apis.core import create_api
 from facefusion.apis import asset_store
+from facefusion.apis.core import create_api
 
 
 @pytest.fixture(scope = 'module')
