@@ -2,8 +2,9 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from facefusion import args_store, state_manager, translator
+from facefusion import args_store, session_manager, state_manager, translator
 from facefusion.apis import asset_store
+from facefusion.apis.endpoints.session import extract_access_token
 
 
 async def get_state(request : Request) -> JSONResponse:
@@ -35,12 +36,14 @@ async def set_state(request : Request) -> JSONResponse:
 async def select_source(request : Request) -> JSONResponse:
 	body = await request.json()
 	asset_ids = body.get('asset_ids')
+	access_token = extract_access_token(request.scope)
+	session_id = session_manager.find_session_id(access_token)
 
-	if isinstance(asset_ids, list):
+	if isinstance(asset_ids, list) and session_id:
 		source_paths = []
 
 		for asset_id in asset_ids:
-			asset = asset_store.get_asset(asset_id)
+			asset = asset_store.get_asset(session_id, asset_id)
 
 			if asset:
 				source_paths.append(asset.get('path'))
@@ -59,9 +62,11 @@ async def select_source(request : Request) -> JSONResponse:
 async def select_target(request : Request) -> JSONResponse:
 	body = await request.json()
 	asset_id = body.get('asset_id')
+	access_token = extract_access_token(request.scope)
+	session_id = session_manager.find_session_id(access_token)
 
-	if isinstance(asset_id, str):
-		asset = asset_store.get_asset(asset_id)
+	if isinstance(asset_id, str) and session_id:
+		asset = asset_store.get_asset(session_id, asset_id)
 
 		if asset:
 			state_manager.set_item('target_path', asset.get('path'))

@@ -169,6 +169,68 @@ EncoderSet = TypedDict('EncoderSet',
 })
 VideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
+AssetId : TypeAlias = str
+AssetType = Literal['source', 'target']
+MediaType = Literal['image', 'video', 'audio']
+AudioMetadata = TypedDict('AudioMetadata',
+{
+	'duration' : Duration
+})
+ImageMetadata = TypedDict('ImageMetadata',
+{
+	'resolution' : Resolution
+})
+VideoMetadata = TypedDict('VideoMetadata',
+{
+	'duration' : Duration,
+	'frame_total' : int,
+	'fps' : Fps,
+	'resolution' : Resolution
+})
+AudioAsset = TypedDict('AudioAsset',
+{
+	'id' : AssetId,
+	'created_at' : datetime,
+	'expires_at' : datetime,
+	'type' : AssetType,
+	'media' : Literal['audio'],
+	'name' : str,
+	'format' : AudioFormat,
+	'size' : int,
+	'path' : str,
+	'metadata' : AudioMetadata
+})
+ImageAsset = TypedDict('ImageAsset',
+{
+	'id' : AssetId,
+	'created_at' : datetime,
+	'expires_at' : datetime,
+	'type' : AssetType,
+	'media' : Literal['image'],
+	'name' : str,
+	'format' : ImageFormat,
+	'size' : int,
+	'path' : str,
+	'metadata' : ImageMetadata
+})
+VideoAsset = TypedDict('VideoAsset',
+{
+	'id' : AssetId,
+	'created_at' : datetime,
+	'expires_at' : datetime,
+	'type' : AssetType,
+	'media' : Literal['video'],
+	'name' : str,
+	'format' : VideoFormat,
+	'size' : int,
+	'path' : str,
+	'metadata' : VideoMetadata
+})
+
+Asset : TypeAlias = AudioAsset | ImageAsset | VideoAsset
+AssetMetadata : TypeAlias = AudioMetadata | ImageMetadata | VideoMetadata
+AssetStore : TypeAlias = Dict[SessionId, Dict[AssetId, Asset]]
+
 BenchmarkMode = Literal['warm', 'cold']
 BenchmarkResolution = Literal['240p', '360p', '540p', '720p', '1080p', '1440p', '2160p']
 BenchmarkSet : TypeAlias = Dict[BenchmarkResolution, str]
