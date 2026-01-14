@@ -15,7 +15,6 @@ def run_ffprobe(commands : List[Command]) -> subprocess.Popen[bytes]:
 
 def detect_audio_sample_rate(audio_path : str) -> Optional[int]:
 	commands = ffprobe_builder.chain(
-		ffprobe_builder.set_error_level(),
 		ffprobe_builder.select_audio_stream(0),
 		ffprobe_builder.show_stream_entries([ 'sample_rate' ]),
 		ffprobe_builder.set_output_value_only(),
@@ -31,7 +30,6 @@ def detect_audio_sample_rate(audio_path : str) -> Optional[int]:
 
 def detect_audio_channel_total(audio_path : str) -> Optional[int]:
 	commands = ffprobe_builder.chain(
-		ffprobe_builder.set_error_level(),
 		ffprobe_builder.select_audio_stream(0),
 		ffprobe_builder.show_stream_entries([ 'channels' ]),
 		ffprobe_builder.set_output_value_only(),
@@ -47,7 +45,6 @@ def detect_audio_channel_total(audio_path : str) -> Optional[int]:
 
 def detect_audio_frame_total(audio_path : str) -> Optional[int]:
 	commands = ffprobe_builder.chain(
-		ffprobe_builder.set_error_level(),
 		ffprobe_builder.select_audio_stream(0),
 		ffprobe_builder.show_stream_entries([ 'nb_frames' ]),
 		ffprobe_builder.set_output_value_only(),
@@ -62,7 +59,6 @@ def detect_audio_frame_total(audio_path : str) -> Optional[int]:
 			return int(output_str)
 
 	commands = ffprobe_builder.chain(
-		ffprobe_builder.set_error_level(),
 		ffprobe_builder.select_audio_stream(0),
 		ffprobe_builder.show_stream_entries([ 'duration', 'sample_rate' ]),
 		ffprobe_builder.set_output_key_value(),
@@ -90,7 +86,6 @@ def detect_audio_frame_total(audio_path : str) -> Optional[int]:
 
 def detect_audio_format(audio_path : str) -> Optional[str]:
 	commands = ffprobe_builder.chain(
-		ffprobe_builder.set_error_level(),
 		ffprobe_builder.select_audio_stream(0),
 		ffprobe_builder.show_stream_entries([ 'codec_name' ]),
 		ffprobe_builder.set_output_value_only(),

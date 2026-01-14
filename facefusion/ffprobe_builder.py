@@ -13,10 +13,6 @@ def chain(*commands : List[Command]) -> List[Command]:
 	return list(itertools.chain(*commands))
 
 
-def set_error_level() -> List[Command]:
-	return [ '-v', 'error' ]
-
-
 def select_audio_stream(index : int) -> List[Command]:
 	return [ '-select_streams', 'a:{}'.format(index) ]
 
