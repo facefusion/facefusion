@@ -4,7 +4,7 @@ from starlette.datastructures import Headers
 from starlette.types import Scope
 
 from facefusion.audio import detect_audio_duration
-from facefusion.ffmpeg import detect_audio_channel_total, detect_audio_format, detect_audio_frame_total, detect_audio_sample_rate
+from facefusion.ffprobe import detect_audio_channel_total, detect_audio_format, detect_audio_frame_total, detect_audio_sample_rate
 from facefusion.types import AudioMetadata, ImageMetadata, VideoMetadata
 from facefusion.vision import count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution
 

@@ -65,19 +65,6 @@ def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	return process
 
 
-def run_ffprobe(commands : List[Command]) -> Optional[str]:
-	commands = ffmpeg_builder.probe(commands)
-	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-
-	try:
-		output, _ = process.communicate()
-		if process.returncode == 0 and output:
-			return output.decode().strip()
-	except (OSError, UnicodeDecodeError):
-		pass
-	return None
-
-
 def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.run(commands)
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
@@ -321,88 +308,3 @@ def fix_video_encoder(video_format : VideoFormat, video_encoder : VideoEncoder) 
 	if video_format == 'webm':
 		return 'libvpx-vp9'
 	return video_encoder
-
-
-def detect_audio_sample_rate(audio_path : str) -> Optional[int]:
-	commands =\
-	[
-		'-v', 'error',
-		'-select_streams', 'a:0',
-		'-show_entries', 'stream=sample_rate',
-		'-of', 'default=noprint_wrappers=1:nokey=1',
-		audio_path
-	]
-	output = run_ffprobe(commands)
-
-	if output:
-		return int(output)
-	return None
-
-
-def detect_audio_channel_total(audio_path : str) -> Optional[int]:
-	commands =\
-	[
-		'-v', 'error',
-		'-select_streams', 'a:0',
-		'-show_entries', 'stream=channels',
-		'-of', 'default=noprint_wrappers=1:nokey=1',
-		audio_path
-	]
-	output = run_ffprobe(commands)
-
-	if output:
-		return int(output)
-	return None
-
-
-def detect_audio_frame_total(audio_path : str) -> Optional[int]:
-	commands =\
-	[
-		'-v', 'error',
-		'-select_streams', 'a:0',
-		'-show_entries', 'stream=nb_frames',
-		'-of', 'default=noprint_wrappers=1:nokey=1',
-		audio_path
-	]
-	output = run_ffprobe(commands)
-
-	if output and output != 'N/A':
-		return int(output)
-
-	commands =\
-	[
-		'-v', 'error',
-		'-select_streams', 'a:0',
-		'-show_entries', 'stream=duration,sample_rate',
-		'-of', 'default=noprint_wrappers=1',
-		audio_path
-	]
-	output = run_ffprobe(commands)
-
-	if output:
-		duration = None
-		sample_rate = None
-		lines = output.split('\n')
-
-		for line in lines:
-			if line.startswith('duration='):
-				duration = float(line.split('=')[1])
-			if line.startswith('sample_rate='):
-				sample_rate = int(line.split('=')[1])
-
-		if duration and sample_rate:
-			return int(duration * sample_rate)
-
-	return None
-
-
-def detect_audio_format(audio_path : str) -> Optional[str]:
-	commands =\
-	[
-		'-v', 'error',
-		'-select_streams', 'a:0',
-		'-show_entries', 'stream=codec_name',
-		'-of', 'default=noprint_wrappers=1:nokey=1',
-		audio_path
-	]
-	return run_ffprobe(commands)
