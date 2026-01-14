@@ -12,6 +12,10 @@ def run(commands : List[Command]) -> List[Command]:
 	return [ shutil.which('ffmpeg'), '-loglevel', 'error' ] + commands
 
 
+def probe(commands : List[Command]) -> List[Command]:
+	return [ shutil.which('ffprobe'), '-loglevel', 'error' ] + commands
+
+
 def chain(*commands : List[Command]) -> List[Command]:
 	return list(itertools.chain(*commands))
 

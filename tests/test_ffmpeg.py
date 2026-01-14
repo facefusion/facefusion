@@ -7,7 +7,7 @@ import pytest
 import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, spawn_frames
+from facefusion.ffmpeg import concat_video, detect_audio_channel_total, detect_audio_format, detect_audio_frame_total, detect_audio_sample_rate, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, spawn_frames
 from facefusion.filesystem import copy_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
@@ -208,3 +208,47 @@ def test_replace_audio() -> None:
 		clear_temp_directory(state_manager.get_temp_path(), output_path)
 
 	state_manager.init_item('output_audio_encoder', 'aac')
+
+
+def test_detect_audio_sample_rate() -> None:
+	audio_sample_rate = detect_audio_sample_rate(get_test_example_file('source.mp3'))
+	assert audio_sample_rate == 44100
+
+	audio_sample_rate = detect_audio_sample_rate(get_test_example_file('source.wav'))
+	assert audio_sample_rate == 44100
+
+	audio_sample_rate = detect_audio_sample_rate(get_test_example_file('invalid.mp3'))
+	assert audio_sample_rate is None
+
+
+def test_detect_audio_channel_total() -> None:
+	audio_channel_total = detect_audio_channel_total(get_test_example_file('source.mp3'))
+	assert audio_channel_total == 1
+
+	audio_channel_total = detect_audio_channel_total(get_test_example_file('source.wav'))
+	assert audio_channel_total == 1
+
+	audio_channel_total = detect_audio_channel_total(get_test_example_file('invalid.mp3'))
+	assert audio_channel_total is None
+
+
+def test_detect_audio_frame_total() -> None:
+	audio_frame_total = detect_audio_frame_total(get_test_example_file('source.mp3'))
+	assert audio_frame_total == 167039
+
+	audio_frame_total = detect_audio_frame_total(get_test_example_file('source.wav'))
+	assert audio_frame_total == 167039
+
+	audio_frame_total = detect_audio_frame_total(get_test_example_file('invalid.mp3'))
+	assert audio_frame_total is None
+
+
+def test_detect_audio_format() -> None:
+	audio_format = detect_audio_format(get_test_example_file('source.mp3'))
+	assert audio_format == 'mp3'
+
+	audio_format = detect_audio_format(get_test_example_file('source.wav'))
+	assert audio_format == 'pcm_s16le'
+
+	audio_format = detect_audio_format(get_test_example_file('invalid.mp3'))
+	assert audio_format is None
