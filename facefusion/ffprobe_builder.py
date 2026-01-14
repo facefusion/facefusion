@@ -21,8 +21,8 @@ def select_audio_stream(index : int) -> List[Command]:
 	return [ '-select_streams', 'a:{}'.format(index) ]
 
 
-def show_entries(entries : str) -> List[Command]:
-	return [ '-show_entries', entries ]
+def show_stream_entries(entries : List[str]) -> List[Command]:
+	return [ '-show_entries', 'stream=' + ','.join(entries) ]
 
 
 def set_output_value_only() -> List[Command]:
