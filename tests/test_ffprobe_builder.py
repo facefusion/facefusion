@@ -12,11 +12,11 @@ def test_run() -> None:
 def test_chain() -> None:
 	assert chain(
 		ffprobe_builder.set_error_level(),
-		ffprobe_builder.select_audio_stream()
+		ffprobe_builder.select_audio_stream(0)
 	) == [ '-v', 'error', '-select_streams', 'a:0' ]
 	assert chain(
 		ffprobe_builder.set_error_level(),
-		ffprobe_builder.select_audio_stream(),
+		ffprobe_builder.select_audio_stream(0),
 		ffprobe_builder.show_entries('stream=sample_rate'),
 		ffprobe_builder.set_output_value_only(),
 		ffprobe_builder.set_input('audio.mp3')
@@ -28,7 +28,7 @@ def test_set_error_level() -> None:
 
 
 def test_select_audio_stream() -> None:
-	assert select_audio_stream() == [ '-select_streams', 'a:0' ]
+	assert select_audio_stream(0) == [ '-select_streams', 'a:0' ]
 
 
 def test_show_entries() -> None:

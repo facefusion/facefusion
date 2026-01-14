@@ -17,8 +17,8 @@ def set_error_level() -> List[Command]:
 	return [ '-v', 'error' ]
 
 
-def select_audio_stream() -> List[Command]:
-	return [ '-select_streams', 'a:0' ]
+def select_audio_stream(index : int) -> List[Command]:
+	return [ '-select_streams', 'a:{}'.format(index) ]
 
 
 def show_entries(entries : str) -> List[Command]:
