@@ -80,7 +80,7 @@ def get_asset(session_id : SessionId, asset_id : AssetId) -> Optional[AudioAsset
 	return None
 
 
-def list_assets(session_id : SessionId, asset_type : Optional[AssetType] = None, media : Optional[MediaType] = None) -> List[AudioAsset | ImageAsset | VideoAsset]:
+def list_assets(session_id : SessionId, asset_type : AssetType, media : MediaType) -> List[AudioAsset | ImageAsset | VideoAsset]:
 	if session_id not in ASSET_STORE:
 		return []
 
