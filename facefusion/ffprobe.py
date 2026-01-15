@@ -8,16 +8,14 @@ from facefusion.types import Command
 
 def run_ffprobe(commands : List[Command]) -> subprocess.Popen[bytes]:
 	commands = ffprobe_builder.run(commands)
-	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-	process.wait()
-	return process
+	return subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
 def detect_audio_sample_rate(audio_path : str) -> Optional[int]:
 	commands = ffprobe_builder.chain(
 		ffprobe_builder.select_audio_stream(0),
 		ffprobe_builder.show_stream_entries([ 'sample_rate' ]),
-		ffprobe_builder.set_output_value_only(),
+		ffprobe_builder.format_to_value(),
 		ffprobe_builder.set_input(audio_path)
 	)
 	process = run_ffprobe(commands)
@@ -32,7 +30,7 @@ def detect_audio_channel_total(audio_path : str) -> Optional[int]:
 	commands = ffprobe_builder.chain(
 		ffprobe_builder.select_audio_stream(0),
 		ffprobe_builder.show_stream_entries([ 'channels' ]),
-		ffprobe_builder.set_output_value_only(),
+		ffprobe_builder.format_to_value(),
 		ffprobe_builder.set_input(audio_path)
 	)
 	process = run_ffprobe(commands)
@@ -46,22 +44,8 @@ def detect_audio_channel_total(audio_path : str) -> Optional[int]:
 def detect_audio_frame_total(audio_path : str) -> Optional[int]:
 	commands = ffprobe_builder.chain(
 		ffprobe_builder.select_audio_stream(0),
-		ffprobe_builder.show_stream_entries([ 'nb_frames' ]),
-		ffprobe_builder.set_output_value_only(),
-		ffprobe_builder.set_input(audio_path)
-	)
-	process = run_ffprobe(commands)
-	output, _ = process.communicate()
-
-	if process.returncode == 0 and output:
-		output_str = output.decode().strip()
-		if output_str and output_str != 'N/A':
-			return int(output_str)
-
-	commands = ffprobe_builder.chain(
-		ffprobe_builder.select_audio_stream(0),
 		ffprobe_builder.show_stream_entries([ 'duration', 'sample_rate' ]),
-		ffprobe_builder.set_output_key_value(),
+		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(audio_path)
 	)
 	process = run_ffprobe(commands)
@@ -88,7 +72,7 @@ def detect_audio_format(audio_path : str) -> Optional[str]:
 	commands = ffprobe_builder.chain(
 		ffprobe_builder.select_audio_stream(0),
 		ffprobe_builder.show_stream_entries([ 'codec_name' ]),
-		ffprobe_builder.set_output_value_only(),
+		ffprobe_builder.format_to_value(),
 		ffprobe_builder.set_input(audio_path)
 	)
 	process = run_ffprobe(commands)

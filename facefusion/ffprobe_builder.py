@@ -14,18 +14,18 @@ def chain(*commands : List[Command]) -> List[Command]:
 
 
 def select_audio_stream(index : int) -> List[Command]:
-	return [ '-select_streams', 'a:{}'.format(index) ]
+	return [ '-select_streams', 'a:' + str(index) ]
 
 
 def show_stream_entries(entries : List[str]) -> List[Command]:
 	return [ '-show_entries', 'stream=' + ','.join(entries) ]
 
 
-def set_output_value_only() -> List[Command]:
+def format_to_value() -> List[Command]:
 	return [ '-of', 'default=noprint_wrappers=1:nokey=1' ]
 
 
-def set_output_key_value() -> List[Command]:
+def format_to_key_value() -> List[Command]:
 	return [ '-of', 'default=noprint_wrappers=1' ]
 
 
