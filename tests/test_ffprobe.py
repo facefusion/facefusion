@@ -15,48 +15,28 @@ def before_all() -> None:
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3'
 	])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), get_test_example_file('source.wav') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-t', '1.9', '-ar', '48000', '-ac', '2', get_test_example_file('source.wav') ])
 
 
 def test_detect_audio_sample_rate() -> None:
-	audio_sample_rate = detect_audio_sample_rate(get_test_example_file('source.mp3'))
-	assert audio_sample_rate == 44100
-
-	audio_sample_rate = detect_audio_sample_rate(get_test_example_file('source.wav'))
-	assert audio_sample_rate == 44100
-
-	audio_sample_rate = detect_audio_sample_rate(get_test_example_file('invalid.mp3'))
-	assert audio_sample_rate is None
+	assert detect_audio_sample_rate(get_test_example_file('source.mp3')) == 44100
+	assert detect_audio_sample_rate(get_test_example_file('source.wav')) == 44100
+	assert detect_audio_sample_rate(get_test_example_file('invalid.mp3')) is None
 
 
 def test_detect_audio_channel_total() -> None:
-	audio_channel_total = detect_audio_channel_total(get_test_example_file('source.mp3'))
-	assert audio_channel_total == 1
-
-	audio_channel_total = detect_audio_channel_total(get_test_example_file('source.wav'))
-	assert audio_channel_total == 1
-
-	audio_channel_total = detect_audio_channel_total(get_test_example_file('invalid.mp3'))
-	assert audio_channel_total is None
+	assert detect_audio_channel_total(get_test_example_file('source.mp3')) == 1
+	assert detect_audio_channel_total(get_test_example_file('source.wav')) == 1
+	assert detect_audio_channel_total(get_test_example_file('invalid.mp3')) is None
 
 
 def test_detect_audio_frame_total() -> None:
-	audio_frame_total = detect_audio_frame_total(get_test_example_file('source.mp3'))
-	assert audio_frame_total == 167039
-
-	audio_frame_total = detect_audio_frame_total(get_test_example_file('source.wav'))
-	assert audio_frame_total == 167039
-
-	audio_frame_total = detect_audio_frame_total(get_test_example_file('invalid.mp3'))
-	assert audio_frame_total is None
+	assert detect_audio_frame_total(get_test_example_file('source.mp3')) == 167039
+	assert detect_audio_frame_total(get_test_example_file('source.wav')) == 167039
+	assert detect_audio_frame_total(get_test_example_file('invalid.mp3')) is None
 
 
 def test_detect_audio_format() -> None:
-	audio_format = detect_audio_format(get_test_example_file('source.mp3'))
-	assert audio_format == 'mp3'
-
-	audio_format = detect_audio_format(get_test_example_file('source.wav'))
-	assert audio_format == 'pcm_s16le'
-
-	audio_format = detect_audio_format(get_test_example_file('invalid.mp3'))
-	assert audio_format is None
+	assert detect_audio_format(get_test_example_file('source.mp3')) == 'mp3'
+	assert detect_audio_format(get_test_example_file('source.wav')) == 'pcm_s16le'
+	assert detect_audio_format(get_test_example_file('invalid.mp3')) is None
