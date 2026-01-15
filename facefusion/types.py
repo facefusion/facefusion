@@ -174,7 +174,11 @@ AssetType = Literal['source', 'target']
 MediaType = Literal['image', 'video', 'audio']
 AudioMetadata = TypedDict('AudioMetadata',
 {
-	'duration' : Duration
+	'duration' : Duration,
+	'sample_rate': int,
+	'frame_total': int,
+	'channels': int,
+	'format': str
 })
 ImageMetadata = TypedDict('ImageMetadata',
 {
