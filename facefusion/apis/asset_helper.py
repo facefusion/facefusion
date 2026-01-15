@@ -1,4 +1,6 @@
-from typing import Optional
+import os
+import re
+from typing import Any, Dict, Optional
 
 from facefusion.audio import detect_audio_duration
 from facefusion.ffprobe import detect_audio_channel_total, detect_audio_format, detect_audio_frame_total, detect_audio_sample_rate
@@ -46,3 +48,24 @@ def detect_media_type(file_path : str) -> Optional[MediaType]:
 	if is_video(file_path):
 		return 'video'
 	return None
+
+
+def sanitize_filename(filename : str) -> str:
+	filename = os.path.basename(filename)
+	filename = re.sub(r'[^\w\-.]', '_', filename)
+	return filename[:255]
+
+
+def serialize_asset(asset : Dict[str, Any]) -> Dict[str, Any]:
+	return\
+	{
+		'id': asset.get('id'),
+		'created_at': asset.get('created_at').isoformat(),
+		'expires_at': asset.get('expires_at').isoformat(),
+		'type': asset.get('type'),
+		'media': asset.get('media'),
+		'name': asset.get('name'),
+		'format': asset.get('format'),
+		'size': asset.get('size'),
+		'metadata': asset.get('metadata')
+	}

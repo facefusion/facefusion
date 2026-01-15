@@ -1,11 +1,11 @@
 import os
 import uuid
 from datetime import datetime, timedelta
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 from facefusion.apis.asset_helper import detect_media_type, extract_audio_metadata, extract_image_metadata, extract_video_metadata
-from facefusion.filesystem import get_file_format, get_file_name
-from facefusion.types import AssetId, AssetStore, AssetType, AudioAsset, AudioFormat, ImageAsset, ImageFormat, SessionId, VideoAsset, VideoFormat
+from facefusion.filesystem import get_file_format, get_file_name, is_file, remove_file
+from facefusion.types import AssetId, AssetStore, AssetType, AudioAsset, AudioFormat, ImageAsset, ImageFormat, MediaType, SessionId, VideoAsset, VideoFormat
 
 ASSET_STORE : AssetStore = {}
 
@@ -78,6 +78,35 @@ def get_asset(session_id : SessionId, asset_id : AssetId) -> Optional[AudioAsset
 	if session_id in ASSET_STORE:
 		return ASSET_STORE[session_id].get(asset_id)
 	return None
+
+
+def list_assets(session_id : SessionId, asset_type : Optional[AssetType] = None, media : Optional[MediaType] = None) -> List[AudioAsset | ImageAsset | VideoAsset]:
+	if session_id not in ASSET_STORE:
+		return []
+
+	assets = list(ASSET_STORE[session_id].values())
+
+	if asset_type:
+		assets = [ asset for asset in assets if asset.get('type') == asset_type ]
+	if media:
+		assets = [ asset for asset in assets if asset.get('media') == media ]
+
+	return assets
+
+
+def delete_asset(session_id : SessionId, asset_id : AssetId) -> bool:
+	asset = get_asset(session_id, asset_id)
+
+	if asset:
+		file_path = asset.get('path')
+
+		if file_path and is_file(file_path):
+			remove_file(file_path)
+
+		del ASSET_STORE[session_id][asset_id]
+		return True
+
+	return False
 
 
 def clear() -> None:
