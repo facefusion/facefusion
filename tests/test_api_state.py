@@ -113,8 +113,8 @@ def test_select_source_assets(test_client : TestClient) -> None:
 	]
 	asset_ids =\
 	[
-		asset_store.create_asset(session_id, 'source', source_paths[0]).get('id'),
-		asset_store.create_asset(session_id, 'source', source_paths[1]).get('id')
+		asset_store.create_asset(session_id, 'source', 'image', source_paths[0]).get('id'),
+		asset_store.create_asset(session_id, 'source', 'image', source_paths[1]).get('id')
 	]
 
 	select_response = test_client.put('/state?action=select&type=source', json =
@@ -156,7 +156,7 @@ def test_select_target_assets(test_client : TestClient) -> None:
 	access_token = create_session_body.get('access_token')
 	session_id = session_manager.find_session_id(access_token)
 	target_path = get_test_example_file('target-240p.jpg')
-	asset_id = asset_store.create_asset(session_id, 'target', target_path).get('id')
+	asset_id = asset_store.create_asset(session_id, 'target', 'image', target_path).get('id')
 
 	select_response = test_client.put('/state?action=select&type=target', json=
 	{
