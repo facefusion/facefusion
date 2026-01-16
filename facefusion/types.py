@@ -232,7 +232,8 @@ VideoAsset = TypedDict('VideoAsset',
 })
 
 AssetMetadata : TypeAlias = AudioMetadata | ImageMetadata | VideoMetadata
-AssetStore : TypeAlias = Dict[SessionId, Dict[AssetId, AudioAsset | ImageAsset | VideoAsset]]
+Asset : TypeAlias = AudioAsset | ImageAsset | VideoAsset
+AssetStore : TypeAlias = Dict[SessionId, Dict[AssetId, Asset]]
 
 BenchmarkMode = Literal['warm', 'cold']
 BenchmarkResolution = Literal['240p', '360p', '540p', '720p', '1080p', '1440p', '2160p']
