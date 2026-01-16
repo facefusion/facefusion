@@ -59,17 +59,19 @@ async def prepare_files(files : List[UploadFile]) -> List[Tuple[str, MediaType]]
 			temp_file.write(content)
 			file_path = temp_file.name
 
-		if is_audio(file_path):
-			prepared_files.append((file_path, 'audio'))
-			continue
-		if is_image(file_path):
-			prepared_files.append((file_path, 'image'))
-			continue
-		if is_video(file_path):
-			prepared_files.append((file_path, 'video'))
-			continue
+		media_type : MediaType | None = None
 
-		if is_file(file_path):
+		if is_audio(file_path):
+			media_type = 'audio'
+		if is_image(file_path):
+			media_type = 'image'
+		if is_video(file_path):
+			media_type = 'video'
+
+		if media_type:
+			prepared_files.append((file_path, media_type))
+
+		if not media_type and is_file(file_path):
 			remove_file(file_path)
 
 	return prepared_files

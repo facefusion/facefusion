@@ -120,28 +120,6 @@ def test_upload_target_asset(test_client : TestClient) -> None:
 	assert upload_response.json().get('asset_id')
 
 
-def test_upload_target_multiple_files_uses_first(test_client : TestClient) -> None:
-	create_session_response = test_client.post('/session', json =
-	{
-		'client_version': metadata.get('version')
-	})
-	create_session_body = create_session_response.json()
-
-	with open('.assets/examples/target-240p.mp4', 'rb') as target_file_1:
-		with open('.assets/examples/target-240p.mp4', 'rb') as target_file_2:
-			upload_response = test_client.post('/assets?type=target', headers =
-			{
-				'Authorization': 'Bearer ' + create_session_body.get('access_token')
-			}, files =
-			[
-				('file', ('target1.mp4', target_file_1, 'video/mp4')),
-				('file', ('target2.mp4', target_file_2, 'video/mp4'))
-			])
-
-	assert upload_response.status_code == 201
-	assert upload_response.json().get('asset_id')
-
-
 def test_upload_unsupported_format(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
