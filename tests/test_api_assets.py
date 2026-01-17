@@ -128,7 +128,7 @@ def test_upload_target_asset(test_client : TestClient) -> None:
 		})
 
 	assert upload_response.status_code == 201
-	assert upload_response.json().get('asset_id')
+	assert upload_response.json().get('asset_ids')
 
 
 def test_upload_unsupported_format(test_client : TestClient) -> None:
@@ -143,7 +143,7 @@ def test_upload_unsupported_format(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + create_session_body.get('access_token')
 	}, files =
 	{
-		'file': ('test.txt', b'invalid content', 'text/plain')
+		'file': ('test.txt', b'invalid', 'text/plain')
 	})
 
 	assert upload_response.status_code == 400

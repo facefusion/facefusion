@@ -3,71 +3,58 @@ from typing import List
 
 from starlette.datastructures import UploadFile
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from facefusion import session_manager
 from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import detect_media_type
 from facefusion.apis.endpoints.session import extract_access_token
-from facefusion.filesystem import get_file_extension, is_file, remove_file
+from facefusion.filesystem import get_file_extension, remove_file
 
 
-async def upload_asset(request : Request) -> JSONResponse:
+async def upload_asset(request : Request) -> Response:
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
 	asset_type = request.query_params.get('type')
 
 	if session_id and asset_type in [ 'source', 'target' ]:
 		form = await request.form()
-		files = [ file for file in form.getlist('file') if isinstance(file, UploadFile) ]
+		upload_files = form.getlist('file')
+		asset_paths = await save_asset_files(upload_files)
 
-		if asset_type == 'target':
-			files = files[:1]
-
-		media_files = await prepare_media_files(files)
-
-		if media_files:
+		if asset_paths:
 			asset_ids : List[str] = []
 
-			for media_file in media_files:
-				media_type = detect_media_type(media_file)
+			for asset_path in asset_paths:
+				asset = asset_store.create_asset(session_id, asset_type, asset_path) # type: ignore[arg-type]
+				asset_id = asset.get('id')
 
-				if media_type:
-					asset = asset_store.create_asset(session_id, asset_type, media_type, media_file) #type:ignore[arg-type]
-
-					if asset:
-						asset_id = asset.get('id')
-
-						if asset_id:
-							asset_ids.append(asset_id)
+				if asset_id:
+					asset_ids.append(asset_id)
 
 			if asset_ids:
-				if asset_type == 'target':
-					return JSONResponse({ 'asset_id': asset_ids[0] }, status_code = HTTP_201_CREATED)
+				return JSONResponse(
+				{
+					'asset_ids': asset_ids
+				}, status_code = HTTP_201_CREATED)
 
-				return JSONResponse({ 'asset_ids': asset_ids }, status_code = HTTP_201_CREATED)
-
-	return JSONResponse({}, status_code = HTTP_400_BAD_REQUEST)
+	return Response(status_code = HTTP_400_BAD_REQUEST)
 
 
-async def prepare_media_files(files : List[UploadFile]) -> List[str]:
-	media_files : List[str] = []
+async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
+	asset_paths : List[str] = []
 
-	for file in files:
-		file_extension = get_file_extension(file.filename)
+	for upload_file in upload_files:
+		upload_file_extension = get_file_extension(upload_file.filename)
 
-		with tempfile.NamedTemporaryFile(suffix = file_extension, delete = False) as temp_file:
-			content = await file.read()
-			temp_file.write(content)
-			file_path = temp_file.name
+		with tempfile.NamedTemporaryFile(suffix = upload_file_extension, delete = False) as temp_file:
+			temp_content = await upload_file.read()
+			temp_file.write(temp_content)
 
-		media_type = detect_media_type(file_path)
+			if detect_media_type(temp_file.name):
+				asset_paths.append(temp_file.name)
+			else:
+				remove_file(temp_file.name)
 
-		if media_type:
-			media_files.append(file_path)
-
-		if not media_type and is_file(file_path):
-			remove_file(file_path)
-
-	return media_files
+	return asset_paths
