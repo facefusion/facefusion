@@ -80,7 +80,7 @@ def clear_session(session_id : SessionId) -> None:
 		for asset in ASSET_STORE[session_id].values():
 			file_path = asset.get('path')
 
-			if file_path and is_file(file_path):
+			if is_file(file_path):
 				remove_file(file_path)
 
 		del ASSET_STORE[session_id]

@@ -25,12 +25,12 @@ async def upload_asset(request : Request) -> JSONResponse:
 		if asset_type == 'target':
 			files = files[:1]
 
-		prepared_files = await prepare_files(files)
+		media_files = await prepare_media_files(files)
 
-		if prepared_files:
+		if media_files:
 			asset_ids : List[str] = []
 
-			for file_path, media_type in prepared_files:
+			for file_path, media_type in media_files:
 				asset = asset_store.create_asset(session_id, asset_type, media_type, file_path) #type:ignore[arg-type]
 
 				if asset:
@@ -48,8 +48,8 @@ async def upload_asset(request : Request) -> JSONResponse:
 	return JSONResponse({}, status_code = HTTP_400_BAD_REQUEST)
 
 
-async def prepare_files(files : List[UploadFile]) -> List[Tuple[str, MediaType]]:
-	prepared_files : List[Tuple[str, MediaType]] = []
+async def prepare_media_files(files : List[UploadFile]) -> List[Tuple[str, MediaType]]:
+	media_files : List[Tuple[str, MediaType]] = []
 
 	for file in files:
 		file_extension = get_file_extension(file.filename)
@@ -69,9 +69,9 @@ async def prepare_files(files : List[UploadFile]) -> List[Tuple[str, MediaType]]
 			media_type = 'video'
 
 		if media_type:
-			prepared_files.append((file_path, media_type))
+			media_files.append((file_path, media_type))
 
 		if not media_type and is_file(file_path):
 			remove_file(file_path)
 
-	return prepared_files
+	return media_files
