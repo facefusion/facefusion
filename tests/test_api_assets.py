@@ -6,6 +6,17 @@ from starlette.testclient import TestClient
 from facefusion import metadata, session_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
+from facefusion.download import conditional_download
+from .helper import get_test_example_file, get_test_examples_directory
+
+
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
+	conditional_download(get_test_examples_directory(),
+	[
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
+	])
 
 
 @pytest.fixture(scope = 'module')
@@ -63,7 +74,7 @@ def test_upload_source_asset(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 
-	with open('.assets/examples/source.jpg', 'rb') as source_file:
+	with open(get_test_example_file('source.jpg'), 'rb') as source_file:
 		upload_response = test_client.post('/assets?type=source', headers =
 		{
 			'Authorization': 'Bearer ' + create_session_body.get('access_token')
@@ -84,16 +95,16 @@ def test_upload_multiple_source_assets(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 
-	with open('.assets/examples/source.jpg', 'rb') as source_file_1:
-		with open('.assets/examples/source.jpg', 'rb') as source_file_2:
-			upload_response = test_client.post('/assets?type=source', headers =
-			{
-				'Authorization': 'Bearer ' + create_session_body.get('access_token')
-			}, files =
-			[
-				('file', ('source1.jpg', source_file_1, 'image/jpeg')),
-				('file', ('source2.jpg', source_file_2, 'image/jpeg'))
-			])
+	with open(get_test_example_file('source.jpg'), 'rb') as source_file:
+		source_content = source_file.read()
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + create_session_body.get('access_token')
+		}, files =
+		[
+			('file', ('source1.jpg', source_content, 'image/jpeg')),
+			('file', ('source2.jpg', source_content, 'image/jpeg'))
+		])
 
 	assert upload_response.status_code == 201
 	assert upload_response.json().get('asset_ids')
@@ -107,7 +118,7 @@ def test_upload_target_asset(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 
-	with open('.assets/examples/target-240p.mp4', 'rb') as target_file:
+	with open(get_test_example_file('target-240p.mp4'), 'rb') as target_file:
 		upload_response = test_client.post('/assets?type=target', headers =
 		{
 			'Authorization': 'Bearer ' + create_session_body.get('access_token')
