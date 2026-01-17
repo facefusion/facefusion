@@ -114,7 +114,7 @@ def predict_video_frame_total(video_path : str, fps : Fps, trim_frame_start : in
 	return 0
 
 
-def detect_video_fps(video_path : str) -> Optional[float]:
+def detect_video_fps(video_path : str) -> Optional[Fps]:
 	if is_video(video_path):
 		video_capture = get_video_capture(video_path)
 

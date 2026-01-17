@@ -3,18 +3,19 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Optional, cast
 
-from facefusion.apis.asset_helper import extract_audio_metadata, extract_image_metadata, extract_video_metadata
-from facefusion.filesystem import get_file_format, get_file_name, is_file, remove_file
-from facefusion.types import Asset, AssetId, AssetStore, AssetType, AudioAsset, AudioFormat, ImageAsset, ImageFormat, MediaType, SessionId, VideoAsset, VideoFormat
+from facefusion.apis.asset_helper import detect_media_type, extract_audio_metadata, extract_image_metadata, extract_video_metadata
+from facefusion.filesystem import get_file_format, get_file_name
+from facefusion.types import AssetId, AssetStore, AssetType, AudioAsset, AudioFormat, ImageAsset, ImageFormat, SessionId, VideoAsset, VideoFormat
 
 ASSET_STORE : AssetStore = {}
 
 
-def create_asset(session_id : SessionId, asset_type : AssetType, media_type : MediaType, file_path : str) -> Asset:
+def create_asset(session_id : SessionId, asset_type : AssetType, asset_path : str) -> Optional[AudioAsset | ImageAsset | VideoAsset]:
 	asset_id = str(uuid.uuid4())
-	file_name = get_file_name(file_path)
-	file_format = get_file_format(file_path)
-	file_size = os.path.getsize(file_path)
+	asset_name = get_file_name(asset_path)
+	asset_format = get_file_format(asset_path)
+	asset_size = os.path.getsize(asset_path)
+	media_type = detect_media_type(asset_path)
 	created_at = datetime.now()
 	expires_at = created_at + timedelta(hours = 2)
 
@@ -29,11 +30,11 @@ def create_asset(session_id : SessionId, asset_type : AssetType, media_type : Me
 			'expires_at': expires_at,
 			'type': asset_type,
 			'media': media_type,
-			'name': file_name,
-			'format': cast(AudioFormat, file_format),
-			'size': file_size,
-			'path': file_path,
-			'metadata': extract_audio_metadata(file_path)
+			'name': asset_name,
+			'format': cast(AudioFormat, asset_format),
+			'size': asset_size,
+			'path': asset_path,
+			'metadata': extract_audio_metadata(asset_path)
 		})
 
 	if media_type == 'image':
@@ -44,11 +45,11 @@ def create_asset(session_id : SessionId, asset_type : AssetType, media_type : Me
 			'expires_at': expires_at,
 			'type': asset_type,
 			'media': media_type,
-			'name': file_name,
-			'format': cast(ImageFormat, file_format),
-			'size': file_size,
-			'path': file_path,
-			'metadata': extract_image_metadata(file_path)
+			'name': asset_name,
+			'format': cast(ImageFormat, asset_format),
+			'size': asset_size,
+			'path': asset_path,
+			'metadata': extract_image_metadata(asset_path)
 		})
 
 	if media_type == 'video':
@@ -59,33 +60,21 @@ def create_asset(session_id : SessionId, asset_type : AssetType, media_type : Me
 			'expires_at': expires_at,
 			'type': asset_type,
 			'media': media_type,
-			'name': file_name,
-			'format': cast(VideoFormat, file_format),
-			'size': file_size,
-			'path': file_path,
-			'metadata': extract_video_metadata(file_path)
+			'name': asset_name,
+			'format': cast(VideoFormat, asset_format),
+			'size': asset_size,
+			'path': asset_path,
+			'metadata': extract_video_metadata(asset_path)
 		})
 
-	return ASSET_STORE[session_id][asset_id]
+	return ASSET_STORE[session_id].get(asset_id)
 
 
-def get_asset(session_id : SessionId, asset_id : AssetId) -> Optional[Asset]:
+def get_asset(session_id : SessionId, asset_id : AssetId) -> Optional[AudioAsset | ImageAsset | VideoAsset]:
 	if session_id in ASSET_STORE:
 		return ASSET_STORE[session_id].get(asset_id)
 	return None
 
 
-def clear_session(session_id : SessionId) -> None:
-	if session_id in ASSET_STORE:
-		for asset in ASSET_STORE[session_id].values():
-			file_path = asset.get('path')
-
-			if is_file(file_path):
-				remove_file(file_path)
-
-		del ASSET_STORE[session_id]
-
-
 def clear() -> None:
-	for session_id in list(ASSET_STORE.keys()):
-		clear_session(session_id)
+	ASSET_STORE.clear()
