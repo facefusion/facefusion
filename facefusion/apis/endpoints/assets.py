@@ -52,9 +52,9 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 			temp_content = await upload_file.read()
 			temp_file.write(temp_content)
 
-			if detect_media_type(temp_file.name):
-				asset_paths.append(temp_file.name)
-			else:
-				remove_file(temp_file.name)
+		if detect_media_type(temp_file.name):
+			asset_paths.append(temp_file.name)
+		else:
+			remove_file(temp_file.name)
 
 	return asset_paths
