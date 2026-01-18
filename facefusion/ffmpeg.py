@@ -178,6 +178,7 @@ def read_audio_buffer(target_path : str, audio_sample_rate : int, audio_sample_s
 
 	process = open_ffmpeg(commands)
 	audio_buffer, _ = process.communicate()
+
 	if process.returncode == 0:
 		return audio_buffer
 	return None
@@ -284,6 +285,36 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	process.communicate()
 	remove_file(concat_video_path)
 	return process.returncode == 0
+
+
+def sanitize_audio(temp_path : str, asset_path : str) -> bool:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(temp_path),
+		ffmpeg_builder.deep_copy_audio(),
+		ffmpeg_builder.strip_metadata(),
+		ffmpeg_builder.force_output(asset_path)
+	)
+	return run_ffmpeg(commands).returncode == 0
+
+
+def sanitize_image(temp_path : str, asset_path : str) -> bool:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(temp_path),
+		ffmpeg_builder.deep_copy_image(),
+		ffmpeg_builder.strip_metadata(),
+		ffmpeg_builder.force_output(asset_path)
+	)
+	return run_ffmpeg(commands).returncode == 0
+
+
+def sanitize_video(temp_path : str, asset_path : str) -> bool:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(temp_path),
+		ffmpeg_builder.deep_copy_video(),
+		ffmpeg_builder.strip_metadata(),
+		ffmpeg_builder.force_output(asset_path)
+	)
+	return run_ffmpeg(commands).returncode == 0
 
 
 def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:

@@ -87,6 +87,10 @@ def enforce_pixel_format(pixel_format : str) -> List[Command]:
 	return [ '-pix_fmt', pixel_format ]
 
 
+def strip_metadata() -> List[Command]:
+	return [ '-map_metadata', '-1' ]
+
+
 def set_pixel_format(video_encoder : VideoEncoder) -> List[Command]:
 	if video_encoder == 'rawvideo':
 		return [ '-pix_fmt', 'rgb24' ]
@@ -131,12 +135,8 @@ def set_media_resolution(video_resolution : str) -> List[Command]:
 	return [ '-s', video_resolution ]
 
 
-def set_image_quality(image_path : str, image_quality : int) -> List[Command]:
-	if get_file_format(image_path) == 'webp':
-		return [ '-q:v', str(image_quality) ]
-
-	image_compression = round(31 - (image_quality * 0.31))
-	return [ '-q:v', str(image_compression) ]
+def deep_copy_audio() -> List[Command]:
+	return [ '-q:a', '0' ]
 
 
 def set_audio_encoder(audio_codec : str) -> List[Command]:
@@ -176,11 +176,27 @@ def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> List
 	if audio_encoder == 'libvorbis':
 		audio_compression = numpy.round(numpy.interp(audio_quality, [ 0, 100 ], [ -1, 10 ]), 1).astype(float).item()
 		return [ '-q:a', str(audio_compression) ]
-	return []
+	return [ '-q:a', '0' ]
 
 
 def set_audio_volume(audio_volume : int) -> List[Command]:
 	return [ '-filter:a', 'volume=' + str(audio_volume / 100) ]
+
+
+def deep_copy_image() -> List[Command]:
+	return [ '-q:v', '0' ]
+
+
+def set_image_quality(image_path : str, image_quality : int) -> List[Command]:
+	if get_file_format(image_path) == 'webp':
+		return [ '-q:v', str(image_quality) ]
+
+	image_compression = round(31 - (image_quality * 0.31))
+	return [ '-q:v', str(image_compression) ]
+
+
+def deep_copy_video() -> List[Command]:
+	return [ '-q:v', '0' ]
 
 
 def set_video_encoder(video_encoder : str) -> List[Command]:
@@ -210,7 +226,7 @@ def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> List
 	if video_encoder in [ 'h264_videotoolbox', 'hevc_videotoolbox' ]:
 		video_bit_rate = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 1024, 50512 ])).astype(int).item()
 		return [ '-b:v', str(video_bit_rate) + 'k' ]
-	return []
+	return [ '-q:v', '0' ]
 
 
 def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -> List[Command]:
