@@ -1,3 +1,4 @@
+import os
 import tempfile
 from typing import List
 
@@ -6,11 +7,11 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
-from facefusion import session_manager
+from facefusion import ffmpeg, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import detect_media_type
 from facefusion.apis.endpoints.session import extract_access_token
-from facefusion.filesystem import get_file_extension, remove_file
+from facefusion.filesystem import get_file_extension
 
 
 async def upload_asset(request : Request) -> Response:
@@ -48,13 +49,22 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 	for upload_file in upload_files:
 		upload_file_extension = get_file_extension(upload_file.filename)
 
-		with tempfile.NamedTemporaryFile(suffix = upload_file_extension, delete = False) as temp_file:
-			temp_content = await upload_file.read()
-			temp_file.write(temp_content)
+		with tempfile.NamedTemporaryFile(suffix = upload_file_extension) as temp_file:
 
-		if detect_media_type(temp_file.name):
-			asset_paths.append(temp_file.name)
-		else:
-			remove_file(temp_file.name)
+			while upload_chunk := await upload_file.read(1024):
+				temp_file.write(upload_chunk)
+
+			media_type = detect_media_type(temp_file.name)
+			temp_path = state_manager.get_temp_path()
+			asset_path = os.path.join(temp_path, temp_file.name + '.' + upload_file_extension)
+
+			if media_type == 'audio' and ffmpeg.sanitize_audio(temp_file.name, asset_path):
+				asset_paths.append(asset_path)
+
+			if media_type == 'image' and ffmpeg.sanitize_image(temp_file.name, asset_path):
+				asset_paths.append(asset_path)
+
+			if media_type == 'video' and ffmpeg.sanitize_video(temp_file.name, asset_path):
+				asset_paths.append(asset_path)
 
 	return asset_paths

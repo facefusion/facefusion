@@ -1,9 +1,10 @@
+import tempfile
 from typing import Iterator
 
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager
+from facefusion import metadata, process_manager, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -12,6 +13,7 @@ from .helper import get_test_example_file, get_test_examples_directory
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	process_manager.start()
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
@@ -27,6 +29,8 @@ def test_client() -> Iterator[TestClient]:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
+	state_manager.init_item('temp_path', tempfile.gettempdir())
+	state_manager.init_item('temp_frame_format', 'png')
 	session_manager.SESSIONS.clear()
 	asset_store.clear()
 
