@@ -176,7 +176,7 @@ def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> List
 	if audio_encoder == 'libvorbis':
 		audio_compression = numpy.round(numpy.interp(audio_quality, [ 0, 100 ], [ -1, 10 ]), 1).astype(float).item()
 		return [ '-q:a', str(audio_compression) ]
-	return [ '-q:a', '0' ]
+	return []
 
 
 def set_audio_volume(audio_volume : int) -> List[Command]:
@@ -226,7 +226,7 @@ def set_video_quality(video_encoder : VideoEncoder, video_quality : int) -> List
 	if video_encoder in [ 'h264_videotoolbox', 'hevc_videotoolbox' ]:
 		video_bit_rate = numpy.round(numpy.interp(video_quality, [ 0, 100 ], [ 1024, 50512 ])).astype(int).item()
 		return [ '-b:v', str(video_bit_rate) + 'k' ]
-	return [ '-q:v', '0' ]
+	return []
 
 
 def set_video_preset(video_encoder : VideoEncoder, video_preset : VideoPreset) -> List[Command]:
