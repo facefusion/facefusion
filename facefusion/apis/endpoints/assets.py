@@ -54,10 +54,9 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 			while upload_chunk := await upload_file.read(1024):
 				temp_file.write(upload_chunk)
 
-			temp_file.flush()
 			media_type = detect_media_type(temp_file.name)
 			temp_path = state_manager.get_temp_path()
-			asset_path = os.path.join(temp_path, os.path.basename(temp_file.name) + upload_file_extension)
+			asset_path = os.path.join(temp_path, temp_file.name + '.' + upload_file_extension)
 
 			if media_type == 'audio' and ffmpeg.sanitize_audio(temp_file.name, asset_path):
 				asset_paths.append(asset_path)
