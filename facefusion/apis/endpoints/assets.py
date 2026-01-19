@@ -11,7 +11,7 @@ from facefusion import ffmpeg, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import detect_media_type
 from facefusion.apis.endpoints.session import extract_access_token
-from facefusion.filesystem import get_file_extension
+from facefusion.filesystem import get_file_extension, remove_file
 
 
 async def upload_asset(request : Request) -> Response:
@@ -49,10 +49,12 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 	for upload_file in upload_files:
 		upload_file_extension = get_file_extension(upload_file.filename)
 
-		with tempfile.NamedTemporaryFile(suffix = upload_file_extension) as temp_file:
+		with tempfile.NamedTemporaryFile(suffix = upload_file_extension, delete = False) as temp_file:
 
 			while upload_chunk := await upload_file.read(1024):
 				temp_file.write(upload_chunk)
+
+			temp_file.flush()
 
 			media_type = detect_media_type(temp_file.name)
 			temp_path = state_manager.get_temp_path()
@@ -66,5 +68,7 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 			if media_type == 'video' and ffmpeg.sanitize_video(temp_file.name, asset_path):
 				asset_paths.append(asset_path)
+
+		remove_file(temp_file.name)
 
 	return asset_paths
