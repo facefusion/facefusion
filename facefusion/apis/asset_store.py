@@ -1,11 +1,11 @@
 import os
 import uuid
 from datetime import datetime, timedelta
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 from facefusion.apis.asset_helper import detect_media_type, extract_audio_metadata, extract_image_metadata, extract_video_metadata
 from facefusion.filesystem import get_file_format, get_file_name
-from facefusion.types import AssetId, AssetStore, AssetType, AudioAsset, AudioFormat, ImageAsset, ImageFormat, SessionId, VideoAsset, VideoFormat
+from facefusion.types import AssetId, AssetSet, AssetStore, AssetType, AudioAsset, AudioFormat, ImageAsset, ImageFormat, SessionId, VideoAsset, VideoFormat
 
 ASSET_STORE : AssetStore = {}
 
@@ -70,9 +70,21 @@ def create_asset(session_id : SessionId, asset_type : AssetType, asset_path : st
 	return ASSET_STORE[session_id].get(asset_id)
 
 
+def get_assets(session_id : SessionId) -> Optional[AssetSet]:
+	return ASSET_STORE.get(session_id)
+
+
 def get_asset(session_id : SessionId, asset_id : AssetId) -> Optional[AudioAsset | ImageAsset | VideoAsset]:
 	if session_id in ASSET_STORE:
-		return ASSET_STORE[session_id].get(asset_id)
+		return ASSET_STORE.get(session_id).get(asset_id)
+	return None
+
+
+def delete_assets(session_id : SessionId, asset_ids : List[AssetId]) -> None:
+	if session_id in ASSET_STORE:
+		for asset_id in asset_ids:
+			if asset_id in ASSET_STORE.get(session_id):
+				del ASSET_STORE[session_id][asset_id]
 	return None
 
 
