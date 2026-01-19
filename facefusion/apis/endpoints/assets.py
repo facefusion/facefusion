@@ -7,7 +7,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
-from facefusion import ffmpeg, session_manager, state_manager
+from facefusion import ffmpeg, process_manager, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import detect_media_type
 from facefusion.apis.endpoints.session import extract_access_token
@@ -60,6 +60,8 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 			temp_path = state_manager.get_temp_path()
 			asset_path = os.path.join(temp_path, temp_file.name + '.' + upload_file_extension)
 
+			process_manager.start()
+
 			if media_type == 'audio' and ffmpeg.sanitize_audio(temp_file.name, asset_path):
 				asset_paths.append(asset_path)
 
@@ -68,6 +70,8 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 			if media_type == 'video' and ffmpeg.sanitize_video(temp_file.name, asset_path):
 				asset_paths.append(asset_path)
+
+			process_manager.end()
 
 		remove_file(temp_file.name)
 
