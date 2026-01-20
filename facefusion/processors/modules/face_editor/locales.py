@@ -40,5 +40,44 @@ LOCALES : Locales =\
 			'mouth_purse_slider': 'FACE EDITOR MOUTH PURSE',
 			'mouth_smile_slider': 'FACE EDITOR MOUTH SMILE'
 		}
+	},
+	'tr':
+	{
+		'help':
+		{
+			'model': 'yüz düzenleme için sorumlu modeli seçin',
+			'eyebrow_direction': 'kaş yönünü belirtin',
+			'eye_gaze_horizontal': 'yatay göz bakışını belirtin',
+			'eye_gaze_vertical': 'dikey göz bakışını belirtin',
+			'eye_open_ratio': 'göz açıklık oranını belirtin',
+			'lip_open_ratio': 'dudak açıklık oranını belirtin',
+			'mouth_grim': 'ağız sıkışmasını belirtin',
+			'mouth_pout': 'ağız somurtmasını belirtin',
+			'mouth_purse': 'ağız büzme durumunu belirtin',
+			'mouth_smile': 'ağız gülümsemesini belirtin',
+			'mouth_position_horizontal': 'yatay ağız konumunu belirtin',
+			'mouth_position_vertical': 'dikey ağız konumunu belirtin',
+			'head_pitch': 'kafa eğimini belirtin',
+			'head_yaw': 'kafa sapağını belirtin',
+			'head_roll': 'kafa yuvarlanmasını belirtin'
+		},
+		'uis':
+		{
+			'eyebrow_direction_slider': 'YÜZ DÜZENLEYİCİ KAŞ YÖNÜ',
+			'eye_gaze_horizontal_slider': 'YÜZ DÜZENLEYİCİ YATAY GÖZ BAKIŞI',
+			'eye_gaze_vertical_slider': 'YÜZ DÜZENLEYİCİ DİKEY GÖZ BAKIŞI',
+			'eye_open_ratio_slider': 'YÜZ DÜZENLEYİCİ GÖZ AÇIKLIK ORANI',
+			'head_pitch_slider': 'YÜZ DÜZENLEYİCİ KAFA EĞİMİ',
+			'head_roll_slider': 'YÜZ DÜZENLEYİCİ KAFA YUVARLANMASI',
+			'head_yaw_slider': 'YÜZ DÜZENLEYİCİ KAFA SAPAĞI',
+			'lip_open_ratio_slider': 'YÜZ DÜZENLEYİCİ DUDAK AÇIKLIK ORANI',
+			'model_dropdown': 'YÜZ DÜZENLEYİCİ MODELİ',
+			'mouth_grim_slider': 'YÜZ DÜZENLEYİCİ AĞIZ SIKIŞMASI',
+			'mouth_position_horizontal_slider': 'YÜZ DÜZENLEYİCİ YATAY AĞIZ KONUMU',
+			'mouth_position_vertical_slider': 'YÜZ DÜZENLEYİCİ DİKEY AĞIZ KONUMU',
+			'mouth_pout_slider': 'YÜZ DÜZENLEYİCİ AĞIZ SOMURTMASI',
+			'mouth_purse_slider': 'YÜZ DÜZENLEYİCİ AĞIZ BÜZME',
+			'mouth_smile_slider': 'YÜZ DÜZENLEYİCİ AĞIZ GÜLÜMSEMESİ'
+		}
 	}
 }

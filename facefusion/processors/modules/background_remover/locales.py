@@ -17,5 +17,21 @@ LOCALES : Locales =\
 			'color_blue_number': 'BACKGROUND COLOR BLUE',
 			'color_alpha_number': 'BACKGROUND COLOR ALPHA'
 		}
+	},
+	'tr':
+	{
+		'help':
+		{
+			'model': 'arka planı kaldırmak için sorumlu modeli seçin',
+			'color': 'arka plana kırmızı, yeşil, mavi ve alfa değerlerini uygulayın'
+		},
+		'uis':
+		{
+			'model_dropdown': 'ARKA PLAN KALDIRICI MODELİ',
+			'color_red_number': 'ARKA PLAN KIRMIZI RENGİ',
+			'color_green_number': 'ARKA PLAN YEŞİL RENGİ',
+			'color_blue_number': 'ARKA PLAN MAVİ RENGİ',
+			'color_alpha_number': 'ARKA PLAN ALFA DEĞERİ'
+		}
 	}
 }

@@ -14,5 +14,18 @@ LOCALES : Locales =\
 			'model_dropdown': 'LIP SYNCER MODEL',
 			'weight_slider': 'LIP SYNCER WEIGHT'
 		}
+	},
+	'tr':
+	{
+		'help':
+		{
+			'model': 'dudak senkronizasyonu için sorumlu modeli seçin',
+			'weight': 'dudaklara uygulanan ağırlık derecesini belirtin'
+		},
+		'uis':
+		{
+			'model_dropdown': 'DUDAK SENKRONİZASYONU MODELİ',
+			'weight_slider': 'DUDAK SENKRONİZASYONU AĞIRLIĞI'
+		}
 	}
 }

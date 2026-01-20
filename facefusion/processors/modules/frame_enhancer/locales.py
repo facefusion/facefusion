@@ -14,5 +14,18 @@ LOCALES : Locales =\
 			'blend_slider': 'FRAME ENHANCER BLEND',
 			'model_dropdown': 'FRAME ENHANCER MODEL'
 		}
+	},
+	'tr':
+	{
+		'help':
+		{
+			'model': 'kare iyileştirme için sorumlu modeli seçin',
+			'blend': 'İyileştirileni önceki kareyle harmanlama'
+		},
+		'uis':
+		{
+			'blend_slider': 'KARE İYİLEŞTİRİCİ HARMANLAMA',
+			'model_dropdown': 'KARE İYİLEŞTİRİCİ MODELİ'
+		}
 	}
 }

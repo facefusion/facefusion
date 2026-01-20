@@ -16,5 +16,20 @@ LOCALES : Locales =\
 			'pixel_boost_dropdown': 'FACE SWAPPER PIXEL BOOST',
 			'weight_slider': 'FACE SWAPPER WEIGHT'
 		}
+	},
+	'tr':
+	{
+		'help':
+		{
+			'model': 'yüz değiştirme için sorumlu modeli seçin',
+			'pixel_boost': 'yüz değiştirici için piksel artırıcı çözünürlüğü seçin',
+			'weight': 'yüze uygulanan ağırlık derecesini belirtin'
+		},
+		'uis':
+		{
+			'model_dropdown': 'YÜZ DEĞİŞTİRİCİ MODELİ',
+			'pixel_boost_dropdown': 'YÜZ DEĞİŞTİRİCİ PİKSEL ARTIRICI',
+			'weight_slider': 'YÜZ DEĞİŞTİRİCİ AĞIRLIĞI'
+		}
 	}
 }

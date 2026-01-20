@@ -12,5 +12,16 @@ LOCALES : Locales =\
 		{
 			'items_checkbox_group': 'FACE DEBUGGER ITEMS'
 		}
+	},
+	'tr':
+	{
+		'help':
+		{
+			'items': 'tek veya birden fazla işlemci yükleyin (seçenekler: {choices})'
+		},
+		'uis':
+		{
+			'items_checkbox_group': 'YÜZ HATA AYIKLAYICI ÖĞELERİ'
+		}
 	}
 }

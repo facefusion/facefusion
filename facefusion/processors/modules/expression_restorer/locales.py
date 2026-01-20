@@ -16,5 +16,20 @@ LOCALES : Locales =\
 			'factor_slider': 'EXPRESSION RESTORER FACTOR',
 			'areas_checkbox_group': 'EXPRESSION RESTORER AREAS'
 		}
+	},
+	'tr':
+	{
+		'help':
+		{
+			'model': 'ıfade geri yükleme için sorumlu modeli seçin',
+			'factor': 'hedef yüzden ıfade geri yükleme faktörü',
+			'areas': 'ıfade alanları için kullanılan öğeleri seçin (seçenekler: {choices})'
+		},
+		'uis':
+		{
+			'model_dropdown': 'İFADE GERİ YÜKLEYİCİ MODELİ',
+			'factor_slider': 'İFADE GERİ YÜKLEYİCİ FAKTÖRÜ',
+			'areas_checkbox_group': 'İFADE GERİ YÜKLEYİCİ ALANLARI'
+		}
 	}
 }

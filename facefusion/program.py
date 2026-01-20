@@ -261,6 +261,14 @@ def create_log_level_program() -> ArgumentParser:
 	return program
 
 
+def create_language_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_misc = program.add_argument_group('misc')
+	group_misc.add_argument('--language', help = translator.get('help.language'), default = config.get_str_value('misc', 'language', 'en'), choices = facefusion.choices.languages)
+	args_store.register_args([ 'language' ], scopes = [ 'cli' ])
+	return program
+
+
 def create_halt_on_error_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
@@ -292,7 +300,7 @@ def collect_step_program() -> ArgumentParser:
 
 
 def collect_job_program() -> ArgumentParser:
-	return ArgumentParser(parents = [ create_workflow_program(), create_execution_program(), create_download_providers_program(), create_memory_program(), create_log_level_program() ], add_help = False)
+	return ArgumentParser(parents = [ create_workflow_program(), create_execution_program(), create_download_providers_program(), create_memory_program(), create_log_level_program(), create_language_program() ], add_help = False)
 
 
 def create_program() -> ArgumentParser:

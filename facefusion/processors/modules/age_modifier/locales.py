@@ -14,5 +14,18 @@ LOCALES : Locales =\
 			'direction_slider': 'AGE MODIFIER DIRECTION',
 			'model_dropdown': 'AGE MODIFIER MODEL'
 		}
+	},
+	'tr':
+	{
+		'help':
+		{
+			'model': 'yüz yaşlandırma için sorumlu modeli seçin',
+			'direction': 'yaşın değiştirileceği yönü belirtin'
+		},
+		'uis':
+		{
+			'direction_slider': 'YAŞ DEĞİŞTİRİCİ YÖNÜ',
+			'model_dropdown': 'YAŞ DEĞİŞTİRİCİ MODELİ'
+		}
 	}
 }

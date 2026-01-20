@@ -1,3 +1,4 @@
+from facefusion import translator
 from facefusion.filesystem import get_file_name, is_video, resolve_file_paths
 from facefusion.normalizer import normalize_fps, normalize_space
 from facefusion.processors.core import get_processors_modules
@@ -90,6 +91,11 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	# misc
 	apply_state_item('log_level', args.get('log_level'))
 	apply_state_item('halt_on_error', args.get('halt_on_error'))
+	# language
+	language = args.get('language')
+	if language:
+		apply_state_item('language', language)
+		translator.set_language(language)
 	# jobs
 	apply_state_item('job_id', args.get('job_id'))
 	apply_state_item('job_status', args.get('job_status'))

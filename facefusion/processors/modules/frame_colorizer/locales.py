@@ -16,5 +16,20 @@ LOCALES : Locales =\
 			'model_dropdown': 'FRAME COLORIZER MODEL',
 			'size_dropdown': 'FRAME COLORIZER SIZE'
 		}
+	},
+	'tr':
+	{
+		'help':
+		{
+			'model': 'kare renklendirme için sorumlu modeli seçin',
+			'size': 'kare renklendiriciye sağlanan kare boyutunu belirtin',
+			'blend': 'renklendirilen kareyi önceki kareyle harmanlama'
+		},
+		'uis':
+		{
+			'blend_slider': 'KARE REKLENDİRİCİ HARMANLAMA',
+			'model_dropdown': 'KARE REKLENDİRİCİ MODELİ',
+			'size_dropdown': 'KARE REKLENDİRİCİ BOYUTU'
+		}
 	}
 }
