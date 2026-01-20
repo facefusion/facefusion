@@ -7,6 +7,16 @@ LOCALE_POOL_SET : LocalePoolSet = {}
 CURRENT_LANGUAGE : Language = 'en'
 
 
+def init(language : Language) -> None:
+	global CURRENT_LANGUAGE
+
+	CURRENT_LANGUAGE = language
+
+
+def get_current_language() -> Language:
+	return CURRENT_LANGUAGE
+
+
 def __autoload__(module_name : str) -> None:
 	try:
 		__locales__ = importlib.import_module(module_name + '.locales')
@@ -23,7 +33,19 @@ def get(notation : str, module_name : str = 'facefusion') -> Optional[str]:
 	if module_name not in LOCALE_POOL_SET:
 		__autoload__(module_name)
 
-	current = LOCALE_POOL_SET.get(module_name).get(CURRENT_LANGUAGE)
+	locale_pool = LOCALE_POOL_SET.get(module_name)
+	if not locale_pool:
+		return None
+
+	# Try current language first
+	current = locale_pool.get(CURRENT_LANGUAGE)
+	
+	# Fallback to English if current language not available
+	if not current:
+		current = locale_pool.get('en')
+	
+	if not current:
+		return None
 
 	for fragment in notation.split('.'):
 		if fragment in current:

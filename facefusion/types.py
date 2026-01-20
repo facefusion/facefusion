@@ -50,7 +50,7 @@ FaceStore = TypedDict('FaceStore',
 	'static_faces' : FaceSet
 })
 
-Language = Literal['en']
+Language = Literal['en', 'tr']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]
 LocalePoolSet : TypeAlias = Dict[str, Locales]
 

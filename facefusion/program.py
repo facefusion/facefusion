@@ -250,6 +250,15 @@ def create_memory_program() -> ArgumentParser:
 	return program
 
 
+def create_language_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_misc = program.add_argument_group('misc')
+	group_misc.add_argument('--language', help = translator.get('help.language'), default = config.get_str_value('misc', 'language', 'en'), choices = facefusion.choices.languages)
+	job_store.register_job_keys([ 'language' ])
+	apply_language(program)
+	return program
+
+
 def create_log_level_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
@@ -289,7 +298,7 @@ def collect_step_program() -> ArgumentParser:
 
 
 def collect_job_program() -> ArgumentParser:
-	return ArgumentParser(parents = [ create_execution_program(), create_download_providers_program(), create_memory_program(), create_log_level_program() ], add_help = False)
+	return ArgumentParser(parents = [ create_execution_program(), create_download_providers_program(), create_memory_program(), create_language_program(), create_log_level_program() ], add_help = False)
 
 
 def create_program() -> ArgumentParser:
@@ -325,3 +334,9 @@ def create_program() -> ArgumentParser:
 def apply_config_path(program : ArgumentParser) -> None:
 	known_args, _ = program.parse_known_args()
 	state_manager.init_item('config_path', known_args.config_path)
+
+
+def apply_language(program : ArgumentParser) -> None:
+	known_args, _ = program.parse_known_args()
+	if hasattr(known_args, 'language') and known_args.language:
+		translator.init(known_args.language)

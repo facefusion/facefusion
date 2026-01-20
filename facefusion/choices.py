@@ -147,6 +147,8 @@ log_level_set : LogLevelSet =\
 }
 log_levels : List[LogLevel] = list(log_level_set.keys())
 
+languages : List[str] = [ 'en', 'tr' ]
+
 ui_workflows : List[UiWorkflow] = [ 'instant_runner', 'job_runner', 'job_manager' ]
 job_statuses : List[JobStatus] = [ 'drafted', 'queued', 'completed', 'failed' ]
 
