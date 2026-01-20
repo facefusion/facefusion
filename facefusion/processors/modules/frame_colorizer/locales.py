@@ -27,9 +27,9 @@ LOCALES : Locales =\
 		},
 		'uis':
 		{
-			'blend_slider': 'KARE REKLENDİRİCİ HARMANLAMA',
-			'model_dropdown': 'KARE REKLENDİRİCİ MODELİ',
-			'size_dropdown': 'KARE REKLENDİRİCİ BOYUTU'
+			'blend_slider': 'KARE RENKLENDİRİCİ HARMANLAMA',
+			'model_dropdown': 'KARE RENKLENDİRİCİ MODELİ',
+			'size_dropdown': 'KARE RENKLENDİRİCİ BOYUTU'
 		}
 	}
 }

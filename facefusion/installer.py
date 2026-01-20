@@ -27,7 +27,34 @@ LOCALES =\
 		'conda_not_activated': 'conda etkinleştirilmemiş'
 	}
 }
-CURRENT_LANGUAGE = 'en'
+
+def get_current_language() -> str:
+	# Try to get language from environment variable first
+	language = os.getenv('FACEFUSION_LANGUAGE')
+	if language in LOCALES:
+		return language
+	
+	# Try to read from config file
+	try:
+		from configparser import ConfigParser
+		config_parser = ConfigParser()
+		config_paths = ['facefusion.ini', os.path.expanduser('~/.facefusion.ini')]
+		
+		for config_path in config_paths:
+			if os.path.exists(config_path):
+				config_parser.read(config_path, encoding='utf-8')
+				if config_parser.has_option('misc', 'language'):
+					language = config_parser.get('misc', 'language')
+					if language in LOCALES:
+						return language
+				break
+	except Exception:
+		pass
+	
+	# Default to English
+	return 'en'
+
+CURRENT_LANGUAGE = get_current_language()
 
 def get_locale(key : str) -> str:
 	return LOCALES.get(CURRENT_LANGUAGE, LOCALES.get('en')).get(key, LOCALES.get('en').get(key, key))

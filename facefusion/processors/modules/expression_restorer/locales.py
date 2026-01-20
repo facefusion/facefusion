@@ -21,9 +21,9 @@ LOCALES : Locales =\
 	{
 		'help':
 		{
-			'model': 'ıfade geri yükleme için sorumlu modeli seçin',
-			'factor': 'hedef yüzden ıfade geri yükleme faktörü',
-			'areas': 'ıfade alanları için kullanılan öğeleri seçin (seçenekler: {choices})'
+			'model': 'İfade geri yükleme için sorumlu modeli seçin',
+			'factor': 'hedef yüzden ifade geri yükleme faktörü',
+			'areas': 'İfade alanları için kullanılan öğeleri seçin (seçenekler: {choices})'
 		},
 		'uis':
 		{
