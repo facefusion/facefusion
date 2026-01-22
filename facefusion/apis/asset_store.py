@@ -1,10 +1,9 @@
-import os
 import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional, cast
 
 from facefusion.apis.asset_helper import detect_media_type, extract_audio_metadata, extract_image_metadata, extract_video_metadata
-from facefusion.filesystem import get_file_format, get_file_name
+from facefusion.filesystem import get_file_format, get_file_name, get_file_size
 from facefusion.types import AssetId, AssetSet, AssetStore, AssetType, AudioAsset, AudioFormat, ImageAsset, ImageFormat, SessionId, VideoAsset, VideoFormat
 
 ASSET_STORE : AssetStore = {}
@@ -14,7 +13,7 @@ def create_asset(session_id : SessionId, asset_type : AssetType, asset_path : st
 	asset_id = str(uuid.uuid4())
 	asset_name = get_file_name(asset_path)
 	asset_format = get_file_format(asset_path)
-	asset_size = os.path.getsize(asset_path)
+	asset_size = get_file_size(asset_path)
 	media_type = detect_media_type(asset_path)
 	created_at = datetime.now()
 	expires_at = created_at + timedelta(hours = 2)
