@@ -7,11 +7,11 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from facefusion import ffmpeg, process_manager, session_manager, state_manager
+from facefusion import ffmpeg, process_manager, session_context, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import detect_media_type
 from facefusion.apis.endpoints.session import extract_access_token
-from facefusion.filesystem import get_file_extension, get_file_name, remove_file
+from facefusion.filesystem import create_directory, get_file_extension, get_file_name, remove_file
 
 
 async def upload_asset(request : Request) -> Response:
@@ -20,6 +20,8 @@ async def upload_asset(request : Request) -> Response:
 	asset_type = request.query_params.get('type')
 
 	if session_id and asset_type in [ 'source', 'target' ]:
+		session_context.set_session_id(session_id)
+
 		form = await request.form()
 		upload_files = form.getlist('file')
 		asset_paths = await save_asset_files(upload_files) # type: ignore[arg-type]
@@ -60,8 +62,11 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 			media_type = detect_media_type(temp_file.name)
 			temp_path = state_manager.get_temp_path()
+
+			create_directory(temp_path)
+
 			asset_file_name = get_file_name(temp_file.name)
-			asset_path = os.path.join(temp_path, asset_file_name + '_' + upload_file_extension)
+			asset_path = os.path.join(temp_path, asset_file_name + upload_file_extension)
 
 			process_manager.start()
 
