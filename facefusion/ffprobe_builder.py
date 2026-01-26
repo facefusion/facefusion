@@ -13,11 +13,7 @@ def chain(*commands : List[Command]) -> List[Command]:
 	return list(itertools.chain(*commands))
 
 
-def select_audio_stream(index : int) -> List[Command]:
-	return [ '-select_streams', 'a:' + str(index) ]
-
-
-def show_stream_entries(entries : List[str]) -> List[Command]:
+def show_entries(entries : List[str]) -> List[Command]:
 	return [ '-show_entries', 'stream=' + ','.join(entries) ]
 
 

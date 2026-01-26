@@ -175,10 +175,9 @@ MediaType = Literal['image', 'video', 'audio']
 AudioMetadata = TypedDict('AudioMetadata',
 {
 	'duration' : Duration,
-	'sample_rate': int,
 	'frame_total': int,
-	'channels': int,
-	'format': str
+	'sample_rate': int,
+	'channels': int
 })
 ImageMetadata = TypedDict('ImageMetadata',
 {
