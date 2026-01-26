@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from facefusion import ffprobe_builder
 from facefusion.types import Command
@@ -11,73 +11,50 @@ def run_ffprobe(commands : List[Command]) -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
-def detect_audio_sample_rate(audio_path : str) -> Optional[int]:
+def get_audio_entries(audio_path : str) -> Dict[str, str]:
+	audio_entries = {}
 	commands = ffprobe_builder.chain(
-		ffprobe_builder.select_audio_stream(0),
-		ffprobe_builder.show_stream_entries([ 'sample_rate' ]),
-		ffprobe_builder.format_to_value(),
-		ffprobe_builder.set_input(audio_path)
-	)
-	process = run_ffprobe(commands)
-	output, _ = process.communicate()
-
-	if process.returncode == 0 and output:
-		return int(output.decode().strip())
-	return None
-
-
-def detect_audio_channel_total(audio_path : str) -> Optional[int]:
-	commands = ffprobe_builder.chain(
-		ffprobe_builder.select_audio_stream(0),
-		ffprobe_builder.show_stream_entries([ 'channels' ]),
-		ffprobe_builder.format_to_value(),
-		ffprobe_builder.set_input(audio_path)
-	)
-	process = run_ffprobe(commands)
-	output, _ = process.communicate()
-
-	if process.returncode == 0 and output:
-		return int(output.decode().strip())
-	return None
-
-
-def detect_audio_frame_total(audio_path : str) -> Optional[int]:
-	commands = ffprobe_builder.chain(
-		ffprobe_builder.select_audio_stream(0),
-		ffprobe_builder.show_stream_entries([ 'duration', 'sample_rate' ]),
+		ffprobe_builder.show_entries([ 'duration', 'sample_rate', 'channels', 'nb_read_frames' ]),
 		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(audio_path)
 	)
 	process = run_ffprobe(commands)
 	output, _ = process.communicate()
 
-	if process.returncode == 0 and output:
-		duration = None
-		sample_rate = None
+	if output:
 		lines = output.decode().strip().split(os.linesep)
 
 		for line in lines:
-			if line.startswith('duration='):
-				duration = float(line.split('=')[1])
-			if line.startswith('sample_rate='):
-				sample_rate = int(line.split('=')[1])
+			if '=' in line:
+				key, value = line.split('=', 1)
+				audio_entries[key] = value
 
-		if duration and sample_rate:
-			return int(duration * sample_rate)
+	return audio_entries
 
+
+def detect_audio_sample_rate(audio_path : str) -> Optional[int]:
+	audio_entries = get_audio_entries(audio_path)
+	sample_rate = audio_entries.get('sample_rate')
+
+	if sample_rate:
+		return int(sample_rate)
 	return None
 
 
-def detect_audio_format(audio_path : str) -> Optional[str]:
-	commands = ffprobe_builder.chain(
-		ffprobe_builder.select_audio_stream(0),
-		ffprobe_builder.show_stream_entries([ 'codec_name' ]),
-		ffprobe_builder.format_to_value(),
-		ffprobe_builder.set_input(audio_path)
-	)
-	process = run_ffprobe(commands)
-	output, _ = process.communicate()
+def detect_audio_channel_total(audio_path : str) -> Optional[int]:
+	audio_entries = get_audio_entries(audio_path)
+	audio_channel_total = audio_entries.get('channels')
 
-	if process.returncode == 0 and output:
-		return output.decode().strip()
+	if audio_channel_total:
+		return int(audio_channel_total)
+	return None
+
+
+def detect_audio_frame_total(audio_path : str) -> Optional[int]:
+	audio_entries = get_audio_entries(audio_path)
+	audio_duration = audio_entries.get('duration')
+	audio_sample_rate = audio_entries.get('sample_rate')
+
+	if audio_duration and audio_sample_rate:
+		return int(float(audio_duration) * int(audio_sample_rate))
 	return None
