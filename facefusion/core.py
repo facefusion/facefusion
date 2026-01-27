@@ -369,9 +369,7 @@ def detect_workflow() -> WorkFlow:
 
 
 def render_metrics() -> None:
-	temp_path = state_manager.get_item('temp_path')
-	metrics = system.get_metrics(temp_path)
-
+	metrics = system.get_metrics()
 	metrics_helper.render_execution_devices(metrics.get('execution_devices'))
 	metrics_helper.render_processors(metrics.get('processors'))
 	metrics_helper.render_memory(metrics.get('memory'))

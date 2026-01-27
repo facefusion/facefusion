@@ -1,35 +1,35 @@
 import os
 import platform
+import subprocess
 from typing import List, Optional
 
 import psutil
 
+from facefusion.execution import detect_execution_devices
 from facefusion.types import DiskMetrics, Frequency, MemoryMetrics, Metrics, ProcessorMetrics, Utilization
 
 
-def get_metrics(temp_path : Optional[str] = None) -> Metrics:
-	from facefusion.execution import detect_execution_devices
-
+def get_metrics() -> Metrics:
 	return\
 	{
 		'execution_devices': detect_execution_devices(),
 		'processors': get_processor_metrics(),
 		'memory': get_memory_metrics(),
-		'disk': get_disk_metrics(temp_path)
+		'disk': get_disk_metrics()
 	}
 
 
 def get_processor_metrics() -> List[ProcessorMetrics]:
 	processors : List[ProcessorMetrics] = []
-	cpu_freq = psutil.cpu_freq()
+	cpu_frequency = psutil.cpu_freq()
 	cpu_percent = psutil.cpu_percent()
 	cpu_name = get_cpu_name()
 	cpu_vendor = get_cpu_vendor()
 	frequency : Optional[Frequency] = None
 	utilization : Optional[Utilization] = None
 
-	if cpu_freq:
-		frequency = { 'value': int(cpu_freq.current), 'unit': 'MHz' }
+	if cpu_frequency:
+		frequency = { 'value': int(cpu_frequency.current), 'unit': 'MHz' }
 
 	if cpu_percent:
 		utilization = { 'value': int(cpu_percent), 'unit': '%' }
@@ -58,8 +58,7 @@ def get_cpu_name() -> Optional[str]:
 					return line.split(':')[1].strip()
 
 	if platform.system() == 'Darwin':
-		import subprocess
-		output = subprocess.check_output(['sysctl', '-n', 'machdep.cpu.brand_string'])
+		output = subprocess.check_output([ 'sysctl', '-n', 'machdep.cpu.brand_string' ])
 		return output.decode().strip()
 
 	return None
@@ -73,8 +72,7 @@ def get_cpu_vendor() -> Optional[str]:
 					return line.split(':')[1].strip()
 
 	if platform.system() == 'Darwin':
-		import subprocess
-		output = subprocess.check_output(['sysctl', '-n', 'machdep.cpu.vendor'])
+		output = subprocess.check_output([ 'sysctl', '-n', 'machdep.cpu.vendor' ])
 		return output.decode().strip()
 
 	return None
@@ -93,10 +91,8 @@ def get_memory_metrics() -> MemoryMetrics:
 	}
 
 
-def get_disk_metrics(temp_path : Optional[str] = None) -> Optional[DiskMetrics]:
-	if not temp_path:
-		temp_path = os.getcwd()
-
+def get_disk_metrics() -> Optional[DiskMetrics]:
+	temp_path = os.getcwd()
 	target_mountpoint = None
 	target_mountpoint_len = 0
 
@@ -106,16 +102,16 @@ def get_disk_metrics(temp_path : Optional[str] = None) -> Optional[DiskMetrics]:
 				target_mountpoint = partition.mountpoint
 				target_mountpoint_len = len(partition.mountpoint)
 
-	if not target_mountpoint:
-		return None
+	if target_mountpoint:
+		usage = psutil.disk_usage(target_mountpoint)
+		total_gib = usage.total // (1024 * 1024 * 1024)
+		free_gib = usage.free // (1024 * 1024 * 1024)
 
-	usage = psutil.disk_usage(target_mountpoint)
-	total_gib = usage.total // (1024 * 1024 * 1024)
-	free_gib = usage.free // (1024 * 1024 * 1024)
+		return\
+		{
+			'total': { 'value': total_gib, 'unit': 'GiB' },
+			'free': { 'value': free_gib, 'unit': 'GiB' },
+			'utilization': { 'value': int(usage.percent), 'unit': '%' }
+		}
 
-	return\
-	{
-		'total': { 'value': total_gib, 'unit': 'GiB' },
-		'free': { 'value': free_gib, 'unit': 'GiB' },
-		'utilization': { 'value': int(usage.percent), 'unit': '%' }
-	}
+	return None
