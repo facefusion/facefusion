@@ -114,19 +114,25 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 	except Exception:
 		root_element = ElementTree.Element('xml')
 
-	for gpu_element in root_element.findall('gpu'):
+	for device_id, gpu_element in enumerate(root_element.findall('gpu')):
 		execution_devices.append(
 		{
+			'id': device_id,
 			'driver_version': root_element.findtext('driver_version'),
+			'product':
+			{
+				'name': gpu_element.findtext('product_name').replace('NVIDIA', '').strip(),
+				'vendor': 'NVIDIA'
+			},
 			'framework':
 			{
 				'name': 'CUDA',
 				'version': root_element.findtext('cuda_version')
 			},
-			'product':
+			'frequency':
 			{
-				'vendor': 'NVIDIA',
-				'name': gpu_element.findtext('product_name').replace('NVIDIA', '').strip()
+				'gpu': create_value_and_unit(gpu_element.findtext('clocks/graphics_clock')),
+				'memory': create_value_and_unit(gpu_element.findtext('clocks/mem_clock'))
 			},
 			'video_memory':
 			{

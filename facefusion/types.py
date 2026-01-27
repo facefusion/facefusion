@@ -263,6 +263,21 @@ ValueAndUnit = TypedDict('ValueAndUnit',
 	'value' : int,
 	'unit' : str
 })
+Frequency = TypedDict('Frequency',
+{
+	'value' : int,
+	'unit' : str
+})
+Utilization = TypedDict('Utilization',
+{
+	'value' : int,
+	'unit' : str
+})
+Temperature = TypedDict('Temperature',
+{
+	'value' : int,
+	'unit' : str
+})
 ExecutionDeviceFramework = TypedDict('ExecutionDeviceFramework',
 {
 	'name' : str,
@@ -272,6 +287,11 @@ ExecutionDeviceProduct = TypedDict('ExecutionDeviceProduct',
 {
 	'vendor' : str,
 	'name' : str
+})
+ExecutionDeviceFrequency = TypedDict('ExecutionDeviceFrequency',
+{
+	'gpu' : Optional[ValueAndUnit],
+	'memory' : Optional[ValueAndUnit]
 })
 ExecutionDeviceVideoMemory = TypedDict('ExecutionDeviceVideoMemory',
 {
@@ -290,12 +310,42 @@ ExecutionDeviceUtilization = TypedDict('ExecutionDeviceUtilization',
 })
 ExecutionDevice = TypedDict('ExecutionDevice',
 {
+	'id' : int,
+	'product' : ExecutionDeviceProduct,
 	'driver_version' : str,
 	'framework' : ExecutionDeviceFramework,
-	'product' : ExecutionDeviceProduct,
+	'frequency' : ExecutionDeviceFrequency,
 	'video_memory' : ExecutionDeviceVideoMemory,
 	'temperature' : ExecutionDeviceTemperature,
 	'utilization' : ExecutionDeviceUtilization
+})
+ProcessorMetrics = TypedDict('ProcessorMetrics',
+{
+	'id' : int,
+	'name' : Optional[str],
+	'vendor' : Optional[str],
+	'frequency' : Optional[Frequency],
+	'temperature' : Optional[Temperature],
+	'utilization' : Optional[Utilization]
+})
+MemoryMetrics = TypedDict('MemoryMetrics',
+{
+	'total' : ValueAndUnit,
+	'free' : ValueAndUnit,
+	'utilization' : ValueAndUnit
+})
+DiskMetrics = TypedDict('DiskMetrics',
+{
+	'total' : ValueAndUnit,
+	'free' : ValueAndUnit,
+	'utilization' : ValueAndUnit
+})
+Metrics = TypedDict('Metrics',
+{
+	'execution_devices' : List[ExecutionDevice],
+	'processors' : List[ProcessorMetrics],
+	'memory' : MemoryMetrics,
+	'disk' : Optional[DiskMetrics]
 })
 
 DownloadProvider = Literal['github', 'huggingface']

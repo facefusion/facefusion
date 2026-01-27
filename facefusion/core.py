@@ -7,7 +7,7 @@ from time import time
 
 import uvicorn
 
-from facefusion import args_store, benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, state_manager, translator, voice_extractor
+from facefusion import args_store, benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, metrics_helper, state_manager, system, translator, voice_extractor
 from facefusion.apis.core import create_api
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
@@ -57,6 +57,10 @@ def route(args : Args) -> None:
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
 		uvicorn.run(create_api(), host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port'))
 		hard_exit(1)
+
+	if state_manager.get_item('command') == 'metrics':
+		render_metrics()
+		hard_exit(0)
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
 		if not job_manager.init_jobs(state_manager.get_jobs_path()):
@@ -362,3 +366,13 @@ def detect_workflow() -> WorkFlow:
 		return 'audio-to-image:frames'
 
 	return 'image-to-image'
+
+
+def render_metrics() -> None:
+	temp_path = state_manager.get_item('temp_path')
+	metrics = system.get_metrics(temp_path)
+
+	metrics_helper.render_execution_devices(metrics.get('execution_devices'))
+	metrics_helper.render_processors(metrics.get('processors'))
+	metrics_helper.render_memory(metrics.get('memory'))
+	metrics_helper.render_disk(metrics.get('disk'))
