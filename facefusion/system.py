@@ -5,6 +5,7 @@ from typing import List, Optional
 
 import psutil
 
+from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.execution import detect_execution_devices
 from facefusion.types import DiskMetrics, Frequency, MemoryMetrics, Metrics, ProcessorMetrics, Utilization
 
@@ -21,12 +22,15 @@ def get_metrics_set() -> Metrics:
 
 def get_processor_metrics() -> List[ProcessorMetrics]:
 	processors : List[ProcessorMetrics] = []
-	cpu_frequency = psutil.cpu_freq() if hasattr(psutil, 'cpu_freq') else None # TODO
+	cpu_frequency = None
 	cpu_percent = psutil.cpu_percent()
 	cpu_name = get_cpu_name()
 	cpu_vendor = get_cpu_vendor()
-	frequency : Optional[Frequency] = None
-	utilization : Optional[Utilization] = None
+	frequency: Optional[Frequency] = None
+	utilization: Optional[Utilization] = None
+
+	if is_linux() or is_windows():
+		cpu_frequency = psutil.cpu_freq()
 
 	if cpu_frequency:
 		frequency =\
@@ -55,32 +59,36 @@ def get_processor_metrics() -> List[ProcessorMetrics]:
 
 
 def get_cpu_name() -> Optional[str]:
-	if platform.system() == 'Windows':
+	if is_windows():
 		return platform.processor()
 
-	if platform.system() == 'Linux':
+	if is_linux():
 		with open('/proc/cpuinfo') as cpuinfo:
 			for line in cpuinfo:
 				if 'model name' in line:
 					return line.split(':')[1].strip()
 
-	if platform.system() == 'Darwin':
-		output = subprocess.check_output([ 'sysctl', '-n', 'machdep.cpu.brand_string' ])
-		return output.decode().strip()
+	if is_macos():
+		result = subprocess.run([ 'sysctl', '-n', 'machdep.cpu.brand_string' ], capture_output = True)
+
+		if result.returncode == 0:
+			return result.stdout.decode().strip()
 
 	return None
 
 
 def get_cpu_vendor() -> Optional[str]:
-	if platform.system() == 'Linux':
+	if is_linux():
 		with open('/proc/cpuinfo') as cpuinfo:
 			for line in cpuinfo:
 				if 'vendor_id' in line:
 					return line.split(':')[1].strip()
 
-	if platform.system() == 'Darwin':
-		output = subprocess.check_output([ 'sysctl', '-n', 'machdep.cpu.vendor' ])
-		return output.decode().strip()
+	if is_macos():
+		result = subprocess.run([ 'sysctl', '-n', 'machdep.cpu.vendor' ], capture_output = True)
+
+		if result.returncode == 0:
+			return result.stdout.decode().strip()
 
 	return None
 
