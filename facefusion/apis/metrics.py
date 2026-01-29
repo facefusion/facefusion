@@ -1,21 +1,25 @@
 import asyncio
-from typing import Optional
 
-from starlette.datastructures import Headers
 from starlette.requests import Request
-from starlette.responses import JSONResponse
-from starlette.websockets import WebSocket, WebSocketDisconnect
+from starlette.responses import JSONResponse, Response
+from starlette.status import HTTP_404_NOT_FOUND
+from starlette.websockets import WebSocket
 
+from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.system import get_metrics
 
 
-async def metrics(request : Request) -> JSONResponse:
+async def metrics(request : Request) -> Response:
 	metrics_data = get_metrics()
-	return JSONResponse(metrics_data)
+
+	if metrics_data:
+		return JSONResponse(metrics_data)
+
+	return Response(status_code = HTTP_404_NOT_FOUND)
 
 
 async def websocket_metrics(websocket : WebSocket) -> None:
-	subprotocol = get_requested_subprotocol(websocket)
+	subprotocol = get_sec_websocket_protocol(websocket.scope)
 	await websocket.accept(subprotocol = subprotocol)
 
 	try:
@@ -24,16 +28,5 @@ async def websocket_metrics(websocket : WebSocket) -> None:
 			await websocket.send_json(metrics_data)
 			await asyncio.sleep(2)
 
-	except (WebSocketDisconnect, Exception):
+	except Exception:
 		pass
-
-
-def get_requested_subprotocol(websocket : WebSocket) -> Optional[str]:
-	headers = Headers(scope = websocket.scope)
-	protocol_header = headers.get('Sec-WebSocket-Protocol')
-
-	if protocol_header:
-		protocol, _, _ = protocol_header.partition(',')
-		return protocol.strip()
-
-	return None

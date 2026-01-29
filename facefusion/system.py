@@ -21,7 +21,7 @@ def get_metrics() -> Metrics:
 
 def get_processor_metrics() -> List[ProcessorMetrics]:
 	processors : List[ProcessorMetrics] = []
-	cpu_frequency = psutil.cpu_freq()
+	cpu_frequency = psutil.cpu_freq() if hasattr(psutil, 'cpu_freq') else None # TODO
 	cpu_percent = psutil.cpu_percent()
 	cpu_name = get_cpu_name()
 	cpu_vendor = get_cpu_vendor()
@@ -29,10 +29,18 @@ def get_processor_metrics() -> List[ProcessorMetrics]:
 	utilization : Optional[Utilization] = None
 
 	if cpu_frequency:
-		frequency = { 'value': int(cpu_frequency.current), 'unit': 'MHz' }
+		frequency =\
+		{
+			'value': int(cpu_frequency.current),
+			'unit': 'MHz'
+		}
 
 	if cpu_percent:
-		utilization = { 'value': int(cpu_percent), 'unit': '%' }
+		utilization =\
+		{
+			'value': int(cpu_percent),
+			'unit': '%'
+		}
 
 	processors.append(
 	{
@@ -85,9 +93,21 @@ def get_memory_metrics() -> MemoryMetrics:
 
 	return\
 	{
-		'total': { 'value': total_gib, 'unit': 'GiB' },
-		'free': { 'value': free_gib, 'unit': 'GiB' },
-		'utilization': { 'value': int(virtual_memory.percent), 'unit': '%' }
+		'total':
+		{
+			'value': total_gib,
+			'unit': 'GiB'
+		},
+		'free':
+		{
+			'value': free_gib,
+			'unit': 'GiB'
+		},
+		'utilization':
+		{
+			'value': int(virtual_memory.percent),
+			'unit': '%'
+		}
 	}
 
 
@@ -109,9 +129,21 @@ def get_disk_metrics() -> Optional[DiskMetrics]:
 
 		return\
 		{
-			'total': { 'value': total_gib, 'unit': 'GiB' },
-			'free': { 'value': free_gib, 'unit': 'GiB' },
-			'utilization': { 'value': int(usage.percent), 'unit': '%' }
+			'total':
+			{
+				'value': total_gib,
+				'unit': 'GiB'
+			},
+			'free':
+			{
+				'value': free_gib,
+				'unit': 'GiB'
+			},
+			'utilization':
+			{
+				'value': int(usage.percent),
+				'unit': '%'
+			}
 		}
 
 	return None

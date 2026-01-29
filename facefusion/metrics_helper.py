@@ -37,7 +37,7 @@ def render_execution_devices(execution_devices : Optional[List[ExecutionDevice]]
 			if utilization.get('gpu'):
 				package_logger.critical(translator.get('metrics.utilization').format(value = utilization.get('gpu').get('value'), unit = utilization.get('gpu').get('unit')))
 
-			return None
+		return None
 
 	package_logger.critical(translator.get('metrics.not_available'))
 
@@ -67,7 +67,7 @@ def render_processors(processors : Optional[List[ProcessorMetrics]]) -> None:
 			if processor.get('utilization'):
 				package_logger.critical(translator.get('metrics.utilization').format(value = processor.get('utilization').get('value'), unit = processor.get('utilization').get('unit')))
 
-			return None
+		return None
 
 	package_logger.critical(translator.get('metrics.not_available'))
 
