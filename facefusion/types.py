@@ -290,23 +290,23 @@ ExecutionDeviceProduct = TypedDict('ExecutionDeviceProduct',
 })
 ExecutionDeviceFrequency = TypedDict('ExecutionDeviceFrequency',
 {
-	'gpu' : Optional[ValueAndUnit],
-	'memory' : Optional[ValueAndUnit]
+	'gpu' : ValueAndUnit,
+	'memory' : ValueAndUnit
 })
 ExecutionDeviceVideoMemory = TypedDict('ExecutionDeviceVideoMemory',
 {
-	'total' : Optional[ValueAndUnit],
-	'free' : Optional[ValueAndUnit]
+	'total' : ValueAndUnit,
+	'free' : ValueAndUnit
 })
 ExecutionDeviceTemperature = TypedDict('ExecutionDeviceTemperature',
 {
-	'gpu' : Optional[ValueAndUnit],
-	'memory' : Optional[ValueAndUnit]
+	'gpu' : ValueAndUnit,
+	'memory' : ValueAndUnit
 })
 ExecutionDeviceUtilization = TypedDict('ExecutionDeviceUtilization',
 {
-	'gpu' : Optional[ValueAndUnit],
-	'memory' : Optional[ValueAndUnit]
+	'gpu' : ValueAndUnit,
+	'memory' : ValueAndUnit
 })
 ExecutionDevice = TypedDict('ExecutionDevice',
 {

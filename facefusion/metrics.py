@@ -89,44 +89,44 @@ def format_value_and_unit(value_and_unit : ValueAndUnit) -> str:
 	return str(value_and_unit.get('value')) + ' ' + str(value_and_unit.get('unit'))
 
 
-def format_processor_value(value_and_unit : Optional[ValueAndUnit]) -> str:
+def format_processor_value(value_and_unit : ValueAndUnit) -> str:
 	if value_and_unit:
 		return format_value_and_unit(value_and_unit)
 	return None
 
 
-def format_product_vendor(product : Optional[ExecutionDeviceProduct]) -> str:
+def format_product_vendor(product : ExecutionDeviceProduct) -> str:
 	if product:
 		return product.get('vendor')
 	return None
 
 
-def format_product_name(product : Optional[ExecutionDeviceProduct]) -> str:
+def format_product_name(product : ExecutionDeviceProduct) -> str:
 	if product:
 		return product.get('name')
 	return None
 
 
-def format_frequency(frequency : Optional[ExecutionDeviceFrequency]) -> str:
-	if frequency and frequency.get('gpu'):
+def format_frequency(frequency : ExecutionDeviceFrequency) -> str:
+	if frequency:
 		return format_value_and_unit(frequency.get('gpu'))
 	return None
 
 
-def format_video_memory(video_memory : Optional[ExecutionDeviceVideoMemory]) -> str:
-	if video_memory and video_memory.get('free') and video_memory.get('total'):
+def format_video_memory(video_memory : ExecutionDeviceVideoMemory) -> str:
+	if video_memory:
 		return str(video_memory.get('free').get('value')) + ' / ' + str(video_memory.get('total').get('value')) + ' ' + str(video_memory.get('total').get('unit'))
 	return None
 
 
-def format_temperature(temperature : Optional[ExecutionDeviceTemperature]) -> str:
-	if temperature and temperature.get('gpu'):
+def format_temperature(temperature : ExecutionDeviceTemperature) -> str:
+	if temperature:
 		return format_value_and_unit(temperature.get('gpu'))
 	return None
 
 
 def format_utilization(utilization : Optional[ExecutionDeviceUtilization]) -> str:
-	if utilization and utilization.get('gpu'):
+	if utilization:
 		return format_value_and_unit(utilization.get('gpu'))
 	return None
 
