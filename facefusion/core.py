@@ -7,7 +7,7 @@ from time import time
 
 import uvicorn
 
-from facefusion import args_store, benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, metrics_helper, state_manager, system, translator, voice_extractor
+from facefusion import args_store, benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, metrics, state_manager, system, translator, voice_extractor
 from facefusion.apis.core import create_api
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
@@ -370,7 +370,7 @@ def detect_workflow() -> WorkFlow:
 
 def render_metrics() -> None:
 	metrics_set = system.get_metrics_set()
-	metrics_helper.render_execution_devices(metrics_set.get('execution_devices'))
-	metrics_helper.render_processors(metrics_set.get('processors'))
-	metrics_helper.render_memory(metrics_set.get('memory'))
-	metrics_helper.render_disk(metrics_set.get('disk'))
+	metrics.render_execution_devices(metrics_set.get('execution_devices'))
+	metrics.render_processors(metrics_set.get('processors'))
+	metrics.render_memory(metrics_set.get('memory'))
+	metrics.render_disk(metrics_set.get('disk'))
