@@ -6,14 +6,14 @@ from starlette.status import HTTP_404_NOT_FOUND
 from starlette.websockets import WebSocket
 
 from facefusion.apis.api_helper import get_sec_websocket_protocol
-from facefusion.system import get_metrics
+from facefusion.system import get_metrics_set
 
 
-async def metrics(request : Request) -> Response:
-	metrics_data = get_metrics()
+async def get_metrics(request : Request) -> Response:
+	metrics_set = get_metrics_set()
 
-	if metrics_data:
-		return JSONResponse(metrics_data)
+	if metrics_set:
+		return JSONResponse(metrics_set)
 
 	return Response(status_code = HTTP_404_NOT_FOUND)
 
@@ -24,8 +24,8 @@ async def websocket_metrics(websocket : WebSocket) -> None:
 
 	try:
 		while True:
-			metrics_data = get_metrics()
-			await websocket.send_json(metrics_data)
+			metrics_set = get_metrics_set()
+			await websocket.send_json(metrics_set)
 			await asyncio.sleep(2)
 
 	except Exception:

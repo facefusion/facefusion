@@ -369,8 +369,8 @@ def detect_workflow() -> WorkFlow:
 
 
 def render_metrics() -> None:
-	metrics = system.get_metrics()
-	metrics_helper.render_execution_devices(metrics.get('execution_devices'))
-	metrics_helper.render_processors(metrics.get('processors'))
-	metrics_helper.render_memory(metrics.get('memory'))
-	metrics_helper.render_disk(metrics.get('disk'))
+	metrics_set = system.get_metrics_set()
+	metrics_helper.render_execution_devices(metrics_set.get('execution_devices'))
+	metrics_helper.render_processors(metrics_set.get('processors'))
+	metrics_helper.render_memory(metrics_set.get('memory'))
+	metrics_helper.render_disk(metrics_set.get('disk'))
