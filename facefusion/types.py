@@ -325,7 +325,6 @@ ProcessorMetrics = TypedDict('ProcessorMetrics',
 	'name' : Optional[str],
 	'vendor' : Optional[str],
 	'frequency' : Optional[Frequency],
-	'temperature' : Optional[Temperature],
 	'utilization' : Optional[Utilization]
 })
 MemoryMetrics = TypedDict('MemoryMetrics',

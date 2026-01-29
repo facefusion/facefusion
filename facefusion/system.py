@@ -48,7 +48,6 @@ def get_processor_metrics() -> List[ProcessorMetrics]:
 		'name': cpu_name,
 		'vendor': cpu_vendor,
 		'frequency': frequency,
-		'temperature': None,
 		'utilization': utilization
 	})
 

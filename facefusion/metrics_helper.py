@@ -1,108 +1,163 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
-from facefusion import logger, translator
-from facefusion.types import DiskMetrics, ExecutionDevice, MemoryMetrics, ProcessorMetrics
+from facefusion.cli_helper import render_table
+from facefusion.logger import get_package_logger
+from facefusion.types import DiskMetrics, ExecutionDevice, ExecutionDeviceFrequency, ExecutionDeviceProduct, ExecutionDeviceTemperature, ExecutionDeviceUtilization, ExecutionDeviceVideoMemory, MemoryMetrics, ProcessorMetrics, TableContent, TableHeader, ValueAndUnit
 
 
-def render_execution_devices(execution_devices : Optional[List[ExecutionDevice]]) -> None:
-	package_logger = logger.get_package_logger()
-	package_logger.critical(translator.get('metrics.execution_devices'))
+def compose_execution_devices(execution_devices : List[ExecutionDevice]) -> Tuple[List[TableHeader], List[List[TableContent]]]:
+	headers : List[TableHeader] =\
+	[
+		'id',
+		'vendor',
+		'name',
+		'frequency',
+		'video memory',
+		'temperature',
+		'utilization'
+	]
+	contents : List[List[TableContent]] = []
 
-	if execution_devices:
-		for device in execution_devices:
-			product = device.get('product')
-			frequency = device.get('frequency')
-			video_memory = device.get('video_memory')
-			temperature = device.get('temperature')
-			utilization = device.get('utilization')
+	for device in execution_devices:
+		contents.append(
+		[
+			device.get('id'),
+			format_product_vendor(device.get('product')),
+			format_product_name(device.get('product')),
+			format_frequency(device.get('frequency')),
+			format_video_memory(device.get('video_memory')),
+			format_temperature(device.get('temperature')),
+			format_utilization(device.get('utilization'))
+		])
 
-			if device.get('id'):
-				package_logger.critical(translator.get('metrics.id').format(value = device.get('id')))
+	return headers, contents
 
-			if product.get('vendor'):
-				package_logger.critical(translator.get('metrics.vendor').format(value = product.get('vendor')))
 
-			if product.get('name'):
-				package_logger.critical(translator.get('metrics.name').format(value = product.get('name')))
+def compose_processors(processors : List[ProcessorMetrics]) -> Tuple[List[TableHeader], List[List[TableContent]]]:
+	headers : List[TableHeader] =\
+	[
+		'id',
+		'vendor',
+		'name',
+		'frequency',
+		'utilization'
+	]
+	contents : List[List[TableContent]] = []
 
-			if frequency.get('gpu'):
-				package_logger.critical(translator.get('metrics.frequency').format(value = frequency.get('gpu').get('value'), unit = frequency.get('gpu').get('unit')))
+	for processor in processors:
+		contents.append(
+		[
+			processor.get('id'),
+			processor.get('vendor'),
+			processor.get('name'),
+			format_processor_value(processor.get('frequency')),
+			format_processor_value(processor.get('utilization'))
+		])
 
-			if video_memory.get('total') and video_memory.get('free'):
-				package_logger.critical(translator.get('metrics.video_memory').format(free = video_memory.get('free').get('value'), total = video_memory.get('total').get('value'), unit = video_memory.get('total').get('unit')))
+	return headers, contents
 
-			if temperature.get('gpu'):
-				package_logger.critical(translator.get('metrics.temperature').format(value = temperature.get('gpu').get('value'), unit = temperature.get('gpu').get('unit')))
 
-			if utilization.get('gpu'):
-				package_logger.critical(translator.get('metrics.utilization').format(value = utilization.get('gpu').get('value'), unit = utilization.get('gpu').get('unit')))
+def compose_memory(memory : MemoryMetrics) -> Tuple[List[TableHeader], List[List[TableContent]]]:
+	headers : List[TableHeader] = [ 'total', 'free', 'utilization' ]
+	contents : List[List[TableContent]] = []
 
-		return None
+	contents.append(
+	[
+		format_value_and_unit(memory.get('total')),
+		format_value_and_unit(memory.get('free')),
+		format_value_and_unit(memory.get('utilization'))
+	])
 
-	package_logger.critical(translator.get('metrics.not_available'))
+	return headers, contents
 
+
+def compose_disk(disk : DiskMetrics) -> Tuple[List[TableHeader], List[List[TableContent]]]:
+	headers : List[TableHeader] = [ 'total', 'free', 'utilization' ]
+	contents : List[List[TableContent]] = []
+
+	contents.append(
+	[
+		format_value_and_unit(disk.get('total')),
+		format_value_and_unit(disk.get('free')),
+		format_value_and_unit(disk.get('utilization'))
+	])
+
+	return headers, contents
+
+
+def format_value_and_unit(value_and_unit : ValueAndUnit) -> str:
+	return str(value_and_unit.get('value')) + ' ' + str(value_and_unit.get('unit'))
+
+
+def format_processor_value(value_and_unit : Optional[ValueAndUnit]) -> str:
+	if value_and_unit:
+		return format_value_and_unit(value_and_unit)
 	return None
 
 
-def render_processors(processors : Optional[List[ProcessorMetrics]]) -> None:
-	package_logger = logger.get_package_logger()
+def format_product_vendor(product : Optional[ExecutionDeviceProduct]) -> str:
+	if product:
+		return product.get('vendor')
+	return None
+
+
+def format_product_name(product : Optional[ExecutionDeviceProduct]) -> str:
+	if product:
+		return product.get('name')
+	return None
+
+
+def format_frequency(frequency : Optional[ExecutionDeviceFrequency]) -> str:
+	if frequency and frequency.get('gpu'):
+		return format_value_and_unit(frequency.get('gpu'))
+	return None
+
+
+def format_video_memory(video_memory : Optional[ExecutionDeviceVideoMemory]) -> str:
+	if video_memory and video_memory.get('free') and video_memory.get('total'):
+		return str(video_memory.get('free').get('value')) + ' / ' + str(video_memory.get('total').get('value')) + ' ' + str(video_memory.get('total').get('unit'))
+	return None
+
+
+def format_temperature(temperature : Optional[ExecutionDeviceTemperature]) -> str:
+	if temperature and temperature.get('gpu'):
+		return format_value_and_unit(temperature.get('gpu'))
+	return None
+
+
+def format_utilization(utilization : Optional[ExecutionDeviceUtilization]) -> str:
+	if utilization and utilization.get('gpu'):
+		return format_value_and_unit(utilization.get('gpu'))
+	return None
+
+
+def render_execution_devices(execution_devices : List[ExecutionDevice]) -> None:
+	package_logger = get_package_logger()
 	package_logger.critical('')
-	package_logger.critical(translator.get('metrics.processors'))
-
-	if processors:
-		for processor in processors:
-
-			if processor.get('id'):
-				package_logger.critical(translator.get('metrics.id').format(value = processor.get('id')))
-
-			if processor.get('name'):
-				package_logger.critical(translator.get('metrics.name').format(value = processor.get('name')))
-
-			if processor.get('frequency'):
-				package_logger.critical(translator.get('metrics.frequency').format(value = processor.get('frequency').get('value'), unit = processor.get('frequency').get('unit')))
-
-			if processor.get('temperature'):
-				package_logger.critical(translator.get('metrics.temperature').format(value = processor.get('temperature').get('value'), unit = processor.get('temperature').get('unit')))
-
-			if processor.get('utilization'):
-				package_logger.critical(translator.get('metrics.utilization').format(value = processor.get('utilization').get('value'), unit = processor.get('utilization').get('unit')))
-
-		return None
-
-	package_logger.critical(translator.get('metrics.not_available'))
-
-	return None
+	package_logger.critical('EXECUTION DEVICES')
+	headers, contents = compose_execution_devices(execution_devices)
+	render_table(headers, contents)
 
 
-def render_memory(memory : Optional[MemoryMetrics]) -> None:
-	package_logger = logger.get_package_logger()
+def render_processors(processors : List[ProcessorMetrics]) -> None:
+	package_logger = get_package_logger()
 	package_logger.critical('')
-	package_logger.critical(translator.get('metrics.memory'))
-
-	if memory:
-		package_logger.critical(translator.get('metrics.total').format(value = memory.get('total').get('value'), unit = memory.get('total').get('unit')))
-		package_logger.critical(translator.get('metrics.free').format(value = memory.get('free').get('value'), unit = memory.get('free').get('unit')))
-		package_logger.critical(translator.get('metrics.utilization').format(value = memory.get('utilization').get('value'), unit = memory.get('utilization').get('unit')))
-
-		return None
-
-	package_logger.critical(translator.get('metrics.not_available'))
-
-	return None
+	package_logger.critical('PROCESSORS')
+	headers, contents = compose_processors(processors)
+	render_table(headers, contents)
 
 
-def render_disk(disk : Optional[DiskMetrics]) -> None:
-	package_logger = logger.get_package_logger()
+def render_memory(memory : MemoryMetrics) -> None:
+	package_logger = get_package_logger()
 	package_logger.critical('')
-	package_logger.critical(translator.get('metrics.disk'))
+	package_logger.critical('MEMORY')
+	headers, contents = compose_memory(memory)
+	render_table(headers, contents)
 
-	if disk:
-		package_logger.critical(translator.get('metrics.total').format(value = disk.get('total').get('value'), unit = disk.get('total').get('unit')))
-		package_logger.critical(translator.get('metrics.free').format(value = disk.get('free').get('value'), unit = disk.get('free').get('unit')))
-		package_logger.critical(translator.get('metrics.utilization').format(value = disk.get('utilization').get('value'), unit = disk.get('utilization').get('unit')))
 
-		return None
-
-	package_logger.critical(translator.get('metrics.not_available'))
-
-	return None
+def render_disk(disk : DiskMetrics) -> None:
+	package_logger = get_package_logger()
+	package_logger.critical('')
+	package_logger.critical('DISK')
+	headers, contents = compose_disk(disk)
+	render_table(headers, contents)
