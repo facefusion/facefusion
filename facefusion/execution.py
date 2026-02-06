@@ -1,13 +1,11 @@
-import shutil
-import subprocess
-import xml.etree.ElementTree as ElementTree
 from functools import lru_cache
-from typing import List, Optional
+from typing import List
 
+import pynvml
 from onnxruntime import get_available_providers, set_default_logger_severity
 
 import facefusion.choices
-from facefusion.types import ExecutionDevice, ExecutionProvider, InferenceSessionProvider, ValueAndUnit
+from facefusion.types import ExecutionDevice, ExecutionProvider, InferenceSessionProvider
 
 set_default_logger_severity(3)
 
@@ -95,9 +93,8 @@ def resolve_openvino_device_type(execution_device_id : int) -> str:
 	return 'GPU.' + str(execution_device_id)
 
 
-def run_nvidia_smi() -> subprocess.Popen[bytes]:
-	commands = [ shutil.which('nvidia-smi'), '--query', '--xml-format' ]
-	return subprocess.Popen(commands, stdout = subprocess.PIPE)
+def resolve_cuda_driver_version(cuda_driver_version : int) -> str:
+	return '{}.{}'.format(cuda_driver_version // 1000, (cuda_driver_version % 1000) // 10)
 
 
 @lru_cache()
@@ -109,52 +106,74 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 	execution_devices : List[ExecutionDevice] = []
 
 	try:
-		output, _ = run_nvidia_smi().communicate()
-		root_element = ElementTree.fromstring(output)
-	except Exception:
-		root_element = ElementTree.Element('xml')
+		pynvml.nvmlInit()
+		device_count = pynvml.nvmlDeviceGetCount()
 
-	for gpu_element in root_element.findall('gpu'):
-		execution_devices.append(
-		{
-			'driver_version': root_element.findtext('driver_version'),
-			'framework':
+		for device_id in range(device_count):
+			handle = pynvml.nvmlDeviceGetHandleByIndex(device_id)
+			product_name = pynvml.nvmlDeviceGetName(handle)
+			driver_version = pynvml.nvmlSystemGetDriverVersion()
+			cuda_driver_version = resolve_cuda_driver_version(pynvml.nvmlSystemGetCudaDriverVersion())
+			memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+			utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
+			temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
+			memory_total_mib = memory_info.total // (1024 * 1024)
+			memory_free_mib = memory_info.free // (1024 * 1024)
+			memory_used_mib = memory_info.used // (1024 * 1024)
+			memory_percent = memory_used_mib / memory_total_mib * 100
+
+			execution_devices.append(
 			{
-				'name': 'CUDA',
-				'version': root_element.findtext('cuda_version')
-			},
-			'product':
-			{
-				'vendor': 'NVIDIA',
-				'name': gpu_element.findtext('product_name').replace('NVIDIA', '').strip()
-			},
-			'video_memory':
-			{
-				'total': create_value_and_unit(gpu_element.findtext('fb_memory_usage/total')),
-				'free': create_value_and_unit(gpu_element.findtext('fb_memory_usage/free'))
-			},
-			'temperature':
-			{
-				'gpu': create_value_and_unit(gpu_element.findtext('temperature/gpu_temp')),
-				'memory': create_value_and_unit(gpu_element.findtext('temperature/memory_temp'))
-			},
-			'utilization':
-			{
-				'gpu': create_value_and_unit(gpu_element.findtext('utilization/gpu_util')),
-				'memory': create_value_and_unit(gpu_element.findtext('utilization/memory_util'))
-			}
-		})
+				'driver_version': driver_version,
+				'framework':
+				{
+					'name': 'CUDA',
+					'version': cuda_driver_version
+				},
+				'product':
+				{
+					'vendor': 'NVIDIA',
+					'name': product_name.replace('NVIDIA', '').strip()
+				},
+				'video_memory':
+				{
+					'total':
+					{
+						'value': int(memory_total_mib),
+						'unit': 'MiB'
+					},
+					'free':
+					{
+						'value': int(memory_free_mib),
+						'unit': 'MiB'
+					}
+				},
+				'temperature':
+				{
+					'gpu':
+					{
+						'value': int(temperature),
+						'unit': 'C'
+					},
+					'memory': None
+				},
+				'utilization':
+				{
+					'gpu':
+					{
+						'value': int(utilization.gpu),
+						'unit': '%'
+					},
+					'memory':
+					{
+						'value': int(memory_percent),
+						'unit': '%'
+					}
+				}
+			})
+
+		pynvml.nvmlShutdown()
+	except Exception:
+		pass
 
 	return execution_devices
-
-
-def create_value_and_unit(text : str) -> Optional[ValueAndUnit]:
-	if ' ' in text:
-		value, unit = text.split()
-
-		return\
-		{
-			'value': int(value),
-			'unit': str(unit)
-		}
-	return None
