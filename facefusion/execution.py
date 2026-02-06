@@ -93,10 +93,6 @@ def resolve_openvino_device_type(execution_device_id : int) -> str:
 	return 'GPU.' + str(execution_device_id)
 
 
-def resolve_cuda_driver_version(cuda_driver_version : int) -> str:
-	return '{}.{}'.format(cuda_driver_version // 1000, (cuda_driver_version % 1000) // 10)
-
-
 @lru_cache()
 def detect_static_execution_devices() -> List[ExecutionDevice]:
 	return detect_execution_devices()
@@ -111,62 +107,56 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 
 		for device_id in range(device_count):
 			handle = pynvml.nvmlDeviceGetHandleByIndex(device_id)
-			product_name = pynvml.nvmlDeviceGetName(handle)
-			driver_version = pynvml.nvmlSystemGetDriverVersion()
-			cuda_driver_version = resolve_cuda_driver_version(pynvml.nvmlSystemGetCudaDriverVersion())
-			memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-			utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
-			temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
-			memory_total_mib = memory_info.total // (1024 * 1024)
-			memory_free_mib = memory_info.free // (1024 * 1024)
-			memory_used_mib = memory_info.used // (1024 * 1024)
-			memory_percent = memory_used_mib / memory_total_mib * 100
 
 			execution_devices.append(
 			{
-				'driver_version': driver_version,
+				'driver_version': pynvml.nvmlSystemGetDriverVersion(),
 				'framework':
 				{
 					'name': 'CUDA',
-					'version': cuda_driver_version
+					'version': pynvml.nvmlSystemGetCudaDriverVersion()
 				},
 				'product':
 				{
 					'vendor': 'NVIDIA',
-					'name': product_name.replace('NVIDIA', '').strip()
+					'name': pynvml.nvmlDeviceGetName(handle)
 				},
 				'video_memory':
 				{
 					'total':
 					{
-						'value': int(memory_total_mib),
-						'unit': 'MiB'
+						'value': pynvml.nvmlDeviceGetMemoryInfo(handle).total // (1024 * 1024 * 1024),
+						'unit': 'GB'
 					},
 					'free':
 					{
-						'value': int(memory_free_mib),
-						'unit': 'MiB'
+						'value': pynvml.nvmlDeviceGetMemoryInfo(handle).free // (1024 * 1024 * 1024),
+						'unit': 'GB'
 					}
 				},
 				'temperature':
 				{
 					'gpu':
 					{
-						'value': int(temperature),
+						'value': pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU),
 						'unit': 'C'
 					},
-					'memory': None
+					'memory':
+					{
+						'value': 0,
+						'unit': '%'
+					}
 				},
 				'utilization':
 				{
 					'gpu':
 					{
-						'value': int(utilization.gpu),
+						'value': pynvml.nvmlDeviceGetUtilizationRates(handle).gpu,
 						'unit': '%'
 					},
 					'memory':
 					{
-						'value': int(memory_percent),
+						'value': pynvml.nvmlDeviceGetUtilizationRates(handle).memory,
 						'unit': '%'
 					}
 				}
