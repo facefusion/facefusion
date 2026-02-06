@@ -2,7 +2,6 @@ from functools import lru_cache
 from typing import List
 
 import pynvml
-from aitop.core.gpu import GPUMonitorFactory
 from onnxruntime import get_available_providers, set_default_logger_severity
 
 import facefusion.choices
@@ -107,74 +106,73 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 	execution_devices : List[ExecutionDevice] = []
 
 	try:
-		monitors = GPUMonitorFactory.create_monitors()
+		pynvml.nvmlInit()
+		device_count = pynvml.nvmlDeviceGetCount()
 
-		for monitor in monitors:
-			quick_metrics = monitor.get_quick_metrics()
+		for device_id in range(device_count):
+			handle = pynvml.nvmlDeviceGetHandleByIndex(device_id)
+			product_name = pynvml.nvmlDeviceGetName(handle)
+			driver_version = pynvml.nvmlSystemGetDriverVersion()
+			cuda_driver_version = resolve_cuda_driver_version(pynvml.nvmlSystemGetCudaDriverVersion())
+			memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+			utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
+			temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
+			memory_total_mib = memory_info.total // (1024 * 1024)
+			memory_free_mib = memory_info.free // (1024 * 1024)
+			memory_used_mib = memory_info.used // (1024 * 1024)
+			memory_percent = memory_used_mib / memory_total_mib * 100
 
-			pynvml.nvmlInit()
-
-			for device_id, metrics in quick_metrics.items():
-				handle = pynvml.nvmlDeviceGetHandleByIndex(device_id)
-				product_name = pynvml.nvmlDeviceGetName(handle)
-				driver_version = pynvml.nvmlSystemGetDriverVersion()
-				cuda_driver_version = resolve_cuda_driver_version(pynvml.nvmlSystemGetCudaDriverVersion())
-				temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
-				memory_total_mib = int(metrics.get('memory_total'))
-				memory_used_mib = int(metrics.get('memory_used'))
-				memory_free_mib = memory_total_mib - memory_used_mib
-
-				execution_devices.append(
+			execution_devices.append(
+			{
+				'driver_version': driver_version,
+				'framework':
 				{
-					'driver_version': driver_version,
-					'framework':
+					'name': 'CUDA',
+					'version': cuda_driver_version
+				},
+				'product':
+				{
+					'vendor': 'NVIDIA',
+					'name': product_name.replace('NVIDIA', '').strip()
+				},
+				'video_memory':
+				{
+					'total':
 					{
-						'name': 'CUDA',
-						'version': cuda_driver_version
+						'value': int(memory_total_mib),
+						'unit': 'MiB'
 					},
-					'product':
+					'free':
 					{
-						'vendor': 'NVIDIA',
-						'name': product_name.replace('NVIDIA', '').strip()
-					},
-					'video_memory':
-					{
-						'total':
-						{
-							'value': memory_total_mib,
-							'unit': 'MiB'
-						},
-						'free':
-						{
-							'value': memory_free_mib,
-							'unit': 'MiB'
-						}
-					},
-					'temperature':
-					{
-						'gpu':
-						{
-							'value': int(temperature),
-							'unit': 'C'
-						},
-						'memory': None
-					},
-					'utilization':
-					{
-						'gpu':
-						{
-							'value': int(metrics.get('utilization')),
-							'unit': '%'
-						},
-						'memory':
-						{
-							'value': int(metrics.get('memory_percent')),
-							'unit': '%'
-						}
+						'value': int(memory_free_mib),
+						'unit': 'MiB'
 					}
-				})
+				},
+				'temperature':
+				{
+					'gpu':
+					{
+						'value': int(temperature),
+						'unit': 'C'
+					},
+					'memory': None
+				},
+				'utilization':
+				{
+					'gpu':
+					{
+						'value': int(utilization.gpu),
+						'unit': '%'
+					},
+					'memory':
+					{
+						'value': int(memory_percent),
+						'unit': '%'
+					}
+				}
+			})
 
-			pynvml.nvmlShutdown()
+		pynvml.nvmlShutdown()
 	except Exception:
 		pass
 
