@@ -189,7 +189,7 @@ LOCALES : Locales =\
 		},
 		'about':
 		{
-			'fund': 'fund training server',
+			'fund': 'fund ai workstation',
 			'subscribe': 'become a member',
 			'join': 'join our community'
 		},

@@ -43,9 +43,9 @@ def detect_local_camera_ids(id_start : int, id_end : int) -> List[int]:
 	local_camera_ids = []
 
 	for camera_id in range(id_start, id_end):
-		cv2.setLogLevel(0)
+		cv2.utils.logging.setLogLevel(0)
 		camera_capture = get_local_camera_capture(camera_id)
-		cv2.setLogLevel(3)
+		cv2.utils.logging.setLogLevel(3)
 
 		if camera_capture and camera_capture.isOpened():
 			local_camera_ids.append(camera_id)

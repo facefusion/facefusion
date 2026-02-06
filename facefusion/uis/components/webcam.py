@@ -10,7 +10,7 @@ from facefusion.streamer import multi_process_capture, open_stream
 from facefusion.types import Fps, VisionFrame, WebcamMode
 from facefusion.uis.core import get_ui_component
 from facefusion.uis.types import File
-from facefusion.vision import unpack_resolution
+from facefusion.vision import fit_cover_frame, unpack_resolution
 
 SOURCE_FILE : Optional[gradio.File] = None
 WEBCAM_IMAGE : Optional[gradio.Image] = None
@@ -100,10 +100,11 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 
 		for capture_frame in multi_process_capture(camera_capture, webcam_fps):
 			capture_frame = cv2.cvtColor(capture_frame, cv2.COLOR_BGR2RGB)
+			capture_frame = fit_cover_frame(capture_frame, (webcam_width, webcam_height))
 
 			if webcam_mode == 'inline':
 				yield capture_frame
-			else:
+			if webcam_mode in [ 'udp', 'v4l2' ]:
 				try:
 					stream.stdin.write(capture_frame.tobytes())
 				except Exception:
