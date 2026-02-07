@@ -35,7 +35,8 @@ def test_get_metrics(test_client : TestClient) -> None:
 	})
 	get_metrics_body = get_metrics_response.json()
 
-	assert get_metrics_body.get('execution_devices')
+	assert 'execution_devices' in get_metrics_body
+	assert isinstance(get_metrics_body.get('execution_devices'), list)
 	assert get_metrics_response.status_code == 200
 
 
@@ -52,4 +53,5 @@ def test_websocket_metrics(test_client : TestClient) -> None:
 	]) as websocket:
 		metrics_set = websocket.receive_json()
 
-		assert metrics_set.get('execution_devices')
+		assert 'execution_devices' in metrics_set
+		assert isinstance(metrics_set.get('execution_devices'), list)
