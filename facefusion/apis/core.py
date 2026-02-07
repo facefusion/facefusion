@@ -7,6 +7,7 @@ from facefusion.apis.endpoints.assets import delete_assets, get_asset, get_asset
 from facefusion.apis.endpoints.ping import websocket_ping
 from facefusion.apis.endpoints.session import create_session, create_session_guard, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
+from facefusion.apis.metrics import get_metrics, websocket_metrics
 
 
 def create_api() -> Starlette:
@@ -23,6 +24,8 @@ def create_api() -> Starlette:
 			Route('/assets', upload_asset, methods = [ 'POST' ], middleware = [ session_guard ]),
 			Route('/assets/{asset_id}', get_asset, methods = [ 'GET' ], middleware = [ session_guard ]),
 			Route('/assets', delete_assets, methods = [ 'DELETE' ], middleware = [ session_guard ]),
+			Route('/metrics', get_metrics, methods = [ 'GET' ], middleware = [ session_guard ]),
+			WebSocketRoute('/metrics', websocket_metrics, middleware = [ session_guard ]),
 			WebSocketRoute('/ping', websocket_ping, middleware = [ session_guard ])
 		]
 

@@ -297,6 +297,10 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'temperature' : ExecutionDeviceTemperature,
 	'utilization' : ExecutionDeviceUtilization
 })
+Metrics = TypedDict('Metrics',
+{
+	'execution_devices' : List[ExecutionDevice]
+})
 
 DownloadProvider = Literal['github', 'huggingface']
 DownloadProviderValue = TypedDict('DownloadProviderValue',
