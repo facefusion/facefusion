@@ -21,6 +21,27 @@ def before_each() -> None:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def mock_detect_execution_devices(mocker : MockerFixture) -> None:
+	mocker.patch('facefusion.system.state_manager.get_temp_path', return_value = '/tmp')
+	mocker.patch('facefusion.system.detect_disk_metrics', return_value =
+	[
+		{
+			'total':
+			{
+				'value': 500,
+				'unit': 'GB'
+			},
+			'free':
+			{
+				'value': 200,
+				'unit': 'GB'
+			},
+			'utilization':
+			{
+				'value': 60,
+				'unit': '%'
+			}
+		}
+	])
 	mocker.patch('facefusion.system.detect_execution_devices', return_value =
 	[
 		{
@@ -99,6 +120,9 @@ def test_get_metrics(test_client : TestClient) -> None:
 	assert metrics_body.get('execution_devices')[0].get('driver_version') == '555.42'
 	assert metrics_body.get('execution_devices')[0].get('product').get('name') == 'RTX 4090'
 	assert metrics_body.get('execution_devices')[0].get('video_memory').get('total').get('value') == 24
+	assert metrics_body.get('disks')[0].get('total').get('value') == 500
+	assert metrics_body.get('disks')[0].get('free').get('unit') == 'GB'
+	assert metrics_body.get('disks')[0].get('utilization').get('value') == 60
 
 
 def test_websocket_metrics(test_client : TestClient) -> None:
@@ -117,3 +141,6 @@ def test_websocket_metrics(test_client : TestClient) -> None:
 		assert metrics_set.get('execution_devices')[0].get('driver_version') == '555.42'
 		assert metrics_set.get('execution_devices')[0].get('product').get('name') == 'RTX 4090'
 		assert metrics_set.get('execution_devices')[0].get('video_memory').get('total').get('value') == 24
+		assert metrics_set.get('disks')[0].get('total').get('value') == 500
+		assert metrics_set.get('disks')[0].get('free').get('unit') == 'GB'
+		assert metrics_set.get('disks')[0].get('utilization').get('value') == 60
