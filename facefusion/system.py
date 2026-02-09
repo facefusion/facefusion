@@ -1,4 +1,5 @@
 import shutil
+from pathlib import Path
 from typing import List
 
 from facefusion import state_manager
@@ -7,10 +8,12 @@ from facefusion.types import DiskMetrics, Metrics
 
 
 def get_metrics_set() -> Metrics:
+	drive_path = Path(state_manager.get_temp_path()).anchor
+
 	return\
 	{
 		'execution_devices': detect_execution_devices(),
-		'disks': detect_disk_metrics([ state_manager.get_temp_path() ])
+		'disks': detect_disk_metrics([ drive_path ])
 	}
 
 
