@@ -117,9 +117,11 @@ def test_get_metrics(test_client : TestClient) -> None:
 	metrics_body = metrics_response.json()
 
 	assert metrics_response.status_code == 200
+
 	assert metrics_body.get('execution_devices')[0].get('driver_version') == '555.42'
 	assert metrics_body.get('execution_devices')[0].get('product').get('name') == 'RTX 4090'
 	assert metrics_body.get('execution_devices')[0].get('video_memory').get('total').get('value') == 24
+
 	assert metrics_body.get('disks')[0].get('total').get('value') == 500
 	assert metrics_body.get('disks')[0].get('free').get('unit') == 'GB'
 	assert metrics_body.get('disks')[0].get('utilization').get('value') == 60
@@ -141,6 +143,7 @@ def test_websocket_metrics(test_client : TestClient) -> None:
 		assert metrics_set.get('execution_devices')[0].get('driver_version') == '555.42'
 		assert metrics_set.get('execution_devices')[0].get('product').get('name') == 'RTX 4090'
 		assert metrics_set.get('execution_devices')[0].get('video_memory').get('total').get('value') == 24
+
 		assert metrics_set.get('disks')[0].get('total').get('value') == 500
 		assert metrics_set.get('disks')[0].get('free').get('unit') == 'GB'
 		assert metrics_set.get('disks')[0].get('utilization').get('value') == 60
