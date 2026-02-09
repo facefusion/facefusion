@@ -4,10 +4,10 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
 from facefusion.apis.endpoints.assets import delete_assets, get_asset, get_assets, upload_asset
+from facefusion.apis.endpoints.metrics import get_metrics, websocket_metrics
 from facefusion.apis.endpoints.ping import websocket_ping
 from facefusion.apis.endpoints.session import create_session, create_session_guard, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
-from facefusion.apis.metrics import get_metrics, websocket_metrics
 
 
 def create_api() -> Starlette:
