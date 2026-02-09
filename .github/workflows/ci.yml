@@ -35,6 +35,7 @@ jobs:
      python-version: '3.12'
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
+  - run: pip install pytest-mock
   - run: pip install httpx
   - run: pip install python-multipart
   - run: pytest
@@ -54,6 +55,7 @@ jobs:
   - run: pip install coveralls
   - run: pip install pytest
   - run: pip install pytest-cov
+  - run: pip install pytest-mock
   - run: pip install httpx
   - run: pip install python-multipart
   - run: pytest tests --cov facefusion
