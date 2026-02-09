@@ -297,9 +297,16 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'temperature' : ExecutionDeviceTemperature,
 	'utilization' : ExecutionDeviceUtilization
 })
+DiskMetrics = TypedDict('DiskMetrics',
+{
+	'total' : ValueAndUnit,
+	'free' : ValueAndUnit,
+	'utilization' : ValueAndUnit
+})
 Metrics = TypedDict('Metrics',
 {
-	'execution_devices' : List[ExecutionDevice]
+	'execution_devices' : List[ExecutionDevice],
+	'disks' : List[DiskMetrics]
 })
 
 DownloadProvider = Literal['github', 'huggingface']
