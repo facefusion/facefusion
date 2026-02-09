@@ -306,7 +306,7 @@ DiskMetrics = TypedDict('DiskMetrics',
 Metrics = TypedDict('Metrics',
 {
 	'execution_devices' : List[ExecutionDevice],
-	'disk' : DiskMetrics
+	'disks' : List[DiskMetrics]
 })
 
 DownloadProvider = Literal['github', 'huggingface']
