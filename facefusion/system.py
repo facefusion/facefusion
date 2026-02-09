@@ -28,12 +28,12 @@ def detect_disk_metrics(drive_paths : List[str]) -> List[DiskMetrics]:
 			'total':
 			{
 				'value': int(disk_usage.total / (1024 * 1024 * 1024)),
-				'unit': 'GiB'
+				'unit': 'GB'
 			},
 			'free':
 			{
 				'value': int(disk_usage.free / (1024 * 1024 * 1024)),
-				'unit': 'GiB'
+				'unit': 'GB'
 			},
 			'utilization':
 			{
