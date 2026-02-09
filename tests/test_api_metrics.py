@@ -79,9 +79,9 @@ def mock_detect_execution_devices(mocker : MockerFixture) -> None:
 
 
 def test_get_metrics(test_client : TestClient) -> None:
-	get_metrics_response = test_client.get('/metrics')
+	metrics_response = test_client.get('/metrics')
 
-	assert get_metrics_response.status_code == 401
+	assert metrics_response.status_code == 401
 
 	create_session_response = test_client.post('/session', json =
 	{
@@ -89,16 +89,16 @@ def test_get_metrics(test_client : TestClient) -> None:
 	})
 	create_session_body = create_session_response.json()
 
-	get_metrics_response = test_client.get('/metrics', headers =
+	metrics_response = test_client.get('/metrics', headers =
 	{
 		'Authorization': 'Bearer ' + create_session_body.get('access_token')
 	})
-	get_metrics_body = get_metrics_response.json()
+	metrics_body = metrics_response.json()
 
-	assert get_metrics_response.status_code == 200
-	assert get_metrics_body.get('execution_devices')[0].get('driver_version') == '555.42'
-	assert get_metrics_body.get('execution_devices')[0].get('product').get('name') == 'RTX 4090'
-	assert get_metrics_body.get('execution_devices')[0].get('video_memory').get('total').get('value') == 24
+	assert metrics_response.status_code == 200
+	assert metrics_body.get('execution_devices')[0].get('driver_version') == '555.42'
+	assert metrics_body.get('execution_devices')[0].get('product').get('name') == 'RTX 4090'
+	assert metrics_body.get('execution_devices')[0].get('video_memory').get('total').get('value') == 24
 
 
 def test_websocket_metrics(test_client : TestClient) -> None:
