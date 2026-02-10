@@ -6,7 +6,7 @@ import psutil
 
 from facefusion import state_manager
 from facefusion.execution import detect_execution_devices
-from facefusion.types import DiskMetrics, MemoryMetrics, Metrics
+from facefusion.types import DiskMetrics, MemoryMetrics, Metrics, NetworkMetrics
 
 
 def get_metrics_set() -> Metrics:
@@ -16,7 +16,8 @@ def get_metrics_set() -> Metrics:
 	{
 		'execution_devices': detect_execution_devices(),
 		'disks': detect_disk_metrics([ drive_path ]),
-		'memory': detect_memory_metrics()
+		'memory': detect_memory_metrics(),
+		'network': detect_network_metrics()
 	}
 
 
@@ -67,5 +68,23 @@ def detect_memory_metrics() -> MemoryMetrics:
 		{
 			'value': int(virtual_memory.percent),
 			'unit': '%'
+		}
+	}
+
+
+def detect_network_metrics() -> NetworkMetrics:
+	network_io = psutil.net_io_counters()
+
+	return\
+	{
+		'sent':
+		{
+			'value': int(network_io.bytes_sent / (1024 * 1024)),
+			'unit': 'MB'
+		},
+		'received':
+		{
+			'value': int(network_io.bytes_recv / (1024 * 1024)),
+			'unit': 'MB'
 		}
 	}
