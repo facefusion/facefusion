@@ -2,9 +2,11 @@ import shutil
 from pathlib import Path
 from typing import List
 
+import psutil
+
 from facefusion import state_manager
 from facefusion.execution import detect_execution_devices
-from facefusion.types import DiskMetrics, Metrics
+from facefusion.types import DiskMetrics, MemoryMetrics, Metrics
 
 
 def get_metrics_set() -> Metrics:
@@ -13,7 +15,8 @@ def get_metrics_set() -> Metrics:
 	return\
 	{
 		'execution_devices': detect_execution_devices(),
-		'disks': detect_disk_metrics([ drive_path ])
+		'disks': detect_disk_metrics([ drive_path ]),
+		'memory': detect_memory_metrics()
 	}
 
 
@@ -43,3 +46,26 @@ def detect_disk_metrics(drive_paths : List[str]) -> List[DiskMetrics]:
 		})
 
 	return disk_metrics
+
+
+def detect_memory_metrics() -> MemoryMetrics:
+	virtual_memory = psutil.virtual_memory()
+
+	return\
+	{
+		'total':
+		{
+			'value': int(virtual_memory.total / (1024 * 1024 * 1024)),
+			'unit': 'GB'
+		},
+		'free':
+		{
+			'value': int(virtual_memory.available / (1024 * 1024 * 1024)),
+			'unit': 'GB'
+		},
+		'utilization':
+		{
+			'value': int(virtual_memory.percent),
+			'unit': '%'
+		}
+	}
