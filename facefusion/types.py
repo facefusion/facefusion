@@ -309,11 +309,17 @@ MemoryMetrics = TypedDict('MemoryMetrics',
 	'free' : ValueAndUnit,
 	'utilization' : ValueAndUnit
 })
+NetworkMetrics = TypedDict('NetworkMetrics',
+{
+	'sent' : ValueAndUnit,
+	'received' : ValueAndUnit
+})
 Metrics = TypedDict('Metrics',
 {
 	'execution_devices' : List[ExecutionDevice],
 	'disks' : List[DiskMetrics],
-	'memory' : MemoryMetrics
+	'memory' : MemoryMetrics,
+	'network' : NetworkMetrics
 })
 
 DownloadProvider = Literal['github', 'huggingface']
