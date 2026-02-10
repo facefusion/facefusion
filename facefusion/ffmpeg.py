@@ -114,6 +114,7 @@ def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_v
 		ffmpeg_builder.set_input(target_path),
 		ffmpeg_builder.set_media_resolution(pack_resolution(temp_video_resolution)),
 		ffmpeg_builder.set_frame_quality(0),
+		ffmpeg_builder.enforce_pixel_format('rgb24'),
 		ffmpeg_builder.select_frame_range(trim_frame_start, trim_frame_end, temp_video_fps),
 		ffmpeg_builder.prevent_frame_drop(),
 		ffmpeg_builder.set_output(temp_frames_pattern)

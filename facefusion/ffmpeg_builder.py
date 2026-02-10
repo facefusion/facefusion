@@ -79,6 +79,10 @@ def unsafe_concat() -> List[Command]:
 	return [ '-f', 'concat', '-safe', '0' ]
 
 
+def enforce_pixel_format(pixel_format : str) -> List[Command]:
+	return [ '-pix_fmt', pixel_format ]
+
+
 def set_pixel_format(video_encoder : VideoEncoder) -> List[Command]:
 	if video_encoder == 'rawvideo':
 		return [ '-pix_fmt', 'rgb24' ]
