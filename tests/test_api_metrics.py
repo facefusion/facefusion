@@ -73,6 +73,24 @@ def mock_detect_execution_devices(mocker : MockerFixture) -> None:
 			'unit': 'MB'
 		}
 	})
+	mocker.patch('facefusion.system.detect_processor_metrics', return_value =
+	{
+		'cores':
+		{
+			'value': 16,
+			'unit': 'cores'
+		},
+		'frequency':
+		{
+			'value': 3500,
+			'unit': 'MHz'
+		},
+		'utilization':
+		{
+			'value': 25,
+			'unit': '%'
+		}
+	})
 	mocker.patch('facefusion.system.detect_execution_devices', return_value =
 	[
 		{
@@ -165,6 +183,10 @@ def test_get_metrics(test_client : TestClient) -> None:
 	assert metrics_body.get('network').get('sent').get('unit') == 'MB'
 	assert metrics_body.get('network').get('received').get('value') == 2048
 
+	assert metrics_body.get('processor').get('cores').get('value') == 16
+	assert metrics_body.get('processor').get('frequency').get('value') == 3500
+	assert metrics_body.get('processor').get('utilization').get('value') == 25
+
 
 def test_websocket_metrics(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
@@ -194,3 +216,7 @@ def test_websocket_metrics(test_client : TestClient) -> None:
 		assert metrics_set.get('network').get('sent').get('value') == 1024
 		assert metrics_set.get('network').get('sent').get('unit') == 'MB'
 		assert metrics_set.get('network').get('received').get('value') == 2048
+
+		assert metrics_set.get('processor').get('cores').get('value') == 16
+		assert metrics_set.get('processor').get('frequency').get('value') == 3500
+		assert metrics_set.get('processor').get('utilization').get('value') == 25
