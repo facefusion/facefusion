@@ -303,10 +303,17 @@ DiskMetrics = TypedDict('DiskMetrics',
 	'free' : ValueAndUnit,
 	'utilization' : ValueAndUnit
 })
+MemoryMetrics = TypedDict('MemoryMetrics',
+{
+	'total' : ValueAndUnit,
+	'free' : ValueAndUnit,
+	'utilization' : ValueAndUnit
+})
 Metrics = TypedDict('Metrics',
 {
 	'execution_devices' : List[ExecutionDevice],
-	'disks' : List[DiskMetrics]
+	'disks' : List[DiskMetrics],
+	'memory' : MemoryMetrics
 })
 
 DownloadProvider = Literal['github', 'huggingface']

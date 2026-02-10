@@ -42,6 +42,24 @@ def mock_detect_execution_devices(mocker : MockerFixture) -> None:
 			}
 		}
 	])
+	mocker.patch('facefusion.system.detect_memory_metrics', return_value =
+	{
+		'total':
+		{
+			'value': 32,
+			'unit': 'GB'
+		},
+		'free':
+		{
+			'value': 16,
+			'unit': 'GB'
+		},
+		'utilization':
+		{
+			'value': 50,
+			'unit': '%'
+		}
+	})
 	mocker.patch('facefusion.system.detect_execution_devices', return_value =
 	[
 		{
@@ -126,6 +144,10 @@ def test_get_metrics(test_client : TestClient) -> None:
 	assert metrics_body.get('disks')[0].get('free').get('unit') == 'GB'
 	assert metrics_body.get('disks')[0].get('utilization').get('value') == 60
 
+	assert metrics_body.get('memory').get('total').get('value') == 32
+	assert metrics_body.get('memory').get('free').get('unit') == 'GiB'
+	assert metrics_body.get('memory').get('utilization').get('value') == 50
+
 
 def test_websocket_metrics(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
@@ -147,3 +169,7 @@ def test_websocket_metrics(test_client : TestClient) -> None:
 		assert metrics_set.get('disks')[0].get('total').get('value') == 500
 		assert metrics_set.get('disks')[0].get('free').get('unit') == 'GB'
 		assert metrics_set.get('disks')[0].get('utilization').get('value') == 60
+
+		assert metrics_set.get('memory').get('total').get('value') == 32
+		assert metrics_set.get('memory').get('free').get('unit') == 'GiB'
+		assert metrics_set.get('memory').get('utilization').get('value') == 50
