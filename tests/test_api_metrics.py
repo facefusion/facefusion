@@ -60,6 +60,19 @@ def mock_detect_execution_devices(mocker : MockerFixture) -> None:
 			'unit': '%'
 		}
 	})
+	mocker.patch('facefusion.system.detect_network_metrics', return_value =
+	{
+		'sent':
+		{
+			'value': 1024,
+			'unit': 'MB'
+		},
+		'received':
+		{
+			'value': 2048,
+			'unit': 'MB'
+		}
+	})
 	mocker.patch('facefusion.system.detect_execution_devices', return_value =
 	[
 		{
@@ -148,6 +161,10 @@ def test_get_metrics(test_client : TestClient) -> None:
 	assert metrics_body.get('memory').get('free').get('unit') == 'GB'
 	assert metrics_body.get('memory').get('utilization').get('value') == 50
 
+	assert metrics_body.get('network').get('sent').get('value') == 1024
+	assert metrics_body.get('network').get('sent').get('unit') == 'MB'
+	assert metrics_body.get('network').get('received').get('value') == 2048
+
 
 def test_websocket_metrics(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
@@ -173,3 +190,7 @@ def test_websocket_metrics(test_client : TestClient) -> None:
 		assert metrics_set.get('memory').get('total').get('value') == 32
 		assert metrics_set.get('memory').get('free').get('unit') == 'GB'
 		assert metrics_set.get('memory').get('utilization').get('value') == 50
+
+		assert metrics_set.get('network').get('sent').get('value') == 1024
+		assert metrics_set.get('network').get('sent').get('unit') == 'MB'
+		assert metrics_set.get('network').get('received').get('value') == 2048
