@@ -314,12 +314,19 @@ NetworkMetrics = TypedDict('NetworkMetrics',
 	'sent' : ValueAndUnit,
 	'received' : ValueAndUnit
 })
+ProcessorMetrics = TypedDict('ProcessorMetrics',
+{
+	'cores' : ValueAndUnit,
+	'frequency' : ValueAndUnit,
+	'utilization' : ValueAndUnit
+})
 Metrics = TypedDict('Metrics',
 {
 	'execution_devices' : List[ExecutionDevice],
 	'disks' : List[DiskMetrics],
 	'memory' : MemoryMetrics,
-	'network' : NetworkMetrics
+	'network' : NetworkMetrics,
+	'processor' : ProcessorMetrics
 })
 
 DownloadProvider = Literal['github', 'huggingface']

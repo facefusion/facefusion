@@ -6,7 +6,7 @@ import psutil
 
 from facefusion import state_manager
 from facefusion.execution import detect_execution_devices
-from facefusion.types import DiskMetrics, MemoryMetrics, Metrics, NetworkMetrics
+from facefusion.types import DiskMetrics, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
 
 
 def get_metrics_set() -> Metrics:
@@ -17,7 +17,8 @@ def get_metrics_set() -> Metrics:
 		'execution_devices': detect_execution_devices(),
 		'disks': detect_disk_metrics([ drive_path ]),
 		'memory': detect_memory_metrics(),
-		'network': detect_network_metrics()
+		'network': detect_network_metrics(),
+		'processor': detect_processor_metrics()
 	}
 
 
@@ -86,5 +87,28 @@ def detect_network_metrics() -> NetworkMetrics:
 		{
 			'value': int(network_io.bytes_recv / (1024 * 1024)),
 			'unit': 'MB'
+		}
+	}
+
+
+def detect_processor_metrics() -> ProcessorMetrics:
+	cpu_frequency = psutil.cpu_freq()
+
+	return\
+	{
+		'cores':
+		{
+			'value': psutil.cpu_count(logical = True),
+			'unit': 'cores'
+		},
+		'frequency':
+		{
+			'value': int(cpu_frequency.current),
+			'unit': 'MHz'
+		},
+		'utilization':
+		{
+			'value': int(psutil.cpu_percent(interval = None)),
+			'unit': '%'
 		}
 	}
