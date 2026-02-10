@@ -48,14 +48,15 @@ def signal_exit(signum : int, frame : FrameType) -> None:
 def run(program : ArgumentParser) -> None:
 	args = program.parse_args()
 	has_conda = 'CONDA_PREFIX' in os.environ
-	commands = [ shutil.which('pip'), 'install' ]
-
-	if args.force_reinstall:
-		commands.append('--force-reinstall')
 
 	if not args.skip_conda and not has_conda:
 		sys.stdout.write(LOCALES.get('conda_not_activated') + os.linesep)
 		sys.exit(1)
+
+	commands = [ shutil.which('pip'), 'install' ]
+
+	if args.force_reinstall:
+		commands.append('--force-reinstall')
 
 	with open('requirements.txt') as file:
 
@@ -66,6 +67,8 @@ def run(program : ArgumentParser) -> None:
 
 	onnxruntime_name, onnxruntime_version = ONNXRUNTIME_SET.get(args.onnxruntime)
 	commands.append(onnxruntime_name + '==' + onnxruntime_version)
+
+	subprocess.call([shutil.which('pip'), 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q'])
 
 	subprocess.call(commands)
 
