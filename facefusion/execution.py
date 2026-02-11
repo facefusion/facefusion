@@ -3,6 +3,7 @@ from typing import List
 from onnxruntime import get_available_providers, set_default_logger_severity
 
 import facefusion.choices
+from facefusion import state_manager
 from facefusion.system import detect_static_graphic_devices
 from facefusion.types import ExecutionProvider, InferenceSessionProvider
 
@@ -76,7 +77,7 @@ def create_inference_session_providers(execution_device_id : int, execution_prov
 
 
 def resolve_cudnn_conv_algo_search() -> str:
-	execution_devices = detect_static_graphic_devices()
+	execution_devices = detect_static_graphic_devices(state_manager.get_item('execution_providers'))
 	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
 
 	for execution_device in execution_devices:
