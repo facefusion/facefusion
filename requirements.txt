@@ -1,3 +1,4 @@
+amdsmi==7.0.2
 numpy==2.2.6
 onnx==1.19.1
 onnxruntime==1.23.2
