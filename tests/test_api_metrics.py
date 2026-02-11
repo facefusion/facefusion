@@ -91,7 +91,7 @@ def mock_detect_execution_devices(mocker : MockerFixture) -> None:
 			'unit': '%'
 		}
 	})
-	mocker.patch('facefusion.system.detect_execution_devices', return_value =
+	mocker.patch('facefusion.system.detect_graphic_devices', return_value =
 	[
 		{
 			'driver_version': '555.42',
