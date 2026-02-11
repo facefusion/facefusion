@@ -1,10 +1,10 @@
+import importlib
 import shutil
 from functools import lru_cache
 from pathlib import Path
 from typing import List
 
 import psutil
-import pynvml
 
 from facefusion import state_manager
 from facefusion.types import DiskMetrics, ExecutionDevice, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
@@ -15,7 +15,7 @@ def get_metrics_set() -> Metrics:
 
 	return\
 	{
-		'execution_devices': detect_execution_devices(),
+		'execution_devices': detect_graphic_devices(),
 		'disks': detect_disk_metrics([ drive_path ]),
 		'memory': detect_memory_metrics(),
 		'network': detect_network_metrics(),
@@ -24,12 +24,23 @@ def get_metrics_set() -> Metrics:
 
 
 @lru_cache()
-def detect_static_execution_devices() -> List[ExecutionDevice]:
-	return detect_execution_devices()
+def detect_static_graphic_devices() -> List[ExecutionDevice]:
+	return detect_graphic_devices()
 
 
-def detect_execution_devices() -> List[ExecutionDevice]:
-	execution_devices : List[ExecutionDevice] = []
+def detect_graphic_devices() -> List[ExecutionDevice]:
+	execution_providers = state_manager.get_item('execution_providers')
+
+	if any(execution_provider in [ 'rocm', 'migraphx' ] for execution_provider in execution_providers):
+		return detect_amd_devices()
+	if any(execution_provider in [ 'cuda', 'tensorrt' ] for execution_provider in execution_providers):
+		return detect_nvidia_devices()
+	return []
+
+
+def detect_nvidia_devices() -> List[ExecutionDevice]:
+	pynvml = importlib.import_module('pynvml')
+	nvidia_devices : List[ExecutionDevice] = []
 
 	try:
 		pynvml.nvmlInit()
@@ -38,7 +49,7 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 		for device_id in range(device_count):
 			handle = pynvml.nvmlDeviceGetHandleByIndex(device_id)
 
-			execution_devices.append(
+			nvidia_devices.append(
 			{
 				'driver_version': pynvml.nvmlSystemGetDriverVersion(),
 				'framework':
@@ -96,7 +107,81 @@ def detect_execution_devices() -> List[ExecutionDevice]:
 	except Exception:
 		pass
 
-	return execution_devices
+	return nvidia_devices
+
+
+def detect_amd_devices() -> List[ExecutionDevice]:
+	amdsmi = importlib.import_module('amdsmi')
+	amd_devices : List[ExecutionDevice] = []
+
+	try:
+		amdsmi.amdsmi_init()
+		handles = amdsmi.amdsmi_get_processor_handles()
+
+		for handle in handles:
+			driver_info = amdsmi.amdsmi_get_gpu_driver_info(handle)
+			vram_usage = amdsmi.amdsmi_get_gpu_vram_usage(handle)
+			activity = amdsmi.amdsmi_get_gpu_activity(handle)
+
+			amd_devices.append(
+			{
+				'driver_version': driver_info.get('driver_version', ''),
+				'framework':
+				{
+					'name': 'ROCm',
+					'version': driver_info.get('driver_version', '')
+				},
+				'product':
+				{
+					'vendor': 'AMD',
+					'name': amdsmi.amdsmi_get_gpu_asic_info(handle).get('market_name', '')
+				},
+				'video_memory':
+				{
+					'total':
+					{
+						'value': vram_usage.get('vram_total', 0) // (1024 * 1024 * 1024),
+						'unit': 'GB'
+					},
+					'free':
+					{
+						'value': (vram_usage.get('vram_total', 0) - vram_usage.get('vram_used', 0)) // (1024 * 1024 * 1024),
+						'unit': 'GB'
+					}
+				},
+				'temperature':
+				{
+					'gpu':
+					{
+						'value': amdsmi.amdsmi_get_temp_metric(handle, amdsmi.AmdSmiTemperatureType.EDGE, amdsmi.AmdSmiTemperatureMetric.CURRENT) // 1000,
+						'unit': 'C'
+					},
+					'memory':
+					{
+						'value': 0,
+						'unit': '%'
+					}
+				},
+				'utilization':
+				{
+					'gpu':
+					{
+						'value': activity.get('gfx_activity', 0),
+						'unit': '%'
+					},
+					'memory':
+					{
+						'value': activity.get('umc_activity', 0),
+						'unit': '%'
+					}
+				}
+			})
+
+		amdsmi.amdsmi_shut_down()
+	except Exception:
+		pass
+
+	return amd_devices
 
 
 def detect_disk_metrics(drive_paths : List[str]) -> List[DiskMetrics]:
