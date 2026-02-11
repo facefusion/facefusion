@@ -8,8 +8,8 @@ import pynvml
 import onnxruntime
 
 import facefusion.choices
-from facefusion.filesystem import create_directory, is_directory
-from facefusion.types import ExecutionDevice, ExecutionProvider, InferenceOptionSet, InferenceProvider, ValueAndUnit
+from facefusion.system import detect_static_graphic_devices
+from facefusion.types import ExecutionProvider, InferenceSessionProvider
 
 onnxruntime.set_default_logger_severity(3)
 
@@ -113,7 +113,7 @@ def resolve_cache_path() -> str:
 
 
 def resolve_cudnn_conv_algo_search() -> str:
-	execution_devices = detect_static_execution_devices()
+	execution_devices = detect_static_graphic_devices()
 	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
 
 	for execution_device in execution_devices:
