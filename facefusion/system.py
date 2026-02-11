@@ -1,12 +1,13 @@
 import shutil
+from functools import lru_cache
 from pathlib import Path
 from typing import List
 
 import psutil
+import pynvml
 
 from facefusion import state_manager
-from facefusion.execution import detect_execution_devices
-from facefusion.types import DiskMetrics, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
+from facefusion.types import DiskMetrics, ExecutionDevice, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
 
 
 def get_metrics_set() -> Metrics:
@@ -20,6 +21,82 @@ def get_metrics_set() -> Metrics:
 		'network': detect_network_metrics(),
 		'processor': detect_processor_metrics()
 	}
+
+
+@lru_cache()
+def detect_static_execution_devices() -> List[ExecutionDevice]:
+	return detect_execution_devices()
+
+
+def detect_execution_devices() -> List[ExecutionDevice]:
+	execution_devices : List[ExecutionDevice] = []
+
+	try:
+		pynvml.nvmlInit()
+		device_count = pynvml.nvmlDeviceGetCount()
+
+		for device_id in range(device_count):
+			handle = pynvml.nvmlDeviceGetHandleByIndex(device_id)
+
+			execution_devices.append(
+			{
+				'driver_version': pynvml.nvmlSystemGetDriverVersion(),
+				'framework':
+				{
+					'name': 'CUDA',
+					'version': pynvml.nvmlSystemGetCudaDriverVersion()
+				},
+				'product':
+				{
+					'vendor': 'NVIDIA',
+					'name': pynvml.nvmlDeviceGetName(handle)
+				},
+				'video_memory':
+				{
+					'total':
+					{
+						'value': pynvml.nvmlDeviceGetMemoryInfo(handle).total // (1024 * 1024 * 1024),
+						'unit': 'GB'
+					},
+					'free':
+					{
+						'value': pynvml.nvmlDeviceGetMemoryInfo(handle).free // (1024 * 1024 * 1024),
+						'unit': 'GB'
+					}
+				},
+				'temperature':
+				{
+					'gpu':
+					{
+						'value': pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU),
+						'unit': 'C'
+					},
+					'memory':
+					{
+						'value': 0,
+						'unit': '%'
+					}
+				},
+				'utilization':
+				{
+					'gpu':
+					{
+						'value': pynvml.nvmlDeviceGetUtilizationRates(handle).gpu,
+						'unit': '%'
+					},
+					'memory':
+					{
+						'value': pynvml.nvmlDeviceGetUtilizationRates(handle).memory,
+						'unit': '%'
+					}
+				}
+			})
+
+		pynvml.nvmlShutdown()
+	except Exception:
+		pass
+
+	return execution_devices
 
 
 def detect_disk_metrics(drive_paths : List[str]) -> List[DiskMetrics]:
