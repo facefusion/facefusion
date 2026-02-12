@@ -76,12 +76,13 @@ def create_inference_session_providers(execution_device_id : int, execution_prov
 
 
 def resolve_cudnn_conv_algo_search(execution_providers : List[ExecutionProvider]) -> str:
-	graphic_devices = detect_static_graphic_devices(tuple(execution_providers))
-	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
+	if has_execution_provider('cuda') or has_execution_provider('tensorrt'):
+		graphic_devices = detect_static_graphic_devices(tuple(execution_providers))
+		product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
 
-	for graphic_device in graphic_devices:
-		if graphic_device.get('product').get('name').startswith(product_names):
-			return 'DEFAULT'
+		for graphic_device in graphic_devices:
+			if graphic_device.get('product').get('name').startswith(product_names):
+				return 'DEFAULT'
 
 	return 'EXHAUSTIVE'
 
