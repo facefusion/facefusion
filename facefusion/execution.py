@@ -113,11 +113,11 @@ def resolve_cache_path() -> str:
 
 
 def resolve_cudnn_conv_algo_search(execution_providers : List[ExecutionProvider]) -> str:
-	execution_devices = detect_static_graphic_devices(tuple(execution_providers))
+	graphic_devices = detect_static_graphic_devices(tuple(execution_providers))
 	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
 
-	for execution_device in execution_devices:
-		if execution_device.get('product').get('name').startswith(product_names):
+	for graphic_device in graphic_devices:
+		if graphic_device.get('product').get('name').startswith(product_names):
 			return 'DEFAULT'
 
 	return 'EXHAUSTIVE'
