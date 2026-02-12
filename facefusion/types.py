@@ -288,7 +288,7 @@ ExecutionDeviceUtilization = TypedDict('ExecutionDeviceUtilization',
 	'gpu' : Optional[ValueAndUnit],
 	'memory' : Optional[ValueAndUnit]
 })
-ExecutionDevice = TypedDict('ExecutionDevice',
+GraphicDevice = TypedDict('GraphicDevice',
 {
 	'driver_version' : str,
 	'framework' : ExecutionDeviceFramework,
@@ -322,7 +322,7 @@ ProcessorMetrics = TypedDict('ProcessorMetrics',
 })
 Metrics = TypedDict('Metrics',
 {
-	'execution_devices' : List[ExecutionDevice],
+	'graphic_devices' : List[GraphicDevice],
 	'disks' : List[DiskMetrics],
 	'memory' : MemoryMetrics,
 	'network' : NetworkMetrics,

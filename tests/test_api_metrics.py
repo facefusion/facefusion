@@ -91,7 +91,7 @@ def mock_detect_execution_devices(mocker : MockerFixture) -> None:
 			'unit': '%'
 		}
 	})
-	mocker.patch('facefusion.system.detect_execution_devices', return_value =
+	mocker.patch('facefusion.system.detect_graphic_devices', return_value =
 	[
 		{
 			'driver_version': '555.42',
@@ -167,9 +167,9 @@ def test_get_metrics(test_client : TestClient) -> None:
 
 	assert metrics_response.status_code == 200
 
-	assert metrics_body.get('execution_devices')[0].get('driver_version') == '555.42'
-	assert metrics_body.get('execution_devices')[0].get('product').get('name') == 'RTX 4090'
-	assert metrics_body.get('execution_devices')[0].get('video_memory').get('total').get('value') == 24
+	assert metrics_body.get('graphic_devices')[0].get('driver_version') == '555.42'
+	assert metrics_body.get('graphic_devices')[0].get('product').get('name') == 'RTX 4090'
+	assert metrics_body.get('graphic_devices')[0].get('video_memory').get('total').get('value') == 24
 
 	assert metrics_body.get('disks')[0].get('total').get('value') == 500
 	assert metrics_body.get('disks')[0].get('free').get('unit') == 'GB'
@@ -201,9 +201,9 @@ def test_websocket_metrics(test_client : TestClient) -> None:
 	]) as websocket:
 		metrics_set = websocket.receive_json()
 
-		assert metrics_set.get('execution_devices')[0].get('driver_version') == '555.42'
-		assert metrics_set.get('execution_devices')[0].get('product').get('name') == 'RTX 4090'
-		assert metrics_set.get('execution_devices')[0].get('video_memory').get('total').get('value') == 24
+		assert metrics_set.get('graphic_devices')[0].get('driver_version') == '555.42'
+		assert metrics_set.get('graphic_devices')[0].get('product').get('name') == 'RTX 4090'
+		assert metrics_set.get('graphic_devices')[0].get('video_memory').get('total').get('value') == 24
 
 		assert metrics_set.get('disks')[0].get('total').get('value') == 500
 		assert metrics_set.get('disks')[0].get('free').get('unit') == 'GB'

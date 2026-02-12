@@ -1,11 +1,10 @@
-from functools import lru_cache
 from typing import List
 
-import pynvml
 from onnxruntime import get_available_providers, set_default_logger_severity
 
 import facefusion.choices
-from facefusion.types import ExecutionDevice, ExecutionProvider, InferenceSessionProvider
+from facefusion.system import detect_static_graphic_devices
+from facefusion.types import ExecutionProvider, InferenceSessionProvider
 
 set_default_logger_severity(3)
 
@@ -34,7 +33,7 @@ def create_inference_session_providers(execution_device_id : int, execution_prov
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id,
-				'cudnn_conv_algo_search': resolve_cudnn_conv_algo_search()
+				'cudnn_conv_algo_search': resolve_cudnn_conv_algo_search(execution_providers)
 			}))
 		if execution_provider == 'tensorrt':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
@@ -76,13 +75,14 @@ def create_inference_session_providers(execution_device_id : int, execution_prov
 	return inference_session_providers
 
 
-def resolve_cudnn_conv_algo_search() -> str:
-	execution_devices = detect_static_execution_devices()
-	product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
+def resolve_cudnn_conv_algo_search(execution_providers : List[ExecutionProvider]) -> str:
+	if has_execution_provider('cuda') or has_execution_provider('tensorrt'):
+		graphic_devices = detect_static_graphic_devices(tuple(execution_providers))
+		product_names = ('GeForce GTX 1630', 'GeForce GTX 1650', 'GeForce GTX 1660')
 
-	for execution_device in execution_devices:
-		if execution_device.get('product').get('name').startswith(product_names):
-			return 'DEFAULT'
+		for graphic_device in graphic_devices:
+			if graphic_device.get('product').get('name').startswith(product_names):
+				return 'DEFAULT'
 
 	return 'EXHAUSTIVE'
 
@@ -91,79 +91,3 @@ def resolve_openvino_device_type(execution_device_id : int) -> str:
 	if execution_device_id == 0:
 		return 'GPU'
 	return 'GPU.' + str(execution_device_id)
-
-
-@lru_cache()
-def detect_static_execution_devices() -> List[ExecutionDevice]:
-	return detect_execution_devices()
-
-
-def detect_execution_devices() -> List[ExecutionDevice]:
-	execution_devices : List[ExecutionDevice] = []
-
-	try:
-		pynvml.nvmlInit()
-		device_count = pynvml.nvmlDeviceGetCount()
-
-		for device_id in range(device_count):
-			handle = pynvml.nvmlDeviceGetHandleByIndex(device_id)
-
-			execution_devices.append(
-			{
-				'driver_version': pynvml.nvmlSystemGetDriverVersion(),
-				'framework':
-				{
-					'name': 'CUDA',
-					'version': pynvml.nvmlSystemGetCudaDriverVersion()
-				},
-				'product':
-				{
-					'vendor': 'NVIDIA',
-					'name': pynvml.nvmlDeviceGetName(handle)
-				},
-				'video_memory':
-				{
-					'total':
-					{
-						'value': pynvml.nvmlDeviceGetMemoryInfo(handle).total // (1024 * 1024 * 1024),
-						'unit': 'GB'
-					},
-					'free':
-					{
-						'value': pynvml.nvmlDeviceGetMemoryInfo(handle).free // (1024 * 1024 * 1024),
-						'unit': 'GB'
-					}
-				},
-				'temperature':
-				{
-					'gpu':
-					{
-						'value': pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU),
-						'unit': 'C'
-					},
-					'memory':
-					{
-						'value': 0,
-						'unit': '%'
-					}
-				},
-				'utilization':
-				{
-					'gpu':
-					{
-						'value': pynvml.nvmlDeviceGetUtilizationRates(handle).gpu,
-						'unit': '%'
-					},
-					'memory':
-					{
-						'value': pynvml.nvmlDeviceGetUtilizationRates(handle).memory,
-						'unit': '%'
-					}
-				}
-			})
-
-		pynvml.nvmlShutdown()
-	except Exception:
-		pass
-
-	return execution_devices
