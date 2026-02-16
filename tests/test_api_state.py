@@ -1,4 +1,5 @@
 import subprocess
+from argparse import ArgumentParser
 from typing import Iterator
 
 import pytest
@@ -23,7 +24,13 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'module')
 def test_client() -> Iterator[TestClient]:
-	args_store.register_args([ 'source_paths', 'target_path', 'execution_providers' ], scopes = [ 'api' ])
+	program = ArgumentParser()
+	source_paths_action = program.add_argument('--source-paths', nargs = '+', default = None)
+	target_path_action = program.add_argument('--target-path', default = None)
+	execution_providers_action = program.add_argument('--execution-providers', nargs = '+', default = None)
+	args_store.register_argument(source_paths_action, scopes = [ 'api' ])
+	args_store.register_argument(target_path_action, scopes = [ 'api' ])
+	args_store.register_argument(execution_providers_action, scopes = [ 'api' ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 
 	with TestClient(create_api()) as test_client:

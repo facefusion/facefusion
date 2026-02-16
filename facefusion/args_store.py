@@ -28,23 +28,6 @@ def get_capabilities() -> Dict[str, Any]:
 	return ARGS_STORE.get('api')
 
 
-def register_args(keys : List[str], scopes : List[Scope]) -> None:
-	for key in keys:
-		entry =\
-		{
-			'default': None,
-			'choices': None
-		}
-
-		for scope in scopes:
-			if scope == 'api':
-				ARGS_STORE['api'][key] = entry
-			if scope == 'cli':
-				ARGS_STORE['cli'][key] = entry
-			if scope == 'sys':
-				ARGS_STORE['sys'][key] = entry
-
-
 def register_argument(action : Action, scopes : List[Scope]) -> None:
 	key = action.dest
 	choices : Any = list(action.choices) if action.choices else None
