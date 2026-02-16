@@ -276,9 +276,10 @@ def get_model_size() -> Size:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--deep-swapper-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'deep_swapper_model', 'iperov/elon_musk_224'), choices = deep_swapper_choices.deep_swapper_models)
-		group_processors.add_argument('--deep-swapper-morph', help = translator.get('help.morph', __package__), type = int, default = config.get_int_value('processors', 'deep_swapper_morph', '100'), choices = deep_swapper_choices.deep_swapper_morph_range, metavar = create_int_metavar(deep_swapper_choices.deep_swapper_morph_range))
-		facefusion.args_store.register_args([ 'deep_swapper_model', 'deep_swapper_morph' ], scopes = [ 'api', 'cli' ])
+		deep_swapper_model_action = group_processors.add_argument('--deep-swapper-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'deep_swapper_model', 'iperov/elon_musk_224'), choices = deep_swapper_choices.deep_swapper_models)
+		deep_swapper_morph_action = group_processors.add_argument('--deep-swapper-morph', help = translator.get('help.morph', __package__), type = int, default = config.get_int_value('processors', 'deep_swapper_morph', '100'), choices = deep_swapper_choices.deep_swapper_morph_range, metavar = create_int_metavar(deep_swapper_choices.deep_swapper_morph_range))
+		facefusion.args_store.register_argument(deep_swapper_model_action, scopes = [ 'api', 'cli' ])
+		facefusion.args_store.register_argument(deep_swapper_morph_action, scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:

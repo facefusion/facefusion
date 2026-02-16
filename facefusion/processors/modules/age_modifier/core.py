@@ -29,41 +29,6 @@ from facefusion.vision import match_frame_color, read_static_image, read_static_
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 	return\
 	{
-		'fran':
-		{
-			'__metadata__':
-			{
-				'vendor': 'ry-lu',
-				'license': 'mit',
-				'year': 2024
-			},
-			'hashes':
-			{
-				'age_modifier':
-				{
-					'url': resolve_download_url('models-3.6.0', 'fran.hash'),
-					'path': resolve_relative_path('../.assets/models/fran.hash')
-				}
-			},
-			'sources':
-			{
-				'age_modifier':
-				{
-					'url': resolve_download_url('models-3.6.0', 'fran.onnx'),
-					'path': resolve_relative_path('../.assets/models/fran.onnx')
-				}
-			},
-			'templates':
-			{
-				'target': 'ffhq_512',
-			},
-			'sizes':
-			{
-				'target': (1024, 1024),
-			},
-			'mean': [ 0.0, 0.0, 0.0 ],
-			'standard_deviation': [ 1.0, 1.0, 1.0 ]
-		},
 		'styleganex_age':
 		{
 			'__metadata__':
@@ -97,9 +62,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'target': (256, 256),
 				'target_with_background': (384, 384)
-			},
-			'mean': [ 0.5, 0.5, 0.5 ],
-			'standard_deviation': [ 0.5, 0.5, 0.5 ]
+			}
 		}
 	}
 
@@ -124,9 +87,10 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--age-modifier-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'age_modifier_model', 'fran'), choices = age_modifier_choices.age_modifier_models)
-		group_processors.add_argument('--age-modifier-direction', help = translator.get('help.direction', __package__), type = int, default = config.get_int_value('processors', 'age_modifier_direction', '0'), choices = age_modifier_choices.age_modifier_direction_range, metavar = create_int_metavar(age_modifier_choices.age_modifier_direction_range))
-		facefusion.args_store.register_args([ 'age_modifier_model', 'age_modifier_direction' ], scopes = [ 'api', 'cli' ])
+		age_modifier_model_action = group_processors.add_argument('--age-modifier-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'age_modifier_model', 'styleganex_age'), choices = age_modifier_choices.age_modifier_models)
+		age_modifier_direction_action = group_processors.add_argument('--age-modifier-direction', help = translator.get('help.direction', __package__), type = int, default = config.get_int_value('processors', 'age_modifier_direction', '0'), choices = age_modifier_choices.age_modifier_direction_range, metavar = create_int_metavar(age_modifier_choices.age_modifier_direction_range))
+		facefusion.args_store.register_argument(age_modifier_model_action, scopes = [ 'api', 'cli' ])
+		facefusion.args_store.register_argument(age_modifier_direction_action, scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
@@ -172,57 +136,32 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 	model_sizes = get_model_options().get('sizes')
 	face_landmark_5 = target_face.landmark_set.get('5/68').copy()
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5, model_templates.get('target'), model_sizes.get('target'))
+	extend_face_landmark_5 = scale_face_landmark_5(face_landmark_5, 0.875)
+	extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_templates.get('target_with_background'), model_sizes.get('target_with_background'))
+	extend_vision_frame_raw = extend_vision_frame.copy()
+	box_mask = create_box_mask(extend_vision_frame, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
+	crop_masks =\
+	[
+		box_mask
+	]
 
-	if state_manager.get_item('age_modifier_model') == 'fran':
-		box_mask = create_box_mask(crop_vision_frame, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
-		crop_masks =\
-		[
-			box_mask
-		]
+	if 'occlusion' in state_manager.get_item('face_mask_types'):
+		occlusion_mask = create_occlusion_mask(crop_vision_frame)
+		temp_matrix = merge_matrix([ extend_affine_matrix, cv2.invertAffineTransform(affine_matrix) ])
+		occlusion_mask = cv2.warpAffine(occlusion_mask, temp_matrix, model_sizes.get('target_with_background'))
+		crop_masks.append(occlusion_mask)
 
-		if 'occlusion' in state_manager.get_item('face_mask_types'):
-			occlusion_mask = create_occlusion_mask(crop_vision_frame)
-			crop_masks.append(occlusion_mask)
-
-		crop_vision_frame = prepare_vision_frame(crop_vision_frame)
-		target_age = numpy.mean(target_face.age)
-		age_modifier_direction = numpy.array([ target_age, target_age + state_manager.get_item('age_modifier_direction') ], dtype = numpy.float32) / 100
-		age_modifier_direction = age_modifier_direction.clip(0, 1)
-		crop_vision_frame = forward(crop_vision_frame, crop_vision_frame, age_modifier_direction)
-		crop_vision_frame = normalize_vision_frame(crop_vision_frame)
-		crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
-		paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
-		return paste_vision_frame
-
-	if state_manager.get_item('age_modifier_model') == 'styleganex_age':
-		extend_face_landmark_5 = scale_face_landmark_5(face_landmark_5, 0.875)
-		extend_vision_frame, extend_affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, extend_face_landmark_5, model_templates.get('target_with_background'), model_sizes.get('target_with_background'))
-		extend_vision_frame_raw = extend_vision_frame.copy()
-		box_mask = create_box_mask(extend_vision_frame, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
-		crop_masks =\
-		[
-			box_mask
-		]
-
-		if 'occlusion' in state_manager.get_item('face_mask_types'):
-			occlusion_mask = create_occlusion_mask(crop_vision_frame)
-			temp_matrix = merge_matrix([ extend_affine_matrix, cv2.invertAffineTransform(affine_matrix) ])
-			occlusion_mask = cv2.warpAffine(occlusion_mask, temp_matrix, model_sizes.get('target_with_background'))
-			crop_masks.append(occlusion_mask)
-
-		crop_vision_frame = prepare_vision_frame(crop_vision_frame)
-		extend_vision_frame = prepare_vision_frame(extend_vision_frame)
-		age_modifier_direction = numpy.array(numpy.interp(state_manager.get_item('age_modifier_direction'), [ -100, 100 ], [ 2.5, -2.5 ])).astype(numpy.float32)
-		extend_vision_frame = forward(crop_vision_frame, extend_vision_frame, age_modifier_direction)
-		extend_vision_frame = normalize_extend_frame(extend_vision_frame)
-		extend_vision_frame = match_frame_color(extend_vision_frame_raw, extend_vision_frame)
-		extend_affine_matrix *= (model_sizes.get('target')[0] * 4) / model_sizes.get('target_with_background')[0]
-		crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
-		crop_mask = cv2.resize(crop_mask, (model_sizes.get('target')[0] * 4, model_sizes.get('target')[1] * 4))
-		paste_vision_frame = paste_back(temp_vision_frame, extend_vision_frame, crop_mask, extend_affine_matrix)
-		return paste_vision_frame
-
-	return temp_vision_frame
+	crop_vision_frame = prepare_vision_frame(crop_vision_frame)
+	extend_vision_frame = prepare_vision_frame(extend_vision_frame)
+	age_modifier_direction = numpy.array(numpy.interp(state_manager.get_item('age_modifier_direction'), [ -100, 100 ], [ 2.5, -2.5 ])).astype(numpy.float32)
+	extend_vision_frame = forward(crop_vision_frame, extend_vision_frame, age_modifier_direction)
+	extend_vision_frame = normalize_extend_frame(extend_vision_frame)
+	extend_vision_frame = match_frame_color(extend_vision_frame_raw, extend_vision_frame)
+	extend_affine_matrix *= (model_sizes.get('target')[0] * 4) / model_sizes.get('target_with_background')[0]
+	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
+	crop_mask = cv2.resize(crop_mask, (model_sizes.get('target')[0] * 4, model_sizes.get('target')[1] * 4))
+	paste_vision_frame = paste_back(temp_vision_frame, extend_vision_frame, crop_mask, extend_affine_matrix)
+	return paste_vision_frame
 
 
 def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame, age_modifier_direction : AgeModifierDirection) -> VisionFrame:
@@ -247,21 +186,9 @@ def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame, 
 
 
 def prepare_vision_frame(vision_frame : VisionFrame) -> VisionFrame:
-	model_mean = get_model_options().get('mean')
-	model_standard_deviation = get_model_options().get('standard_deviation')
 	vision_frame = vision_frame[:, :, ::-1] / 255.0
-	vision_frame = (vision_frame - model_mean) / model_standard_deviation
+	vision_frame = (vision_frame - 0.5) / 0.5
 	vision_frame = numpy.expand_dims(vision_frame.transpose(2, 0, 1), axis = 0).astype(numpy.float32)
-	return vision_frame
-
-
-def normalize_vision_frame(vision_frame : VisionFrame) -> VisionFrame:
-	model_mean = get_model_options().get('mean')
-	model_standard_deviation = get_model_options().get('standard_deviation')
-	vision_frame = vision_frame.transpose(1, 2, 0)
-	vision_frame = vision_frame * model_standard_deviation + model_mean
-	vision_frame = vision_frame.clip(0, 1)
-	vision_frame = vision_frame[:, :, ::-1] * 255
 	return vision_frame
 
 
