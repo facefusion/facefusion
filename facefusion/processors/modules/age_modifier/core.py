@@ -87,9 +87,10 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--age-modifier-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'age_modifier_model', 'styleganex_age'), choices = age_modifier_choices.age_modifier_models)
-		group_processors.add_argument('--age-modifier-direction', help = translator.get('help.direction', __package__), type = int, default = config.get_int_value('processors', 'age_modifier_direction', '0'), choices = age_modifier_choices.age_modifier_direction_range, metavar = create_int_metavar(age_modifier_choices.age_modifier_direction_range))
-		facefusion.args_store.register_args([ 'age_modifier_model', 'age_modifier_direction' ], scopes = [ 'api', 'cli' ])
+		age_modifier_model_action = group_processors.add_argument('--age-modifier-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'age_modifier_model', 'styleganex_age'), choices = age_modifier_choices.age_modifier_models)
+		age_modifier_direction_action = group_processors.add_argument('--age-modifier-direction', help = translator.get('help.direction', __package__), type = int, default = config.get_int_value('processors', 'age_modifier_direction', '0'), choices = age_modifier_choices.age_modifier_direction_range, metavar = create_int_metavar(age_modifier_choices.age_modifier_direction_range))
+		facefusion.args_store.register_argument(age_modifier_model_action, scopes = [ 'api', 'cli' ])
+		facefusion.args_store.register_argument(age_modifier_direction_action, scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
