@@ -102,10 +102,11 @@ Scope : TypeAlias = Literal['api', 'cli', 'sys']
 
 ArgsStore = TypedDict('ArgsStore',
 {
-	'api' : List[str],
-	'cli' : List[str],
-	'sys' : List[str]
+	'api' : Dict[str, Any],
+	'cli' : Dict[str, Any],
+	'sys' : Dict[str, Any]
 })
+
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 UpdateProgress : TypeAlias = Callable[[int], None]

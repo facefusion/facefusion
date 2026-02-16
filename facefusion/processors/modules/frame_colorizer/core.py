@@ -184,10 +184,12 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--frame-colorizer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'frame_colorizer_model', 'ddcolor'), choices = frame_colorizer_choices.frame_colorizer_models)
-		group_processors.add_argument('--frame-colorizer-size', help = translator.get('help.size', __package__), type = str, default = config.get_str_value('processors', 'frame_colorizer_size', '256x256'), choices = frame_colorizer_choices.frame_colorizer_sizes)
-		group_processors.add_argument('--frame-colorizer-blend', help = translator.get('help.blend', __package__), type = int, default = config.get_int_value('processors', 'frame_colorizer_blend', '100'), choices = frame_colorizer_choices.frame_colorizer_blend_range, metavar = create_int_metavar(frame_colorizer_choices.frame_colorizer_blend_range))
-		facefusion.args_store.register_args([ 'frame_colorizer_model', 'frame_colorizer_blend', 'frame_colorizer_size' ], scopes = [ 'api', 'cli' ])
+		frame_colorizer_model_action = group_processors.add_argument('--frame-colorizer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'frame_colorizer_model', 'ddcolor'), choices = frame_colorizer_choices.frame_colorizer_models)
+		frame_colorizer_size_action = group_processors.add_argument('--frame-colorizer-size', help = translator.get('help.size', __package__), type = str, default = config.get_str_value('processors', 'frame_colorizer_size', '256x256'), choices = frame_colorizer_choices.frame_colorizer_sizes)
+		frame_colorizer_blend_action = group_processors.add_argument('--frame-colorizer-blend', help = translator.get('help.blend', __package__), type = int, default = config.get_int_value('processors', 'frame_colorizer_blend', '100'), choices = frame_colorizer_choices.frame_colorizer_blend_range, metavar = create_int_metavar(frame_colorizer_choices.frame_colorizer_blend_range))
+		facefusion.args_store.register_argument(frame_colorizer_model_action, scopes = [ 'api', 'cli' ])
+		facefusion.args_store.register_argument(frame_colorizer_size_action, scopes = [ 'api', 'cli' ])
+		facefusion.args_store.register_argument(frame_colorizer_blend_action, scopes = [ 'api', 'cli' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:

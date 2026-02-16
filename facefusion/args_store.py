@@ -1,43 +1,72 @@
-from typing import List
+from argparse import Action
+from typing import Any, Dict, List
 
 from facefusion.types import Args, ArgsStore, Scope
 
 
 ARGS_STORE : ArgsStore =\
 {
-	'api': [],
-	'cli': [],
-	'sys': []
+	'api': {},
+	'cli': {},
+	'sys': {}
 }
 
 
 def get_api_args() -> List[str]:
-	return ARGS_STORE.get('api')
+	return list(ARGS_STORE.get('api').keys())
 
 
 def get_sys_args() -> List[str]:
-	return ARGS_STORE.get('sys')
+	return list(ARGS_STORE.get('sys').keys())
 
 
 def get_cli_args() -> List[str]:
-	return ARGS_STORE.get('cli')
+	return list(ARGS_STORE.get('cli').keys())
+
+
+def get_capabilities() -> Dict[str, Any]:
+	return ARGS_STORE.get('api')
 
 
 def register_args(keys : List[str], scopes : List[Scope]) -> None:
 	for key in keys:
+		entry =\
+		{
+			'default': None,
+			'choices': None
+		}
+
 		for scope in scopes:
 			if scope == 'api':
-				ARGS_STORE['api'].append(key)
+				ARGS_STORE['api'][key] = entry
 			if scope == 'cli':
-				ARGS_STORE['cli'].append(key)
+				ARGS_STORE['cli'][key] = entry
 			if scope == 'sys':
-				ARGS_STORE['sys'].append(key)
+				ARGS_STORE['sys'][key] = entry
+
+
+def register_argument(action : Action, scopes : List[Scope]) -> None:
+	key = action.dest
+	choices : Any = list(action.choices) if action.choices else None
+	entry =\
+	{
+		'default': action.default,
+		'choices': choices
+	}
+
+	for scope in scopes:
+		if scope == 'api':
+			ARGS_STORE['api'][key] = entry
+		if scope == 'cli':
+			ARGS_STORE['cli'][key] = entry
+		if scope == 'sys':
+			ARGS_STORE['sys'][key] = entry
 
 
 def filter_api_args(args : Args) -> Args:
 	api_args =\
 	{
-		key: args.get(key) for key in args if key in get_api_args() #type:ignore[literal-required]
+		key: args.get(key) for key in args if key in ARGS_STORE.get('api') #type:ignore[literal-required]
 	}
 	return api_args
 
@@ -45,7 +74,7 @@ def filter_api_args(args : Args) -> Args:
 def filter_sys_args(args : Args) -> Args:
 	sys_args =\
 	{
-		key: args.get(key) for key in args if key in get_sys_args() #type:ignore[literal-required]
+		key: args.get(key) for key in args if key in ARGS_STORE.get('sys') #type:ignore[literal-required]
 	}
 	return sys_args
 
@@ -53,7 +82,7 @@ def filter_sys_args(args : Args) -> Args:
 def filter_cli_args(args : Args) -> Args:
 	cli_args =\
 	{
-		key: args.get(key) for key in args if key in get_cli_args() #type:ignore[literal-required]
+		key: args.get(key) for key in args if key in ARGS_STORE.get('cli') #type:ignore[literal-required]
 	}
 	return cli_args
 
@@ -61,6 +90,6 @@ def filter_cli_args(args : Args) -> Args:
 def filter_step_args(args : Args) -> Args:
 	step_args =\
 	{
-		key: args.get(key) for key in args if key in get_cli_args() and key not in get_sys_args() #type:ignore[literal-required]
+		key: args.get(key) for key in args if key in ARGS_STORE.get('cli') and key not in ARGS_STORE.get('sys') #type:ignore[literal-required]
 	}
 	return step_args
