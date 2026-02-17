@@ -573,10 +573,25 @@ def get_frame_enhancer_model() -> str:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		frame_enhancer_model_action = group_processors.add_argument('--frame-enhancer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'frame_enhancer_model', 'span_kendata_x4'), choices = frame_enhancer_choices.frame_enhancer_models)
-		frame_enhancer_blend_action = group_processors.add_argument('--frame-enhancer-blend', help = translator.get('help.blend', __package__), type = int, default = config.get_int_value('processors', 'frame_enhancer_blend', '80'), choices = frame_enhancer_choices.frame_enhancer_blend_range, metavar = create_int_metavar(frame_enhancer_choices.frame_enhancer_blend_range))
-		facefusion.args_store.register_argument(frame_enhancer_model_action, scopes = [ 'api', 'cli' ])
-		facefusion.args_store.register_argument(frame_enhancer_blend_action, scopes = [ 'api', 'cli' ])
+		facefusion.args_store.register_arguments(
+			[
+				group_processors.add_argument(
+					'--frame-enhancer-model',
+					help = translator.get('help.model', __package__),
+					default = config.get_str_value('processors', 'frame_enhancer_model', 'span_kendata_x4'),
+					choices = frame_enhancer_choices.frame_enhancer_models
+				),
+				group_processors.add_argument(
+					'--frame-enhancer-blend',
+					help = translator.get('help.blend', __package__),
+					type = int,
+					default = config.get_int_value('processors', 'frame_enhancer_blend', '80'),
+					choices = frame_enhancer_choices.frame_enhancer_blend_range,
+					metavar = create_int_metavar(frame_enhancer_choices.frame_enhancer_blend_range)
+				)
+			],
+			scopes = [ 'api', 'cli' ]
+		)
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:

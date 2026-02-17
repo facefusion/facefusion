@@ -25,21 +25,30 @@ def before_all() -> None:
 @pytest.fixture(scope = 'module')
 def test_client() -> Iterator[TestClient]:
 	program = ArgumentParser()
-	args_store.register_argument(
-		program.add_argument(
-			'--source-paths',
-			nargs = '+'),
+	args_store.register_arguments(
+		[
+			program.add_argument(
+				'--source-paths',
+				nargs = '+'
+			)
+		],
 		scopes = [ 'api' ]
 	)
-	args_store.register_argument(
-		program.add_argument(
-			'--target-path'),
+	args_store.register_arguments(
+		[
+			program.add_argument(
+				'--target-path'
+			)
+		],
 		scopes = [ 'api' ]
 	)
-	args_store.register_argument(
-		program.add_argument(
-			'--execution-providers',
-			nargs = '+'),
+	args_store.register_arguments(
+		[
+			program.add_argument(
+				'--execution-providers',
+				nargs = '+'
+			)
+		],
 		scopes = [ 'api' ]
 	)
 	state_manager.init_item('execution_providers', [ 'cpu' ])
