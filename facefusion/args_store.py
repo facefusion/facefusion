@@ -12,20 +12,28 @@ ARGS_STORE : ArgsStore =\
 }
 
 
+def get_api_set() -> ArgumentValue:
+	return ARGS_STORE.get('api')
+
+
+def get_cli_set() -> ArgumentValue:
+	return ARGS_STORE.get('cli')
+
+
+def get_sys_set() -> ArgumentValue:
+	return ARGS_STORE.get('sys')
+
+
 def get_api_args() -> List[str]:
-	return list(ARGS_STORE.get('api').keys())
-
-
-def get_sys_args() -> List[str]:
-	return list(ARGS_STORE.get('sys').keys())
+	return list(get_api_set().keys())
 
 
 def get_cli_args() -> List[str]:
-	return list(ARGS_STORE.get('cli').keys())
+	return list(get_cli_set().keys())
 
 
-def get_capabilities() -> Dict[str, ArgumentValue]:
-	return ARGS_STORE.get('api')
+def get_sys_args() -> List[str]:
+	return list(get_cli_set().keys())
 
 
 def register_argument(action : Action, scopes : List[Scope]) -> None:
