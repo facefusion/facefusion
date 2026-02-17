@@ -99,7 +99,7 @@ Resolution : TypeAlias = Tuple[int, int]
 
 Args : TypeAlias = Dict[str, Any]
 Scope : TypeAlias = Literal['api', 'cli', 'sys']
-ArgumentValue : TypeAlias = Any
+ArgumentValue : TypeAlias = Dict[str, Any]
 
 ArgsStore = TypedDict('ArgsStore',
 {
