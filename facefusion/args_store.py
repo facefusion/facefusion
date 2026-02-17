@@ -1,7 +1,7 @@
 from argparse import Action
 from typing import List
 
-from facefusion.types import Args, ArgsStore, ArgumentValue, Scope
+from facefusion.types import Args, ArgsStore, ArgumentSet, Scope
 
 
 ARGS_STORE : ArgsStore =\
@@ -12,15 +12,15 @@ ARGS_STORE : ArgsStore =\
 }
 
 
-def get_api_set() -> ArgumentValue:
+def get_api_set() -> ArgumentSet:
 	return ARGS_STORE.get('api')
 
 
-def get_cli_set() -> ArgumentValue:
+def get_cli_set() -> ArgumentSet:
 	return ARGS_STORE.get('cli')
 
 
-def get_sys_set() -> ArgumentValue:
+def get_sys_set() -> ArgumentSet:
 	return ARGS_STORE.get('sys')
 
 
