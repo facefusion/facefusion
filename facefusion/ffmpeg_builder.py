@@ -48,7 +48,7 @@ def set_input(input_path : str) -> List[Command]:
 
 
 def set_input_fps(input_fps : Fps) -> List[Command]:
-	return [ '-r', str(input_fps)]
+	return [ '-r', str(input_fps) ]
 
 
 def set_output(output_path : str) -> List[Command]:

@@ -19,9 +19,9 @@ def normalize_space(spaces : Optional[List[int]]) -> Optional[Padding]:
 	if spaces and len(spaces) == 1:
 		return tuple([spaces[0]] * 4) #type:ignore[return-value]
 	if spaces and len(spaces) == 2:
-		return tuple([spaces[0], spaces[1], spaces[0], spaces[1]]) #type:ignore[return-value]
+		return tuple([ spaces[0], spaces[1], spaces[0], spaces[1] ]) #type:ignore[return-value]
 	if spaces and len(spaces) == 3:
-		return tuple([spaces[0], spaces[1], spaces[2], spaces[1]]) #type:ignore[return-value]
+		return tuple([ spaces[0], spaces[1], spaces[2], spaces[1] ]) #type:ignore[return-value]
 	if spaces and len(spaces) == 4:
 		return tuple(spaces) #type:ignore[return-value]
 	return None

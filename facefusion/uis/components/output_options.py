@@ -132,7 +132,7 @@ def listen() -> None:
 		'target_video'
 	]):
 		for method in [ 'change', 'clear' ]:
-			getattr(ui_component, method)(remote_update, outputs = [OUTPUT_IMAGE_QUALITY_SLIDER, OUTPUT_IMAGE_SCALE_SLIDER, OUTPUT_AUDIO_ENCODER_DROPDOWN, OUTPUT_AUDIO_QUALITY_SLIDER, OUTPUT_AUDIO_VOLUME_SLIDER, OUTPUT_VIDEO_ENCODER_DROPDOWN, OUTPUT_VIDEO_PRESET_DROPDOWN, OUTPUT_VIDEO_QUALITY_SLIDER, OUTPUT_VIDEO_SCALE_SLIDER, OUTPUT_VIDEO_FPS_SLIDER])
+			getattr(ui_component, method)(remote_update, outputs = [ OUTPUT_IMAGE_QUALITY_SLIDER, OUTPUT_IMAGE_SCALE_SLIDER, OUTPUT_AUDIO_ENCODER_DROPDOWN, OUTPUT_AUDIO_QUALITY_SLIDER, OUTPUT_AUDIO_VOLUME_SLIDER, OUTPUT_VIDEO_ENCODER_DROPDOWN, OUTPUT_VIDEO_PRESET_DROPDOWN, OUTPUT_VIDEO_QUALITY_SLIDER, OUTPUT_VIDEO_SCALE_SLIDER, OUTPUT_VIDEO_FPS_SLIDER ])
 
 
 def remote_update() -> Tuple[gradio.Slider, gradio.Slider, gradio.Dropdown, gradio.Slider, gradio.Slider, gradio.Dropdown, gradio.Dropdown, gradio.Slider, gradio.Slider, gradio.Slider]:

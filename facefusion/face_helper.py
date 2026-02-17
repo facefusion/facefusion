@@ -81,7 +81,7 @@ def warp_face_by_face_landmark_5(temp_vision_frame : VisionFrame, face_landmark_
 
 
 def warp_face_by_bounding_box(temp_vision_frame : VisionFrame, bounding_box : BoundingBox, crop_size : Size) -> Tuple[VisionFrame, Matrix]:
-	source_points = numpy.array([ [ bounding_box[0], bounding_box[1] ], [bounding_box[2], bounding_box[1] ], [ bounding_box[0], bounding_box[3] ] ]).astype(numpy.float32)
+	source_points = numpy.array([ [ bounding_box[0], bounding_box[1] ], [ bounding_box[2], bounding_box[1] ], [ bounding_box[0], bounding_box[3] ] ]).astype(numpy.float32)
 	target_points = numpy.array([ [ 0, 0 ], [ crop_size[0], 0 ], [ 0, crop_size[1] ] ]).astype(numpy.float32)
 	affine_matrix = cv2.getAffineTransform(source_points, target_points)
 	if bounding_box[2] - bounding_box[0] > crop_size[0] or bounding_box[3] - bounding_box[1] > crop_size[1]:
@@ -247,7 +247,7 @@ def get_nms_threshold(face_detector_model : FaceDetectorModel, face_detector_ang
 
 
 def merge_matrix(temp_matrices : List[Matrix]) -> Matrix:
-	matrix = numpy.vstack([temp_matrices[0], [0, 0, 1]])
+	matrix = numpy.vstack([ temp_matrices[0], [ 0, 0, 1 ] ])
 
 	for temp_matrix in temp_matrices[1:]:
 		temp_matrix = numpy.vstack([ temp_matrix, [ 0, 0, 1 ] ])

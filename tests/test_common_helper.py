@@ -20,8 +20,8 @@ def test_create_float_range() -> None:
 
 
 def test_calc_int_step() -> None:
-	assert calculate_int_step([0, 1]) == 1
+	assert calculate_int_step([ 0, 1 ]) == 1
 
 
 def test_calc_float_step() -> None:
-	assert calculate_float_step([0.1, 0.2]) == 0.1
+	assert calculate_float_step([ 0.1, 0.2 ]) == 0.1

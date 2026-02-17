@@ -381,11 +381,11 @@ def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> T
 			face_scores.extend(face_scores_raw[keep_indices])
 			face_landmarks_5_raw = numpy.concatenate(
 			[
-				face_landmarks_5_raw[:, [0, 1]] * feature_stride + anchors,
-				face_landmarks_5_raw[:, [2, 3]] * feature_stride + anchors,
-				face_landmarks_5_raw[:, [4, 5]] * feature_stride + anchors,
-				face_landmarks_5_raw[:, [6, 7]] * feature_stride + anchors,
-				face_landmarks_5_raw[:, [8, 9]] * feature_stride + anchors
+				face_landmarks_5_raw[:, [ 0, 1 ]] * feature_stride + anchors,
+				face_landmarks_5_raw[:, [ 2, 3 ]] * feature_stride + anchors,
+				face_landmarks_5_raw[:, [ 4, 5 ]] * feature_stride + anchors,
+				face_landmarks_5_raw[:, [ 6, 7 ]] * feature_stride + anchors,
+				face_landmarks_5_raw[:, [ 8, 9 ]] * feature_stride + anchors
 			], axis = -1).reshape(-1, 5, 2)
 
 			for face_landmark_raw_5 in face_landmarks_5_raw[keep_indices]:

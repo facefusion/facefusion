@@ -81,7 +81,7 @@ def listen() -> None:
 
 	processors_checkbox_group = get_ui_component('processors_checkbox_group')
 	if processors_checkbox_group:
-		processors_checkbox_group.change(remote_update, inputs = processors_checkbox_group, outputs = [BACKGROUND_REMOVER_MODEL_DROPDOWN, BACKGROUND_REMOVER_COLOR_WRAPPER])
+		processors_checkbox_group.change(remote_update, inputs = processors_checkbox_group, outputs = [ BACKGROUND_REMOVER_MODEL_DROPDOWN, BACKGROUND_REMOVER_COLOR_WRAPPER ])
 
 
 def remote_update(processors : List[str]) -> Tuple[gradio.Dropdown, gradio.Group]:
