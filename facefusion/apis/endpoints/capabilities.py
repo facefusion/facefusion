@@ -15,6 +15,6 @@ async def get_capabilities(request : Request) -> JSONResponse:
 			'image': facefusion.choices.image_formats,
 			'video': facefusion.choices.video_formats
 		},
-		'arguments': args_store.get_capabilities()
+		'arguments': args_store.get_api_set()
 	}
 	return JSONResponse(capabilities, status_code = HTTP_200_OK)
