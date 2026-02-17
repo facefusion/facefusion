@@ -420,10 +420,24 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		background_remover_model_action = group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = background_remover_choices.background_remover_models)
-		background_remover_color_action = group_processors.add_argument('--background-remover-color', help = translator.get('help.color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 0 0 0'), nargs = '+')
-		facefusion.args_store.register_argument(background_remover_model_action, scopes = [ 'api', 'cli' ])
-		facefusion.args_store.register_argument(background_remover_color_action, scopes = [ 'api', 'cli' ])
+		facefusion.args_store.register_arguments(
+			[
+				group_processors.add_argument(
+					'--background-remover-model',
+					help = translator.get('help.model', __package__),
+					default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'),
+					choices = background_remover_choices.background_remover_models
+				),
+				group_processors.add_argument(
+					'--background-remover-color',
+					help = translator.get('help.color', __package__),
+					type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range),
+					default = config.get_int_list('processors', 'background_remover_color', '0 0 0 0'),
+					nargs = '+'
+				)
+			],
+			scopes = [ 'api', 'cli' ]
+		)
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
