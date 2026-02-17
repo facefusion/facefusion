@@ -99,16 +99,12 @@ Resolution : TypeAlias = Tuple[int, int]
 
 Args : TypeAlias = Dict[str, Any]
 Scope : TypeAlias = Literal['api', 'cli', 'sys']
-ArgumentValue : TypeAlias = Dict[str, Any]
-ArgumentSet : TypeAlias = Dict[str, ArgumentValue]
-
 ArgsStore = TypedDict('ArgsStore',
 {
-	'api' : ArgumentSet,
-	'cli' : ArgumentSet,
-	'sys' : ArgumentSet
+	'api' : Args,
+	'cli' : Args,
+	'sys' : Args
 })
-
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
 UpdateProgress : TypeAlias = Callable[[int], None]

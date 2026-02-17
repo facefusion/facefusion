@@ -1,7 +1,7 @@
 from argparse import Action
 from typing import List
 
-from facefusion.types import Args, ArgsStore, ArgumentSet, Scope
+from facefusion.types import Args, ArgsStore, Scope
 
 
 ARGS_STORE : ArgsStore =\
@@ -12,15 +12,15 @@ ARGS_STORE : ArgsStore =\
 }
 
 
-def get_api_set() -> ArgumentSet:
+def get_api_set() -> Args:
 	return ARGS_STORE.get('api')
 
 
-def get_cli_set() -> ArgumentSet:
+def get_cli_set() -> Args:
 	return ARGS_STORE.get('cli')
 
 
-def get_sys_set() -> ArgumentSet:
+def get_sys_set() -> Args:
 	return ARGS_STORE.get('sys')
 
 
@@ -36,45 +36,37 @@ def get_sys_args() -> List[str]:
 	return list(get_cli_set().keys())
 
 
-def register_argument(action : Action, scopes : List[Scope]) -> None:
-	key = action.dest
-	value =\
-	{
-		'default': action.default
-	}
+def register_arguments(actions : List[Action], scopes : List[Scope]) -> None:
+	for action in actions:
+		value =\
+		{
+			'default': action.default
+		}
 
-	if action.choices:
-		value['choices'] = list(action.choices)
+		if action.choices:
+			value['choices'] = list(action.choices)
 
-	for scope in scopes:
-		if scope == 'api':
-			ARGS_STORE['api'][key] = value
-		if scope == 'cli':
-			ARGS_STORE['cli'][key] = value
-		if scope == 'sys':
-			ARGS_STORE['sys'][key] = value
+		for scope in scopes:
+			if scope == 'api':
+				ARGS_STORE['api'][action.dest] = value
+			if scope == 'cli':
+				ARGS_STORE['cli'][action.dest] = value
+			if scope == 'sys':
+				ARGS_STORE['sys'][action.dest] = value
 
 
 def filter_api_args(args : Args) -> Args:
 	api_args =\
 	{
-		key: args.get(key) for key in args if key in ARGS_STORE.get('api') #type:ignore[literal-required]
+		key: args.get(key) for key in args if key in get_api_set() #type:ignore[literal-required]
 	}
 	return api_args
-
-
-def filter_sys_args(args : Args) -> Args:
-	sys_args =\
-	{
-		key: args.get(key) for key in args if key in ARGS_STORE.get('sys') #type:ignore[literal-required]
-	}
-	return sys_args
 
 
 def filter_cli_args(args : Args) -> Args:
 	cli_args =\
 	{
-		key: args.get(key) for key in args if key in ARGS_STORE.get('cli') #type:ignore[literal-required]
+		key: args.get(key) for key in args if key in get_cli_args() #type:ignore[literal-required]
 	}
 	return cli_args
 
@@ -82,6 +74,14 @@ def filter_cli_args(args : Args) -> Args:
 def filter_step_args(args : Args) -> Args:
 	step_args =\
 	{
-		key: args.get(key) for key in args if key in ARGS_STORE.get('cli') and key not in ARGS_STORE.get('sys') #type:ignore[literal-required]
+		key: args.get(key) for key in args if key in get_cli_args() and key not in get_sys_set() #type:ignore[literal-required]
 	}
 	return step_args
+
+
+def filter_sys_args(args : Args) -> Args:
+	sys_args =\
+	{
+		key: args.get(key) for key in args if key in get_sys_set() #type:ignore[literal-required]
+	}
+	return sys_args

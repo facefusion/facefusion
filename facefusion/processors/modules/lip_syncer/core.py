@@ -132,10 +132,25 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		lip_syncer_model_action = group_processors.add_argument('--lip-syncer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'), choices = lip_syncer_choices.lip_syncer_models)
-		lip_syncer_weight_action = group_processors.add_argument('--lip-syncer-weight', help = translator.get('help.weight', __package__), type = float, default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'), choices = lip_syncer_choices.lip_syncer_weight_range, metavar = create_float_metavar(lip_syncer_choices.lip_syncer_weight_range))
-		facefusion.args_store.register_argument(lip_syncer_model_action, scopes = [ 'api', 'cli' ])
-		facefusion.args_store.register_argument(lip_syncer_weight_action, scopes = [ 'api', 'cli' ])
+		facefusion.args_store.register_arguments(
+			[
+				group_processors.add_argument(
+					'--lip-syncer-model',
+					help = translator.get('help.model', __package__),
+					default = config.get_str_value('processors', 'lip_syncer_model', 'wav2lip_gan_96'),
+					choices = lip_syncer_choices.lip_syncer_models
+				),
+				group_processors.add_argument(
+					'--lip-syncer-weight',
+					help = translator.get('help.weight', __package__),
+					type = float,
+					default = config.get_float_value('processors', 'lip_syncer_weight', '0.5'),
+					choices = lip_syncer_choices.lip_syncer_weight_range,
+					metavar = create_float_metavar(lip_syncer_choices.lip_syncer_weight_range)
+				)
+			],
+			scopes = [ 'api', 'cli' ]
+		)
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
