@@ -1,5 +1,5 @@
 from argparse import Action
-from typing import Dict, List
+from typing import List
 
 from facefusion.types import Args, ArgsStore, ArgumentValue, Scope
 
