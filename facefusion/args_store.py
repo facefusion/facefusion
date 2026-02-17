@@ -33,7 +33,7 @@ def get_cli_args() -> List[str]:
 
 
 def get_sys_args() -> List[str]:
-	return list(get_cli_set().keys())
+	return list(get_sys_set().keys())
 
 
 def register_arguments(actions : List[Action], scopes : List[Scope]) -> None:
