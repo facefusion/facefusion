@@ -1,7 +1,7 @@
 from argparse import Action
-from typing import Any, Dict, List
+from typing import Dict, List
 
-from facefusion.types import Args, ArgsStore, Scope
+from facefusion.types import Args, ArgsStore, ArgumentValue, Scope
 
 
 ARGS_STORE : ArgsStore =\
@@ -24,26 +24,27 @@ def get_cli_args() -> List[str]:
 	return list(ARGS_STORE.get('cli').keys())
 
 
-def get_capabilities() -> Dict[str, Any]:
+def get_capabilities() -> Dict[str, ArgumentValue]:
 	return ARGS_STORE.get('api')
 
 
 def register_argument(action : Action, scopes : List[Scope]) -> None:
 	key = action.dest
-	choices : Any = list(action.choices) if action.choices else None
-	entry =\
+	value =\
 	{
-		'default': action.default,
-		'choices': choices
+		'default': action.default
 	}
+
+	if action.choices:
+		value['choices'] = list(action.choices)
 
 	for scope in scopes:
 		if scope == 'api':
-			ARGS_STORE['api'][key] = entry
+			ARGS_STORE['api'][key] = value
 		if scope == 'cli':
-			ARGS_STORE['cli'][key] = entry
+			ARGS_STORE['cli'][key] = value
 		if scope == 'sys':
-			ARGS_STORE['sys'][key] = entry
+			ARGS_STORE['sys'][key] = value
 
 
 def filter_api_args(args : Args) -> Args:
