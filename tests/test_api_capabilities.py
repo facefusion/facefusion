@@ -11,8 +11,8 @@ from facefusion.apis.core import create_api
 @pytest.fixture(scope = 'module')
 def test_client() -> Iterator[TestClient]:
 	program = ArgumentParser()
-	source_paths_action = program.add_argument('--source-paths', nargs = '+', default = None)
-	target_path_action = program.add_argument('--target-path', default = None)
+	source_paths_action = program.add_argument('--source-paths', nargs = '+')
+	target_path_action = program.add_argument('--target-path')
 	output_format_action = program.add_argument('--output-format', default = 'mp4', choices = [ 'mp4', 'mkv', 'webm' ])
 	args_store.register_argument(source_paths_action, scopes = [ 'api' ])
 	args_store.register_argument(target_path_action, scopes = [ 'api' ])
