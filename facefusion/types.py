@@ -1,4 +1,3 @@
-import argparse
 from collections import namedtuple
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
@@ -100,7 +99,7 @@ Resolution : TypeAlias = Tuple[int, int]
 
 Choice : TypeAlias = Union[int | str]
 Scope : TypeAlias = Literal['api', 'cli', 'sys']
-Args : TypeAlias = argparse.Namespace
+Args : TypeAlias = Dict[str, Any]
 ArgumentSet = TypedDict('ArgumentSet',
 {
 	'default' : Any,
