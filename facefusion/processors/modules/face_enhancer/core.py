@@ -292,7 +292,7 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		facefusion.args_store.register_arguments(
+		facefusion.args_store.register_argument_set(
 			[
 				group_processors.add_argument(
 					'--face-enhancer-model',

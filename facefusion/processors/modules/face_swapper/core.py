@@ -513,7 +513,7 @@ def get_model_name() -> str:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		facefusion.args_store.register_arguments(
+		facefusion.args_store.register_argument_set(
 			[
 				group_processors.add_argument(
 					'--face-swapper-model',
@@ -526,7 +526,7 @@ def register_args(program : ArgumentParser) -> None:
 		)
 		known_args, _ = program.parse_known_args()
 		face_swapper_pixel_boost_choices = face_swapper_choices.face_swapper_set.get(known_args.face_swapper_model)
-		facefusion.args_store.register_arguments(
+		facefusion.args_store.register_argument_set(
 			[
 				group_processors.add_argument(
 					'--face-swapper-pixel-boost',

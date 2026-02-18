@@ -573,7 +573,7 @@ def get_frame_enhancer_model() -> str:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		facefusion.args_store.register_arguments(
+		facefusion.args_store.register_argument_set(
 			[
 				group_processors.add_argument(
 					'--frame-enhancer-model',

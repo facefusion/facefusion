@@ -24,7 +24,7 @@ def create_config_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_paths.add_argument(
 				'--config-path',
@@ -43,7 +43,7 @@ def create_workflow_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_paths.add_argument(
 				'--workflow',
@@ -62,7 +62,7 @@ def create_temp_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_paths.add_argument(
 				'--temp-path',
@@ -80,7 +80,7 @@ def create_jobs_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_paths.add_argument(
 				'--jobs-path',
@@ -98,7 +98,7 @@ def create_source_paths_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_paths.add_argument(
 				'-s', '--source-paths',
@@ -117,7 +117,7 @@ def create_target_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_paths.add_argument(
 				'-t', '--target-path',
@@ -135,7 +135,7 @@ def create_output_path_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_paths = program.add_argument_group('paths')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_paths.add_argument(
 				'-o', '--output-path',
@@ -153,7 +153,7 @@ def create_source_pattern_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_patterns = program.add_argument_group('patterns')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_patterns.add_argument(
 				'-s', '--source-pattern',
@@ -171,7 +171,7 @@ def create_target_pattern_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_patterns = program.add_argument_group('patterns')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_patterns.add_argument(
 				'-t', '--target-pattern',
@@ -189,7 +189,7 @@ def create_output_pattern_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_patterns = program.add_argument_group('patterns')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_patterns.add_argument(
 				'-o', '--output-pattern',
@@ -207,7 +207,7 @@ def create_face_detector_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_detector = program.add_argument_group('face detector')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_detector.add_argument(
 				'--face-detector-model',
@@ -222,7 +222,7 @@ def create_face_detector_program() -> ArgumentParser:
 	known_args, _ = program.parse_known_args()
 	face_detector_size_choices = facefusion.choices.face_detector_set.get(known_args.face_detector_model)
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_detector.add_argument(
 				'--face-detector-size',
@@ -233,7 +233,7 @@ def create_face_detector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_detector.add_argument(
 				'--face-detector-margin',
@@ -245,7 +245,7 @@ def create_face_detector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_detector.add_argument(
 				'--face-detector-angles',
@@ -259,7 +259,7 @@ def create_face_detector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_detector.add_argument(
 				'--face-detector-score',
@@ -280,7 +280,7 @@ def create_face_landmarker_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_landmarker = program.add_argument_group('face landmarker')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_landmarker.add_argument(
 				'--face-landmarker-model',
@@ -291,7 +291,7 @@ def create_face_landmarker_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_landmarker.add_argument(
 				'--face-landmarker-score',
@@ -312,7 +312,7 @@ def create_face_selector_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_selector = program.add_argument_group('face selector')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_selector.add_argument(
 				'--face-selector-mode',
@@ -323,7 +323,7 @@ def create_face_selector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_selector.add_argument(
 				'--face-selector-order',
@@ -334,7 +334,7 @@ def create_face_selector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_selector.add_argument(
 				'--face-selector-age-start',
@@ -347,7 +347,7 @@ def create_face_selector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_selector.add_argument(
 				'--face-selector-age-end',
@@ -360,7 +360,7 @@ def create_face_selector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_selector.add_argument(
 				'--face-selector-gender',
@@ -371,7 +371,7 @@ def create_face_selector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_selector.add_argument(
 				'--face-selector-race',
@@ -382,7 +382,7 @@ def create_face_selector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_selector.add_argument(
 				'--reference-face-position',
@@ -393,7 +393,7 @@ def create_face_selector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_selector.add_argument(
 				'--reference-face-distance',
@@ -406,7 +406,7 @@ def create_face_selector_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_selector.add_argument(
 				'--reference-frame-number',
@@ -425,7 +425,7 @@ def create_face_masker_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_face_masker = program.add_argument_group('face masker')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_masker.add_argument(
 				'--face-occluder-model',
@@ -436,7 +436,7 @@ def create_face_masker_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_masker.add_argument(
 				'--face-parser-model',
@@ -447,7 +447,7 @@ def create_face_masker_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_masker.add_argument(
 				'--face-mask-types',
@@ -460,7 +460,7 @@ def create_face_masker_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_masker.add_argument(
 				'--face-mask-areas',
@@ -473,7 +473,7 @@ def create_face_masker_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_masker.add_argument(
 				'--face-mask-regions',
@@ -486,7 +486,7 @@ def create_face_masker_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_masker.add_argument(
 				'--face-mask-blur',
@@ -499,7 +499,7 @@ def create_face_masker_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_face_masker.add_argument(
 				'--face-mask-padding',
@@ -519,7 +519,7 @@ def create_voice_extractor_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_voice_extractor = program.add_argument_group('voice extractor')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_voice_extractor.add_argument(
 				'--voice-extractor-model',
@@ -538,7 +538,7 @@ def create_frame_extraction_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_frame_extraction = program.add_argument_group('frame extraction')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_frame_extraction.add_argument(
 				'--trim-frame-start',
@@ -549,7 +549,7 @@ def create_frame_extraction_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_frame_extraction.add_argument(
 				'--trim-frame-end',
@@ -560,7 +560,7 @@ def create_frame_extraction_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_frame_extraction.add_argument(
 				'--temp-frame-format',
@@ -580,7 +580,7 @@ def create_output_creation_program() -> ArgumentParser:
 	available_encoder_set = get_available_encoder_set()
 	group_output_creation = program.add_argument_group('output creation')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_output_creation.add_argument(
 				'--output-image-quality',
@@ -593,7 +593,7 @@ def create_output_creation_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_output_creation.add_argument(
 				'--output-image-scale',
@@ -605,7 +605,7 @@ def create_output_creation_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_output_creation.add_argument(
 				'--output-audio-encoder',
@@ -616,7 +616,7 @@ def create_output_creation_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_output_creation.add_argument(
 				'--output-audio-quality',
@@ -629,7 +629,7 @@ def create_output_creation_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_output_creation.add_argument(
 				'--output-audio-volume',
@@ -642,7 +642,7 @@ def create_output_creation_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_output_creation.add_argument(
 				'--output-video-encoder',
@@ -653,7 +653,7 @@ def create_output_creation_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_output_creation.add_argument(
 				'--output-video-preset',
@@ -664,7 +664,7 @@ def create_output_creation_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_output_creation.add_argument(
 				'--output-video-quality',
@@ -677,7 +677,7 @@ def create_output_creation_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_output_creation.add_argument(
 				'--output-video-scale',
@@ -689,7 +689,7 @@ def create_output_creation_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_output_creation.add_argument(
 				'--output-video-fps',
@@ -709,7 +709,7 @@ def create_processors_program() -> ArgumentParser:
 	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	group_processors = program.add_argument_group('processors')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_processors.add_argument(
 				'--processors',
@@ -732,7 +732,7 @@ def create_download_providers_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_download = program.add_argument_group('download')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_download.add_argument(
 				'--download-providers',
@@ -753,7 +753,7 @@ def create_download_scope_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_download = program.add_argument_group('download')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_download.add_argument(
 				'--download-scope',
@@ -820,7 +820,7 @@ def create_execution_program() -> ArgumentParser:
 	available_execution_providers = get_available_execution_providers()
 	group_execution = program.add_argument_group('execution')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_execution.add_argument(
 				'--execution-device-ids',
@@ -833,7 +833,7 @@ def create_execution_program() -> ArgumentParser:
 		],
 		scopes = [ 'cli', 'sys' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_execution.add_argument(
 				'--execution-providers',
@@ -846,7 +846,7 @@ def create_execution_program() -> ArgumentParser:
 		],
 		scopes = [ 'cli', 'sys' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_execution.add_argument(
 				'--execution-thread-count',
@@ -867,7 +867,7 @@ def create_memory_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_memory = program.add_argument_group('memory')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_memory.add_argument(
 				'--video-memory-strategy',
@@ -886,7 +886,7 @@ def create_log_level_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_misc.add_argument(
 				'--log-level',
@@ -905,7 +905,7 @@ def create_halt_on_error_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	group_misc = program.add_argument_group('misc')
 
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			group_misc.add_argument(
 				'--halt-on-error',
