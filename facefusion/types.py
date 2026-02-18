@@ -1,6 +1,7 @@
+import argparse
 from collections import namedtuple
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict, NotRequired, Union
 
 import cv2
 import numpy
@@ -97,13 +98,19 @@ Margin : TypeAlias = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
-Args : TypeAlias = Dict[str, Any]
+Choice : TypeAlias = Union[int | str]
 Scope : TypeAlias = Literal['api', 'cli', 'sys']
-ArgsStore = TypedDict('ArgsStore',
+Args : TypeAlias = argparse.Namespace
+ArgumentSet = TypedDict('ArgumentSet',
 {
-	'api' : Args,
-	'cli' : Args,
-	'sys' : Args
+	'default' : Any,
+	'choices' : NotRequired[List[Choice]]
+})
+ArgumentStore = TypedDict('ArgumentStore',
+{
+	'api' : ArgumentSet,
+	'cli' : ArgumentSet,
+	'sys' : ArgumentSet
 })
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
