@@ -57,7 +57,7 @@ def register_argument_set(actions : List[Action], scopes : List[Scope]) -> None:
 def filter_api_args(state : State) -> Args:
 	api_args =\
 	{
-		key: state.get(key) for key in state if key in get_api_argument_set()
+		key: state.get(key) for key in state if key in get_api_arguments()
 	}
 	return api_args
 
@@ -73,7 +73,7 @@ def filter_cli_args(state : State) -> Args:
 def filter_step_args(args : Args) -> Args:
 	step_args =\
 	{
-		key: args.get(key) for key in args if key in get_cli_arguments() and key not in get_sys_argument_set()
+		key: args.get(key) for key in args if key in get_cli_arguments() and key not in get_sys_arguments()
 	}
 	return step_args
 
@@ -81,6 +81,6 @@ def filter_step_args(args : Args) -> Args:
 def filter_sys_args(state : State) -> Args:
 	sys_args =\
 	{
-		key: state.get(key) for key in state if key in get_sys_argument_set()
+		key: state.get(key) for key in state if key in get_sys_arguments()
 	}
 	return sys_args
