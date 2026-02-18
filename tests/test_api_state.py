@@ -25,7 +25,7 @@ def before_all() -> None:
 @pytest.fixture(scope = 'module')
 def test_client() -> Iterator[TestClient]:
 	program = ArgumentParser()
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			program.add_argument(
 				'--source-paths',
@@ -34,7 +34,7 @@ def test_client() -> Iterator[TestClient]:
 		],
 		scopes = [ 'api' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			program.add_argument(
 				'--target-path'
@@ -42,7 +42,7 @@ def test_client() -> Iterator[TestClient]:
 		],
 		scopes = [ 'api' ]
 	)
-	args_store.register_arguments(
+	args_store.register_argument_set(
 		[
 			program.add_argument(
 				'--execution-providers',

@@ -1,6 +1,6 @@
 from collections import namedtuple
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict
+from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
 
 import cv2
 import numpy
@@ -97,13 +97,19 @@ Margin : TypeAlias = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
-Args : TypeAlias = Dict[str, Any]
+Choice : TypeAlias = Union[int | str]
 Scope : TypeAlias = Literal['api', 'cli', 'sys']
-ArgsStore = TypedDict('ArgsStore',
+Args : TypeAlias = Dict[str, Any]
+ArgumentSet = TypedDict('ArgumentSet',
 {
-	'api' : Args,
-	'cli' : Args,
-	'sys' : Args
+	'default' : Any,
+	'choices' : NotRequired[List[Choice]]
+})
+ArgumentStore = TypedDict('ArgumentStore',
+{
+	'api' : Dict[str, ArgumentSet],
+	'cli' : Dict[str, ArgumentSet],
+	'sys' : Dict[str, ArgumentSet]
 })
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']

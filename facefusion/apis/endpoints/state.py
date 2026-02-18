@@ -23,7 +23,7 @@ async def set_state(request : Request) -> JSONResponse:
 		return await select_target(request)
 
 	body = await request.json()
-	api_args = args_store.get_api_args()
+	api_args = args_store.get_api_arguments()
 
 	for key, value in body.items():
 		if key in api_args:
