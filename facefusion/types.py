@@ -107,9 +107,9 @@ ArgumentSet = TypedDict('ArgumentSet',
 })
 ArgumentStore = TypedDict('ArgumentStore',
 {
-	'api' : ArgumentSet,
-	'cli' : ArgumentSet,
-	'sys' : ArgumentSet
+	'api' : Dict[str, ArgumentSet],
+	'cli' : Dict[str, ArgumentSet],
+	'sys' : Dict[str, ArgumentSet]
 })
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']

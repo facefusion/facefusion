@@ -8,7 +8,7 @@ from facefusion.apis.endpoints.session import extract_access_token
 
 
 async def get_state(request : Request) -> JSONResponse:
-	api_args = args_store.filter_api_args(state_manager.get_state())
+	api_args = args_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
 	return JSONResponse(state_manager.collect_state(api_args), status_code = HTTP_200_OK)
 
 

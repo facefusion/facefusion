@@ -1,5 +1,5 @@
 from argparse import Action
-from typing import List
+from typing import Dict, List
 
 from facefusion.types import Args, ArgumentSet, ArgumentStore, Scope, State
 
@@ -11,15 +11,15 @@ ARGUMENT_STORE : ArgumentStore =\
 }
 
 
-def get_api_argument_set() -> ArgumentSet:
+def get_api_argument_set() -> Dict[str, ArgumentSet]:
 	return ARGUMENT_STORE.get('api')
 
 
-def get_cli_argument_set() -> ArgumentSet:
+def get_cli_argument_set() -> Dict[str, ArgumentSet]:
 	return ARGUMENT_STORE.get('cli')
 
 
-def get_sys_argument_set() -> ArgumentSet:
+def get_sys_argument_set() -> Dict[str, ArgumentSet]:
 	return ARGUMENT_STORE.get('sys')
 
 
@@ -37,7 +37,7 @@ def get_sys_arguments() -> List[str]:
 
 def register_argument_set(actions : List[Action], scopes : List[Scope]) -> None:
 	for action in actions:
-		value =\
+		value : ArgumentSet =\
 		{
 			'default': action.default
 		}
