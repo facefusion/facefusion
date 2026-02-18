@@ -1,7 +1,7 @@
 from argparse import Action
 from typing import List
 
-from facefusion.types import ArgumentSet, ArgumentStore, Scope, State
+from facefusion.types import Args, ArgumentSet, ArgumentStore, Scope, State
 
 ARGUMENT_STORE : ArgumentStore =\
 {
@@ -54,33 +54,33 @@ def register_argument_set(actions : List[Action], scopes : List[Scope]) -> None:
 				ARGUMENT_STORE['sys'][action.dest] = value
 
 
-def filter_api_argument_set(state : State) -> ArgumentSet:
-	api_argument_set =\
+def filter_api_args(state : State) -> Args:
+	api_args =\
 	{
 		key: state.get(key) for key in state if key in get_api_argument_set()
 	}
-	return api_argument_set
+	return api_args
 
 
-def filter_cli_argument_set(state : State) -> ArgumentSet:
-	cli_argument_set =\
+def filter_cli_args(state : State) -> Args:
+	cli_args =\
 	{
 		key: state.get(key) for key in state if key in get_cli_arguments()
 	}
-	return cli_argument_set
+	return cli_args
 
 
-def filter_step_argument_set(state : State) -> ArgumentSet:
-	step_argument_set =\
+def filter_step_args(args : Args) -> Args:
+	step_args =\
 	{
-		key: state.get(key) for key in state if key in get_cli_arguments() and key not in get_sys_argument_set()
+		key: args.get(key) for key in args if key in get_cli_arguments() and key not in get_sys_argument_set()
 	}
-	return step_argument_set
+	return step_args
 
 
-def filter_sys_argument_set(state : State) -> ArgumentSet:
-	sys_argument_set =\
+def filter_sys_args(state : State) -> Args:
+	sys_args =\
 	{
 		key: state.get(key) for key in state if key in get_sys_argument_set()
 	}
-	return sys_argument_set
+	return sys_args

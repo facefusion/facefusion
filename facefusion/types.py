@@ -1,7 +1,7 @@
 import argparse
 from collections import namedtuple
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, TypeAlias, TypedDict, NotRequired, Union
+from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
 
 import cv2
 import numpy
