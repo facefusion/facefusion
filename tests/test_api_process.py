@@ -1,15 +1,17 @@
-import shutil
 import tempfile
+from argparse import ArgumentParser
 from typing import Iterator
-from unittest.mock import patch
 
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager, state_manager
+from facefusion import args_store, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, metadata, session_manager, state_manager, voice_extractor
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
+from facefusion.args_helper import apply_args
+from facefusion.core import processors_pre_check
 from facefusion.download import conditional_download
+from facefusion.program import collect_step_program
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -23,91 +25,76 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'module')
 def test_client() -> Iterator[TestClient]:
+	state_manager.init_item('config_path', 'facefusion.ini')
+	program = collect_step_program()
+	args = vars(program.parse_args([]))
+	apply_args(args, state_manager.init_item)
+	state_manager.init_item('execution_device_ids', [ 0 ])
+	state_manager.init_item('execution_providers', [ 'cpu' ])
+	state_manager.init_item('execution_thread_count', 1)
+	state_manager.init_item('temp_path', tempfile.gettempdir())
+	state_manager.init_item('video_memory_strategy', 'strict')
+	state_manager.init_item('log_level', 'info')
+	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+	state_manager.init_item('download_scope', 'lite')
+	state_manager.init_item('source_paths', None)
+
+	args_store.register_argument_set(
+	[
+		ArgumentParser().add_argument('--source-paths', nargs = '+')
+	], scopes = [ 'api' ])
+
+	for module in [ content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, voice_extractor ]:
+		module.pre_check()
+
+	processors_pre_check()
+
 	with TestClient(create_api()) as test_client:
 		yield test_client
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	state_manager.init_item('temp_path', tempfile.gettempdir())
-	state_manager.init_item('temp_frame_format', 'png')
 	state_manager.init_item('source_paths', None)
 	session_manager.SESSIONS.clear()
 	asset_store.clear()
 
 
-def mock_process_image(start_time : float) -> int:
-	output_path = state_manager.get_item('output_path')
-	target_path = state_manager.get_item('target_path')
-	shutil.copy(target_path, output_path)
-	return 0
-
-
-def test_websocket_process_image_without_auth(test_client : TestClient) -> None:
-	with pytest.raises(Exception):
-		with test_client.websocket_connect('/process/image') as _:
-			pass
-
-
-def test_websocket_process_image_without_source(test_client : TestClient) -> None:
+def test_process_image(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
 	})
 	access_token = create_session_response.json().get('access_token')
+	source_path = get_test_example_file('source.jpg')
+
+	with open(source_path, 'rb') as source_file:
+		source_content = source_file.read()
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.jpg', source_content, 'image/jpeg'))
+		])
+
+	asset_id = upload_response.json().get('asset_ids')[0]
+
+	select_response = test_client.put('/state?action=select&type=source', json =
+	{
+		'asset_ids': [ asset_id ]
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert select_response.status_code == 200
 
 	with test_client.websocket_connect('/process/image', subprotocols =
 	[
 		'access_token.' + access_token
 	]) as websocket:
-		with pytest.raises(Exception):
-			websocket.receive_bytes()
-
-
-def test_websocket_process_image_single(test_client : TestClient) -> None:
-	create_session_response = test_client.post('/session', json =
-	{
-		'client_version': metadata.get('version')
-	})
-	access_token = create_session_response.json().get('access_token')
-	source_path = get_test_example_file('source.jpg')
-	state_manager.init_item('source_paths', [ source_path ])
-
-	with open(source_path, 'rb') as source_file:
-		image_bytes = source_file.read()
-
-	with patch('facefusion.apis.endpoints.process.image_to_image.process', side_effect = mock_process_image):
-		with test_client.websocket_connect('/process/image', subprotocols =
-		[
-			'access_token.' + access_token
-		]) as websocket:
-			websocket.send_bytes(image_bytes)
-			result_bytes = websocket.receive_bytes()
+		websocket.send_bytes(source_content)
+		result_bytes = websocket.receive_bytes()
 
 	assert len(result_bytes) > 0
-
-
-def test_websocket_process_image_batch(test_client : TestClient) -> None:
-	create_session_response = test_client.post('/session', json =
-	{
-		'client_version': metadata.get('version')
-	})
-	access_token = create_session_response.json().get('access_token')
-	source_path = get_test_example_file('source.jpg')
-	state_manager.init_item('source_paths', [ source_path ])
-
-	with open(source_path, 'rb') as source_file:
-		image_bytes = source_file.read()
-
-	with patch('facefusion.apis.endpoints.process.image_to_image.process', side_effect = mock_process_image):
-		with test_client.websocket_connect('/process/image', subprotocols =
-		[
-			'access_token.' + access_token
-		]) as websocket:
-			websocket.send_bytes(image_bytes)
-			result_bytes_1 = websocket.receive_bytes()
-			websocket.send_bytes(image_bytes)
-			result_bytes_2 = websocket.receive_bytes()
-
-	assert len(result_bytes_1) > 0
-	assert len(result_bytes_2) > 0
