@@ -38,6 +38,8 @@ def test_client() -> Iterator[TestClient]:
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 	state_manager.init_item('download_scope', 'lite')
 	state_manager.init_item('source_paths', None)
+	state_manager.init_item('processors', [ 'face_swapper' ])
+	state_manager.init_item('face_selector_mode', 'many')
 
 	args_store.register_argument_set(
 	[
