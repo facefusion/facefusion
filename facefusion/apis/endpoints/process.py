@@ -3,7 +3,7 @@ import uuid
 from time import time
 from typing import Optional
 
-from starlette.websockets import WebSocket
+from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from facefusion import ffmpeg, process_manager, session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
@@ -74,7 +74,7 @@ async def websocket_process_image(websocket : WebSocket) -> None:
 
 						remove_file(output_path)
 
-		except Exception:
+		except (WebSocketDisconnect, OSError):
 			pass
 		return
 
