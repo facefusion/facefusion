@@ -1,15 +1,15 @@
 import tempfile
-from argparse import ArgumentParser
 from typing import Iterator
 
+import cv2
+import numpy
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import args_store, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, metadata, session_manager, state_manager, voice_extractor
+from facefusion import metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.args_helper import apply_args
-from facefusion.core import processors_pre_check
 from facefusion.download import conditional_download
 from facefusion.program import collect_step_program
 from .helper import get_test_example_file, get_test_examples_directory
@@ -31,25 +31,9 @@ def test_client() -> Iterator[TestClient]:
 	apply_args(args, state_manager.init_item)
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
-	state_manager.init_item('execution_thread_count', 1)
 	state_manager.init_item('temp_path', tempfile.gettempdir())
-	state_manager.init_item('video_memory_strategy', 'strict')
-	state_manager.init_item('log_level', 'info')
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
-	state_manager.init_item('download_scope', 'lite')
-	state_manager.init_item('source_paths', None)
-	state_manager.init_item('processors', [ 'face_swapper' ])
 	state_manager.init_item('face_selector_mode', 'many')
-
-	args_store.register_argument_set(
-	[
-		ArgumentParser().add_argument('--source-paths', nargs = '+')
-	], scopes = [ 'api' ])
-
-	for module in [ content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, voice_extractor ]:
-		module.pre_check()
-
-	processors_pre_check()
 
 	with TestClient(create_api()) as test_client:
 		yield test_client
@@ -97,6 +81,7 @@ def test_process_image(test_client : TestClient) -> None:
 		'access_token.' + access_token
 	]) as websocket:
 		websocket.send_bytes(source_content)
-		result_bytes = websocket.receive_bytes()
+		output_bytes = websocket.receive_bytes()
+		output_vision_frame = cv2.imdecode(numpy.frombuffer(output_bytes, numpy.uint8), cv2.IMREAD_COLOR)
 
-	assert len(result_bytes) > 0
+	assert output_vision_frame.shape == (1024, 1024, 3)
