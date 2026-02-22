@@ -6,12 +6,12 @@ import numpy
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager, state_manager
+from facefusion import face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.args_helper import apply_args
-from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
+from facefusion.processors.core import get_processors_modules
 from facefusion.program import collect_step_program
 from .helper import get_test_example_file, get_test_examples_directory
 
@@ -35,8 +35,14 @@ def test_client() -> Iterator[TestClient]:
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 	state_manager.init_item('face_selector_mode', 'many')
-	common_pre_check()
-	processors_pre_check()
+	face_classifier.pre_check()
+	face_detector.pre_check()
+	face_landmarker.pre_check()
+	face_masker.pre_check()
+	face_recognizer.pre_check()
+
+	for processor_module in get_processors_modules(state_manager.get_item('processors')):
+		processor_module.pre_check()
 
 	with TestClient(create_api()) as test_client:
 		yield test_client
