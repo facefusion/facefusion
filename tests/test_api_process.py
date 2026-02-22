@@ -6,13 +6,11 @@ import numpy
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, metadata, session_manager, state_manager
+from facefusion import face_classifier, face_detector, face_landmarker, face_recognizer, metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
-from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download
 from facefusion.processors.core import get_processors_modules
-from facefusion.program import collect_step_program
 from .helper import get_test_example_file, get_test_examples_directory
 
 
@@ -26,19 +24,29 @@ def before_all() -> None:
 
 @pytest.fixture(scope = 'module')
 def test_client() -> Iterator[TestClient]:
-	state_manager.init_item('config_path', 'facefusion.ini')
-	program = collect_step_program()
-	args = vars(program.parse_args([]))
-	apply_args(args, state_manager.init_item)
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
-	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+	state_manager.init_item('temp_path', tempfile.gettempdir())
+	state_manager.init_item('processors', [ 'face_swapper' ])
 	state_manager.init_item('face_selector_mode', 'many')
+	state_manager.init_item('face_detector_model', 'yolo_face')
+	state_manager.init_item('face_detector_size', '640x640')
+	state_manager.init_item('face_detector_score', 0.5)
+	state_manager.init_item('face_detector_angles', [ 0 ])
+	state_manager.init_item('face_detector_margin', [ 0, 0, 0, 0 ])
+	state_manager.init_item('face_landmarker_model', '2dfan4')
+	state_manager.init_item('face_landmarker_score', 0.5)
+	state_manager.init_item('face_mask_types', [ 'box' ])
+	state_manager.init_item('face_mask_blur', 0.3)
+	state_manager.init_item('face_mask_padding', [ 0, 0, 0, 0 ])
+	state_manager.init_item('face_swapper_model', 'hyperswap_1a_256')
+	state_manager.init_item('face_swapper_pixel_boost', '256x256')
+	state_manager.init_item('face_swapper_weight', 0.5)
+
 	face_classifier.pre_check()
 	face_detector.pre_check()
 	face_landmarker.pre_check()
-	face_masker.pre_check()
 	face_recognizer.pre_check()
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
