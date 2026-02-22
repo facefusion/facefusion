@@ -20,19 +20,18 @@ async def websocket_process_image(websocket : WebSocket) -> None:
 
 	if source_paths:
 		try:
-			while True:
-				image_bytes = await websocket.receive_bytes()
-				target_vision_frame = cv2.imdecode(numpy.frombuffer(image_bytes, numpy.uint8), cv2.IMREAD_COLOR)
+			image_bytes = await websocket.receive_bytes()
+			target_vision_frame = cv2.imdecode(numpy.frombuffer(image_bytes, numpy.uint8), cv2.IMREAD_COLOR)
 
-				if numpy.any(target_vision_frame):
-					temp_vision_frame = process_stream_frame(target_vision_frame)
-					is_success, output_vision_frame = cv2.imencode('.jpg', temp_vision_frame)
+			if numpy.any(target_vision_frame):
+				temp_vision_frame = process_stream_frame(target_vision_frame)
+				is_success, output_vision_frame = cv2.imencode('.jpg', temp_vision_frame)
 
-					if is_success:
-						await websocket.send_bytes(output_vision_frame.tobytes())
+				if is_success:
+					await websocket.send_bytes(output_vision_frame.tobytes())
 
 		except (WebSocketDisconnect, OSError):
 			pass
 		return
 
-	await websocket.close(code = 1008)
+	await websocket.close()
