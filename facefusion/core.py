@@ -54,6 +54,9 @@ def route(args : Args) -> None:
 		benchmarker.render()
 
 	if state_manager.get_item('command') == 'api':
+		if not common_pre_check() or not processors_pre_check():
+			hard_exit(2)
+
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
 		uvicorn.run(create_api(), host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port'))
 		hard_exit(1)

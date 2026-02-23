@@ -9,6 +9,7 @@ from starlette.testclient import TestClient
 from facefusion import metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
+from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
 from .helper import get_test_example_file, get_test_examples_directory
 
@@ -42,6 +43,9 @@ def test_client() -> Iterator[TestClient]:
 	state_manager.init_item('face_swapper_model', 'hyperswap_1a_256')
 	state_manager.init_item('face_swapper_pixel_boost', '256x256')
 	state_manager.init_item('face_swapper_weight', 0.5)
+
+	common_pre_check()
+	processors_pre_check()
 
 	with TestClient(create_api()) as test_client:
 		yield test_client
