@@ -1,5 +1,4 @@
 import pytest
-from pytest import approx
 
 from facefusion.apis.asset_helper import detect_media_type, extract_audio_metadata, extract_image_metadata, extract_video_metadata
 from facefusion.download import conditional_download
@@ -31,7 +30,7 @@ def test_extract_image_metadata() -> None:
 def test_extract_video_metadata() -> None:
 	metadata = extract_video_metadata(get_test_example_file('target-240p.mp4'))
 
-	assert metadata.get('duration') == approx(10.8, rel = 1e-3)
+	assert metadata.get('duration') == 10.8
 	assert metadata.get('frame_total') == 270
 	assert metadata.get('fps') == 25.0
 	assert metadata.get('resolution') == (426, 226)
@@ -40,6 +39,6 @@ def test_extract_video_metadata() -> None:
 def test_extract_audio_metadata() -> None:
 	metadata = extract_audio_metadata(get_test_example_file('source.mp3'))
 
-	assert metadata.get('duration') == approx(3.788, rel = 1e-3)
+	assert metadata.get('duration') == 3.7877708333333335
 	assert metadata.get('sample_rate') == 44100
 	assert metadata.get('channels') == 1
