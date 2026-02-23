@@ -16,6 +16,7 @@ def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
 
@@ -76,6 +77,24 @@ def test_upload_asset(test_client : TestClient) -> None:
 	assert asset.get('type') == 'source'
 	assert asset.get('format') == 'mp4'
 
+	assert upload_response.status_code == 201
+
+	audio_path = get_test_example_file('source.mp3')
+
+	with open(audio_path, 'rb') as audio_file:
+		audio_content = audio_file.read()
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.mp3', audio_content, 'audio/mpeg'))
+		])
+	upload_body = upload_response.json()
+	asset = asset_store.get_asset(session_id, upload_body.get('asset_ids')[0])
+
+	assert asset.get('media') == 'audio'
+	assert asset.get('type') == 'source'
 	assert upload_response.status_code == 201
 
 	upload_response = test_client.post('/assets?type=invalid', headers =
