@@ -1,5 +1,5 @@
 import os
-from typing import Any, Union
+from typing import Union
 
 from facefusion.app_context import detect_app_context
 from facefusion.processors.types import ProcessorState, ProcessorStateKey, ProcessorStateSet

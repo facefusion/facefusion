@@ -1,4 +1,4 @@
-from typing import Any, Dict, Literal, Tuple, TypeAlias
+from typing import Any, Dict, Tuple, TypeAlias
 
 from numpy.typing import NDArray
 
