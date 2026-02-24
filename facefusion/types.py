@@ -97,19 +97,21 @@ Margin : TypeAlias = Tuple[int, int, int, int]
 Orientation = Literal['landscape', 'portrait']
 Resolution : TypeAlias = Tuple[int, int]
 
+Args : TypeAlias = Dict[str, Any]
+
 Choice : TypeAlias = Union[int | str]
 Scope : TypeAlias = Literal['api', 'cli', 'sys']
-Args : TypeAlias = Dict[str, Any]
-ArgumentSet = TypedDict('ArgumentSet',
+
+CapabilitySet = TypedDict('CapabilitySet',
 {
 	'default' : Any,
 	'choices' : NotRequired[List[Choice]]
 })
-ArgumentStore = TypedDict('ArgumentStore',
+CapabilityStore = TypedDict('CapabilityStore',
 {
-	'api' : Dict[str, ArgumentSet],
-	'cli' : Dict[str, ArgumentSet],
-	'sys' : Dict[str, ArgumentSet]
+	'api' : Dict[str, CapabilitySet],
+	'cli' : Dict[str, CapabilitySet],
+	'sys' : Dict[str, CapabilitySet]
 })
 
 ProcessState = Literal['checking', 'processing', 'stopping', 'pending']
