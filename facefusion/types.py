@@ -378,6 +378,7 @@ StateValue : TypeAlias = Any
 StateKey = Literal\
 [
 	'command',
+	'workflow',
 	'config_path',
 	'temp_path',
 	'jobs_path',
@@ -438,6 +439,7 @@ StateKey = Literal\
 	'log_level',
 	'halt_on_error',
 	'api_host',
+	'api_port',
 	'api_key',
 	'job_id',
 	'job_status',
@@ -446,6 +448,7 @@ StateKey = Literal\
 State = TypedDict('State',
 {
 	'command' : str,
+	'workflow' : WorkFlow,
 	'config_path' : str,
 	'temp_path' : str,
 	'jobs_path' : str,
@@ -506,6 +509,7 @@ State = TypedDict('State',
 	'log_level' : LogLevel,
 	'halt_on_error' : bool,
 	'api_host' : str,
+	'api_port' : int,
 	'api_key' : str,
 	'job_id' : str,
 	'job_status' : JobStatus,
