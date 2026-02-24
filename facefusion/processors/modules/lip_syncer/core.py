@@ -17,10 +17,10 @@ from facefusion.face_selector import select_faces
 from facefusion.filesystem import has_audio, resolve_relative_path
 from facefusion.processors.modules.lip_syncer import choices as lip_syncer_choices
 from facefusion.processors.modules.lip_syncer.types import LipSyncerInputs, LipSyncerWeight
-from facefusion.processors.types import ProcessorOutputs
+from facefusion.processors.types import ApplyStateItem, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import Args, AudioFrame, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple, TypeAlias
+from typing import Any, Callable, Dict, Tuple, TypeAlias
 
 from numpy.typing import NDArray
 
@@ -18,5 +18,7 @@ ProcessorStateValue : TypeAlias = Any
 ProcessorStateKey : TypeAlias = str
 ProcessorState : TypeAlias = Dict[ProcessorStateKey, ProcessorStateValue]
 ProcessorStateSet : TypeAlias = Dict[AppContext, ProcessorState]
+
+ApplyStateItem : TypeAlias = Callable[[ProcessorStateKey, ProcessorStateValue], None]
 
 ProcessorOutputs : TypeAlias = Tuple[VisionFrame, Mask]

@@ -15,11 +15,11 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.normalizer import normalize_color
 from facefusion.processors.modules.background_remover import choices as background_remover_choices
 from facefusion.processors.modules.background_remover.types import BackgroundRemoverInputs
-from facefusion.processors.types import ProcessorOutputs
+from facefusion.processors.types import ApplyStateItem, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.sanitizer import sanitize_int_range
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import Args, DownloadScope, ExecutionProvider, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
 
