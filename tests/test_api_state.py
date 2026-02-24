@@ -5,7 +5,7 @@ from typing import Iterator
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import args_store, metadata, session_manager, state_manager
+from facefusion import capability_store, metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
@@ -25,7 +25,7 @@ def before_all() -> None:
 @pytest.fixture(scope = 'module')
 def test_client() -> Iterator[TestClient]:
 	program = ArgumentParser()
-	args_store.register_argument_set(
+	capability_store.register_capability_set(
 		[
 			program.add_argument(
 				'--source-paths',
@@ -34,7 +34,7 @@ def test_client() -> Iterator[TestClient]:
 		],
 		scopes = [ 'api' ]
 	)
-	args_store.register_argument_set(
+	capability_store.register_capability_set(
 		[
 			program.add_argument(
 				'--target-path'
@@ -42,7 +42,7 @@ def test_client() -> Iterator[TestClient]:
 		],
 		scopes = [ 'api' ]
 	)
-	args_store.register_argument_set(
+	capability_store.register_capability_set(
 		[
 			program.add_argument(
 				'--execution-providers',

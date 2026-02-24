@@ -5,7 +5,7 @@ from typing import Tuple
 import cv2
 import numpy
 
-import facefusion.args_store
+import facefusion.capability_store
 import facefusion.jobs.job_manager
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
 from facefusion.common_helper import create_int_metavar
@@ -99,7 +99,7 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		facefusion.args_store.register_argument_set(
+		facefusion.capability_store.register_capability_set(
 			[
 				group_processors.add_argument(
 					'--expression-restorer-model',

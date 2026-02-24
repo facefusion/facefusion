@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import cv2
 import numpy
 
-import facefusion.args_store
+import facefusion.capability_store
 import facefusion.jobs.job_manager
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, state_manager, translator, video_manager
 from facefusion.face_analyser import scale_face
@@ -30,7 +30,7 @@ def clear_inference_pool() -> None:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		facefusion.args_store.register_argument_set(
+		facefusion.capability_store.register_capability_set(
 			[
 				group_processors.add_argument(
 					'--face-debugger-items',
