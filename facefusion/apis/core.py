@@ -4,7 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
 from facefusion.apis.choices import get_choices
-from facefusion.apis.endpoints.assets import delete_assets, get_asset, get_assets, upload_asset
+from facefusion.apis.endpoints.assets import delete_asset, delete_assets, get_asset, get_assets, upload_asset
 from facefusion.apis.endpoints.ping import websocket_ping
 from facefusion.apis.endpoints.session import create_session, create_session_guard, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
@@ -29,6 +29,7 @@ def create_api() -> Starlette:
 		Route('/assets', get_assets, methods = [ 'GET' ], middleware = [ version_guard, session_guard ]),
 		Route('/assets', upload_asset, methods = [ 'POST' ], middleware = [ version_guard, session_guard ]),
 		Route('/assets/{asset_id}', get_asset, methods = [ 'GET' ], middleware = [ version_guard, session_guard ]),
+		Route('/assets/{asset_id}', delete_asset, methods = [ 'DELETE' ], middleware = [ version_guard, session_guard ]),
 		Route('/assets', delete_assets, methods = [ 'DELETE' ], middleware = [ version_guard, session_guard ]),
 		Route('/choices', get_choices, methods = [ 'GET' ], middleware = [ version_guard, session_guard ]),
 		Route('/remote', remote, methods = [ 'POST' ], middleware = [ version_guard, session_guard ]),
