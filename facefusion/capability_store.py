@@ -1,9 +1,9 @@
 from argparse import Action
 from typing import Dict, List
 
-from facefusion.types import Args, ArgumentSet, ArgumentStore, Scope, State
+from facefusion.types import Args, CapabilitySet, CapabilityStore, Scope, State
 
-ARGUMENT_STORE : ArgumentStore =\
+CAPABILITY_STORE : CapabilityStore =\
 {
 	'api': {},
 	'cli': {},
@@ -11,33 +11,33 @@ ARGUMENT_STORE : ArgumentStore =\
 }
 
 
-def get_api_argument_set() -> Dict[str, ArgumentSet]:
-	return ARGUMENT_STORE.get('api')
+def get_api_capability_set() -> Dict[str, CapabilitySet]:
+	return CAPABILITY_STORE.get('api')
 
 
-def get_cli_argument_set() -> Dict[str, ArgumentSet]:
-	return ARGUMENT_STORE.get('cli')
+def get_cli_capability_set() -> Dict[str, CapabilitySet]:
+	return CAPABILITY_STORE.get('cli')
 
 
-def get_sys_argument_set() -> Dict[str, ArgumentSet]:
-	return ARGUMENT_STORE.get('sys')
+def get_sys_capability_set() -> Dict[str, CapabilitySet]:
+	return CAPABILITY_STORE.get('sys')
 
 
 def get_api_arguments() -> List[str]:
-	return list(get_api_argument_set().keys())
+	return list(get_api_capability_set().keys())
 
 
 def get_cli_arguments() -> List[str]:
-	return list(get_cli_argument_set().keys())
+	return list(get_cli_capability_set().keys())
 
 
 def get_sys_arguments() -> List[str]:
-	return list(get_sys_argument_set().keys())
+	return list(get_sys_capability_set().keys())
 
 
-def register_argument_set(actions : List[Action], scopes : List[Scope]) -> None:
+def register_capability_set(actions : List[Action], scopes : List[Scope]) -> None:
 	for action in actions:
-		value : ArgumentSet =\
+		value : CapabilitySet =\
 		{
 			'default': action.default
 		}
@@ -47,11 +47,11 @@ def register_argument_set(actions : List[Action], scopes : List[Scope]) -> None:
 
 		for scope in scopes:
 			if scope == 'api':
-				ARGUMENT_STORE['api'][action.dest] = value
+				CAPABILITY_STORE['api'][action.dest] = value
 			if scope == 'cli':
-				ARGUMENT_STORE['cli'][action.dest] = value
+				CAPABILITY_STORE['cli'][action.dest] = value
 			if scope == 'sys':
-				ARGUMENT_STORE['sys'][action.dest] = value
+				CAPABILITY_STORE['sys'][action.dest] = value
 
 
 def filter_api_args(state : State) -> Args:

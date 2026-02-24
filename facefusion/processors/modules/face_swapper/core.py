@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 import cv2
 import numpy
 
-import facefusion.args_store
+import facefusion.capability_store
 import facefusion.choices
 import facefusion.jobs.job_manager
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
@@ -513,7 +513,7 @@ def get_model_name() -> str:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		facefusion.args_store.register_argument_set(
+		facefusion.capability_store.register_capability_set(
 			[
 				group_processors.add_argument(
 					'--face-swapper-model',
@@ -526,7 +526,7 @@ def register_args(program : ArgumentParser) -> None:
 		)
 		known_args, _ = program.parse_known_args()
 		face_swapper_pixel_boost_choices = face_swapper_choices.face_swapper_set.get(known_args.face_swapper_model)
-		facefusion.args_store.register_argument_set(
+		facefusion.capability_store.register_capability_set(
 			[
 				group_processors.add_argument(
 					'--face-swapper-pixel-boost',
