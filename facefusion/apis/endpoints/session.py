@@ -36,25 +36,16 @@ async def create_session(request : Request) -> JSONResponse:
 
 async def get_session(request : Request) -> JSONResponse:
 	access_token = extract_access_token(request.scope)
-
-	if access_token:
-		session_id = session_manager.find_session_id(access_token)
-
-		if session_id:
-			session = session_manager.get_session(session_id)
-
-			return JSONResponse(
-			{
-				'access_token': session.get('access_token'),
-				'refresh_token': session.get('refresh_token'),
-				'created_at': session.get('created_at').isoformat(),
-				'expires_at': session.get('expires_at').isoformat()
-			}, status_code = HTTP_200_OK)
+	session_id = session_manager.find_session_id(access_token)
+	session = session_manager.get_session(session_id)
 
 	return JSONResponse(
 	{
-		'message': translator.get('something_went_wrong', 'facefusion.apis')
-	}, status_code = HTTP_401_UNAUTHORIZED)
+		'access_token': session.get('access_token'),
+		'refresh_token': session.get('refresh_token'),
+		'created_at': session.get('created_at').isoformat(),
+		'expires_at': session.get('expires_at').isoformat()
+	}, status_code = HTTP_200_OK)
 
 
 async def refresh_session(request : Request) -> JSONResponse:
@@ -79,22 +70,13 @@ async def refresh_session(request : Request) -> JSONResponse:
 
 async def destroy_session(request : Request) -> JSONResponse:
 	access_token = extract_access_token(request.scope)
-
-	if access_token:
-		session_id = session_manager.find_session_id(access_token)
-
-		if session_id:
-			session_manager.clear_session(session_id)
-
-			return JSONResponse(
-			{
-				'message': translator.get('ok', 'facefusion.apis')
-			}, status_code = HTTP_200_OK)
+	session_id = session_manager.find_session_id(access_token)
+	session_manager.clear_session(session_id)
 
 	return JSONResponse(
 	{
-		'message': translator.get('something_went_wrong', 'facefusion.apis')
-	}, status_code = HTTP_401_UNAUTHORIZED)
+		'message': translator.get('ok', 'facefusion.apis')
+	}, status_code = HTTP_200_OK)
 
 
 def create_session_guard(app : ASGIApp) -> ASGIApp:
