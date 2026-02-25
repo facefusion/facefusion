@@ -1,16 +1,12 @@
 import os
 import secrets
-from typing import Optional
 
-from starlette.datastructures import Headers
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_426_UPGRADE_REQUIRED
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED
 
 from facefusion import session_context, session_manager, translator
-from facefusion.apis.api_helper import get_sec_websocket_protocol
-from facefusion.types import Token
+from facefusion.apis.session_helper import extract_access_token
 
 
 async def create_session(request : Request) -> JSONResponse:
@@ -36,25 +32,16 @@ async def create_session(request : Request) -> JSONResponse:
 
 async def get_session(request : Request) -> JSONResponse:
 	access_token = extract_access_token(request.scope)
-
-	if access_token:
-		session_id = session_manager.find_session_id(access_token)
-
-		if session_id:
-			session = session_manager.get_session(session_id)
-
-			return JSONResponse(
-			{
-				'access_token': session.get('access_token'),
-				'refresh_token': session.get('refresh_token'),
-				'created_at': session.get('created_at').isoformat(),
-				'expires_at': session.get('expires_at').isoformat()
-			}, status_code = HTTP_200_OK)
+	session_id = session_manager.find_session_id(access_token)
+	session = session_manager.get_session(session_id)
 
 	return JSONResponse(
 	{
-		'message': translator.get('something_went_wrong', 'facefusion.apis')
-	}, status_code = HTTP_401_UNAUTHORIZED)
+		'access_token': session.get('access_token'),
+		'refresh_token': session.get('refresh_token'),
+		'created_at': session.get('created_at').isoformat(),
+		'expires_at': session.get('expires_at').isoformat()
+	}, status_code = HTTP_200_OK)
 
 
 async def refresh_session(request : Request) -> JSONResponse:
@@ -79,69 +66,10 @@ async def refresh_session(request : Request) -> JSONResponse:
 
 async def destroy_session(request : Request) -> JSONResponse:
 	access_token = extract_access_token(request.scope)
-
-	if access_token:
-		session_id = session_manager.find_session_id(access_token)
-
-		if session_id:
-			session_manager.clear_session(session_id)
-
-			return JSONResponse(
-			{
-				'message': translator.get('ok', 'facefusion.apis')
-			}, status_code = HTTP_200_OK)
+	session_id = session_manager.find_session_id(access_token)
+	session_manager.clear_session(session_id)
 
 	return JSONResponse(
 	{
-		'message': translator.get('something_went_wrong', 'facefusion.apis')
-	}, status_code = HTTP_401_UNAUTHORIZED)
-
-
-def create_session_guard(app : ASGIApp) -> ASGIApp:
-	async def middleware(scope : Scope, receive : Receive, send : Send) -> None:
-		access_token = extract_access_token(scope)
-
-		if access_token:
-			session_id = session_manager.find_session_id(access_token)
-
-			if session_id:
-				if session_manager.validate_session(session_id):
-					return await app(scope, receive, send)
-
-				response = JSONResponse(
-				{
-					'message': translator.get('invalid_access_token', 'facefusion.apis')
-				}, status_code = HTTP_426_UPGRADE_REQUIRED)
-
-				return await response(scope, receive, send)
-
-		response = JSONResponse(
-		{
-			'message': translator.get('invalid_access_token', 'facefusion.apis')
-		}, status_code = HTTP_401_UNAUTHORIZED)
-
-		return await response(scope, receive, send)
-
-	return middleware
-
-
-def extract_access_token(scope : Scope) -> Optional[Token]:
-	if scope.get('type') == 'http':
-		auth_header = Headers(scope = scope).get('Authorization')
-
-		if auth_header:
-			auth_prefix, _, access_token = auth_header.partition(' ')
-
-			if auth_prefix.lower() == 'bearer' and access_token:
-				return access_token
-
-	if scope.get('type') == 'websocket':
-		subprotocol = get_sec_websocket_protocol(scope)
-
-		if subprotocol:
-			protocol_prefix, _, access_token = subprotocol.partition('.')
-
-			if protocol_prefix == 'access_token' and access_token:
-				return access_token
-
-	return None
+		'message': translator.get('ok', 'facefusion.apis')
+	}, status_code = HTTP_200_OK)
