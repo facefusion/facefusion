@@ -18,10 +18,10 @@ from facefusion.filesystem import in_directory, is_image, is_video, resolve_rela
 from facefusion.processors.live_portrait import create_rotation, limit_expression
 from facefusion.processors.modules.expression_restorer import choices as expression_restorer_choices
 from facefusion.processors.modules.expression_restorer.types import ExpressionRestorerInputs
-from facefusion.processors.types import LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw, ProcessorOutputs
+from facefusion.processors.types import ApplyStateItem, LivePortraitExpression, LivePortraitFeatureVolume, LivePortraitMotionPoints, LivePortraitPitch, LivePortraitRoll, LivePortraitScale, LivePortraitTranslation, LivePortraitYaw, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore, thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
 

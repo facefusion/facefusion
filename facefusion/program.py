@@ -998,7 +998,6 @@ def create_program() -> ArgumentParser:
 	)
 
 	sub_program = program.add_subparsers(dest = 'command')
-	# general
 	sub_program.add_parser(
 		'run',
 		help = translator.get('help.run'),
@@ -1068,7 +1067,6 @@ def create_program() -> ArgumentParser:
 		],
 		formatter_class = create_help_formatter_large
 	)
-	# job manager
 	sub_program.add_parser(
 		'job-list',
 		help = translator.get('help.job_list'),
@@ -1199,7 +1197,6 @@ def create_program() -> ArgumentParser:
 		],
 		formatter_class = create_help_formatter_large
 	)
-	# job runner
 	sub_program.add_parser(
 		'job-run',
 		help = translator.get('help.job_run'),

@@ -24,13 +24,13 @@ async def upload_asset(request : Request) -> Response:
 
 		form = await request.form()
 		upload_files = form.getlist('file')
-		asset_paths = await save_asset_files(upload_files) # type: ignore[arg-type]
+		asset_paths = await save_asset_files(upload_files) #type:ignore[arg-type]
 
 		if asset_paths:
 			asset_ids : List[str] = []
 
 			for asset_path in asset_paths:
-				asset = asset_store.create_asset(session_id, asset_type, asset_path) # type: ignore[arg-type]
+				asset = asset_store.create_asset(session_id, asset_type, asset_path) #type:ignore[arg-type]
 
 				if asset:
 					asset_id = asset.get('id')

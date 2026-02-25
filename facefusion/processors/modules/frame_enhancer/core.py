@@ -13,10 +13,10 @@ from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path
 from facefusion.processors.modules.frame_enhancer import choices as frame_enhancer_choices
 from facefusion.processors.modules.frame_enhancer.types import FrameEnhancerInputs
-from facefusion.processors.types import ProcessorOutputs
+from facefusion.processors.types import ApplyStateItem, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import Args, DownloadScope, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, create_tile_frames, merge_tile_frames, read_static_image, read_static_video_frame
 
 
