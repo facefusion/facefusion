@@ -317,7 +317,7 @@ def process_batch(args : Args) -> ErrorCode:
 
 def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 	step_total = job_manager.count_step_total(job_id)
-	cli_args = args_helper.extract_cli_args(state_manager.get_state()) #type:ignore[arg-type]
+	cli_args = args_helper.extract_cli_args(state_manager.get_state())
 	args = cli_args.copy()
 	args.update(step_args)
 	apply_args(args, state_manager.set_item)
