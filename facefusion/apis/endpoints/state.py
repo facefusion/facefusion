@@ -2,13 +2,13 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from facefusion import capability_store, session_manager, state_manager, translator
+from facefusion import args_helper, capability_store, session_manager, state_manager, translator
 from facefusion.apis import asset_store
 from facefusion.apis.endpoints.session import extract_access_token
 
 
 async def get_state(request : Request) -> JSONResponse:
-	api_args = capability_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
+	api_args = args_helper.extract_api_args(state_manager.get_state()) #type:ignore[arg-type]
 	return JSONResponse(state_manager.collect_state(api_args), status_code = HTTP_200_OK)
 
 
@@ -29,8 +29,8 @@ async def set_state(request : Request) -> JSONResponse:
 		if key in api_args:
 			state_manager.set_item(key, value)
 
-	__api_args__ = capability_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
-	return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK) #type:ignore[arg-type]
+	__api_args__ = args_helper.extract_api_args(state_manager.get_state()) #type:ignore[arg-type]
+	return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
 
 async def select_source(request : Request) -> JSONResponse:
@@ -50,7 +50,7 @@ async def select_source(request : Request) -> JSONResponse:
 
 		state_manager.set_item('source_paths', source_paths)
 
-		__api_args__ = capability_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
+		__api_args__ = args_helper.extract_api_args(state_manager.get_state()) #type:ignore[arg-type]
 		return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
 	return JSONResponse(
@@ -71,7 +71,7 @@ async def select_target(request : Request) -> JSONResponse:
 		if asset:
 			state_manager.set_item('target_path', asset.get('path'))
 
-			__api_args__ = capability_store.filter_api_args(state_manager.get_state()) #type:ignore[arg-type]
+			__api_args__ = args_helper.extract_api_args(state_manager.get_state()) #type:ignore[arg-type]
 			return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
 	return JSONResponse(
