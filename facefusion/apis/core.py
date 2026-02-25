@@ -8,8 +8,9 @@ from facefusion.apis.endpoints.capabilities import get_capabilities
 from facefusion.apis.endpoints.metrics import get_metrics, websocket_metrics
 from facefusion.apis.endpoints.ping import websocket_ping
 from facefusion.apis.endpoints.process import websocket_process_image
-from facefusion.apis.endpoints.session import create_session, create_session_guard, destroy_session, get_session, refresh_session
+from facefusion.apis.endpoints.session import create_session, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
+from facefusion.apis.middlewares.session import create_session_guard
 
 
 def create_api() -> Starlette:
