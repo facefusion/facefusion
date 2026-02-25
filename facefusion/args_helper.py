@@ -115,3 +115,11 @@ def extract_step_args(state : Union[State, ProcessorState]) -> Args:
 		key: state.get(key) for key in state if key in get_cli_arguments() and key not in get_sys_arguments()
 	}
 	return step_args
+
+
+def filter_step_args(args : Args) -> Args:
+	step_args =\
+	{
+		key: args.get(key) for key in args if key in get_cli_arguments() and key not in get_sys_arguments()
+	}
+	return step_args
