@@ -1,7 +1,10 @@
+from typing import Union
+
 from facefusion.capability_store import get_api_arguments, get_cli_arguments, get_sys_arguments
 from facefusion.filesystem import get_file_name, is_video, resolve_file_paths
 from facefusion.normalizer import normalize_fps, normalize_space
 from facefusion.processors.core import get_processors_modules
+from facefusion.processors.types import ProcessorState
 from facefusion.types import ApplyStateItem, Args, State
 from facefusion.vision import detect_video_fps
 
@@ -82,7 +85,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('step_index', args.get('step_index'))
 
 
-def extract_api_args(state : State) -> Args:
+def extract_api_args(state : Union[State, ProcessorState]) -> Args:
 	api_args =\
 	{
 		key: state.get(key) for key in state if key in get_api_arguments()
@@ -90,7 +93,7 @@ def extract_api_args(state : State) -> Args:
 	return api_args
 
 
-def extract_cli_args(state : State) -> Args:
+def extract_cli_args(state : Union[State, ProcessorState]) -> Args:
 	cli_args =\
 	{
 		key: state.get(key) for key in state if key in get_cli_arguments()
@@ -98,7 +101,7 @@ def extract_cli_args(state : State) -> Args:
 	return cli_args
 
 
-def extract_sys_args(state : State) -> Args:
+def extract_sys_args(state : Union[State, ProcessorState]) -> Args:
 	sys_args =\
 	{
 		key: state.get(key) for key in state if key in get_sys_arguments()
@@ -106,9 +109,17 @@ def extract_sys_args(state : State) -> Args:
 	return sys_args
 
 
-def extract_step_args(state : State) -> Args:
+def extract_step_args(state : Union[State, ProcessorState]) -> Args:
 	step_args =\
 	{
 		key: state.get(key) for key in state if key in get_cli_arguments() and key not in get_sys_arguments()
+	}
+	return step_args
+
+
+def filter_step_args(args : Args) -> Args:
+	step_args =\
+	{
+		key: args.get(key) for key in args if key in get_cli_arguments() and key not in get_sys_arguments()
 	}
 	return step_args
