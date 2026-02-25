@@ -375,9 +375,11 @@ Job = TypedDict('Job',
 })
 JobSet : TypeAlias = Dict[str, Job]
 
+StateValue : TypeAlias = Any
 StateKey = Literal\
 [
 	'command',
+	'workflow',
 	'config_path',
 	'temp_path',
 	'jobs_path',
@@ -437,6 +439,9 @@ StateKey = Literal\
 	'video_memory_strategy',
 	'log_level',
 	'halt_on_error',
+	'api_host',
+	'api_port',
+	'api_key',
 	'job_id',
 	'job_status',
 	'step_index'
@@ -444,6 +449,7 @@ StateKey = Literal\
 State = TypedDict('State',
 {
 	'command' : str,
+	'workflow' : WorkFlow,
 	'config_path' : str,
 	'temp_path' : str,
 	'jobs_path' : str,
@@ -503,9 +509,13 @@ State = TypedDict('State',
 	'video_memory_strategy' : VideoMemoryStrategy,
 	'log_level' : LogLevel,
 	'halt_on_error' : bool,
+	'api_host' : str,
+	'api_port' : int,
+	'api_key' : str,
 	'job_id' : str,
 	'job_status' : JobStatus,
 	'step_index' : int
 })
-ApplyStateItem : TypeAlias = Callable[[Any, Any], None]
 StateSet : TypeAlias = Dict[AppContext, State]
+
+ApplyStateItem : TypeAlias = Callable[[StateKey, StateValue], None]

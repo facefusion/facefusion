@@ -1,10 +1,10 @@
 import os
-from typing import Any, Union
+from typing import Union
 
 from facefusion.app_context import detect_app_context
 from facefusion.processors.types import ProcessorState, ProcessorStateKey, ProcessorStateSet
 from facefusion.session_context import get_session_id
-from facefusion.types import Args, State, StateKey, StateSet
+from facefusion.types import Args, State, StateKey, StateSet, StateValue
 
 STATE_SET : Union[StateSet, ProcessorStateSet] =\
 {
@@ -15,27 +15,27 @@ STATE_SET : Union[StateSet, ProcessorStateSet] =\
 
 def get_state() -> Union[State, ProcessorState]:
 	app_context = detect_app_context()
-	return STATE_SET.get(app_context) #type:ignore[return-value]
+	return STATE_SET.get(app_context)
 
 
 def collect_state(args : Args) -> Union[State, ProcessorState]:
 	state =\
 	{
-		key: get_item(key) for key in args #type:ignore[arg-type]
+		key: get_item(key) for key in args
 	}
-	return state #type:ignore[return-value]
+	return state
 
 
-def init_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
+def init_item(key : Union[StateKey, ProcessorStateKey], value : StateValue) -> None:
 	STATE_SET['api'][key] = value #type:ignore[literal-required]
 	STATE_SET['cli'][key] = value #type:ignore[literal-required]
 
 
-def get_item(key : Union[StateKey, ProcessorStateKey]) -> Any:
-	return get_state().get(key) #type:ignore[literal-required]
+def get_item(key : Union[StateKey, ProcessorStateKey]) -> StateValue:
+	return get_state().get(key)
 
 
-def set_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
+def set_item(key : Union[StateKey, ProcessorStateKey], value : StateValue) -> None:
 	app_context = detect_app_context()
 	STATE_SET[app_context][key] = value #type:ignore[literal-required]
 
