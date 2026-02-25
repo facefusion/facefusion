@@ -18,10 +18,10 @@ from facefusion.face_selector import select_faces
 from facefusion.filesystem import get_file_name, in_directory, is_image, is_video, resolve_file_paths, resolve_relative_path
 from facefusion.processors.modules.deep_swapper import choices as deep_swapper_choices
 from facefusion.processors.modules.deep_swapper.types import DeepSwapperInputs, DeepSwapperMorph
-from facefusion.processors.types import ProcessorOutputs
+from facefusion.processors.types import ApplyStateItem, ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import Args, DownloadScope, Face, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import conditional_match_frame_color, read_static_image, read_static_video_frame
 
 
