@@ -8,7 +8,7 @@ from facefusion.apis.endpoints.session import extract_access_token
 from facefusion.streamer import process_stream_frame
 
 
-async def websocket_process_image(websocket : WebSocket) -> None:
+async def websocket_stream_image(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 	access_token = extract_access_token(websocket.scope)
 	session_id = session_manager.find_session_id(access_token)
