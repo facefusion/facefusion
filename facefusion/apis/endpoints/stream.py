@@ -1,5 +1,6 @@
 import cv2
 import numpy
+from starlette.requests import Request
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from facefusion import session_context, session_manager, state_manager
@@ -35,3 +36,7 @@ async def websocket_stream_image(websocket : WebSocket) -> None:
 		return
 
 	await websocket.close()
+
+
+async def webrtc_stream_video(request : Request) -> None: # TODO: implement webrtc video streaming
+	pass

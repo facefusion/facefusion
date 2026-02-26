@@ -88,7 +88,7 @@ def test_stream_image(test_client : TestClient) -> None:
 
 	assert select_response.status_code == 200
 
-	with test_client.websocket_connect('/stream/image', subprotocols =
+	with test_client.websocket_connect('/stream', subprotocols =
 	[
 		'access_token.' + access_token
 	]) as websocket:
