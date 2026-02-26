@@ -58,7 +58,7 @@ def before_each() -> None:
 	asset_store.clear()
 
 
-def test_process_image(test_client : TestClient) -> None:
+def test_stream_image(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
@@ -88,7 +88,7 @@ def test_process_image(test_client : TestClient) -> None:
 
 	assert select_response.status_code == 200
 
-	with test_client.websocket_connect('/process/image', subprotocols =
+	with test_client.websocket_connect('/stream', subprotocols =
 	[
 		'access_token.' + access_token
 	]) as websocket:
