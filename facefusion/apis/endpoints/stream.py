@@ -1,5 +1,6 @@
 import cv2
 import numpy
+from starlette.requests import Request
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from facefusion import session_context, session_manager, state_manager
@@ -8,7 +9,7 @@ from facefusion.apis.endpoints.session import extract_access_token
 from facefusion.streamer import process_stream_frame
 
 
-async def websocket_process_image(websocket : WebSocket) -> None:
+async def websocket_stream(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 	access_token = extract_access_token(websocket.scope)
 	session_id = session_manager.find_session_id(access_token)
@@ -35,3 +36,7 @@ async def websocket_process_image(websocket : WebSocket) -> None:
 		return
 
 	await websocket.close()
+
+
+async def webrtc_stream(request : Request) -> None: # TODO: implement webrtc streaming
+	pass
