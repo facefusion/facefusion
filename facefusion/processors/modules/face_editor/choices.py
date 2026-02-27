@@ -1,9 +1,9 @@
-from typing import List, Sequence
+from typing import List, Sequence, get_args
 
 from facefusion.common_helper import create_float_range
 from facefusion.processors.modules.face_editor.types import FaceEditorModel
 
-face_editor_models : List[FaceEditorModel] = [ 'live_portrait' ]
+face_editor_models : List[FaceEditorModel] = list(get_args(FaceEditorModel))
 
 face_editor_eyebrow_direction_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.05)
 face_editor_eye_gaze_horizontal_range : Sequence[float] = create_float_range(-1.0, 1.0, 0.05)

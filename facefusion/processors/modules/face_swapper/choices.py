@@ -1,7 +1,8 @@
-from typing import List, Sequence
+from typing import List, Sequence, get_args
 
 from facefusion.common_helper import create_float_range
 from facefusion.processors.modules.face_swapper.types import FaceSwapperModel, FaceSwapperSet, FaceSwapperWeight
+
 
 face_swapper_set : FaceSwapperSet =\
 {
@@ -20,6 +21,6 @@ face_swapper_set : FaceSwapperSet =\
 	'uniface_256': [ '256x256', '512x512', '768x768', '1024x1024' ]
 }
 
-face_swapper_models : List[FaceSwapperModel] = list(face_swapper_set.keys())
+face_swapper_models : List[FaceSwapperModel] = list(get_args(FaceSwapperModel))
 
 face_swapper_weight_range : Sequence[FaceSwapperWeight] = create_float_range(0.0, 1.0, 0.05)
