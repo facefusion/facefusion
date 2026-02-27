@@ -244,7 +244,7 @@ def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution
 
 
 def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
-	concat_video_path = tempfile.mktemp()
+	_, concat_video_path = tempfile.mkstemp()
 
 	with open(concat_video_path, 'w') as concat_video_file:
 		for temp_output_path in temp_output_paths:
