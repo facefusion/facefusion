@@ -1,15 +1,16 @@
+import os
 import shutil
 import subprocess
 import xml.etree.ElementTree as ElementTree
 from functools import lru_cache
 from typing import List, Optional
 
-from onnxruntime import get_available_providers, set_default_logger_severity
+import onnxruntime
 
 import facefusion.choices
 from facefusion.types import ExecutionDevice, ExecutionProvider, InferenceSessionProvider, ValueAndUnit
 
-set_default_logger_severity(3)
+onnxruntime.set_default_logger_severity(3)
 
 
 def has_execution_provider(execution_provider : ExecutionProvider) -> bool:
@@ -17,7 +18,7 @@ def has_execution_provider(execution_provider : ExecutionProvider) -> bool:
 
 
 def get_available_execution_providers() -> List[ExecutionProvider]:
-	inference_session_providers = get_available_providers()
+	inference_session_providers = onnxruntime.get_available_providers()
 	available_execution_providers : List[ExecutionProvider] = []
 
 	for execution_provider, execution_provider_value in facefusion.choices.execution_provider_set.items():
@@ -43,9 +44,9 @@ def create_inference_session_providers(execution_device_id : int, execution_prov
 			{
 				'device_id': execution_device_id,
 				'trt_engine_cache_enable': True,
-				'trt_engine_cache_path': '.caches',
+				'trt_engine_cache_path': resolve_cache_path(),
 				'trt_timing_cache_enable': True,
-				'trt_timing_cache_path': '.caches',
+				'trt_timing_cache_path': resolve_cache_path(),
 				'trt_builder_optimization_level': 5
 			}))
 		if execution_provider in [ 'directml', 'rocm' ]:
@@ -57,7 +58,7 @@ def create_inference_session_providers(execution_device_id : int, execution_prov
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id,
-				'migraphx_model_cache_dir': '.caches'
+				'migraphx_model_cache_dir': resolve_cache_path()
 			}))
 		if execution_provider == 'openvino':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
@@ -69,13 +70,17 @@ def create_inference_session_providers(execution_device_id : int, execution_prov
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'SpecializationStrategy': 'FastPrediction',
-				'ModelCacheDirectory': '.caches'
+				'ModelCacheDirectory': resolve_cache_path()
 			}))
 
 	if 'cpu' in execution_providers:
 		inference_session_providers.append(facefusion.choices.execution_provider_set.get('cpu'))
 
 	return inference_session_providers
+
+
+def resolve_cache_path() -> str:
+	return os.path.join('.caches', onnxruntime.get_version_string())
 
 
 def resolve_cudnn_conv_algo_search() -> str:
