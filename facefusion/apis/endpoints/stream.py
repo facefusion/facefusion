@@ -1,12 +1,19 @@
+import asyncio
+from functools import partial
+
 import cv2
 import numpy
+from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from facefusion import session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
-from facefusion.apis.endpoints.session import extract_access_token
+from facefusion.apis.session_helper import extract_access_token
+from facefusion.apis.stream_helper import get_from_queue, on_video_track
 from facefusion.streamer import process_stream_frame
+from facefusion.types import FrameQueue
 
 
 async def websocket_stream(websocket : WebSocket) -> None:
@@ -38,5 +45,29 @@ async def websocket_stream(websocket : WebSocket) -> None:
 	await websocket.close()
 
 
-async def webrtc_stream(request : Request) -> None: # TODO: implement webrtc streaming
-	pass
+async def webrtc_stream(request : Request) -> JSONResponse:
+	access_token = extract_access_token(request.scope)
+	session_id = session_manager.find_session_id(access_token)
+	session_context.set_session_id(session_id)
+
+	body = await request.json()
+	offer = RTCSessionDescription(sdp = body['sdp'], type = body['type'])
+
+	connection = RTCPeerConnection()
+	frame_queue : FrameQueue = asyncio.Queue(maxsize = 30)
+
+	output_track = VideoStreamTrack()
+	setattr(output_track, 'recv', partial(get_from_queue, frame_queue))
+	connection.addTrack(output_track)
+
+	connection.on('track', partial(on_video_track, frame_queue))
+
+	await connection.setRemoteDescription(offer)
+	answer = await connection.createAnswer()
+	await connection.setLocalDescription(answer)
+
+	return JSONResponse(
+	{
+		'sdp': connection.localDescription.sdp,
+		'type': connection.localDescription.type
+	})
