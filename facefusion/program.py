@@ -926,7 +926,7 @@ def create_job_id_program() -> ArgumentParser:
 	program.add_argument(
 		'job_id',
 		help = translator.get('help.job_id'),
-		type=sanitize_job_id
+		type = sanitize_job_id
 	)
 
 	return program

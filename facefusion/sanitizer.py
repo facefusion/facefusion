@@ -1,8 +1,8 @@
 import hashlib
-from typing import Sequence
+from typing import Optional, Sequence
 
 
-def sanitize_job_id(job_id : str) -> str:
+def sanitize_job_id(job_id : str) -> Optional[str]:
 	__job_id__ = job_id.replace('-', '')
 
 	if __job_id__.isalnum():
