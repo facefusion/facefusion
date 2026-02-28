@@ -89,7 +89,7 @@ def cycle(cycle_count : int) -> BenchmarkCycleSet:
 
 def suggest_output_path(target_path : str) -> str:
 	target_file_extension = get_file_extension(target_path)
-	return os.path.join(tempfile.gettempdir(), hashlib.sha1().hexdigest()[:8] + target_file_extension)
+	return os.path.join(tempfile.gettempdir(), hashlib.sha1(target_path.encode()).hexdigest() + target_file_extension)
 
 
 def render() -> None:

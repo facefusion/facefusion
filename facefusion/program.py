@@ -10,7 +10,7 @@ from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.jobs import job_store
 from facefusion.processors.core import get_processors_modules
-from facefusion.sanitizer import sanitize_int_range
+from facefusion.sanitizer import sanitize_int_range, sanitize_job_id
 
 
 def create_help_formatter_small(prog : str) -> HelpFormatter:
@@ -268,7 +268,7 @@ def create_halt_on_error_program() -> ArgumentParser:
 
 def create_job_id_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('job_id', help = translator.get('help.job_id'))
+	program.add_argument('job_id', help = translator.get('help.job_id'), type = sanitize_job_id)
 	return program
 
 
