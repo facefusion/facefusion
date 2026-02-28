@@ -9,7 +9,7 @@ from facefusion.execution import get_available_execution_providers
 from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.processors.core import get_processors_modules
-from facefusion.sanitizer import sanitize_int_range
+from facefusion.sanitizer import sanitize_int_range, sanitize_job_id
 
 
 def create_help_formatter_small(prog : str) -> HelpFormatter:
@@ -925,7 +925,8 @@ def create_job_id_program() -> ArgumentParser:
 
 	program.add_argument(
 		'job_id',
-		help = translator.get('help.job_id')
+		help = translator.get('help.job_id'),
+		type = sanitize_job_id
 	)
 
 	return program
