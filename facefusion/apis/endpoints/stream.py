@@ -7,9 +7,10 @@ from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
 from av import VideoFrame
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
-from facefusion import session_context, session_manager, state_manager
+from facefusion import session_context, session_manager, state_manager, translator
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
 from facefusion.apis.stream_helper import on_video_track
@@ -50,24 +51,30 @@ async def webrtc_stream(request : Request) -> JSONResponse:
 	session_id = session_manager.find_session_id(access_token)
 	session_context.set_session_id(session_id)
 
-	body = await request.json()
-	rtc_offer = RTCSessionDescription(sdp = body.get('sdp'), type = body.get('type'))
+	if session_id:
+		body = await request.json()
+		rtc_offer = RTCSessionDescription(sdp = body.get('sdp'), type = body.get('type'))
 
-	rtc_connection = RTCPeerConnection()
-	frame_queue : asyncio.Queue[VideoFrame] = asyncio.Queue(maxsize = 30)
+		rtc_connection = RTCPeerConnection()
+		frame_queue : asyncio.Queue[VideoFrame] = asyncio.Queue(maxsize = 30)
 
-	output_track = VideoStreamTrack()
-	setattr(output_track, 'recv', frame_queue.get)
-	rtc_connection.addTrack(output_track)
+		output_track = VideoStreamTrack()
+		setattr(output_track, 'recv', frame_queue.get)
+		rtc_connection.addTrack(output_track)
 
-	rtc_connection.on('track', partial(on_video_track, frame_queue))
+		rtc_connection.on('track', partial(on_video_track, frame_queue))
 
-	await rtc_connection.setRemoteDescription(rtc_offer)
-	answer = await rtc_connection.createAnswer()
-	await rtc_connection.setLocalDescription(answer)
+		await rtc_connection.setRemoteDescription(rtc_offer)
+		answer = await rtc_connection.createAnswer()
+		await rtc_connection.setLocalDescription(answer)
+
+		return JSONResponse(
+		{
+			'sdp': rtc_connection.localDescription.sdp,
+			'type': rtc_connection.localDescription.type
+		})
 
 	return JSONResponse(
 	{
-		'sdp': rtc_connection.localDescription.sdp,
-		'type': rtc_connection.localDescription.type
-	})
+		'message': translator.get('something_went_wrong', 'facefusion.apis')
+	}, status_code = HTTP_500_INTERNAL_SERVER_ERROR)
