@@ -11,7 +11,7 @@ from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_au
 from facefusion.filesystem import copy_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
-from .helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
+from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

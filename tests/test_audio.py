@@ -5,7 +5,7 @@ from pytest import approx
 
 from facefusion.audio import detect_audio_duration, get_audio_frame, read_static_audio, restrict_trim_audio_frame
 from facefusion.download import conditional_download
-from .helper import get_test_example_file, get_test_examples_directory
+from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

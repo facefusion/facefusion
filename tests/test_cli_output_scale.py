@@ -7,7 +7,7 @@ from facefusion.download import conditional_download
 from facefusion.jobs.job_manager import clear_jobs, init_jobs
 from facefusion.types import Resolution, Scale
 from facefusion.vision import detect_image_resolution, detect_video_resolution
-from .helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, prepare_test_output_directory
+from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_jobs_directory, get_test_output_path, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

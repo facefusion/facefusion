@@ -1,8 +1,5 @@
 import os
 import tempfile
-from typing import Tuple
-
-from aiortc import RTCPeerConnection, VideoStreamTrack
 
 from facefusion.filesystem import are_images, create_directory, is_directory, is_file, remove_directory, resolve_file_paths
 from facefusion.types import JobStatus
@@ -49,14 +46,3 @@ def prepare_test_output_directory() -> bool:
 	remove_directory(test_outputs_directory)
 	create_directory(test_outputs_directory)
 	return is_directory(test_outputs_directory)
-
-
-async def create_webrtc_offer() -> Tuple[str, str]:
-	connection = RTCPeerConnection()
-	connection.addTrack(VideoStreamTrack())
-	offer = await connection.createOffer()
-	await connection.setLocalDescription(offer)
-	sdp = connection.localDescription.sdp
-	offer_type = connection.localDescription.type
-	await connection.close()
-	return sdp, offer_type
