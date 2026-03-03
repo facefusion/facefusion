@@ -51,23 +51,23 @@ async def webrtc_stream(request : Request) -> JSONResponse:
 	session_context.set_session_id(session_id)
 
 	body = await request.json()
-	offer = RTCSessionDescription(sdp = body['sdp'], type = body['type'])
+	rtc_offer = RTCSessionDescription(sdp = body.get('sdp'), type = body.get('type'))
 
-	connection = RTCPeerConnection()
+	rtc_connection = RTCPeerConnection()
 	frame_queue : FrameQueue = asyncio.Queue(maxsize = 30)
 
 	output_track = VideoStreamTrack()
 	setattr(output_track, 'recv', partial(get_from_queue, frame_queue))
-	connection.addTrack(output_track)
+	rtc_connection.addTrack(output_track)
 
-	connection.on('track', partial(on_video_track, frame_queue))
+	rtc_connection.on('track', partial(on_video_track, frame_queue))
 
-	await connection.setRemoteDescription(offer)
-	answer = await connection.createAnswer()
-	await connection.setLocalDescription(answer)
+	await rtc_connection.setRemoteDescription(rtc_offer)
+	answer = await rtc_connection.createAnswer()
+	await rtc_connection.setLocalDescription(answer)
 
 	return JSONResponse(
 	{
-		'sdp': connection.localDescription.sdp,
-		'type': connection.localDescription.type
+		'sdp': rtc_connection.localDescription.sdp,
+		'type': rtc_connection.localDescription.type
 	})
