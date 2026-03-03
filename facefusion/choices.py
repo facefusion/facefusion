@@ -105,11 +105,12 @@ execution_provider_set : ExecutionProviderSet =\
 {
 	'cuda': 'CUDAExecutionProvider',
 	'tensorrt': 'TensorrtExecutionProvider',
-	'directml': 'DmlExecutionProvider',
 	'rocm': 'ROCMExecutionProvider',
 	'migraphx': 'MIGraphXExecutionProvider',
-	'openvino': 'OpenVINOExecutionProvider',
 	'coreml': 'CoreMLExecutionProvider',
+	'openvino': 'OpenVINOExecutionProvider',
+	'qnn': 'QNNExecutionProvider',
+	'directml': 'DmlExecutionProvider',
 	'cpu': 'CPUExecutionProvider'
 }
 execution_providers : List[ExecutionProvider] = list(get_args(ExecutionProvider))

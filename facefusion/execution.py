@@ -60,17 +60,23 @@ def create_inference_session_providers(execution_device_id : int, execution_prov
 				'device_id': execution_device_id,
 				'migraphx_model_cache_dir': resolve_cache_path()
 			}))
+		if execution_provider == 'coreml':
+			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			{
+				'SpecializationStrategy': 'FastPrediction',
+				'ModelCacheDirectory': resolve_cache_path()
+			}))
 		if execution_provider == 'openvino':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_type': resolve_openvino_device_type(execution_device_id),
 				'precision': 'FP32'
 			}))
-		if execution_provider == 'coreml':
+		if execution_provider == 'qnn':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
-				'SpecializationStrategy': 'FastPrediction',
-				'ModelCacheDirectory': resolve_cache_path()
+				'device_id': execution_device_id,
+				'backend_type': 'htp'
 			}))
 
 	if 'cpu' in execution_providers:

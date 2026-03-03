@@ -167,8 +167,8 @@ ModelOptions : TypeAlias = Dict[str, Any]
 ModelSet : TypeAlias = Dict[str, ModelOptions]
 ModelInitializer : TypeAlias = NDArray[Any]
 
-ExecutionProvider = Literal['cuda', 'tensorrt', 'rocm', 'migraphx', 'coreml', 'openvino', 'directml', 'cpu']
-ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'MIGraphXExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
+ExecutionProvider = Literal['cuda', 'tensorrt', 'rocm', 'migraphx', 'coreml', 'openvino', 'qnn', 'directml', 'cpu']
+ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'MIGraphXExecutionProvider', 'QNNExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
 ExecutionProviderSet : TypeAlias = Dict[ExecutionProvider, ExecutionProviderValue]
 InferenceSessionProvider : TypeAlias = Any
 ValueAndUnit = TypedDict('ValueAndUnit',
