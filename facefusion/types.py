@@ -1,4 +1,3 @@
-import asyncio
 from collections import namedtuple
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
@@ -519,4 +518,3 @@ State = TypedDict('State',
 StateSet : TypeAlias = Dict[AppContext, State]
 
 ApplyStateItem : TypeAlias = Callable[[StateKey, StateValue], None]
-FrameQueue : TypeAlias = asyncio.Queue[Any]
