@@ -68,11 +68,7 @@ async def webrtc_stream(request : Request) -> JSONResponse:
 		answer = await rtc_connection.createAnswer()
 		await rtc_connection.setLocalDescription(answer)
 
-		return JSONResponse(
-		{
-			'sdp': rtc_connection.localDescription.sdp,
-			'type': rtc_connection.localDescription.type
-		})
+		return JSONResponse(vars(rtc_connection.localDescription))
 
 	return JSONResponse(
 	{
