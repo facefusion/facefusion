@@ -518,3 +518,4 @@ State = TypedDict('State',
 StateSet : TypeAlias = Dict[AppContext, State]
 
 ApplyStateItem : TypeAlias = Callable[[StateKey, StateValue], None]
+RtcOfferSet : TypeAlias = Dict[str, str]

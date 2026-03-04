@@ -1,9 +1,9 @@
-from typing import Dict
-
 from aiortc import RTCPeerConnection, VideoStreamTrack
 
+from facefusion.types import RtcOfferSet
 
-async def create_webrtc_offer() -> Dict[str, str]:
+
+async def create_rtc_offer() -> RtcOfferSet:
 	rtc_connection = RTCPeerConnection()
 	rtc_connection.addTrack(VideoStreamTrack())
 	rtc_offer = await rtc_connection.createOffer()
@@ -17,4 +17,5 @@ async def create_webrtc_offer() -> Dict[str, str]:
 	}
 
 	await rtc_connection.close()
+
 	return offer_dict

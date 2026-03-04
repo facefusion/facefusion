@@ -13,7 +13,7 @@ from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
 from .assert_helper import get_test_example_file, get_test_examples_directory
-from .stream_helper import create_webrtc_offer
+from .stream_helper import create_rtc_offer
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -129,7 +129,8 @@ def test_stream_video(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	stream_response = test_client.post('/stream', json = asyncio.run(create_webrtc_offer()), headers =
+	rtc_offer = asyncio.run(create_rtc_offer())
+	stream_response = test_client.post('/stream', json = rtc_offer, headers =
 	{
 		'Authorization': 'Bearer ' + access_token
 	})

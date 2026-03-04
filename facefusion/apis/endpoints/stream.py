@@ -1,10 +1,8 @@
-import asyncio
 from functools import partial
 
 import cv2
 import numpy
-from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
-from av import VideoFrame
+from aiortc import RTCPeerConnection, RTCSessionDescription
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
@@ -54,21 +52,19 @@ async def webrtc_stream(request : Request) -> JSONResponse:
 	if session_id:
 		body = await request.json()
 		rtc_offer = RTCSessionDescription(sdp = body.get('sdp'), type = body.get('type'))
-
 		rtc_connection = RTCPeerConnection()
-		frame_queue : asyncio.Queue[VideoFrame] = asyncio.Queue(maxsize = 30)
 
-		output_track = VideoStreamTrack()
-		setattr(output_track, 'recv', frame_queue.get)
-		rtc_connection.addTrack(output_track)
-
-		rtc_connection.on('track', partial(on_video_track, frame_queue))
+		rtc_connection.on('track', partial(on_video_track, rtc_connection))
 
 		await rtc_connection.setRemoteDescription(rtc_offer)
-		answer = await rtc_connection.createAnswer()
-		await rtc_connection.setLocalDescription(answer)
+		rtc_answer = await rtc_connection.createAnswer()
+		await rtc_connection.setLocalDescription(rtc_answer)
 
-		return JSONResponse(vars(rtc_connection.localDescription))
+		return JSONResponse(
+		{
+			'sdp': rtc_connection.localDescription.sdp,
+			'type': rtc_connection.localDescription.type
+		})
 
 	return JSONResponse(
 	{
