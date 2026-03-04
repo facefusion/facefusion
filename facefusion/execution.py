@@ -8,6 +8,7 @@ from typing import List, Optional
 import onnxruntime
 
 import facefusion.choices
+from facefusion.filesystem import create_directory, is_directory
 from facefusion.types import ExecutionDevice, ExecutionProvider, InferenceSessionProvider, ValueAndUnit
 
 onnxruntime.set_default_logger_severity(3)
@@ -31,6 +32,7 @@ def get_available_execution_providers() -> List[ExecutionProvider]:
 
 def create_inference_session_providers(execution_device_id : int, execution_providers : List[ExecutionProvider]) -> List[InferenceSessionProvider]:
 	inference_session_providers : List[InferenceSessionProvider] = []
+	cache_path = resolve_cache_path()
 
 	for execution_provider in execution_providers:
 		if execution_provider == 'cuda':
@@ -39,39 +41,60 @@ def create_inference_session_providers(execution_device_id : int, execution_prov
 				'device_id': execution_device_id,
 				'cudnn_conv_algo_search': resolve_cudnn_conv_algo_search()
 			}))
+
 		if execution_provider == 'tensorrt':
-			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			execution_options =\
 			{
-				'device_id': execution_device_id,
-				'trt_engine_cache_enable': True,
-				'trt_engine_cache_path': resolve_cache_path(),
-				'trt_timing_cache_enable': True,
-				'trt_timing_cache_path': resolve_cache_path(),
-				'trt_builder_optimization_level': 5
-			}))
+				'device_id': execution_device_id
+			}
+			if is_directory(cache_path) or create_directory(cache_path):
+				execution_options.update(
+				{
+					'trt_engine_cache_enable': True,
+					'trt_engine_cache_path': cache_path,
+					'trt_timing_cache_enable': True,
+					'trt_timing_cache_path': cache_path,
+					'trt_builder_optimization_level': 5
+				})
+			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), execution_options))
+
 		if execution_provider in [ 'directml', 'rocm' ]:
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id
 			}))
+
 		if execution_provider == 'migraphx':
-			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			execution_options =\
 			{
-				'device_id': execution_device_id,
-				'migraphx_model_cache_dir': resolve_cache_path()
-			}))
+				'device_id': execution_device_id
+			}
+			if is_directory(cache_path) or create_directory(cache_path):
+				execution_options.update(
+				{
+					'migraphx_model_cache_dir': cache_path
+				})
+			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), execution_options))
+
 		if execution_provider == 'coreml':
-			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			execution_options =\
 			{
-				'SpecializationStrategy': 'FastPrediction',
-				'ModelCacheDirectory': resolve_cache_path()
-			}))
+				'SpecializationStrategy': 'FastPrediction'
+			}
+			if is_directory(cache_path) or create_directory(cache_path):
+				execution_options.update(
+				{
+					'ModelCacheDirectory': cache_path
+				})
+			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), execution_options))
+
 		if execution_provider == 'openvino':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_type': resolve_openvino_device_type(execution_device_id),
 				'precision': 'FP32'
 			}))
+
 		if execution_provider == 'qnn':
 			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
