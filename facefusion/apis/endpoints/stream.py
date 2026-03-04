@@ -4,7 +4,7 @@ import cv2
 import numpy
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
@@ -37,14 +37,14 @@ async def websocket_stream(websocket : WebSocket) -> None:
 				if is_success:
 					await websocket.send_bytes(output_vision_frame.tobytes())
 
-		except (WebSocketDisconnect, OSError):
+		except Exception:
 			pass
 		return
 
 	await websocket.close()
 
 
-async def webrtc_stream(request : Request) -> JSONResponse:
+async def webrtc_stream(request : Request) -> Response:
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
 	session_context.set_session_id(session_id)
@@ -57,8 +57,7 @@ async def webrtc_stream(request : Request) -> JSONResponse:
 		rtc_connection.on('track', partial(on_video_track, rtc_connection))
 
 		await rtc_connection.setRemoteDescription(rtc_offer)
-		rtc_answer = await rtc_connection.createAnswer()
-		await rtc_connection.setLocalDescription(rtc_answer)
+		await rtc_connection.setLocalDescription(await rtc_connection.createAnswer())
 
 		return JSONResponse(
 		{
@@ -66,7 +65,4 @@ async def webrtc_stream(request : Request) -> JSONResponse:
 			'type': rtc_connection.localDescription.type
 		})
 
-	return JSONResponse(
-	{
-		'message': translator.get('something_went_wrong', 'facefusion.apis')
-	}, status_code = HTTP_500_INTERNAL_SERVER_ERROR)
+	return Response(status_code = HTTP_500_INTERNAL_SERVER_ERROR)
