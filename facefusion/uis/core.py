@@ -1,5 +1,5 @@
-import asyncio
 import importlib
+import logging
 import os
 import warnings
 from types import ModuleType
@@ -10,7 +10,6 @@ from gradio.themes import Size
 
 import facefusion.uis.overrides as uis_overrides
 from facefusion import logger, metadata, state_manager, translator
-from facefusion.common_helper import is_windows
 from facefusion.exit_helper import hard_exit
 from facefusion.filesystem import resolve_relative_path
 from facefusion.uis.types import Component, ComponentName
@@ -74,9 +73,7 @@ def init() -> None:
 	os.environ['GRADIO_ANALYTICS_ENABLED'] = '0'
 	os.environ['GRADIO_TEMP_DIR'] = os.path.join(state_manager.get_item('temp_path'), 'gradio')
 
-	if is_windows():
-		asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
+	logging.getLogger('asyncio').setLevel(logging.CRITICAL)
 	warnings.filterwarnings('ignore', category = UserWarning, module = 'gradio')
 	gradio.processing_utils._check_allowed = uis_overrides.mock
 	gradio.processing_utils.convert_video_to_playable_mp4 = uis_overrides.convert_video_to_playable_mp4
