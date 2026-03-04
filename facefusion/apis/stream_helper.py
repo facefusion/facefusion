@@ -23,9 +23,9 @@ def create_output_track(target_track : MediaStreamTrack) -> VideoStreamTrack:
 
 
 def on_video_track(rtc_connection : RTCPeerConnection, target_track : MediaStreamTrack) -> None:
+	if target_track.kind == 'audio':
+		rtc_connection.addTrack(target_track)
+
 	if target_track.kind == 'video':
 		output_track = create_output_track(target_track)
 		rtc_connection.addTrack(output_track)
-
-	if target_track.kind == 'audio':
-		rtc_connection.addTrack(target_track)
