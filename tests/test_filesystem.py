@@ -4,7 +4,7 @@ import pytest
 
 from facefusion.download import conditional_download
 from facefusion.filesystem import create_directory, filter_audio_paths, filter_image_paths, get_file_extension, get_file_format, get_file_size, has_audio, has_image, has_video, in_directory, is_audio, is_directory, is_file, is_image, is_video, remove_directory, resolve_file_paths
-from .helper import get_test_example_file, get_test_examples_directory, get_test_outputs_directory
+from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_outputs_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)

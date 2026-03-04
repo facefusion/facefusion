@@ -1,3 +1,4 @@
+import asyncio
 import tempfile
 from typing import Iterator
 
@@ -11,7 +12,8 @@ from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
-from .helper import get_test_example_file, get_test_examples_directory
+from .assert_helper import get_test_example_file, get_test_examples_directory
+from .stream_helper import create_rtc_offer
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -97,3 +99,42 @@ def test_stream_image(test_client : TestClient) -> None:
 		output_vision_frame = cv2.imdecode(numpy.frombuffer(output_bytes, numpy.uint8), cv2.IMREAD_COLOR)
 
 	assert output_vision_frame.shape == (1024, 1024, 3)
+
+
+def test_stream_video(test_client : TestClient) -> None:
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	access_token = create_session_response.json().get('access_token')
+	source_path = get_test_example_file('source.jpg')
+
+	with open(source_path, 'rb') as source_file:
+		source_content = source_file.read()
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.jpg', source_content, 'image/jpeg'))
+		])
+
+	asset_id = upload_response.json().get('asset_ids')[0]
+
+	test_client.put('/state?action=select&type=source', json =
+	{
+		'asset_ids': [ asset_id ]
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	rtc_offer = asyncio.run(create_rtc_offer())
+	stream_response = test_client.post('/stream', json = rtc_offer, headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert stream_response.status_code == 200
+	assert stream_response.json().get('type') == 'answer'
+	assert stream_response.json().get('sdp')

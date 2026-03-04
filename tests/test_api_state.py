@@ -9,7 +9,7 @@ from facefusion import capability_store, metadata, session_manager, state_manage
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.download import conditional_download
-from .helper import get_test_example_file, get_test_examples_directory
+from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
