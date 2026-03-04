@@ -6,9 +6,9 @@ from aiortc import RTCPeerConnection, RTCSessionDescription
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
-from starlette.websockets import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocket
 
-from facefusion import session_context, session_manager, state_manager, translator
+from facefusion import session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
 from facefusion.apis.stream_helper import on_video_track
