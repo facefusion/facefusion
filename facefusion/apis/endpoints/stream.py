@@ -27,8 +27,8 @@ async def websocket_stream(websocket : WebSocket) -> None:
 
 	if source_paths:
 		try:
-			image_bytes = await websocket.receive_bytes()
-			target_vision_frame = cv2.imdecode(numpy.frombuffer(image_bytes, numpy.uint8), cv2.IMREAD_COLOR)
+			image_buffer = await websocket.receive_bytes()
+			target_vision_frame = cv2.imdecode(numpy.frombuffer(image_buffer, numpy.uint8), cv2.IMREAD_COLOR)
 
 			if numpy.any(target_vision_frame):
 				temp_vision_frame = process_stream_frame(target_vision_frame)
