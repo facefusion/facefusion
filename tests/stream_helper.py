@@ -10,7 +10,7 @@ async def create_rtc_offer() -> RtcOfferSet:
 
 	await rtc_connection.setLocalDescription(rtc_offer)
 
-	offer_dict =\
+	rtc_offer_set : RtcOfferSet =\
 	{
 		'sdp': rtc_connection.localDescription.sdp,
 		'type': rtc_connection.localDescription.type
@@ -18,4 +18,4 @@ async def create_rtc_offer() -> RtcOfferSet:
 
 	await rtc_connection.close()
 
-	return offer_dict
+	return rtc_offer_set

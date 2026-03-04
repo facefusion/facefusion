@@ -257,6 +257,12 @@ BenchmarkCycleSet = TypedDict('BenchmarkCycleSet',
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']
 
+RtcOfferSet = TypedDict('RtcOfferSet',
+{
+	'sdp': str,
+	'type': str
+})
+
 ModelOptions : TypeAlias = Dict[str, Any]
 ModelSet : TypeAlias = Dict[str, ModelOptions]
 ModelInitializer : TypeAlias = NDArray[Any]
@@ -518,4 +524,3 @@ State = TypedDict('State',
 StateSet : TypeAlias = Dict[AppContext, State]
 
 ApplyStateItem : TypeAlias = Callable[[StateKey, StateValue], None]
-RtcOfferSet : TypeAlias = Dict[str, str]
