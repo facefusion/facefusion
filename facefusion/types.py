@@ -170,7 +170,8 @@ ModelInitializer : TypeAlias = NDArray[Any]
 ExecutionProvider = Literal['cuda', 'tensorrt', 'rocm', 'migraphx', 'coreml', 'openvino', 'qnn', 'directml', 'cpu']
 ExecutionProviderValue = Literal['CPUExecutionProvider', 'CoreMLExecutionProvider', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'OpenVINOExecutionProvider', 'MIGraphXExecutionProvider', 'QNNExecutionProvider', 'ROCMExecutionProvider', 'TensorrtExecutionProvider']
 ExecutionProviderSet : TypeAlias = Dict[ExecutionProvider, ExecutionProviderValue]
-InferenceSessionProvider : TypeAlias = Any
+InferenceProvider : TypeAlias = Any
+InferenceOptionSet : TypeAlias = Dict[str, Any]
 ValueAndUnit = TypedDict('ValueAndUnit',
 {
 	'value' : int,

@@ -9,7 +9,7 @@ import onnxruntime
 
 import facefusion.choices
 from facefusion.filesystem import create_directory, is_directory
-from facefusion.types import ExecutionDevice, ExecutionProvider, InferenceSessionProvider, ValueAndUnit
+from facefusion.types import ExecutionDevice, ExecutionProvider, InferenceOptionSet, InferenceProvider, ValueAndUnit
 
 onnxruntime.set_default_logger_severity(3)
 
@@ -30,25 +30,25 @@ def get_available_execution_providers() -> List[ExecutionProvider]:
 	return available_execution_providers
 
 
-def create_inference_session_providers(execution_device_id : int, execution_providers : List[ExecutionProvider]) -> List[InferenceSessionProvider]:
-	inference_session_providers : List[InferenceSessionProvider] = []
+def create_inference_providers(execution_device_id : int, execution_providers : List[ExecutionProvider]) -> List[InferenceProvider]:
+	inference_providers : List[InferenceProvider] = []
 	cache_path = resolve_cache_path()
 
 	for execution_provider in execution_providers:
 		if execution_provider == 'cuda':
-			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			inference_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id,
 				'cudnn_conv_algo_search': resolve_cudnn_conv_algo_search()
 			}))
 
 		if execution_provider == 'tensorrt':
-			execution_options =\
+			inference_option_set : InferenceOptionSet =\
 			{
 				'device_id': execution_device_id
 			}
 			if is_directory(cache_path) or create_directory(cache_path):
-				execution_options.update(
+				inference_option_set.update(
 				{
 					'trt_engine_cache_enable': True,
 					'trt_engine_cache_path': cache_path,
@@ -56,56 +56,56 @@ def create_inference_session_providers(execution_device_id : int, execution_prov
 					'trt_timing_cache_path': cache_path,
 					'trt_builder_optimization_level': 5
 				})
-			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), execution_options))
+			inference_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), inference_option_set))
 
 		if execution_provider in [ 'directml', 'rocm' ]:
-			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			inference_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id
 			}))
 
 		if execution_provider == 'migraphx':
-			execution_options =\
+			inference_option_set =\
 			{
 				'device_id': execution_device_id
 			}
 			if is_directory(cache_path) or create_directory(cache_path):
-				execution_options.update(
+				inference_option_set.update(
 				{
 					'migraphx_model_cache_dir': cache_path
 				})
-			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), execution_options))
+			inference_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), inference_option_set))
 
 		if execution_provider == 'coreml':
-			execution_options =\
+			inference_option_set =\
 			{
 				'SpecializationStrategy': 'FastPrediction'
 			}
 			if is_directory(cache_path) or create_directory(cache_path):
-				execution_options.update(
+				inference_option_set.update(
 				{
 					'ModelCacheDirectory': cache_path
 				})
-			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), execution_options))
+			inference_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), inference_option_set))
 
 		if execution_provider == 'openvino':
-			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			inference_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_type': resolve_openvino_device_type(execution_device_id),
 				'precision': 'FP32'
 			}))
 
 		if execution_provider == 'qnn':
-			inference_session_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
+			inference_providers.append((facefusion.choices.execution_provider_set.get(execution_provider),
 			{
 				'device_id': execution_device_id,
 				'backend_type': 'htp'
 			}))
 
 	if 'cpu' in execution_providers:
-		inference_session_providers.append(facefusion.choices.execution_provider_set.get('cpu'))
+		inference_providers.append(facefusion.choices.execution_provider_set.get('cpu'))
 
-	return inference_session_providers
+	return inference_providers
 
 
 def resolve_cache_path() -> str:
