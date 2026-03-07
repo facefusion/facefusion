@@ -54,7 +54,7 @@ def create_inference_providers(execution_device_id : int, execution_providers : 
 					'trt_engine_cache_path': cache_path,
 					'trt_timing_cache_enable': True,
 					'trt_timing_cache_path': cache_path,
-					'trt_builder_optimization_level': 5
+					'trt_builder_optimization_level': 4
 				})
 			inference_providers.append((facefusion.choices.execution_provider_set.get(execution_provider), inference_option_set))
 
