@@ -90,7 +90,7 @@ def start(webcam_device_id : int, webcam_mode : WebcamMode, webcam_resolution : 
 	stream = None
 
 	if webcam_mode in [ 'udp', 'v4l2' ]:
-		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) # type:ignore[arg-type]
+		stream = open_stream(webcam_mode, webcam_resolution, webcam_fps) #type:ignore[arg-type]
 	webcam_width, webcam_height = unpack_resolution(webcam_resolution)
 
 	if camera_capture and camera_capture.isOpened():

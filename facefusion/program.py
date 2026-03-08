@@ -10,7 +10,7 @@ from facefusion.ffmpeg import get_available_encoder_set
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.jobs import job_store
 from facefusion.processors.core import get_processors_modules
-from facefusion.sanitizer import sanitize_int_range
+from facefusion.sanitizer import sanitize_int_range, sanitize_job_id
 
 
 def create_help_formatter_small(prog : str) -> HelpFormatter:
@@ -188,7 +188,7 @@ def create_processors_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	group_processors = program.add_argument_group('processors')
-	group_processors.add_argument('--processors', help = translator.get('help.processors').format(choices = ', '.join(available_processors)), default = config.get_str_list('processors', 'processors', 'face_swapper'), nargs = '+')
+	group_processors.add_argument('--processors', help = translator.get('help.processors').format(choices = ', '.join(available_processors)), default = config.get_str_list('processors', 'processors', 'face_swapper'), choices = available_processors, nargs = '+', metavar = 'PROCESSORS')
 	job_store.register_step_keys([ 'processors' ])
 	for processor_module in get_processors_modules(available_processors):
 		processor_module.register_args(program)
@@ -200,7 +200,7 @@ def create_uis_program() -> ArgumentParser:
 	available_ui_layouts = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/uis/layouts') ]
 	group_uis = program.add_argument_group('uis')
 	group_uis.add_argument('--open-browser', help = translator.get('help.open_browser'), action = 'store_true', default = config.get_bool_value('uis', 'open_browser'))
-	group_uis.add_argument('--ui-layouts', help = translator.get('help.ui_layouts').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis', 'ui_layouts', 'default'), nargs = '+')
+	group_uis.add_argument('--ui-layouts', help = translator.get('help.ui_layouts').format(choices = ', '.join(available_ui_layouts)), default = config.get_str_list('uis', 'ui_layouts', 'default'), choices = available_ui_layouts, nargs = '+', metavar = 'UI_LAYOUTS')
 	group_uis.add_argument('--ui-workflow', help = translator.get('help.ui_workflow'), default = config.get_str_value('uis', 'ui_workflow', 'instant_runner'), choices = facefusion.choices.ui_workflows)
 	return program
 
@@ -268,7 +268,7 @@ def create_halt_on_error_program() -> ArgumentParser:
 
 def create_job_id_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
-	program.add_argument('job_id', help = translator.get('help.job_id'))
+	program.add_argument('job_id', help = translator.get('help.job_id'), type = sanitize_job_id)
 	return program
 
 
@@ -297,13 +297,11 @@ def create_program() -> ArgumentParser:
 	program._positionals.title = 'commands'
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	sub_program = program.add_subparsers(dest = 'command')
-	# general
 	sub_program.add_parser('run', help = translator.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('headless-run', help = translator.get('help.headless_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('batch-run', help = translator.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('force-download', help = translator.get('help.force_download'), parents = [ create_download_providers_program(), create_download_scope_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('benchmark', help = translator.get('help.benchmark'), parents = [ create_temp_path_program(), collect_step_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	# job manager
 	sub_program.add_parser('job-list', help = translator.get('help.job_list'), parents = [ create_job_status_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-create', help = translator.get('help.job_create'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-submit', help = translator.get('help.job_submit'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
@@ -314,7 +312,6 @@ def create_program() -> ArgumentParser:
 	sub_program.add_parser('job-remix-step', help = translator.get('help.job_remix_step'), parents = [ create_job_id_program(), create_step_index_program(), create_config_path_program(), create_jobs_path_program(), create_source_paths_program(), create_output_path_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-insert-step', help = translator.get('help.job_insert_step'), parents = [ create_job_id_program(), create_step_index_program(), create_config_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-remove-step', help = translator.get('help.job_remove_step'), parents = [ create_job_id_program(), create_step_index_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
-	# job runner
 	sub_program.add_parser('job-run', help = translator.get('help.job_run'), parents = [ create_job_id_program(), create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-run-all', help = translator.get('help.job_run_all'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), collect_job_program(), create_halt_on_error_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-retry', help = translator.get('help.job_retry'), parents = [ create_job_id_program(), create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), collect_job_program() ], formatter_class = create_help_formatter_large)

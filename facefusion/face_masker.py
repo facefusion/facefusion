@@ -233,7 +233,7 @@ def create_area_mask(crop_vision_frame : VisionFrame, face_landmark_68 : FaceLan
 
 	convex_hull = cv2.convexHull(face_landmark_68[landmark_points].astype(numpy.int32))
 	area_mask = numpy.zeros(crop_size).astype(numpy.float32)
-	cv2.fillConvexPoly(area_mask, convex_hull, 1.0) # type: ignore[call-overload]
+	cv2.fillConvexPoly(area_mask, convex_hull, 1.0) #type:ignore[call-overload]
 	area_mask = (cv2.GaussianBlur(area_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0.5) * 2
 	return area_mask
 
