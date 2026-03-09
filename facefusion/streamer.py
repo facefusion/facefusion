@@ -31,7 +31,7 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 					camera_capture.release()
 
 				if numpy.any(capture_frame):
-					future = executor.submit(process_stream_frame, capture_frame)
+					future = executor.submit(process_vision_frame, capture_frame)
 					futures.append(future)
 
 				for future_done in [ future for future in futures if future.done() ]:
@@ -44,7 +44,7 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 					yield capture_deque.popleft()
 
 
-def process_stream_frame(target_vision_frame : VisionFrame) -> VisionFrame:
+def process_vision_frame(target_vision_frame : VisionFrame) -> VisionFrame:
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
 	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()

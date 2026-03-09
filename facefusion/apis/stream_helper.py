@@ -4,7 +4,13 @@ from typing import cast
 from aiortc import MediaStreamTrack, RTCPeerConnection, VideoStreamTrack
 from av import VideoFrame
 
-from facefusion.streamer import process_stream_frame
+from facefusion.streamer import process_vision_frame
+
+
+def process_stream_frame(target_stream_frame : VideoFrame) -> VideoFrame:
+	target_vision_frame = target_stream_frame.to_ndarray(format = 'bgr24')
+	output_vision_frame = process_vision_frame(target_vision_frame)
+	return VideoFrame.from_ndarray(output_vision_frame, format = 'bgr24')
 
 
 def create_output_track(target_track : MediaStreamTrack) -> VideoStreamTrack:
@@ -12,8 +18,7 @@ def create_output_track(target_track : MediaStreamTrack) -> VideoStreamTrack:
 
 	async def read_stream_frame() -> VideoFrame:
 		target_stream_frame = cast(VideoFrame, await target_track.recv())
-		output_vision_frame = await asyncio.get_running_loop().run_in_executor(None, process_stream_frame, target_stream_frame.to_ndarray(format = 'bgr24'))
-		output_stream_frame = VideoFrame.from_ndarray(output_vision_frame, format = 'bgr24')
+		output_stream_frame = await asyncio.get_running_loop().run_in_executor(None, process_stream_frame, target_stream_frame)
 		output_stream_frame.pts = target_stream_frame.pts
 		output_stream_frame.time_base = target_stream_frame.time_base
 		return output_stream_frame
