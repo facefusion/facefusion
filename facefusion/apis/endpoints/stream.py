@@ -12,7 +12,7 @@ from facefusion import session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
 from facefusion.apis.stream_helper import on_video_track
-from facefusion.streamer import process_stream_frame
+from facefusion.streamer import process_vision_frame
 
 
 async def websocket_stream(websocket : WebSocket) -> None:
@@ -31,7 +31,7 @@ async def websocket_stream(websocket : WebSocket) -> None:
 			target_vision_frame = cv2.imdecode(numpy.frombuffer(image_buffer, numpy.uint8), cv2.IMREAD_COLOR)
 
 			if numpy.any(target_vision_frame):
-				temp_vision_frame = process_stream_frame(target_vision_frame)
+				temp_vision_frame = process_vision_frame(target_vision_frame)
 				is_success, output_vision_frame = cv2.imencode('.jpg', temp_vision_frame)
 
 				if is_success:
