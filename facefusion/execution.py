@@ -5,7 +5,7 @@ from typing import List
 import onnxruntime
 
 import facefusion.choices
-from facefusion.filesystem import is_directory, create_directory
+from facefusion.filesystem import create_directory, is_directory
 from facefusion.system import detect_static_graphic_devices
 from facefusion.types import ExecutionProvider, InferenceOptionSet, InferenceProvider
 
