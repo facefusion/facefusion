@@ -56,7 +56,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'__metadata__':
 			{
 				'vendor': 'Helaman',
-				'license': 'Non-Commercial',
+				'license': 'CC-BY-4.0',
 				'year': 2023
 			},
 			'hashes':
@@ -83,7 +83,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'__metadata__':
 			{
 				'vendor': 'Phhofm',
-				'license': 'Non-Commercial',
+				'license': 'CC-BY-4.0',
 				'year': 2023
 			},
 			'hashes':
@@ -299,7 +299,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'__metadata__':
 			{
 				'vendor': 'Helaman',
-				'license': 'Non-Commercial',
+				'license': 'CC-BY-4.0',
 				'year': 2024
 			},
 			'hashes':
