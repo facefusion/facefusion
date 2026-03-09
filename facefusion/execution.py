@@ -1,15 +1,13 @@
 import os
-import shutil
-import subprocess
+from typing import List
 
-from functools import lru_cache
-from typing import List, Optional
-import pynvml
+
 import onnxruntime
 
 import facefusion.choices
+from facefusion.filesystem import is_directory, create_directory
 from facefusion.system import detect_static_graphic_devices
-from facefusion.types import ExecutionProvider, InferenceSessionProvider
+from facefusion.types import ExecutionProvider, InferenceOptionSet, InferenceProvider
 
 onnxruntime.set_default_logger_severity(3)
 
