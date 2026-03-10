@@ -30,13 +30,16 @@ async def upload_asset(request : Request) -> Response:
 			asset_ids : List[str] = []
 
 			for asset_path in asset_paths:
-				asset = asset_store.create_asset(session_id, asset_type, asset_path) #type:ignore[arg-type]
+				asset_name = os.path.basename(asset_path)
 
-				if asset:
-					asset_id = asset.get('id')
+				if not asset_store.has_asset(session_id, asset_type, asset_name): #type:ignore[arg-type]
+					asset = asset_store.create_asset(session_id, asset_type, asset_path) #type:ignore[arg-type]
 
-					if asset_id:
-						asset_ids.append(asset_id)
+					if asset:
+						asset_id = asset.get('id')
+
+						if asset_id:
+							asset_ids.append(asset_id)
 
 			if asset_ids:
 				return JSONResponse(
@@ -65,7 +68,7 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 			create_directory(temp_path)
 
-			asset_file_name = get_file_name(temp_file.name)
+			asset_file_name = get_file_name(upload_file.filename)
 			asset_path = os.path.join(temp_path, asset_file_name + upload_file_extension)
 
 			process_manager.start()
@@ -89,6 +92,7 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 async def get_assets(request : Request) -> Response:
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
+	asset_type = request.query_params.get('type')
 
 	if session_id:
 		asset_set = asset_store.get_assets(session_id)
@@ -96,18 +100,19 @@ async def get_assets(request : Request) -> Response:
 
 		if asset_set:
 			for asset in asset_set.values():
-				assets.append(
-				{
-					'id': asset.get('id'),
-					'created_at': asset.get('created_at').isoformat(),
-					'expires_at': asset.get('expires_at').isoformat(),
-					'type': asset.get('type'),
-					'media': asset.get('media'),
-					'name': asset.get('name'),
-					'format': asset.get('format'),
-					'size': asset.get('size'),
-					'metadata': asset.get('metadata')
-				})
+				if asset_type is None or asset.get('type') == asset_type:
+					assets.append(
+					{
+						'id': asset.get('id'),
+						'created_at': asset.get('created_at').isoformat(),
+						'expires_at': asset.get('expires_at').isoformat(),
+						'type': asset.get('type'),
+						'media': asset.get('media'),
+						'name': asset.get('name'),
+						'format': asset.get('format'),
+						'size': asset.get('size'),
+						'metadata': asset.get('metadata')
+					})
 
 		return JSONResponse(
 		{
