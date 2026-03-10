@@ -163,17 +163,13 @@ AudioFormat = Literal['flac', 'm4a', 'mp3', 'ogg', 'opus', 'wav']
 ImageFormat = Literal['bmp', 'jpeg', 'png', 'tiff', 'webp']
 VideoFormat = Literal['avi', 'm4v', 'mkv', 'mov', 'mp4', 'mpeg', 'mxf', 'webm', 'wmv']
 TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
-AudioTypeSet : TypeAlias = Dict[AudioFormat, str]
-ImageTypeSet : TypeAlias = Dict[ImageFormat, str]
-VideoTypeSet : TypeAlias = Dict[VideoFormat, str]
 
 AudioEncoder = Literal['flac', 'aac', 'libmp3lame', 'libopus', 'libvorbis', 'pcm_s16le', 'pcm_s32le']
+ImageEncoder = Literal['bmp', 'mjpeg', 'png', 'tiff', 'libwebp']
 VideoEncoder = Literal['libx264', 'libx264rgb', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox', 'rawvideo']
-EncoderSet = TypedDict('EncoderSet',
-{
-	'audio' : List[AudioEncoder],
-	'video' : List[VideoEncoder]
-})
+AudioSet : TypeAlias = Dict[AudioFormat, AudioEncoder]
+ImageSet : TypeAlias = Dict[ImageFormat, ImageEncoder]
+VideoSet : TypeAlias = Dict[VideoFormat, VideoEncoder]
 VideoPreset = Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 
 AssetId : TypeAlias = str
