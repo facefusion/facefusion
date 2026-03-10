@@ -4,7 +4,7 @@ from typing import List
 
 from starlette.datastructures import UploadFile
 from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
+from starlette.responses import FileResponse, JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from facefusion import ffmpeg, process_manager, session_context, session_manager, state_manager
@@ -126,6 +126,12 @@ async def get_asset(request : Request) -> Response:
 		asset = asset_store.get_asset(session_id, asset_id)
 
 		if asset:
+			if request.query_params.get('action') == 'download':
+				asset_path = asset.get('path')
+
+				if os.path.exists(asset_path):
+					return FileResponse(asset_path, filename = asset.get('name'))
+
 			return JSONResponse(
 			{
 				'id': asset.get('id'),
