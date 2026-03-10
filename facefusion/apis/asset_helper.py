@@ -70,13 +70,13 @@ def validate_asset_files(upload_files : List[UploadFile]) -> bool:
 		file_format = get_file_format(upload_file.filename)
 		media_type = detect_media_type_by_format(file_format)
 
-		if media_type == 'audio' and facefusion.choices.audio_set.get(file_format) not in available_encoder_set.get('audio'):
+		if media_type == 'audio' and facefusion.choices.audio_set.get(file_format) not in available_encoder_set.get('audio'): #type:ignore[call-overload]
 			return False
 
-		if media_type == 'image' and facefusion.choices.image_set.get(file_format) not in available_encoder_set.get('image'):
+		if media_type == 'image' and facefusion.choices.image_set.get(file_format) not in available_encoder_set.get('image'): #type:ignore[call-overload]
 			return False
 
-		if media_type == 'video' and facefusion.choices.video_set.get(file_format) not in available_encoder_set.get('video'):
+		if media_type == 'video' and facefusion.choices.video_set.get(file_format) not in available_encoder_set.get('video'): #type:ignore[call-overload]
 			return False
 
 	return True
