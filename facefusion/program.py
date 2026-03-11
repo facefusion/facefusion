@@ -659,7 +659,7 @@ def create_output_creation_program() -> ArgumentParser:
 				'--output-video-preset',
 				help = translator.get('help.output_video_preset'),
 				default = config.get_str_value('output_creation', 'output_video_preset', 'veryfast'),
-				choices = facefusion.choices.output_video_presets
+				choices = facefusion.choices.video_presets
 			)
 		],
 		scopes = [ 'api', 'cli' ]
