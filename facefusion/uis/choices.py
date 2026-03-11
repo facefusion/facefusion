@@ -14,7 +14,7 @@ preview_resolutions : List[str] = [ '512x512', '768x768', '1024x1024' ]
 webcam_modes : List[WebcamMode] = [ 'inline', 'udp', 'v4l2' ]
 webcam_resolutions : List[str] = [ '320x240', '640x480', '800x600', '1024x768', '1280x720', '1280x960', '1920x1080' ]
 
-background_remover_colors : Dict[str, Color] =\
+background_remover_fill_colors : Dict[str, Color] =\
 {
 	'red' : (255, 0, 0, 255),
 	'green' : (0, 255, 0, 255),

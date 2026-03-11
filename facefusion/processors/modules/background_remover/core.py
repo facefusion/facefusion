@@ -463,13 +463,15 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = background_remover_choices.background_remover_models)
-		group_processors.add_argument('--background-remover-color', help = translator.get('help.color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 0 0 0'), nargs = '+')
-		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model', 'background_remover_color' ])
+		group_processors.add_argument('--background-remover-fill-color', help = translator.get('help.fill_color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_fill_color', '0 0 0 0'), nargs = '+')
+		group_processors.add_argument('--background-remover-despill-color', help = translator.get('help.despill_color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_despill_color', '0 0 0 0'), nargs = '+')
+		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model', 'background_remover_fill_color', 'background_remover_despill_color' ])
 
 
 def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('background_remover_model', args.get('background_remover_model'))
-	apply_state_item('background_remover_color', normalize_color(args.get('background_remover_color')))
+	apply_state_item('background_remover_fill_color', normalize_color(args.get('background_remover_fill_color')))
+	apply_state_item('background_remover_despill_color', normalize_color(args.get('background_remover_despill_color')))
 
 
 def pre_check() -> bool:
@@ -515,7 +517,8 @@ def remove_background(temp_vision_frame : VisionFrame) -> Tuple[VisionFrame, Mas
 
 	remove_vision_mask = normalize_vision_mask(remove_vision_mask)
 	remove_vision_mask = cv2.resize(remove_vision_mask, temp_vision_frame.shape[:2][::-1])
-	temp_vision_frame = apply_background_color(temp_vision_frame, remove_vision_mask)
+	temp_vision_frame = apply_despill_color(temp_vision_frame)
+	temp_vision_frame = apply_fill_color(temp_vision_frame, remove_vision_mask)
 	return temp_vision_frame, remove_vision_mask
 
 
@@ -554,10 +557,9 @@ def prepare_temp_frame(temp_vision_frame : VisionFrame) -> VisionFrame:
 	model_standard_deviation = get_model_options().get('standard_deviation')
 
 	if model_type == 'corridor_key':
-		coarse_color = cv2.cvtColor(temp_vision_frame, cv2.COLOR_BGR2HSV)
-		coarse_vision_mask = cv2.inRange(coarse_color, numpy.array([ 35, 40, 40 ]), numpy.array([ 85, 255, 255 ]))
-		coarse_vision_mask = 1.0 - coarse_vision_mask.astype(numpy.float32) / 255.0
-		coarse_vision_mask = cv2.resize(coarse_vision_mask, model_size)[:, :, numpy.newaxis]
+		coarse_color = temp_vision_frame[:, :, ::-1].astype(numpy.float32) / 255.0
+		coarse_bias = coarse_color[:, :, 1] - numpy.maximum(coarse_color[:, :, 0], coarse_color[:, :, 2])
+		coarse_vision_mask = cv2.resize(1.0 - numpy.clip(coarse_bias * 2.0, 0, 1), model_size)[:, :, numpy.newaxis]
 
 	temp_vision_frame = cv2.resize(temp_vision_frame, model_size)
 	temp_vision_frame = temp_vision_frame[:, :, ::-1] / 255.0
@@ -577,18 +579,35 @@ def normalize_vision_mask(temp_vision_mask : Mask) -> Mask:
 	return temp_vision_mask
 
 
-def apply_background_color(temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -> VisionFrame:
-	background_remover_color = state_manager.get_item('background_remover_color')
+def apply_fill_color(temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -> VisionFrame:
+	background_remover_fill_color = state_manager.get_item('background_remover_fill_color')
 	temp_vision_mask = temp_vision_mask.astype(numpy.float32) / 255
 	temp_vision_mask = numpy.expand_dims(temp_vision_mask, axis = 2)
-	temp_vision_mask = (1 - temp_vision_mask) * background_remover_color[-1] / 255
+	temp_vision_mask = (1 - temp_vision_mask) * background_remover_fill_color[-1] / 255
 	color_frame = numpy.zeros_like(temp_vision_frame)
-	color_frame[:, :, 0] = background_remover_color[2]
-	color_frame[:, :, 1] = background_remover_color[1]
-	color_frame[:, :, 2] = background_remover_color[0]
+	color_frame[:, :, 0] = background_remover_fill_color[2]
+	color_frame[:, :, 1] = background_remover_fill_color[1]
+	color_frame[:, :, 2] = background_remover_fill_color[0]
 	temp_vision_frame = temp_vision_frame * (1 - temp_vision_mask) + color_frame * temp_vision_mask
 	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
 	return temp_vision_frame
+
+
+def apply_despill_color(temp_vision_frame : VisionFrame) -> VisionFrame:
+	background_remover_despill_color = state_manager.get_item('background_remover_despill_color')
+	strength = background_remover_despill_color[3] / 255.0
+	spill_bgr = numpy.array([ background_remover_despill_color[2], background_remover_despill_color[1], background_remover_despill_color[0] ], dtype = numpy.float32)
+	spill_weights = spill_bgr / spill_bgr.sum()
+	temp_vision_frame = temp_vision_frame.astype(numpy.float32)
+
+	for channel in range(3):
+		if spill_weights[channel] > 0:
+			others = [ i for i in range(3) if i != channel ]
+			channel_limit = (temp_vision_frame[:, :, others[0]] + temp_vision_frame[:, :, others[1]]) * 0.5
+			despilled = numpy.minimum(temp_vision_frame[:, :, channel], channel_limit)
+			temp_vision_frame[:, :, channel] = temp_vision_frame[:, :, channel] + (despilled - temp_vision_frame[:, :, channel]) * strength * spill_weights[channel]
+
+	return temp_vision_frame.astype(numpy.uint8)
 
 
 def process_frame(inputs : BackgroundRemoverInputs) -> ProcessorOutputs:
