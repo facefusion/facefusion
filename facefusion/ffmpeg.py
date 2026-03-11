@@ -83,6 +83,7 @@ def get_available_encoder_set() -> EncoderSet:
 	available_encoder_set : EncoderSet =\
 	{
 		'audio': [],
+		'image': [],
 		'video': []
 	}
 	commands = ffmpeg_builder.chain(
@@ -94,15 +95,17 @@ def get_available_encoder_set() -> EncoderSet:
 		if line.startswith(' a'):
 			audio_encoder = line.split()[1]
 
-			if audio_encoder in facefusion.choices.output_audio_encoders:
-				index = facefusion.choices.output_audio_encoders.index(audio_encoder) #type:ignore[arg-type]
-				available_encoder_set['audio'].insert(index, audio_encoder) #type:ignore[arg-type]
-		if line.startswith(' v'):
-			video_encoder = line.split()[1]
+			if audio_encoder in facefusion.choices.audio_encoders and audio_encoder not in available_encoder_set.get('audio'):
+				available_encoder_set['audio'].append(audio_encoder) #type:ignore[arg-type]
 
-			if video_encoder in facefusion.choices.output_video_encoders:
-				index = facefusion.choices.output_video_encoders.index(video_encoder) #type:ignore[arg-type]
-				available_encoder_set['video'].insert(index, video_encoder) #type:ignore[arg-type]
+		if line.startswith(' v'):
+			vision_encoder = line.split()[1]
+
+			if vision_encoder in facefusion.choices.image_encoders and vision_encoder not in available_encoder_set.get('image'):
+				available_encoder_set['image'].append(vision_encoder) #type:ignore[arg-type]
+
+			if vision_encoder in facefusion.choices.video_encoders and vision_encoder not in available_encoder_set.get('video'):
+				available_encoder_set['video'].append(vision_encoder) #type:ignore[arg-type]
 
 	return available_encoder_set
 

@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence, get_args
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, VoiceExtractorModel
+from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorMode, FaceSelectorOrder, Gender, ImageEncoder, ImageFormat, ImageSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoSet, VoiceExtractorModel, WorkFlow
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -47,48 +47,44 @@ voice_extractor_models : List[VoiceExtractorModel] = list(get_args(VoiceExtracto
 
 workflows : List[WorkFlow] = [ 'auto', 'audio-to-image:frames', 'audio-to-image:video', 'image-to-image', 'image-to-video', 'image-to-video:frames' ]
 
-audio_type_set : AudioTypeSet =\
+audio_set : AudioSet =\
 {
-	'flac': 'audio/flac',
-	'm4a': 'audio/mp4',
-	'mp3': 'audio/mpeg',
-	'ogg': 'audio/ogg',
-	'opus': 'audio/opus',
-	'wav': 'audio/x-wav'
+	'flac': 'flac',
+	'm4a': 'aac',
+	'mp3': 'libmp3lame',
+	'ogg': 'flac',
+	'opus': 'libopus',
+	'wav': 'pcm_s16le'
 }
-image_type_set : ImageTypeSet =\
+image_set : ImageSet =\
 {
-	'bmp': 'image/bmp',
-	'jpeg': 'image/jpeg',
-	'png': 'image/png',
-	'tiff': 'image/tiff',
-	'webp': 'image/webp'
+	'bmp': 'bmp',
+	'jpeg': 'mjpeg',
+	'png': 'png',
+	'tiff': 'tiff',
+	'webp': 'libwebp'
 }
-video_type_set : VideoTypeSet =\
+video_set : VideoSet =\
 {
-	'avi': 'video/x-msvideo',
-	'm4v': 'video/mp4',
-	'mkv': 'video/x-matroska',
-	'mp4': 'video/mp4',
-	'mpeg': 'video/mpeg',
-	'mov': 'video/quicktime',
-	'mxf': 'application/mxf',
-	'webm': 'video/webm',
-	'wmv': 'video/x-ms-wmv'
+	'avi': 'mpeg4',
+	'm4v': 'libx264',
+	'mkv': 'libx264',
+	'mov': 'libx264',
+	'mp4': 'libx264',
+	'mpeg': 'mpeg1video',
+	'mxf': 'mpeg2video',
+	'webm': 'libvpx-vp9',
+	'wmv': 'msmpeg4'
 }
 audio_formats : List[AudioFormat] = list(get_args(AudioFormat))
 image_formats : List[ImageFormat] = list(get_args(ImageFormat))
 video_formats : List[VideoFormat] = list(get_args(VideoFormat))
 temp_frame_formats : List[TempFrameFormat] = list(get_args(TempFrameFormat))
 
-output_audio_encoders : List[AudioEncoder] = list(get_args(AudioEncoder))
-output_video_encoders : List[VideoEncoder] = list(get_args(VideoEncoder))
-output_encoder_set : EncoderSet =\
-{
-	'audio': output_audio_encoders,
-	'video': output_video_encoders
-}
-output_video_presets : List[VideoPreset] = list(get_args(VideoPreset))
+audio_encoders : List[AudioEncoder] = list(get_args(AudioEncoder))
+image_encoders : List[ImageEncoder] = list(get_args(ImageEncoder))
+video_encoders : List[VideoEncoder] = list(get_args(VideoEncoder))
+video_presets : List[VideoPreset] = list(get_args(VideoPreset))
 
 benchmark_modes : List[BenchmarkMode] = list(get_args(BenchmarkMode))
 benchmark_set : BenchmarkSet =\

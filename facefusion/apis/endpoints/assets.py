@@ -1,17 +1,15 @@
 import os
-import tempfile
 from typing import List
 
-from starlette.datastructures import UploadFile
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_415_UNSUPPORTED_MEDIA_TYPE
 
-from facefusion import ffmpeg, process_manager, session_context, session_manager, state_manager
+from facefusion import session_context, session_manager
 from facefusion.apis import asset_store
-from facefusion.apis.asset_helper import detect_media_type
+from facefusion.apis.asset_helper import save_asset_files, validate_asset_files
 from facefusion.apis.endpoints.session import extract_access_token
-from facefusion.filesystem import create_directory, get_file_extension, get_file_name, remove_file
+from facefusion.filesystem import remove_file
 
 
 async def upload_asset(request : Request) -> Response:
@@ -24,13 +22,17 @@ async def upload_asset(request : Request) -> Response:
 
 		form = await request.form()
 		upload_files = form.getlist('file')
-		asset_paths = await save_asset_files(upload_files) #type:ignore[arg-type]
+
+		if not validate_asset_files(upload_files):
+			return Response(status_code = HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+		asset_paths = await save_asset_files(upload_files)
 
 		if asset_paths:
 			asset_ids : List[str] = []
 
 			for asset_path in asset_paths:
-				asset = asset_store.create_asset(session_id, asset_type, asset_path) #type:ignore[arg-type]
+				asset = asset_store.create_asset(session_id, asset_type, asset_path)
 
 				if asset:
 					asset_id = asset.get('id')
@@ -45,45 +47,6 @@ async def upload_asset(request : Request) -> Response:
 				}, status_code = HTTP_201_CREATED)
 
 	return Response(status_code = HTTP_400_BAD_REQUEST)
-
-
-async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
-	asset_paths : List[str] = []
-
-	for upload_file in upload_files:
-		upload_file_extension = get_file_extension(upload_file.filename)
-
-		with tempfile.NamedTemporaryFile(suffix = upload_file_extension, delete = False) as temp_file:
-
-			while upload_chunk := await upload_file.read(1024):
-				temp_file.write(upload_chunk)
-
-			temp_file.flush()
-
-			media_type = detect_media_type(temp_file.name)
-			temp_path = state_manager.get_temp_path()
-
-			create_directory(temp_path)
-
-			asset_file_name = get_file_name(temp_file.name)
-			asset_path = os.path.join(temp_path, asset_file_name + upload_file_extension)
-
-			process_manager.start()
-
-			if media_type == 'audio' and ffmpeg.sanitize_audio(temp_file.name, asset_path):
-				asset_paths.append(asset_path)
-
-			if media_type == 'image' and ffmpeg.sanitize_image(temp_file.name, asset_path):
-				asset_paths.append(asset_path)
-
-			if media_type == 'video' and ffmpeg.sanitize_video(temp_file.name, asset_path):
-				asset_paths.append(asset_path)
-
-			process_manager.end()
-
-		remove_file(temp_file.name)
-
-	return asset_paths
 
 
 async def get_assets(request : Request) -> Response:

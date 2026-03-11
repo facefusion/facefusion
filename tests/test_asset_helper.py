@@ -1,6 +1,6 @@
 import pytest
 
-from facefusion.apis.asset_helper import detect_media_type, extract_audio_metadata, extract_image_metadata, extract_video_metadata
+from facefusion.apis.asset_helper import detect_media_type_by_path, extract_audio_metadata, extract_image_metadata, extract_video_metadata
 from facefusion.download import conditional_download
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -16,9 +16,9 @@ def before_all() -> None:
 
 
 def test_detect_media_type() -> None:
-	assert detect_media_type(get_test_example_file('source.jpg')) == 'image'
-	assert detect_media_type(get_test_example_file('target-240p.mp4')) == 'video'
-	assert detect_media_type(get_test_example_file('source.mp3')) == 'audio'
+	assert detect_media_type_by_path(get_test_example_file('source.jpg')) == 'image'
+	assert detect_media_type_by_path(get_test_example_file('target-240p.mp4')) == 'video'
+	assert detect_media_type_by_path(get_test_example_file('source.mp3')) == 'audio'
 
 
 def test_extract_image_metadata() -> None:
