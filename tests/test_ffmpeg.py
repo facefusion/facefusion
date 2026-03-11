@@ -52,6 +52,7 @@ def get_available_encoder_set() -> EncoderSet:
 		return\
 		{
 			'audio': [ 'aac' ],
+			'image': [ 'png' ],
 			'video': [ 'libx264' ]
 		}
 	return facefusion.ffmpeg.get_available_encoder_set()
@@ -61,6 +62,7 @@ def test_get_available_encoder_set() -> None:
 	available_encoder_set = get_available_encoder_set()
 
 	assert 'aac' in available_encoder_set.get('audio')
+	assert 'png' in available_encoder_set.get('image')
 	assert 'libx264' in available_encoder_set.get('video')
 
 
