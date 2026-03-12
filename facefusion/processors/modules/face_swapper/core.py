@@ -540,8 +540,8 @@ def pre_process(mode : ProcessMode) -> bool:
 		return False
 
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
-	source_frames = read_static_images(source_image_paths)
-	source_faces = get_many_faces(source_frames)
+	source_vision_frames = read_static_images(source_image_paths)
+	source_faces = get_many_faces(source_vision_frames)
 
 	if not get_one_face(source_faces):
 		logger.error(translator.get('no_source_face_detected') + translator.get('exclamation_mark'), __name__)
