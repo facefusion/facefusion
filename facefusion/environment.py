@@ -27,7 +27,7 @@ def setup() -> None:
 				os.execv(sys.executable, [ sys.executable ] + sys.argv)
 
 		if is_windows():
-			library_paths : List[str] =\
+			library_paths =\
 			[
 				os.path.join(conda_prefix, 'Lib'),
 				os.path.join(conda_prefix, 'Lib', 'site-packages', 'tensorrt_libs')
