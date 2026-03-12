@@ -41,7 +41,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'age_modifier':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/FRAN/resolve/main/fran.hash',
+					'url': resolve_download_url('models-3.6.0', 'fran.hash'),
 					'path': resolve_relative_path('../.assets/models/fran.hash')
 				}
 			},
@@ -49,7 +49,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'age_modifier':
 				{
-					'url': 'https://huggingface.co/bluefoxcreation/FRAN/resolve/main/fran.onnx',
+					'url': resolve_download_url('models-3.6.0', 'fran.onnx'),
 					'path': resolve_relative_path('../.assets/models/fran.onnx')
 				}
 			},
