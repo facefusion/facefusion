@@ -584,27 +584,27 @@ def apply_fill_color(temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -
 	temp_vision_mask = temp_vision_mask.astype(numpy.float32) / 255
 	temp_vision_mask = numpy.expand_dims(temp_vision_mask, axis = 2)
 	temp_vision_mask = (1 - temp_vision_mask) * background_remover_fill_color[-1] / 255
-	color_frame = numpy.zeros_like(temp_vision_frame)
-	color_frame[:, :, 0] = background_remover_fill_color[2]
-	color_frame[:, :, 1] = background_remover_fill_color[1]
-	color_frame[:, :, 2] = background_remover_fill_color[0]
-	temp_vision_frame = temp_vision_frame * (1 - temp_vision_mask) + color_frame * temp_vision_mask
+	fill_vision_frame = numpy.zeros_like(temp_vision_frame)
+	fill_vision_frame[:, :, 0] = background_remover_fill_color[2]
+	fill_vision_frame[:, :, 1] = background_remover_fill_color[1]
+	fill_vision_frame[:, :, 2] = background_remover_fill_color[0]
+	temp_vision_frame = temp_vision_frame * (1 - temp_vision_mask) + fill_vision_frame * temp_vision_mask
 	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
 	return temp_vision_frame
 
 
 def apply_despill_color(temp_vision_frame : VisionFrame) -> VisionFrame:
 	background_remover_despill_color = state_manager.get_item('background_remover_despill_color')
-	color_alpha = background_remover_despill_color[3] / 255.0
-	color_frame = numpy.zeros_like(temp_vision_frame).astype(numpy.float32)
-	color_frame[:, :, 0] = background_remover_despill_color[2]
-	color_frame[:, :, 1] = background_remover_despill_color[1]
-	color_frame[:, :, 2] = background_remover_despill_color[0]
-	color_weight = color_frame / numpy.maximum(numpy.sum(background_remover_despill_color[:3]), 1)
 	temp_vision_frame = temp_vision_frame.astype(numpy.float32)
-	channel_limit = (numpy.roll(temp_vision_frame, 1, axis = 2) + numpy.roll(temp_vision_frame, -1, axis = 2)) * 0.5
-	despill_vision_frame = numpy.minimum(temp_vision_frame, channel_limit)
-	temp_vision_frame = temp_vision_frame + (despill_vision_frame - temp_vision_frame) * color_alpha * color_weight
+	color_alpha = background_remover_despill_color[3] / 255.0
+	despill_vision_frame = numpy.zeros_like(temp_vision_frame)
+	despill_vision_frame[:, :, 0] = background_remover_despill_color[2]
+	despill_vision_frame[:, :, 1] = background_remover_despill_color[1]
+	despill_vision_frame[:, :, 2] = background_remover_despill_color[0]
+	color_weight = despill_vision_frame / numpy.maximum(numpy.max(background_remover_despill_color[:3]), 1)
+	color_limit = numpy.roll(temp_vision_frame, 1, 2) + numpy.roll(temp_vision_frame, -1, 2)
+	limit_vision_frame = numpy.minimum(temp_vision_frame, color_limit * 0.5)
+	temp_vision_frame = temp_vision_frame + (limit_vision_frame - temp_vision_frame) * color_alpha * color_weight
 	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
 	return temp_vision_frame
 
