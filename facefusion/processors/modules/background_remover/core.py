@@ -595,19 +595,18 @@ def apply_fill_color(temp_vision_frame : VisionFrame, temp_vision_mask : Mask) -
 
 def apply_despill_color(temp_vision_frame : VisionFrame) -> VisionFrame:
 	background_remover_despill_color = state_manager.get_item('background_remover_despill_color')
-	strength = background_remover_despill_color[3] / 255.0
-	spill_bgr = numpy.array([ background_remover_despill_color[2], background_remover_despill_color[1], background_remover_despill_color[0] ], dtype = numpy.float32)
-	spill_weights = spill_bgr / spill_bgr.sum()
+	color_alpha = background_remover_despill_color[3] / 255.0
+	color_frame = numpy.zeros_like(temp_vision_frame).astype(numpy.float32)
+	color_frame[:, :, 0] = background_remover_despill_color[2]
+	color_frame[:, :, 1] = background_remover_despill_color[1]
+	color_frame[:, :, 2] = background_remover_despill_color[0]
+	color_weight = color_frame / numpy.maximum(numpy.sum(background_remover_despill_color[:3]), 1)
 	temp_vision_frame = temp_vision_frame.astype(numpy.float32)
-
-	for channel in range(3):
-		if spill_weights[channel] > 0:
-			others = [ i for i in range(3) if i != channel ]
-			channel_limit = (temp_vision_frame[:, :, others[0]] + temp_vision_frame[:, :, others[1]]) * 0.5
-			despilled = numpy.minimum(temp_vision_frame[:, :, channel], channel_limit)
-			temp_vision_frame[:, :, channel] = temp_vision_frame[:, :, channel] + (despilled - temp_vision_frame[:, :, channel]) * strength * spill_weights[channel]
-
-	return temp_vision_frame.astype(numpy.uint8)
+	channel_limit = (numpy.roll(temp_vision_frame, 1, axis = 2) + numpy.roll(temp_vision_frame, -1, axis = 2)) * 0.5
+	despill_vision_frame = numpy.minimum(temp_vision_frame, channel_limit)
+	temp_vision_frame = temp_vision_frame + (despill_vision_frame - temp_vision_frame) * color_alpha * color_weight
+	temp_vision_frame = temp_vision_frame.astype(numpy.uint8)
+	return temp_vision_frame
 
 
 def process_frame(inputs : BackgroundRemoverInputs) -> ProcessorOutputs:
