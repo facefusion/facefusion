@@ -72,35 +72,3 @@ def run(program : ArgumentParser) -> None:
 	subprocess.call([ shutil.which('pip'), 'uninstall', 'onnxruntime', onnxruntime_name, '-y', '-q' ])
 
 	subprocess.call(commands)
-
-	if args.onnxruntime == 'cuda' and has_conda:
-		library_paths = []
-
-		if is_linux():
-			python_id = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
-			library_paths.extend(
-			[
-				os.path.join(os.getenv('CONDA_PREFIX'), 'lib'),
-				os.path.join(os.getenv('CONDA_PREFIX'), 'lib', python_id, 'site-packages', 'tensorrt_libs')
-			])
-
-			if os.getenv('LD_LIBRARY_PATH'):
-				library_paths.extend(os.getenv('LD_LIBRARY_PATH').split(os.pathsep))
-
-			library_paths = list(dict.fromkeys(filter(os.path.exists, library_paths)))
-
-			subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'LD_LIBRARY_PATH=' + os.pathsep.join(library_paths) ])
-
-		if is_windows():
-			library_paths.extend(
-			[
-				os.path.join(os.getenv('CONDA_PREFIX'), 'Lib'),
-				os.path.join(os.getenv('CONDA_PREFIX'), 'Lib', 'site-packages', 'tensorrt_libs')
-			])
-
-			if os.getenv('PATH'):
-				library_paths.extend(os.getenv('PATH').split(os.pathsep))
-
-			library_paths = list(dict.fromkeys(filter(os.path.exists, library_paths)))
-
-			subprocess.call([ shutil.which('conda'), 'env', 'config', 'vars', 'set', 'PATH=' + os.pathsep.join(library_paths) ])
