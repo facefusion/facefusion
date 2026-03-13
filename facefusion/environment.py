@@ -39,4 +39,3 @@ def setup() -> None:
 					library_paths.append(os.getenv('PATH'))
 				os.environ['PATH'] = os.pathsep.join(library_paths)
 				os.environ['CONDA_READY'] = '1'
-				os.execv(sys.executable, [ sys.executable ] + sys.argv)
