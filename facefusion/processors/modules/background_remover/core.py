@@ -114,7 +114,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'mean': [ 0.0, 0.0, 0.0 ],
 			'standard_deviation': [ 1.0, 1.0, 1.0 ]
 		},
-		'corridor_key':
+		'corridor_key_1024':
 		{
 			'__metadata__':
 			{
@@ -126,20 +126,49 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			{
 				'background_remover':
 				{
-					'url': resolve_download_url('models-3.6.0', 'corridor_key.hash'),
-					'path': resolve_relative_path('../.assets/models/corridor_key.hash')
+					'url': resolve_download_url('models-3.6.0', 'corridor_key_1024.hash'),
+					'path': resolve_relative_path('../.assets/models/corridor_key_1024.hash')
 				}
 			},
 			'sources':
 			{
 				'background_remover':
 				{
-					'url': resolve_download_url('models-3.6.0', 'corridor_key.onnx'),
-					'path': resolve_relative_path('../.assets/models/corridor_key.onnx')
+					'url': resolve_download_url('models-3.6.0', 'corridor_key_1024.onnx'),
+					'path': resolve_relative_path('../.assets/models/corridor_key_1024.onnx')
 				}
 			},
 			'type': 'corridor_key',
 			'size': (1024, 1024),
+			'mean': [ 0.485, 0.456, 0.406 ],
+			'standard_deviation': [ 0.229, 0.224, 0.225 ]
+		},
+		'corridor_key_2048':
+		{
+			'__metadata__':
+			{
+				'vendor': 'nikopueringer',
+				'license': 'Non-Commercial',
+				'year': 2025
+			},
+			'hashes':
+			{
+				'background_remover':
+				{
+					'url': resolve_download_url('models-3.6.0', 'corridor_key_2048.hash'),
+					'path': resolve_relative_path('../.assets/models/corridor_key_2048.hash')
+				}
+			},
+			'sources':
+			{
+				'background_remover':
+				{
+					'url': resolve_download_url('models-3.6.0', 'corridor_key_2048.onnx'),
+					'path': resolve_relative_path('../.assets/models/corridor_key_2048.onnx')
+				}
+			},
+			'type': 'corridor_key',
+			'size': (2048, 2048),
 			'mean': [ 0.485, 0.456, 0.406 ],
 			'standard_deviation': [ 0.229, 0.224, 0.225 ]
 		},
