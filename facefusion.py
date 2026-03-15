@@ -4,8 +4,8 @@ import os
 
 os.environ['OMP_NUM_THREADS'] = '1'
 
-from facefusion import core, environment
+from facefusion import core, conda
 
 if __name__ == '__main__':
-	environment.setup()
+	conda.setup()
 	core.cli()
