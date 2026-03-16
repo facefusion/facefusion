@@ -26,17 +26,17 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 			futures = []
 
 			while camera_capture and camera_capture.isOpened():
-				_, capture_frame = camera_capture.read()
-				if analyse_stream(capture_frame, camera_fps):
+				_, capture_vision_frame = camera_capture.read()
+				if analyse_stream(capture_vision_frame, camera_fps):
 					camera_capture.release()
 
-				if numpy.any(capture_frame):
-					future = executor.submit(process_stream_frame, capture_frame)
+				if numpy.any(capture_vision_frame):
+					future = executor.submit(process_stream_frame, capture_vision_frame)
 					futures.append(future)
 
 				for future_done in [ future for future in futures if future.done() ]:
-					capture_frame = future_done.result()
-					capture_deque.append(capture_frame)
+					capture_vision_frame = future_done.result()
+					capture_deque.append(capture_vision_frame)
 					futures.remove(future_done)
 
 				while capture_deque:

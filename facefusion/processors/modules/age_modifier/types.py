@@ -12,6 +12,6 @@ AgeModifierInputs = TypedDict('AgeModifierInputs',
 	'temp_vision_mask' : Mask
 })
 
-AgeModifierModel = Literal['styleganex_age']
+AgeModifierModel = Literal['fran', 'styleganex_age']
 
 AgeModifierDirection : TypeAlias = NDArray[Any]
