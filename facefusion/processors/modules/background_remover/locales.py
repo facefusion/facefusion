@@ -8,7 +8,7 @@ LOCALES : Locales =\
 		{
 			'model': 'choose the model responsible for removing the background',
 			'fill_color': 'apply red, green, blue and alpha values to the background fill',
-			'despill_color': 'apply red, green, blue and alpha values to suppress color despill'
+			'despill_color': 'apply red, green, blue and alpha values to foreground despill'
 		},
 		'uis':
 		{

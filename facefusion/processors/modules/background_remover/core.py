@@ -493,7 +493,7 @@ def get_model_options() -> ModelOptions:
 def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
-		group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = background_remover_choices.background_remover_models)
+		group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'silueta'), choices = background_remover_choices.background_remover_models)
 		group_processors.add_argument('--background-remover-fill-color', help = translator.get('help.fill_color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_fill_color', '0 0 0 0'), nargs = '+')
 		group_processors.add_argument('--background-remover-despill-color', help = translator.get('help.despill_color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_despill_color', '0 0 0 0'), nargs = '+')
 		facefusion.jobs.job_store.register_step_keys([ 'background_remover_model', 'background_remover_fill_color', 'background_remover_despill_color' ])
