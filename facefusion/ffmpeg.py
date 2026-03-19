@@ -10,7 +10,7 @@ import facefusion.choices
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, translator
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
-from facefusion.types import AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, UpdateProgress, VideoEncoder, VideoFormat
+from facefusion.types import ApiSecurityStrategy, AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, MediaType, ReadChunk, Resolution, UpdateProgress, VideoEncoder, VideoFormat
 from facefusion.vision import detect_video_duration, detect_video_fps, pack_resolution, predict_video_frame_total
 
 
@@ -49,6 +49,34 @@ def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
 	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
+
+	while process_manager.is_processing():
+		try:
+			if log_level == 'debug':
+				log_debug(process)
+			process.wait(timeout = 0.5)
+		except subprocess.TimeoutExpired:
+			continue
+		return process
+
+	if process_manager.is_stopping():
+		process.terminate()
+
+	return process
+
+
+def run_ffmpeg_with_pipe(commands : List[Command], read_chunk : ReadChunk) -> subprocess.Popen[bytes]:
+	log_level = state_manager.get_item('log_level')
+	commands = ffmpeg_builder.run(commands)
+	process = subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
+
+	while chunk := read_chunk():
+		if process.poll() is not None:
+			break
+		process.stdin.write(chunk)
+
+	if process.stdin and not process.stdin.closed:
+		process.stdin.close()
 
 	while process_manager.is_processing():
 		try:
@@ -290,34 +318,95 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	return process.returncode == 0
 
 
-def sanitize_audio(temp_path : str, asset_path : str) -> bool:
+def sanitize_audio(input_format : str, read_chunk : ReadChunk, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+	pipe_format = resolve_audio_pipe_format(input_format)
+
+	if security_strategy == 'strict':
+		commands = ffmpeg_builder.chain(
+			ffmpeg_builder.set_pipe_input(pipe_format),
+			ffmpeg_builder.deep_copy_audio(),
+			ffmpeg_builder.strip_metadata(),
+			ffmpeg_builder.force_output(asset_path)
+		)
+		return run_ffmpeg_with_pipe(commands, read_chunk).returncode == 0
+
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_input(temp_path),
-		ffmpeg_builder.deep_copy_audio(),
+		ffmpeg_builder.set_pipe_input(pipe_format),
+		ffmpeg_builder.copy_audio_encoder(),
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
 	)
-	return run_ffmpeg(commands).returncode == 0
+	return run_ffmpeg_with_pipe(commands, read_chunk).returncode == 0
 
 
-def sanitize_image(temp_path : str, asset_path : str) -> bool:
+def sanitize_image(input_format : str, read_chunk : ReadChunk, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+	image_codec = resolve_image_pipe_codec(input_format)
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_input(temp_path),
+		ffmpeg_builder.set_pipe_image_input(image_codec),
 		ffmpeg_builder.deep_copy_image(),
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
 	)
-	return run_ffmpeg(commands).returncode == 0
+	return run_ffmpeg_with_pipe(commands, read_chunk).returncode == 0
 
 
-def sanitize_video(temp_path : str, asset_path : str) -> bool:
+def sanitize_video(input_format : str, read_chunk : ReadChunk, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+	pipe_format = resolve_video_pipe_format(input_format)
+
+	if security_strategy == 'strict':
+		commands = ffmpeg_builder.chain(
+			ffmpeg_builder.set_pipe_input(pipe_format),
+			ffmpeg_builder.set_video_encoder('libx264'),
+			ffmpeg_builder.set_video_preset('libx264', 'ultrafast'),
+			ffmpeg_builder.deep_copy_video(),
+			ffmpeg_builder.deep_copy_audio(),
+			ffmpeg_builder.strip_metadata(),
+			ffmpeg_builder.force_output(asset_path)
+		)
+		return run_ffmpeg_with_pipe(commands, read_chunk).returncode == 0
+
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_input(temp_path),
-		ffmpeg_builder.deep_copy_video(),
+		ffmpeg_builder.set_pipe_input(pipe_format),
+		ffmpeg_builder.copy_video_encoder(),
+		ffmpeg_builder.copy_audio_encoder(),
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
 	)
-	return run_ffmpeg(commands).returncode == 0
+	return run_ffmpeg_with_pipe(commands, read_chunk).returncode == 0
+
+
+def sanitize_media(media_type : MediaType, input_format : str, read_chunk : ReadChunk, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+	if media_type == 'audio':
+		return sanitize_audio(input_format, read_chunk, asset_path, security_strategy)
+	if media_type == 'image':
+		return sanitize_image(input_format, read_chunk, asset_path, security_strategy)
+	if media_type == 'video':
+		return sanitize_video(input_format, read_chunk, asset_path, security_strategy)
+	return False
+
+
+def resolve_audio_pipe_format(input_format : str) -> str:
+	if input_format == 'm4a':
+		return 'mp4'
+	if input_format == 'opus':
+		return 'ogg'
+	return input_format
+
+
+def resolve_image_pipe_codec(input_format : str) -> str:
+	if input_format == 'jpeg':
+		return 'mjpeg'
+	return input_format
+
+
+def resolve_video_pipe_format(input_format : str) -> str:
+	if input_format == 'mkv':
+		return 'matroska'
+	if input_format == 'm4v':
+		return 'mp4'
+	if input_format == 'wmv':
+		return 'asf'
+	return input_format
 
 
 def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:

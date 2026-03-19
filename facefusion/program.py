@@ -811,6 +811,12 @@ def create_api_program() -> ArgumentParser:
 		type = int,
 		default = config.get_int_value('api', 'api_port', '8000')
 	)
+	group_api.add_argument(
+		'--api-security-strategy',
+		help = translator.get('help.api_security_strategy'),
+		default = config.get_str_value('api', 'api_security_strategy', 'strict'),
+		choices = facefusion.choices.api_security_strategies
+	)
 
 	return program
 
