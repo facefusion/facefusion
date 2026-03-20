@@ -1,8 +1,12 @@
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
+from facefusion import mediamtx
 from facefusion.apis.endpoints.assets import delete_assets, get_asset, get_assets, upload_asset
 from facefusion.apis.endpoints.capabilities import get_capabilities
 from facefusion.apis.endpoints.metrics import get_metrics, websocket_metrics
@@ -11,6 +15,14 @@ from facefusion.apis.endpoints.session import create_session, destroy_session, g
 from facefusion.apis.endpoints.state import get_state, set_state
 from facefusion.apis.endpoints.stream import websocket_stream, websocket_stream_whip
 from facefusion.apis.middlewares.session import create_session_guard
+
+
+@asynccontextmanager
+async def lifespan(app : Starlette) -> AsyncGenerator[None, None]:
+	mediamtx.start()
+	mediamtx.wait_for_ready()
+	yield
+	mediamtx.stop()
 
 
 def create_api() -> Starlette:
@@ -35,7 +47,7 @@ def create_api() -> Starlette:
 			WebSocketRoute('/stream/whip', websocket_stream_whip, middleware = [ session_guard ])
 		]
 
-	api = Starlette(routes = routes)
+	api = Starlette(routes = routes, lifespan = lifespan)
 	api.add_middleware(CORSMiddleware, allow_origins = [ '*' ], allow_methods = [ '*' ], allow_headers = [ '*' ])
 
 	return api

@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>whip_stream test</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: monospace; background: #111; color: #eee; padding: 20px; }
+  h1 { font-size: 15px; margin-bottom: 16px; color: #888; }
+
+  .steps { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .step {
+    border: 1px solid #333; padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .step-num { font-size: 11px; color: #555; min-width: 14px; }
+  .step-label { font-size: 12px; color: #777; min-width: 130px; }
+  .step-body { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1; }
+  .step.done { border-color: #2a5a3a; }
+  .step.done .step-num { color: #4a9; }
+
+  select, input[type=text], input[type=password] {
+    background: #1a1a1a; border: 1px solid #444; color: #eee;
+    padding: 5px 8px; font-family: monospace; font-size: 13px; width: 220px;
+  }
+  input[type=file] { font-size: 12px; color: #888; }
+
+  button {
+    background: #222; border: 1px solid #555; color: #ccc;
+    padding: 6px 12px; font-family: monospace; font-size: 12px; cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover:not(:disabled) { background: #333; border-color: #777; }
+  button:disabled { opacity: 0.35; cursor: default; }
+  button.danger { border-color: #a44; color: #a44; }
+
+  #sourceThumb {
+    width: 48px; height: 48px; object-fit: cover;
+    border: 1px solid #444; display: none;
+  }
+
+  .video-row { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+
+  .video-container { position: relative; display: inline-block; flex-shrink: 0; }
+  .video-container span { font-size: 11px; color: #555; display: block; margin-bottom: 5px; }
+  #outputVideo { background: #000; width: 960px; height: 540px; display: block; }
+  #inputVideo { position: absolute; bottom: 10px; right: 10px; width: 240px; height: 135px; border: 1px solid #444; background: #000; z-index: 1; display: none; }
+  #inputVideo.visible { display: block; }
+
+  #stats {
+    border: 1px solid #333; border-radius: 4px;
+    padding: 10px 12px; font-size: 13px; line-height: 1.7; color: #aaa;
+    width: 210px; display: none; flex-shrink: 0;
+  }
+  #stats.visible { display: block; }
+  #stats .label { color: #666; }
+  #stats .value { color: #4a9; }
+  #stats div { white-space: nowrap; }
+
+  #timeline {
+    display: none; margin-bottom: 8px;
+  }
+  #timeline.visible { display: flex; align-items: center; gap: 10px; width: 960px; }
+  #timeline input[type=range] {
+    flex: 1; height: 4px; -webkit-appearance: none; appearance: none;
+    background: #333; outline: none; cursor: pointer;
+  }
+  #timeline input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px;
+    background: #4a9; border-radius: 50%; cursor: pointer;
+  }
+  #timeline .time { font-size: 12px; color: #888; min-width: 80px; }
+
+  #log {
+    background: #161616; border: 1px solid #2a2a2a;
+    padding: 10px; height: 200px; overflow-y: auto;
+    font-size: 12px; line-height: 1.7;
+  }
+  .info  { color: #888; }
+  .ok    { color: #4a9; }
+  .error { color: #e55; }
+  .warn  { color: #ca5; }
+  .debug { color: #68a; }
+</style>
+</head>
+<body>
+
+<h1>whip_stream — face swap via ffmpeg WHIP + mediamtx</h1>
+
+<div class="steps">
+
+  <div class="step" id="stepSession">
+    <span class="step-num">1</span>
+    <span class="step-label">session</span>
+    <div class="step-body">
+      <input type="text" id="serverUrl" value="http://localhost:8000" placeholder="server URL">
+      <input type="password" id="apiKey" placeholder="api key (optional)">
+      <button onclick="createSession()">Connect</button>
+    </div>
+  </div>
+
+  <div class="step" id="stepSource">
+    <span class="step-num">2</span>
+    <span class="step-label">source face</span>
+    <div class="step-body">
+      <input type="file" id="sourceFile" accept="image/*" onchange="uploadSource(event)" disabled>
+      <img id="sourceThumb" alt="source">
+    </div>
+  </div>
+
+  <div class="step" id="stepVideo">
+    <span class="step-num">3</span>
+    <span class="step-label">video source</span>
+    <div class="step-body">
+      <button id="btnCamera" onclick="startCamera()" disabled>Use Camera</button>
+      <button id="btnFile" onclick="document.getElementById('videoFile').click()" disabled>Use Video File</button>
+      <input type="file" id="videoFile" accept="video/*" style="display:none" onchange="loadVideoFile(event)">
+      <video id="videoThumb" muted playsinline style="width: 80px; height: 48px; object-fit: cover; border: 1px solid #444; display: none;"></video>
+    </div>
+  </div>
+
+  <div class="step" id="stepOptions">
+    <span class="step-num">4</span>
+    <span class="step-label">options</span>
+    <div class="step-body">
+      <select id="captureRes" style="width: auto;">
+        <option value="0">original</option>
+        <option value="640">480p</option>
+        <option value="1280" selected>720p</option>
+        <option value="1920">1080p</option>
+        <option value="2560">2K</option>
+        <option value="3840">4K</option>
+      </select>
+      <label style="font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+        <input type="checkbox" id="faceDebugger" onchange="toggleFaceDebugger()" disabled> face debugger
+      </label>
+      <label style="font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+        <input type="checkbox" id="pipToggle" onchange="togglePip()" disabled> picture in picture
+      </label>
+    </div>
+  </div>
+
+  <div class="step" id="stepConnect">
+    <span class="step-num">5</span>
+    <span class="step-label">whip stream</span>
+    <div class="step-body">
+      <button id="btnConnect" onclick="connect()" disabled>Stream</button>
+      <button id="btnDisconnect" class="danger" onclick="disconnect()" disabled>Disconnect</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="video-row">
+  <div class="video-container">
+    <span>processed output (webrtc via WHEP)</span>
+    <video id="outputVideo" autoplay playsinline></video>
+    <video id="inputVideo" autoplay muted playsinline></video>
+  </div>
+  <div id="stats">
+    <div><span class="label">ws </span><span class="value" id="statWs">—</span></div>
+    <div><span class="label">rtc </span><span class="value" id="statRtc">—</span></div>
+    <div><span class="label">ice </span><span class="value" id="statIce">—</span></div>
+    <div><span class="label">codec </span><span class="value" id="statCodec">—</span></div>
+    <div><span class="label">res </span><span class="value" id="statResolution">—</span></div>
+    <div><span class="label">fps in </span><span class="value" id="statFps">—</span></div>
+    <div><span class="label">kbps in </span><span class="value" id="statBitrate">—</span></div>
+    <div><span class="label">frames </span><span class="value" id="statFrames">—</span></div>
+    <div><span class="label">fps out </span><span class="value" id="statFpsSend">—</span></div>
+    <div><span class="label">sent </span><span class="value" id="statSent">—</span></div>
+    <div><span class="label">up </span><span class="value" id="statUptime">—</span></div>
+  </div>
+</div>
+
+<div id="timeline">
+  <span class="time" id="timePosition">0:00</span>
+  <input type="range" id="timeSlider" min="0" max="100" step="0.1" value="0" oninput="onSeekInput()" onchange="onSeekCommit()">
+  <span class="time" id="timeDuration">0:00</span>
+</div>
+
+<div id="log"></div>
+
+<script>
+var accessToken = null;
+var whepUrlFromServer = null;
+var ws = null;
+var pc = null;
+var localStream = null;
+var sourceReady = false;
+var statsTimer = null;
+var captureTimer = null;
+var connectTime = null;
+var streaming = false;
+var inputVideoSource = null;
+var framesSent = 0;
+var prevBytes = 0;
+var prevFrames = 0;
+var prevStatsTime = 0;
+var prevFramesSent = 0;
+
+var captureCanvas = document.createElement('canvas');
+var captureCtx = captureCanvas.getContext('2d');
+var audioCtx = null;
+var audioWorklet = null;
+
+function log(msg, type) {
+  type = type || 'info';
+  var el = document.getElementById('log');
+  var div = document.createElement('div');
+  div.className = type;
+  div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function markDone(stepId) {
+  document.getElementById(stepId).classList.add('done');
+}
+
+function base() {
+  return document.getElementById('serverUrl').value.replace(/\/$/, '');
+}
+
+function wsBase() {
+  return base().replace(/^http/, 'ws');
+}
+
+function whepUrl() {
+  return whepUrlFromServer;
+}
+
+function authHeaders() {
+  return { 'Authorization': 'Bearer ' + accessToken };
+}
+
+function checkConnectReady() {
+  if (sourceReady && localStream) {
+    document.getElementById('btnConnect').disabled = false;
+  }
+}
+
+function setStat(id, value) {
+  document.getElementById(id).textContent = value;
+}
+
+function startStats() {
+  connectTime = performance.now();
+  prevBytes = 0;
+  prevFrames = 0;
+  prevStatsTime = 0;
+  prevFramesSent = 0;
+  document.getElementById('stats').className = 'visible';
+
+  statsTimer = setInterval(async function() {
+    if (ws) {
+      setStat('statWs', ws.readyState === WebSocket.OPEN ? 'open' : 'closed');
+    }
+
+    if (pc) {
+      setStat('statRtc', pc.connectionState);
+      setStat('statIce', pc.iceConnectionState);
+
+      var stats = await pc.getStats();
+      stats.forEach(function(report) {
+        if (report.type === 'inbound-rtp' && report.kind === 'video') {
+          var now = report.timestamp;
+          var bytes = report.bytesReceived || 0;
+          var frames = report.framesReceived || 0;
+
+          if (prevStatsTime > 0) {
+            var dt = (now - prevStatsTime) / 1000;
+            setStat('statBitrate', Math.round((bytes - prevBytes) * 8 / dt / 1000));
+            setStat('statFps', Math.round((frames - prevFrames) / dt));
+          }
+
+          prevBytes = bytes;
+          prevFrames = frames;
+          prevStatsTime = now;
+          setStat('statFrames', frames);
+
+          if (report.frameWidth && report.frameHeight) {
+            setStat('statResolution', report.frameWidth + 'x' + report.frameHeight);
+          }
+        }
+
+        if (report.type === 'codec' && report.mimeType) {
+          setStat('statCodec', report.mimeType.split('/')[1]);
+        }
+      });
+    }
+
+    var fpsSend = framesSent - prevFramesSent;
+    prevFramesSent = framesSent;
+    setStat('statFpsSend', fpsSend);
+    setStat('statSent', framesSent);
+
+    var elapsed = Math.floor((performance.now() - connectTime) / 1000);
+    var min = Math.floor(elapsed / 60);
+    var sec = elapsed % 60;
+    setStat('statUptime', min + ':' + String(sec).padStart(2, '0'));
+  }, 1000);
+}
+
+function stopStats() {
+  if (statsTimer) {
+    clearInterval(statsTimer);
+    statsTimer = null;
+  }
+  document.getElementById('stats').className = '';
+}
+
+async function createSession() {
+  var apiKey = document.getElementById('apiKey').value;
+  try {
+    var sessionHeaders = { 'Content-Type': 'application/json' };
+    var sessionBody = JSON.stringify(apiKey ? { api_key: apiKey } : {});
+
+    var res = await fetch(base() + '/session', {
+      method: 'POST',
+      headers: sessionHeaders,
+      body: sessionBody
+    });
+    var data = await res.json();
+
+    if (!res.ok) { log('session failed: ' + JSON.stringify(data), 'error'); return; }
+    accessToken = data.access_token;
+    log('session ok — token: ' + accessToken.slice(0, 10) + '...', 'ok');
+
+    await fetch(base() + '/state', {
+      method: 'PUT',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ face_selector_mode: 'many' })
+    });
+    log('face_selector_mode → many', 'ok');
+
+    markDone('stepSession');
+    document.getElementById('sourceFile').disabled = false;
+    document.getElementById('btnCamera').disabled = false;
+    document.getElementById('btnFile').disabled = false;
+    document.getElementById('faceDebugger').disabled = false;
+    document.getElementById('pipToggle').disabled = false;
+
+    var storedData = localStorage.getItem('ff_source_data');
+    var storedName = localStorage.getItem('ff_source_name');
+    if (storedData && storedName && !sourceReady) {
+      log('auto-uploading saved source: ' + storedName, 'info');
+      await uploadSourceFile(dataURLtoFile(storedData, storedName));
+    }
+  } catch (e) {
+    log('fetch error: ' + e.message, 'error');
+  }
+}
+
+function saveSourceToStorage(file) {
+  var reader = new FileReader();
+  reader.onload = function() {
+    localStorage.setItem('ff_source_data', reader.result);
+    localStorage.setItem('ff_source_name', file.name);
+  };
+  reader.readAsDataURL(file);
+}
+
+function dataURLtoFile(dataURL, name) {
+  var parts = dataURL.split(',');
+  var mime = parts[0].match(/:(.*?);/)[1];
+  var bytes = atob(parts[1]);
+  var array = new Uint8Array(bytes.length);
+  for (var i = 0; i < bytes.length; i++) array[i] = bytes.charCodeAt(i);
+  return new File([array], name, { type: mime });
+}
+
+function loadSourceFromStorage() {
+  var data = localStorage.getItem('ff_source_data');
+  var name = localStorage.getItem('ff_source_name');
+  if (data && name) {
+    var thumb = document.getElementById('sourceThumb');
+    thumb.src = data;
+    thumb.style.display = 'block';
+    log('restored source: ' + name, 'info');
+  }
+}
+
+async function uploadSourceFile(file) {
+  log('uploading source: ' + file.name, 'info');
+
+  var form = new FormData();
+  form.append('file', file);
+
+  try {
+    var uploadRes = await fetch(base() + '/assets?type=source', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: form
+    });
+    if (!uploadRes.ok) { log('upload failed: ' + uploadRes.status + ' ' + await uploadRes.text(), 'error'); return; }
+    var uploadData = await uploadRes.json();
+    var assetId = (uploadData.asset_ids || [])[0];
+    if (!assetId) { log('upload failed: no asset_id in response', 'error'); return; }
+    log('asset uploaded: ' + assetId, 'ok');
+
+    var selectRes = await fetch(base() + '/state?action=select&type=source', {
+      method: 'PUT',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ asset_ids: [assetId] })
+    });
+    if (!selectRes.ok) { log('select source failed', 'error'); return; }
+
+    log('source face set', 'ok');
+    markDone('stepSource');
+
+    var thumb = document.getElementById('sourceThumb');
+    thumb.src = URL.createObjectURL(file);
+    thumb.style.display = 'block';
+
+    saveSourceToStorage(file);
+    sourceReady = true;
+    checkConnectReady();
+  } catch (e) {
+    log('source error: ' + e.message, 'error');
+  }
+}
+
+async function uploadSource(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  await uploadSourceFile(file);
+}
+
+async function startCamera() {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    inputVideoSource = 'camera';
+    document.getElementById('inputVideo').srcObject = localStream;
+    log('camera: ' + localStream.getVideoTracks()[0].label, 'ok');
+
+    if (localStream.getAudioTracks().length > 0) {
+      log('mic: ' + localStream.getAudioTracks()[0].label, 'ok');
+    }
+
+    markDone('stepVideo');
+    checkConnectReady();
+  } catch (e) {
+    log('camera error: ' + e.message, 'error');
+  }
+}
+
+function loadVideoFile(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  loadVideoFromFile(file);
+  saveVideoToStorage(file);
+}
+
+function loadVideoFromFile(file) {
+  var vid = document.getElementById('inputVideo');
+  var blobUrl = URL.createObjectURL(file);
+  vid.src = blobUrl;
+  vid.loop = true;
+  vid.muted = false;
+  vid.volume = 0;
+
+  var thumb = document.getElementById('videoThumb');
+  thumb.src = blobUrl;
+  thumb.style.display = 'block';
+  thumb.play().catch(function() {});
+
+  vid.play().then(function() {
+    localStream = (vid.captureStream || vid.mozCaptureStream).call(vid);
+    inputVideoSource = 'file';
+    log('video file: ' + file.name, 'ok');
+    markDone('stepVideo');
+    checkConnectReady();
+    initTimeline(vid);
+  }).catch(function(e) { log('file error: ' + e.message, 'error'); });
+}
+
+function openVideoDb() {
+  return new Promise(function(resolve, reject) {
+    var req = indexedDB.open('ff_video_store', 1);
+    req.onupgradeneeded = function() { req.result.createObjectStore('videos'); };
+    req.onsuccess = function() { resolve(req.result); };
+    req.onerror = function() { reject(req.error); };
+  });
+}
+
+function saveVideoToStorage(file) {
+  openVideoDb().then(function(db) {
+    var tx = db.transaction('videos', 'readwrite');
+    tx.objectStore('videos').put(file, 'target');
+    tx.objectStore('videos').put(file.name, 'target_name');
+  });
+}
+
+function loadVideoFromStorage() {
+  openVideoDb().then(function(db) {
+    var tx = db.transaction('videos', 'readonly');
+    var store = tx.objectStore('videos');
+    var fileReq = store.get('target');
+    var nameReq = store.get('target_name');
+    tx.oncomplete = function() {
+      if (!fileReq.result || !nameReq.result) return;
+      var file = new File([fileReq.result], nameReq.result, { type: fileReq.result.type });
+      loadVideoFromFile(file);
+      log('restored video: ' + file.name, 'info');
+    };
+  });
+}
+
+var timelineVideo = null;
+var timelineSeeking = false;
+var timelineTimer = null;
+
+function initTimeline(vid) {
+  timelineVideo = vid;
+  var slider = document.getElementById('timeSlider');
+
+  vid.addEventListener('loadedmetadata', function() {
+    slider.max = vid.duration;
+    document.getElementById('timeDuration').textContent = formatTime(vid.duration);
+  });
+
+  if (vid.duration) {
+    slider.max = vid.duration;
+    document.getElementById('timeDuration').textContent = formatTime(vid.duration);
+  }
+
+  document.getElementById('timeline').className = 'visible';
+}
+
+function startTimelineSync() {
+  timelineTimer = setInterval(function() {
+    if (timelineVideo && !timelineSeeking) {
+      document.getElementById('timeSlider').value = timelineVideo.currentTime;
+      document.getElementById('timePosition').textContent = formatTime(timelineVideo.currentTime);
+    }
+  }, 250);
+}
+
+function stopTimelineSync() {
+  if (timelineTimer) {
+    clearInterval(timelineTimer);
+    timelineTimer = null;
+  }
+}
+
+function onSeekInput() {
+  timelineSeeking = true;
+  var t = parseFloat(document.getElementById('timeSlider').value);
+  document.getElementById('timePosition').textContent = formatTime(t);
+}
+
+function onSeekCommit() {
+  var t = parseFloat(document.getElementById('timeSlider').value);
+  timelineSeeking = false;
+
+  if (timelineVideo) {
+    timelineVideo.currentTime = t;
+    log('seek → ' + formatTime(t), 'info');
+  }
+}
+
+function formatTime(s) {
+  var m = Math.floor(s / 60);
+  var sec = Math.floor(s % 60);
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+function captureAndSend() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+  var video = document.getElementById('inputVideo');
+  if (!video.videoWidth || !video.videoHeight) return;
+
+  var maxW = parseInt(document.getElementById('captureRes').value);
+  var w = video.videoWidth;
+  var h = video.videoHeight;
+
+  if (maxW > 0 && w > maxW) {
+    h = Math.round(maxW * h / w);
+    h = h - (h % 2);
+    w = maxW;
+  }
+
+  captureCanvas.width = w;
+  captureCanvas.height = h;
+  captureCtx.drawImage(video, 0, 0, w, h);
+
+  captureCanvas.toBlob(function(blob) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+    blob.arrayBuffer().then(function(buf) {
+      ws.send(buf);
+      framesSent++;
+    });
+  }, 'image/jpeg', 0.7);
+}
+
+async function connectWhep() {
+  var url = whepUrl();
+  var t0 = performance.now();
+  log('WHEP → ' + url, 'info');
+
+  var PeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+
+  if (!PeerConnection) {
+    log('WebRTC not supported in this browser', 'error');
+    return;
+  }
+
+  pc = new PeerConnection({ iceServers: [] });
+
+  pc.onconnectionstatechange = function() {
+    var state = pc.connectionState;
+    log('rtc: ' + state + ' (' + Math.round(performance.now() - t0) + 'ms)', state === 'connected' ? 'ok' : state === 'failed' ? 'error' : 'info');
+  };
+
+  pc.oniceconnectionstatechange = function() {
+    log('ice: ' + pc.iceConnectionState + ' (' + Math.round(performance.now() - t0) + 'ms)', 'debug');
+  };
+
+  pc.ontrack = function(event) {
+    log('remote track: ' + event.track.kind + ' (' + Math.round(performance.now() - t0) + 'ms)', 'ok');
+    document.getElementById('outputVideo').srcObject = event.streams[0];
+  };
+
+  pc.addTransceiver('video', { direction: 'recvonly' });
+  pc.addTransceiver('audio', { direction: 'recvonly' });
+
+  log('creating offer...', 'debug');
+  var offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  log('offer created (' + Math.round(performance.now() - t0) + 'ms)', 'debug');
+
+  var res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/sdp' },
+    body: offer.sdp
+  });
+  log('WHEP response: ' + res.status + ' (' + Math.round(performance.now() - t0) + 'ms)', res.ok ? 'debug' : 'error');
+
+  if (!res.ok) {
+    log('WHEP body: ' + await res.text(), 'error');
+    return;
+  }
+
+  var answerSdp = await res.text();
+  await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+  log('WHEP answer applied (' + Math.round(performance.now() - t0) + 'ms)', 'ok');
+}
+
+function startAudioCapture() {
+  var stream = localStream;
+
+  if (!stream || stream.getAudioTracks().length === 0) {
+    log('no audio track available', 'warn');
+    return;
+  }
+
+  audioCtx = new AudioContext({ sampleRate: 48000 });
+  var source = audioCtx.createMediaStreamSource(stream);
+  var processor = audioCtx.createScriptProcessor(4096, 2, 2);
+
+  processor.onaudioprocess = function(e) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+    var left = e.inputBuffer.getChannelData(0);
+    var right = e.inputBuffer.getChannelData(1);
+    var pcm = new Int16Array(left.length * 2);
+
+    for (var i = 0; i < left.length; i++) {
+      pcm[i * 2] = Math.max(-32768, Math.min(32767, left[i] * 32768));
+      pcm[i * 2 + 1] = Math.max(-32768, Math.min(32767, right[i] * 32768));
+    }
+
+    ws.send(pcm.buffer);
+  };
+
+  source.connect(processor);
+  processor.connect(audioCtx.destination);
+  audioWorklet = processor;
+  log('audio capture started (48kHz stereo s16le)', 'ok');
+}
+
+function stopAudioCapture() {
+  if (audioWorklet) {
+    audioWorklet.disconnect();
+    audioWorklet = null;
+  }
+
+  if (audioCtx) {
+    audioCtx.close();
+    audioCtx = null;
+  }
+}
+
+async function connect() {
+  framesSent = 0;
+
+  var wsUrl = wsBase() + '/stream/whip';
+  var protocols = ['access_token.' + accessToken];
+  var t0 = performance.now();
+  log('ws → ' + wsUrl, 'info');
+
+  ws = new WebSocket(wsUrl, protocols);
+  ws.binaryType = 'arraybuffer';
+
+  ws.onopen = function() {
+    log('websocket open (' + Math.round(performance.now() - t0) + 'ms) — sending frames', 'ok');
+    markDone('stepConnect');
+    document.getElementById('btnConnect').disabled = true;
+    document.getElementById('btnDisconnect').disabled = false;
+    streaming = true;
+    updatePipVisibility();
+
+    captureTimer = setInterval(captureAndSend, 1000 / 30);
+    startAudioCapture();
+    startTimelineSync();
+    startStats();
+  };
+
+  ws.onmessage = function(event) {
+    if (typeof event.data === 'string' && !whepUrlFromServer) {
+      whepUrlFromServer = event.data;
+      log('stream ready (' + Math.round(performance.now() - t0) + 'ms) — WHEP url: ' + whepUrlFromServer, 'ok');
+
+      if (!window.RTCPeerConnection && !window.webkitRTCPeerConnection) {
+        log('WebRTC not supported — try Chrome or Edge', 'error');
+        return;
+      }
+
+      var tWhep = performance.now();
+      connectWhep().then(function() {
+        log('WHEP connected (' + Math.round(performance.now() - tWhep) + 'ms)', 'ok');
+      }).catch(function(e) {
+        log('WHEP failed (' + Math.round(performance.now() - tWhep) + 'ms): ' + e.message, 'error');
+      });
+      return;
+    }
+  };
+
+  ws.onclose = function(event) {
+    log('websocket closed: ' + event.code, 'warn');
+    stopStreaming();
+  };
+
+  ws.onerror = function() {
+    log('websocket error', 'error');
+  };
+}
+
+function stopStreaming() {
+  streaming = false;
+  updatePipVisibility();
+  stopStats();
+
+  if (captureTimer) {
+    clearInterval(captureTimer);
+    captureTimer = null;
+  }
+
+  document.getElementById('btnConnect').disabled = false;
+  document.getElementById('btnDisconnect').disabled = true;
+  document.getElementById('stepConnect').classList.remove('done');
+}
+
+function disconnect() {
+  stopAudioCapture();
+  stopTimelineSync();
+
+  if (pc) {
+    pc.close();
+    pc = null;
+  }
+
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+
+  whepUrlFromServer = null;
+
+  document.getElementById('outputVideo').srcObject = null;
+  stopStreaming();
+  log('disconnected', 'warn');
+}
+
+async function toggleFaceDebugger() {
+  var enabled = document.getElementById('faceDebugger').checked;
+  var processors = enabled ? ['face_swapper', 'face_debugger'] : ['face_swapper'];
+  var face_mask_types = enabled ? ['box', 'occlusion', 'region'] : ['box', 'region'];
+
+  var res = await fetch(base() + '/state', {
+    method: 'PUT',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ processors: processors, face_mask_types: face_mask_types })
+  });
+
+  if (res.ok) {
+    log('processors → ' + processors.join(', ') + ', masks → ' + face_mask_types.join(', '), 'ok');
+  }
+  if (!res.ok) {
+    log('failed to set processors', 'error');
+  }
+}
+
+function togglePip() {
+  updatePipVisibility();
+}
+
+function updatePipVisibility() {
+  var checked = document.getElementById('pipToggle').checked;
+  var input = document.getElementById('inputVideo');
+  if (checked && streaming) {
+    input.classList.add('visible');
+  }
+  if (!checked || !streaming) {
+    input.classList.remove('visible');
+  }
+}
+
+loadSourceFromStorage();
+loadVideoFromStorage();
+
+createSession().catch(function() {});
+</script>
+</body>
+</html>

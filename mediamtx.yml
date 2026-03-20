@@ -7,4 +7,3 @@ webrtcAddress: :8889
 api: yes
 apiAddress: :9997
 paths:
-  stream:

@@ -49,7 +49,7 @@ async def websocket_stream(websocket : WebSocket) -> None:
 	await websocket.close()
 
 
-def run_whip_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_event : threading.Event, audio_write_fd_holder : list) -> None:
+def run_whip_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_event : threading.Event, ready_event : threading.Event, audio_write_fd_holder : list, stream_path : str) -> None:
 	encoder = None
 	audio_write_fd = -1
 	output_deque : Deque[VisionFrame] = deque()
@@ -70,16 +70,24 @@ def run_whip_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_ev
 				output_deque.append(future_done.result())
 				futures.remove(future_done)
 
+			if encoder and encoder.poll() is not None:
+				stderr_output = encoder.stderr.read() if encoder.stderr else b''
+				logger.error('encoder died with code ' + str(encoder.returncode) + ': ' + stderr_output.decode(), __name__)
+				break
+
 			while output_deque:
 				temp_vision_frame = output_deque.popleft()
 
 				if not encoder:
 					height, width = temp_vision_frame.shape[:2]
-					encoder, audio_write_fd = create_whip_encoder(width, height, STREAM_FPS, STREAM_QUALITY)
+					encoder, audio_write_fd = create_whip_encoder(width, height, STREAM_FPS, STREAM_QUALITY, stream_path)
 					audio_write_fd_holder[0] = audio_write_fd
 					logger.info('whip encoder started ' + str(width) + 'x' + str(height), __name__)
 
 				feed_whip_frame(encoder, temp_vision_frame)
+
+			if encoder and not ready_event.is_set() and mediamtx.is_path_ready(stream_path):
+				ready_event.set()
 
 			if capture_frame is None and not output_deque:
 				time.sleep(0.005)
@@ -104,27 +112,28 @@ async def websocket_stream_whip(websocket : WebSocket) -> None:
 	await websocket.accept(subprotocol = subprotocol)
 
 	if source_paths:
-		mediamtx_process = mediamtx.start()
-		is_ready = await asyncio.get_running_loop().run_in_executor(None, mediamtx.wait_for_ready)
-
-		if not is_ready:
-			logger.error('mediamtx failed to start', __name__)
-			mediamtx.stop(mediamtx_process)
-			await websocket.close()
-			return
-
-		logger.info('mediamtx ready', __name__)
+		stream_path = 'stream/' + session_id
+		mediamtx.remove_path(stream_path)
+		mediamtx.add_path(stream_path)
+		logger.info('mediamtx path added ' + stream_path, __name__)
 
 		latest_frame_holder : list = [None]
 		audio_write_fd_holder : list = [-1]
+		whep_sent = False
 		lock = threading.Lock()
 		stop_event = threading.Event()
-		worker = threading.Thread(target = run_whip_pipeline, args = (latest_frame_holder, lock, stop_event, audio_write_fd_holder), daemon = True)
+		ready_event = threading.Event()
+		worker = threading.Thread(target = run_whip_pipeline, args = (latest_frame_holder, lock, stop_event, ready_event, audio_write_fd_holder, stream_path), daemon = True)
 		worker.start()
 
 		try:
 			while True:
 				message = await websocket.receive()
+
+				if not whep_sent and ready_event.is_set():
+					whep_url = mediamtx.get_whep_url(stream_path)
+					await websocket.send_text(whep_url)
+					whep_sent = True
 
 				if message.get('bytes'):
 					data = message.get('bytes')
@@ -143,10 +152,9 @@ async def websocket_stream_whip(websocket : WebSocket) -> None:
 			logger.error(str(exception), __name__)
 
 		stop_event.set()
-		worker.join(timeout = 10)
-
-		if mediamtx_process:
-			mediamtx.stop(mediamtx_process)
+		loop = asyncio.get_running_loop()
+		await loop.run_in_executor(None, worker.join, 10)
+		mediamtx.remove_path(stream_path)
 		return
 
 	await websocket.close()

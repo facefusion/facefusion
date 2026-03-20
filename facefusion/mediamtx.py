@@ -9,13 +9,17 @@ import httpx
 
 MEDIAMTX_WHIP_PORT : int = 8889
 MEDIAMTX_API_PORT : int = 9997
-MEDIAMTX_PATH : str = 'stream'
 MEDIAMTX_CONFIG : str = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'mediamtx.yml')
 MEDIAMTX_FALLBACK_BINARY : str = '/home/henry/local/bin/mediamtx'
+MEDIAMTX_PROCESS : Optional[subprocess.Popen[bytes]] = None
 
 
-def get_whip_url() -> str:
-	return 'http://localhost:' + str(MEDIAMTX_WHIP_PORT) + '/' + MEDIAMTX_PATH + '/whip'
+def get_whip_url(stream_path : str) -> str:
+	return 'http://localhost:' + str(MEDIAMTX_WHIP_PORT) + '/' + stream_path + '/whip'
+
+
+def get_whep_url(stream_path : str) -> str:
+	return 'http://localhost:' + str(MEDIAMTX_WHIP_PORT) + '/' + stream_path + '/whep'
 
 
 def get_api_url() -> str:
@@ -30,20 +34,25 @@ def resolve_binary() -> str:
 	return MEDIAMTX_FALLBACK_BINARY
 
 
-def start() -> Optional[subprocess.Popen[bytes]]:
+def start() -> None:
+	global MEDIAMTX_PROCESS
+
 	stop_stale()
 	mediamtx_binary = resolve_binary()
-
-	return subprocess.Popen(
+	MEDIAMTX_PROCESS = subprocess.Popen(
 		[ mediamtx_binary, MEDIAMTX_CONFIG ],
 		stdout = subprocess.DEVNULL,
 		stderr = subprocess.DEVNULL
 	)
 
 
-def stop(process : subprocess.Popen[bytes]) -> None:
-	process.terminate()
-	process.wait()
+def stop() -> None:
+	global MEDIAMTX_PROCESS
+
+	if MEDIAMTX_PROCESS:
+		MEDIAMTX_PROCESS.terminate()
+		MEDIAMTX_PROCESS.wait()
+		MEDIAMTX_PROCESS = None
 
 
 def stop_stale() -> None:
@@ -66,3 +75,30 @@ def wait_for_ready() -> bool:
 			pass
 		time.sleep(0.5)
 	return False
+
+
+def is_path_ready(stream_path : str) -> bool:
+	api_url = get_api_url() + '/v3/paths/get/' + stream_path
+
+	try:
+		response = httpx.get(api_url, timeout = 1)
+
+		if response.status_code == 200:
+			return response.json().get('ready', False)
+	except Exception:
+		pass
+	return False
+
+
+def add_path(stream_path : str) -> bool:
+	api_url = get_api_url() + '/v3/config/paths/add/' + stream_path
+	response = httpx.post(api_url, json = {}, timeout = 5)
+
+	return response.status_code == 200
+
+
+def remove_path(stream_path : str) -> bool:
+	api_url = get_api_url() + '/v3/config/paths/delete/' + stream_path
+	response = httpx.delete(api_url, timeout = 5)
+
+	return response.status_code == 200

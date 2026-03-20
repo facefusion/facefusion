@@ -27,10 +27,10 @@ def create_dtls_certificate() -> None:
 	], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
 
 
-def create_whip_encoder(width : int, height : int, stream_fps : int, stream_quality : int) -> Tuple[subprocess.Popen[bytes], int]:
+def create_whip_encoder(width : int, height : int, stream_fps : int, stream_quality : int, stream_path : str) -> Tuple[subprocess.Popen[bytes], int]:
 	create_dtls_certificate()
 	audio_read_fd, audio_write_fd = os.pipe()
-	whip_url = mediamtx.get_whip_url()
+	whip_url = mediamtx.get_whip_url(stream_path)
 	commands = ffmpeg_builder.chain(
 		[ '-use_wallclock_as_timestamps', '1' ],
 		ffmpeg_builder.capture_video(),
