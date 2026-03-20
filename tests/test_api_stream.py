@@ -1,4 +1,3 @@
-import asyncio
 import tempfile
 from typing import Iterator
 
@@ -13,7 +12,6 @@ from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
 from .assert_helper import get_test_example_file, get_test_examples_directory
-from .stream_helper import create_rtc_offer
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -101,7 +99,7 @@ def test_stream_image(test_client : TestClient) -> None:
 	assert output_vision_frame.shape == (1024, 1024, 3)
 
 
-def test_stream_video(test_client : TestClient) -> None:
+def test_stream_live(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
@@ -129,12 +127,11 @@ def test_stream_video(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	rtc_offer = asyncio.run(create_rtc_offer())
-	stream_response = test_client.post('/stream', json = rtc_offer, headers =
-	{
-		'Authorization': 'Bearer ' + access_token
-	})
+	with test_client.websocket_connect('/stream/live', subprotocols =
+	[
+		'access_token.' + access_token
+	]) as websocket:
+		websocket.send_bytes(source_content)
+		output_bytes = websocket.receive_bytes()
 
-	assert stream_response.status_code == 200
-	assert stream_response.json().get('type') == 'answer'
-	assert stream_response.json().get('sdp')
+	assert len(output_bytes) > 0

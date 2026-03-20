@@ -1,21 +1,11 @@
-from aiortc import RTCPeerConnection, VideoStreamTrack
+import cv2
+import numpy
 
-from facefusion.types import RtcOfferSet
 
+def create_test_frame_bytes(width : int, height : int) -> bytes:
+	vision_frame = numpy.zeros((height, width, 3), dtype = numpy.uint8)
+	is_success, image_buffer = cv2.imencode('.jpg', vision_frame)
 
-async def create_rtc_offer() -> RtcOfferSet:
-	rtc_connection = RTCPeerConnection()
-	rtc_connection.addTrack(VideoStreamTrack())
-	rtc_offer = await rtc_connection.createOffer()
-
-	await rtc_connection.setLocalDescription(rtc_offer)
-
-	rtc_offer_set : RtcOfferSet =\
-	{
-		'sdp': rtc_connection.localDescription.sdp,
-		'type': rtc_connection.localDescription.type
-	}
-
-	await rtc_connection.close()
-
-	return rtc_offer_set
+	if is_success:
+		return image_buffer.tobytes()
+	return b''

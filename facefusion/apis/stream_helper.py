@@ -1,36 +1,67 @@
-import asyncio
-from typing import cast
+import subprocess
+import threading
+from typing import Optional
 
-from aiortc import MediaStreamTrack, RTCPeerConnection, VideoStreamTrack
-from av import VideoFrame
+import cv2
 
+from facefusion import ffmpeg_builder
+from facefusion.ffmpeg import open_ffmpeg
 from facefusion.streamer import process_vision_frame
+from facefusion.types import VisionFrame
+
+STREAM_FPS : int = 30
+STREAM_QUALITY : int = 80
 
 
-def process_stream_frame(target_stream_frame : VideoFrame) -> VideoFrame:
-	target_vision_frame = target_stream_frame.to_ndarray(format = 'bgr24')
-	output_vision_frame = process_vision_frame(target_vision_frame)
-	return VideoFrame.from_ndarray(output_vision_frame, format = 'bgr24')
+def create_stream_encoder(width : int, height : int, stream_fps : int, stream_quality : int) -> subprocess.Popen[bytes]:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.capture_video(),
+		ffmpeg_builder.set_media_resolution(str(width) + 'x' + str(height)),
+		ffmpeg_builder.set_input_fps(stream_fps),
+		ffmpeg_builder.set_input('-'),
+		ffmpeg_builder.set_video_encoder('libx264'),
+		ffmpeg_builder.set_video_quality('libx264', stream_quality),
+		ffmpeg_builder.set_video_preset('libx264', 'ultrafast'),
+		[ '-tune', 'zerolatency' ],
+		[ '-maxrate', '4000k' ],
+		[ '-bufsize', '8000k' ],
+		[ '-g', str(stream_fps) ],
+		[ '-f', 'mp4' ],
+		[ '-movflags', 'frag_keyframe+empty_moov+default_base_moof+frag_every_frame' ],
+		ffmpeg_builder.set_output('-')
+	)
+	return open_ffmpeg(commands)
 
 
-def create_output_track(target_track : MediaStreamTrack) -> VideoStreamTrack:
-	output_track = VideoStreamTrack()
+def read_stream_output(process : subprocess.Popen[bytes], output_chunks : list, lock : threading.Lock) -> None:
+	while True:
+		chunk = process.stdout.read(4096)
 
-	async def read_stream_frame() -> VideoFrame:
-		target_stream_frame = cast(VideoFrame, await target_track.recv())
-		output_stream_frame = await asyncio.get_running_loop().run_in_executor(None, process_stream_frame, target_stream_frame)
-		output_stream_frame.pts = target_stream_frame.pts
-		output_stream_frame.time_base = target_stream_frame.time_base
-		return output_stream_frame
+		if not chunk:
+			break
 
-	output_track.recv = read_stream_frame
-	return output_track
+		with lock:
+			output_chunks.append(chunk)
 
 
-def on_video_track(rtc_connection : RTCPeerConnection, target_track : MediaStreamTrack) -> None:
-	if target_track.kind == 'audio':
-		rtc_connection.addTrack(target_track)
+def encode_stream_frame(process : subprocess.Popen[bytes], vision_frame : VisionFrame, output_chunks : list, lock : threading.Lock) -> Optional[bytes]:
+	raw_bytes = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2RGB).tobytes()
+	process.stdin.write(raw_bytes)
+	process.stdin.flush()
 
-	if target_track.kind == 'video':
-		output_track = create_output_track(target_track)
-		rtc_connection.addTrack(output_track)
+	with lock:
+		if output_chunks:
+			encoded_bytes = b''.join(output_chunks)
+			output_chunks.clear()
+			return encoded_bytes
+
+	return None
+
+
+def close_stream_encoder(process : subprocess.Popen[bytes]) -> None:
+	process.stdin.close()
+	process.wait()
+
+
+def process_stream_frame(vision_frame : VisionFrame) -> VisionFrame:
+	return process_vision_frame(vision_frame)
