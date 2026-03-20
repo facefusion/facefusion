@@ -12,9 +12,11 @@ from starlette.websockets import WebSocket
 from facefusion import logger, session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.apis.stream_helper import STREAM_FPS, STREAM_QUALITY, close_whip_encoder, create_whip_encoder, feed_whip_frame, process_stream_frame, start_mediamtx, stop_mediamtx, wait_for_mediamtx
+from facefusion.apis.stream_helper import STREAM_FPS, STREAM_QUALITY, close_whip_encoder, create_whip_encoder, feed_whip_audio, feed_whip_frame, process_stream_frame, start_mediamtx, stop_mediamtx, wait_for_mediamtx
 from facefusion.streamer import process_vision_frame
 from facefusion.types import VisionFrame
+
+JPEG_MAGIC : bytes = b'\xff\xd8'
 
 
 async def websocket_stream(websocket : WebSocket) -> None:
@@ -46,8 +48,9 @@ async def websocket_stream(websocket : WebSocket) -> None:
 	await websocket.close()
 
 
-def run_whip_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_event : threading.Event) -> None:
+def run_whip_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_event : threading.Event, audio_write_fd_holder : list) -> None:
 	encoder = None
+	audio_write_fd = -1
 	output_deque : Deque[VisionFrame] = deque()
 
 	with ThreadPoolExecutor(max_workers = state_manager.get_item('execution_thread_count')) as executor:
@@ -71,7 +74,8 @@ def run_whip_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_ev
 
 				if not encoder:
 					height, width = temp_vision_frame.shape[:2]
-					encoder = create_whip_encoder(width, height, STREAM_FPS, STREAM_QUALITY)
+					encoder, audio_write_fd = create_whip_encoder(width, height, STREAM_FPS, STREAM_QUALITY)
+					audio_write_fd_holder[0] = audio_write_fd
 					logger.info('whip encoder started ' + str(width) + 'x' + str(height), __name__)
 
 				feed_whip_frame(encoder, temp_vision_frame)
@@ -85,7 +89,7 @@ def run_whip_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_ev
 		if stderr_output:
 			logger.error('ffmpeg: ' + stderr_output.decode(), __name__)
 
-		close_whip_encoder(encoder)
+		close_whip_encoder(encoder, audio_write_fd)
 
 
 async def websocket_stream_whip(websocket : WebSocket) -> None:
@@ -111,19 +115,28 @@ async def websocket_stream_whip(websocket : WebSocket) -> None:
 		logger.info('mediamtx ready', __name__)
 
 		latest_frame_holder : list = [None]
+		audio_write_fd_holder : list = [-1]
 		lock = threading.Lock()
 		stop_event = threading.Event()
-		worker = threading.Thread(target = run_whip_pipeline, args = (latest_frame_holder, lock, stop_event), daemon = True)
+		worker = threading.Thread(target = run_whip_pipeline, args = (latest_frame_holder, lock, stop_event, audio_write_fd_holder), daemon = True)
 		worker.start()
 
 		try:
 			while True:
-				image_buffer = await websocket.receive_bytes()
-				frame = cv2.imdecode(numpy.frombuffer(image_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+				message = await websocket.receive()
 
-				if numpy.any(frame):
-					with lock:
-						latest_frame_holder[0] = frame
+				if message.get('bytes'):
+					data = message.get('bytes')
+
+					if data[:2] == JPEG_MAGIC:
+						frame = cv2.imdecode(numpy.frombuffer(data, numpy.uint8), cv2.IMREAD_COLOR)
+
+						if numpy.any(frame):
+							with lock:
+								latest_frame_holder[0] = frame
+
+					if data[:2] != JPEG_MAGIC and audio_write_fd_holder[0] > 0:
+						feed_whip_audio(audio_write_fd_holder[0], data)
 
 		except Exception as exception:
 			logger.error(str(exception), __name__)

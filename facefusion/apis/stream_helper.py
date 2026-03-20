@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import tempfile
 import time
-from typing import Optional
+from typing import Optional, Tuple
 
 import cv2
 import requests
@@ -14,6 +14,7 @@ from facefusion.types import VisionFrame
 
 STREAM_FPS : int = 30
 STREAM_QUALITY : int = 45
+STREAM_AUDIO_RATE : int = 48000
 MEDIAMTX_WHIP_PORT : int = 8889
 MEDIAMTX_PATH : str = 'stream'
 MEDIAMTX_CONFIG : str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'mediamtx.yml')
@@ -32,15 +33,17 @@ def create_dtls_certificate() -> None:
 	], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
 
 
-def create_whip_encoder(width : int, height : int, stream_fps : int, stream_quality : int) -> subprocess.Popen[bytes]:
+def create_whip_encoder(width : int, height : int, stream_fps : int, stream_quality : int) -> Tuple[subprocess.Popen[bytes], int]:
 	create_dtls_certificate()
+	audio_read_fd, audio_write_fd = os.pipe()
 	whip_url = 'http://localhost:' + str(MEDIAMTX_WHIP_PORT) + '/' + MEDIAMTX_PATH + '/whip'
 	commands = ffmpeg_builder.chain(
 		[ '-use_wallclock_as_timestamps', '1' ],
 		ffmpeg_builder.capture_video(),
 		ffmpeg_builder.set_media_resolution(str(width) + 'x' + str(height)),
 		ffmpeg_builder.set_input('-'),
-		[ '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo' ],
+		[ '-use_wallclock_as_timestamps', '1' ],
+		[ '-f', 's16le', '-ar', str(STREAM_AUDIO_RATE), '-ac', '2', '-i', 'pipe:' + str(audio_read_fd) ],
 		ffmpeg_builder.set_video_encoder('libx264'),
 		ffmpeg_builder.set_video_quality('libx264', stream_quality),
 		ffmpeg_builder.set_video_preset('libx264', 'ultrafast'),
@@ -57,7 +60,9 @@ def create_whip_encoder(width : int, height : int, stream_fps : int, stream_qual
 		ffmpeg_builder.set_output(whip_url)
 	)
 	commands = ffmpeg_builder.run(commands)
-	return subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
+	process = subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, pass_fds = (audio_read_fd,))
+	os.close(audio_read_fd)
+	return process, audio_write_fd
 
 
 def start_mediamtx() -> Optional[subprocess.Popen[bytes]]:
@@ -105,7 +110,12 @@ def feed_whip_frame(process : subprocess.Popen[bytes], vision_frame : VisionFram
 	process.stdin.flush()
 
 
-def close_whip_encoder(process : subprocess.Popen[bytes]) -> None:
+def feed_whip_audio(audio_write_fd : int, audio_data : bytes) -> None:
+	os.write(audio_write_fd, audio_data)
+
+
+def close_whip_encoder(process : subprocess.Popen[bytes], audio_write_fd : int) -> None:
+	os.close(audio_write_fd)
 	process.stdin.close()
 	process.terminate()
 	process.wait(timeout = 5)
