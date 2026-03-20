@@ -2,189 +2,251 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>whip_stream test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WHIP Stream Monitor</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: monospace; background: #111; color: #eee; padding: 20px; }
-  h1 { font-size: 15px; margin-bottom: 16px; color: #888; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0f; color: #c8c8d0; min-height: 100vh; }
+  .layout { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
 
-  .steps { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-  .step {
-    border: 1px solid #333; padding: 12px 14px;
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  }
-  .step-num { font-size: 11px; color: #555; min-width: 14px; }
-  .step-label { font-size: 12px; color: #777; min-width: 130px; }
-  .step-body { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1; }
-  .step.done { border-color: #2a5a3a; }
-  .step.done .step-num { color: #4a9; }
+  .sidebar { background: #12121a; border-right: 1px solid #1e1e2e; padding: 1.2rem; overflow-y: auto; }
+  .sidebar h2 { font-size: 1rem; color: #fff; margin-bottom: 0.8rem; }
+  .sidebar h2 .badge { font-size: 0.65rem; padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; vertical-align: middle; background: linear-gradient(135deg, #6c5ce7, #a855f7); color: #fff; }
 
-  select, input[type=text], input[type=password] {
-    background: #1a1a1a; border: 1px solid #444; color: #eee;
-    padding: 5px 8px; font-family: monospace; font-size: 13px; width: 220px;
-  }
-  input[type=file] { font-size: 12px; color: #888; }
+  .section { margin-bottom: 1rem; }
+  .section-title { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .section-title .step-dot { width: 18px; height: 18px; border-radius: 50%; background: #1e1e2e; border: 1px solid #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; color: #555; flex-shrink: 0; }
+  .section-title .step-dot.done { background: #00b894; border-color: #00b894; color: #fff; }
 
-  button {
-    background: #222; border: 1px solid #555; color: #ccc;
-    padding: 6px 12px; font-family: monospace; font-size: 12px; cursor: pointer;
-    white-space: nowrap;
-  }
-  button:hover:not(:disabled) { background: #333; border-color: #777; }
-  button:disabled { opacity: 0.35; cursor: default; }
-  button.danger { border-color: #a44; color: #a44; }
+  .form-row { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
+  .form-row label { font-size: 0.7rem; color: #888; flex: 1; }
+  .form-row input, .form-row select { width: 100%; padding: 0.35rem; border-radius: 6px; border: 1px solid #2a2a3a; background: #0a0a0f; color: #fff; font-size: 0.8rem; }
 
-  #sourceThumb {
-    width: 48px; height: 48px; object-fit: cover;
-    border: 1px solid #444; display: none;
-  }
+  .upload-box { border: 2px dashed #2a2a3a; border-radius: 10px; padding: 1rem; text-align: center; cursor: pointer; transition: border-color 0.2s; margin-bottom: 0.6rem; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+  .upload-box:hover { border-color: #6c5ce7; }
+  .upload-box.has-file { border-color: #00b894; border-style: solid; }
+  .upload-box.disabled { opacity: 0.35; pointer-events: none; }
+  .upload-box input[type="file"] { display: none; }
+  .upload-box .label { font-weight: 600; font-size: 0.85rem; }
+  .upload-box .hint { font-size: 0.7rem; color: #555; margin-top: 0.2rem; }
+  .upload-box .preview { width: 100%; height: 100%; border-radius: 6px; margin-top: 0.4rem; object-fit: cover; }
+  .upload-box .filename { font-size: 0.7rem; color: #888; margin-top: 0.2rem; word-break: break-all; }
 
-  .video-row { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+  .switch-row { display: flex; justify-content: space-between; align-items: center; padding: 0.3rem 0; font-size: 0.75rem; color: #888; }
+  .switch { position: relative; width: 36px; height: 20px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .slider { position: absolute; inset: 0; background: #2a2a3a; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+  .switch .slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; bottom: 3px; background: #666; border-radius: 50%; transition: 0.2s; }
+  .switch input:checked + .slider { background: #6c5ce7; }
+  .switch input:checked + .slider:before { transform: translateX(16px); background: #fff; }
+  .switch input:disabled + .slider { opacity: 0.35; cursor: default; }
 
-  .video-container { position: relative; display: inline-block; flex-shrink: 0; }
-  .video-container span { font-size: 11px; color: #555; display: block; margin-bottom: 5px; }
-  #outputVideo { background: #000; width: 960px; height: 540px; display: block; }
-  #inputVideo { position: absolute; bottom: 10px; right: 10px; width: 240px; height: 135px; border: 1px solid #444; background: #000; z-index: 1; display: none; }
-  #inputVideo.visible { display: block; }
+  .btn { display: block; width: 100%; padding: 0.7rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-bottom: 0.5rem; }
+  .btn-primary { background: linear-gradient(135deg, #6c5ce7, #a855f7); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-danger { background: transparent; border: 1px solid #e74c3c; color: #e74c3c; }
+  .btn-danger:hover { background: #e74c3c22; }
+  .btn-danger:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-secondary { background: #1e1e2e; color: #c8c8d0; border: 1px solid #2a2a3a; }
+  .btn-secondary:hover { border-color: #6c5ce7; }
+  .btn-secondary:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-row { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
+  .btn-row .btn { flex: 1; padding: 0.5rem; font-size: 0.8rem; }
 
-  #stats {
-    border: 1px solid #333; border-radius: 4px;
-    padding: 10px 12px; font-size: 13px; line-height: 1.7; color: #aaa;
-    width: 210px; display: none; flex-shrink: 0;
-  }
-  #stats.visible { display: block; }
-  #stats .label { color: #666; }
-  #stats .value { color: #4a9; }
-  #stats div { white-space: nowrap; }
+  .main { display: flex; flex-direction: column; overflow: hidden; }
 
-  #timeline {
-    display: none; margin-bottom: 8px;
-  }
-  #timeline.visible { display: flex; align-items: center; gap: 10px; width: 960px; }
-  #timeline input[type=range] {
-    flex: 1; height: 4px; -webkit-appearance: none; appearance: none;
-    background: #333; outline: none; cursor: pointer;
-  }
-  #timeline input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 14px; height: 14px;
-    background: #4a9; border-radius: 50%; cursor: pointer;
-  }
-  #timeline .time { font-size: 12px; color: #888; min-width: 80px; }
+  .topbar { display: flex; gap: 1px; background: #1e1e2e; border-bottom: 1px solid #1e1e2e; flex-shrink: 0; }
+  .stat-card { flex: 1; background: #12121a; padding: 0.6rem 0.4rem; text-align: center; }
+  .stat-card .stat-value { font-size: 1.1rem; font-weight: 800; color: #fff; font-family: monospace; }
+  .stat-card .stat-label { font-size: 0.55rem; color: #666; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.1rem; }
+  .stat-card .stat-value.ok { color: #00b894; }
+  .stat-card .stat-value.warn { color: #f6ad55; }
+  .stat-card .stat-value.bad { color: #e74c3c; }
 
-  #log {
-    background: #161616; border: 1px solid #2a2a2a;
-    padding: 10px; height: 200px; overflow-y: auto;
-    font-size: 12px; line-height: 1.7;
+  .video-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1rem; position: relative; overflow: hidden; background: #08080c; }
+  #outputVideo { width: 100%; height: 100%; object-fit: contain; background: #000; border-radius: 8px; }
+
+  .timeline { display: none; align-items: stretch; padding: 0; background: #0e0e14; border-top: 1px solid #1e1e2e; border-bottom: 1px solid #1e1e2e; flex-shrink: 0; }
+  .timeline.visible { display: flex; }
+  .timeline .time { font-size: 0.75rem; color: #888; font-family: monospace; min-width: 60px; display: flex; align-items: center; justify-content: center; padding: 0 0.6rem; background: #12121a; border-right: 1px solid #1e1e2e; }
+  .timeline .time:last-child { border-right: none; border-left: 1px solid #1e1e2e; }
+  .timeline .track { flex: 1; position: relative; height: 2em; cursor: pointer; background: repeating-linear-gradient(90deg, transparent, transparent 59px, #1a1a25 59px, #1a1a25 60px); }
+  .timeline .track-fill { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(135deg, #6c5ce722, #a855f722); border-right: 2px solid #6c5ce7; pointer-events: none; transition: width 0.15s; }
+  .timeline .track-playhead { position: absolute; top: 0; width: 2px; height: 100%; background: #a855f7; pointer-events: none; box-shadow: 0 0 6px #a855f7aa; transition: left 0.15s; }
+  .timeline .track-playhead:before { content: ''; position: absolute; top: -4px; left: -5px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #a855f7; }
+  .timeline input[type=range] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; -webkit-appearance: none; appearance: none; background: transparent; outline: none; cursor: pointer; margin: 0; opacity: 0; z-index: 2; }
+  .timeline input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1px; height: 100%; cursor: col-resize; }
+
+  .log-panel { background: #08080c; border-top: 1px solid #1e1e2e; flex-shrink: 0; max-height: 300px; overflow-y: auto; padding: 0.4rem 1rem; font-family: monospace; font-size: 0.8rem; color: #444; }
+  .log-panel div { padding: 1px 0; white-space: nowrap; }
+  .log-panel .log-info { color: #555; }
+  .log-panel .log-ok { color: #00b894; }
+  .log-panel .log-error { color: #e74c3c; }
+  .log-panel .log-warn { color: #f6ad55; }
+  .log-panel .log-debug { color: #5b7fa6; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 1px solid #1e1e2e; }
+    .video-area { min-height: 300px; }
   }
-  .info  { color: #888; }
-  .ok    { color: #4a9; }
-  .error { color: #e55; }
-  .warn  { color: #ca5; }
-  .debug { color: #68a; }
 </style>
 </head>
 <body>
+<div class="layout">
+  <div class="sidebar">
+    <h2>WHIP Stream <span class="badge">LIVE</span></h2>
 
-<h1>whip_stream — face swap via ffmpeg WHIP + mediamtx</h1>
+    <div class="section">
+      <div class="section-title"><span class="step-dot" id="dotSession">1</span> Session</div>
+      <div class="form-row">
+        <label>Server<input type="text" id="serverUrl" value="http://localhost:8000" placeholder="server URL"></label>
+      </div>
+      <div class="form-row">
+        <label>API Key<input type="password" id="apiKey" placeholder="optional"></label>
+      </div>
+      <button class="btn btn-secondary" onclick="createSession()">Connect</button>
+    </div>
 
-<div class="steps">
+    <div class="section">
+      <div class="section-title"><span class="step-dot" id="dotSource">2</span> Source Face</div>
+      <div class="upload-box disabled" id="sourceBox" onclick="document.getElementById('sourceFile').click()">
+        <input type="file" id="sourceFile" accept="image/*">
+        <div class="label">Source Face</div>
+        <div class="hint">JPG, PNG, WEBP</div>
+      </div>
+    </div>
 
-  <div class="step" id="stepSession">
-    <span class="step-num">1</span>
-    <span class="step-label">session</span>
-    <div class="step-body">
-      <input type="text" id="serverUrl" value="http://localhost:8000" placeholder="server URL">
-      <input type="password" id="apiKey" placeholder="api key (optional)">
-      <button onclick="createSession()">Connect</button>
+    <div class="section">
+      <div class="section-title"><span class="step-dot" id="dotVideo">3</span> Video Source</div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btnCamera" onclick="startCamera()" disabled>Camera</button>
+        <button class="btn btn-secondary" id="btnFile" onclick="document.getElementById('videoFile').click()" disabled>Video File</button>
+        <input type="file" id="videoFile" accept="video/*" style="display:none">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="step-dot" id="dotOptions">4</span> Options</div>
+      <div class="form-row">
+        <label>Capture Resolution
+          <select id="captureRes">
+            <option value="0">Original</option>
+            <option value="640">480p</option>
+            <option value="1280" selected>720p</option>
+            <option value="1920">1080p</option>
+            <option value="2560">2K</option>
+            <option value="3840">4K</option>
+          </select>
+        </label>
+      </div>
+      <div class="switch-row">
+        <span>Face Debugger</span>
+        <label class="switch"><input type="checkbox" id="faceDebugger" onchange="toggleFaceDebugger()" disabled><span class="slider"></span></label>
+      </div>
+      <div class="switch-row">
+        <span>Picture in Picture</span>
+        <label class="switch"><input type="checkbox" id="pipToggle" onchange="togglePip()" disabled><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="step-dot" id="dotStream">5</span> Stream</div>
+      <button class="btn btn-primary" id="btnConnect" onclick="connect()" disabled>Start Stream</button>
+      <button class="btn btn-danger" id="btnDisconnect" onclick="disconnect()" disabled>Disconnect</button>
     </div>
   </div>
 
-  <div class="step" id="stepSource">
-    <span class="step-num">2</span>
-    <span class="step-label">source face</span>
-    <div class="step-body">
-      <input type="file" id="sourceFile" accept="image/*" onchange="uploadSource(event)" disabled>
-      <img id="sourceThumb" alt="source">
+  <div class="main">
+    <div class="topbar">
+      <div class="stat-card">
+        <div class="stat-value" id="statWs">--</div>
+        <div class="stat-label">WebSocket</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statRtc">--</div>
+        <div class="stat-label">RTC</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statIce">--</div>
+        <div class="stat-label">ICE</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statResolution">--</div>
+        <div class="stat-label">Resolution</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statFps">--</div>
+        <div class="stat-label">FPS In</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statFpsSend">--</div>
+        <div class="stat-label">FPS Out</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statBitrate">--</div>
+        <div class="stat-label">Kbps In</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statUptime">--</div>
+        <div class="stat-label">Uptime</div>
+      </div>
     </div>
-  </div>
 
-  <div class="step" id="stepVideo">
-    <span class="step-num">3</span>
-    <span class="step-label">video source</span>
-    <div class="step-body">
-      <button id="btnCamera" onclick="startCamera()" disabled>Use Camera</button>
-      <button id="btnFile" onclick="document.getElementById('videoFile').click()" disabled>Use Video File</button>
-      <input type="file" id="videoFile" accept="video/*" style="display:none" onchange="loadVideoFile(event)">
-      <video id="videoThumb" muted playsinline style="width: 80px; height: 48px; object-fit: cover; border: 1px solid #444; display: none;"></video>
+    <div class="topbar" style="border-top: 1px solid #1e1e2e;">
+      <div class="stat-card">
+        <div class="stat-value" id="statCodec">--</div>
+        <div class="stat-label">Codec</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statFrames">--</div>
+        <div class="stat-label">Frames</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statSent">--</div>
+        <div class="stat-label">Sent</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statGpu">--</div>
+        <div class="stat-label">GPU</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statVram">--</div>
+        <div class="stat-label">VRAM</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statGpuTemp">--</div>
+        <div class="stat-label">GPU Temp</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statCpu">--</div>
+        <div class="stat-label">CPU</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statRam">--</div>
+        <div class="stat-label">RAM</div>
+      </div>
     </div>
-  </div>
 
-  <div class="step" id="stepOptions">
-    <span class="step-num">4</span>
-    <span class="step-label">options</span>
-    <div class="step-body">
-      <select id="captureRes" style="width: auto;">
-        <option value="0">original</option>
-        <option value="640">480p</option>
-        <option value="1280" selected>720p</option>
-        <option value="1920">1080p</option>
-        <option value="2560">2K</option>
-        <option value="3840">4K</option>
-      </select>
-      <label style="font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-        <input type="checkbox" id="faceDebugger" onchange="toggleFaceDebugger()" disabled> face debugger
-      </label>
-      <label style="font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-        <input type="checkbox" id="pipToggle" onchange="togglePip()" disabled> picture in picture
-      </label>
+    <div class="video-area">
+      <video id="outputVideo" autoplay playsinline></video>
     </div>
-  </div>
+    <video id="inputVideo" autoplay muted playsinline style="display:none;"></video>
 
-  <div class="step" id="stepConnect">
-    <span class="step-num">5</span>
-    <span class="step-label">whip stream</span>
-    <div class="step-body">
-      <button id="btnConnect" onclick="connect()" disabled>Stream</button>
-      <button id="btnDisconnect" class="danger" onclick="disconnect()" disabled>Disconnect</button>
+    <div class="timeline" id="timeline">
+      <span class="time" id="timePosition">0:00</span>
+      <div class="track">
+        <div class="track-fill" id="trackFill"></div>
+        <div class="track-playhead" id="trackPlayhead"></div>
+        <input type="range" id="timeSlider" min="0" max="100" step="0.1" value="0" oninput="onSeekInput()" onchange="onSeekCommit()">
+      </div>
+      <span class="time" id="timeDuration">0:00</span>
     </div>
-  </div>
 
+    <div class="log-panel" id="log"></div>
+  </div>
 </div>
-
-<div class="video-row">
-  <div class="video-container">
-    <span>processed output (webrtc via WHEP)</span>
-    <video id="outputVideo" autoplay playsinline></video>
-    <video id="inputVideo" autoplay muted playsinline></video>
-  </div>
-  <div id="stats">
-    <div><span class="label">ws </span><span class="value" id="statWs">—</span></div>
-    <div><span class="label">rtc </span><span class="value" id="statRtc">—</span></div>
-    <div><span class="label">ice </span><span class="value" id="statIce">—</span></div>
-    <div><span class="label">codec </span><span class="value" id="statCodec">—</span></div>
-    <div><span class="label">res </span><span class="value" id="statResolution">—</span></div>
-    <div><span class="label">fps in </span><span class="value" id="statFps">—</span></div>
-    <div><span class="label">kbps in </span><span class="value" id="statBitrate">—</span></div>
-    <div><span class="label">frames </span><span class="value" id="statFrames">—</span></div>
-    <div><span class="label">fps out </span><span class="value" id="statFpsSend">—</span></div>
-    <div><span class="label">sent </span><span class="value" id="statSent">—</span></div>
-    <div><span class="label">up </span><span class="value" id="statUptime">—</span></div>
-    <div style="border-top: 1px solid #333; margin-top: 6px; padding-top: 6px;"></div>
-    <div><span class="label">gpu </span><span class="value" id="statGpu">—</span></div>
-    <div><span class="label">vram </span><span class="value" id="statVram">—</span></div>
-    <div><span class="label">gpu temp </span><span class="value" id="statGpuTemp">—</span></div>
-    <div><span class="label">cpu </span><span class="value" id="statCpu">—</span></div>
-    <div><span class="label">ram </span><span class="value" id="statRam">—</span></div>
-  </div>
-</div>
-
-<div id="timeline">
-  <span class="time" id="timePosition">0:00</span>
-  <input type="range" id="timeSlider" min="0" max="100" step="0.1" value="0" oninput="onSeekInput()" onchange="onSeekCommit()">
-  <span class="time" id="timeDuration">0:00</span>
-</div>
-
-<div id="log"></div>
 
 <script>
 var accessToken = null;
@@ -215,14 +277,14 @@ function log(msg, type) {
   type = type || 'info';
   var el = document.getElementById('log');
   var div = document.createElement('div');
-  div.className = type;
+  div.className = 'log-' + type;
   div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
   el.appendChild(div);
   el.scrollTop = el.scrollHeight;
 }
 
-function markDone(stepId) {
-  document.getElementById(stepId).classList.add('done');
+function markDone(dotId) {
+  document.getElementById(dotId).classList.add('done');
 }
 
 function base() {
@@ -257,16 +319,19 @@ function startStats() {
   prevFrames = 0;
   prevStatsTime = 0;
   prevFramesSent = 0;
-  document.getElementById('stats').className = 'visible';
   connectMetrics();
 
   statsTimer = setInterval(async function() {
     if (ws) {
-      setStat('statWs', ws.readyState === WebSocket.OPEN ? 'open' : 'closed');
+      var wsState = ws.readyState === WebSocket.OPEN ? 'open' : 'closed';
+      setStat('statWs', wsState);
+      document.getElementById('statWs').className = 'stat-value ' + (wsState === 'open' ? 'ok' : 'bad');
     }
 
     if (pc) {
-      setStat('statRtc', pc.connectionState);
+      var rtcState = pc.connectionState;
+      setStat('statRtc', rtcState);
+      document.getElementById('statRtc').className = 'stat-value ' + (rtcState === 'connected' ? 'ok' : rtcState === 'failed' ? 'bad' : 'warn');
       setStat('statIce', pc.iceConnectionState);
 
       var stats = await pc.getStats();
@@ -285,7 +350,7 @@ function startStats() {
           prevBytes = bytes;
           prevFrames = frames;
           prevStatsTime = now;
-          setStat('statFrames', frames);
+          setStat('statFrames', report.framesReceived || 0);
 
           if (report.frameWidth && report.frameHeight) {
             setStat('statResolution', report.frameWidth + 'x' + report.frameHeight);
@@ -352,7 +417,6 @@ function stopStats() {
     clearInterval(statsTimer);
     statsTimer = null;
   }
-  document.getElementById('stats').className = '';
 }
 
 async function createSession() {
@@ -379,8 +443,8 @@ async function createSession() {
     });
     log('face_selector_mode → many', 'ok');
 
-    markDone('stepSession');
-    document.getElementById('sourceFile').disabled = false;
+    markDone('dotSession');
+    document.getElementById('sourceBox').classList.remove('disabled');
     document.getElementById('btnCamera').disabled = false;
     document.getElementById('btnFile').disabled = false;
     document.getElementById('faceDebugger').disabled = false;
@@ -419,9 +483,17 @@ function loadSourceFromStorage() {
   var data = localStorage.getItem('ff_source_data');
   var name = localStorage.getItem('ff_source_name');
   if (data && name) {
-    var thumb = document.getElementById('sourceThumb');
-    thumb.src = data;
-    thumb.style.display = 'block';
+    var box = document.getElementById('sourceBox');
+    box.classList.add('has-file');
+    box.querySelectorAll('.preview, .filename').forEach(function(el) { el.remove(); });
+    var img = document.createElement('img');
+    img.className = 'preview';
+    img.src = data;
+    box.appendChild(img);
+    var fn = document.createElement('div');
+    fn.className = 'filename';
+    fn.textContent = name;
+    box.appendChild(fn);
     log('restored source: ' + name, 'info');
   }
 }
@@ -452,11 +524,19 @@ async function uploadSourceFile(file) {
     if (!selectRes.ok) { log('select source failed', 'error'); return; }
 
     log('source face set', 'ok');
-    markDone('stepSource');
+    markDone('dotSource');
 
-    var thumb = document.getElementById('sourceThumb');
-    thumb.src = URL.createObjectURL(file);
-    thumb.style.display = 'block';
+    var box = document.getElementById('sourceBox');
+    box.classList.add('has-file');
+    box.querySelectorAll('.preview, .filename').forEach(function(el) { el.remove(); });
+    var img = document.createElement('img');
+    img.className = 'preview';
+    img.src = URL.createObjectURL(file);
+    box.appendChild(img);
+    var fn = document.createElement('div');
+    fn.className = 'filename';
+    fn.textContent = file.name;
+    box.appendChild(fn);
 
     saveSourceToStorage(file);
     sourceReady = true;
@@ -466,11 +546,11 @@ async function uploadSourceFile(file) {
   }
 }
 
-async function uploadSource(event) {
+document.getElementById('sourceFile').addEventListener('change', function(event) {
   var file = event.target.files[0];
   if (!file) return;
-  await uploadSourceFile(file);
-}
+  uploadSourceFile(file);
+});
 
 async function startCamera() {
   try {
@@ -483,19 +563,19 @@ async function startCamera() {
       log('mic: ' + localStream.getAudioTracks()[0].label, 'ok');
     }
 
-    markDone('stepVideo');
+    markDone('dotVideo');
     checkConnectReady();
   } catch (e) {
     log('camera error: ' + e.message, 'error');
   }
 }
 
-function loadVideoFile(event) {
+document.getElementById('videoFile').addEventListener('change', function(event) {
   var file = event.target.files[0];
   if (!file) return;
   loadVideoFromFile(file);
   saveVideoToStorage(file);
-}
+});
 
 function loadVideoFromFile(file) {
   var vid = document.getElementById('inputVideo');
@@ -505,16 +585,11 @@ function loadVideoFromFile(file) {
   vid.muted = false;
   vid.volume = 0;
 
-  var thumb = document.getElementById('videoThumb');
-  thumb.src = blobUrl;
-  thumb.style.display = 'block';
-  thumb.play().catch(function() {});
-
   vid.play().then(function() {
     localStream = (vid.captureStream || vid.mozCaptureStream).call(vid);
     inputVideoSource = 'file';
     log('video file: ' + file.name, 'ok');
-    markDone('stepVideo');
+    markDone('dotVideo');
     checkConnectReady();
     initTimeline(vid);
   }).catch(function(e) { log('file error: ' + e.message, 'error'); });
@@ -570,7 +645,13 @@ function initTimeline(vid) {
     document.getElementById('timeDuration').textContent = formatTime(vid.duration);
   }
 
-  document.getElementById('timeline').className = 'visible';
+  document.getElementById('timeline').classList.add('visible');
+}
+
+function updateTrackVisual(position, duration) {
+  var pct = duration > 0 ? (position / duration) * 100 : 0;
+  document.getElementById('trackFill').style.width = pct + '%';
+  document.getElementById('trackPlayhead').style.left = pct + '%';
 }
 
 function startTimelineSync() {
@@ -578,6 +659,7 @@ function startTimelineSync() {
     if (timelineVideo && !timelineSeeking) {
       document.getElementById('timeSlider').value = timelineVideo.currentTime;
       document.getElementById('timePosition').textContent = formatTime(timelineVideo.currentTime);
+      updateTrackVisual(timelineVideo.currentTime, timelineVideo.duration);
     }
   }, 250);
 }
@@ -593,6 +675,9 @@ function onSeekInput() {
   timelineSeeking = true;
   var t = parseFloat(document.getElementById('timeSlider').value);
   document.getElementById('timePosition').textContent = formatTime(t);
+  if (timelineVideo) {
+    updateTrackVisual(t, timelineVideo.duration);
+  }
 }
 
 function onSeekCommit() {
@@ -752,7 +837,7 @@ async function connect() {
 
   ws.onopen = function() {
     log('websocket open (' + Math.round(performance.now() - t0) + 'ms) — sending frames', 'ok');
-    markDone('stepConnect');
+    markDone('dotStream');
     document.getElementById('btnConnect').disabled = true;
     document.getElementById('btnDisconnect').disabled = false;
     streaming = true;
@@ -806,7 +891,7 @@ function stopStreaming() {
 
   document.getElementById('btnConnect').disabled = false;
   document.getElementById('btnDisconnect').disabled = true;
-  document.getElementById('stepConnect').classList.remove('done');
+  document.getElementById('dotStream').classList.remove('done');
 }
 
 function disconnect() {
