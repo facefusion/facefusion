@@ -11,7 +11,7 @@ from starlette.websockets import WebSocket
 from facefusion import session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.apis.stream_helper import on_video_track
+from facefusion.apis.stream_helper import create_output_track, on_video_track
 from facefusion.streamer import process_vision_frame
 
 
@@ -51,10 +51,18 @@ async def webrtc_stream(request : Request) -> Response:
 
 	if session_id:
 		body = await request.json()
+		buffer_size = int(body.get('buffer_size', 30))
+		bitrate_init = int(body.get('bitrate_init', 100000))
+		bitrate_min = int(body.get('bitrate_min', 100000))
+		bitrate_max = int(body.get('bitrate_max', 4000000))
+
 		rtc_offer = RTCSessionDescription(sdp = body.get('sdp'), type = body.get('type'))
 		rtc_connection = RTCPeerConnection()
 
-		rtc_connection.on('track', partial(on_video_track, rtc_connection))
+		output_track, sender = create_output_track(rtc_connection, buffer_size)
+		sender.configure_bitrate(bitrate_init, bitrate_min, bitrate_max)
+
+		rtc_connection.on('track', partial(on_video_track, rtc_connection, output_track))
 
 		await rtc_connection.setRemoteDescription(rtc_offer)
 		await rtc_connection.setLocalDescription(await rtc_connection.createAnswer())
