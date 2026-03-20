@@ -52,16 +52,15 @@ async def webrtc_stream(request : Request) -> Response:
 	if session_id:
 		body = await request.json()
 		buffer_size = int(body.get('buffer_size', 30))
-		bitrate = int(body.get('bitrate', 0)) * 1000
-		min_bitrate = int(body.get('min_bitrate', 100)) * 1000
-		max_bitrate = int(body.get('max_bitrate', 10000)) * 1000
-		initial_bitrate = max(min_bitrate, bitrate)
+		bitrate_init = int(body.get('bitrate_init', 100000))
+		bitrate_min = int(body.get('bitrate_min', 100000))
+		bitrate_max = int(body.get('bitrate_max', 4000000))
 
 		rtc_offer = RTCSessionDescription(sdp = body.get('sdp'), type = body.get('type'))
 		rtc_connection = RTCPeerConnection()
 
 		output_track, sender = create_output_track(rtc_connection, buffer_size)
-		sender.configure_bitrate(initial_bitrate, min_bitrate, max_bitrate)
+		sender.configure_bitrate(bitrate_init, bitrate_min, bitrate_max)
 
 		rtc_connection.on('track', partial(on_video_track, rtc_connection, output_track))
 

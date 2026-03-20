@@ -17,9 +17,9 @@ def process_stream_frame(target_stream_frame : VideoFrame) -> VideoFrame:
 	return output_stream_frame
 
 
-def create_output_track(pc : RTCPeerConnection, buffer_size : int) -> Tuple[QueuedVideoStreamTrack, RTCRtpSender]:
+def create_output_track(rtc_connection : RTCPeerConnection, buffer_size : int) -> Tuple[QueuedVideoStreamTrack, RTCRtpSender]:
 	output_track = QueuedVideoStreamTrack(buffer_size = buffer_size)
-	sender = pc.addTrack(output_track)
+	sender = rtc_connection.addTrack(output_track)
 	return output_track, sender
 
 
@@ -30,7 +30,7 @@ async def process_and_enqueue(target_track : MediaStreamTrack, output_track : Qu
 		try:
 			target_stream_frame = await target_track.recv()
 		except MediaStreamError:
-			break
+			pass
 
 		output_stream_frame = await loop.run_in_executor(None, process_stream_frame, target_stream_frame) #type:ignore[arg-type]
 		await output_track.put(output_stream_frame)
