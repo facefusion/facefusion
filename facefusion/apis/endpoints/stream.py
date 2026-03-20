@@ -12,7 +12,8 @@ from starlette.websockets import WebSocket
 from facefusion import logger, session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.apis.stream_helper import STREAM_FPS, STREAM_QUALITY, close_whip_encoder, create_whip_encoder, feed_whip_audio, feed_whip_frame, process_stream_frame, start_mediamtx, stop_mediamtx, wait_for_mediamtx
+from facefusion import mediamtx
+from facefusion.apis.stream_helper import STREAM_FPS, STREAM_QUALITY, close_whip_encoder, create_whip_encoder, feed_whip_audio, feed_whip_frame, process_stream_frame
 from facefusion.streamer import process_vision_frame
 from facefusion.types import VisionFrame
 
@@ -103,12 +104,12 @@ async def websocket_stream_whip(websocket : WebSocket) -> None:
 	await websocket.accept(subprotocol = subprotocol)
 
 	if source_paths:
-		mediamtx = start_mediamtx()
-		is_ready = await asyncio.get_running_loop().run_in_executor(None, wait_for_mediamtx)
+		mediamtx_process = mediamtx.start()
+		is_ready = await asyncio.get_running_loop().run_in_executor(None, mediamtx.wait_for_ready)
 
 		if not is_ready:
 			logger.error('mediamtx failed to start', __name__)
-			stop_mediamtx(mediamtx)
+			mediamtx.stop(mediamtx_process)
 			await websocket.close()
 			return
 
@@ -144,8 +145,8 @@ async def websocket_stream_whip(websocket : WebSocket) -> None:
 		stop_event.set()
 		worker.join(timeout = 10)
 
-		if mediamtx:
-			stop_mediamtx(mediamtx)
+		if mediamtx_process:
+			mediamtx.stop(mediamtx_process)
 		return
 
 	await websocket.close()

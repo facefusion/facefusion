@@ -1,23 +1,17 @@
 import os
-import shutil
 import subprocess
 import tempfile
-import time
-from typing import Optional, Tuple
+from typing import Tuple
 
 import cv2
-import requests
 
-from facefusion import ffmpeg_builder
+from facefusion import ffmpeg_builder, mediamtx
 from facefusion.streamer import process_vision_frame
 from facefusion.types import VisionFrame
 
 STREAM_FPS : int = 30
 STREAM_QUALITY : int = 45
 STREAM_AUDIO_RATE : int = 48000
-MEDIAMTX_WHIP_PORT : int = 8889
-MEDIAMTX_PATH : str = 'stream'
-MEDIAMTX_CONFIG : str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'mediamtx.yml')
 DTLS_CERT_FILE : str = os.path.join(tempfile.gettempdir(), 'facefusion_dtls_cert.pem')
 DTLS_KEY_FILE : str = os.path.join(tempfile.gettempdir(), 'facefusion_dtls_key.pem')
 
@@ -36,7 +30,7 @@ def create_dtls_certificate() -> None:
 def create_whip_encoder(width : int, height : int, stream_fps : int, stream_quality : int) -> Tuple[subprocess.Popen[bytes], int]:
 	create_dtls_certificate()
 	audio_read_fd, audio_write_fd = os.pipe()
-	whip_url = 'http://localhost:' + str(MEDIAMTX_WHIP_PORT) + '/' + MEDIAMTX_PATH + '/whip'
+	whip_url = mediamtx.get_whip_url()
 	commands = ffmpeg_builder.chain(
 		[ '-use_wallclock_as_timestamps', '1' ],
 		ffmpeg_builder.capture_video(),
@@ -63,45 +57,6 @@ def create_whip_encoder(width : int, height : int, stream_fps : int, stream_qual
 	process = subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, pass_fds = (audio_read_fd,))
 	os.close(audio_read_fd)
 	return process, audio_write_fd
-
-
-def start_mediamtx() -> Optional[subprocess.Popen[bytes]]:
-	stop_stale_mediamtx()
-	mediamtx_path = shutil.which('mediamtx')
-
-	if not mediamtx_path:
-		mediamtx_path = '/home/henry/local/bin/mediamtx'
-
-	return subprocess.Popen(
-		[ mediamtx_path, MEDIAMTX_CONFIG ],
-		stdout = subprocess.DEVNULL,
-		stderr = subprocess.DEVNULL
-	)
-
-
-def stop_stale_mediamtx() -> None:
-	subprocess.run([ 'fuser', '-k', str(MEDIAMTX_WHIP_PORT) + '/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-	subprocess.run([ 'fuser', '-k', '8189/udp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-	subprocess.run([ 'fuser', '-k', '9997/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-	time.sleep(1)
-
-
-def wait_for_mediamtx() -> bool:
-	for _ in range(10):
-		try:
-			response = requests.get('http://localhost:9997/v3/paths/list', timeout = 1)
-
-			if response.status_code == 200:
-				return True
-		except Exception:
-			pass
-		time.sleep(0.5)
-	return False
-
-
-def stop_mediamtx(process : subprocess.Popen[bytes]) -> None:
-	process.terminate()
-	process.wait()
 
 
 def feed_whip_frame(process : subprocess.Popen[bytes], vision_frame : VisionFrame) -> None:
