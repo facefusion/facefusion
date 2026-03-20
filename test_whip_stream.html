@@ -169,6 +169,12 @@
     <div><span class="label">fps out </span><span class="value" id="statFpsSend">—</span></div>
     <div><span class="label">sent </span><span class="value" id="statSent">—</span></div>
     <div><span class="label">up </span><span class="value" id="statUptime">—</span></div>
+    <div style="border-top: 1px solid #333; margin-top: 6px; padding-top: 6px;"></div>
+    <div><span class="label">gpu </span><span class="value" id="statGpu">—</span></div>
+    <div><span class="label">vram </span><span class="value" id="statVram">—</span></div>
+    <div><span class="label">gpu temp </span><span class="value" id="statGpuTemp">—</span></div>
+    <div><span class="label">cpu </span><span class="value" id="statCpu">—</span></div>
+    <div><span class="label">ram </span><span class="value" id="statRam">—</span></div>
   </div>
 </div>
 
@@ -197,6 +203,8 @@ var prevBytes = 0;
 var prevFrames = 0;
 var prevStatsTime = 0;
 var prevFramesSent = 0;
+
+var metricsWs = null;
 
 var captureCanvas = document.createElement('canvas');
 var captureCtx = captureCanvas.getContext('2d');
@@ -250,6 +258,7 @@ function startStats() {
   prevStatsTime = 0;
   prevFramesSent = 0;
   document.getElementById('stats').className = 'visible';
+  connectMetrics();
 
   statsTimer = setInterval(async function() {
     if (ws) {
@@ -301,7 +310,44 @@ function startStats() {
   }, 1000);
 }
 
+function connectMetrics() {
+  var metricsUrl = wsBase() + '/metrics';
+  var protocols = ['access_token.' + accessToken];
+  metricsWs = new WebSocket(metricsUrl, protocols);
+
+  metricsWs.onmessage = function(event) {
+    var m = JSON.parse(event.data);
+    var gpu = (m.graphic_devices || [])[0];
+
+    if (gpu) {
+      setStat('statGpu', gpu.utilization.gpu.value + gpu.utilization.gpu.unit);
+      setStat('statVram', gpu.video_memory.free.value + '/' + gpu.video_memory.total.value + gpu.video_memory.total.unit);
+      setStat('statGpuTemp', gpu.temperature.gpu.value + gpu.temperature.gpu.unit);
+    }
+
+    if (m.processor) {
+      setStat('statCpu', m.processor.utilization.value + m.processor.utilization.unit);
+    }
+
+    if (m.memory) {
+      setStat('statRam', m.memory.utilization.value + m.memory.utilization.unit);
+    }
+  };
+
+  metricsWs.onerror = function() {
+    log('metrics websocket error', 'warn');
+  };
+}
+
+function disconnectMetrics() {
+  if (metricsWs) {
+    metricsWs.close();
+    metricsWs = null;
+  }
+}
+
 function stopStats() {
+  disconnectMetrics();
   if (statsTimer) {
     clearInterval(statsTimer);
     statsTimer = null;
@@ -820,6 +866,15 @@ function updatePipVisibility() {
 
 loadSourceFromStorage();
 loadVideoFromStorage();
+
+var autoConnectTimer = setInterval(function() {
+  if (accessToken) {
+    clearInterval(autoConnectTimer);
+    return;
+  }
+  log('auto-connect attempt...', 'debug');
+  createSession().catch(function() {});
+}, 2000);
 
 createSession().catch(function() {});
 </script>
