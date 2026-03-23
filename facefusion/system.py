@@ -1,8 +1,7 @@
 import importlib
 import shutil
-from functools import lru_cache
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 import psutil
 
@@ -15,7 +14,7 @@ def get_metrics_set() -> Metrics:
 
 	return\
 	{
-		'graphic_devices': detect_graphic_devices(tuple(state_manager.get_item('execution_providers'))),
+		'graphic_devices': detect_graphic_devices(state_manager.get_item('execution_providers')),
 		'disks': detect_disk_metrics([ drive_path ]),
 		'memory': detect_memory_metrics(),
 		'network': detect_network_metrics(),
@@ -23,12 +22,7 @@ def get_metrics_set() -> Metrics:
 	}
 
 
-@lru_cache()
-def detect_static_graphic_devices(execution_providers : Tuple[ExecutionProvider, ...]) -> List[GraphicDevice]:
-	return detect_graphic_devices(execution_providers)
-
-
-def detect_graphic_devices(execution_providers : Tuple[ExecutionProvider, ...]) -> List[GraphicDevice]:
+def detect_graphic_devices(execution_providers : List[ExecutionProvider]) -> List[GraphicDevice]:
 	if 'rocm' in execution_providers or 'migraphx' in execution_providers:
 		return detect_amd_graphic_devices()
 	if 'cuda' in execution_providers or 'tensorrt' in execution_providers:
