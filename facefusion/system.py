@@ -15,7 +15,7 @@ def get_metrics_set() -> Metrics:
 
 	return\
 	{
-		'graphic_devices': detect_static_graphic_devices(tuple(state_manager.get_item('execution_providers'))),
+		'graphic_devices': detect_graphic_devices(tuple(state_manager.get_item('execution_providers'))),
 		'disks': detect_disk_metrics([ drive_path ]),
 		'memory': detect_memory_metrics(),
 		'network': detect_network_metrics(),
