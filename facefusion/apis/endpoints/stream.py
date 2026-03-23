@@ -7,7 +7,6 @@ from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from typing import Deque, List
 
-import av
 import cv2
 import numpy
 from starlette.websockets import WebSocket
@@ -632,17 +631,19 @@ async def websocket_stream_whip_dc(websocket : WebSocket) -> None:
 								latest_frame_holder[0] = frame
 
 					if data[:2] != JPEG_MAGIC:
-						encoder = rtc_audio.get_opus_encoder()
-						pcm = numpy.frombuffer(data, dtype = numpy.int16).reshape(1, -1)
-						needed = 960 * 2
+						rtc_audio.init_opus_encoder()
 
-						for offset in range(0, pcm.shape[1] - needed + 1, needed):
-							chunk = pcm[:, offset:offset + needed]
-							audio_frame = av.AudioFrame.from_ndarray(chunk, format = 's16', layout = 'stereo')
-							audio_frame.sample_rate = 48000
+						with rtc_audio.audio_lock:
+							rtc_audio.audio_buffer.extend(data)
+							needed = rtc_audio.OPUS_FRAME_SAMPLES * 2 * 2
 
-							for packet in encoder.encode(audio_frame):
-								audio_sock.sendto(b'\x02' + bytes(packet), relay_addr)
+							while len(rtc_audio.audio_buffer) >= needed:
+								chunk = bytes(rtc_audio.audio_buffer[:needed])
+								del rtc_audio.audio_buffer[:needed]
+								opus_pkt = rtc_audio.encode_opus_frame(chunk)
+
+								if opus_pkt:
+									audio_sock.sendto(b'\x02' + opus_pkt, relay_addr)
 
 		except Exception as exception:
 			logger.error(str(exception), __name__)
