@@ -12,7 +12,6 @@ from facefusion.workflows.core import is_process_stopping
 
 
 def create_temp_frames() -> ErrorCode:
-	state_manager.set_item('output_video_fps', 25.0)  # TODO: set default fps value
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)

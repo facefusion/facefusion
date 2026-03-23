@@ -339,6 +339,10 @@ def conditional_process() -> ErrorCode:
 		if not processor_module.pre_process('output'):
 			return 2
 
+	if state_manager.get_item('workflow') in [ 'audio-to-image:video', 'audio-to-image:frames' ]:
+		if not state_manager.get_item('output_video_fps'):
+			logger.error(translator.get('output_video_fps_not_set'), __name__)
+			return 1
 	if state_manager.get_item('workflow') == 'audio-to-image:video':
 		return audio_to_image.process(start_time)
 	if state_manager.get_item('workflow') == 'audio-to-image:frames':
