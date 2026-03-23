@@ -30,8 +30,6 @@ typedef struct
 	char path[256];
 	int rtp_port;
 	int rtp_fd;
-	int audio_port;
-	int audio_fd;
 	Viewer viewers[MAX_VIEWERS];
 	int viewer_count;
 	int active;
@@ -72,7 +70,7 @@ static double get_elapsed_seconds(struct timeval *start)
 	return (now.tv_sec - start->tv_sec) + (now.tv_usec - start->tv_usec) / 1000000.0;
 }
 
-static void *rtp_receiver_thread(void *arg)
+static void *receiver_thread(void *arg)
 {
 	Session *session = (Session *)arg;
 	char buf[256 * 1024];
@@ -85,19 +83,20 @@ static void *rtp_receiver_thread(void *arg)
 		socklen_t fromlen = sizeof(from);
 		int n = recvfrom(session->rtp_fd, buf, sizeof(buf), 0, (struct sockaddr *)&from, &fromlen);
 
-		if (n <= 0)
+		if (n <= 1)
 		{
 			continue;
 		}
 
-		if (!started)
+		char tag = buf[0];
+		char *payload = buf + 1;
+		int payload_len = n - 1;
+
+		if (!started && tag == 0x01)
 		{
 			gettimeofday(&start_time, NULL);
 			started = 1;
 		}
-
-		double elapsed = get_elapsed_seconds(&start_time);
-		uint32_t timestamp = (uint32_t)(elapsed * 90000.0);
 
 		pthread_mutex_lock(&session->lock);
 
@@ -110,61 +109,32 @@ static void *rtp_receiver_thread(void *arg)
 				continue;
 			}
 
-			for (int t = 0; t < viewer->track_count; t++)
+			if (tag == 0x01)
 			{
-				if (!rtcIsOpen(viewer->tracks[t]))
+				for (int t = 0; t < viewer->track_count; t++)
 				{
-					continue;
+					if (!rtcIsOpen(viewer->tracks[t]))
+					{
+						continue;
+					}
+
+					double elapsed = started ? get_elapsed_seconds(&start_time) : 0;
+					uint32_t timestamp = (uint32_t)(elapsed * 90000.0);
+					rtcSetTrackRtpTimestamp(viewer->tracks[t], timestamp);
+					rtcSendMessage(viewer->tracks[t], payload, payload_len);
+				}
+			}
+
+			if (tag == 0x02 && viewer->audio_track > 0)
+			{
+				if (rtcIsOpen(viewer->audio_track))
+				{
+					rtcSetTrackRtpTimestamp(viewer->audio_track, session->audio_pts);
+					rtcSendMessage(viewer->audio_track, payload, payload_len);
 				}
 
-				rtcSetTrackRtpTimestamp(viewer->tracks[t], timestamp);
-				rtcSendMessage(viewer->tracks[t], buf, n);
+				session->audio_pts += 960;
 			}
-		}
-
-		pthread_mutex_unlock(&session->lock);
-	}
-
-	return NULL;
-}
-
-static void *audio_receiver_thread(void *arg)
-{
-	Session *session = (Session *)arg;
-	char buf[4096];
-
-	while (running && session->active)
-	{
-		struct sockaddr_in from;
-		socklen_t fromlen = sizeof(from);
-		int n = recvfrom(session->audio_fd, buf, sizeof(buf), 0, (struct sockaddr *)&from, &fromlen);
-
-		if (n <= 0)
-		{
-			continue;
-		}
-
-		uint32_t ts = session->audio_pts;
-		session->audio_pts += 960;
-
-		pthread_mutex_lock(&session->lock);
-
-		for (int v = 0; v < session->viewer_count; v++)
-		{
-			Viewer *viewer = &session->viewers[v];
-
-			if (!viewer->connected || viewer->audio_track <= 0)
-			{
-				continue;
-			}
-
-			if (!rtcIsOpen(viewer->audio_track))
-			{
-				continue;
-			}
-
-			rtcSetTrackRtpTimestamp(viewer->audio_track, ts);
-			rtcSendMessage(viewer->audio_track, buf, n);
 		}
 
 		pthread_mutex_unlock(&session->lock);
@@ -206,26 +176,11 @@ static Session *create_session_slot(const char *path)
 			setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
 			sessions[i].rtp_fd = fd;
-
-			sessions[i].audio_port = next_rtp_port++;
-			int afd = socket(AF_INET, SOCK_DGRAM, 0);
-			struct sockaddr_in aaddr;
-			memset(&aaddr, 0, sizeof(aaddr));
-			aaddr.sin_family = AF_INET;
-			aaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-			aaddr.sin_port = htons(sessions[i].audio_port);
-			bind(afd, (struct sockaddr *)&aaddr, sizeof(aaddr));
-			setsockopt(afd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-			sessions[i].audio_fd = afd;
 			sessions[i].audio_pts = 0;
 
 			pthread_t tid;
-			pthread_create(&tid, NULL, rtp_receiver_thread, &sessions[i]);
+			pthread_create(&tid, NULL, receiver_thread, &sessions[i]);
 			pthread_detach(tid);
-
-			pthread_t atid;
-			pthread_create(&atid, NULL, audio_receiver_thread, &sessions[i]);
-			pthread_detach(atid);
 
 			return &sessions[i];
 		}
@@ -516,8 +471,8 @@ static void handle_client(int client_fd)
 
 		if (session)
 		{
-			char port_str[64];
-			snprintf(port_str, sizeof(port_str), "%d,%d", session->rtp_port, session->audio_port);
+			char port_str[16];
+			snprintf(port_str, sizeof(port_str), "%d", session->rtp_port);
 			send_http_response(client_fd, 200, "text/plain", port_str, strlen(port_str));
 		}
 		else

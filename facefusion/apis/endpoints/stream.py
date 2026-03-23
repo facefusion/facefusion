@@ -557,8 +557,8 @@ def run_h264_dc_pipeline(latest_frame_holder : list, lock : threading.Lock, stop
 
 					for frame in pending:
 						if backend == 'relay' and udp_sock:
-							if len(frame) <= 65000:
-								udp_sock.sendto(frame, ('127.0.0.1', rtp_port))
+							if len(frame) <= 64999:
+								udp_sock.sendto(b'\x01' + frame, ('127.0.0.1', rtp_port))
 						if backend == 'rtc':
 							from facefusion import rtc
 							rtc.send_vp8_frame(stream_path, frame)
@@ -594,14 +594,15 @@ async def websocket_stream_whip_dc(websocket : WebSocket) -> None:
 		from facefusion import rtc as rtc_audio
 		import socket as sock
 		stream_path = 'stream/' + session_id
-		rtp_port, audio_port = whip_relay.create_session(stream_path)
+		rtp_port = whip_relay.create_session(stream_path)
 
 		if not rtp_port:
 			logger.error('failed to create relay session', __name__)
 			await websocket.close()
 			return
 
-		audio_sock = sock.socket(sock.AF_INET, sock.SOCK_DGRAM) if audio_port else None
+		audio_sock = sock.socket(sock.AF_INET, sock.SOCK_DGRAM)
+		relay_addr = ('127.0.0.1', rtp_port)
 
 		latest_frame_holder : list = [None]
 		whep_sent = False
@@ -630,30 +631,24 @@ async def websocket_stream_whip_dc(websocket : WebSocket) -> None:
 							with lock:
 								latest_frame_holder[0] = frame
 
-					if data[:2] != JPEG_MAGIC and audio_sock and audio_port:
+					if data[:2] != JPEG_MAGIC:
 						encoder = rtc_audio.get_opus_encoder()
 						pcm = numpy.frombuffer(data, dtype = numpy.int16).reshape(1, -1)
-						samples = pcm.shape[1] // (2 * 960) * 960 * 2
+						needed = 960 * 2
 
-						if samples > 0:
-							for offset in range(0, samples, 960 * 2):
-								chunk = pcm[:, offset:offset + 960 * 2]
+						for offset in range(0, pcm.shape[1] - needed + 1, needed):
+							chunk = pcm[:, offset:offset + needed]
+							audio_frame = av.AudioFrame.from_ndarray(chunk, format = 's16', layout = 'stereo')
+							audio_frame.sample_rate = 48000
 
-								if chunk.shape[1] == 960 * 2:
-									frame = av.AudioFrame.from_ndarray(chunk, format = 's16', layout = 'stereo')
-									frame.sample_rate = 48000
-
-									for packet in encoder.encode(frame):
-										audio_sock.sendto(bytes(packet), ('127.0.0.1', audio_port))
+							for packet in encoder.encode(audio_frame):
+								audio_sock.sendto(b'\x02' + bytes(packet), relay_addr)
 
 		except Exception as exception:
 			logger.error(str(exception), __name__)
 
 		stop_event.set()
-
-		if audio_sock:
-			audio_sock.close()
-
+		audio_sock.close()
 		loop = asyncio.get_running_loop()
 		await loop.run_in_executor(None, worker.join, 10)
 		return
