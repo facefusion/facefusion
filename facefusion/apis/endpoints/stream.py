@@ -784,6 +784,80 @@ def run_rtc_direct_pipeline(latest_frame_holder : list, lock : threading.Lock, s
 		encoder.wait(timeout = 5)
 
 
+async def websocket_stream_rtc_relay(websocket : WebSocket) -> None:
+	subprotocol = get_sec_websocket_protocol(websocket.scope)
+	access_token = extract_access_token(websocket.scope)
+	session_id = session_manager.find_session_id(access_token)
+
+	session_context.set_session_id(session_id)
+	source_paths = state_manager.get_item('source_paths')
+
+	await websocket.accept(subprotocol = subprotocol)
+
+	if source_paths:
+		from facefusion import rtc
+		import socket as sock
+		stream_path = 'stream/' + session_id
+		rtp_port = rtc.create_rtp_session(stream_path)
+		whep_url = 'http://localhost:' + str(rtc.WHEP_PORT) + '/' + stream_path + '/whep'
+
+		audio_sock = sock.socket(sock.AF_INET, sock.SOCK_DGRAM)
+		relay_addr = ('127.0.0.1', rtp_port)
+
+		latest_frame_holder : list = [None]
+		whep_sent = False
+		lock = threading.Lock()
+		stop_event = threading.Event()
+		ready_event = threading.Event()
+		worker = threading.Thread(target = run_h264_dc_pipeline, args = (latest_frame_holder, lock, stop_event, ready_event, 'relay', stream_path, rtp_port), daemon = True)
+		worker.start()
+
+		try:
+			while True:
+				message = await websocket.receive()
+
+				if not whep_sent and ready_event.is_set():
+					await websocket.send_text(whep_url)
+					whep_sent = True
+
+				if message.get('bytes'):
+					data = message.get('bytes')
+
+					if data[:2] == JPEG_MAGIC:
+						frame = cv2.imdecode(numpy.frombuffer(data, numpy.uint8), cv2.IMREAD_COLOR)
+
+						if numpy.any(frame):
+							with lock:
+								latest_frame_holder[0] = frame
+
+					if data[:2] != JPEG_MAGIC:
+						rtc.init_opus_encoder()
+
+						with rtc.audio_lock:
+							rtc.audio_buffer.extend(data)
+							needed = rtc.OPUS_FRAME_SAMPLES * 2 * 2
+
+							while len(rtc.audio_buffer) >= needed:
+								chunk = bytes(rtc.audio_buffer[:needed])
+								del rtc.audio_buffer[:needed]
+								opus_pkt = rtc.encode_opus_frame(chunk)
+
+								if opus_pkt:
+									audio_sock.sendto(b'\x02' + opus_pkt, relay_addr)
+
+		except Exception as exception:
+			logger.error(str(exception), __name__)
+
+		stop_event.set()
+		audio_sock.close()
+		loop = asyncio.get_running_loop()
+		await loop.run_in_executor(None, worker.join, 10)
+		rtc.destroy_session(stream_path)
+		return
+
+	await websocket.close()
+
+
 async def websocket_stream_rtc(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 	access_token = extract_access_token(websocket.scope)

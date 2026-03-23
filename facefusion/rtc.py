@@ -255,12 +255,51 @@ def run_rtp_forwarder(stream_path : str) -> None:
 		try:
 			data, addr = rtp_fd.recvfrom(262144)
 
-			if not data:
+			if len(data) < 2:
 				continue
 
-			send_to_viewers(stream_path, data)
+			tag = data[0]
+			payload = data[1:]
+
+			if tag == 0x01:
+				send_to_viewers(stream_path, payload)
+			if tag == 0x02:
+				send_audio_to_viewers(stream_path, payload)
 		except Exception:
 			continue
+
+
+def send_audio_to_viewers(stream_path : str, opus_data : bytes) -> None:
+	global audio_pts
+
+	session = sessions.get(stream_path)
+
+	if not session:
+		return
+
+	viewers = session.get('viewers')
+
+	if not viewers:
+		return
+
+	buf = ctypes.create_string_buffer(opus_data)
+
+	for viewer in viewers:
+		if not viewer.get('connected'):
+			continue
+
+		audio_track_id = viewer.get('audio_track')
+
+		if not audio_track_id:
+			continue
+
+		if not lib.rtcIsOpen(audio_track_id):
+			continue
+
+		lib.rtcSetTrackRtpTimestamp(audio_track_id, audio_pts & 0xFFFFFFFF)
+		lib.rtcSendMessage(audio_track_id, buf, len(opus_data))
+
+	audio_pts += OPUS_FRAME_SAMPLES
 
 
 send_start_time : float = 0
