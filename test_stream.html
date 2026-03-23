@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WHIP Stream Monitor</title>
+<title>Video Stream</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { overflow: hidden; height: 100vh; }
@@ -107,7 +107,7 @@
 <body>
 <div class="layout">
   <div class="sidebar">
-    <h2>WHIP Stream <span class="badge">LIVE</span></h2>
+    <h2>Video Stream <span class="badge">LIVE</span></h2>
 
     <div class="section">
       <div class="section-title"><span class="step-dot" id="dotSession">1</span> Session</div>
@@ -144,12 +144,11 @@
         <label>Approach
           <select id="streamMode">
             <option value="whip-mediamtx">FFmpeg WHIP + MediaMTX</option>
-            <option value="whip-python">aiortc in-process WebRTC</option>
+            <option value="whip-python">aiortc WebRTC (no ext. deps)</option>
             <option value="whip-datachannel">FFmpeg WHIP + libdatachannel relay</option>
             <option value="ws-fmp4">FFmpeg fMP4 + WebSocket (MSE)</option>
             <option value="datachannel-direct">libdatachannel direct</option>
-            <option value="whip-aiortc">aiortc WebRTC + audio (no ext. deps)</option>
-            <option value="ws-mjpeg">MJPEG over WebSocket (no deps)</option>
+<option value="ws-mjpeg">MJPEG over WebSocket (no deps)</option>
           </select>
         </label>
       </div>
@@ -324,8 +323,7 @@ var MODE_CONFIG = {
   'whip-datachannel':    { wsPath: '/stream/whip-dc',  playback: 'whep' },
   'ws-fmp4':             { wsPath: '/stream/live',     playback: 'mse' },
   'datachannel-direct':  { wsPath: '/stream/rtc',      playback: 'whep' },
-  'whip-aiortc':         { wsPath: '/stream/whip-aio',  playback: 'whep' },
-  'ws-mjpeg':            { wsPath: '/stream/mjpeg',    playback: 'mjpeg' }
+'ws-mjpeg':            { wsPath: '/stream/mjpeg',    playback: 'mjpeg' }
 };
 
 function getMode() {
@@ -1019,6 +1017,23 @@ async function connect() {
   var config = getModeConfig();
   var mode = getMode();
   framesSent = 0;
+
+  var outputVideo = document.getElementById('outputVideo');
+  outputVideo.srcObject = null;
+  outputVideo.removeAttribute('src');
+  outputVideo.load();
+  outputVideo.style.display = '';
+
+  var mjpegImg = outputVideo._mjpegImg;
+
+  if (mjpegImg) {
+    if (mjpegImg._prevUrl) URL.revokeObjectURL(mjpegImg._prevUrl);
+    mjpegImg.remove();
+    outputVideo._mjpegImg = null;
+  }
+
+  cleanupMse();
+  whepUrlFromServer = null;
 
   var wsUrl = wsBase() + config.wsPath;
   var protocols = ['access_token.' + accessToken];

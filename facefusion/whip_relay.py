@@ -88,12 +88,16 @@ def is_session_ready(stream_path : str) -> bool:
 	return False
 
 
-def create_session(stream_path : str) -> int:
+def create_session(stream_path : str) -> tuple:
 	try:
 		response = httpx.post('http://localhost:' + str(RELAY_PORT) + '/' + stream_path + '/create', timeout = 5)
 
 		if response.status_code == 200:
-			return int(response.text)
+			parts = response.text.split(',')
+
+			if len(parts) >= 2:
+				return int(parts[0]), int(parts[1])
+			return int(parts[0]), 0
 	except Exception:
 		pass
-	return 0
+	return 0, 0

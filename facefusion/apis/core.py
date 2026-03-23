@@ -14,7 +14,7 @@ from facefusion.apis.endpoints.ping import websocket_ping
 from facefusion.apis.endpoints.session import create_session, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
 from facefusion import logger
-from facefusion.apis.endpoints.stream import websocket_stream, websocket_stream_audio, websocket_stream_live, websocket_stream_mjpeg, websocket_stream_rtc, websocket_stream_whip, websocket_stream_whip_aio, websocket_stream_whip_dc, websocket_stream_whip_py
+from facefusion.apis.endpoints.stream import websocket_stream, websocket_stream_audio, websocket_stream_live, websocket_stream_mjpeg, websocket_stream_rtc, websocket_stream_whip, websocket_stream_whip_dc, websocket_stream_whip_py
 from facefusion.apis.middlewares.session import create_session_guard
 
 
@@ -87,8 +87,7 @@ def create_api() -> Starlette:
 			WebSocketRoute('/stream/whip-py', websocket_stream_whip_py, middleware = [ session_guard ]),
 			WebSocketRoute('/stream/whip-dc', websocket_stream_whip_dc, middleware = [ session_guard ]),
 			WebSocketRoute('/stream/live', websocket_stream_live, middleware = [ session_guard ]),
-			WebSocketRoute('/stream/whip-aio', websocket_stream_whip_aio, middleware = [ session_guard ]),
-			WebSocketRoute('/stream/rtc', websocket_stream_rtc, middleware = [ session_guard ]),
+WebSocketRoute('/stream/rtc', websocket_stream_rtc, middleware = [ session_guard ]),
 			WebSocketRoute('/stream/mjpeg', websocket_stream_mjpeg, middleware = [ session_guard ]),
 			WebSocketRoute('/stream/audio', websocket_stream_audio, middleware = [ session_guard ])
 		]

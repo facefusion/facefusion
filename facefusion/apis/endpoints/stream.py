@@ -7,6 +7,7 @@ from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from typing import Deque, List
 
+import av
 import cv2
 import numpy
 from starlette.websockets import WebSocket
@@ -590,13 +591,17 @@ async def websocket_stream_whip_dc(websocket : WebSocket) -> None:
 
 	if source_paths:
 		from facefusion import whip_relay
+		from facefusion import rtc as rtc_audio
+		import socket as sock
 		stream_path = 'stream/' + session_id
-		rtp_port = whip_relay.create_session(stream_path)
+		rtp_port, audio_port = whip_relay.create_session(stream_path)
 
 		if not rtp_port:
 			logger.error('failed to create relay session', __name__)
 			await websocket.close()
 			return
+
+		audio_sock = sock.socket(sock.AF_INET, sock.SOCK_DGRAM) if audio_port else None
 
 		latest_frame_holder : list = [None]
 		whep_sent = False
@@ -625,10 +630,30 @@ async def websocket_stream_whip_dc(websocket : WebSocket) -> None:
 							with lock:
 								latest_frame_holder[0] = frame
 
+					if data[:2] != JPEG_MAGIC and audio_sock and audio_port:
+						encoder = rtc_audio.get_opus_encoder()
+						pcm = numpy.frombuffer(data, dtype = numpy.int16).reshape(1, -1)
+						samples = pcm.shape[1] // (2 * 960) * 960 * 2
+
+						if samples > 0:
+							for offset in range(0, samples, 960 * 2):
+								chunk = pcm[:, offset:offset + 960 * 2]
+
+								if chunk.shape[1] == 960 * 2:
+									frame = av.AudioFrame.from_ndarray(chunk, format = 's16', layout = 'stereo')
+									frame.sample_rate = 48000
+
+									for packet in encoder.encode(frame):
+										audio_sock.sendto(bytes(packet), ('127.0.0.1', audio_port))
+
 		except Exception as exception:
 			logger.error(str(exception), __name__)
 
 		stop_event.set()
+
+		if audio_sock:
+			audio_sock.close()
+
 		loop = asyncio.get_running_loop()
 		await loop.run_in_executor(None, worker.join, 10)
 		return

@@ -270,6 +270,7 @@ send_start_time : float = 0
 opus_encoder : Optional[av.CodecContext] = None
 audio_buffer : bytearray = bytearray()
 audio_lock : threading.Lock = threading.Lock()
+audio_pts : int = 0
 OPUS_FRAME_SAMPLES : int = 960
 
 
@@ -320,6 +321,8 @@ def get_opus_encoder() -> av.CodecContext:
 
 
 def send_audio(stream_path : str, pcm_data : bytes) -> None:
+	global audio_pts
+
 	session = sessions.get(stream_path)
 
 	if not session:
@@ -342,10 +345,11 @@ def send_audio(stream_path : str, pcm_data : bytes) -> None:
 			pcm = numpy.frombuffer(chunk, dtype = numpy.int16).reshape(1, -1)
 			frame = av.AudioFrame.from_ndarray(pcm, format = 's16', layout = 'stereo')
 			frame.sample_rate = 48000
-			frame.pts = None
+			frame.pts = audio_pts
 
 			for packet in encoder.encode(frame):
 				opus_data = bytes(packet)
+				buf = ctypes.create_string_buffer(opus_data)
 
 				for viewer in viewers:
 					if not viewer.get('connected'):
@@ -359,11 +363,10 @@ def send_audio(stream_path : str, pcm_data : bytes) -> None:
 					if not lib.rtcIsOpen(audio_track_id):
 						continue
 
-					elapsed = _time.monotonic() - send_start_time if send_start_time > 0 else 0
-					timestamp = int(elapsed * 48000) & 0xFFFFFFFF
-					buf = ctypes.create_string_buffer(opus_data)
-					lib.rtcSetTrackRtpTimestamp(audio_track_id, timestamp)
+					lib.rtcSetTrackRtpTimestamp(audio_track_id, audio_pts & 0xFFFFFFFF)
 					lib.rtcSendMessage(audio_track_id, buf, len(opus_data))
+
+			audio_pts += OPUS_FRAME_SAMPLES
 
 
 h264_au_buffer : Dict[str, bytes] = {}
