@@ -805,6 +805,9 @@ async def websocket_stream_rtc(websocket : WebSocket) -> None:
 							with lock:
 								latest_frame_holder[0] = frame
 
+					if data[:2] != JPEG_MAGIC:
+						rtc.send_audio(stream_path, data)
+
 		except Exception as exception:
 			logger.error(str(exception), __name__)
 
