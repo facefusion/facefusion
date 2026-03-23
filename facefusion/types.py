@@ -292,7 +292,7 @@ ExecutionDeviceProduct = TypedDict('ExecutionDeviceProduct',
 ExecutionDeviceVideoMemory = TypedDict('ExecutionDeviceVideoMemory',
 {
 	'total' : Optional[ValueAndUnit],
-	'free' : Optional[ValueAndUnit]
+	'used' : Optional[ValueAndUnit]
 })
 ExecutionDeviceTemperature = TypedDict('ExecutionDeviceTemperature',
 {
