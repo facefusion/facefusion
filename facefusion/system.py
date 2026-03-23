@@ -2,7 +2,7 @@ import importlib
 import shutil
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
 
 import psutil
 
@@ -24,7 +24,7 @@ def get_metrics_set() -> Metrics:
 
 
 @lru_cache()
-def detect_static_graphic_devices(execution_providers : Tuple[ExecutionProvider, ...]) -> List[GraphicDevice]:
+def detect_static_graphic_devices(execution_providers : Sequence[ExecutionProvider]) -> List[GraphicDevice]:
 	return detect_graphic_devices(execution_providers)
 
 
