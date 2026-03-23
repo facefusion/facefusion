@@ -60,9 +60,9 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 					'value': pynvml.nvmlDeviceGetMemoryInfo(handle).total // (1024 * 1024 * 1024),
 					'unit': 'GB'
 				},
-				'free':
+				'used':
 				{
-					'value': pynvml.nvmlDeviceGetMemoryInfo(handle).free // (1024 * 1024 * 1024),
+					'value': pynvml.nvmlDeviceGetMemoryInfo(handle).used // (1024 * 1024 * 1024),
 					'unit': 'GB'
 				}
 			},
@@ -131,9 +131,9 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 					'value': vram_usage.get('vram_total', 0) // (1024 * 1024 * 1024),
 					'unit': 'GB'
 				},
-				'free':
+				'used':
 				{
-					'value': (vram_usage.get('vram_total', 0) - vram_usage.get('vram_used', 0)) // (1024 * 1024 * 1024),
+					'value': vram_usage.get('vram_used', 0) // (1024 * 1024 * 1024),
 					'unit': 'GB'
 				}
 			},
