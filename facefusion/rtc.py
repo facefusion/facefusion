@@ -83,34 +83,11 @@ class RtcPacketizerInit(ctypes.Structure):
 
 def find_library() -> Optional[str]:
 	project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+	bin_dir = os.path.join(project_root, 'bin')
 
 	if is_windows():
-		bin_dir = os.path.join(project_root, 'bin')
-
-		if os.path.isdir(bin_dir):
-			for entry in sorted(os.listdir(bin_dir), reverse = True):
-				if 'datachannel' in entry and entry.endswith('.dll'):
-					return os.path.join(bin_dir, entry)
-
-		search_paths =\
-		[
-			os.path.join(os.environ.get('CONDA_PREFIX', ''), 'Library', 'bin', 'datachannel.dll'),
-			os.path.join(os.environ.get('CONDA_PREFIX', ''), 'Library', 'lib', 'datachannel.dll')
-		]
-	else:
-		search_paths =\
-		[
-			'/home/henry/local/lib/libdatachannel.so',
-			'/usr/local/lib/libdatachannel.so',
-			'/usr/lib/libdatachannel.so',
-			'/usr/lib/x86_64-linux-gnu/libdatachannel.so'
-		]
-
-	for path in search_paths:
-		if os.path.isfile(path):
-			return path
-
-	return None
+		return os.path.join(bin_dir, 'windows-x64-openssl-h264-vp8-av1-opus-datachannel-0.24.1.dll')
+	return os.path.join(bin_dir, 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so')
 
 
 def load_library() -> bool:
