@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Dict, List, Optional, TypeAlias
 
 from facefusion import logger
+from facefusion.common_helper import is_windows
 
 RtcLib : TypeAlias = ctypes.CDLL
 WHEP_PORT : int = 8892
@@ -76,30 +77,34 @@ class RtcPacketizerInit(ctypes.Structure):
 		('obuPacketization', ctypes.c_int),
 		('playoutDelayId', ctypes.c_uint8),
 		('playoutDelayMin', ctypes.c_uint16),
-		('playoutDelayMax', ctypes.c_uint16),
-		('colorSpaceId', ctypes.c_uint8),
-		('colorChromaSitingHorz', ctypes.c_uint8),
-		('colorChromaSitingVert', ctypes.c_uint8),
-		('colorRange', ctypes.c_uint8),
-		('colorPrimaries', ctypes.c_uint8),
-		('colorTransfer', ctypes.c_uint8),
-		('colorMatrix', ctypes.c_uint8)
+		('playoutDelayMax', ctypes.c_uint16)
 	]
 
 
 def find_library() -> Optional[str]:
-	lib_path = ctypes.util.find_library('datachannel')
+	project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-	if lib_path:
-		return lib_path
+	if is_windows():
+		bin_dir = os.path.join(project_root, 'bin')
 
-	search_paths =\
-	[
-		'/home/henry/local/lib/libdatachannel.so',
-		'/usr/local/lib/libdatachannel.so',
-		'/usr/lib/libdatachannel.so',
-		'/usr/lib/x86_64-linux-gnu/libdatachannel.so'
-	]
+		if os.path.isdir(bin_dir):
+			for entry in sorted(os.listdir(bin_dir), reverse = True):
+				if 'datachannel' in entry and entry.endswith('.dll'):
+					return os.path.join(bin_dir, entry)
+
+		search_paths =\
+		[
+			os.path.join(os.environ.get('CONDA_PREFIX', ''), 'Library', 'bin', 'datachannel.dll'),
+			os.path.join(os.environ.get('CONDA_PREFIX', ''), 'Library', 'lib', 'datachannel.dll')
+		]
+	else:
+		search_paths =\
+		[
+			'/home/henry/local/lib/libdatachannel.so',
+			'/usr/local/lib/libdatachannel.so',
+			'/usr/lib/libdatachannel.so',
+			'/usr/lib/x86_64-linux-gnu/libdatachannel.so'
+		]
 
 	for path in search_paths:
 		if os.path.isfile(path):
@@ -111,10 +116,13 @@ def find_library() -> Optional[str]:
 def load_library() -> bool:
 	global lib
 
+	if lib:
+		return True
+
 	lib_path = find_library()
 
 	if not lib_path:
-		logger.warn('libdatachannel.so not found', __name__)
+		logger.warn('libdatachannel not found', __name__)
 		return False
 
 	lib = ctypes.CDLL(lib_path)
@@ -352,7 +360,15 @@ def init_opus_encoder() -> None:
 	if opus_enc:
 		return
 
-	libopus_handle = ctypes.CDLL(ctypes.util.find_library('opus'))
+	opus_path = ctypes.util.find_library('opus')
+
+	if not opus_path:
+		if not hasattr(init_opus_encoder, '_warned'):
+			logger.warn('libopus not found, audio encoding disabled', __name__)
+			init_opus_encoder._warned = True
+		return
+
+	libopus_handle = ctypes.CDLL(opus_path)
 	libopus_handle.opus_encoder_create.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
 	libopus_handle.opus_encoder_create.restype = ctypes.c_void_p
 	libopus_handle.opus_encode.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_ubyte), ctypes.c_int32]
@@ -434,41 +450,97 @@ def send_vp8_frame(stream_path : str, frame_data : bytes) -> None:
 	send_h264_frame(stream_path, frame_data)
 
 
+def find_nal_starts(data : bytes) -> List:
+	starts = []
+	i = 0
+
+	while i < len(data) - 3:
+		if data[i] == 0 and data[i + 1] == 0:
+			if data[i + 2] == 1:
+				starts.append((i, 3))
+				i += 3
+				continue
+			if i < len(data) - 4 and data[i + 2] == 0 and data[i + 3] == 1:
+				starts.append((i, 4))
+				i += 4
+				continue
+
+		i += 1
+
+	return starts
+
+
 def send_h264_frame(stream_path : str, frame_data : bytes) -> None:
+	global send_start_time
+
 	session = sessions.get(stream_path)
 
 	if not session:
 		return
 
+	viewers = session.get('viewers')
+
+	if not viewers:
+		return
+
 	prev = h264_au_buffer.get(stream_path, b'')
 	buf = prev + frame_data
+	nal_starts = find_nal_starts(buf)
 
-	au_starts = []
-	i = 0
-
-	while i < len(buf) - 4:
-		if buf[i] == 0 and buf[i + 1] == 0 and buf[i + 2] == 0 and buf[i + 3] == 1 and i + 4 < len(buf):
-			nal_type = buf[i + 4] & 0x1f
-
-			if nal_type == 7 or nal_type == 5:
-				au_starts.append(i)
-
-		i += 1
-
-	if len(au_starts) < 2:
+	if len(nal_starts) < 2:
 		h264_au_buffer[stream_path] = buf
 		return
 
-	for j in range(len(au_starts) - 1):
-		au = buf[au_starts[j]:au_starts[j + 1]]
+	au_boundaries = []
 
-		for viewer in session.get('viewers', []):
-			tracks = viewer.get('tracks', [])
+	for idx, (pos, sc_len) in enumerate(nal_starts):
+		nal_type = buf[pos + sc_len] & 0x1f
 
-			if tracks:
-				lib.rtcSendMessage(tracks[0], au, len(au))
+		if nal_type == 7:
+			au_boundaries.append(idx)
 
-	h264_au_buffer[stream_path] = buf[au_starts[-1]:]
+	if len(au_boundaries) < 2:
+		h264_au_buffer[stream_path] = buf
+		return
+
+	if send_start_time == 0:
+		send_start_time = _time.monotonic()
+
+	elapsed = _time.monotonic() - send_start_time
+	frame_duration = 1.0 / 30.0
+
+	for k in range(len(au_boundaries) - 1):
+		start_nal = au_boundaries[k]
+		end_nal = au_boundaries[k + 1]
+		timestamp = int((elapsed + k * frame_duration) * 90000) & 0xFFFFFFFF
+
+		nalu_parts = []
+
+		for nal_idx in range(start_nal, end_nal):
+			nal_pos = nal_starts[nal_idx][0]
+			nal_sc_len = nal_starts[nal_idx][1]
+
+			if nal_idx + 1 < len(nal_starts):
+				nal_end = nal_starts[nal_idx + 1][0]
+			else:
+				nal_end = len(buf)
+
+			nalu = buf[nal_pos + nal_sc_len:nal_end]
+
+			if len(nalu) > 0:
+				nalu_parts.append(len(nalu).to_bytes(4, 'big') + nalu)
+
+		if nalu_parts:
+			frame_msg = b''.join(nalu_parts)
+
+			for viewer in viewers:
+				tracks = viewer.get('tracks', [])
+
+				if tracks:
+					lib.rtcSendMessage(tracks[0], frame_msg, len(frame_msg))
+
+	last_boundary = au_boundaries[-1]
+	h264_au_buffer[stream_path] = buf[nal_starts[last_boundary][0]:]
 
 
 def destroy_session(stream_path : str) -> None:
@@ -560,6 +632,13 @@ def handle_whep_offer(stream_path : str, sdp_offer : str) -> Optional[str]:
 	lib.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
 	lib.rtcChainRtcpSrReporter(audio_track)
 
+	def on_track_open(track_id, user_ptr):
+		logger.info('track ' + str(track_id) + ' opened', __name__)
+
+	track_open_cb = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)(on_track_open)
+	callback_refs.append(track_open_cb)
+	lib.rtcSetOpenCallback(video_track, track_open_cb)
+
 	viewer['tracks'] = [video_track]
 	viewer['audio_track'] = audio_track
 	session['viewers'].append(viewer)
@@ -585,6 +664,9 @@ def handle_whep_offer(stream_path : str, sdp_offer : str) -> Optional[str]:
 
 def start() -> None:
 	global running, http_thread
+
+	if running:
+		return
 
 	if not load_library():
 		return

@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 import cv2
 
 from facefusion import ffmpeg_builder
+from facefusion.common_helper import is_windows
 from facefusion.streamer import process_vision_frame
 from facefusion.types import VisionFrame
 
@@ -82,7 +83,13 @@ def create_whip_encoder(width : int, height : int, stream_fps : int, stream_qual
 		ffmpeg_builder.set_output(whip_url)
 	)
 	commands = ffmpeg_builder.run(commands)
-	process = subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, pass_fds = (audio_read_fd,))
+
+	if is_windows():
+		os.set_inheritable(audio_read_fd, True)
+		process = subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, close_fds = False)
+	else:
+		process = subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, pass_fds = (audio_read_fd,))
+
 	os.close(audio_read_fd)
 	return process, audio_write_fd
 
@@ -130,7 +137,13 @@ def create_fmp4_encoder(width : int, height : int, stream_fps : int, stream_qual
 		ffmpeg_builder.set_output('-')
 	)
 	commands = ffmpeg_builder.run(commands)
-	process = subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE, pass_fds = (audio_read_fd,))
+
+	if is_windows():
+		os.set_inheritable(audio_read_fd, True)
+		process = subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE, close_fds = False)
+	else:
+		process = subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE, pass_fds = (audio_read_fd,))
+
 	os.close(audio_read_fd)
 	return process, audio_write_fd
 

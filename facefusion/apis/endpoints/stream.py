@@ -1,5 +1,4 @@
 import asyncio
-import fcntl
 import os as _os
 import threading
 import time
@@ -12,6 +11,7 @@ import numpy
 from starlette.websockets import WebSocket
 
 from facefusion import logger, session_context, session_manager, state_manager
+from facefusion.common_helper import is_windows
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
 from facefusion import mediamtx
@@ -450,8 +450,11 @@ def run_aiortc_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_
 
 def read_h264_output(process, h264_chunks : List[bytes], h264_lock : threading.Lock) -> None:
 	fd = process.stdout.fileno()
-	flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-	fcntl.fcntl(fd, fcntl.F_SETFL, flags & ~_os.O_NONBLOCK)
+
+	if not is_windows():
+		import fcntl
+		flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+		fcntl.fcntl(fd, fcntl.F_SETFL, flags & ~_os.O_NONBLOCK)
 
 	while True:
 		chunk = _os.read(fd, 4096)
@@ -465,8 +468,11 @@ def read_h264_output(process, h264_chunks : List[bytes], h264_lock : threading.L
 
 def read_ivf_frames(process, frame_list : List[bytes], frame_lock : threading.Lock) -> None:
 	fd = process.stdout.fileno()
-	flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-	fcntl.fcntl(fd, fcntl.F_SETFL, flags & ~_os.O_NONBLOCK)
+
+	if not is_windows():
+		import fcntl
+		flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+		fcntl.fcntl(fd, fcntl.F_SETFL, flags & ~_os.O_NONBLOCK)
 
 	header = b''
 
@@ -589,26 +595,18 @@ async def websocket_stream_whip_dc(websocket : WebSocket) -> None:
 	await websocket.accept(subprotocol = subprotocol)
 
 	if source_paths:
-		from facefusion import whip_relay
-		from facefusion import rtc as rtc_audio
-		import socket as sock
-		stream_path = 'stream/' + session_id
-		rtp_port = whip_relay.create_session(stream_path)
+		from facefusion.aiortc_bridge import AiortcBridge
 
-		if not rtp_port:
-			logger.error('failed to create relay session', __name__)
-			await websocket.close()
-			return
-
-		audio_sock = sock.socket(sock.AF_INET, sock.SOCK_DGRAM)
-		relay_addr = ('127.0.0.1', rtp_port)
+		bridge = AiortcBridge()
+		await bridge.start()
+		whep_url = 'http://localhost:' + str(bridge.port) + '/whep'
 
 		latest_frame_holder : list = [None]
 		whep_sent = False
 		lock = threading.Lock()
 		stop_event = threading.Event()
 		ready_event = threading.Event()
-		worker = threading.Thread(target = run_h264_dc_pipeline, args = (latest_frame_holder, lock, stop_event, ready_event, 'relay', stream_path, rtp_port), daemon = True)
+		worker = threading.Thread(target = run_aiortc_pipeline, args = (latest_frame_holder, lock, stop_event, ready_event, bridge), daemon = True)
 		worker.start()
 
 		try:
@@ -616,7 +614,6 @@ async def websocket_stream_whip_dc(websocket : WebSocket) -> None:
 				message = await websocket.receive()
 
 				if not whep_sent and ready_event.is_set():
-					whep_url = whip_relay.get_whep_url(stream_path)
 					await websocket.send_text(whep_url)
 					whep_sent = True
 
@@ -631,27 +628,15 @@ async def websocket_stream_whip_dc(websocket : WebSocket) -> None:
 								latest_frame_holder[0] = frame
 
 					if data[:2] != JPEG_MAGIC:
-						rtc_audio.init_opus_encoder()
-
-						with rtc_audio.audio_lock:
-							rtc_audio.audio_buffer.extend(data)
-							needed = rtc_audio.OPUS_FRAME_SAMPLES * 2 * 2
-
-							while len(rtc_audio.audio_buffer) >= needed:
-								chunk = bytes(rtc_audio.audio_buffer[:needed])
-								del rtc_audio.audio_buffer[:needed]
-								opus_pkt = rtc_audio.encode_opus_frame(chunk)
-
-								if opus_pkt:
-									audio_sock.sendto(b'\x02' + opus_pkt, relay_addr)
+						bridge.push_audio(data)
 
 		except Exception as exception:
 			logger.error(str(exception), __name__)
 
 		stop_event.set()
-		audio_sock.close()
 		loop = asyncio.get_running_loop()
 		await loop.run_in_executor(None, worker.join, 10)
+		await bridge.stop()
 		return
 
 	await websocket.close()
@@ -792,24 +777,28 @@ async def websocket_stream_rtc_relay(websocket : WebSocket) -> None:
 	session_context.set_session_id(session_id)
 	source_paths = state_manager.get_item('source_paths')
 
+	logger.info('rtc-relay: session_id=' + str(session_id) + ' source_paths=' + str(bool(source_paths)), __name__)
+
 	await websocket.accept(subprotocol = subprotocol)
 
 	if source_paths:
 		from facefusion import rtc
-		import socket as sock
-		stream_path = 'stream/' + session_id
-		rtp_port = rtc.create_rtp_session(stream_path)
-		whep_url = 'http://localhost:' + str(rtc.WHEP_PORT) + '/' + stream_path + '/whep'
 
-		audio_sock = sock.socket(sock.AF_INET, sock.SOCK_DGRAM)
-		relay_addr = ('127.0.0.1', rtp_port)
+		if not rtc.lib:
+			logger.error('rtc-relay: libdatachannel not loaded', __name__)
+			await websocket.close()
+			return
+
+		stream_path = 'stream/' + session_id
+		rtc.create_session(stream_path)
+		whep_url = 'http://localhost:' + str(rtc.WHEP_PORT) + '/' + stream_path + '/whep'
 
 		latest_frame_holder : list = [None]
 		whep_sent = False
 		lock = threading.Lock()
 		stop_event = threading.Event()
 		ready_event = threading.Event()
-		worker = threading.Thread(target = run_h264_dc_pipeline, args = (latest_frame_holder, lock, stop_event, ready_event, 'relay', stream_path, rtp_port), daemon = True)
+		worker = threading.Thread(target = run_rtc_direct_pipeline, args = (latest_frame_holder, lock, stop_event, ready_event, stream_path), daemon = True)
 		worker.start()
 
 		try:
@@ -831,25 +820,12 @@ async def websocket_stream_rtc_relay(websocket : WebSocket) -> None:
 								latest_frame_holder[0] = frame
 
 					if data[:2] != JPEG_MAGIC:
-						rtc.init_opus_encoder()
-
-						with rtc.audio_lock:
-							rtc.audio_buffer.extend(data)
-							needed = rtc.OPUS_FRAME_SAMPLES * 2 * 2
-
-							while len(rtc.audio_buffer) >= needed:
-								chunk = bytes(rtc.audio_buffer[:needed])
-								del rtc.audio_buffer[:needed]
-								opus_pkt = rtc.encode_opus_frame(chunk)
-
-								if opus_pkt:
-									audio_sock.sendto(b'\x02' + opus_pkt, relay_addr)
+						rtc.send_audio(stream_path, data)
 
 		except Exception as exception:
 			logger.error(str(exception), __name__)
 
 		stop_event.set()
-		audio_sock.close()
 		loop = asyncio.get_running_loop()
 		await loop.run_in_executor(None, worker.join, 10)
 		rtc.destroy_session(stream_path)

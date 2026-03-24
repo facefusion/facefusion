@@ -6,22 +6,23 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route, WebSocketRoute
 
-from facefusion import mediamtx
+from facefusion import logger, mediamtx
 from facefusion.apis.endpoints.assets import delete_assets, get_asset, get_assets, upload_asset
 from facefusion.apis.endpoints.capabilities import get_capabilities
 from facefusion.apis.endpoints.metrics import get_metrics, websocket_metrics
 from facefusion.apis.endpoints.ping import websocket_ping
 from facefusion.apis.endpoints.session import create_session, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
-from facefusion import logger
+from facefusion.common_helper import is_windows
 from facefusion.apis.endpoints.stream import websocket_stream, websocket_stream_audio, websocket_stream_live, websocket_stream_mjpeg, websocket_stream_rtc, websocket_stream_rtc_relay, websocket_stream_whip, websocket_stream_whip_dc, websocket_stream_whip_py
 from facefusion.apis.middlewares.session import create_session_guard
 
 
 @asynccontextmanager
 async def lifespan(app : Starlette) -> AsyncGenerator[None, None]:
-	mediamtx.start()
-	mediamtx.wait_for_ready()
+	if not is_windows():
+		mediamtx.start()
+		mediamtx.wait_for_ready()
 
 	try:
 		from facefusion import webrtc_sfu
@@ -43,7 +44,9 @@ async def lifespan(app : Starlette) -> AsyncGenerator[None, None]:
 		logger.warn('rtc: ' + str(exception), __name__)
 
 	yield
-	mediamtx.stop()
+
+	if not is_windows():
+		mediamtx.stop()
 
 	try:
 		from facefusion import webrtc_sfu

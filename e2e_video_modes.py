@@ -1,4 +1,5 @@
 import os
+import platform
 import signal
 import subprocess
 import sys
@@ -10,7 +11,21 @@ from playwright.sync_api import sync_playwright
 API_PORT : int = 8400
 HTML_FILE : str = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_stream.html')
 SOURCE_FILE : str = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.assets', 'examples', 'source.jpg')
-VIDEO_FILE : str = '/home/henry/Documents/examples/download.mp4'
+
+def is_windows() -> bool:
+	return platform.system().lower() == 'windows'
+
+if is_windows():
+	VIDEO_FILE : str = 'C:\\Users\\info\\Downloads\\face8k.mp4'
+else:
+	VIDEO_FILE : str = '/home/henry/Documents/examples/download.mp4'
+
+
+def safe_print(text : str) -> None:
+	try:
+		print(text)
+	except UnicodeEncodeError:
+		print(text.encode('ascii', errors='replace').decode('ascii'))
 
 MODES =\
 [
@@ -26,9 +41,13 @@ MODES =\
 
 def start_api() -> subprocess.Popen:
 	env = os.environ.copy()
-	env['LD_LIBRARY_PATH'] = '/home/henry/local/lib:' + env.get('LD_LIBRARY_PATH', '')
+	python_cmd = 'python' if is_windows() else 'python3'
+
+	if not is_windows():
+		env['LD_LIBRARY_PATH'] = '/home/henry/local/lib:' + env.get('LD_LIBRARY_PATH', '')
+
 	proc = subprocess.Popen(
-		[ 'python3', 'facefusion.py', 'api', '--api-port', str(API_PORT), '--execution-providers', 'cpu' ],
+		[ python_cmd, 'facefusion.py', 'api', '--api-port', str(API_PORT), '--execution-providers', 'cpu' ],
 		env = env,
 		stdout = subprocess.PIPE,
 		stderr = subprocess.PIPE
@@ -55,7 +74,10 @@ def wait_for_api(timeout : int = 60) -> bool:
 
 
 def stop_api(proc : subprocess.Popen) -> None:
-	proc.send_signal(signal.SIGTERM)
+	if is_windows():
+		proc.terminate()
+	else:
+		proc.send_signal(signal.SIGTERM)
 
 	try:
 		proc.wait(timeout = 10)
@@ -66,14 +88,36 @@ def stop_api(proc : subprocess.Popen) -> None:
 	time.sleep(1)
 
 
+def kill_port_windows(port : int) -> None:
+	result = subprocess.run(
+		[ 'netstat', '-ano' ],
+		capture_output = True, text = True
+	)
+
+	for line in result.stdout.splitlines():
+		if ':' + str(port) + ' ' in line and ('LISTENING' in line or 'ESTABLISHED' in line):
+			parts = line.split()
+			pid = parts[-1]
+
+			if pid.isdigit() and int(pid) > 0:
+				subprocess.run([ 'taskkill', '/F', '/PID', pid ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+
+
 def kill_stale() -> None:
-	subprocess.run([ 'fuser', '-k', str(API_PORT) + '/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-	subprocess.run([ 'fuser', '-k', '8889/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-	subprocess.run([ 'fuser', '-k', '8189/udp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-	subprocess.run([ 'fuser', '-k', '9997/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-	subprocess.run([ 'fuser', '-k', '8890/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-	subprocess.run([ 'fuser', '-k', '8891/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-	subprocess.run([ 'fuser', '-k', '8892/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+	ports = [ API_PORT, 8889, 8189, 9997, 8890, 8891, 8892 ]
+
+	if is_windows():
+		for port in ports:
+			kill_port_windows(port)
+	else:
+		subprocess.run([ 'fuser', '-k', str(API_PORT) + '/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+		subprocess.run([ 'fuser', '-k', '8889/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+		subprocess.run([ 'fuser', '-k', '8189/udp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+		subprocess.run([ 'fuser', '-k', '9997/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+		subprocess.run([ 'fuser', '-k', '8890/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+		subprocess.run([ 'fuser', '-k', '8891/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+		subprocess.run([ 'fuser', '-k', '8892/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+
 	time.sleep(2)
 
 
@@ -258,33 +302,48 @@ def test_mode(mode : str) -> dict:
 						print('  [' + str(i) + 's] frames=' + str(frames_val) + ' fps=' + fps_stat + ' rtc=' + rtc_stat)
 						break
 
-				print('  [' + str(i) + 's] ws=' + ws_stat + ' rtc=' + rtc_stat + ' frames=' + frames_stat)
+				try:
+					rtc_stats = page.evaluate('''() => {
+						if (!window.pc) return '';
+						return pc.getStats().then(stats => {
+							var r = '';
+							stats.forEach(report => {
+								if (report.type === 'inbound-rtp' && report.kind === 'video') {
+									r = 'pkts=' + (report.packetsReceived||0) + ' bytes=' + (report.bytesReceived||0) + ' lost=' + (report.packetsLost||0) + ' dropped=' + (report.framesDropped||0) + ' dec=' + (report.decoderImplementation||'?') + ' kf=' + (report.keyFramesDecoded||0) + ' nacks=' + (report.nackCount||0) + ' plis=' + (report.pliCount||0);
+								}
+							});
+							return r;
+						});
+					}''')
+				except Exception:
+					rtc_stats = ''
+				print('  [' + str(i) + 's] ws=' + ws_stat + ' rtc=' + rtc_stat + ' frames=' + frames_stat + ' ' + str(rtc_stats))
 
 			if not result.get('playback'):
 				log_text = page.locator('#log').text_content()
 				result['error'] = 'no playback after 45s'
-				print('  FAIL: no playback')
-				print('  LOG (last 500): ' + log_text[-500:])
+				safe_print('  FAIL: no playback')
+				safe_print('  LOG (last 500): ' + log_text[-500:])
 
 				for line in logs[-20:]:
-					print('  [console] ' + line)
+					safe_print('  [console] ' + line)
 
 			browser.close()
 
 	except Exception as exception:
 		result['error'] = str(exception)
-		print('  EXCEPTION: ' + str(exception))
+		safe_print('  EXCEPTION: ' + str(exception))
 
 	stderr_out = ''
 
 	try:
 		stop_api(api_proc)
-		stderr_out = api_proc.stderr.read().decode()[-500:]
+		stderr_out = api_proc.stderr.read().decode('utf-8', errors='ignore')[-5000:]
 	except Exception:
 		pass
 
 	if stderr_out.strip():
-		print('  API stderr: ' + stderr_out)
+		safe_print('  API stderr: ' + stderr_out)
 
 	return result
 
