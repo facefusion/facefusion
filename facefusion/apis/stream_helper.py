@@ -214,11 +214,6 @@ def create_h264_pipe_encoder(width : int, height : int, stream_fps : int, stream
 
 
 def create_vp8_pipe_encoder(width : int, height : int, stream_fps : int, stream_quality : int) -> subprocess.Popen[bytes]:
-	if width > 1280:
-		height = int(height * 1280 / width)
-		height = height - (height % 2)
-		width = 1280
-
 	commands = ffmpeg_builder.chain(
 		[ '-use_wallclock_as_timestamps', '1' ],
 		ffmpeg_builder.capture_video(),
@@ -226,14 +221,14 @@ def create_vp8_pipe_encoder(width : int, height : int, stream_fps : int, stream_
 		ffmpeg_builder.set_input('-'),
 		[ '-c:v', 'libvpx' ],
 		[ '-deadline', 'realtime' ],
-		[ '-cpu-used', '15' ],
+		[ '-cpu-used', '8' ],
 		[ '-pix_fmt', 'yuv420p' ],
-		[ '-crf', '30' ],
-		[ '-b:v', '1000k' ],
-		[ '-maxrate', '1500k' ],
-		[ '-bufsize', '2000k' ],
-		[ '-g', '60' ],
-		[ '-keyint_min', '30' ],
+		[ '-crf', '10' ],
+		[ '-b:v', compute_bitrate(width, height) ],
+		[ '-maxrate', compute_bitrate(width, height) ],
+		[ '-bufsize', compute_bufsize(width, height) ],
+		[ '-g', str(stream_fps) ],
+		[ '-keyint_min', str(stream_fps) ],
 		[ '-error-resilient', '1' ],
 		[ '-lag-in-frames', '0' ],
 		[ '-rc_lookahead', '0' ],
