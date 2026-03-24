@@ -189,6 +189,23 @@ def test_get_metrics(test_client : TestClient) -> None:
 	assert metrics_body.get('processor').get('utilization').get('value') == 25
 
 
+def test_get_metrics_not_found(test_client : TestClient, mocker : MockerFixture) -> None:
+	mocker.patch('facefusion.apis.endpoints.metrics.get_metrics_set', return_value = None)
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	create_session_body = create_session_response.json()
+
+	metrics_response = test_client.get('/metrics', headers =
+	{
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
+	})
+
+	assert metrics_response.status_code == 404
+
+
 def test_websocket_metrics(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
