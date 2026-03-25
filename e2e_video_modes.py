@@ -2,7 +2,6 @@ import os
 import platform
 import signal
 import subprocess
-import sys
 import time
 
 import httpx
@@ -12,16 +11,8 @@ API_PORT : int = 8400
 HTML_FILE : str = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_stream.html')
 SOURCE_FILE : str = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.assets', 'examples', 'source.jpg')
 
-def is_windows() -> bool:
-	return platform.system().lower() == 'windows'
-
-def is_macos() -> bool:
-	return platform.system().lower() == 'darwin'
-
-if is_windows():
+if platform.system().lower() == 'windows':
 	VIDEO_FILE : str = 'C:\\Users\\info\\Downloads\\face8k.mp4'
-elif is_macos():
-	VIDEO_FILE : str = '/Users/henry/Downloads/copy_face_instant.mp4'
 else:
 	VIDEO_FILE : str = '/home/henry/Documents/examples/download.mp4'
 
@@ -32,25 +23,12 @@ def safe_print(text : str) -> None:
 	except UnicodeEncodeError:
 		print(text.encode('ascii', errors='replace').decode('ascii'))
 
-_ALL_MODES =\
-[
-	'whip-mediamtx',
-	'whip-python',
-	'whip-datachannel',
-	'ws-fmp4',
-	'datachannel-direct',
-	'datachannel-relay-py',
-	'ws-mjpeg'
-]
-
-MODES = [ m for m in _ALL_MODES if not (is_macos() and m == 'whip-mediamtx') ]
-
 
 def start_api() -> subprocess.Popen:
 	env = os.environ.copy()
-	python_cmd = 'python' if is_windows() else 'python3'
+	python_cmd = 'python' if platform.system().lower() == 'windows' else 'python3'
 
-	if not is_windows() and not is_macos():
+	if platform.system().lower() != 'windows':
 		env['LD_LIBRARY_PATH'] = '/home/henry/local/lib:' + env.get('LD_LIBRARY_PATH', '')
 
 	proc = subprocess.Popen(
@@ -81,7 +59,7 @@ def wait_for_api(timeout : int = 60) -> bool:
 
 
 def stop_api(proc : subprocess.Popen) -> None:
-	if is_windows():
+	if platform.system().lower() == 'windows':
 		proc.terminate()
 	else:
 		proc.send_signal(signal.SIGTERM)
@@ -95,64 +73,32 @@ def stop_api(proc : subprocess.Popen) -> None:
 	time.sleep(1)
 
 
-def kill_port_windows(port : int) -> None:
-	result = subprocess.run(
-		[ 'netstat', '-ano' ],
-		capture_output = True, text = True
-	)
-
-	for line in result.stdout.splitlines():
-		if ':' + str(port) + ' ' in line and ('LISTENING' in line or 'ESTABLISHED' in line):
-			parts = line.split()
-			pid = parts[-1]
-
-			if pid.isdigit() and int(pid) > 0:
-				subprocess.run([ 'taskkill', '/F', '/PID', pid ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-
-
-def kill_port_macos(port : int) -> None:
-	pids = set()
-
-	for proto in [ 'tcp', 'udp' ]:
-		result = subprocess.run(
-			[ 'lsof', '-ti', proto + ':' + str(port) ],
-			capture_output = True, text = True
-		)
-
-		for pid in result.stdout.split():
-			if pid.isdigit():
-				pids.add(pid)
-
-	for pid in pids:
-		subprocess.run([ 'kill', '-9', pid ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-
-
 def kill_stale() -> None:
-	ports = [ API_PORT, 8889, 8189, 9997, 8890, 8891, 8892 ]
+	ports = [ API_PORT ]
 
-	if is_windows():
+	if platform.system().lower() == 'windows':
 		for port in ports:
-			kill_port_windows(port)
-	elif is_macos():
-		for port in ports:
-			kill_port_macos(port)
+			result = subprocess.run([ 'netstat', '-ano' ], capture_output = True, text = True)
+
+			for line in result.stdout.splitlines():
+				if ':' + str(port) + ' ' in line and ('LISTENING' in line or 'ESTABLISHED' in line):
+					parts = line.split()
+					pid = parts[-1]
+
+					if pid.isdigit() and int(pid) > 0:
+						subprocess.run([ 'taskkill', '/F', '/PID', pid ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
 	else:
-		subprocess.run([ 'fuser', '-k', str(API_PORT) + '/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-		subprocess.run([ 'fuser', '-k', '8889/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-		subprocess.run([ 'fuser', '-k', '8189/udp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-		subprocess.run([ 'fuser', '-k', '9997/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-		subprocess.run([ 'fuser', '-k', '8890/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-		subprocess.run([ 'fuser', '-k', '8891/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
-		subprocess.run([ 'fuser', '-k', '8892/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+		for port in ports:
+			subprocess.run([ 'fuser', '-k', str(port) + '/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
 
 	time.sleep(2)
 
 
-def test_mode(mode : str) -> dict:
-	result = {'mode': mode, 'session': False, 'source': False, 'video': False, 'ws_open': False, 'stream_ready': False, 'playback': False, 'error': None}
+def test_rtc() -> dict:
+	result = {'session': False, 'source': False, 'video': False, 'ws_open': False, 'stream_ready': False, 'playback': False, 'error': None}
 
 	print('\n' + '=' * 60)
-	print('TESTING: ' + mode)
+	print('TESTING: libdatachannel direct (RTC)')
 	print('=' * 60)
 
 	kill_stale()
@@ -236,11 +182,7 @@ def test_mode(mode : str) -> dict:
 				stop_api(api_proc)
 				return result
 
-			print('  video OK, selecting mode: ' + mode)
-			page.select_option('#streamMode', mode)
-			time.sleep(0.5)
-
-			print('  starting stream...')
+			print('  video OK, starting stream...')
 
 			for _ in range(10):
 				time.sleep(1)
@@ -283,68 +225,17 @@ def test_mode(mode : str) -> dict:
 				if 'stream ready' in log_text or 'WHEP' in log_text:
 					result['stream_ready'] = True
 
-				if mode == 'ws-mjpeg':
-					result['stream_ready'] = True
-
-					try:
-						has_img = page.evaluate('!!document.getElementById("outputVideo")._mjpegImg && !!document.getElementById("outputVideo")._mjpegImg.src')
-
-						if has_img:
-							result['playback'] = True
-							print('  [' + str(i) + 's] MJPEG receiving frames')
-							break
-					except Exception:
-						pass
-
-				if mode == 'ws-fmp4':
-					if 'MSE source buffer ready' in log_text:
-						result['stream_ready'] = True
-
-					try:
-						mse_info = page.evaluate('''() => {
-							var v = document.getElementById("outputVideo");
-							var ms = v._mediaSource || window.mediaSource;
-							var buf = (v.buffered && v.buffered.length > 0) ? v.buffered.end(0) : 0;
-							return { time: v.currentTime, buffered: buf, readyState: v.readyState, networkState: v.networkState };
-						}''')
-						buffered = mse_info.get('buffered', 0)
-
-						if buffered > 0 or mse_info.get('time', 0) > 0:
-							result['playback'] = True
-							print('  [' + str(i) + 's] MSE buffered=' + str(round(buffered, 2)) + ' time=' + str(round(mse_info.get('time', 0), 2)))
-							break
-
-						if i % 5 == 0:
-							print('  [' + str(i) + 's] MSE: ' + str(mse_info))
-					except Exception:
-						pass
-				else:
-					try:
-						frames_val = int(frames_stat) if frames_stat and frames_stat != '--' else 0
-					except ValueError:
-						frames_val = 0
-
-					if frames_val > 0:
-						result['playback'] = True
-						print('  [' + str(i) + 's] frames=' + str(frames_val) + ' fps=' + fps_stat + ' rtc=' + rtc_stat)
-						break
-
 				try:
-					rtc_stats = page.evaluate('''() => {
-						if (!window.pc) return '';
-						return pc.getStats().then(stats => {
-							var r = '';
-							stats.forEach(report => {
-								if (report.type === 'inbound-rtp' && report.kind === 'video') {
-									r = 'pkts=' + (report.packetsReceived||0) + ' bytes=' + (report.bytesReceived||0) + ' lost=' + (report.packetsLost||0) + ' dropped=' + (report.framesDropped||0) + ' dec=' + (report.decoderImplementation||'?') + ' kf=' + (report.keyFramesDecoded||0) + ' nacks=' + (report.nackCount||0) + ' plis=' + (report.pliCount||0);
-								}
-							});
-							return r;
-						});
-					}''')
-				except Exception:
-					rtc_stats = ''
-				print('  [' + str(i) + 's] ws=' + ws_stat + ' rtc=' + rtc_stat + ' frames=' + frames_stat + ' ' + str(rtc_stats))
+					frames_val = int(frames_stat) if frames_stat and frames_stat != '--' else 0
+				except ValueError:
+					frames_val = 0
+
+				if frames_val > 0:
+					result['playback'] = True
+					print('  [' + str(i) + 's] frames=' + str(frames_val) + ' fps=' + fps_stat + ' rtc=' + rtc_stat)
+					break
+
+				print('  [' + str(i) + 's] ws=' + ws_stat + ' rtc=' + rtc_stat + ' frames=' + frames_stat)
 
 			if not result.get('playback'):
 				log_text = page.locator('#log').text_content()
@@ -376,36 +267,26 @@ def test_mode(mode : str) -> dict:
 
 
 def main() -> None:
-	modes_to_test = MODES
-
-	if len(sys.argv) > 1:
-		modes_to_test = sys.argv[1:]
-
-	results = []
-
-	for mode in modes_to_test:
-		result = test_mode(mode)
-		results.append(result)
+	result = test_rtc()
 
 	print('\n\n' + '=' * 60)
-	print('SUMMARY')
+	print('RESULT')
 	print('=' * 60)
 
-	for r in results:
-		status = 'PASS' if r.get('playback') else 'FAIL'
-		error = ' (' + r.get('error', '') + ')' if r.get('error') else ''
-		flags = []
+	status = 'PASS' if result.get('playback') else 'FAIL'
+	error = ' (' + result.get('error', '') + ')' if result.get('error') else ''
+	flags = []
 
-		if r.get('session'):
-			flags.append('session')
-		if r.get('ws_open'):
-			flags.append('ws')
-		if r.get('stream_ready'):
-			flags.append('ready')
-		if r.get('playback'):
-			flags.append('playback')
+	if result.get('session'):
+		flags.append('session')
+	if result.get('ws_open'):
+		flags.append('ws')
+	if result.get('stream_ready'):
+		flags.append('ready')
+	if result.get('playback'):
+		flags.append('playback')
 
-		print('  ' + status + '  ' + r.get('mode') + '  [' + ','.join(flags) + ']' + error)
+	print('  ' + status + '  datachannel-direct  [' + ','.join(flags) + ']' + error)
 
 
 if __name__ == '__main__':

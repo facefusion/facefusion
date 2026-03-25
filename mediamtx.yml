@@ -1,9 +1,0 @@
-rtsp: no
-rtmp: no
-hls: no
-srt: no
-webrtc: yes
-webrtcAddress: :8889
-api: yes
-apiAddress: :9997
-paths:

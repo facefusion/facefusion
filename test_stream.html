@@ -139,24 +139,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="step-dot" id="dotMode">4</span> Streaming Mode</div>
-      <div class="form-row">
-        <label>Approach
-          <select id="streamMode">
-            <option value="whip-mediamtx">FFmpeg WHIP + MediaMTX</option>
-            <option value="whip-python">aiortc WebRTC (no ext. deps)</option>
-            <option value="whip-datachannel">FFmpeg WHIP + libdatachannel relay</option>
-            <option value="ws-fmp4">FFmpeg fMP4 + WebSocket (MSE)</option>
-            <option value="datachannel-direct">libdatachannel direct</option>
-            <option value="datachannel-relay-py">libdatachannel Python relay (UDP)</option>
-            <option value="ws-mjpeg">MJPEG over WebSocket (no deps)</option>
-          </select>
-        </label>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title"><span class="step-dot" id="dotOptions">5</span> Options</div>
+      <div class="section-title"><span class="step-dot" id="dotOptions">4</span> Options</div>
       <div class="form-row">
         <label>Capture Resolution
           <select id="captureRes">
@@ -180,7 +163,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="step-dot" id="dotStream">6</span> Stream</div>
+      <div class="section-title"><span class="step-dot" id="dotStream">5</span> Stream</div>
       <div class="switch-row">
         <span>Ready</span>
         <span id="streamReadyHint" style="font-size:0.7rem;color:#555;">set source + video first</span>
@@ -303,38 +286,12 @@ var prevBytes = 0;
 var prevFrames = 0;
 var prevStatsTime = 0;
 var prevFramesSent = 0;
-
 var metricsWs = null;
-var mediaSource = null;
-var sourceBuffer = null;
-var mseQueue = [];
-var mseReady = false;
 
 var captureCanvas = document.createElement('canvas');
 var captureCtx = captureCanvas.getContext('2d');
 var audioCtx = null;
 var audioWorklet = null;
-var audioEchoWs = null;
-var audioPlayCtx = null;
-var audioPlayNextTime = 0;
-
-var MODE_CONFIG = {
-  'whip-mediamtx':       { wsPath: '/stream/whip',    playback: 'whep' },
-  'whip-python':         { wsPath: '/stream/whip-py',  playback: 'whep' },
-  'whip-datachannel':    { wsPath: '/stream/whip-dc',  playback: 'whep' },
-  'ws-fmp4':             { wsPath: '/stream/live',     playback: 'mse' },
-  'datachannel-direct':  { wsPath: '/stream/rtc',      playback: 'whep' },
-  'datachannel-relay-py': { wsPath: '/stream/rtc-relay', playback: 'whep' },
-  'ws-mjpeg':            { wsPath: '/stream/mjpeg',    playback: 'mjpeg' }
-};
-
-function getMode() {
-  return document.getElementById('streamMode').value;
-}
-
-function getModeConfig() {
-  return MODE_CONFIG[getMode()];
-}
 
 function log(msg, type) {
   type = type || 'info';
@@ -356,10 +313,6 @@ function base() {
 
 function wsBase() {
   return base().replace(/^http/, 'ws');
-}
-
-function whepUrl() {
-  return whepUrlFromServer;
 }
 
 function authHeaders() {
@@ -753,12 +706,6 @@ function onSeekCommit() {
     timelineVideo.currentTime = t;
     log('seek → ' + formatTime(t), 'info');
   }
-
-  if (audioPlayCtx) {
-    audioPlayCtx.close();
-    audioPlayCtx = new AudioContext({ sampleRate: 48000 });
-    audioPlayNextTime = 0;
-  }
 }
 
 function formatTime(s) {
@@ -797,19 +744,11 @@ function captureAndSend() {
   }, 'image/jpeg', 0.7);
 }
 
-async function connectWhep() {
-  var url = whepUrl();
+async function connectWhep(url) {
   var t0 = performance.now();
   log('WHEP → ' + url, 'info');
 
-  var PeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
-
-  if (!PeerConnection) {
-    log('WebRTC not supported in this browser', 'error');
-    return;
-  }
-
-  pc = new PeerConnection({ iceServers: [] });
+  pc = new RTCPeerConnection({ iceServers: [] });
 
   pc.onconnectionstatechange = function() {
     var state = pc.connectionState;
@@ -899,156 +838,19 @@ function stopAudioCapture() {
   }
 }
 
-function startAudioEcho() {
-  var stream = localStream;
-
-  if (!stream || stream.getAudioTracks().length === 0) {
-    log('no audio track for echo', 'warn');
-    return;
-  }
-
-  audioPlayCtx = new AudioContext({ sampleRate: 48000 });
-  audioPlayNextTime = 0;
-
-  var captureCtxAudio = new AudioContext({ sampleRate: 48000 });
-  var source = captureCtxAudio.createMediaStreamSource(stream);
-  var processor = captureCtxAudio.createScriptProcessor(4096, 2, 2);
-
-  var echoUrl = wsBase() + '/stream/audio';
-  var protocols = ['access_token.' + accessToken];
-  audioEchoWs = new WebSocket(echoUrl, protocols);
-  audioEchoWs.binaryType = 'arraybuffer';
-
-  audioEchoWs.onmessage = function(event) {
-    if (!audioPlayCtx) return;
-
-    var pcm = new Int16Array(event.data);
-    var samples = pcm.length / 2;
-    var buffer = audioPlayCtx.createBuffer(2, samples, 48000);
-    var left = buffer.getChannelData(0);
-    var right = buffer.getChannelData(1);
-
-    for (var i = 0; i < samples; i++) {
-      left[i] = pcm[i * 2] / 32768;
-      right[i] = pcm[i * 2 + 1] / 32768;
-    }
-
-    var bufferSource = audioPlayCtx.createBufferSource();
-    bufferSource.buffer = buffer;
-    bufferSource.connect(audioPlayCtx.destination);
-
-    var now = audioPlayCtx.currentTime;
-    if (audioPlayNextTime < now) audioPlayNextTime = now + 0.05;
-    bufferSource.start(audioPlayNextTime);
-    audioPlayNextTime += buffer.duration;
-  };
-
-  processor.onaudioprocess = function(e) {
-    if (!audioEchoWs || audioEchoWs.readyState !== WebSocket.OPEN) return;
-
-    var left = e.inputBuffer.getChannelData(0);
-    var right = e.inputBuffer.getChannelData(1);
-    var pcm = new Int16Array(left.length * 2);
-
-    for (var i = 0; i < left.length; i++) {
-      pcm[i * 2] = Math.max(-32768, Math.min(32767, left[i] * 32768));
-      pcm[i * 2 + 1] = Math.max(-32768, Math.min(32767, right[i] * 32768));
-    }
-
-    audioEchoWs.send(pcm.buffer);
-  };
-
-  source.connect(processor);
-  processor.connect(captureCtxAudio.destination);
-  log('audio echo started (48kHz stereo s16le)', 'ok');
-}
-
-function stopAudioEcho() {
-  if (audioEchoWs) {
-    audioEchoWs.close();
-    audioEchoWs = null;
-  }
-
-  if (audioPlayCtx) {
-    audioPlayCtx.close();
-    audioPlayCtx = null;
-  }
-
-  audioPlayNextTime = 0;
-}
-
-function initMse() {
-  var video = document.getElementById('outputVideo');
-  mediaSource = new MediaSource();
-  video.src = URL.createObjectURL(mediaSource);
-
-  mediaSource.addEventListener('sourceopen', function() {
-    sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42E01E,mp4a.40.2"');
-    sourceBuffer.mode = 'sequence';
-    mseReady = true;
-
-    sourceBuffer.addEventListener('updateend', function() {
-      if (mseQueue.length > 0 && !sourceBuffer.updating) {
-        sourceBuffer.appendBuffer(mseQueue.shift());
-      }
-    });
-
-    log('MSE source buffer ready', 'ok');
-  });
-}
-
-function feedMse(data) {
-  if (!mseReady || !sourceBuffer) return;
-
-  if (sourceBuffer.updating || mseQueue.length > 0) {
-    mseQueue.push(data);
-  } else {
-    sourceBuffer.appendBuffer(data);
-  }
-}
-
-function cleanupMse() {
-  mseQueue = [];
-  mseReady = false;
-  sourceBuffer = null;
-
-  if (mediaSource && mediaSource.readyState === 'open') {
-    mediaSource.endOfStream();
-  }
-
-  mediaSource = null;
-}
-
 async function connect() {
-  var config = getModeConfig();
-  var mode = getMode();
   framesSent = 0;
+  whepUrlFromServer = null;
 
   var outputVideo = document.getElementById('outputVideo');
   outputVideo.srcObject = null;
   outputVideo.removeAttribute('src');
   outputVideo.load();
-  outputVideo.style.display = '';
 
-  var mjpegImg = outputVideo._mjpegImg;
-
-  if (mjpegImg) {
-    if (mjpegImg._prevUrl) URL.revokeObjectURL(mjpegImg._prevUrl);
-    mjpegImg.remove();
-    outputVideo._mjpegImg = null;
-  }
-
-  cleanupMse();
-  whepUrlFromServer = null;
-
-  var wsUrl = wsBase() + config.wsPath;
+  var wsUrl = wsBase() + '/stream/rtc';
   var protocols = ['access_token.' + accessToken];
   var t0 = performance.now();
-  log('[' + mode + '] ws → ' + wsUrl, 'info');
-
-  if (config.playback === 'mse') {
-    initMse();
-  }
+  log('ws → ' + wsUrl, 'info');
 
   ws = new WebSocket(wsUrl, protocols);
   ws.binaryType = 'arraybuffer';
@@ -1056,7 +858,6 @@ async function connect() {
   ws.onopen = function() {
     log('websocket open (' + Math.round(performance.now() - t0) + 'ms) — sending frames', 'ok');
     markDone('dotStream');
-    markDone('dotMode');
     document.getElementById('btnPlay').disabled = true;
     document.getElementById('btnPlay').classList.add('active');
     document.getElementById('btnStop').disabled = false;
@@ -1072,67 +873,31 @@ async function connect() {
     updateTrackVisual(0, timelineVideo ? timelineVideo.duration : 0);
 
     captureTimer = setInterval(captureAndSend, 1000 / 30);
-    if (config.playback === 'mjpeg') {
-      startAudioEcho();
-    } else {
-      startAudioCapture();
-    }
+    startAudioCapture();
     startStats();
   };
 
   var streamStarted = false;
 
-  function onFirstOutput() {
-    if (streamStarted) return;
-    streamStarted = true;
-    if (timelineVideo) timelineVideo.play();
-    startTimelineSync();
-    log('stream output started', 'ok');
-  }
-
   ws.onmessage = function(event) {
-    if (config.playback === 'mse' && event.data instanceof ArrayBuffer) {
-      onFirstOutput();
-      feedMse(event.data);
-      return;
-    }
-
-    if (config.playback === 'mjpeg' && event.data instanceof ArrayBuffer) {
-      onFirstOutput();
-      var blob = new Blob([event.data], { type: 'image/jpeg' });
-      var url = URL.createObjectURL(blob);
-      var video = document.getElementById('outputVideo');
-      if (!video._mjpegImg) {
-        video.style.display = 'none';
-        var img = document.createElement('img');
-        img.id = 'mjpegOutput';
-        img.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;';
-        video.parentNode.appendChild(img);
-        video._mjpegImg = img;
-      }
-      if (video._mjpegImg._prevUrl) URL.revokeObjectURL(video._mjpegImg._prevUrl);
-      video._mjpegImg.src = url;
-      video._mjpegImg._prevUrl = url;
-      return;
-    }
-
     if (typeof event.data === 'string' && !whepUrlFromServer) {
-      whepUrlFromServer = event.data;
-      onFirstOutput();
+      whepUrlFromServer = base() + event.data;
+
+      if (!streamStarted) {
+        streamStarted = true;
+        if (timelineVideo) timelineVideo.play();
+        startTimelineSync();
+        log('stream output started', 'ok');
+      }
+
       log('stream ready (' + Math.round(performance.now() - t0) + 'ms) — WHEP url: ' + whepUrlFromServer, 'ok');
 
-      if (!window.RTCPeerConnection && !window.webkitRTCPeerConnection) {
-        log('WebRTC not supported — try Chrome or Edge', 'error');
-        return;
-      }
-
       var tWhep = performance.now();
-      connectWhep().then(function() {
+      connectWhep(whepUrlFromServer).then(function() {
         log('WHEP connected (' + Math.round(performance.now() - tWhep) + 'ms)', 'ok');
       }).catch(function(e) {
         log('WHEP failed (' + Math.round(performance.now() - tWhep) + 'ms): ' + e.message, 'error');
       });
-      return;
     }
   };
 
@@ -1150,7 +915,6 @@ function stopStreaming() {
   streaming = false;
   updatePipVisibility();
   stopStats();
-  cleanupMse();
 
   if (captureTimer) {
     clearInterval(captureTimer);
@@ -1162,12 +926,10 @@ function stopStreaming() {
   document.getElementById('btnStop').disabled = true;
   document.getElementById('timeSlider').disabled = true;
   document.getElementById('dotStream').classList.remove('done');
-  document.getElementById('dotMode').classList.remove('done');
 }
 
 function disconnect() {
   stopAudioCapture();
-  stopAudioEcho();
   stopTimelineSync();
 
   if (pc) {
