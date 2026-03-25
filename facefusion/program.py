@@ -703,10 +703,10 @@ def create_output_creation_program() -> ArgumentParser:
 	capability_store.register_capability_set(
 		[
 			group_output_creation.add_argument(
-				'--temp-fps',
-				help = translator.get('help.temp_fps'),
+				'--output-audio-fps',
+				help = translator.get('help.output_audio_fps'),
 				type = float,
-				default = config.get_float_value('output_creation', 'temp_fps', '25.0')
+				default = config.get_float_value('output_creation', 'output_audio_fps', '25.0')
 			)
 		],
 		scopes = [ 'api', 'cli' ]
