@@ -57,12 +57,12 @@ def conditional_get_source_audio_frame(frame_number : int) -> AudioFrame:
 def conditional_get_source_voice_frame(frame_number: int) -> AudioFrame:
 	if state_manager.get_item('workflow') in [ 'audio-to-image:frames', 'audio-to-image:video', 'image-to-video' ]:
 		source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
-		fps = state_manager.get_item('output_audio_fps')
+		temp_fps = state_manager.get_item('output_audio_fps')
 
 		if state_manager.get_item('workflow') == 'image-to-video':
-			fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
+			temp_fps = restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
 
-		source_voice_frame = get_voice_frame(source_audio_path, fps, frame_number)
+		source_voice_frame = get_voice_frame(source_audio_path, temp_fps, frame_number)
 
 		if numpy.any(source_voice_frame):
 			return source_voice_frame
