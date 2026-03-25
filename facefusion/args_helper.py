@@ -52,6 +52,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('output_audio_encoder', args.get('output_audio_encoder'))
 	apply_state_item('output_audio_quality', args.get('output_audio_quality'))
 	apply_state_item('output_audio_volume', args.get('output_audio_volume'))
+	apply_state_item('output_audio_fps', normalize_fps(args.get('output_audio_fps')))
 	apply_state_item('output_video_encoder', args.get('output_video_encoder'))
 	apply_state_item('output_video_preset', args.get('output_video_preset'))
 	apply_state_item('output_video_quality', args.get('output_video_quality'))

@@ -39,9 +39,10 @@ def merge_frames() -> ErrorCode:
 	trim_frame_start, trim_frame_end = restrict_trim_frame(len(temp_frame_paths), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 	output_video_resolution = conditional_scale_resolution()
 	temp_video_fps = conditional_restrict_video_fps()
+	output_fps = conditional_get_output_fps()
 
-	logger.info(translator.get('merging_video').format(resolution = pack_resolution(output_video_resolution), fps = state_manager.get_item('output_video_fps')), __name__)
-	if ffmpeg.merge_video(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_video_fps, output_video_resolution, trim_frame_start, trim_frame_end):
+	logger.info(translator.get('merging_video').format(resolution = pack_resolution(output_video_resolution), fps = output_fps), __name__)
+	if ffmpeg.merge_video(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_video_fps, output_fps, output_video_resolution, trim_frame_start, trim_frame_end):
 		logger.debug(translator.get('merging_video_succeeded'), __name__)
 	else:
 		if is_process_stopping():
@@ -100,6 +101,12 @@ def conditional_clear_video_pool() -> None:
 def conditional_restrict_video_fps() -> Fps:
 	if state_manager.get_item('workflow') == 'image-to-video':
 		return restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
+	return conditional_get_output_fps()
+
+
+def conditional_get_output_fps() -> Fps:
+	if state_manager.get_item('workflow') in [ 'audio-to-image:frames', 'audio-to-image:video' ]:
+		return state_manager.get_item('output_audio_fps')
 	return state_manager.get_item('output_video_fps')
 
 

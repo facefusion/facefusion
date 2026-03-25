@@ -12,13 +12,13 @@ from facefusion.workflows.core import is_process_stopping
 
 
 def create_temp_frames() -> ErrorCode:
-	state_manager.set_item('output_video_fps', 25.0)  # TODO: set default fps value
+	output_audio_fps = state_manager.get_item('output_audio_fps')
 	source_audio_path = get_first(filter_audio_paths(state_manager.get_item('source_paths')))
 	output_image_resolution = scale_resolution(detect_image_resolution(state_manager.get_item('target_path')), state_manager.get_item('output_image_scale'))
 	temp_image_resolution = restrict_image_resolution(state_manager.get_item('target_path'), output_image_resolution)
-	trim_frame_start, trim_frame_end = restrict_trim_audio_frame(source_audio_path, state_manager.get_item('output_video_fps'), state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
+	trim_frame_start, trim_frame_end = restrict_trim_audio_frame(source_audio_path, output_audio_fps, state_manager.get_item('trim_frame_start'), state_manager.get_item('trim_frame_end'))
 
-	if ffmpeg.spawn_frames(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_image_resolution, state_manager.get_item('output_video_fps'), trim_frame_start, trim_frame_end):
+	if ffmpeg.spawn_frames(state_manager.get_item('target_path'), state_manager.get_item('output_path'), temp_image_resolution, output_audio_fps, trim_frame_start, trim_frame_end):
 		logger.debug(translator.get('spawning_frames_succeeded'), __name__)
 	else:
 		if is_process_stopping():
