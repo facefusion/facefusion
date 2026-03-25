@@ -150,6 +150,7 @@ LOCALES : Locales =\
 			'output_video_quality': 'specify the video quality which translates to the video compression',
 			'output_video_scale': 'specify the video scale based on the target video',
 			'output_video_fps': 'specify the video fps based on the target video',
+			'temp_fps': 'specify the frame rate for spawning frames from a still image',
 			'processors': 'load a single or multiple processors (choices: {choices}, ...)',
 			'background-remover-model': 'choose the model responsible for removing the background',
 			'background-remover-color': 'apply red, green blue and alpha values of the background',

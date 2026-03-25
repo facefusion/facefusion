@@ -700,6 +700,17 @@ def create_output_creation_program() -> ArgumentParser:
 		],
 		scopes = [ 'api', 'cli' ]
 	)
+	capability_store.register_capability_set(
+		[
+			group_output_creation.add_argument(
+				'--temp-fps',
+				help = translator.get('help.temp_fps'),
+				type = float,
+				default = config.get_float_value('output_creation', 'temp_fps', '25.0')
+			)
+		],
+		scopes = [ 'api', 'cli' ]
+	)
 
 	return program
 

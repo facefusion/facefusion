@@ -60,6 +60,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	if args.get('output_video_fps') or is_video(args.get('target_path')):
 		output_video_fps = normalize_fps(args.get('output_video_fps')) or detect_video_fps(args.get('target_path'))
 		apply_state_item('output_video_fps', output_video_fps)
+	apply_state_item('temp_fps', normalize_fps(args.get('temp_fps')))
 
 	available_processors = [ get_file_name(file_path) for file_path in resolve_file_paths('facefusion/processors/modules') ]
 	apply_state_item('processors', args.get('processors'))
