@@ -132,7 +132,7 @@ def test_merge_video() -> None:
 			create_temp_directory(state_manager.get_temp_path(), output_path)
 			extract_frames(target_path, output_path, (452, 240), 25.0, 0, 1)
 
-			assert merge_video(target_path, output_path, 25.0, (452, 240), 0, 1) is True
+			assert merge_video(target_path, output_path, 25.0, 25.0, (452, 240), 0, 1) is True
 
 			clear_temp_directory(state_manager.get_temp_path(), output_path)
 
