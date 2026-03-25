@@ -13,14 +13,14 @@ from facefusion.apis.endpoints.metrics import get_metrics, websocket_metrics
 from facefusion.apis.endpoints.ping import websocket_ping
 from facefusion.apis.endpoints.session import create_session, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
-from facefusion.common_helper import is_windows
+from facefusion.common_helper import is_linux, is_windows
 from facefusion.apis.endpoints.stream import websocket_stream, websocket_stream_audio, websocket_stream_live, websocket_stream_mjpeg, websocket_stream_rtc, websocket_stream_rtc_relay, websocket_stream_whip, websocket_stream_whip_dc, websocket_stream_whip_py
 from facefusion.apis.middlewares.session import create_session_guard
 
 
 @asynccontextmanager
 async def lifespan(app : Starlette) -> AsyncGenerator[None, None]:
-	if not is_windows():
+	if is_linux():
 		mediamtx.start()
 		mediamtx.wait_for_ready()
 
@@ -45,7 +45,7 @@ async def lifespan(app : Starlette) -> AsyncGenerator[None, None]:
 
 	yield
 
-	if not is_windows():
+	if is_linux():
 		mediamtx.stop()
 
 	try:

@@ -260,7 +260,7 @@
     </div>
 
     <div class="video-area">
-      <video id="outputVideo" autoplay playsinline></video>
+      <video id="outputVideo" autoplay muted playsinline></video>
     </div>
     <video id="inputVideo" autoplay muted playsinline style="display:none;"></video>
 
@@ -415,7 +415,7 @@ function startStats() {
           prevBytes = bytes;
           prevFrames = frames;
           prevStatsTime = now;
-          setStat('statFrames', report.framesReceived || 0);
+          setStat('statFrames', report.framesDecoded || 0);
 
           if (report.frameWidth && report.frameHeight) {
             setStat('statResolution', report.frameWidth + 'x' + report.frameHeight);
@@ -822,7 +822,11 @@ async function connectWhep() {
 
   pc.ontrack = function(event) {
     log('remote track: ' + event.track.kind + ' (' + Math.round(performance.now() - t0) + 'ms)', 'ok');
-    document.getElementById('outputVideo').srcObject = event.streams[0];
+    var video = document.getElementById('outputVideo');
+    video.srcObject = event.streams[0];
+    video.play().then(function() {
+      video.muted = false;
+    }).catch(function(e) { log('play error: ' + e.message, 'error'); });
   };
 
   pc.addTransceiver('video', { direction: 'recvonly' });

@@ -7,7 +7,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Dict, List, Optional, TypeAlias
 
 from facefusion import logger
-from facefusion.common_helper import is_windows
+from facefusion.common_helper import is_macos, is_windows
 
 RtcLib : TypeAlias = ctypes.CDLL
 WHEP_PORT : int = 8892
@@ -87,6 +87,8 @@ def find_library() -> Optional[str]:
 
 	if is_windows():
 		return os.path.join(bin_dir, 'windows-x64-openssl-h264-vp8-av1-opus-datachannel-0.24.1.dll')
+	if is_macos():
+		return os.path.join(bin_dir, 'macos-universal-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.dylib')
 	return os.path.join(bin_dir, 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so')
 
 
@@ -206,6 +208,8 @@ next_rtp_port : int = 16000
 
 
 def create_session(stream_path : str) -> None:
+	global video_frame_count
+	video_frame_count = 0
 	sessions[stream_path] = {'viewers': [], 'tracks': [], 'rtp_port': 0, 'rtp_fd': None}
 
 
@@ -288,6 +292,7 @@ def send_audio_to_viewers(stream_path : str, opus_data : bytes) -> None:
 
 
 send_start_time : float = 0
+video_frame_count : int = 0
 audio_pts : int = 0
 opus_enc = None
 audio_buffer : bytearray = bytearray()
@@ -296,7 +301,7 @@ OPUS_FRAME_SAMPLES : int = 960
 
 
 def send_to_viewers(stream_path : str, data : bytes) -> None:
-	global send_start_time
+	global video_frame_count
 
 	session = sessions.get(stream_path)
 
@@ -308,11 +313,8 @@ def send_to_viewers(stream_path : str, data : bytes) -> None:
 	if not viewers:
 		return
 
-	if send_start_time == 0:
-		send_start_time = _time.monotonic()
-
-	elapsed = _time.monotonic() - send_start_time
-	timestamp = int(elapsed * 90000) & 0xFFFFFFFF
+	timestamp = int(video_frame_count * 3000) & 0xFFFFFFFF
+	video_frame_count += 1
 	buf = ctypes.create_string_buffer(data)
 	data_len = len(data)
 

@@ -15,8 +15,13 @@ SOURCE_FILE : str = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.a
 def is_windows() -> bool:
 	return platform.system().lower() == 'windows'
 
+def is_macos() -> bool:
+	return platform.system().lower() == 'darwin'
+
 if is_windows():
 	VIDEO_FILE : str = 'C:\\Users\\info\\Downloads\\face8k.mp4'
+elif is_macos():
+	VIDEO_FILE : str = '/Users/henry/Downloads/copy_face_instant.mp4'
 else:
 	VIDEO_FILE : str = '/home/henry/Documents/examples/download.mp4'
 
@@ -27,7 +32,7 @@ def safe_print(text : str) -> None:
 	except UnicodeEncodeError:
 		print(text.encode('ascii', errors='replace').decode('ascii'))
 
-MODES =\
+_ALL_MODES =\
 [
 	'whip-mediamtx',
 	'whip-python',
@@ -38,12 +43,14 @@ MODES =\
 	'ws-mjpeg'
 ]
 
+MODES = [ m for m in _ALL_MODES if not (is_macos() and m == 'whip-mediamtx') ]
+
 
 def start_api() -> subprocess.Popen:
 	env = os.environ.copy()
 	python_cmd = 'python' if is_windows() else 'python3'
 
-	if not is_windows():
+	if not is_windows() and not is_macos():
 		env['LD_LIBRARY_PATH'] = '/home/henry/local/lib:' + env.get('LD_LIBRARY_PATH', '')
 
 	proc = subprocess.Popen(
@@ -103,12 +110,32 @@ def kill_port_windows(port : int) -> None:
 				subprocess.run([ 'taskkill', '/F', '/PID', pid ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
 
 
+def kill_port_macos(port : int) -> None:
+	pids = set()
+
+	for proto in [ 'tcp', 'udp' ]:
+		result = subprocess.run(
+			[ 'lsof', '-ti', proto + ':' + str(port) ],
+			capture_output = True, text = True
+		)
+
+		for pid in result.stdout.split():
+			if pid.isdigit():
+				pids.add(pid)
+
+	for pid in pids:
+		subprocess.run([ 'kill', '-9', pid ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+
+
 def kill_stale() -> None:
 	ports = [ API_PORT, 8889, 8189, 9997, 8890, 8891, 8892 ]
 
 	if is_windows():
 		for port in ports:
 			kill_port_windows(port)
+	elif is_macos():
+		for port in ports:
+			kill_port_macos(port)
 	else:
 		subprocess.run([ 'fuser', '-k', str(API_PORT) + '/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
 		subprocess.run([ 'fuser', '-k', '8889/tcp' ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)

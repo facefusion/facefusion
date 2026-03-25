@@ -12,6 +12,7 @@ from starlette.websockets import WebSocket
 
 from facefusion import logger, session_context, session_manager, state_manager
 from facefusion.common_helper import is_windows
+from facefusion.apis.stream_helper import STREAM_AUDIO_RATE
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
 from facefusion import mediamtx
@@ -158,7 +159,24 @@ async def websocket_stream_whip(websocket : WebSocket) -> None:
 	await websocket.close()
 
 
-def run_fmp4_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_event : threading.Event, output_chunks : List[bytes], output_lock : threading.Lock, audio_write_fd_holder : list) -> None:
+def run_audio_silence_feeder(audio_write_fd_holder : list, stop_event : threading.Event, audio_active_event : threading.Event) -> None:
+	frame_bytes = STREAM_AUDIO_RATE // 50 * 2 * 2
+	silence = b'\x00' * frame_bytes
+
+	while not stop_event.is_set():
+		if not audio_active_event.is_set():
+			fd = audio_write_fd_holder[0]
+
+			if fd > 0:
+				try:
+					_os.write(fd, silence)
+				except OSError:
+					break
+
+		time.sleep(0.02)
+
+
+def run_fmp4_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_event : threading.Event, output_chunks : List[bytes], output_lock : threading.Lock, audio_write_fd_holder : list, audio_active_event : threading.Event) -> None:
 	encoder = None
 	audio_write_fd = -1
 	reader_thread = None
@@ -194,6 +212,8 @@ def run_fmp4_pipeline(latest_frame_holder : list, lock : threading.Lock, stop_ev
 					audio_write_fd_holder[0] = audio_write_fd
 					reader_thread = threading.Thread(target = read_fmp4_output, args = (encoder, output_chunks, output_lock), daemon = True)
 					reader_thread.start()
+					silence_thread = threading.Thread(target = run_audio_silence_feeder, args = (audio_write_fd_holder, stop_event, audio_active_event), daemon = True)
+					silence_thread.start()
 					logger.info('fmp4 encoder started ' + str(width) + 'x' + str(height), __name__)
 
 				feed_whip_frame(encoder, temp_vision_frame)
@@ -222,7 +242,8 @@ async def websocket_stream_live(websocket : WebSocket) -> None:
 		lock = threading.Lock()
 		output_lock = threading.Lock()
 		stop_event = threading.Event()
-		worker = threading.Thread(target = run_fmp4_pipeline, args = (latest_frame_holder, lock, stop_event, output_chunks, output_lock, audio_write_fd_holder), daemon = True)
+		audio_active_event = threading.Event()
+		worker = threading.Thread(target = run_fmp4_pipeline, args = (latest_frame_holder, lock, stop_event, output_chunks, output_lock, audio_write_fd_holder, audio_active_event), daemon = True)
 		worker.start()
 
 		try:
@@ -245,6 +266,7 @@ async def websocket_stream_live(websocket : WebSocket) -> None:
 								latest_frame_holder[0] = frame
 
 					if data[:2] != JPEG_MAGIC and audio_write_fd_holder[0] > 0:
+						audio_active_event.set()
 						feed_whip_audio(audio_write_fd_holder[0], data)
 
 		except Exception as exception:
