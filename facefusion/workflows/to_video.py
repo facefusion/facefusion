@@ -101,9 +101,7 @@ def conditional_clear_video_pool() -> None:
 def conditional_restrict_video_fps() -> Fps:
 	if state_manager.get_item('workflow') == 'image-to-video':
 		return restrict_video_fps(state_manager.get_item('target_path'), state_manager.get_item('output_video_fps'))
-	if state_manager.get_item('workflow') in [ 'audio-to-image:frames', 'audio-to-image:video' ]:
-		return state_manager.get_item('output_audio_fps')
-	return state_manager.get_item('output_video_fps')
+	return conditional_get_output_fps()
 
 
 def conditional_get_output_fps() -> Fps:
