@@ -145,6 +145,7 @@ LOCALES : Locales =\
 			'output_audio_encoder': 'specify the encoder used for the audio',
 			'output_audio_quality': 'specify the audio quality which translates to the audio compression',
 			'output_audio_volume': 'specify the audio volume based on the target video',
+			'output_audio_fps': 'specify the fps used when converting audio to video frames',
 			'output_video_encoder': 'specify the encoder used for the video',
 			'output_video_preset': 'balance fast video processing and video file size',
 			'output_video_quality': 'specify the video quality which translates to the video compression',
