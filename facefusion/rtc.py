@@ -1,11 +1,16 @@
 import ctypes
 import ctypes.util
 import os
+import platform
 import threading
 import time
+from functools import lru_cache
 from typing import Dict, List, Optional, TypeAlias
 
 from facefusion import logger
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.filesystem import resolve_relative_path
+from facefusion.types import DownloadSet
 
 RtcLib : TypeAlias = ctypes.CDLL
 
@@ -60,18 +65,62 @@ class RtcPacketizerInit(ctypes.Structure):
 	]
 
 
+def get_binary_name() -> str:
+	system = platform.system()
+
+	if system == 'Linux':
+		return 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so'
+	if system == 'Darwin':
+		return 'macos-universal-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.dylib'
+	if system == 'Windows':
+		return 'windows-x64-openssl-h264-vp8-av1-opus-datachannel-0.24.1.dll'
+	return ''
+
+
+@lru_cache
+def create_static_download_set() -> Dict[str, DownloadSet]:
+	binary_name = get_binary_name()
+
+	return\
+	{
+		'hashes':
+		{
+			'datachannel':
+			{
+				'url': resolve_download_url('binaries-1.0.0', binary_name + '.hash'),
+				'path': resolve_relative_path('../.assets/binaries/' + binary_name + '.hash')
+			}
+		},
+		'sources':
+		{
+			'datachannel':
+			{
+				'url': resolve_download_url('binaries-1.0.0', binary_name),
+				'path': resolve_relative_path('../.assets/binaries/' + binary_name)
+			}
+		}
+	}
+
+
+def pre_check() -> bool:
+	download_set = create_static_download_set()
+
+	if not conditional_download_hashes(download_set.get('hashes')):
+		return False
+	return conditional_download_sources(download_set.get('sources'))
+
+
 def find_library() -> Optional[str]:
-	project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-	bin_dir = os.path.join(project_root, 'bin')
+	system = platform.system()
+	ext = '.dll' if system == 'Windows' else '.dylib' if system == 'Darwin' else '.so'
 
-	if not os.path.isdir(bin_dir):
-		return None
+	for search_dir in [ resolve_relative_path('../.assets/binaries'), resolve_relative_path('../bin') ]:
+		if not os.path.isdir(search_dir):
+			continue
 
-	ext = '.dll' if os.name == 'nt' else '.so'
-
-	for name in os.listdir(bin_dir):
-		if 'datachannel' in name and name.endswith(ext):
-			return os.path.join(bin_dir, name)
+		for name in os.listdir(search_dir):
+			if 'datachannel' in name and name.endswith(ext):
+				return os.path.join(search_dir, name)
 
 	return None
 

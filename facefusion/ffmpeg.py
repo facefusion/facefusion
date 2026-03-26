@@ -70,6 +70,37 @@ def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE)
 
 
+def open_vp8_encoder(width : int, height : int, stream_fps : int, stream_bitrate : str, stream_bufsize : str) -> subprocess.Popen[bytes]:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.use_wallclock_timestamps(),
+		ffmpeg_builder.capture_video(),
+		ffmpeg_builder.set_media_resolution(str(width) + 'x' + str(height)),
+		ffmpeg_builder.set_input('-'),
+		ffmpeg_builder.set_video_encoder('libvpx'),
+		[ '-deadline', 'realtime' ],
+		[ '-cpu-used', '8' ],
+		ffmpeg_builder.enforce_pixel_format('yuv420p'),
+		[ '-crf', '10' ],
+		ffmpeg_builder.set_video_bitrate(stream_bitrate),
+		ffmpeg_builder.set_video_bufsize(stream_bufsize),
+		ffmpeg_builder.set_keyframe_interval(stream_fps),
+		[ '-error-resilient', '1' ],
+		[ '-lag-in-frames', '0' ],
+		[ '-rc_lookahead', '0' ],
+		[ '-threads', '4' ],
+		ffmpeg_builder.ignore_audio_stream(),
+		ffmpeg_builder.set_output_format('ivf'),
+		ffmpeg_builder.set_output('-')
+	)
+	commands = ffmpeg_builder.run(commands)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+
+def write_raw_bytes(process : subprocess.Popen[bytes], raw_bytes : bytes) -> None:
+	process.stdin.write(raw_bytes)
+	process.stdin.flush()
+
+
 def log_debug(process : subprocess.Popen[bytes]) -> None:
 	_, stderr = process.communicate()
 	errors = stderr.decode().split(os.linesep)

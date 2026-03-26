@@ -847,8 +847,8 @@ async function connect() {
   outputVideo.removeAttribute('src');
   outputVideo.load();
 
-  var wsUrl = wsBase() + '/stream/rtc';
-  var protocols = ['access_token.' + accessToken];
+  var wsUrl = wsBase() + '/stream';
+  var protocols = ['access_token.' + accessToken, 'video'];
   var t0 = performance.now();
   log('ws → ' + wsUrl, 'info');
 
@@ -880,8 +880,9 @@ async function connect() {
   var streamStarted = false;
 
   ws.onmessage = function(event) {
-    if (typeof event.data === 'string' && !whepUrlFromServer) {
-      whepUrlFromServer = base() + event.data;
+    if (typeof event.data === 'string' && event.data.startsWith('ready:') && !whepUrlFromServer) {
+      var sessionId = event.data.split(':')[1];
+      whepUrlFromServer = base() + '/stream?session_id=' + sessionId;
 
       if (!streamStarted) {
         streamStarted = true;
@@ -890,7 +891,7 @@ async function connect() {
         log('stream output started', 'ok');
       }
 
-      log('stream ready (' + Math.round(performance.now() - t0) + 'ms) — WHEP url: ' + whepUrlFromServer, 'ok');
+      log('stream ready (' + Math.round(performance.now() - t0) + 'ms)', 'ok');
 
       var tWhep = performance.now();
       connectWhep(whepUrlFromServer).then(function() {

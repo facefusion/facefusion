@@ -259,6 +259,30 @@ def capture_video() -> List[Command]:
 	return [ '-f', 'rawvideo', '-pix_fmt', 'rgb24' ]
 
 
+def use_wallclock_timestamps() -> List[Command]:
+	return [ '-use_wallclock_as_timestamps', '1' ]
+
+
+def set_video_bitrate(video_bitrate : str) -> List[Command]:
+	return [ '-b:v', video_bitrate, '-maxrate', video_bitrate ]
+
+
+def set_video_bufsize(video_bufsize : str) -> List[Command]:
+	return [ '-bufsize', video_bufsize ]
+
+
+def set_keyframe_interval(interval : int) -> List[Command]:
+	return [ '-g', str(interval), '-keyint_min', str(interval) ]
+
+
+def ignore_audio_stream() -> List[Command]:
+	return [ '-an' ]
+
+
+def set_output_format(output_format : str) -> List[Command]:
+	return [ '-f', output_format ]
+
+
 def ignore_video_stream() -> List[Command]:
 	return [ '-vn' ]
 

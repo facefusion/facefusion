@@ -13,7 +13,7 @@ from facefusion.apis.endpoints.metrics import get_metrics, websocket_metrics
 from facefusion.apis.endpoints.ping import websocket_ping
 from facefusion.apis.endpoints.session import create_session, destroy_session, get_session, refresh_session
 from facefusion.apis.endpoints.state import get_state, set_state
-from facefusion.apis.endpoints.stream import post_whep, websocket_stream, websocket_stream_rtc
+from facefusion.apis.endpoints.stream import post_stream, websocket_stream
 from facefusion.apis.middlewares.session import create_session_guard
 
 
@@ -50,11 +50,10 @@ def create_api() -> Starlette:
 			Route('/assets', delete_assets, methods = [ 'DELETE' ], middleware = [ session_guard ]),
 			Route('/capabilities', get_capabilities, methods = [ 'GET' ]),
 			Route('/metrics', get_metrics, methods = [ 'GET' ], middleware = [ session_guard ]),
+			Route('/stream', post_stream, methods = [ 'POST' ]),
 			WebSocketRoute('/metrics', websocket_metrics, middleware = [ session_guard ]),
 			WebSocketRoute('/ping', websocket_ping, middleware = [ session_guard ]),
-			Route('/stream/{session_id}/whep', post_whep, methods = [ 'POST' ]),
-			WebSocketRoute('/stream', websocket_stream, middleware = [ session_guard ]),
-			WebSocketRoute('/stream/rtc', websocket_stream_rtc, middleware = [ session_guard ])
+			WebSocketRoute('/stream', websocket_stream, middleware = [ session_guard ])
 		]
 
 	api = Starlette(routes = routes, lifespan = lifespan)
