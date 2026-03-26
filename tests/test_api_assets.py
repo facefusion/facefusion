@@ -1,3 +1,4 @@
+import os
 import tempfile
 from typing import Iterator
 
@@ -289,3 +290,94 @@ def test_delete_assets(test_client : TestClient) -> None:
 	})
 
 	assert delete_response.status_code == 404
+
+
+def test_upload_asset_uuid_filename(test_client : TestClient) -> None:
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	access_token = create_session_response.json().get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+
+	source_path = get_test_example_file('source.jpg')
+
+	with open(source_path, 'rb') as source_file:
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+		])
+
+	asset_id = upload_response.json().get('asset_ids')[0]
+	asset = asset_store.get_asset(session_id, asset_id)
+	asset_filename = os.path.basename(asset.get('path'))
+
+	assert 'source' not in asset_filename
+	assert len(os.path.splitext(asset_filename)[0]) == 32
+
+
+def test_upload_asset_security_strategy_strict(test_client : TestClient) -> None:
+	state_manager.init_item('api_security_strategy', 'strict')
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	access_token = create_session_response.json().get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+
+	source_path = get_test_example_file('source.jpg')
+	target_path = get_test_example_file('target-240p.mp4')
+
+	with open(source_path, 'rb') as source_file, open(target_path, 'rb') as target_file:
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.jpg', source_file.read(), 'image/jpeg')),
+			('file', ('target.mp4', target_file.read(), 'video/mp4'))
+		])
+
+	assert upload_response.status_code == 201
+
+	asset_ids = upload_response.json().get('asset_ids')
+
+	assert asset_store.get_asset(session_id, asset_ids[0]).get('media') == 'image'
+	assert asset_store.get_asset(session_id, asset_ids[1]).get('media') == 'video'
+
+
+def test_upload_asset_security_strategy_moderate(test_client : TestClient) -> None:
+	state_manager.init_item('api_security_strategy', 'moderate')
+
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	access_token = create_session_response.json().get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+
+	source_path = get_test_example_file('source.jpg')
+	target_path = get_test_example_file('target-240p.mp4')
+
+	with open(source_path, 'rb') as source_file, open(target_path, 'rb') as target_file:
+		upload_response = test_client.post('/assets?type=source', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('source.jpg', source_file.read(), 'image/jpeg')),
+			('file', ('target.mp4', target_file.read(), 'video/mp4'))
+		])
+
+	assert upload_response.status_code == 201
+
+	asset_ids = upload_response.json().get('asset_ids')
+
+	assert asset_store.get_asset(session_id, asset_ids[0]).get('media') == 'image'
+	assert asset_store.get_asset(session_id, asset_ids[1]).get('media') == 'video'
+
+	state_manager.init_item('api_security_strategy', 'strict')
