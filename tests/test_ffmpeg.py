@@ -60,7 +60,7 @@ def get_available_encoder_set() -> EncoderSet:
 	return facefusion.ffmpeg.get_available_encoder_set()
 
 
-def create_read_chunk(file_path : str) -> partial:
+def create_read_chunk(file_path : str) -> partial[bytes]:
 	file_buffer = io.BytesIO(open(file_path, 'rb').read())
 	return partial(file_buffer.read, 1024)
 
