@@ -363,7 +363,7 @@ DownloadSet : TypeAlias = Dict[str, Download]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 ApiSecurityStrategy = Literal['strict', 'moderate']
-ChunkQueue : TypeAlias = queue.SimpleQueue
+ChunkQueue : TypeAlias = queue.SimpleQueue[Optional[bytes]]
 ReadChunk : TypeAlias = Callable[[], Optional[bytes]]
 AppContext = Literal['cli', 'api']
 
