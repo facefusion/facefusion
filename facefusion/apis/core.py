@@ -50,7 +50,7 @@ def create_api() -> Starlette:
 			Route('/assets', delete_assets, methods = [ 'DELETE' ], middleware = [ session_guard ]),
 			Route('/capabilities', get_capabilities, methods = [ 'GET' ]),
 			Route('/metrics', get_metrics, methods = [ 'GET' ], middleware = [ session_guard ]),
-			Route('/stream', post_stream, methods = [ 'POST' ]),
+			Route('/stream', post_stream, methods = [ 'POST' ], middleware = [ session_guard ]),
 			WebSocketRoute('/metrics', websocket_metrics, middleware = [ session_guard ]),
 			WebSocketRoute('/ping', websocket_ping, middleware = [ session_guard ]),
 			WebSocketRoute('/stream', websocket_stream, middleware = [ session_guard ])

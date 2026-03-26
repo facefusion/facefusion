@@ -778,7 +778,7 @@ async function connectWhep(url) {
 
   var res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/sdp' },
+    headers: { ...authHeaders(), 'Content-Type': 'application/sdp' },
     body: offer.sdp
   });
   log('WHEP response: ' + res.status + ' (' + Math.round(performance.now() - t0) + 'ms)', res.ok ? 'debug' : 'error');
@@ -880,9 +880,8 @@ async function connect() {
   var streamStarted = false;
 
   ws.onmessage = function(event) {
-    if (typeof event.data === 'string' && event.data.startsWith('ready:') && !whepUrlFromServer) {
-      var sessionId = event.data.split(':')[1];
-      whepUrlFromServer = base() + '/stream?session_id=' + sessionId;
+    if (typeof event.data === 'string' && event.data === 'ready' && !whepUrlFromServer) {
+      whepUrlFromServer = base() + '/stream';
 
       if (!streamStarted) {
         streamStarted = true;

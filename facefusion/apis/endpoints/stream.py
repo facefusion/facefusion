@@ -193,7 +193,7 @@ async def handle_video_stream(websocket : WebSocket, session_id : str) -> None:
 			message = await websocket.receive()
 
 			if not ready_sent and ready_event.is_set():
-				await websocket.send_text('ready:' + session_id)
+				await websocket.send_text('ready')
 				ready_sent = True
 
 			if message.get('bytes'):
@@ -221,7 +221,8 @@ async def handle_video_stream(websocket : WebSocket, session_id : str) -> None:
 async def post_stream(request : Request) -> Response:
 	from facefusion import rtc
 
-	session_id = request.query_params.get('session_id')
+	access_token = extract_access_token(request.scope)
+	session_id = session_manager.find_session_id(access_token)
 	stream_path = 'stream/' + session_id
 	body = await request.body()
 	sdp_offer = body.decode('utf-8')
