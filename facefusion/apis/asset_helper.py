@@ -2,7 +2,6 @@ import asyncio
 import os
 import queue
 import uuid
-from functools import partial
 from typing import List, Optional
 
 from starlette.datastructures import UploadFile
@@ -91,10 +90,6 @@ async def feed_upload_queue(upload_file : UploadFile, upload_queue : UploadQueue
 	upload_queue.put(None)
 
 
-def read_chunk_queue(upload_queue : UploadQueue) -> Optional[bytes]:
-	return upload_queue.get()
-
-
 async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 	asset_paths : List[str] = []
 	api_security_strategy = state_manager.get_item('api_security_strategy')
@@ -113,11 +108,19 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 		process_manager.start()
 
-		feed_task = asyncio.create_task(feed_upload_queue(upload_file, upload_queue))
-		sanitize_output = await asyncio.to_thread(ffmpeg.sanitize_media, media_type, file_format, partial(read_chunk_queue, upload_queue), asset_path, api_security_strategy)
-		await feed_task
+		upload_task = asyncio.create_task(feed_upload_queue(upload_file, upload_queue))
+		is_file_sanitized = False
 
-		if sanitize_output:
+		if media_type == 'audio':
+			is_file_sanitized = await asyncio.to_thread(ffmpeg.sanitize_audio, file_format, upload_queue.get, asset_path, api_security_strategy)
+		if media_type == 'image':
+			is_file_sanitized = await asyncio.to_thread(ffmpeg.sanitize_image, file_format, upload_queue.get, asset_path)
+		if media_type == 'video':
+			is_file_sanitized = await asyncio.to_thread(ffmpeg.sanitize_video, file_format, upload_queue.get, asset_path, api_security_strategy)
+
+		await upload_task
+
+		if is_file_sanitized:
 			asset_paths.append(asset_path)
 
 		process_manager.end()
