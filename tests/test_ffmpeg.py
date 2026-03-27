@@ -1,8 +1,6 @@
-import io
 import os
 import subprocess
 import tempfile
-from functools import partial
 
 import pytest
 
@@ -13,7 +11,7 @@ from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_au
 from facefusion.filesystem import copy_file, is_file
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
-from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
+from .assert_helper import create_read_chunk, get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -58,11 +56,6 @@ def get_available_encoder_set() -> EncoderSet:
 			'video': [ 'libx264' ]
 		}
 	return facefusion.ffmpeg.get_available_encoder_set()
-
-
-def create_read_chunk(file_path : str) -> partial[bytes]:
-	file_buffer = io.BytesIO(open(file_path, 'rb').read())
-	return partial(file_buffer.read, 1024)
 
 
 def test_get_available_encoder_set() -> None:
@@ -219,14 +212,6 @@ def test_replace_audio() -> None:
 	state_manager.init_item('output_audio_encoder', 'aac')
 
 
-def test_sanitize_image() -> None:
-	source_path = get_test_example_file('source.jpg')
-	output_path = get_test_output_path('sanitize-image.jpg')
-
-	assert sanitize_image('jpeg', create_read_chunk(source_path), output_path) is True
-	assert is_file(output_path) is True
-
-
 def test_sanitize_audio() -> None:
 	audio_path = get_test_example_file('source.mp3')
 
@@ -238,6 +223,14 @@ def test_sanitize_audio() -> None:
 
 	assert sanitize_audio('mp3', create_read_chunk(audio_path), moderate_output_path, 'moderate') is True
 	assert is_file(moderate_output_path) is True
+
+
+def test_sanitize_image() -> None:
+	source_path = get_test_example_file('source.jpg')
+	output_path = get_test_output_path('sanitize-image.jpg')
+
+	assert sanitize_image('jpeg', create_read_chunk(source_path), output_path) is True
+	assert is_file(output_path) is True
 
 
 def test_sanitize_video() -> None:
