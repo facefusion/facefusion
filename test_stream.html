@@ -133,6 +133,7 @@
       <div class="section-title"><span class="step-dot" id="dotVideo">3</span> Video Source</div>
       <div class="btn-row">
         <button class="btn btn-secondary" id="btnCamera" onclick="startCamera()" disabled>Camera</button>
+        <button class="btn btn-secondary" id="btnScreen" onclick="startScreen()" disabled>Screen</button>
         <button class="btn btn-secondary" id="btnFile" onclick="document.getElementById('videoFile').click()" disabled>Video File</button>
         <input type="file" id="videoFile" accept="video/*" style="display:none">
       </div>
@@ -464,6 +465,7 @@ async function createSession() {
     markDone('dotSession');
     document.getElementById('sourceBox').classList.remove('disabled');
     document.getElementById('btnCamera').disabled = false;
+    document.getElementById('btnScreen').disabled = false;
     document.getElementById('btnFile').disabled = false;
     document.getElementById('faceDebugger').disabled = false;
     document.getElementById('pipToggle').disabled = false;
@@ -585,6 +587,45 @@ async function startCamera() {
     checkConnectReady();
   } catch (e) {
     log('camera error: ' + e.message, 'error');
+  }
+}
+
+async function startScreen() {
+  try {
+    var displayStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'always' }, audio: true });
+    var audioStream = null;
+
+    try {
+      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      log('mic not available, screen audio only', 'warn');
+    }
+
+    var tracks = displayStream.getVideoTracks();
+
+    if (audioStream) {
+      audioStream.getAudioTracks().forEach(function(track) { displayStream.addTrack(track); });
+    }
+
+    localStream = displayStream;
+    inputVideoSource = 'screen';
+    document.getElementById('inputVideo').srcObject = displayStream;
+    log('screen: ' + tracks[0].label, 'ok');
+
+    tracks[0].addEventListener('ended', function() {
+      log('screen sharing stopped', 'warn');
+      localStream = null;
+      document.getElementById('inputVideo').srcObject = null;
+
+      if (streaming) {
+        disconnect();
+      }
+    });
+
+    markDone('dotVideo');
+    checkConnectReady();
+  } catch (e) {
+    log('screen error: ' + e.message, 'error');
   }
 }
 
