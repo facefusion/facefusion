@@ -1,7 +1,6 @@
 import os
-from typing import List, cast
+from typing import List
 
-from starlette.datastructures import UploadFile
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_415_UNSUPPORTED_MEDIA_TYPE
@@ -11,7 +10,6 @@ from facefusion.apis import asset_store
 from facefusion.apis.asset_helper import save_asset_files, validate_asset_files
 from facefusion.apis.endpoints.session import extract_access_token
 from facefusion.filesystem import remove_file
-from facefusion.types import AssetType
 
 
 async def upload_asset(request : Request) -> Response:
@@ -23,7 +21,7 @@ async def upload_asset(request : Request) -> Response:
 		session_context.set_session_id(session_id)
 
 		form = await request.form()
-		upload_files = cast(List[UploadFile], form.getlist('file'))
+		upload_files = form.getlist('file')
 
 		if not validate_asset_files(upload_files):
 			return Response(status_code = HTTP_415_UNSUPPORTED_MEDIA_TYPE)
@@ -34,7 +32,7 @@ async def upload_asset(request : Request) -> Response:
 			asset_ids : List[str] = []
 
 			for asset_path in asset_paths:
-				asset = asset_store.create_asset(session_id, cast(AssetType, asset_type), asset_path)
+				asset = asset_store.create_asset(session_id, asset_type, asset_path)
 
 				if asset:
 					asset_id = asset.get('id')
