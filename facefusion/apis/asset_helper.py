@@ -12,7 +12,7 @@ from facefusion import ffmpeg, process_manager, state_manager
 from facefusion.audio import detect_audio_duration
 from facefusion.ffprobe import detect_audio_channel_total, detect_audio_frame_total, detect_audio_sample_rate
 from facefusion.filesystem import create_directory, get_file_extension, get_file_format, is_audio, is_image, is_video
-from facefusion.types import AudioMetadata, ChunkQueue, ImageMetadata, MediaType, VideoMetadata
+from facefusion.types import AudioMetadata, ImageMetadata, MediaType, UploadQueue, VideoMetadata
 from facefusion.vision import count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution
 
 
@@ -85,14 +85,14 @@ def validate_asset_files(upload_files : List[UploadFile]) -> bool:
 	return True
 
 
-async def feed_chunk_queue(upload_file : UploadFile, chunk_queue : ChunkQueue) -> None:
-	while chunk := await upload_file.read(1024):
-		chunk_queue.put(chunk)
-	chunk_queue.put(None)
+async def feed_upload_queue(upload_file : UploadFile, upload_queue : UploadQueue) -> None:
+	while file_chunk := await upload_file.read(1024):
+		upload_queue.put(file_chunk)
+	upload_queue.put(None)
 
 
-def read_chunk_queue(chunk_queue : ChunkQueue) -> Optional[bytes]:
-	return chunk_queue.get()
+def read_chunk_queue(upload_queue : UploadQueue) -> Optional[bytes]:
+	return upload_queue.get()
 
 
 async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
@@ -109,12 +109,12 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 		asset_file_name = uuid.uuid4().hex
 		asset_path = os.path.join(temp_path, asset_file_name + file_extension)
-		chunk_queue : ChunkQueue = queue.SimpleQueue()
+		upload_queue : UploadQueue = queue.SimpleQueue()
 
 		process_manager.start()
 
-		feed_task = asyncio.create_task(feed_chunk_queue(upload_file, chunk_queue))
-		sanitize_output = await asyncio.to_thread(ffmpeg.sanitize_media, media_type, file_format, partial(read_chunk_queue, chunk_queue), asset_path, api_security_strategy)
+		feed_task = asyncio.create_task(feed_upload_queue(upload_file, upload_queue))
+		sanitize_output = await asyncio.to_thread(ffmpeg.sanitize_media, media_type, file_format, partial(read_chunk_queue, upload_queue), asset_path, api_security_strategy)
 		await feed_task
 
 		if sanitize_output:
