@@ -318,7 +318,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 
 
 def sanitize_audio(audio_format : str, read_chunk : ChunkReader, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
-	pipe_format = resolve_audio_pipe_format(audio_format)
+	pipe_format = ffmpeg_builder.resolve_audio_pipe_format(audio_format)
 
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
@@ -339,7 +339,7 @@ def sanitize_audio(audio_format : str, read_chunk : ChunkReader, asset_path : st
 
 
 def sanitize_image(image_format : str, read_chunk : ChunkReader, asset_path : str) -> bool:
-	image_format = resolve_image_pipe_format(image_format)
+	image_format = ffmpeg_builder.resolve_image_pipe_format(image_format)
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_pipe_image_input(image_format),
 		ffmpeg_builder.deep_copy_image(),
@@ -350,7 +350,7 @@ def sanitize_image(image_format : str, read_chunk : ChunkReader, asset_path : st
 
 
 def sanitize_video(video_format : str, read_chunk : ChunkReader, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
-	pipe_format = resolve_video_pipe_format(video_format)
+	pipe_format = ffmpeg_builder.resolve_video_pipe_format(video_format)
 
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
@@ -382,30 +382,6 @@ def sanitize_media(media_type : MediaType, media_format : str, read_chunk : Chun
 	if media_type == 'video':
 		return sanitize_video(media_format, read_chunk, asset_path, security_strategy)
 	return False
-
-
-def resolve_audio_pipe_format(audio_format : str) -> str:
-	if audio_format == 'm4a':
-		return 'mp4'
-	if audio_format == 'opus':
-		return 'ogg'
-	return audio_format
-
-
-def resolve_image_pipe_format(image_format : str) -> str:
-	if image_format == 'jpeg':
-		return 'mjpeg'
-	return image_format
-
-
-def resolve_video_pipe_format(video_format : str) -> str:
-	if video_format == 'mkv':
-		return 'matroska'
-	if video_format == 'm4v':
-		return 'mp4'
-	if video_format == 'wmv':
-		return 'asf'
-	return video_format
 
 
 def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:
