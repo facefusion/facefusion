@@ -363,8 +363,8 @@ DownloadSet : TypeAlias = Dict[str, Download]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 ApiSecurityStrategy = Literal['strict', 'moderate']
-UploadQueue : TypeAlias = queue.SimpleQueue[Optional[bytes]]
-ChunkReader : TypeAlias = Callable[[], Optional[bytes]]
+UploadQueue : TypeAlias = queue.SimpleQueue[bytes]
+ChunkReader : TypeAlias = Callable[[], bytes]
 AppContext = Literal['cli', 'api']
 
 InferencePool : TypeAlias = Dict[str, InferenceSession]

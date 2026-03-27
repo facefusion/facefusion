@@ -87,7 +87,7 @@ def validate_asset_files(upload_files : List[UploadFile]) -> bool:
 async def feed_upload_queue(upload_file : UploadFile, upload_queue : UploadQueue) -> None:
 	while file_chunk := await upload_file.read(1024):
 		upload_queue.put(file_chunk)
-	upload_queue.put(None)
+	upload_queue.put(b'')
 
 
 async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
