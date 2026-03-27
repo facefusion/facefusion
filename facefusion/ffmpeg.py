@@ -56,6 +56,8 @@ def run_ffmpeg_with_pipe(commands : List[Command], read_chunk : ChunkReader) -> 
 	process = subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
 	while chunk := read_chunk():
+		if process.poll() is not None:
+			break
 		process.stdin.write(chunk)
 
 	if process.stdin and not process.stdin.closed:
@@ -346,6 +348,7 @@ def sanitize_video(video_format : str, read_chunk : ChunkReader, asset_path : st
 			ffmpeg_builder.set_pipe_input(video_pipe_format),
 			ffmpeg_builder.set_video_encoder('libx264'),
 			ffmpeg_builder.set_video_preset('libx264', 'ultrafast'),
+			ffmpeg_builder.set_pixel_format('libx264'),
 			ffmpeg_builder.deep_copy_video(),
 			ffmpeg_builder.deep_copy_audio(),
 			ffmpeg_builder.strip_metadata(),
