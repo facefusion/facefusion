@@ -50,6 +50,6 @@ def prepare_test_output_directory() -> bool:
 	return is_directory(test_outputs_directory)
 
 
-def create_read_chunk(file_path : str) -> partial[bytes]:
+def create_media_chunk_reader(file_path : str) -> partial[bytes]:
 	file_buffer = io.BytesIO(open(file_path, 'rb').read())
 	return partial(file_buffer.read, 1024)
