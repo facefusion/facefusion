@@ -56,7 +56,7 @@ def run_ffmpeg_with_pipe(commands : List[Command], media_chunk_reader : MediaChu
 	process = subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
 	while media_chunk := media_chunk_reader():
-		if process.poll() is not None:
+		if process.poll() is not None: #todo - poll not allowed
 			break
 		process.stdin.write(media_chunk)
 
@@ -309,7 +309,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 
 
 def sanitize_audio(audio_format : str, media_chunk_reader : MediaChunkReader, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
-	audio_pipe_format = ffmpeg_builder.resolve_audio_pipe_format(audio_format)
+	audio_pipe_format = ffmpeg_builder.resolve_audio_pipe_format(audio_format) #todo: does not make sense this methods are in the builder
 
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
@@ -330,7 +330,7 @@ def sanitize_audio(audio_format : str, media_chunk_reader : MediaChunkReader, as
 
 
 def sanitize_image(image_format : str, media_chunk_reader : MediaChunkReader, asset_path : str) -> bool:
-	image_pipe_format = ffmpeg_builder.resolve_image_pipe_format(image_format)
+	image_pipe_format = ffmpeg_builder.resolve_image_pipe_format(image_format) #todo: does not make sense this methods are in the builder
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.pipe_image(image_pipe_format),
 		ffmpeg_builder.deep_copy_image(),
@@ -341,14 +341,14 @@ def sanitize_image(image_format : str, media_chunk_reader : MediaChunkReader, as
 
 
 def sanitize_video(video_format : str, media_chunk_reader : MediaChunkReader, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
-	video_pipe_format = ffmpeg_builder.resolve_video_pipe_format(video_format)
+	video_pipe_format = ffmpeg_builder.resolve_video_pipe_format(video_format) #todo: does not make sense this methods are in the builder
 
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
 			ffmpeg_builder.pipe_input(video_pipe_format),
-			ffmpeg_builder.set_video_encoder('libx264'),
-			ffmpeg_builder.set_video_preset('libx264', 'ultrafast'),
-			ffmpeg_builder.set_pixel_format('libx264'),
+			ffmpeg_builder.set_video_encoder('libx264'), #todo - remove hard coded
+			ffmpeg_builder.set_video_preset('libx264', 'ultrafast'), #todo - remove hard coded
+			ffmpeg_builder.set_pixel_format('libx264'), #todo - remove hard coded
 			ffmpeg_builder.deep_copy_video(),
 			ffmpeg_builder.deep_copy_audio(),
 			ffmpeg_builder.strip_metadata(),

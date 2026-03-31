@@ -32,7 +32,7 @@ def get_audio_entries(audio_path : str) -> Dict[str, str]:
 	return audio_entries
 
 
-def detect_audio_codec(audio_path : str) -> Optional[str]:
+def detect_audio_codec(audio_path : str) -> Optional[str]: #todo: extend get_audio_entries and reuse it
 	commands = ffprobe_builder.chain(
 		ffprobe_builder.show_entries([ 'codec_name' ]),
 		ffprobe_builder.format_to_value(),
@@ -74,7 +74,7 @@ def detect_audio_frame_total(audio_path : str) -> Optional[int]:
 	return None
 
 
-def detect_video_codec(video_path : str) -> Optional[str]:
+def detect_video_codec(video_path : str) -> Optional[str]: #todo: could be generic entries method like audio has
 	commands = ffprobe_builder.chain(
 		ffprobe_builder.show_entries([ 'codec_name' ]),
 		ffprobe_builder.format_to_value(),
