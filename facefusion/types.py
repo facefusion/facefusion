@@ -1,4 +1,3 @@
-import queue
 from collections import namedtuple
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
@@ -363,8 +362,6 @@ DownloadSet : TypeAlias = Dict[str, Download]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
 ApiSecurityStrategy = Literal['strict', 'moderate']
-UploadQueue : TypeAlias = queue.SimpleQueue[bytes]
-MediaChunkReader : TypeAlias = Callable[[], bytes]
 AppContext = Literal['cli', 'api']
 
 InferencePool : TypeAlias = Dict[str, InferenceSession]

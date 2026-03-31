@@ -13,7 +13,7 @@ from facefusion.ffprobe import detect_audio_codec, detect_video_codec
 from facefusion.filesystem import copy_file, is_image
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
-from .assert_helper import create_media_reader, get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
+from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -226,10 +226,10 @@ def test_sanitize_audio() -> None:
 		get_test_output_path('test-sanitize-audio-moderate.wav')
 	]
 
-	assert sanitize_audio('wav', create_media_reader(file_path), output_paths[0], 'strict') is True
+	assert sanitize_audio(file_path, output_paths[0], 'strict') is True
 	assert detect_audio_codec(output_paths[0]) == 'mp3'
 
-	assert sanitize_audio('wav', create_media_reader(file_path), output_paths[1], 'moderate') is True
+	assert sanitize_audio(file_path, output_paths[1], 'moderate') is True
 	assert detect_audio_codec(output_paths[1]) == 'pcm_s16le'
 
 
@@ -237,7 +237,7 @@ def test_sanitize_image() -> None:
 	file_path = get_test_example_file('source.jpg')
 	output_path = get_test_output_path('test-sanitize-image.jpg')
 
-	assert sanitize_image('jpeg', create_media_reader(file_path), output_path) is True
+	assert sanitize_image(file_path, output_path) is True
 	assert is_image(output_path) is True
 
 
@@ -249,8 +249,8 @@ def test_sanitize_video() -> None:
 		get_test_output_path('test-sanitize-video-moderate.mp4')
 	]
 
-	assert sanitize_video('mp4', create_media_reader(file_path), output_paths[0], 'strict') is True
+	assert sanitize_video(file_path, output_paths[0], 'strict') is True
 	assert detect_video_codec(output_paths[0]) == 'h264'
 
-	assert sanitize_video('mp4', create_media_reader(file_path), output_paths[1], 'moderate') is True
+	assert sanitize_video(file_path, output_paths[1], 'moderate') is True
 	assert detect_video_codec(output_paths[1]) == 'hevc'
