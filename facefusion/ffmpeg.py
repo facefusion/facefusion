@@ -48,10 +48,6 @@ def update_progress(progress : tqdm, frame_number : int) -> None:
 def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-	return complete_process(process)
-
-
-def complete_process(process : subprocess.Popen[bytes]) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
 
 	while process_manager.is_processing():
