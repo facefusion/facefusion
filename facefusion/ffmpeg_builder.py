@@ -47,11 +47,11 @@ def set_input(input_path : str) -> List[Command]:
 	return [ '-i', input_path ]
 
 
-def set_pipe_input(pipe_format : str) -> List[Command]:
+def pipe_input(pipe_format : str) -> List[Command]:
 	return [ '-f', pipe_format, '-i', 'pipe:0' ]
 
 
-def set_pipe_image_input(image_format : str) -> List[Command]:
+def pipe_image(image_format : str) -> List[Command]:
 	return [ '-f', 'image2pipe', '-c:v', image_format, '-i', 'pipe:0' ]
 
 

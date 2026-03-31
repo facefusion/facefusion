@@ -313,7 +313,7 @@ def sanitize_audio(audio_format : str, media_chunk_reader : MediaChunkReader, as
 
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
-			ffmpeg_builder.set_pipe_input(audio_pipe_format),
+			ffmpeg_builder.pipe_input(audio_pipe_format),
 			ffmpeg_builder.deep_copy_audio(),
 			ffmpeg_builder.strip_metadata(),
 			ffmpeg_builder.force_output(asset_path)
@@ -321,7 +321,7 @@ def sanitize_audio(audio_format : str, media_chunk_reader : MediaChunkReader, as
 		return run_ffmpeg_with_pipe(commands, media_chunk_reader).returncode == 0
 
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_pipe_input(audio_pipe_format),
+		ffmpeg_builder.pipe_input(audio_pipe_format),
 		ffmpeg_builder.copy_audio_encoder(),
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
@@ -332,7 +332,7 @@ def sanitize_audio(audio_format : str, media_chunk_reader : MediaChunkReader, as
 def sanitize_image(image_format : str, media_chunk_reader : MediaChunkReader, asset_path : str) -> bool:
 	image_pipe_format = ffmpeg_builder.resolve_image_pipe_format(image_format)
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_pipe_image_input(image_pipe_format),
+		ffmpeg_builder.pipe_image(image_pipe_format),
 		ffmpeg_builder.deep_copy_image(),
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
@@ -345,7 +345,7 @@ def sanitize_video(video_format : str, media_chunk_reader : MediaChunkReader, as
 
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
-			ffmpeg_builder.set_pipe_input(video_pipe_format),
+			ffmpeg_builder.pipe_input(video_pipe_format),
 			ffmpeg_builder.set_video_encoder('libx264'),
 			ffmpeg_builder.set_video_preset('libx264', 'ultrafast'),
 			ffmpeg_builder.set_pixel_format('libx264'),
@@ -357,7 +357,7 @@ def sanitize_video(video_format : str, media_chunk_reader : MediaChunkReader, as
 		return run_ffmpeg_with_pipe(commands, media_chunk_reader).returncode == 0
 
 	commands = ffmpeg_builder.chain(
-		ffmpeg_builder.set_pipe_input(video_pipe_format),
+		ffmpeg_builder.pipe_input(video_pipe_format),
 		ffmpeg_builder.copy_video_encoder(),
 		ffmpeg_builder.copy_audio_encoder(),
 		ffmpeg_builder.strip_metadata(),
