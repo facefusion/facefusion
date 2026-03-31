@@ -23,28 +23,28 @@ async def upload_asset(request : Request) -> Response:
 		form = await request.form()
 		upload_files = form.getlist('file')
 
-		if not validate_asset_files(upload_files):
+		if upload_files and validate_asset_files(upload_files):
+			asset_paths = await save_asset_files(upload_files)
+
+			if asset_paths:
+				asset_ids : List[str] = []
+
+				for asset_path in asset_paths:
+					asset = asset_store.create_asset(session_id, asset_type, asset_path)
+
+					if asset:
+						asset_id = asset.get('id')
+
+						if asset_id:
+							asset_ids.append(asset_id)
+
+				if asset_ids:
+					return JSONResponse(
+					{
+						'asset_ids': asset_ids
+					}, status_code = HTTP_201_CREATED)
+
 			return Response(status_code = HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
-		asset_paths = await save_asset_files(upload_files)
-
-		if asset_paths:
-			asset_ids : List[str] = []
-
-			for asset_path in asset_paths:
-				asset = asset_store.create_asset(session_id, asset_type, asset_path)
-
-				if asset:
-					asset_id = asset.get('id')
-
-					if asset_id:
-						asset_ids.append(asset_id)
-
-			if asset_ids:
-				return JSONResponse(
-				{
-					'asset_ids': asset_ids
-				}, status_code = HTTP_201_CREATED)
 
 	return Response(status_code = HTTP_400_BAD_REQUEST)
 

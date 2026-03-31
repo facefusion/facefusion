@@ -119,7 +119,7 @@ def test_upload_asset(test_client : TestClient) -> None:
 		'file': ('invalid.txt', 'invalid'.encode(), 'text/plain')
 	})
 
-	assert upload_response.status_code == 400
+	assert upload_response.status_code == 415
 
 
 def test_get_assets(test_client : TestClient) -> None:
