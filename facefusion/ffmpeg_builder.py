@@ -47,14 +47,6 @@ def set_input(input_path : str) -> List[Command]:
 	return [ '-i', input_path ]
 
 
-def pipe_input(pipe_format : str) -> List[Command]:
-	return [ '-f', pipe_format, '-i', 'pipe:0' ]
-
-
-def pipe_image(image_format : str) -> List[Command]:
-	return [ '-f', 'image2pipe', '-c:v', image_format, '-i', 'pipe:0' ]
-
-
 def set_input_fps(input_fps : Fps) -> List[Command]:
 	return [ '-r', str(input_fps) ]
 
@@ -299,25 +291,3 @@ def map_qsv_preset(video_preset : VideoPreset) -> Optional[str]:
 	return None
 
 
-def resolve_audio_pipe_format(audio_format : str) -> str:
-	if audio_format == 'm4a':
-		return 'mp4'
-	if audio_format == 'opus':
-		return 'ogg'
-	return audio_format
-
-
-def resolve_image_pipe_format(image_format : str) -> str:
-	if image_format == 'jpeg':
-		return 'mjpeg'
-	return image_format
-
-
-def resolve_video_pipe_format(video_format : str) -> str:
-	if video_format == 'mkv':
-		return 'matroska'
-	if video_format == 'm4v':
-		return 'mp4'
-	if video_format == 'wmv':
-		return 'asf'
-	return video_format
