@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import tempfile
 
 import pytest
@@ -33,7 +34,10 @@ def before_all() -> None:
 		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '16000', get_test_example_file('target-240p-16khz.' + output_video_format) ])
 
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '48000', get_test_example_file('target-240p-48khz.mp4') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-c:v', 'libx265', '-an', get_test_example_file('target-240p-h265.mp4') ])
+	if sys.platform == 'darwin':
+		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-c:v', 'hevc_videotoolbox', '-an', get_test_example_file('target-240p-h265.mp4') ])
+	else:
+		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-c:v', 'libx265', '-an', get_test_example_file('target-240p-h265.mp4') ])
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
 	state_manager.init_item('output_audio_encoder', 'aac')
