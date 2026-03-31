@@ -214,7 +214,6 @@ def test_replace_audio() -> None:
 
 def test_sanitize_audio() -> None:
 	audio_path = get_test_example_file('source.mp3')
-
 	output_strict_path = get_test_output_path('output-strict.mp3')
 	output_moderate_path = get_test_output_path('output-moderate.mp3')
 
@@ -235,7 +234,6 @@ def test_sanitize_image() -> None:
 
 def test_sanitize_video() -> None:
 	video_path = get_test_example_file('target-240p.mp4')
-
 	output_strict_path = get_test_output_path('output-strict.mp4')
 	output_moderate_path = get_test_output_path('output-moderate.mp4')
 

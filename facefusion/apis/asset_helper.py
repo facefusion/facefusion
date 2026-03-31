@@ -109,20 +109,17 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 		process_manager.start()
 
 		upload_task = asyncio.create_task(feed_upload_queue(upload_file, upload_queue))
-		has_file_sanitized = False
 
-		if media_type == 'audio':
-			has_file_sanitized = await asyncio.to_thread(ffmpeg.sanitize_audio, file_format, upload_queue.get, asset_path, api_security_strategy)
-		if media_type == 'image':
-			has_file_sanitized = await asyncio.to_thread(ffmpeg.sanitize_image, file_format, upload_queue.get, asset_path)
-		if media_type == 'video':
-			has_file_sanitized = await asyncio.to_thread(ffmpeg.sanitize_video, file_format, upload_queue.get, asset_path, api_security_strategy)
-
-		await upload_task
-
-		if has_file_sanitized:
+		if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, file_format, upload_queue.get, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
 
-		process_manager.end()
+		if media_type == 'image' and await asyncio.to_thread(ffmpeg.sanitize_image, file_format, upload_queue.get, asset_path):
+			asset_paths.append(asset_path)
+
+		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, file_format, upload_queue.get, asset_path, api_security_strategy):
+			asset_paths.append(asset_path)
+
+		if await upload_task:
+			process_manager.end()
 
 	return asset_paths
