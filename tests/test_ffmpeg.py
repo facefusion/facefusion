@@ -7,11 +7,11 @@ import pytest
 import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, spawn_frames
-from facefusion.filesystem import copy_file
+from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
+from facefusion.filesystem import copy_file, is_audio, is_image, is_video
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
-from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
+from .assert_helper import create_media_reader, get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -210,3 +210,37 @@ def test_replace_audio() -> None:
 		clear_temp_directory(state_manager.get_temp_path(), output_path)
 
 	state_manager.init_item('output_audio_encoder', 'aac')
+
+
+def test_sanitize_audio() -> None:
+	audio_path = get_test_example_file('source.mp3')
+
+	output_strict_path = get_test_output_path('output-strict.mp3')
+	output_moderate_path = get_test_output_path('output-moderate.mp3')
+
+	assert sanitize_audio('mp3', create_media_reader(audio_path), output_strict_path, 'strict') is True
+	assert is_audio(output_strict_path) is True
+
+	assert sanitize_audio('mp3', create_media_reader(audio_path), output_moderate_path, 'moderate') is True
+	assert is_audio(output_moderate_path) is True
+
+
+def test_sanitize_image() -> None:
+	source_path = get_test_example_file('source.jpg')
+	output_path = get_test_output_path('output.jpg')
+
+	assert sanitize_image('jpeg', create_media_reader(source_path), output_path) is True
+	assert is_image(output_path) is True
+
+
+def test_sanitize_video() -> None:
+	video_path = get_test_example_file('target-240p.mp4')
+
+	output_strict_path = get_test_output_path('output-strict.mp4')
+	output_moderate_path = get_test_output_path('output-moderate.mp4')
+
+	assert sanitize_video('mp4', create_media_reader(video_path), output_strict_path, 'strict') is True
+	assert is_video(output_strict_path) is True
+
+	assert sanitize_video('mp4', create_media_reader(video_path), output_moderate_path, 'moderate') is True
+	assert is_video(output_moderate_path) is True

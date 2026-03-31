@@ -289,3 +289,37 @@ def test_delete_assets(test_client : TestClient) -> None:
 	})
 
 	assert delete_response.status_code == 404
+
+
+def test_upload_asset_security_strategies(test_client : TestClient) -> None:
+	source_path = get_test_example_file('source.jpg')
+	target_path = get_test_example_file('target-240p.mp4')
+
+	for strategy in [ 'strict', 'moderate' ]:
+		state_manager.init_item('api_security_strategy', strategy)
+
+		create_session_response = test_client.post('/session', json =
+		{
+			'client_version': metadata.get('version')
+		})
+		access_token = create_session_response.json().get('access_token')
+		session_id = session_manager.find_session_id(access_token)
+
+		with open(source_path, 'rb') as source_file, open(target_path, 'rb') as target_file:
+			upload_response = test_client.post('/assets?type=source', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('source.jpg', source_file.read(), 'image/jpeg')),
+				('file', ('target.mp4', target_file.read(), 'video/mp4'))
+			])
+
+		assert upload_response.status_code == 201
+
+		asset_ids = upload_response.json().get('asset_ids')
+
+		assert asset_store.get_asset(session_id, asset_ids[0]).get('media') == 'image'
+		assert asset_store.get_asset(session_id, asset_ids[1]).get('media') == 'video'
+
+	state_manager.init_item('api_security_strategy', 'strict')

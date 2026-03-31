@@ -1,5 +1,7 @@
+import asyncio
 import os
-import tempfile
+import queue
+import uuid
 from typing import List, Optional
 
 from starlette.datastructures import UploadFile
@@ -8,8 +10,8 @@ import facefusion.choices
 from facefusion import ffmpeg, process_manager, state_manager
 from facefusion.audio import detect_audio_duration
 from facefusion.ffprobe import detect_audio_channel_total, detect_audio_frame_total, detect_audio_sample_rate
-from facefusion.filesystem import create_directory, get_file_extension, get_file_format, get_file_name, is_audio, is_image, is_video, remove_file
-from facefusion.types import AudioMetadata, ImageMetadata, MediaType, VideoMetadata
+from facefusion.filesystem import create_directory, get_file_extension, get_file_format, is_audio, is_image, is_video
+from facefusion.types import AudioMetadata, ImageMetadata, MediaType, UploadQueue, VideoMetadata
 from facefusion.vision import count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution
 
 
@@ -82,40 +84,45 @@ def validate_asset_files(upload_files : List[UploadFile]) -> bool:
 	return True
 
 
+async def feed_upload_queue(upload_file : UploadFile, upload_queue : UploadQueue) -> None:
+	while file_chunk := await upload_file.read(1024):
+		upload_queue.put(file_chunk)
+	upload_queue.put(b'')
+
+
 async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 	asset_paths : List[str] = []
+	api_security_strategy = state_manager.get_item('api_security_strategy')
 
 	for upload_file in upload_files:
-		upload_file_extension = get_file_extension(upload_file.filename)
+		file_format = get_file_format(upload_file.filename)
+		file_extension = get_file_extension(upload_file.filename)
+		media_type = detect_media_type_by_format(file_format)
+		temp_path = state_manager.get_temp_path()
 
-		with tempfile.NamedTemporaryFile(suffix = upload_file_extension, delete = False) as temp_file:
+		create_directory(temp_path)
 
-			while upload_chunk := await upload_file.read(1024):
-				temp_file.write(upload_chunk)
+		asset_file_name = uuid.uuid4().hex
+		asset_path = os.path.join(temp_path, asset_file_name + file_extension)
+		upload_queue : UploadQueue = queue.SimpleQueue()
 
-			temp_file.flush()
+		process_manager.start()
 
-			media_type = detect_media_type_by_path(temp_file.name)
-			temp_path = state_manager.get_temp_path()
+		upload_task = asyncio.create_task(feed_upload_queue(upload_file, upload_queue))
+		has_file_sanitized = False
 
-			create_directory(temp_path)
+		if media_type == 'audio':
+			has_file_sanitized = await asyncio.to_thread(ffmpeg.sanitize_audio, file_format, upload_queue.get, asset_path, api_security_strategy)
+		if media_type == 'image':
+			has_file_sanitized = await asyncio.to_thread(ffmpeg.sanitize_image, file_format, upload_queue.get, asset_path)
+		if media_type == 'video':
+			has_file_sanitized = await asyncio.to_thread(ffmpeg.sanitize_video, file_format, upload_queue.get, asset_path, api_security_strategy)
 
-			asset_file_name = get_file_name(temp_file.name)
-			asset_path = os.path.join(temp_path, asset_file_name + upload_file_extension)
+		await upload_task
 
-			process_manager.start()
+		if has_file_sanitized:
+			asset_paths.append(asset_path)
 
-			if media_type == 'audio' and ffmpeg.sanitize_audio(temp_file.name, asset_path):
-				asset_paths.append(asset_path)
-
-			if media_type == 'image' and ffmpeg.sanitize_image(temp_file.name, asset_path):
-				asset_paths.append(asset_path)
-
-			if media_type == 'video' and ffmpeg.sanitize_video(temp_file.name, asset_path):
-				asset_paths.append(asset_path)
-
-			process_manager.end()
-
-		remove_file(temp_file.name)
+		process_manager.end()
 
 	return asset_paths

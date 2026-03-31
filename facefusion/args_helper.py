@@ -78,6 +78,7 @@ def apply_args(args : Args, apply_state_item : ApplyStateItem) -> None:
 	apply_state_item('benchmark_cycle_count', args.get('benchmark_cycle_count'))
 	apply_state_item('api_host', args.get('api_host'))
 	apply_state_item('api_port', args.get('api_port'))
+	apply_state_item('api_security_strategy', args.get('api_security_strategy'))
 	apply_state_item('video_memory_strategy', args.get('video_memory_strategy'))
 	apply_state_item('log_level', args.get('log_level'))
 	apply_state_item('halt_on_error', args.get('halt_on_error'))

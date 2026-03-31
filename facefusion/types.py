@@ -1,3 +1,4 @@
+import queue
 from collections import namedtuple
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
@@ -361,6 +362,9 @@ Download = TypedDict('Download',
 DownloadSet : TypeAlias = Dict[str, Download]
 
 VideoMemoryStrategy = Literal['strict', 'moderate', 'tolerant']
+ApiSecurityStrategy = Literal['strict', 'moderate']
+UploadQueue : TypeAlias = queue.SimpleQueue[bytes]
+MediaChunkReader : TypeAlias = Callable[[], bytes]
 AppContext = Literal['cli', 'api']
 
 InferencePool : TypeAlias = Dict[str, InferenceSession]
@@ -451,6 +455,7 @@ StateKey = Literal\
 	'api_host',
 	'api_port',
 	'api_key',
+	'api_security_strategy',
 	'job_id',
 	'job_status',
 	'step_index'
@@ -522,6 +527,7 @@ State = TypedDict('State',
 	'api_host' : str,
 	'api_port' : int,
 	'api_key' : str,
+	'api_security_strategy' : ApiSecurityStrategy,
 	'job_id' : str,
 	'job_status' : JobStatus,
 	'step_index' : int
