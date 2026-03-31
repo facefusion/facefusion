@@ -32,6 +32,20 @@ def get_audio_entries(audio_path : str) -> Dict[str, str]:
 	return audio_entries
 
 
+def detect_audio_codec(audio_path : str) -> Optional[str]:
+	commands = ffprobe_builder.chain(
+		ffprobe_builder.show_entries([ 'codec_name' ]),
+		ffprobe_builder.format_to_value(),
+		ffprobe_builder.set_input(audio_path)
+	)
+	process = run_ffprobe(commands)
+	output, _ = process.communicate()
+
+	if output:
+		return output.decode().strip().split(os.linesep)[0]
+	return None
+
+
 def detect_audio_sample_rate(audio_path : str) -> Optional[int]:
 	audio_entries = get_audio_entries(audio_path)
 	sample_rate = audio_entries.get('sample_rate')
@@ -57,4 +71,18 @@ def detect_audio_frame_total(audio_path : str) -> Optional[int]:
 
 	if audio_duration and audio_sample_rate:
 		return int(float(audio_duration) * int(audio_sample_rate))
+	return None
+
+
+def detect_video_codec(video_path : str) -> Optional[str]:
+	commands = ffprobe_builder.chain(
+		ffprobe_builder.show_entries([ 'codec_name' ]),
+		ffprobe_builder.format_to_value(),
+		ffprobe_builder.set_input(video_path)
+	)
+	process = run_ffprobe(commands)
+	output, _ = process.communicate()
+
+	if output:
+		return output.decode().strip().split(os.linesep)[0]
 	return None
