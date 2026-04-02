@@ -110,13 +110,13 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 		upload_task = asyncio.create_task(feed_upload_queue(upload_file, upload_queue))
 
-		if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, file_format, upload_queue.get, asset_path, api_security_strategy): #todo: do not pass format, do not pass queue but bytes if same speed
+		if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, upload_queue.get, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
 
-		if media_type == 'image' and await asyncio.to_thread(ffmpeg.sanitize_image, file_format, upload_queue.get, asset_path):
+		if media_type == 'image' and await asyncio.to_thread(ffmpeg.sanitize_image, upload_queue.get, asset_path):
 			asset_paths.append(asset_path)
 
-		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, file_format, upload_queue.get, asset_path, api_security_strategy):
+		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, upload_queue.get, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
 
 		await upload_task
