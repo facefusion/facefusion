@@ -226,10 +226,10 @@ def test_sanitize_audio() -> None:
 		get_test_output_path('test-sanitize-audio-moderate.wav')
 	]
 
-	assert sanitize_audio('wav', create_media_reader(file_path), output_paths[0], 'strict') is True
+	assert sanitize_audio(create_media_reader(file_path), output_paths[0], 'strict') is True
 	assert detect_audio_codec(output_paths[0]) == 'mp3'
 
-	assert sanitize_audio('wav', create_media_reader(file_path), output_paths[1], 'moderate') is True
+	assert sanitize_audio(create_media_reader(file_path), output_paths[1], 'moderate') is True
 	assert detect_audio_codec(output_paths[1]) == 'pcm_s16le'
 
 
@@ -237,7 +237,7 @@ def test_sanitize_image() -> None:
 	file_path = get_test_example_file('source.jpg')
 	output_path = get_test_output_path('test-sanitize-image.jpg')
 
-	assert sanitize_image('jpeg', create_media_reader(file_path), output_path) is True
+	assert sanitize_image(create_media_reader(file_path), output_path) is True
 	assert is_image(output_path) is True
 
 
@@ -249,8 +249,8 @@ def test_sanitize_video() -> None:
 		get_test_output_path('test-sanitize-video-moderate.mp4')
 	]
 
-	assert sanitize_video('mp4', create_media_reader(file_path), output_paths[0], 'strict') is True
+	assert sanitize_video(create_media_reader(file_path), output_paths[0], 'strict') is True
 	assert detect_video_codec(output_paths[0]) == 'h264'
 
-	assert sanitize_video('mp4', create_media_reader(file_path), output_paths[1], 'moderate') is True
+	assert sanitize_video(create_media_reader(file_path), output_paths[1], 'moderate') is True
 	assert detect_video_codec(output_paths[1]) == 'hevc'
