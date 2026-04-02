@@ -297,27 +297,3 @@ def map_qsv_preset(video_preset : VideoPreset) -> Optional[str]:
 	if video_preset in [ 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow' ]:
 		return video_preset
 	return None
-
-
-def resolve_audio_pipe_format(audio_format : str) -> str:
-	if audio_format == 'm4a':
-		return 'mp4'
-	if audio_format == 'opus':
-		return 'ogg'
-	return audio_format
-
-
-def resolve_image_pipe_format(image_format : str) -> str:
-	if image_format == 'jpeg':
-		return 'mjpeg'
-	return image_format
-
-
-def resolve_video_pipe_format(video_format : str) -> str:
-	if video_format == 'mkv':
-		return 'matroska'
-	if video_format == 'm4v':
-		return 'mp4'
-	if video_format == 'wmv':
-		return 'asf'
-	return video_format

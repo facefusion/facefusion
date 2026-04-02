@@ -309,7 +309,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 
 
 def sanitize_audio(media_chunk_reader : MediaChunkReader, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
-	audio_pipe_format = ffmpeg_builder.resolve_audio_pipe_format(get_file_format(asset_path)) #todo: does not make sense this methods are in the builder
+	audio_pipe_format = resolve_audio_pipe_format(get_file_format(asset_path))
 
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
@@ -330,7 +330,7 @@ def sanitize_audio(media_chunk_reader : MediaChunkReader, asset_path : str, secu
 
 
 def sanitize_image(media_chunk_reader : MediaChunkReader, asset_path : str) -> bool:
-	image_pipe_format = ffmpeg_builder.resolve_image_pipe_format(get_file_format(asset_path)) #todo: does not make sense this methods are in the builder
+	image_pipe_format = resolve_image_pipe_format(get_file_format(asset_path))
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.pipe_image(image_pipe_format),
 		ffmpeg_builder.deep_copy_image(),
@@ -341,7 +341,7 @@ def sanitize_image(media_chunk_reader : MediaChunkReader, asset_path : str) -> b
 
 
 def sanitize_video(media_chunk_reader : MediaChunkReader, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
-	video_pipe_format = ffmpeg_builder.resolve_video_pipe_format(get_file_format(asset_path)) #todo: does not make sense this methods are in the builder
+	video_pipe_format = resolve_video_pipe_format(get_file_format(asset_path))
 
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
@@ -390,3 +390,27 @@ def fix_video_encoder(video_format : VideoFormat, video_encoder : VideoEncoder) 
 	if video_format == 'webm':
 		return 'libvpx-vp9'
 	return video_encoder
+
+
+def resolve_audio_pipe_format(audio_format : str) -> str:
+	if audio_format == 'm4a':
+		return 'mp4'
+	if audio_format == 'opus':
+		return 'ogg'
+	return audio_format
+
+
+def resolve_image_pipe_format(image_format : str) -> str:
+	if image_format == 'jpeg':
+		return 'mjpeg'
+	return image_format
+
+
+def resolve_video_pipe_format(video_format : str) -> str:
+	if video_format == 'mkv':
+		return 'matroska'
+	if video_format == 'm4v':
+		return 'mp4'
+	if video_format == 'wmv':
+		return 'asf'
+	return video_format
