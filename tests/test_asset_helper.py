@@ -40,5 +40,5 @@ def test_extract_audio_metadata() -> None:
 	metadata = extract_audio_metadata(get_test_example_file('source.mp3'))
 
 	assert metadata.get('duration') == 3.7877708333333335
+	assert metadata.get('channel_total') == 1
 	assert metadata.get('sample_rate') == 44100
-	assert metadata.get('channels') == 1

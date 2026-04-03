@@ -9,7 +9,7 @@ from starlette.datastructures import UploadFile
 import facefusion.choices
 from facefusion import ffmpeg, process_manager, state_manager
 from facefusion.audio import detect_audio_duration
-from facefusion.ffprobe import detect_audio_channel_total, detect_audio_frame_total, detect_audio_sample_rate
+from facefusion.ffprobe import detect_audio_bitrate, detect_audio_channel_total, detect_audio_frame_total, detect_audio_sample_rate, detect_video_bitrate
 from facefusion.filesystem import create_directory, get_file_extension, get_file_format, is_audio, is_image, is_video
 from facefusion.types import AudioMetadata, ImageMetadata, MediaType, UploadQueue, VideoMetadata
 from facefusion.vision import count_video_frame_total, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution
@@ -20,8 +20,9 @@ def extract_audio_metadata(file_path : str) -> AudioMetadata:
 	{
 		'duration': detect_audio_duration(file_path),
 		'frame_total': detect_audio_frame_total(file_path),
+		'channel_total': detect_audio_channel_total(file_path),
 		'sample_rate': detect_audio_sample_rate(file_path),
-		'channels': detect_audio_channel_total(file_path)
+		'bit_rate': detect_audio_bitrate(file_path)
 	}
 	return metadata
 
@@ -40,7 +41,8 @@ def extract_video_metadata(file_path : str) -> VideoMetadata:
 		'duration': detect_video_duration(file_path),
 		'frame_total': count_video_frame_total(file_path),
 		'fps': detect_video_fps(file_path),
-		'resolution': detect_video_resolution(file_path)
+		'resolution': detect_video_resolution(file_path),
+		'bit_rate': detect_video_bitrate(file_path)
 	}
 	return metadata
 
