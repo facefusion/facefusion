@@ -14,7 +14,7 @@ def run_ffprobe(commands : List[Command]) -> subprocess.Popen[bytes]:
 def get_audio_entries(audio_path : str) -> Dict[str, str]:
 	audio_entries = {}
 	commands = ffprobe_builder.chain(
-		ffprobe_builder.show_entries([ 'duration', 'sample_rate', 'channels', 'nb_read_frames' ]),
+		ffprobe_builder.show_entries([ 'codec_name', 'duration', 'sample_rate', 'channels', 'nb_read_frames' ]),
 		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(audio_path)
 	)
@@ -32,18 +32,9 @@ def get_audio_entries(audio_path : str) -> Dict[str, str]:
 	return audio_entries
 
 
-def detect_audio_codec(audio_path : str) -> Optional[str]: #todo: extend get_audio_entries and reuse it
-	commands = ffprobe_builder.chain(
-		ffprobe_builder.show_entries([ 'codec_name' ]),
-		ffprobe_builder.format_to_value(),
-		ffprobe_builder.set_input(audio_path)
-	)
-	process = run_ffprobe(commands)
-	output, _ = process.communicate()
-
-	if output:
-		return output.decode().strip().split(os.linesep)[0]
-	return None
+def detect_audio_codec(audio_path : str) -> Optional[str]:
+	audio_entries = get_audio_entries(audio_path)
+	return audio_entries.get('codec_name')
 
 
 def detect_audio_sample_rate(audio_path : str) -> Optional[int]:
@@ -74,15 +65,27 @@ def detect_audio_frame_total(audio_path : str) -> Optional[int]:
 	return None
 
 
-def detect_video_codec(video_path : str) -> Optional[str]: #todo: could be generic entries method like audio has
+def get_video_entries(video_path : str) -> Dict[str, str]:
+	video_entries = {}
 	commands = ffprobe_builder.chain(
 		ffprobe_builder.show_entries([ 'codec_name' ]),
-		ffprobe_builder.format_to_value(),
+		ffprobe_builder.format_to_key_value(),
 		ffprobe_builder.set_input(video_path)
 	)
 	process = run_ffprobe(commands)
 	output, _ = process.communicate()
 
 	if output:
-		return output.decode().strip().split(os.linesep)[0]
-	return None
+		lines = output.decode().strip().split(os.linesep)
+
+		for line in lines:
+			if '=' in line:
+				key, value = line.split('=', 1)
+				video_entries[key] = value
+
+	return video_entries
+
+
+def detect_video_codec(video_path : str) -> Optional[str]:
+	video_entries = get_video_entries(video_path)
+	return video_entries.get('codec_name')
