@@ -33,7 +33,7 @@ def probe_entries(media_path : str, entries : List[str]) -> Dict[str, str]:
 
 
 def extract_audio_metadata(audio_path : str) -> AudioMetadata:
-	audio_entries = probe_entries(audio_path, ['duration', 'sample_rate', 'channels', 'bit_rate'])
+	audio_entries = probe_entries(audio_path, [ 'duration', 'sample_rate', 'channels', 'bit_rate' ])
 
 	duration = float(audio_entries.get('duration'))
 	sample_rate = int(audio_entries.get('sample_rate'))
@@ -54,12 +54,13 @@ def extract_audio_metadata(audio_path : str) -> AudioMetadata:
 
 
 def extract_video_metadata(video_path : str) -> VideoMetadata:
-	video_entries = probe_entries(video_path, ['duration', 'width', 'height', 'r_frame_rate', 'bit_rate'])
+	video_entries = probe_entries(video_path, [ 'duration', 'width', 'height', 'r_frame_rate', 'bit_rate' ])
 
 	duration = float(video_entries.get('duration'))
 	fps = extract_video_fps(video_entries.get('r_frame_rate'))
 	frame_total = int(duration * fps)
-	resolution = (int(video_entries.get('width')), int(video_entries.get('height')))
+	width = int(video_entries.get('width'))
+	height = int(video_entries.get('height'))
 	bit_rate = int(video_entries.get('bit_rate'))
 
 	video_metadata : VideoMetadata =\
@@ -67,7 +68,7 @@ def extract_video_metadata(video_path : str) -> VideoMetadata:
 		'duration' : duration,
 		'frame_total' : frame_total,
 		'fps' : fps,
-		'resolution' : resolution,
+		'resolution' : (width, height),
 		'bit_rate' : bit_rate
 	}
 
