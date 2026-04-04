@@ -4,7 +4,7 @@ import pytest
 
 from facefusion import process_manager
 from facefusion.download import conditional_download
-from facefusion.ffprobe import probe_entries, extract_audio_metadata, extract_video_metadata
+from facefusion.ffprobe import extract_audio_metadata, extract_video_metadata, probe_entries
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
