@@ -4,7 +4,7 @@ import pytest
 
 from facefusion import process_manager
 from facefusion.download import conditional_download
-from facefusion.ffprobe import detect_audio_bitrate, detect_audio_channel_total, detect_audio_codec, detect_audio_frame_total, detect_audio_sample_rate, detect_video_bitrate, detect_video_codec, detect_video_duration, detect_video_fps, detect_video_resolution
+from facefusion.ffprobe import probe_entries, extract_audio_metadata, extract_video_metadata
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -19,56 +19,34 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-t', '1.9', '-ar', '48000', '-ac', '2', get_test_example_file('test-audio-entries.wav') ])
 
 
-def test_detect_audio_codec() -> None:
-	assert detect_audio_codec(get_test_example_file('source.mp3')) == 'mp3'
-	assert detect_audio_codec(get_test_example_file('test-audio-entries.wav')) == 'pcm_s16le'
-	assert detect_audio_codec(get_test_example_file('invalid.mp3')) is None
+def test_parse_audio_codec() -> None:
+	assert probe_entries(get_test_example_file('source.mp3'), ['codec_name']).get('codec_name') == 'mp3'
+	assert probe_entries(get_test_example_file('test-audio-entries.wav'), ['codec_name']).get('codec_name') == 'pcm_s16le'
+	assert probe_entries(get_test_example_file('invalid.mp3'), ['codec_name']).get('codec_name') is None
 
 
-def test_detect_audio_sample_rate() -> None:
-	assert detect_audio_sample_rate(get_test_example_file('source.mp3')) == 44100
-	assert detect_audio_sample_rate(get_test_example_file('test-audio-entries.wav')) == 48000
-	assert detect_audio_sample_rate(get_test_example_file('invalid.mp3')) is None
+def test_probe_audio() -> None:
+	audio_metadata = extract_audio_metadata(get_test_example_file('source.mp3'))
+	assert audio_metadata.get('sample_rate') == 44100
+	assert audio_metadata.get('channel_total') == 1
+	assert audio_metadata.get('frame_total') == 167039
+	assert audio_metadata.get('bit_rate') == 128000
+
+	audio_metadata = extract_audio_metadata(get_test_example_file('test-audio-entries.wav'))
+	assert audio_metadata.get('sample_rate') == 48000
+	assert audio_metadata.get('channel_total') == 2
+	assert audio_metadata.get('frame_total') == 91200
+	assert audio_metadata.get('bit_rate') == 1536000
 
 
-def test_detect_audio_channel_total() -> None:
-	assert detect_audio_channel_total(get_test_example_file('source.mp3')) == 1
-	assert detect_audio_channel_total(get_test_example_file('test-audio-entries.wav')) == 2
-	assert detect_audio_channel_total(get_test_example_file('invalid.mp3')) is None
+def test_parse_video_codec() -> None:
+	assert probe_entries(get_test_example_file('target-240p.mp4'), ['codec_name']).get('codec_name') == 'h264'
+	assert probe_entries(get_test_example_file('invalid.mp4'), ['codec_name']).get('codec_name') is None
 
 
-def test_detect_audio_frame_total() -> None:
-	assert detect_audio_frame_total(get_test_example_file('source.mp3')) == 167039
-	assert detect_audio_frame_total(get_test_example_file('test-audio-entries.wav')) == 91200
-	assert detect_audio_frame_total(get_test_example_file('invalid.mp3')) is None
-
-
-def test_detect_audio_bitrate() -> None:
-	assert detect_audio_bitrate(get_test_example_file('source.mp3')) == 128000
-	assert detect_audio_bitrate(get_test_example_file('test-audio-entries.wav')) == 1536000
-	assert detect_audio_bitrate(get_test_example_file('invalid.mp3')) is None
-
-
-def test_detect_video_codec() -> None:
-	assert detect_video_codec(get_test_example_file('target-240p.mp4')) == 'h264'
-	assert detect_video_codec(get_test_example_file('invalid.mp4')) is None
-
-
-def test_detect_video_fps() -> None:
-	assert detect_video_fps(get_test_example_file('target-240p.mp4')) == 25.0
-	assert detect_video_fps(get_test_example_file('invalid.mp4')) is None
-
-
-def test_detect_video_duration() -> None:
-	assert detect_video_duration(get_test_example_file('target-240p.mp4')) == 11
-	assert detect_video_duration(get_test_example_file('invalid.mp4')) is None
-
-
-def test_detect_video_resolution() -> None:
-	assert detect_video_resolution(get_test_example_file('target-240p.mp4')) == (426, 226)
-	assert detect_video_resolution(get_test_example_file('invalid.mp4')) is None
-
-
-def test_detect_video_bitrate() -> None:
-	assert detect_video_bitrate(get_test_example_file('target-240p.mp4')) == 138754
-	assert detect_video_bitrate(get_test_example_file('invalid.mp4')) is None
+def test_probe_video() -> None:
+	video_metadata = extract_video_metadata(get_test_example_file('target-240p.mp4'))
+	assert video_metadata.get('fps') == 25.0
+	assert video_metadata.get('duration') == 10.8
+	assert video_metadata.get('resolution') == (426, 226)
+	assert video_metadata.get('bit_rate') == 138754

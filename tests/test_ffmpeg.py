@@ -9,7 +9,7 @@ import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
-from facefusion.ffprobe import detect_audio_codec, detect_video_codec
+from facefusion.ffprobe import probe_entries
 from facefusion.filesystem import copy_file, is_image
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
 from facefusion.types import EncoderSet
@@ -227,10 +227,10 @@ def test_sanitize_audio() -> None:
 	]
 
 	assert sanitize_audio(create_media_reader(file_path), output_paths[0], 'strict') is True
-	assert detect_audio_codec(output_paths[0]) == 'mp3'
+	assert probe_entries(output_paths[0], ['codec_name']).get('codec_name') == 'mp3'
 
 	assert sanitize_audio(create_media_reader(file_path), output_paths[1], 'moderate') is True
-	assert detect_audio_codec(output_paths[1]) == 'pcm_s16le'
+	assert probe_entries(output_paths[1], ['codec_name']).get('codec_name') == 'pcm_s16le'
 
 
 def test_sanitize_image() -> None:
@@ -250,7 +250,7 @@ def test_sanitize_video() -> None:
 	]
 
 	assert sanitize_video(create_media_reader(file_path), output_paths[0], 'strict') is True
-	assert detect_video_codec(output_paths[0]) == 'h264'
+	assert probe_entries(output_paths[0], ['codec_name']).get('codec_name') == 'h264'
 
 	assert sanitize_video(create_media_reader(file_path), output_paths[1], 'moderate') is True
-	assert detect_video_codec(output_paths[1]) == 'hevc'
+	assert probe_entries(output_paths[1], ['codec_name']).get('codec_name') == 'hevc'
