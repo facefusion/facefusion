@@ -4,7 +4,7 @@ import pytest
 
 from facefusion import process_manager
 from facefusion.download import conditional_download
-from facefusion.ffprobe import extract_audio_metadata, extract_video_metadata, probe_entries
+from facefusion.ffprobe import extract_audio_metadata, extract_video_metadata
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -36,7 +36,7 @@ def test_extract_audio_metadata() -> None:
 	assert audio_metadata.get('bit_rate') == 1536000
 
 
-def test_xtract_video_metadata() -> None:
+def test_extract_video_metadata() -> None:
 	video_metadata = extract_video_metadata(get_test_example_file('target-240p.mp4'))
 
 	assert video_metadata.get('fps') == 25.0
