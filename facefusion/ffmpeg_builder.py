@@ -47,14 +47,6 @@ def set_input(input_path : str) -> List[Command]:
 	return [ '-i', input_path ]
 
 
-def pipe_input(pipe_format : str) -> List[Command]:
-	return [ '-f', pipe_format, '-i', 'pipe:0' ]
-
-
-def pipe_image(image_format : str) -> List[Command]:
-	return [ '-f', 'image2pipe', '-c:v', image_format, '-i', 'pipe:0' ]
-
-
 def set_input_fps(input_fps : Fps) -> List[Command]:
 	return [ '-r', str(input_fps) ]
 

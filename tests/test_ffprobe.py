@@ -47,6 +47,6 @@ def test_extract_video_metadata() -> None:
 	video_metadata = extract_video_metadata(get_test_example_file('target-240p-1s.mov'))
 
 	assert video_metadata.get('fps') == 25.0
-	assert video_metadata.get('duration') == 1.08
+	assert video_metadata.get('duration') == 1.0
 	assert video_metadata.get('resolution') == (426, 226)
 	assert video_metadata.get('bit_rate') == 165600

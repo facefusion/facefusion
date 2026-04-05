@@ -227,10 +227,10 @@ def test_sanitize_audio() -> None:
 	]
 
 	assert sanitize_audio(create_media_reader(file_path), output_paths[0], 'strict') is True
-	assert probe_entries(output_paths[0], ['codec_name']).get('codec_name') == 'mp3'
+	assert probe_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'mp3'
 
 	assert sanitize_audio(create_media_reader(file_path), output_paths[1], 'moderate') is True
-	assert probe_entries(output_paths[1], ['codec_name']).get('codec_name') == 'pcm_s16le'
+	assert probe_entries(output_paths[1], [ 'codec_name' ]).get('codec_name') == 'pcm_s16le'
 
 
 def test_sanitize_image() -> None:
@@ -250,7 +250,7 @@ def test_sanitize_video() -> None:
 	]
 
 	assert sanitize_video(create_media_reader(file_path), output_paths[0], 'strict') is True
-	assert probe_entries(output_paths[0], ['codec_name']).get('codec_name') == 'h264'
+	assert probe_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'h264'
 
 	assert sanitize_video(create_media_reader(file_path), output_paths[1], 'moderate') is True
-	assert probe_entries(output_paths[1], ['codec_name']).get('codec_name') == 'hevc'
+	assert probe_entries(output_paths[1], [ 'codec_name' ]).get('codec_name') == 'hevc'
