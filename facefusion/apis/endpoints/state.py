@@ -34,9 +34,12 @@ async def set_state(request : Request) -> JSONResponse:
 				'message': translator.get('invalid_state_key', 'facefusion.apis')
 			}, status_code = HTTP_400_BAD_REQUEST)
 		__api_args__[key] = value
-		state_manager.set_item(key, value)
 
 	if __api_args__:
+
+		for key, value in __api_args__.items():
+			state_manager.set_item(key, value)
+
 		__api_args__ = args_helper.extract_api_args(state_manager.get_state())
 		return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
