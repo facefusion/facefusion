@@ -2,7 +2,8 @@ import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional, cast
 
-from facefusion.apis.asset_helper import detect_media_type_by_path, extract_audio_metadata, extract_image_metadata, extract_video_metadata
+from facefusion.apis.asset_helper import detect_media_type_by_path, extract_image_metadata
+from facefusion.ffprobe import extract_audio_metadata, extract_video_metadata
 from facefusion.filesystem import get_file_format, get_file_name, get_file_size
 from facefusion.types import AssetId, AssetSet, AssetStore, AssetType, AudioAsset, AudioFormat, ImageAsset, ImageFormat, SessionId, VideoAsset, VideoFormat
 

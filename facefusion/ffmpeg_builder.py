@@ -5,7 +5,7 @@ from typing import List, Optional
 import numpy
 
 from facefusion.filesystem import get_file_format
-from facefusion.types import AudioEncoder, Command, CommandSet, Duration, Fps, StreamMode, VideoEncoder, VideoPreset
+from facefusion.types import AudioEncoder, Command, CommandSet, Duration, Fps, SampleRate, StreamMode, VideoEncoder, VideoPreset
 
 
 def run(commands : List[Command]) -> List[Command]:
@@ -45,14 +45,6 @@ def set_progress() -> List[Command]:
 
 def set_input(input_path : str) -> List[Command]:
 	return [ '-i', input_path ]
-
-
-def pipe_input(pipe_format : str) -> List[Command]:
-	return [ '-f', pipe_format, '-i', 'pipe:0' ]
-
-
-def pipe_image(image_format : str) -> List[Command]:
-	return [ '-f', 'image2pipe', '-c:v', image_format, '-i', 'pipe:0' ]
 
 
 def set_input_fps(input_fps : Fps) -> List[Command]:
@@ -155,7 +147,7 @@ def copy_audio_encoder() -> List[Command]:
 	return set_audio_encoder('copy')
 
 
-def set_audio_sample_rate(audio_sample_rate : int) -> List[Command]:
+def set_audio_sample_rate(audio_sample_rate : SampleRate) -> List[Command]:
 	return [ '-ar', str(audio_sample_rate) ]
 
 

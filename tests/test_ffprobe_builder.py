@@ -13,7 +13,7 @@ def test_chain() -> None:
 		ffprobe_builder.show_entries([ 'sample_rate' ]),
 		ffprobe_builder.format_to_value(),
 		ffprobe_builder.set_input('audio.mp3')
-	) == [ '-show_entries', 'stream=sample_rate', '-of', 'default=noprint_wrappers=1:nokey=1', 'audio.mp3' ]
+	) == [ '-show_entries', 'stream=sample_rate', '-of', 'default=noprint_wrappers=1:nokey=1', '-i', 'audio.mp3' ]
 
 
 def test_show_entries() -> None:
@@ -30,5 +30,5 @@ def test_format_to_key_value() -> None:
 
 
 def test_set_input() -> None:
-	assert set_input('input.mp3') == [ 'input.mp3' ]
-	assert set_input('input.wav') == [ 'input.wav' ]
+	assert set_input('input.mp3') == [ '-i', 'input.mp3' ]
+	assert set_input('input.wav') == [ '-i', 'input.wav' ]

@@ -90,6 +90,8 @@ MelFilterBank : TypeAlias = NDArray[Any]
 Voice : TypeAlias = NDArray[Any]
 VoiceChunk : TypeAlias = NDArray[Any]
 
+BitRate : TypeAlias = int
+SampleRate : TypeAlias = int
 Fps : TypeAlias = float
 Duration : TypeAlias = float
 Color : TypeAlias = Tuple[int, int, int, int]
@@ -185,9 +187,10 @@ MediaType = Literal['image', 'video', 'audio']
 AudioMetadata = TypedDict('AudioMetadata',
 {
 	'duration' : Duration,
-	'frame_total': int,
-	'sample_rate': int,
-	'channels': int
+	'frame_total' : int,
+	'channel_total' : int,
+	'sample_rate' : SampleRate,
+	'bit_rate' : BitRate
 })
 ImageMetadata = TypedDict('ImageMetadata',
 {
@@ -198,7 +201,8 @@ VideoMetadata = TypedDict('VideoMetadata',
 	'duration' : Duration,
 	'frame_total' : int,
 	'fps' : Fps,
-	'resolution' : Resolution
+	'resolution' : Resolution,
+	'bit_rate' : BitRate
 })
 AudioAsset = TypedDict('AudioAsset',
 {
