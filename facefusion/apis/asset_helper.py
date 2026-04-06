@@ -42,7 +42,7 @@ def detect_media_type_by_format(file_format : str) -> Optional[MediaType]:
 
 
 def validate_asset_files(upload_files : List[UploadFile]) -> bool:
-	available_encoder_set = ffmpeg.get_available_encoder_set()
+	available_encoder_set = ffmpeg.get_static_available_encoder_set()
 
 	for upload_file in upload_files:
 		file_format = get_file_format(upload_file.filename)
