@@ -1,4 +1,3 @@
-import os
 import subprocess
 from typing import Dict, List
 
@@ -22,7 +21,7 @@ def probe_entries(media_path : str, entries : List[str]) -> Dict[str, str]:
 	output, _ = run_ffprobe(commands).communicate()
 
 	if output:
-		lines = output.decode().strip().split(os.linesep)
+		lines = output.decode().strip().splitlines()
 
 		for line in lines:
 			if '=' in line:

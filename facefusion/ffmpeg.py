@@ -91,7 +91,7 @@ def open_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 
 def log_debug(process : subprocess.Popen[bytes]) -> None:
 	_, stderr = process.communicate()
-	errors = stderr.decode().split(os.linesep)
+	errors = stderr.decode().splitlines()
 
 	for error in errors:
 		if error.strip():
