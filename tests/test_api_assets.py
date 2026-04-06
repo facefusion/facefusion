@@ -35,6 +35,7 @@ def before_each() -> None:
 	asset_store.clear()
 
 
+#todo: target file uploaded as type=source is semantically wrong, split into separate source and target uploads
 def test_upload_asset(test_client : TestClient) -> None:
 	upload_response = test_client.post('/assets?type=source')
 
@@ -122,6 +123,7 @@ def test_upload_asset(test_client : TestClient) -> None:
 	assert upload_response.status_code == 415
 
 
+#todo: target file uploaded as type=source is semantically wrong, split into separate source and target uploads
 def test_get_assets(test_client : TestClient) -> None:
 	get_response = test_client.get('/assets')
 
@@ -291,6 +293,7 @@ def test_delete_assets(test_client : TestClient) -> None:
 	assert delete_response.status_code == 404
 
 
+#todo: target file uploaded as type=source is semantically wrong, upload as type=target with target_paths
 def test_upload_asset_security_strategies(test_client : TestClient) -> None:
 	source_path = get_test_example_file('source.jpg')
 	target_path = get_test_example_file('target-240p.mp4')
