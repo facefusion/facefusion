@@ -1,6 +1,6 @@
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
 
 from facefusion import args_helper, capability_store, session_manager, state_manager, translator
 from facefusion.apis import asset_store
@@ -27,16 +27,22 @@ async def set_state(request : Request) -> JSONResponse:
 	body = await request.json()
 	api_args = capability_store.get_api_arguments()
 
+	for key in body:
+		if key not in api_args:
+			return JSONResponse(
+			{
+				'message': translator.get('invalid_state_key', 'facefusion.apis')
+			}, status_code = HTTP_400_BAD_REQUEST)
+
 	for key, value in body.items():
-		if key in api_args:
-			__api_args__[key] = value
-			state_manager.set_item(key, value)
+		__api_args__[key] = value
+		state_manager.set_item(key, value)
 
 	if __api_args__:
 		__api_args__ = args_helper.extract_api_args(state_manager.get_state())
 		return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
 
-	return JSONResponse({}, status_code = HTTP_404_NOT_FOUND)
+	return JSONResponse({}, status_code = HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 async def select_source(request : Request) -> JSONResponse:
