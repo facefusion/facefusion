@@ -26,4 +26,4 @@ def format_to_key_value() -> List[Command]:
 
 
 def set_input(input_path : str) -> List[Command]:
-	return [ input_path ]
+	return [ '-i', input_path ]
