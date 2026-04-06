@@ -120,7 +120,27 @@ def test_set_state(test_client : TestClient) -> None:
 	set_state_body = set_state_response.json()
 
 	assert set_state_body.get('invalid') is None
-	assert set_state_response.status_code == 200
+	assert set_state_response.status_code == 400
+
+	set_state_response = test_client.put('/state', json =
+	{
+		'execution_providers': [ 'cuda' ],
+		'invalid': 'invalid'
+	}, headers =
+	{
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
+	})
+	set_state_body = set_state_response.json()
+
+	assert set_state_body.get('invalid') is None
+	assert set_state_response.status_code == 400
+
+	set_state_response = test_client.put('/state', json = {}, headers =
+	{
+		'Authorization': 'Bearer ' + create_session_body.get('access_token')
+	})
+
+	assert set_state_response.status_code == 422
 
 
 def test_select_source_assets(test_client : TestClient) -> None:
