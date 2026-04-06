@@ -339,11 +339,12 @@ def sanitize_image(media_chunk_reader : MediaChunkReader, asset_path : str) -> b
 
 def sanitize_video(media_chunk_reader : MediaChunkReader, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
 	if security_strategy == 'strict':
+		available_video_encoders = get_available_encoder_set().get('video')
 		commands = ffmpeg_builder.chain(
 			ffmpeg_builder.set_input('pipe:0'),
-			ffmpeg_builder.set_video_encoder('libx264'), #todo - remove hard coded
-			ffmpeg_builder.set_video_preset('libx264', 'ultrafast'), #todo - remove hard coded
-			ffmpeg_builder.set_pixel_format('libx264'), #todo - remove hard coded
+			ffmpeg_builder.set_video_encoder(available_video_encoders[0]),
+			ffmpeg_builder.set_video_preset(available_video_encoders[0], 'ultrafast'),
+			ffmpeg_builder.set_pixel_format(available_video_encoders[0]),
 			ffmpeg_builder.deep_copy_video(),
 			ffmpeg_builder.deep_copy_audio(),
 			ffmpeg_builder.strip_metadata(),
