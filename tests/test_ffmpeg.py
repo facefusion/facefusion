@@ -7,7 +7,7 @@ import pytest
 
 import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
-from facefusion.common_helper import is_windows
+from facefusion.common_helper import is_linux
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
 from facefusion.ffprobe import probe_entries
@@ -250,7 +250,7 @@ def test_sanitize_video() -> None:
 		get_test_output_path('test-sanitize-video-moderate.mp4')
 	]
 
-	if not is_windows():
+	if is_linux():
 		assert sanitize_video(create_media_reader(file_path), output_paths[0], 'strict') is True
 		assert probe_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'h264'
 	else:
