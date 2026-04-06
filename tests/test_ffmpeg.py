@@ -7,7 +7,6 @@ import pytest
 
 import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
-from facefusion.common_helper import is_linux
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
 from facefusion.ffprobe import probe_entries
@@ -36,9 +35,9 @@ def before_all() -> None:
 
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '48000', get_test_example_file('target-240p-48khz.mp4') ])
 	if sys.platform == 'darwin':
-		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-c:v', 'hevc_videotoolbox', '-an', get_test_example_file('target-240p-h265.mp4') ])
+		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-c:v', 'hevc_videotoolbox', '-an', '-movflags', '+faststart', get_test_example_file('target-240p-h265.mp4') ])
 	else:
-		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-c:v', 'libx265', '-an', get_test_example_file('target-240p-h265.mp4') ])
+		subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-c:v', 'libx265', '-an', '-movflags', '+faststart', get_test_example_file('target-240p-h265.mp4') ])
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
 	state_manager.init_item('output_audio_encoder', 'aac')
@@ -250,12 +249,8 @@ def test_sanitize_video() -> None:
 		get_test_output_path('test-sanitize-video-moderate.mp4')
 	]
 
-	if is_linux():
-		assert sanitize_video(create_media_reader(file_path), output_paths[0], 'strict') is True
-		assert probe_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'h264'
-	else:
-		#todo: fix this test under windows - might be just proper preparation of testfile, as we need moov at the beginning
-		pytest.skip()
+	assert sanitize_video(create_media_reader(file_path), output_paths[0], 'strict') is True
+	assert probe_entries(output_paths[0], [ 'codec_name' ]).get('codec_name') == 'h264'
 
 	assert sanitize_video(create_media_reader(file_path), output_paths[1], 'moderate') is True
 	assert probe_entries(output_paths[1], [ 'codec_name' ]).get('codec_name') == 'hevc'
