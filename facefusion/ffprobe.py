@@ -37,14 +37,14 @@ def extract_audio_metadata(audio_path : str) -> AudioMetadata:
 	duration = float(audio_entries.get('duration'))
 	sample_rate = int(audio_entries.get('sample_rate'))
 	frame_total = int(duration * sample_rate)
-	channnel_total = int(audio_entries.get('channels'))
+	channel_total = int(audio_entries.get('channels'))
 	bit_rate = int(audio_entries.get('bit_rate'))
 
 	audio_metadata : AudioMetadata =\
 	{
 		'duration' : duration,
 		'frame_total' : frame_total,
-		'channel_total' : channnel_total,
+		'channel_total' : channel_total,
 		'sample_rate' : sample_rate,
 		'bit_rate' : bit_rate
 	}

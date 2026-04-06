@@ -1,7 +1,7 @@
 import os
 import subprocess
 import tempfile
-from functools import partial
+from functools import lru_cache, partial
 from typing import List, Optional, cast
 
 from tqdm import tqdm
@@ -127,6 +127,11 @@ def get_available_encoder_set() -> EncoderSet:
 				available_encoder_set['video'].append(vision_encoder) #type:ignore[arg-type]
 
 	return available_encoder_set
+
+
+@lru_cache(maxsize = None)
+def get_static_available_encoder_set() -> EncoderSet:
+	return get_available_encoder_set()
 
 
 def extract_frames(target_path : str, output_path : str, temp_video_resolution : Resolution, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
@@ -339,7 +344,7 @@ def sanitize_image(media_chunk_reader : MediaChunkReader, asset_path : str) -> b
 
 def sanitize_video(media_chunk_reader : MediaChunkReader, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
 	if security_strategy == 'strict':
-		available_video_encoders = get_available_encoder_set().get('video')
+		available_video_encoders = get_static_available_encoder_set().get('video')
 		commands = ffmpeg_builder.chain(
 			ffmpeg_builder.set_input('pipe:0'),
 			ffmpeg_builder.set_video_encoder(available_video_encoders[0]),

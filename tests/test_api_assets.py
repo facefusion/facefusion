@@ -7,7 +7,6 @@ from starlette.testclient import TestClient
 from facefusion import metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
-from facefusion.common_helper import is_windows
 from facefusion.download import conditional_download
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -295,10 +294,6 @@ def test_delete_assets(test_client : TestClient) -> None:
 def test_upload_asset_security_strategies(test_client : TestClient) -> None:
 	source_path = get_test_example_file('source.jpg')
 	target_path = get_test_example_file('target-240p.mp4')
-
-	if is_windows():
-		# todo - fix mp4 file to work with sanitize method under windows
-		pytest.skip()
 
 	for strategy in [ 'strict', 'moderate' ]:
 		state_manager.init_item('api_security_strategy', strategy)
