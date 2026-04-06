@@ -13,6 +13,8 @@ async def get_state(request : Request) -> JSONResponse:
 
 
 async def set_state(request : Request) -> JSONResponse:
+	__api_args__ = {}
+
 	action = request.query_params.get('action')
 	asset_type = request.query_params.get('type')
 
@@ -27,10 +29,14 @@ async def set_state(request : Request) -> JSONResponse:
 
 	for key, value in body.items():
 		if key in api_args:
+			__api_args__[key] = value
 			state_manager.set_item(key, value)
 
-	__api_args__ = args_helper.extract_api_args(state_manager.get_state())
-	return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
+	if __api_args__:
+		__api_args__ = args_helper.extract_api_args(state_manager.get_state())
+		return JSONResponse(state_manager.collect_state(__api_args__), status_code = HTTP_200_OK)
+
+	return JSONResponse({}, status_code = HTTP_404_NOT_FOUND)
 
 
 async def select_source(request : Request) -> JSONResponse:

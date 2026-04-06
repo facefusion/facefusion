@@ -120,7 +120,7 @@ def test_set_state(test_client : TestClient) -> None:
 	set_state_body = set_state_response.json()
 
 	assert set_state_body.get('invalid') is None
-	assert set_state_response.status_code == 200
+	assert set_state_response.status_code == 404
 
 
 def test_select_source_assets(test_client : TestClient) -> None:
