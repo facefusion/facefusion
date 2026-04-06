@@ -27,14 +27,12 @@ async def set_state(request : Request) -> JSONResponse:
 	body = await request.json()
 	api_args = capability_store.get_api_arguments()
 
-	for key in body:
+	for key, value in body.items():
 		if key not in api_args:
 			return JSONResponse(
 			{
 				'message': translator.get('invalid_state_key', 'facefusion.apis')
 			}, status_code = HTTP_400_BAD_REQUEST)
-
-	for key, value in body.items():
 		__api_args__[key] = value
 		state_manager.set_item(key, value)
 
