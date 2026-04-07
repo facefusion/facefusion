@@ -159,6 +159,14 @@
     <div id="contextMenu" class="absolute z-[100] bg-node/95 border border-nodeBorder rounded-lg py-1.5 shadow-2xl min-w-[200px] max-h-[60vh] overflow-y-auto scrollbar-thin backdrop-blur-md" style="display:none;"></div>
     <!-- Toasts -->
     <div id="toasts" class="absolute top-14 right-4 z-[200] space-y-2"></div>
+    <!-- Metrics -->
+    <div id="metricsBar" class="absolute bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-6 px-4 py-2.5 bg-canvas/90 backdrop-blur-md border-t border-nodeBorder" style="display:none;">
+        <div class="flex items-center gap-2"><span class="text-[10px] text-[#555] font-medium">CPU</span><div class="w-16 h-1.5 bg-[#1e1e2a] rounded-full overflow-hidden"><div id="metricCpuBar" class="h-full rounded-full transition-all duration-500"></div></div><span id="metricCpuUtil" class="text-[10px] text-[#555] font-medium tabular-nums w-7 text-right"></span></div>
+        <div class="flex items-center gap-2"><span class="text-[10px] text-[#555] font-medium">RAM</span><div class="w-16 h-1.5 bg-[#1e1e2a] rounded-full overflow-hidden"><div id="metricMemBar" class="h-full rounded-full transition-all duration-500"></div></div><span id="metricMemUtil" class="text-[10px] text-[#555] font-medium tabular-nums w-7 text-right"></span></div>
+        <div id="metricGpuContainer" class="flex items-center gap-2" style="display:none;"><span class="text-[10px] text-[#555] font-medium">GPU</span><div class="w-16 h-1.5 bg-[#1e1e2a] rounded-full overflow-hidden"><div id="metricGpuBar" class="h-full rounded-full transition-all duration-500"></div></div><span id="metricGpuUtil" class="text-[10px] text-[#555] font-medium tabular-nums w-7 text-right"></span></div>
+        <div id="metricVramContainer" class="flex items-center gap-2" style="display:none;"><span class="text-[10px] text-[#555] font-medium">VRAM</span><div class="w-16 h-1.5 bg-[#1e1e2a] rounded-full overflow-hidden"><div id="metricVramBar" class="h-full rounded-full transition-all duration-500"></div></div><span id="metricGpuVram" class="text-[10px] text-[#555] font-medium tabular-nums w-14 text-right"></span></div>
+        <div class="flex items-center gap-2"><span class="text-[10px] text-[#555] font-medium">Disk</span><div class="w-16 h-1.5 bg-[#1e1e2a] rounded-full overflow-hidden"><div id="metricDiskBar" class="h-full rounded-full transition-all duration-500"></div></div><span id="metricDiskUtil" class="text-[10px] text-[#555] font-medium tabular-nums w-7 text-right"></span></div>
+    </div>
     <!-- Loading -->
     <div id="loadingOverlay" class="absolute inset-0 z-[300] bg-canvas flex items-center justify-center">
         <div class="text-center">
@@ -327,7 +335,7 @@ const app = (function() {
         if (fromNode) triggerDownstream(fromNode);
     }
 
-    const AUTO_EXEC_NODES = new Set(['face_detector', 'face_debugger', 'face_swapper', 'face_enhancer']);
+    const AUTO_EXEC_NODES = new Set(['face_detector', 'face_debugger', 'face_swapper', 'face_enhancer', 'face_landmarker']);
     function isAutoExecNode(node) { return AUTO_EXEC_NODES.has(node.key); }
 
     let autoExecTimers = {};
@@ -1005,8 +1013,48 @@ const app = (function() {
         }
     }
 
+    function vu(obj) { return obj.value + ' ' + obj.unit; }
+
+    function usageColor(v) { if (v < 50) return '#10b981'; if (v < 80) return '#f59e0b'; return '#ef4444'; }
+
+    function setBar(barId, labelId, value, unit) {
+        var bar = $(barId);
+        bar.style.width = Math.min(value, 100) + '%';
+        bar.style.backgroundColor = usageColor(value);
+        $(labelId).textContent = value + unit;
+    }
+
+    function updateMetrics(m) {
+        $('metricsBar').style.display = '';
+        setBar('metricCpuBar', 'metricCpuUtil', m.processor.utilization.value, '%');
+        setBar('metricMemBar', 'metricMemUtil', m.memory.utilization.value, '%');
+        if (m.graphic_devices?.length) {
+            var gpu = m.graphic_devices[0];
+            $('metricGpuContainer').style.display = '';
+            setBar('metricGpuBar', 'metricGpuUtil', gpu.utilization.gpu.value, '%');
+            $('metricVramContainer').style.display = '';
+            var vramPct = Math.round(gpu.video_memory.used.value / gpu.video_memory.total.value * 100);
+            $('metricVramBar').style.width = vramPct + '%';
+            $('metricVramBar').style.backgroundColor = usageColor(vramPct);
+            $('metricGpuVram').textContent = gpu.video_memory.used.value + '/' + gpu.video_memory.total.value + ' GB';
+        }
+        if (m.disks?.length) {
+            setBar('metricDiskBar', 'metricDiskUtil', m.disks[0].utilization.value, '%');
+        }
+    }
+
+    function connectMetricsWs() {
+        if (!accessToken) return;
+        apiCall('/metrics').then(m => { if (m) updateMetrics(m); }).catch(() => {});
+        const wsBase = API_BASE.replace(/^http/, 'ws');
+        const ws = new WebSocket(wsBase + '/metrics', [ 'access_token.' + accessToken ]);
+        ws.onmessage = e => { try { updateMetrics(JSON.parse(e.data)); } catch(err) {} };
+        ws.onclose = () => setTimeout(connectMetricsWs, 5000);
+        ws.onerror = () => ws.close();
+    }
+
     lucide.createIcons();
-    init();
+    init().then(connectMetricsWs);
 
     return { addNode, addNodeByKey, addNodeAtCtx, addConnection, deleteNode, removeConnection,
         resetView, fitView, toggleMenu, closeMenu, closeCtx, executeNode, saveToStorage,
