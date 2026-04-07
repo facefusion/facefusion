@@ -35,7 +35,6 @@ def before_each() -> None:
 	asset_store.clear()
 
 
-#todo: target file uploaded as type=source is semantically wrong, split into separate source and target uploads
 def test_upload_asset(test_client : TestClient) -> None:
 	upload_response = test_client.post('/assets?type=source')
 
@@ -52,32 +51,36 @@ def test_upload_asset(test_client : TestClient) -> None:
 	source_path = get_test_example_file('source.jpg')
 	target_path = get_test_example_file('target-240p.mp4')
 
-	with open(source_path, 'rb') as source_file, open(target_path, 'rb') as target_file:
-		source_content = source_file.read()
-		target_content = target_file.read()
+	with open(source_path, 'rb') as source_file:
 		upload_response = test_client.post('/assets?type=source', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		}, files =
 		[
-			('file', ('source.jpg', source_content, 'image/jpeg')),
-			('file', ('target.mp4', target_content, 'video/mp4'))
+			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 		])
 	upload_body = upload_response.json()
-	asset_ids = upload_body.get('asset_ids')
-
-	asset = asset_store.get_asset(session_id, asset_ids[0])
+	asset = asset_store.get_asset(session_id, upload_body.get('asset_ids')[0])
 
 	assert asset.get('media') == 'image'
 	assert asset.get('type') == 'source'
 	assert asset.get('format') == 'jpeg'
+	assert upload_response.status_code == 201
 
-	asset = asset_store.get_asset(session_id, asset_ids[1])
+	with open(target_path, 'rb') as target_file:
+		upload_response = test_client.post('/assets?type=target', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('target.mp4', target_file.read(), 'video/mp4'))
+		])
+	upload_body = upload_response.json()
+	asset = asset_store.get_asset(session_id, upload_body.get('asset_ids')[0])
 
 	assert asset.get('media') == 'video'
-	assert asset.get('type') == 'source'
+	assert asset.get('type') == 'target'
 	assert asset.get('format') == 'mp4'
-
 	assert upload_response.status_code == 201
 
 	audio_path = get_test_example_file('source.mp3')
@@ -123,7 +126,6 @@ def test_upload_asset(test_client : TestClient) -> None:
 	assert upload_response.status_code == 415
 
 
-#todo: target file uploaded as type=source is semantically wrong, split into separate source and target uploads
 def test_get_assets(test_client : TestClient) -> None:
 	get_response = test_client.get('/assets')
 
@@ -149,16 +151,22 @@ def test_get_assets(test_client : TestClient) -> None:
 	source_path = get_test_example_file('source.jpg')
 	target_path = get_test_example_file('target-240p.mp4')
 
-	with open(source_path, 'rb') as source_file, open(target_path, 'rb') as target_file:
-		source_content = source_file.read()
-		target_content = target_file.read()
+	with open(source_path, 'rb') as source_file:
 		test_client.post('/assets?type=source', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		}, files =
 		[
-			('file', ('source.jpg', source_content, 'image/jpeg')),
-			('file', ('target.mp4', target_content, 'video/mp4'))
+			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+		])
+
+	with open(target_path, 'rb') as target_file:
+		test_client.post('/assets?type=target', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('target.mp4', target_file.read(), 'video/mp4'))
 		])
 
 	get_response = test_client.get('/assets', headers =
@@ -293,7 +301,6 @@ def test_delete_assets(test_client : TestClient) -> None:
 	assert delete_response.status_code == 404
 
 
-#todo: target file uploaded as type=source is semantically wrong, upload as type=target with target_paths
 def test_upload_asset_security_strategies(test_client : TestClient) -> None:
 	source_path = get_test_example_file('source.jpg')
 	target_path = get_test_example_file('target-240p.mp4')
@@ -308,21 +315,31 @@ def test_upload_asset_security_strategies(test_client : TestClient) -> None:
 		access_token = create_session_response.json().get('access_token')
 		session_id = session_manager.find_session_id(access_token)
 
-		with open(source_path, 'rb') as source_file, open(target_path, 'rb') as target_file:
-			upload_response = test_client.post('/assets?type=source', headers =
+		with open(source_path, 'rb') as source_file:
+			source_upload_response = test_client.post('/assets?type=source', headers =
 			{
 				'Authorization': 'Bearer ' + access_token
 			}, files =
 			[
-				('file', ('source.jpg', source_file.read(), 'image/jpeg')),
+				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
+			])
+
+		with open(target_path, 'rb') as target_file:
+			target_upload_response = test_client.post('/assets?type=target', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
 				('file', ('target.mp4', target_file.read(), 'video/mp4'))
 			])
 
-		assert upload_response.status_code == 201
+		assert source_upload_response.status_code == 201
+		assert target_upload_response.status_code == 201
 
-		asset_ids = upload_response.json().get('asset_ids')
+		source_asset_id = source_upload_response.json().get('asset_ids')[0]
+		target_asset_id = target_upload_response.json().get('asset_ids')[0]
 
-		assert asset_store.get_asset(session_id, asset_ids[0]).get('media') == 'image'
-		assert asset_store.get_asset(session_id, asset_ids[1]).get('media') == 'video'
+		assert asset_store.get_asset(session_id, source_asset_id).get('media') == 'image'
+		assert asset_store.get_asset(session_id, target_asset_id).get('media') == 'video'
 
 	state_manager.init_item('api_security_strategy', 'strict')
