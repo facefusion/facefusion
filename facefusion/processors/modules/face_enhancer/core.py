@@ -440,11 +440,13 @@ def blend_paste_frame(temp_vision_frame : VisionFrame, paste_vision_frame : Visi
 	name = 'face_enhancer',
 	inputs =
 	[
-		NodePort(name = 'image', type = 'image', label = 'Image')
+		NodePort(name = 'image', type = 'image', label = 'Image'),
+		NodePort(name = 'image', type = 'video', label = 'Input Video')
 	],
 	outputs =
 	[
-		NodePort(name = 'image', type = 'image', label = 'Enhanced Image')
+		NodePort(name = 'image', type = 'image', label = 'Enhanced Image'),
+		NodePort(name = 'image', type = 'video', label = 'Output Video')
 	],
 	state_keys =
 	[

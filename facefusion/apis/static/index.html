@@ -36,6 +36,7 @@
         .port { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #0f0f14; cursor: crosshair; transition: transform 0.15s, box-shadow 0.15s; z-index: 10; }
         .port:hover { transform: scale(1.4); box-shadow: 0 0 10px currentColor; }
         .port-image { background: #38bdf8; color: #38bdf8; }
+        .port-video { background: #ef4444; color: #ef4444; }
         .port-json { background: #f59e0b; color: #f59e0b; }
         .port-image_list { background: #10b981; color: #10b981; }
         .connection-line { fill: none; stroke-width: 2.5; stroke-linecap: round; pointer-events: stroke; cursor: pointer; }
@@ -178,6 +179,56 @@
 <script>
 const API_BASE = 'http://127.0.0.1:8000';
 
+const MP4_EXTENSIONS = new Set(['mp4', 'm4v', 'mov', 'm4a']);
+const MP4_CONTAINER_TYPES = new Set(['moov', 'trak', 'mdia', 'minf', 'stbl', 'edts', 'udta']);
+
+function parseMp4Atoms(view) {
+    var atoms = [], offset = 0;
+    while (offset + 8 <= view.byteLength) {
+        var size = view.getUint32(offset);
+        var type = String.fromCharCode(view.getUint8(offset+4), view.getUint8(offset+5), view.getUint8(offset+6), view.getUint8(offset+7));
+        if (size === 1 && offset + 16 <= view.byteLength) size = view.getUint32(offset+8) * 0x100000000 + view.getUint32(offset+12);
+        if (size === 0) size = view.byteLength - offset;
+        if (size < 8) break;
+        atoms.push({ type: type, offset: offset, size: size });
+        offset += size;
+    }
+    return atoms;
+}
+
+function patchChunkOffsets(view, start, end, delta) {
+    var offset = start;
+    while (offset + 8 <= end) {
+        var size = view.getUint32(offset);
+        var type = String.fromCharCode(view.getUint8(offset+4), view.getUint8(offset+5), view.getUint8(offset+6), view.getUint8(offset+7));
+        if (size < 8) break;
+        if (MP4_CONTAINER_TYPES.has(type)) patchChunkOffsets(view, offset + 8, offset + size, delta);
+        if (type === 'stco') { var n = view.getUint32(offset+12); for (var i = 0; i < n; i++) { var p = offset+16+i*4; view.setUint32(p, view.getUint32(p)+delta); } }
+        if (type === 'co64') { var n = view.getUint32(offset+12); for (var i = 0; i < n; i++) { var p = offset+16+i*8; var hi = view.getUint32(p), lo = view.getUint32(p+4), v = hi*0x100000000+lo+delta; view.setUint32(p, Math.floor(v/0x100000000)); view.setUint32(p+4, v%0x100000000); } }
+        offset += size;
+    }
+}
+
+async function ensureFaststart(file) {
+    var buffer = await file.arrayBuffer();
+    var view = new DataView(buffer);
+    var atoms = parseMp4Atoms(view);
+    var moovAtom = null, mdatAtom = null;
+    for (var i = 0; i < atoms.length; i++) {
+        if (atoms[i].type === 'moov') moovAtom = atoms[i];
+        if (atoms[i].type === 'mdat') mdatAtom = atoms[i];
+    }
+    if (!moovAtom || !mdatAtom || moovAtom.offset < mdatAtom.offset) return file;
+    var moovCopy = buffer.slice(moovAtom.offset, moovAtom.offset + moovAtom.size);
+    patchChunkOffsets(new DataView(moovCopy), 8, moovAtom.size, moovAtom.size);
+    return new File([
+        new Uint8Array(buffer, 0, mdatAtom.offset),
+        new Uint8Array(moovCopy),
+        new Uint8Array(buffer, mdatAtom.offset, moovAtom.offset - mdatAtom.offset),
+        new Uint8Array(buffer, moovAtom.offset + moovAtom.size)
+    ], file.name, { type: file.type });
+}
+
 const app = (function() {
     let nodes = [], connections = [], nextId = 1, nextConnId = 1;
     let panX = 0, panY = 0, zoom = 1;
@@ -216,7 +267,20 @@ const app = (function() {
     }
 
     async function createSession() {
-        // Always create a fresh session to avoid stale token issues
+        var saved = sessionStorage.getItem('ff_session');
+        if (saved) {
+            try {
+                var session = JSON.parse(saved);
+                accessToken = session.access_token;
+                refreshToken = session.refresh_token;
+                var check = await fetch(API_BASE + '/session', { headers: { 'Authorization': 'Bearer ' + accessToken } });
+                if (check.ok) {
+                    setBadge('Restored', true);
+                    setTimeout(function() { setBadge('Connected', true); }, 2000);
+                    return;
+                }
+            } catch(e) {}
+        }
         sessionStorage.removeItem('ff_session');
         const data = await apiCall('/session', { method: 'POST', body: {} });
         accessToken = data.access_token; refreshToken = data.refresh_token;
@@ -243,6 +307,7 @@ const app = (function() {
         lip_syncer:     { icon:'mic',              color:'#a78bfa' },
         age_modifier:   { icon:'clock',            color:'#a78bfa' },
         frame_enhancer: { icon:'image-up',         color:'#a78bfa' },
+        frame_picker:   { icon:'image-down',       color:'#f59e0b' },
     };
     const DEFAULT_META = { icon:'box', color:'#6366f1' };
 
@@ -256,6 +321,12 @@ const app = (function() {
         let items = '<div class="px-3 py-1 text-[9px] text-gray-500 font-semibold uppercase tracking-widest">Image</div>';
         items += `<button onclick="app.addNodeByKey('_image_input');app.closeMenu()" class="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-accent/20 flex items-center gap-2"><i data-lucide="image" class="w-3.5 h-3.5 text-emerald-400"></i> Image Input</button>`;
         items += `<button onclick="app.addNodeByKey('_image_output');app.closeMenu()" class="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-accent/20 flex items-center gap-2"><i data-lucide="monitor" class="w-3.5 h-3.5 text-amber-400"></i> Image Output</button>`;
+        items += '<div class="border-t border-nodeBorder my-1"></div>';
+        items += '<div class="px-3 py-1 text-[9px] text-gray-500 font-semibold uppercase tracking-widest">Video</div>';
+        items += `<button onclick="app.addNodeByKey('_video_input');app.closeMenu()" class="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-accent/20 flex items-center gap-2"><i data-lucide="film" class="w-3.5 h-3.5 text-red-400"></i> Video Input</button>`;
+        items += `<button onclick="app.addNodeByKey('_video_output');app.closeMenu()" class="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-accent/20 flex items-center gap-2"><i data-lucide="clapperboard" class="w-3.5 h-3.5 text-red-400"></i> Video Output</button>`;
+        items += '<div class="border-t border-nodeBorder my-1"></div>';
+        items += '<div class="px-3 py-1 text-[9px] text-gray-500 font-semibold uppercase tracking-widest">Utility</div>';
         items += `<button onclick="app.addNodeByKey('_log_output');app.closeMenu()" class="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-accent/20 flex items-center gap-2"><i data-lucide="scroll-text" class="w-3.5 h-3.5 text-amber-400"></i> Log Output</button>`;
         items += '<div class="border-t border-nodeBorder my-1"></div>';
         items += '<div class="px-3 py-1 text-[9px] text-gray-500 font-semibold uppercase tracking-widest">Nodes</div>';
@@ -297,6 +368,14 @@ const app = (function() {
             node = { id, key, label: 'Image Output', icon: 'monitor', color: '#f59e0b',
                 x, y, width: 260, zIndex: nextId, data: {},
                 inputs: [{ name:'image', type:'image', label:'Image' }], outputs: [] };
+        } else if (key === '_video_input') {
+            node = { id, key, label: 'Video Input', icon: 'film', color: '#ef4444',
+                x, y, width: 260, zIndex: nextId, data: {},
+                inputs: [], outputs: [{ name:'video', type:'video', label:'Video' }] };
+        } else if (key === '_video_output') {
+            node = { id, key, label: 'Video Output', icon: 'clapperboard', color: '#ef4444',
+                x, y, width: 260, zIndex: nextId, data: {},
+                inputs: [{ name:'video', type:'video', label:'Video' }], outputs: [] };
         } else if (key === '_log_output') {
             node = { id, key, label: 'Log Output', icon: 'scroll-text', color: '#f59e0b',
                 x, y, width: 280, zIndex: nextId, data: {},
@@ -335,20 +414,27 @@ const app = (function() {
         if (fromNode) triggerDownstream(fromNode);
     }
 
-    const AUTO_EXEC_NODES = new Set(['face_detector', 'face_debugger', 'face_swapper', 'face_enhancer', 'face_landmarker']);
+    const AUTO_EXEC_NODES = new Set(['face_detector', 'face_debugger', 'face_swapper', 'face_enhancer', 'face_landmarker', 'frame_picker']);
     function isAutoExecNode(node) { return AUTO_EXEC_NODES.has(node.key); }
 
     let autoExecTimers = {};
     function autoExecDebounced(node) {
         clearTimeout(autoExecTimers[node.id]);
         autoExecTimers[node.id] = setTimeout(() => {
-            // Check all inputs are connected and have data
+            // Group input ports by name, require at least one per name connected with data
             const inPorts = node.ports.filter(p => p.dir === 'input');
-            const allConnected = inPorts.every(port => {
-                const conn = connections.find(c => c.toPortId === port.id);
-                if (!conn) return false;
-                const src = getNode(conn.fromNodeId);
-                return src && getNodeOutputBase64(src, conn.fromPortId);
+            const byName = {};
+            inPorts.forEach(port => {
+                if (!byName[port.name]) byName[port.name] = [];
+                byName[port.name].push(port);
+            });
+            const allConnected = Object.values(byName).every(ports => {
+                return ports.some(port => {
+                    const conn = connections.find(c => c.toPortId === port.id);
+                    if (!conn) return false;
+                    const src = getNode(conn.fromNodeId);
+                    return src && getNodeOutputBase64(src, conn.fromPortId);
+                });
             });
             if (allConnected) executeNode(node);
         }, 300);
@@ -367,12 +453,43 @@ const app = (function() {
                 } else if (downstream.key === '_image_output' && port.type === 'image') {
                     const b64 = getNodeOutputBase64(node, port.id);
                     if (b64) { downstream.data.resultUrl = 'data:image/jpeg;base64,' + b64; refreshNodeBody(downstream); }
+                } else if (downstream.key === '_video_output' && port.type === 'video') {
+                    var videoAssetId = getNodeOutputBase64(node, port.id);
+                    if (videoAssetId) {
+                        fetch(API_BASE + '/assets/' + videoAssetId + '?action=download', { headers: { 'Authorization': 'Bearer ' + accessToken } })
+                            .then(function(r) { return r.blob(); })
+                            .then(function(blob) {
+                                downstream.data.videoResultUrl = URL.createObjectURL(blob);
+                                refreshNodeBody(downstream);
+                            });
+                    } else {
+                        var videoSrc = findVideoInput(downstream);
+                        if (videoSrc && videoSrc.data.preview) downstream.data.resultUrl = videoSrc.data.preview;
+                        refreshNodeBody(downstream);
+                    }
                 } else if (downstream.key === '_log_output' && port.type === 'json') {
                     const jsonData = node.data._outputsByPort?.[port.name];
                     if (jsonData !== undefined) { downstream.data.logJson = JSON.stringify(jsonData, null, 2); refreshNodeBody(downstream); }
                 }
             }
         }
+    }
+
+    function findVideoInput(node, visited) {
+        if (!visited) visited = new Set();
+        if (visited.has(node.id)) return null;
+        visited.add(node.id);
+        if (node.key === '_video_input') return node;
+        var inPorts = node.ports.filter(function(p) { return p.dir === 'input'; });
+        for (var i = 0; i < inPorts.length; i++) {
+            var conn = connections.find(function(c) { return c.toPortId === inPorts[i].id; });
+            if (!conn) continue;
+            var src = getNode(conn.fromNodeId);
+            if (!src) continue;
+            var found = findVideoInput(src, visited);
+            if (found) return found;
+        }
+        return null;
     }
 
     function removeConnection(id) { connections = connections.filter(c => c.id !== id); renderSVG(); }
@@ -407,7 +524,7 @@ const app = (function() {
             </div>
             <div class="node-body bg-node px-4 py-3 space-y-2 scrollbar-thin" style="max-height:${node.bodyMaxH || 600}px;overflow-y:auto;border-radius:0 0 11px 11px;">${getNodeBody(node)}</div>
             ${getPortsHTML(node)}
-            ${(node.key === '_image_input' || node.key === '_image_output') ? '<div class="resize-handle"><i data-lucide="grip-horizontal" class="w-full h-full text-gray-600"></i></div>' : ''}`;
+            ${['_image_input','_image_output','_video_input','_video_output'].includes(node.key) ? '<div class="resize-handle"><i data-lucide="grip-horizontal" class="w-full h-full text-gray-600"></i></div>' : ''}`;
 
         div.querySelector('.btn-del').addEventListener('click', e => { e.stopPropagation(); deleteNode(node.id); });
         const resizeEl = div.querySelector('.resize-handle');
@@ -444,6 +561,8 @@ const app = (function() {
     function getNodeBody(node) {
         if (node.key === '_image_input') return getImageInputBody(node);
         if (node.key === '_image_output') return getImageOutputBody(node);
+        if (node.key === '_video_input') return getVideoInputBody(node);
+        if (node.key === '_video_output') return getVideoOutputBody(node);
         if (node.key === '_log_output') return getLogOutputBody(node);
         return getApiNodeBody(node);
     }
@@ -482,6 +601,49 @@ const app = (function() {
         </div>`;
     }
 
+    function getVideoInputBody(node) {
+        if (node.data.videoName) {
+            let html = `<div class="relative">`;
+            if (node.data.preview) {
+                html += `<img src="${node.data.preview}" class="w-full rounded-md object-contain bg-black/20"/>`;
+            }
+            html += `<button class="btn-clear-video absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none hover:bg-red-500/80">&times;</button>`;
+            html += `</div>`;
+            html += `<div class="flex items-center justify-between mt-1">`;
+            html += `<span class="text-[10px] text-gray-500 truncate">${esc(node.data.videoName)}</span>`;
+            html += `<span class="text-[10px] text-gray-600 tabular-nums">${node.data.videoFrames || '?'} frames</span>`;
+            html += `</div>`;
+            if (node.data.videoUploading) {
+                html += `<div class="flex items-center justify-center gap-2 mt-1 py-1 text-xs text-red-400"><i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Uploading...</div>`;
+            }
+            if (node.data.videoName && !node.data.assetId && !node.data.videoUploading) {
+                html += `<div class="drop-zone border border-dashed border-red-500/30 rounded-lg p-2 text-center cursor-pointer hover:border-red-500/50 transition-colors mt-1">
+                    <p class="text-red-400 text-[10px] font-medium">Re-upload to resume</p>
+                    <input type="file" accept="video/*" class="file-input hidden"/>
+                </div>`;
+            }
+            return html;
+        }
+        return `<div class="drop-zone border-2 border-dashed border-nodeBorder rounded-lg p-4 text-center cursor-pointer hover:border-red-500/50 transition-colors">
+            <i data-lucide="film" class="w-6 h-6 mx-auto text-gray-500 mb-2"></i>
+            <p class="text-gray-400 text-xs font-medium">Drop video here</p>
+            <p class="text-gray-600 text-[10px] mt-1">or click to browse</p>
+            <input type="file" accept="video/*" class="file-input hidden"/>
+        </div>`;
+    }
+
+    function getVideoOutputBody(node) {
+        if (node.data.videoResultUrl) {
+            return `<div class="border border-nodeBorder rounded-lg overflow-hidden"><video src="${node.data.videoResultUrl}" class="w-full bg-black/20" controls autoplay loop muted></video></div>`;
+        }
+        if (node.data.resultUrl) {
+            return `<div class="border border-nodeBorder rounded-lg overflow-hidden"><img src="${node.data.resultUrl}" class="w-full object-contain bg-black/20"/></div>`;
+        }
+        return `<div class="border border-dashed border-nodeBorder rounded-lg p-4 flex items-center justify-center min-h-[80px]">
+            <div class="text-center"><i data-lucide="clapperboard" class="w-6 h-6 text-gray-600 mx-auto mb-1"></i><p class="text-gray-600 text-[10px]">Connect a video node here</p></div>
+        </div>`;
+    }
+
     function getApiNodeBody(node) {
         let html = '';
         const autoExecFlag = isAutoExecNode(node);
@@ -493,7 +655,21 @@ const app = (function() {
         const capArgs = capabilities?.arguments || {};
         for (const stateKey of (node.stateKeys || [])) {
             const cap = capArgs[stateKey];
-            if (!cap) continue;
+            if (!cap) {
+                // frame_picker: render slider based on connected video metadata
+                if (node.key === 'frame_picker' && stateKey === 'frame_number') {
+                    let videoSrc = findVideoInput(node);
+                    let maxFrames = videoSrc ? (videoSrc.data.videoFrames || 0) : 0;
+                    let fpVal = node.data[stateKey] ?? 0;
+                    let sliderMax = Math.max(maxFrames - 1, 1);
+                    html += `<div><div class="flex justify-between items-baseline"><label class="lbl" style="margin-bottom:0">Frame</label><span class="val" data-display="${stateKey}">${fpVal} / ${maxFrames}</span></div><input type="range" min="0" max="${sliderMax}" step="1" value="${fpVal}" data-bind="${stateKey}" style="margin-top:6px"/></div>`;
+                } else {
+                    const fallbackLabel = stateKey.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    const fallbackVal = node.data[stateKey] ?? 0;
+                    html += `<div><label class="lbl">${esc(fallbackLabel)}</label><input type="number" data-bind="${stateKey}" value="${fallbackVal}"/></div>`;
+                }
+                continue;
+            }
             const label = stateKey.replace(/^[^_]+_[^_]+_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || stateKey;
             const val = node.data[stateKey] ?? cap.default;
 
@@ -536,7 +712,7 @@ const app = (function() {
             html += `<div class="flex items-center justify-center gap-2 mt-1 py-1 text-xs text-accent"><i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Processing...</div>`;
         }
 
-        // Result preview (skip for auto-exec nodes — results flow through ports)
+        // Result preview (skip for auto-exec nodes)
         if (!autoExec) {
             if (node.data.resultUrl) {
                 html += `<div class="border border-nodeBorder rounded-lg overflow-hidden mt-1"><img src="${node.data.resultUrl}" class="w-full object-contain bg-black/20"/></div>`;
@@ -604,12 +780,15 @@ const app = (function() {
         if (fi && dz) {
             dz.addEventListener('click', e => { e.stopPropagation(); fi.click(); });
             dz.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); });
-            dz.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); handleFile(e.dataTransfer.files[0], node); });
-            fi.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0], node); });
+            dz.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); if (node.key === '_video_input') handleVideoFile(e.dataTransfer.files[0], node); else handleFile(e.dataTransfer.files[0], node); });
+            fi.addEventListener('change', e => { if (e.target.files[0]) { if (node.key === '_video_input') handleVideoFile(e.target.files[0], node); else handleFile(e.target.files[0], node); } });
         }
         // Clear image
         const clearBtn = el.querySelector('.btn-clear-img');
         if (clearBtn) clearBtn.addEventListener('click', e => { e.stopPropagation(); node.data.preview = null; node.data.base64 = null; refreshNodeBody(node); });
+        // Clear video
+        const clearVideoBtn = el.querySelector('.btn-clear-video');
+        if (clearVideoBtn) clearVideoBtn.addEventListener('click', e => { e.stopPropagation(); node.data.preview = null; node.data.videoName = null; node.data.assetId = null; node.data.videoFrames = null; node.data.videoFile = null; refreshNodeBody(node); });
 
         // State bindings
         el.querySelectorAll('[data-bind]').forEach(inp => {
@@ -617,7 +796,11 @@ const app = (function() {
             const k = inp.dataset.bind;
             if (inp.type === 'range') {
                 const disp = el.querySelector(`[data-display="${k}"]`);
-                inp.addEventListener('input', () => { node.data[k] = parseFloat(inp.value); if (disp) disp.textContent = Number.isInteger(parseFloat(inp.value)) ? inp.value : parseFloat(inp.value).toFixed(2); if (isAutoExecNode(node)) autoExecDebounced(node); });
+                inp.addEventListener('input', () => {
+                    node.data[k] = parseFloat(inp.value);
+                    if (disp) disp.textContent = Number.isInteger(parseFloat(inp.value)) ? inp.value : parseFloat(inp.value).toFixed(2);
+                    if (isAutoExecNode(node)) autoExecDebounced(node);
+                });
             } else {
                 inp.addEventListener('input', () => { node.data[k] = inp.type === 'number' ? parseFloat(inp.value) : inp.value; if (isAutoExecNode(node)) autoExecDebounced(node); });
             }
@@ -687,6 +870,69 @@ const app = (function() {
         reader.readAsDataURL(file);
     }
 
+    async function handleVideoFile(file, node) {
+        if (!file) return;
+        node.data.videoName = file.name;
+        node.data.videoFile = file;
+        node.data.videoUploading = true;
+        refreshNodeBody(node);
+
+        // Faststart MP4 client-side so backend can read it via pipe
+        var ext = file.name.split('.').pop().toLowerCase();
+        var uploadFile = file;
+        if (MP4_EXTENSIONS.has(ext)) {
+            uploadFile = await ensureFaststart(file);
+        }
+
+        // Extract preview + metadata client-side from faststarted file
+        var objectUrl = URL.createObjectURL(uploadFile);
+        await new Promise(function(resolve) {
+            var vid = document.createElement('video');
+            vid.preload = 'auto';
+            vid.muted = true;
+            vid.src = objectUrl;
+            vid.onloadedmetadata = function() {
+                node.data.videoFps = 30;
+                node.data.videoFrames = Math.round(vid.duration * 30);
+                vid.currentTime = 0.1;
+            };
+            vid.onseeked = function() {
+                var c = document.createElement('canvas');
+                c.width = vid.videoWidth;
+                c.height = vid.videoHeight;
+                c.getContext('2d').drawImage(vid, 0, 0);
+                node.data.preview = c.toDataURL('image/jpeg');
+                refreshNodeBody(node);
+                resolve();
+            };
+            vid.onerror = function() { resolve(); };
+        });
+        URL.revokeObjectURL(objectUrl);
+
+        // Upload faststarted file
+        var formData = new FormData();
+        formData.append('file', uploadFile, file.name);
+        try {
+            var result = await apiCall('/assets?type=target', { method: 'POST', body: formData, headers: {} });
+            if (result && result.asset_ids && result.asset_ids.length) {
+                node.data.assetId = result.asset_ids[0];
+                var assetInfo = await apiCall('/assets/' + node.data.assetId);
+                if (assetInfo && assetInfo.metadata && assetInfo.metadata.frame_total > 0) {
+                    node.data.videoFrames = assetInfo.metadata.frame_total;
+                    node.data.videoFps = assetInfo.metadata.fps || node.data.videoFps;
+                }
+                toast('Video uploaded', 'success');
+            }
+        } catch(err) {
+            toast('Upload failed: ' + err.message, 'error');
+        } finally {
+            node.data.videoUploading = false;
+            refreshNodeBody(node);
+            triggerDownstream(node);
+        }
+    }
+
+
     // ── Execute Node ──
     async function executeNode(node) {
         if (!node.apiNode || node.data._executing) return;
@@ -695,6 +941,7 @@ const app = (function() {
 
         try {
             const inputs = {};
+            const inputTypes = {};
             const inPorts = node.ports.filter(p => p.dir === 'input');
 
             for (const port of inPorts) {
@@ -703,7 +950,11 @@ const app = (function() {
                 const srcNode = getNode(conn.fromNodeId);
                 if (!srcNode) continue;
                 const data = getNodeOutputBase64(srcNode, conn.fromPortId);
-                if (data) inputs[port.name] = data;
+                if (!data) continue;
+                // For duplicate names (image + video), prefer image over video
+                if (inputs[port.name] && inputTypes[port.name] === 'image' && port.type === 'video') continue;
+                inputs[port.name] = data;
+                inputTypes[port.name] = port.type;
             }
 
             const state = {};
@@ -750,8 +1001,8 @@ const app = (function() {
     }
 
     function getNodeOutputBase64(srcNode, fromPortId) {
-        // Image input node: return its base64
         if (srcNode.key === '_image_input') return srcNode.data.base64 || null;
+        if (srcNode.key === '_video_input') return srcNode.data.assetId || null;
         // API node: check which output port
         const port = srcNode.ports.find(p => p.id === fromPortId);
         if (!port) return null;
@@ -909,7 +1160,7 @@ const app = (function() {
             const state = {
                 nodes: nodes.map(n => ({
                     key: n.key, x: n.x, y: n.y, width: n.width, bodyMaxH: n.bodyMaxH,
-                    data: { ...n.data, _executing: false, _outputsByPort: null, _outputB64: null, resultUrl: null, resultJson: null, croppedFaces: null, logJson: null }
+                    data: { ...n.data, _executing: false, _outputsByPort: null, _outputB64: null, resultUrl: null, resultJson: null, croppedFaces: null, logJson: null, videoResultUrl: null, _streaming: false, _videoProcessing: false }
                 })),
                 connections: connections.map(c => ({
                     fromIdx: nodeIdx(c.fromNodeId), fromPort: portIdx(c.fromNodeId, c.fromPortId),
@@ -929,9 +1180,10 @@ const app = (function() {
             if (!state.nodes?.length) return false;
 
             const rebuilt = [];
+            var hasInvalid = false;
             for (const saved of state.nodes) {
                 const n = addNode(saved.key, saved.x, saved.y);
-                if (!n) { rebuilt.push(null); continue; }
+                if (!n) { hasInvalid = true; rebuilt.push(null); continue; }
                 n.width = saved.width || n.width;
                 n.bodyMaxH = saved.bodyMaxH;
                 if (saved.data) {
@@ -958,11 +1210,28 @@ const app = (function() {
                 });
             }
 
+            if (hasInvalid) { sessionStorage.removeItem(STORAGE_KEY); nodes = []; connections = []; return false; }
             if (state.view) { panX = state.view.panX; panY = state.view.panY; zoom = state.view.zoom; }
             renderAll(); updateView();
-            requestAnimationFrame(() => nodes.forEach(n => { updatePortPositions(n); refreshNodeBody(n); }));
+            requestAnimationFrame(() => {
+                nodes.forEach(n => { updatePortPositions(n); refreshNodeBody(n); });
+                // Re-hydrate video inputs from server
+                nodes.filter(n => n.key === '_video_input' && n.data.assetId).forEach(n => {
+                    apiCall('/assets/' + n.data.assetId).then(info => {
+                        if (info && info.metadata) {
+                            n.data.videoFrames = info.metadata.frame_total || n.data.videoFrames;
+                            n.data.videoFps = info.metadata.fps || n.data.videoFps;
+                        }
+                        return apiCall('/assets/' + n.data.assetId + '/frame/0');
+                    }).then(frame => {
+                        if (frame && frame.frame) n.data.preview = 'data:image/jpeg;base64,' + frame.frame;
+                        refreshNodeBody(n);
+                        triggerDownstream(n);
+                    }).catch(() => {});
+                });
+            });
             return true;
-        } catch(e) { return false; }
+        } catch(e) { sessionStorage.removeItem(STORAGE_KEY); return false; }
     }
 
     setInterval(saveToStorage, 5000);

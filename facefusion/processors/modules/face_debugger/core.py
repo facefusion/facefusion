@@ -234,11 +234,13 @@ def draw_face_landmark_68_5(target_face : Face, temp_vision_frame : VisionFrame)
 	name = 'face_debugger',
 	inputs =
 	[
-		NodePort(name = 'image', type = 'image', label = 'Image')
+		NodePort(name = 'image', type = 'image', label = 'Image'),
+		NodePort(name = 'image', type = 'video', label = 'Input Video')
 	],
 	outputs =
 	[
-		NodePort(name = 'image', type = 'image', label = 'Debug Image')
+		NodePort(name = 'image', type = 'image', label = 'Debug Image'),
+		NodePort(name = 'image', type = 'video', label = 'Output Video')
 	],
 	state_keys =
 	[

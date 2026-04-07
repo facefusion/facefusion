@@ -786,11 +786,13 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 	inputs =
 	[
 		NodePort(name = 'source', type = 'image', label = 'Source Face'),
-		NodePort(name = 'target', type = 'image', label = 'Target Image')
+		NodePort(name = 'target', type = 'image', label = 'Target Image'),
+		NodePort(name = 'target', type = 'video', label = 'Target Video')
 	],
 	outputs =
 	[
-		NodePort(name = 'image', type = 'image', label = 'Swapped Image')
+		NodePort(name = 'image', type = 'image', label = 'Swapped Image'),
+		NodePort(name = 'image', type = 'video', label = 'Output Video')
 	],
 	state_keys =
 	[
