@@ -6,6 +6,7 @@ import numpy
 import facefusion.capability_store
 import facefusion.jobs.job_manager
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, logger, state_manager, translator, video_manager
+from facefusion.node import NodeContext, NodePort, node
 from facefusion.face_analyser import scale_face
 from facefusion.face_helper import warp_face_by_face_landmark_5
 from facefusion.face_masker import create_area_mask, create_box_mask, create_occlusion_mask, create_region_mask
@@ -14,6 +15,7 @@ from facefusion.filesystem import in_directory, is_image, is_video
 from facefusion.processors.modules.face_debugger import choices as face_debugger_choices
 from facefusion.processors.modules.face_debugger.types import FaceDebuggerInputs
 from facefusion.processors.types import ApplyStateItem, ProcessorOutputs
+from typing import Optional
 from facefusion.program_helper import find_argument_group
 from facefusion.types import Args, Face, InferencePool, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
@@ -77,14 +79,14 @@ def post_process() -> None:
 		face_recognizer.clear_inference_pool()
 
 
-def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
-	face_debugger_items = state_manager.get_item('face_debugger_items')
+def debug_face(target_face : Face, temp_vision_frame : VisionFrame, ctx : NodeContext = None) -> VisionFrame:
+	face_debugger_items = ctx.get_item('face_debugger_items') if ctx else state_manager.get_item('face_debugger_items')
 
 	if 'bounding-box' in face_debugger_items:
 		temp_vision_frame = draw_bounding_box(target_face, temp_vision_frame)
 
 	if 'face-mask' in face_debugger_items:
-		temp_vision_frame = draw_face_mask(target_face, temp_vision_frame)
+		temp_vision_frame = draw_face_mask(target_face, temp_vision_frame, ctx)
 
 	if 'face-landmark-5' in face_debugger_items:
 		temp_vision_frame = draw_face_landmark_5(target_face, temp_vision_frame)
@@ -122,7 +124,8 @@ def draw_bounding_box(target_face : Face, temp_vision_frame : VisionFrame) -> Vi
 	return temp_vision_frame
 
 
-def draw_face_mask(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+def draw_face_mask(target_face : Face, temp_vision_frame : VisionFrame, ctx : NodeContext = None) -> VisionFrame:
+	_get = ctx.get_item if ctx else state_manager.get_item
 	crop_masks = []
 	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_5 = target_face.landmark_set.get('5')
@@ -136,21 +139,21 @@ def draw_face_mask(target_face : Face, temp_vision_frame : VisionFrame) -> Visio
 	if numpy.array_equal(face_landmark_5, face_landmark_5_68):
 		mask_color = 255, 255, 0
 
-	if 'box' in state_manager.get_item('face_mask_types'):
-		box_mask = create_box_mask(crop_vision_frame, 0, state_manager.get_item('face_mask_padding'))
+	if 'box' in _get('face_mask_types'):
+		box_mask = create_box_mask(crop_vision_frame, 0, _get('face_mask_padding'))
 		crop_masks.append(box_mask)
 
-	if 'occlusion' in state_manager.get_item('face_mask_types'):
+	if 'occlusion' in _get('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 
-	if 'area' in state_manager.get_item('face_mask_types'):
+	if 'area' in _get('face_mask_types'):
 		face_landmark_68 = cv2.transform(face_landmark_68.reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-		area_mask = create_area_mask(crop_vision_frame, face_landmark_68, state_manager.get_item('face_mask_areas'))
+		area_mask = create_area_mask(crop_vision_frame, face_landmark_68, _get('face_mask_areas'))
 		crop_masks.append(area_mask)
 
-	if 'region' in state_manager.get_item('face_mask_types'):
-		region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))
+	if 'region' in _get('face_mask_types'):
+		region_mask = create_region_mask(crop_vision_frame, _get('face_mask_regions'))
 		crop_masks.append(region_mask)
 
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
@@ -227,18 +230,51 @@ def draw_face_landmark_68_5(target_face : Face, temp_vision_frame : VisionFrame)
 	return temp_vision_frame
 
 
-def process_frame(inputs : FaceDebuggerInputs) -> ProcessorOutputs:
+@node(
+	name = 'face_debugger',
+	inputs =
+	[
+		NodePort(name = 'image', type = 'image', label = 'Image')
+	],
+	outputs =
+	[
+		NodePort(name = 'image', type = 'image', label = 'Debug Image')
+	],
+	state_keys =
+	[
+		'face_debugger_items'
+	],
+	description = 'Visualize face landmarks, bounding boxes and masks'
+)
+def process_frame(inputs, ctx = None):
+	from facefusion.face_analyser import get_many_faces
+	from facefusion.vision import extract_vision_mask
+
+	vision_frame = inputs.get('image')
+
+	if isinstance(inputs.get('reference_vision_frame'), type(None)) and vision_frame is not None:
+		target_vision_frame = vision_frame
+		temp_vision_frame = vision_frame.copy()
+		temp_vision_mask = extract_vision_mask(temp_vision_frame)
+		target_faces = get_many_faces([ target_vision_frame ])
+
+		if target_faces:
+			for target_face in target_faces:
+				temp_vision_frame = debug_face(target_face, temp_vision_frame, ctx)
+
+		return { 'image' : temp_vision_frame }
+
 	reference_vision_frame = inputs.get('reference_vision_frame')
-	target_vision_frame = inputs.get('target_vision_frame')
-	temp_vision_frame = inputs.get('temp_vision_frame')
+	target_vision_frame = inputs.get('target_vision_frame', vision_frame)
+	temp_vision_frame = inputs.get('temp_vision_frame', vision_frame.copy() if vision_frame is not None else None)
 	temp_vision_mask = inputs.get('temp_vision_mask')
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
 	if target_faces:
 		for target_face in target_faces:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
-			temp_vision_frame = debug_face(target_face, temp_vision_frame)
+			temp_vision_frame = debug_face(target_face, temp_vision_frame, ctx)
 
-	return temp_vision_frame, temp_vision_mask
+	return { 'image' : temp_vision_frame }
 
 

@@ -14,8 +14,10 @@ from facefusion.face_masker import create_box_mask, create_occlusion_mask
 from facefusion.face_selector import select_faces
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path
 from facefusion.processors.modules.face_enhancer import choices as face_enhancer_choices
+from facefusion.node import NodeContext, NodePort, node
 from facefusion.processors.modules.face_enhancer.types import FaceEnhancerInputs, FaceEnhancerWeight
 from facefusion.processors.types import ApplyStateItem, ProcessorOutputs
+from typing import Optional
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
 from facefusion.types import Args, DownloadScope, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
@@ -360,27 +362,28 @@ def post_process() -> None:
 		face_recognizer.clear_inference_pool()
 
 
-def enhance_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+def enhance_face(target_face : Face, temp_vision_frame : VisionFrame, ctx : NodeContext = None) -> VisionFrame:
+	_get = ctx.get_item if ctx else state_manager.get_item
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, model_size)
-	box_mask = create_box_mask(crop_vision_frame, state_manager.get_item('face_mask_blur'), (0, 0, 0, 0))
+	box_mask = create_box_mask(crop_vision_frame, _get('face_mask_blur'), (0, 0, 0, 0))
 	crop_masks =\
 	[
 		box_mask
 	]
 
-	if 'occlusion' in state_manager.get_item('face_mask_types'):
+	if 'occlusion' in _get('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 
 	crop_vision_frame = prepare_crop_frame(crop_vision_frame)
-	face_enhancer_weight = numpy.array([ state_manager.get_item('face_enhancer_weight') ]).astype(numpy.double)
+	face_enhancer_weight = numpy.array([ _get('face_enhancer_weight') ]).astype(numpy.double)
 	crop_vision_frame = forward(crop_vision_frame, face_enhancer_weight)
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
-	temp_vision_frame = blend_paste_frame(temp_vision_frame, paste_vision_frame)
+	temp_vision_frame = blend_paste_frame(temp_vision_frame, paste_vision_frame, ctx)
 	return temp_vision_frame
 
 
@@ -426,22 +429,57 @@ def normalize_crop_frame(crop_vision_frame : VisionFrame) -> VisionFrame:
 	return crop_vision_frame
 
 
-def blend_paste_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame) -> VisionFrame:
-	face_enhancer_blend = 1 - (state_manager.get_item('face_enhancer_blend') / 100)
+def blend_paste_frame(temp_vision_frame : VisionFrame, paste_vision_frame : VisionFrame, ctx : NodeContext = None) -> VisionFrame:
+	_get = ctx.get_item if ctx else state_manager.get_item
+	face_enhancer_blend = 1 - (_get('face_enhancer_blend') / 100)
 	temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame, 1 - face_enhancer_blend)
 	return temp_vision_frame
 
 
-def process_frame(inputs : FaceEnhancerInputs) -> ProcessorOutputs:
+@node(
+	name = 'face_enhancer',
+	inputs =
+	[
+		NodePort(name = 'image', type = 'image', label = 'Image')
+	],
+	outputs =
+	[
+		NodePort(name = 'image', type = 'image', label = 'Enhanced Image')
+	],
+	state_keys =
+	[
+		'face_enhancer_model',
+		'face_enhancer_blend',
+		'face_enhancer_weight'
+	],
+	description = 'Enhance and restore face quality'
+)
+def process_frame(inputs, ctx = None):
+	from facefusion.face_analyser import get_many_faces
+	from facefusion.vision import extract_vision_mask
+
+	vision_frame = inputs.get('image')
+
+	if isinstance(inputs.get('reference_vision_frame'), type(None)) and vision_frame is not None:
+		target_vision_frame = vision_frame
+		temp_vision_frame = vision_frame.copy()
+		target_faces = get_many_faces([ target_vision_frame ])
+
+		if target_faces:
+			for target_face in target_faces:
+				temp_vision_frame = enhance_face(target_face, temp_vision_frame, ctx)
+
+		return { 'image' : temp_vision_frame }
+
 	reference_vision_frame = inputs.get('reference_vision_frame')
-	target_vision_frame = inputs.get('target_vision_frame')
-	temp_vision_frame = inputs.get('temp_vision_frame')
+	target_vision_frame = inputs.get('target_vision_frame', vision_frame)
+	temp_vision_frame = inputs.get('temp_vision_frame', vision_frame.copy() if vision_frame is not None else None)
 	temp_vision_mask = inputs.get('temp_vision_mask')
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
 
 	if target_faces:
 		for target_face in target_faces:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
-			temp_vision_frame = enhance_face(target_face, temp_vision_frame)
+			temp_vision_frame = enhance_face(target_face, temp_vision_frame, ctx)
 
-	return temp_vision_frame, temp_vision_mask
+	return { 'image' : temp_vision_frame }

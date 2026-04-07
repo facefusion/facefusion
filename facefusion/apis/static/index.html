@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Area</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        canvas: '#0f0f14',
+                        node: '#1a1a24',
+                        nodeBorder: '#2a2a3a',
+                        accent: '#818cf8',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html { color-scheme: dark; }
+        body { margin: 0; overflow: hidden; background: #0f0f14; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; color: #fff; }
+        .canvas-grid { background-image: radial-gradient(circle, #ffffff08 1px, transparent 1px); background-size: 24px 24px; }
+        .node-card { backdrop-filter: blur(12px); transition: box-shadow 0.15s, border-color 0.15s; user-select: none; overflow: visible; }
+        .node-card input, .node-card select { user-select: text; }
+        .node-card:hover { border-color: #3d3d55; }
+        .node-card.selected { outline: 1px solid rgba(129,140,248,0.5); }
+        .node-card.dragging { box-shadow: 0 0 30px rgba(99,102,241,0.25); border-color: #6366f1; }
+        .port { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #0f0f14; cursor: crosshair; transition: transform 0.15s, box-shadow 0.15s; z-index: 10; }
+        .port:hover { transform: scale(1.4); box-shadow: 0 0 10px currentColor; }
+        .port-image { background: #38bdf8; color: #38bdf8; }
+        .port-json { background: #f59e0b; color: #f59e0b; }
+        .port-image_list { background: #10b981; color: #10b981; }
+        .connection-line { fill: none; stroke-width: 2.5; stroke-linecap: round; pointer-events: stroke; cursor: pointer; }
+        .connection-line:hover { stroke-width: 4; filter: drop-shadow(0 0 6px rgba(99,102,241,0.5)); }
+        .temp-connection { fill: none; stroke-width: 2; stroke-dasharray: 8 4; stroke-linecap: round; pointer-events: none; opacity: 0.7; }
+        input[type="text"], input[type="number"], textarea {
+            background: #16161f; border: 1px solid #2a2a3a; color: #ffffff;
+            border-radius: 6px; padding: 8px 12px; font-size: 13px; font-weight: 500;
+            font-family: 'Inter', system-ui, sans-serif; letter-spacing: 0.01em;
+            line-height: 1.4; width: 100%; outline: none; transition: border-color 0.15s ease;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus { border-color: #6366f1; }
+        input[type="number"] { -moz-appearance: textfield; }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        select.native-hidden { display: none !important; }
+        .cdrop { position: relative; width: 100%; user-select: none; }
+        .cdrop-trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #16161f; border: 1px solid #2a2a3a; border-radius: 6px;
+            padding: 7px 10px; cursor: pointer; transition: border-color 0.15s ease; min-height: 34px;
+        }
+        .cdrop-trigger:hover { border-color: #3d3d55; }
+        .cdrop-trigger.open { border-color: #6366f1; border-radius: 6px 6px 0 0; }
+        .cdrop-value { color: #fff; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cdrop-chevron { width: 12px; height: 12px; flex-shrink: 0; margin-left: 6px; color: #4a4a6a; transition: transform 0.15s ease; }
+        .cdrop-trigger.open .cdrop-chevron { transform: rotate(180deg); }
+        .cdrop-menu {
+            display: none; position: absolute; top: 100%; left: 0; right: 0;
+            background: #16161f; border: 1px solid #6366f1; border-top: none;
+            border-radius: 0 0 6px 6px; max-height: 180px; overflow-y: auto; z-index: 200;
+        }
+        .cdrop-menu.open { display: block; }
+        .cdrop-item {
+            padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: 400;
+            font-family: 'Inter', sans-serif; color: #94a3b8; transition: background 0.1s ease;
+        }
+        .cdrop-item:hover { background: #6366f120; color: #e2e8f0; }
+        .cdrop-item.active { color: #a78bfa; font-weight: 500; }
+        .cdrop-menu::-webkit-scrollbar { width: 3px; }
+        .cdrop-menu::-webkit-scrollbar-track { background: transparent; }
+        .cdrop-menu::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
+
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 6px;
+            background: #1e1e2a; border-radius: 3px; outline: none; border: none; padding: 0;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px; background: #1e1e2a; border-radius: 3px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px; margin-top: -5px;
+            background: #6366f1; border-radius: 50%; cursor: pointer;
+            box-shadow: 0 0 0 3px #0f0f14, 0 0 8px rgba(99,102,241,0.3);
+            transition: box-shadow 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 0 3px #0f0f14, 0 0 12px rgba(99,102,241,0.5);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 16px; height: 16px; border: none;
+            background: #6366f1; border-radius: 50%; cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+            width: 16px; height: 16px; border: 2px solid #3d3d55; border-radius: 4px;
+            background: #16161f; cursor: pointer; position: relative;
+            transition: all 0.15s ease; flex-shrink: 0;
+        }
+        input[type="checkbox"]:checked {
+            background: #6366f1; border-color: #6366f1;
+        }
+        input[type="checkbox"]:checked::after {
+            content: ''; position: absolute; left: 3px; top: 0px; width: 6px; height: 10px;
+            border: solid #ffffff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+        }
+        input[type="checkbox"]:hover { border-color: #6366f1; }
+
+        .lbl { font-size: 11.5px; font-weight: 500; color: #94a3b8; letter-spacing: 0.02em; margin-bottom: 4px; display: block; }
+        .val { font-size: 11.5px; font-weight: 500; color: #94a3b8; font-variant-numeric: tabular-nums; }
+        .resize-handle { position: absolute; bottom: 0; right: 0; width: 16px; height: 16px; cursor: se-resize; opacity: 0; transition: opacity 0.15s; }
+        .node-card:hover .resize-handle { opacity: 1; }
+        .toast { animation: slideIn 0.25s ease; backdrop-filter: blur(12px); }
+        @keyframes slideIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- Toolbar -->
+    <div id="toolbar" class="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2.5 bg-canvas/90 backdrop-blur-md border-b border-nodeBorder">
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+                <i data-lucide="workflow" class="w-4 h-4 text-accent"></i>
+                <span class="text-white font-semibold text-sm">Workflow Area</span>
+            </div>
+            <div class="w-px h-4 bg-nodeBorder"></div>
+            <div id="toolbarNodes" class="relative flex items-center gap-1"></div>
+        </div>
+        <div class="flex items-center gap-2">
+            <div id="sessionBadge" class="text-[10px] text-gray-600 font-medium px-2 py-1 rounded bg-white/5 border border-white/5">No session</div>
+            <span class="text-gray-500 text-xs font-medium tabular-nums" id="zoomLabel">100%</span>
+            <button onclick="app.resetView()" class="text-gray-400 text-xs px-2 py-1.5 rounded-md hover:bg-white/5"><i data-lucide="home" class="w-3 h-3 inline"></i> Reset</button>
+            <button onclick="app.fitView()" class="text-gray-400 text-xs px-2 py-1.5 rounded-md hover:bg-white/5"><i data-lucide="maximize-2" class="w-3 h-3 inline"></i> Fit</button>
+        </div>
+    </div>
+    <!-- Canvas -->
+    <div id="canvas" class="w-screen h-screen canvas-grid">
+        <svg id="svgLayer" class="absolute inset-0 w-full h-full" style="z-index:5; pointer-events:none;">
+            <defs><linearGradient id="wireGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#6366f1"/><stop offset="100%" style="stop-color:#a78bfa"/></linearGradient></defs>
+            <g id="svgContent"></g>
+        </svg>
+        <div id="nodesContainer" class="absolute inset-0" style="z-index:10; transform-origin:0 0;"></div>
+    </div>
+    <!-- Context Menu -->
+    <div id="contextMenu" class="absolute z-[100] bg-node/95 border border-nodeBorder rounded-lg py-1.5 shadow-2xl min-w-[200px] max-h-[60vh] overflow-y-auto scrollbar-thin backdrop-blur-md" style="display:none;"></div>
+    <!-- Toasts -->
+    <div id="toasts" class="absolute top-14 right-4 z-[200] space-y-2"></div>
+    <!-- Loading -->
+    <div id="loadingOverlay" class="absolute inset-0 z-[300] bg-canvas flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin mx-auto mb-3"></div>
+            <p class="text-gray-400 text-sm font-medium">Connecting...</p>
+        </div>
+    </div>
+</div>
+<script>
+const API_BASE = 'http://127.0.0.1:8000';
+
+const app = (function() {
+    let nodes = [], connections = [], nextId = 1, nextConnId = 1;
+    let panX = 0, panY = 0, zoom = 1;
+    let isPanning = false, panStart = {x:0,y:0}, spaceHeld = false;
+    let dragState = null, resizeState = null, tempConnection = null, selectedNodes = [];
+    let accessToken = null, refreshToken = null;
+    let nodeDefinitions = {}; // from GET /nodes
+    let capabilities = null; // from GET /capabilities (for state_key choices)
+    let contextMenuPos = null;
+
+    const $ = id => document.getElementById(id);
+    const esc = s => { if (s==null) return ''; const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; };
+    const nodeEl = id => document.querySelector(`[data-node-id="${id}"]`);
+    const getNode = id => nodes.find(n => n.id === id);
+
+    // ── Toast ──
+    function toast(msg, type='info') {
+        const colors = {info:'border-accent/40 text-gray-300', success:'border-emerald-500/40 text-emerald-300', error:'border-red-500/40 text-red-300'};
+        const el = document.createElement('div');
+        el.className = `toast text-xs font-medium px-3 py-2 rounded-lg bg-node/95 border ${colors[type]||colors.info}`;
+        el.textContent = msg;
+        $('toasts').appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+
+    // ── API ──
+    async function apiCall(path, opts = {}) {
+        const headers = opts.headers || {};
+        if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+        if (opts.body && !(opts.body instanceof FormData)) { headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(opts.body); }
+        const res = await fetch(API_BASE + path, { ...opts, headers });
+        if (!res.ok) throw new Error(`API ${res.status}`);
+        const text = await res.text();
+        if (!text) return null;
+        return JSON.parse(text);
+    }
+
+    async function createSession() {
+        // Always create a fresh session to avoid stale token issues
+        sessionStorage.removeItem('ff_session');
+        const data = await apiCall('/session', { method: 'POST', body: {} });
+        accessToken = data.access_token; refreshToken = data.refresh_token;
+        sessionStorage.setItem('ff_session', JSON.stringify({ access_token: accessToken, refresh_token: refreshToken }));
+        setBadge('Connected', true);
+    }
+
+    function setBadge(text, ok) {
+        const b = $('sessionBadge');
+        b.textContent = text;
+        b.className = ok
+            ? 'text-[10px] text-emerald-400 font-medium px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20'
+            : 'text-[10px] text-red-400 font-medium px-2 py-1 rounded bg-red-500/10 border border-red-500/20';
+    }
+
+    // ── Meta for known node icons/colors ──
+    const NODE_META = {
+        face_detector:  { icon:'scan-face',        color:'#38bdf8' },
+        face_landmarker:{ icon:'locate',           color:'#38bdf8' },
+        face_debugger:  { icon:'bug',              color:'#f59e0b' },
+        face_enhancer:  { icon:'sparkles',         color:'#a78bfa' },
+        face_swapper:   { icon:'arrow-left-right', color:'#f472b6' },
+        face_editor:    { icon:'pen-tool',         color:'#a78bfa' },
+        lip_syncer:     { icon:'mic',              color:'#a78bfa' },
+        age_modifier:   { icon:'clock',            color:'#a78bfa' },
+        frame_enhancer: { icon:'image-up',         color:'#a78bfa' },
+    };
+    const DEFAULT_META = { icon:'box', color:'#6366f1' };
+
+    function getNodeMeta(name) { return NODE_META[name] || DEFAULT_META; }
+    function getNodeLabel(name) { return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+
+    // ── Build toolbar + context menu from /nodes ──
+    function buildUI() {
+        // Toolbar dropdown
+        const tb = $('toolbarNodes');
+        let items = '<div class="px-3 py-1 text-[9px] text-gray-500 font-semibold uppercase tracking-widest">Image</div>';
+        items += `<button onclick="app.addNodeByKey('_image_input');app.closeMenu()" class="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-accent/20 flex items-center gap-2"><i data-lucide="image" class="w-3.5 h-3.5 text-emerald-400"></i> Image Input</button>`;
+        items += `<button onclick="app.addNodeByKey('_image_output');app.closeMenu()" class="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-accent/20 flex items-center gap-2"><i data-lucide="monitor" class="w-3.5 h-3.5 text-amber-400"></i> Image Output</button>`;
+        items += `<button onclick="app.addNodeByKey('_log_output');app.closeMenu()" class="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-accent/20 flex items-center gap-2"><i data-lucide="scroll-text" class="w-3.5 h-3.5 text-amber-400"></i> Log Output</button>`;
+        items += '<div class="border-t border-nodeBorder my-1"></div>';
+        items += '<div class="px-3 py-1 text-[9px] text-gray-500 font-semibold uppercase tracking-widest">Nodes</div>';
+        for (const [name, def] of Object.entries(nodeDefinitions)) {
+            const m = getNodeMeta(name);
+            items += `<button onclick="app.addNodeByKey('${name}');app.closeMenu()" class="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-accent/20 flex items-center gap-2"><i data-lucide="${m.icon}" class="w-3.5 h-3.5" style="color:${m.color}"></i> ${esc(getNodeLabel(name))}</button>`;
+        }
+        tb.innerHTML = `
+            <button id="addNodeBtn" onclick="app.toggleMenu()" class="text-gray-300 text-xs px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-nodeBorder hover:bg-white/5">
+                <i data-lucide="plus" class="w-3.5 h-3.5 text-accent"></i> Add Node <i data-lucide="chevron-down" class="w-3 h-3 text-gray-500 ml-0.5"></i>
+            </button>
+            <div id="toolbarMenu" class="absolute top-full left-0 mt-1 bg-node/95 border border-nodeBorder rounded-lg py-1.5 shadow-2xl min-w-[200px] max-h-[60vh] overflow-y-auto scrollbar-thin backdrop-blur-md" style="display:none; z-index:100;">${items}</div>`;
+
+        // Context menu (same items)
+        $('contextMenu').innerHTML = items.replace(/app\.closeMenu\(\)/g, 'app.closeCtx()').replace(/app\.addNodeByKey/g, 'app.addNodeAtCtx');
+
+        lucide.createIcons();
+    }
+
+    function toggleMenu() { const m = $('toolbarMenu'); m.style.display = m.style.display === 'none' ? 'block' : 'none'; lucide.createIcons(); }
+    function closeMenu() { const m = $('toolbarMenu'); if (m) m.style.display = 'none'; }
+    function closeCtx() { $('contextMenu').style.display = 'none'; }
+    document.addEventListener('click', e => {
+        if (!e.target.closest('#toolbarNodes')) closeMenu();
+        if (!e.target.closest('#contextMenu')) closeCtx();
+        if (!e.target.closest('.cdrop')) document.querySelectorAll('.cdrop-trigger.open').forEach(t => { t.classList.remove('open'); t.nextElementSibling.classList.remove('open'); });
+    });
+
+    // ── Node creation ──
+    function addNode(key, x, y) {
+        const id = 'node_' + nextId++;
+        let node;
+
+        if (key === '_image_input') {
+            node = { id, key, label: 'Image Input', icon: 'image', color: '#10b981',
+                x, y, width: 260, zIndex: nextId, data: {},
+                inputs: [], outputs: [{ name:'image', type:'image', label:'Image' }] };
+        } else if (key === '_image_output') {
+            node = { id, key, label: 'Image Output', icon: 'monitor', color: '#f59e0b',
+                x, y, width: 260, zIndex: nextId, data: {},
+                inputs: [{ name:'image', type:'image', label:'Image' }], outputs: [] };
+        } else if (key === '_log_output') {
+            node = { id, key, label: 'Log Output', icon: 'scroll-text', color: '#f59e0b',
+                x, y, width: 280, zIndex: nextId, data: {},
+                inputs: [{ name:'data', type:'json', label:'Data' }], outputs: [] };
+        } else {
+            const def = nodeDefinitions[key];
+            if (!def) { toast(`Unknown node: ${key}`, 'error'); return null; }
+            const m = getNodeMeta(key);
+            node = { id, key, label: getNodeLabel(key), icon: m.icon, color: m.color,
+                x, y, width: 300, zIndex: nextId, data: {},
+                inputs: def.inputs || [], outputs: def.outputs || [],
+                stateKeys: def.state_keys || [], apiNode: true };
+        }
+
+        // Generate port IDs
+        node.ports = [];
+        node.inputs.forEach((inp, i) => { node.ports.push({ id: 'port_' + nextId++, nodeId: id, dir: 'input', idx: i, ...inp }); });
+        node.outputs.forEach((out, i) => { node.ports.push({ id: 'port_' + nextId++, nodeId: id, dir: 'output', idx: i, ...out }); });
+
+        nodes.push(node);
+        renderAll();
+        return node;
+    }
+
+    function addNodeByKey(key) { addNode(key, (-panX + innerWidth/2)/zoom - 130, (-panY + innerHeight/2)/zoom - 80); }
+    function addNodeAtCtx(key) { if (contextMenuPos) addNode(key, contextMenuPos.cx, contextMenuPos.cy); closeCtx(); }
+
+    // ── Connections ──
+    function addConnection(fromNodeId, fromPortId, toNodeId, toPortId) {
+        if (connections.find(c => c.fromPortId === fromPortId && c.toPortId === toPortId)) return;
+        connections = connections.filter(c => c.toPortId !== toPortId); // only one input per port
+        connections.push({ id: 'conn_' + nextConnId++, fromNodeId, fromPortId, toNodeId, toPortId });
+        renderSVG();
+        // Trigger the source node's downstream propagation (handles output nodes + auto-exec)
+        const fromNode = getNode(fromNodeId);
+        if (fromNode) triggerDownstream(fromNode);
+    }
+
+    const AUTO_EXEC_NODES = new Set(['face_detector', 'face_debugger', 'face_swapper', 'face_enhancer']);
+    function isAutoExecNode(node) { return AUTO_EXEC_NODES.has(node.key); }
+
+    let autoExecTimers = {};
+    function autoExecDebounced(node) {
+        clearTimeout(autoExecTimers[node.id]);
+        autoExecTimers[node.id] = setTimeout(() => {
+            // Check all inputs are connected and have data
+            const inPorts = node.ports.filter(p => p.dir === 'input');
+            const allConnected = inPorts.every(port => {
+                const conn = connections.find(c => c.toPortId === port.id);
+                if (!conn) return false;
+                const src = getNode(conn.fromNodeId);
+                return src && getNodeOutputBase64(src, conn.fromPortId);
+            });
+            if (allConnected) executeNode(node);
+        }, 300);
+    }
+
+    // Trigger all downstream nodes from a given node
+    function triggerDownstream(node) {
+        const outPorts = node.ports.filter(p => p.dir === 'output');
+        for (const port of outPorts) {
+            const conns = connections.filter(c => c.fromPortId === port.id);
+            for (const conn of conns) {
+                const downstream = getNode(conn.toNodeId);
+                if (!downstream) continue;
+                if (downstream.apiNode && isAutoExecNode(downstream)) {
+                    autoExecDebounced(downstream);
+                } else if (downstream.key === '_image_output' && port.type === 'image') {
+                    const b64 = getNodeOutputBase64(node, port.id);
+                    if (b64) { downstream.data.resultUrl = 'data:image/jpeg;base64,' + b64; refreshNodeBody(downstream); }
+                } else if (downstream.key === '_log_output' && port.type === 'json') {
+                    const jsonData = node.data._outputsByPort?.[port.name];
+                    if (jsonData !== undefined) { downstream.data.logJson = JSON.stringify(jsonData, null, 2); refreshNodeBody(downstream); }
+                }
+            }
+        }
+    }
+
+    function removeConnection(id) { connections = connections.filter(c => c.id !== id); renderSVG(); }
+
+    // ── Rendering ──
+    function renderAll() { renderNodes(); renderSVG(); }
+
+    function renderNodes() {
+        const c = $('nodesContainer');
+        c.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+        const cur = new Set(nodes.map(n => n.id));
+        c.querySelectorAll('[data-node-id]').forEach(el => { if (!cur.has(el.dataset.nodeId)) el.remove(); });
+        nodes.forEach(node => {
+            let el = nodeEl(node.id);
+            if (!el) { el = createNodeEl(node); c.appendChild(el); }
+            el.style.left = node.x + 'px'; el.style.top = node.y + 'px';
+            el.style.width = node.width + 'px'; el.style.zIndex = node.zIndex || 1;
+            el.classList.toggle('selected', selectedNodes.includes(node.id));
+            el.classList.toggle('dragging', dragState?.nodeId === node.id);
+        });
+        lucide.createIcons();
+    }
+
+    function createNodeEl(node) {
+        const div = document.createElement('div');
+        div.className = 'node-card absolute rounded-xl border border-nodeBorder';
+        div.dataset.nodeId = node.id;
+        div.innerHTML = `
+            <div class="node-header flex items-center justify-between px-3 py-2 cursor-grab" style="background:${node.color}15; border-radius:11px 11px 0 0;">
+                <div class="flex items-center gap-2"><i data-lucide="${node.icon}" class="w-3.5 h-3.5" style="color:${node.color}"></i><span class="text-white text-[13px] font-semibold">${esc(node.label)}</span></div>
+                <button class="btn-del text-gray-500 hover:text-red-400 p-1 rounded"><i data-lucide="x" class="w-3 h-3"></i></button>
+            </div>
+            <div class="node-body bg-node px-4 py-3 space-y-2 scrollbar-thin" style="max-height:${node.bodyMaxH || 600}px;overflow-y:auto;border-radius:0 0 11px 11px;">${getNodeBody(node)}</div>
+            ${getPortsHTML(node)}
+            ${(node.key === '_image_input' || node.key === '_image_output') ? '<div class="resize-handle"><i data-lucide="grip-horizontal" class="w-full h-full text-gray-600"></i></div>' : ''}`;
+
+        div.querySelector('.btn-del').addEventListener('click', e => { e.stopPropagation(); deleteNode(node.id); });
+        const resizeEl = div.querySelector('.resize-handle');
+        if (resizeEl) {
+            resizeEl.addEventListener('mousedown', e => {
+                e.stopPropagation();
+                const body = div.querySelector('.node-body');
+                resizeState = { nodeId: node.id, startX: e.clientX, startY: e.clientY, startW: node.width, startH: body ? parseInt(body.style.maxHeight) || 600 : 600 };
+            });
+        }
+        div.addEventListener('mousedown', e => {
+            if (e.target.closest('input,select,button,.drop-zone')) return;
+            e.stopPropagation(); node.zIndex = ++nextId;
+            if (!selectedNodes.includes(node.id)) selectedNodes = [node.id];
+            dragState = { nodeId: node.id, ox: (e.clientX-panX)/zoom - node.x, oy: (e.clientY-panY)/zoom - node.y };
+            renderNodes();
+        });
+        div.querySelectorAll('.port').forEach(pe => {
+            pe.addEventListener('mousedown', e => {
+                e.stopPropagation();
+                const dir = pe.dataset.dir, nid = node.id, pid = pe.dataset.portId, ptype = pe.dataset.type;
+                const pos = getPortPos(nid, pid);
+                const m = { x:(e.clientX-panX)/zoom, y:(e.clientY-panY)/zoom };
+                tempConnection = dir === 'output'
+                    ? { fromNodeId:nid, fromPortId:pid, from:pos, to:m, dir:'output', portType:ptype }
+                    : { toNodeId:nid, toPortId:pid, from:m, to:pos, dir:'input', portType:ptype };
+            });
+        });
+
+        bindNodeInteractions(div, node);
+        return div;
+    }
+
+    function getNodeBody(node) {
+        if (node.key === '_image_input') return getImageInputBody(node);
+        if (node.key === '_image_output') return getImageOutputBody(node);
+        if (node.key === '_log_output') return getLogOutputBody(node);
+        return getApiNodeBody(node);
+    }
+
+    function getImageInputBody(node) {
+        const hasFile = node.data.preview;
+        if (hasFile) {
+            return `<div class="relative">
+                <img src="${node.data.preview}" class="w-full rounded-md object-contain bg-black/20"/>
+                <button class="btn-clear-img absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-500/80">&times;</button>
+            </div>`;
+        }
+        return `<div class="drop-zone border-2 border-dashed border-nodeBorder rounded-lg p-4 text-center cursor-pointer hover:border-accent/50 transition-colors">
+            <i data-lucide="upload" class="w-6 h-6 mx-auto text-gray-500 mb-2"></i>
+            <p class="text-gray-400 text-xs font-medium">Drop image here</p>
+            <p class="text-gray-600 text-[10px] mt-1">or click to browse</p>
+            <input type="file" accept="image/*" class="file-input hidden"/>
+        </div>`;
+    }
+
+    function getLogOutputBody(node) {
+        if (node.data.logJson) {
+            return `<div class="bg-black/20 rounded-lg p-2 max-h-[200px] overflow-y-auto scrollbar-thin"><pre class="text-[10px] text-gray-400 whitespace-pre-wrap break-all font-mono">${esc(node.data.logJson)}</pre></div>`;
+        }
+        return `<div class="border border-dashed border-nodeBorder rounded-lg p-4 flex items-center justify-center min-h-[60px]">
+            <div class="text-center"><i data-lucide="scroll-text" class="w-5 h-5 text-gray-600 mx-auto mb-1"></i><p class="text-gray-600 text-[10px]">Connect data output here</p></div>
+        </div>`;
+    }
+
+    function getImageOutputBody(node) {
+        if (node.data.resultUrl) {
+            return `<div class="border border-nodeBorder rounded-lg overflow-hidden"><img src="${node.data.resultUrl}" class="w-full object-contain bg-black/20"/></div>`;
+        }
+        return `<div class="border border-dashed border-nodeBorder rounded-lg p-4 flex items-center justify-center min-h-[80px]">
+            <div class="text-center"><i data-lucide="image" class="w-6 h-6 text-gray-600 mx-auto mb-1"></i><p class="text-gray-600 text-[10px]">Connect a node output here</p></div>
+        </div>`;
+    }
+
+    function getApiNodeBody(node) {
+        let html = '';
+        const autoExecFlag = isAutoExecNode(node);
+        if (!autoExecFlag && nodeDefinitions[node.key]?.description) {
+            html += `<p class="text-gray-500 text-[11px] italic">${esc(nodeDefinitions[node.key].description)}</p>`;
+        }
+
+        // State key controls
+        const capArgs = capabilities?.arguments || {};
+        for (const stateKey of (node.stateKeys || [])) {
+            const cap = capArgs[stateKey];
+            if (!cap) continue;
+            const label = stateKey.replace(/^[^_]+_[^_]+_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || stateKey;
+            const val = node.data[stateKey] ?? cap.default;
+
+            if (cap.choices && cap.choices.length > 10 && typeof cap.choices[0] === 'number') {
+                const min = cap.choices[0], max = cap.choices[cap.choices.length-1];
+                const step = cap.choices.length > 1 ? Math.abs(cap.choices[1]-cap.choices[0]) : 1;
+                const isFloat = !Number.isInteger(step) || !Number.isInteger(min);
+                const display = isFloat ? Number(val).toFixed(2) : val;
+                html += `<div><div class="flex justify-between items-baseline"><label class="lbl" style="margin-bottom:0">${esc(label)}</label><span class="val" data-display="${stateKey}">${display}</span></div><input type="range" min="${min}" max="${max}" step="${step}" value="${val}" data-bind="${stateKey}" style="margin-top:6px"/></div>`;
+            } else if (Array.isArray(cap.default) && cap.choices && !Array.isArray(cap.choices[0])) {
+                // Multi-select checkboxes (e.g. face_mask_types, face_detector_angles)
+                const selected = Array.isArray(val) ? val : (cap.default || []);
+                const checks = cap.choices.map(c => {
+                    const ch = selected.includes(c) ? 'checked' : '';
+                    return `<label class="flex items-center gap-2 text-gray-300 text-[11px] cursor-pointer"><input type="checkbox" data-bind-multi="${stateKey}" value="${esc(c)}" ${ch}/> ${esc(String(c).replace(/-/g, ' '))}</label>`;
+                }).join('');
+                html += `<div><label class="lbl">${esc(label)}</label><div class="flex flex-wrap gap-x-4 gap-y-2 mt-1.5">${checks}</div></div>`;
+            } else if (cap.choices && cap.choices.length > 0 && cap.choices.length <= 50 && !Array.isArray(cap.default)) {
+                const cur = String(val ?? cap.default ?? cap.choices[0]);
+                const items = cap.choices.map(c => `<div class="cdrop-item${String(c)===cur?' active':''}" data-val="${esc(c)}">${esc(c)}</div>`).join('');
+                html += `<div><label class="lbl">${esc(label)}</label><div class="cdrop" data-bind-drop="${stateKey}"><div class="cdrop-trigger"><span class="cdrop-value">${esc(cur)}</span><svg class="cdrop-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div><div class="cdrop-menu">${items}</div></div></div>`;
+            } else if (Array.isArray(val) && val.length === 4 && typeof val[0] === 'number') {
+                const labels = stateKey.includes('color') ? ['R','G','B','A'] : ['T','R','B','L'];
+                const inputs = labels.map((l, idx) => `<div class="flex-1"><span class="text-[9px] text-gray-500 block text-center">${l}</span><input type="number" data-bind-arr="${stateKey}" data-idx="${idx}" value="${val[idx]}" class="text-center !px-1 !py-1 text-[12px]"/></div>`).join('');
+                html += `<div><label class="lbl">${esc(label)}</label><div class="flex gap-1.5">${inputs}</div></div>`;
+            } else if (typeof val === 'number') {
+                html += `<div><label class="lbl">${esc(label)}</label><input type="number" data-bind="${stateKey}" value="${val}"/></div>`;
+            }
+        }
+
+        const autoExec = isAutoExecNode(node);
+
+        if (!autoExec) {
+            // Execute button
+            const executing = node.data._executing;
+            html += `<button class="btn-execute w-full mt-1 px-3 py-2 text-xs font-semibold rounded-lg border border-accent/40 bg-accent/15 text-accent ${executing?'opacity-50':'hover:bg-accent/30'} transition-all flex items-center justify-center gap-2" ${executing?'disabled':''}>
+                <i data-lucide="${executing?'loader-2':'play'}" class="w-3.5 h-3.5 ${executing?'animate-spin':''}"></i> ${executing?'Running...':'Execute'}
+            </button>`;
+        } else if (node.data._executing) {
+            html += `<div class="flex items-center justify-center gap-2 mt-1 py-1 text-xs text-accent"><i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Processing...</div>`;
+        }
+
+        // Result preview (skip for auto-exec nodes — results flow through ports)
+        if (!autoExec) {
+            if (node.data.resultUrl) {
+                html += `<div class="border border-nodeBorder rounded-lg overflow-hidden mt-1"><img src="${node.data.resultUrl}" class="w-full object-contain bg-black/20"/></div>`;
+            }
+            if (node.data.resultJson) {
+                html += `<div class="mt-1 bg-black/20 rounded-lg p-2 max-h-[100px] overflow-y-auto scrollbar-thin"><pre class="text-[10px] text-gray-400 whitespace-pre-wrap break-all font-mono">${esc(node.data.resultJson)}</pre></div>`;
+            }
+            if (node.data.croppedFaces && node.data.croppedFaces.length > 0) {
+                html += `<div class="flex flex-wrap gap-1 mt-1">${node.data.croppedFaces.map(url => `<img src="${url}" class="w-16 h-16 object-cover rounded border border-nodeBorder"/>`).join('')}</div>`;
+            }
+        }
+
+        return html;
+    }
+
+    function getPortsHTML(node) {
+        let html = '';
+        const inPorts = node.ports.filter(p => p.dir === 'input');
+        const outPorts = node.ports.filter(p => p.dir === 'output');
+
+        inPorts.forEach((p, i) => {
+            const defaultTop = 38 + 30 + i * 40;
+            html += `<div class="absolute flex items-center port-wrap" data-port-wrap="${p.id}" style="left:-7px; top:${defaultTop}px;">
+                <span class="pointer-events-none absolute" style="right:18px;font-size:9px;font-weight:600;color:#5a5a8a;text-transform:uppercase;white-space:nowrap;">${esc(p.label)}</span>
+                <div class="port port-${p.type}" data-port-id="${p.id}" data-dir="input" data-type="${p.type}"></div>
+            </div>`;
+        });
+        outPorts.forEach((p, i) => {
+            const defaultTop = 38 + 30 + i * 40;
+            html += `<div class="absolute flex items-center port-wrap" data-port-wrap="${p.id}" style="right:-7px; top:${defaultTop}px;">
+                <div class="port port-${p.type}" data-port-id="${p.id}" data-dir="output" data-type="${p.type}"></div>
+                <span class="pointer-events-none absolute" style="left:18px;font-size:9px;font-weight:600;color:#5a5a8a;text-transform:uppercase;white-space:nowrap;">${esc(p.label)}</span>
+            </div>`;
+        });
+        return html;
+    }
+
+    function updatePortPositions(node) {
+        const el = nodeEl(node.id); if (!el) return;
+        const h = el.offsetHeight, hdr = 38;
+        const inPorts = node.ports.filter(p => p.dir === 'input');
+        const outPorts = node.ports.filter(p => p.dir === 'output');
+        inPorts.forEach((p, i) => {
+            const w = el.querySelector(`[data-port-wrap="${p.id}"]`);
+            if (w) w.style.top = (hdr + (h-hdr) / (inPorts.length+1) * (i+1)) + 'px';
+        });
+        outPorts.forEach((p, i) => {
+            const w = el.querySelector(`[data-port-wrap="${p.id}"]`);
+            if (w) w.style.top = (hdr + (h-hdr) / (outPorts.length+1) * (i+1)) + 'px';
+        });
+    }
+
+    function refreshNodeBody(node) {
+        const el = nodeEl(node.id); if (!el) return;
+        el.querySelector('.node-body').innerHTML = getNodeBody(node);
+        bindNodeInteractions(el, node);
+        updatePortPositions(node);
+        renderSVG();
+        lucide.createIcons();
+    }
+
+    function bindNodeInteractions(el, node) {
+        // File upload
+        const fi = el.querySelector('.file-input'), dz = el.querySelector('.drop-zone');
+        if (fi && dz) {
+            dz.addEventListener('click', e => { e.stopPropagation(); fi.click(); });
+            dz.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); });
+            dz.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); handleFile(e.dataTransfer.files[0], node); });
+            fi.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0], node); });
+        }
+        // Clear image
+        const clearBtn = el.querySelector('.btn-clear-img');
+        if (clearBtn) clearBtn.addEventListener('click', e => { e.stopPropagation(); node.data.preview = null; node.data.base64 = null; refreshNodeBody(node); });
+
+        // State bindings
+        el.querySelectorAll('[data-bind]').forEach(inp => {
+            inp.addEventListener('mousedown', e => e.stopPropagation());
+            const k = inp.dataset.bind;
+            if (inp.type === 'range') {
+                const disp = el.querySelector(`[data-display="${k}"]`);
+                inp.addEventListener('input', () => { node.data[k] = parseFloat(inp.value); if (disp) disp.textContent = Number.isInteger(parseFloat(inp.value)) ? inp.value : parseFloat(inp.value).toFixed(2); if (isAutoExecNode(node)) autoExecDebounced(node); });
+            } else {
+                inp.addEventListener('input', () => { node.data[k] = inp.type === 'number' ? parseFloat(inp.value) : inp.value; if (isAutoExecNode(node)) autoExecDebounced(node); });
+            }
+        });
+
+        // Custom dropdowns
+        el.querySelectorAll('.cdrop').forEach(drop => {
+            const k = drop.dataset.bindDrop, trigger = drop.querySelector('.cdrop-trigger'), menu = drop.querySelector('.cdrop-menu'), valEl = drop.querySelector('.cdrop-value');
+            trigger.addEventListener('mousedown', e => e.stopPropagation());
+            trigger.addEventListener('click', e => {
+                e.stopPropagation();
+                document.querySelectorAll('.cdrop-trigger.open').forEach(t => { if (t !== trigger) { t.classList.remove('open'); t.nextElementSibling.classList.remove('open'); } });
+                trigger.classList.toggle('open'); menu.classList.toggle('open');
+            });
+            menu.querySelectorAll('.cdrop-item').forEach(item => {
+                item.addEventListener('click', e => {
+                    e.stopPropagation();
+                    node.data[k] = item.dataset.val;
+                    valEl.textContent = item.dataset.val;
+                    menu.querySelectorAll('.cdrop-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    trigger.classList.remove('open'); menu.classList.remove('open');
+                    if (isAutoExecNode(node)) autoExecDebounced(node);
+                });
+            });
+        });
+
+        // Array inputs (TRBL / RGBA)
+        el.querySelectorAll('[data-bind-arr]').forEach(inp => {
+            const k = inp.dataset.bindArr, idx = parseInt(inp.dataset.idx);
+            inp.addEventListener('mousedown', e => e.stopPropagation());
+            inp.addEventListener('input', () => {
+                const capArgs = capabilities?.arguments || {};
+                if (!node.data[k]) node.data[k] = [...(capArgs[k]?.default || [0,0,0,0])];
+                node.data[k][idx] = parseFloat(inp.value) || 0;
+                if (isAutoExecNode(node)) autoExecDebounced(node);
+            });
+        });
+
+        // Multi-select checkboxes
+        el.querySelectorAll('[data-bind-multi]').forEach(inp => {
+            const k = inp.dataset.bindMulti;
+            inp.addEventListener('mousedown', e => e.stopPropagation());
+            inp.addEventListener('change', () => {
+                node.data[k] = Array.from(el.querySelectorAll(`[data-bind-multi="${k}"]`)).filter(cb => cb.checked).map(cb => isNaN(cb.value) ? cb.value : Number(cb.value));
+                if (isAutoExecNode(node)) autoExecDebounced(node);
+            });
+        });
+
+        // Execute button
+        const execBtn = el.querySelector('.btn-execute');
+        if (execBtn) {
+            execBtn.addEventListener('mousedown', e => e.stopPropagation());
+            execBtn.addEventListener('click', e => { e.stopPropagation(); executeNode(node); });
+        }
+    }
+
+    async function handleFile(file, node) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            node.data.preview = e.target.result;
+            node.data.base64 = e.target.result.split(',')[1];
+            refreshNodeBody(node);
+            triggerDownstream(node);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ── Execute Node ──
+    async function executeNode(node) {
+        if (!node.apiNode || node.data._executing) return;
+        node.data._executing = true;
+        refreshNodeBody(node);
+
+        try {
+            const inputs = {};
+            const inPorts = node.ports.filter(p => p.dir === 'input');
+
+            for (const port of inPorts) {
+                const conn = connections.find(c => c.toPortId === port.id);
+                if (!conn) continue;
+                const srcNode = getNode(conn.fromNodeId);
+                if (!srcNode) continue;
+                const data = getNodeOutputBase64(srcNode, conn.fromPortId);
+                if (data) inputs[port.name] = data;
+            }
+
+            const state = {};
+            const capArgs = capabilities?.arguments || {};
+            for (const sk of (node.stateKeys || [])) {
+                if (node.data[sk] !== undefined) state[sk] = node.data[sk];
+                else if (capArgs[sk]?.default !== undefined) state[sk] = capArgs[sk].default;
+            }
+
+            const result = await apiCall(`/nodes/${node.key}`, { method: 'POST', body: { inputs, state } });
+
+            // Store all outputs by port name for downstream connections
+            node.data.resultUrl = null; node.data.resultJson = null; node.data.croppedFaces = null;
+            node.data._outputsByPort = {};
+
+            const def = nodeDefinitions[node.key];
+            for (const outPort of (def?.outputs || [])) {
+                if (result[outPort.name] !== undefined) {
+                    node.data._outputsByPort[outPort.name] = result[outPort.name];
+                }
+            }
+
+            // Pick best preview: first image output
+            if (result.image) node.data.resultUrl = 'data:image/jpeg;base64,' + result.image;
+            else if (result.annotated) node.data.resultUrl = 'data:image/jpeg;base64,' + result.annotated;
+
+            if (result.cropped_faces) {
+                node.data.croppedFaces = result.cropped_faces.map(b64 => 'data:image/jpeg;base64,' + b64);
+            }
+
+            if (result.faces) node.data.resultJson = JSON.stringify(result.faces, null, 2);
+
+            node.data._outputB64 = result.image || result.annotated || null;
+
+            // Propagate to connected output nodes
+            propagateResults(node);
+            toast(`${node.label} done`, 'success');
+        } catch(err) {
+            toast(`Error: ${err.message}`, 'error');
+        } finally {
+            node.data._executing = false;
+            refreshNodeBody(node);
+        }
+    }
+
+    function getNodeOutputBase64(srcNode, fromPortId) {
+        // Image input node: return its base64
+        if (srcNode.key === '_image_input') return srcNode.data.base64 || null;
+        // API node: check which output port
+        const port = srcNode.ports.find(p => p.id === fromPortId);
+        if (!port) return null;
+        // image_list: return first item
+        if (port.type === 'image_list' && srcNode.data._outputsByPort?.[port.name]?.length) return srcNode.data._outputsByPort[port.name][0];
+        // image: return the stored base64 for this port
+        if (srcNode.data._outputsByPort?.[port.name]) return srcNode.data._outputsByPort[port.name];
+        if (srcNode.data._outputB64) return srcNode.data._outputB64;
+        return null;
+    }
+
+    function propagateResults(node) {
+        triggerDownstream(node);
+    }
+
+    // ── SVG connections ──
+    function getPortPos(nid, pid) {
+        const n = getNode(nid), el = nodeEl(nid);
+        if (!n || !el) return { x:0, y:0 };
+        const portDot = el.querySelector(`[data-port-id="${pid}"]`);
+        if (portDot) {
+            const nRect = el.getBoundingClientRect(), pRect = portDot.getBoundingClientRect();
+            return { x: n.x + (pRect.left + pRect.width/2 - nRect.left)/zoom, y: n.y + (pRect.top + pRect.height/2 - nRect.top)/zoom };
+        }
+        return { x: n.x, y: n.y + 60 };
+    }
+
+    function cubicBezier(f, t) { const dx = Math.abs(t.x-f.x), cp = Math.max(60, dx*0.4); return `M ${f.x} ${f.y} C ${f.x+cp} ${f.y}, ${t.x-cp} ${t.y}, ${t.x} ${t.y}`; }
+
+    function renderSVG() {
+        const g = $('svgContent');
+        g.setAttribute('transform', `translate(${panX},${panY}) scale(${zoom})`);
+        let html = '';
+        connections.forEach(c => {
+            const f = getPortPos(c.fromNodeId, c.fromPortId), t = getPortPos(c.toNodeId, c.toPortId);
+            html += `<path d="${cubicBezier(f,t)}" class="connection-line" stroke="url(#wireGrad)" onclick="app.removeConnection('${c.id}')"/>`;
+        });
+        if (tempConnection) {
+            html += `<path d="${cubicBezier(tempConnection.from, tempConnection.to)}" class="temp-connection" stroke="#6366f1"/>`;
+        }
+        g.innerHTML = html;
+    }
+
+    // ── Node management ──
+    function deleteNode(id) {
+        connections = connections.filter(c => c.fromNodeId !== id && c.toNodeId !== id);
+        nodes = nodes.filter(n => n.id !== id);
+        selectedNodes = selectedNodes.filter(s => s !== id);
+        renderAll();
+    }
+
+    function resetView() { panX = 0; panY = 0; zoom = 1; updateView(); }
+    function fitView() {
+        if (!nodes.length) return;
+        let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+        nodes.forEach(n => { minX=Math.min(minX,n.x); minY=Math.min(minY,n.y); maxX=Math.max(maxX,n.x+n.width); maxY=Math.max(maxY,n.y+250); });
+        const w=maxX-minX+200, h=maxY-minY+200;
+        zoom = Math.min(innerWidth/w, innerHeight/h, 1.5);
+        panX = (innerWidth-w*zoom)/2 - (minX-100)*zoom;
+        panY = (innerHeight-h*zoom)/2 - (minY-100)*zoom;
+        updateView();
+    }
+    function updateView() {
+        $('nodesContainer').style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+        $('zoomLabel').textContent = Math.round(zoom*100) + '%';
+        renderSVG();
+    }
+
+    // ── Events ──
+    document.addEventListener('mousemove', e => {
+        if (isPanning) { panX = e.clientX - panStart.x; panY = e.clientY - panStart.y; updateView(); return; }
+        if (resizeState) {
+            const n = getNode(resizeState.nodeId); if (!n) return;
+            n.width = Math.max(180, resizeState.startW + (e.clientX - resizeState.startX) / zoom);
+            const el = nodeEl(n.id);
+            if (el) {
+                const body = el.querySelector('.node-body');
+                if (body) { const newH = Math.max(60, resizeState.startH + (e.clientY - resizeState.startY) / zoom); body.style.maxHeight = newH + 'px'; n.bodyMaxH = newH; }
+            }
+            renderNodes(); updatePortPositions(n); renderSVG(); return;
+        }
+        if (dragState) {
+            const n = getNode(dragState.nodeId); if (!n) return;
+            n.x = (e.clientX-panX)/zoom - dragState.ox;
+            n.y = (e.clientY-panY)/zoom - dragState.oy;
+            renderNodes(); renderSVG(); return;
+        }
+        if (tempConnection) {
+            const mx = (e.clientX-panX)/zoom, my = (e.clientY-panY)/zoom;
+            if (tempConnection.dir === 'output') tempConnection.to = {x:mx, y:my};
+            else tempConnection.from = {x:mx, y:my};
+            renderSVG(); return;
+        }
+    });
+
+    document.addEventListener('mouseup', e => {
+        if (tempConnection) {
+            const t = document.elementFromPoint(e.clientX, e.clientY);
+            if (t?.classList.contains('port')) {
+                const tn = t.closest('[data-node-id]')?.dataset.nodeId, tp = t.dataset.portId, td = t.dataset.dir;
+                if (td !== tempConnection.dir && tn !== (tempConnection.fromNodeId || tempConnection.toNodeId)) {
+                    // Enforce type matching
+                    const srcType = tempConnection.dir === 'output' ? tempConnection.portType : t.dataset.type;
+                    const dstType = tempConnection.dir === 'output' ? t.dataset.type : tempConnection.portType;
+                    if (srcType === dstType) {
+                        if (tempConnection.dir === 'output') addConnection(tempConnection.fromNodeId, tempConnection.fromPortId, tn, tp);
+                        else addConnection(tn, tp, tempConnection.toNodeId, tempConnection.toPortId);
+                    } else {
+                        toast(`Cannot connect ${srcType} to ${dstType}`, 'error');
+                    }
+                }
+            }
+            tempConnection = null; renderSVG();
+        }
+        if (dragState) {
+            const n = getNode(dragState.nodeId);
+            if (n) { n.x = Math.round(n.x/12)*12; n.y = Math.round(n.y/12)*12; }
+            renderNodes();
+        }
+        isPanning = false; dragState = null; resizeState = null;
+    });
+
+    $('canvas').addEventListener('mousedown', e => {
+        closeCtx();
+        if (e.button === 1 || spaceHeld) { isPanning = true; panStart = {x:e.clientX-panX, y:e.clientY-panY}; e.preventDefault(); return; }
+        if (e.button === 0 && !e.target.closest('.node-card')) { selectedNodes = []; renderNodes(); }
+    });
+    $('canvas').addEventListener('wheel', e => {
+        e.preventDefault();
+        const d = e.deltaY > 0 ? 0.92 : 1.08, nz = Math.max(0.15, Math.min(3, zoom*d));
+        panX = e.clientX - (e.clientX-panX)*(nz/zoom); panY = e.clientY - (e.clientY-panY)*(nz/zoom);
+        zoom = nz; updateView();
+    }, {passive:false});
+    $('canvas').addEventListener('contextmenu', e => {
+        e.preventDefault();
+        contextMenuPos = {x:e.clientX, y:e.clientY, cx:(e.clientX-panX)/zoom, cy:(e.clientY-panY)/zoom};
+        const m = $('contextMenu'); m.style.left = e.clientX+'px'; m.style.top = e.clientY+'px'; m.style.display = 'block';
+        lucide.createIcons();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.code === 'Space' && !e.target.closest('input,select')) { e.preventDefault(); spaceHeld = true; document.body.style.cursor = 'grab'; }
+        if ((e.key === 'Delete' || e.key === 'Backspace') && !e.target.closest('input,select')) { e.preventDefault(); [...selectedNodes].forEach(id => deleteNode(id)); }
+        if (e.key === 'Escape') { selectedNodes = []; closeCtx(); tempConnection = null; renderAll(); }
+    });
+    document.addEventListener('keyup', e => { if (e.code === 'Space') { spaceHeld = false; document.body.style.cursor = ''; } });
+
+    // ── Session Storage ──
+    const STORAGE_KEY = 'facefusion_workflow';
+
+    function saveToStorage() {
+        try {
+            const nodeIdx = id => nodes.findIndex(n => n.id === id);
+            const portIdx = (nid, pid) => { const n = getNode(nid); return n ? n.ports.findIndex(p => p.id === pid) : -1; };
+            const state = {
+                nodes: nodes.map(n => ({
+                    key: n.key, x: n.x, y: n.y, width: n.width, bodyMaxH: n.bodyMaxH,
+                    data: { ...n.data, _executing: false, _outputsByPort: null, _outputB64: null, resultUrl: null, resultJson: null, croppedFaces: null, logJson: null }
+                })),
+                connections: connections.map(c => ({
+                    fromIdx: nodeIdx(c.fromNodeId), fromPort: portIdx(c.fromNodeId, c.fromPortId),
+                    toIdx: nodeIdx(c.toNodeId), toPort: portIdx(c.toNodeId, c.toPortId)
+                })).filter(c => c.fromIdx >= 0 && c.toIdx >= 0 && c.fromPort >= 0 && c.toPort >= 0),
+                view: { panX, panY, zoom }
+            };
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch(e) {}
+    }
+
+    function loadFromStorage() {
+        try {
+            const raw = sessionStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+            const state = JSON.parse(raw);
+            if (!state.nodes?.length) return false;
+
+            const rebuilt = [];
+            for (const saved of state.nodes) {
+                const n = addNode(saved.key, saved.x, saved.y);
+                if (!n) { rebuilt.push(null); continue; }
+                n.width = saved.width || n.width;
+                n.bodyMaxH = saved.bodyMaxH;
+                if (saved.data) {
+                    // Restore control values but clear transient state
+                    for (const [k, v] of Object.entries(saved.data)) {
+                        if (k !== 'preview' && k !== 'base64' && !k.startsWith('_') && k !== 'resultUrl' && k !== 'resultJson' && k !== 'logJson' && k !== 'croppedFaces') {
+                            n.data[k] = v;
+                        }
+                    }
+                    // Restore image preview if it was a data URL
+                    if (saved.data.preview) { n.data.preview = saved.data.preview; n.data.base64 = saved.data.base64; }
+                }
+                rebuilt.push(n);
+            }
+
+            if (state.connections) {
+                requestAnimationFrame(() => {
+                    for (const c of state.connections) {
+                        const fromN = rebuilt[c.fromIdx], toN = rebuilt[c.toIdx];
+                        if (!fromN || !toN) continue;
+                        const fromP = fromN.ports[c.fromPort], toP = toN.ports[c.toPort];
+                        if (fromP && toP) addConnection(fromN.id, fromP.id, toN.id, toP.id);
+                    }
+                });
+            }
+
+            if (state.view) { panX = state.view.panX; panY = state.view.panY; zoom = state.view.zoom; }
+            renderAll(); updateView();
+            requestAnimationFrame(() => nodes.forEach(n => { updatePortPositions(n); refreshNodeBody(n); }));
+            return true;
+        } catch(e) { return false; }
+    }
+
+    setInterval(saveToStorage, 5000);
+
+    // ── Init ──
+    async function init() {
+        try {
+            await createSession();
+            const [nodesData, capsData] = await Promise.all([
+                apiCall('/nodes').catch(() => null),
+                apiCall('/capabilities').catch(() => null)
+            ]);
+            if (!nodesData) {
+                throw new Error('GET /nodes returned 404. Restart the FaceFusion API to load the new routes: python facefusion.py api');
+            }
+            nodeDefinitions = nodesData || {};
+            capabilities = capsData;
+            buildUI();
+
+            const restored = loadFromStorage();
+            if (!restored) {
+                // Default: target_input → face_swapper.target, source_input → face_detector → face_swapper.source, face_swapper → output
+                const tgtInput = addNode('_image_input', 60, 30);
+                const srcInput = addNode('_image_input', 60, 420);
+                const det = addNode('face_detector', 480, 320);
+                const swap = addNode('face_swapper', 880, 100);
+                const out = addNode('_image_output', 1260, 100);
+
+                requestAnimationFrame(() => {
+                    nodes.forEach(n => updatePortPositions(n));
+                    // target_input.image → face_swapper.target
+                    if (tgtInput && swap) addConnection(tgtInput.id, tgtInput.ports.find(p=>p.dir==='output').id, swap.id, swap.ports.find(p=>p.dir==='input'&&p.name==='target').id);
+                    // source_input.image → face_detector.image
+                    if (srcInput && det) addConnection(srcInput.id, srcInput.ports.find(p=>p.dir==='output').id, det.id, det.ports.find(p=>p.dir==='input'&&p.name==='image').id);
+                    // face_detector.face_image → face_swapper.source
+                    if (det && swap) addConnection(det.id, det.ports.find(p=>p.dir==='output'&&p.name==='face_image').id, swap.id, swap.ports.find(p=>p.dir==='input'&&p.name==='source').id);
+                    // face_swapper.image → output
+                    if (swap && out) addConnection(swap.id, swap.ports.find(p=>p.dir==='output').id, out.id, out.ports.find(p=>p.dir==='input').id);
+                    renderAll();
+                    fitView();
+                });
+            }
+
+            $('loadingOverlay').style.display = 'none';
+            toast('Ready', 'success');
+        } catch(err) {
+            $('loadingOverlay').innerHTML = `<div class="text-center"><p class="text-red-400 text-sm font-medium mb-1">Failed to connect</p><p class="text-gray-500 text-xs">${esc(err.message)}</p><button onclick="location.reload()" class="mt-3 px-3 py-1.5 bg-accent/20 text-accent text-xs rounded-md hover:bg-accent/30">Retry</button></div>`;
+        }
+    }
+
+    lucide.createIcons();
+    init();
+
+    return { addNode, addNodeByKey, addNodeAtCtx, addConnection, deleteNode, removeConnection,
+        resetView, fitView, toggleMenu, closeMenu, closeCtx, executeNode, saveToStorage,
+        getNodes: () => nodes, getConnections: () => connections };
+})();
+</script>
+</body>
+</html>

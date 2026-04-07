@@ -19,6 +19,7 @@ from facefusion.face_selector import select_faces, sort_faces_by_order
 from facefusion.filesystem import filter_image_paths, has_image, in_directory, is_image, is_video, resolve_relative_path
 from facefusion.model_helper import get_static_model_initializer
 from facefusion.processors.modules.face_swapper import choices as face_swapper_choices
+from facefusion.node import NodeContext, NodePort, node
 from facefusion.processors.modules.face_swapper.types import FaceSwapperInputs
 from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel_boost
 from facefusion.processors.types import ApplyStateItem, ProcessorOutputs
@@ -600,20 +601,21 @@ def post_process() -> None:
 		face_recognizer.clear_inference_pool()
 
 
-def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame, ctx : NodeContext = None) -> VisionFrame:
+	_get = ctx.get_item if ctx else state_manager.get_item
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
-	pixel_boost_size = unpack_resolution(state_manager.get_item('face_swapper_pixel_boost'))
+	pixel_boost_size = unpack_resolution(_get('face_swapper_pixel_boost'))
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, pixel_boost_size)
 	temp_vision_frames = []
 	crop_masks = []
 
-	if 'box' in state_manager.get_item('face_mask_types'):
-		box_mask = create_box_mask(crop_vision_frame, state_manager.get_item('face_mask_blur'), state_manager.get_item('face_mask_padding'))
+	if 'box' in _get('face_mask_types'):
+		box_mask = create_box_mask(crop_vision_frame, _get('face_mask_blur'), _get('face_mask_padding'))
 		crop_masks.append(box_mask)
 
-	if 'occlusion' in state_manager.get_item('face_mask_types'):
+	if 'occlusion' in _get('face_mask_types'):
 		occlusion_mask = create_occlusion_mask(crop_vision_frame)
 		crop_masks.append(occlusion_mask)
 
@@ -625,13 +627,13 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 		temp_vision_frames.append(pixel_boost_vision_frame)
 	crop_vision_frame = explode_pixel_boost(temp_vision_frames, pixel_boost_total, model_size, pixel_boost_size)
 
-	if 'area' in state_manager.get_item('face_mask_types'):
+	if 'area' in _get('face_mask_types'):
 		face_landmark_68 = cv2.transform(target_face.landmark_set.get('68').reshape(1, -1, 2), affine_matrix).reshape(-1, 2)
-		area_mask = create_area_mask(crop_vision_frame, face_landmark_68, state_manager.get_item('face_mask_areas'))
+		area_mask = create_area_mask(crop_vision_frame, face_landmark_68, _get('face_mask_areas'))
 		crop_masks.append(area_mask)
 
-	if 'region' in state_manager.get_item('face_mask_types'):
-		region_mask = create_region_mask(crop_vision_frame, state_manager.get_item('face_mask_regions'))
+	if 'region' in _get('face_mask_types'):
+		region_mask = create_region_mask(crop_vision_frame, _get('face_mask_regions'))
 		crop_masks.append(region_mask)
 
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
@@ -779,9 +781,42 @@ def extract_source_face(source_vision_frames : List[VisionFrame]) -> Optional[Fa
 	return get_average_face(source_faces)
 
 
-def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
-	reference_vision_frame = inputs.get('reference_vision_frame')
+@node(
+	name = 'face_swapper',
+	inputs =
+	[
+		NodePort(name = 'source', type = 'image', label = 'Source Face'),
+		NodePort(name = 'target', type = 'image', label = 'Target Image')
+	],
+	outputs =
+	[
+		NodePort(name = 'image', type = 'image', label = 'Swapped Image')
+	],
+	state_keys =
+	[
+		'face_swapper_model',
+		'face_swapper_pixel_boost',
+		'face_swapper_weight'
+	],
+	description = 'Swap faces from source to target image'
+)
+def process_frame(inputs, ctx = None):
+	source_frame = inputs.get('source')
+	target_frame = inputs.get('target')
+
+	if source_frame is not None and target_frame is not None:
+		source_face = extract_source_face([ source_frame ])
+		target_faces = get_many_faces([ target_frame ])
+		temp_vision_frame = target_frame.copy()
+
+		if source_face and target_faces:
+			for target_face in target_faces:
+				temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame, ctx)
+
+		return { 'image' : temp_vision_frame }
+
 	source_vision_frames = inputs.get('source_vision_frames')
+	reference_vision_frame = inputs.get('reference_vision_frame')
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
@@ -791,6 +826,6 @@ def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	if source_face and target_faces:
 		for target_face in target_faces:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
-			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
+			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame, ctx)
 
-	return temp_vision_frame, temp_vision_mask
+	return { 'image' : temp_vision_frame }

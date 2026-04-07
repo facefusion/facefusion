@@ -1,8 +1,10 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
+import cv2
 import numpy
 
 from facefusion import state_manager
+from facefusion.node import NodeContext, NodePort, encode_vision_frame, node
 from facefusion.common_helper import get_first
 from facefusion.face_classifier import classify_face
 from facefusion.face_detector import detect_faces, detect_faces_by_angle
@@ -141,3 +143,118 @@ def scale_face(target_face : Face, target_vision_frame : VisionFrame, temp_visio
 		bounding_box = bounding_box,
 		landmark_set = landmark_set
 	)
+
+
+def crop_face(vision_frame : VisionFrame, face : Face, padding : int = 30) -> VisionFrame:
+	h, w = vision_frame.shape[:2]
+	box = face.bounding_box.astype(int)
+	x1 = max(0, box[0] - padding)
+	y1 = max(0, box[1] - padding)
+	x2 = min(w, box[2] + padding)
+	y2 = min(h, box[3] + padding)
+	return vision_frame[y1:y2, x1:x2].copy()
+
+
+def draw_bounding_boxes(vision_frame : VisionFrame, faces : List[Face]) -> VisionFrame:
+	result = numpy.ascontiguousarray(vision_frame.copy())
+
+	for face in faces:
+		box = face.bounding_box.astype(int)
+		cv2.rectangle(result, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+		label = ''
+		if face.gender:
+			label += face.gender
+		if face.age:
+			label += f' {face.age.start}-{face.age.stop}'
+		if label:
+			cv2.putText(result, label.strip(), (box[0], box[1] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+
+	return result
+
+
+@node(
+	name = 'face_detector',
+	inputs =
+	[
+		NodePort(name = 'image', type = 'image', label = 'Image')
+	],
+	outputs =
+	[
+		NodePort(name = 'face_image', type = 'image', label = 'Face Image'),
+		NodePort(name = 'face_data', type = 'json', label = 'Face Data')
+	],
+	state_keys =
+	[
+		'face_detector_model',
+		'face_detector_size',
+		'face_detector_margin',
+		'face_detector_angles',
+		'face_detector_score'
+	],
+	description = 'Detect faces and output annotated image with cropped faces'
+)
+def detect_faces_node(inputs : Dict[str, Any], ctx : Optional[NodeContext] = None) -> Dict[str, Any]:
+	vision_frame = inputs.get('image')
+	faces = get_many_faces([ vision_frame ])
+	face_image = crop_face(vision_frame, faces[0]) if faces else vision_frame
+
+	face_data = []
+	for face in faces:
+		face_data.append(
+		{
+			'bounding_box' : face.bounding_box.tolist(),
+			'score' : float(face.score_set.get('detector', 0)),
+			'gender' : face.gender,
+			'age' : { 'start' : face.age.start, 'stop' : face.age.stop } if face.age else None,
+			'race' : face.race
+		})
+
+	return\
+	{
+		'face_image' : face_image,
+		'face_data' : face_data
+	}
+
+
+@node(
+	name = 'face_landmarker',
+	inputs =
+	[
+		NodePort(name = 'image', type = 'image', label = 'Image')
+	],
+	outputs =
+	[
+		NodePort(name = 'image', type = 'image', label = 'Landmark Image'),
+		NodePort(name = 'landmark_data', type = 'json', label = 'Landmark Data')
+	],
+	state_keys =
+	[
+		'face_landmarker_model',
+		'face_landmarker_score'
+	],
+	description = 'Detect face landmarks'
+)
+def detect_landmarks_node(inputs : Dict[str, Any], ctx : Optional[NodeContext] = None) -> Dict[str, Any]:
+	vision_frame = inputs.get('image')
+	faces = get_many_faces([ vision_frame ])
+	result_frame = numpy.ascontiguousarray(vision_frame.copy())
+
+	landmark_data = []
+	for face in faces:
+		face_landmark_68 = face.landmark_set.get('68')
+
+		if numpy.any(face_landmark_68):
+			for point in face_landmark_68.astype(int):
+				cv2.circle(result_frame, tuple(point), 2, (0, 255, 0), -1)
+
+		landmark_data.append(
+		{
+			'landmark_5' : face.landmark_set.get('5').tolist() if numpy.any(face.landmark_set.get('5')) else [],
+			'landmark_68' : face.landmark_set.get('68').tolist() if numpy.any(face.landmark_set.get('68')) else []
+		})
+
+	return\
+	{
+		'image' : result_frame,
+		'landmark_data' : landmark_data
+	}
