@@ -1,3 +1,4 @@
+import subprocess
 import tempfile
 from typing import Iterator
 
@@ -19,6 +20,7 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg'), '-y' ])
 
 
 @pytest.fixture(scope = 'module')
@@ -49,7 +51,8 @@ def test_upload_asset(test_client : TestClient) -> None:
 	session_id = session_manager.find_session_id(access_token)
 
 	source_path = get_test_example_file('source.jpg')
-	target_path = get_test_example_file('target-240p.mp4')
+	target_image_path = get_test_example_file('target-240p.jpg')
+	target_video_path = get_test_example_file('target-240p.mp4')
 
 	with open(source_path, 'rb') as source_file:
 		upload_response = test_client.post('/assets?type=source', headers =
@@ -59,24 +62,40 @@ def test_upload_asset(test_client : TestClient) -> None:
 		[
 			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 		])
-	upload_body = upload_response.json()
-	asset = asset_store.get_asset(session_id, upload_body.get('asset_ids')[0])
+	asset_ids = upload_response.json().get('asset_ids')
+	asset = asset_store.get_asset(session_id, asset_ids[0])
 
 	assert asset.get('media') == 'image'
 	assert asset.get('type') == 'source'
 	assert asset.get('format') == 'jpeg'
 	assert upload_response.status_code == 201
 
-	with open(target_path, 'rb') as target_file:
+	with open(target_image_path, 'rb') as target_image_file:
 		upload_response = test_client.post('/assets?type=target', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		}, files =
 		[
-			('file', ('target.mp4', target_file.read(), 'video/mp4'))
+			('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg'))
 		])
-	upload_body = upload_response.json()
-	asset = asset_store.get_asset(session_id, upload_body.get('asset_ids')[0])
+	asset_ids = upload_response.json().get('asset_ids')
+	asset = asset_store.get_asset(session_id, asset_ids[0])
+
+	assert asset.get('media') == 'image'
+	assert asset.get('type') == 'target'
+	assert asset.get('format') == 'jpeg'
+	assert upload_response.status_code == 201
+
+	with open(target_video_path, 'rb') as target_video_file:
+		upload_response = test_client.post('/assets?type=target', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
+		])
+	asset_ids = upload_response.json().get('asset_ids')
+	asset = asset_store.get_asset(session_id, asset_ids[0])
 
 	assert asset.get('media') == 'video'
 	assert asset.get('type') == 'target'
@@ -86,16 +105,15 @@ def test_upload_asset(test_client : TestClient) -> None:
 	audio_path = get_test_example_file('source.mp3')
 
 	with open(audio_path, 'rb') as audio_file:
-		audio_content = audio_file.read()
 		upload_response = test_client.post('/assets?type=source', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		}, files =
 		[
-			('file', ('source.mp3', audio_content, 'audio/mpeg'))
+			('file', ('source.mp3', audio_file.read(), 'audio/mpeg'))
 		])
-	upload_body = upload_response.json()
-	asset = asset_store.get_asset(session_id, upload_body.get('asset_ids')[0])
+	asset_ids = upload_response.json().get('asset_ids')
+	asset = asset_store.get_asset(session_id, asset_ids[0])
 
 	assert asset.get('media') == 'audio'
 	assert asset.get('type') == 'source'
@@ -149,7 +167,8 @@ def test_get_assets(test_client : TestClient) -> None:
 	assert get_response.status_code == 200
 
 	source_path = get_test_example_file('source.jpg')
-	target_path = get_test_example_file('target-240p.mp4')
+	target_image_path = get_test_example_file('target-240p.jpg')
+	target_video_path = get_test_example_file('target-240p.mp4')
 
 	with open(source_path, 'rb') as source_file:
 		test_client.post('/assets?type=source', headers =
@@ -160,13 +179,22 @@ def test_get_assets(test_client : TestClient) -> None:
 			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 		])
 
-	with open(target_path, 'rb') as target_file:
+	with open(target_image_path, 'rb') as target_image_file:
 		test_client.post('/assets?type=target', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		}, files =
 		[
-			('file', ('target.mp4', target_file.read(), 'video/mp4'))
+			('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg'))
+		])
+
+	with open(target_video_path, 'rb') as target_video_file:
+		test_client.post('/assets?type=target', headers =
+		{
+			'Authorization': 'Bearer ' + access_token
+		}, files =
+		[
+			('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
 		])
 
 	get_response = test_client.get('/assets', headers =
@@ -176,9 +204,10 @@ def test_get_assets(test_client : TestClient) -> None:
 	get_body = get_response.json()
 	assets = get_body.get('assets')
 
-	assert len(assets) == 2
+	assert len(assets) == 3
 	assert assets[0].get('media') == 'image'
-	assert assets[1].get('media') == 'video'
+	assert assets[1].get('media') == 'image'
+	assert assets[2].get('media') == 'video'
 
 	assert get_response.status_code == 200
 
@@ -198,16 +227,14 @@ def test_get_asset(test_client : TestClient) -> None:
 	source_path = get_test_example_file('source.jpg')
 
 	with open(source_path, 'rb') as source_file:
-		source_content = source_file.read()
 		upload_response = test_client.post('/assets?type=source', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		}, files =
 		[
-			('file', ('source.jpg', source_content, 'image/jpeg'))
+			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 		])
-	upload_body = upload_response.json()
-	asset_id = upload_body.get('asset_ids')[0]
+	asset_ids = upload_response.json().get('asset_ids')
 
 	second_session_response = test_client.post('/session', json =
 	{
@@ -216,20 +243,20 @@ def test_get_asset(test_client : TestClient) -> None:
 	second_session_body = second_session_response.json()
 	second_access_token = second_session_body.get('access_token')
 
-	get_response = test_client.get('/assets/' + asset_id, headers =
+	get_response = test_client.get('/assets/' + asset_ids[0], headers =
 	{
 		'Authorization': 'Bearer ' + second_access_token
 	})
 
 	assert get_response.status_code == 404
 
-	get_response = test_client.get('/assets/' + asset_id, headers =
+	get_response = test_client.get('/assets/' + asset_ids[0], headers =
 	{
 		'Authorization': 'Bearer ' + access_token
 	})
 	get_body = get_response.json()
 
-	assert get_body.get('id') == asset_id
+	assert get_body.get('id') == asset_ids[0]
 	assert get_body.get('type') == 'source'
 	assert get_body.get('media') == 'image'
 	assert get_body.get('format') == 'jpeg'
@@ -250,18 +277,16 @@ def test_delete_assets(test_client : TestClient) -> None:
 	source_path = get_test_example_file('source.jpg')
 
 	with open(source_path, 'rb') as source_file:
-		source_content = source_file.read()
 		upload_response = test_client.post('/assets?type=source', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		}, files =
 		[
-			('file', ('source.jpg', source_content, 'image/jpeg'))
+			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 		])
-	upload_body = upload_response.json()
-	asset_id = upload_body.get('asset_ids')[0]
+	asset_ids = upload_response.json().get('asset_ids')
 
-	assert asset_store.get_asset(session_id, asset_id)
+	assert asset_store.get_asset(session_id, asset_ids[0])
 
 	second_session_response = test_client.post('/session', json =
 	{
@@ -275,7 +300,7 @@ def test_delete_assets(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + second_access_token
 	}, json =
 	{
-		'asset_ids': [ asset_id ]
+		'asset_ids': asset_ids
 	})
 
 	assert delete_response.status_code == 404
@@ -285,7 +310,7 @@ def test_delete_assets(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	}, json =
 	{
-		'asset_ids': [ asset_id ]
+		'asset_ids': asset_ids
 	})
 
 	assert delete_response.status_code == 200
@@ -295,7 +320,7 @@ def test_delete_assets(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	}, json =
 	{
-		'asset_ids': [ asset_id ]
+		'asset_ids': asset_ids
 	})
 
 	assert delete_response.status_code == 404
@@ -303,7 +328,8 @@ def test_delete_assets(test_client : TestClient) -> None:
 
 def test_upload_asset_security_strategies(test_client : TestClient) -> None:
 	source_path = get_test_example_file('source.jpg')
-	target_path = get_test_example_file('target-240p.mp4')
+	target_image_path = get_test_example_file('target-240p.jpg')
+	target_video_path = get_test_example_file('target-240p.mp4')
 
 	for strategy in [ 'strict', 'moderate' ]:
 		state_manager.init_item('api_security_strategy', strategy)
@@ -324,22 +350,34 @@ def test_upload_asset_security_strategies(test_client : TestClient) -> None:
 				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 			])
 
-		with open(target_path, 'rb') as target_file:
-			target_upload_response = test_client.post('/assets?type=target', headers =
+		with open(target_image_path, 'rb') as target_image_file:
+			target_image_upload_response = test_client.post('/assets?type=target', headers =
 			{
 				'Authorization': 'Bearer ' + access_token
 			}, files =
 			[
-				('file', ('target.mp4', target_file.read(), 'video/mp4'))
+				('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg'))
+			])
+
+		with open(target_video_path, 'rb') as target_video_file:
+			target_video_upload_response = test_client.post('/assets?type=target', headers =
+			{
+				'Authorization': 'Bearer ' + access_token
+			}, files =
+			[
+				('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
 			])
 
 		assert source_upload_response.status_code == 201
-		assert target_upload_response.status_code == 201
+		assert target_image_upload_response.status_code == 201
+		assert target_video_upload_response.status_code == 201
 
 		source_asset_id = source_upload_response.json().get('asset_ids')[0]
-		target_asset_id = target_upload_response.json().get('asset_ids')[0]
+		target_image_asset_id = target_image_upload_response.json().get('asset_ids')[0]
+		target_video_asset_id = target_video_upload_response.json().get('asset_ids')[0]
 
 		assert asset_store.get_asset(session_id, source_asset_id).get('media') == 'image'
-		assert asset_store.get_asset(session_id, target_asset_id).get('media') == 'video'
+		assert asset_store.get_asset(session_id, target_image_asset_id).get('media') == 'image'
+		assert asset_store.get_asset(session_id, target_video_asset_id).get('media') == 'video'
 
 	state_manager.init_item('api_security_strategy', 'strict')
