@@ -409,6 +409,7 @@ const app = (function() {
         connections = connections.filter(c => c.toPortId !== toPortId); // only one input per port
         connections.push({ id: 'conn_' + nextConnId++, fromNodeId, fromPortId, toNodeId, toPortId });
         renderSVG();
+        saveToStorage();
         // Trigger the source node's downstream propagation (handles output nodes + auto-exec)
         const fromNode = getNode(fromNodeId);
         if (fromNode) triggerDownstream(fromNode);
@@ -492,7 +493,7 @@ const app = (function() {
         return null;
     }
 
-    function removeConnection(id) { connections = connections.filter(c => c.id !== id); renderSVG(); }
+    function removeConnection(id) { connections = connections.filter(c => c.id !== id); renderSVG(); saveToStorage(); }
 
     // ── Rendering ──
     function renderAll() { renderNodes(); renderSVG(); }
@@ -524,7 +525,7 @@ const app = (function() {
             </div>
             <div class="node-body bg-node px-4 py-3 space-y-2 scrollbar-thin" style="max-height:${node.bodyMaxH || 600}px;overflow-y:auto;border-radius:0 0 11px 11px;">${getNodeBody(node)}</div>
             ${getPortsHTML(node)}
-            ${['_image_input','_image_output','_video_input','_video_output'].includes(node.key) ? '<div class="resize-handle"><i data-lucide="grip-horizontal" class="w-full h-full text-gray-600"></i></div>' : ''}`;
+            ${['_image_input','_image_output','_video_input','_video_output'].includes(node.key) ? '<div class="resize-handle"><svg width="10" height="10" viewBox="0 0 10 10" class="text-gray-600" style="margin:3px"><path d="M9 1L1 9M9 5L5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>' : ''}`;
 
         div.querySelector('.btn-del').addEventListener('click', e => { e.stopPropagation(); deleteNode(node.id); });
         const resizeEl = div.querySelector('.resize-handle');
@@ -1052,6 +1053,7 @@ const app = (function() {
         nodes = nodes.filter(n => n.id !== id);
         selectedNodes = selectedNodes.filter(s => s !== id);
         renderAll();
+        saveToStorage();
     }
 
     function resetView() { panX = 0; panY = 0; zoom = 1; updateView(); }
@@ -1235,6 +1237,7 @@ const app = (function() {
     }
 
     setInterval(saveToStorage, 5000);
+    window.addEventListener('beforeunload', saveToStorage);
 
     // ── Init ──
     async function init() {
