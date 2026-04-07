@@ -634,8 +634,8 @@ const app = (function() {
     }
 
     function getVideoOutputBody(node) {
-        if (node.data.videoResultUrl) {
-            return `<div class="border border-nodeBorder rounded-lg overflow-hidden"><video src="${node.data.videoResultUrl}" class="w-full bg-black/20" controls autoplay loop muted></video></div>`;
+        if (node.data.videoResultUrl && node.data.videoResultUrl.startsWith('blob:')) {
+            return `<div class="border border-nodeBorder rounded-lg overflow-hidden"><video src="${node.data.videoResultUrl}" class="w-full bg-black/20" controls autoplay loop muted onerror="this.parentElement.innerHTML='<p class=\\'text-gray-600 text-[10px] p-4 text-center\\'>Video expired, re-process to update</p>'"></video></div>`;
         }
         if (node.data.resultUrl) {
             return `<div class="border border-nodeBorder rounded-lg overflow-hidden"><img src="${node.data.resultUrl}" class="w-full object-contain bg-black/20"/></div>`;
