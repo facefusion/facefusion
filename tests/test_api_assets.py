@@ -20,7 +20,7 @@ def before_all() -> None:
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg'), '-y' ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
 
 
 @pytest.fixture(scope = 'module')
@@ -70,36 +70,23 @@ def test_upload_asset(test_client : TestClient) -> None:
 	assert asset.get('format') == 'jpeg'
 	assert upload_response.status_code == 201
 
-	with open(target_image_path, 'rb') as target_image_file:
+	with open(target_image_path, 'rb') as target_image_file, open(target_video_path, 'rb') as target_video_file:
 		upload_response = test_client.post('/assets?type=target', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		}, files =
 		[
-			('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg'))
-		])
-	asset_ids = upload_response.json().get('asset_ids')
-	asset = asset_store.get_asset(session_id, asset_ids[0])
-
-	assert asset.get('media') == 'image'
-	assert asset.get('type') == 'target'
-	assert asset.get('format') == 'jpeg'
-	assert upload_response.status_code == 201
-
-	with open(target_video_path, 'rb') as target_video_file:
-		upload_response = test_client.post('/assets?type=target', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		}, files =
-		[
+			('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
 			('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
 		])
 	asset_ids = upload_response.json().get('asset_ids')
-	asset = asset_store.get_asset(session_id, asset_ids[0])
 
-	assert asset.get('media') == 'video'
-	assert asset.get('type') == 'target'
-	assert asset.get('format') == 'mp4'
+	assert asset_store.get_asset(session_id, asset_ids[0]).get('media') == 'image'
+	assert asset_store.get_asset(session_id, asset_ids[0]).get('type') == 'target'
+	assert asset_store.get_asset(session_id, asset_ids[0]).get('format') == 'jpeg'
+	assert asset_store.get_asset(session_id, asset_ids[1]).get('media') == 'video'
+	assert asset_store.get_asset(session_id, asset_ids[1]).get('type') == 'target'
+	assert asset_store.get_asset(session_id, asset_ids[1]).get('format') == 'mp4'
 	assert upload_response.status_code == 201
 
 	audio_path = get_test_example_file('source.mp3')
@@ -179,21 +166,13 @@ def test_get_assets(test_client : TestClient) -> None:
 			('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 		])
 
-	with open(target_image_path, 'rb') as target_image_file:
+	with open(target_image_path, 'rb') as target_image_file, open(target_video_path, 'rb') as target_video_file:
 		test_client.post('/assets?type=target', headers =
 		{
 			'Authorization': 'Bearer ' + access_token
 		}, files =
 		[
-			('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg'))
-		])
-
-	with open(target_video_path, 'rb') as target_video_file:
-		test_client.post('/assets?type=target', headers =
-		{
-			'Authorization': 'Bearer ' + access_token
-		}, files =
-		[
+			('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
 			('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
 		])
 
@@ -350,34 +329,24 @@ def test_upload_asset_security_strategies(test_client : TestClient) -> None:
 				('file', ('source.jpg', source_file.read(), 'image/jpeg'))
 			])
 
-		with open(target_image_path, 'rb') as target_image_file:
-			target_image_upload_response = test_client.post('/assets?type=target', headers =
+		with open(target_image_path, 'rb') as target_image_file, open(target_video_path, 'rb') as target_video_file:
+			target_upload_response = test_client.post('/assets?type=target', headers =
 			{
 				'Authorization': 'Bearer ' + access_token
 			}, files =
 			[
-				('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg'))
-			])
-
-		with open(target_video_path, 'rb') as target_video_file:
-			target_video_upload_response = test_client.post('/assets?type=target', headers =
-			{
-				'Authorization': 'Bearer ' + access_token
-			}, files =
-			[
+				('file', ('target-240p.jpg', target_image_file.read(), 'image/jpeg')),
 				('file', ('target-240p.mp4', target_video_file.read(), 'video/mp4'))
 			])
 
 		assert source_upload_response.status_code == 201
-		assert target_image_upload_response.status_code == 201
-		assert target_video_upload_response.status_code == 201
+		assert target_upload_response.status_code == 201
 
 		source_asset_id = source_upload_response.json().get('asset_ids')[0]
-		target_image_asset_id = target_image_upload_response.json().get('asset_ids')[0]
-		target_video_asset_id = target_video_upload_response.json().get('asset_ids')[0]
+		target_asset_ids = target_upload_response.json().get('asset_ids')
 
 		assert asset_store.get_asset(session_id, source_asset_id).get('media') == 'image'
-		assert asset_store.get_asset(session_id, target_image_asset_id).get('media') == 'image'
-		assert asset_store.get_asset(session_id, target_video_asset_id).get('media') == 'video'
+		assert asset_store.get_asset(session_id, target_asset_ids[0]).get('media') == 'image'
+		assert asset_store.get_asset(session_id, target_asset_ids[1]).get('media') == 'video'
 
 	state_manager.init_item('api_security_strategy', 'strict')
