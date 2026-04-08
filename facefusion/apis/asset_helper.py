@@ -1,6 +1,5 @@
 import asyncio
 import os
-import queue
 import uuid
 from typing import List, Optional
 
@@ -9,7 +8,7 @@ from starlette.datastructures import UploadFile
 import facefusion.choices
 from facefusion import ffmpeg, process_manager, state_manager
 from facefusion.filesystem import create_directory, get_file_extension, get_file_format, is_audio, is_image, is_video
-from facefusion.types import ImageMetadata, MediaType, UploadQueue
+from facefusion.types import ImageMetadata, MediaType
 from facefusion.vision import detect_image_resolution
 
 
@@ -60,12 +59,6 @@ def validate_asset_files(upload_files : List[UploadFile]) -> bool:
 	return True
 
 
-async def feed_upload_queue(upload_file : UploadFile, upload_queue : UploadQueue) -> None:
-	while file_chunk := await upload_file.read(1024):
-		upload_queue.put(file_chunk)
-	upload_queue.put(b'')
-
-
 async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 	asset_paths : List[str] = []
 	api_security_strategy = state_manager.get_item('api_security_strategy')
@@ -80,22 +73,18 @@ async def save_asset_files(upload_files : List[UploadFile]) -> List[str]:
 
 		asset_file_name = uuid.uuid4().hex
 		asset_path = os.path.join(temp_path, asset_file_name + file_extension)
-		upload_queue : UploadQueue = queue.SimpleQueue() #todo: not sure if queue is even needed
+		file_content = await upload_file.read()
 
 		process_manager.start()
 
-		upload_task = asyncio.create_task(feed_upload_queue(upload_file, upload_queue))
-
-		if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, upload_queue.get, asset_path, api_security_strategy):
+		if media_type == 'audio' and await asyncio.to_thread(ffmpeg.sanitize_audio, file_content, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
 
-		if media_type == 'image' and await asyncio.to_thread(ffmpeg.sanitize_image, upload_queue.get, asset_path):
+		if media_type == 'image' and await asyncio.to_thread(ffmpeg.sanitize_image, file_content, asset_path):
 			asset_paths.append(asset_path)
 
-		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, upload_queue.get, asset_path, api_security_strategy):
+		if media_type == 'video' and await asyncio.to_thread(ffmpeg.sanitize_video, file_content, asset_path, api_security_strategy):
 			asset_paths.append(asset_path)
-
-		await upload_task
 
 		process_manager.end()
 
