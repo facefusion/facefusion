@@ -10,7 +10,7 @@ import facefusion.choices
 from facefusion import ffmpeg_builder, logger, process_manager, state_manager, translator
 from facefusion.filesystem import get_file_format, remove_file
 from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
-from facefusion.types import ApiSecurityStrategy, AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, MediaChunkReader, Resolution, SampleRate, UpdateProgress, VideoEncoder, VideoFormat
+from facefusion.types import ApiSecurityStrategy, AudioBuffer, AudioEncoder, Command, EncoderSet, Fps, Resolution, SampleRate, UpdateProgress, VideoEncoder, VideoFormat
 from facefusion.vision import detect_video_duration, detect_video_fps, pack_resolution, predict_video_frame_total
 
 
@@ -45,29 +45,17 @@ def update_progress(progress : tqdm, frame_number : int) -> None:
 	progress.update(frame_number - progress.n)
 
 
-def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
-	commands = ffmpeg_builder.run(commands)
-	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-	return complete_process(process)
-
-
-def run_ffmpeg_with_pipe(commands : List[Command], media_chunk_reader : MediaChunkReader) -> subprocess.Popen[bytes]:
+def run_ffmpeg_with_pipe(commands : List[Command], file_content : bytes) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.run(commands)
 	process = subprocess.Popen(commands, stdin = subprocess.PIPE, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-
-	while media_chunk := media_chunk_reader():
-		if process.poll() is not None: #todo - poll not allowed
-			break
-		process.stdin.write(media_chunk)
-
-	if process.stdin and not process.stdin.closed:
-		process.stdin.close()
-
-	return complete_process(process)
+	process.communicate(input = file_content)
+	return process
 
 
-def complete_process(process : subprocess.Popen[bytes]) -> subprocess.Popen[bytes]:
+def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
+	commands = ffmpeg_builder.run(commands)
+	process = subprocess.Popen(commands, stderr = subprocess.PIPE, stdout = subprocess.PIPE)
 
 	while process_manager.is_processing():
 		try:
@@ -313,7 +301,7 @@ def concat_video(output_path : str, temp_output_paths : List[str]) -> bool:
 	return process.returncode == 0
 
 
-def sanitize_audio(media_chunk_reader : MediaChunkReader, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+def sanitize_audio(file_content : bytes, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
 	if security_strategy == 'strict':
 		commands = ffmpeg_builder.chain(
 			ffmpeg_builder.set_input('pipe:0'),
@@ -321,7 +309,7 @@ def sanitize_audio(media_chunk_reader : MediaChunkReader, asset_path : str, secu
 			ffmpeg_builder.strip_metadata(),
 			ffmpeg_builder.force_output(asset_path)
 		)
-		return run_ffmpeg_with_pipe(commands, media_chunk_reader).returncode == 0
+		return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
@@ -329,20 +317,20 @@ def sanitize_audio(media_chunk_reader : MediaChunkReader, asset_path : str, secu
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
 	)
-	return run_ffmpeg_with_pipe(commands, media_chunk_reader).returncode == 0
+	return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
 
 
-def sanitize_image(media_chunk_reader : MediaChunkReader, asset_path : str) -> bool:
+def sanitize_image(file_content : bytes, asset_path : str) -> bool:
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
 		ffmpeg_builder.deep_copy_image(),
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
 	)
-	return run_ffmpeg_with_pipe(commands, media_chunk_reader).returncode == 0
+	return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
 
 
-def sanitize_video(media_chunk_reader : MediaChunkReader, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
+def sanitize_video(file_content : bytes, asset_path : str, security_strategy : ApiSecurityStrategy) -> bool:
 	if security_strategy == 'strict':
 		available_video_encoders = get_static_available_encoder_set().get('video')
 		commands = ffmpeg_builder.chain(
@@ -355,7 +343,7 @@ def sanitize_video(media_chunk_reader : MediaChunkReader, asset_path : str, secu
 			ffmpeg_builder.strip_metadata(),
 			ffmpeg_builder.force_output(asset_path)
 		)
-		return run_ffmpeg_with_pipe(commands, media_chunk_reader).returncode == 0
+		return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
 
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.set_input('pipe:0'),
@@ -364,7 +352,7 @@ def sanitize_video(media_chunk_reader : MediaChunkReader, asset_path : str, secu
 		ffmpeg_builder.strip_metadata(),
 		ffmpeg_builder.force_output(asset_path)
 	)
-	return run_ffmpeg_with_pipe(commands, media_chunk_reader).returncode == 0
+	return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
 
 
 def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:

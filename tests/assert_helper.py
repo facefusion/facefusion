@@ -1,7 +1,5 @@
-import io
 import os
 import tempfile
-from functools import partial
 
 from facefusion.filesystem import are_images, create_directory, is_directory, is_file, remove_directory, resolve_file_paths
 from facefusion.types import JobStatus
@@ -48,8 +46,3 @@ def prepare_test_output_directory() -> bool:
 	remove_directory(test_outputs_directory)
 	create_directory(test_outputs_directory)
 	return is_directory(test_outputs_directory)
-
-
-def create_media_reader(file_path : str) -> partial[bytes]: #todo: kill this
-	file_buffer = io.BytesIO(open(file_path, 'rb').read())
-	return partial(file_buffer.read, 1024)
