@@ -355,6 +355,34 @@ def sanitize_video(file_content : bytes, asset_path : str, security_strategy : A
 	return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
 
 
+def open_vp8_encoder(resolution : Resolution, stream_fps : int, stream_bitrate : str, stream_bufsize : str) -> subprocess.Popen[bytes]:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.use_wallclock_timestamps(),
+		ffmpeg_builder.capture_video(),
+		ffmpeg_builder.set_media_resolution(pack_resolution(resolution)),
+		ffmpeg_builder.set_input('-'),
+		ffmpeg_builder.set_video_encoder('libvpx'),
+		ffmpeg_builder.set_vp8_deadline('realtime'),
+		ffmpeg_builder.set_cpu_used(8), # TODO: replace hardcoded value
+		ffmpeg_builder.enforce_pixel_format('yuv420p'),
+		ffmpeg_builder.set_crf(10), # TODO: replace hardcoded value
+		ffmpeg_builder.set_video_bitrate(stream_bitrate),
+		ffmpeg_builder.set_video_bufsize(stream_bufsize),
+		ffmpeg_builder.set_keyframe_interval(stream_fps),
+		ffmpeg_builder.set_lag_in_frames(0),
+		ffmpeg_builder.ignore_audio_stream(),
+		ffmpeg_builder.set_output_format('ivf'),
+		ffmpeg_builder.set_output('-')
+	)
+	commands = ffmpeg_builder.run(commands)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+
+def write_raw_bytes(process : subprocess.Popen[bytes], raw_bytes : bytes) -> None:
+	process.stdin.write(raw_bytes)
+	process.stdin.flush()
+
+
 def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:
 	if video_format == 'avi' and audio_encoder == 'libopus':
 		return 'aac'

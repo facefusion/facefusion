@@ -269,6 +269,17 @@ RtcOfferSet = TypedDict('RtcOfferSet',
 	'type': str
 })
 
+RtcPeer = TypedDict('RtcPeer',
+{
+	'peer_connection': int,
+	'video_track': int,
+	'audio_track': int,
+	'connection': bool
+})
+
+RtcVideoTrack : TypeAlias = int
+RtcAudioTrack : TypeAlias = int
+
 ModelOptions : TypeAlias = Dict[str, Any]
 ModelSet : TypeAlias = Dict[str, ModelOptions]
 ModelInitializer : TypeAlias = NDArray[Any]
@@ -388,6 +399,7 @@ Job = TypedDict('Job',
 })
 JobSet : TypeAlias = Dict[str, Job]
 
+RtcStateValue : TypeAlias = Any
 StateValue : TypeAlias = Any
 StateKey = Literal\
 [

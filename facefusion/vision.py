@@ -53,6 +53,10 @@ def write_image(image_path : str, vision_frame : VisionFrame) -> bool:
 	return False
 
 
+def convert_to_raw_rgb(vision_frame : VisionFrame) -> bytes:
+	return cv2.cvtColor(vision_frame, cv2.COLOR_BGR2RGB).tobytes()
+
+
 def detect_image_resolution(image_path : str) -> Optional[Resolution]:
 	if is_image(image_path):
 		image = read_image(image_path)

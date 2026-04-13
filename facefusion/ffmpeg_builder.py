@@ -289,3 +289,43 @@ def map_qsv_preset(video_preset : VideoPreset) -> Optional[str]:
 	if video_preset in [ 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow' ]:
 		return video_preset
 	return None
+
+
+def use_wallclock_timestamps() -> List[Command]:
+	return [ '-use_wallclock_as_timestamps', '1' ]
+
+
+def set_video_bitrate(video_bitrate : str) -> List[Command]:
+	return [ '-b:v', video_bitrate, '-maxrate', video_bitrate ]
+
+
+def set_video_bufsize(video_bufsize : str) -> List[Command]:
+	return [ '-bufsize', video_bufsize ]
+
+
+def set_keyframe_interval(interval : int) -> List[Command]:
+	return [ '-g', str(interval), '-keyint_min', str(interval) ]
+
+
+def ignore_audio_stream() -> List[Command]:
+	return [ '-an' ]
+
+
+def set_output_format(output_format : str) -> List[Command]:
+	return [ '-f', output_format ]
+
+
+def set_vp8_deadline(deadline : str) -> List[Command]:
+	return [ '-deadline', deadline ]
+
+
+def set_cpu_used(value : int) -> List[Command]:
+	return [ '-cpu-used', str(value) ]
+
+
+def set_crf(value : int) -> List[Command]:
+	return [ '-crf', str(value) ]
+
+
+def set_lag_in_frames(value : int) -> List[Command]:
+	return [ '-lag-in-frames', str(value) ]
