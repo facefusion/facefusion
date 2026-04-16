@@ -87,7 +87,7 @@ def create_static_download_set() -> Dict[str, DownloadSet]:
 		{
 			'datachannel':
 			{
-				'url': resolve_download_url('binaries-1.0.0', binary_name + '.hash'),
+				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so.hash', # TODO: use url with dynamic binary_name
 				'path': resolve_relative_path('../.assets/binaries/' + binary_name + '.hash')
 			}
 		},
@@ -95,7 +95,7 @@ def create_static_download_set() -> Dict[str, DownloadSet]:
 		{
 			'datachannel':
 			{
-				'url': resolve_download_url('binaries-1.0.0', binary_name),
+				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so', # TODO: use url with dynamic binary_name
 				'path': resolve_relative_path('../.assets/binaries/' + binary_name)
 			}
 		}
