@@ -5,7 +5,7 @@ from functools import lru_cache
 from typing import Dict, Optional
 
 from facefusion.common_helper import is_linux, is_macos, is_windows
-from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.filesystem import resolve_relative_path
 from facefusion.types import DownloadSet, RtcStateValue
 
