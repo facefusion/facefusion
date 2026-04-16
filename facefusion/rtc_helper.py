@@ -51,18 +51,19 @@ RTC_PACKETIZER_INIT = type('RtcPacketizerInit', (ctypes.Structure,),
 
 RTC_STATE : Dict[str, RtcStateValue] =\
 {
-	'lib': None,
+	'library': None,
 	'sessions': {},
 	'pending_connections': {},
 	'send_start_time': 0.0,
-	'audio_pts': 0,
-	'opus_enc': None,
-	'libopus_handle': None,
+	'audio_timestamp': 0,
+	'opus_encoder': None,
+	'opus_library': None,
 	'audio_buffer': bytearray(),
 	'audio_lock': threading.Lock(),
-	'desc_cb': None,
-	'gather_cb': None,
-	'state_cb': None
+	'description_callback': None,
+	'gathering_callback': None,
+	'state_callback': None,
+	'track_open_callback': None
 }
 
 
@@ -123,23 +124,28 @@ def on_gathering(peer_connection_id : int, gathering_state : int, user_ptr : Opt
 		pending_connection['ice_gather'].set()
 
 
+def on_track_open(track_id : int, user_ptr : Optional[int]) -> None:
+	pass
+
+
 def on_state(peer_connection_id : int, connection_state : int, user_ptr : Optional[int]) -> None:
 	if connection_state == 2:
 
 		for session in RTC_STATE.get('sessions').values():
 			for rtc_peer in session.get('peers', []):
 				if rtc_peer.get('pc') == peer_connection_id:
-					rtc_peer['connected'] = True
+					rtc_peer['connection'] = True
 					return None
 	return None
 
 
 def prepare_types() -> None:
-	rtc_library = RTC_STATE.get('lib')
+	rtc_library = RTC_STATE.get('library')
 	log_cb_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)
 	desc_cb_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p)
 	state_cb_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)
 	gather_cb_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)
+	open_cb_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)
 	rtc_library.rtcInitLogger.argtypes = [ ctypes.c_int, log_cb_type ]
 	rtc_library.rtcInitLogger.restype = None
 	rtc_library.rtcInitLogger(4, log_cb_type(0))
@@ -180,35 +186,45 @@ def prepare_types() -> None:
 	rtc_library.rtcIsOpen.argtypes = [ ctypes.c_int ]
 	rtc_library.rtcIsOpen.restype = ctypes.c_bool
 
+	rtc_library.rtcSetOpenCallback.argtypes = [ ctypes.c_int, open_cb_type ]
+	rtc_library.rtcSetOpenCallback.restype = ctypes.c_int
+
+	rtc_library.rtcChainRtcpNackResponder.argtypes = [ ctypes.c_int, ctypes.c_uint ]
+	rtc_library.rtcChainRtcpNackResponder.restype = ctypes.c_int
+
+	rtc_library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
+	rtc_library.rtcGetLocalDescription.restype = ctypes.c_int
+
 	rtc_library.rtcSetOpusPacketizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
 	rtc_library.rtcSetOpusPacketizer.restype = ctypes.c_int
 
-	RTC_STATE['desc_cb'] = desc_cb_type(on_description)
-	RTC_STATE['gather_cb'] = gather_cb_type(on_gathering)
-	RTC_STATE['state_cb'] = state_cb_type(on_state)
+	RTC_STATE['description_callback'] = desc_cb_type(on_description)
+	RTC_STATE['gathering_callback'] = gather_cb_type(on_gathering)
+	RTC_STATE['state_callback'] = state_cb_type(on_state)
+	RTC_STATE['track_open_callback'] = open_cb_type(on_track_open)
 
 
 def init_opus_encoder() -> bool:
-	if RTC_STATE.get('opus_enc'):
+	if RTC_STATE.get('opus_encoder'):
 		return True
 
 	opus_path = ctypes.util.find_library('opus')
 
 	if opus_path:
-		RTC_STATE['libopus_handle'] = ctypes.CDLL(opus_path)
-		RTC_STATE.get('libopus_handle').opus_encoder_create.argtypes = [ ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int) ]
-		RTC_STATE.get('libopus_handle').opus_encoder_create.restype = ctypes.c_void_p
-		RTC_STATE.get('libopus_handle').opus_encode.argtypes = [ ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_ubyte), ctypes.c_int32 ]
-		RTC_STATE.get('libopus_handle').opus_encode.restype = ctypes.c_int32
-		RTC_STATE['opus_enc'] = RTC_STATE.get('libopus_handle').opus_encoder_create(48000, 2, 2049, ctypes.byref(ctypes.c_int(0)))
+		RTC_STATE['opus_library'] = ctypes.CDLL(opus_path)
+		RTC_STATE.get('opus_library').opus_encoder_create.argtypes = [ ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_int) ]
+		RTC_STATE.get('opus_library').opus_encoder_create.restype = ctypes.c_void_p
+		RTC_STATE.get('opus_library').opus_encode.argtypes = [ ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_ubyte), ctypes.c_int32 ]
+		RTC_STATE.get('opus_library').opus_encode.restype = ctypes.c_int32
+		RTC_STATE['opus_encoder'] = RTC_STATE.get('opus_library').opus_encoder_create(48000, 2, 2049, ctypes.byref(ctypes.c_int(0)))
 		return True
 
 	return False
 
 
 def encode_opus_frame(pcm_data : bytes) -> Optional[bytes]:
-	opus_enc = RTC_STATE.get('opus_enc')
-	libopus_handle = RTC_STATE.get('libopus_handle')
+	opus_enc = RTC_STATE.get('opus_encoder')
+	libopus_handle = RTC_STATE.get('opus_library')
 
 	if opus_enc and libopus_handle:
 		max_packet = 4000

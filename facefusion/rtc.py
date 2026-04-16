@@ -3,7 +3,7 @@ import threading
 import time
 from typing import Optional, Tuple
 
-from facefusion.rtc_helper import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, RTC_STATE, create_static_download_set, encode_opus_frame, init_opus_encoder, prepare_types
+from facefusion.rtc_helper import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, RTC_STATE, create_static_download_set, prepare_types
 from facefusion.types import RtcAudioTrack, RtcPeer, RtcVideoTrack
 
 
@@ -11,7 +11,7 @@ def load_library() -> bool:
 	binary_path = create_static_download_set().get('sources').get('datachannel').get('path')
 
 	if binary_path:
-		RTC_STATE['lib'] = ctypes.CDLL(binary_path)
+		RTC_STATE['library'] = ctypes.CDLL(binary_path)
 		prepare_types()
 		return True
 
@@ -34,14 +34,27 @@ def create_peer_connection() -> int:
 	config.portRangeEnd = 0
 	config.mtu = 0
 	config.maxMessageSize = 0
-	return RTC_STATE.get('lib').rtcCreatePeerConnection(ctypes.byref(config))
+	return RTC_STATE.get('library').rtcCreatePeerConnection(ctypes.byref(config))
 
 
-def create_session(stream_path : str) -> None:
-	RTC_STATE.get('sessions')[stream_path] =\
-	{
-		'peers': []
-	}
+def create_rtc_session(stream_path : str) -> None:
+	if stream_path not in RTC_STATE.get('sessions'):
+		RTC_STATE.get('sessions')[stream_path] =\
+		{
+			'peers': []
+		}
+
+
+def destroy_rtc_session(stream_path : str) -> None:
+	session = RTC_STATE.get('sessions').pop(stream_path, None)
+	rtc_library = RTC_STATE.get('library')
+
+	if session:
+		for rtc_peer in session.get('peers'):
+			peer_connection_id = rtc_peer.get('pc')
+
+			if peer_connection_id is not None:
+				rtc_library.rtcDeletePeerConnection(peer_connection_id)
 
 
 def send_to_peers(stream_path : str, data : bytes) -> None:
@@ -54,81 +67,24 @@ def send_to_peers(stream_path : str, data : bytes) -> None:
 			if RTC_STATE.get('send_start_time') == 0:
 				RTC_STATE['send_start_time'] = time.monotonic()
 
-			timestamp = int(time.monotonic() - RTC_STATE.get('send_start_time') * 90000) & 0xFFFFFFFF
+			timestamp = int((time.monotonic() - RTC_STATE.get('send_start_time')) * 90000) & 0xFFFFFFFF
 			data_buffer = ctypes.create_string_buffer(data)
 			data_total = len(data)
 
 			for rtc_peer in peers:
-				if rtc_peer.get('connected'):
+				if rtc_peer.get('connection'):
 					video_track_id = rtc_peer.get('video_track')
 
-					if video_track_id and RTC_STATE.get('lib').rtcIsOpen(video_track_id):
-						RTC_STATE.get('lib').rtcSetTrackRtpTimestamp(video_track_id, timestamp)
-						RTC_STATE.get('lib').rtcSendMessage(video_track_id, data_buffer, data_total)
+					if video_track_id and RTC_STATE.get('library').rtcIsOpen(video_track_id):
+						RTC_STATE.get('library').rtcSetTrackRtpTimestamp(video_track_id, timestamp)
+						RTC_STATE.get('library').rtcSendMessage(video_track_id, data_buffer, data_total)
 
 	return None
-
-
-def send_audio(stream_path : str, pcm_data : bytes) -> None:
-	session = RTC_STATE.get('sessions').get(stream_path)
-
-	if session:
-		peers = session.get('peers')
-
-		if peers:
-			init_opus_encoder()
-			rtc_library = RTC_STATE.get('lib')
-
-			with RTC_STATE.get('audio_lock'):
-				RTC_STATE.get('audio_buffer').extend(pcm_data)
-				pcm_frame_size = 960 * 2 * 2
-
-				while len(RTC_STATE.get('audio_buffer')) >= pcm_frame_size:
-					chunk = bytes(RTC_STATE.get('audio_buffer')[:pcm_frame_size])
-					del RTC_STATE.get('audio_buffer')[:pcm_frame_size]
-
-					opus_data = encode_opus_frame(chunk)
-
-					if not opus_data:
-						continue
-
-					encoded_audio_buffer = ctypes.create_string_buffer(opus_data)
-
-					for rtc_peer in peers:
-						if not rtc_peer.get('connected'):
-							continue
-
-						audio_track_id = rtc_peer.get('audio_track')
-
-						if not audio_track_id:
-							continue
-
-						if not rtc_library.rtcIsOpen(audio_track_id):
-							continue
-
-						rtc_library.rtcSetTrackRtpTimestamp(audio_track_id, RTC_STATE.get('audio_pts') & 0xFFFFFFFF)
-						rtc_library.rtcSendMessage(audio_track_id, encoded_audio_buffer, len(opus_data))
-
-					RTC_STATE['audio_pts'] += 960
-
-	return None
-
-
-def destroy_session(stream_path : str) -> None:
-	session = RTC_STATE.get('sessions').pop(stream_path, None)
-	rtc_library = RTC_STATE.get('lib')
-
-	if session:
-		for rtc_peer in session.get('peers'):
-			peer_connection_id = rtc_peer.get('pc')
-
-			if peer_connection_id is not None:
-				rtc_library.rtcDeletePeerConnection(peer_connection_id)
 
 
 def register_pending_connection(peer_connection : int) -> threading.Event:
 	ice_gather = threading.Event()
-	rtc_library = RTC_STATE.get('lib')
+	rtc_library = RTC_STATE.get('library')
 
 	RTC_STATE['pending_connections'][peer_connection] =\
 	{
@@ -136,14 +92,14 @@ def register_pending_connection(peer_connection : int) -> threading.Event:
 		'local_sdp': None
 	}
 
-	rtc_library.rtcSetLocalDescriptionCallback(peer_connection, RTC_STATE.get('desc_cb'))
-	rtc_library.rtcSetGatheringStateChangeCallback(peer_connection, RTC_STATE.get('gather_cb'))
-	rtc_library.rtcSetStateChangeCallback(peer_connection, RTC_STATE.get('state_cb'))
+	rtc_library.rtcSetLocalDescriptionCallback(peer_connection, RTC_STATE.get('description_callback'))
+	rtc_library.rtcSetGatheringStateChangeCallback(peer_connection, RTC_STATE.get('gathering_callback'))
+	rtc_library.rtcSetStateChangeCallback(peer_connection, RTC_STATE.get('state_callback'))
 	return ice_gather
 
 
 def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrack]:
-	rtc_library = RTC_STATE.get('lib')
+	rtc_library = RTC_STATE.get('library')
 
 	video_media_description = b'm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=rtpmap:96 VP8/90000\r\na=sendonly\r\na=mid:0\r\na=rtcp-mux\r\n'
 	audio_media_description = b'm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=rtpmap:111 opus/48000/2\r\na=sendonly\r\na=mid:1\r\na=rtcp-mux\r\n'
@@ -159,6 +115,8 @@ def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrac
 	video_packetizer.maxFragmentSize = 1200
 	rtc_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
 	rtc_library.rtcChainRtcpSrReporter(video_track)
+	rtc_library.rtcSetOpenCallback(video_track, RTC_STATE.get('track_open_callback'))
+	rtc_library.rtcChainRtcpNackResponder(video_track, 512)
 
 	audio_packetizer = RTC_PACKETIZER_INIT()
 	audio_packetizer.ssrc = 43
@@ -171,9 +129,15 @@ def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrac
 
 
 def negotiate_sdp(peer_connection : int, sdp_offer : str, ice_gather : threading.Event) -> Optional[str]:
-	RTC_STATE.get('lib').rtcSetRemoteDescription(peer_connection, sdp_offer.encode('utf-8'), b'offer')
-	ice_gather.wait(timeout = 3)
+	RTC_STATE.get('library').rtcSetRemoteDescription(peer_connection, sdp_offer.encode('utf-8'), b'offer')
+	ice_gather.wait(timeout = 5)
 	pending_connection = RTC_STATE.get('pending_connections').pop(peer_connection, {})
+	buffer_size = 16384
+	buffer_string = ctypes.create_string_buffer(buffer_size)
+
+	if RTC_STATE.get('library').rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
+		return buffer_string.value.decode('utf-8')
+
 	return pending_connection.get('local_sdp')
 
 
@@ -200,10 +164,21 @@ def handle_whep_offer(stream_path : str, sdp_offer : str) -> Optional[str]:
 	return local_sdp
 
 
+def is_peer_connected(stream_path : str) -> bool:
+	session = RTC_STATE.get('sessions').get(stream_path)
+
+	if session:
+		for rtc_peer in session.get('peers', []):
+			if rtc_peer.get('connection'):
+				return True
+
+	return False
+
+
 def start() -> None:
 	load_library()
 
 
 def stop() -> None:
 	for stream_path in list(RTC_STATE.get('sessions').keys()):
-		destroy_session(stream_path)
+		destroy_rtc_session(stream_path)
