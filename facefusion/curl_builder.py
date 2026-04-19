@@ -9,7 +9,7 @@ from facefusion.types import Command
 def run(commands : List[Command]) -> List[Command]:
 	user_agent = metadata.get('name') + '/' + metadata.get('version')
 
-	return [ shutil.which('curl'), '--user-agent', user_agent, '--location', '--silent' ] + commands
+	return [ shutil.which('curl'), '--user-agent', user_agent, '--location', '--silent', '--ssl-no-revoke' ] + commands
 
 
 def chain(*commands : List[Command]) -> List[Command]:
