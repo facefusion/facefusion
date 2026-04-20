@@ -8,7 +8,7 @@ from facefusion.filesystem import resolve_relative_path
 from facefusion.types import DownloadSet, RtcPeer
 
 
-def resolve_binary_name() -> Optional[str]:
+def resolve_binary_file() -> Optional[str]:
 	if is_linux():
 		return 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so'
 	if is_macos():
@@ -20,7 +20,7 @@ def resolve_binary_name() -> Optional[str]:
 
 @lru_cache
 def create_static_download_set() -> Dict[str, DownloadSet]: # TODO: replace once conda package is in place
-	binary_name = resolve_binary_name()
+	binary_name = resolve_binary_file()
 
 	return\
 	{
