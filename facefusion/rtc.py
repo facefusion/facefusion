@@ -161,7 +161,7 @@ def negotiate_sdp(rtc_library : ctypes.CDLL, peer_connection : int, sdp_offer : 
 
 	while time.monotonic() < wait_limit:
 		if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
-			return buffer_string.value.decode('utf-8')
+			return buffer_string.value.decode()
 		time.sleep(0.05)
 
 	return None
