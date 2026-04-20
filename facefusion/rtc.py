@@ -1,24 +1,113 @@
 import ctypes
-import threading
 import time
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
-from facefusion.rtc_helper import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, RTC_STATE, create_static_download_set, prepare_types
+from facefusion.rtc_helper import create_static_download_set
 from facefusion.types import RtcAudioTrack, RtcPeer, RtcVideoTrack
 
 
-def load_library() -> bool:
-	binary_path = create_static_download_set().get('sources').get('datachannel').get('path')
+RTC_CONFIGURATION = type('RtcConfiguration', (ctypes.Structure,),
+{
+	'_fields_':
+	[
+		('iceServers', ctypes.POINTER(ctypes.c_char_p)),
+		('iceServersCount', ctypes.c_int),
+		('proxyServer', ctypes.c_char_p),
+		('bindAddress', ctypes.c_char_p),
+		('certificateType', ctypes.c_int),
+		('iceTransportPolicy', ctypes.c_int),
+		('enableIceTcp', ctypes.c_bool),
+		('enableIceUdpMux', ctypes.c_bool),
+		('disableAutoNegotiation', ctypes.c_bool),
+		('forceMediaTransport', ctypes.c_bool),
+		('portRangeBegin', ctypes.c_ushort),
+		('portRangeEnd', ctypes.c_ushort),
+		('mtu', ctypes.c_int),
+		('maxMessageSize', ctypes.c_int)
+	]
+})
 
-	if binary_path:
-		RTC_STATE['library'] = ctypes.CDLL(binary_path)
-		prepare_types()
+RTC_PACKETIZER_INIT = type('RtcPacketizerInit', (ctypes.Structure,),
+{
+	'_fields_':
+	[
+		('ssrc', ctypes.c_uint32),
+		('cname', ctypes.c_char_p),
+		('payloadType', ctypes.c_uint8),
+		('clockRate', ctypes.c_uint32),
+		('sequenceNumber', ctypes.c_uint16),
+		('timestamp', ctypes.c_uint32),
+		('maxFragmentSize', ctypes.c_uint16),
+		('nalSeparator', ctypes.c_int),
+		('obuPacketization', ctypes.c_int),
+		('playoutDelayId', ctypes.c_uint8),
+		('playoutDelayMin', ctypes.c_uint16),
+		('playoutDelayMax', ctypes.c_uint16)
+	]
+})
+
+LOG_CB_TYPE = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)
+
+
+def init_ctypes(rtc_library : ctypes.CDLL) -> bool:
+	if rtc_library:
+		rtc_library.rtcInitLogger.argtypes = [ ctypes.c_int, LOG_CB_TYPE ]
+		rtc_library.rtcInitLogger.restype = None
+		rtc_library.rtcInitLogger(4, LOG_CB_TYPE(0))
+
+		rtc_library.rtcCreatePeerConnection.argtypes = [ ctypes.POINTER(RTC_CONFIGURATION) ]
+		rtc_library.rtcCreatePeerConnection.restype = ctypes.c_int
+
+		rtc_library.rtcDeletePeerConnection.argtypes = [ ctypes.c_int ]
+		rtc_library.rtcDeletePeerConnection.restype = ctypes.c_int
+
+		rtc_library.rtcSetRemoteDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p ]
+		rtc_library.rtcSetRemoteDescription.restype = ctypes.c_int
+
+		rtc_library.rtcAddTrack.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
+		rtc_library.rtcAddTrack.restype = ctypes.c_int
+
+		rtc_library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
+		rtc_library.rtcSendMessage.restype = ctypes.c_int
+
+		rtc_library.rtcSetVP8Packetizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
+		rtc_library.rtcSetVP8Packetizer.restype = ctypes.c_int
+
+		rtc_library.rtcChainRtcpSrReporter.argtypes = [ ctypes.c_int ]
+		rtc_library.rtcChainRtcpSrReporter.restype = ctypes.c_int
+
+		rtc_library.rtcSetTrackRtpTimestamp.argtypes = [ ctypes.c_int, ctypes.c_uint32 ]
+		rtc_library.rtcSetTrackRtpTimestamp.restype = ctypes.c_int
+
+		rtc_library.rtcIsOpen.argtypes = [ ctypes.c_int ]
+		rtc_library.rtcIsOpen.restype = ctypes.c_bool
+
+		rtc_library.rtcChainRtcpNackResponder.argtypes = [ ctypes.c_int, ctypes.c_uint ]
+		rtc_library.rtcChainRtcpNackResponder.restype = ctypes.c_int
+
+		rtc_library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
+		rtc_library.rtcGetLocalDescription.restype = ctypes.c_int
+
+		rtc_library.rtcSetOpusPacketizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
+		rtc_library.rtcSetOpusPacketizer.restype = ctypes.c_int
+
 		return True
 
 	return False
 
 
-def create_peer_connection() -> int:
+def load_library() -> Optional[ctypes.CDLL]:
+	binary_path = create_static_download_set().get('sources').get('datachannel').get('path')
+
+	if binary_path:
+		rtc_library = ctypes.CDLL(binary_path)
+		if init_ctypes(rtc_library):
+			return rtc_library
+
+	return None
+
+
+def create_peer_connection(rtc_library : ctypes.CDLL) -> int:
 	config = RTC_CONFIGURATION()
 	config.iceServers = None
 	config.iceServersCount = 0
@@ -34,73 +123,10 @@ def create_peer_connection() -> int:
 	config.portRangeEnd = 0
 	config.mtu = 0
 	config.maxMessageSize = 0
-	return RTC_STATE.get('library').rtcCreatePeerConnection(ctypes.byref(config))
+	return rtc_library.rtcCreatePeerConnection(ctypes.byref(config))
 
 
-def create_rtc_session(stream_path : str) -> None:
-	if stream_path not in RTC_STATE.get('sessions'):
-		RTC_STATE.get('sessions')[stream_path] =\
-		{
-			'peers': []
-		}
-
-
-def destroy_rtc_session(stream_path : str) -> None:
-	session = RTC_STATE.get('sessions').pop(stream_path, None)
-	rtc_library = RTC_STATE.get('library')
-
-	if session:
-		for rtc_peer in session.get('peers'):
-			peer_connection_id = rtc_peer.get('pc')
-
-			if peer_connection_id is not None:
-				rtc_library.rtcDeletePeerConnection(peer_connection_id)
-
-
-def send_to_peers(stream_path : str, data : bytes) -> None:
-	session = RTC_STATE.get('sessions').get(stream_path)
-
-	if session:
-		peers = session.get('peers')
-
-		if peers:
-			if RTC_STATE.get('send_start_time') == 0:
-				RTC_STATE['send_start_time'] = time.monotonic()
-
-			timestamp = int((time.monotonic() - RTC_STATE.get('send_start_time')) * 90000) & 0xFFFFFFFF
-			data_buffer = ctypes.create_string_buffer(data)
-			data_total = len(data)
-
-			for rtc_peer in peers:
-				if rtc_peer.get('connection'):
-					video_track_id = rtc_peer.get('video_track')
-
-					if video_track_id and RTC_STATE.get('library').rtcIsOpen(video_track_id):
-						RTC_STATE.get('library').rtcSetTrackRtpTimestamp(video_track_id, timestamp)
-						RTC_STATE.get('library').rtcSendMessage(video_track_id, data_buffer, data_total)
-
-	return None
-
-
-def register_pending_connection(peer_connection : int) -> threading.Event:
-	ice_gather = threading.Event()
-	rtc_library = RTC_STATE.get('library')
-
-	RTC_STATE['pending_connections'][peer_connection] =\
-	{
-		'ice_gather': ice_gather,
-		'local_sdp': None
-	}
-
-	rtc_library.rtcSetLocalDescriptionCallback(peer_connection, RTC_STATE.get('description_callback'))
-	rtc_library.rtcSetGatheringStateChangeCallback(peer_connection, RTC_STATE.get('gathering_callback'))
-	rtc_library.rtcSetStateChangeCallback(peer_connection, RTC_STATE.get('state_callback'))
-	return ice_gather
-
-
-def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrack]:
-	rtc_library = RTC_STATE.get('library')
-
+def add_media_tracks(rtc_library : ctypes.CDLL, peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrack]:
 	video_media_description = b'm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=rtpmap:96 VP8/90000\r\na=sendonly\r\na=mid:0\r\na=rtcp-mux\r\n'
 	audio_media_description = b'm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=rtpmap:111 opus/48000/2\r\na=sendonly\r\na=mid:1\r\na=rtcp-mux\r\n'
 
@@ -115,7 +141,6 @@ def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrac
 	video_packetizer.maxFragmentSize = 1200
 	rtc_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
 	rtc_library.rtcChainRtcpSrReporter(video_track)
-	rtc_library.rtcSetOpenCallback(video_track, RTC_STATE.get('track_open_callback'))
 	rtc_library.rtcChainRtcpNackResponder(video_track, 512)
 
 	audio_packetizer = RTC_PACKETIZER_INIT()
@@ -128,57 +153,58 @@ def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrac
 	return video_track, audio_track
 
 
-def negotiate_sdp(peer_connection : int, sdp_offer : str, ice_gather : threading.Event) -> Optional[str]:
-	RTC_STATE.get('library').rtcSetRemoteDescription(peer_connection, sdp_offer.encode('utf-8'), b'offer')
-	ice_gather.wait(timeout = 5)
-	pending_connection = RTC_STATE.get('pending_connections').pop(peer_connection, {})
+def negotiate_sdp(rtc_library : ctypes.CDLL, peer_connection : int, sdp_offer : str) -> Optional[str]:
+	rtc_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode('utf-8'), b'offer')
 	buffer_size = 16384
 	buffer_string = ctypes.create_string_buffer(buffer_size)
+	wait_limit = time.monotonic() + 5
 
-	if RTC_STATE.get('library').rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
-		return buffer_string.value.decode('utf-8')
+	while time.monotonic() < wait_limit:
+		if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
+			return buffer_string.value.decode('utf-8')
+		time.sleep(0.05)
 
-	return pending_connection.get('local_sdp')
+	return None
 
 
-def handle_whep_offer(stream_path : str, sdp_offer : str) -> Optional[str]:
-	session = RTC_STATE.get('sessions').get(stream_path)
-	peer_connection = create_peer_connection()
-	ice_gather = register_pending_connection(peer_connection)
-	video_track, audio_track = add_media_tracks(peer_connection)
+def handle_whep_offer(rtc_library : ctypes.CDLL, peers : List[RtcPeer], sdp_offer : str) -> Optional[str]:
+	peer_connection = create_peer_connection(rtc_library)
+	video_track, audio_track = add_media_tracks(rtc_library, peer_connection)
+	local_sdp = negotiate_sdp(rtc_library, peer_connection, sdp_offer)
 
-	rtc_peer : RtcPeer =\
-	{
-		'peer_connection': peer_connection,
-		'video_track': video_track,
-		'audio_track': audio_track,
-		'connection': False
-	}
-	session['peers'].append(rtc_peer)
-
-	local_sdp = negotiate_sdp(peer_connection, sdp_offer, ice_gather)
-
-	if not local_sdp:
-		session['peers'].remove(rtc_peer)
+	if local_sdp:
+		rtc_peer : RtcPeer =\
+		{
+			'peer_connection': peer_connection,
+			'video_track': video_track,
+			'audio_track': audio_track
+		}
+		peers.append(rtc_peer)
 
 	return local_sdp
 
 
-def is_peer_connected(stream_path : str) -> bool:
-	session = RTC_STATE.get('sessions').get(stream_path)
+def send_to_peers(rtc_library : ctypes.CDLL, peers : List[RtcPeer], data : bytes) -> None:
+	if peers:
+		timestamp = int(time.monotonic() * 90000) & 0xFFFFFFFF
+		data_buffer = ctypes.create_string_buffer(data)
+		data_total = len(data)
 
-	if session:
-		for rtc_peer in session.get('peers', []):
-			if rtc_peer.get('connection'):
-				return True
+		for rtc_peer in peers:
+			video_track_id = rtc_peer.get('video_track')
 
-	return False
+			if video_track_id and rtc_library.rtcIsOpen(video_track_id):
+				rtc_library.rtcSetTrackRtpTimestamp(video_track_id, timestamp)
+				rtc_library.rtcSendMessage(video_track_id, data_buffer, data_total)
 
-
-def start() -> None:
-	load_library()
+	return None
 
 
-def stop() -> None:
-	for stream_path in list(RTC_STATE.get('sessions').keys()):
-		destroy_rtc_session(stream_path)
+def delete_peers(rtc_library : ctypes.CDLL, peers : List[RtcPeer]) -> None:
+	for rtc_peer in peers:
+		peer_connection_id = rtc_peer.get('peer_connection')
+
+		if peer_connection_id:
+			rtc_library.rtcDeletePeerConnection(peer_connection_id)
+
+	peers.clear()

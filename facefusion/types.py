@@ -134,6 +134,7 @@ Session = TypedDict('Session',
 
 Command : TypeAlias = str
 CommandSet : TypeAlias = Dict[str, List[Command]]
+FfmpegMuxer : TypeAlias = str
 
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128', 'dfl_whole_face', 'ffhq_512', 'mtcnn_512', 'styleganex_384']
 WarpTemplateSet : TypeAlias = Dict[WarpTemplate, NDArray[Any]]
@@ -273,8 +274,7 @@ RtcPeer = TypedDict('RtcPeer',
 {
 	'peer_connection': int,
 	'video_track': int,
-	'audio_track': int,
-	'connection': bool
+	'audio_track': int
 })
 
 RtcVideoTrack : TypeAlias = int
@@ -399,7 +399,6 @@ Job = TypedDict('Job',
 })
 JobSet : TypeAlias = Dict[str, Job]
 
-RtcStateValue : TypeAlias = Any
 StateValue : TypeAlias = Any
 StateKey = Literal\
 [
