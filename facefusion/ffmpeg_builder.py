@@ -295,10 +295,6 @@ def use_wallclock_timestamps() -> List[Command]:
 	return [ '-use_wallclock_as_timestamps', '1' ]
 
 
-def set_video_bitrate(video_bitrate : str) -> List[Command]:
-	return [ '-b:v', video_bitrate, '-maxrate', video_bitrate ]
-
-
 def set_keyframe_interval(interval : int) -> List[Command]:
 	return [ '-g', str(interval), '-keyint_min', str(interval) ]
 
