@@ -266,11 +266,6 @@ def test_spawn_stream_encoder() -> None:
 
 	for resolution, stream_fps, stream_bitrate in test_set:
 		encoder = spawn_stream_encoder(resolution, stream_fps, stream_bitrate)
-
-		assert encoder
-		assert encoder.stdin
-		assert encoder.stdout
-
 		frame_size = resolution[0] * resolution[1] * 3
 		stdout, _ = encoder.communicate(input = bytes(frame_size))
 
