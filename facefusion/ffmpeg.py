@@ -355,6 +355,23 @@ def sanitize_video(file_content : bytes, asset_path : str, security_strategy : A
 	return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
 
 
+def spawn_stream(resolution : Resolution, stream_fps : int, stream_bitrate : int) -> subprocess.Popen[bytes]:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.use_wallclock(),
+		ffmpeg_builder.capture_video(),
+		ffmpeg_builder.set_media_resolution(pack_resolution(resolution)),
+		ffmpeg_builder.set_input('-'),
+		ffmpeg_builder.set_video_encoder('libvpx'), # TODO: replace hardcoded value
+		ffmpeg_builder.enforce_pixel_format('yuv420p'), # TODO: replace hardcoded value
+		ffmpeg_builder.set_stream_quality(stream_bitrate),
+		ffmpeg_builder.set_stream_keyframe(stream_fps),
+		ffmpeg_builder.set_muxer('ivf'), # TODO: replace hardcoded value
+		ffmpeg_builder.set_output('-')
+	)
+	commands = ffmpeg_builder.run(commands)
+	return subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+
 def fix_audio_encoder(video_format : VideoFormat, audio_encoder : AudioEncoder) -> AudioEncoder:
 	if video_format == 'avi' and audio_encoder == 'libopus':
 		return 'aac'
@@ -379,7 +396,3 @@ def fix_video_encoder(video_format : VideoFormat, video_encoder : VideoEncoder) 
 	if video_format == 'webm':
 		return 'libvpx-vp9'
 	return video_encoder
-
-
-
-

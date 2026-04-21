@@ -169,6 +169,7 @@ TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
 AudioEncoder = Literal['flac', 'aac', 'libmp3lame', 'libopus', 'libvorbis', 'pcm_s16le', 'pcm_s32le']
 ImageEncoder = Literal['bmp', 'mjpeg', 'png', 'tiff', 'libwebp']
 VideoEncoder = Literal['libx264', 'libx264rgb', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox', 'rawvideo']
+Muxer : TypeAlias = str
 AudioSet : TypeAlias = Dict[AudioFormat, str]
 ImageSet : TypeAlias = Dict[ImageFormat, str]
 VideoSet : TypeAlias = Dict[VideoFormat, str]
@@ -268,6 +269,16 @@ RtcOfferSet = TypedDict('RtcOfferSet',
 	'sdp': str,
 	'type': str
 })
+
+RtcPeer = TypedDict('RtcPeer',
+{
+	'peer_connection': int,
+	'video_track': int,
+	'audio_track': int
+})
+
+RtcVideoTrack : TypeAlias = int
+RtcAudioTrack : TypeAlias = int
 
 ModelOptions : TypeAlias = Dict[str, Any]
 ModelSet : TypeAlias = Dict[str, ModelOptions]

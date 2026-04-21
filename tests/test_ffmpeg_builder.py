@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import chain, concat, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_stream_mode, set_video_encoder, set_video_fps, set_video_quality
+from facefusion.ffmpeg_builder import capture_video, chain, concat, enforce_pixel_format, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_muxer, set_stream_keyframe, set_stream_mode, set_stream_quality, set_video_encoder, set_video_fps, set_video_quality, use_wallclock
 
 
 def test_run() -> None:
@@ -108,3 +108,31 @@ def test_set_video_quality() -> None:
 	assert set_video_quality('hevc_videotoolbox', 0) == [ '-b:v', '1024k' ]
 	assert set_video_quality('hevc_videotoolbox', 50) == [ '-b:v', '25768k' ]
 	assert set_video_quality('hevc_videotoolbox', 100) == [ '-b:v', '50512k' ]
+
+
+def test_use_wallclock_timestamps() -> None:
+	assert use_wallclock() == [ '-use_wallclock_as_timestamps', '1' ]
+
+
+def test_capture_video() -> None:
+	assert capture_video() == [ '-f', 'rawvideo', '-pix_fmt', 'rgb24' ]
+
+
+def test_enforce_pixel_format() -> None:
+	assert enforce_pixel_format('yuv420p') == [ '-pix_fmt', 'yuv420p' ]
+	assert enforce_pixel_format('rgb24') == [ '-pix_fmt', 'rgb24' ]
+
+
+def test_set_stream_quality() -> None:
+	assert set_stream_quality(500) == [ '-b:v', '500k' ]
+	assert set_stream_quality(2000) == [ '-b:v', '2000k' ]
+
+
+def test_set_keyframe_interval() -> None:
+	assert set_stream_keyframe(30) == [ '-g', '30', '-keyint_min', '30' ]
+	assert set_stream_keyframe(60) == [ '-g', '60', '-keyint_min', '60' ]
+
+
+def test_set_output_format() -> None:
+	assert set_muxer('ivf') == [ '-f', 'ivf' ]
+	assert set_muxer('mpegts') == [ '-f', 'mpegts' ]
