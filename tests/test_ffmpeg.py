@@ -270,12 +270,10 @@ def test_spawn_stream_encoder() -> None:
 		stdout, _ = encoder.communicate(input = bytes(frame_size))
 
 		assert len(stdout) > 32
-		ivf_header = stdout[:32]
-		signature = ivf_header[:4]
+		frame_header = stdout[:32]
 
-		assert signature == b'DKIF'
-		ivf_width = struct.unpack_from('<H', ivf_header, 12)[0]
-		ivf_height = struct.unpack_from('<H', ivf_header, 14)[0]
+		assert frame_header[:4] == b'DKIF'
+		output_width = struct.unpack_from('<H', frame_header, 12)[0]
+		output_height = struct.unpack_from('<H', frame_header, 14)[0]
 
-		assert ivf_width == resolution[0]
-		assert ivf_height == resolution[1]
+		assert (output_width, output_height) == resolution
