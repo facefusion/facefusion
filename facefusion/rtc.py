@@ -9,6 +9,8 @@ from facefusion.filesystem import resolve_relative_path
 from facefusion.rtc_bindings import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, init_ctypes
 from facefusion.types import DownloadSet, RtcAudioTrack, RtcPeer, RtcVideoTrack
 
+RTC_LIBRARY: Optional[ctypes.CDLL] = None
+
 
 def resolve_binary_file() -> Optional[str]:
 	if is_linux():
@@ -53,18 +55,23 @@ def pre_check() -> bool:
 	return conditional_download_sources(download_set.get('sources'))
 
 
-def load_library() -> Optional[ctypes.CDLL]:
+def get_rtc_library() -> Optional[ctypes.CDLL]:
+	global RTC_LIBRARY
+
+	if RTC_LIBRARY:
+		return RTC_LIBRARY
 	binary_path = create_static_download_set().get('sources').get('datachannel').get('path')
 
 	if binary_path:
 		rtc_library = ctypes.CDLL(binary_path)
 		if init_ctypes(rtc_library):
-			return rtc_library
+			RTC_LIBRARY = rtc_library
 
-	return None
+	return RTC_LIBRARY
 
 
-def create_peer_connection(rtc_library : ctypes.CDLL) -> int:
+def create_peer_connection() -> int:
+	rtc_library = get_rtc_library()
 	config = RTC_CONFIGURATION()
 	config.iceServers = None
 	config.iceServersCount = 0
@@ -83,7 +90,8 @@ def create_peer_connection(rtc_library : ctypes.CDLL) -> int:
 	return rtc_library.rtcCreatePeerConnection(ctypes.byref(config))
 
 
-def add_media_tracks(rtc_library : ctypes.CDLL, peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrack]:
+def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrack]:
+	rtc_library = get_rtc_library()
 	video_media_description = b'm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=rtpmap:96 VP8/90000\r\na=sendonly\r\na=mid:0\r\na=rtcp-mux\r\n'
 	audio_media_description = b'm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=rtpmap:111 opus/48000/2\r\na=sendonly\r\na=mid:1\r\na=rtcp-mux\r\n'
 
@@ -110,7 +118,8 @@ def add_media_tracks(rtc_library : ctypes.CDLL, peer_connection : int) -> Tuple[
 	return video_track, audio_track
 
 
-def negotiate_sdp(rtc_library : ctypes.CDLL, peer_connection : int, sdp_offer : str) -> Optional[str]:
+def negotiate_sdp(peer_connection : int, sdp_offer : str) -> Optional[str]:
+	rtc_library = get_rtc_library()
 	rtc_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode('utf-8'), b'offer')
 	buffer_size = 16384
 	buffer_string = ctypes.create_string_buffer(buffer_size)
@@ -124,10 +133,10 @@ def negotiate_sdp(rtc_library : ctypes.CDLL, peer_connection : int, sdp_offer : 
 	return None
 
 
-def handle_whep_offer(rtc_library : ctypes.CDLL, peers : List[RtcPeer], sdp_offer : str) -> Optional[str]:
-	peer_connection = create_peer_connection(rtc_library)
-	video_track, audio_track = add_media_tracks(rtc_library, peer_connection)
-	local_sdp = negotiate_sdp(rtc_library, peer_connection, sdp_offer)
+def handle_whep_offer(peers : List[RtcPeer], sdp_offer : str) -> Optional[str]:
+	peer_connection = create_peer_connection()
+	video_track, audio_track = add_media_tracks(peer_connection)
+	local_sdp = negotiate_sdp(peer_connection, sdp_offer)
 
 	if local_sdp:
 		rtc_peer : RtcPeer =\
@@ -141,7 +150,8 @@ def handle_whep_offer(rtc_library : ctypes.CDLL, peers : List[RtcPeer], sdp_offe
 	return local_sdp
 
 
-def send_to_peers(rtc_library : ctypes.CDLL, peers : List[RtcPeer], data : bytes) -> None:
+def send_to_peers(peers : List[RtcPeer], data : bytes) -> None:
+	rtc_library = get_rtc_library()
 	if peers:
 		timestamp = int(time.monotonic() * 90000) & 0xFFFFFFFF
 		data_buffer = ctypes.create_string_buffer(data)
@@ -157,7 +167,9 @@ def send_to_peers(rtc_library : ctypes.CDLL, peers : List[RtcPeer], data : bytes
 	return None
 
 
-def delete_peers(rtc_library : ctypes.CDLL, peers : List[RtcPeer]) -> None:
+def delete_peers(peers : List[RtcPeer]) -> None:
+	rtc_library = get_rtc_library()
+
 	for rtc_peer in peers:
 		peer_connection_id = rtc_peer.get('peer_connection')
 
@@ -167,7 +179,8 @@ def delete_peers(rtc_library : ctypes.CDLL, peers : List[RtcPeer]) -> None:
 	peers.clear()
 
 
-def is_peer_connected(rtc_library : ctypes.CDLL, peers : List[RtcPeer]) -> bool:
+def is_peer_connected(peers : List[RtcPeer]) -> bool:
+	rtc_library = get_rtc_library()
 	for rtc_peer in peers:
 		video_track_id = rtc_peer.get('video_track')
 
