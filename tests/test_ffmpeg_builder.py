@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import capture_video, chain, concat, enforce_pixel_format, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_keyframe_interval, set_output_format, set_stream_mode, set_stream_quality, set_video_encoder, set_video_fps, set_video_quality, use_wallclock_timestamps
+from facefusion.ffmpeg_builder import capture_video, chain, concat, enforce_pixel_format, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_stream_keyframe, set_muxer, set_stream_mode, set_stream_quality, set_video_encoder, set_video_fps, set_video_quality, use_wallclock
 
 
 def test_run() -> None:
@@ -111,7 +111,7 @@ def test_set_video_quality() -> None:
 
 
 def test_use_wallclock_timestamps() -> None:
-	assert use_wallclock_timestamps() == [ '-use_wallclock_as_timestamps', '1' ]
+	assert use_wallclock() == [ '-use_wallclock_as_timestamps', '1' ]
 
 
 def test_capture_video() -> None:
@@ -129,10 +129,10 @@ def test_set_stream_quality() -> None:
 
 
 def test_set_keyframe_interval() -> None:
-	assert set_keyframe_interval(30) == [ '-g', '30', '-keyint_min', '30' ]
-	assert set_keyframe_interval(60) == [ '-g', '60', '-keyint_min', '60' ]
+	assert set_stream_keyframe(30) == [ '-g', '30', '-keyint_min', '30' ]
+	assert set_stream_keyframe(60) == [ '-g', '60', '-keyint_min', '60' ]
 
 
 def test_set_output_format() -> None:
-	assert set_output_format('ivf') == [ '-f', 'ivf' ]
-	assert set_output_format('mpegts') == [ '-f', 'mpegts' ]
+	assert set_muxer('ivf') == [ '-f', 'ivf' ]
+	assert set_muxer('mpegts') == [ '-f', 'mpegts' ]

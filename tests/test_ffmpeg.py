@@ -8,7 +8,7 @@ import pytest
 import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames, spawn_stream_encoder
+from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames, spawn_stream
 from facefusion.ffprobe import probe_entries
 from facefusion.filesystem import copy_file, is_image
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
@@ -256,7 +256,7 @@ def test_sanitize_video() -> None:
 	assert probe_entries(output_paths[1], [ 'codec_name' ]).get('codec_name') == 'hevc'
 
 
-def test_spawn_stream_encoder() -> None:
+def test_spawn_stream() -> None: # TODO: Improve test
 	test_set =\
 	[
 		((426, 240), 25, 500),
@@ -265,7 +265,7 @@ def test_spawn_stream_encoder() -> None:
 	]
 
 	for resolution, stream_fps, stream_bitrate in test_set:
-		encoder = spawn_stream_encoder(resolution, stream_fps, stream_bitrate)
+		encoder = spawn_stream(resolution, stream_fps, stream_bitrate)
 		frame_size = resolution[0] * resolution[1] * 3
 		stdout, _ = encoder.communicate(input = bytes(frame_size))
 

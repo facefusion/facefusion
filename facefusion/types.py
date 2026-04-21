@@ -134,7 +134,6 @@ Session = TypedDict('Session',
 
 Command : TypeAlias = str
 CommandSet : TypeAlias = Dict[str, List[Command]]
-FfmpegMuxer : TypeAlias = str
 
 WarpTemplate = Literal['arcface_112_v1', 'arcface_112_v2', 'arcface_128', 'dfl_whole_face', 'ffhq_512', 'mtcnn_512', 'styleganex_384']
 WarpTemplateSet : TypeAlias = Dict[WarpTemplate, NDArray[Any]]
@@ -170,6 +169,7 @@ TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
 AudioEncoder = Literal['flac', 'aac', 'libmp3lame', 'libopus', 'libvorbis', 'pcm_s16le', 'pcm_s32le']
 ImageEncoder = Literal['bmp', 'mjpeg', 'png', 'tiff', 'libwebp']
 VideoEncoder = Literal['libx264', 'libx264rgb', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox', 'rawvideo']
+Muxer : TypeAlias = str
 AudioSet : TypeAlias = Dict[AudioFormat, str]
 ImageSet : TypeAlias = Dict[ImageFormat, str]
 VideoSet : TypeAlias = Dict[VideoFormat, str]

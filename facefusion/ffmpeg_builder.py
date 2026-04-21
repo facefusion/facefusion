@@ -5,7 +5,7 @@ from typing import List, Optional
 import numpy
 
 from facefusion.filesystem import get_file_format
-from facefusion.types import AudioEncoder, Command, CommandSet, Duration, FfmpegMuxer, Fps, SampleRate, StreamMode, VideoEncoder, VideoPreset
+from facefusion.types import AudioEncoder, Command, CommandSet, Duration, Fps, Muxer, SampleRate, StreamMode, VideoEncoder, VideoPreset
 
 
 def run(commands : List[Command]) -> List[Command]:
@@ -291,13 +291,13 @@ def map_qsv_preset(video_preset : VideoPreset) -> Optional[str]:
 	return None
 
 
-def use_wallclock_timestamps() -> List[Command]:
+def use_wallclock() -> List[Command]:
 	return [ '-use_wallclock_as_timestamps', '1' ]
 
 
-def set_keyframe_interval(interval : int) -> List[Command]:
+def set_stream_keyframe(interval : int) -> List[Command]:
 	return [ '-g', str(interval), '-keyint_min', str(interval) ]
 
 
-def set_output_format(output_format : FfmpegMuxer) -> List[Command]:
-	return [ '-f', output_format ]
+def set_muxer(muxer : Muxer) -> List[Command]:
+	return [ '-f', muxer]

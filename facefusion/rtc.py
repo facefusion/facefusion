@@ -70,7 +70,7 @@ def get_rtc_library() -> Optional[ctypes.CDLL]:
 	return RTC_LIBRARY
 
 
-def create_peer_connection() -> int:
+def create_peer_connection() -> int: # TODO: change method to have arguments with default values
 	rtc_library = get_rtc_library()
 	config = RTC_CONFIGURATION()
 	config.iceServers = None
@@ -90,7 +90,7 @@ def create_peer_connection() -> int:
 	return rtc_library.rtcCreatePeerConnection(ctypes.byref(config))
 
 
-def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrack]:
+def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrack]: # TODO: split into add_audio_track and add_video_track. add arguments with default values
 	rtc_library = get_rtc_library()
 	video_media_description = b'm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=rtpmap:96 VP8/90000\r\na=sendonly\r\na=mid:0\r\na=rtcp-mux\r\n'
 	audio_media_description = b'm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=rtpmap:111 opus/48000/2\r\na=sendonly\r\na=mid:1\r\na=rtcp-mux\r\n'
@@ -104,6 +104,7 @@ def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrac
 	video_packetizer.payloadType = 96
 	video_packetizer.clockRate = 90000
 	video_packetizer.maxFragmentSize = 1200
+
 	rtc_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
 	rtc_library.rtcChainRtcpSrReporter(video_track)
 	rtc_library.rtcChainRtcpNackResponder(video_track, 512)
@@ -113,8 +114,10 @@ def add_media_tracks(peer_connection : int) -> Tuple[RtcVideoTrack, RtcAudioTrac
 	audio_packetizer.cname = b'audio'
 	audio_packetizer.payloadType = 111
 	audio_packetizer.clockRate = 48000
+
 	rtc_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
 	rtc_library.rtcChainRtcpSrReporter(audio_track)
+
 	return video_track, audio_track
 
 
@@ -152,6 +155,7 @@ def handle_whep_offer(peers : List[RtcPeer], sdp_offer : str) -> Optional[str]:
 
 def send_to_peers(peers : List[RtcPeer], data : bytes) -> None:
 	rtc_library = get_rtc_library()
+
 	if peers:
 		timestamp = int(time.monotonic() * 90000) & 0xFFFFFFFF
 		data_buffer = ctypes.create_string_buffer(data)
@@ -181,6 +185,7 @@ def delete_peers(peers : List[RtcPeer]) -> None:
 
 def is_peer_connected(peers : List[RtcPeer]) -> bool:
 	rtc_library = get_rtc_library()
+
 	for rtc_peer in peers:
 		video_track_id = rtc_peer.get('video_track')
 
