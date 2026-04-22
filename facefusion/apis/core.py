@@ -1,4 +1,5 @@
 import contextlib
+from collections.abc import AsyncGenerator
 
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
@@ -45,7 +46,7 @@ def create_api() -> Starlette:
 
 
 @contextlib.asynccontextmanager
-async def lifespan(app : Starlette):
+async def lifespan(app : Starlette) -> AsyncGenerator[None, None]:
 	app.state.rtc_sessions = {} # TODO: improve rtc sessions
 	yield
 
