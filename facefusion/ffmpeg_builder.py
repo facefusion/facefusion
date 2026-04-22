@@ -295,6 +295,14 @@ def use_wallclock() -> List[Command]:
 	return [ '-use_wallclock_as_timestamps', '1' ]
 
 
+def use_realtime_deadline() -> List[Command]:
+	return [ '-deadline', 'realtime' ]
+
+
+def disable_frame_lag() -> List[Command]:
+	return [ '-lag-in-frames', '0' ]
+
+
 def set_stream_keyframe(interval : int) -> List[Command]:
 	return [ '-g', str(interval), '-keyint_min', str(interval) ]
 

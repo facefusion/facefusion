@@ -361,10 +361,12 @@ def spawn_stream(resolution : Resolution, stream_fps : int, stream_bitrate : int
 		ffmpeg_builder.capture_video(),
 		ffmpeg_builder.set_media_resolution(pack_resolution(resolution)),
 		ffmpeg_builder.set_input('-'),
+		ffmpeg_builder.use_realtime_deadline(),
 		ffmpeg_builder.set_video_encoder('libvpx'), # TODO: replace hardcoded value
-		ffmpeg_builder.enforce_pixel_format('yuv420p'), # TODO: replace hardcoded value
+		ffmpeg_builder.enforce_pixel_format('rgb24'), # TODO: replace hardcoded value
 		ffmpeg_builder.set_stream_quality(stream_bitrate),
 		ffmpeg_builder.set_stream_keyframe(stream_fps),
+		ffmpeg_builder.disable_frame_lag(),
 		ffmpeg_builder.set_muxer('ivf'), # TODO: replace hardcoded value
 		ffmpeg_builder.set_output('-')
 	)

@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import capture_video, chain, concat, enforce_pixel_format, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_muxer, set_stream_keyframe, set_stream_mode, set_stream_quality, set_video_encoder, set_video_fps, set_video_quality, use_wallclock
+from facefusion.ffmpeg_builder import capture_video, chain, concat, disable_frame_lag, enforce_pixel_format, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_muxer, set_stream_keyframe, set_stream_mode, set_stream_quality, set_video_encoder, set_video_fps, set_video_quality, use_realtime_deadline, use_wallclock
 
 
 def test_run() -> None:
@@ -131,6 +131,14 @@ def test_set_stream_quality() -> None:
 def test_set_keyframe_interval() -> None:
 	assert set_stream_keyframe(30) == [ '-g', '30', '-keyint_min', '30' ]
 	assert set_stream_keyframe(60) == [ '-g', '60', '-keyint_min', '60' ]
+
+
+def test_use_realtime_deadline() -> None:
+	assert use_realtime_deadline() == [ '-deadline', 'realtime' ]
+
+
+def test_disable_frame_lag() -> None:
+	assert disable_frame_lag() == [ '-lag-in-frames', '0' ]
 
 
 def test_set_output_format() -> None:

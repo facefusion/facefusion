@@ -7,7 +7,7 @@ from time import time
 
 import uvicorn
 
-from facefusion import args_helper, benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, state_manager, translator, voice_extractor
+from facefusion import args_helper, benchmarker, cli_helper, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, hash_helper, logger, rtc, state_manager, translator, voice_extractor
 from facefusion.apis.core import create_api
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
@@ -54,7 +54,7 @@ def route(args : Args) -> None:
 		benchmarker.render()
 
 	if state_manager.get_item('command') == 'api':
-		if not common_pre_check() or not processors_pre_check():
+		if not common_pre_check() or not processors_pre_check() or not rtc.pre_check():
 			hard_exit(2)
 
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
