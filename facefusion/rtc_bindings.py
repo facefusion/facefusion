@@ -41,48 +41,45 @@ RTC_PACKETIZER_INIT = type('RtcPacketizerInit', (ctypes.Structure,),
 LOG_CB_TYPE = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)
 
 
-def init_ctypes(rtc_library : ctypes.CDLL) -> bool:
-	if rtc_library:
-		rtc_library.rtcInitLogger.argtypes = [ ctypes.c_int, LOG_CB_TYPE ]
-		rtc_library.rtcInitLogger.restype = None
-		rtc_library.rtcInitLogger(4, LOG_CB_TYPE(0))
+def init_ctypes(rtc_library : ctypes.CDLL) -> ctypes.CDLL:
+	rtc_library.rtcInitLogger.argtypes = [ ctypes.c_int, LOG_CB_TYPE ]
+	rtc_library.rtcInitLogger.restype = None
+	rtc_library.rtcInitLogger(4, LOG_CB_TYPE(0))
 
-		rtc_library.rtcCreatePeerConnection.argtypes = [ ctypes.POINTER(RTC_CONFIGURATION) ]
-		rtc_library.rtcCreatePeerConnection.restype = ctypes.c_int
+	rtc_library.rtcCreatePeerConnection.argtypes = [ ctypes.POINTER(RTC_CONFIGURATION) ]
+	rtc_library.rtcCreatePeerConnection.restype = ctypes.c_int
 
-		rtc_library.rtcDeletePeerConnection.argtypes = [ ctypes.c_int ]
-		rtc_library.rtcDeletePeerConnection.restype = ctypes.c_int
+	rtc_library.rtcDeletePeerConnection.argtypes = [ ctypes.c_int ]
+	rtc_library.rtcDeletePeerConnection.restype = ctypes.c_int
 
-		rtc_library.rtcSetRemoteDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p ]
-		rtc_library.rtcSetRemoteDescription.restype = ctypes.c_int
+	rtc_library.rtcSetRemoteDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p ]
+	rtc_library.rtcSetRemoteDescription.restype = ctypes.c_int
 
-		rtc_library.rtcAddTrack.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
-		rtc_library.rtcAddTrack.restype = ctypes.c_int
+	rtc_library.rtcAddTrack.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
+	rtc_library.rtcAddTrack.restype = ctypes.c_int
 
-		rtc_library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
-		rtc_library.rtcSendMessage.restype = ctypes.c_int
+	rtc_library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
+	rtc_library.rtcSendMessage.restype = ctypes.c_int
 
-		rtc_library.rtcSetVP8Packetizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
-		rtc_library.rtcSetVP8Packetizer.restype = ctypes.c_int
+	rtc_library.rtcSetVP8Packetizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
+	rtc_library.rtcSetVP8Packetizer.restype = ctypes.c_int
 
-		rtc_library.rtcChainRtcpSrReporter.argtypes = [ ctypes.c_int ]
-		rtc_library.rtcChainRtcpSrReporter.restype = ctypes.c_int
+	rtc_library.rtcChainRtcpSrReporter.argtypes = [ ctypes.c_int ]
+	rtc_library.rtcChainRtcpSrReporter.restype = ctypes.c_int
 
-		rtc_library.rtcSetTrackRtpTimestamp.argtypes = [ ctypes.c_int, ctypes.c_uint32 ]
-		rtc_library.rtcSetTrackRtpTimestamp.restype = ctypes.c_int
+	rtc_library.rtcSetTrackRtpTimestamp.argtypes = [ ctypes.c_int, ctypes.c_uint32 ]
+	rtc_library.rtcSetTrackRtpTimestamp.restype = ctypes.c_int
 
-		rtc_library.rtcIsOpen.argtypes = [ ctypes.c_int ]
-		rtc_library.rtcIsOpen.restype = ctypes.c_bool
+	rtc_library.rtcIsOpen.argtypes = [ ctypes.c_int ]
+	rtc_library.rtcIsOpen.restype = ctypes.c_bool
 
-		rtc_library.rtcChainRtcpNackResponder.argtypes = [ ctypes.c_int, ctypes.c_uint ]
-		rtc_library.rtcChainRtcpNackResponder.restype = ctypes.c_int
+	rtc_library.rtcChainRtcpNackResponder.argtypes = [ ctypes.c_int, ctypes.c_uint ]
+	rtc_library.rtcChainRtcpNackResponder.restype = ctypes.c_int
 
-		rtc_library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
-		rtc_library.rtcGetLocalDescription.restype = ctypes.c_int
+	rtc_library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
+	rtc_library.rtcGetLocalDescription.restype = ctypes.c_int
 
-		rtc_library.rtcSetOpusPacketizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
-		rtc_library.rtcSetOpusPacketizer.restype = ctypes.c_int
+	rtc_library.rtcSetOpusPacketizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
+	rtc_library.rtcSetOpusPacketizer.restype = ctypes.c_int
 
-		return True
-
-	return False
+	return rtc_library
