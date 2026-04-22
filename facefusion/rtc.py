@@ -60,12 +60,25 @@ def create_static_rtc_library() -> Optional[ctypes.CDLL]:
 
 	if binary_path:
 		rtc_library = ctypes.CDLL(binary_path)
-		init_ctypes(rtc_library)
-		return rtc_library
+		return init_ctypes(rtc_library)
+
 	return None
 
 
-def create_peer_connection(ice_servers : Optional[ctypes.Array[ctypes.c_char_p]] = None, ice_servers_count : int = 0, proxy_server : Optional[bytes] = None, bind_address : Optional[bytes] = None, certificate_type : int = 0, ice_transport_policy : int = 0, enable_ice_tcp : bool = False, enable_ice_udp_mux : bool = True, disable_auto_negotiation : bool = False, force_media_transport : bool = True, port_range_begin : int = 0, port_range_end : int = 0, max_packet_size : int = 0, max_message_size : int = 0) -> int:
+def create_peer_connection(
+	ice_servers : Optional[ctypes.Array[ctypes.c_char_p]] = None,
+	ice_servers_count : int = 0, proxy_server : Optional[bytes] = None,
+	bind_address : Optional[bytes] = None, certificate_type : int = 0,
+	ice_transport_policy : int = 0,
+	enable_ice_tcp : bool = False,
+	enable_ice_udp_mux : bool = True,
+	disable_auto_negotiation : bool = False,
+	force_media_transport : bool = True,
+	port_range_begin : int = 0,
+	port_range_end : int = 0,
+	max_packet_size : int = 0,
+	max_message_size : int = 0) -> int:
+
 	rtc_library = create_static_rtc_library()
 	rtc_configuration = RTC_CONFIGURATION()
 
@@ -83,6 +96,7 @@ def create_peer_connection(ice_servers : Optional[ctypes.Array[ctypes.c_char_p]]
 	rtc_configuration.portRangeEnd = port_range_end
 	rtc_configuration.mtu = max_packet_size
 	rtc_configuration.maxMessageSize = max_message_size
+
 	return rtc_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
 
@@ -108,6 +122,7 @@ def add_audio_track(peer_connection : int, sync_source_id : int = 43, canonical_
 
 	rtc_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
 	rtc_library.rtcChainRtcpSrReporter(audio_track)
+
 	return audio_track
 
 
@@ -135,6 +150,7 @@ def add_video_track(peer_connection : int, sync_source_id : int = 42, canonical_
 	rtc_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
 	rtc_library.rtcChainRtcpSrReporter(video_track)
 	rtc_library.rtcChainRtcpNackResponder(video_track, nack_buffer_size)
+
 	return video_track
 
 
