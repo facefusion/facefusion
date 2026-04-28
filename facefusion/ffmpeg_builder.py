@@ -5,7 +5,7 @@ from typing import List, Optional
 import numpy
 
 from facefusion.filesystem import get_file_format
-from facefusion.types import AudioEncoder, Command, CommandSet, Duration, Fps, Muxer, SampleRate, StreamMode, VideoEncoder, VideoPreset
+from facefusion.types import AudioEncoder, Command, CommandSet, Duration, EncoderDeadline, Fps, Muxer, SampleRate, StreamMode, VideoEncoder, VideoPreset
 
 
 def run(commands : List[Command]) -> List[Command]:
@@ -300,4 +300,16 @@ def set_stream_keyframe(interval : int) -> List[Command]:
 
 
 def set_muxer(muxer : Muxer) -> List[Command]:
-	return [ '-f', muxer]
+	return [ '-f', muxer ]
+
+
+def set_video_bufsize(video_bufsize : int) -> List[Command]:
+	return [ '-bufsize', str(video_bufsize) + 'k' ]
+
+
+def set_encoder_deadline(deadline : EncoderDeadline) -> List[Command]:
+	return [ '-deadline', deadline ]
+
+
+def set_lag_in_frames(count : int) -> List[Command]:
+	return [ '-lag-in-frames', str(count) ]
