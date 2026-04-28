@@ -259,13 +259,13 @@ def test_sanitize_video() -> None:
 def test_spawn_stream() -> None: # TODO: Improve test
 	test_set =\
 	[
-		((426, 240), 25, 500),
-		((640, 360), 30, 1000),
-		((1280, 720), 30, 2000)
+		((426, 240), 25, 400, 800),
+		((640, 360), 30, 1000, 2000),
+		((1280, 720), 30, 2000, 4000)
 	]
 
-	for resolution, stream_fps, stream_bitrate in test_set:
-		encoder = spawn_stream(resolution, stream_fps, stream_bitrate)
+	for resolution, stream_fps, stream_bitrate, stream_bufsize in test_set:
+		encoder = spawn_stream(resolution, stream_fps, stream_bitrate, stream_bufsize)
 		frame_size = resolution[0] * resolution[1] * 3
 		stdout, _ = encoder.communicate(input = bytes(frame_size))
 

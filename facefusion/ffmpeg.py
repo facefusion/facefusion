@@ -355,15 +355,18 @@ def sanitize_video(file_content : bytes, asset_path : str, security_strategy : A
 	return run_ffmpeg_with_pipe(commands, file_content).returncode == 0
 
 
-def spawn_stream(resolution : Resolution, stream_fps : int, stream_bitrate : int) -> subprocess.Popen[bytes]:
+def spawn_stream(resolution : Resolution, stream_fps : int, stream_bitrate : int, stream_bufsize : int) -> subprocess.Popen[bytes]:
 	commands = ffmpeg_builder.chain(
 		ffmpeg_builder.use_wallclock(),
 		ffmpeg_builder.capture_video(),
 		ffmpeg_builder.set_media_resolution(pack_resolution(resolution)),
+		ffmpeg_builder.set_input_fps(stream_fps),
 		ffmpeg_builder.set_input('-'),
 		ffmpeg_builder.set_video_encoder('libvpx'), # TODO: replace hardcoded value
-		ffmpeg_builder.enforce_pixel_format('yuv420p'), # TODO: replace hardcoded value
+		ffmpeg_builder.set_encoder_deadline('realtime'),
+		ffmpeg_builder.enforce_pixel_format('rgb24'), # TODO: replace hardcoded value
 		ffmpeg_builder.set_stream_quality(stream_bitrate),
+		ffmpeg_builder.set_video_bufsize(stream_bufsize),
 		ffmpeg_builder.set_stream_keyframe(stream_fps),
 		ffmpeg_builder.set_muxer('ivf'), # TODO: replace hardcoded value
 		ffmpeg_builder.set_output('-')
