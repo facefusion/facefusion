@@ -8,7 +8,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.filesystem import resolve_relative_path
 from facefusion.rtc_bindings import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, init_ctypes
-from facefusion.types import DownloadSet, RtcAudioTrack, RtcPeer, RtcSdpAnswer, RtcVideoTrack
+from facefusion.types import DownloadSet, RtcAudioTrack, RtcPeer, RtcSdpAnswer, RtcSdpOffer, RtcVideoTrack
 
 
 def resolve_binary_file() -> Optional[str]:
@@ -169,7 +169,7 @@ def negotiate_sdp(peer_connection : int, sdp_offer : str) -> Optional[str]:
 	return None
 
 
-def handle_whep_offer(peers : List[RtcPeer], sdp_offer : str) -> Optional[RtcSdpAnswer]:
+def handle_whep_offer(peers : List[RtcPeer], sdp_offer : RtcSdpOffer) -> Optional[RtcSdpAnswer]:
 	peer_connection = create_peer_connection()
 	audio_track = add_audio_track(peer_connection)
 	video_track = add_video_track(peer_connection)
