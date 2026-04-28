@@ -11,7 +11,7 @@ from starlette.types import Scope
 
 from facefusion.common_helper import is_linux, is_macos
 from facefusion.streamer import process_vision_frame
-from facefusion.types import Resolution, StreamFrame, WebSocketStreamMode
+from facefusion.types import Resolution, StreamBuffer, WebSocketStreamMode
 
 
 def process_stream_frame(target_stream_frame : VideoFrame) -> VideoFrame:
@@ -88,7 +88,7 @@ def read_pipe_buffer(pipe_handle : int, size : int) -> Optional[bytes]:
 	return None
 
 
-def forward_stream_frame(process : subprocess.Popen[bytes]) -> Iterator[StreamFrame]:
+def forward_stream_frame(process : subprocess.Popen[bytes]) -> Iterator[StreamBuffer]:
 	pipe_handle = process.stdout.fileno()
 
 	if is_linux() or is_macos():
