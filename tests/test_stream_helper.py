@@ -66,7 +66,7 @@ def test_forward_frames() -> None:
 	encoder.stdin.write(bytes(frame_size))
 	encoder.stdin.close()
 
-	frames_received = list(forward_stream_frame(encoder))
+	stream_frames = list(forward_stream_frame(encoder))
 
-	assert len(frames_received) > 0
-	assert all(isinstance(frame, bytes) for frame in frames_received)
+	assert len(stream_frames) == 1
+	assert all(0 < len(frame) < frame_size for frame in stream_frames)
