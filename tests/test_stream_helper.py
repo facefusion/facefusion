@@ -15,19 +15,19 @@ def make_scope(protocol : str) -> dict[str, object]:
 
 
 def test_calculate_bitrate() -> None:
-	assert calculate_bitrate((320, 240)) == 400
-	assert calculate_bitrate((640, 480)) == 741
-	assert calculate_bitrate((1280, 720)) == 2222
-	assert calculate_bitrate((1920, 1080)) == 5000
-	assert calculate_bitrate((3840, 2160)) == 20000
+	assert calculate_bitrate((320, 240)) == 674
+	assert calculate_bitrate((640, 480)) == 1347
+	assert calculate_bitrate((1280, 720)) == 2333
+	assert calculate_bitrate((1920, 1080)) == 3500
+	assert calculate_bitrate((3840, 2160)) == 7000
 
 
 def test_calculate_buffer_size() -> None:
-	assert calculate_buffer_size((320, 240)) == 800
-	assert calculate_buffer_size((640, 480)) == 1482
-	assert calculate_buffer_size((1280, 720)) == 4444
-	assert calculate_buffer_size((1920, 1080)) == 10000
-	assert calculate_buffer_size((3840, 2160)) == 40000
+	assert calculate_buffer_size((320, 240)) == 1348
+	assert calculate_buffer_size((640, 480)) == 2694
+	assert calculate_buffer_size((1280, 720)) == 4666
+	assert calculate_buffer_size((1920, 1080)) == 7000
+	assert calculate_buffer_size((3840, 2160)) == 14000
 
 
 def test_get_websocket_stream_mode() -> None:

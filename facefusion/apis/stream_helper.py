@@ -1,4 +1,5 @@
 import asyncio
+import math
 import os
 import subprocess
 from typing import Iterator, Optional, Tuple, cast
@@ -50,10 +51,10 @@ def on_video_track(rtc_connection : RTCPeerConnection, output_track : QueuedVide
 		asyncio.create_task(process_and_enqueue(target_track, output_track))
 
 
-def calculate_bitrate(resolution : Resolution) -> int:
+def calculate_bitrate(resolution : Resolution) -> int: # TODO : improve the bitrate calculation
 	pixel_total = resolution[0] * resolution[1]
-	bitrate_factor = 5000 / (1920 * 1080)
-	return max(400, round(pixel_total * bitrate_factor))
+	bitrate_factor = 3500 / math.sqrt(1920 * 1080)
+	return max(400, round(math.sqrt(pixel_total) * bitrate_factor))
 
 
 def calculate_buffer_size(resolution : Resolution) -> int:
