@@ -264,6 +264,8 @@ BenchmarkCycleSet = TypedDict('BenchmarkCycleSet',
 
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']
+WebSocketStreamMode = Literal['image', 'video']
+StreamBuffer : TypeAlias = bytes
 
 RtcOfferSet = TypedDict('RtcOfferSet',
 {
