@@ -1,7 +1,7 @@
 import asyncio
 import os
 import subprocess
-from typing import Iterator, Optional, Tuple
+from typing import Optional, Tuple, cast
 
 from aiortc import MediaStreamTrack, QueuedVideoStreamTrack, RTCPeerConnection, RTCRtpSender
 from aiortc.mediastreams import MediaStreamError
@@ -11,7 +11,7 @@ from starlette.types import Scope
 
 from facefusion.common_helper import is_linux, is_macos
 from facefusion.streamer import process_vision_frame
-from facefusion.types import Resolution, WebSocketStreamMode
+from facefusion.types import FrameStream, Resolution, WebSocketStreamMode
 
 
 def process_stream_frame(target_stream_frame : VideoFrame) -> VideoFrame:
@@ -52,30 +52,12 @@ def on_video_track(rtc_connection : RTCPeerConnection, output_track : QueuedVide
 
 def calculate_bitrate(resolution : Resolution) -> int:
 	pixel_total = resolution[0] * resolution[1]
-
-	if pixel_total > 1920 * 1080:
-		return 5000
-	if pixel_total > 1280 * 720:
-		return 3500
-	if pixel_total > 640 * 480:
-		return 2000
-	if pixel_total > 320 * 240:
-		return 1000
-	return 400
+	bitrate_factor = 5000 / (1920 * 1080)
+	return max(400, round(pixel_total * bitrate_factor))
 
 
 def calculate_buffer_size(resolution : Resolution) -> int:
-	pixel_total = resolution[0] * resolution[1]
-
-	if pixel_total > 1920 * 1080:
-		return 10000
-	if pixel_total > 1280 * 720:
-		return 7000
-	if pixel_total > 640 * 480:
-		return 4000
-	if pixel_total > 320 * 240:
-		return 2000
-	return 800
+	return calculate_bitrate(resolution) * 2
 
 
 def get_stream_mode(scope : Scope) -> Optional[WebSocketStreamMode]:
@@ -86,7 +68,7 @@ def get_stream_mode(scope : Scope) -> Optional[WebSocketStreamMode]:
 			protocol = protocol.strip()
 
 			if protocol in [ 'image', 'video' ]:
-				return protocol #type:ignore[return-value]
+				return cast(WebSocketStreamMode, protocol)
 
 	return None
 
@@ -106,7 +88,7 @@ def read_pipe_buffer(pipe_handle : int, size : int) -> Optional[bytes]:
 	return None
 
 
-def iter_video_frames(process : subprocess.Popen[bytes]) -> Iterator[bytes]:
+def stream_frames(process : subprocess.Popen[bytes]) -> FrameStream:
 	pipe_handle = process.stdout.fileno()
 
 	if is_linux() or is_macos():

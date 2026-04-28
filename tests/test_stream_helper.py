@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, get_stream_mode, iter_video_frames, read_pipe_buffer
+from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, get_stream_mode, stream_frames, read_pipe_buffer
 
 
 def make_scope(protocol : str) -> dict[str, object]:
@@ -14,18 +14,18 @@ def make_scope(protocol : str) -> dict[str, object]:
 
 def test_calculate_bitrate() -> None:
 	assert calculate_bitrate((320, 240)) == 400
-	assert calculate_bitrate((640, 480)) == 1000
-	assert calculate_bitrate((1280, 720)) == 2000
-	assert calculate_bitrate((1920, 1080)) == 3500
-	assert calculate_bitrate((3840, 2160)) == 5000
+	assert calculate_bitrate((640, 480)) == 741
+	assert calculate_bitrate((1280, 720)) == 2222
+	assert calculate_bitrate((1920, 1080)) == 5000
+	assert calculate_bitrate((3840, 2160)) == 20000
 
 
 def test_calculate_buffer_size() -> None:
 	assert calculate_buffer_size((320, 240)) == 800
-	assert calculate_buffer_size((640, 480)) == 2000
-	assert calculate_buffer_size((1280, 720)) == 4000
-	assert calculate_buffer_size((1920, 1080)) == 7000
-	assert calculate_buffer_size((3840, 2160)) == 10000
+	assert calculate_buffer_size((640, 480)) == 1482
+	assert calculate_buffer_size((1280, 720)) == 4444
+	assert calculate_buffer_size((1920, 1080)) == 10000
+	assert calculate_buffer_size((3840, 2160)) == 40000
 
 
 def test_get_stream_mode() -> None:
@@ -45,7 +45,7 @@ def test_read_pipe_buffer() -> None:
 	os.close(read_fd)
 
 
-def test_iter_video_frames() -> None:
+def test_stream_frames() -> None:
 	encoder = subprocess.Popen(
 	[
 		'ffmpeg',
@@ -66,7 +66,7 @@ def test_iter_video_frames() -> None:
 	encoder.stdin.write(bytes(frame_size))
 	encoder.stdin.close()
 
-	frames_received = list(iter_video_frames(encoder))
+	frames_received = list(stream_frames(encoder))
 
 	assert len(frames_received) > 0
 	assert all(isinstance(frame, bytes) for frame in frames_received)
