@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, get_stream_mode, read_pipe_buffer, stream_frames
+from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, forward_stream_frame, get_websocket_stream_mode, read_pipe_buffer
 
 
 def make_scope(protocol : str) -> dict[str, object]:
@@ -28,9 +28,9 @@ def test_calculate_buffer_size() -> None:
 	assert calculate_buffer_size((3840, 2160)) == 40000
 
 
-def test_get_stream_mode() -> None:
-	assert get_stream_mode(make_scope('image')) == 'image'
-	assert get_stream_mode(make_scope('video')) == 'video'
+def test_get_websocket_stream_mode() -> None:
+	assert get_websocket_stream_mode(make_scope('image')) == 'image'
+	assert get_websocket_stream_mode(make_scope('video')) == 'video'
 
 
 def test_read_pipe_buffer() -> None:
@@ -45,7 +45,7 @@ def test_read_pipe_buffer() -> None:
 	os.close(read_fd)
 
 
-def test_stream_frames() -> None:
+def test_forward_frames() -> None:
 	encoder = subprocess.Popen(
 	[
 		'ffmpeg',
@@ -66,7 +66,7 @@ def test_stream_frames() -> None:
 	encoder.stdin.write(bytes(frame_size))
 	encoder.stdin.close()
 
-	frames_received = list(stream_frames(encoder))
+	frames_received = list(forward_stream_frame(encoder))
 
 	assert len(frames_received) > 0
 	assert all(isinstance(frame, bytes) for frame in frames_received)

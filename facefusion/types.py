@@ -1,6 +1,6 @@
 from collections import namedtuple
 from datetime import datetime
-from typing import Any, Callable, Dict, Generator, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
+from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
 
 import cv2
 import numpy
@@ -83,6 +83,7 @@ AudioBuffer : TypeAlias = bytes
 Audio : TypeAlias = NDArray[Any]
 AudioChunk : TypeAlias = NDArray[Any]
 AudioFrame : TypeAlias = NDArray[Any]
+StreamFrame : TypeAlias = bytes
 Spectrogram : TypeAlias = NDArray[Any]
 Mel : TypeAlias = NDArray[Any]
 MelFilterBank : TypeAlias = NDArray[Any]
@@ -265,7 +266,6 @@ BenchmarkCycleSet = TypedDict('BenchmarkCycleSet',
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']
 WebSocketStreamMode = Literal['image', 'video']
-FrameStream : TypeAlias = Generator[bytes, None, None]
 
 RtcOfferSet = TypedDict('RtcOfferSet',
 {

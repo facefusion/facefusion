@@ -1,7 +1,7 @@
 import asyncio
 import os
 import subprocess
-from typing import Optional, Tuple, cast
+from typing import Iterator, Optional, Tuple, cast
 
 from aiortc import MediaStreamTrack, QueuedVideoStreamTrack, RTCPeerConnection, RTCRtpSender
 from aiortc.mediastreams import MediaStreamError
@@ -11,7 +11,7 @@ from starlette.types import Scope
 
 from facefusion.common_helper import is_linux, is_macos
 from facefusion.streamer import process_vision_frame
-from facefusion.types import FrameStream, Resolution, WebSocketStreamMode
+from facefusion.types import Resolution, StreamFrame, WebSocketStreamMode
 
 
 def process_stream_frame(target_stream_frame : VideoFrame) -> VideoFrame:
@@ -60,15 +60,15 @@ def calculate_buffer_size(resolution : Resolution) -> int:
 	return calculate_bitrate(resolution) * 2
 
 
-def get_stream_mode(scope : Scope) -> Optional[WebSocketStreamMode]:
+def get_websocket_stream_mode(scope : Scope) -> Optional[WebSocketStreamMode]:
 	protocol_header = Headers(scope = scope).get('Sec-WebSocket-Protocol')
 
 	if protocol_header:
 		for protocol in protocol_header.split(','):
-			protocol = protocol.strip()
+			websocket_stream_mode = protocol.strip()
 
-			if protocol in [ 'image', 'video' ]:
-				return cast(WebSocketStreamMode, protocol)
+			if websocket_stream_mode in [ 'image', 'video' ]:
+				return cast(WebSocketStreamMode, websocket_stream_mode)
 
 	return None
 
@@ -88,7 +88,7 @@ def read_pipe_buffer(pipe_handle : int, size : int) -> Optional[bytes]:
 	return None
 
 
-def stream_frames(process : subprocess.Popen[bytes]) -> FrameStream:
+def forward_stream_frame(process : subprocess.Popen[bytes]) -> Iterator[StreamFrame]:
 	pipe_handle = process.stdout.fileno()
 
 	if is_linux() or is_macos():
