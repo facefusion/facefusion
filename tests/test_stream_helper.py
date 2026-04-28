@@ -4,7 +4,7 @@ import subprocess
 from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, get_stream_mode, iter_video_frames, read_pipe_buffer
 
 
-def make_scope(protocol : str) -> dict:
+def make_scope(protocol : str) -> dict[str, object]:
 	return\
 	{
 		'type': 'websocket',
