@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import capture_video, chain, concat, enforce_pixel_format, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_muxer, set_stream_keyframe, set_stream_mode, set_stream_quality, set_video_encoder, set_video_fps, set_video_quality, use_wallclock
+from facefusion.ffmpeg_builder import capture_video, chain, concat, enforce_pixel_format, keep_video_alpha, run, select_frame_range, set_audio_quality, set_audio_sample_size, set_encoder_deadline, set_lag_in_frames, set_muxer, set_stream_keyframe, set_stream_mode, set_stream_quality, set_video_bitrate, set_video_bufsize, set_video_encoder, set_video_fps, set_video_quality, use_wallclock
 
 
 def test_run() -> None:
@@ -136,3 +136,24 @@ def test_set_keyframe_interval() -> None:
 def test_set_output_format() -> None:
 	assert set_muxer('ivf') == [ '-f', 'ivf' ]
 	assert set_muxer('mpegts') == [ '-f', 'mpegts' ]
+
+
+def test_set_video_bitrate() -> None:
+	assert set_video_bitrate('400k') == [ '-b:v', '400k', '-maxrate', '400k' ]
+	assert set_video_bitrate('2000k') == [ '-b:v', '2000k', '-maxrate', '2000k' ]
+
+
+def test_set_video_bufsize() -> None:
+	assert set_video_bufsize(800) == [ '-bufsize', '800k' ]
+	assert set_video_bufsize(4000) == [ '-bufsize', '4000k' ]
+
+
+def test_set_encoder_deadline() -> None:
+	assert set_encoder_deadline('best') == [ '-deadline', 'best' ]
+	assert set_encoder_deadline('good') == [ '-deadline', 'good' ]
+	assert set_encoder_deadline('realtime') == [ '-deadline', 'realtime' ]
+
+
+def test_set_lag_in_frames() -> None:
+	assert set_lag_in_frames(0) == [ '-lag-in-frames', '0' ]
+	assert set_lag_in_frames(16) == [ '-lag-in-frames', '16' ]

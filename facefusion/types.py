@@ -170,6 +170,7 @@ AudioEncoder = Literal['flac', 'aac', 'libmp3lame', 'libopus', 'libvorbis', 'pcm
 ImageEncoder = Literal['bmp', 'mjpeg', 'png', 'tiff', 'libwebp']
 VideoEncoder = Literal['libx264', 'libx264rgb', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox', 'rawvideo']
 Muxer : TypeAlias = str
+EncoderDeadline = Literal['best', 'good', 'realtime']
 AudioSet : TypeAlias = Dict[AudioFormat, str]
 ImageSet : TypeAlias = Dict[ImageFormat, str]
 VideoSet : TypeAlias = Dict[VideoFormat, str]
@@ -279,6 +280,8 @@ RtcPeer = TypedDict('RtcPeer',
 
 RtcVideoTrack : TypeAlias = int
 RtcAudioTrack : TypeAlias = int
+RtcSdpAnswer : TypeAlias = str
+RtcStreamStore : TypeAlias = Dict[str, List[RtcPeer]]
 
 ModelOptions : TypeAlias = Dict[str, Any]
 ModelSet : TypeAlias = Dict[str, ModelOptions]
