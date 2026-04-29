@@ -1,37 +1,37 @@
 from typing import List, Optional
 
 from facefusion import rtc
-from facefusion.types import RtcPeer, RtcSdpAnswer, RtcSdpOffer, RtcStreamStore
+from facefusion.types import RtcPeer, RtcSdpAnswer, RtcSdpOffer, RtcStreamStore, SessionId
 
-RTC_STREAMS : RtcStreamStore = {} # TODO: tie lifetime to session_id so streams are cleaned up on session expiry
-
-
-def get_rtc_stream(stream_path : str) -> Optional[List[RtcPeer]]:
-	return RTC_STREAMS.get(stream_path)
+RTC_STREAMS : RtcStreamStore = {}
 
 
-def create_rtc_stream(stream_path : str) -> None:
-	RTC_STREAMS[stream_path] = []
+def get_rtc_stream(session_id : SessionId) -> Optional[List[RtcPeer]]:
+	return RTC_STREAMS.get(session_id)
 
 
-def destroy_rtc_stream(stream_path : str) -> None:
-	peers = RTC_STREAMS.pop(stream_path, None)
+def create_rtc_stream(session_id : SessionId) -> None:
+	RTC_STREAMS[session_id] = []
+
+
+def destroy_rtc_stream(session_id : SessionId) -> None:
+	peers = RTC_STREAMS.pop(session_id, None)
 
 	if peers:
 		rtc.delete_peers(peers)
 
 
-def add_rtc_viewer(stream_path : str, sdp_offer : RtcSdpOffer) -> Optional[RtcSdpAnswer]:
-	peers = get_rtc_stream(stream_path)
+def add_rtc_viewer(session_id : SessionId, sdp_offer : RtcSdpOffer) -> Optional[RtcSdpAnswer]:
+	peers = get_rtc_stream(session_id)
 
-	if peers:
+	if peers is not None:
 		return rtc.handle_whep_offer(peers, sdp_offer)
 
 	return None
 
 
-def send_rtc_frame(stream_path : str, frame_data : bytes) -> None:
-	peers = get_rtc_stream(stream_path)
+def send_rtc_frame(session_id : SessionId, frame_data : bytes) -> None:
+	peers = get_rtc_stream(session_id)
 
 	if peers:
 		rtc.send_to_peers(peers, frame_data)

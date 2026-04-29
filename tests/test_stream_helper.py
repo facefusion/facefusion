@@ -30,7 +30,7 @@ def test_calculate_buffer_size() -> None:
 	assert calculate_buffer_size((3840, 2160)) == 14000
 
 
-def test_get_websocket_stream_mode() -> None:
+def test_get_stream_mode() -> None:
 	assert get_websocket_stream_mode(make_scope('image')) == 'image'
 	assert get_websocket_stream_mode(make_scope('video')) == 'video'
 
