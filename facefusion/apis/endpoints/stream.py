@@ -35,33 +35,9 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
-def forward_frames(encoder : subprocess.Popen[bytes], session_id : SessionId) -> None:
+def forward_rtc_frames(encoder : subprocess.Popen[bytes], session_id : SessionId) -> None:
 	for stream_buffer in forward_stream_frame(encoder):
 		rtc_store.send_rtc_frame(session_id, stream_buffer)
-
-
-def warmup_pipeline(encoder : subprocess.Popen[bytes], vision_frame_deque : deque[VisionFrame], encode_frame_deque : deque[VisionFrame]) -> None:
-	while not vision_frame_deque and encoder.poll() is None:
-		time.sleep(0.001)
-
-	if vision_frame_deque:
-		output_vision_frame = process_vision_frame(vision_frame_deque[-1])
-		encode_frame_deque.append(output_vision_frame)
-		encoder.stdin.write(cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2RGB).tobytes())
-		encoder.stdin.flush()
-
-
-def run_pipeline(encoder : subprocess.Popen[bytes], vision_frame_deque : deque[VisionFrame], encode_frame_deque : deque[VisionFrame]) -> None:
-	while encoder.poll() is None:
-
-		if vision_frame_deque:
-			output_vision_frame = process_vision_frame(vision_frame_deque[-1])
-			encode_frame_deque.append(output_vision_frame)
-			encoder.stdin.write(cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2RGB).tobytes())
-			encoder.stdin.flush()
-			continue
-
-		time.sleep(0.001)
 
 
 async def handle_image_stream(websocket : WebSocket) -> None:
@@ -110,22 +86,40 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 
 			vision_frame_deque.append(vision_frame)
 			rtc_store.create_rtc_stream(session_id)
-			threading.Thread(target = forward_frames, args = (encoder, session_id), daemon = True).start()
+			threading.Thread(target = forward_rtc_frames, args = (encoder, session_id), daemon = True).start()
 
 			loop = asyncio.get_running_loop()
-			await loop.run_in_executor(None, warmup_pipeline, encoder, vision_frame_deque, encode_frame_deque)
+			await loop.run_in_executor(None, submit_encoder_frame, encoder, vision_frame_deque, encode_frame_deque)
 			await websocket.send_text('ready')
-			pipeline_task = loop.run_in_executor(None, run_pipeline, encoder, vision_frame_deque, encode_frame_deque)
+			pipeline_task = loop.run_in_executor(None, run_encode_loop, encoder, vision_frame_deque, encode_frame_deque)
 
 			async for vision_frame in vision_frames:
 				vision_frame_deque.append(vision_frame)
 
+			vision_frame_deque.clear()
 			encoder.stdin.close()
 			await pipeline_task
 			rtc_store.destroy_rtc_stream(session_id)
 
 	if websocket.client_state == WebSocketState.CONNECTED:
 		await websocket.close()
+
+
+def submit_encoder_frame(encoder : subprocess.Popen[bytes], vision_frame_deque : deque[VisionFrame], encode_frame_deque : deque[VisionFrame]) -> None:
+	output_vision_frame = process_vision_frame(vision_frame_deque[-1])
+	encode_frame_deque.append(output_vision_frame)
+	encoder.stdin.write(cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2RGB).tobytes())
+	encoder.stdin.flush()
+
+
+def run_encode_loop(encoder : subprocess.Popen[bytes], vision_frame_deque : deque[VisionFrame], encode_frame_deque : deque[VisionFrame]) -> None:
+	while encoder.poll() is None:
+
+		if vision_frame_deque and not encoder.stdin.closed:
+			submit_encoder_frame(encoder, vision_frame_deque, encode_frame_deque)
+			continue
+
+		time.sleep(0.001)
 
 
 async def websocket_stream(websocket : WebSocket) -> None:
