@@ -1,5 +1,6 @@
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
 from starlette.websockets import WebSocket
 
 from facefusion import rtc_store, session_context, session_manager
@@ -27,6 +28,6 @@ async def post_stream(request : Request) -> Response:
 		sdp_answer = rtc_store.add_rtc_viewer(session_id, sdp_offer)
 
 		if sdp_answer:
-			return Response(sdp_answer, status_code = 201, media_type = 'application/sdp')
+			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type = 'application/sdp')
 
-	return Response(status_code = 404)
+	return Response(status_code = HTTP_404_NOT_FOUND)
