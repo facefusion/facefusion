@@ -1,4 +1,3 @@
-import asyncio
 import tempfile
 import threading
 from typing import Iterator
@@ -13,8 +12,8 @@ from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
-from .assert_helper import get_test_example_file, get_test_examples_directory, open_websocket_stream
-from .stream_helper import create_rtc_offer
+from .assert_helper import get_test_example_file, get_test_examples_directory
+from .stream_helper import create_sdp_offer, open_websocket_stream
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -137,8 +136,8 @@ def test_stream_video(test_client : TestClient) -> None:
 	stream_thread.start()
 	ready_event.wait()
 
-	rtc_offer = asyncio.run(create_rtc_offer())
-	stream_response = test_client.post('/stream', content = rtc_offer.get('sdp'), headers =
+	sdp_offer = create_sdp_offer()
+	stream_response = test_client.post('/stream', content = sdp_offer, headers =
 	{
 		'Authorization': 'Bearer ' + access_token,
 		'Content-Type': 'application/sdp'
