@@ -100,7 +100,7 @@ def submit_encoder_frame(encoder : subprocess.Popen[bytes], vision_frame_deque :
 
 
 def run_encode_loop(encoder : subprocess.Popen[bytes], vision_frame_deque : deque[VisionFrame]) -> None:
-	while encoder.poll() is None:
+	while encoder.poll() is None: # TODO: remove usage of poll()
 
 		if vision_frame_deque:
 			submit_encoder_frame(encoder, vision_frame_deque)
