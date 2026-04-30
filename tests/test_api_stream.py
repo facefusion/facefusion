@@ -132,6 +132,7 @@ def test_stream_video(test_client : TestClient) -> None:
 
 	ready_event = threading.Event()
 	stop_event = threading.Event()
+	#TODO: use asyncio
 	stream_thread = threading.Thread(target = open_websocket_stream, args = (test_client, [ 'access_token.' + access_token, 'video' ], source_content, ready_event, stop_event))
 	stream_thread.start()
 	ready_event.wait()
