@@ -1,8 +1,19 @@
 import os
 import tempfile
+import threading
+
+from starlette.testclient import TestClient
 
 from facefusion.filesystem import are_images, create_directory, is_directory, is_file, remove_directory, resolve_file_paths
 from facefusion.types import JobStatus
+
+
+def open_websocket_stream(test_client : TestClient, subprotocols : list[str], source_content : bytes, ready_event : threading.Event, stop_event : threading.Event) -> None:
+	with test_client.websocket_connect('/stream', subprotocols = subprotocols) as websocket:
+		websocket.send_bytes(source_content)
+		websocket.receive_text()
+		ready_event.set()
+		stop_event.wait()
 
 
 def is_test_job_file(file_path : str, job_status : JobStatus) -> bool:

@@ -7,7 +7,6 @@ nvidia-ml-py==13.590.48
 psutil==7.2.2
 tqdm==4.67.3
 scipy==1.16.3
-aiortc @ git+https://github.com/facefusion/aiortc.git@feat/dynamic-bitrate
 starlette==0.52.1
 uvicorn==0.41.0
 websockets==16.0

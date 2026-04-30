@@ -1,9 +1,6 @@
 import os
-import subprocess
 
-from facefusion import ffmpeg_builder
-from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, forward_stream_frame, get_websocket_stream_mode, read_pipe_buffer
-from facefusion.vision import pack_resolution
+from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, get_websocket_stream_mode, read_pipe_buffer
 
 
 def make_scope(protocol : str) -> dict[str, object]:
@@ -45,25 +42,3 @@ def test_read_pipe_buffer() -> None:
 	assert read_pipe_buffer(read_fd, 1) is None
 
 	os.close(read_fd)
-
-
-def test_forward_frames() -> None:
-	resolution = (320, 240)
-	frame_size = resolution[0] * resolution[1] * 3
-	commands = ffmpeg_builder.run(ffmpeg_builder.chain(
-		ffmpeg_builder.capture_video(),
-		ffmpeg_builder.set_media_resolution(pack_resolution(resolution)),
-		ffmpeg_builder.set_input_fps(30),
-		ffmpeg_builder.set_input('-'),
-		ffmpeg_builder.set_video_encoder('libvpx'),
-		ffmpeg_builder.set_encoder_deadline('realtime'),
-		ffmpeg_builder.set_stream_quality(400),
-		ffmpeg_builder.set_muxer('ivf'),
-		ffmpeg_builder.set_output('-')
-	))
-	encoder = subprocess.Popen(commands, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-	encoder.stdin.write(bytes(frame_size))
-	encoder.stdin.close()
-
-	for stream_buffer in forward_stream_frame(encoder):
-		assert 0 < len(stream_buffer) < frame_size
