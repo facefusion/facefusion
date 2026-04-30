@@ -100,15 +100,11 @@ def submit_encoder_frame(encoder : subprocess.Popen[bytes], vision_frame_deque :
 
 
 def run_encode_loop(encoder : subprocess.Popen[bytes], vision_frame_deque : deque[VisionFrame]) -> None:
-	while encoder.poll() is None: # TODO: remove usage of poll()
+	while vision_frame_deque:
+		submit_encoder_frame(encoder, vision_frame_deque)
 
-		if vision_frame_deque:
-			submit_encoder_frame(encoder, vision_frame_deque)
-			continue
-
-		encoder.stdin.close()
-		encoder.wait()
-		return None
+	encoder.stdin.close()
+	encoder.wait()
 
 
 async def handle_image_stream(websocket : WebSocket) -> None:
