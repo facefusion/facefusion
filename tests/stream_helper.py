@@ -10,6 +10,7 @@ from facefusion import rtc
 from facefusion.types import RtcSdpOffer
 
 
+# TODO: reuse media description building from rtc.py
 def create_sdp_offer() -> Optional[RtcSdpOffer]:
 	rtc_library = rtc.create_static_rtc_library()
 	peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
@@ -43,7 +44,9 @@ def create_sdp_offer() -> Optional[RtcSdpOffer]:
 		if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
 			sdp = buffer_string.value.decode()
 			rtc_library.rtcDeletePeerConnection(peer_connection)
+			#TODO: use return buffer_string.value.decode()
 			return sdp
+
 		time.sleep(0.05)
 
 	rtc_library.rtcDeletePeerConnection(peer_connection)
