@@ -1,5 +1,5 @@
-import asyncio
 import tempfile
+import threading
 from typing import Iterator
 
 import cv2
@@ -13,7 +13,7 @@ from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
 from .assert_helper import get_test_example_file, get_test_examples_directory
-from .stream_helper import create_rtc_offer
+from .stream_helper import create_sdp_offer, open_websocket_stream
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -92,7 +92,8 @@ def test_stream_image(test_client : TestClient) -> None:
 
 	with test_client.websocket_connect('/stream', subprotocols =
 	[
-		'access_token.' + access_token
+		'access_token.' + access_token,
+		'image'
 	]) as websocket:
 		websocket.send_bytes(source_content)
 		output_bytes = websocket.receive_bytes()
@@ -129,12 +130,21 @@ def test_stream_video(test_client : TestClient) -> None:
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	rtc_offer = asyncio.run(create_rtc_offer())
-	stream_response = test_client.post('/stream', json = rtc_offer, headers =
+	ready_event = threading.Event()
+	stop_event = threading.Event()
+	stream_thread = threading.Thread(target = open_websocket_stream, args = (test_client, [ 'access_token.' + access_token, 'video' ], source_content, ready_event, stop_event))
+	stream_thread.start()
+	ready_event.wait()
+
+	sdp_offer = create_sdp_offer()
+	stream_response = test_client.post('/stream', content = sdp_offer, headers =
 	{
-		'Authorization': 'Bearer ' + access_token
+		'Authorization': 'Bearer ' + access_token,
+		'Content-Type': 'application/sdp'
 	})
 
-	assert stream_response.status_code == 200
-	assert stream_response.json().get('type') == 'answer'
-	assert stream_response.json().get('sdp')
+	assert stream_response.status_code == 201
+	assert stream_response.text
+
+	stop_event.set()
+	stream_thread.join()
