@@ -22,10 +22,8 @@ def destroy_rtc_stream(session_id : SessionId) -> None:
 
 
 def add_rtc_viewer(session_id : SessionId, sdp_offer : RtcSdpOffer) -> Optional[RtcSdpAnswer]:
-	peers = get_rtc_stream(session_id)
-
-	if peers is not None:
-		return rtc.handle_whep_offer(peers, sdp_offer)
+	if session_id in RTC_STREAMS:
+		return rtc.handle_whep_offer(RTC_STREAMS.get(session_id), sdp_offer)
 
 	return None
 
