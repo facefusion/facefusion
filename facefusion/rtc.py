@@ -155,7 +155,7 @@ def add_video_track(peer_connection : int, sync_source_id : int = 42, canonical_
 	return video_track
 
 
-def _on_sdp_ready(peer_id : int, sdp : ctypes.c_char_p, sdp_type : int, context_pointer : int) -> None:
+def _on_sdp_ready(peer_id : int, sdp : bytes, sdp_type : int, context_pointer : int) -> None:
 	ctypes.cast(context_pointer, ctypes.py_object).value.set()
 
 
