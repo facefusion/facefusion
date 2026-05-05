@@ -39,6 +39,7 @@ RTC_PACKETIZER_INIT = type('RtcPacketizerInit', (ctypes.Structure,),
 	]
 })
 LOG_CB_TYPE = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)
+LOCAL_DESC_CB_TYPE = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p)
 
 
 def init_ctypes(rtc_library : ctypes.CDLL) -> ctypes.CDLL:
@@ -78,6 +79,12 @@ def init_ctypes(rtc_library : ctypes.CDLL) -> ctypes.CDLL:
 
 	rtc_library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
 	rtc_library.rtcGetLocalDescription.restype = ctypes.c_int
+
+	rtc_library.rtcSetUserPointer.argtypes = [ ctypes.c_int, ctypes.c_void_p ]
+	rtc_library.rtcSetUserPointer.restype = None
+
+	rtc_library.rtcSetLocalDescriptionCallback.argtypes = [ ctypes.c_int, LOCAL_DESC_CB_TYPE ]
+	rtc_library.rtcSetLocalDescriptionCallback.restype = ctypes.c_int
 
 	rtc_library.rtcSetOpusPacketizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
 	rtc_library.rtcSetOpusPacketizer.restype = ctypes.c_int

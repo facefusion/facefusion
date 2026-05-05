@@ -1,13 +1,14 @@
 import ctypes
 import os
+import threading
 import time
 from functools import lru_cache
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.filesystem import resolve_relative_path
-from facefusion.rtc_bindings import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, init_ctypes
+from facefusion.rtc_bindings import LOCAL_DESC_CB_TYPE, RTC_CONFIGURATION, RTC_PACKETIZER_INIT, init_ctypes
 from facefusion.types import DownloadSet, RtcAudioTrack, RtcPeer, RtcSdpAnswer, RtcSdpOffer, RtcVideoTrack
 
 
@@ -154,17 +155,29 @@ def add_video_track(peer_connection : int, sync_source_id : int = 42, canonical_
 	return video_track
 
 
+def _on_sdp_ready(peer_id : int, sdp : ctypes.c_char_p, sdp_type : int, context_pointer : int) -> None:
+	ctypes.cast(context_pointer, ctypes.py_object).value.set()
+
+
+@lru_cache
+def create_local_description_callback() -> Callable[..., None]:
+	return LOCAL_DESC_CB_TYPE(_on_sdp_ready)
+
+
 def negotiate_sdp(peer_connection : int, sdp_offer : str) -> Optional[str]:
 	rtc_library = create_static_rtc_library()
+	gathering_event = threading.Event()
+
+	rtc_library.rtcSetUserPointer(peer_connection, id(gathering_event))
+	rtc_library.rtcSetLocalDescriptionCallback(peer_connection, create_local_description_callback())
 	rtc_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode('utf-8'), b'offer')
+
+	gathering_event.wait(timeout = 5)
 	buffer_size = 16384
 	buffer_string = ctypes.create_string_buffer(buffer_size)
-	wait_limit = time.monotonic() + 5
 
-	while time.monotonic() < wait_limit:
-		if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
-			return buffer_string.value.decode()
-		time.sleep(0.05)
+	if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
+		return buffer_string.value.decode()
 
 	return None
 
