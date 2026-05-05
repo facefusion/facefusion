@@ -8,8 +8,7 @@ from .stream_helper import create_sdp_offer
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	if rtc.create_static_rtc_library() is None:
-		pytest.skip('libdatachannel binary not available')
+	rtc.pre_check()
 
 
 def test_on_sdp_ready() -> None:

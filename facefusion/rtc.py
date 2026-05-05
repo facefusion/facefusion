@@ -162,18 +162,18 @@ def on_sdp_ready(peer_id : int, sdp : bytes, sdp_type : int, context_pointer : i
 
 def negotiate_sdp(peer_connection : int, sdp_offer : str) -> Optional[str]:
 	rtc_library = create_static_rtc_library()
-	gathering_event = threading.Event()
+	sdp_ready_event = threading.Event()
 
-	rtc_library.rtcSetUserPointer(peer_connection, id(gathering_event))
+	rtc_library.rtcSetUserPointer(peer_connection, id(sdp_ready_event))
 	rtc_library.rtcSetLocalDescriptionCallback(peer_connection, on_sdp_ready)
 	rtc_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode('utf-8'), b'offer')
 
-	gathering_event.wait(timeout = 5)
-	buffer_size = 16384
-	buffer_string = ctypes.create_string_buffer(buffer_size)
+	sdp_ready_event.wait(timeout = 5)
+	sdp_buffer_size = 16384
+	sdp_buffer = ctypes.create_string_buffer(sdp_buffer_size)
 
-	if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
-		return buffer_string.value.decode()
+	if rtc_library.rtcGetLocalDescription(peer_connection, sdp_buffer, sdp_buffer_size) > 0:
+		return sdp_buffer.value.decode()
 
 	return None
 

@@ -27,8 +27,7 @@ async def post_stream(request : Request) -> Response:
 
 	if session_id:
 		sdp_offer = (await request.body()).decode()
-		event_loop = asyncio.get_running_loop()
-		sdp_answer = await event_loop.run_in_executor(None, rtc_store.add_rtc_viewer, session_id, sdp_offer)
+		sdp_answer = await asyncio.to_thread(rtc_store.add_rtc_viewer, session_id, sdp_offer)
 
 		if sdp_answer:
 			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type = 'application/sdp')
