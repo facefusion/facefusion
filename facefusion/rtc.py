@@ -156,7 +156,7 @@ def add_video_track(peer_connection : int, sync_source_id : int = 42, canonical_
 
 
 @ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p)
-def _on_sdp_ready(peer_id : int, sdp : bytes, sdp_type : int, context_pointer : int) -> None:
+def on_sdp_ready(peer_id : int, sdp : bytes, sdp_type : int, context_pointer : int) -> None:
 	ctypes.cast(context_pointer, ctypes.py_object).value.set()
 
 
@@ -165,7 +165,7 @@ def negotiate_sdp(peer_connection : int, sdp_offer : str) -> Optional[str]:
 	gathering_event = threading.Event()
 
 	rtc_library.rtcSetUserPointer(peer_connection, id(gathering_event))
-	rtc_library.rtcSetLocalDescriptionCallback(peer_connection, _on_sdp_ready)
+	rtc_library.rtcSetLocalDescriptionCallback(peer_connection, on_sdp_ready)
 	rtc_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode('utf-8'), b'offer')
 
 	gathering_event.wait(timeout = 5)

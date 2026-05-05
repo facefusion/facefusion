@@ -14,7 +14,7 @@ def before_all() -> None:
 
 def test_on_sdp_ready() -> None:
 	event = threading.Event()
-	rtc._on_sdp_ready(1, b'v=0\r\n', 0, id(event))
+	rtc.on_sdp_ready(1, b'v=0\r\n', 0, id(event))
 
 	assert event.is_set()
 
