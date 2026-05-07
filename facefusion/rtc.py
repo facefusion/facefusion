@@ -163,7 +163,7 @@ def create_sdp(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 
 def negotiate_sdp(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	rtc_library = create_static_rtc_library()
-	rtc_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode('utf-8'), b'offer')
+	rtc_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
 	buffer_size = 16384
 	buffer_string = ctypes.create_string_buffer(buffer_size)
 	wait_limit = time.monotonic() + 5
