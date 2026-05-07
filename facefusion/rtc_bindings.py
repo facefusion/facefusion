@@ -52,6 +52,9 @@ def init_ctypes(rtc_library : ctypes.CDLL) -> ctypes.CDLL:
 	rtc_library.rtcDeletePeerConnection.argtypes = [ ctypes.c_int ]
 	rtc_library.rtcDeletePeerConnection.restype = ctypes.c_int
 
+	rtc_library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
+	rtc_library.rtcSetLocalDescription.restype = ctypes.c_int
+
 	rtc_library.rtcSetRemoteDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p ]
 	rtc_library.rtcSetRemoteDescription.restype = ctypes.c_int
 
@@ -78,6 +81,9 @@ def init_ctypes(rtc_library : ctypes.CDLL) -> ctypes.CDLL:
 
 	rtc_library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
 	rtc_library.rtcGetLocalDescription.restype = ctypes.c_int
+
+	rtc_library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
+	rtc_library.rtcSetLocalDescription.restype = ctypes.c_int
 
 	rtc_library.rtcSetOpusPacketizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
 	rtc_library.rtcSetOpusPacketizer.restype = ctypes.c_int

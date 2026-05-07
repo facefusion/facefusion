@@ -1,5 +1,4 @@
 import ctypes
-import os
 import time
 from functools import lru_cache
 from typing import Dict, List, Optional
@@ -8,7 +7,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.filesystem import resolve_relative_path
 from facefusion.rtc_bindings import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, init_ctypes
-from facefusion.types import DownloadSet, RtcAudioTrack, RtcPeer, RtcSdpAnswer, RtcSdpOffer, RtcVideoTrack
+from facefusion.types import DownloadSet, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
 
 
 def resolve_binary_file() -> Optional[str]:
@@ -77,7 +76,7 @@ def create_peer_connection(
 	port_range_begin : int = 0,
 	port_range_end : int = 0,
 	max_packet_size : int = 0,
-	max_message_size : int = 0) -> int:
+	max_message_size : int = 0) -> PeerConnection:
 
 	rtc_library = create_static_rtc_library()
 	rtc_configuration = RTC_CONFIGURATION()
@@ -100,25 +99,29 @@ def create_peer_connection(
 	return rtc_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
 
-def add_audio_track(peer_connection : int, sync_source_id : int = 43, canonical_name : bytes = b'audio', payload_type : int = 111, clock_rate : int = 48000) -> RtcAudioTrack:
-	rtc_library = create_static_rtc_library()
-	media_description = os.linesep.join(
+def build_media_description(media_type : str, payload_type : int, rtp_codec : str, media_direction : MediaDirection, media_id : int) -> bytes:
+	return '\r\n'.join(
 	[
-		'm=audio 9 UDP/TLS/RTP/SAVPF 111',
-		'a=rtpmap:111 opus/48000/2',
-		'a=sendonly',
-		'a=mid:1',
+		'm=' + media_type + ' 9 UDP/TLS/RTP/SAVPF ' + str(payload_type),
+		'a=rtpmap:' + str(payload_type) + ' ' + rtp_codec,
+		'a=' + media_direction,
+		'a=mid:' + str(media_id),
 		'a=rtcp-mux',
 		''
 	]).encode()
 
+
+def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection) -> RtcAudioTrack:
+	rtc_library = create_static_rtc_library()
+	media_description = build_media_description('audio', 111, 'opus/48000/2', media_direction, 1)
+
 	audio_track = rtc_library.rtcAddTrack(peer_connection, media_description)
 
 	audio_packetizer = RTC_PACKETIZER_INIT()
-	audio_packetizer.ssrc = sync_source_id
-	audio_packetizer.cname = canonical_name
-	audio_packetizer.payloadType = payload_type
-	audio_packetizer.clockRate = clock_rate
+	audio_packetizer.ssrc = 43
+	audio_packetizer.cname = b'audio'
+	audio_packetizer.payloadType = 111
+	audio_packetizer.clockRate = 48000
 
 	rtc_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
 	rtc_library.rtcChainRtcpSrReporter(audio_track)
@@ -126,37 +129,41 @@ def add_audio_track(peer_connection : int, sync_source_id : int = 43, canonical_
 	return audio_track
 
 
-def add_video_track(peer_connection : int, sync_source_id : int = 42, canonical_name : bytes = b'video', payload_type : int = 96, clock_rate : int = 90000, max_fragment_size : int = 1200, nack_buffer_size : int = 512) -> RtcVideoTrack:
+def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection) -> RtcVideoTrack:
 	rtc_library = create_static_rtc_library()
-	media_description = os.linesep.join(
-	[
-		'm=video 9 UDP/TLS/RTP/SAVPF 96',
-		'a=rtpmap:96 VP8/90000',
-		'a=sendonly',
-		'a=mid:0',
-		'a=rtcp-mux',
-		''
-	]).encode()
+	media_description = build_media_description('video', 96, 'VP8/90000', media_direction, 0)
 
 	video_track = rtc_library.rtcAddTrack(peer_connection, media_description)
 
 	video_packetizer = RTC_PACKETIZER_INIT()
-	video_packetizer.ssrc = sync_source_id
-	video_packetizer.cname = canonical_name
-	video_packetizer.payloadType = payload_type
-	video_packetizer.clockRate = clock_rate
-	video_packetizer.maxFragmentSize = max_fragment_size
+	video_packetizer.ssrc = 42
+	video_packetizer.cname = b'video'
+	video_packetizer.payloadType = 96
+	video_packetizer.clockRate = 90000
+	video_packetizer.maxFragmentSize = 1200
 
 	rtc_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
 	rtc_library.rtcChainRtcpSrReporter(video_track)
-	rtc_library.rtcChainRtcpNackResponder(video_track, nack_buffer_size)
+	rtc_library.rtcChainRtcpNackResponder(video_track, 512)
 
 	return video_track
 
 
-def negotiate_sdp(peer_connection : int, sdp_offer : str) -> Optional[str]:
+def create_sdp(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	rtc_library = create_static_rtc_library()
-	rtc_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode('utf-8'), b'offer')
+	rtc_library.rtcSetLocalDescription(peer_connection, b'offer')
+	buffer_size = 16384
+	buffer_string = ctypes.create_string_buffer(buffer_size)
+
+	if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
+		return buffer_string.value.decode()
+
+	return None
+
+
+def negotiate_sdp(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+	rtc_library = create_static_rtc_library()
+	rtc_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
 	buffer_size = 16384
 	buffer_string = ctypes.create_string_buffer(buffer_size)
 	wait_limit = time.monotonic() + 5
@@ -169,10 +176,10 @@ def negotiate_sdp(peer_connection : int, sdp_offer : str) -> Optional[str]:
 	return None
 
 
-def handle_whep_offer(peers : List[RtcPeer], sdp_offer : RtcSdpOffer) -> Optional[RtcSdpAnswer]:
+def handle_whep_offer(peers : List[RtcPeer], sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	peer_connection = create_peer_connection()
-	audio_track = add_audio_track(peer_connection)
-	video_track = add_video_track(peer_connection)
+	audio_track = add_audio_track(peer_connection, 'sendonly')
+	video_track = add_video_track(peer_connection, 'sendonly')
 	local_sdp = negotiate_sdp(peer_connection, sdp_offer)
 
 	if local_sdp:

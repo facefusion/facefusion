@@ -281,8 +281,10 @@ RtcPeer = TypedDict('RtcPeer',
 
 RtcVideoTrack : TypeAlias = int
 RtcAudioTrack : TypeAlias = int
-RtcSdpOffer : TypeAlias = str
-RtcSdpAnswer : TypeAlias = str
+PeerConnection : TypeAlias = int
+SdpOffer : TypeAlias = str
+SdpAnswer : TypeAlias = str
+MediaDirection : TypeAlias = Literal['sendonly', 'recvonly', 'sendrecv', 'inactive']
 RtcStreamStore : TypeAlias = Dict[str, List[RtcPeer]]
 
 ModelOptions : TypeAlias = Dict[str, Any]

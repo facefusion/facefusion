@@ -1,5 +1,4 @@
 import ctypes
-import os
 import threading
 import time
 from typing import Optional
@@ -7,33 +6,15 @@ from typing import Optional
 from starlette.testclient import TestClient
 
 from facefusion import rtc
-from facefusion.types import RtcSdpOffer
+from facefusion.types import SdpOffer
 
 
-# TODO: reuse media description building from rtc.py
-def create_sdp_offer() -> Optional[RtcSdpOffer]:
+def create_sdp_offer() -> Optional[SdpOffer]:
 	rtc_library = rtc.create_static_rtc_library()
 	peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
 
-	media_video = os.linesep.join(
-	[
-		'm=video 9 UDP/TLS/RTP/SAVPF 96',
-		'a=rtpmap:96 VP8/90000',
-		'a=recvonly',
-		'a=mid:0',
-		''
-	]).encode()
-	media_audio = os.linesep.join(
-	[
-		'm=audio 9 UDP/TLS/RTP/SAVPF 111',
-		'a=rtpmap:111 opus/48000/2',
-		'a=recvonly',
-		'a=mid:1',
-		''
-	]).encode()
-
-	rtc_library.rtcAddTrack(peer_connection, media_video)
-	rtc_library.rtcAddTrack(peer_connection, media_audio)
+	rtc_library.rtcAddTrack(peer_connection, rtc.build_media_description('video', 96, 'VP8/90000', 'recvonly', 0))
+	rtc_library.rtcAddTrack(peer_connection, rtc.build_media_description('audio', 111, 'opus/48000/2', 'recvonly', 1))
 	rtc_library.rtcSetLocalDescription(peer_connection, b'offer')
 
 	buffer_size = 16384
@@ -44,7 +25,6 @@ def create_sdp_offer() -> Optional[RtcSdpOffer]:
 		if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
 			sdp = buffer_string.value.decode()
 			rtc_library.rtcDeletePeerConnection(peer_connection)
-			#TODO: use return buffer_string.value.decode()
 			return sdp
 
 		time.sleep(0.05)
