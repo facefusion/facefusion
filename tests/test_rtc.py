@@ -1,3 +1,5 @@
+import ctypes
+import time
 import pytest
 
 from facefusion import rtc
@@ -37,3 +39,35 @@ def test_add_video_track() -> None:
 
 	assert video_track > 0
 	assert rtc_library.rtcDeletePeerConnection(peer_connection) == 0
+
+
+def test_peer_connection_open_and_close() -> None:
+	rtc_library = rtc.create_static_rtc_library()
+
+	peer_1 = rtc.create_peer_connection(enable_ice_udp_mux = False)
+	video_track = rtc.add_video_track(peer_1, 'sendonly')
+	rtc_library.rtcSetLocalDescription(peer_1, b'offer')
+	buffer_size = 16384
+	buffer_string = ctypes.create_string_buffer(buffer_size)
+	wait_limit = time.monotonic() + 5
+	offer = None
+
+	while time.monotonic() < wait_limit:
+		if rtc_library.rtcGetLocalDescription(peer_1, buffer_string, buffer_size) > 0:
+			offer = buffer_string.value.decode()
+			break
+		time.sleep(0.05)
+
+	peer_2 = rtc.create_peer_connection(enable_ice_udp_mux = False)
+	rtc.add_video_track(peer_2, 'recvonly')
+	answer = rtc.negotiate_sdp(peer_2, offer)
+	rtc_library.rtcSetRemoteDescription(peer_1, answer.encode('utf-8'), b'answer')
+
+	wait_limit = time.monotonic() + 5
+	while time.monotonic() < wait_limit and not rtc_library.rtcIsOpen(video_track):
+		time.sleep(0.05)
+
+	assert rtc_library.rtcIsOpen(video_track) is True
+	assert rtc_library.rtcDeletePeerConnection(peer_1) == 0
+	assert rtc_library.rtcDeletePeerConnection(peer_2) == 0
+	assert rtc_library.rtcIsOpen(video_track) is False
