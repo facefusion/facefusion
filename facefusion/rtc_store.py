@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from facefusion import rtc
-from facefusion.types import RtcPeer, RtcSdpAnswer, RtcSdpOffer, RtcStreamStore, SessionId
+from facefusion.types import RtcPeer, RtcStreamStore, SdpAnswer, SdpOffer, SessionId
 
 RTC_STREAMS : RtcStreamStore = {}
 
@@ -21,7 +21,7 @@ def destroy_rtc_stream(session_id : SessionId) -> None:
 		rtc.delete_peers(peers)
 
 
-def add_rtc_viewer(session_id : SessionId, sdp_offer : RtcSdpOffer) -> Optional[RtcSdpAnswer]:
+def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	if session_id in RTC_STREAMS:
 		return rtc.handle_whep_offer(RTC_STREAMS.get(session_id), sdp_offer)
 
