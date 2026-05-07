@@ -1,8 +1,14 @@
 import ctypes
+from functools import lru_cache
+from typing import Dict, Optional
 
-RTC_CONFIGURATION = type('RtcConfiguration', (ctypes.Structure,),
-{
-	'_fields_':
+from facefusion.common_helper import is_linux, is_macos, is_windows
+from facefusion.filesystem import resolve_relative_path
+from facefusion.types import DownloadSet
+
+
+class RTC_CONFIGURATION(ctypes.Structure):
+	_fields_ =\
 	[
 		('iceServers', ctypes.POINTER(ctypes.c_char_p)),
 		('iceServersCount', ctypes.c_int),
@@ -19,10 +25,10 @@ RTC_CONFIGURATION = type('RtcConfiguration', (ctypes.Structure,),
 		('mtu', ctypes.c_int),
 		('maxMessageSize', ctypes.c_int)
 	]
-})
-RTC_PACKETIZER_INIT = type('RtcPacketizerInit', (ctypes.Structure,),
-{
-	'_fields_':
+
+
+class RTC_PACKETIZER_INIT(ctypes.Structure):
+	_fields_ =\
 	[
 		('ssrc', ctypes.c_uint32),
 		('cname', ctypes.c_char_p),
@@ -30,15 +36,57 @@ RTC_PACKETIZER_INIT = type('RtcPacketizerInit', (ctypes.Structure,),
 		('clockRate', ctypes.c_uint32),
 		('sequenceNumber', ctypes.c_uint16),
 		('timestamp', ctypes.c_uint32),
-		('maxFragmentSize', ctypes.c_uint16),
-		('nalSeparator', ctypes.c_int),
-		('obuPacketization', ctypes.c_int),
-		('playoutDelayId', ctypes.c_uint8),
-		('playoutDelayMin', ctypes.c_uint16),
-		('playoutDelayMax', ctypes.c_uint16)
+		('maxFragmentSize', ctypes.c_uint16)
 	]
-})
+
+
 LOG_CB_TYPE = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)
+
+
+def resolve_binary_file() -> Optional[str]:
+	if is_linux():
+		return 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so'
+	if is_macos():
+		return 'macos-universal-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.dylib'
+	if is_windows():
+		return 'windows-x64-openssl-h264-vp8-av1-opus-datachannel-0.24.1.dll'
+	return None
+
+
+@lru_cache
+def create_static_download_set() -> Dict[str, DownloadSet]: # TODO: replace once conda package is in place
+	binary_name = resolve_binary_file()
+
+	return\
+	{
+		'hashes':
+		{
+			'datachannel':
+			{
+				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so.hash', # TODO: use url with dynamic binary_name
+				'path': resolve_relative_path('../.assets/binaries/' + binary_name + '.hash')
+			}
+		},
+		'sources':
+		{
+			'datachannel':
+			{
+				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so', # TODO: use url with dynamic binary_name
+				'path': resolve_relative_path('../.assets/binaries/' + binary_name)
+			}
+		}
+	}
+
+
+@lru_cache
+def create_static_rtc_library() -> Optional[ctypes.CDLL]:
+	binary_path = create_static_download_set().get('sources').get('datachannel').get('path')
+
+	if binary_path:
+		rtc_library = ctypes.CDLL(binary_path)
+		return init_ctypes(rtc_library)
+
+	return None
 
 
 def init_ctypes(rtc_library : ctypes.CDLL) -> ctypes.CDLL:
@@ -81,9 +129,6 @@ def init_ctypes(rtc_library : ctypes.CDLL) -> ctypes.CDLL:
 
 	rtc_library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
 	rtc_library.rtcGetLocalDescription.restype = ctypes.c_int
-
-	rtc_library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
-	rtc_library.rtcSetLocalDescription.restype = ctypes.c_int
 
 	rtc_library.rtcSetOpusPacketizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
 	rtc_library.rtcSetOpusPacketizer.restype = ctypes.c_int

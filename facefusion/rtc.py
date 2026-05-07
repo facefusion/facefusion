@@ -1,48 +1,10 @@
 import ctypes
 import time
-from functools import lru_cache
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.filesystem import resolve_relative_path
-from facefusion.rtc_bindings import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, init_ctypes
-from facefusion.types import DownloadSet, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
-
-
-def resolve_binary_file() -> Optional[str]:
-	if is_linux():
-		return 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so'
-	if is_macos():
-		return 'macos-universal-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.dylib'
-	if is_windows():
-		return 'windows-x64-openssl-h264-vp8-av1-opus-datachannel-0.24.1.dll'
-	return None
-
-
-@lru_cache
-def create_static_download_set() -> Dict[str, DownloadSet]: # TODO: replace once conda package is in place
-	binary_name = resolve_binary_file()
-
-	return\
-	{
-		'hashes':
-		{
-			'datachannel':
-			{
-				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so.hash', # TODO: use url with dynamic binary_name
-				'path': resolve_relative_path('../.assets/binaries/' + binary_name + '.hash')
-			}
-		},
-		'sources':
-		{
-			'datachannel':
-			{
-				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so', # TODO: use url with dynamic binary_name
-				'path': resolve_relative_path('../.assets/binaries/' + binary_name)
-			}
-		}
-	}
+from facefusion.rtc_bindings import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, create_static_download_set, create_static_rtc_library
+from facefusion.types import MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
 
 
 def pre_check() -> bool:
@@ -51,17 +13,6 @@ def pre_check() -> bool:
 	if not conditional_download_hashes(download_set.get('hashes')):
 		return False
 	return conditional_download_sources(download_set.get('sources'))
-
-
-@lru_cache
-def create_static_rtc_library() -> Optional[ctypes.CDLL]:
-	binary_path = create_static_download_set().get('sources').get('datachannel').get('path')
-
-	if binary_path:
-		rtc_library = ctypes.CDLL(binary_path)
-		return init_ctypes(rtc_library)
-
-	return None
 
 
 def create_peer_connection(
