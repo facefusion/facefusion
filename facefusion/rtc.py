@@ -1,5 +1,4 @@
 import ctypes
-import os
 import time
 from functools import lru_cache
 from typing import Dict, List, Optional
@@ -100,17 +99,21 @@ def create_peer_connection(
 	return rtc_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
 
-def add_audio_track(peer_connection : int, sync_source_id : int = 43, canonical_name : bytes = b'audio', payload_type : int = 111, clock_rate : int = 48000) -> RtcAudioTrack:
-	rtc_library = create_static_rtc_library()
-	media_description = os.linesep.join(
+def build_media_description(media_type : str, payload_type : int, rtp_codec : str, media_direction : str, media_id : int) -> bytes:
+	return '\r\n'.join(
 	[
-		'm=audio 9 UDP/TLS/RTP/SAVPF 111',
-		'a=rtpmap:111 opus/48000/2',
-		'a=sendonly',
-		'a=mid:1',
+		'm=' + media_type + ' 9 UDP/TLS/RTP/SAVPF ' + str(payload_type),
+		'a=rtpmap:' + str(payload_type) + ' ' + rtp_codec,
+		'a=' + media_direction,
+		'a=mid:' + str(media_id),
 		'a=rtcp-mux',
 		''
 	]).encode()
+
+
+def add_audio_track(peer_connection : int, sync_source_id : int = 43, canonical_name : bytes = b'audio', payload_type : int = 111, clock_rate : int = 48000) -> RtcAudioTrack:
+	rtc_library = create_static_rtc_library()
+	media_description = build_media_description('audio', payload_type, 'opus/48000/2', 'sendonly', 1)
 
 	audio_track = rtc_library.rtcAddTrack(peer_connection, media_description)
 
@@ -128,15 +131,7 @@ def add_audio_track(peer_connection : int, sync_source_id : int = 43, canonical_
 
 def add_video_track(peer_connection : int, sync_source_id : int = 42, canonical_name : bytes = b'video', payload_type : int = 96, clock_rate : int = 90000, max_fragment_size : int = 1200, nack_buffer_size : int = 512) -> RtcVideoTrack:
 	rtc_library = create_static_rtc_library()
-	media_description = os.linesep.join(
-	[
-		'm=video 9 UDP/TLS/RTP/SAVPF 96',
-		'a=rtpmap:96 VP8/90000',
-		'a=sendonly',
-		'a=mid:0',
-		'a=rtcp-mux',
-		''
-	]).encode()
+	media_description = build_media_description('video', payload_type, 'VP8/90000', 'sendonly', 0)
 
 	video_track = rtc_library.rtcAddTrack(peer_connection, media_description)
 
