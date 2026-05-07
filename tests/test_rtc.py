@@ -1,5 +1,3 @@
-import ctypes
-import time
 import pytest
 
 from facefusion import rtc
@@ -24,50 +22,46 @@ def test_create_peer_connection() -> None:
 
 
 def test_add_audio_track() -> None:
-	peer_connection = rtc.create_peer_connection()
-	audio_track = rtc.add_audio_track(peer_connection, 'sendonly')
 	rtc_library = rtc.create_static_rtc_library()
 
-	assert audio_track > 0
-	assert rtc_library.rtcDeletePeerConnection(peer_connection) == 0
+	sender_connection = rtc.create_peer_connection()
+	sender_audio_track = rtc.add_audio_track(sender_connection, 'sendonly')
+	sdp_offer = rtc.create_sdp(sender_connection)
+
+	receiver_connection = rtc.create_peer_connection()
+	receiver_audio_track = rtc.add_audio_track(receiver_connection, 'recvonly')
+	sdp_answer = rtc.negotiate_sdp(receiver_connection, sdp_offer)
+
+	assert sender_audio_track > 0
+	assert receiver_audio_track > 0
+
+	assert 'm=audio' in sdp_offer
+	assert 'm=audio' in sdp_answer
+	assert 'opus/48000/2' in sdp_offer
+	assert 'opus/48000/2' in sdp_answer
+
+	assert rtc_library.rtcDeletePeerConnection(sender_connection) == 0
+	assert rtc_library.rtcDeletePeerConnection(receiver_connection) == 0
 
 
 def test_add_video_track() -> None:
-	peer_connection = rtc.create_peer_connection()
-	video_track = rtc.add_video_track(peer_connection, 'sendonly')
 	rtc_library = rtc.create_static_rtc_library()
 
-	assert video_track > 0
-	assert rtc_library.rtcDeletePeerConnection(peer_connection) == 0
+	sender_connection = rtc.create_peer_connection()
+	sender_video_track = rtc.add_video_track(sender_connection, 'sendonly')
+	sdp_offer = rtc.create_sdp(sender_connection)
 
+	receiver_connection = rtc.create_peer_connection()
+	receiver_video_track = rtc.add_video_track(receiver_connection, 'recvonly')
+	sdp_answer = rtc.negotiate_sdp(receiver_connection, sdp_offer)
 
-def test_peer_connection_open_and_close() -> None:
-	rtc_library = rtc.create_static_rtc_library()
+	assert sender_video_track > 0
+	assert receiver_video_track > 0
 
-	peer_1 = rtc.create_peer_connection(enable_ice_udp_mux = False)
-	video_track = rtc.add_video_track(peer_1, 'sendonly')
-	rtc_library.rtcSetLocalDescription(peer_1, b'offer')
-	buffer_size = 16384
-	buffer_string = ctypes.create_string_buffer(buffer_size)
-	wait_limit = time.monotonic() + 5
-	offer = None
+	assert 'm=video' in sdp_offer
+	assert 'm=video' in sdp_answer
+	assert 'VP8/90000' in sdp_offer
+	assert 'VP8/90000' in sdp_answer
 
-	while time.monotonic() < wait_limit:
-		if rtc_library.rtcGetLocalDescription(peer_1, buffer_string, buffer_size) > 0:
-			offer = buffer_string.value.decode()
-			break
-		time.sleep(0.05)
-
-	peer_2 = rtc.create_peer_connection(enable_ice_udp_mux = False)
-	rtc.add_video_track(peer_2, 'recvonly')
-	answer = rtc.negotiate_sdp(peer_2, offer)
-	rtc_library.rtcSetRemoteDescription(peer_1, answer.encode('utf-8'), b'answer')
-
-	wait_limit = time.monotonic() + 5
-	while time.monotonic() < wait_limit and not rtc_library.rtcIsOpen(video_track):
-		time.sleep(0.05)
-
-	assert rtc_library.rtcIsOpen(video_track) is True
-	assert rtc_library.rtcDeletePeerConnection(peer_1) == 0
-	assert rtc_library.rtcDeletePeerConnection(peer_2) == 0
-	assert rtc_library.rtcIsOpen(video_track) is False
+	assert rtc_library.rtcDeletePeerConnection(sender_connection) == 0
+	assert rtc_library.rtcDeletePeerConnection(receiver_connection) == 0

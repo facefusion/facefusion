@@ -6,10 +6,10 @@ from typing import Optional
 from starlette.testclient import TestClient
 
 from facefusion import rtc
-from facefusion.types import RtcSdpOffer
+from facefusion.types import SdpOffer
 
 
-def create_sdp_offer() -> Optional[RtcSdpOffer]:
+def create_sdp_offer() -> Optional[SdpOffer]:
 	rtc_library = rtc.create_static_rtc_library()
 	peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
 
