@@ -3,7 +3,7 @@ import pytest
 from facefusion import rtc
 
 
-@pytest.fixture(scope = 'module', autouse = True)
+@pytest.fixture(scope = 'module')
 def before_all() -> None:
 	rtc.pre_check()
 
@@ -15,22 +15,25 @@ def test_build_media_description() -> None:
 
 def test_create_peer_connection() -> None:
 	peer_connection = rtc.create_peer_connection()
-	rtc.create_static_rtc_library().rtcDeletePeerConnection(peer_connection)
+	rtc_library = rtc.create_static_rtc_library()
 
-	assert peer_connection == 1
+	assert peer_connection > 0
+	assert rtc_library.rtcDeletePeerConnection(peer_connection) == 0
 
 
 def test_add_audio_track() -> None:
 	peer_connection = rtc.create_peer_connection()
-	audio_track = rtc.add_audio_track(peer_connection)
-	rtc.create_static_rtc_library().rtcDeletePeerConnection(peer_connection)
+	audio_track = rtc.add_audio_track(peer_connection, 'sendonly')
+	rtc_library = rtc.create_static_rtc_library()
 
 	assert audio_track > 0
+	assert rtc_library.rtcDeletePeerConnection(peer_connection) == 0
 
 
 def test_add_video_track() -> None:
 	peer_connection = rtc.create_peer_connection()
-	video_track = rtc.add_video_track(peer_connection)
-	rtc.create_static_rtc_library().rtcDeletePeerConnection(peer_connection)
+	video_track = rtc.add_video_track(peer_connection, 'sendonly')
+	rtc_library = rtc.create_static_rtc_library()
 
 	assert video_track > 0
+	assert rtc_library.rtcDeletePeerConnection(peer_connection) == 0

@@ -111,17 +111,17 @@ def build_media_description(media_type : str, payload_type : int, rtp_codec : st
 	]).encode()
 
 
-def add_audio_track(peer_connection : int, sync_source_id : int = 43, canonical_name : bytes = b'audio', payload_type : int = 111, clock_rate : int = 48000) -> RtcAudioTrack:
+def add_audio_track(peer_connection : int, media_direction : str) -> RtcAudioTrack:
 	rtc_library = create_static_rtc_library()
-	media_description = build_media_description('audio', payload_type, 'opus/48000/2', 'sendonly', 1)
+	media_description = build_media_description('audio', 111, 'opus/48000/2', media_direction, 1)
 
 	audio_track = rtc_library.rtcAddTrack(peer_connection, media_description)
 
 	audio_packetizer = RTC_PACKETIZER_INIT()
-	audio_packetizer.ssrc = sync_source_id
-	audio_packetizer.cname = canonical_name
-	audio_packetizer.payloadType = payload_type
-	audio_packetizer.clockRate = clock_rate
+	audio_packetizer.ssrc = 43
+	audio_packetizer.cname = b'audio'
+	audio_packetizer.payloadType = 111
+	audio_packetizer.clockRate = 48000
 
 	rtc_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
 	rtc_library.rtcChainRtcpSrReporter(audio_track)
@@ -129,22 +129,22 @@ def add_audio_track(peer_connection : int, sync_source_id : int = 43, canonical_
 	return audio_track
 
 
-def add_video_track(peer_connection : int, sync_source_id : int = 42, canonical_name : bytes = b'video', payload_type : int = 96, clock_rate : int = 90000, max_fragment_size : int = 1200, nack_buffer_size : int = 512) -> RtcVideoTrack:
+def add_video_track(peer_connection : int, media_direction : str) -> RtcVideoTrack:
 	rtc_library = create_static_rtc_library()
-	media_description = build_media_description('video', payload_type, 'VP8/90000', 'sendonly', 0)
+	media_description = build_media_description('video', 96, 'VP8/90000', media_direction, 0)
 
 	video_track = rtc_library.rtcAddTrack(peer_connection, media_description)
 
 	video_packetizer = RTC_PACKETIZER_INIT()
-	video_packetizer.ssrc = sync_source_id
-	video_packetizer.cname = canonical_name
-	video_packetizer.payloadType = payload_type
-	video_packetizer.clockRate = clock_rate
-	video_packetizer.maxFragmentSize = max_fragment_size
+	video_packetizer.ssrc = 42
+	video_packetizer.cname = b'video'
+	video_packetizer.payloadType = 96
+	video_packetizer.clockRate = 90000
+	video_packetizer.maxFragmentSize = 1200
 
 	rtc_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
 	rtc_library.rtcChainRtcpSrReporter(video_track)
-	rtc_library.rtcChainRtcpNackResponder(video_track, nack_buffer_size)
+	rtc_library.rtcChainRtcpNackResponder(video_track, 512)
 
 	return video_track
 
@@ -166,8 +166,8 @@ def negotiate_sdp(peer_connection : int, sdp_offer : str) -> Optional[str]:
 
 def handle_whep_offer(peers : List[RtcPeer], sdp_offer : RtcSdpOffer) -> Optional[RtcSdpAnswer]:
 	peer_connection = create_peer_connection()
-	audio_track = add_audio_track(peer_connection)
-	video_track = add_video_track(peer_connection)
+	audio_track = add_audio_track(peer_connection, 'sendonly')
+	video_track = add_video_track(peer_connection, 'sendonly')
 	local_sdp = negotiate_sdp(peer_connection, sdp_offer)
 
 	if local_sdp:
