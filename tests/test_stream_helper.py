@@ -42,8 +42,8 @@ def test_read_pipe_buffer() -> None:
 	os.write(write_pipe, b'123456')
 	os.close(write_pipe)
 
-	assert read_pipe_buffer(read_pipe, 4) == b'123'
-	assert read_pipe_buffer(read_pipe, 4) == b'456'
+	assert read_pipe_buffer(read_pipe, 3) == b'123'
+	assert read_pipe_buffer(read_pipe, 3) == b'456'
 	assert read_pipe_buffer(read_pipe, 1) is None
 
 	os.close(read_pipe)
