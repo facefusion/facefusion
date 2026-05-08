@@ -4,11 +4,10 @@ import os
 import subprocess
 from collections import deque
 from collections.abc import AsyncIterator
-from typing import Optional, cast
+from typing import Optional
 
 import cv2
 import numpy
-from starlette.types import Scope
 from starlette.websockets import WebSocket, WebSocketState
 
 from facefusion import rtc_store, session_context, session_manager, state_manager
@@ -17,7 +16,7 @@ from facefusion.apis.session_helper import extract_access_token
 from facefusion.common_helper import is_linux, is_macos
 from facefusion.ffmpeg import spawn_stream
 from facefusion.streamer import process_vision_frame
-from facefusion.types import Resolution, SessionId, VisionFrame, WebSocketStreamMode
+from facefusion.types import Resolution, SessionId, VisionFrame
 
 
 def calculate_bitrate(resolution : Resolution) -> int: # TODO : improve the bitrate calculation
@@ -28,19 +27,6 @@ def calculate_bitrate(resolution : Resolution) -> int: # TODO : improve the bitr
 
 def calculate_buffer_size(resolution : Resolution) -> int:
 	return calculate_bitrate(resolution) * 2
-
-
-def detect_websocket_stream_mode(scope : Scope) -> Optional[WebSocketStreamMode]:
-	subprotocol = get_sec_websocket_protocol(scope)
-
-	if subprotocol:
-		for protocol in subprotocol.split(','):
-			websocket_stream_mode = cast(WebSocketStreamMode, protocol.strip())
-
-			if websocket_stream_mode in [ 'image', 'video' ]:
-				return websocket_stream_mode
-
-	return None
 
 
 def read_pipe_buffer(pipe_handle : int, size : int) -> Optional[bytes]:
