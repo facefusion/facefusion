@@ -6,41 +6,48 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.filesystem import resolve_relative_path
 from facefusion.types import DownloadSet
 
-
-class RTC_CONFIGURATION(ctypes.Structure):
-	_fields_ =\
-	[
-		('iceServers', ctypes.POINTER(ctypes.c_char_p)),
-		('iceServersCount', ctypes.c_int),
-		('proxyServer', ctypes.c_char_p),
-		('bindAddress', ctypes.c_char_p),
-		('certificateType', ctypes.c_int),
-		('iceTransportPolicy', ctypes.c_int),
-		('enableIceTcp', ctypes.c_bool),
-		('enableIceUdpMux', ctypes.c_bool),
-		('disableAutoNegotiation', ctypes.c_bool),
-		('forceMediaTransport', ctypes.c_bool),
-		('portRangeBegin', ctypes.c_ushort),
-		('portRangeEnd', ctypes.c_ushort),
-		('mtu', ctypes.c_int),
-		('maxMessageSize', ctypes.c_int)
-	]
-
-
-class RTC_PACKETIZER_INIT(ctypes.Structure):
-	_fields_ =\
-	[
-		('ssrc', ctypes.c_uint32),
-		('cname', ctypes.c_char_p),
-		('payloadType', ctypes.c_uint8),
-		('clockRate', ctypes.c_uint32),
-		('sequenceNumber', ctypes.c_uint16),
-		('timestamp', ctypes.c_uint32),
-		('maxFragmentSize', ctypes.c_uint16)
-	]
-
-
 LOG_CB_TYPE = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)
+
+
+def create_rtc_configuration() -> ctypes.Structure:
+	rtc_configuration = type('RTC_CONFIGURATION', (ctypes.Structure,),
+	{
+		'_fields_':
+		[
+			('iceServers', ctypes.POINTER(ctypes.c_char_p)),
+			('iceServersCount', ctypes.c_int),
+			('proxyServer', ctypes.c_char_p),
+			('bindAddress', ctypes.c_char_p),
+			('certificateType', ctypes.c_int),
+			('iceTransportPolicy', ctypes.c_int),
+			('enableIceTcp', ctypes.c_bool),
+			('enableIceUdpMux', ctypes.c_bool),
+			('disableAutoNegotiation', ctypes.c_bool),
+			('forceMediaTransport', ctypes.c_bool),
+			('portRangeBegin', ctypes.c_ushort),
+			('portRangeEnd', ctypes.c_ushort),
+			('mtu', ctypes.c_int),
+			('maxMessageSize', ctypes.c_int)
+		]
+	})
+	return rtc_configuration()
+
+
+def create_rtc_packetizer_init() -> ctypes.Structure:
+	rtc_packetizer_init = type('RTC_PACKETIZER_INIT', (ctypes.Structure,),
+	{
+		'_fields_':
+		[
+			('ssrc', ctypes.c_uint32),
+			('cname', ctypes.c_char_p),
+			('payloadType', ctypes.c_uint8),
+			('clockRate', ctypes.c_uint32),
+			('sequenceNumber', ctypes.c_uint16),
+			('timestamp', ctypes.c_uint32),
+			('maxFragmentSize', ctypes.c_uint16)
+		]
+	})
+	return rtc_packetizer_init()
 
 
 def resolve_binary_file() -> Optional[str]:
@@ -94,7 +101,6 @@ def init_ctypes(rtc_library : ctypes.CDLL) -> ctypes.CDLL:
 	rtc_library.rtcInitLogger.restype = None
 	rtc_library.rtcInitLogger(4, LOG_CB_TYPE(0))
 
-	rtc_library.rtcCreatePeerConnection.argtypes = [ ctypes.POINTER(RTC_CONFIGURATION) ]
 	rtc_library.rtcCreatePeerConnection.restype = ctypes.c_int
 
 	rtc_library.rtcDeletePeerConnection.argtypes = [ ctypes.c_int ]
@@ -112,7 +118,6 @@ def init_ctypes(rtc_library : ctypes.CDLL) -> ctypes.CDLL:
 	rtc_library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
 	rtc_library.rtcSendMessage.restype = ctypes.c_int
 
-	rtc_library.rtcSetVP8Packetizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
 	rtc_library.rtcSetVP8Packetizer.restype = ctypes.c_int
 
 	rtc_library.rtcChainRtcpSrReporter.argtypes = [ ctypes.c_int ]
@@ -130,7 +135,6 @@ def init_ctypes(rtc_library : ctypes.CDLL) -> ctypes.CDLL:
 	rtc_library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
 	rtc_library.rtcGetLocalDescription.restype = ctypes.c_int
 
-	rtc_library.rtcSetOpusPacketizer.argtypes = [ ctypes.c_int, ctypes.POINTER(RTC_PACKETIZER_INIT) ]
 	rtc_library.rtcSetOpusPacketizer.restype = ctypes.c_int
 
 	return rtc_library

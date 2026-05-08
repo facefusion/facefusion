@@ -3,7 +3,7 @@ import time
 from typing import List, Optional
 
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.rtc_bindings import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, create_static_download_set, create_static_rtc_library
+from facefusion.rtc_bindings import create_rtc_configuration, create_rtc_packetizer_init, create_static_download_set, create_static_rtc_library
 from facefusion.types import MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
 
 
@@ -30,7 +30,7 @@ def create_peer_connection(
 	max_message_size : int = 0) -> PeerConnection:
 
 	rtc_library = create_static_rtc_library()
-	rtc_configuration = RTC_CONFIGURATION()
+	rtc_configuration = create_rtc_configuration()
 
 	rtc_configuration.iceServers = ice_servers
 	rtc_configuration.iceServersCount = ice_servers_count
@@ -68,7 +68,7 @@ def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDir
 
 	audio_track = rtc_library.rtcAddTrack(peer_connection, media_description)
 
-	audio_packetizer = RTC_PACKETIZER_INIT()
+	audio_packetizer = create_rtc_packetizer_init()
 	audio_packetizer.ssrc = 43
 	audio_packetizer.cname = b'audio'
 	audio_packetizer.payloadType = 111
@@ -86,7 +86,7 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 
 	video_track = rtc_library.rtcAddTrack(peer_connection, media_description)
 
-	video_packetizer = RTC_PACKETIZER_INIT()
+	video_packetizer = create_rtc_packetizer_init()
 	video_packetizer.ssrc = 42
 	video_packetizer.cname = b'video'
 	video_packetizer.payloadType = 96
