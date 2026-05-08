@@ -67,11 +67,13 @@ def test_delete_peers() -> None:
 	datachannel_library = rtc.create_static_datachannel_library()
 	peer_connection = rtc.create_peer_connection()
 	rtc_peers : List[RtcPeer] =\
-	[{
-		'peer_connection': peer_connection,
-		'video_track': 0,
-		'audio_track': 0
-	}]
+	[
+		{
+			'peer_connection': peer_connection,
+			'video_track': 0,
+			'audio_track': 0
+		}
+	]
 
 	rtc.delete_peers(rtc_peers)
 
