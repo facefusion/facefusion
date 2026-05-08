@@ -93,5 +93,3 @@ def find_device_handles(nvidia_ml_library : ctypes.CDLL) -> List[ctypes.c_void_p
 		device_handles.append(device_handle)
 
 	return device_handles
-
-
