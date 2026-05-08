@@ -8,7 +8,6 @@ from typing import Optional, cast
 
 import cv2
 import numpy
-from starlette.datastructures import Headers
 from starlette.types import Scope
 from starlette.websockets import WebSocket, WebSocketState
 
@@ -31,15 +30,15 @@ def calculate_buffer_size(resolution : Resolution) -> int:
 	return calculate_bitrate(resolution) * 2
 
 
-def get_websocket_stream_mode(scope : Scope) -> Optional[WebSocketStreamMode]:
-	protocol_header = Headers(scope = scope).get('Sec-WebSocket-Protocol')
+def detect_websocket_stream_mode(scope : Scope) -> Optional[WebSocketStreamMode]:
+	subprotocol = get_sec_websocket_protocol(scope)
 
-	if protocol_header:
-		for protocol in protocol_header.split(','):
-			websocket_stream_mode = protocol.strip()
+	if subprotocol:
+		for protocol in subprotocol.split(','):
+			websocket_stream_mode = cast(WebSocketStreamMode, protocol.strip())
 
 			if websocket_stream_mode in [ 'image', 'video' ]:
-				return cast(WebSocketStreamMode, websocket_stream_mode)
+				return websocket_stream_mode
 
 	return None
 
