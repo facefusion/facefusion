@@ -1,48 +1,10 @@
 import ctypes
 import time
-from functools import lru_cache
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from facefusion.common_helper import is_linux, is_macos, is_windows
+from facefusion.datachannel import create_rtc_configuration, create_rtc_packetizer_init, create_static_datachannel_library, create_static_download_set
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.filesystem import resolve_relative_path
-from facefusion.rtc_bindings import RTC_CONFIGURATION, RTC_PACKETIZER_INIT, init_ctypes
-from facefusion.types import DownloadSet, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
-
-
-def resolve_binary_file() -> Optional[str]:
-	if is_linux():
-		return 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so'
-	if is_macos():
-		return 'macos-universal-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.dylib'
-	if is_windows():
-		return 'windows-x64-openssl-h264-vp8-av1-opus-datachannel-0.24.1.dll'
-	return None
-
-
-@lru_cache
-def create_static_download_set() -> Dict[str, DownloadSet]: # TODO: replace once conda package is in place
-	binary_name = resolve_binary_file()
-
-	return\
-	{
-		'hashes':
-		{
-			'datachannel':
-			{
-				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so.hash', # TODO: use url with dynamic binary_name
-				'path': resolve_relative_path('../.assets/binaries/' + binary_name + '.hash')
-			}
-		},
-		'sources':
-		{
-			'datachannel':
-			{
-				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so', # TODO: use url with dynamic binary_name
-				'path': resolve_relative_path('../.assets/binaries/' + binary_name)
-			}
-		}
-	}
+from facefusion.types import MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
 
 
 def pre_check() -> bool:
@@ -51,17 +13,6 @@ def pre_check() -> bool:
 	if not conditional_download_hashes(download_set.get('hashes')):
 		return False
 	return conditional_download_sources(download_set.get('sources'))
-
-
-@lru_cache
-def create_static_rtc_library() -> Optional[ctypes.CDLL]:
-	binary_path = create_static_download_set().get('sources').get('datachannel').get('path')
-
-	if binary_path:
-		rtc_library = ctypes.CDLL(binary_path)
-		return init_ctypes(rtc_library)
-
-	return None
 
 
 def create_peer_connection(
@@ -78,8 +29,8 @@ def create_peer_connection(
 	max_packet_size : int = 0,
 	max_message_size : int = 0) -> PeerConnection:
 
-	rtc_library = create_static_rtc_library()
-	rtc_configuration = RTC_CONFIGURATION()
+	datachannel_library = create_static_datachannel_library()
+	rtc_configuration = create_rtc_configuration()
 
 	rtc_configuration.iceServers = ice_servers
 	rtc_configuration.iceServersCount = ice_servers_count
@@ -96,7 +47,7 @@ def create_peer_connection(
 	rtc_configuration.mtu = max_packet_size
 	rtc_configuration.maxMessageSize = max_message_size
 
-	return rtc_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
+	return datachannel_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
 
 def build_media_description(media_type : str, payload_type : int, rtp_codec : str, media_direction : MediaDirection, media_id : int) -> bytes:
@@ -112,64 +63,64 @@ def build_media_description(media_type : str, payload_type : int, rtp_codec : st
 
 
 def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection) -> RtcAudioTrack:
-	rtc_library = create_static_rtc_library()
+	datachannel_library = create_static_datachannel_library()
 	media_description = build_media_description('audio', 111, 'opus/48000/2', media_direction, 1)
 
-	audio_track = rtc_library.rtcAddTrack(peer_connection, media_description)
+	audio_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
 
-	audio_packetizer = RTC_PACKETIZER_INIT()
+	audio_packetizer = create_rtc_packetizer_init()
 	audio_packetizer.ssrc = 43
 	audio_packetizer.cname = b'audio'
 	audio_packetizer.payloadType = 111
 	audio_packetizer.clockRate = 48000
 
-	rtc_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
-	rtc_library.rtcChainRtcpSrReporter(audio_track)
+	datachannel_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
+	datachannel_library.rtcChainRtcpSrReporter(audio_track)
 
 	return audio_track
 
 
 def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection) -> RtcVideoTrack:
-	rtc_library = create_static_rtc_library()
+	datachannel_library = create_static_datachannel_library()
 	media_description = build_media_description('video', 96, 'VP8/90000', media_direction, 0)
 
-	video_track = rtc_library.rtcAddTrack(peer_connection, media_description)
+	video_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
 
-	video_packetizer = RTC_PACKETIZER_INIT()
+	video_packetizer = create_rtc_packetizer_init()
 	video_packetizer.ssrc = 42
 	video_packetizer.cname = b'video'
 	video_packetizer.payloadType = 96
 	video_packetizer.clockRate = 90000
 	video_packetizer.maxFragmentSize = 1200
 
-	rtc_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
-	rtc_library.rtcChainRtcpSrReporter(video_track)
-	rtc_library.rtcChainRtcpNackResponder(video_track, 512)
+	datachannel_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
+	datachannel_library.rtcChainRtcpSrReporter(video_track)
+	datachannel_library.rtcChainRtcpNackResponder(video_track, 512)
 
 	return video_track
 
 
 def create_sdp(peer_connection : PeerConnection) -> Optional[SdpOffer]:
-	rtc_library = create_static_rtc_library()
-	rtc_library.rtcSetLocalDescription(peer_connection, b'offer')
+	datachannel_library = create_static_datachannel_library()
+	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')
 	buffer_size = 16384
 	buffer_string = ctypes.create_string_buffer(buffer_size)
 
-	if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
+	if datachannel_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
 		return buffer_string.value.decode()
 
 	return None
 
 
 def negotiate_sdp(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
-	rtc_library = create_static_rtc_library()
-	rtc_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
+	datachannel_library = create_static_datachannel_library()
+	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
 	buffer_size = 16384
 	buffer_string = ctypes.create_string_buffer(buffer_size)
 	wait_limit = time.monotonic() + 5
 
 	while time.monotonic() < wait_limit:
-		if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
+		if datachannel_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
 			return buffer_string.value.decode()
 		time.sleep(0.05)
 
@@ -195,7 +146,7 @@ def handle_whep_offer(peers : List[RtcPeer], sdp_offer : SdpOffer) -> Optional[S
 
 
 def send_to_peers(peers : List[RtcPeer], data : bytes) -> None:
-	rtc_library = create_static_rtc_library()
+	datachannel_library = create_static_datachannel_library()
 
 	if peers:
 		timestamp = int(time.monotonic() * 90000) & 0xFFFFFFFF
@@ -205,32 +156,32 @@ def send_to_peers(peers : List[RtcPeer], data : bytes) -> None:
 		for rtc_peer in peers:
 			video_track_id = rtc_peer.get('video_track')
 
-			if video_track_id and rtc_library.rtcIsOpen(video_track_id):
-				rtc_library.rtcSetTrackRtpTimestamp(video_track_id, timestamp)
-				rtc_library.rtcSendMessage(video_track_id, data_buffer, data_total)
+			if video_track_id and datachannel_library.rtcIsOpen(video_track_id):
+				datachannel_library.rtcSetTrackRtpTimestamp(video_track_id, timestamp)
+				datachannel_library.rtcSendMessage(video_track_id, data_buffer, data_total)
 
 	return None
 
 
 def delete_peers(peers : List[RtcPeer]) -> None:
-	rtc_library = create_static_rtc_library()
+	datachannel_library = create_static_datachannel_library()
 
 	for rtc_peer in peers:
 		peer_connection_id = rtc_peer.get('peer_connection')
 
 		if peer_connection_id:
-			rtc_library.rtcDeletePeerConnection(peer_connection_id)
+			datachannel_library.rtcDeletePeerConnection(peer_connection_id)
 
 	peers.clear()
 
 
 def is_peer_connected(peers : List[RtcPeer]) -> bool:
-	rtc_library = create_static_rtc_library()
+	datachannel_library = create_static_datachannel_library()
 
 	for rtc_peer in peers:
 		video_track_id = rtc_peer.get('video_track')
 
-		if video_track_id and rtc_library.rtcIsOpen(video_track_id):
+		if video_track_id and datachannel_library.rtcIsOpen(video_track_id):
 			return True
 
 	return False

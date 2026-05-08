@@ -15,14 +15,14 @@ def test_build_media_description() -> None:
 
 def test_create_peer_connection() -> None:
 	peer_connection = rtc.create_peer_connection()
-	rtc_library = rtc.create_static_rtc_library()
+	datachannel_library = rtc.create_static_datachannel_library()
 
 	assert peer_connection > 0
-	assert rtc_library.rtcDeletePeerConnection(peer_connection) == 0
+	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == 0
 
 
 def test_add_audio_track() -> None:
-	rtc_library = rtc.create_static_rtc_library()
+	datachannel_library = rtc.create_static_datachannel_library()
 
 	sender_connection = rtc.create_peer_connection()
 	sender_audio_track = rtc.add_audio_track(sender_connection, 'sendonly')
@@ -40,12 +40,12 @@ def test_add_audio_track() -> None:
 	assert 'opus/48000/2' in sdp_offer
 	assert 'opus/48000/2' in sdp_answer
 
-	assert rtc_library.rtcDeletePeerConnection(sender_connection) == 0
-	assert rtc_library.rtcDeletePeerConnection(receiver_connection) == 0
+	assert datachannel_library.rtcDeletePeerConnection(sender_connection) == 0
+	assert datachannel_library.rtcDeletePeerConnection(receiver_connection) == 0
 
 
 def test_add_video_track() -> None:
-	rtc_library = rtc.create_static_rtc_library()
+	datachannel_library = rtc.create_static_datachannel_library()
 
 	sender_connection = rtc.create_peer_connection()
 	sender_video_track = rtc.add_video_track(sender_connection, 'sendonly')
@@ -63,5 +63,5 @@ def test_add_video_track() -> None:
 	assert 'VP8/90000' in sdp_offer
 	assert 'VP8/90000' in sdp_answer
 
-	assert rtc_library.rtcDeletePeerConnection(sender_connection) == 0
-	assert rtc_library.rtcDeletePeerConnection(receiver_connection) == 0
+	assert datachannel_library.rtcDeletePeerConnection(sender_connection) == 0
+	assert datachannel_library.rtcDeletePeerConnection(receiver_connection) == 0
