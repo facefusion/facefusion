@@ -22,15 +22,17 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 	return None
 
 
-def define_driver_info() -> ctypes.Structure:
-	return type('AMDSMI_DRIVER_INFO', (ctypes.Structure,),
+def define_driver_version() -> ctypes.Structure:
+	return type('AMDSMI_VERSION', (ctypes.Structure,),
 	{
 		'_pack_': 1,
 		'_fields_':
 		[
-			('driver_version', ctypes.c_char * 256),
-			('driver_date', ctypes.c_char * 256),
-			('driver_name', ctypes.c_char * 256)
+			('major', ctypes.c_uint32),
+			('minor', ctypes.c_uint32),
+			('release', ctypes.c_uint32),
+			('padding', ctypes.c_ubyte * 4),
+			('build', ctypes.POINTER(ctypes.c_char))
 		]
 	})()
 
@@ -92,14 +94,14 @@ def init_ctypes(amd_smi : ctypes.CDLL) -> ctypes.CDLL:
 	amd_smi.amdsmi_shut_down.argtypes = []
 	amd_smi.amdsmi_shut_down.restype = ctypes.c_uint32
 
+	amd_smi.amdsmi_get_lib_version.argtypes = [ ctypes.c_void_p ]
+	amd_smi.amdsmi_get_lib_version.restype = ctypes.c_uint32
+
 	amd_smi.amdsmi_get_socket_handles.argtypes = [ ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_void_p) ]
 	amd_smi.amdsmi_get_socket_handles.restype = ctypes.c_uint32
 
 	amd_smi.amdsmi_get_processor_handles.argtypes = [ ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_void_p) ]
 	amd_smi.amdsmi_get_processor_handles.restype = ctypes.c_uint32
-
-	amd_smi.amdsmi_get_gpu_driver_info.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
-	amd_smi.amdsmi_get_gpu_driver_info.restype = ctypes.c_uint32
 
 	amd_smi.amdsmi_get_gpu_vram_usage.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
 	amd_smi.amdsmi_get_gpu_vram_usage.restype = ctypes.c_uint32
