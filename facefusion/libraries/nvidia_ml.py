@@ -54,28 +54,28 @@ def init_ctypes(nvidia_ml : ctypes.CDLL) -> ctypes.CDLL:
 	nvidia_ml.nvmlShutdown.argtypes = []
 	nvidia_ml.nvmlShutdown.restype = ctypes.c_int
 
-	nvidia_ml.nvmlDeviceGetCount_v2.argtypes = [ctypes.POINTER(ctypes.c_uint)]
+	nvidia_ml.nvmlDeviceGetCount_v2.argtypes = [ ctypes.POINTER(ctypes.c_uint) ]
 	nvidia_ml.nvmlDeviceGetCount_v2.restype = ctypes.c_int
 
-	nvidia_ml.nvmlSystemGetDriverVersion.argtypes = [ctypes.c_char_p, ctypes.c_uint]
+	nvidia_ml.nvmlSystemGetDriverVersion.argtypes = [ ctypes.c_char_p, ctypes.c_uint ]
 	nvidia_ml.nvmlSystemGetDriverVersion.restype = ctypes.c_int
 
-	nvidia_ml.nvmlSystemGetCudaDriverVersion.argtypes = [ctypes.POINTER(ctypes.c_int)]
+	nvidia_ml.nvmlSystemGetCudaDriverVersion.argtypes = [ ctypes.POINTER(ctypes.c_int) ]
 	nvidia_ml.nvmlSystemGetCudaDriverVersion.restype = ctypes.c_int
 
-	nvidia_ml.nvmlDeviceGetHandleByIndex_v2.argtypes = [ctypes.c_uint, ctypes.POINTER(ctypes.c_void_p)]
+	nvidia_ml.nvmlDeviceGetHandleByIndex_v2.argtypes = [ ctypes.c_uint, ctypes.POINTER(ctypes.c_void_p) ]
 	nvidia_ml.nvmlDeviceGetHandleByIndex_v2.restype = ctypes.c_int
 
-	nvidia_ml.nvmlDeviceGetName.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_uint]
+	nvidia_ml.nvmlDeviceGetName.argtypes = [ ctypes.c_void_p, ctypes.c_char_p, ctypes.c_uint ]
 	nvidia_ml.nvmlDeviceGetName.restype = ctypes.c_int
 
-	nvidia_ml.nvmlDeviceGetMemoryInfo.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+	nvidia_ml.nvmlDeviceGetMemoryInfo.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
 	nvidia_ml.nvmlDeviceGetMemoryInfo.restype = ctypes.c_int
 
-	nvidia_ml.nvmlDeviceGetTemperature.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_uint)]
+	nvidia_ml.nvmlDeviceGetTemperature.argtypes = [ ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_uint) ]
 	nvidia_ml.nvmlDeviceGetTemperature.restype = ctypes.c_int
 
-	nvidia_ml.nvmlDeviceGetUtilizationRates.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+	nvidia_ml.nvmlDeviceGetUtilizationRates.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
 	nvidia_ml.nvmlDeviceGetUtilizationRates.restype = ctypes.c_int
 
 	return nvidia_ml
