@@ -60,7 +60,6 @@ def before_each() -> None:
 	asset_store.clear()
 
 
-@pytest.mark.skip
 def test_stream_image(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
@@ -103,6 +102,7 @@ def test_stream_image(test_client : TestClient) -> None:
 	assert output_vision_frame.shape == (1024, 1024, 3)
 
 
+#TODO: fix this test - it breaks CI
 @pytest.mark.skip
 def test_stream_video(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
