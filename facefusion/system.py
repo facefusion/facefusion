@@ -1,3 +1,4 @@
+import ctypes
 import importlib
 import shutil
 from pathlib import Path
@@ -6,6 +7,7 @@ from typing import List
 import psutil
 
 from facefusion import state_manager
+from facefusion.libraries.nvml import create_nvml_memory, create_nvml_utilization, create_static_nvml_library
 from facefusion.types import DiskMetrics, ExecutionProvider, GraphicDevice, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
 
 
@@ -31,70 +33,92 @@ def detect_graphic_devices(execution_providers : List[ExecutionProvider]) -> Lis
 
 
 def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
-	pynvml = importlib.import_module('pynvml')
+	nvml_library = create_static_nvml_library()
 	graphic_devices : List[GraphicDevice] = []
 
-	pynvml.nvmlInit()
-	device_count = pynvml.nvmlDeviceGetCount()
+	if nvml_library:
+		nvml_library.nvmlInit_v2()
 
-	for device_id in range(device_count):
-		handle = pynvml.nvmlDeviceGetHandleByIndex(device_id)
+		device_count = ctypes.c_uint()
+		nvml_library.nvmlDeviceGetCount_v2(ctypes.byref(device_count))
 
-		graphic_devices.append(
-		{
-			'driver_version': pynvml.nvmlSystemGetDriverVersion(),
-			'framework':
+		driver_version = ctypes.create_string_buffer(80)
+		nvml_library.nvmlSystemGetDriverVersion(driver_version, 80)
+
+		cuda_version = ctypes.c_int()
+		nvml_library.nvmlSystemGetCudaDriverVersion(ctypes.byref(cuda_version))
+
+		for device_id in range(device_count.value):
+			handle = ctypes.c_void_p()
+			nvml_library.nvmlDeviceGetHandleByIndex_v2(device_id, ctypes.byref(handle))
+
+			name = ctypes.create_string_buffer(96)
+			nvml_library.nvmlDeviceGetName(handle, name, 96)
+
+			memory = create_nvml_memory()
+			nvml_library.nvmlDeviceGetMemoryInfo(handle, ctypes.byref(memory))
+
+			temperature = ctypes.c_uint()
+			nvml_library.nvmlDeviceGetTemperature(handle, 0, ctypes.byref(temperature))
+
+			utilization = create_nvml_utilization()
+			nvml_library.nvmlDeviceGetUtilizationRates(handle, ctypes.byref(utilization))
+
+			graphic_devices.append(
 			{
-				'name': 'CUDA',
-				'version': pynvml.nvmlSystemGetCudaDriverVersion()
-			},
-			'product':
-			{
-				'vendor': 'NVIDIA',
-				'name': pynvml.nvmlDeviceGetName(handle)
-			},
-			'video_memory':
-			{
-				'total':
+				'driver_version': driver_version.value.decode(),
+				'framework':
 				{
-					'value': pynvml.nvmlDeviceGetMemoryInfo(handle).total // (1024 * 1024 * 1024),
-					'unit': 'GB'
+					'name': 'CUDA',
+					'version': cuda_version.value
 				},
-				'used':
+				'product':
 				{
-					'value': pynvml.nvmlDeviceGetMemoryInfo(handle).used // (1024 * 1024 * 1024),
-					'unit': 'GB'
-				}
-			},
-			'temperature':
-			{
-				'gpu':
-				{
-					'value': pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU),
-					'unit': 'C'
-				},
-				'memory':
-				{
-					'value': 0,
-					'unit': '%'
-				}
-			},
-			'utilization':
-			{
-				'gpu':
-				{
-					'value': pynvml.nvmlDeviceGetUtilizationRates(handle).gpu,
-					'unit': '%'
+					'vendor': 'NVIDIA',
+					'name': name.value.decode()
 				},
 				'memory':
 				{
-					'value': pynvml.nvmlDeviceGetUtilizationRates(handle).memory,
-					'unit': '%'
+					'total':
+					{
+						'value': memory.total // (1024 * 1024 * 1024),
+						'unit': 'GB'
+					},
+					'used':
+					{
+						'value': memory.used // (1024 * 1024 * 1024),
+						'unit': 'GB'
+					}
+				},
+				'temperature':
+				{
+					'gpu':
+					{
+						'value': temperature.value,
+						'unit': 'C'
+					},
+					'memory':
+					{
+						'value': 0,
+						'unit': '%'
+					}
+				},
+				'utilization':
+				{
+					'gpu':
+					{
+						'value': utilization.gpu,
+						'unit': '%'
+					},
+					'memory':
+					{
+						'value': utilization.memory,
+						'unit': '%'
+					}
 				}
-			}
-		})
+			})
 
-	pynvml.nvmlShutdown()
+		nvml_library.nvmlShutdown()
 
 	return graphic_devices
 
@@ -124,7 +148,7 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 				'vendor': 'AMD',
 				'name': amdsmi.amdsmi_get_gpu_asic_info(handle).get('market_name', '')
 			},
-			'video_memory':
+			'memory':
 			{
 				'total':
 				{

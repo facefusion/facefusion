@@ -105,7 +105,7 @@ def mock_detect_execution_devices(mocker : MockerFixture) -> None:
 				'vendor': 'NVIDIA',
 				'name': 'RTX 4090'
 			},
-			'video_memory':
+			'memory':
 			{
 				'total':
 				{
@@ -169,8 +169,8 @@ def test_get_metrics(test_client : TestClient) -> None:
 
 	assert metrics_body.get('graphic_devices')[0].get('driver_version') == '555.42'
 	assert metrics_body.get('graphic_devices')[0].get('product').get('name') == 'RTX 4090'
-	assert metrics_body.get('graphic_devices')[0].get('video_memory').get('total').get('value') == 24
-	assert metrics_body.get('graphic_devices')[0].get('video_memory').get('used').get('value') == 4
+	assert metrics_body.get('graphic_devices')[0].get('memory').get('total').get('value') == 24
+	assert metrics_body.get('graphic_devices')[0].get('memory').get('used').get('value') == 4
 
 	assert metrics_body.get('disks')[0].get('total').get('value') == 500
 	assert metrics_body.get('disks')[0].get('free').get('unit') == 'GB'
@@ -221,8 +221,8 @@ def test_websocket_metrics(test_client : TestClient) -> None:
 
 		assert metrics_set.get('graphic_devices')[0].get('driver_version') == '555.42'
 		assert metrics_set.get('graphic_devices')[0].get('product').get('name') == 'RTX 4090'
-		assert metrics_set.get('graphic_devices')[0].get('video_memory').get('total').get('value') == 24
-		assert metrics_set.get('graphic_devices')[0].get('video_memory').get('used').get('value') == 4
+		assert metrics_set.get('graphic_devices')[0].get('memory').get('total').get('value') == 24
+		assert metrics_set.get('graphic_devices')[0].get('memory').get('used').get('value') == 4
 
 		assert metrics_set.get('disks')[0].get('total').get('value') == 500
 		assert metrics_set.get('disks')[0].get('free').get('unit') == 'GB'
