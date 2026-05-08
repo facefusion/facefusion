@@ -121,13 +121,13 @@ def init_ctypes(amd_smi : ctypes.CDLL) -> ctypes.CDLL:
 def find_device_handles(amd_smi_library : ctypes.CDLL) -> List[ctypes.c_void_p]:
 	device_handles : List[ctypes.c_void_p] = []
 
-	socket_count = ctypes.c_uint32(0)
+	socket_count = ctypes.c_uint32()
 	amd_smi_library.amdsmi_get_socket_handles(ctypes.byref(socket_count), ctypes.POINTER(ctypes.c_void_p)())
 	socket_handles = (ctypes.c_void_p * socket_count.value)()
 	amd_smi_library.amdsmi_get_socket_handles(ctypes.byref(socket_count), socket_handles)
 
 	for socket_index in range(socket_count.value):
-		device_count = ctypes.c_uint32(0)
+		device_count = ctypes.c_uint32()
 		amd_smi_library.amdsmi_get_processor_handles(socket_handles[socket_index], ctypes.byref(device_count), ctypes.POINTER(ctypes.c_void_p)())
 		processor_handles = (ctypes.c_void_p * device_count.value)()
 		amd_smi_library.amdsmi_get_processor_handles(socket_handles[socket_index], ctypes.byref(device_count), processor_handles)
@@ -136,5 +136,3 @@ def find_device_handles(amd_smi_library : ctypes.CDLL) -> List[ctypes.c_void_p]:
 			device_handles.append(ctypes.c_void_p(processor_handles[device_index]))
 
 	return device_handles
-
-
