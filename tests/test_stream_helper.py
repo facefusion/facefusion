@@ -1,6 +1,6 @@
 import os
 
-from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, detect_websocket_stream_mode, read_pipe_buffer
+from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, read_pipe_buffer
 
 
 def test_calculate_bitrate() -> None:
@@ -17,24 +17,6 @@ def test_calculate_buffer_size() -> None:
 	assert calculate_buffer_size((1280, 720)) == 4666
 	assert calculate_buffer_size((1920, 1080)) == 7000
 	assert calculate_buffer_size((3840, 2160)) == 14000
-
-
-def test_detect_websocket_stream_mode() -> None:
-	scope =\
-	{
-		'type': 'websocket',
-		'headers': [ (b'sec-websocket-protocol', b'image') ]
-	}
-
-	assert detect_websocket_stream_mode(scope) == 'image'
-
-	scope =\
-	{
-		'type': 'websocket',
-		'headers': [ (b'sec-websocket-protocol', b'video') ]
-	}
-
-	assert detect_websocket_stream_mode(scope) == 'video'
 
 
 def test_read_pipe_buffer() -> None:
