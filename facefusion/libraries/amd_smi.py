@@ -22,7 +22,7 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 	return None
 
 
-def create_driver_info_configuration() -> ctypes.Structure:
+def define_driver_info() -> ctypes.Structure:
 	return type('AMDSMI_DRIVER_INFO', (ctypes.Structure,),
 	{
 		'_pack_': 1,
@@ -35,7 +35,7 @@ def create_driver_info_configuration() -> ctypes.Structure:
 	})()
 
 
-def create_rocm_version_configuration() -> ctypes.Structure:
+def define_rocm_version() -> ctypes.Structure:
 	return type('AMDSMI_VERSION', (ctypes.Structure,),
 	{
 		'_pack_': 1,
@@ -49,7 +49,7 @@ def create_rocm_version_configuration() -> ctypes.Structure:
 	})()
 
 
-def create_product_info_configuration() -> ctypes.Structure:
+def define_product_info() -> ctypes.Structure:
 	return type('AMDSMI_ASIC_INFO', (ctypes.Structure,),
 	{
 		'_pack_': 1,
@@ -72,7 +72,7 @@ def create_product_info_configuration() -> ctypes.Structure:
 	})()
 
 
-def create_device_memory_configuration() -> ctypes.Structure:
+def define_device_memory() -> ctypes.Structure:
 	return type('AMDSMI_VRAM_USAGE', (ctypes.Structure,),
 	{
 		'_pack_': 1,
@@ -85,7 +85,7 @@ def create_device_memory_configuration() -> ctypes.Structure:
 	})()
 
 
-def create_device_utilization_configuration() -> ctypes.Structure:
+def define_device_utilization() -> ctypes.Structure:
 	return type('AMDSMI_ENGINE_USAGE', (ctypes.Structure,),
 	{
 		'_pack_': 1,
