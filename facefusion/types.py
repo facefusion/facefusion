@@ -311,7 +311,7 @@ ExecutionDeviceProduct = TypedDict('ExecutionDeviceProduct',
 	'vendor' : str,
 	'name' : str
 })
-ExecutionDeviceVideoMemory = TypedDict('ExecutionDeviceVideoMemory',
+ExecutionDeviceMemory = TypedDict('ExecutionDeviceMemory',
 {
 	'total' : Optional[ValueAndUnit],
 	'used' : Optional[ValueAndUnit]
@@ -331,7 +331,7 @@ GraphicDevice = TypedDict('GraphicDevice',
 	'driver_version' : str,
 	'framework' : ExecutionDeviceFramework,
 	'product' : ExecutionDeviceProduct,
-	'video_memory' : ExecutionDeviceVideoMemory,
+	'memory' : ExecutionDeviceMemory,
 	'temperature' : ExecutionDeviceTemperature,
 	'utilization' : ExecutionDeviceUtilization
 })
