@@ -159,12 +159,12 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 				{
 					'total':
 					{
-						'value': device_memory.vram_total // (1024 * 1024 * 1024),
+						'value': device_memory.vram_total // 1024,
 						'unit': 'GB'
 					},
 					'used':
 					{
-						'value': device_memory.vram_used // (1024 * 1024 * 1024),
+						'value': device_memory.vram_used // 1024,
 						'unit': 'GB'
 					}
 				},
