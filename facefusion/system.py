@@ -1,3 +1,4 @@
+import ctypes
 import importlib
 import shutil
 from pathlib import Path
@@ -6,6 +7,7 @@ from typing import List
 import psutil
 
 from facefusion import state_manager
+from facefusion.libraries.nvidia_ml import create_memory_configuration, create_utilization_configuration, create_static_library
 from facefusion.types import DiskMetrics, ExecutionProvider, GraphicDevice, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
 
 
@@ -31,70 +33,92 @@ def detect_graphic_devices(execution_providers : List[ExecutionProvider]) -> Lis
 
 
 def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
-	pynvml = importlib.import_module('pynvml')
+	nvidia_ml = create_static_library()
 	graphic_devices : List[GraphicDevice] = []
 
-	pynvml.nvmlInit()
-	device_count = pynvml.nvmlDeviceGetCount()
+	if nvidia_ml:
+		nvidia_ml.nvmlInit_v2()
 
-	for device_id in range(device_count):
-		handle = pynvml.nvmlDeviceGetHandleByIndex(device_id)
+		device_count = ctypes.c_uint()
+		nvidia_ml.nvmlDeviceGetCount_v2(ctypes.byref(device_count))
 
-		graphic_devices.append(
-		{
-			'driver_version': pynvml.nvmlSystemGetDriverVersion(),
-			'framework':
-			{
-				'name': 'CUDA',
-				'version': pynvml.nvmlSystemGetCudaDriverVersion()
-			},
-			'product':
-			{
-				'vendor': 'NVIDIA',
-				'name': pynvml.nvmlDeviceGetName(handle)
-			},
-			'video_memory':
-			{
-				'total':
-				{
-					'value': pynvml.nvmlDeviceGetMemoryInfo(handle).total // (1024 * 1024 * 1024),
-					'unit': 'GB'
-				},
-				'used':
-				{
-					'value': pynvml.nvmlDeviceGetMemoryInfo(handle).used // (1024 * 1024 * 1024),
-					'unit': 'GB'
-				}
-			},
-			'temperature':
-			{
-				'gpu':
-				{
-					'value': pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU),
-					'unit': 'C'
-				},
-				'memory':
-				{
-					'value': 0,
-					'unit': '%'
-				}
-			},
-			'utilization':
-			{
-				'gpu':
-				{
-					'value': pynvml.nvmlDeviceGetUtilizationRates(handle).gpu,
-					'unit': '%'
-				},
-				'memory':
-				{
-					'value': pynvml.nvmlDeviceGetUtilizationRates(handle).memory,
-					'unit': '%'
-				}
-			}
-		})
+		driver_version = ctypes.create_string_buffer(80)
+		nvidia_ml.nvmlSystemGetDriverVersion(driver_version, 80)
 
-	pynvml.nvmlShutdown()
+		cuda_version = ctypes.c_int()
+		nvidia_ml.nvmlSystemGetCudaDriverVersion(ctypes.byref(cuda_version))
+
+		for device_id in range(device_count.value):
+			device_handle = ctypes.c_void_p()
+			nvidia_ml.nvmlDeviceGetHandleByIndex_v2(device_id, ctypes.byref(device_handle))
+
+			name = ctypes.create_string_buffer(96)
+			nvidia_ml.nvmlDeviceGetName(device_handle, name, 96)
+
+			memory = create_memory_configuration()
+			nvidia_ml.nvmlDeviceGetMemoryInfo(device_handle, ctypes.byref(memory))
+
+			temperature = ctypes.c_uint()
+			nvidia_ml.nvmlDeviceGetTemperature(device_handle, 0, ctypes.byref(temperature))
+
+			utilization = create_utilization_configuration()
+			nvidia_ml.nvmlDeviceGetUtilizationRates(device_handle, ctypes.byref(utilization))
+
+			graphic_devices.append(
+			{
+				'driver_version': driver_version.value.decode(),
+				'framework':
+				{
+					'name': 'CUDA',
+					'version': cuda_version.value
+				},
+				'product':
+				{
+					'vendor': 'NVIDIA',
+					'name': name.value.decode()
+				},
+				'video_memory':
+				{
+					'total':
+					{
+						'value': memory.total // (1024 * 1024 * 1024),
+						'unit': 'GB'
+					},
+					'used':
+					{
+						'value': memory.used // (1024 * 1024 * 1024),
+						'unit': 'GB'
+					}
+				},
+				'temperature':
+				{
+					'gpu':
+					{
+						'value': temperature.value,
+						'unit': 'C'
+					},
+					'memory':
+					{
+						'value': 0,
+						'unit': '%'
+					}
+				},
+				'utilization':
+				{
+					'gpu':
+					{
+						'value': utilization.gpu,
+						'unit': '%'
+					},
+					'memory':
+					{
+						'value': utilization.memory,
+						'unit': '%'
+					}
+				}
+			})
+
+		nvidia_ml.nvmlShutdown()
 
 	return graphic_devices
 
