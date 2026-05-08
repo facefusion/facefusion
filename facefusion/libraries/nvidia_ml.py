@@ -24,7 +24,7 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 	return None
 
 
-def create_memory_configuration() -> ctypes.Structure:
+def define_device_memory() -> ctypes.Structure:
 	return type('NVML_MEMORY', (ctypes.Structure,),
 	{
 		'_fields_':
@@ -36,7 +36,7 @@ def create_memory_configuration() -> ctypes.Structure:
 	})()
 
 
-def create_utilization_configuration() -> ctypes.Structure:
+def define_device_utilization() -> ctypes.Structure:
 	return type('NVML_UTILIZATION', (ctypes.Structure,),
 	{
 		'_fields_':
