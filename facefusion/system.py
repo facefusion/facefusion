@@ -6,7 +6,7 @@ from typing import List
 import psutil
 
 from facefusion import state_manager
-from facefusion.libraries import amd_smi as amd_smi_module, nvidia_ml as nvidia_ml_module
+from facefusion.libraries import amd_smi as amd_smi_module, nvidia_ml as nvidia_ml_module, rocm_core as rocm_core_module
 from facefusion.types import DiskMetrics, ExecutionProvider, GraphicDevice, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
 
 
@@ -123,8 +123,13 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 	if amd_smi_library:
 		amd_smi_library.amdsmi_init(ctypes.c_uint64(2))
 
-		rocm_version = amd_smi_module.define_rocm_version()
-		amd_smi_library.amdsmi_get_lib_version(ctypes.byref(rocm_version))
+		rocm_core_library = rocm_core_module.create_static_library()
+		rocm_major_version = ctypes.c_uint()
+		rocm_minor_version = ctypes.c_uint()
+		rocm_patch_version = ctypes.c_uint()
+
+		if rocm_core_library:
+			rocm_core_library.getROCmVersion(ctypes.byref(rocm_major_version), ctypes.byref(rocm_minor_version), ctypes.byref(rocm_patch_version))
 
 		for device_handle in amd_smi_module.find_device_handles(amd_smi_library):
 			driver_info = amd_smi_module.define_driver_info()
@@ -148,7 +153,7 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 				'framework':
 				{
 					'name': 'ROCm',
-					'version': str(rocm_version.major) + '.' + str(rocm_version.minor) + '.' + str(rocm_version.patch)
+					'version': str(rocm_major_version.value) + '.' + str(rocm_minor_version.value) + '.' + str(rocm_patch_version.value)
 				},
 				'product':
 				{

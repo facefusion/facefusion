@@ -35,20 +35,6 @@ def define_driver_info() -> ctypes.Structure:
 	})()
 
 
-def define_rocm_version() -> ctypes.Structure:
-	return type('AMDSMI_VERSION', (ctypes.Structure,),
-	{
-		'_pack_': 1,
-		'_fields_':
-		[
-			('major', ctypes.c_uint32),
-			('minor', ctypes.c_uint32),
-			('patch', ctypes.c_uint32),
-			('build', ctypes.c_char_p)
-		]
-	})()
-
-
 def define_product_info() -> ctypes.Structure:
 	return type('AMDSMI_ASIC_INFO', (ctypes.Structure,),
 	{
@@ -100,22 +86,17 @@ def define_device_utilization() -> ctypes.Structure:
 
 
 def init_ctypes(amd_smi : ctypes.CDLL) -> ctypes.CDLL:
-	void_pointer = ctypes.POINTER(None)
-
 	amd_smi.amdsmi_init.argtypes = [ ctypes.c_uint64 ]
 	amd_smi.amdsmi_init.restype = ctypes.c_uint32
 
 	amd_smi.amdsmi_shut_down.argtypes = []
 	amd_smi.amdsmi_shut_down.restype = ctypes.c_uint32
 
-	amd_smi.amdsmi_get_socket_handles.argtypes = [ ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(void_pointer) ]
+	amd_smi.amdsmi_get_socket_handles.argtypes = [ ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_void_p) ]
 	amd_smi.amdsmi_get_socket_handles.restype = ctypes.c_uint32
 
-	amd_smi.amdsmi_get_processor_handles.argtypes = [ ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(void_pointer) ]
+	amd_smi.amdsmi_get_processor_handles.argtypes = [ ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_void_p) ]
 	amd_smi.amdsmi_get_processor_handles.restype = ctypes.c_uint32
-
-	amd_smi.amdsmi_get_lib_version.argtypes = [ ctypes.c_void_p ]
-	amd_smi.amdsmi_get_lib_version.restype = ctypes.c_uint32
 
 	amd_smi.amdsmi_get_gpu_driver_info.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
 	amd_smi.amdsmi_get_gpu_driver_info.restype = ctypes.c_uint32
