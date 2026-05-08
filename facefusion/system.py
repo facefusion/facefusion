@@ -123,6 +123,9 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 	if amd_smi_library:
 		amd_smi_library.amdsmi_init(ctypes.c_uint64(2))
 
+		driver_version = amd_smi_module.define_driver_version()
+		amd_smi_library.amdsmi_get_lib_version(ctypes.byref(driver_version))
+
 		rocm_core_library = rocm_core_module.create_static_library()
 		rocm_major_version = ctypes.c_uint()
 		rocm_minor_version = ctypes.c_uint()
@@ -132,9 +135,6 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 			rocm_core_library.getROCmVersion(ctypes.byref(rocm_major_version), ctypes.byref(rocm_minor_version), ctypes.byref(rocm_patch_version))
 
 		for device_handle in amd_smi_module.find_device_handles(amd_smi_library):
-			driver_info = amd_smi_module.define_driver_info()
-			amd_smi_library.amdsmi_get_gpu_driver_info(device_handle, ctypes.byref(driver_info))
-
 			product_info = amd_smi_module.define_product_info()
 			amd_smi_library.amdsmi_get_gpu_asic_info(device_handle, ctypes.byref(product_info))
 
@@ -149,7 +149,7 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 
 			graphic_devices.append(
 			{
-				'driver_version': driver_info.driver_version.decode(),
+				'driver_version': str(driver_version.major) + '.' + str(driver_version.minor) + '.' + str(driver_version.release),
 				'framework':
 				{
 					'name': 'ROCm',
