@@ -284,7 +284,6 @@ RtcPeer = TypedDict('RtcPeer',
 	'peer_connection': PeerConnection,
 	'video_track': RtcVideoTrack,
 	'audio_track': RtcAudioTrack,
-	'connected': bool
 })
 
 RtcStreamStore : TypeAlias = Dict[str, List[RtcPeer]]
