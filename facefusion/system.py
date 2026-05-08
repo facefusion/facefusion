@@ -45,17 +45,17 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 		nvidia_ml_library.nvmlSystemGetCudaDriverVersion(ctypes.byref(cuda_version))
 
 		for device_handle in nvidia_ml_module.find_device_handles(nvidia_ml_library):
-			name = ctypes.create_string_buffer(96)
-			nvidia_ml_library.nvmlDeviceGetName(device_handle, name, 96)
+			device_name = ctypes.create_string_buffer(96)
+			nvidia_ml_library.nvmlDeviceGetName(device_handle, device_name, 96)
 
-			memory = nvidia_ml_module.create_memory_configuration()
-			nvidia_ml_library.nvmlDeviceGetMemoryInfo(device_handle, ctypes.byref(memory))
+			device_memory = nvidia_ml_module.create_memory_configuration()
+			nvidia_ml_library.nvmlDeviceGetMemoryInfo(device_handle, ctypes.byref(device_memory))
 
-			temperature = ctypes.c_uint()
-			nvidia_ml_library.nvmlDeviceGetTemperature(device_handle, 0, ctypes.byref(temperature))
+			device_temperature = ctypes.c_uint()
+			nvidia_ml_library.nvmlDeviceGetTemperature(device_handle, 0, ctypes.byref(device_temperature))
 
-			utilization = nvidia_ml_module.create_utilization_configuration()
-			nvidia_ml_library.nvmlDeviceGetUtilizationRates(device_handle, ctypes.byref(utilization))
+			device_utilization = nvidia_ml_module.create_utilization_configuration()
+			nvidia_ml_library.nvmlDeviceGetUtilizationRates(device_handle, ctypes.byref(device_utilization))
 
 			graphic_devices.append(
 			{
@@ -68,18 +68,18 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 				'product':
 				{
 					'vendor': 'NVIDIA',
-					'name': name.value.decode()
+					'name': device_name.value.decode()
 				},
 				'memory':
 				{
 					'total':
 					{
-						'value': memory.total // (1024 * 1024 * 1024),
+						'value': device_memory.total // (1024 * 1024 * 1024),
 						'unit': 'GB'
 					},
 					'used':
 					{
-						'value': memory.used // (1024 * 1024 * 1024),
+						'value': device_memory.used // (1024 * 1024 * 1024),
 						'unit': 'GB'
 					}
 				},
@@ -87,7 +87,7 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 				{
 					'gpu':
 					{
-						'value': temperature.value,
+						'value': device_temperature.value,
 						'unit': 'C'
 					},
 					'memory':
@@ -100,12 +100,12 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 				{
 					'gpu':
 					{
-						'value': utilization.gpu,
+						'value': device_utilization.gpu,
 						'unit': '%'
 					},
 					'memory':
 					{
-						'value': utilization.memory,
+						'value': device_utilization.memory,
 						'unit': '%'
 					}
 				}
@@ -123,21 +123,24 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 	if amd_smi_library:
 		amd_smi_library.amdsmi_init(ctypes.c_uint64(2))
 
+		rocm_version = amd_smi_module.create_rocm_version_configuration()
+		amd_smi_library.amdsmi_get_lib_version(ctypes.byref(rocm_version))
+
 		for device_handle in amd_smi_module.find_device_handles(amd_smi_library):
 			driver_info = amd_smi_module.create_driver_info_configuration()
 			amd_smi_library.amdsmi_get_gpu_driver_info(device_handle, ctypes.byref(driver_info))
 
-			asic_info = amd_smi_module.create_asic_info_configuration()
-			amd_smi_library.amdsmi_get_gpu_asic_info(device_handle, ctypes.byref(asic_info))
+			product_info = amd_smi_module.create_product_info_configuration()
+			amd_smi_library.amdsmi_get_gpu_asic_info(device_handle, ctypes.byref(product_info))
 
-			memory = amd_smi_module.create_memory_configuration()
-			amd_smi_library.amdsmi_get_gpu_vram_usage(device_handle, ctypes.byref(memory))
+			device_memory = amd_smi_module.create_device_memory_configuration()
+			amd_smi_library.amdsmi_get_gpu_vram_usage(device_handle, ctypes.byref(device_memory))
 
-			temperature = ctypes.c_int64()
-			amd_smi_library.amdsmi_get_temp_metric(device_handle, 0, 0, ctypes.byref(temperature))
+			device_temperature = ctypes.c_int64()
+			amd_smi_library.amdsmi_get_temp_metric(device_handle, 0, 0, ctypes.byref(device_temperature))
 
-			utilization = amd_smi_module.create_utilization_configuration()
-			amd_smi_library.amdsmi_get_gpu_activity(device_handle, ctypes.byref(utilization))
+			device_utilization = amd_smi_module.create_device_utilization_configuration()
+			amd_smi_library.amdsmi_get_gpu_activity(device_handle, ctypes.byref(device_utilization))
 
 			graphic_devices.append(
 			{
@@ -145,23 +148,23 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 				'framework':
 				{
 					'name': 'ROCm',
-					'version': driver_info.driver_version.decode()
+					'version': str(rocm_version.major) + '.' + str(rocm_version.minor) + '.' + str(rocm_version.patch)
 				},
 				'product':
 				{
 					'vendor': 'AMD',
-					'name': asic_info.market_name.decode()
+					'name': product_info.market_name.decode()
 				},
 				'memory':
 				{
 					'total':
 					{
-						'value': memory.vram_total // (1024 * 1024 * 1024),
+						'value': device_memory.vram_total // (1024 * 1024 * 1024),
 						'unit': 'GB'
 					},
 					'used':
 					{
-						'value': memory.vram_used // (1024 * 1024 * 1024),
+						'value': device_memory.vram_used // (1024 * 1024 * 1024),
 						'unit': 'GB'
 					}
 				},
@@ -169,7 +172,7 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 				{
 					'gpu':
 					{
-						'value': temperature.value // 1000,
+						'value': device_temperature.value // 1000,
 						'unit': 'C'
 					},
 					'memory':
@@ -182,12 +185,12 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 				{
 					'gpu':
 					{
-						'value': utilization.gfx_activity,
+						'value': device_utilization.gfx_activity,
 						'unit': '%'
 					},
 					'memory':
 					{
-						'value': utilization.umc_activity,
+						'value': device_utilization.umc_activity,
 						'unit': '%'
 					}
 				}

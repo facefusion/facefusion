@@ -22,7 +22,34 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 	return None
 
 
-def create_asic_info_configuration() -> ctypes.Structure:
+def create_driver_info_configuration() -> ctypes.Structure:
+	return type('AMDSMI_DRIVER_INFO', (ctypes.Structure,),
+	{
+		'_pack_': 1,
+		'_fields_':
+		[
+			('driver_version', ctypes.c_char * 256),
+			('driver_date', ctypes.c_char * 256),
+			('driver_name', ctypes.c_char * 256)
+		]
+	})()
+
+
+def create_rocm_version_configuration() -> ctypes.Structure:
+	return type('AMDSMI_VERSION', (ctypes.Structure,),
+	{
+		'_pack_': 1,
+		'_fields_':
+		[
+			('major', ctypes.c_uint32),
+			('minor', ctypes.c_uint32),
+			('patch', ctypes.c_uint32),
+			('build', ctypes.c_char_p)
+		]
+	})()
+
+
+def create_product_info_configuration() -> ctypes.Structure:
 	return type('AMDSMI_ASIC_INFO', (ctypes.Structure,),
 	{
 		'_pack_': 1,
@@ -45,20 +72,7 @@ def create_asic_info_configuration() -> ctypes.Structure:
 	})()
 
 
-def create_driver_info_configuration() -> ctypes.Structure:
-	return type('AMDSMI_DRIVER_INFO', (ctypes.Structure,),
-	{
-		'_pack_': 1,
-		'_fields_':
-		[
-			('driver_version', ctypes.c_char * 256),
-			('driver_date', ctypes.c_char * 256),
-			('driver_name', ctypes.c_char * 256)
-		]
-	})()
-
-
-def create_memory_configuration() -> ctypes.Structure:
+def create_device_memory_configuration() -> ctypes.Structure:
 	return type('AMDSMI_VRAM_USAGE', (ctypes.Structure,),
 	{
 		'_pack_': 1,
@@ -71,7 +85,7 @@ def create_memory_configuration() -> ctypes.Structure:
 	})()
 
 
-def create_utilization_configuration() -> ctypes.Structure:
+def create_device_utilization_configuration() -> ctypes.Structure:
 	return type('AMDSMI_ENGINE_USAGE', (ctypes.Structure,),
 	{
 		'_pack_': 1,
@@ -99,6 +113,9 @@ def init_ctypes(amd_smi : ctypes.CDLL) -> ctypes.CDLL:
 
 	amd_smi.amdsmi_get_processor_handles.argtypes = [ ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(void_pointer) ]
 	amd_smi.amdsmi_get_processor_handles.restype = ctypes.c_uint32
+
+	amd_smi.amdsmi_get_lib_version.argtypes = [ ctypes.c_void_p ]
+	amd_smi.amdsmi_get_lib_version.restype = ctypes.c_uint32
 
 	amd_smi.amdsmi_get_gpu_driver_info.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
 	amd_smi.amdsmi_get_gpu_driver_info.restype = ctypes.c_uint32
