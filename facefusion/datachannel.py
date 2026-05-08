@@ -138,4 +138,16 @@ def init_ctypes(datachannel_library : ctypes.CDLL) -> ctypes.CDLL:
 
 	datachannel_library.rtcSetOpusPacketizer.restype = ctypes.c_int
 
+	datachannel_library.rtcSetUserPointer.argtypes = [ ctypes.c_int, ctypes.c_void_p ]
+	datachannel_library.rtcSetUserPointer.restype = None
+
+	datachannel_library.rtcSetLocalDescriptionCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p) ]
+	datachannel_library.rtcSetLocalDescriptionCallback.restype = ctypes.c_int
+
+	datachannel_library.rtcSetGatheringStateChangeCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p) ]
+	datachannel_library.rtcSetGatheringStateChangeCallback.restype = ctypes.c_int
+
+	datachannel_library.rtcSetStateChangeCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p) ]
+	datachannel_library.rtcSetStateChangeCallback.restype = ctypes.c_int
+
 	return datachannel_library

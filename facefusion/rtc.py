@@ -1,4 +1,5 @@
 import ctypes
+import threading
 import time
 from typing import List, Optional
 
@@ -112,48 +113,46 @@ def create_sdp(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	return None
 
 
+@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p)
+def on_sdp_ready(peer_connection : int, sdp : Optional[bytes], sdp_type : int, user_pointer : Optional[int]) -> None:
+	ctypes.cast(user_pointer, ctypes.py_object).value.set()
+
+
+@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)
+def on_ice_complete(peer_connection : int, state : int, user_pointer : Optional[int]) -> None:
+	if state == 2:
+		context = ctypes.cast(user_pointer, ctypes.py_object).value
+		context['event'].set()
+
+
 def negotiate_sdp(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	datachannel_library = create_static_datachannel_library()
-	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
-	buffer_size = 16384
-	buffer_string = ctypes.create_string_buffer(buffer_size)
-	wait_limit = time.monotonic() + 5
+	sdp_event = threading.Event()
+	sdp_event_pointer = ctypes.cast(id(sdp_event), ctypes.c_void_p)
 
-	while time.monotonic() < wait_limit:
-		if datachannel_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
-			return buffer_string.value.decode()
-		time.sleep(0.05)
+	datachannel_library.rtcSetUserPointer(peer_connection, sdp_event_pointer)
+	datachannel_library.rtcSetLocalDescriptionCallback(peer_connection, on_sdp_ready)
+	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
+	sdp_event.wait(timeout = 5)
+
+	sdp_buffer_size = 16384
+	sdp_buffer = ctypes.create_string_buffer(sdp_buffer_size)
+
+	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, sdp_buffer_size) > 0:
+		return sdp_buffer.value.decode()
 
 	return None
 
 
-def handle_whep_offer(peers : List[RtcPeer], sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
-	peer_connection = create_peer_connection()
-	audio_track = add_audio_track(peer_connection, 'sendonly')
-	video_track = add_video_track(peer_connection, 'sendonly')
-	local_sdp = negotiate_sdp(peer_connection, sdp_offer)
-
-	if local_sdp:
-		rtc_peer : RtcPeer =\
-		{
-			'peer_connection': peer_connection,
-			'video_track': video_track,
-			'audio_track': audio_track
-		}
-		peers.append(rtc_peer)
-
-	return local_sdp
-
-
-def send_to_peers(peers : List[RtcPeer], data : bytes) -> None:
+def send_to_peers(rtc_peers : List[RtcPeer], data : bytes) -> None:
 	datachannel_library = create_static_datachannel_library()
 
-	if peers:
+	if rtc_peers:
 		timestamp = int(time.monotonic() * 90000) & 0xFFFFFFFF
 		data_buffer = ctypes.create_string_buffer(data)
 		data_total = len(data)
 
-		for rtc_peer in peers:
+		for rtc_peer in rtc_peers:
 			video_track_id = rtc_peer.get('video_track')
 
 			if video_track_id and datachannel_library.rtcIsOpen(video_track_id):
@@ -163,25 +162,13 @@ def send_to_peers(peers : List[RtcPeer], data : bytes) -> None:
 	return None
 
 
-def delete_peers(peers : List[RtcPeer]) -> None:
+def delete_peers(rtc_peers : List[RtcPeer]) -> None:
 	datachannel_library = create_static_datachannel_library()
 
-	for rtc_peer in peers:
+	for rtc_peer in rtc_peers:
 		peer_connection_id = rtc_peer.get('peer_connection')
 
 		if peer_connection_id:
 			datachannel_library.rtcDeletePeerConnection(peer_connection_id)
 
-	peers.clear()
-
-
-def is_peer_connected(peers : List[RtcPeer]) -> bool:
-	datachannel_library = create_static_datachannel_library()
-
-	for rtc_peer in peers:
-		video_track_id = rtc_peer.get('video_track')
-
-		if video_track_id and datachannel_library.rtcIsOpen(video_track_id):
-			return True
-
-	return False
+	return None
