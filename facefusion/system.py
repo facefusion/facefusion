@@ -1,5 +1,4 @@
 import ctypes
-import importlib
 import shutil
 from pathlib import Path
 from typing import List
@@ -7,7 +6,7 @@ from typing import List
 import psutil
 
 from facefusion import state_manager
-from facefusion.libraries import nvidia_ml as nvidia_ml_module
+from facefusion.libraries import amd_smi as amd_smi_module, nvidia_ml as nvidia_ml_module
 from facefusion.types import DiskMetrics, ExecutionProvider, GraphicDevice, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
 
 
@@ -39,19 +38,13 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 	if nvidia_ml_library:
 		nvidia_ml_library.nvmlInit_v2()
 
-		device_count = ctypes.c_uint()
-		nvidia_ml_library.nvmlDeviceGetCount_v2(ctypes.byref(device_count))
-
 		driver_version = ctypes.create_string_buffer(80)
 		nvidia_ml_library.nvmlSystemGetDriverVersion(driver_version, 80)
 
 		cuda_version = ctypes.c_int()
 		nvidia_ml_library.nvmlSystemGetCudaDriverVersion(ctypes.byref(cuda_version))
 
-		for device_id in range(device_count.value):
-			device_handle = ctypes.c_void_p()
-			nvidia_ml_library.nvmlDeviceGetHandleByIndex_v2(device_id, ctypes.byref(device_handle))
-
+		for device_handle in nvidia_ml_module.find_device_handles(nvidia_ml_library):
 			name = ctypes.create_string_buffer(96)
 			nvidia_ml_library.nvmlDeviceGetName(device_handle, name, 96)
 
@@ -77,7 +70,7 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 					'vendor': 'NVIDIA',
 					'name': name.value.decode()
 				},
-				'video_memory':
+				'memory':
 				{
 					'total':
 					{
@@ -124,72 +117,86 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 
 
 def detect_amd_graphic_devices() -> List[GraphicDevice]:
-	amdsmi = importlib.import_module('amdsmi')
+	amd_smi_library = amd_smi_module.create_static_library()
 	graphic_devices : List[GraphicDevice] = []
 
-	amdsmi.amdsmi_init()
-	handles = amdsmi.amdsmi_get_processor_handles()
+	if amd_smi_library:
+		amd_smi_library.amdsmi_init(ctypes.c_uint64(2))
 
-	for handle in handles:
-		driver_info = amdsmi.amdsmi_get_gpu_driver_info(handle)
-		vram_usage = amdsmi.amdsmi_get_gpu_vram_usage(handle)
-		activity = amdsmi.amdsmi_get_gpu_activity(handle)
+		for device_handle in amd_smi_module.find_device_handles(amd_smi_library):
+			driver_info = amd_smi_module.create_driver_info_configuration()
+			amd_smi_library.amdsmi_get_gpu_driver_info(device_handle, ctypes.byref(driver_info))
 
-		graphic_devices.append(
-		{
-			'driver_version': driver_info.get('driver_version', ''),
-			'framework':
+			asic_info = amd_smi_module.create_asic_info_configuration()
+			amd_smi_library.amdsmi_get_gpu_asic_info(device_handle, ctypes.byref(asic_info))
+
+			memory_total = ctypes.c_uint64()
+			amd_smi_library.amdsmi_get_gpu_memory_total(device_handle, 0, ctypes.byref(memory_total))
+
+			memory_usage = ctypes.c_uint64()
+			amd_smi_library.amdsmi_get_gpu_memory_usage(device_handle, 0, ctypes.byref(memory_usage))
+
+			temperature = ctypes.c_int64()
+			amd_smi_library.amdsmi_get_temp_metric(device_handle, 0, 0, ctypes.byref(temperature))
+
+			utilization = amd_smi_module.create_utilization_configuration()
+			amd_smi_library.amdsmi_get_gpu_activity(device_handle, ctypes.byref(utilization))
+
+			graphic_devices.append(
 			{
-				'name': 'ROCm',
-				'version': driver_info.get('driver_version', '')
-			},
-			'product':
-			{
-				'vendor': 'AMD',
-				'name': amdsmi.amdsmi_get_gpu_asic_info(handle).get('market_name', '')
-			},
-			'video_memory':
-			{
-				'total':
+				'driver_version': driver_info.driver_version.decode(),
+				'framework':
 				{
-					'value': vram_usage.get('vram_total', 0) // (1024 * 1024 * 1024),
-					'unit': 'GB'
+					'name': 'ROCm',
+					'version': driver_info.driver_version.decode()
 				},
-				'used':
+				'product':
 				{
-					'value': vram_usage.get('vram_used', 0) // (1024 * 1024 * 1024),
-					'unit': 'GB'
-				}
-			},
-			'temperature':
-			{
-				'gpu':
-				{
-					'value': amdsmi.amdsmi_get_temp_metric(handle, amdsmi.AmdSmiTemperatureType.EDGE, amdsmi.AmdSmiTemperatureMetric.CURRENT) // 1000,
-					'unit': 'C'
+					'vendor': 'AMD',
+					'name': asic_info.market_name.decode()
 				},
 				'memory':
 				{
-					'value': 0,
-					'unit': '%'
-				}
-			},
-			'utilization':
-			{
-				'gpu':
-				{
-					'value': activity.get('gfx_activity', 0),
-					'unit': '%'
+					'total':
+					{
+						'value': memory_total.value // (1024 * 1024 * 1024),
+						'unit': 'GB'
+					},
+					'used':
+					{
+						'value': memory_usage.value // (1024 * 1024 * 1024),
+						'unit': 'GB'
+					}
 				},
-				'memory':
+				'temperature':
 				{
-					'value': activity.get('umc_activity', 0),
-					'unit': '%'
+					'gpu':
+					{
+						'value': temperature.value // 1000,
+						'unit': 'C'
+					},
+					'memory':
+					{
+						'value': 0,
+						'unit': '%'
+					}
+				},
+				'utilization':
+				{
+					'gpu':
+					{
+						'value': utilization.gfx_activity,
+						'unit': '%'
+					},
+					'memory':
+					{
+						'value': utilization.umc_activity,
+						'unit': '%'
+					}
 				}
-			}
-		})
+			})
 
-	amdsmi.amdsmi_shut_down()
+		amd_smi_library.amdsmi_shut_down()
 
 	return graphic_devices
 
