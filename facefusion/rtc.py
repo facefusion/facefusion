@@ -1,10 +1,11 @@
 import ctypes
+import threading
 import time
 from typing import List, Optional
 
 from facefusion.datachannel import create_rtc_configuration, create_rtc_packetizer_init, create_static_datachannel_library, create_static_download_set
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.types import MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
+from facefusion.types import MediaDirection, PeerConnectionId, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
 
 
 def pre_check() -> bool:
@@ -27,7 +28,7 @@ def create_peer_connection(
 	port_range_begin : int = 0,
 	port_range_end : int = 0,
 	max_packet_size : int = 0,
-	max_message_size : int = 0) -> PeerConnection:
+	max_message_size : int = 0) -> PeerConnectionId:
 
 	datachannel_library = create_static_datachannel_library()
 	rtc_configuration = create_rtc_configuration()
@@ -62,7 +63,7 @@ def build_media_description(media_type : str, payload_type : int, rtp_codec : st
 	]).encode()
 
 
-def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection) -> RtcAudioTrack:
+def add_audio_track(peer_connection : PeerConnectionId, media_direction : MediaDirection) -> RtcAudioTrack:
 	datachannel_library = create_static_datachannel_library()
 	media_description = build_media_description('audio', 111, 'opus/48000/2', media_direction, 1)
 
@@ -80,7 +81,7 @@ def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDir
 	return audio_track
 
 
-def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection) -> RtcVideoTrack:
+def add_video_track(peer_connection : PeerConnectionId, media_direction : MediaDirection) -> RtcVideoTrack:
 	datachannel_library = create_static_datachannel_library()
 	media_description = build_media_description('video', 96, 'VP8/90000', media_direction, 0)
 
@@ -100,7 +101,7 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 	return video_track
 
 
-def create_sdp(peer_connection : PeerConnection) -> Optional[SdpOffer]:
+def create_sdp(peer_connection : PeerConnectionId) -> Optional[SdpOffer]:
 	datachannel_library = create_static_datachannel_library()
 	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')
 	buffer_size = 16384
@@ -112,22 +113,46 @@ def create_sdp(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	return None
 
 
-def negotiate_sdp(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
-	datachannel_library = create_static_datachannel_library()
-	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
-	buffer_size = 16384
-	buffer_string = ctypes.create_string_buffer(buffer_size)
-	wait_limit = time.monotonic() + 5
+@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p)
+def on_sdp_ready(peer_connection : int, sdp : Optional[bytes], sdp_type : int, user_pointer : Optional[int]) -> None:
+	ctypes.cast(user_pointer, ctypes.py_object).value.set()
 
-	while time.monotonic() < wait_limit:
-		if datachannel_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
-			return buffer_string.value.decode()
-		time.sleep(0.05)
+
+@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)
+def on_gathering_complete(peer_connection : int, state : int, user_pointer : Optional[int]) -> None:
+	if state == 2:
+		context = ctypes.cast(user_pointer, ctypes.py_object).value
+		context['event'].set()
+
+
+@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)
+def on_state_change(peer_connection : int, state : int, user_pointer : Optional[int]) -> None:
+	if state in (4, 5):
+		peer = ctypes.cast(user_pointer, ctypes.py_object).value
+		peer['connected'] = False
+
+
+def negotiate_sdp(peer_connection : PeerConnectionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+	datachannel_library = create_static_datachannel_library()
+	sdp_event = threading.Event()
+	sdp_event_pointer = ctypes.cast(id(sdp_event), ctypes.c_void_p)
+
+	datachannel_library.rtcSetUserPointer(peer_connection, sdp_event_pointer)
+	datachannel_library.rtcSetLocalDescriptionCallback(peer_connection, on_sdp_ready)
+	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
+	sdp_event.wait(timeout = 5)
+
+	sdp_buffer_size = 16384
+	sdp_buffer = ctypes.create_string_buffer(sdp_buffer_size)
+
+	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, sdp_buffer_size) > 0:
+		return sdp_buffer.value.decode()
 
 	return None
 
 
 def handle_whep_offer(peers : List[RtcPeer], sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+	datachannel_library = create_static_datachannel_library()
 	peer_connection = create_peer_connection()
 	audio_track = add_audio_track(peer_connection, 'sendonly')
 	video_track = add_video_track(peer_connection, 'sendonly')
@@ -136,10 +161,14 @@ def handle_whep_offer(peers : List[RtcPeer], sdp_offer : SdpOffer) -> Optional[S
 	if local_sdp:
 		rtc_peer : RtcPeer =\
 		{
-			'peer_connection': peer_connection,
+			'peer_connection_id': peer_connection,
 			'video_track': video_track,
-			'audio_track': audio_track
+			'audio_track': audio_track,
+			'connected': True
 		}
+		peer_pointer = ctypes.cast(id(rtc_peer), ctypes.c_void_p)
+		datachannel_library.rtcSetUserPointer(peer_connection, peer_pointer)
+		datachannel_library.rtcSetStateChangeCallback(peer_connection, on_state_change)
 		peers.append(rtc_peer)
 
 	return local_sdp
@@ -167,7 +196,7 @@ def delete_peers(peers : List[RtcPeer]) -> None:
 	datachannel_library = create_static_datachannel_library()
 
 	for rtc_peer in peers:
-		peer_connection_id = rtc_peer.get('peer_connection')
+		peer_connection_id = rtc_peer.get('peer_connection_id')
 
 		if peer_connection_id:
 			datachannel_library.rtcDeletePeerConnection(peer_connection_id)
@@ -175,13 +204,9 @@ def delete_peers(peers : List[RtcPeer]) -> None:
 	peers.clear()
 
 
-def is_peer_connected(peers : List[RtcPeer]) -> bool:
-	datachannel_library = create_static_datachannel_library()
-
+def has_connected_peer(peers : List[RtcPeer]) -> bool:
 	for rtc_peer in peers:
-		video_track_id = rtc_peer.get('video_track')
-
-		if video_track_id and datachannel_library.rtcIsOpen(video_track_id):
+		if rtc_peer.get('connected'):
 			return True
 
 	return False
