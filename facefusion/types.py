@@ -274,14 +274,14 @@ RtcOfferSet = TypedDict('RtcOfferSet',
 
 RtcVideoTrack : TypeAlias = int
 RtcAudioTrack : TypeAlias = int
-PeerConnectionId : TypeAlias = int
+PeerConnection : TypeAlias = int
 SdpOffer : TypeAlias = str
 SdpAnswer : TypeAlias = str
 MediaDirection : TypeAlias = Literal['sendonly', 'recvonly', 'sendrecv', 'inactive']
 
 RtcPeer = TypedDict('RtcPeer',
 {
-	'peer_connection_id': PeerConnectionId,
+	'peer_connection': PeerConnection,
 	'video_track': RtcVideoTrack,
 	'audio_track': RtcAudioTrack,
 	'connected': bool

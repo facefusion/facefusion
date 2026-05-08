@@ -73,14 +73,14 @@ def test_add_video_track() -> None:
 def test_has_connected_peer() -> None:
 	connected_peer : RtcPeer =\
 	{
-		'peer_connection_id': 1,
+		'peer_connection': 1,
 		'video_track': 1,
 		'audio_track': 1,
 		'connected': True
 	}
 	disconnected_peer : RtcPeer =\
 	{
-		'peer_connection_id': 2,
+		'peer_connection': 2,
 		'video_track': 2,
 		'audio_track': 2,
 		'connected': False
@@ -96,7 +96,7 @@ def test_delete_peers(before_all : None) -> None:
 	peer_connection = rtc.create_peer_connection()
 	peers : List[RtcPeer] =\
 	[{
-		'peer_connection_id': peer_connection,
+		'peer_connection': peer_connection,
 		'video_track': 0,
 		'audio_track': 0,
 		'connected': True
