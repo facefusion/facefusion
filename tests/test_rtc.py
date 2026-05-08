@@ -1,3 +1,5 @@
+from typing import List
+
 import pytest
 
 from facefusion import rtc
@@ -92,7 +94,7 @@ def test_has_connected_peer() -> None:
 
 def test_delete_peers(before_all : None) -> None:
 	peer_connection = rtc.create_peer_connection()
-	peers =\
+	peers : List[RtcPeer] =\
 	[{
 		'peer_connection_id': peer_connection,
 		'video_track': 0,
