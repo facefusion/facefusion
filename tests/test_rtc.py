@@ -1,6 +1,9 @@
+from typing import List
+
 import pytest
 
 from facefusion import rtc
+from facefusion.types import RtcPeer
 
 
 @pytest.fixture(scope = 'module')
@@ -22,46 +25,56 @@ def test_create_peer_connection() -> None:
 
 
 def test_add_audio_track() -> None:
+	peer_connection = rtc.create_peer_connection()
+
+	assert rtc.add_audio_track(peer_connection, 'sendonly') > 0
+
+	rtc.create_static_datachannel_library().rtcDeletePeerConnection(peer_connection)
+
+
+def test_add_video_track() -> None:
+	peer_connection = rtc.create_peer_connection()
+
+	assert rtc.add_video_track(peer_connection, 'sendonly') > 0
+
+	rtc.create_static_datachannel_library().rtcDeletePeerConnection(peer_connection)
+
+
+def test_negotiate_sdp() -> None:
 	datachannel_library = rtc.create_static_datachannel_library()
 
 	sender_connection = rtc.create_peer_connection()
-	sender_audio_track = rtc.add_audio_track(sender_connection, 'sendonly')
+	rtc.add_video_track(sender_connection, 'sendonly')
+	rtc.add_audio_track(sender_connection, 'sendonly')
 	sdp_offer = rtc.create_sdp(sender_connection)
 
 	receiver_connection = rtc.create_peer_connection()
-	receiver_audio_track = rtc.add_audio_track(receiver_connection, 'recvonly')
+	rtc.add_video_track(receiver_connection, 'recvonly')
+	rtc.add_audio_track(receiver_connection, 'recvonly')
 	sdp_answer = rtc.negotiate_sdp(receiver_connection, sdp_offer)
 
-	assert sender_audio_track > 0
-	assert receiver_audio_track > 0
-
-	assert 'm=audio' in sdp_offer
+	assert sdp_answer
+	assert 'm=video' in sdp_answer
+	assert 'VP8/90000' in sdp_answer
 	assert 'm=audio' in sdp_answer
-	assert 'opus/48000/2' in sdp_offer
 	assert 'opus/48000/2' in sdp_answer
 
 	assert datachannel_library.rtcDeletePeerConnection(sender_connection) == 0
 	assert datachannel_library.rtcDeletePeerConnection(receiver_connection) == 0
 
 
-def test_add_video_track() -> None:
+def test_delete_peers() -> None:
 	datachannel_library = rtc.create_static_datachannel_library()
+	peer_connection = rtc.create_peer_connection()
+	rtc_peers : List[RtcPeer] =\
+	[
+		{
+			'peer_connection': peer_connection,
+			'video_track': 0,
+			'audio_track': 0
+		}
+	]
 
-	sender_connection = rtc.create_peer_connection()
-	sender_video_track = rtc.add_video_track(sender_connection, 'sendonly')
-	sdp_offer = rtc.create_sdp(sender_connection)
+	rtc.delete_peers(rtc_peers)
 
-	receiver_connection = rtc.create_peer_connection()
-	receiver_video_track = rtc.add_video_track(receiver_connection, 'recvonly')
-	sdp_answer = rtc.negotiate_sdp(receiver_connection, sdp_offer)
-
-	assert sender_video_track > 0
-	assert receiver_video_track > 0
-
-	assert 'm=video' in sdp_offer
-	assert 'm=video' in sdp_answer
-	assert 'VP8/90000' in sdp_offer
-	assert 'VP8/90000' in sdp_answer
-
-	assert datachannel_library.rtcDeletePeerConnection(sender_connection) == 0
-	assert datachannel_library.rtcDeletePeerConnection(receiver_connection) == 0
+	assert datachannel_library.rtcDeletePeerConnection(peer_connection) < 0
