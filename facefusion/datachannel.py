@@ -95,45 +95,45 @@ def create_static_datachannel_library() -> Optional[ctypes.CDLL]:
 
 
 def init_ctypes(datachannel_library : ctypes.CDLL) -> ctypes.CDLL:
-	datachannel_library.rtcInitLogger.argtypes = [ctypes.c_int, LOG_CB_TYPE]
+	datachannel_library.rtcInitLogger.argtypes = [ ctypes.c_int, LOG_CB_TYPE ]
 	datachannel_library.rtcInitLogger.restype = None
 	datachannel_library.rtcInitLogger(4, LOG_CB_TYPE(0))
 
 	datachannel_library.rtcCreatePeerConnection.restype = ctypes.c_int
 
-	datachannel_library.rtcDeletePeerConnection.argtypes = [ctypes.c_int]
+	datachannel_library.rtcDeletePeerConnection.argtypes = [ ctypes.c_int ]
 	datachannel_library.rtcDeletePeerConnection.restype = ctypes.c_int
 
-	datachannel_library.rtcSetLocalDescription.argtypes = [ctypes.c_int, ctypes.c_char_p]
+	datachannel_library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
 	datachannel_library.rtcSetLocalDescription.restype = ctypes.c_int
 
-	datachannel_library.rtcSetRemoteDescription.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p]
+	datachannel_library.rtcSetRemoteDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p ]
 	datachannel_library.rtcSetRemoteDescription.restype = ctypes.c_int
 
-	datachannel_library.rtcAddTrack.argtypes = [ctypes.c_int, ctypes.c_char_p]
+	datachannel_library.rtcAddTrack.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
 	datachannel_library.rtcAddTrack.restype = ctypes.c_int
 
-	datachannel_library.rtcSendMessage.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_int]
+	datachannel_library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
 	datachannel_library.rtcSendMessage.restype = ctypes.c_int
 
 	datachannel_library.rtcSetVP8Packetizer.restype = ctypes.c_int
 
-	datachannel_library.rtcChainRtcpSrReporter.argtypes = [ctypes.c_int]
+	datachannel_library.rtcChainRtcpSrReporter.argtypes = [ ctypes.c_int ]
 	datachannel_library.rtcChainRtcpSrReporter.restype = ctypes.c_int
 
-	datachannel_library.rtcSetTrackRtpTimestamp.argtypes = [ctypes.c_int, ctypes.c_uint32]
+	datachannel_library.rtcSetTrackRtpTimestamp.argtypes = [ ctypes.c_int, ctypes.c_uint32 ]
 	datachannel_library.rtcSetTrackRtpTimestamp.restype = ctypes.c_int
 
-	datachannel_library.rtcIsOpen.argtypes = [ctypes.c_int]
+	datachannel_library.rtcIsOpen.argtypes = [ ctypes.c_int ]
 	datachannel_library.rtcIsOpen.restype = ctypes.c_bool
 
-	datachannel_library.rtcChainRtcpNackResponder.argtypes = [ctypes.c_int, ctypes.c_uint]
+	datachannel_library.rtcChainRtcpNackResponder.argtypes = [ ctypes.c_int, ctypes.c_uint ]
 	datachannel_library.rtcChainRtcpNackResponder.restype = ctypes.c_int
 
-	datachannel_library.rtcGetLocalDescription.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
+	datachannel_library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
 	datachannel_library.rtcGetLocalDescription.restype = ctypes.c_int
 
-	datachannel_library.rtcSetLocalDescription.argtypes = [ctypes.c_int, ctypes.c_char_p]
+	datachannel_library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
 	datachannel_library.rtcSetLocalDescription.restype = ctypes.c_int
 
 	datachannel_library.rtcSetOpusPacketizer.restype = ctypes.c_int
