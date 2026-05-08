@@ -7,7 +7,7 @@ from typing import List
 import psutil
 
 from facefusion import state_manager
-from facefusion.libraries.nvidia_ml import create_memory_configuration, create_utilization_configuration, create_static_library
+from facefusion.libraries.nvidia_ml import create_memory_configuration, create_static_library, create_utilization_configuration
 from facefusion.types import DiskMetrics, ExecutionProvider, GraphicDevice, MemoryMetrics, Metrics, NetworkMetrics, ProcessorMetrics
 
 
