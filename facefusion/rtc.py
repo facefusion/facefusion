@@ -2,8 +2,8 @@ import ctypes
 import time
 from typing import List, Optional
 
+from facefusion.datachannel import create_rtc_configuration, create_rtc_packetizer_init, create_static_download_set, create_static_rtc_library
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.rtc_bindings import create_rtc_configuration, create_rtc_packetizer_init, create_static_download_set, create_static_rtc_library
 from facefusion.types import MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
 
 
