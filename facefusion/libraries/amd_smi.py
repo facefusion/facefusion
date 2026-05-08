@@ -106,12 +106,6 @@ def init_ctypes(amd_smi : ctypes.CDLL) -> ctypes.CDLL:
 	amd_smi.amdsmi_get_gpu_vram_usage.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
 	amd_smi.amdsmi_get_gpu_vram_usage.restype = ctypes.c_uint32
 
-	amd_smi.amdsmi_get_gpu_memory_total.argtypes = [ ctypes.c_void_p, ctypes.c_uint32, ctypes.POINTER(ctypes.c_uint64) ]
-	amd_smi.amdsmi_get_gpu_memory_total.restype = ctypes.c_uint32
-
-	amd_smi.amdsmi_get_gpu_memory_usage.argtypes = [ ctypes.c_void_p, ctypes.c_uint32, ctypes.POINTER(ctypes.c_uint64) ]
-	amd_smi.amdsmi_get_gpu_memory_usage.restype = ctypes.c_uint32
-
 	amd_smi.amdsmi_get_gpu_activity.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
 	amd_smi.amdsmi_get_gpu_activity.restype = ctypes.c_uint32
 

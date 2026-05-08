@@ -130,11 +130,8 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 			asic_info = amd_smi_module.create_asic_info_configuration()
 			amd_smi_library.amdsmi_get_gpu_asic_info(device_handle, ctypes.byref(asic_info))
 
-			memory_total = ctypes.c_uint64()
-			amd_smi_library.amdsmi_get_gpu_memory_total(device_handle, 0, ctypes.byref(memory_total))
-
-			memory_usage = ctypes.c_uint64()
-			amd_smi_library.amdsmi_get_gpu_memory_usage(device_handle, 0, ctypes.byref(memory_usage))
+			memory = amd_smi_module.create_memory_configuration()
+			amd_smi_library.amdsmi_get_gpu_vram_usage(device_handle, ctypes.byref(memory))
 
 			temperature = ctypes.c_int64()
 			amd_smi_library.amdsmi_get_temp_metric(device_handle, 0, 0, ctypes.byref(temperature))
@@ -159,12 +156,12 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 				{
 					'total':
 					{
-						'value': memory_total.value // (1024 * 1024 * 1024),
+						'value': memory.vram_total // (1024 * 1024 * 1024),
 						'unit': 'GB'
 					},
 					'used':
 					{
-						'value': memory_usage.value // (1024 * 1024 * 1024),
+						'value': memory.vram_used // (1024 * 1024 * 1024),
 						'unit': 'GB'
 					}
 				},
