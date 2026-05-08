@@ -5,11 +5,11 @@ from starlette.websockets import WebSocket
 
 from facefusion import rtc_store, session_context, session_manager
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.apis.stream_helper import detect_websocket_stream_mode, handle_image_stream, handle_video_stream
+from facefusion.apis.stream_helper import handle_image_stream, handle_video_stream
 
 
 async def websocket_stream(websocket : WebSocket) -> None:
-	stream_mode = detect_websocket_stream_mode(websocket.scope)
+	stream_mode = websocket.query_params.get('mode')
 
 	if stream_mode == 'image':
 		await handle_image_stream(websocket)
