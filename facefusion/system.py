@@ -70,7 +70,7 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 				'framework':
 				{
 					'name': 'CUDA',
-					'version': cuda_version.value
+					'version': str(cuda_version.value)
 				},
 				'product':
 				{
