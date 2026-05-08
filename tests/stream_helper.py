@@ -10,26 +10,26 @@ from facefusion.types import SdpOffer
 
 
 def create_sdp_offer() -> Optional[SdpOffer]:
-	rtc_library = rtc.create_static_rtc_library()
+	datachannel_library = rtc.create_static_datachannel_library()
 	peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
 
-	rtc_library.rtcAddTrack(peer_connection, rtc.build_media_description('video', 96, 'VP8/90000', 'recvonly', 0))
-	rtc_library.rtcAddTrack(peer_connection, rtc.build_media_description('audio', 111, 'opus/48000/2', 'recvonly', 1))
-	rtc_library.rtcSetLocalDescription(peer_connection, b'offer')
+	datachannel_library.rtcAddTrack(peer_connection, rtc.build_media_description('video', 96, 'VP8/90000', 'recvonly', 0))
+	datachannel_library.rtcAddTrack(peer_connection, rtc.build_media_description('audio', 111, 'opus/48000/2', 'recvonly', 1))
+	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')
 
 	buffer_size = 16384
 	buffer_string = ctypes.create_string_buffer(buffer_size)
 	wait_limit = time.monotonic() + 5
 
 	while time.monotonic() < wait_limit:
-		if rtc_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
+		if datachannel_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
 			sdp = buffer_string.value.decode()
-			rtc_library.rtcDeletePeerConnection(peer_connection)
+			datachannel_library.rtcDeletePeerConnection(peer_connection)
 			return sdp
 
 		time.sleep(0.05)
 
-	rtc_library.rtcDeletePeerConnection(peer_connection)
+	datachannel_library.rtcDeletePeerConnection(peer_connection)
 	return None
 
 
