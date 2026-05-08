@@ -1,14 +1,6 @@
 import os
 
-from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, get_websocket_stream_mode, read_pipe_buffer
-
-
-def make_scope(protocol : str) -> dict[str, object]:
-	return\
-	{
-		'type': 'websocket',
-		'headers': [ (b'sec-websocket-protocol', protocol.encode()) ]
-	}
+from facefusion.apis.stream_helper import calculate_bitrate, calculate_buffer_size, detect_websocket_stream_mode, read_pipe_buffer
 
 
 def test_calculate_bitrate() -> None:
@@ -27,21 +19,31 @@ def test_calculate_buffer_size() -> None:
 	assert calculate_buffer_size((3840, 2160)) == 14000
 
 
-def test_get_stream_mode() -> None:
-	assert get_websocket_stream_mode(make_scope('image')) == 'image'
-	assert get_websocket_stream_mode(make_scope('video')) == 'video'
+def test_detect_websocket_stream_mode() -> None:
+	scope =\
+	{
+		'type': 'websocket',
+		'headers': [ (b'sec-websocket-protocol', b'image') ]
+	}
+
+	assert detect_websocket_stream_mode(scope) == 'image'
+
+	scope =\
+	{
+		'type': 'websocket',
+		'headers': [ (b'sec-websocket-protocol', b'video') ]
+	}
+
+	assert detect_websocket_stream_mode(scope) == 'video'
 
 
 def test_read_pipe_buffer() -> None:
-	read_fd, write_fd = os.pipe()
-	os.write(write_fd, b'abcdefgh')
-	os.close(write_fd)
+	read_pipe, write_pipe = os.pipe()
+	os.write(write_pipe, b'123456')
+	os.close(write_pipe)
 
-	assert read_pipe_buffer(read_fd, 4) == b'abcd'
-	assert read_pipe_buffer(read_fd, 4) == b'efgh'
-	assert read_pipe_buffer(read_fd, 1) is None
+	assert read_pipe_buffer(read_pipe, 4) == b'123'
+	assert read_pipe_buffer(read_pipe, 4) == b'456'
+	assert read_pipe_buffer(read_pipe, 1) is None
 
-	os.close(read_fd)
-
-
-# TODO: add remaining tests
+	os.close(read_pipe)
