@@ -123,9 +123,6 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 	if amd_smi_library:
 		amd_smi_library.amdsmi_init(ctypes.c_uint64(2))
 
-		driver_version = amd_smi_module.define_driver_version()
-		amd_smi_library.amdsmi_get_lib_version(ctypes.byref(driver_version))
-
 		rocm_core_library = rocm_core_module.create_static_library()
 		rocm_major_version = ctypes.c_uint()
 		rocm_minor_version = ctypes.c_uint()
@@ -149,7 +146,7 @@ def detect_amd_graphic_devices() -> List[GraphicDevice]:
 
 			graphic_devices.append(
 			{
-				'driver_version': str(driver_version.major) + '.' + str(driver_version.minor) + '.' + str(driver_version.release),
+				'driver_version': '0.0.0',
 				'framework':
 				{
 					'name': 'ROCm',
