@@ -1,5 +1,4 @@
 import os
-import struct
 import subprocess
 import tempfile
 
@@ -8,7 +7,7 @@ import pytest
 import facefusion.ffmpeg
 from facefusion import process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames, spawn_stream
+from facefusion.ffmpeg import concat_video, extract_frames, merge_video, read_audio_buffer, replace_audio, restore_audio, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
 from facefusion.ffprobe import probe_entries
 from facefusion.filesystem import copy_file, is_image
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths
@@ -256,24 +255,3 @@ def test_sanitize_video() -> None:
 	assert probe_entries(output_paths[1], [ 'codec_name' ]).get('codec_name') == 'hevc'
 
 
-def test_spawn_stream() -> None: # TODO: Improve test
-	test_set =\
-	[
-		((426, 240), 25, 400, 800),
-		((640, 360), 30, 1000, 2000),
-		((1280, 720), 30, 2000, 4000)
-	]
-
-	for resolution, stream_fps, stream_bitrate, stream_bufsize in test_set:
-		encoder = spawn_stream(resolution, stream_fps, stream_bitrate, stream_bufsize)
-		frame_size = resolution[0] * resolution[1] * 3
-		stdout, _ = encoder.communicate(input = bytes(frame_size))
-
-		assert len(stdout) > 32
-		frame_header = stdout[:32]
-
-		assert frame_header[:4] == b'DKIF'
-		output_width = struct.unpack_from('<H', frame_header, 12)[0]
-		output_height = struct.unpack_from('<H', frame_header, 14)[0]
-
-		assert (output_width, output_height) == resolution

@@ -1,8 +1,8 @@
 __pycache__
 .assets
-.binaries
 .claude
 .caches
 .idea
 .jobs
+.libraries
 .vscode

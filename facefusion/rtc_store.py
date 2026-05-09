@@ -21,11 +21,13 @@ def destroy_rtc_stream(session_id : SessionId) -> None:
 		rtc.delete_peers(rtc_peers)
 
 
+# TODO: clean up peer connection on failed sdp negotiation, wrap in run_in_executor to avoid blocking async event loop
 def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	if session_id in RTC_STREAMS:
+		payload_types = rtc.parse_sdp_payload_types(sdp_offer)
 		peer_connection : PeerConnection = rtc.create_peer_connection()
-		audio_track : RtcAudioTrack = rtc.add_audio_track(peer_connection, 'sendonly')
-		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly')
+		audio_track : RtcAudioTrack = rtc.add_audio_track(peer_connection, 'sendonly', payload_types.get('opus', 111))
+		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly', payload_types.get('vp8', 96))
 		local_sdp = rtc.negotiate_sdp(peer_connection, sdp_offer)
 
 		if local_sdp:
@@ -42,8 +44,16 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 	return None
 
 
-def send_rtc_frame(session_id : SessionId, frame_data : bytes) -> None:
+# TODO: detect and remove dead peers
+def send_rtc_video(session_id : SessionId, frame_buffer : bytes) -> None:
 	rtc_peers = get_rtc_stream(session_id)
 
 	if rtc_peers:
-		rtc.send_to_peers(rtc_peers, frame_data)
+		rtc.send_video_to_peers(rtc_peers, frame_buffer)
+
+
+def send_rtc_audio(session_id : SessionId, audio_buffer : bytes, audio_pts : int) -> None:
+	rtc_peers = get_rtc_stream(session_id)
+
+	if rtc_peers:
+		rtc.send_audio_to_peers(rtc_peers, audio_buffer, audio_pts)

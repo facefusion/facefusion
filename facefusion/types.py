@@ -169,8 +169,6 @@ TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
 AudioEncoder = Literal['flac', 'aac', 'libmp3lame', 'libopus', 'libvorbis', 'pcm_s16le', 'pcm_s32le']
 ImageEncoder = Literal['bmp', 'mjpeg', 'png', 'tiff', 'libwebp']
 VideoEncoder = Literal['libx264', 'libx264rgb', 'libx265', 'libvpx-vp9', 'h264_nvenc', 'hevc_nvenc', 'h264_amf', 'hevc_amf', 'h264_qsv', 'hevc_qsv', 'h264_videotoolbox', 'hevc_videotoolbox', 'rawvideo']
-EncoderDeadline = Literal['best', 'good', 'realtime']
-Muxer : TypeAlias = str
 AudioSet : TypeAlias = Dict[AudioFormat, str]
 ImageSet : TypeAlias = Dict[ImageFormat, str]
 VideoSet : TypeAlias = Dict[VideoFormat, str]
@@ -264,14 +262,6 @@ BenchmarkCycleSet = TypedDict('BenchmarkCycleSet',
 
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']
-WebSocketStreamMode = Literal['image', 'video']
-
-RtcOfferSet = TypedDict('RtcOfferSet',
-{
-	'sdp': str,
-	'type': str
-})
-
 RtcVideoTrack : TypeAlias = int
 RtcAudioTrack : TypeAlias = int
 PeerConnection : TypeAlias = int

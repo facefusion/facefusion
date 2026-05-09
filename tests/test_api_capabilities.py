@@ -8,8 +8,8 @@ from facefusion import capability_store, session_manager
 from facefusion.apis.core import create_api
 
 
-@pytest.fixture(scope = 'module')
-def test_client() -> Iterator[TestClient]:
+@pytest.fixture(scope = 'module', autouse = True)
+def before_all() -> None:
 	program = ArgumentParser()
 	capability_store.register_capability_set(
 		[
@@ -31,13 +31,16 @@ def test_client() -> Iterator[TestClient]:
 		scopes = [ 'api' ]
 	)
 
-	with TestClient(create_api()) as test_client:
-		yield test_client
-
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	session_manager.SESSIONS.clear()
+
+
+@pytest.fixture(scope = 'module')
+def test_client() -> Iterator[TestClient]:
+	with TestClient(create_api()) as test_client:
+		yield test_client
 
 
 def test_get_capabilities(test_client : TestClient) -> None:

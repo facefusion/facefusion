@@ -1,21 +1,13 @@
 import ctypes
 import threading
 import time
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
 
 
-def pre_check() -> bool:
-	download_set = datachannel_module.create_static_library_set()
-
-	if not conditional_download_hashes(download_set.get('hashes')):
-		return False
-	return conditional_download_sources(download_set.get('sources'))
-
-
+# TODO: reduce to only used params
 def create_peer_connection(
 	ice_servers : Optional[ctypes.Array[ctypes.c_char_p]] = None,
 	ice_servers_count : int = 0, proxy_server : Optional[bytes] = None,
@@ -52,27 +44,42 @@ def create_peer_connection(
 
 
 def build_media_description(media_type : str, payload_type : int, rtp_codec : str, media_direction : MediaDirection, media_id : int) -> bytes:
-	return '\r\n'.join(
+	lines =\
 	[
 		'm=' + media_type + ' 9 UDP/TLS/RTP/SAVPF ' + str(payload_type),
 		'a=rtpmap:' + str(payload_type) + ' ' + rtp_codec,
+		'a=rtcp-fb:' + str(payload_type) + ' nack',
+		'a=rtcp-fb:' + str(payload_type) + ' nack pli',
 		'a=' + media_direction,
 		'a=mid:' + str(media_id),
 		'a=rtcp-mux',
 		''
-	]).encode()
+	]
+	return '\r\n'.join(lines).encode()
 
 
-def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection) -> RtcAudioTrack:
+def parse_sdp_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
+	payload_types : Dict[str, int] = {}
+
+	for line in sdp_offer.splitlines():
+		if line.startswith('a=rtpmap:') and 'VP8/90000' in line:
+			payload_types['vp8'] = int(line.split(':')[1].split(' ')[0])
+		if line.startswith('a=rtpmap:') and 'opus/48000/2' in line:
+			payload_types['opus'] = int(line.split(':')[1].split(' ')[0])
+
+	return payload_types
+
+
+def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection, payload_type : int) -> RtcAudioTrack:
 	datachannel_library = datachannel_module.create_static_library()
-	media_description = build_media_description('audio', 111, 'opus/48000/2', media_direction, 1)
+	media_description = build_media_description('audio', payload_type, 'opus/48000/2', media_direction, 1)
 
 	audio_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
 
 	audio_packetizer = datachannel_module.define_rtc_packetizer_init()
 	audio_packetizer.ssrc = 43
 	audio_packetizer.cname = b'audio'
-	audio_packetizer.payloadType = 111
+	audio_packetizer.payloadType = payload_type
 	audio_packetizer.clockRate = 48000
 
 	datachannel_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
@@ -81,16 +88,16 @@ def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDir
 	return audio_track
 
 
-def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection) -> RtcVideoTrack:
+def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, payload_type : int) -> RtcVideoTrack:
 	datachannel_library = datachannel_module.create_static_library()
-	media_description = build_media_description('video', 96, 'VP8/90000', media_direction, 0)
+	media_description = build_media_description('video', payload_type, 'VP8/90000', media_direction, 0)
 
 	video_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
 
 	video_packetizer = datachannel_module.define_rtc_packetizer_init()
 	video_packetizer.ssrc = 42
 	video_packetizer.cname = b'video'
-	video_packetizer.payloadType = 96
+	video_packetizer.payloadType = payload_type
 	video_packetizer.clockRate = 90000
 	video_packetizer.maxFragmentSize = 1200
 
@@ -118,6 +125,7 @@ def on_sdp_ready(peer_connection : int, sdp : Optional[bytes], sdp_type : int, u
 	ctypes.cast(user_pointer, ctypes.py_object).value.set()
 
 
+# TODO: unused callback, remove or wire up
 @ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)
 def on_ice_complete(peer_connection : int, state : int, user_pointer : Optional[int]) -> None:
 	if state == 2:
@@ -125,6 +133,7 @@ def on_ice_complete(peer_connection : int, state : int, user_pointer : Optional[
 		context['event'].set()
 
 
+# TODO: sanitize sdp_offer, wrap in run_in_executor, track peer connection state
 def negotiate_sdp(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	datachannel_library = datachannel_module.create_static_library()
 	sdp_event = threading.Event()
@@ -144,20 +153,38 @@ def negotiate_sdp(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Opt
 	return None
 
 
-def send_to_peers(rtc_peers : List[RtcPeer], data : bytes) -> None:
+def send_video_to_peers(rtc_peers : List[RtcPeer], frame_buffer : bytes) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	if rtc_peers:
 		timestamp = int(time.monotonic() * 90000) & 0xFFFFFFFF
-		data_buffer = ctypes.create_string_buffer(data)
-		data_total = len(data)
+		send_buffer = ctypes.create_string_buffer(frame_buffer)
+		send_total = len(frame_buffer)
 
 		for rtc_peer in rtc_peers:
 			video_track_id = rtc_peer.get('video_track')
 
 			if video_track_id and datachannel_library.rtcIsOpen(video_track_id):
 				datachannel_library.rtcSetTrackRtpTimestamp(video_track_id, timestamp)
-				datachannel_library.rtcSendMessage(video_track_id, data_buffer, data_total)
+				datachannel_library.rtcSendMessage(video_track_id, send_buffer, send_total)
+
+	return None
+
+
+def send_audio_to_peers(rtc_peers : List[RtcPeer], audio_buffer : bytes, audio_pts : int) -> None:
+	datachannel_library = datachannel_module.create_static_library()
+
+	if rtc_peers:
+		timestamp = audio_pts & 0xFFFFFFFF
+		send_buffer = ctypes.create_string_buffer(audio_buffer)
+		send_total = len(audio_buffer)
+
+		for rtc_peer in rtc_peers:
+			audio_track_id = rtc_peer.get('audio_track')
+
+			if audio_track_id and datachannel_library.rtcIsOpen(audio_track_id):
+				datachannel_library.rtcSetTrackRtpTimestamp(audio_track_id, timestamp)
+				datachannel_library.rtcSendMessage(audio_track_id, send_buffer, send_total)
 
 	return None
 
