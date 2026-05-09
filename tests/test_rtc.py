@@ -9,12 +9,13 @@ from facefusion.types import RtcPeer
 
 @pytest.fixture(scope = 'module')
 def before_all() -> None:
-	rtc.pre_check()
+	datachannel_module.pre_check()
 
 
+# TODO: add test_parse_sdp_payload_types
 def test_build_media_description() -> None:
-	assert rtc.build_media_description('audio', 111, 'opus/48000/2', 'sendonly', 1) == b'm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=rtpmap:111 opus/48000/2\r\na=sendonly\r\na=mid:1\r\na=rtcp-mux\r\n'
-	assert rtc.build_media_description('video', 96, 'VP8/90000', 'recvonly', 0) == b'm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=rtpmap:96 VP8/90000\r\na=recvonly\r\na=mid:0\r\na=rtcp-mux\r\n'
+	assert rtc.build_media_description('audio', 111, 'opus/48000/2', 'sendonly', 1) == b'm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=rtpmap:111 opus/48000/2\r\na=rtcp-fb:111 nack\r\na=rtcp-fb:111 nack pli\r\na=sendonly\r\na=mid:1\r\na=rtcp-mux\r\n'
+	assert rtc.build_media_description('video', 96, 'VP8/90000', 'recvonly', 0) == b'm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=rtpmap:96 VP8/90000\r\na=rtcp-fb:96 nack\r\na=rtcp-fb:96 nack pli\r\na=recvonly\r\na=mid:0\r\na=rtcp-mux\r\n'
 
 
 # TODO: enable again
@@ -32,7 +33,7 @@ def test_create_peer_connection() -> None:
 def test_add_audio_track() -> None:
 	peer_connection = rtc.create_peer_connection()
 
-	assert rtc.add_audio_track(peer_connection, 'sendonly') > 0
+	assert rtc.add_audio_track(peer_connection, 'sendonly', 111) > 0
 
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
@@ -42,7 +43,7 @@ def test_add_audio_track() -> None:
 def test_add_video_track() -> None:
 	peer_connection = rtc.create_peer_connection()
 
-	assert rtc.add_video_track(peer_connection, 'sendonly') > 0
+	assert rtc.add_video_track(peer_connection, 'sendonly', 96) > 0
 
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
@@ -53,13 +54,13 @@ def test_negotiate_sdp() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	sender_connection = rtc.create_peer_connection()
-	rtc.add_video_track(sender_connection, 'sendonly')
-	rtc.add_audio_track(sender_connection, 'sendonly')
+	rtc.add_video_track(sender_connection, 'sendonly', 96)
+	rtc.add_audio_track(sender_connection, 'sendonly', 111)
 	sdp_offer = rtc.create_sdp(sender_connection)
 
 	receiver_connection = rtc.create_peer_connection()
-	rtc.add_video_track(receiver_connection, 'recvonly')
-	rtc.add_audio_track(receiver_connection, 'recvonly')
+	rtc.add_video_track(receiver_connection, 'recvonly', 96)
+	rtc.add_audio_track(receiver_connection, 'recvonly', 111)
 	sdp_answer = rtc.negotiate_sdp(receiver_connection, sdp_offer)
 
 	assert sdp_answer

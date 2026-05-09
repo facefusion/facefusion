@@ -8,6 +8,7 @@ from facefusion.apis.session_helper import extract_access_token
 from facefusion.apis.stream_helper import handle_image_stream, handle_video_stream
 
 
+# TODO: reject websocket with invalid or missing stream mode
 async def websocket_stream(websocket : WebSocket) -> None:
 	stream_mode = websocket.query_params.get('mode')
 
@@ -18,14 +19,15 @@ async def websocket_stream(websocket : WebSocket) -> None:
 		await handle_video_stream(websocket)
 
 
+# TODO: validate content type is application/sdp, sanitize sdp input
 async def post_stream(request : Request) -> Response:
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
 	session_context.set_session_id(session_id)
 
 	if session_id:
-		sdp_offer = (await request.body()).decode()
-		sdp_answer = rtc_store.add_rtc_viewer(session_id, sdp_offer)
+		sdp_offer = await request.body()
+		sdp_answer = rtc_store.add_rtc_viewer(session_id, sdp_offer.decode())
 
 		if sdp_answer:
 			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type = 'application/sdp')
