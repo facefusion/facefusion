@@ -236,11 +236,13 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 
 	if session_id and source_paths:
 		stream_frames = receive_stream_frames(websocket)
-		first_frame_type, first_frame_buffer = await anext(stream_frames, (0, b''))
 		first_vision_frame = None
 
-		if first_frame_type == 1:
-			first_vision_frame = cv2.imdecode(numpy.frombuffer(first_frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+		# TODO: audio frames may arrive before video due to ScriptProcessor firing faster than canvas toBlob
+		async for first_frame_type, first_frame_buffer in stream_frames:
+			if first_frame_type == 1:
+				first_vision_frame = cv2.imdecode(numpy.frombuffer(first_frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+				break
 
 		if numpy.any(first_vision_frame):
 			resolution : Resolution = (first_vision_frame.shape[1], first_vision_frame.shape[0])
