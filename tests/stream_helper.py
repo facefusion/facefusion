@@ -6,11 +6,12 @@ from typing import Optional
 from starlette.testclient import TestClient
 
 from facefusion import rtc
+from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import SdpOffer
 
 
 def create_sdp_offer() -> Optional[SdpOffer]:
-	datachannel_library = rtc.create_static_datachannel_library()
+	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
 
 	datachannel_library.rtcAddTrack(peer_connection, rtc.build_media_description('video', 96, 'VP8/90000', 'recvonly', 0))
