@@ -10,6 +10,7 @@ from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import SdpOffer
 
 
+# TODO: remove, use rtc.create_sdp with recvonly tracks instead
 def create_sdp_offer() -> Optional[SdpOffer]:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
@@ -34,8 +35,9 @@ def create_sdp_offer() -> Optional[SdpOffer]:
 	return None
 
 
+# TODO: remove, inline into test_api_stream.py
 def open_websocket_stream(test_client : TestClient, subprotocols : list[str], source_content : bytes, ready_event : threading.Event, stop_event : threading.Event) -> None:
-	with test_client.websocket_connect('/stream', subprotocols = subprotocols) as websocket:
+	with test_client.websocket_connect('/stream?mode=video', subprotocols = subprotocols) as websocket:
 		websocket.send_bytes(source_content)
 		websocket.receive_text()
 		ready_event.set()

@@ -92,10 +92,9 @@ def test_stream_image(test_client : TestClient) -> None:
 
 	assert select_response.status_code == 200
 
-	with test_client.websocket_connect('/stream', subprotocols =
+	with test_client.websocket_connect('/stream?mode=image', subprotocols =
 	[
-		'access_token.' + access_token,
-		'image'
+		'access_token.' + access_token
 	]) as websocket:
 		websocket.send_bytes(source_content)
 		output_bytes = websocket.receive_bytes()
@@ -137,7 +136,7 @@ def test_stream_video(test_client : TestClient) -> None:
 	ready_event = threading.Event()
 	stop_event = threading.Event()
 	#TODO: use asyncio
-	stream_thread = threading.Thread(target = open_websocket_stream, args = (test_client, [ 'access_token.' + access_token, 'video' ], source_content, ready_event, stop_event))
+	stream_thread = threading.Thread(target = open_websocket_stream, args = (test_client, [ 'access_token.' + access_token ], source_content, ready_event, stop_event))
 	stream_thread.start()
 	ready_event.wait()
 

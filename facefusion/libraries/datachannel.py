@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import Dict, Optional
 
 from facefusion.common_helper import is_linux, is_macos, is_windows
+from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.filesystem import resolve_relative_path
 from facefusion.types import DownloadSet
 
@@ -15,6 +16,12 @@ def resolve_library_file() -> Optional[str]:
 	if is_windows():
 		return 'windows-x64-openssl-h264-vp8-av1-opus-datachannel-0.24.1.dll'
 	return None
+
+
+def pre_check() -> bool:
+	download_set = create_static_library_set()
+
+	return conditional_download_hashes(download_set.get('hashes')) and conditional_download_sources(download_set.get('sources'))
 
 
 @lru_cache

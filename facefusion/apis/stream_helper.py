@@ -1,10 +1,10 @@
 import asyncio
-import math
-import os
-import subprocess
+import ctypes
+import multiprocessing
+import struct
 from collections import deque
 from collections.abc import AsyncIterator
-from typing import Optional
+from typing import Optional, Tuple
 
 import cv2
 import numpy
@@ -13,35 +13,21 @@ from starlette.websockets import WebSocket, WebSocketState
 from facefusion import rtc_store, session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.common_helper import is_linux, is_macos
-from facefusion.ffmpeg import spawn_stream
+from facefusion.libraries import opus as opus_module, vpx as vpx_module
 from facefusion.streamer import process_vision_frame
 from facefusion.types import Resolution, SessionId, VisionFrame
 
 
-def calculate_bitrate(resolution : Resolution) -> int: # TODO : improve the bitrate calculation
-	pixel_total = resolution[0] * resolution[1]
-	bitrate_factor = 3500 / math.sqrt(1920 * 1080)
-	return max(400, round(math.sqrt(pixel_total) * bitrate_factor))
+async def receive_stream_frames(websocket : WebSocket) -> AsyncIterator[Tuple[int, bytes]]:
+	websocket_event = await websocket.receive()
 
+	while websocket_event.get('type') == 'websocket.receive':
+		frame_buffer = websocket_event.get('bytes') or b''
 
-def calculate_buffer_size(resolution : Resolution) -> int:
-	return calculate_bitrate(resolution) * 2
+		if len(frame_buffer) > 1:
+			yield frame_buffer[0], frame_buffer[1:]
 
-
-def read_pipe_buffer(pipe_handle : int, size : int) -> Optional[bytes]:
-	byte_buffer = bytearray()
-	frame_data = os.read(pipe_handle, size - len(byte_buffer))
-
-	while frame_data:
-		byte_buffer += frame_data
-
-		if len(byte_buffer) == size:
-			return bytes(byte_buffer)
-
-		frame_data = os.read(pipe_handle, size - len(byte_buffer))
-
-	return None
+		websocket_event = await websocket.receive()
 
 
 async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFrame]:
@@ -57,41 +43,165 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
-def forward_rtc_frames(encoder : subprocess.Popen[bytes], session_id : SessionId) -> None:
-	pipe_handle = encoder.stdout.fileno()
+# TODO: move to facefusion/vpx_encoder.py
+def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[ctypes.Array[ctypes.c_char]]:
+	vpx_library = vpx_module.create_static_library()
 
-	if is_linux() or is_macos():
-		os.set_blocking(pipe_handle, True)
+	if vpx_library:
+		vp8_iface = ctypes.c_void_p.in_dll(vpx_library, 'vpx_codec_vp8_cx_algo')
+		config_buffer = ctypes.create_string_buffer(4096)
 
-	header = read_pipe_buffer(pipe_handle, 32)
+		if vpx_library.vpx_codec_enc_config_default(ctypes.byref(vp8_iface), config_buffer, 0) == 0:
+			thread_count = min(multiprocessing.cpu_count(), 8)
+			struct.pack_into('I', config_buffer, 4, thread_count)
+			struct.pack_into('I', config_buffer, 12, width)
+			struct.pack_into('I', config_buffer, 16, height)
+			struct.pack_into('I', config_buffer, 72, 2)
+			struct.pack_into('I', config_buffer, 112, bitrate)
+			struct.pack_into('I', config_buffer, 116, 2)
+			struct.pack_into('I', config_buffer, 120, 50)
+			struct.pack_into('I', config_buffer, 124, 50)
+			struct.pack_into('I', config_buffer, 128, 50)
+			context_buffer = ctypes.create_string_buffer(512)
 
-	if header:
-		frame_header = read_pipe_buffer(pipe_handle, 12)
+			if vpx_library.vpx_codec_enc_init_ver(context_buffer, ctypes.byref(vp8_iface), config_buffer, 0, 37) == 0:
+				vpx_library.vpx_codec_control_(context_buffer, 13, ctypes.c_int(16))
+				vpx_library.vpx_codec_control_(context_buffer, 12, ctypes.c_int(3))
+				vpx_library.vpx_codec_control_(context_buffer, 27, ctypes.c_int(10))
+				return context_buffer
 
-		while frame_header:
-			frame_size = int.from_bytes(frame_header[0:4], 'little')
-			frame_data = read_pipe_buffer(pipe_handle, frame_size)
-
-			if frame_data:
-				rtc_store.send_rtc_frame(session_id, frame_data)
-
-			frame_header = read_pipe_buffer(pipe_handle, 12)
+	return None
 
 
-def submit_encoder_frame(encoder : subprocess.Popen[bytes], vision_frame_deque : deque[VisionFrame]) -> None:
-	output_vision_frame = process_vision_frame(vision_frame_deque[-1])
-	encoder.stdin.write(cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2RGB).tobytes())
-	encoder.stdin.flush()
+# TODO: move to facefusion/vpx_encoder.py
+def encode_vpx(codec_context : ctypes.Array[ctypes.c_char], yuv_buffer : bytes, width : int, height : int, pts : int, flags : int) -> bytes:
+	vpx_library = vpx_module.create_static_library()
+	frame_buffer = b''
+
+	if vpx_library:
+		image_buffer = ctypes.create_string_buffer(512)
+		yuv_string_buffer = ctypes.create_string_buffer(yuv_buffer)
+
+		if vpx_library.vpx_img_wrap(image_buffer, 0x102, width, height, 1, yuv_string_buffer):
+			if vpx_library.vpx_codec_encode(codec_context, image_buffer, pts, 1, flags, 1) == 0:
+				iterator = ctypes.c_void_p(0)
+				packet = vpx_library.vpx_codec_get_cx_data(codec_context, ctypes.byref(iterator))
+
+				while packet:
+					if ctypes.c_int.from_address(packet).value == 0:
+						buffer_pointer = ctypes.c_void_p.from_address(packet + 8).value
+						buffer_size = ctypes.c_size_t.from_address(packet + 16).value
+						frame_buffer += ctypes.string_at(buffer_pointer, buffer_size)
+
+					packet = vpx_library.vpx_codec_get_cx_data(codec_context, ctypes.byref(iterator))
+
+	return frame_buffer
 
 
-def run_encode_loop(encoder : subprocess.Popen[bytes], vision_frame_deque : deque[VisionFrame]) -> None:
+# TODO: move to facefusion/vpx_encoder.py
+def destroy_vpx_encoder(codec_context : ctypes.Array[ctypes.c_char]) -> None:
+	vpx_library = vpx_module.create_static_library()
+
+	if vpx_library:
+		vpx_library.vpx_codec_destroy(codec_context)
+
+
+# TODO: move to facefusion/opus_encoder.py
+def create_opus_encoder(sample_rate : int, channels : int) -> Optional[ctypes.c_void_p]:
+	opus_library = opus_module.create_static_library()
+
+	if opus_library:
+		error = ctypes.c_int(0)
+		encoder = opus_library.opus_encoder_create(sample_rate, channels, 2049, ctypes.byref(error))
+
+		if error.value == 0:
+			opus_library.opus_encoder_ctl(encoder, 4002, 64000)
+			return encoder
+
+	return None
+
+
+# TODO: move to facefusion/opus_encoder.py
+def encode_opus(opus_encoder : ctypes.c_void_p, pcm_pointer : ctypes.c_void_p, frame_size : int) -> bytes:
+	opus_library = opus_module.create_static_library()
+	audio_buffer = b''
+
+	if opus_library:
+		output_buffer = ctypes.create_string_buffer(4000)
+		encoded_length = opus_library.opus_encode_float(opus_encoder, pcm_pointer, frame_size, output_buffer, 4000)
+
+		if encoded_length > 0:
+			audio_buffer = output_buffer.raw[:encoded_length]
+
+	return audio_buffer
+
+
+# TODO: move to facefusion/opus_encoder.py
+def destroy_opus_encoder(opus_encoder : ctypes.c_void_p) -> None:
+	opus_library = opus_module.create_static_library()
+
+	if opus_library:
+		opus_library.opus_encoder_destroy(opus_encoder)
+
+
+# TODO: move to facefusion/vpx_encoder.py, throttle loop to avoid spinning on same frame
+def run_video_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
+	codec_context = create_vpx_encoder(initial_resolution[0], initial_resolution[1], 4500)
+	current_resolution = initial_resolution
+	pts = 0
+
 	while vision_frame_deque:
-		submit_encoder_frame(encoder, vision_frame_deque)
+		vision_frame = vision_frame_deque[-1]
+		output_frame = process_vision_frame(vision_frame)
+		height, width = output_frame.shape[:2]
+		frame_resolution = (width, height)
 
-	encoder.stdin.close()
-	encoder.wait()
+		if frame_resolution[0] != current_resolution[0] or frame_resolution[1] != current_resolution[1]:
+			if codec_context:
+				destroy_vpx_encoder(codec_context)
+
+			current_resolution = frame_resolution
+			codec_context = create_vpx_encoder(current_resolution[0], current_resolution[1], 4500)
+			pts = 0
+
+		if codec_context:
+			yuv_frame = cv2.cvtColor(output_frame, cv2.COLOR_BGR2YUV_I420)
+			vpx_flags = 0
+
+			if pts % keyframe_interval == 0:
+				vpx_flags = 1
+
+			frame_buffer = encode_vpx(codec_context, yuv_frame.tobytes(), width, height, pts, vpx_flags)
+
+			if frame_buffer:
+				rtc_store.send_rtc_video(session_id, frame_buffer)
+
+		pts += 1
+
+	if codec_context:
+		destroy_vpx_encoder(codec_context)
 
 
+# TODO: move to facefusion/opus_encoder.py
+def encode_audio_chunk(opus_encoder : ctypes.c_void_p, session_id : SessionId, pcm_data : numpy.ndarray, audio_remainder : numpy.ndarray, audio_pts : int) -> Tuple[numpy.ndarray, int]:
+	pcm_buffer = numpy.concatenate([audio_remainder, pcm_data])
+	frame_samples = 1920
+
+	while len(pcm_buffer) >= frame_samples:
+		chunk = pcm_buffer[:frame_samples]
+		pcm_buffer = pcm_buffer[frame_samples:]
+		pcm_pointer = ctypes.cast(chunk.ctypes.data, ctypes.c_void_p)
+		audio_buffer = encode_opus(opus_encoder, pcm_pointer, 960)
+
+		if audio_buffer:
+			rtc_store.send_rtc_audio(session_id, audio_buffer, audio_pts)
+
+		audio_pts += 960
+
+	return pcm_buffer, audio_pts
+
+
+# TODO: extract shared session setup from handle_image_stream and handle_video_stream, guard session_id like handle_video_stream
 async def handle_image_stream(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 	access_token = extract_access_token(websocket.scope)
@@ -125,30 +235,45 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 	await websocket.accept(subprotocol = subprotocol)
 
 	if session_id and source_paths:
-		output_video_fps = int(state_manager.get_item('output_video_fps') or 30) # TODO: resolve from target video fps
-		vision_frames = receive_vision_frames(websocket)
-		vision_frame = await anext(vision_frames, None)
+		stream_frames = receive_stream_frames(websocket)
+		first_frame_type, first_frame_buffer = await anext(stream_frames, (0, b''))
+		first_vision_frame = None
 
-		if numpy.any(vision_frame):
-			resolution = (vision_frame.shape[1], vision_frame.shape[0])
-			encoder = spawn_stream(resolution, output_video_fps, calculate_bitrate(resolution), calculate_buffer_size(resolution))
+		if first_frame_type == 1:
+			first_vision_frame = cv2.imdecode(numpy.frombuffer(first_frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
 
+		if numpy.any(first_vision_frame):
+			resolution : Resolution = (first_vision_frame.shape[1], first_vision_frame.shape[0])
+			keyframe_interval = int(state_manager.get_item('output_video_fps') or 30) # TODO: remove hardcoded via stream_video_fps
 			vision_frame_deque : deque[VisionFrame] = deque(maxlen = 1)
+			opus_encoder = create_opus_encoder(48000, 2) # TODO: guard against opus_encoder being None
+			audio_remainder = numpy.array([], dtype = numpy.float32)
+			audio_pts = 0
 
-			vision_frame_deque.append(vision_frame)
+			vision_frame_deque.append(first_vision_frame)
 			rtc_store.create_rtc_stream(session_id)
 
 			event_loop = asyncio.get_running_loop()
-			await event_loop.run_in_executor(None, submit_encoder_frame, encoder, vision_frame_deque)
+			video_encode_task = event_loop.run_in_executor(None, run_video_encode_loop, vision_frame_deque, session_id, resolution, keyframe_interval)
 			await websocket.send_text('ready')
-			encode_task = event_loop.run_in_executor(None, run_encode_loop, encoder, vision_frame_deque)
-			rtc_task = event_loop.run_in_executor(None, forward_rtc_frames, encoder, session_id)
 
-			async for vision_frame in vision_frames:
-				vision_frame_deque.append(vision_frame)
+			async for frame_type, frame_buffer in stream_frames:
+				if frame_type == 1:
+					vision_frame = cv2.imdecode(numpy.frombuffer(frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+
+					if numpy.any(vision_frame):
+						vision_frame_deque.append(vision_frame)
+
+				if frame_type == 2:
+					pcm_data = numpy.frombuffer(frame_buffer, dtype = numpy.float32)
+					audio_remainder, audio_pts = encode_audio_chunk(opus_encoder, session_id, pcm_data, audio_remainder, audio_pts)
 
 			vision_frame_deque.clear()
-			await asyncio.gather(encode_task, rtc_task)
+			await video_encode_task
+
+			if opus_encoder:
+				destroy_opus_encoder(opus_encoder)
+
 			rtc_store.destroy_rtc_stream(session_id)
 
 	if websocket.client_state == WebSocketState.CONNECTED:
