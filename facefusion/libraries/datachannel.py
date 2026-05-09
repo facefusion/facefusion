@@ -7,6 +7,16 @@ from facefusion.filesystem import resolve_relative_path
 from facefusion.types import DownloadSet
 
 
+def resolve_library_file() -> Optional[str]:
+	if is_linux():
+		return 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so'
+	if is_macos():
+		return 'macos-universal-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.dylib'
+	if is_windows():
+		return 'windows-x64-openssl-h264-vp8-av1-opus-datachannel-0.24.1.dll'
+	return None
+
+
 @lru_cache
 def create_static_library_set() -> Dict[str, DownloadSet]:
 	library_file = resolve_library_file()
@@ -32,14 +42,76 @@ def create_static_library_set() -> Dict[str, DownloadSet]:
 	}
 
 
-def resolve_library_file() -> Optional[str]:
-	if is_linux():
-		return 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so'
-	if is_macos():
-		return 'macos-universal-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.dylib'
-	if is_windows():
-		return 'windows-x64-openssl-h264-vp8-av1-opus-datachannel-0.24.1.dll'
+@lru_cache
+def create_static_library() -> Optional[ctypes.CDLL]:
+	library_path = create_static_library_set().get('sources').get('datachannel').get('path')
+
+	if library_path:
+		library = ctypes.CDLL(library_path)
+
+		if library:
+			return init_ctypes(library)
+
 	return None
+
+
+def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
+	library.rtcInitLogger.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p) ]
+	library.rtcInitLogger.restype = None
+	library.rtcInitLogger(4, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)(0))
+
+	library.rtcCreatePeerConnection.restype = ctypes.c_int
+
+	library.rtcDeletePeerConnection.argtypes = [ ctypes.c_int ]
+	library.rtcDeletePeerConnection.restype = ctypes.c_int
+
+	library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
+	library.rtcSetLocalDescription.restype = ctypes.c_int
+
+	library.rtcSetRemoteDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p ]
+	library.rtcSetRemoteDescription.restype = ctypes.c_int
+
+	library.rtcAddTrack.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
+	library.rtcAddTrack.restype = ctypes.c_int
+
+	library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
+	library.rtcSendMessage.restype = ctypes.c_int
+
+	library.rtcSetVP8Packetizer.restype = ctypes.c_int
+
+	library.rtcChainRtcpSrReporter.argtypes = [ ctypes.c_int ]
+	library.rtcChainRtcpSrReporter.restype = ctypes.c_int
+
+	library.rtcSetTrackRtpTimestamp.argtypes = [ ctypes.c_int, ctypes.c_uint32 ]
+	library.rtcSetTrackRtpTimestamp.restype = ctypes.c_int
+
+	library.rtcIsOpen.argtypes = [ ctypes.c_int ]
+	library.rtcIsOpen.restype = ctypes.c_bool
+
+	library.rtcChainRtcpNackResponder.argtypes = [ ctypes.c_int, ctypes.c_uint ]
+	library.rtcChainRtcpNackResponder.restype = ctypes.c_int
+
+	library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
+	library.rtcGetLocalDescription.restype = ctypes.c_int
+
+	library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
+	library.rtcSetLocalDescription.restype = ctypes.c_int
+
+	library.rtcSetOpusPacketizer.restype = ctypes.c_int
+
+	library.rtcSetUserPointer.argtypes = [ ctypes.c_int, ctypes.c_void_p ]
+	library.rtcSetUserPointer.restype = None
+
+	library.rtcSetLocalDescriptionCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p) ]
+	library.rtcSetLocalDescriptionCallback.restype = ctypes.c_int
+
+	library.rtcSetGatheringStateChangeCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p) ]
+	library.rtcSetGatheringStateChangeCallback.restype = ctypes.c_int
+
+	library.rtcSetStateChangeCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p) ]
+	library.rtcSetStateChangeCallback.restype = ctypes.c_int
+
+	return library
 
 
 def define_rtc_configuration() -> ctypes.Structure:
@@ -79,73 +151,3 @@ def define_rtc_packetizer_init() -> ctypes.Structure:
 			('maxFragmentSize', ctypes.c_uint16)
 		]
 	})()
-
-
-@lru_cache
-def create_static_library() -> Optional[ctypes.CDLL]:
-	library_path = create_static_library_set().get('sources').get('datachannel').get('path')
-
-	if library_path:
-		datachannel_library = ctypes.CDLL(library_path)
-		return init_ctypes(datachannel_library)
-
-	return None
-
-
-def init_ctypes(datachannel_library : ctypes.CDLL) -> ctypes.CDLL:
-	datachannel_library.rtcInitLogger.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p) ]
-	datachannel_library.rtcInitLogger.restype = None
-	datachannel_library.rtcInitLogger(4, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)(0))
-
-	datachannel_library.rtcCreatePeerConnection.restype = ctypes.c_int
-
-	datachannel_library.rtcDeletePeerConnection.argtypes = [ ctypes.c_int ]
-	datachannel_library.rtcDeletePeerConnection.restype = ctypes.c_int
-
-	datachannel_library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
-	datachannel_library.rtcSetLocalDescription.restype = ctypes.c_int
-
-	datachannel_library.rtcSetRemoteDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p ]
-	datachannel_library.rtcSetRemoteDescription.restype = ctypes.c_int
-
-	datachannel_library.rtcAddTrack.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
-	datachannel_library.rtcAddTrack.restype = ctypes.c_int
-
-	datachannel_library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
-	datachannel_library.rtcSendMessage.restype = ctypes.c_int
-
-	datachannel_library.rtcSetVP8Packetizer.restype = ctypes.c_int
-
-	datachannel_library.rtcChainRtcpSrReporter.argtypes = [ ctypes.c_int ]
-	datachannel_library.rtcChainRtcpSrReporter.restype = ctypes.c_int
-
-	datachannel_library.rtcSetTrackRtpTimestamp.argtypes = [ ctypes.c_int, ctypes.c_uint32 ]
-	datachannel_library.rtcSetTrackRtpTimestamp.restype = ctypes.c_int
-
-	datachannel_library.rtcIsOpen.argtypes = [ ctypes.c_int ]
-	datachannel_library.rtcIsOpen.restype = ctypes.c_bool
-
-	datachannel_library.rtcChainRtcpNackResponder.argtypes = [ ctypes.c_int, ctypes.c_uint ]
-	datachannel_library.rtcChainRtcpNackResponder.restype = ctypes.c_int
-
-	datachannel_library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
-	datachannel_library.rtcGetLocalDescription.restype = ctypes.c_int
-
-	datachannel_library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
-	datachannel_library.rtcSetLocalDescription.restype = ctypes.c_int
-
-	datachannel_library.rtcSetOpusPacketizer.restype = ctypes.c_int
-
-	datachannel_library.rtcSetUserPointer.argtypes = [ ctypes.c_int, ctypes.c_void_p ]
-	datachannel_library.rtcSetUserPointer.restype = None
-
-	datachannel_library.rtcSetLocalDescriptionCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p) ]
-	datachannel_library.rtcSetLocalDescriptionCallback.restype = ctypes.c_int
-
-	datachannel_library.rtcSetGatheringStateChangeCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p) ]
-	datachannel_library.rtcSetGatheringStateChangeCallback.restype = ctypes.c_int
-
-	datachannel_library.rtcSetStateChangeCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p) ]
-	datachannel_library.rtcSetStateChangeCallback.restype = ctypes.c_int
-
-	return datachannel_library
