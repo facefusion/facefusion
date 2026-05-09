@@ -12,20 +12,13 @@ from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
+from facefusion.libraries import datachannel as datachannel_module
 from .assert_helper import get_test_example_file, get_test_examples_directory
 from .stream_helper import create_sdp_offer, open_websocket_stream
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	conditional_download(get_test_examples_directory(),
-	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
-	])
-
-
-@pytest.fixture(scope = 'module')
-def test_client() -> Iterator[TestClient]:
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
@@ -46,15 +39,24 @@ def test_client() -> Iterator[TestClient]:
 
 	common_pre_check()
 	processors_pre_check()
+	datachannel_module.pre_check()
 
-	with TestClient(create_api()) as test_client:
-		yield test_client
+	conditional_download(get_test_examples_directory(),
+	[
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
+	])
 
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	session_manager.SESSIONS.clear()
 	asset_store.clear()
+
+
+@pytest.fixture(scope = 'module')
+def test_client() -> Iterator[TestClient]:
+	with TestClient(create_api()) as test_client:
+		yield test_client
 
 
 def test_stream_image(test_client : TestClient) -> None:

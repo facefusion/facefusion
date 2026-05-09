@@ -10,15 +10,15 @@ from facefusion.apis.core import create_api
 from facefusion.types import Session
 
 
+@pytest.fixture(scope = 'function', autouse = True)
+def before_each() -> None:
+	session_manager.SESSIONS.clear()
+
+
 @pytest.fixture(scope = 'module')
 def test_client() -> Iterator[TestClient]:
 	with TestClient(create_api()) as test_client:
 		yield test_client
-
-
-@pytest.fixture(scope = 'function', autouse = True)
-def before_each() -> None:
-	session_manager.SESSIONS.clear()
 
 
 def test_create_session(test_client : TestClient) -> None:

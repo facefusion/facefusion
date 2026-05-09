@@ -23,18 +23,18 @@ def before_all() -> None:
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vframes', '1', get_test_example_file('target-240p.jpg') ])
 
 
-@pytest.fixture(scope = 'module')
-def test_client() -> Iterator[TestClient]:
-	with TestClient(create_api()) as test_client:
-		yield test_client
-
-
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('temp_frame_format', 'png')
 	session_manager.SESSIONS.clear()
 	asset_store.clear()
+
+
+@pytest.fixture(scope = 'module')
+def test_client() -> Iterator[TestClient]:
+	with TestClient(create_api()) as test_client:
+		yield test_client
 
 
 def test_upload_asset(test_client : TestClient) -> None:

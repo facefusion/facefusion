@@ -1,26 +1,27 @@
 import ctypes
+import os
 from functools import lru_cache
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from facefusion.common_helper import is_linux, is_macos, is_windows
-from facefusion.download import conditional_download_hashes, conditional_download_sources
+from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
 from facefusion.filesystem import resolve_relative_path
 from facefusion.types import DownloadSet
 
 
-def resolve_library_file() -> Optional[str]:
+def resolve_library_paths() -> Optional[Tuple[str, str]]:
 	if is_linux():
-		return 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so'
+		return 'linux/libdatachannel.hash', 'linux/libdatachannel.so'
 	if is_macos():
-		return 'macos-universal-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.dylib'
+		return 'macos/libdatachannel.hash', 'macos/libdatachannel.dylib'
 	if is_windows():
-		return 'windows-x64-openssl-h264-vp8-av1-opus-datachannel-0.24.1.dll'
+		return 'windows/datachannel.hash', 'windows/datachannel.dll'
 	return None
 
 
 @lru_cache
 def create_static_library_set() -> Dict[str, DownloadSet]:
-	library_file = resolve_library_file()
+	library_hash_path, library_source_path = resolve_library_paths()
 
 	return\
 	{
@@ -28,26 +29,26 @@ def create_static_library_set() -> Dict[str, DownloadSet]:
 		{
 			'datachannel':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/' + library_file + '.hash',
-				'path': resolve_relative_path('../.binaries/' + library_file + '.hash')
+				'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', library_hash_path),
+				'path': resolve_relative_path('../.libraries/' + os.path.basename(library_hash_path))
 			}
 		},
 		'sources':
 		{
 			'datachannel':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/' + library_file,
-				'path': resolve_relative_path('../.binaries/' + library_file)
+				'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', library_source_path),
+				'path': resolve_relative_path('../.libraries/' + os.path.basename(library_source_path))
 			}
 		}
 	}
 
 
 def pre_check() -> bool:
-	binary_hash_set = create_static_library_set().get('hashes')
-	binary_source_set = create_static_library_set().get('sources')
+	library_hash_set = create_static_library_set().get('hashes')
+	library_source_set = create_static_library_set().get('sources')
 
-	return conditional_download_hashes(binary_hash_set) and conditional_download_sources(binary_source_set)
+	return conditional_download_hashes(library_hash_set) and conditional_download_sources(library_source_set)
 
 
 @lru_cache
