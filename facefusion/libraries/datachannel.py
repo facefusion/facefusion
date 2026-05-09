@@ -6,12 +6,10 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.filesystem import resolve_relative_path
 from facefusion.types import DownloadSet
 
-LOG_CB_TYPE = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)
-
 
 @lru_cache
-def create_static_download_set() -> Dict[str, DownloadSet]: # TODO: replace once conda package is in place
-	binary_name = resolve_binary_file()
+def create_static_library_set() -> Dict[str, DownloadSet]:
+	library_file = resolve_library_file()
 
 	return\
 	{
@@ -19,22 +17,22 @@ def create_static_download_set() -> Dict[str, DownloadSet]: # TODO: replace once
 		{
 			'datachannel':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so.hash', # TODO: use url with dynamic binary_name
-				'path': resolve_relative_path('../.assets/binaries/' + binary_name + '.hash')
+				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so.hash',
+				'path': resolve_relative_path('../.binaries/' + library_file + '.hash')
 			}
 		},
 		'sources':
 		{
 			'datachannel':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so', # TODO: use url with dynamic binary_name
-				'path': resolve_relative_path('../.assets/binaries/' + binary_name)
+				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so',
+				'path': resolve_relative_path('../.binaries/' + library_file)
 			}
 		}
 	}
 
 
-def resolve_binary_file() -> Optional[str]:
+def resolve_library_file() -> Optional[str]:
 	if is_linux():
 		return 'linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so'
 	if is_macos():
@@ -44,7 +42,7 @@ def resolve_binary_file() -> Optional[str]:
 	return None
 
 
-def create_rtc_configuration() -> ctypes.Structure:
+def define_rtc_configuration() -> ctypes.Structure:
 	return type('RTC_CONFIGURATION', (ctypes.Structure,),
 	{
 		'_fields_':
@@ -67,7 +65,7 @@ def create_rtc_configuration() -> ctypes.Structure:
 	})()
 
 
-def create_rtc_packetizer_init() -> ctypes.Structure:
+def define_rtc_packetizer_init() -> ctypes.Structure:
 	return type('RTC_PACKETIZER_INIT', (ctypes.Structure,),
 	{
 		'_fields_':
@@ -84,20 +82,20 @@ def create_rtc_packetizer_init() -> ctypes.Structure:
 
 
 @lru_cache
-def create_static_datachannel_library() -> Optional[ctypes.CDLL]:
-	binary_path = create_static_download_set().get('sources').get('datachannel').get('path')
+def create_static_library() -> Optional[ctypes.CDLL]:
+	library_path = create_static_library_set().get('sources').get('datachannel').get('path')
 
-	if binary_path:
-		datachannel_library = ctypes.CDLL(binary_path)
+	if library_path:
+		datachannel_library = ctypes.CDLL(library_path)
 		return init_ctypes(datachannel_library)
 
 	return None
 
 
 def init_ctypes(datachannel_library : ctypes.CDLL) -> ctypes.CDLL:
-	datachannel_library.rtcInitLogger.argtypes = [ ctypes.c_int, LOG_CB_TYPE ]
+	datachannel_library.rtcInitLogger.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p) ]
 	datachannel_library.rtcInitLogger.restype = None
-	datachannel_library.rtcInitLogger(4, LOG_CB_TYPE(0))
+	datachannel_library.rtcInitLogger(4, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)(0))
 
 	datachannel_library.rtcCreatePeerConnection.restype = ctypes.c_int
 

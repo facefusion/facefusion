@@ -3,6 +3,7 @@ from typing import List
 import pytest
 
 from facefusion import rtc
+from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import RtcPeer
 
 
@@ -20,7 +21,7 @@ def test_build_media_description() -> None:
 @pytest.mark.skip
 def test_create_peer_connection() -> None:
 	peer_connection = rtc.create_peer_connection()
-	datachannel_library = rtc.create_static_datachannel_library()
+	datachannel_library = datachannel_module.create_static_library()
 
 	assert peer_connection > 0
 	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == 0
@@ -33,7 +34,7 @@ def test_add_audio_track() -> None:
 
 	assert rtc.add_audio_track(peer_connection, 'sendonly') > 0
 
-	rtc.create_static_datachannel_library().rtcDeletePeerConnection(peer_connection)
+	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
 
 # TODO: enable again
@@ -43,13 +44,13 @@ def test_add_video_track() -> None:
 
 	assert rtc.add_video_track(peer_connection, 'sendonly') > 0
 
-	rtc.create_static_datachannel_library().rtcDeletePeerConnection(peer_connection)
+	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
 
 # TODO: enable again
 @pytest.mark.skip
 def test_negotiate_sdp() -> None:
-	datachannel_library = rtc.create_static_datachannel_library()
+	datachannel_library = datachannel_module.create_static_library()
 
 	sender_connection = rtc.create_peer_connection()
 	rtc.add_video_track(sender_connection, 'sendonly')
@@ -74,7 +75,7 @@ def test_negotiate_sdp() -> None:
 # TODO: enable again
 @pytest.mark.skip
 def test_delete_peers() -> None:
-	datachannel_library = rtc.create_static_datachannel_library()
+	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = rtc.create_peer_connection()
 	rtc_peers : List[RtcPeer] =\
 	[
