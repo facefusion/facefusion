@@ -31,7 +31,6 @@ def test_client() -> Iterator[TestClient]:
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('processors', [ 'face_swapper' ])
-	state_manager.init_item('face_selector_mode', 'many')
 	state_manager.init_item('face_detector_model', 'yolo_face')
 	state_manager.init_item('face_detector_size', '640x640')
 	state_manager.init_item('face_detector_score', 0.5)
@@ -55,13 +54,10 @@ def test_client() -> Iterator[TestClient]:
 
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
-	state_manager.init_item('source_paths', None)
 	session_manager.SESSIONS.clear()
 	asset_store.clear()
 
 
-# TODO: enable again
-@pytest.mark.skip
 def test_stream_image(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
