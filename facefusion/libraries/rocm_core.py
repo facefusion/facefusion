@@ -16,14 +16,16 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 	library_file = resolve_library_file()
 
 	if library_file:
-		rocm_core_library = ctypes.CDLL(library_file)
-		return init_ctypes(rocm_core_library)
+		library = ctypes.CDLL(library_file)
+
+		if library:
+			return init_ctypes(library)
 
 	return None
 
 
-def init_ctypes(rocm_core : ctypes.CDLL) -> ctypes.CDLL:
-	rocm_core.getROCmVersion.argtypes = [ ctypes.POINTER(ctypes.c_uint), ctypes.POINTER(ctypes.c_uint), ctypes.POINTER(ctypes.c_uint) ]
-	rocm_core.getROCmVersion.restype = ctypes.c_int
+def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
+	library.getROCmVersion.argtypes = [ ctypes.POINTER(ctypes.c_uint), ctypes.POINTER(ctypes.c_uint), ctypes.POINTER(ctypes.c_uint) ]
+	library.getROCmVersion.restype = ctypes.c_int
 
-	return rocm_core
+	return library

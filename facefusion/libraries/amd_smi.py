@@ -16,10 +16,60 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 	library_file = resolve_library_file()
 
 	if library_file:
-		amd_smi_library = ctypes.CDLL(library_file)
-		return init_ctypes(amd_smi_library)
+		library = ctypes.CDLL(library_file)
+
+		if library:
+			return init_ctypes(library)
 
 	return None
+
+
+def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
+	library.amdsmi_init.argtypes = [ ctypes.c_uint64 ]
+	library.amdsmi_init.restype = ctypes.c_uint32
+
+	library.amdsmi_shut_down.argtypes = []
+	library.amdsmi_shut_down.restype = ctypes.c_uint32
+
+	library.amdsmi_get_socket_handles.argtypes = [ ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_void_p) ]
+	library.amdsmi_get_socket_handles.restype = ctypes.c_uint32
+
+	library.amdsmi_get_processor_handles.argtypes = [ ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_void_p) ]
+	library.amdsmi_get_processor_handles.restype = ctypes.c_uint32
+
+	library.amdsmi_get_gpu_vram_usage.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
+	library.amdsmi_get_gpu_vram_usage.restype = ctypes.c_uint32
+
+	library.amdsmi_get_gpu_activity.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
+	library.amdsmi_get_gpu_activity.restype = ctypes.c_uint32
+
+	library.amdsmi_get_gpu_asic_info.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
+	library.amdsmi_get_gpu_asic_info.restype = ctypes.c_uint32
+
+	library.amdsmi_get_temp_metric.argtypes = [ ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.POINTER(ctypes.c_int64) ]
+	library.amdsmi_get_temp_metric.restype = ctypes.c_uint32
+
+	return library
+
+
+def find_device_handles(amd_smi_library : ctypes.CDLL) -> List[ctypes.c_void_p]:
+	device_handles : List[ctypes.c_void_p] = []
+
+	socket_count = ctypes.c_uint32()
+	amd_smi_library.amdsmi_get_socket_handles(ctypes.byref(socket_count), ctypes.POINTER(ctypes.c_void_p)())
+	socket_handles = (ctypes.c_void_p * socket_count.value)()
+	amd_smi_library.amdsmi_get_socket_handles(ctypes.byref(socket_count), socket_handles)
+
+	for socket_index in range(socket_count.value):
+		device_count = ctypes.c_uint32()
+		amd_smi_library.amdsmi_get_processor_handles(socket_handles[socket_index], ctypes.byref(device_count), ctypes.POINTER(ctypes.c_void_p)())
+		processor_handles = (ctypes.c_void_p * device_count.value)()
+		amd_smi_library.amdsmi_get_processor_handles(socket_handles[socket_index], ctypes.byref(device_count), processor_handles)
+
+		for device_index in range(device_count.value):
+			device_handles.append(ctypes.c_void_p(processor_handles[device_index]))
+
+	return device_handles
 
 
 def define_product_info() -> ctypes.Structure:
@@ -70,51 +120,3 @@ def define_device_utilization() -> ctypes.Structure:
 			('reserved', ctypes.c_uint32 * 13)
 		]
 	})()
-
-
-def init_ctypes(amd_smi : ctypes.CDLL) -> ctypes.CDLL:
-	amd_smi.amdsmi_init.argtypes = [ ctypes.c_uint64 ]
-	amd_smi.amdsmi_init.restype = ctypes.c_uint32
-
-	amd_smi.amdsmi_shut_down.argtypes = []
-	amd_smi.amdsmi_shut_down.restype = ctypes.c_uint32
-
-	amd_smi.amdsmi_get_socket_handles.argtypes = [ ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_void_p) ]
-	amd_smi.amdsmi_get_socket_handles.restype = ctypes.c_uint32
-
-	amd_smi.amdsmi_get_processor_handles.argtypes = [ ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32), ctypes.POINTER(ctypes.c_void_p) ]
-	amd_smi.amdsmi_get_processor_handles.restype = ctypes.c_uint32
-
-	amd_smi.amdsmi_get_gpu_vram_usage.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
-	amd_smi.amdsmi_get_gpu_vram_usage.restype = ctypes.c_uint32
-
-	amd_smi.amdsmi_get_gpu_activity.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
-	amd_smi.amdsmi_get_gpu_activity.restype = ctypes.c_uint32
-
-	amd_smi.amdsmi_get_gpu_asic_info.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
-	amd_smi.amdsmi_get_gpu_asic_info.restype = ctypes.c_uint32
-
-	amd_smi.amdsmi_get_temp_metric.argtypes = [ ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.POINTER(ctypes.c_int64) ]
-	amd_smi.amdsmi_get_temp_metric.restype = ctypes.c_uint32
-
-	return amd_smi
-
-
-def find_device_handles(amd_smi_library : ctypes.CDLL) -> List[ctypes.c_void_p]:
-	device_handles : List[ctypes.c_void_p] = []
-
-	socket_count = ctypes.c_uint32()
-	amd_smi_library.amdsmi_get_socket_handles(ctypes.byref(socket_count), ctypes.POINTER(ctypes.c_void_p)())
-	socket_handles = (ctypes.c_void_p * socket_count.value)()
-	amd_smi_library.amdsmi_get_socket_handles(ctypes.byref(socket_count), socket_handles)
-
-	for socket_index in range(socket_count.value):
-		device_count = ctypes.c_uint32()
-		amd_smi_library.amdsmi_get_processor_handles(socket_handles[socket_index], ctypes.byref(device_count), ctypes.POINTER(ctypes.c_void_p)())
-		processor_handles = (ctypes.c_void_p * device_count.value)()
-		amd_smi_library.amdsmi_get_processor_handles(socket_handles[socket_index], ctypes.byref(device_count), processor_handles)
-
-		for device_index in range(device_count.value):
-			device_handles.append(ctypes.c_void_p(processor_handles[device_index]))
-
-	return device_handles
