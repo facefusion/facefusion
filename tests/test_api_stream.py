@@ -100,8 +100,6 @@ def test_stream_image(test_client : TestClient) -> None:
 	assert output_vision_frame.shape == (1024, 1024, 3)
 
 
-# TODO: enable again
-@pytest.mark.skip
 def test_stream_video(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
@@ -135,7 +133,9 @@ def test_stream_video(test_client : TestClient) -> None:
 	#TODO: use asyncio
 	stream_thread = threading.Thread(target = open_websocket_stream, args = (test_client, [ 'access_token.' + access_token ], source_content, ready_event, stop_event))
 	stream_thread.start()
-	ready_event.wait()
+	ready_event.wait(timeout = 10)
+
+	assert ready_event.is_set()
 
 	sdp_offer = create_sdp_offer()
 	stream_response = test_client.post('/stream', content = sdp_offer, headers =
@@ -148,4 +148,4 @@ def test_stream_video(test_client : TestClient) -> None:
 	assert stream_response.text
 
 	stop_event.set()
-	stream_thread.join()
+	stream_thread.join(timeout = 10)

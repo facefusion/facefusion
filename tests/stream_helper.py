@@ -38,7 +38,7 @@ def create_sdp_offer() -> Optional[SdpOffer]:
 # TODO: remove, inline into test_api_stream.py
 def open_websocket_stream(test_client : TestClient, subprotocols : list[str], source_content : bytes, ready_event : threading.Event, stop_event : threading.Event) -> None:
 	with test_client.websocket_connect('/stream?mode=video', subprotocols = subprotocols) as websocket:
-		websocket.send_bytes(source_content)
+		websocket.send_bytes(b'\x01' + source_content)
 		websocket.receive_text()
 		ready_event.set()
-		stop_event.wait()
+		stop_event.wait(timeout = 15)
