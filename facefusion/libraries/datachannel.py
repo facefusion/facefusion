@@ -18,12 +18,6 @@ def resolve_library_file() -> Optional[str]:
 	return None
 
 
-def pre_check() -> bool:
-	download_set = create_static_library_set()
-
-	return conditional_download_hashes(download_set.get('hashes')) and conditional_download_sources(download_set.get('sources'))
-
-
 @lru_cache
 def create_static_library_set() -> Dict[str, DownloadSet]:
 	library_file = resolve_library_file()
@@ -34,7 +28,7 @@ def create_static_library_set() -> Dict[str, DownloadSet]:
 		{
 			'datachannel':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so.hash',
+				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/' + library_file + '.hash',
 				'path': resolve_relative_path('../.binaries/' + library_file + '.hash')
 			}
 		},
@@ -42,11 +36,18 @@ def create_static_library_set() -> Dict[str, DownloadSet]:
 		{
 			'datachannel':
 			{
-				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/linux-x64-openssl-h264-vp8-av1-opus-libdatachannel-0.24.1.so',
+				'url': 'https://huggingface.co/bluefoxcreation/libdatachannel/resolve/main/' + library_file,
 				'path': resolve_relative_path('../.binaries/' + library_file)
 			}
 		}
 	}
+
+
+def pre_check() -> bool:
+	binary_hash_set = create_static_library_set().get('hashes')
+	binary_source_set = create_static_library_set().get('sources')
+
+	return conditional_download_hashes(binary_hash_set) and conditional_download_sources(binary_source_set)
 
 
 @lru_cache

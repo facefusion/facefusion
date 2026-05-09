@@ -43,7 +43,6 @@ def test_client() -> Iterator[TestClient]:
 	state_manager.init_item('face_mask_padding', [ 0, 0, 0, 0 ])
 	state_manager.init_item('face_swapper_model', 'hyperswap_1a_256')
 	state_manager.init_item('face_swapper_pixel_boost', '256x256')
-	state_manager.init_item('face_swapper_weight', 0.5)
 
 	common_pre_check()
 	processors_pre_check()
