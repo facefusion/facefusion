@@ -8,7 +8,7 @@ from facefusion.libraries import vpx as vpx_module
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	environment.setup()
+	environment.setup_for_system()
 
 
 def test_create_static_library() -> None:

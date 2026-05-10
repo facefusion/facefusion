@@ -9,7 +9,7 @@ from facefusion.types import RtcPeer
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	environment.setup()
+	environment.setup_for_system()
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 	datachannel_module.pre_check()
 

@@ -5,7 +5,7 @@ from typing import List
 from facefusion.common_helper import is_linux, is_macos, is_windows
 
 
-def setup() -> None:
+def setup_for_conda() -> None:
 	conda_prefix = os.getenv('CONDA_PREFIX')
 	conda_ready = os.getenv('CONDA_READY')
 
@@ -40,6 +40,8 @@ def setup() -> None:
 				os.environ['PATH'] = os.pathsep.join(library_paths)
 				os.environ['CONDA_READY'] = '1'
 
+
+def setup_for_system() -> None:
 	if is_macos():
 		library_paths =\
 		[
