@@ -46,7 +46,7 @@ jobs:
   - if: matrix.os == 'windows-latest'
     run: vcpkg install libvpx
   - if: matrix.os == 'windows-latest'
-    run: vcpkg install libopus
+    run: vcpkg install opus
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pip install pytest-mock
