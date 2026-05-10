@@ -49,11 +49,6 @@ jobs:
     run: vcpkg install opus:x64-windows libvpx:x64-windows openssl:x64-windows
   - if: matrix.os == 'windows-latest'
     run: echo "C:\vcpkg\installed\x64-windows\bin" >> $GITHUB_PATH
-  - if: matrix.os == 'windows-latest'
-    run: |
-      dir C:\vcpkg\installed\x64-windows\bin\ | findstr /i "vpx opus ssl"
-      python -c "import ctypes.util; print('vpx:', ctypes.util.find_library('vpx')); print('opus:', ctypes.util.find_library('opus'))"
-    shell: cmd
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pip install pytest-mock

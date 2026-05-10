@@ -18,7 +18,7 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 				break
 
 	if not library_path and is_windows():
-		for windows_path in [ 'C:/vcpkg/installed/x64-windows/bin/vpx-1.dll' ]:
+		for windows_path in [ 'C:/vcpkg/installed/x64-windows/bin/vpx.dll', 'C:/vcpkg/installed/x64-windows/bin/vpx-1.dll' ]:
 			if os.path.isfile(windows_path):
 				library_path = windows_path
 				break

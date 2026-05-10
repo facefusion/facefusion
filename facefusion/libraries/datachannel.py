@@ -56,6 +56,11 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 	library_path = create_static_library_set().get('sources').get('datachannel').get('path')
 
 	if library_path:
+		if is_windows():
+			for dll_dir in [ 'C:/vcpkg/installed/x64-windows/bin' ]:
+				if os.path.isdir(dll_dir):
+					os.add_dll_directory(dll_dir)
+
 		library = ctypes.CDLL(library_path)
 
 		if library:
