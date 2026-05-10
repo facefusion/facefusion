@@ -42,7 +42,7 @@ jobs:
   - if: matrix.os == 'macos-latest'
     run: brew install opus
   - if: matrix.os == 'macos-latest'
-    run: brew install openssl
+    run: brew install openssl@3
   - if: matrix.os == 'windows-latest'
     run: C:\msys64\usr\bin\pacman -S --noconfirm mingw-w64-x86_64-opus mingw-w64-x86_64-libvpx mingw-w64-x86_64-openssl
     shell: cmd
@@ -51,9 +51,10 @@ jobs:
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pip install pytest-mock
+  - run: pip install pytest-timeout
   - run: pip install httpx
   - run: pip install python-multipart
-  - run: pytest -v
+  - run: pytest -v --timeout=60
  report:
   needs: test
   runs-on: ubuntu-latest
