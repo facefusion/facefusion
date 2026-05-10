@@ -57,12 +57,10 @@ def setup_for_system() -> None:
 			os.environ['DYLD_LIBRARY_PATH'] = os.pathsep.join(library_paths)
 
 	if is_windows():
-		system_drive = os.environ.get('SystemDrive')
 		vcpkg_path = os.environ.get('VCPKG_INSTALLATION_ROOT')
 		library_paths =\
 		[
-			os.path.join(vcpkg_path, 'installed', 'x64-windows', 'bin'),
-			os.path.join(system_drive, os.sep, 'msys64', 'mingw64', 'bin')
+			os.path.join(vcpkg_path, 'installed', 'x64-windows', 'bin')
 		]
 		library_paths = list(filter(os.path.isdir, library_paths))
 
