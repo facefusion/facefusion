@@ -46,12 +46,13 @@ jobs:
   - if: matrix.os == 'macos-latest'
     run: echo "DYLD_LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib" >> $GITHUB_ENV
   - if: matrix.os == 'windows-latest'
-    run: vcpkg install opus:x64-windows libvpx:x64-windows openssl:x64-windows
+    run: vcpkg install opus:x64-windows openssl:x64-windows
   - if: matrix.os == 'windows-latest'
     run: echo "C:\vcpkg\installed\x64-windows\bin" >> $GITHUB_PATH
   - if: matrix.os == 'windows-latest'
-    run: dir C:\vcpkg\installed\x64-windows\bin\ | findstr /i vpx
-    shell: cmd
+    run: C:\msys64\usr\bin\bash -c "pacman -S --noconfirm mingw-w64-x86_64-libvpx"
+  - if: matrix.os == 'windows-latest'
+    run: echo "C:\msys64\mingw64\bin" >> $GITHUB_PATH
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pip install pytest-mock
