@@ -73,4 +73,3 @@ def setup_for_system() -> None:
 			if os.getenv('PATH'):
 				library_paths.append(os.getenv('PATH'))
 			os.environ['PATH'] = os.pathsep.join(library_paths)
-

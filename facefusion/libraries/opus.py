@@ -6,7 +6,7 @@ from typing import Optional
 
 @lru_cache
 def create_static_library() -> Optional[ctypes.CDLL]:
-	library_path = ctypes.util.find_library('opus')
+	library_path = ctypes.util.find_library('opus') or ctypes.util.find_library('libopus')
 
 	if library_path:
 		library = ctypes.CDLL(library_path)

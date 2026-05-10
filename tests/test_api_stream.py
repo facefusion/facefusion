@@ -10,7 +10,6 @@ from starlette.testclient import TestClient
 from facefusion import environment, metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
-
 from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
 from facefusion.libraries import datachannel as datachannel_module
