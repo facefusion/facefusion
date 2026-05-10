@@ -2,7 +2,7 @@ import os
 import sys
 from typing import List
 
-from facefusion.common_helper import is_linux, is_windows
+from facefusion.common_helper import is_linux, is_macos, is_windows
 
 
 def setup() -> None:
@@ -39,3 +39,17 @@ def setup() -> None:
 					library_paths.append(os.getenv('PATH'))
 				os.environ['PATH'] = os.pathsep.join(library_paths)
 				os.environ['CONDA_READY'] = '1'
+
+	if is_macos():
+		library_paths =\
+		[
+			'/opt/homebrew/lib',
+			'/opt/homebrew/opt/openssl/lib',
+			'/usr/local/lib'
+		]
+		library_paths = list(filter(os.path.isdir, library_paths))
+
+		if library_paths:
+			if os.getenv('DYLD_LIBRARY_PATH'):
+				library_paths.append(os.getenv('DYLD_LIBRARY_PATH'))
+			os.environ['DYLD_LIBRARY_PATH'] = os.pathsep.join(library_paths)
