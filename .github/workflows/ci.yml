@@ -45,6 +45,10 @@ jobs:
     run: brew install openssl@3
   - if: matrix.os == 'macos-latest'
     run: echo "DYLD_LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib" >> $GITHUB_ENV
+  - if: matrix.os == 'windows-latest'
+    run: vcpkg install opus:x64-windows libvpx:x64-windows
+  - if: matrix.os == 'windows-latest'
+    run: echo "C:\vcpkg\installed\x64-windows\bin" >> $GITHUB_PATH
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pip install pytest-mock
