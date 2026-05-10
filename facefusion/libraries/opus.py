@@ -1,27 +1,12 @@
 import ctypes
 import ctypes.util
-import os
 from functools import lru_cache
 from typing import Optional
-
-from facefusion.common_helper import is_macos, is_windows
 
 
 @lru_cache
 def create_static_library() -> Optional[ctypes.CDLL]:
 	library_path = ctypes.util.find_library('opus')
-
-	if not library_path and is_macos():
-		for brew_path in [ '/opt/homebrew/lib/libopus.dylib', '/usr/local/lib/libopus.dylib' ]:
-			if os.path.isfile(brew_path):
-				library_path = brew_path
-				break
-
-	if not library_path and is_windows():
-		for windows_path in [ 'C:/vcpkg/installed/x64-windows/bin/opus.dll' ]:
-			if os.path.isfile(windows_path):
-				library_path = windows_path
-				break
 
 	if library_path:
 		library = ctypes.CDLL(library_path)
