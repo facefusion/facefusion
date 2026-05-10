@@ -33,16 +33,16 @@ jobs:
     uses: actions/setup-python@v5
     with:
      python-version: '3.12'
-  - if: matrix.os == 'ubuntu-latest'
-    run: sudo apt-get install libvpx-dev
-  - if: matrix.os == 'ubuntu-latest'
-    run: sudo apt-get install libopus-dev
   - if: matrix.os == 'macos-latest'
     run: brew install libvpx
   - if: matrix.os == 'macos-latest'
     run: brew install opus
   - if: matrix.os == 'macos-latest'
     run: brew install openssl@3
+  - if: matrix.os == 'ubuntu-latest'
+    run: sudo apt-get install libvpx-dev
+  - if: matrix.os == 'ubuntu-latest'
+    run: sudo apt-get install libopus-dev
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pip install pytest-mock

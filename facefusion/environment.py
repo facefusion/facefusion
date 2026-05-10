@@ -43,10 +43,11 @@ def setup_for_conda() -> None:
 
 def setup_for_system() -> None:
 	if is_macos():
+		homebrew_path = os.environ.get('HOMEBREW_PREFIX')
 		library_paths =\
 		[
-			'/opt/homebrew/lib',
-			'/opt/homebrew/opt/openssl@3/lib'
+			os.path.join(homebrew_path, 'lib'),
+			os.path.join(homebrew_path, 'opt', 'openssl@3', 'lib')
 		]
 		library_paths = list(filter(os.path.isdir, library_paths))
 
@@ -54,4 +55,19 @@ def setup_for_system() -> None:
 			if os.getenv('DYLD_LIBRARY_PATH'):
 				library_paths.append(os.getenv('DYLD_LIBRARY_PATH'))
 			os.environ['DYLD_LIBRARY_PATH'] = os.pathsep.join(library_paths)
+
+	if is_windows():
+		system_drive = os.environ.get('SystemDrive')
+		vcpkg_path = os.environ.get('VCPKG_INSTALLATION_ROOT')
+		library_paths =\
+		[
+			os.path.join(vcpkg_path, 'installed', 'x64-windows', 'bin'),
+			os.path.join(system_drive, os.sep, 'msys64', 'mingw64', 'bin')
+		]
+		library_paths = list(filter(os.path.isdir, library_paths))
+
+		if library_paths:
+			if os.getenv('PATH'):
+				library_paths.append(os.getenv('PATH'))
+			os.environ['PATH'] = os.pathsep.join(library_paths)
 
