@@ -59,7 +59,7 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 		if is_windows():
 			for dll_dir in [ 'C:/vcpkg/installed/x64-windows/bin', 'C:/msys64/mingw64/bin' ]:
 				if os.path.isdir(dll_dir):
-					os.add_dll_directory(dll_dir)
+					os.add_dll_directory(dll_dir)  # type: ignore[attr-defined]
 
 		library = ctypes.CDLL(library_path)
 
