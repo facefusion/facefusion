@@ -50,7 +50,8 @@ jobs:
   - if: matrix.os == 'windows-latest'
     run: echo "C:\vcpkg\installed\x64-windows\bin" >> $GITHUB_PATH
   - if: matrix.os == 'windows-latest'
-    run: C:\msys64\usr\bin\bash -c "pacman -S --noconfirm mingw-w64-x86_64-libvpx"
+    run: C:\msys64\usr\bin\pacman -S --noconfirm mingw-w64-x86_64-libvpx
+    shell: cmd
   - if: matrix.os == 'windows-latest'
     run: echo "C:\msys64\mingw64\bin" >> $GITHUB_PATH
   - run: python install.py --onnxruntime default --skip-conda
