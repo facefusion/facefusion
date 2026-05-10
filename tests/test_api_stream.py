@@ -10,7 +10,7 @@ from starlette.testclient import TestClient
 from facefusion import metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
-from facefusion.common_helper import is_macos, is_windows
+from facefusion.common_helper import is_windows
 from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
 from facefusion.libraries import datachannel as datachannel_module
@@ -101,8 +101,7 @@ def test_stream_image(test_client : TestClient) -> None:
 	assert output_vision_frame.shape == (1024, 1024, 3)
 
 
-#TODO: figure out why this fails
-@pytest.mark.skipif(is_macos() or is_windows(), reason = 'not supported on macOS and Windows')
+@pytest.mark.skipif(is_windows(), reason = 'not supported on Windows')
 def test_stream_video(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
