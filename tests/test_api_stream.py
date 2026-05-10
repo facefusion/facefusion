@@ -7,7 +7,7 @@ import numpy
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager, state_manager
+from facefusion import environment, metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 
@@ -20,6 +20,7 @@ from .stream_helper import create_sdp_offer, open_websocket_stream
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	environment.setup()
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])

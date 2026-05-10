@@ -44,8 +44,7 @@ def setup() -> None:
 		library_paths =\
 		[
 			'/opt/homebrew/lib',
-			'/opt/homebrew/opt/openssl/lib',
-			'/usr/local/lib'
+			'/opt/homebrew/opt/openssl/lib'
 		]
 		library_paths = list(filter(os.path.isdir, library_paths))
 
