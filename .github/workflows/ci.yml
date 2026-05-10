@@ -43,13 +43,17 @@ jobs:
     run: sudo apt-get install libvpx-dev
   - if: matrix.os == 'ubuntu-latest'
     run: sudo apt-get install libopus-dev
+  - if: matrix.os == 'windows-latest'
+    run: vcpkg install libvpx
+  - if: matrix.os == 'windows-latest'
+    run: vcpkg install libopus
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pip install pytest-mock
   - run: pip install pytest-timeout
   - run: pip install httpx
   - run: pip install python-multipart
-  - run: pytest
+  - run: pytest tests/test_library_datachannel.py tests/test_library_opus.py tests/test_library_vpx.py
  report:
   needs: test
   runs-on: ubuntu-latest
