@@ -44,17 +44,22 @@ def setup_for_conda() -> None:
 def setup_for_system() -> None:
 	if is_macos():
 		homebrew_path = os.environ.get('HOMEBREW_PREFIX')
-		library_paths =\
-		[
-			os.path.join(homebrew_path, 'lib'),
-			os.path.join(homebrew_path, 'opt', 'openssl@3', 'lib')
-		]
-		library_paths = list(filter(os.path.isdir, library_paths))
+		system_ready = os.getenv('SYSTEM_READY')
 
-		if library_paths:
-			if os.getenv('DYLD_LIBRARY_PATH'):
-				library_paths.append(os.getenv('DYLD_LIBRARY_PATH'))
-			os.environ['DYLD_LIBRARY_PATH'] = os.pathsep.join(library_paths)
+		if homebrew_path and not system_ready:
+			library_paths =\
+			[
+				os.path.join(homebrew_path, 'lib'),
+				os.path.join(homebrew_path, 'opt', 'openssl@3', 'lib')
+			]
+			library_paths = list(filter(os.path.isdir, library_paths))
+
+			if library_paths:
+				if os.getenv('DYLD_LIBRARY_PATH'):
+					library_paths.append(os.getenv('DYLD_LIBRARY_PATH'))
+				os.environ['DYLD_LIBRARY_PATH'] = os.pathsep.join(library_paths)
+				os.environ['SYSTEM_READY'] = '1'
+				os.execv(sys.executable, [ sys.executable ] + sys.argv)
 
 	if is_windows():
 		vcpkg_path = os.environ.get('VCPKG_INSTALLATION_ROOT')
