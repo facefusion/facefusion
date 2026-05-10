@@ -21,6 +21,7 @@ from .stream_helper import create_sdp_offer, open_websocket_stream
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	environment.setup_for_system()
+
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])

@@ -53,7 +53,7 @@ jobs:
   - run: pip install pytest-mock
   - run: pip install httpx
   - run: pip install python-multipart
-  - run: pytest
+  - run: pytest -v
  report:
   needs: test
   runs-on: ubuntu-latest

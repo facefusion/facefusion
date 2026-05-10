@@ -46,7 +46,8 @@ def setup_for_system() -> None:
 		library_paths =\
 		[
 			'/opt/homebrew/lib',
-			'/opt/homebrew/opt/openssl/lib'
+			'/opt/homebrew/opt/openssl/lib',
+			'/opt/homebrew/opt/openssl@3/lib'
 		]
 		library_paths = list(filter(os.path.isdir, library_paths))
 
@@ -54,3 +55,4 @@ def setup_for_system() -> None:
 			if os.getenv('DYLD_LIBRARY_PATH'):
 				library_paths.append(os.getenv('DYLD_LIBRARY_PATH'))
 			os.environ['DYLD_LIBRARY_PATH'] = os.pathsep.join(library_paths)
+
