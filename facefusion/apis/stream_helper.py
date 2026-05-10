@@ -64,7 +64,7 @@ def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[cty
 			struct.pack_into('I', config_buffer, 128, 50)
 			context_buffer = ctypes.create_string_buffer(512)
 
-			if vpx_library.vpx_codec_enc_init_ver(context_buffer, ctypes.byref(vp8_iface), config_buffer, 0, 37) == 0:
+			if vpx_library.vpx_codec_enc_init_ver(context_buffer, ctypes.byref(vp8_iface), config_buffer, 0, 39) == 0:
 				vpx_library.vpx_codec_control_(context_buffer, 13, ctypes.c_int(16))
 				vpx_library.vpx_codec_control_(context_buffer, 12, ctypes.c_int(3))
 				vpx_library.vpx_codec_control_(context_buffer, 27, ctypes.c_int(10))

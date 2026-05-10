@@ -2,13 +2,14 @@ import ctypes
 
 import pytest
 
-from facefusion import environment
+from facefusion import state_manager
 from facefusion.libraries import opus as opus_module
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	environment.setup_for_system()
+	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+	opus_module.pre_check()
 
 
 def test_create_static_library() -> None:
