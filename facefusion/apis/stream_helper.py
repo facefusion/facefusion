@@ -230,11 +230,10 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 	access_token = extract_access_token(websocket.scope)
 	session_id = session_manager.find_session_id(access_token)
 	session_context.set_session_id(session_id)
-	source_paths = state_manager.get_item('source_paths')
 
 	await websocket.accept(subprotocol = subprotocol)
 
-	if session_id and source_paths:
+	if session_id:
 		stream_frames = receive_stream_frames(websocket)
 		first_vision_frame = None
 
