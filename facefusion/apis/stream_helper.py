@@ -115,7 +115,6 @@ def create_opus_encoder(sample_rate : int, channels : int) -> Optional[ctypes.c_
 		encoder = opus_library.opus_encoder_create(sample_rate, channels, 2049, ctypes.byref(error))
 
 		if error.value == 0:
-			opus_library.opus_encoder_ctl(encoder, 4002, 64000)
 			return encoder
 
 	return None
@@ -190,7 +189,7 @@ def encode_audio_chunk(opus_encoder : ctypes.c_void_p, session_id : SessionId, p
 	while len(pcm_buffer) >= frame_samples:
 		chunk = pcm_buffer[:frame_samples]
 		pcm_buffer = pcm_buffer[frame_samples:]
-		pcm_pointer = ctypes.cast(chunk.ctypes.data, ctypes.c_void_p)
+		pcm_pointer = chunk.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
 		audio_buffer = encode_opus(opus_encoder, pcm_pointer, 960)
 
 		if audio_buffer:
