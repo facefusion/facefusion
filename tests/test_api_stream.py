@@ -7,7 +7,7 @@ import numpy
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import environment, metadata, session_manager, state_manager
+from facefusion import metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check, processors_pre_check
@@ -35,8 +35,6 @@ def before_all() -> None:
 	state_manager.init_item('face_mask_padding', [ 0, 0, 0, 0 ])
 	state_manager.init_item('face_swapper_model', 'hyperswap_1a_256')
 	state_manager.init_item('face_swapper_pixel_boost', '256x256')
-
-	environment.setup_platform()
 
 	common_pre_check()
 	processors_pre_check()

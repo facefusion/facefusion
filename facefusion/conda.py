@@ -2,10 +2,10 @@ import os
 import sys
 from typing import List
 
-from facefusion.common_helper import is_linux, is_macos, is_windows
+from facefusion.common_helper import is_linux, is_windows
 
 
-def setup_conda() -> None:
+def setup() -> None:
 	conda_prefix = os.getenv('CONDA_PREFIX')
 	conda_ready = os.getenv('CONDA_READY')
 
@@ -39,23 +39,3 @@ def setup_conda() -> None:
 					library_paths.append(os.getenv('PATH'))
 				os.environ['PATH'] = os.pathsep.join(library_paths)
 				os.environ['CONDA_READY'] = '1'
-
-
-def setup_platform() -> None:
-	homebrew_prefix = os.environ.get('HOMEBREW_PREFIX')
-	platform_ready = os.getenv('PLATFORM_READY')
-
-	if homebrew_prefix and not platform_ready:
-		if is_macos():
-			library_paths =\
-			[
-				os.path.join(homebrew_prefix, 'lib'),
-				os.path.join(homebrew_prefix, 'opt', 'openssl', 'lib')
-			]
-			library_paths = list(filter(os.path.exists, library_paths))
-
-			if library_paths:
-				if os.getenv('DYLD_LIBRARY_PATH'):
-					library_paths.append(os.getenv('DYLD_LIBRARY_PATH'))
-				os.environ['DYLD_LIBRARY_PATH'] = os.pathsep.join(library_paths)
-				os.environ['PLATFORM_READY'] = '1'
