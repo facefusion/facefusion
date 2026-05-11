@@ -1,38 +1,38 @@
 import ctypes
-import multiprocessing
 import struct
 from typing import Optional
 
 from facefusion.libraries import vpx as vpx_module
-from facefusion.types import VpxEncoder
+from facefusion.types import BitRate, VpxEncoder
 
 
-# TODO this method needs refinement
-def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[VpxEncoder]:
+def create_vpx_encoder(width : int, height : int, bitrate : BitRate) -> Optional[VpxEncoder]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
-		vp8_descriptor = ctypes.c_void_p.in_dll(vpx_library, 'vpx_codec_vp8_cx_algo')
+		vpx_encoder = ctypes.create_string_buffer(512)
+		vp8_codec = ctypes.c_void_p.in_dll(vpx_library, 'vpx_codec_vp8_cx_algo')
+
 		config_buffer = ctypes.create_string_buffer(4096)
 
-		if vpx_library.vpx_codec_enc_config_default(ctypes.byref(vp8_descriptor), config_buffer, 0) == 0:
-			thread_count = min(multiprocessing.cpu_count(), 8)
-			struct.pack_into('I', config_buffer, 4, thread_count)
+		if vpx_library.vpx_codec_enc_config_default(ctypes.byref(vp8_codec), config_buffer, 0) == 0:
+			struct.pack_into('I', config_buffer, 4, 8)
 			struct.pack_into('I', config_buffer, 12, width)
 			struct.pack_into('I', config_buffer, 16, height)
-			struct.pack_into('I', config_buffer, 72, 2)
+			struct.pack_into('I', config_buffer, 28, 1)
+			struct.pack_into('I', config_buffer, 36, 0)
+			struct.pack_into('I', config_buffer, 72, 0)
 			struct.pack_into('I', config_buffer, 112, bitrate)
 			struct.pack_into('I', config_buffer, 116, 2)
 			struct.pack_into('I', config_buffer, 120, 50)
 			struct.pack_into('I', config_buffer, 124, 50)
 			struct.pack_into('I', config_buffer, 128, 50)
-			context_buffer = ctypes.create_string_buffer(512)
 
-			if vpx_library.vpx_codec_enc_init_ver(context_buffer, ctypes.byref(vp8_descriptor), config_buffer, 0, 39) == 0:
-				vpx_library.vpx_codec_control_(context_buffer, 13, ctypes.c_int(16))
-				vpx_library.vpx_codec_control_(context_buffer, 12, ctypes.c_int(3))
-				vpx_library.vpx_codec_control_(context_buffer, 27, ctypes.c_int(10))
-				return context_buffer
+			if vpx_library.vpx_codec_enc_init_ver(vpx_encoder, ctypes.byref(vp8_codec), config_buffer, 0, 39) == 0:
+				vpx_library.vpx_codec_control_(vpx_encoder, 13, ctypes.c_int(16))
+				vpx_library.vpx_codec_control_(vpx_encoder, 12, ctypes.c_int(3))
+				vpx_library.vpx_codec_control_(vpx_encoder, 27, ctypes.c_int(10))
+				return vpx_encoder
 
 	return None
 

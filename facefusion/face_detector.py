@@ -228,7 +228,7 @@ def detect_with_retinaface(vision_frame : VisionFrame, face_detector_size : str)
 		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
-			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
+			anchors = create_static_anchors(feature_stride, anchor_total, stride_width, stride_height)
 			bounding_boxes_raw = detection[index + feature_map_channel] * feature_stride
 			face_landmarks_5_raw = detection[index + feature_map_channel * 2] * feature_stride
 
@@ -273,7 +273,7 @@ def detect_with_scrfd(vision_frame : VisionFrame, face_detector_size : str) -> T
 		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
-			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
+			anchors = create_static_anchors(feature_stride, anchor_total, stride_width, stride_height)
 			bounding_boxes_raw = detection[index + feature_map_channel] * feature_stride
 			face_landmarks_5_raw = detection[index + feature_map_channel * 2] * feature_stride
 
@@ -356,7 +356,7 @@ def detect_with_yunet(vision_frame : VisionFrame, face_detector_size : str) -> T
 		if numpy.any(keep_indices):
 			stride_height = face_detector_height // feature_stride
 			stride_width = face_detector_width // feature_stride
-			anchors = create_static_anchors(feature_stride, anchor_total, stride_height, stride_width)
+			anchors = create_static_anchors(feature_stride, anchor_total, stride_width, stride_height)
 			bounding_boxes_center = detection[index + feature_map_channel * 2].squeeze(0)[:, :2] * feature_stride + anchors
 			bounding_boxes_size = numpy.exp(detection[index + feature_map_channel * 2].squeeze(0)[:, 2:4]) * feature_stride
 			face_landmarks_5_raw = detection[index + feature_map_channel * 3].squeeze(0)
