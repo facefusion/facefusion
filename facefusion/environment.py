@@ -59,4 +59,3 @@ def setup_platform() -> None:
 					library_paths.append(os.getenv('DYLD_LIBRARY_PATH'))
 				os.environ['DYLD_LIBRARY_PATH'] = os.pathsep.join(library_paths)
 				os.environ['SYSTEM_READY'] = '1'
-				os.execv(sys.executable, [ sys.executable ] + sys.argv)
