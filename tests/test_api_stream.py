@@ -36,10 +36,10 @@ def before_all() -> None:
 	state_manager.init_item('face_swapper_model', 'hyperswap_1a_256')
 	state_manager.init_item('face_swapper_pixel_boost', '256x256')
 
+	environment.setup_platform()
+
 	common_pre_check()
 	processors_pre_check()
-
-	environment.setup_platform()
 
 	conditional_download(get_test_examples_directory(),
 	[
