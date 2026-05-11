@@ -6,6 +6,7 @@ from typing import Optional
 from facefusion.libraries import vpx as vpx_module
 
 
+# TODO this method needs refinement
 def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[ctypes.Array[ctypes.c_char]]:
 	vpx_library = vpx_module.create_static_library()
 
@@ -35,6 +36,7 @@ def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[cty
 	return None
 
 
+# TODO this method needs refinement
 def encode_vpx(codec_context : ctypes.Array[ctypes.c_char], yuv_buffer : bytes, width : int, height : int, presentation_timestamp : int, flags : int) -> bytes:
 	vpx_library = vpx_module.create_static_library()
 	frame_buffer = b''
