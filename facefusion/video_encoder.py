@@ -1,9 +1,15 @@
 import ctypes
 import multiprocessing
 import struct
+from collections import deque
 from typing import Optional
 
+import cv2
+
+from facefusion import rtc_store
 from facefusion.libraries import vpx as vpx_module
+from facefusion.streamer import process_vision_frame
+from facefusion.types import Resolution, SessionId, VisionFrame
 
 
 # TODO this method needs refinement
@@ -67,3 +73,41 @@ def destroy_vpx_encoder(codec_context : ctypes.Array[ctypes.c_char]) -> None:
 
 	if vpx_library:
 		vpx_library.vpx_codec_destroy(codec_context)
+
+
+# TODO: throttle loop to avoid spinning on same frame
+def run_video_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
+	codec_context = create_vpx_encoder(initial_resolution[0], initial_resolution[1], 4500)
+	current_resolution = initial_resolution
+	pts = 0
+
+	while vision_frame_deque:
+		vision_frame = vision_frame_deque[-1]
+		output_frame = process_vision_frame(vision_frame)
+		height, width = output_frame.shape[:2]
+		frame_resolution = (width, height)
+
+		if frame_resolution[0] != current_resolution[0] or frame_resolution[1] != current_resolution[1]:
+			if codec_context:
+				destroy_vpx_encoder(codec_context)
+
+			current_resolution = frame_resolution
+			codec_context = create_vpx_encoder(current_resolution[0], current_resolution[1], 4500)
+			pts = 0
+
+		if codec_context:
+			yuv_frame = cv2.cvtColor(output_frame, cv2.COLOR_BGR2YUV_I420)
+			vpx_flags = 0
+
+			if pts % keyframe_interval == 0:
+				vpx_flags = 1
+
+			frame_buffer = encode_vpx(codec_context, yuv_frame.tobytes(), width, height, pts, vpx_flags)
+
+			if frame_buffer:
+				rtc_store.send_rtc_video(session_id, frame_buffer)
+
+		pts += 1
+
+	if codec_context:
+		destroy_vpx_encoder(codec_context)
