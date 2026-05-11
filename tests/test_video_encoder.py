@@ -17,12 +17,24 @@ def before_all() -> None:
 	vpx_module.pre_check()
 
 
+# TODO: implement
+def test_create_vpx_encoder() -> None:
+	pass
+
+
+# TODO: rename to test_encode_vpx_buffer
 def test_encode_vpx() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	height, width = vision_frame.shape[:2]
+	vpx_encoder = create_vpx_encoder(width, height, 1000)
+
 	buffer_valid = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	buffer_invalid = bytes(0)
-	vpx_encoder = create_vpx_encoder(width, height, 1000)
 
 	assert encode_vpx(vpx_encoder, buffer_valid, width, height, 3, 1)
 	assert encode_vpx(vpx_encoder, buffer_invalid, width, height, 0, 0) == b''
+
+
+# TODO: implement
+def test_destroy_vpx_encoder() -> None:
+	pass
