@@ -1,4 +1,5 @@
 import asyncio
+import ctypes
 from collections import deque
 from collections.abc import AsyncIterator
 from typing import Tuple
@@ -10,7 +11,7 @@ from starlette.websockets import WebSocket, WebSocketState
 from facefusion import rtc_store, session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_audio_chunk
+from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_opus
 from facefusion.streamer import process_vision_frame
 from facefusion.types import Resolution, SessionId, VisionFrame
 from facefusion.video_encoder import create_vpx_encoder, destroy_vpx_encoder, encode_vpx
@@ -126,8 +127,8 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			keyframe_interval = int(state_manager.get_item('output_video_fps') or 30) # TODO: remove hardcoded via stream_video_fps
 			vision_frame_deque : deque[VisionFrame] = deque(maxlen = 1)
 			opus_encoder = create_opus_encoder(48000, 2) # TODO: guard against opus_encoder being None
-			audio_initial = numpy.array([], dtype = numpy.float32)
-			audio_pts = 0
+			audio_temp = numpy.array([], dtype = numpy.float32)
+			audio_timestamp = 0
 
 			vision_frame_deque.append(first_vision_frame)
 			rtc_store.create_rtc_stream(session_id)
@@ -144,8 +145,18 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 						vision_frame_deque.append(vision_frame)
 
 				if frame_type == 2:
-					pcm_data = numpy.frombuffer(frame_buffer, dtype = numpy.float32)
-					audio_initial, audio_pts = encode_audio_chunk(opus_encoder, session_id, pcm_data, audio_initial, audio_pts)
+					audio_temp = numpy.concatenate([ audio_temp, numpy.frombuffer(frame_buffer).astype(numpy.float32) ])
+
+					while len(audio_temp) >= 1920:
+						audio_chunk = audio_temp[:1920]
+						audio_temp = audio_temp[1920:]
+						pcm_pointer = audio_chunk.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+						audio_buffer = encode_opus(opus_encoder, pcm_pointer, 960)
+
+						if audio_buffer:
+							rtc_store.send_rtc_audio(session_id, audio_buffer, audio_timestamp)
+
+						audio_timestamp += 960
 
 			vision_frame_deque.clear()
 			await video_encode_task
