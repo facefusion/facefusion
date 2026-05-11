@@ -97,8 +97,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'crypto':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/libcrypto.hash'),
-					'path': resolve_relative_path('../.libraries/libcrypto.hash')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/crypto.hash'),
+					'path': resolve_relative_path('../.libraries/crypto.hash')
 				},
 				'datachannel':
 				{
@@ -107,16 +107,16 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'ssl':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/libssl.hash'),
-					'path': resolve_relative_path('../.libraries/libssl.hash')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/ssl.hash'),
+					'path': resolve_relative_path('../.libraries/ssl.hash')
 				}
 			},
 			'sources':
 			{
 				'crypto':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/libcrypto.dll'),
-					'path': resolve_relative_path('../.libraries/libcrypto.dll')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/crypto.dll'),
+					'path': resolve_relative_path('../.libraries/crypto.dll')
 				},
 				'datachannel':
 				{
@@ -125,8 +125,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'ssl':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/libssl.dll'),
-					'path': resolve_relative_path('../.libraries/libssl.dll')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/ssl.dll'),
+					'path': resolve_relative_path('../.libraries/ssl.dll')
 				}
 			}
 		}
