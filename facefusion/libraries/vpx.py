@@ -17,7 +17,7 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'vpx':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libvpx.hash'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'linux/libvpx.hash'),
 					'path': resolve_relative_path('../.libraries/libvpx.hash')
 				}
 			},
@@ -25,7 +25,7 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'vpx':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libvpx.so'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'linux/libvpx.so'),
 					'path': resolve_relative_path('../.libraries/libvpx.so')
 				}
 			}
@@ -37,7 +37,7 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'vpx':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libvpx.hash'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'macos/libvpx.hash'),
 					'path': resolve_relative_path('../.libraries/libvpx.hash')
 				}
 			},
@@ -45,7 +45,7 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'vpx':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libvpx.dylib'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'macos/libvpx.dylib'),
 					'path': resolve_relative_path('../.libraries/libvpx.dylib')
 				}
 			}
