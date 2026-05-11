@@ -34,7 +34,7 @@ jobs:
     with:
      python-version: '3.12'
   - if: matrix.os == 'macos-latest'
-    run: brew install openssl@3
+    run: echo "DYLD_LIBRARY_PATH=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pip install pytest-mock
