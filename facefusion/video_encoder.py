@@ -35,7 +35,7 @@ def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[cty
 	return None
 
 
-def encode_vpx(codec_context : ctypes.Array[ctypes.c_char], yuv_buffer : bytes, width : int, height : int, pts : int, flags : int) -> bytes:
+def encode_vpx(codec_context : ctypes.Array[ctypes.c_char], yuv_buffer : bytes, width : int, height : int, presentation_timestamp : int, flags : int) -> bytes:
 	vpx_library = vpx_module.create_static_library()
 	frame_buffer = b''
 
@@ -44,7 +44,7 @@ def encode_vpx(codec_context : ctypes.Array[ctypes.c_char], yuv_buffer : bytes, 
 		yuv_string_buffer = ctypes.create_string_buffer(yuv_buffer)
 
 		if vpx_library.vpx_img_wrap(image_buffer, 0x102, width, height, 1, yuv_string_buffer):
-			if vpx_library.vpx_codec_encode(codec_context, image_buffer, pts, 1, flags, 1) == 0:
+			if vpx_library.vpx_codec_encode(codec_context, image_buffer, presentation_timestamp, 1, flags, 1) == 0:
 				iterator = ctypes.c_void_p(0)
 				packet = vpx_library.vpx_codec_get_cx_data(codec_context, ctypes.byref(iterator))
 
