@@ -1,4 +1,5 @@
 import ctypes
+import ctypes.util
 import os
 from functools import lru_cache
 from typing import Dict, Optional, Tuple
@@ -56,6 +57,9 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 	library_path = create_static_library_set().get('sources').get('datachannel').get('path')
 
 	if library_path:
+		if is_macos() and ctypes.util.find_library('ssl'):
+			ctypes.CDLL(ctypes.util.find_library('ssl'))
+
 		if is_windows():
 			library = ctypes.CDLL(library_path, winmode = 0)
 		else:
