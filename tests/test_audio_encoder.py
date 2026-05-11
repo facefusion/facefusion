@@ -40,6 +40,7 @@ def test_encode_opus() -> None:
 def test_destroy_opus_encoder() -> None:
 	pass
 
+
 # TODO: improvise
 def test_encode_audio_chunk() -> None:
 	sample_rate = 48000
