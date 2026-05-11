@@ -2,24 +2,20 @@ import ctypes
 from typing import Optional
 
 from facefusion.libraries import opus as opus_module
+from facefusion.types import OpusEncoder
 
 
-# TODO this method needs refinement
-def create_opus_encoder(sample_rate : int, channels : int) -> Optional[ctypes.c_void_p]:
+def create_opus_encoder(sample_rate : int, channel_total : int) -> Optional[OpusEncoder]:
 	opus_library = opus_module.create_static_library()
 
 	if opus_library:
-		error = ctypes.c_int(0)
-		encoder = opus_library.opus_encoder_create(sample_rate, channels, 2049, ctypes.byref(error))
-
-		if error.value == 0:
-			return encoder
+		return opus_library.opus_encoder_create(sample_rate, channel_total, 2049, ctypes.byref(ctypes.c_int(0)))
 
 	return None
 
 
 # TODO this method needs refinement - rename to encode_opus_buffer
-def encode_opus(opus_encoder : ctypes.c_void_p, pcm_pointer : ctypes.c_void_p, frame_size : int) -> bytes:
+def encode_opus(opus_encoder : OpusEncoder, pcm_pointer : ctypes.c_void_p, frame_size : int) -> bytes:
 	opus_library = opus_module.create_static_library()
 	audio_buffer = b''
 
@@ -33,8 +29,7 @@ def encode_opus(opus_encoder : ctypes.c_void_p, pcm_pointer : ctypes.c_void_p, f
 	return audio_buffer
 
 
-# TODO not 100 sure this makes full sense. should we not run clear on the lru-cache instead?
-def destroy_opus_encoder(opus_encoder : ctypes.c_void_p) -> None:
+def destroy_opus_encoder(opus_encoder : OpusEncoder) -> None:
 	opus_library = opus_module.create_static_library()
 
 	if opus_library:

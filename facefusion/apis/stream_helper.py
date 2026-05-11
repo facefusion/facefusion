@@ -44,7 +44,7 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 
 # TODO: move to facefusion/vpx_encoder.py, throttle loop to avoid spinning on same frame
 def run_video_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
-	codec_context = create_vpx_encoder(initial_resolution[0], initial_resolution[1], 4500)
+	vpx_encoder = create_vpx_encoder(initial_resolution[0], initial_resolution[1], 4500)
 	current_resolution = initial_resolution
 	pts = 0
 
@@ -55,29 +55,29 @@ def run_video_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : 
 		frame_resolution = (width, height)
 
 		if frame_resolution[0] != current_resolution[0] or frame_resolution[1] != current_resolution[1]:
-			if codec_context:
-				destroy_vpx_encoder(codec_context)
+			if vpx_encoder:
+				destroy_vpx_encoder(vpx_encoder)
 
 			current_resolution = frame_resolution
-			codec_context = create_vpx_encoder(current_resolution[0], current_resolution[1], 4500)
+			vpx_encoder = create_vpx_encoder(current_resolution[0], current_resolution[1], 4500)
 			pts = 0
 
-		if codec_context:
+		if vpx_encoder:
 			yuv_frame = cv2.cvtColor(output_frame, cv2.COLOR_BGR2YUV_I420)
 			vpx_flags = 0
 
 			if pts % keyframe_interval == 0:
 				vpx_flags = 1
 
-			frame_buffer = encode_vpx(codec_context, yuv_frame.tobytes(), width, height, pts, vpx_flags)
+			frame_buffer = encode_vpx(vpx_encoder, yuv_frame.tobytes(), width, height, pts, vpx_flags)
 
 			if frame_buffer:
 				rtc_store.send_rtc_video(session_id, frame_buffer)
 
 		pts += 1
 
-	if codec_context:
-		destroy_vpx_encoder(codec_context)
+	if vpx_encoder:
+		destroy_vpx_encoder(vpx_encoder)
 
 
 # TODO: extract shared session setup from handle_image_stream and handle_video_stream, guard session_id like handle_video_stream

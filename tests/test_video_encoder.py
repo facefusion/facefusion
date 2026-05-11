@@ -1,25 +1,27 @@
 import cv2
 import pytest
+from unittest.mock import patch
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
 from facefusion.download import conditional_download
 from facefusion.libraries import vpx as vpx_module
-from facefusion.video_encoder import create_vpx_encoder, encode_vpx
+from facefusion.video_encoder import create_vpx_encoder, destroy_vpx_encoder, encode_vpx
 from facefusion.vision import read_video_frame
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+
 	conditional_download(get_test_examples_directory(), [ 'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4' ])
 
 	vpx_module.pre_check()
 
 
-# TODO: implement
 def test_create_vpx_encoder() -> None:
-	pass
+	assert create_vpx_encoder(320, 240, 1000)
+	assert create_vpx_encoder(0, 0, 0) is None
 
 
 # TODO: rename to test_encode_vpx_buffer
@@ -35,6 +37,9 @@ def test_encode_vpx() -> None:
 	assert encode_vpx(vpx_encoder, buffer_invalid, width, height, 0, 0) == b''
 
 
-# TODO: implement
 def test_destroy_vpx_encoder() -> None:
-	pass
+	vpx_encoder = create_vpx_encoder(320, 240, 1000)
+
+	with patch.object(vpx_module.create_static_library(), 'vpx_codec_destroy') as mock:
+		destroy_vpx_encoder(vpx_encoder)
+		mock.assert_called_once_with(vpx_encoder)

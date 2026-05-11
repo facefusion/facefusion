@@ -4,10 +4,11 @@ import struct
 from typing import Optional
 
 from facefusion.libraries import vpx as vpx_module
+from facefusion.types import VpxEncoder
 
 
 # TODO this method needs refinement
-def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[ctypes.Array[ctypes.c_char]]:
+def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[VpxEncoder]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
@@ -37,7 +38,7 @@ def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[cty
 
 
 # TODO this method needs refinement - rename to encode_vpx_buffer
-def encode_vpx(codec_context : ctypes.Array[ctypes.c_char], yuv_buffer : bytes, width : int, height : int, presentation_timestamp : int, flags : int) -> bytes:
+def encode_vpx(vpx_encoder : VpxEncoder, yuv_buffer : bytes, width : int, height : int, presentation_timestamp : int, flags : int) -> bytes:
 	vpx_library = vpx_module.create_static_library()
 	frame_buffer = b''
 
@@ -46,9 +47,9 @@ def encode_vpx(codec_context : ctypes.Array[ctypes.c_char], yuv_buffer : bytes, 
 		yuv_string_buffer = ctypes.create_string_buffer(yuv_buffer)
 
 		if vpx_library.vpx_img_wrap(image_buffer, 0x102, width, height, 1, yuv_string_buffer):
-			if vpx_library.vpx_codec_encode(codec_context, image_buffer, presentation_timestamp, 1, flags, 1) == 0:
+			if vpx_library.vpx_codec_encode(vpx_encoder, image_buffer, presentation_timestamp, 1, flags, 1) == 0:
 				iterator = ctypes.c_void_p(0)
-				packet = vpx_library.vpx_codec_get_cx_data(codec_context, ctypes.byref(iterator))
+				packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(iterator))
 
 				while packet:
 					if ctypes.c_int.from_address(packet).value == 0:
@@ -56,14 +57,13 @@ def encode_vpx(codec_context : ctypes.Array[ctypes.c_char], yuv_buffer : bytes, 
 						buffer_size = ctypes.c_size_t.from_address(packet + 16).value
 						frame_buffer += ctypes.string_at(buffer_pointer, buffer_size)
 
-					packet = vpx_library.vpx_codec_get_cx_data(codec_context, ctypes.byref(iterator))
+					packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(iterator))
 
 	return frame_buffer
 
 
-# TODO not 100 sure this makes full sense. should we not run clear on the lru-cache instead?
-def destroy_vpx_encoder(codec_context : ctypes.Array[ctypes.c_char]) -> None:
+def destroy_vpx_encoder(vpx_encoder : VpxEncoder) -> None:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
-		vpx_library.vpx_codec_destroy(codec_context)
+		vpx_library.vpx_codec_destroy(vpx_encoder)
