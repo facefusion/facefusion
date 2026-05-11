@@ -11,8 +11,8 @@ from facefusion import args_helper, benchmarker, cli_helper, content_analyser, f
 from facefusion.apis.core import create_api
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
-from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.exit_helper import hard_exit, signal_exit
+from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.filesystem import get_file_extension, has_audio, has_image, has_video
 from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_file_pattern
 from facefusion.jobs import job_helper, job_manager, job_runner
@@ -105,15 +105,15 @@ def pre_check() -> bool:
 def common_pre_check() -> bool:
 	common_modules =\
 	[
+		datachannel_module,
 		content_analyser,
 		face_classifier,
 		face_detector,
 		face_landmarker,
 		face_masker,
 		face_recognizer,
-		voice_extractor,
-		datachannel_module,
 		opus_module,
+		voice_extractor,
 		vpx_module
 	]
 
