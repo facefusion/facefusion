@@ -1,47 +1,79 @@
 import ctypes
-import os
 from functools import lru_cache
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
 from facefusion.filesystem import resolve_relative_path
-from facefusion.types import DownloadSet
-
-
-def resolve_library_paths() -> Optional[Tuple[str, str]]:
-	if is_linux():
-		return 'linux/libopus.hash', 'linux/libopus.so'
-	if is_macos():
-		return 'macos/libopus.hash', 'macos/libopus.dylib'
-	if is_windows():
-		return 'windows/opus.hash', 'windows/opus.dll'
-	return None
+from facefusion.types import LibrarySet
 
 
 @lru_cache
-def create_static_library_set() -> Dict[str, DownloadSet]:
-	library_hash_path, library_source_path = resolve_library_paths()
-
-	return\
-	{
-		'hashes':
+def create_static_library_set() -> Optional[LibrarySet]:
+	if is_linux():
+		return\
 		{
-			'opus':
+			'hashes':
 			{
-				'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', library_hash_path),
-				'path': resolve_relative_path('../.libraries/' + os.path.basename(library_hash_path))
-			}
-		},
-		'sources':
-		{
-			'opus':
+				'opus':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libopus.hash'),
+					'path': resolve_relative_path('../.libraries/libopus.hash')
+				}
+			},
+			'sources':
 			{
-				'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', library_source_path),
-				'path': resolve_relative_path('../.libraries/' + os.path.basename(library_source_path))
+				'opus':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libopus.so'),
+					'path': resolve_relative_path('../.libraries/libopus.so')
+				}
 			}
 		}
-	}
+
+	if is_macos():
+		return\
+		{
+			'hashes':
+			{
+				'opus':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libopus.hash'),
+					'path': resolve_relative_path('../.libraries/libopus.hash')
+				}
+			},
+			'sources':
+			{
+				'opus':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libopus.dylib'),
+					'path': resolve_relative_path('../.libraries/libopus.dylib')
+				}
+			}
+		}
+
+	if is_windows():
+		return\
+		{
+			'hashes':
+			{
+				'opus':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/opus.hash'),
+					'path': resolve_relative_path('../.libraries/opus.hash')
+				}
+			},
+			'sources':
+			{
+				'opus':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/opus.dll'),
+					'path': resolve_relative_path('../.libraries/opus.dll')
+				}
+			}
+		}
+
+	return None
 
 
 def pre_check() -> bool:

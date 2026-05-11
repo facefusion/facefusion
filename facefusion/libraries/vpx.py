@@ -1,47 +1,77 @@
 import ctypes
-import os
 from functools import lru_cache
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url_by_provider
 from facefusion.filesystem import resolve_relative_path
-from facefusion.types import DownloadSet
-
-
-def resolve_library_paths() -> Optional[Tuple[str, str]]:
-	if is_linux():
-		return 'linux/libvpx.hash', 'linux/libvpx.so'
-	if is_macos():
-		return 'macos/libvpx.hash', 'macos/libvpx.dylib'
-	if is_windows():
-		return 'windows/vpx.hash', 'windows/vpx.dll'
-	return None
+from facefusion.types import LibrarySet
 
 
 @lru_cache
-def create_static_library_set() -> Dict[str, DownloadSet]:
-	library_hash_path, library_source_path = resolve_library_paths()
-
-	return\
-	{
-		'hashes':
+def create_static_library_set() -> Optional[LibrarySet]:
+	if is_linux():
+		return\
 		{
-			'vpx':
+			'hashes':
 			{
-				'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', library_hash_path),
-				'path': resolve_relative_path('../.libraries/' + os.path.basename(library_hash_path))
-			}
-		},
-		'sources':
-		{
-			'vpx':
+				'vpx':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libvpx.hash'),
+					'path': resolve_relative_path('../.libraries/libvpx.hash')
+				}
+			},
+			'sources':
 			{
-				'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', library_source_path),
-				'path': resolve_relative_path('../.libraries/' + os.path.basename(library_source_path))
+				'vpx':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libvpx.so'),
+					'path': resolve_relative_path('../.libraries/libvpx.so')
+				}
 			}
 		}
-	}
+	if is_macos():
+		return\
+		{
+			'hashes':
+			{
+				'vpx':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libvpx.hash'),
+					'path': resolve_relative_path('../.libraries/libvpx.hash')
+				}
+			},
+			'sources':
+			{
+				'vpx':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libvpx.dylib'),
+					'path': resolve_relative_path('../.libraries/libvpx.dylib')
+				}
+			}
+		}
+	if is_windows():
+		return\
+		{
+			'hashes':
+			{
+				'vpx':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/vpx.hash'),
+					'path': resolve_relative_path('../.libraries/vpx.hash')
+				}
+			},
+			'sources':
+			{
+				'vpx':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/vpx.dll'),
+					'path': resolve_relative_path('../.libraries/vpx.dll')
+				}
+			}
+		}
+
+	return None
 
 
 def pre_check() -> bool:

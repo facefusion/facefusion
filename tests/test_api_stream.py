@@ -97,6 +97,8 @@ def test_stream_image(test_client : TestClient) -> None:
 		output_bytes = websocket.receive_bytes()
 		output_vision_frame = cv2.imdecode(numpy.frombuffer(output_bytes, numpy.uint8), cv2.IMREAD_COLOR)
 
+	# TODO: can we test if bytes have been passed? what does this actual test than just the handshake?
+	# TODO: compare to the video test - no status code check?
 	assert output_vision_frame.shape == (1024, 1024, 3)
 
 
@@ -144,6 +146,7 @@ def test_stream_video(test_client : TestClient) -> None:
 		'Content-Type': 'application/sdp'
 	})
 
+	# TODO: can we test if bytes have been passed? what does this actual test than just the handshake?
 	assert stream_response.status_code == 201
 	assert stream_response.text
 
