@@ -56,7 +56,10 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 	library_path = create_static_library_set().get('sources').get('datachannel').get('path')
 
 	if library_path:
-		library = ctypes.CDLL(library_path)
+		if is_windows():
+			library = ctypes.CDLL(library_path, winmode = 0)
+		else:
+			library = ctypes.CDLL(library_path)
 
 		if library:
 			return init_ctypes(library)

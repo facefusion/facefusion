@@ -12,13 +12,6 @@ from .assert_helper import get_test_example_file, get_test_examples_directory
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
-	conditional_download(get_test_examples_directory(),
-	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
-	])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.8:ih*0.8', get_test_example_file('source-80crop.jpg') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.7:ih*0.7', get_test_example_file('source-70crop.jpg') ])
-	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.6:ih*0.6', get_test_example_file('source-60crop.jpg') ])
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github' ])
@@ -27,9 +20,19 @@ def before_all() -> None:
 	state_manager.init_item('face_detector_score', 0.5)
 	state_manager.init_item('face_landmarker_model', 'many')
 	state_manager.init_item('face_landmarker_score', 0.5)
+
 	face_classifier.pre_check()
 	face_landmarker.pre_check()
 	face_recognizer.pre_check()
+
+	conditional_download(get_test_examples_directory(),
+	[
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
+	])
+
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.8:ih*0.8', get_test_example_file('source-80crop.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.7:ih*0.7', get_test_example_file('source-70crop.jpg') ])
+	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.jpg'), '-vf', 'crop=iw*0.6:ih*0.6', get_test_example_file('source-60crop.jpg') ])
 
 
 @pytest.fixture(autouse = True)

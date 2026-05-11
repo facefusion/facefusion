@@ -64,7 +64,7 @@ def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[cty
 			struct.pack_into('I', config_buffer, 128, 50)
 			context_buffer = ctypes.create_string_buffer(512)
 
-			if vpx_library.vpx_codec_enc_init_ver(context_buffer, ctypes.byref(vp8_iface), config_buffer, 0, 37) == 0:
+			if vpx_library.vpx_codec_enc_init_ver(context_buffer, ctypes.byref(vp8_iface), config_buffer, 0, 39) == 0:
 				vpx_library.vpx_codec_control_(context_buffer, 13, ctypes.c_int(16))
 				vpx_library.vpx_codec_control_(context_buffer, 12, ctypes.c_int(3))
 				vpx_library.vpx_codec_control_(context_buffer, 27, ctypes.c_int(10))
@@ -115,7 +115,6 @@ def create_opus_encoder(sample_rate : int, channels : int) -> Optional[ctypes.c_
 		encoder = opus_library.opus_encoder_create(sample_rate, channels, 2049, ctypes.byref(error))
 
 		if error.value == 0:
-			opus_library.opus_encoder_ctl(encoder, 4002, 64000)
 			return encoder
 
 	return None
@@ -190,7 +189,7 @@ def encode_audio_chunk(opus_encoder : ctypes.c_void_p, session_id : SessionId, p
 	while len(pcm_buffer) >= frame_samples:
 		chunk = pcm_buffer[:frame_samples]
 		pcm_buffer = pcm_buffer[frame_samples:]
-		pcm_pointer = ctypes.cast(chunk.ctypes.data, ctypes.c_void_p)
+		pcm_pointer = chunk.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
 		audio_buffer = encode_opus(opus_encoder, pcm_pointer, 960)
 
 		if audio_buffer:
@@ -230,17 +229,18 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 	access_token = extract_access_token(websocket.scope)
 	session_id = session_manager.find_session_id(access_token)
 	session_context.set_session_id(session_id)
-	source_paths = state_manager.get_item('source_paths')
 
 	await websocket.accept(subprotocol = subprotocol)
 
-	if session_id and source_paths:
+	if session_id:
 		stream_frames = receive_stream_frames(websocket)
-		first_frame_type, first_frame_buffer = await anext(stream_frames, (0, b''))
 		first_vision_frame = None
 
-		if first_frame_type == 1:
-			first_vision_frame = cv2.imdecode(numpy.frombuffer(first_frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+		# TODO: audio frames may arrive before video due to ScriptProcessor firing faster than canvas toBlob
+		async for first_frame_type, first_frame_buffer in stream_frames:
+			if first_frame_type == 1:
+				first_vision_frame = cv2.imdecode(numpy.frombuffer(first_frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+				break
 
 		if numpy.any(first_vision_frame):
 			resolution : Resolution = (first_vision_frame.shape[1], first_vision_frame.shape[0])

@@ -18,12 +18,22 @@ from .assert_helper import get_test_example_file, get_test_examples_directory, g
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	process_manager.start()
+	state_manager.init_item('temp_path', tempfile.gettempdir())
+	state_manager.init_item('temp_frame_format', 'png')
+	state_manager.init_item('output_audio_encoder', 'aac')
+	state_manager.init_item('output_audio_quality', 100)
+	state_manager.init_item('output_audio_volume', 100)
+	state_manager.init_item('output_video_encoder', 'libx264')
+	state_manager.init_item('output_video_quality', 100)
+	state_manager.init_item('output_video_preset', 'ultrafast')
+
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
+
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), get_test_example_file('source.wav') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=25', get_test_example_file('target-240p-25fps.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-vf', 'fps=30', get_test_example_file('target-240p-30fps.mp4') ])
@@ -34,14 +44,6 @@ def before_all() -> None:
 
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-i', get_test_example_file('target-240p.mp4'), '-ar', '48000', get_test_example_file('target-240p-48khz.mp4') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-c:v', 'libx265', '-an', '-movflags', '+faststart', get_test_example_file('target-240p-h265.mp4') ])
-	state_manager.init_item('temp_path', tempfile.gettempdir())
-	state_manager.init_item('temp_frame_format', 'png')
-	state_manager.init_item('output_audio_encoder', 'aac')
-	state_manager.init_item('output_audio_quality', 100)
-	state_manager.init_item('output_audio_volume', 100)
-	state_manager.init_item('output_video_encoder', 'libx264')
-	state_manager.init_item('output_video_quality', 100)
-	state_manager.init_item('output_video_preset', 'ultrafast')
 
 
 @pytest.fixture(scope = 'function', autouse = True)
