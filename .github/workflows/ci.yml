@@ -39,7 +39,7 @@ jobs:
   - run: pip install pytest-timeout
   - run: pip install httpx
   - run: pip install python-multipart
-  - run: pytest tests/test_library_datachannel.py tests/test_library_opus.py tests/test_library_vpx.py
+  - run: pytest
  report:
   needs: test
   runs-on: ubuntu-latest
