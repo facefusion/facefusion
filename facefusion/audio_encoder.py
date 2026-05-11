@@ -4,6 +4,7 @@ from typing import Optional
 from facefusion.libraries import opus as opus_module
 
 
+# TODO this method needs refinement
 def create_opus_encoder(sample_rate : int, channels : int) -> Optional[ctypes.c_void_p]:
 	opus_library = opus_module.create_static_library()
 
@@ -17,6 +18,7 @@ def create_opus_encoder(sample_rate : int, channels : int) -> Optional[ctypes.c_
 	return None
 
 
+# TODO this method needs refinement - rename to encode_opus_buffer
 def encode_opus(opus_encoder : ctypes.c_void_p, pcm_pointer : ctypes.c_void_p, frame_size : int) -> bytes:
 	opus_library = opus_module.create_static_library()
 	audio_buffer = b''

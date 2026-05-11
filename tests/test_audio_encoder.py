@@ -25,6 +25,7 @@ def test_create_opus_encoder() -> None:
 	pass
 
 
+#TODO: rename to test_encode_opus_buffer
 def test_encode_opus() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	pcm_samples = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
