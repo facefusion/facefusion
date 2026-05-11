@@ -1,6 +1,7 @@
+from unittest.mock import patch
+
 import cv2
 import pytest
-from unittest.mock import patch
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
