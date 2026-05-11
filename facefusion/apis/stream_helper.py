@@ -1,8 +1,7 @@
 import asyncio
-import ctypes
 from collections import deque
 from collections.abc import AsyncIterator
-from typing import Optional, Tuple
+from typing import Tuple
 
 import cv2
 import numpy
@@ -11,7 +10,7 @@ from starlette.websockets import WebSocket, WebSocketState
 from facefusion import rtc_store, session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.libraries import opus as opus_module
+from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_audio_chunk
 from facefusion.streamer import process_vision_frame
 from facefusion.types import Resolution, SessionId, VisionFrame
 from facefusion.video_encoder import create_vpx_encoder, destroy_vpx_encoder, encode_vpx
@@ -40,43 +39,6 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 			yield vision_frame
 
 		websocket_event = await websocket.receive()
-
-
-# TODO: move to facefusion/opus_encoder.py
-def create_opus_encoder(sample_rate : int, channels : int) -> Optional[ctypes.c_void_p]:
-	opus_library = opus_module.create_static_library()
-
-	if opus_library:
-		error = ctypes.c_int(0)
-		encoder = opus_library.opus_encoder_create(sample_rate, channels, 2049, ctypes.byref(error))
-
-		if error.value == 0:
-			return encoder
-
-	return None
-
-
-# TODO: move to facefusion/opus_encoder.py
-def encode_opus(opus_encoder : ctypes.c_void_p, pcm_pointer : ctypes.c_void_p, frame_size : int) -> bytes:
-	opus_library = opus_module.create_static_library()
-	audio_buffer = b''
-
-	if opus_library:
-		output_buffer = ctypes.create_string_buffer(4000)
-		encoded_length = opus_library.opus_encode_float(opus_encoder, pcm_pointer, frame_size, output_buffer, 4000)
-
-		if encoded_length > 0:
-			audio_buffer = output_buffer.raw[:encoded_length]
-
-	return audio_buffer
-
-
-# TODO: move to facefusion/opus_encoder.py
-def destroy_opus_encoder(opus_encoder : ctypes.c_void_p) -> None:
-	opus_library = opus_module.create_static_library()
-
-	if opus_library:
-		opus_library.opus_encoder_destroy(opus_encoder)
 
 
 # TODO: move to facefusion/vpx_encoder.py, throttle loop to avoid spinning on same frame
@@ -115,25 +77,6 @@ def run_video_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : 
 
 	if codec_context:
 		destroy_vpx_encoder(codec_context)
-
-
-# TODO: move to facefusion/opus_encoder.py
-def encode_audio_chunk(opus_encoder : ctypes.c_void_p, session_id : SessionId, pcm_data : numpy.ndarray, audio_remainder : numpy.ndarray, audio_pts : int) -> Tuple[numpy.ndarray, int]:
-	pcm_buffer = numpy.concatenate([audio_remainder, pcm_data])
-	frame_samples = 1920
-
-	while len(pcm_buffer) >= frame_samples:
-		chunk = pcm_buffer[:frame_samples]
-		pcm_buffer = pcm_buffer[frame_samples:]
-		pcm_pointer = chunk.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
-		audio_buffer = encode_opus(opus_encoder, pcm_pointer, 960)
-
-		if audio_buffer:
-			rtc_store.send_rtc_audio(session_id, audio_buffer, audio_pts)
-
-		audio_pts += 960
-
-	return pcm_buffer, audio_pts
 
 
 # TODO: extract shared session setup from handle_image_stream and handle_video_stream, guard session_id like handle_video_stream
@@ -183,7 +126,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			keyframe_interval = int(state_manager.get_item('output_video_fps') or 30) # TODO: remove hardcoded via stream_video_fps
 			vision_frame_deque : deque[VisionFrame] = deque(maxlen = 1)
 			opus_encoder = create_opus_encoder(48000, 2) # TODO: guard against opus_encoder being None
-			audio_remainder = numpy.array([], dtype = numpy.float32)
+			audio_initial = numpy.array([], dtype = numpy.float32)
 			audio_pts = 0
 
 			vision_frame_deque.append(first_vision_frame)
@@ -202,7 +145,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 
 				if frame_type == 2:
 					pcm_data = numpy.frombuffer(frame_buffer, dtype = numpy.float32)
-					audio_remainder, audio_pts = encode_audio_chunk(opus_encoder, session_id, pcm_data, audio_remainder, audio_pts)
+					audio_initial, audio_pts = encode_audio_chunk(opus_encoder, session_id, pcm_data, audio_initial, audio_pts)
 
 			vision_frame_deque.clear()
 			await video_encode_task
