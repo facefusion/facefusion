@@ -77,7 +77,7 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/datachannel.hash'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel.hash'),
 					'path': resolve_relative_path('../.libraries/datachannel.hash')
 				}
 			},
@@ -85,7 +85,7 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/datachannel.dll'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel.dll'),
 					'path': resolve_relative_path('../.libraries/datachannel.dll')
 				}
 			}
