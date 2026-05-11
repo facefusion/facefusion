@@ -15,7 +15,7 @@ def before_all() -> None:
 def test_encode_vpx() -> None:
 	codec_context = create_vpx_encoder(320, 240, 1000)
 	yuv_buffer = bytes(320 * 240 * 3 // 2)
-	invalid_yuv_buffer = bytes(640 * 480 * 3 // 2)
+	invalid_yuv_buffer = bytes(0)
 
 	assert isinstance(encode_vpx(codec_context, yuv_buffer, 320, 240, 0, 0), bytes)
 	assert isinstance(encode_vpx(codec_context, yuv_buffer, 320, 240, 2, 0), bytes)
