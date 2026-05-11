@@ -7,7 +7,7 @@ import numpy
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager, state_manager
+from facefusion import environment, metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check, processors_pre_check
@@ -38,6 +38,8 @@ def before_all() -> None:
 
 	common_pre_check()
 	processors_pre_check()
+
+	environment.setup_platform()
 
 	conditional_download(get_test_examples_directory(),
 	[

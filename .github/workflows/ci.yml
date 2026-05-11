@@ -36,7 +36,6 @@ jobs:
   - run: python install.py --onnxruntime default --skip-conda
   - run: pip install pytest
   - run: pip install pytest-mock
-  - run: pip install pytest-timeout
   - run: pip install httpx
   - run: pip install python-multipart
   - run: pytest
