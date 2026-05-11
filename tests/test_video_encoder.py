@@ -1,12 +1,12 @@
 import cv2
 import pytest
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
 from facefusion.download import conditional_download
 from facefusion.libraries import vpx as vpx_module
 from facefusion.video_encoder import create_vpx_encoder, encode_vpx
 from facefusion.vision import read_video_frame
-from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
