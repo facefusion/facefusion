@@ -11,11 +11,13 @@ from .assert_helper import get_test_example_file, get_test_examples_directory
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	process_manager.start()
+
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3',
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
+
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('source.mp3'), '-t', '1.9', '-ar', '48000', '-ac', '2', get_test_example_file('source-48000khz-2ch.wav') ])
 	subprocess.run([ 'ffmpeg', '-i', get_test_example_file('target-240p.mp4'), '-t', '1', get_test_example_file('target-240p-1s.mov') ])
 

@@ -1,24 +1,15 @@
 import ctypes
+import ctypes.util
 from functools import lru_cache
 from typing import List, Optional
-
-from facefusion.common_helper import is_linux, is_windows
-
-
-def resolve_library_file() -> Optional[str]:
-	if is_linux():
-		return 'libnvidia-ml.so.1'
-	if is_windows():
-		return 'nvml.dll'
-	return None
 
 
 @lru_cache
 def create_static_library() -> Optional[ctypes.CDLL]:
-	library_file = resolve_library_file()
+	library_path = ctypes.util.find_library('nvidia-ml') or ctypes.util.find_library('nvml')
 
-	if library_file:
-		library = ctypes.CDLL(library_file)
+	if library_path:
+		library = ctypes.CDLL(library_path)
 
 		if library:
 			return init_ctypes(library)

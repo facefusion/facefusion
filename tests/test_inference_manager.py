@@ -12,6 +12,7 @@ def before_all() -> None:
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github' ])
+
 	content_analyser.pre_check()
 
 

@@ -11,12 +11,13 @@ from .assert_helper import get_test_example_file, get_test_examples_directory
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
+	state_manager.init_item('temp_path', tempfile.gettempdir())
+	state_manager.init_item('temp_frame_format', 'png')
+
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4'
 	])
-	state_manager.init_item('temp_path', tempfile.gettempdir())
-	state_manager.init_item('temp_frame_format', 'png')
 
 
 def test_get_temp_file_path() -> None:
