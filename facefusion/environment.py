@@ -42,20 +42,20 @@ def setup_conda() -> None:
 
 
 def setup_platform() -> None:
-	homebrew_path = os.environ.get('HOMEBREW_PREFIX')
-	system_ready = os.getenv('SYSTEM_READY')
+	homebrew_prefix = os.environ.get('HOMEBREW_PREFIX')
+	platform_ready = os.getenv('PLATFORM_READY')
 
-	if homebrew_path and not system_ready:
+	if homebrew_prefix and not platform_ready:
 		if is_macos():
 			library_paths =\
 			[
-				os.path.join(homebrew_path, 'lib'),
-				os.path.join(homebrew_path, 'opt', 'openssl@3', 'lib')
+				os.path.join(homebrew_prefix, 'lib'),
+				os.path.join(homebrew_prefix, 'opt', 'openssl', 'lib')
 			]
-			library_paths = list(filter(os.path.isdir, library_paths))
+			library_paths = list(filter(os.path.exists, library_paths))
 
 			if library_paths:
 				if os.getenv('DYLD_LIBRARY_PATH'):
 					library_paths.append(os.getenv('DYLD_LIBRARY_PATH'))
 				os.environ['DYLD_LIBRARY_PATH'] = os.pathsep.join(library_paths)
-				os.environ['SYSTEM_READY'] = '1'
+				os.environ['PLATFORM_READY'] = '1'
