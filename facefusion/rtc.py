@@ -43,6 +43,7 @@ def create_peer_connection(
 	return datachannel_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
 
+#TODO: I think we dont need this method at all
 def build_media_description(media_type : str, payload_type : int, rtp_codec : str, media_direction : MediaDirection, media_id : int) -> bytes:
 	lines =\
 	[
