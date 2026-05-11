@@ -9,6 +9,7 @@ from facefusion.libraries import opus as opus_module
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+
 	opus_module.pre_check()
 
 

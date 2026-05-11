@@ -3,14 +3,17 @@ from typing import List
 import pytest
 
 from facefusion import rtc, state_manager
-from facefusion.libraries import datachannel as datachannel_module
+from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.types import RtcPeer
 
 
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+
 	datachannel_module.pre_check()
+	opus_module.pre_check()
+	vpx_module.pre_check()
 
 
 # TODO: add test_parse_sdp_payload_types

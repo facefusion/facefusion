@@ -12,7 +12,7 @@ from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check, processors_pre_check
 from facefusion.download import conditional_download
-from facefusion.libraries import datachannel as datachannel_module
+from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from .assert_helper import get_test_example_file, get_test_examples_directory
 from .stream_helper import create_sdp_offer, open_websocket_stream
 
@@ -39,7 +39,6 @@ def before_all() -> None:
 
 	common_pre_check()
 	processors_pre_check()
-	datachannel_module.pre_check()
 
 	conditional_download(get_test_examples_directory(),
 	[

@@ -9,6 +9,7 @@ from facefusion.libraries import vpx as vpx_module
 @pytest.fixture(scope = 'module', autouse = True)
 def before_all() -> None:
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
+
 	vpx_module.pre_check()
 
 
