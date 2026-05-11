@@ -36,7 +36,7 @@ def create_vpx_encoder(width : int, height : int, bitrate : int) -> Optional[cty
 	return None
 
 
-# TODO this method needs refinement
+# TODO this method needs refinement - rename to encode_vpx_buffer
 def encode_vpx(codec_context : ctypes.Array[ctypes.c_char], yuv_buffer : bytes, width : int, height : int, presentation_timestamp : int, flags : int) -> bytes:
 	vpx_library = vpx_module.create_static_library()
 	frame_buffer = b''

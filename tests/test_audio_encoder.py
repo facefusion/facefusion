@@ -19,6 +19,12 @@ def before_all() -> None:
 	opus_module.pre_check()
 
 
+# TODO: implement
+def test_create_opus_encoder() -> None:
+	pass
+
+
+#TODO: rename to test_encode_opus_buffer
 def test_encode_opus() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	pcm_data = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
@@ -27,6 +33,11 @@ def test_encode_opus() -> None:
 
 	assert encode_opus(opus_encoder, pcm_pointer, 960)
 	assert encode_opus(opus_encoder, pcm_pointer, 0) == b''
+
+
+# TODO: implement
+def test_destroy_opus_encoder() -> None:
+	pass
 
 
 def test_encode_audio_chunk() -> None:

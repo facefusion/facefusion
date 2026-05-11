@@ -22,7 +22,7 @@ def create_opus_encoder(sample_rate : int, channels : int) -> Optional[ctypes.c_
 	return None
 
 
-# TODO this method needs refinement
+# TODO this method needs refinement - rename to encode_opus_buffer
 def encode_opus(opus_encoder : ctypes.c_void_p, pcm_pointer : ctypes.c_void_p, frame_size : int) -> bytes:
 	opus_library = opus_module.create_static_library()
 	audio_buffer = b''
@@ -37,6 +37,7 @@ def encode_opus(opus_encoder : ctypes.c_void_p, pcm_pointer : ctypes.c_void_p, f
 	return audio_buffer
 
 
+# TODO not 100 sure this makes full sense. should we not run clear on the lru-cache instead?
 def destroy_opus_encoder(opus_encoder : ctypes.c_void_p) -> None:
 	opus_library = opus_module.create_static_library()
 
@@ -44,7 +45,7 @@ def destroy_opus_encoder(opus_encoder : ctypes.c_void_p) -> None:
 		opus_library.opus_encoder_destroy(opus_encoder)
 
 
-# TODO this method needs refinement
+# TODO this method needs refinement - eventual inline to encode
 def encode_audio_chunk(opus_encoder : ctypes.c_void_p, session_id : SessionId, pcm_data : AudioChunk, audio_remainder : AudioChunk, audio_timestamp : int) -> Tuple[AudioChunk, int]:
 	pcm_buffer = numpy.concatenate([ audio_remainder, pcm_data ])
 	frame_samples = 1920
