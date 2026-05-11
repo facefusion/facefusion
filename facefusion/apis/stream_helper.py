@@ -145,7 +145,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 						vision_frame_deque.append(vision_frame)
 
 				if frame_type == 2:
-					audio_temp = numpy.concatenate([ audio_temp, numpy.frombuffer(frame_buffer).astype(numpy.float32) ])
+					audio_temp = numpy.concatenate([ audio_temp, numpy.frombuffer(frame_buffer, dtype = numpy.float32) ])
 
 					while len(audio_temp) >= 1920:
 						audio_chunk = audio_temp[:1920]
