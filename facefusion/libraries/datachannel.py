@@ -15,15 +15,15 @@ def create_static_library_set() -> Optional[LibrarySet]:
 		{
 			'hashes':
 			{
-				'datachannel':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'linux/libdatachannel.hash'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.hash')
-				},
 				'crypto':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'linux/libcrypto.hash'),
 					'path': resolve_relative_path('../.libraries/libcrypto.hash')
+				},
+				'datachannel':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'linux/libdatachannel.hash'),
+					'path': resolve_relative_path('../.libraries/libdatachannel.hash')
 				},
 				'ssl':
 				{
@@ -33,15 +33,15 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			},
 			'sources':
 			{
-				'datachannel':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'linux/libdatachannel.so'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.so')
-				},
 				'crypto':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'linux/libcrypto.so'),
 					'path': resolve_relative_path('../.libraries/libcrypto.so')
+				},
+				'datachannel':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'linux/libdatachannel.so'),
+					'path': resolve_relative_path('../.libraries/libdatachannel.so')
 				},
 				'ssl':
 				{
@@ -55,15 +55,15 @@ def create_static_library_set() -> Optional[LibrarySet]:
 		{
 			'hashes':
 			{
-				'datachannel':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'macos/libdatachannel.hash'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.hash')
-				},
 				'crypto':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'macos/libcrypto.hash'),
 					'path': resolve_relative_path('../.libraries/libcrypto.hash')
+				},
+				'datachannel':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'macos/libdatachannel.hash'),
+					'path': resolve_relative_path('../.libraries/libdatachannel.hash')
 				},
 				'ssl':
 				{
@@ -73,15 +73,15 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			},
 			'sources':
 			{
-				'datachannel':
-				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'macos/libdatachannel.dylib'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.dylib')
-				},
 				'crypto':
 				{
 					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'macos/libcrypto.dylib'),
 					'path': resolve_relative_path('../.libraries/libcrypto.dylib')
+				},
+				'datachannel':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'macos/libdatachannel.dylib'),
+					'path': resolve_relative_path('../.libraries/libdatachannel.dylib')
 				},
 				'ssl':
 				{
@@ -95,18 +95,38 @@ def create_static_library_set() -> Optional[LibrarySet]:
 		{
 			'hashes':
 			{
+				'crypto':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/libcrypto.hash'),
+					'path': resolve_relative_path('../.libraries/libcrypto.hash')
+				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel.hash'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/datachannel.hash'),
 					'path': resolve_relative_path('../.libraries/datachannel.hash')
+				},
+				'ssl':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/libssl.hash'),
+					'path': resolve_relative_path('../.libraries/libssl.hash')
 				}
 			},
 			'sources':
 			{
+				'crypto':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/libcrypto.dll'),
+					'path': resolve_relative_path('../.libraries/libcrypto.dll')
+				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel.dll'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/datachannel.dll'),
 					'path': resolve_relative_path('../.libraries/datachannel.dll')
+				},
+				'ssl':
+				{
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'windows/libssl.dll'),
+					'path': resolve_relative_path('../.libraries/libssl.dll')
 				}
 			}
 		}
@@ -123,18 +143,18 @@ def pre_check() -> bool:
 
 @lru_cache
 def create_static_library() -> Optional[ctypes.CDLL]:
-	datachannel_source_path = create_static_library_set().get('sources').get('datachannel').get('path')
 	crypto_source_path = create_static_library_set().get('sources').get('crypto').get('path')
+	datachannel_source_path = create_static_library_set().get('sources').get('datachannel').get('path')
 	ssl_source_path = create_static_library_set().get('sources').get('ssl').get('path')
 
-	if datachannel_source_path:
-		if crypto_source_path and ssl_source_path:
-			ctypes.CDLL(crypto_source_path)
-			ctypes.CDLL(ssl_source_path)
-
+	if crypto_source_path and datachannel_source_path and ssl_source_path:
 		if is_windows():
+			ctypes.CDLL(crypto_source_path, winmode = 0)
+			ctypes.CDLL(ssl_source_path, winmode = 0)
 			library = ctypes.CDLL(datachannel_source_path, winmode = 0)
 		else:
+			ctypes.CDLL(crypto_source_path)
+			ctypes.CDLL(ssl_source_path)
 			library = ctypes.CDLL(datachannel_source_path)
 
 		if library:

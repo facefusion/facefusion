@@ -3,6 +3,7 @@ onnx==1.20.1
 onnxruntime==1.24.1
 opencv-python==4.13.0.92
 psutil==7.2.2
+python-multipart==0.0.28
 tqdm==4.67.3
 scipy==1.16.3
 starlette==0.52.1
