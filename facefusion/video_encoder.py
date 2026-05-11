@@ -61,6 +61,7 @@ def encode_vpx(codec_context : ctypes.Array[ctypes.c_char], yuv_buffer : bytes, 
 	return frame_buffer
 
 
+# TODO not 100 sure this makes full sense. should we not run clear on the lru-cache instead?
 def destroy_vpx_encoder(codec_context : ctypes.Array[ctypes.c_char]) -> None:
 	vpx_library = vpx_module.create_static_library()
 
