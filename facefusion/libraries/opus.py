@@ -17,7 +17,7 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'opus':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libopus.hash'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'linux/libopus.hash'),
 					'path': resolve_relative_path('../.libraries/libopus.hash')
 				}
 			},
@@ -25,7 +25,7 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'opus':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libopus.so'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'linux/libopus.so'),
 					'path': resolve_relative_path('../.libraries/libopus.so')
 				}
 			}
@@ -38,7 +38,7 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'opus':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libopus.hash'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'macos/libopus.hash'),
 					'path': resolve_relative_path('../.libraries/libopus.hash')
 				}
 			},
@@ -46,7 +46,7 @@ def create_static_library_set() -> Optional[LibrarySet]:
 			{
 				'opus':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libopus.dylib'),
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0-a', 'macos/libopus.dylib'),
 					'path': resolve_relative_path('../.libraries/libopus.dylib')
 				}
 			}
