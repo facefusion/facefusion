@@ -126,7 +126,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			keyframe_interval = int(state_manager.get_item('output_video_fps') or 30) # TODO: remove hardcoded via stream_video_fps
 			vision_frame_deque : deque[VisionFrame] = deque(maxlen = 1)
 			opus_encoder = create_opus_encoder(48000, 2) # TODO: guard against opus_encoder being None
-			audio_remainder = numpy.array([], dtype = numpy.float32)
+			audio_initial = numpy.array([], dtype = numpy.float32)
 			audio_pts = 0
 
 			vision_frame_deque.append(first_vision_frame)
@@ -145,7 +145,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 
 				if frame_type == 2:
 					pcm_data = numpy.frombuffer(frame_buffer, dtype = numpy.float32)
-					audio_remainder, audio_pts = encode_audio_chunk(opus_encoder, session_id, pcm_data, audio_remainder, audio_pts)
+					audio_initial, audio_pts = encode_audio_chunk(opus_encoder, session_id, pcm_data, audio_initial, audio_pts)
 
 			vision_frame_deque.clear()
 			await video_encode_task
