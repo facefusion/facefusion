@@ -8,7 +8,6 @@ from starlette.testclient import TestClient
 from facefusion import metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
-from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.core import common_pre_check
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
