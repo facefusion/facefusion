@@ -14,8 +14,8 @@ def create_opus_encoder(sample_rate : int, channel_total : int) -> Optional[Opus
 	return None
 
 
-# TODO this method needs refinement - rename to encode_opus_buffer
-def encode_opus(opus_encoder : OpusEncoder, pcm_pointer : ctypes.c_void_p, frame_size : int) -> bytes:
+# TODO this method needs refinement
+def encode_opus_buffer(opus_encoder : OpusEncoder, pcm_pointer : ctypes.c_void_p, frame_size : int) -> bytes:
 	opus_library = opus_module.create_static_library()
 	audio_buffer = b''
 

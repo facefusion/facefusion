@@ -11,10 +11,10 @@ from starlette.websockets import WebSocket, WebSocketState
 from facefusion import rtc_store, session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_opus
+from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.streamer import process_vision_frame
 from facefusion.types import Resolution, SessionId, VisionFrame
-from facefusion.video_encoder import create_vpx_encoder, destroy_vpx_encoder, encode_vpx
+from facefusion.video_encoder import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 
 
 async def receive_stream_frames(websocket : WebSocket) -> AsyncIterator[Tuple[int, bytes]]:
@@ -69,7 +69,7 @@ def run_video_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : 
 			if pts % keyframe_interval == 0:
 				vpx_flags = 1
 
-			frame_buffer = encode_vpx(vpx_encoder, yuv_frame.tobytes(), width, height, pts, vpx_flags)
+			frame_buffer = encode_vpx_buffer(vpx_encoder, yuv_frame.tobytes(), width, height, pts, vpx_flags)
 
 			if frame_buffer:
 				rtc_store.send_rtc_video(session_id, frame_buffer)
@@ -151,7 +151,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 						audio_chunk = audio_temp[:1920]
 						audio_temp = audio_temp[1920:]
 						pcm_pointer = audio_chunk.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
-						audio_buffer = encode_opus(opus_encoder, pcm_pointer, 960)
+						audio_buffer = encode_opus_buffer(opus_encoder, pcm_pointer, 960)
 
 						if audio_buffer:
 							rtc_store.send_rtc_audio(session_id, audio_buffer, audio_timestamp)
