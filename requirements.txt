@@ -8,4 +8,5 @@ tqdm==4.67.3
 scipy==1.16.3
 starlette==0.52.1
 uvicorn==0.41.0
+uvloop==0.21.0
 websockets==16.0

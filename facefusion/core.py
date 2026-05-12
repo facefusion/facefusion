@@ -59,7 +59,7 @@ def route(args : Args) -> None:
 			hard_exit(2)
 
 		logger.info(translator.get('api_started').format(host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port')), __name__)
-		uvicorn.run(create_api(), host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port'))
+		uvicorn.run(create_api(), host = state_manager.get_item('api_host'), port = state_manager.get_item('api_port'), loop = 'uvloop')
 		hard_exit(1)
 
 	if state_manager.get_item('command') in [ 'job-list', 'job-create', 'job-submit', 'job-submit-all', 'job-delete', 'job-delete-all', 'job-add-step', 'job-remix-step', 'job-insert-step', 'job-remove-step' ]:
