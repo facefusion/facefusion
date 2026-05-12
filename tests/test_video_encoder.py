@@ -30,7 +30,7 @@ def test_create_vpx_encoder() -> None:
 def test_encode_vpx_buffer() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	height, width = vision_frame.shape[:2]
-	vpx_encoder = create_vpx_encoder(width, height, 1000, thread_count = 1, cpu_used = 0)
+	vpx_encoder = create_vpx_encoder(width, height, 1000, thread_count = 1, cpu_count = 0)
 
 	buffer_valid = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	buffer_invalid = bytes(0)
