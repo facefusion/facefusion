@@ -1,3 +1,4 @@
+import ctypes
 from collections import namedtuple
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Literal, NotRequired, Optional, Tuple, TypeAlias, TypedDict, Union
@@ -88,6 +89,9 @@ Mel : TypeAlias = NDArray[Any]
 MelFilterBank : TypeAlias = NDArray[Any]
 Voice : TypeAlias = NDArray[Any]
 VoiceChunk : TypeAlias = NDArray[Any]
+
+OpusEncoder : TypeAlias = ctypes.c_void_p
+VpxEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 
 BitRate : TypeAlias = int
 SampleRate : TypeAlias = int

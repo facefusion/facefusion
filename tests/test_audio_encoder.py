@@ -1,11 +1,12 @@
 import ctypes
+from unittest.mock import patch
 
 import numpy
 import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
-from facefusion.audio_encoder import create_opus_encoder, encode_opus
+from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_opus
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.libraries import opus as opus_module
@@ -20,9 +21,9 @@ def before_all() -> None:
 	opus_module.pre_check()
 
 
-# TODO: implement
 def test_create_opus_encoder() -> None:
-	pass
+	assert create_opus_encoder(48000, 2)
+	assert create_opus_encoder(0, 0) is None
 
 
 #TODO: rename to test_encode_opus_buffer
@@ -36,6 +37,9 @@ def test_encode_opus() -> None:
 	assert encode_opus(opus_encoder, pcm_pointer, 0) == b''
 
 
-# TODO: implement
 def test_destroy_opus_encoder() -> None:
-	pass
+	opus_encoder = create_opus_encoder(48000, 2)
+
+	with patch.object(opus_module.create_static_library(), 'opus_encoder_destroy') as mock:
+		destroy_opus_encoder(opus_encoder)
+		mock.assert_called_once_with(opus_encoder)
