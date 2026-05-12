@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 import numpy
 import pytest
-
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager

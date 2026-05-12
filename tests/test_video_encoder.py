@@ -5,7 +5,9 @@ import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
+from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
+from facefusion.hash_helper import create_hash
 from facefusion.libraries import vpx as vpx_module
 from facefusion.video_encoder import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.vision import read_video_frame
@@ -33,7 +35,17 @@ def test_encode_vpx_buffer() -> None:
 	buffer_valid = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	buffer_invalid = bytes(0)
 
-	assert encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)
+	encoded = encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)
+
+	if is_linux():
+		assert create_hash(encoded) == '67120517'
+
+	if is_macos():
+		assert create_hash(encoded) == '67120517'
+
+	if is_windows():
+		assert create_hash(encoded) == '67120517'
+
 	assert encode_vpx_buffer(vpx_encoder, buffer_invalid, width, height, 0, 0) == b''
 
 
