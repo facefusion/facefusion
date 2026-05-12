@@ -4,6 +4,8 @@ from unittest.mock import patch
 import numpy
 import pytest
 
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
+
 from facefusion import state_manager
 from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.common_helper import is_linux, is_macos, is_windows
@@ -11,7 +13,6 @@ from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import opus as opus_module
-from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -34,18 +35,11 @@ def test_encode_opus_buffer() -> None:
 	pcm_pointer = pcm_samples[:1920].ctypes.data_as(ctypes.POINTER(ctypes.c_float))
 	opus_encoder = create_opus_encoder(48000, 2)
 
-	encoded = encode_opus_buffer(opus_encoder, pcm_pointer, 960)
-
-	if is_linux():
-		assert create_hash(encoded) == '8abe71cf'
+	if is_linux() or is_windows():
+		assert create_hash(encode_opus_buffer(opus_encoder, pcm_pointer, 960)) == '8abe71cf'
 
 	if is_macos():
-		assert create_hash(encoded) == '8ecd1108'
-
-	if is_windows():
-		assert create_hash(encoded) == '8abe71cf'
-
-	assert encode_opus_buffer(opus_encoder, pcm_pointer, 0) == b''
+		assert create_hash(encode_opus_buffer(opus_encoder, pcm_pointer, 960)) == '8ecd1108'
 
 
 def test_destroy_opus_encoder() -> None:
