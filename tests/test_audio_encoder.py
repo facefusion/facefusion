@@ -3,15 +3,15 @@ from unittest.mock import patch
 
 import numpy
 import pytest
-from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
 from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
+from facefusion.common_helper import is_linux, is_macos
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import opus as opus_module
-from facefusion.common_helper import is_macos, is_linux, is_windows
+from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 
 @pytest.fixture(scope = 'module', autouse = True)
