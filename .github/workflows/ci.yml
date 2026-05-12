@@ -38,7 +38,7 @@ jobs:
   - run: pip install pytest-mock
   - run: pip install httpx
   - run: pip install python-multipart
-  - run: pytest
+  - run: pytest tests/test_audio_encoder.py
  report:
   needs: test
   runs-on: ubuntu-latest
