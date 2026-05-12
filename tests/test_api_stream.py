@@ -81,13 +81,10 @@ def test_stream_image(test_client : TestClient) -> None:
 		websocket.send_bytes(source_content)
 		output_buffer = websocket.receive_bytes()
 
-	if is_linux() or is_windows():
-		assert create_hash(output_buffer) == '0142782f'
-
-	if is_macos():
-		assert create_hash(output_buffer) == '0142782f'
+	assert create_hash(output_buffer) == '0142782f'
 
 
+#TODO: this test only checks the handshake and sdp offer but no stream of video bytes
 def test_stream_video(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
@@ -118,7 +115,6 @@ def test_stream_video(test_client : TestClient) -> None:
 
 	ready_event = threading.Event()
 	stop_event = threading.Event()
-	#TODO: use asyncio
 	stream_thread = threading.Thread(target = open_websocket_stream, args = (test_client, [ 'access_token.' + access_token ], source_content, ready_event, stop_event))
 	stream_thread.start()
 	ready_event.wait(timeout = 10)
@@ -132,7 +128,6 @@ def test_stream_video(test_client : TestClient) -> None:
 		'Content-Type': 'application/sdp'
 	})
 
-	# TODO: can we test if bytes have been passed? what does this actual test than just the handshake?
 	assert stream_response.status_code == 201
 	assert stream_response.text
 
