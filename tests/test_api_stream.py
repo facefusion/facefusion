@@ -2,16 +2,16 @@ import tempfile
 import threading
 from typing import Iterator
 
-import cv2
-import numpy
 import pytest
 from starlette.testclient import TestClient
 
 from facefusion import metadata, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
-from facefusion.core import common_pre_check, processors_pre_check
+from facefusion.common_helper import is_linux, is_macos, is_windows
+from facefusion.core import common_pre_check
 from facefusion.download import conditional_download
+from facefusion.hash_helper import create_hash
 from .assert_helper import get_test_example_file, get_test_examples_directory
 from .stream_helper import create_sdp_offer, open_websocket_stream
 
@@ -22,22 +22,9 @@ def before_all() -> None:
 	state_manager.init_item('execution_providers', [ 'cpu' ])
 	state_manager.init_item('download_providers', [ 'github', 'huggingface' ])
 	state_manager.init_item('temp_path', tempfile.gettempdir())
-	state_manager.init_item('processors', [ 'face_swapper' ])
-	state_manager.init_item('face_detector_model', 'yolo_face')
-	state_manager.init_item('face_detector_size', '640x640')
-	state_manager.init_item('face_detector_score', 0.5)
-	state_manager.init_item('face_detector_angles', [ 0 ])
-	state_manager.init_item('face_detector_margin', [ 0, 0, 0, 0 ])
-	state_manager.init_item('face_landmarker_model', '2dfan4')
-	state_manager.init_item('face_landmarker_score', 0.5)
-	state_manager.init_item('face_mask_types', [ 'box' ])
-	state_manager.init_item('face_mask_blur', 0.3)
-	state_manager.init_item('face_mask_padding', [ 0, 0, 0, 0 ])
-	state_manager.init_item('face_swapper_model', 'hyperswap_1a_256')
-	state_manager.init_item('face_swapper_pixel_boost', '256x256')
+	state_manager.init_item('processors', [])
 
 	common_pre_check()
-	processors_pre_check()
 
 	conditional_download(get_test_examples_directory(),
 	[
@@ -92,12 +79,13 @@ def test_stream_image(test_client : TestClient) -> None:
 		'access_token.' + access_token
 	]) as websocket:
 		websocket.send_bytes(source_content)
-		output_bytes = websocket.receive_bytes()
-		output_vision_frame = cv2.imdecode(numpy.frombuffer(output_bytes, numpy.uint8), cv2.IMREAD_COLOR)
+		output_buffer = websocket.receive_bytes()
 
-	# TODO: can we test if bytes have been passed? what does this actual test than just the handshake?
-	# TODO: compare to the video test - no status code check?
-	assert output_vision_frame.shape == (1024, 1024, 3)
+	if is_linux() or is_windows():
+		assert create_hash(output_buffer) == '0142782f'
+
+	if is_macos():
+		assert create_hash(output_buffer) == '0142782f'
 
 
 def test_stream_video(test_client : TestClient) -> None:
