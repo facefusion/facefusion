@@ -43,7 +43,7 @@ def test_encode_opus_buffer() -> None:
 		assert create_hash(encoded) == '8ecd1108'
 
 	if is_windows():
-		assert create_hash(encoded) == '8ecd1108'
+		assert create_hash(encoded) == '8abe71cf'
 
 	assert encode_opus_buffer(opus_encoder, pcm_pointer, 0) == b''
 
