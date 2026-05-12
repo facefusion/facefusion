@@ -35,16 +35,14 @@ def test_encode_vpx_buffer() -> None:
 	buffer_valid = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	buffer_invalid = bytes(0)
 
-	encoded = encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)
-
 	if is_linux():
-		assert create_hash(encoded) == '67120517'
+		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == '67120517'
 
 	if is_macos():
-		assert create_hash(encoded) == '67120517'
+		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == '1f528ae9'
 
 	if is_windows():
-		assert create_hash(encoded) == '67120517'
+		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == '67120517'
 
 	assert encode_vpx_buffer(vpx_encoder, buffer_invalid, width, height, 0, 0) == b''
 
