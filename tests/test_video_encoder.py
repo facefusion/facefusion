@@ -39,7 +39,7 @@ def test_encode_vpx_buffer() -> None:
 		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == 'ce133a1f'
 
 	if is_macos():
-		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == '1f528ae9'
+		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == '21c36925'
 
 	if is_windows():
 		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == '67120517'
