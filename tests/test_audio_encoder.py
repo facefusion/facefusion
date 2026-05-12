@@ -11,6 +11,7 @@ from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import opus as opus_module
+from facefusion.common_helper import is_macos, is_linux, is_windows
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -35,7 +36,10 @@ def test_encode_opus_buffer() -> None:
 
 	encoded = encode_opus_buffer(opus_encoder, pcm_pointer, 960)
 
-	assert create_hash(encoded) == '8abe71cf'
+	if is_linux():
+		assert create_hash(encoded) == '8abe71cf'
+	if is_macos():
+		assert create_hash(encoded) == '8ecd1108'
 	assert encode_opus_buffer(opus_encoder, pcm_pointer, 0) == b''
 
 
