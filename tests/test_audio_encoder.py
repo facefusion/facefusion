@@ -6,7 +6,7 @@ import pytest
 
 from facefusion import state_manager
 from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
-from facefusion.common_helper import is_linux, is_macos
+from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
@@ -38,8 +38,13 @@ def test_encode_opus_buffer() -> None:
 
 	if is_linux():
 		assert create_hash(encoded) == '8abe71cf'
+
 	if is_macos():
 		assert create_hash(encoded) == '8ecd1108'
+
+	if is_windows():
+		assert create_hash(encoded) == '8ecd1108'
+
 	assert encode_opus_buffer(opus_encoder, pcm_pointer, 0) == b''
 
 
