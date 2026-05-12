@@ -30,13 +30,13 @@ def test_create_vpx_encoder() -> None:
 def test_encode_vpx_buffer() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	height, width = vision_frame.shape[:2]
-	vpx_encoder = create_vpx_encoder(width, height, 1000)
+	vpx_encoder = create_vpx_encoder(width, height, 1000, thread_count = 1, cpu_used = 0)
 
 	buffer_valid = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	buffer_invalid = bytes(0)
 
 	if is_linux():
-		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == '67120517'
+		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == 'ce133a1f'
 
 	if is_macos():
 		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == '1f528ae9'
