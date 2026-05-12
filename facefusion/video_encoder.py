@@ -6,7 +6,7 @@ from facefusion.libraries import vpx as vpx_module
 from facefusion.types import BitRate, VpxEncoder
 
 
-def create_vpx_encoder(width : int, height : int, bitrate : BitRate, thread_count : int = 8, cpu_count : int = 16) -> Optional[VpxEncoder]:
+def create_vpx_encoder(width : int, height : int, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[VpxEncoder]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:

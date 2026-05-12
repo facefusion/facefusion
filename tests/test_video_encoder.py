@@ -23,14 +23,14 @@ def before_all() -> None:
 
 
 def test_create_vpx_encoder() -> None:
-	assert create_vpx_encoder(320, 240, 1000)
-	assert create_vpx_encoder(0, 0, 0) is None
+	assert create_vpx_encoder(320, 240, 1000, 8, 16)
+	assert create_vpx_encoder(0, 0, 0, 0, 0) is None
 
 
 def test_encode_vpx_buffer() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	height, width = vision_frame.shape[:2]
-	vpx_encoder = create_vpx_encoder(width, height, 1000, thread_count = 1, cpu_count = 0)
+	vpx_encoder = create_vpx_encoder(width, height, 1000, 1, 0)
 
 	buffer_valid = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	buffer_invalid = bytes(0)
@@ -45,7 +45,7 @@ def test_encode_vpx_buffer() -> None:
 
 
 def test_destroy_vpx_encoder() -> None:
-	vpx_encoder = create_vpx_encoder(320, 240, 1000)
+	vpx_encoder = create_vpx_encoder(320, 240, 1000, 8, 16)
 
 	with patch.object(vpx_module.create_static_library(), 'vpx_codec_destroy') as mock:
 		destroy_vpx_encoder(vpx_encoder)
