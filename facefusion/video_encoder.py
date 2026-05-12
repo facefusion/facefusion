@@ -6,7 +6,7 @@ from facefusion.libraries import vpx as vpx_module
 from facefusion.types import BitRate, VpxEncoder
 
 
-def create_vpx_encoder(width : int, height : int, bitrate : BitRate) -> Optional[VpxEncoder]:
+def create_vpx_encoder(width : int, height : int, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[VpxEncoder]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
@@ -16,7 +16,7 @@ def create_vpx_encoder(width : int, height : int, bitrate : BitRate) -> Optional
 		config_buffer = ctypes.create_string_buffer(4096)
 
 		if vpx_library.vpx_codec_enc_config_default(ctypes.byref(vp8_codec), config_buffer, 0) == 0:
-			struct.pack_into('I', config_buffer, 4, 8)
+			struct.pack_into('I', config_buffer, 4, thread_count)
 			struct.pack_into('I', config_buffer, 12, width)
 			struct.pack_into('I', config_buffer, 16, height)
 			struct.pack_into('I', config_buffer, 28, 1)
@@ -29,7 +29,7 @@ def create_vpx_encoder(width : int, height : int, bitrate : BitRate) -> Optional
 			struct.pack_into('I', config_buffer, 128, 50)
 
 			if vpx_library.vpx_codec_enc_init_ver(vpx_encoder, ctypes.byref(vp8_codec), config_buffer, 0, 39) == 0:
-				vpx_library.vpx_codec_control_(vpx_encoder, 13, ctypes.c_int(16))
+				vpx_library.vpx_codec_control_(vpx_encoder, 13, ctypes.c_int(cpu_count))
 				vpx_library.vpx_codec_control_(vpx_encoder, 12, ctypes.c_int(3))
 				vpx_library.vpx_codec_control_(vpx_encoder, 27, ctypes.c_int(10))
 				return vpx_encoder

@@ -44,7 +44,7 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 
 # TODO: move to facefusion/vpx_encoder.py, throttle loop to avoid spinning on same frame
 def run_video_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
-	vpx_encoder = create_vpx_encoder(initial_resolution[0], initial_resolution[1], 4500)
+	vpx_encoder = create_vpx_encoder(initial_resolution[0], initial_resolution[1], 4500, 8, 16)
 	current_resolution = initial_resolution
 	pts = 0
 
@@ -59,7 +59,7 @@ def run_video_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : 
 				destroy_vpx_encoder(vpx_encoder)
 
 			current_resolution = frame_resolution
-			vpx_encoder = create_vpx_encoder(current_resolution[0], current_resolution[1], 4500)
+			vpx_encoder = create_vpx_encoder(current_resolution[0], current_resolution[1], 4500, 8, 16)
 			pts = 0
 
 		if vpx_encoder:

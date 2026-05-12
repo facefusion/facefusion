@@ -7,8 +7,10 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 
 from facefusion import state_manager
 from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
+from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
+from facefusion.hash_helper import create_hash
 from facefusion.libraries import opus as opus_module
 
 
@@ -26,15 +28,17 @@ def test_create_opus_encoder() -> None:
 	assert create_opus_encoder(0, 0) is None
 
 
-#TODO: rename to test_encode_opus_buffer
 def test_encode_opus_buffer() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	pcm_samples = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	pcm_pointer = pcm_samples[:1920].ctypes.data_as(ctypes.POINTER(ctypes.c_float))
 	opus_encoder = create_opus_encoder(48000, 2)
 
-	assert encode_opus_buffer(opus_encoder, pcm_pointer, 960)
-	assert encode_opus_buffer(opus_encoder, pcm_pointer, 0) == b''
+	if is_linux() or is_windows():
+		assert create_hash(encode_opus_buffer(opus_encoder, pcm_pointer, 960)) == '8abe71cf'
+
+	if is_macos():
+		assert create_hash(encode_opus_buffer(opus_encoder, pcm_pointer, 960)) == '8ecd1108'
 
 
 def test_destroy_opus_encoder() -> None:
