@@ -112,7 +112,7 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 def create_sdp(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	datachannel_library = datachannel_module.create_static_library()
 	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')
-	buffer_size = 16384
+	buffer_size = 8192
 	buffer_string = ctypes.create_string_buffer(buffer_size)
 
 	if datachannel_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
@@ -145,7 +145,7 @@ def negotiate_sdp(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Opt
 	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
 	sdp_event.wait(timeout = 5)
 
-	sdp_buffer_size = 16384
+	sdp_buffer_size = 8192
 	sdp_buffer = ctypes.create_string_buffer(sdp_buffer_size)
 
 	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, sdp_buffer_size) > 0:

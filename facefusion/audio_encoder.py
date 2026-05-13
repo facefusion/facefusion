@@ -19,9 +19,9 @@ def encode_opus_buffer(opus_encoder : OpusEncoder, input_buffer : bytes, frame_s
 	output_buffer = b''
 
 	if opus_library:
-		temp_buffer = ctypes.create_string_buffer(4000)
+		temp_buffer = ctypes.create_string_buffer(2048)
 		encode_buffer = ctypes.cast(ctypes.create_string_buffer(input_buffer), ctypes.POINTER(ctypes.c_float))
-		encode_length = opus_library.opus_encode_float(opus_encoder, encode_buffer, frame_size, temp_buffer, 4000)
+		encode_length = opus_library.opus_encode_float(opus_encoder, encode_buffer, frame_size, temp_buffer, 2048)
 
 		if encode_length:
 			output_buffer = temp_buffer.raw[:encode_length]

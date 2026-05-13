@@ -38,15 +38,15 @@ def detect_nvidia_graphic_devices() -> List[GraphicDevice]:
 	if nvidia_ml_library:
 		nvidia_ml_library.nvmlInit_v2()
 
-		driver_version = ctypes.create_string_buffer(80)
-		nvidia_ml_library.nvmlSystemGetDriverVersion(driver_version, 80)
+		driver_version = ctypes.create_string_buffer(128)
+		nvidia_ml_library.nvmlSystemGetDriverVersion(driver_version, 128)
 
 		cuda_version = ctypes.c_int()
 		nvidia_ml_library.nvmlSystemGetCudaDriverVersion(ctypes.byref(cuda_version))
 
 		for device_handle in nvidia_ml_module.find_device_handles(nvidia_ml_library):
-			device_name = ctypes.create_string_buffer(96)
-			nvidia_ml_library.nvmlDeviceGetName(device_handle, device_name, 96)
+			device_name = ctypes.create_string_buffer(128)
+			nvidia_ml_library.nvmlDeviceGetName(device_handle, device_name, 128)
 
 			device_memory = nvidia_ml_module.define_device_memory()
 			nvidia_ml_library.nvmlDeviceGetMemoryInfo(device_handle, ctypes.byref(device_memory))

@@ -10,10 +10,10 @@ def create_vpx_encoder(frame_resolution : Resolution, bitrate : BitRate, thread_
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
-		vpx_encoder = ctypes.create_string_buffer(512)
+		vpx_encoder = ctypes.create_string_buffer(64)
 		vp8_codec = ctypes.c_void_p.in_dll(vpx_library, 'vpx_codec_vp8_cx_algo')
 
-		config_buffer = ctypes.create_string_buffer(4096)
+		config_buffer = ctypes.create_string_buffer(512)
 
 		if vpx_library.vpx_codec_enc_config_default(ctypes.byref(vp8_codec), config_buffer, 0) == 0:
 			struct.pack_into('I', config_buffer, 4, thread_count)
@@ -42,7 +42,7 @@ def encode_vpx_buffer(vpx_encoder : VpxEncoder, input_buffer : bytes, frame_reso
 	output_buffer = b''
 
 	if vpx_library:
-		temp_buffer = ctypes.create_string_buffer(512)
+		temp_buffer = ctypes.create_string_buffer(256)
 		encode_buffer = ctypes.create_string_buffer(input_buffer)
 
 		if vpx_library.vpx_img_wrap(temp_buffer, 0x102, frame_resolution[0], frame_resolution[1], 1, encode_buffer) and vpx_library.vpx_codec_encode(vpx_encoder, temp_buffer, frame_index, 1, 0, 1) == 0:
