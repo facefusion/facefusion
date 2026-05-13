@@ -29,8 +29,8 @@ def test_create_opus_encoder() -> None:
 
 def test_encode_opus_buffer() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
-	pcm_samples = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
-	input_buffer = pcm_samples[:1920].tobytes()
+	input_samples = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
+	input_buffer = input_samples[:1920].tobytes()
 	opus_encoder = create_opus_encoder(48000, 2)
 
 	if is_linux() or is_windows():
