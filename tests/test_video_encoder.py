@@ -23,29 +23,29 @@ def before_all() -> None:
 
 
 def test_create_vpx_encoder() -> None:
-	assert create_vpx_encoder(320, 240, 1000, 8, 16)
-	assert create_vpx_encoder(0, 0, 0, 0, 0) is None
+	assert create_vpx_encoder((320, 240), 1000, 8, 16)
+	assert create_vpx_encoder((0, 0), 0, 0, 0) is None
 
 
 def test_encode_vpx_buffer() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	height, width = vision_frame.shape[:2]
-	vpx_encoder = create_vpx_encoder(width, height, 1000, 1, 0)
+	frame_resolution = (vision_frame.shape[1], vision_frame.shape[0])
+	vpx_encoder = create_vpx_encoder(frame_resolution, 1000, 1, 0)
 
 	buffer_valid = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	buffer_invalid = bytes(0)
 
 	if is_linux() or is_windows():
-		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == 'ce133a1f'
+		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, frame_resolution, 3, 1)) == 'ce133a1f'
 
 	if is_macos():
-		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, width, height, 3, 1)) == '21c36925'
+		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, frame_resolution, 3, 1)) == '21c36925'
 
-	assert encode_vpx_buffer(vpx_encoder, buffer_invalid, width, height, 0, 0) == b''
+	assert encode_vpx_buffer(vpx_encoder, buffer_invalid, frame_resolution, 0, 0) == b''
 
 
 def test_destroy_vpx_encoder() -> None:
-	vpx_encoder = create_vpx_encoder(320, 240, 1000, 8, 16)
+	vpx_encoder = create_vpx_encoder((320, 240), 1000, 8, 16)
 
 	with patch.object(vpx_module.create_static_library(), 'vpx_codec_destroy') as mock:
 		destroy_vpx_encoder(vpx_encoder)
