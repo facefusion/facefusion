@@ -14,19 +14,18 @@ def create_opus_encoder(sample_rate : int, channel_total : int) -> Optional[Opus
 	return None
 
 
-# TODO this method needs refinement
 def encode_opus_buffer(opus_encoder : OpusEncoder, pcm_pointer : ctypes.c_void_p, frame_size : int) -> bytes:
 	opus_library = opus_module.create_static_library()
-	audio_buffer = b''
+	output_buffer = b''
 
 	if opus_library:
-		output_buffer = ctypes.create_string_buffer(4000)
-		encode_length = opus_library.opus_encode_float(opus_encoder, pcm_pointer, frame_size, output_buffer, 4000)
+		temp_buffer = ctypes.create_string_buffer(4000)
+		encode_length = opus_library.opus_encode_float(opus_encoder, pcm_pointer, frame_size, temp_buffer, 4000)
 
-		if encode_length > 0:
-			audio_buffer = output_buffer.raw[:encode_length]
+		if encode_length:
+			output_buffer = temp_buffer.raw[:encode_length]
 
-	return audio_buffer
+	return output_buffer
 
 
 def destroy_opus_encoder(opus_encoder : OpusEncoder) -> None:
