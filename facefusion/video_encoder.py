@@ -37,35 +37,36 @@ def create_vpx_encoder(frame_resolution : Resolution, bitrate : BitRate, thread_
 	return None
 
 
-def collect_vpx_frame_buffer(vpx_encoder : VpxEncoder) -> bytes:
+def encode_vpx_buffer(vpx_encoder : VpxEncoder, input_buffer : bytes, frame_resolution : Resolution, frame_index : int) -> bytes:
 	vpx_library = vpx_module.create_static_library()
-	frame_buffer = b''
-	iterator = ctypes.c_void_p(0)
-	packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(iterator))
+	output_buffer = b''
+
+	if vpx_library:
+		temp_buffer = ctypes.create_string_buffer(512)
+		encode_buffer = ctypes.create_string_buffer(input_buffer)
+
+		if vpx_library.vpx_img_wrap(temp_buffer, 0x102, frame_resolution[0], frame_resolution[1], 1, encode_buffer) and vpx_library.vpx_codec_encode(vpx_encoder, temp_buffer, frame_index, 1, 0, 1) == 0:
+			output_buffer = collect_vpx_buffer(vpx_encoder)
+
+	return output_buffer
+
+
+def collect_vpx_buffer(vpx_encoder : VpxEncoder) -> bytes:
+	vpx_library = vpx_module.create_static_library()
+	output_buffer = b''
+
+	packet_cursor = ctypes.c_void_p(0)
+	packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(packet_cursor))
 
 	while packet:
 		if ctypes.c_int.from_address(packet).value == 0:
 			buffer_pointer = ctypes.c_void_p.from_address(packet + 8).value
 			buffer_size = ctypes.c_size_t.from_address(packet + 16).value
-			frame_buffer += ctypes.string_at(buffer_pointer, buffer_size)
+			output_buffer += ctypes.string_at(buffer_pointer, buffer_size)
 
-		packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(iterator))
+		packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(packet_cursor))
 
-	return frame_buffer
-
-
-def encode_vpx_buffer(vpx_encoder : VpxEncoder, raw_frame_buffer : bytes, frame_resolution : Resolution, presentation_timestamp : int, flags : int) -> bytes:
-	vpx_library = vpx_module.create_static_library()
-	frame_buffer = b''
-
-	if vpx_library:
-		output_buffer = ctypes.create_string_buffer(512)
-		encode_string_buffer = ctypes.create_string_buffer(raw_frame_buffer)
-
-		if vpx_library.vpx_img_wrap(output_buffer, 0x102, frame_resolution[0], frame_resolution[1], 1, encode_string_buffer) and vpx_library.vpx_codec_encode(vpx_encoder, output_buffer, presentation_timestamp, 1, flags, 1) == 0:
-			frame_buffer = collect_vpx_frame_buffer(vpx_encoder)
-
-	return frame_buffer
+	return output_buffer
 
 
 def destroy_vpx_encoder(vpx_encoder : VpxEncoder) -> None:

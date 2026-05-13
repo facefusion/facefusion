@@ -63,12 +63,7 @@ def run_video_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : 
 
 		if vpx_encoder:
 			yuv_frame = cv2.cvtColor(output_frame, cv2.COLOR_BGR2YUV_I420)
-			vpx_flags = 0
-
-			if pts % keyframe_interval == 0:
-				vpx_flags = 1
-
-			frame_buffer = encode_vpx_buffer(vpx_encoder, yuv_frame.tobytes(), frame_resolution, pts, vpx_flags)
+			frame_buffer = encode_vpx_buffer(vpx_encoder, yuv_frame.tobytes(), frame_resolution, pts)
 
 			if frame_buffer:
 				rtc_store.send_rtc_video(session_id, frame_buffer)
