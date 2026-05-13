@@ -36,12 +36,12 @@ def test_encode_vpx_buffer() -> None:
 	buffer_invalid = bytes(0)
 
 	if is_linux() or is_windows():
-		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, frame_resolution, 3, 1)) == 'ce133a1f'
+		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, frame_resolution, 3)) == 'ce133a1f'
 
 	if is_macos():
-		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, frame_resolution, 3, 1)) == '21c36925'
+		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, frame_resolution, 3)) == '21c36925'
 
-	assert encode_vpx_buffer(vpx_encoder, buffer_invalid, frame_resolution, 0, 0) == b''
+	assert encode_vpx_buffer(vpx_encoder, buffer_invalid, frame_resolution, 0) == b''
 
 
 def test_destroy_vpx_encoder() -> None:
