@@ -1,5 +1,4 @@
 import asyncio
-import ctypes
 from collections import deque
 from collections.abc import AsyncIterator
 from typing import Tuple
@@ -144,8 +143,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 					while len(audio_temp) >= 1920:
 						audio_chunk = audio_temp[:1920]
 						audio_temp = audio_temp[1920:]
-						pcm_pointer = audio_chunk.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
-						audio_buffer = encode_opus_buffer(opus_encoder, pcm_pointer, 960)
+						audio_buffer = encode_opus_buffer(opus_encoder, audio_chunk.tobytes(), 960)
 
 						if audio_buffer:
 							rtc_store.send_rtc_audio(session_id, audio_buffer, audio_timestamp)
