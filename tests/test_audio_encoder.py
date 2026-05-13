@@ -1,4 +1,3 @@
-import ctypes
 from unittest.mock import patch
 
 import numpy
@@ -31,14 +30,14 @@ def test_create_opus_encoder() -> None:
 def test_encode_opus_buffer() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	pcm_samples = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
-	pcm_pointer = pcm_samples[:1920].ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+	input_buffer = pcm_samples[:1920].tobytes()
 	opus_encoder = create_opus_encoder(48000, 2)
 
 	if is_linux() or is_windows():
-		assert create_hash(encode_opus_buffer(opus_encoder, pcm_pointer, 960)) == '8abe71cf'
+		assert create_hash(encode_opus_buffer(opus_encoder, input_buffer, 960)) == '8abe71cf'
 
 	if is_macos():
-		assert create_hash(encode_opus_buffer(opus_encoder, pcm_pointer, 960)) == '8ecd1108'
+		assert create_hash(encode_opus_buffer(opus_encoder, input_buffer, 960)) == '8ecd1108'
 
 
 def test_destroy_opus_encoder() -> None:
