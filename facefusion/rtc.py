@@ -145,6 +145,31 @@ def create_sdp(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	return None
 
 
+# TODO: move from testing suite helper to rtc.py - belongs here to complete the rtc flow
+def create_sdp_offer() -> Optional[SdpOffer]:
+	datachannel_library = datachannel_module.create_static_library()
+	peer_connection = create_peer_connection(disable_auto_negotiation = True)
+
+	datachannel_library.rtcAddTrack(peer_connection, build_media_description('video', 96, 'VP8/90000', 'recvonly', 0))
+	datachannel_library.rtcAddTrack(peer_connection, build_media_description('audio', 111, 'opus/48000/2', 'recvonly', 1))
+	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')
+
+	buffer_size = 16384
+	buffer_string = ctypes.create_string_buffer(buffer_size)
+	wait_limit = time.monotonic() + 5
+
+	while time.monotonic() < wait_limit:
+		if datachannel_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
+			sdp = buffer_string.value.decode()
+			datachannel_library.rtcDeletePeerConnection(peer_connection)
+			return sdp
+
+		time.sleep(0.05)
+
+	datachannel_library.rtcDeletePeerConnection(peer_connection)
+	return None
+
+
 @ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p)
 def on_sdp_ready(peer_connection : int, sdp : Optional[bytes], sdp_type : int, user_pointer : Optional[int]) -> None:
 	ctypes.cast(user_pointer, ctypes.py_object).value.set()
@@ -178,24 +203,6 @@ def negotiate_sdp(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Opt
 	return None
 
 
-def send_video_to_peers(rtc_peers : List[RtcPeer], frame_buffer : bytes) -> None:
-	datachannel_library = datachannel_module.create_static_library()
-
-	if rtc_peers:
-		timestamp = int(time.monotonic() * 90000) & 0xFFFFFFFF
-		send_buffer = ctypes.create_string_buffer(frame_buffer)
-		send_total = len(frame_buffer)
-
-		for rtc_peer in rtc_peers:
-			video_track_id = rtc_peer.get('video_track')
-
-			if video_track_id and datachannel_library.rtcIsOpen(video_track_id):
-				datachannel_library.rtcSetTrackRtpTimestamp(video_track_id, timestamp)
-				datachannel_library.rtcSendMessage(video_track_id, send_buffer, send_total)
-
-	return None
-
-
 def send_audio_to_peers(rtc_peers : List[RtcPeer], audio_buffer : bytes, audio_pts : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
@@ -210,6 +217,24 @@ def send_audio_to_peers(rtc_peers : List[RtcPeer], audio_buffer : bytes, audio_p
 			if audio_track_id and datachannel_library.rtcIsOpen(audio_track_id):
 				datachannel_library.rtcSetTrackRtpTimestamp(audio_track_id, timestamp)
 				datachannel_library.rtcSendMessage(audio_track_id, send_buffer, send_total)
+
+	return None
+
+
+def send_video_to_peers(rtc_peers : List[RtcPeer], frame_buffer : bytes) -> None:
+	datachannel_library = datachannel_module.create_static_library()
+
+	if rtc_peers:
+		timestamp = int(time.monotonic() * 90000) & 0xFFFFFFFF
+		send_buffer = ctypes.create_string_buffer(frame_buffer)
+		send_total = len(frame_buffer)
+
+		for rtc_peer in rtc_peers:
+			video_track_id = rtc_peer.get('video_track')
+
+			if video_track_id and datachannel_library.rtcIsOpen(video_track_id):
+				datachannel_library.rtcSetTrackRtpTimestamp(video_track_id, timestamp)
+				datachannel_library.rtcSendMessage(video_track_id, send_buffer, send_total)
 
 	return None
 

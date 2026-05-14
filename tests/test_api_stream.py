@@ -7,14 +7,13 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, session_manager, state_manager
+from facefusion import metadata, rtc, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from .assert_helper import get_test_example_file, get_test_examples_directory
-from .stream_helper import create_sdp_offer, open_websocket_stream
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -50,7 +49,7 @@ def create_event() -> threading.Event:
 	return threading.Event()
 
 
-@pytest.fixture(scope = 'function')
+@pytest.mark.helper
 def set_event(session_id : str, frame_buffer : bytes, event : threading.Event) -> None:
 	event.set()
 
@@ -124,26 +123,22 @@ def test_stream_video(test_client : TestClient, create_event : threading.Event) 
 	})
 
 	with patch('facefusion.rtc_store.send_rtc_video', side_effect = partial(set_event, event = create_event)):
-		ready_event = threading.Event()
-		stop_event = threading.Event()
-		stream_thread = threading.Thread(target = open_websocket_stream, args = (test_client, [ 'access_token.' + access_token ], source_content, ready_event, stop_event))
-		stream_thread.start()
-		ready_event.wait(timeout = 10)
+		with test_client.websocket_connect('/stream?mode=video', subprotocols =
+		[
+			'access_token.' + access_token
+		]) as websocket:
+			websocket.send_bytes(chr(1).encode() + source_content)
+			websocket.receive_text()
 
-		assert ready_event.is_set()
+			sdp_offer = rtc.create_sdp_offer()
+			stream_response = test_client.post('/stream', content = sdp_offer, headers =
+			{
+				'Authorization': 'Bearer ' + access_token,
+				'Content-Type': 'application/sdp'
+			})
 
-		sdp_offer = create_sdp_offer()
-		stream_response = test_client.post('/stream', content = sdp_offer, headers =
-		{
-			'Authorization': 'Bearer ' + access_token,
-			'Content-Type': 'application/sdp'
-		})
+			assert stream_response.status_code == 201
 
-		assert stream_response.status_code == 201
+			create_event.wait(timeout = 10)
 
-		create_event.wait(timeout = 10)
-
-		assert create_event.is_set()
-
-		stop_event.set()
-		stream_thread.join(timeout = 10)
+			assert create_event.is_set()
