@@ -21,7 +21,7 @@ async def receive_stream_frames(websocket : WebSocket) -> AsyncIterator[Tuple[in
 	websocket_event = await websocket.receive()
 
 	while websocket_event.get('type') == 'websocket.receive':
-		frame_buffer = websocket_event.get('bytes') or b''
+		frame_buffer = websocket_event.get('bytes') or bytes()
 
 		if len(frame_buffer) > 1:
 			yield frame_buffer[0], frame_buffer[1:]
@@ -33,7 +33,7 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 	websocket_event = await websocket.receive()
 
 	while websocket_event.get('type') == 'websocket.receive':
-		frame_buffer = websocket_event.get('bytes') or b''
+		frame_buffer = websocket_event.get('bytes') or bytes()
 		vision_frame = cv2.imdecode(numpy.frombuffer(frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
 
 		if numpy.any(vision_frame):
