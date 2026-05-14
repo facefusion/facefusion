@@ -10,10 +10,10 @@ from starlette.websockets import WebSocket, WebSocketState
 from facefusion import rtc_store, session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.audio_encoder import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
+from facefusion.codecs.opus import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.streamer import process_vision_frame
 from facefusion.types import Resolution, SessionId, VisionFrame
-from facefusion.video_encoder import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
+from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 
 
 async def receive_stream_frames(websocket : WebSocket) -> AsyncIterator[Tuple[int, bytes]]:

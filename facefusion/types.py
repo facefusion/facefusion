@@ -90,6 +90,7 @@ MelFilterBank : TypeAlias = NDArray[Any]
 Voice : TypeAlias = NDArray[Any]
 VoiceChunk : TypeAlias = NDArray[Any]
 
+AomEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 OpusEncoder : TypeAlias = ctypes.c_void_p
 VpxEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 
