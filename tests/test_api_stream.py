@@ -94,7 +94,8 @@ def test_stream_image(test_client : TestClient) -> None:
 	assert create_hash(output_buffer) == '0142782f'
 
 
-def test_stream_video(test_client : TestClient, create_event : threading.Event) -> None:
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+def test_stream_video(test_client : TestClient, create_event : threading.Event, video_codec : str) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
@@ -123,7 +124,7 @@ def test_stream_video(test_client : TestClient, create_event : threading.Event) 
 	})
 
 	with patch('facefusion.rtc_store.send_rtc_video', side_effect = partial(set_event, event = create_event)):
-		with test_client.websocket_connect('/stream?mode=video', subprotocols =
+		with test_client.websocket_connect('/stream?mode=video&codec=' + video_codec, subprotocols =
 		[
 			'access_token.' + access_token
 		]) as websocket:
