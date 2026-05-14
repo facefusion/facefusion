@@ -185,6 +185,7 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
 	library.rtcSendMessage.restype = ctypes.c_int
 
+	library.rtcSetAV1Packetizer.restype = ctypes.c_int
 	library.rtcSetVP8Packetizer.restype = ctypes.c_int
 
 	library.rtcChainRtcpSrReporter.argtypes = [ ctypes.c_int ]
@@ -256,6 +257,7 @@ def define_rtc_packetizer_init() -> ctypes.Structure:
 			('clockRate', ctypes.c_uint32),
 			('sequenceNumber', ctypes.c_uint16),
 			('timestamp', ctypes.c_uint32),
-			('maxFragmentSize', ctypes.c_uint16)
+			('maxFragmentSize', ctypes.c_uint16),
+			('obuPacketization', ctypes.c_int)
 		]
 	})()

@@ -4,7 +4,7 @@ import time
 from typing import Dict, List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer
+from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
 
 
 # TODO: reduce to only used params
@@ -62,18 +62,27 @@ def build_media_description(media_type : str, payload_type : int, rtp_codec : st
 def parse_sdp_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
 	payload_types : Dict[str, int] = {}
 
+	# TODO: consider having a codec helper to resolve these
 	for line in sdp_offer.splitlines():
-		if line.startswith('a=rtpmap:') and 'VP8/90000' in line:
+		if line.startswith('a=rtpmap:') and 'AV1/90000' in line and not payload_types.get('av1'):
+			payload_types['av1'] = int(line.split(':')[1].split(' ')[0])
+		if line.startswith('a=rtpmap:') and 'VP8/90000' in line and not payload_types.get('vp8'):
 			payload_types['vp8'] = int(line.split(':')[1].split(' ')[0])
-		if line.startswith('a=rtpmap:') and 'opus/48000/2' in line:
+		if line.startswith('a=rtpmap:') and 'opus/48000/2' in line and not payload_types.get('opus'):
 			payload_types['opus'] = int(line.split(':')[1].split(' ')[0])
 
 	return payload_types
 
 
-def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection, payload_type : int) -> RtcAudioTrack:
+def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> RtcAudioTrack:
 	datachannel_library = datachannel_module.create_static_library()
-	media_description = build_media_description('audio', payload_type, 'opus/48000/2', media_direction, 1)
+
+	# TODO: Fix me via resolve method
+	rtp_codec = 'opus/48000/2'
+	if audio_codec == 'opus':
+		rtp_codec = 'opus/48000/2'
+
+	media_description = build_media_description('audio', payload_type, rtp_codec, media_direction, 1)
 
 	audio_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
 
@@ -83,15 +92,25 @@ def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDir
 	audio_packetizer.payloadType = payload_type
 	audio_packetizer.clockRate = 48000
 
-	datachannel_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
+	if audio_codec == 'opus':
+		datachannel_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
+
 	datachannel_library.rtcChainRtcpSrReporter(audio_track)
 
 	return audio_track
 
 
-def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, payload_type : int) -> RtcVideoTrack:
+def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> RtcVideoTrack:
 	datachannel_library = datachannel_module.create_static_library()
-	media_description = build_media_description('video', payload_type, 'VP8/90000', media_direction, 0)
+
+	#TODO: Fix me via resolve method
+	rtp_codec = 'AV1/90000'
+	if video_codec == 'av1':
+		rtp_codec = 'AV1/90000'
+	if video_codec == 'vp8':
+		rtp_codec = 'VP8/90000'
+
+	media_description = build_media_description('video', payload_type, rtp_codec, media_direction, 0)
 
 	video_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
 
@@ -102,7 +121,11 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 	video_packetizer.clockRate = 90000
 	video_packetizer.maxFragmentSize = 1200
 
-	datachannel_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
+	if video_codec == 'av1':
+		datachannel_library.rtcSetAV1Packetizer(video_track, ctypes.byref(video_packetizer))
+	if video_codec == 'vp8':
+		datachannel_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
+
 	datachannel_library.rtcChainRtcpSrReporter(video_track)
 	datachannel_library.rtcChainRtcpNackResponder(video_track, 512)
 

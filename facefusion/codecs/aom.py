@@ -1,6 +1,6 @@
 import ctypes
 import struct
-from typing import Optional
+from typing import List, Optional
 
 from facefusion.libraries import aom as aom_module
 from facefusion.types import AomEncoder, BitRate, Resolution
@@ -10,16 +10,17 @@ def create_aom_encoder(frame_resolution : Resolution, bitrate : BitRate, thread_
 	aom_library = aom_module.create_static_library()
 
 	if aom_library:
-		aom_encoder = ctypes.create_string_buffer(1024)
+		aom_encoder = ctypes.create_string_buffer(128)
 		aom_codec = ctypes.c_void_p.in_dll(aom_library, 'aom_codec_av1_cx_algo')
 
-		config_buffer = ctypes.create_string_buffer(4096)
+		config_buffer = ctypes.create_string_buffer(1024)
 
 		if aom_library.aom_codec_enc_config_default(ctypes.byref(aom_codec), config_buffer, 1) == 0:
 			struct.pack_into('I', config_buffer, 4, thread_count)
 			struct.pack_into('I', config_buffer, 12, frame_resolution[0])
 			struct.pack_into('I', config_buffer, 16, frame_resolution[1])
 			struct.pack_into('I', config_buffer, 136, bitrate)
+			struct.pack_into('I', config_buffer, 192, 30)
 
 			if aom_library.aom_codec_enc_init_ver(aom_encoder, ctypes.byref(aom_codec), config_buffer, 0, 25) == 0:
 				aom_library.aom_codec_control(aom_encoder, 13, ctypes.c_int(cpu_count))
@@ -37,14 +38,11 @@ def encode_aom_buffer(aom_encoder : AomEncoder, input_buffer : bytes, frame_reso
 	output_buffer = b''
 
 	if aom_library:
-		temp_buffer = ctypes.create_string_buffer(512)
+		temp_buffer = ctypes.create_string_buffer(256)
 		encode_buffer = ctypes.create_string_buffer(input_buffer)
 
 		if aom_library.aom_img_wrap(temp_buffer, 0x102, frame_resolution[0], frame_resolution[1], 1, encode_buffer) and aom_library.aom_codec_encode(aom_encoder, temp_buffer, frame_index, 1, 0, 1) == 0:
 			output_buffer = collect_aom_buffer(aom_encoder)
-
-	if output_buffer.startswith(bytes([ 0x12, 0x00 ])):
-		output_buffer = output_buffer[2:]
 
 	return output_buffer
 
@@ -65,6 +63,47 @@ def collect_aom_buffer(aom_encoder : AomEncoder) -> bytes:
 		packet = aom_library.aom_codec_get_cx_data(aom_encoder, ctypes.byref(packet_cursor))
 
 	return output_buffer
+
+
+# TODO: try to eliminate this
+def extract_aom_obus(frame_buffer : bytes) -> List[bytes]:
+	obu_list : List[bytes] = []
+	offset = 0
+
+	while offset < len(frame_buffer):
+		header_offset = offset
+		header = frame_buffer[offset]
+		obu_type = (header >> 3) & 0x0F
+		has_extension = (header >> 2) & 0x01
+		has_size = (header >> 1) & 0x01
+		offset += 1 + has_extension
+
+		obu_size = 0
+
+		if has_size:
+			shift = 0
+
+			while offset < len(frame_buffer):
+				leb_byte = frame_buffer[offset]
+				offset += 1
+				obu_size |= (leb_byte & 0x7F) << shift
+				shift += 7
+
+				if not (leb_byte & 0x80):
+					break
+
+		payload_offset = offset
+		offset += obu_size
+
+		if obu_type != 2:
+			clean_header = bytes([ header & 0xFD ])
+
+			if has_extension:
+				clean_header += frame_buffer[header_offset + 1:header_offset + 2]
+
+			obu_list.append(clean_header + frame_buffer[payload_offset:payload_offset + obu_size])
+
+	return obu_list
 
 
 def destroy_aom_encoder(aom_encoder : AomEncoder) -> None:
