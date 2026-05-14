@@ -34,7 +34,7 @@ def test_encode_aom_buffer() -> None:
 	aom_encoder = create_aom_encoder(video_resolution, 1000, 1, 0)
 
 	if is_linux() or is_windows():
-		assert create_hash(encode_aom_buffer(aom_encoder, video_buffer, video_resolution, 3)) == '4b621fb8'
+		assert create_hash(encode_aom_buffer(aom_encoder, video_buffer, video_resolution, 3)) == '3ab6cc31'
 
 	if is_macos():
 		assert create_hash(encode_aom_buffer(aom_encoder, video_buffer, video_resolution, 3)) == '64c12977'

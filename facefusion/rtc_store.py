@@ -1,21 +1,23 @@
 from typing import List, Optional
 
 from facefusion import rtc
-from facefusion.types import PeerConnection, RtcAudioTrack, RtcPeer, RtcStreamStore, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId
+from facefusion.types import AudioCodec, PeerConnection, RtcAudioTrack, RtcPeer, RtcStreamStore, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec
 
-RTC_STREAMS : RtcStreamStore = {}
+
+# TODO: aint this a peer store?
+RTC_STREAM_STORE : RtcStreamStore = {}
 
 
 def get_rtc_stream(session_id : SessionId) -> Optional[List[RtcPeer]]:
-	return RTC_STREAMS.get(session_id)
+	return RTC_STREAM_STORE.get(session_id)
 
 
 def create_rtc_stream(session_id : SessionId) -> None:
-	RTC_STREAMS[session_id] = []
+	RTC_STREAM_STORE[session_id] = []
 
 
 def destroy_rtc_stream(session_id : SessionId) -> None:
-	rtc_peers = RTC_STREAMS.pop(session_id, None)
+	rtc_peers = RTC_STREAM_STORE.pop(session_id, None)
 
 	if rtc_peers:
 		rtc.delete_peers(rtc_peers)
@@ -23,11 +25,20 @@ def destroy_rtc_stream(session_id : SessionId) -> None:
 
 # TODO: clean up peer connection on failed sdp negotiation, wrap in run_in_executor to avoid blocking async event loop
 def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
-	if session_id in RTC_STREAMS:
+	if session_id in RTC_STREAM_STORE:
 		payload_types = rtc.parse_sdp_payload_types(sdp_offer)
 		peer_connection : PeerConnection = rtc.create_peer_connection()
-		audio_track : RtcAudioTrack = rtc.add_audio_track(peer_connection, 'sendonly', payload_types.get('opus', 111))
-		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly', payload_types.get('vp8', 96))
+		audio_codec : AudioCodec = 'opus'
+		audio_track : RtcAudioTrack = rtc.add_audio_track(peer_connection, 'sendonly', audio_codec, payload_types.get(audio_codec, 111))
+
+		#TODO: Fix me via resolve method
+		video_codec : VideoCodec = 'av1'
+		if payload_types.get('av1'):
+			video_codec = 'av1'
+		if payload_types.get('vp8'):
+			video_codec = 'vp8'
+
+		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_types.get(video_codec, 96))
 		local_sdp = rtc.negotiate_sdp(peer_connection, sdp_offer)
 
 		if local_sdp:
@@ -37,7 +48,7 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 				'video_track': video_track,
 				'audio_track': audio_track
 			}
-			RTC_STREAMS[session_id].append(rtc_peer)
+			RTC_STREAM_STORE[session_id].append(rtc_peer)
 
 		return local_sdp
 

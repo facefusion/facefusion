@@ -33,7 +33,7 @@ def test_create_peer_connection() -> None:
 def test_add_audio_track() -> None:
 	peer_connection = rtc.create_peer_connection()
 
-	assert rtc.add_audio_track(peer_connection, 'sendonly', 111) > 0
+	assert rtc.add_audio_track(peer_connection, 'sendonly', 'opus', 111) > 0
 
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
@@ -41,7 +41,7 @@ def test_add_audio_track() -> None:
 def test_add_video_track() -> None:
 	peer_connection = rtc.create_peer_connection()
 
-	assert rtc.add_video_track(peer_connection, 'sendonly', 96) > 0
+	assert rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96) > 0
 
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
@@ -50,13 +50,13 @@ def test_negotiate_sdp() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	sender_connection = rtc.create_peer_connection()
-	rtc.add_video_track(sender_connection, 'sendonly', 96)
-	rtc.add_audio_track(sender_connection, 'sendonly', 111)
+	rtc.add_video_track(sender_connection, 'sendonly', 'vp8', 96)
+	rtc.add_audio_track(sender_connection, 'sendonly', 'opus', 111)
 	sdp_offer = rtc.create_sdp(sender_connection)
 
 	receiver_connection = rtc.create_peer_connection()
-	rtc.add_video_track(receiver_connection, 'recvonly', 96)
-	rtc.add_audio_track(receiver_connection, 'recvonly', 111)
+	rtc.add_video_track(receiver_connection, 'recvonly', 'vp8', 96)
+	rtc.add_audio_track(receiver_connection, 'recvonly', 'opus', 111)
 	sdp_answer = rtc.negotiate_sdp(receiver_connection, sdp_offer)
 
 	assert sdp_answer

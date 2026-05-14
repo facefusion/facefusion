@@ -90,6 +90,9 @@ MelFilterBank : TypeAlias = NDArray[Any]
 Voice : TypeAlias = NDArray[Any]
 VoiceChunk : TypeAlias = NDArray[Any]
 
+AudioCodec : TypeAlias = Literal['opus']
+VideoCodec : TypeAlias = Literal['av1', 'vp8']
+
 AomEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 OpusEncoder : TypeAlias = ctypes.c_void_p
 VpxEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
@@ -267,12 +270,14 @@ BenchmarkCycleSet = TypedDict('BenchmarkCycleSet',
 
 WebcamMode = Literal['inline', 'udp', 'v4l2']
 StreamMode = Literal['udp', 'v4l2']
-RtcVideoTrack : TypeAlias = int
-RtcAudioTrack : TypeAlias = int
+
 PeerConnection : TypeAlias = int
 SdpOffer : TypeAlias = str
 SdpAnswer : TypeAlias = str
 MediaDirection : TypeAlias = Literal['sendonly', 'recvonly', 'sendrecv', 'inactive']
+
+RtcVideoTrack : TypeAlias = int
+RtcAudioTrack : TypeAlias = int
 
 RtcPeer = TypedDict('RtcPeer',
 {
@@ -281,7 +286,7 @@ RtcPeer = TypedDict('RtcPeer',
 	'audio_track': RtcAudioTrack,
 })
 
-RtcStreamStore : TypeAlias = Dict[str, List[RtcPeer]]
+RtcStreamStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
 
 ModelOptions : TypeAlias = Dict[str, Any]
 ModelSet : TypeAlias = Dict[str, ModelOptions]
