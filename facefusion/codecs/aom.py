@@ -43,7 +43,10 @@ def encode_aom_buffer(aom_encoder : AomEncoder, input_buffer : bytes, frame_reso
 		if aom_library.aom_img_wrap(temp_buffer, 0x102, frame_resolution[0], frame_resolution[1], 1, encode_buffer) and aom_library.aom_codec_encode(aom_encoder, temp_buffer, frame_index, 1, 0, 1) == 0:
 			output_buffer = collect_aom_buffer(aom_encoder)
 
-	return strip_temporal_delimiters(output_buffer)
+	if output_buffer.startswith(bytes([ 0x12, 0x00 ])):
+		output_buffer = output_buffer[2:]
+
+	return output_buffer
 
 
 def collect_aom_buffer(aom_encoder : AomEncoder) -> bytes:
@@ -60,44 +63,6 @@ def collect_aom_buffer(aom_encoder : AomEncoder) -> bytes:
 			output_buffer += ctypes.string_at(buffer_pointer, buffer_size)
 
 		packet = aom_library.aom_codec_get_cx_data(aom_encoder, ctypes.byref(packet_cursor))
-
-	return output_buffer
-
-
-def strip_temporal_delimiters(frame_buffer : bytes) -> bytes:
-	output_buffer = b''
-	offset = 0
-
-	while offset < len(frame_buffer):
-		obu_start = offset
-		header = frame_buffer[offset]
-		obu_type = (header >> 3) & 0x0F
-		has_extension = (header >> 2) & 0x01
-		has_size = (header >> 1) & 0x01
-		offset += 1
-
-		if has_extension:
-			offset += 1
-
-		if has_size:
-			obu_size = 0
-			shift = 0
-
-			while offset < len(frame_buffer):
-				leb_byte = frame_buffer[offset]
-				offset += 1
-				obu_size |= (leb_byte & 0x7F) << shift
-				shift += 7
-
-				if not (leb_byte & 0x80):
-					break
-
-			offset += obu_size
-		else:
-			break
-
-		if obu_type != 2:
-			output_buffer += frame_buffer[obu_start:offset]
 
 	return output_buffer
 
