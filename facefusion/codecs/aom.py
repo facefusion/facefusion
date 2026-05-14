@@ -35,7 +35,7 @@ def create_aom_encoder(frame_resolution : Resolution, bitrate : BitRate, thread_
 
 def encode_aom_buffer(aom_encoder : AomEncoder, input_buffer : bytes, frame_resolution : Resolution, frame_index : int) -> bytes:
 	aom_library = aom_module.create_static_library()
-	output_buffer = b''
+	output_buffer = bytes()
 
 	if aom_library:
 		temp_buffer = ctypes.create_string_buffer(256)
@@ -49,7 +49,7 @@ def encode_aom_buffer(aom_encoder : AomEncoder, input_buffer : bytes, frame_reso
 
 def collect_aom_buffer(aom_encoder : AomEncoder) -> bytes:
 	aom_library = aom_module.create_static_library()
-	output_buffer = b''
+	output_buffer = bytes()
 
 	packet_cursor = ctypes.c_void_p(0)
 	packet = aom_library.aom_codec_get_cx_data(aom_encoder, ctypes.byref(packet_cursor))

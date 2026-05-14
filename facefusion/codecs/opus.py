@@ -16,7 +16,7 @@ def create_opus_encoder(sample_rate : int, channel_total : int) -> Optional[Opus
 
 def encode_opus_buffer(opus_encoder : OpusEncoder, input_buffer : bytes, frame_size : int) -> bytes:
 	opus_library = opus_module.create_static_library()
-	output_buffer = b''
+	output_buffer = bytes()
 
 	if opus_library:
 		temp_buffer = ctypes.create_string_buffer(2048)

@@ -39,7 +39,7 @@ def create_vpx_encoder(frame_resolution : Resolution, bitrate : BitRate, thread_
 
 def encode_vpx_buffer(vpx_encoder : VpxEncoder, input_buffer : bytes, frame_resolution : Resolution, frame_index : int) -> bytes:
 	vpx_library = vpx_module.create_static_library()
-	output_buffer = b''
+	output_buffer = bytes()
 
 	if vpx_library:
 		temp_buffer = ctypes.create_string_buffer(256)
@@ -53,7 +53,7 @@ def encode_vpx_buffer(vpx_encoder : VpxEncoder, input_buffer : bytes, frame_reso
 
 def collect_vpx_buffer(vpx_encoder : VpxEncoder) -> bytes:
 	vpx_library = vpx_module.create_static_library()
-	output_buffer = b''
+	output_buffer = bytes()
 
 	packet_cursor = ctypes.c_void_p(0)
 	packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(packet_cursor))
