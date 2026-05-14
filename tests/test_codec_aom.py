@@ -37,7 +37,7 @@ def test_encode_aom_buffer() -> None:
 		assert create_hash(encode_aom_buffer(aom_encoder, video_buffer, video_resolution, 3)) == '4b621fb8'
 
 	if is_macos():
-		assert encode_aom_buffer(aom_encoder, video_buffer, video_resolution, 3)
+		assert create_hash(encode_aom_buffer(aom_encoder, video_buffer, video_resolution, 3)) == '6c5f613c'
 
 
 def test_destroy_aom_encoder() -> None:
