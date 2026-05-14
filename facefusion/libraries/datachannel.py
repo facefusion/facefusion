@@ -258,6 +258,7 @@ def define_rtc_packetizer_init() -> ctypes.Structure:
 			('sequenceNumber', ctypes.c_uint16),
 			('timestamp', ctypes.c_uint32),
 			('maxFragmentSize', ctypes.c_uint16),
+			('nalSeparator', ctypes.c_int),
 			('obuPacketization', ctypes.c_int)
 		]
 	})()

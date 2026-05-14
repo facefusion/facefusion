@@ -122,6 +122,7 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 	video_packetizer.maxFragmentSize = 1200
 
 	if video_codec == 'av1':
+		video_packetizer.obuPacketization = 1
 		datachannel_library.rtcSetAV1Packetizer(video_track, ctypes.byref(video_packetizer))
 	if video_codec == 'vp8':
 		datachannel_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))

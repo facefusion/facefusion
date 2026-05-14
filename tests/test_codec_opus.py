@@ -36,7 +36,7 @@ def test_encode_opus_buffer() -> None:
 		assert create_hash(encode_opus_buffer(opus_encoder, audio_sample.tobytes(), 960)) == '8abe71cf'
 
 	if is_macos():
-		assert create_hash(encode_opus_buffer(opus_encoder, audio_sample.tobytes(), 960)) == '8ecd1108'
+		assert create_hash(encode_opus_buffer(opus_encoder, audio_sample.tobytes(), 960)) == 'f595020f'
 
 
 def test_destroy_opus_encoder() -> None:

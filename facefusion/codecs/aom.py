@@ -1,6 +1,6 @@
 import ctypes
 import struct
-from typing import List, Optional
+from typing import Optional
 
 from facefusion.libraries import aom as aom_module
 from facefusion.types import AomEncoder, BitRate, Resolution
@@ -63,47 +63,6 @@ def collect_aom_buffer(aom_encoder : AomEncoder) -> bytes:
 		packet = aom_library.aom_codec_get_cx_data(aom_encoder, ctypes.byref(packet_cursor))
 
 	return output_buffer
-
-
-# TODO: try to eliminate this
-def extract_aom_obus(frame_buffer : bytes) -> List[bytes]:
-	obu_list : List[bytes] = []
-	offset = 0
-
-	while offset < len(frame_buffer):
-		header_offset = offset
-		header = frame_buffer[offset]
-		obu_type = (header >> 3) & 0x0F
-		has_extension = (header >> 2) & 0x01
-		has_size = (header >> 1) & 0x01
-		offset += 1 + has_extension
-
-		obu_size = 0
-
-		if has_size:
-			shift = 0
-
-			while offset < len(frame_buffer):
-				leb_byte = frame_buffer[offset]
-				offset += 1
-				obu_size |= (leb_byte & 0x7F) << shift
-				shift += 7
-
-				if not (leb_byte & 0x80):
-					break
-
-		payload_offset = offset
-		offset += obu_size
-
-		if obu_type != 2:
-			clean_header = bytes([ header & 0xFD ])
-
-			if has_extension:
-				clean_header += frame_buffer[header_offset + 1:header_offset + 2]
-
-			obu_list.append(clean_header + frame_buffer[payload_offset:payload_offset + obu_size])
-
-	return obu_list
 
 
 def destroy_aom_encoder(aom_encoder : AomEncoder) -> None:

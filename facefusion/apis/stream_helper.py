@@ -10,7 +10,7 @@ from starlette.websockets import WebSocket, WebSocketState
 from facefusion import rtc_store, session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.codecs.aom import create_aom_encoder, destroy_aom_encoder, encode_aom_buffer, extract_aom_obus
+from facefusion.codecs.aom import create_aom_encoder, destroy_aom_encoder, encode_aom_buffer
 from facefusion.codecs.opus import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.streamer import process_vision_frame
@@ -65,8 +65,7 @@ def run_aom_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : Se
 			frame_buffer = encode_aom_buffer(aom_encoder, yuv_frame.tobytes(), frame_resolution, pts)
 
 			if frame_buffer:
-				for obu_buffer in extract_aom_obus(frame_buffer):
-					rtc_store.send_rtc_video(session_id, obu_buffer)
+				rtc_store.send_rtc_video(session_id, frame_buffer)
 
 		pts += 1
 
