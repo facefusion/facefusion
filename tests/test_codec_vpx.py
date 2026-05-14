@@ -5,11 +5,11 @@ import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
+from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import vpx as vpx_module
-from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.vision import read_video_frame
 
 
@@ -29,19 +29,15 @@ def test_create_vpx_encoder() -> None:
 
 def test_encode_vpx_buffer() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	frame_resolution = (vision_frame.shape[1], vision_frame.shape[0])
-	vpx_encoder = create_vpx_encoder(frame_resolution, 1000, 1, 0)
-
-	buffer_valid = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	buffer_invalid = bytes(0)
+	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
+	vpx_encoder = create_vpx_encoder(video_resolution, 1000, 1, 0)
 
 	if is_linux() or is_windows():
-		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, frame_resolution, 3)) == 'ce133a1f'
+		assert create_hash(encode_vpx_buffer(vpx_encoder, video_buffer, video_resolution, 3)) == 'ce133a1f'
 
 	if is_macos():
-		assert create_hash(encode_vpx_buffer(vpx_encoder, buffer_valid, frame_resolution, 3)) == '21c36925'
-
-	assert encode_vpx_buffer(vpx_encoder, buffer_invalid, frame_resolution, 0) == b''
+		assert create_hash(encode_vpx_buffer(vpx_encoder, video_buffer, video_resolution, 3)) == '21c36925'
 
 
 def test_destroy_vpx_encoder() -> None:

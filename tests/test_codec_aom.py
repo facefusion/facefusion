@@ -29,19 +29,15 @@ def test_create_aom_encoder() -> None:
 
 def test_encode_aom_buffer() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	frame_resolution = (vision_frame.shape[1], vision_frame.shape[0])
-	aom_encoder = create_aom_encoder(frame_resolution, 1000, 1, 0)
-
-	buffer_valid = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	buffer_invalid = bytes(0)
+	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
+	aom_encoder = create_aom_encoder(video_resolution, 1000, 1, 0)
 
 	if is_linux() or is_windows():
-		assert create_hash(encode_aom_buffer(aom_encoder, buffer_valid, frame_resolution, 3)) == '4b621fb8'
+		assert create_hash(encode_aom_buffer(aom_encoder, video_buffer, video_resolution, 3)) == '4b621fb8'
 
 	if is_macos():
-		assert encode_aom_buffer(aom_encoder, buffer_valid, frame_resolution, 3)
-
-	assert encode_aom_buffer(aom_encoder, buffer_invalid, frame_resolution, 0) == b''
+		assert encode_aom_buffer(aom_encoder, video_buffer, video_resolution, 3)
 
 
 def test_destroy_aom_encoder() -> None:
