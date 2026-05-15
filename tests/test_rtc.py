@@ -24,6 +24,21 @@ def test_create_peer_connection() -> None:
 	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == 0
 
 
+def test_create_sdp_offer() -> None:
+	peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
+	rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96)
+	rtc.add_audio_track(peer_connection, 'sendonly', 'opus', 111)
+	sdp_offer = rtc.create_sdp_offer(peer_connection)
+
+	assert sdp_offer
+	assert 'm=video' in sdp_offer
+	assert 'VP8/90000' in sdp_offer
+	assert 'm=audio' in sdp_offer
+	assert 'opus/48000/2' in sdp_offer
+
+	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
+
+
 def test_negotiate_sdp() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
