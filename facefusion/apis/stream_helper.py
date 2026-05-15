@@ -15,7 +15,7 @@ from facefusion.codecs.aom import create_aom_encoder, destroy_aom_encoder, encod
 from facefusion.codecs.opus import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.streamer import process_vision_frame
-from facefusion.types import AudioCodec, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
+from facefusion.types import PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
 
 
 # TODO: refine this method
@@ -115,22 +115,13 @@ async def handle_image_stream(websocket : WebSocket) -> None:
 def connect_rtc(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	rtc_peers = rtc_store.get_peers(session_id)
 
-	if rtc_peers is not None:
-		payload_types = rtc.get_payload_types(sdp_offer)
+	if rtc_peers:
+		sdp_media = rtc.detect_sdp_media(sdp_offer)
 		peer_connection : PeerConnection = rtc.create_peer_connection()
 		rtc.set_remote_description(peer_connection, sdp_offer)
 
-		audio_codec : AudioCodec = 'opus'
-		audio_track : RtcAudioTrack = rtc.add_audio_track(peer_connection, 'sendonly', audio_codec, payload_types.get(audio_codec, 111))
-
-		#TODO: Fix me via resolve method
-		video_codec : VideoCodec = 'av1'
-		if payload_types.get('av1'):
-			video_codec = 'av1'
-		if payload_types.get('vp8'):
-			video_codec = 'vp8'
-
-		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_types.get(video_codec, 96))
+		audio_track : RtcAudioTrack = rtc.add_audio_track(peer_connection, 'sendonly', sdp_media.get('audio').get('codec'), sdp_media.get('audio').get('payload_type'))
+		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly', sdp_media.get('video').get('codec'), sdp_media.get('video').get('payload_type'))
 		local_sdp = rtc.create_sdp_answer(peer_connection)
 
 		if local_sdp:

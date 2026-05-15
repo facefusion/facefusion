@@ -1,8 +1,8 @@
 import ctypes
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
+from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpMedia, SdpOffer, VideoCodec
 
 
 def create_peer_connection() -> PeerConnection:
@@ -175,15 +175,28 @@ def create_video_track_init(media_direction : MediaDirection, video_codec : Vide
 	return ctypes.byref(track_init)
 
 
-def get_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
-	payload_types : Dict[str, int] = {}
+def detect_sdp_media(sdp_offer : SdpOffer) -> SdpMedia:
+	sdp_media : SdpMedia = {}
 
 	for line in sdp_offer.splitlines():
-		if line.startswith('a=rtpmap:') and 'AV1/90000' in line and not payload_types.get('av1'):
-			payload_types['av1'] = int(line.split(':')[1].split(' ')[0])
-		if line.startswith('a=rtpmap:') and 'VP8/90000' in line and not payload_types.get('vp8'):
-			payload_types['vp8'] = int(line.split(':')[1].split(' ')[0])
-		if line.startswith('a=rtpmap:') and 'opus/48000/2' in line and not payload_types.get('opus'):
-			payload_types['opus'] = int(line.split(':')[1].split(' ')[0])
+		if line.startswith('a=rtpmap:'):
+			if 'av1/90000' in line.lower():
+				sdp_media['video'] =\
+				{
+					'codec': 'av1',
+					'payload_type': int(line.removeprefix('a=rtpmap:').split()[0])
+				}
+			if 'vp8/90000' in line.lower():
+				sdp_media['video'] =\
+				{
+					'codec': 'vp8',
+					'payload_type': int(line.removeprefix('a=rtpmap:').split()[0])
+				}
+			if 'opus/48000/2' in line.lower():
+				sdp_media['audio'] =\
+				{
+					'codec': 'opus',
+					'payload_type': int(line.removeprefix('a=rtpmap:').split()[0])
+				}
 
-	return payload_types
+	return sdp_media

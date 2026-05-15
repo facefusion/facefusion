@@ -4,7 +4,7 @@ import pytest
 
 from facefusion import state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, send_audio_to_peers, send_video_to_peers, set_remote_description
+from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, detect_sdp_media, send_audio_to_peers, send_video_to_peers, set_remote_description
 from facefusion.types import RtcPeer
 
 
@@ -118,3 +118,18 @@ def test_delete_peers() -> None:
 	delete_peers(rtc_peers)
 
 	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == -1
+
+
+def test_detect_sdp_media() -> None:
+	peer_connection = create_peer_connection()
+	add_video_track(peer_connection, 'sendonly', 'vp8', 96)
+	add_audio_track(peer_connection, 'sendonly', 'opus', 111)
+	sdp_offer = create_sdp_offer(peer_connection)
+	sdp_payload = detect_sdp_media(sdp_offer)
+
+	assert sdp_payload.get('video').get('codec') == 'vp8'
+	assert sdp_payload.get('video').get('payload_type') == 96
+	assert sdp_payload.get('audio').get('codec') == 'opus'
+	assert sdp_payload.get('audio').get('payload_type') == 111
+
+	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
