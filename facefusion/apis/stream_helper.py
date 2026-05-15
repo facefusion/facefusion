@@ -149,16 +149,13 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 	current_resolution = initial_resolution
 	pts = 0
 
-	while True:
-		vision_frame = vision_frame_queue.get()
+	vision_frame = vision_frame_queue.get()
 
-		if vision_frame is None:
-			break
-
+	while numpy.any(vision_frame):
 		output_frame = process_vision_frame(vision_frame)
 		frame_resolution = (output_frame.shape[1], output_frame.shape[0])
 
-		if frame_resolution[0] != current_resolution[0] or frame_resolution[1] != current_resolution[1]:
+		if frame_resolution != current_resolution:
 			if aom_encoder:
 				destroy_aom_encoder(aom_encoder)
 
@@ -177,6 +174,7 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 					rtc.send_video_to_peers(rtc_peers, frame_buffer)
 
 		pts += 1
+		vision_frame = vision_frame_queue.get()
 
 	if aom_encoder:
 		destroy_aom_encoder(aom_encoder)
@@ -187,16 +185,13 @@ def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 	current_resolution = initial_resolution
 	pts = 0
 
-	while True:
-		vision_frame = vision_frame_queue.get()
+	vision_frame = vision_frame_queue.get()
 
-		if vision_frame is None:
-			break
-
+	while numpy.any(vision_frame):
 		output_frame = process_vision_frame(vision_frame)
 		frame_resolution = (output_frame.shape[1], output_frame.shape[0])
 
-		if frame_resolution[0] != current_resolution[0] or frame_resolution[1] != current_resolution[1]:
+		if frame_resolution != current_resolution:
 			if vpx_encoder:
 				destroy_vpx_encoder(vpx_encoder)
 
@@ -215,6 +210,7 @@ def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 					rtc.send_video_to_peers(rtc_peers, frame_buffer)
 
 		pts += 1
+		vision_frame = vision_frame_queue.get()
 
 	if vpx_encoder:
 		destroy_vpx_encoder(vpx_encoder)
@@ -223,12 +219,9 @@ def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], session_id : SessionId, opus_encoder : OpusEncoder) -> None:
 	audio_timestamp = 0
 
-	while True:
-		audio_chunk = audio_chunk_queue.get()
+	audio_chunk = audio_chunk_queue.get()
 
-		if audio_chunk is None:
-			break
-
+	while audio_chunk:
 		audio_buffer = encode_opus_buffer(opus_encoder, audio_chunk, 960)
 
 		if audio_buffer:
@@ -238,6 +231,7 @@ def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], sessi
 				rtc.send_audio_to_peers(rtc_peers, audio_buffer, audio_timestamp)
 
 		audio_timestamp += 960
+		audio_chunk = audio_chunk_queue.get()
 
 	if opus_encoder:
 		destroy_opus_encoder(opus_encoder)
