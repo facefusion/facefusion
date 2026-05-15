@@ -90,9 +90,8 @@ def delete_peers(rtc_peers : List[RtcPeer]) -> None:
 
 def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> RtcAudioTrack:
 	datachannel_library = datachannel_module.create_static_library()
-	media_description = create_audio_description(media_direction, audio_codec, payload_type)
-
-	audio_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
+	audio_description = create_audio_description(media_direction, audio_codec, payload_type)
+	audio_track = datachannel_library.rtcAddTrack(peer_connection, audio_description)
 
 	audio_packetizer = datachannel_module.define_rtc_packetizer_init()
 	audio_packetizer.ssrc = 43
@@ -110,9 +109,8 @@ def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDir
 
 def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> RtcVideoTrack:
 	datachannel_library = datachannel_module.create_static_library()
-	media_description = create_video_description(media_direction, video_codec, payload_type)
-
-	video_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
+	video_description = create_video_description(media_direction, video_codec, payload_type)
+	video_track = datachannel_library.rtcAddTrack(peer_connection, video_description)
 
 	video_packetizer = datachannel_module.define_rtc_packetizer_init()
 	video_packetizer.ssrc = 42
@@ -124,6 +122,7 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 	if video_codec == 'av1':
 		video_packetizer.obuPacketization = 1
 		datachannel_library.rtcSetAV1Packetizer(video_track, ctypes.byref(video_packetizer))
+
 	if video_codec == 'vp8':
 		datachannel_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
 
