@@ -179,9 +179,6 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcSetRemoteDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_char_p ]
 	library.rtcSetRemoteDescription.restype = ctypes.c_int
 
-	library.rtcAddTrack.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
-	library.rtcAddTrack.restype = ctypes.c_int
-
 	library.rtcAddTrackEx.restype = ctypes.c_int
 
 	library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
@@ -205,22 +202,7 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcGetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
 	library.rtcGetLocalDescription.restype = ctypes.c_int
 
-	library.rtcSetLocalDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
-	library.rtcSetLocalDescription.restype = ctypes.c_int
-
 	library.rtcSetOpusPacketizer.restype = ctypes.c_int
-
-	library.rtcSetUserPointer.argtypes = [ ctypes.c_int, ctypes.c_void_p ]
-	library.rtcSetUserPointer.restype = None
-
-	library.rtcSetLocalDescriptionCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p) ]
-	library.rtcSetLocalDescriptionCallback.restype = ctypes.c_int
-
-	library.rtcSetGatheringStateChangeCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p) ]
-	library.rtcSetGatheringStateChangeCallback.restype = ctypes.c_int
-
-	library.rtcSetStateChangeCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p) ]
-	library.rtcSetStateChangeCallback.restype = ctypes.c_int
 
 	return library
 

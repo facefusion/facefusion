@@ -4,7 +4,7 @@ import pytest
 
 from facefusion import state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_offer, delete_peers, negotiate_sdp_answer, send_audio_to_peers, send_video_to_peers
+from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, send_audio_to_peers, send_video_to_peers, set_remote_description
 from facefusion.types import RtcPeer
 
 
@@ -41,7 +41,7 @@ def test_create_sdp_offer() -> None:
 	datachannel_module.create_static_library().rtcDeletePeerConnection(sender_peer_connection)
 
 
-def test_negotiate_sdp_answer() -> None:
+def test_create_sdp_answer() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	sender_peer_connection = create_peer_connection()
@@ -50,9 +50,10 @@ def test_negotiate_sdp_answer() -> None:
 	sdp_offer = create_sdp_offer(sender_peer_connection)
 
 	receiver_peer_connection = create_peer_connection()
+	set_remote_description(receiver_peer_connection, sdp_offer)
 	add_video_track(receiver_peer_connection, 'recvonly', 'vp8', 96)
 	add_audio_track(receiver_peer_connection, 'recvonly', 'opus', 111)
-	sdp_answer = negotiate_sdp_answer(receiver_peer_connection, sdp_offer)
+	sdp_answer = create_sdp_answer(receiver_peer_connection)
 
 	assert 'm=video' in sdp_answer
 	assert 'VP8/90000' in sdp_answer
@@ -116,5 +117,4 @@ def test_delete_peers() -> None:
 
 	delete_peers(rtc_peers)
 
-	assert datachannel_library.rtcDeletePeerConnection(peer_connection) < 0
-
+	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == -1

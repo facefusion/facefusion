@@ -12,6 +12,7 @@ def create_peer_connection() -> PeerConnection:
 
 	rtc_configuration.enableIceUdpMux = True
 	rtc_configuration.forceMediaTransport = True
+	rtc_configuration.disableAutoNegotiation = True
 
 	return datachannel_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
@@ -28,14 +29,21 @@ def create_sdp_offer(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	return None
 
 
-def negotiate_sdp_answer(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+def create_sdp_answer(peer_connection : PeerConnection) -> Optional[SdpAnswer]:
 	datachannel_library = datachannel_module.create_static_library()
-	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
+	datachannel_library.rtcSetLocalDescription(peer_connection, b'answer')
 
 	sdp_buffer = ctypes.create_string_buffer(8192)
 
 	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, 8192):
 		return sdp_buffer.value.decode()
+
+	return None
+
+
+def set_remote_description(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
 
 	return None
 

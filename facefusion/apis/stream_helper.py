@@ -117,6 +117,8 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 	if rtc_peers is not None:
 		payload_types = rtc.parse_sdp_payload_types(sdp_offer)
 		peer_connection : PeerConnection = rtc.create_peer_connection()
+		rtc.set_remote_description(peer_connection, sdp_offer)
+
 		audio_codec : AudioCodec = 'opus'
 		audio_track : RtcAudioTrack = rtc.add_audio_track(peer_connection, 'sendonly', audio_codec, payload_types.get(audio_codec, 111))
 
@@ -128,7 +130,7 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 			video_codec = 'vp8'
 
 		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_types.get(video_codec, 96))
-		local_sdp = rtc.negotiate_sdp_answer(peer_connection, sdp_offer)
+		local_sdp = rtc.create_sdp_answer(peer_connection)
 
 		if local_sdp:
 			rtc_peer : RtcPeer =\
