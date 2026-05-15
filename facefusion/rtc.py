@@ -232,11 +232,3 @@ def parse_sdp_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
 @ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p)
 def on_sdp_ready(peer_connection : int, sdp : Optional[bytes], sdp_type : int, user_pointer : Optional[int]) -> None:
 	ctypes.cast(user_pointer, ctypes.py_object).value.set()
-
-
-# TODO: unused callback, remove or wire up
-@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)
-def on_ice_complete(peer_connection : int, state : int, user_pointer : Optional[int]) -> None:
-	if state == 2:
-		context = ctypes.cast(user_pointer, ctypes.py_object).value
-		context['event'].set()
