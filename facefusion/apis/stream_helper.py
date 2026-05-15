@@ -14,7 +14,7 @@ from facefusion.codecs.aom import create_aom_encoder, destroy_aom_encoder, encod
 from facefusion.codecs.opus import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.streamer import process_vision_frame
-from facefusion.types import AudioCodec, OpusEncoder, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
+from facefusion.types import AudioCodec, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
 
 
 async def handle_video_stream(websocket : WebSocket) -> None:
@@ -43,7 +43,6 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			vision_frame_queue : queue.Queue[Optional[VisionFrame]] = queue.Queue()
 			audio_chunk_queue : queue.Queue[Optional[bytes]] = queue.Queue()
 			audio_temp = numpy.array([], dtype = numpy.float32)
-			opus_encoder = create_opus_encoder(48000, 2)
 
 			vision_frame_queue.put(first_vision_frame)
 			rtc_store.create_rtc_peers(session_id)
@@ -55,7 +54,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			if stream_codec == 'vp8':
 				video_encode_task = event_loop.run_in_executor(None, run_vp8_encode_loop, vision_frame_queue, session_id, resolution)
 
-			audio_encode_task = event_loop.run_in_executor(None, run_opus_encode_loop, audio_chunk_queue, session_id, opus_encoder)
+			audio_encode_task = event_loop.run_in_executor(None, run_opus_encode_loop, audio_chunk_queue, session_id)
 			await websocket.send_text('ready')
 
 			async for frame_type, frame_buffer in stream_frames:
@@ -208,7 +207,8 @@ def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		destroy_vpx_encoder(vpx_encoder)
 
 
-def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], session_id : SessionId, opus_encoder : OpusEncoder) -> None:
+def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], session_id : SessionId) -> None:
+	opus_encoder = create_opus_encoder(48000, 2)
 	audio_timestamp = 0
 
 	audio_chunk = audio_chunk_queue.get()

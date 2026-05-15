@@ -91,6 +91,8 @@ def test_receive_vision_frames() -> None:
 
 def test_run_vp8_encode_loop() -> None:
 	frame = numpy.full((64, 64, 3), 128, dtype = numpy.uint8)
+	small_frame = numpy.full((64, 64, 3), 128, dtype = numpy.uint8)
+	large_frame = numpy.full((128, 128, 3), 128, dtype = numpy.uint8)
 
 	vision_frame_queue : queue.Queue[Optional[VisionFrame]] = queue.Queue()
 	vision_frame_queue.put(frame)
@@ -104,6 +106,20 @@ def test_run_vp8_encode_loop() -> None:
 		mock_rtc_store.get_rtc_peers.return_value = [ MagicMock() ]
 		run_vp8_encode_loop(vision_frame_queue, 'session-1', (64, 64))
 		mock_rtc.send_video_to_peers.assert_called_once()
+
+	vision_frame_queue = queue.Queue()
+	vision_frame_queue.put(small_frame)
+	vision_frame_queue.put(small_frame)
+	vision_frame_queue.put(None)
+	with patch('facefusion.apis.stream_helper.process_vision_frame', return_value = large_frame), \
+		patch('facefusion.apis.stream_helper.create_vpx_encoder', return_value = MagicMock()) as mock_create, \
+		patch('facefusion.apis.stream_helper.encode_vpx_buffer', return_value = None), \
+		patch('facefusion.apis.stream_helper.destroy_vpx_encoder') as mock_destroy, \
+		patch('facefusion.apis.stream_helper.rtc_store'), \
+		patch('facefusion.apis.stream_helper.rtc'):
+		run_vp8_encode_loop(vision_frame_queue, 'session-1', (64, 64))
+		assert mock_create.call_count == 2
+		assert mock_destroy.call_count == 2
 
 	vision_frame_queue = queue.Queue()
 	vision_frame_queue.put(frame)
@@ -137,12 +153,13 @@ def test_run_opus_encode_loop() -> None:
 	audio_chunk_queue : queue.Queue[Optional[bytes]] = queue.Queue()
 	audio_chunk_queue.put(audio_chunk)
 	audio_chunk_queue.put(None)
-	with patch('facefusion.apis.stream_helper.encode_opus_buffer', return_value = b'encoded'), \
+	with patch('facefusion.apis.stream_helper.create_opus_encoder', return_value = MagicMock()), \
+		patch('facefusion.apis.stream_helper.encode_opus_buffer', return_value = b'encoded'), \
 		patch('facefusion.apis.stream_helper.destroy_opus_encoder'), \
 		patch('facefusion.apis.stream_helper.rtc_store') as mock_rtc_store, \
 		patch('facefusion.apis.stream_helper.rtc') as mock_rtc:
 		mock_rtc_store.get_rtc_peers.return_value = [ MagicMock() ]
-		run_opus_encode_loop(audio_chunk_queue, 'session-1', MagicMock())
+		run_opus_encode_loop(audio_chunk_queue, 'session-1')
 		mock_rtc.send_audio_to_peers.assert_called_once()
 		assert mock_rtc.send_audio_to_peers.call_args[0][2] == 0
 
@@ -150,12 +167,13 @@ def test_run_opus_encode_loop() -> None:
 	audio_chunk_queue.put(audio_chunk)
 	audio_chunk_queue.put(audio_chunk)
 	audio_chunk_queue.put(None)
-	with patch('facefusion.apis.stream_helper.encode_opus_buffer', return_value = b'encoded'), \
+	with patch('facefusion.apis.stream_helper.create_opus_encoder', return_value = MagicMock()), \
+		patch('facefusion.apis.stream_helper.encode_opus_buffer', return_value = b'encoded'), \
 		patch('facefusion.apis.stream_helper.destroy_opus_encoder'), \
 		patch('facefusion.apis.stream_helper.rtc_store') as mock_rtc_store, \
 		patch('facefusion.apis.stream_helper.rtc') as mock_rtc:
 		mock_rtc_store.get_rtc_peers.return_value = [ MagicMock() ]
-		run_opus_encode_loop(audio_chunk_queue, 'session-1', MagicMock())
+		run_opus_encode_loop(audio_chunk_queue, 'session-1')
 		assert mock_rtc.send_audio_to_peers.call_count == 2
 		assert mock_rtc.send_audio_to_peers.call_args_list[0][0][2] == 0
 		assert mock_rtc.send_audio_to_peers.call_args_list[1][0][2] == 960
@@ -163,23 +181,24 @@ def test_run_opus_encode_loop() -> None:
 	audio_chunk_queue = queue.Queue()
 	audio_chunk_queue.put(audio_chunk)
 	audio_chunk_queue.put(None)
-	with patch('facefusion.apis.stream_helper.encode_opus_buffer', return_value = b''), \
+	with patch('facefusion.apis.stream_helper.create_opus_encoder', return_value = MagicMock()), \
+		patch('facefusion.apis.stream_helper.encode_opus_buffer', return_value = b''), \
 		patch('facefusion.apis.stream_helper.destroy_opus_encoder'), \
 		patch('facefusion.apis.stream_helper.rtc_store'), \
 		patch('facefusion.apis.stream_helper.rtc') as mock_rtc:
-		run_opus_encode_loop(audio_chunk_queue, 'session-1', MagicMock())
+		run_opus_encode_loop(audio_chunk_queue, 'session-1')
 		mock_rtc.send_audio_to_peers.assert_not_called()
 
 	audio_chunk_queue = queue.Queue()
 	audio_chunk_queue.put(audio_chunk)
 	audio_chunk_queue.put(None)
-	mock_encoder = MagicMock()
-	with patch('facefusion.apis.stream_helper.encode_opus_buffer', return_value = None), \
+	with patch('facefusion.apis.stream_helper.create_opus_encoder', return_value = MagicMock()), \
+		patch('facefusion.apis.stream_helper.encode_opus_buffer', return_value = None), \
 		patch('facefusion.apis.stream_helper.destroy_opus_encoder') as mock_destroy, \
 		patch('facefusion.apis.stream_helper.rtc_store'), \
 		patch('facefusion.apis.stream_helper.rtc'):
-		run_opus_encode_loop(audio_chunk_queue, 'session-1', mock_encoder)
-		mock_destroy.assert_called_with(mock_encoder)
+		run_opus_encode_loop(audio_chunk_queue, 'session-1')
+		mock_destroy.assert_called_once()
 
 
 def test_handle_video_stream() -> None:
@@ -193,7 +212,6 @@ def test_handle_video_stream() -> None:
 		patch('facefusion.apis.stream_helper.session_manager.find_session_id', return_value = 'session-1'), \
 		patch('facefusion.apis.stream_helper.session_context.set_session_id'), \
 		patch('facefusion.apis.stream_helper.state_manager.get_item', return_value = 30), \
-		patch('facefusion.apis.stream_helper.create_opus_encoder', return_value = MagicMock()), \
 		patch('facefusion.apis.stream_helper.run_aom_encode_loop') as mock_loop, \
 		patch('facefusion.apis.stream_helper.run_opus_encode_loop'), \
 		patch('facefusion.apis.stream_helper.rtc_store') as mock_rtc:
@@ -224,7 +242,6 @@ def test_handle_video_stream() -> None:
 		patch('facefusion.apis.stream_helper.session_manager.find_session_id', return_value = 'session-1'), \
 		patch('facefusion.apis.stream_helper.session_context.set_session_id'), \
 		patch('facefusion.apis.stream_helper.state_manager.get_item', return_value = 30), \
-		patch('facefusion.apis.stream_helper.create_opus_encoder', return_value = MagicMock()), \
 		patch('facefusion.apis.stream_helper.run_aom_encode_loop'), \
 		patch('facefusion.apis.stream_helper.run_opus_encode_loop') as mock_audio_loop, \
 		patch('facefusion.apis.stream_helper.rtc_store'):
