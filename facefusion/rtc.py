@@ -92,8 +92,8 @@ def delete_peers(rtc_peers : List[RtcPeer]) -> None:
 
 def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> RtcAudioTrack:
 	datachannel_library = datachannel_module.create_static_library()
-	audio_description = create_audio_description(media_direction, audio_codec, payload_type)
-	audio_track = datachannel_library.rtcAddTrack(peer_connection, audio_description)
+	audio_track_init = create_audio_track_init(media_direction, audio_codec, payload_type)
+	audio_track = datachannel_library.rtcAddTrackEx(peer_connection, audio_track_init)
 
 	audio_packetizer = datachannel_module.define_rtc_packetizer_init()
 	audio_packetizer.ssrc = 43
@@ -111,8 +111,8 @@ def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDir
 
 def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> RtcVideoTrack:
 	datachannel_library = datachannel_module.create_static_library()
-	video_description = create_video_description(media_direction, video_codec, payload_type)
-	video_track = datachannel_library.rtcAddTrack(peer_connection, video_description)
+	video_track_init = create_video_track_init(media_direction, video_codec, payload_type)
+	video_track = datachannel_library.rtcAddTrackEx(peer_connection, video_track_init)
 
 	video_packetizer = datachannel_module.define_rtc_packetizer_init()
 	video_packetizer.ssrc = 42
@@ -134,46 +134,42 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 	return video_track
 
 
-#TODO: needs revision
-def create_audio_description(media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> bytes:
-	rtp_codec = 'opus/48000/2'
+def create_audio_track_init(media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> ctypes.Structure:
+	track_init = datachannel_module.define_rtc_track_init()
+
+	if media_direction == 'sendonly':
+		track_init.direction = 1
+	if media_direction == 'recvonly':
+		track_init.direction = 2
 	if audio_codec == 'opus':
-		rtp_codec = 'opus/48000/2'
+		track_init.codec = 128
 
-	lines =\
-	[
-		'm=audio 9 UDP/TLS/RTP/SAVPF ' + str(payload_type),
-		'a=rtpmap:' + str(payload_type) + ' ' + rtp_codec,
-		'a=rtcp-fb:' + str(payload_type) + ' nack',
-		'a=rtcp-fb:' + str(payload_type) + ' nack pli',
-		'a=' + media_direction,
-		'a=mid:1',
-		'a=rtcp-mux',
-		''
-	]
-	return '\r\n'.join(lines).encode()
+	track_init.payloadType = payload_type
+	track_init.ssrc = 43
+	track_init.name = b'audio'
+	track_init.mid = b'1'
+
+	return ctypes.byref(track_init)
 
 
-#TODO: needs revision
-def create_video_description(media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> bytes:
-	rtp_codec = 'AV1/90000'
+def create_video_track_init(media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> ctypes.Structure:
+	track_init = datachannel_module.define_rtc_track_init()
+
+	if media_direction == 'sendonly':
+		track_init.direction = 1
+	if media_direction == 'recvonly':
+		track_init.direction = 2
 	if video_codec == 'av1':
-		rtp_codec = 'AV1/90000'
+		track_init.codec = 4
 	if video_codec == 'vp8':
-		rtp_codec = 'VP8/90000'
+		track_init.codec = 1
 
-	lines =\
-	[
-		'm=video 9 UDP/TLS/RTP/SAVPF ' + str(payload_type),
-		'a=rtpmap:' + str(payload_type) + ' ' + rtp_codec,
-		'a=rtcp-fb:' + str(payload_type) + ' nack',
-		'a=rtcp-fb:' + str(payload_type) + ' nack pli',
-		'a=' + media_direction,
-		'a=mid:0',
-		'a=rtcp-mux',
-		''
-	]
-	return '\r\n'.join(lines).encode()
+	track_init.payloadType = payload_type
+	track_init.ssrc = 42
+	track_init.name = b'video'
+	track_init.mid = b'0'
+
+	return ctypes.byref(track_init)
 
 
 #TODO: needs revision

@@ -274,7 +274,7 @@ StreamMode = Literal['udp', 'v4l2']
 PeerConnection : TypeAlias = int
 SdpOffer : TypeAlias = str
 SdpAnswer : TypeAlias = str
-MediaDirection : TypeAlias = Literal['sendonly', 'recvonly', 'sendrecv', 'inactive']
+MediaDirection : TypeAlias = Literal['sendonly', 'recvonly']
 
 RtcVideoTrack : TypeAlias = int
 RtcAudioTrack : TypeAlias = int
