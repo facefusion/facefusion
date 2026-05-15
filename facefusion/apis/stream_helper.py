@@ -115,7 +115,7 @@ async def handle_image_stream(websocket : WebSocket) -> None:
 def connect_rtc(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	rtc_peers = rtc_store.get_peers(session_id)
 
-	if rtc_peers:
+	if rtc_peers is not None:
 		sdp_media = rtc.detect_sdp_media(sdp_offer)
 		peer_connection : PeerConnection = rtc.create_peer_connection()
 		rtc.set_remote_description(peer_connection, sdp_offer)
