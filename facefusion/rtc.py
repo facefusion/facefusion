@@ -3,7 +3,7 @@ import time
 from typing import Dict, List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
+from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
 
 
 def create_peer_connection() -> PeerConnection:
@@ -134,7 +134,7 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 	return video_track
 
 
-def create_audio_track_init(media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> ctypes._CArgObject:
+def create_audio_track_init(media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> RtcTrackInit:
 	track_init = datachannel_module.define_rtc_track_init()
 
 	if media_direction == 'sendonly':
@@ -152,7 +152,7 @@ def create_audio_track_init(media_direction : MediaDirection, audio_codec : Audi
 	return ctypes.byref(track_init)
 
 
-def create_video_track_init(media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> ctypes._CArgObject:
+def create_video_track_init(media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> RtcTrackInit:
 	track_init = datachannel_module.define_rtc_track_init()
 
 	if media_direction == 'sendonly':

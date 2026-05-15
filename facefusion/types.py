@@ -276,6 +276,8 @@ SdpOffer : TypeAlias = str
 SdpAnswer : TypeAlias = str
 MediaDirection : TypeAlias = Literal['sendonly', 'recvonly']
 
+RtcTrackInit : TypeAlias = Any
+
 RtcVideoTrack : TypeAlias = int
 RtcAudioTrack : TypeAlias = int
 
