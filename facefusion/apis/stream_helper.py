@@ -1,5 +1,5 @@
 import asyncio
-from collections import deque
+import queue
 from collections.abc import AsyncIterator
 from typing import Optional, Tuple, cast, get_args
 
@@ -14,7 +14,7 @@ from facefusion.codecs.aom import create_aom_encoder, destroy_aom_encoder, encod
 from facefusion.codecs.opus import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.streamer import process_vision_frame
-from facefusion.types import AudioCodec, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
+from facefusion.types import AudioCodec, OpusEncoder, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
 
 
 async def handle_video_stream(websocket : WebSocket) -> None:
@@ -31,9 +31,8 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 
 	if session_id:
 		stream_frames = receive_stream_frames(websocket)
-		first_vision_frame = None
+		first_vision_frame : Optional[VisionFrame] = None
 
-		# TODO: audio frames may arrive before video due to ScriptProcessor firing faster than canvas toBlob
 		async for first_frame_type, first_frame_buffer in stream_frames:
 			if first_frame_type == 1:
 				first_vision_frame = cv2.imdecode(numpy.frombuffer(first_frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
@@ -41,22 +40,22 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 
 		if numpy.any(first_vision_frame):
 			resolution : Resolution = (first_vision_frame.shape[1], first_vision_frame.shape[0])
-			keyframe_interval = int(state_manager.get_item('output_video_fps') or 30) # TODO: remove hardcoded via stream_video_fps
-			vision_frame_deque : deque[VisionFrame] = deque(maxlen = 1)
-			opus_encoder = create_opus_encoder(48000, 2) # TODO: guard against opus_encoder being None
+			keyframe_interval = int(state_manager.get_item('output_video_fps') or 30)
+			vision_frame_queue : queue.Queue[Optional[VisionFrame]] = queue.Queue()
+			audio_chunk_queue : queue.Queue[Optional[bytes]] = queue.Queue()
 			audio_temp = numpy.array([], dtype = numpy.float32)
-			audio_timestamp = 0
-
-			vision_frame_deque.append(first_vision_frame)
-			rtc_store.create_rtc_peers(session_id)
-
-			event_loop = asyncio.get_running_loop()
+			opus_encoder = create_opus_encoder(48000, 2)
 			encode_loop = run_aom_encode_loop
 
 			if stream_codec == 'vp8':
 				encode_loop = run_vp8_encode_loop
 
-			video_encode_task = event_loop.run_in_executor(None, encode_loop, vision_frame_deque, session_id, resolution, keyframe_interval)
+			vision_frame_queue.put(first_vision_frame)
+			rtc_store.create_rtc_peers(session_id)
+
+			event_loop = asyncio.get_running_loop()
+			video_encode_task = event_loop.run_in_executor(None, encode_loop, vision_frame_queue, session_id, resolution, keyframe_interval)
+			audio_encode_task = event_loop.run_in_executor(None, run_opus_encode_loop, audio_chunk_queue, session_id, opus_encoder)
 			await websocket.send_text('ready')
 
 			async for frame_type, frame_buffer in stream_frames:
@@ -64,29 +63,23 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 					vision_frame = cv2.imdecode(numpy.frombuffer(frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
 
 					if numpy.any(vision_frame):
-						vision_frame_deque.append(vision_frame)
+						try:
+							vision_frame_queue.get_nowait()
+						except queue.Empty:
+							pass
+						vision_frame_queue.put(vision_frame)
 
 				if frame_type == 2:
 					audio_temp = numpy.concatenate([ audio_temp, numpy.frombuffer(frame_buffer, dtype = numpy.float32) ])
 
 					while len(audio_temp) >= 1920:
-						audio_chunk = audio_temp[:1920]
+						audio_chunk_queue.put(audio_temp[:1920].tobytes())
 						audio_temp = audio_temp[1920:]
-						audio_buffer = encode_opus_buffer(opus_encoder, audio_chunk.tobytes(), 960)
 
-						if audio_buffer:
-							rtc_peers = rtc_store.get_rtc_peers(session_id)
-
-							if rtc_peers:
-								rtc.send_audio_to_peers(rtc_peers, audio_buffer, audio_timestamp)
-
-						audio_timestamp += 960
-
-			vision_frame_deque.clear()
+			vision_frame_queue.put(None)
+			audio_chunk_queue.put(None)
 			await video_encode_task
-
-			if opus_encoder:
-				destroy_opus_encoder(opus_encoder)
+			await audio_encode_task
 
 			rtc_store.destroy_rtc_peers(session_id)
 
@@ -152,13 +145,17 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 	return None
 
 
-def run_aom_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
+def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
 	aom_encoder = create_aom_encoder(initial_resolution, 4500, 8, 10)
 	current_resolution = initial_resolution
 	pts = 0
 
-	while vision_frame_deque:
-		vision_frame = vision_frame_deque[-1]
+	while True:
+		vision_frame = vision_frame_queue.get()
+
+		if vision_frame is None:
+			break
+
 		output_frame = process_vision_frame(vision_frame)
 		frame_resolution = (output_frame.shape[1], output_frame.shape[0])
 
@@ -186,13 +183,17 @@ def run_aom_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : Se
 		destroy_aom_encoder(aom_encoder)
 
 
-def run_vp8_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
+def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
 	vpx_encoder = create_vpx_encoder(initial_resolution, 4500, 8, 16)
 	current_resolution = initial_resolution
 	pts = 0
 
-	while vision_frame_deque:
-		vision_frame = vision_frame_deque[-1]
+	while True:
+		vision_frame = vision_frame_queue.get()
+
+		if vision_frame is None:
+			break
+
 		output_frame = process_vision_frame(vision_frame)
 		frame_resolution = (output_frame.shape[1], output_frame.shape[0])
 
@@ -218,6 +219,29 @@ def run_vp8_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : Se
 
 	if vpx_encoder:
 		destroy_vpx_encoder(vpx_encoder)
+
+
+def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], session_id : SessionId, opus_encoder : OpusEncoder) -> None:
+	audio_timestamp = 0
+
+	while True:
+		audio_chunk = audio_chunk_queue.get()
+
+		if audio_chunk is None:
+			break
+
+		audio_buffer = encode_opus_buffer(opus_encoder, audio_chunk, 960)
+
+		if audio_buffer:
+			rtc_peers = rtc_store.get_rtc_peers(session_id)
+
+			if rtc_peers:
+				rtc.send_audio_to_peers(rtc_peers, audio_buffer, audio_timestamp)
+
+		audio_timestamp += 960
+
+	if opus_encoder:
+		destroy_opus_encoder(opus_encoder)
 
 
 async def receive_stream_frames(websocket : WebSocket) -> AsyncIterator[Tuple[int, bytes]]:
