@@ -40,21 +40,21 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 
 		if numpy.any(first_vision_frame):
 			resolution : Resolution = (first_vision_frame.shape[1], first_vision_frame.shape[0])
-			keyframe_interval = int(state_manager.get_item('output_video_fps') or 30)
 			vision_frame_queue : queue.Queue[Optional[VisionFrame]] = queue.Queue()
 			audio_chunk_queue : queue.Queue[Optional[bytes]] = queue.Queue()
 			audio_temp = numpy.array([], dtype = numpy.float32)
 			opus_encoder = create_opus_encoder(48000, 2)
-			encode_loop = run_aom_encode_loop
-
-			if stream_codec == 'vp8':
-				encode_loop = run_vp8_encode_loop
 
 			vision_frame_queue.put(first_vision_frame)
 			rtc_store.create_rtc_peers(session_id)
 
 			event_loop = asyncio.get_running_loop()
-			video_encode_task = event_loop.run_in_executor(None, encode_loop, vision_frame_queue, session_id, resolution, keyframe_interval)
+
+			if stream_codec == 'av1':
+				video_encode_task = event_loop.run_in_executor(None, run_aom_encode_loop, vision_frame_queue, session_id, resolution)
+			if stream_codec == 'vp8':
+				video_encode_task = event_loop.run_in_executor(None, run_vp8_encode_loop, vision_frame_queue, session_id, resolution)
+
 			audio_encode_task = event_loop.run_in_executor(None, run_opus_encode_loop, audio_chunk_queue, session_id, opus_encoder)
 			await websocket.send_text('ready')
 
@@ -78,6 +78,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 
 			vision_frame_queue.put(None)
 			audio_chunk_queue.put(None)
+
 			await video_encode_task
 			await audio_encode_task
 
@@ -145,7 +146,7 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 	return None
 
 
-def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
+def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, initial_resolution : Resolution) -> None:
 	aom_encoder = create_aom_encoder(initial_resolution, 4500, 8, 10)
 	current_resolution = initial_resolution
 	pts = 0
@@ -183,7 +184,7 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		destroy_aom_encoder(aom_encoder)
 
 
-def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
+def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, initial_resolution : Resolution) -> None:
 	vpx_encoder = create_vpx_encoder(initial_resolution, 4500, 8, 16)
 	current_resolution = initial_resolution
 	pts = 0

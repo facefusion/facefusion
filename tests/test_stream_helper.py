@@ -104,7 +104,7 @@ def test_run_vp8_encode_loop() -> None:
 		patch('facefusion.apis.stream_helper.rtc_store') as mock_rtc_store, \
 		patch('facefusion.apis.stream_helper.rtc') as mock_rtc:
 		mock_rtc_store.get_rtc_peers.return_value = [ MagicMock() ]
-		run_vp8_encode_loop(vision_frame_queue, 'session-1', (64, 64), 30)
+		run_vp8_encode_loop(vision_frame_queue, 'session-1', (64, 64))
 		mock_rtc.send_video_to_peers.assert_called_once()
 
 	vision_frame_queue = queue.Queue()
@@ -117,7 +117,7 @@ def test_run_vp8_encode_loop() -> None:
 		patch('facefusion.apis.stream_helper.destroy_vpx_encoder') as mock_destroy, \
 		patch('facefusion.apis.stream_helper.rtc_store'), \
 		patch('facefusion.apis.stream_helper.rtc'):
-		run_vp8_encode_loop(vision_frame_queue, 'session-1', (64, 64), 30)
+		run_vp8_encode_loop(vision_frame_queue, 'session-1', (64, 64))
 		assert mock_create.call_count == 2
 		assert mock_destroy.call_count == 2
 
@@ -130,7 +130,7 @@ def test_run_vp8_encode_loop() -> None:
 		patch('facefusion.apis.stream_helper.destroy_vpx_encoder'), \
 		patch('facefusion.apis.stream_helper.rtc_store'), \
 		patch('facefusion.apis.stream_helper.rtc') as mock_rtc:
-		run_vp8_encode_loop(vision_frame_queue, 'session-1', (64, 64), 30)
+		run_vp8_encode_loop(vision_frame_queue, 'session-1', (64, 64))
 		mock_rtc.send_video_to_peers.assert_not_called()
 
 	vision_frame_queue = queue.Queue()
@@ -143,7 +143,7 @@ def test_run_vp8_encode_loop() -> None:
 		patch('facefusion.apis.stream_helper.destroy_vpx_encoder') as mock_destroy, \
 		patch('facefusion.apis.stream_helper.rtc_store'), \
 		patch('facefusion.apis.stream_helper.rtc'):
-		run_vp8_encode_loop(vision_frame_queue, 'session-1', (64, 64), 30)
+		run_vp8_encode_loop(vision_frame_queue, 'session-1', (64, 64))
 		mock_destroy.assert_called_with(mock_encoder)
 
 
@@ -219,7 +219,7 @@ def test_handle_video_stream() -> None:
 		websocket.close.assert_called_once()
 		mock_rtc.create_rtc_peers.assert_called_once_with('session-1')
 		mock_rtc.destroy_rtc_peers.assert_called_once_with('session-1')
-		_, loop_session_id, loop_resolution, _ = mock_loop.call_args[0]
+		_, loop_session_id, loop_resolution = mock_loop.call_args[0]
 		assert loop_session_id == 'session-1'
 		assert loop_resolution == (64, 64)
 
