@@ -17,6 +17,7 @@ from facefusion.streamer import process_vision_frame
 from facefusion.types import AudioCodec, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
 
 
+# TODO: refine this method
 async def handle_video_stream(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 	access_token = extract_access_token(websocket.scope)
@@ -143,6 +144,7 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 	return None
 
 
+# TODO: combine both encode loop method to one
 def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, frame_resolution : Resolution) -> None:
 	aom_encoder = create_aom_encoder(frame_resolution, 4500, 8, 10)
 	temp_resolution = frame_resolution
@@ -175,6 +177,7 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		destroy_aom_encoder(aom_encoder)
 
 
+# TODO: combine both encode loop method to one
 def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, frame_resolution : Resolution) -> None:
 	vpx_encoder = create_vpx_encoder(frame_resolution, 4500, 8, 16)
 	temp_resolution = frame_resolution
@@ -213,7 +216,7 @@ def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], sessi
 
 	audio_chunk = audio_chunk_queue.get()
 
-	while audio_chunk:
+	while audio_chunk: # TODO: improve this condition with b''
 		audio_buffer = encode_opus_buffer(opus_encoder, audio_chunk, 960)
 		rtc_peers = rtc_store.get_rtc_peers(session_id)
 
