@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import cv2
 import numpy
-from numpy.typing import NDArray
 import pytest
+from numpy.typing import NDArray
 from starlette.websockets import WebSocketState
 
 from facefusion.apis.stream_helper import handle_video_stream, receive_stream_frames, receive_vision_frames, run_vp8_encode_loop
