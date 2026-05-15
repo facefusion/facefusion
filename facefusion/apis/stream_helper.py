@@ -156,12 +156,12 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		output_resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 
 		if output_resolution == temp_resolution:
-			yuv_frame = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420)
-			frame_buffer = encode_aom_buffer(aom_encoder, yuv_frame.tobytes(), output_resolution, timestamp)
+			output_frame_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+			output_frame_buffer = encode_aom_buffer(aom_encoder, output_frame_buffer, output_resolution, timestamp)
 			rtc_peers = rtc_store.get_rtc_peers(session_id)
 
-			if frame_buffer and rtc_peers:
-				rtc.send_video_to_peers(rtc_peers, frame_buffer)
+			if output_frame_buffer and rtc_peers:
+				rtc.send_video_to_peers(rtc_peers, output_frame_buffer)
 
 			timestamp += 1
 			vision_frame = vision_frame_queue.get()
@@ -188,12 +188,12 @@ def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		output_resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 
 		if output_resolution == temp_resolution:
-			yuv_frame = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420)
-			frame_buffer = encode_vpx_buffer(vpx_encoder, yuv_frame.tobytes(), output_resolution, timestamp)
+			output_frame_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+			output_frame_buffer = encode_vpx_buffer(vpx_encoder, output_frame_buffer, output_resolution, timestamp)
 			rtc_peers = rtc_store.get_rtc_peers(session_id)
 
-			if frame_buffer and rtc_peers:
-				rtc.send_video_to_peers(rtc_peers, frame_buffer)
+			if output_frame_buffer and rtc_peers:
+				rtc.send_video_to_peers(rtc_peers, output_frame_buffer)
 
 			timestamp += 1
 			vision_frame = vision_frame_queue.get()
