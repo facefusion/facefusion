@@ -8,6 +8,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from facefusion import metadata, rtc, session_manager, state_manager
+from facefusion.libraries import datachannel as datachannel_module
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check
@@ -131,7 +132,11 @@ def test_stream_video(test_client : TestClient, create_event : threading.Event, 
 			websocket.send_bytes(chr(1).encode() + source_content)
 			websocket.receive_text()
 
-			sdp_offer = rtc.create_sdp_offer()
+			peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
+			rtc.add_video_track(peer_connection, 'recvonly', 'vp8', 96)
+			rtc.add_audio_track(peer_connection, 'recvonly', 'opus', 111)
+			sdp_offer = rtc.create_sdp_offer(peer_connection)
+			datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 			stream_response = test_client.post('/stream', content = sdp_offer, headers =
 			{
 				'Authorization': 'Bearer ' + access_token,

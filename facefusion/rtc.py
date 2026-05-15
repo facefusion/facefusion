@@ -42,26 +42,9 @@ def create_peer_connection(
 
 	return datachannel_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
-
-def create_sdp(peer_connection : PeerConnection) -> Optional[SdpOffer]:
+# TODO: check if sleep is needed
+def create_sdp_offer(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	datachannel_library = datachannel_module.create_static_library()
-	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')
-	buffer_size = 8192
-	buffer_string = ctypes.create_string_buffer(buffer_size)
-
-	if datachannel_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
-		return buffer_string.value.decode()
-
-	return None
-
-
-# TODO: move from testing suite helper to rtc.py - belongs here to complete the rtc flow
-def create_sdp_offer() -> Optional[SdpOffer]:
-	datachannel_library = datachannel_module.create_static_library()
-	peer_connection = create_peer_connection(disable_auto_negotiation = True)
-
-	datachannel_library.rtcAddTrack(peer_connection, create_video_description('recvonly', 'vp8', 96))
-	datachannel_library.rtcAddTrack(peer_connection, create_audio_description('recvonly', 'opus', 111))
 	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')
 
 	buffer_size = 16384
@@ -70,13 +53,10 @@ def create_sdp_offer() -> Optional[SdpOffer]:
 
 	while time.monotonic() < wait_limit:
 		if datachannel_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
-			sdp = buffer_string.value.decode()
-			datachannel_library.rtcDeletePeerConnection(peer_connection)
-			return sdp
+			return buffer_string.value.decode()
 
 		time.sleep(0.05)
 
-	datachannel_library.rtcDeletePeerConnection(peer_connection)
 	return None
 
 

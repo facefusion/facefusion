@@ -30,7 +30,7 @@ def test_negotiate_sdp() -> None:
 	sender_connection = rtc.create_peer_connection()
 	rtc.add_video_track(sender_connection, 'sendonly', 'vp8', 96)
 	rtc.add_audio_track(sender_connection, 'sendonly', 'opus', 111)
-	sdp_offer = rtc.create_sdp(sender_connection)
+	sdp_offer = rtc.create_sdp_offer(sender_connection)
 
 	receiver_connection = rtc.create_peer_connection()
 	rtc.add_video_track(receiver_connection, 'recvonly', 'vp8', 96)
