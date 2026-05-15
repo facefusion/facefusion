@@ -43,96 +43,6 @@ def create_peer_connection(
 	return datachannel_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
 
-#TODO: I think we dont need this method at all
-def build_media_description(media_type : str, payload_type : int, rtp_codec : str, media_direction : MediaDirection, media_id : int) -> bytes:
-	lines =\
-	[
-		'm=' + media_type + ' 9 UDP/TLS/RTP/SAVPF ' + str(payload_type),
-		'a=rtpmap:' + str(payload_type) + ' ' + rtp_codec,
-		'a=rtcp-fb:' + str(payload_type) + ' nack',
-		'a=rtcp-fb:' + str(payload_type) + ' nack pli',
-		'a=' + media_direction,
-		'a=mid:' + str(media_id),
-		'a=rtcp-mux',
-		''
-	]
-	return '\r\n'.join(lines).encode()
-
-
-def parse_sdp_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
-	payload_types : Dict[str, int] = {}
-
-	# TODO: consider having a codec helper to resolve these
-	for line in sdp_offer.splitlines():
-		if line.startswith('a=rtpmap:') and 'AV1/90000' in line and not payload_types.get('av1'):
-			payload_types['av1'] = int(line.split(':')[1].split(' ')[0])
-		if line.startswith('a=rtpmap:') and 'VP8/90000' in line and not payload_types.get('vp8'):
-			payload_types['vp8'] = int(line.split(':')[1].split(' ')[0])
-		if line.startswith('a=rtpmap:') and 'opus/48000/2' in line and not payload_types.get('opus'):
-			payload_types['opus'] = int(line.split(':')[1].split(' ')[0])
-
-	return payload_types
-
-
-def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> RtcAudioTrack:
-	datachannel_library = datachannel_module.create_static_library()
-
-	# TODO: Fix me via resolve method
-	rtp_codec = 'opus/48000/2'
-	if audio_codec == 'opus':
-		rtp_codec = 'opus/48000/2'
-
-	media_description = build_media_description('audio', payload_type, rtp_codec, media_direction, 1)
-
-	audio_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
-
-	audio_packetizer = datachannel_module.define_rtc_packetizer_init()
-	audio_packetizer.ssrc = 43
-	audio_packetizer.cname = b'audio'
-	audio_packetizer.payloadType = payload_type
-	audio_packetizer.clockRate = 48000
-
-	if audio_codec == 'opus':
-		datachannel_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
-
-	datachannel_library.rtcChainRtcpSrReporter(audio_track)
-
-	return audio_track
-
-
-def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> RtcVideoTrack:
-	datachannel_library = datachannel_module.create_static_library()
-
-	#TODO: Fix me via resolve method
-	rtp_codec = 'AV1/90000'
-	if video_codec == 'av1':
-		rtp_codec = 'AV1/90000'
-	if video_codec == 'vp8':
-		rtp_codec = 'VP8/90000'
-
-	media_description = build_media_description('video', payload_type, rtp_codec, media_direction, 0)
-
-	video_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
-
-	video_packetizer = datachannel_module.define_rtc_packetizer_init()
-	video_packetizer.ssrc = 42
-	video_packetizer.cname = b'video'
-	video_packetizer.payloadType = payload_type
-	video_packetizer.clockRate = 90000
-	video_packetizer.maxFragmentSize = 1200
-
-	if video_codec == 'av1':
-		video_packetizer.obuPacketization = 1
-		datachannel_library.rtcSetAV1Packetizer(video_track, ctypes.byref(video_packetizer))
-	if video_codec == 'vp8':
-		datachannel_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
-
-	datachannel_library.rtcChainRtcpSrReporter(video_track)
-	datachannel_library.rtcChainRtcpNackResponder(video_track, 512)
-
-	return video_track
-
-
 def create_sdp(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	datachannel_library = datachannel_module.create_static_library()
 	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')
@@ -150,8 +60,8 @@ def create_sdp_offer() -> Optional[SdpOffer]:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection(disable_auto_negotiation = True)
 
-	datachannel_library.rtcAddTrack(peer_connection, build_media_description('video', 96, 'VP8/90000', 'recvonly', 0))
-	datachannel_library.rtcAddTrack(peer_connection, build_media_description('audio', 111, 'opus/48000/2', 'recvonly', 1))
+	datachannel_library.rtcAddTrack(peer_connection, create_video_description('recvonly', 'vp8', 96))
+	datachannel_library.rtcAddTrack(peer_connection, create_audio_description('recvonly', 'opus', 111))
 	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')
 
 	buffer_size = 16384
@@ -168,19 +78,6 @@ def create_sdp_offer() -> Optional[SdpOffer]:
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 	return None
-
-
-@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p)
-def on_sdp_ready(peer_connection : int, sdp : Optional[bytes], sdp_type : int, user_pointer : Optional[int]) -> None:
-	ctypes.cast(user_pointer, ctypes.py_object).value.set()
-
-
-# TODO: unused callback, remove or wire up
-@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)
-def on_ice_complete(peer_connection : int, state : int, user_pointer : Optional[int]) -> None:
-	if state == 2:
-		context = ctypes.cast(user_pointer, ctypes.py_object).value
-		context['event'].set()
 
 
 # TODO: sanitize sdp_offer, wrap in run_in_executor, track peer connection state
@@ -249,3 +146,116 @@ def delete_peers(rtc_peers : List[RtcPeer]) -> None:
 			datachannel_library.rtcDeletePeerConnection(peer_connection_id)
 
 	return None
+
+
+def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> RtcAudioTrack:
+	datachannel_library = datachannel_module.create_static_library()
+	media_description = create_audio_description(media_direction, audio_codec, payload_type)
+
+	audio_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
+
+	audio_packetizer = datachannel_module.define_rtc_packetizer_init()
+	audio_packetizer.ssrc = 43
+	audio_packetizer.cname = b'audio'
+	audio_packetizer.payloadType = payload_type
+	audio_packetizer.clockRate = 48000
+
+	if audio_codec == 'opus':
+		datachannel_library.rtcSetOpusPacketizer(audio_track, ctypes.byref(audio_packetizer))
+
+	datachannel_library.rtcChainRtcpSrReporter(audio_track)
+
+	return audio_track
+
+
+def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> RtcVideoTrack:
+	datachannel_library = datachannel_module.create_static_library()
+	media_description = create_video_description(media_direction, video_codec, payload_type)
+
+	video_track = datachannel_library.rtcAddTrack(peer_connection, media_description)
+
+	video_packetizer = datachannel_module.define_rtc_packetizer_init()
+	video_packetizer.ssrc = 42
+	video_packetizer.cname = b'video'
+	video_packetizer.payloadType = payload_type
+	video_packetizer.clockRate = 90000
+	video_packetizer.maxFragmentSize = 1200
+
+	if video_codec == 'av1':
+		video_packetizer.obuPacketization = 1
+		datachannel_library.rtcSetAV1Packetizer(video_track, ctypes.byref(video_packetizer))
+	if video_codec == 'vp8':
+		datachannel_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
+
+	datachannel_library.rtcChainRtcpSrReporter(video_track)
+	datachannel_library.rtcChainRtcpNackResponder(video_track, 512)
+
+	return video_track
+
+
+def create_audio_description(media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> bytes:
+	rtp_codec = 'opus/48000/2'
+	if audio_codec == 'opus':
+		rtp_codec = 'opus/48000/2'
+
+	lines =\
+	[
+		'm=audio 9 UDP/TLS/RTP/SAVPF ' + str(payload_type),
+		'a=rtpmap:' + str(payload_type) + ' ' + rtp_codec,
+		'a=rtcp-fb:' + str(payload_type) + ' nack',
+		'a=rtcp-fb:' + str(payload_type) + ' nack pli',
+		'a=' + media_direction,
+		'a=mid:1',
+		'a=rtcp-mux',
+		''
+	]
+	return '\r\n'.join(lines).encode()
+
+
+def create_video_description(media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> bytes:
+	rtp_codec = 'AV1/90000'
+	if video_codec == 'av1':
+		rtp_codec = 'AV1/90000'
+	if video_codec == 'vp8':
+		rtp_codec = 'VP8/90000'
+
+	lines =\
+	[
+		'm=video 9 UDP/TLS/RTP/SAVPF ' + str(payload_type),
+		'a=rtpmap:' + str(payload_type) + ' ' + rtp_codec,
+		'a=rtcp-fb:' + str(payload_type) + ' nack',
+		'a=rtcp-fb:' + str(payload_type) + ' nack pli',
+		'a=' + media_direction,
+		'a=mid:0',
+		'a=rtcp-mux',
+		''
+	]
+	return '\r\n'.join(lines).encode()
+
+
+def parse_sdp_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
+	payload_types : Dict[str, int] = {}
+
+	# TODO: consider having a codec helper to resolve these
+	for line in sdp_offer.splitlines():
+		if line.startswith('a=rtpmap:') and 'AV1/90000' in line and not payload_types.get('av1'):
+			payload_types['av1'] = int(line.split(':')[1].split(' ')[0])
+		if line.startswith('a=rtpmap:') and 'VP8/90000' in line and not payload_types.get('vp8'):
+			payload_types['vp8'] = int(line.split(':')[1].split(' ')[0])
+		if line.startswith('a=rtpmap:') and 'opus/48000/2' in line and not payload_types.get('opus'):
+			payload_types['opus'] = int(line.split(':')[1].split(' ')[0])
+
+	return payload_types
+
+
+@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p)
+def on_sdp_ready(peer_connection : int, sdp : Optional[bytes], sdp_type : int, user_pointer : Optional[int]) -> None:
+	ctypes.cast(user_pointer, ctypes.py_object).value.set()
+
+
+# TODO: unused callback, remove or wire up
+@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)
+def on_ice_complete(peer_connection : int, state : int, user_pointer : Optional[int]) -> None:
+	if state == 2:
+		context = ctypes.cast(user_pointer, ctypes.py_object).value
+		context['event'].set()
