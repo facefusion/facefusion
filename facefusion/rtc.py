@@ -7,38 +7,12 @@ from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
 
 
-# TODO: reduce to only used params
-def create_peer_connection(
-	ice_servers : Optional[ctypes.Array[ctypes.c_char_p]] = None,
-	ice_servers_count : int = 0, proxy_server : Optional[bytes] = None,
-	bind_address : Optional[bytes] = None, certificate_type : int = 0,
-	ice_transport_policy : int = 0,
-	enable_ice_tcp : bool = False,
-	enable_ice_udp_mux : bool = True,
-	disable_auto_negotiation : bool = False,
-	force_media_transport : bool = True,
-	port_range_begin : int = 0,
-	port_range_end : int = 0,
-	max_packet_size : int = 0,
-	max_message_size : int = 0) -> PeerConnection:
-
+def create_peer_connection() -> PeerConnection:
 	datachannel_library = datachannel_module.create_static_library()
 	rtc_configuration = datachannel_module.define_rtc_configuration()
 
-	rtc_configuration.iceServers = ice_servers
-	rtc_configuration.iceServersCount = ice_servers_count
-	rtc_configuration.proxyServer = proxy_server
-	rtc_configuration.bindAddress = bind_address
-	rtc_configuration.certificateType = certificate_type
-	rtc_configuration.iceTransportPolicy = ice_transport_policy
-	rtc_configuration.enableIceTcp = enable_ice_tcp
-	rtc_configuration.enableIceUdpMux = enable_ice_udp_mux
-	rtc_configuration.disableAutoNegotiation = disable_auto_negotiation
-	rtc_configuration.forceMediaTransport = force_media_transport
-	rtc_configuration.portRangeBegin = port_range_begin
-	rtc_configuration.portRangeEnd = port_range_end
-	rtc_configuration.mtu = max_packet_size
-	rtc_configuration.maxMessageSize = max_message_size
+	rtc_configuration.enableIceUdpMux = True
+	rtc_configuration.forceMediaTransport = True
 
 	return datachannel_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 

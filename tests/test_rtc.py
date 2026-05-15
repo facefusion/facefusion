@@ -25,7 +25,7 @@ def test_create_peer_connection() -> None:
 
 
 def test_create_sdp_offer() -> None:
-	peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
+	peer_connection = rtc.create_peer_connection()
 	rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96)
 	rtc.add_audio_track(peer_connection, 'sendonly', 'opus', 111)
 	sdp_offer = rtc.create_sdp_offer(peer_connection)
