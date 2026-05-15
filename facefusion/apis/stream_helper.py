@@ -63,10 +63,8 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 					vision_frame = cv2.imdecode(numpy.frombuffer(frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
 
 					if numpy.any(vision_frame):
-						try:
+						if vision_frame_queue.qsize():
 							vision_frame_queue.get_nowait()
-						except queue.Empty:
-							pass
 						vision_frame_queue.put(vision_frame)
 
 				if frame_type == 2:
