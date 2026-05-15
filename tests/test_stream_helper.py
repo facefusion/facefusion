@@ -1,10 +1,12 @@
 import asyncio
 from collections import deque
 from functools import partial
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import cv2
 import numpy
+from numpy.typing import NDArray
 import pytest
 from starlette.websockets import WebSocketState
 
@@ -13,33 +15,32 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.hash_helper import create_hash
 
 
-def _clear_deque(deque_ref : deque, return_value : object, *args) -> object:
+def _clear_deque(deque_ref : deque[Any], return_value : Any, *args : Any) -> Any:
 	deque_ref.clear()
 	return return_value
 
 
-def _countdown_clear(deque_ref : deque, counter : list, *args) -> None:
+def _countdown_clear(deque_ref : deque[Any], counter : list[int], *args : Any) -> None:
 	counter[0] -= 1
 	if counter[0] <= 0:
 		deque_ref.clear()
-	return None
 
 
-async def _collect_stream_frames(events : list) -> list:
+async def _collect_stream_frames(events : list[Any]) -> list[tuple[int, bytes]]:
 	return [ item async for item in receive_stream_frames(_make_websocket(events)) ]
 
 
-async def _collect_vision_frames(events : list) -> list:
+async def _collect_vision_frames(events : list[Any]) -> list[NDArray[Any]]:
 	return [ item async for item in receive_vision_frames(_make_websocket(events)) ]
 
 
-def _make_websocket(events : list) -> MagicMock:
+def _make_websocket(events : list[Any]) -> MagicMock:
 	mock = MagicMock()
 	mock.receive = AsyncMock(side_effect = events)
 	return mock
 
 
-def _make_handler_websocket(events : list) -> MagicMock:
+def _make_handler_websocket(events : list[Any]) -> MagicMock:
 	mock = MagicMock()
 	mock.scope = {}
 	mock.client_state = WebSocketState.CONNECTED
@@ -50,12 +51,12 @@ def _make_handler_websocket(events : list) -> MagicMock:
 	return mock
 
 
-def _make_video_packet(frame : numpy.ndarray) -> bytes:
+def _make_video_packet(frame : NDArray[Any]) -> bytes:
 	_, encoded = cv2.imencode('.jpg', frame)
 	return b'\x01' + encoded.tobytes()
 
 
-def _make_audio_packet(samples : numpy.ndarray) -> bytes:
+def _make_audio_packet(samples : NDArray[Any]) -> bytes:
 	return b'\x02' + samples.tobytes()
 
 
@@ -104,7 +105,7 @@ def test_run_vp8_encode_loop() -> None:
 	small_frame = numpy.full((64, 64, 3), 128, dtype = numpy.uint8)
 	large_frame = numpy.full((128, 128, 3), 128, dtype = numpy.uint8)
 
-	vision_frame_deque : deque = deque([ frame ], maxlen = 1)
+	vision_frame_deque : deque[NDArray[Any]] = deque([ frame ], maxlen = 1)
 	with patch('facefusion.apis.stream_helper.process_vision_frame', return_value = frame), \
 		patch('facefusion.apis.stream_helper.create_vpx_encoder', return_value = MagicMock()), \
 		patch('facefusion.apis.stream_helper.encode_vpx_buffer', side_effect = partial(_clear_deque, vision_frame_deque, b'encoded')), \
