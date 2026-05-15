@@ -112,11 +112,11 @@ async def handle_image_stream(websocket : WebSocket) -> None:
 
 
 # TODO: clean up peer connection on failed sdp negotiation, wrap in run_in_executor to avoid blocking async event loop
-def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+def connect_rtc(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	rtc_peers = rtc_store.get_peers(session_id)
 
 	if rtc_peers is not None:
-		payload_types = rtc.parse_sdp_payload_types(sdp_offer)
+		payload_types = rtc.get_payload_types(sdp_offer)
 		peer_connection : PeerConnection = rtc.create_peer_connection()
 		rtc.set_remote_description(peer_connection, sdp_offer)
 

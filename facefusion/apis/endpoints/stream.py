@@ -5,7 +5,7 @@ from starlette.websockets import WebSocket
 
 from facefusion import session_context, session_manager
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.apis.stream_helper import add_rtc_viewer, handle_image_stream, handle_video_stream
+from facefusion.apis.stream_helper import connect_rtc, handle_image_stream, handle_video_stream
 
 
 async def websocket_stream(websocket : WebSocket) -> None:
@@ -28,7 +28,7 @@ async def post_stream(request : Request) -> Response:
 
 	if content_type == 'application/sdp' and session_id:
 		sdp_offer = await request.body()
-		sdp_answer = add_rtc_viewer(session_id, sdp_offer.decode())
+		sdp_answer = connect_rtc(session_id, sdp_offer.decode())
 
 		if sdp_answer:
 			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type = 'application/sdp')

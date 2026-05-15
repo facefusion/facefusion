@@ -175,11 +175,9 @@ def create_video_track_init(media_direction : MediaDirection, video_codec : Vide
 	return ctypes.byref(track_init)
 
 
-#TODO: needs revision
-def parse_sdp_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
-	payload_types : Dict[str, int] = {}
+def get_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
+	payload_types = {}
 
-	# TODO: consider having a codec helper to resolve these
 	for line in sdp_offer.splitlines():
 		if line.startswith('a=rtpmap:') and 'AV1/90000' in line and not payload_types.get('av1'):
 			payload_types['av1'] = int(line.split(':')[1].split(' ')[0])
