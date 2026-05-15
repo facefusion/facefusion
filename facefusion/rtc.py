@@ -176,7 +176,7 @@ def create_video_track_init(media_direction : MediaDirection, video_codec : Vide
 
 
 def get_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
-	payload_types = {}
+	payload_types : Dict[str, int] = {}
 
 	for line in sdp_offer.splitlines():
 		if line.startswith('a=rtpmap:') and 'AV1/90000' in line and not payload_types.get('av1'):
