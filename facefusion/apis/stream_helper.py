@@ -46,7 +46,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			audio_temp = numpy.array([], dtype = numpy.float32)
 
 			vision_frame_queue.put(first_vision_frame)
-			rtc_store.create_rtc_peers(session_id)
+			rtc_store.init_peers(session_id)
 
 			event_loop = asyncio.get_running_loop()
 
@@ -80,7 +80,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			await video_encode_task
 			await audio_encode_task
 
-			rtc_store.destroy_rtc_peers(session_id)
+			rtc_store.delete_peers(session_id)
 
 	if websocket.client_state == WebSocketState.CONNECTED:
 		await websocket.close()
@@ -112,7 +112,7 @@ async def handle_image_stream(websocket : WebSocket) -> None:
 
 # TODO: clean up peer connection on failed sdp negotiation, wrap in run_in_executor to avoid blocking async event loop
 def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
-	rtc_peers = rtc_store.get_rtc_peers(session_id)
+	rtc_peers = rtc_store.get_peers(session_id)
 
 	if rtc_peers is not None:
 		payload_types = rtc.parse_sdp_payload_types(sdp_offer)
@@ -159,7 +159,7 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		if output_resolution == temp_resolution:
 			output_frame_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 			output_frame_buffer = encode_aom_buffer(aom_encoder, output_frame_buffer, output_resolution, timestamp)
-			rtc_peers = rtc_store.get_rtc_peers(session_id)
+			rtc_peers = rtc_store.get_peers(session_id)
 
 			if output_frame_buffer and rtc_peers:
 				rtc.send_video_to_peers(rtc_peers, output_frame_buffer)
@@ -192,7 +192,7 @@ def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		if output_resolution == temp_resolution:
 			output_frame_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 			output_frame_buffer = encode_vpx_buffer(vpx_encoder, output_frame_buffer, output_resolution, timestamp)
-			rtc_peers = rtc_store.get_rtc_peers(session_id)
+			rtc_peers = rtc_store.get_peers(session_id)
 
 			if output_frame_buffer and rtc_peers:
 				rtc.send_video_to_peers(rtc_peers, output_frame_buffer)
@@ -219,7 +219,7 @@ def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], sessi
 
 	while audio_chunk: # TODO: improve this condition with b''
 		audio_buffer = encode_opus_buffer(opus_encoder, audio_chunk, 960)
-		rtc_peers = rtc_store.get_rtc_peers(session_id)
+		rtc_peers = rtc_store.get_peers(session_id)
 
 		if audio_buffer and rtc_peers:
 			rtc.send_audio_to_peers(rtc_peers, audio_buffer, audio_timestamp)

@@ -209,8 +209,8 @@ def test_handle_video_stream() -> None:
 		websocket.accept.assert_called_once_with(subprotocol = 'proto')
 		websocket.send_text.assert_called_once_with('ready')
 		websocket.close.assert_called_once()
-		mock_rtc.create_rtc_peers.assert_called_once_with('session-1')
-		mock_rtc.destroy_rtc_peers.assert_called_once_with('session-1')
+		mock_rtc.init_peers.assert_called_once_with('session-1')
+		mock_rtc.delete_peers.assert_called_once_with('session-1')
 		_, loop_session_id, loop_resolution = mock_loop.call_args[0]
 		assert loop_session_id == 'session-1'
 		assert loop_resolution == (64, 64)
@@ -224,7 +224,7 @@ def test_handle_video_stream() -> None:
 		asyncio.run(handle_video_stream(websocket))
 		websocket.accept.assert_called_once()
 		websocket.send_text.assert_not_called()
-		mock_rtc.create_rtc_peers.assert_not_called()
+		mock_rtc.init_peers.assert_not_called()
 
 	websocket = _make_handler_websocket([ {'type': 'websocket.receive', 'bytes': video_packet}, {'type': 'websocket.receive', 'bytes': audio_packet}, {'type': 'websocket.disconnect'} ])
 	with patch('facefusion.apis.stream_helper.get_sec_websocket_protocol', return_value = 'proto'), \
