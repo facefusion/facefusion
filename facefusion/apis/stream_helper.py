@@ -144,73 +144,65 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 	return None
 
 
-def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, initial_resolution : Resolution) -> None:
-	aom_encoder = create_aom_encoder(initial_resolution, 4500, 8, 10)
-	current_resolution = initial_resolution
-	pts = 0
+def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, frame_resolution : Resolution) -> None:
+	aom_encoder = create_aom_encoder(frame_resolution, 4500, 8, 10)
+	temp_resolution = frame_resolution
+	timestamp = 0
 
 	vision_frame = vision_frame_queue.get()
 
-	while numpy.any(vision_frame):
-		output_frame = process_vision_frame(vision_frame)
-		frame_resolution = (output_frame.shape[1], output_frame.shape[0])
+	while numpy.any(vision_frame) and aom_encoder:
+		output_vision_frame = process_vision_frame(vision_frame)
+		output_resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 
-		if frame_resolution != current_resolution:
-			if aom_encoder:
-				destroy_aom_encoder(aom_encoder)
+		if output_resolution == temp_resolution:
+			yuv_frame = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420)
+			frame_buffer = encode_aom_buffer(aom_encoder, yuv_frame.tobytes(), output_resolution, timestamp)
+			rtc_peers = rtc_store.get_rtc_peers(session_id)
 
-			current_resolution = frame_resolution
-			aom_encoder = create_aom_encoder(current_resolution, 4500, 8, 10)
-			pts = 0
+			if frame_buffer and rtc_peers:
+				rtc.send_video_to_peers(rtc_peers, frame_buffer)
 
-		if aom_encoder:
-			yuv_frame = cv2.cvtColor(output_frame, cv2.COLOR_BGR2YUV_I420)
-			frame_buffer = encode_aom_buffer(aom_encoder, yuv_frame.tobytes(), frame_resolution, pts)
+			timestamp += 1
+			vision_frame = vision_frame_queue.get()
+			continue
 
-			if frame_buffer:
-				rtc_peers = rtc_store.get_rtc_peers(session_id)
-
-				if rtc_peers:
-					rtc.send_video_to_peers(rtc_peers, frame_buffer)
-
-		pts += 1
-		vision_frame = vision_frame_queue.get()
+		destroy_aom_encoder(aom_encoder)
+		temp_resolution = output_resolution
+		aom_encoder = create_aom_encoder(temp_resolution, 4500, 8, 10)
+		timestamp = 0
 
 	if aom_encoder:
 		destroy_aom_encoder(aom_encoder)
 
 
-def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, initial_resolution : Resolution) -> None:
-	vpx_encoder = create_vpx_encoder(initial_resolution, 4500, 8, 16)
-	current_resolution = initial_resolution
-	pts = 0
+def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, frame_resolution : Resolution) -> None:
+	vpx_encoder = create_vpx_encoder(frame_resolution, 4500, 8, 16)
+	temp_resolution = frame_resolution
+	timestamp = 0
 
 	vision_frame = vision_frame_queue.get()
 
-	while numpy.any(vision_frame):
-		output_frame = process_vision_frame(vision_frame)
-		frame_resolution = (output_frame.shape[1], output_frame.shape[0])
+	while numpy.any(vision_frame) and vpx_encoder:
+		output_vision_frame = process_vision_frame(vision_frame)
+		output_resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 
-		if frame_resolution != current_resolution:
-			if vpx_encoder:
-				destroy_vpx_encoder(vpx_encoder)
+		if output_resolution == temp_resolution:
+			yuv_frame = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420)
+			frame_buffer = encode_vpx_buffer(vpx_encoder, yuv_frame.tobytes(), output_resolution, timestamp)
+			rtc_peers = rtc_store.get_rtc_peers(session_id)
 
-			current_resolution = frame_resolution
-			vpx_encoder = create_vpx_encoder(current_resolution, 4500, 8, 16)
-			pts = 0
+			if frame_buffer and rtc_peers:
+				rtc.send_video_to_peers(rtc_peers, frame_buffer)
 
-		if vpx_encoder:
-			yuv_frame = cv2.cvtColor(output_frame, cv2.COLOR_BGR2YUV_I420)
-			frame_buffer = encode_vpx_buffer(vpx_encoder, yuv_frame.tobytes(), frame_resolution, pts)
+			timestamp += 1
+			vision_frame = vision_frame_queue.get()
+			continue
 
-			if frame_buffer:
-				rtc_peers = rtc_store.get_rtc_peers(session_id)
-
-				if rtc_peers:
-					rtc.send_video_to_peers(rtc_peers, frame_buffer)
-
-		pts += 1
-		vision_frame = vision_frame_queue.get()
+		destroy_vpx_encoder(vpx_encoder)
+		temp_resolution = output_resolution
+		vpx_encoder = create_vpx_encoder(temp_resolution, 4500, 8, 16)
+		timestamp = 0
 
 	if vpx_encoder:
 		destroy_vpx_encoder(vpx_encoder)
