@@ -49,6 +49,7 @@ def _make_video_packet(frame : NDArray[Any]) -> bytes:
 	_, encoded = cv2.imencode('.jpg', frame)
 	return b'\x01' + encoded.tobytes()
 
+
 # TODO: inline or move to helper
 def _make_audio_packet(samples : NDArray[Any]) -> bytes:
 	return b'\x02' + samples.tobytes()
