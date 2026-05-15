@@ -215,12 +215,10 @@ def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], sessi
 
 	while audio_chunk:
 		audio_buffer = encode_opus_buffer(opus_encoder, audio_chunk, 960)
+		rtc_peers = rtc_store.get_rtc_peers(session_id)
 
-		if audio_buffer:
-			rtc_peers = rtc_store.get_rtc_peers(session_id)
-
-			if rtc_peers:
-				rtc.send_audio_to_peers(rtc_peers, audio_buffer, audio_timestamp)
+		if audio_buffer and rtc_peers:
+			rtc.send_audio_to_peers(rtc_peers, audio_buffer, audio_timestamp)
 
 		audio_timestamp += 960
 		audio_chunk = audio_chunk_queue.get()
