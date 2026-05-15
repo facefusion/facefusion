@@ -1,5 +1,4 @@
 import ctypes
-import time
 from typing import Dict, List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
@@ -48,40 +47,36 @@ def set_remote_description(peer_connection : PeerConnection, sdp_offer : SdpOffe
 	return None
 
 
-#TODO: needs revision
-def send_audio_to_peers(rtc_peers : List[RtcPeer], audio_buffer : bytes, audio_pts : int) -> None:
+def send_audio_to_peers(rtc_peers : List[RtcPeer], audio_buffer : bytes, audio_timestamp : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	if rtc_peers:
-		timestamp = audio_pts & 0xFFFFFFFF
 		send_buffer = ctypes.create_string_buffer(audio_buffer)
 		send_total = len(audio_buffer)
 
 		for rtc_peer in rtc_peers:
-			audio_track_id = rtc_peer.get('audio_track')
+			audio_track = rtc_peer.get('audio_track')
 
-			if audio_track_id and datachannel_library.rtcIsOpen(audio_track_id):
-				datachannel_library.rtcSetTrackRtpTimestamp(audio_track_id, timestamp)
-				datachannel_library.rtcSendMessage(audio_track_id, send_buffer, send_total)
+			if datachannel_library.rtcIsOpen(audio_track):
+				datachannel_library.rtcSetTrackRtpTimestamp(audio_track, audio_timestamp)
+				datachannel_library.rtcSendMessage(audio_track, send_buffer, send_total)
 
 	return None
 
 
-#TODO: needs revision
-def send_video_to_peers(rtc_peers : List[RtcPeer], frame_buffer : bytes) -> None:
+def send_video_to_peers(rtc_peers : List[RtcPeer], video_buffer : bytes, video_timestamp : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	if rtc_peers:
-		timestamp = int(time.monotonic() * 90000) & 0xFFFFFFFF
-		send_buffer = ctypes.create_string_buffer(frame_buffer)
-		send_total = len(frame_buffer)
+		send_buffer = ctypes.create_string_buffer(video_buffer)
+		send_total = len(video_buffer)
 
 		for rtc_peer in rtc_peers:
-			video_track_id = rtc_peer.get('video_track')
+			video_track = rtc_peer.get('video_track')
 
-			if video_track_id and datachannel_library.rtcIsOpen(video_track_id):
-				datachannel_library.rtcSetTrackRtpTimestamp(video_track_id, timestamp)
-				datachannel_library.rtcSendMessage(video_track_id, send_buffer, send_total)
+			if datachannel_library.rtcIsOpen(video_track):
+				datachannel_library.rtcSetTrackRtpTimestamp(video_track, video_timestamp)
+				datachannel_library.rtcSendMessage(video_track, send_buffer, send_total)
 
 	return None
 
@@ -90,10 +85,10 @@ def delete_peers(rtc_peers : List[RtcPeer]) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	for rtc_peer in rtc_peers:
-		peer_connection_id = rtc_peer.get('peer_connection')
+		peer_connection = rtc_peer.get('peer_connection')
 
-		if peer_connection_id:
-			datachannel_library.rtcDeletePeerConnection(peer_connection_id)
+		if peer_connection:
+			datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 	return None
 

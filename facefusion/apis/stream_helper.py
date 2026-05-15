@@ -1,5 +1,6 @@
 import asyncio
 import queue # TODO: try deque
+import time
 from collections.abc import AsyncIterator
 from typing import Optional, Tuple, cast, get_args
 
@@ -164,7 +165,8 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 			rtc_peers = rtc_store.get_peers(session_id)
 
 			if output_frame_buffer and rtc_peers:
-				rtc.send_video_to_peers(rtc_peers, output_frame_buffer)
+				video_timestamp = int(time.monotonic() * 90000)
+				rtc.send_video_to_peers(rtc_peers, output_frame_buffer, video_timestamp)
 
 			timestamp += 1
 			vision_frame = vision_frame_queue.get()
@@ -198,7 +200,8 @@ def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 			rtc_peers = rtc_store.get_peers(session_id)
 
 			if output_frame_buffer and rtc_peers:
-				rtc.send_video_to_peers(rtc_peers, output_frame_buffer)
+				video_timestamp = int(time.monotonic() * 90000)
+				rtc.send_video_to_peers(rtc_peers, output_frame_buffer, video_timestamp)
 
 			timestamp += 1
 			vision_frame = vision_frame_queue.get()

@@ -98,7 +98,7 @@ def test_send_video_to_peers() -> None:
 		}
 	]
 
-	send_video_to_peers(rtc_peers, bytes(1024))
+	send_video_to_peers(rtc_peers, bytes(1024), 0)
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
