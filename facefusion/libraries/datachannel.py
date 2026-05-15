@@ -182,6 +182,8 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcAddTrack.argtypes = [ ctypes.c_int, ctypes.c_char_p ]
 	library.rtcAddTrack.restype = ctypes.c_int
 
+	library.rtcAddTrackEx.restype = ctypes.c_int
+
 	library.rtcSendMessage.argtypes = [ ctypes.c_int, ctypes.c_void_p, ctypes.c_int ]
 	library.rtcSendMessage.restype = ctypes.c_int
 
@@ -242,6 +244,24 @@ def define_rtc_configuration() -> ctypes.Structure:
 			('portRangeEnd', ctypes.c_ushort),
 			('mtu', ctypes.c_int),
 			('maxMessageSize', ctypes.c_int)
+		]
+	})()
+
+
+def define_rtc_track_init() -> ctypes.Structure:
+	return type('RTC_TRACK_INIT', (ctypes.Structure,),
+	{
+		'_fields_':
+		[
+			('direction', ctypes.c_int),
+			('codec', ctypes.c_int),
+			('payloadType', ctypes.c_int),
+			('ssrc', ctypes.c_uint32),
+			('mid', ctypes.c_char_p),
+			('name', ctypes.c_char_p),
+			('msid', ctypes.c_char_p),
+			('trackId', ctypes.c_char_p),
+			('profile', ctypes.c_char_p)
 		]
 	})()
 

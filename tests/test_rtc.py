@@ -30,11 +30,12 @@ def test_create_sdp_offer() -> None:
 	rtc.add_audio_track(peer_connection, 'sendonly', 'opus', 111)
 	sdp_offer = rtc.create_sdp_offer(peer_connection)
 
-	assert sdp_offer
 	assert 'm=video' in sdp_offer
 	assert 'VP8/90000' in sdp_offer
+	assert 'a=ssrc:42 cname:video' in sdp_offer
 	assert 'm=audio' in sdp_offer
 	assert 'opus/48000/2' in sdp_offer
+	assert 'a=ssrc:43 cname:audio' in sdp_offer
 
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
@@ -52,12 +53,12 @@ def test_negotiate_sdp_answer() -> None:
 	rtc.add_audio_track(receiver_connection, 'recvonly', 'opus', 111)
 	sdp_answer = rtc.negotiate_sdp_answer(receiver_connection, sdp_offer)
 
-	assert sdp_answer
 	assert 'm=video' in sdp_answer
 	assert 'VP8/90000' in sdp_answer
+	assert 'a=ssrc:42 cname:video' in sdp_answer
 	assert 'm=audio' in sdp_answer
 	assert 'opus/48000/2' in sdp_answer
-	# TODO: review
+	assert 'a=ssrc:43 cname:audio' in sdp_answer
 	assert 'a=recvonly' in sdp_answer
 
 	assert datachannel_library.rtcDeletePeerConnection(sender_connection) == 0
@@ -147,9 +148,3 @@ def test_add_video_track() -> None:
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
 
-def test_create_audio_description() -> None:
-	assert rtc.create_audio_description('sendonly', 'opus', 111) == b'm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=rtpmap:111 opus/48000/2\r\na=rtcp-fb:111 nack\r\na=rtcp-fb:111 nack pli\r\na=sendonly\r\na=mid:1\r\na=rtcp-mux\r\n'
-
-
-def test_create_video_description() -> None:
-	assert rtc.create_video_description('recvonly', 'vp8', 96) == b'm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=rtpmap:96 VP8/90000\r\na=rtcp-fb:96 nack\r\na=rtcp-fb:96 nack pli\r\na=recvonly\r\na=mid:0\r\na=rtcp-mux\r\n'
