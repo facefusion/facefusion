@@ -1,5 +1,5 @@
 import asyncio
-import queue
+import queue # TODO: try deque
 from collections.abc import AsyncIterator
 from typing import Optional, Tuple, cast, get_args
 
@@ -144,7 +144,7 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 	return None
 
 
-# TODO: combine both encode loop method to one
+# TODO: switch to loop_encode_video or encode_video_loop ... pass video_codec to follow standards
 def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, frame_resolution : Resolution) -> None:
 	aom_encoder = create_aom_encoder(frame_resolution, 4500, 8, 10)
 	temp_resolution = frame_resolution
@@ -177,7 +177,7 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		destroy_aom_encoder(aom_encoder)
 
 
-# TODO: combine both encode loop method to one
+# TODO: switch to loop_encode_video or encode_video_loop ... pass video_codec to follow standards
 def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, frame_resolution : Resolution) -> None:
 	vpx_encoder = create_vpx_encoder(frame_resolution, 4500, 8, 16)
 	temp_resolution = frame_resolution
@@ -210,6 +210,7 @@ def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		destroy_vpx_encoder(vpx_encoder)
 
 
+# TODO: switch to loop_encode_audio or encode_audio_loop ... pass audio_codec to follow standards
 def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], session_id : SessionId) -> None:
 	opus_encoder = create_opus_encoder(48000, 2)
 	audio_timestamp = 0
@@ -230,6 +231,7 @@ def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], sessi
 		destroy_opus_encoder(opus_encoder)
 
 
+# TODO: needs refinement
 async def receive_stream_frames(websocket : WebSocket) -> AsyncIterator[Tuple[int, bytes]]:
 	websocket_event = await websocket.receive()
 
@@ -242,6 +244,7 @@ async def receive_stream_frames(websocket : WebSocket) -> AsyncIterator[Tuple[in
 		websocket_event = await websocket.receive()
 
 
+# TODO: needs refinement, does it receive frames or a buffer?
 async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFrame]:
 	websocket_event = await websocket.receive()
 
