@@ -25,7 +25,7 @@ def test_create_peer_connection() -> None:
 
 
 def test_create_sdp_offer() -> None:
-	peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
+	peer_connection = rtc.create_peer_connection()
 	rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96)
 	rtc.add_audio_track(peer_connection, 'sendonly', 'opus', 111)
 	sdp_offer = rtc.create_sdp_offer(peer_connection)
@@ -62,6 +62,44 @@ def test_negotiate_sdp_answer() -> None:
 
 	assert datachannel_library.rtcDeletePeerConnection(sender_connection) == 0
 	assert datachannel_library.rtcDeletePeerConnection(receiver_connection) == 0
+
+
+# TODO: review
+def test_send_audio_to_peers() -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	peer_connection = rtc.create_peer_connection()
+	audio_track = rtc.add_audio_track(peer_connection, 'sendonly', 'opus', 111)
+	rtc_peers : List[RtcPeer] =\
+	[
+		{
+			'peer_connection': peer_connection,
+			'video_track': 0,
+			'audio_track': audio_track
+		}
+	]
+
+	rtc.send_audio_to_peers(rtc_peers, bytes(960), 0)
+
+	datachannel_library.rtcDeletePeerConnection(peer_connection)
+
+
+# TODO: review
+def test_send_video_to_peers() -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	peer_connection = rtc.create_peer_connection()
+	video_track = rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96)
+	rtc_peers : List[RtcPeer] =\
+	[
+		{
+			'peer_connection': peer_connection,
+			'video_track': video_track,
+			'audio_track': 0
+		}
+	]
+
+	rtc.send_video_to_peers(rtc_peers, bytes(1024))
+
+	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 
 def test_delete_peers() -> None:

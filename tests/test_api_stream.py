@@ -132,7 +132,7 @@ def test_stream_video(test_client : TestClient, create_event : threading.Event, 
 			websocket.send_bytes(chr(1).encode() + source_content)
 			websocket.receive_text()
 
-			peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
+			peer_connection = rtc.create_peer_connection()
 			rtc.add_video_track(peer_connection, 'recvonly', 'vp8', 96)
 			rtc.add_audio_track(peer_connection, 'recvonly', 'opus', 111)
 			sdp_offer = rtc.create_sdp_offer(peer_connection)
