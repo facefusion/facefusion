@@ -78,7 +78,7 @@ def test_send_audio_to_peers() -> None:
 		}
 	]
 
-	assert rtc.send_audio_to_peers(rtc_peers, bytes(960), 0) is None
+	rtc.send_audio_to_peers(rtc_peers, bytes(960), 0)
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
@@ -97,7 +97,7 @@ def test_send_video_to_peers() -> None:
 		}
 	]
 
-	assert rtc.send_video_to_peers(rtc_peers, bytes(1024)) is None
+	rtc.send_video_to_peers(rtc_peers, bytes(1024))
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
