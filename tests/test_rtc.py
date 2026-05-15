@@ -39,7 +39,7 @@ def test_create_sdp_offer() -> None:
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
 
-def test_negotiate_sdp() -> None:
+def test_negotiate_sdp_answer() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	sender_connection = rtc.create_peer_connection()
@@ -50,7 +50,7 @@ def test_negotiate_sdp() -> None:
 	receiver_connection = rtc.create_peer_connection()
 	rtc.add_video_track(receiver_connection, 'recvonly', 'vp8', 96)
 	rtc.add_audio_track(receiver_connection, 'recvonly', 'opus', 111)
-	sdp_answer = rtc.negotiate_sdp(receiver_connection, sdp_offer)
+	sdp_answer = rtc.negotiate_sdp_answer(receiver_connection, sdp_offer)
 
 	assert sdp_answer
 	assert 'm=video' in sdp_answer

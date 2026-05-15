@@ -39,7 +39,7 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 			video_codec = 'vp8'
 
 		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_types.get(video_codec, 96))
-		local_sdp = rtc.negotiate_sdp(peer_connection, sdp_offer)
+		local_sdp = rtc.negotiate_sdp_answer(peer_connection, sdp_offer)
 
 		if local_sdp:
 			rtc_peer : RtcPeer =\

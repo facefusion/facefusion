@@ -62,7 +62,7 @@ def create_sdp_offer(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 
 
 # TODO: sanitize sdp_offer, wrap in run_in_executor, track peer connection state
-def negotiate_sdp(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+def negotiate_sdp_answer(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	datachannel_library = datachannel_module.create_static_library()
 	sdp_event = threading.Event()
 	sdp_event_pointer = ctypes.cast(id(sdp_event), ctypes.c_void_p)
