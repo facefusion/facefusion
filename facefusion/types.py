@@ -286,7 +286,7 @@ RtcPeer = TypedDict('RtcPeer',
 	'audio_track': RtcAudioTrack,
 })
 
-RtcStreamStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
+RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
 
 ModelOptions : TypeAlias = Dict[str, Any]
 ModelSet : TypeAlias = Dict[str, ModelOptions]

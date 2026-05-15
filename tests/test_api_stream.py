@@ -13,6 +13,7 @@ from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
+from facefusion.libraries import datachannel as datachannel_module
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -123,7 +124,7 @@ def test_stream_video(test_client : TestClient, create_event : threading.Event, 
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	with patch('facefusion.rtc_store.send_rtc_video', side_effect = partial(set_event, event = create_event)):
+	with patch('facefusion.rtc.send_video_to_peers', side_effect = partial(set_event, event = create_event)):
 		with test_client.websocket_connect('/stream?mode=video&codec=' + video_codec, subprotocols =
 		[
 			'access_token.' + access_token
@@ -131,7 +132,11 @@ def test_stream_video(test_client : TestClient, create_event : threading.Event, 
 			websocket.send_bytes(chr(1).encode() + source_content)
 			websocket.receive_text()
 
-			sdp_offer = rtc.create_sdp_offer()
+			peer_connection = rtc.create_peer_connection(disable_auto_negotiation = True)
+			rtc.add_video_track(peer_connection, 'recvonly', 'vp8', 96)
+			rtc.add_audio_track(peer_connection, 'recvonly', 'opus', 111)
+			sdp_offer = rtc.create_sdp_offer(peer_connection)
+			datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 			stream_response = test_client.post('/stream', content = sdp_offer, headers =
 			{
 				'Authorization': 'Bearer ' + access_token,
