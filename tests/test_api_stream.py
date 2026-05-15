@@ -124,7 +124,7 @@ def test_stream_video(test_client : TestClient, create_event : threading.Event, 
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	with patch('facefusion.rtc_store.send_rtc_video', side_effect = partial(set_event, event = create_event)):
+	with patch('facefusion.rtc.send_video_to_peers', side_effect = partial(set_event, event = create_event)):
 		with test_client.websocket_connect('/stream?mode=video&codec=' + video_codec, subprotocols =
 		[
 			'access_token.' + access_token

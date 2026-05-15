@@ -3,9 +3,9 @@ from starlette.responses import Response
 from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
 from starlette.websockets import WebSocket
 
-from facefusion import rtc_store, session_context, session_manager
+from facefusion import session_context, session_manager
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.apis.stream_helper import handle_image_stream, handle_video_stream
+from facefusion.apis.stream_helper import add_rtc_viewer, handle_image_stream, handle_video_stream
 
 
 # TODO: reject websocket with invalid or missing stream mode
@@ -27,7 +27,7 @@ async def post_stream(request : Request) -> Response:
 
 	if session_id:
 		sdp_offer = await request.body()
-		sdp_answer = rtc_store.add_rtc_viewer(session_id, sdp_offer.decode())
+		sdp_answer = add_rtc_viewer(session_id, sdp_offer.decode())
 
 		if sdp_answer:
 			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type = 'application/sdp')

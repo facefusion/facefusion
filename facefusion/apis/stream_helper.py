@@ -1,20 +1,20 @@
 import asyncio
 from collections import deque
 from collections.abc import AsyncIterator
-from typing import Tuple, cast, get_args
+from typing import Optional, Tuple, cast, get_args
 
 import cv2
 import numpy
 from starlette.websockets import WebSocket, WebSocketState
 
-from facefusion import rtc_store, session_context, session_manager, state_manager
+from facefusion import rtc, rtc_store, session_context, session_manager, state_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
 from facefusion.codecs.aom import create_aom_encoder, destroy_aom_encoder, encode_aom_buffer
 from facefusion.codecs.opus import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.streamer import process_vision_frame
-from facefusion.types import Resolution, SessionId, VideoCodec, VisionFrame
+from facefusion.types import AudioCodec, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
 
 
 async def receive_stream_frames(websocket : WebSocket) -> AsyncIterator[Tuple[int, bytes]]:
@@ -42,6 +42,40 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
+# TODO: clean up peer connection on failed sdp negotiation, wrap in run_in_executor to avoid blocking async event loop
+def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+	rtc_peers = rtc_store.get_rtc_peers(session_id)
+
+	if rtc_peers is not None:
+		payload_types = rtc.parse_sdp_payload_types(sdp_offer)
+		peer_connection : PeerConnection = rtc.create_peer_connection()
+		audio_codec : AudioCodec = 'opus'
+		audio_track : RtcAudioTrack = rtc.add_audio_track(peer_connection, 'sendonly', audio_codec, payload_types.get(audio_codec, 111))
+
+		#TODO: Fix me via resolve method
+		video_codec : VideoCodec = 'av1'
+		if payload_types.get('av1'):
+			video_codec = 'av1'
+		if payload_types.get('vp8'):
+			video_codec = 'vp8'
+
+		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_types.get(video_codec, 96))
+		local_sdp = rtc.negotiate_sdp_answer(peer_connection, sdp_offer)
+
+		if local_sdp:
+			rtc_peer : RtcPeer =\
+			{
+				'peer_connection': peer_connection,
+				'video_track': video_track,
+				'audio_track': audio_track
+			}
+			rtc_peers.append(rtc_peer)
+
+		return local_sdp
+
+	return None
+
+
 def run_aom_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : SessionId, initial_resolution : Resolution, keyframe_interval : int) -> None:
 	aom_encoder = create_aom_encoder(initial_resolution, 4500, 8, 10)
 	current_resolution = initial_resolution
@@ -65,7 +99,10 @@ def run_aom_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : Se
 			frame_buffer = encode_aom_buffer(aom_encoder, yuv_frame.tobytes(), frame_resolution, pts)
 
 			if frame_buffer:
-				rtc_store.send_rtc_video(session_id, frame_buffer)
+				rtc_peers = rtc_store.get_rtc_peers(session_id)
+
+				if rtc_peers:
+					rtc.send_video_to_peers(rtc_peers, frame_buffer)
 
 		pts += 1
 
@@ -96,7 +133,10 @@ def run_vp8_encode_loop(vision_frame_deque : deque[VisionFrame], session_id : Se
 			frame_buffer = encode_vpx_buffer(vpx_encoder, yuv_frame.tobytes(), frame_resolution, pts)
 
 			if frame_buffer:
-				rtc_store.send_rtc_video(session_id, frame_buffer)
+				rtc_peers = rtc_store.get_rtc_peers(session_id)
+
+				if rtc_peers:
+					rtc.send_video_to_peers(rtc_peers, frame_buffer)
 
 		pts += 1
 
@@ -186,7 +226,10 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 						audio_buffer = encode_opus_buffer(opus_encoder, audio_chunk.tobytes(), 960)
 
 						if audio_buffer:
-							rtc_store.send_rtc_audio(session_id, audio_buffer, audio_timestamp)
+							rtc_peers = rtc_store.get_rtc_peers(session_id)
+
+							if rtc_peers:
+								rtc.send_audio_to_peers(rtc_peers, audio_buffer, audio_timestamp)
 
 						audio_timestamp += 960
 
