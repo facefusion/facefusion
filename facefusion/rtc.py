@@ -42,6 +42,7 @@ def create_peer_connection(
 
 	return datachannel_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
+
 # TODO: check if sleep is needed
 def create_sdp_offer(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	datachannel_library = datachannel_module.create_static_library()

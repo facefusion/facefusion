@@ -8,12 +8,12 @@ import pytest
 from starlette.testclient import TestClient
 
 from facefusion import metadata, rtc, session_manager, state_manager
-from facefusion.libraries import datachannel as datachannel_module
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
+from facefusion.libraries import datachannel as datachannel_module
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
