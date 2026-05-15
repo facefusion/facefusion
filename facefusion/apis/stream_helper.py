@@ -168,6 +168,7 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 
 			timestamp += 1
 			vision_frame = vision_frame_queue.get()
+			#TODO: we are not using continue as control flow in the project
 			continue
 
 		destroy_aom_encoder(aom_encoder)
@@ -201,6 +202,7 @@ def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 
 			timestamp += 1
 			vision_frame = vision_frame_queue.get()
+			# TODO: we are not using continue as control flow in the project
 			continue
 
 		destroy_vpx_encoder(vpx_encoder)
