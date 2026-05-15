@@ -1,23 +1,22 @@
 from typing import List, Optional
 
 from facefusion import rtc
-from facefusion.types import AudioCodec, PeerConnection, RtcAudioTrack, RtcPeer, RtcStreamStore, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec
+from facefusion.types import AudioCodec, PeerConnection, RtcAudioTrack, RtcPeer, RtcStore, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec
 
 
-# TODO: aint this a peer store?
-RTC_STREAM_STORE : RtcStreamStore = {}
+RTC_STORE : RtcStore = {}
 
 
-def get_rtc_stream(session_id : SessionId) -> Optional[List[RtcPeer]]:
-	return RTC_STREAM_STORE.get(session_id)
+def get_rtc_peers(session_id : SessionId) -> List[RtcPeer]:
+	return RTC_STORE.get(session_id)
 
 
-def create_rtc_stream(session_id : SessionId) -> None:
-	RTC_STREAM_STORE[session_id] = []
+def create_rtc_peers(session_id : SessionId) -> None:
+	RTC_STORE[session_id] = []
 
 
-def destroy_rtc_stream(session_id : SessionId) -> None:
-	rtc_peers = RTC_STREAM_STORE.pop(session_id, None)
+def destroy_rtc_peers(session_id : SessionId) -> None:
+	rtc_peers = RTC_STORE.pop(session_id, None)
 
 	if rtc_peers:
 		rtc.delete_peers(rtc_peers)
@@ -25,7 +24,7 @@ def destroy_rtc_stream(session_id : SessionId) -> None:
 
 # TODO: clean up peer connection on failed sdp negotiation, wrap in run_in_executor to avoid blocking async event loop
 def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
-	if session_id in RTC_STREAM_STORE:
+	if session_id in RTC_STORE:
 		payload_types = rtc.parse_sdp_payload_types(sdp_offer)
 		peer_connection : PeerConnection = rtc.create_peer_connection()
 		audio_codec : AudioCodec = 'opus'
@@ -48,7 +47,7 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 				'video_track': video_track,
 				'audio_track': audio_track
 			}
-			RTC_STREAM_STORE[session_id].append(rtc_peer)
+			RTC_STORE[session_id].append(rtc_peer)
 
 		return local_sdp
 
@@ -57,14 +56,14 @@ def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[Sdp
 
 # TODO: detect and remove dead peers
 def send_rtc_video(session_id : SessionId, frame_buffer : bytes) -> None:
-	rtc_peers = get_rtc_stream(session_id)
+	rtc_peers = get_rtc_peers(session_id)
 
 	if rtc_peers:
 		rtc.send_video_to_peers(rtc_peers, frame_buffer)
 
 
 def send_rtc_audio(session_id : SessionId, audio_buffer : bytes, audio_pts : int) -> None:
-	rtc_peers = get_rtc_stream(session_id)
+	rtc_peers = get_rtc_peers(session_id)
 
 	if rtc_peers:
 		rtc.send_audio_to_peers(rtc_peers, audio_buffer, audio_pts)

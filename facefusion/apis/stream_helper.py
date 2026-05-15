@@ -159,7 +159,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			audio_timestamp = 0
 
 			vision_frame_deque.append(first_vision_frame)
-			rtc_store.create_rtc_stream(session_id)
+			rtc_store.create_rtc_peers(session_id)
 
 			event_loop = asyncio.get_running_loop()
 			encode_loop = run_aom_encode_loop
@@ -196,7 +196,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			if opus_encoder:
 				destroy_opus_encoder(opus_encoder)
 
-			rtc_store.destroy_rtc_stream(session_id)
+			rtc_store.destroy_rtc_peers(session_id)
 
 	if websocket.client_state == WebSocketState.CONNECTED:
 		await websocket.close()
