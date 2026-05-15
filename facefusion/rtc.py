@@ -40,6 +40,7 @@ def negotiate_sdp_answer(peer_connection : PeerConnection, sdp_offer : SdpOffer)
 	return None
 
 
+#TODO: needs revision
 def send_audio_to_peers(rtc_peers : List[RtcPeer], audio_buffer : bytes, audio_pts : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
@@ -58,6 +59,7 @@ def send_audio_to_peers(rtc_peers : List[RtcPeer], audio_buffer : bytes, audio_p
 	return None
 
 
+#TODO: needs revision
 def send_video_to_peers(rtc_peers : List[RtcPeer], frame_buffer : bytes) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
@@ -132,6 +134,7 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 	return video_track
 
 
+#TODO: needs revision
 def create_audio_description(media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> bytes:
 	rtp_codec = 'opus/48000/2'
 	if audio_codec == 'opus':
@@ -151,6 +154,7 @@ def create_audio_description(media_direction : MediaDirection, audio_codec : Aud
 	return '\r\n'.join(lines).encode()
 
 
+#TODO: needs revision
 def create_video_description(media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> bytes:
 	rtp_codec = 'AV1/90000'
 	if video_codec == 'av1':
@@ -172,6 +176,7 @@ def create_video_description(media_direction : MediaDirection, video_codec : Vid
 	return '\r\n'.join(lines).encode()
 
 
+#TODO: needs revision
 def parse_sdp_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
 	payload_types : Dict[str, int] = {}
 
