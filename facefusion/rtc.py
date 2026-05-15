@@ -1,5 +1,4 @@
 import ctypes
-import threading
 import time
 from typing import Dict, List, Optional
 
@@ -17,39 +16,25 @@ def create_peer_connection() -> PeerConnection:
 	return datachannel_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
 
-# TODO: check if sleep is needed
 def create_sdp_offer(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	datachannel_library = datachannel_module.create_static_library()
 	datachannel_library.rtcSetLocalDescription(peer_connection, b'offer')
 
-	buffer_size = 16384
-	buffer_string = ctypes.create_string_buffer(buffer_size)
-	wait_limit = time.monotonic() + 5
+	sdp_buffer = ctypes.create_string_buffer(8192)
 
-	while time.monotonic() < wait_limit:
-		if datachannel_library.rtcGetLocalDescription(peer_connection, buffer_string, buffer_size) > 0:
-			return buffer_string.value.decode()
-
-		time.sleep(0.05)
+	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, 8192):
+		return sdp_buffer.value.decode()
 
 	return None
 
 
-# TODO: sanitize sdp_offer, wrap in run_in_executor, track peer connection state
 def negotiate_sdp_answer(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	datachannel_library = datachannel_module.create_static_library()
-	sdp_event = threading.Event()
-	sdp_event_pointer = ctypes.cast(id(sdp_event), ctypes.c_void_p)
-
-	datachannel_library.rtcSetUserPointer(peer_connection, sdp_event_pointer)
-	datachannel_library.rtcSetLocalDescriptionCallback(peer_connection, on_sdp_ready)
 	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
-	sdp_event.wait(timeout = 5)
 
-	sdp_buffer_size = 8192
-	sdp_buffer = ctypes.create_string_buffer(sdp_buffer_size)
+	sdp_buffer = ctypes.create_string_buffer(8192)
 
-	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, sdp_buffer_size) > 0:
+	if datachannel_library.rtcGetLocalDescription(peer_connection, sdp_buffer, 8192):
 		return sdp_buffer.value.decode()
 
 	return None
@@ -201,8 +186,3 @@ def parse_sdp_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
 			payload_types['opus'] = int(line.split(':')[1].split(' ')[0])
 
 	return payload_types
-
-
-@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p)
-def on_sdp_ready(peer_connection : int, sdp : Optional[bytes], sdp_type : int, user_pointer : Optional[int]) -> None:
-	ctypes.cast(user_pointer, ctypes.py_object).value.set()
