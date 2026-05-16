@@ -38,6 +38,7 @@ def destroy_opus_encoder(opus_encoder : OpusEncoder) -> None:
 		opus_library.opus_encoder_destroy(opus_encoder)
 
 
+#TODO: needs review
 def create_opus_decoder(sample_rate : int, channel_total : int) -> Optional[OpusDecoder]:
 	opus_library = opus_module.create_static_library()
 
@@ -47,6 +48,7 @@ def create_opus_decoder(sample_rate : int, channel_total : int) -> Optional[Opus
 	return None
 
 
+#TODO: needs review
 def decode_opus_buffer(opus_decoder : OpusDecoder, input_buffer : bytes, frame_size : int, channel_total : int) -> Optional[AudioFrame]:
 	opus_library = opus_module.create_static_library()
 
@@ -60,6 +62,7 @@ def decode_opus_buffer(opus_decoder : OpusDecoder, input_buffer : bytes, frame_s
 	return None
 
 
+#TODO: needs review
 def destroy_opus_decoder(opus_decoder : OpusDecoder) -> None:
 	opus_library = opus_module.create_static_library()
 
