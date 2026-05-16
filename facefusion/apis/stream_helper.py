@@ -166,13 +166,11 @@ def encode_video_loop(video_codec : VideoCodec, vision_frame_queue : queue.Queue
 
 			timestamp += 1
 			vision_frame = vision_frame_queue.get()
-			# TODO: we are not using continue as control flow in the project
-			continue
-
-		destroy_encoder(encoder)
-		temp_resolution = output_resolution
-		encoder = create_encoder(temp_resolution)
-		timestamp = 0
+		else:
+			destroy_encoder(encoder)
+			temp_resolution = output_resolution
+			encoder = create_encoder(temp_resolution)
+			timestamp = 0
 
 	if encoder:
 		destroy_encoder(encoder)
