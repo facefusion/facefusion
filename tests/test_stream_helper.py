@@ -9,9 +9,9 @@ import pytest
 from numpy.typing import NDArray
 from starlette.websockets import WebSocketState
 
-from facefusion.apis.stream_helper import handle_video_stream, run_aom_encode_loop, run_opus_encode_loop, run_vp8_encode_loop
+from facefusion.apis.stream_helper import encode_video_loop, handle_video_stream, run_opus_encode_loop
 from facefusion.hash_helper import create_hash
-from facefusion.types import VisionFrame
+from facefusion.types import VideoCodec, VisionFrame
 
 
 def _make_handler_websocket(events : list[Any]) -> MagicMock:
@@ -35,7 +35,7 @@ def _make_audio_packet(samples : NDArray[Any]) -> bytes:
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-def test_run_video_encode_loop(video_codec : str) -> None:
+def test_run_video_encode_loop(video_codec : VideoCodec) -> None:
 	frame = numpy.full((64, 64, 3), 128, dtype = numpy.uint8)
 	small_frame = numpy.full((64, 64, 3), 128, dtype = numpy.uint8)
 	large_frame = numpy.full((128, 128, 3), 128, dtype = numpy.uint8)
@@ -45,13 +45,11 @@ def test_run_video_encode_loop(video_codec : str) -> None:
 	create_name = prefix + 'create_aom_encoder'
 	encode_name = prefix + 'encode_aom_buffer'
 	destroy_name = prefix + 'destroy_aom_encoder'
-	run_loop = run_aom_encode_loop
 
 	if video_codec == 'vp8':
 		create_name = prefix + 'create_vpx_encoder'
 		encode_name = prefix + 'encode_vpx_buffer'
 		destroy_name = prefix + 'destroy_vpx_encoder'
-		run_loop = run_vp8_encode_loop
 
 	vision_frame_queue : queue.Queue[Optional[VisionFrame]] = queue.Queue()
 	vision_frame_queue.put(frame)
@@ -62,8 +60,8 @@ def test_run_video_encode_loop(video_codec : str) -> None:
 		patch(destroy_name), \
 		patch(prefix + 'rtc_store') as mock_rtc_store, \
 		patch(prefix + 'rtc') as mock_rtc:
-		mock_rtc_store.get_rtc_peers.return_value = [ MagicMock() ]
-		run_loop(vision_frame_queue, 'session-1', (64, 64))
+		mock_rtc_store.get_peers.return_value = [ MagicMock() ]
+		encode_video_loop(video_codec, vision_frame_queue, 'session-1', (64, 64))
 		mock_rtc.send_video_to_peers.assert_called_once()
 
 	vision_frame_queue = queue.Queue()
@@ -77,8 +75,8 @@ def test_run_video_encode_loop(video_codec : str) -> None:
 		patch(destroy_name), \
 		patch(prefix + 'rtc_store') as mock_rtc_store, \
 		patch(prefix + 'rtc') as mock_rtc:
-		mock_rtc_store.get_rtc_peers.return_value = [ MagicMock() ]
-		run_loop(vision_frame_queue, 'session-1', (64, 64))
+		mock_rtc_store.get_peers.return_value = [ MagicMock() ]
+		encode_video_loop(video_codec, vision_frame_queue, 'session-1', (64, 64))
 		assert mock_rtc.send_video_to_peers.call_count == 3
 
 	vision_frame_queue = queue.Queue()
@@ -86,7 +84,7 @@ def test_run_video_encode_loop(video_codec : str) -> None:
 	with patch(create_name, return_value = MagicMock()), \
 		patch(destroy_name) as mock_destroy, \
 		patch(prefix + 'rtc') as mock_rtc:
-		run_loop(vision_frame_queue, 'session-1', (64, 64))
+		encode_video_loop(video_codec, vision_frame_queue, 'session-1', (64, 64))
 		mock_rtc.send_video_to_peers.assert_not_called()
 		mock_destroy.assert_called_once()
 
@@ -99,7 +97,7 @@ def test_run_video_encode_loop(video_codec : str) -> None:
 		patch(destroy_name), \
 		patch(prefix + 'rtc_store'), \
 		patch(prefix + 'rtc') as mock_rtc:
-		run_loop(vision_frame_queue, 'session-1', (64, 64))
+		encode_video_loop(video_codec, vision_frame_queue, 'session-1', (64, 64))
 		mock_rtc.send_video_to_peers.assert_not_called()
 
 	vision_frame_queue = queue.Queue()
@@ -111,8 +109,8 @@ def test_run_video_encode_loop(video_codec : str) -> None:
 		patch(destroy_name) as mock_destroy, \
 		patch(prefix + 'rtc_store') as mock_rtc_store, \
 		patch(prefix + 'rtc') as mock_rtc:
-		mock_rtc_store.get_rtc_peers.return_value = [ MagicMock() ]
-		run_loop(vision_frame_queue, 'session-1', (64, 64))
+		mock_rtc_store.get_peers.return_value = [ MagicMock() ]
+		encode_video_loop(video_codec, vision_frame_queue, 'session-1', (64, 64))
 		assert mock_create.call_count == 2
 		assert mock_destroy.call_count == 2
 		mock_rtc.send_video_to_peers.assert_called_once()
@@ -122,7 +120,7 @@ def test_run_video_encode_loop(video_codec : str) -> None:
 	vision_frame_queue.put(None)
 	with patch(create_name, return_value = None), \
 		patch(prefix + 'rtc') as mock_rtc:
-		run_loop(vision_frame_queue, 'session-1', (64, 64))
+		encode_video_loop(video_codec, vision_frame_queue, 'session-1', (64, 64))
 		mock_rtc.send_video_to_peers.assert_not_called()
 
 
@@ -138,7 +136,7 @@ def test_run_opus_encode_loop() -> None:
 		patch('facefusion.apis.stream_helper.destroy_opus_encoder'), \
 		patch('facefusion.apis.stream_helper.rtc_store') as mock_rtc_store, \
 		patch('facefusion.apis.stream_helper.rtc') as mock_rtc:
-		mock_rtc_store.get_rtc_peers.return_value = [ MagicMock() ]
+		mock_rtc_store.get_peers.return_value = [ MagicMock() ]
 		run_opus_encode_loop(audio_chunk_queue, 'session-1')
 		mock_rtc.send_audio_to_peers.assert_called_once()
 		assert mock_rtc.send_audio_to_peers.call_args[0][2] == 0
@@ -152,7 +150,7 @@ def test_run_opus_encode_loop() -> None:
 		patch('facefusion.apis.stream_helper.destroy_opus_encoder'), \
 		patch('facefusion.apis.stream_helper.rtc_store') as mock_rtc_store, \
 		patch('facefusion.apis.stream_helper.rtc') as mock_rtc:
-		mock_rtc_store.get_rtc_peers.return_value = [ MagicMock() ]
+		mock_rtc_store.get_peers.return_value = [ MagicMock() ]
 		run_opus_encode_loop(audio_chunk_queue, 'session-1')
 		assert mock_rtc.send_audio_to_peers.call_count == 2
 		assert mock_rtc.send_audio_to_peers.call_args_list[0][0][2] == 0
@@ -202,7 +200,7 @@ def test_handle_video_stream() -> None:
 		patch('facefusion.apis.stream_helper.session_manager.find_session_id', return_value = 'session-1'), \
 		patch('facefusion.apis.stream_helper.session_context.set_session_id'), \
 		patch('facefusion.apis.stream_helper.state_manager.get_item', return_value = 30), \
-		patch('facefusion.apis.stream_helper.run_aom_encode_loop') as mock_loop, \
+		patch('facefusion.apis.stream_helper.encode_video_loop') as mock_loop, \
 		patch('facefusion.apis.stream_helper.run_opus_encode_loop'), \
 		patch('facefusion.apis.stream_helper.rtc_store') as mock_rtc:
 		asyncio.run(handle_video_stream(websocket))
@@ -211,7 +209,7 @@ def test_handle_video_stream() -> None:
 		websocket.close.assert_called_once()
 		mock_rtc.init_peers.assert_called_once_with('session-1')
 		mock_rtc.delete_peers.assert_called_once_with('session-1')
-		_, loop_session_id, loop_resolution = mock_loop.call_args[0]
+		_, _, loop_session_id, loop_resolution = mock_loop.call_args[0]
 		assert loop_session_id == 'session-1'
 		assert loop_resolution == (64, 64)
 
@@ -232,7 +230,7 @@ def test_handle_video_stream() -> None:
 		patch('facefusion.apis.stream_helper.session_manager.find_session_id', return_value = 'session-1'), \
 		patch('facefusion.apis.stream_helper.session_context.set_session_id'), \
 		patch('facefusion.apis.stream_helper.state_manager.get_item', return_value = 30), \
-		patch('facefusion.apis.stream_helper.run_aom_encode_loop'), \
+		patch('facefusion.apis.stream_helper.encode_video_loop'), \
 		patch('facefusion.apis.stream_helper.run_opus_encode_loop') as mock_audio_loop, \
 		patch('facefusion.apis.stream_helper.rtc_store'):
 		asyncio.run(handle_video_stream(websocket))
