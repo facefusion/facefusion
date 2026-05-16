@@ -18,8 +18,10 @@ from facefusion.codecs.vpx import create_vpx_decoder, create_vpx_encoder, decode
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AomDecoder, AudioFrame, OpusDecoder, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder
 
+#TODO: remove globals
 RTC_STATE_NAMES = [ 'new', 'connecting', 'connected', 'disconnected', 'failed', 'closed' ]
 peer_connection_labels : dict = {}
+#TODO: aint this the same thing like RTC_STORE
 WHIP_SESSIONS : dict = {}
 
 
@@ -36,7 +38,7 @@ async def process_image(websocket : WebSocket) -> None:
 		capture_vision_frame = await anext(receive_vision_frames(websocket), None)
 
 		if numpy.any(capture_vision_frame):
-			output_vision_frame = streamer.process(create_empty_audio_frame(), capture_vision_frame)
+			output_vision_frame = streamer.process_frame(create_empty_audio_frame(), capture_vision_frame)
 			is_success, output_frame_buffer = cv2.imencode('.jpg', output_vision_frame)
 
 			if is_success:
@@ -59,6 +61,7 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
+#TODO: needs review
 def receive_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	datachannel_library = datachannel_module.create_static_library()
 	rtc_store.init_peers(session_id)
@@ -95,6 +98,7 @@ def receive_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 		'video_track': video_track,
 		'video_decoder': video_decoder,
 		'video_codec': video_codec,
+		#TODO: kill flag
 		'active': True
 	}
 
@@ -135,6 +139,7 @@ def send_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnsw
 	return None
 
 
+#TODO: needs review
 def disconnect_whip(session_id : SessionId) -> None:
 	whip_session = WHIP_SESSIONS.get(session_id)
 
@@ -165,6 +170,7 @@ def disconnect_whip(session_id : SessionId) -> None:
 	rtc_store.delete_peers(session_id)
 
 
+#TODO: needs review
 def run_whip_loop(session_id : SessionId) -> None:
 	whip_session = WHIP_SESSIONS.get(session_id)
 
@@ -211,7 +217,7 @@ def run_whip_loop(session_id : SessionId) -> None:
 			vision_frame = next_frame
 			continue
 
-		output_vision_frame = streamer.process(audio_frame, vision_frame)
+		output_vision_frame = streamer.process_frame(audio_frame, vision_frame)
 		output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 
 		if output_resolution != resolution:
@@ -266,6 +272,7 @@ def run_whip_loop(session_id : SessionId) -> None:
 		destroy_opus_encoder(opus_encoder)
 
 
+#TODO: needs review - belongs to rtc.py
 def add_receive_track(peer_connection : PeerConnection, video_codec : VideoCodec, payload_type : int) -> int:
 	datachannel_library = datachannel_module.create_static_library()
 	track_init = datachannel_module.define_rtc_track_init()
@@ -297,6 +304,7 @@ def add_receive_track(peer_connection : PeerConnection, video_codec : VideoCodec
 	return video_track
 
 
+#TODO: needs review - belongs to rtc.py
 def add_receive_audio_track(peer_connection : PeerConnection, payload_type : int) -> int:
 	datachannel_library = datachannel_module.create_static_library()
 	track_init = datachannel_module.define_rtc_track_init()
@@ -320,6 +328,7 @@ def add_receive_audio_track(peer_connection : PeerConnection, payload_type : int
 	return audio_track
 
 
+#TODO: needs review
 def receive_audio_frame(datachannel_library : ctypes.CDLL, audio_track : int, audio_decoder : OpusDecoder, receive_buffer : ctypes.Array) -> AudioFrame:
 	buf_size = ctypes.c_int(8 * 1024)
 	result = datachannel_library.rtcReceiveMessage(audio_track, receive_buffer, ctypes.byref(buf_size))
@@ -339,6 +348,7 @@ def create_video_decoder(video_codec : str) -> Optional[VpxDecoder | AomDecoder]
 		return create_aom_decoder()
 	if video_codec == 'vp8':
 		return create_vpx_decoder()
+
 	return None
 
 
@@ -425,4 +435,5 @@ def handle_state_change(pc : int, state : int, user_ptr : ctypes.c_void_p) -> No
 	print('[' + label + '] peer ' + str(pc) + ' state: ' + state_name, flush = True)
 
 
+#TODO: remove this
 STATE_CHANGE_CALLBACK = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p)(handle_state_change)

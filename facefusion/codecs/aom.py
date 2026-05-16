@@ -74,6 +74,7 @@ def destroy_aom_encoder(aom_encoder : AomEncoder) -> None:
 		aom_library.aom_codec_destroy(aom_encoder)
 
 
+#TODO: needs review
 def create_aom_decoder() -> Optional[AomDecoder]:
 	aom_library = aom_module.create_static_library()
 
@@ -87,6 +88,7 @@ def create_aom_decoder() -> Optional[AomDecoder]:
 	return None
 
 
+#TODO: needs review
 def add_obu_size_field(frame_buffer : bytes) -> bytes:
 	header_byte = frame_buffer[0]
 	has_size = (header_byte >> 1) & 1
@@ -102,6 +104,7 @@ def add_obu_size_field(frame_buffer : bytes) -> bytes:
 	return bytes([header_byte | 0x02]) + frame_buffer[1:header_size] + size_bytes + frame_buffer[header_size:]
 
 
+#TODO: needs review
 def encode_leb128(value : int) -> bytes:
 	result = bytearray()
 
@@ -114,6 +117,7 @@ def encode_leb128(value : int) -> bytes:
 	return bytes(result)
 
 
+#TODO: needs review
 def decode_aom_buffer(aom_decoder : AomDecoder, frame_buffer : bytes) -> Optional[VisionFrame]:
 	aom_library = aom_module.create_static_library()
 
@@ -133,6 +137,7 @@ def decode_aom_buffer(aom_decoder : AomDecoder, frame_buffer : bytes) -> Optiona
 	return None
 
 
+#TODO: needs review
 def extract_aom_image(frame_pointer : int) -> Optional[VisionFrame]:
 	width = ctypes.c_uint.from_address(frame_pointer + 28).value
 	height = ctypes.c_uint.from_address(frame_pointer + 32).value
@@ -153,6 +158,7 @@ def extract_aom_image(frame_pointer : int) -> Optional[VisionFrame]:
 	return None
 
 
+#TODO: needs review
 def extract_aom_plane(planes_offset : int, strides_offset : int, index : int, width : int, height : int) -> numpy.ndarray:
 	plane_pointer = ctypes.c_void_p.from_address(planes_offset + index * 8).value
 	stride = ctypes.c_int.from_address(strides_offset + index * 4).value
@@ -162,6 +168,7 @@ def extract_aom_plane(planes_offset : int, strides_offset : int, index : int, wi
 	return plane[:, :width]
 
 
+#TODO: needs review
 def destroy_aom_decoder(aom_decoder : AomDecoder) -> None:
 	aom_library = aom_module.create_static_library()
 

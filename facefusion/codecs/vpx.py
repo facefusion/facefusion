@@ -78,6 +78,7 @@ def destroy_vpx_encoder(vpx_encoder : VpxEncoder) -> None:
 		vpx_library.vpx_codec_destroy(vpx_encoder)
 
 
+#TODO: needs review
 def create_vpx_decoder() -> Optional[VpxDecoder]:
 	vpx_library = vpx_module.create_static_library()
 
@@ -91,6 +92,7 @@ def create_vpx_decoder() -> Optional[VpxDecoder]:
 	return None
 
 
+#TODO: needs review
 def decode_vpx_buffer(vpx_decoder : VpxDecoder, frame_buffer : bytes) -> Optional[VisionFrame]:
 	vpx_library = vpx_module.create_static_library()
 
@@ -107,6 +109,7 @@ def decode_vpx_buffer(vpx_decoder : VpxDecoder, frame_buffer : bytes) -> Optiona
 	return None
 
 
+#TODO: needs review
 def extract_vpx_image(frame_pointer : int) -> Optional[VisionFrame]:
 	width = ctypes.c_uint.from_address(frame_pointer + 24).value
 	height = ctypes.c_uint.from_address(frame_pointer + 28).value
@@ -127,6 +130,7 @@ def extract_vpx_image(frame_pointer : int) -> Optional[VisionFrame]:
 	return None
 
 
+#TODO: needs review
 def extract_vpx_plane(planes_offset : int, strides_offset : int, index : int, width : int, height : int) -> numpy.ndarray:
 	plane_pointer = ctypes.c_void_p.from_address(planes_offset + index * 8).value
 	stride = ctypes.c_int.from_address(strides_offset + index * 4).value
@@ -136,6 +140,7 @@ def extract_vpx_plane(planes_offset : int, strides_offset : int, index : int, wi
 	return plane[:, :width]
 
 
+#TODO: needs review
 def destroy_vpx_decoder(vpx_decoder : VpxDecoder) -> None:
 	vpx_library = vpx_module.create_static_library()
 
