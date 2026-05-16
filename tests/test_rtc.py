@@ -2,8 +2,9 @@ from typing import List
 
 import pytest
 
-from facefusion import rtc, state_manager
+from facefusion import state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
+from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, detect_sdp_media, send_audio_to_peers, send_video_to_peers, set_remote_description
 from facefusion.types import RtcPeer
 
 
@@ -17,18 +18,18 @@ def before_all() -> None:
 
 
 def test_create_peer_connection() -> None:
-	peer_connection = rtc.create_peer_connection()
+	peer_connection = create_peer_connection()
 	datachannel_library = datachannel_module.create_static_library()
 
-	assert peer_connection > 0
+	assert peer_connection
 	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == 0
 
 
 def test_create_sdp_offer() -> None:
-	peer_connection = rtc.create_peer_connection()
-	rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96)
-	rtc.add_audio_track(peer_connection, 'sendonly', 'opus', 111)
-	sdp_offer = rtc.create_sdp_offer(peer_connection)
+	sender_peer_connection = create_peer_connection()
+	add_video_track(sender_peer_connection, 'sendonly', 'vp8', 96)
+	add_audio_track(sender_peer_connection, 'sendonly', 'opus', 111)
+	sdp_offer = create_sdp_offer(sender_peer_connection)
 
 	assert 'm=video' in sdp_offer
 	assert 'VP8/90000' in sdp_offer
@@ -37,21 +38,22 @@ def test_create_sdp_offer() -> None:
 	assert 'opus/48000/2' in sdp_offer
 	assert 'a=ssrc:43 cname:audio' in sdp_offer
 
-	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
+	datachannel_module.create_static_library().rtcDeletePeerConnection(sender_peer_connection)
 
 
-def test_negotiate_sdp_answer() -> None:
+def test_create_sdp_answer() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
-	sender_connection = rtc.create_peer_connection()
-	rtc.add_video_track(sender_connection, 'sendonly', 'vp8', 96)
-	rtc.add_audio_track(sender_connection, 'sendonly', 'opus', 111)
-	sdp_offer = rtc.create_sdp_offer(sender_connection)
+	sender_peer_connection = create_peer_connection()
+	add_video_track(sender_peer_connection, 'sendonly', 'vp8', 96)
+	add_audio_track(sender_peer_connection, 'sendonly', 'opus', 111)
+	sdp_offer = create_sdp_offer(sender_peer_connection)
 
-	receiver_connection = rtc.create_peer_connection()
-	rtc.add_video_track(receiver_connection, 'recvonly', 'vp8', 96)
-	rtc.add_audio_track(receiver_connection, 'recvonly', 'opus', 111)
-	sdp_answer = rtc.negotiate_sdp_answer(receiver_connection, sdp_offer)
+	receiver_peer_connection = create_peer_connection()
+	set_remote_description(receiver_peer_connection, sdp_offer)
+	add_video_track(receiver_peer_connection, 'recvonly', 'vp8', 96)
+	add_audio_track(receiver_peer_connection, 'recvonly', 'opus', 111)
+	sdp_answer = create_sdp_answer(receiver_peer_connection)
 
 	assert 'm=video' in sdp_answer
 	assert 'VP8/90000' in sdp_answer
@@ -61,15 +63,14 @@ def test_negotiate_sdp_answer() -> None:
 	assert 'a=ssrc:43 cname:audio' in sdp_answer
 	assert 'a=recvonly' in sdp_answer
 
-	assert datachannel_library.rtcDeletePeerConnection(sender_connection) == 0
-	assert datachannel_library.rtcDeletePeerConnection(receiver_connection) == 0
+	assert datachannel_library.rtcDeletePeerConnection(sender_peer_connection) == 0
+	assert datachannel_library.rtcDeletePeerConnection(receiver_peer_connection) == 0
 
 
-# TODO: review
 def test_send_audio_to_peers() -> None:
 	datachannel_library = datachannel_module.create_static_library()
-	peer_connection = rtc.create_peer_connection()
-	audio_track = rtc.add_audio_track(peer_connection, 'sendonly', 'opus', 111)
+	peer_connection = create_peer_connection()
+	audio_track = add_audio_track(peer_connection, 'sendonly', 'opus', 111)
 	rtc_peers : List[RtcPeer] =\
 	[
 		{
@@ -79,16 +80,15 @@ def test_send_audio_to_peers() -> None:
 		}
 	]
 
-	rtc.send_audio_to_peers(rtc_peers, bytes(960), 0)
+	send_audio_to_peers(rtc_peers, bytes(960), 0)
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 
-# TODO: review
 def test_send_video_to_peers() -> None:
 	datachannel_library = datachannel_module.create_static_library()
-	peer_connection = rtc.create_peer_connection()
-	video_track = rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96)
+	peer_connection = create_peer_connection()
+	video_track = add_video_track(peer_connection, 'sendonly', 'vp8', 96)
 	rtc_peers : List[RtcPeer] =\
 	[
 		{
@@ -98,14 +98,14 @@ def test_send_video_to_peers() -> None:
 		}
 	]
 
-	rtc.send_video_to_peers(rtc_peers, bytes(1024))
+	send_video_to_peers(rtc_peers, bytes(1024), 0)
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 
 def test_delete_peers() -> None:
 	datachannel_library = datachannel_module.create_static_library()
-	peer_connection = rtc.create_peer_connection()
+	peer_connection = create_peer_connection()
 	rtc_peers : List[RtcPeer] =\
 	[
 		{
@@ -115,36 +115,21 @@ def test_delete_peers() -> None:
 		}
 	]
 
-	rtc.delete_peers(rtc_peers)
+	delete_peers(rtc_peers)
 
-	assert datachannel_library.rtcDeletePeerConnection(peer_connection) < 0
-
-
-def test_add_audio_track() -> None:
-	peer_connection = rtc.create_peer_connection()
-	audio_track = rtc.add_audio_track(peer_connection, 'sendonly', 'opus', 111)
-
-	assert audio_track > 0
-
-	# TODO: review
-	sdp_offer = rtc.create_sdp_offer(peer_connection)
-
-	assert 'opus/48000/2' in sdp_offer
-
-	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
+	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == -1
 
 
-def test_add_video_track() -> None:
-	peer_connection = rtc.create_peer_connection()
-	video_track = rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96)
+def test_detect_sdp_media() -> None:
+	peer_connection = create_peer_connection()
+	add_video_track(peer_connection, 'sendonly', 'vp8', 96)
+	add_audio_track(peer_connection, 'sendonly', 'opus', 111)
+	sdp_offer = create_sdp_offer(peer_connection)
+	sdp_payload = detect_sdp_media(sdp_offer)
 
-	assert video_track > 0
-
-	# TODO: review
-	sdp_offer = rtc.create_sdp_offer(peer_connection)
-
-	assert 'VP8/90000' in sdp_offer
+	assert sdp_payload.get('video').get('codec') == 'vp8'
+	assert sdp_payload.get('video').get('payload_type') == 96
+	assert sdp_payload.get('audio').get('codec') == 'opus'
+	assert sdp_payload.get('audio').get('payload_type') == 111
 
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
-
-

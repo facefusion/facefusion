@@ -51,7 +51,7 @@ def create_event() -> threading.Event:
 
 
 @pytest.mark.helper
-def set_event(session_id : str, frame_buffer : bytes, event : threading.Event) -> None:
+def set_event(session_id : str, media_buffer : bytes, timestamp : int, event : threading.Event) -> None:
 	event.set()
 
 

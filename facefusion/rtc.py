@@ -1,9 +1,8 @@
 import ctypes
-import time
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
+from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpMedia, SdpOffer, VideoCodec
 
 
 def create_peer_connection() -> PeerConnection:
@@ -12,6 +11,7 @@ def create_peer_connection() -> PeerConnection:
 
 	rtc_configuration.enableIceUdpMux = True
 	rtc_configuration.forceMediaTransport = True
+	rtc_configuration.disableAutoNegotiation = True
 
 	return datachannel_library.rtcCreatePeerConnection(ctypes.byref(rtc_configuration))
 
@@ -28,9 +28,9 @@ def create_sdp_offer(peer_connection : PeerConnection) -> Optional[SdpOffer]:
 	return None
 
 
-def negotiate_sdp_answer(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+def create_sdp_answer(peer_connection : PeerConnection) -> Optional[SdpAnswer]:
 	datachannel_library = datachannel_module.create_static_library()
-	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
+	datachannel_library.rtcSetLocalDescription(peer_connection, b'answer')
 
 	sdp_buffer = ctypes.create_string_buffer(8192)
 
@@ -40,40 +40,43 @@ def negotiate_sdp_answer(peer_connection : PeerConnection, sdp_offer : SdpOffer)
 	return None
 
 
-#TODO: needs revision
-def send_audio_to_peers(rtc_peers : List[RtcPeer], audio_buffer : bytes, audio_pts : int) -> None:
+def set_remote_description(peer_connection : PeerConnection, sdp_offer : SdpOffer) -> None:
 	datachannel_library = datachannel_module.create_static_library()
-
-	if rtc_peers:
-		timestamp = audio_pts & 0xFFFFFFFF
-		send_buffer = ctypes.create_string_buffer(audio_buffer)
-		send_total = len(audio_buffer)
-
-		for rtc_peer in rtc_peers:
-			audio_track_id = rtc_peer.get('audio_track')
-
-			if audio_track_id and datachannel_library.rtcIsOpen(audio_track_id):
-				datachannel_library.rtcSetTrackRtpTimestamp(audio_track_id, timestamp)
-				datachannel_library.rtcSendMessage(audio_track_id, send_buffer, send_total)
+	datachannel_library.rtcSetRemoteDescription(peer_connection, sdp_offer.encode(), b'offer')
 
 	return None
 
 
-#TODO: needs revision
-def send_video_to_peers(rtc_peers : List[RtcPeer], frame_buffer : bytes) -> None:
+def send_audio_to_peers(rtc_peers : List[RtcPeer], audio_buffer : bytes, audio_timestamp : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	if rtc_peers:
-		timestamp = int(time.monotonic() * 90000) & 0xFFFFFFFF
-		send_buffer = ctypes.create_string_buffer(frame_buffer)
-		send_total = len(frame_buffer)
+		send_buffer = ctypes.create_string_buffer(audio_buffer)
+		send_total = len(audio_buffer)
 
 		for rtc_peer in rtc_peers:
-			video_track_id = rtc_peer.get('video_track')
+			audio_track = rtc_peer.get('audio_track')
 
-			if video_track_id and datachannel_library.rtcIsOpen(video_track_id):
-				datachannel_library.rtcSetTrackRtpTimestamp(video_track_id, timestamp)
-				datachannel_library.rtcSendMessage(video_track_id, send_buffer, send_total)
+			if datachannel_library.rtcIsOpen(audio_track):
+				datachannel_library.rtcSetTrackRtpTimestamp(audio_track, audio_timestamp)
+				datachannel_library.rtcSendMessage(audio_track, send_buffer, send_total)
+
+	return None
+
+
+def send_video_to_peers(rtc_peers : List[RtcPeer], video_buffer : bytes, video_timestamp : int) -> None:
+	datachannel_library = datachannel_module.create_static_library()
+
+	if rtc_peers:
+		send_buffer = ctypes.create_string_buffer(video_buffer)
+		send_total = len(video_buffer)
+
+		for rtc_peer in rtc_peers:
+			video_track = rtc_peer.get('video_track')
+
+			if datachannel_library.rtcIsOpen(video_track):
+				datachannel_library.rtcSetTrackRtpTimestamp(video_track, video_timestamp)
+				datachannel_library.rtcSendMessage(video_track, send_buffer, send_total)
 
 	return None
 
@@ -82,10 +85,10 @@ def delete_peers(rtc_peers : List[RtcPeer]) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 
 	for rtc_peer in rtc_peers:
-		peer_connection_id = rtc_peer.get('peer_connection')
+		peer_connection = rtc_peer.get('peer_connection')
 
-		if peer_connection_id:
-			datachannel_library.rtcDeletePeerConnection(peer_connection_id)
+		if peer_connection:
+			datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 	return None
 
@@ -172,17 +175,28 @@ def create_video_track_init(media_direction : MediaDirection, video_codec : Vide
 	return ctypes.byref(track_init)
 
 
-#TODO: needs revision
-def parse_sdp_payload_types(sdp_offer : SdpOffer) -> Dict[str, int]:
-	payload_types : Dict[str, int] = {}
+def detect_sdp_media(sdp_offer : SdpOffer) -> SdpMedia:
+	sdp_media : SdpMedia = {}
 
-	# TODO: consider having a codec helper to resolve these
 	for line in sdp_offer.splitlines():
-		if line.startswith('a=rtpmap:') and 'AV1/90000' in line and not payload_types.get('av1'):
-			payload_types['av1'] = int(line.split(':')[1].split(' ')[0])
-		if line.startswith('a=rtpmap:') and 'VP8/90000' in line and not payload_types.get('vp8'):
-			payload_types['vp8'] = int(line.split(':')[1].split(' ')[0])
-		if line.startswith('a=rtpmap:') and 'opus/48000/2' in line and not payload_types.get('opus'):
-			payload_types['opus'] = int(line.split(':')[1].split(' ')[0])
+		if line.startswith('a=rtpmap:'):
+			if 'av1/90000' in line.lower():
+				sdp_media['video'] =\
+				{
+					'codec': 'av1',
+					'payload_type': int(line.removeprefix('a=rtpmap:').split()[0])
+				}
+			if 'vp8/90000' in line.lower():
+				sdp_media['video'] =\
+				{
+					'codec': 'vp8',
+					'payload_type': int(line.removeprefix('a=rtpmap:').split()[0])
+				}
+			if 'opus/48000/2' in line.lower():
+				sdp_media['audio'] =\
+				{
+					'codec': 'opus',
+					'payload_type': int(line.removeprefix('a=rtpmap:').split()[0])
+				}
 
-	return payload_types
+	return sdp_media

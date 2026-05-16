@@ -287,8 +287,25 @@ RtcPeer = TypedDict('RtcPeer',
 	'video_track': RtcVideoTrack,
 	'audio_track': RtcAudioTrack,
 })
-
 RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
+
+SdpAudioMedia = TypedDict('SdpAudioMedia',
+{
+	'codec': AudioCodec,
+	'payload_type': int
+})
+
+SdpVideoMedia = TypedDict('SdpVideoMedia',
+{
+	'codec': VideoCodec,
+	'payload_type': int
+})
+
+SdpMedia = TypedDict('SdpMedia',
+{
+	'video': NotRequired[SdpVideoMedia],
+	'audio': NotRequired[SdpAudioMedia]
+})
 
 ModelOptions : TypeAlias = Dict[str, Any]
 ModelSet : TypeAlias = Dict[str, ModelOptions]

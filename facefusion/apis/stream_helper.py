@@ -1,5 +1,6 @@
 import asyncio
 import queue # TODO: try deque
+import time
 from collections.abc import AsyncIterator
 from typing import Optional, Tuple, cast, get_args
 
@@ -14,7 +15,7 @@ from facefusion.codecs.aom import create_aom_encoder, destroy_aom_encoder, encod
 from facefusion.codecs.opus import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.streamer import process_vision_frame
-from facefusion.types import AudioCodec, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
+from facefusion.types import PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
 
 
 # TODO: refine this method
@@ -46,7 +47,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			audio_temp = numpy.array([], dtype = numpy.float32)
 
 			vision_frame_queue.put(first_vision_frame)
-			rtc_store.create_rtc_peers(session_id)
+			rtc_store.init_peers(session_id)
 
 			event_loop = asyncio.get_running_loop()
 
@@ -80,7 +81,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			await video_encode_task
 			await audio_encode_task
 
-			rtc_store.destroy_rtc_peers(session_id)
+			rtc_store.delete_peers(session_id)
 
 	if websocket.client_state == WebSocketState.CONNECTED:
 		await websocket.close()
@@ -111,24 +112,17 @@ async def handle_image_stream(websocket : WebSocket) -> None:
 
 
 # TODO: clean up peer connection on failed sdp negotiation, wrap in run_in_executor to avoid blocking async event loop
-def add_rtc_viewer(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
-	rtc_peers = rtc_store.get_rtc_peers(session_id)
+def connect_rtc(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
+	rtc_peers = rtc_store.get_peers(session_id)
 
 	if rtc_peers is not None:
-		payload_types = rtc.parse_sdp_payload_types(sdp_offer)
+		sdp_media = rtc.detect_sdp_media(sdp_offer)
 		peer_connection : PeerConnection = rtc.create_peer_connection()
-		audio_codec : AudioCodec = 'opus'
-		audio_track : RtcAudioTrack = rtc.add_audio_track(peer_connection, 'sendonly', audio_codec, payload_types.get(audio_codec, 111))
+		rtc.set_remote_description(peer_connection, sdp_offer)
 
-		#TODO: Fix me via resolve method
-		video_codec : VideoCodec = 'av1'
-		if payload_types.get('av1'):
-			video_codec = 'av1'
-		if payload_types.get('vp8'):
-			video_codec = 'vp8'
-
-		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_types.get(video_codec, 96))
-		local_sdp = rtc.negotiate_sdp_answer(peer_connection, sdp_offer)
+		audio_track : RtcAudioTrack = rtc.add_audio_track(peer_connection, 'sendonly', sdp_media.get('audio').get('codec'), sdp_media.get('audio').get('payload_type'))
+		video_track : RtcVideoTrack = rtc.add_video_track(peer_connection, 'sendonly', sdp_media.get('video').get('codec'), sdp_media.get('video').get('payload_type'))
+		local_sdp = rtc.create_sdp_answer(peer_connection)
 
 		if local_sdp:
 			rtc_peer : RtcPeer =\
@@ -159,13 +153,15 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		if output_resolution == temp_resolution:
 			output_frame_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 			output_frame_buffer = encode_aom_buffer(aom_encoder, output_frame_buffer, output_resolution, timestamp)
-			rtc_peers = rtc_store.get_rtc_peers(session_id)
+			rtc_peers = rtc_store.get_peers(session_id)
 
 			if output_frame_buffer and rtc_peers:
-				rtc.send_video_to_peers(rtc_peers, output_frame_buffer)
+				video_timestamp = int(time.monotonic() * 90000)
+				rtc.send_video_to_peers(rtc_peers, output_frame_buffer, video_timestamp)
 
 			timestamp += 1
 			vision_frame = vision_frame_queue.get()
+			#TODO: we are not using continue as control flow in the project
 			continue
 
 		destroy_aom_encoder(aom_encoder)
@@ -192,13 +188,15 @@ def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 		if output_resolution == temp_resolution:
 			output_frame_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 			output_frame_buffer = encode_vpx_buffer(vpx_encoder, output_frame_buffer, output_resolution, timestamp)
-			rtc_peers = rtc_store.get_rtc_peers(session_id)
+			rtc_peers = rtc_store.get_peers(session_id)
 
 			if output_frame_buffer and rtc_peers:
-				rtc.send_video_to_peers(rtc_peers, output_frame_buffer)
+				video_timestamp = int(time.monotonic() * 90000)
+				rtc.send_video_to_peers(rtc_peers, output_frame_buffer, video_timestamp)
 
 			timestamp += 1
 			vision_frame = vision_frame_queue.get()
+			# TODO: we are not using continue as control flow in the project
 			continue
 
 		destroy_vpx_encoder(vpx_encoder)
@@ -219,7 +217,7 @@ def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], sessi
 
 	while audio_chunk: # TODO: improve this condition with b''
 		audio_buffer = encode_opus_buffer(opus_encoder, audio_chunk, 960)
-		rtc_peers = rtc_store.get_rtc_peers(session_id)
+		rtc_peers = rtc_store.get_peers(session_id)
 
 		if audio_buffer and rtc_peers:
 			rtc.send_audio_to_peers(rtc_peers, audio_buffer, audio_timestamp)
