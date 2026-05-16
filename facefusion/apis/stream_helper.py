@@ -8,14 +8,15 @@ import cv2
 import numpy
 from starlette.websockets import WebSocket, WebSocketState
 
-from facefusion import rtc, rtc_store, session_context, session_manager, state_manager
+from facefusion import rtc, rtc_store, session_context, session_manager, state_manager, streamer
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
+from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs.aom import create_aom_decoder, create_aom_encoder, decode_aom_buffer, destroy_aom_decoder, destroy_aom_encoder, encode_aom_buffer
+from facefusion.codecs.opus import create_opus_decoder, create_opus_encoder, decode_opus_buffer, destroy_opus_decoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.codecs.vpx import create_vpx_decoder, create_vpx_encoder, decode_vpx_buffer, destroy_vpx_decoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.streamer import process_vision_frame
-from facefusion.types import AomDecoder, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder
+from facefusion.types import AomDecoder, AudioFrame, OpusDecoder, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder
 
 RTC_STATE_NAMES = [ 'new', 'connecting', 'connected', 'disconnected', 'failed', 'closed' ]
 peer_connection_labels : dict = {}
@@ -35,7 +36,7 @@ async def process_image(websocket : WebSocket) -> None:
 		capture_vision_frame = await anext(receive_vision_frames(websocket), None)
 
 		if numpy.any(capture_vision_frame):
-			output_vision_frame = process_vision_frame(capture_vision_frame)
+			output_vision_frame = streamer.process(create_empty_audio_frame(), capture_vision_frame)
 			is_success, output_frame_buffer = cv2.imencode('.jpg', output_vision_frame)
 
 			if is_success:
@@ -58,7 +59,7 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
-def receive_video(session_id : SessionId, sdp_offer : SdpOffer, codec : str) -> Optional[SdpAnswer]:
+def receive_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	datachannel_library = datachannel_module.create_static_library()
 	rtc_store.init_peers(session_id)
 	sdp_media = rtc.detect_sdp_media(sdp_offer)
@@ -70,19 +71,30 @@ def receive_video(session_id : SessionId, sdp_offer : SdpOffer, codec : str) -> 
 	if not video_media:
 		return None
 
+	audio_media = sdp_media.get('audio')
+	audio_codec = None
+	audio_track = None
+	audio_decoder = None
+
 	video_codec = video_media.get('codec')
 	payload_type = video_media.get('payload_type')
 	video_track = add_receive_track(peer_connection, video_codec, payload_type)
-
 	video_decoder = create_video_decoder(video_codec)
+
+	if audio_media:
+		audio_codec = audio_media.get('codec')
+		audio_track = add_receive_audio_track(peer_connection, audio_media.get('payload_type'))
+		audio_decoder = create_opus_decoder(48000, 2)
 
 	WHIP_SESSIONS[session_id] =\
 	{
 		'peer_connection': peer_connection,
+		'audio_track': audio_track,
+		'audio_decoder': audio_decoder,
+		'audio_codec': audio_codec,
 		'video_track': video_track,
 		'video_decoder': video_decoder,
 		'video_codec': video_codec,
-		'codec': codec,
 		'active': True
 	}
 
@@ -91,7 +103,7 @@ def receive_video(session_id : SessionId, sdp_offer : SdpOffer, codec : str) -> 
 
 	if local_sdp:
 		event_loop = asyncio.get_event_loop()
-		event_loop.run_in_executor(None, run_whip_loop, session_id, codec)
+		event_loop.run_in_executor(None, run_whip_loop, session_id)
 
 	return local_sdp
 
@@ -131,12 +143,16 @@ def disconnect_whip(session_id : SessionId) -> None:
 
 		video_decoder = whip_session.get('video_decoder')
 		video_codec = whip_session.get('video_codec')
+		audio_decoder = whip_session.get('audio_decoder')
 
 		if video_decoder:
 			if video_codec == 'av1':
 				destroy_aom_decoder(video_decoder)
 			if video_codec == 'vp8':
 				destroy_vpx_decoder(video_decoder)
+
+		if audio_decoder:
+			destroy_opus_decoder(audio_decoder)
 
 		datachannel_library = datachannel_module.create_static_library()
 		peer_connection = whip_session.get('peer_connection')
@@ -149,7 +165,7 @@ def disconnect_whip(session_id : SessionId) -> None:
 	rtc_store.delete_peers(session_id)
 
 
-def run_whip_loop(session_id : SessionId, codec : str) -> None:
+def run_whip_loop(session_id : SessionId) -> None:
 	whip_session = WHIP_SESSIONS.get(session_id)
 
 	if not whip_session:
@@ -159,77 +175,95 @@ def run_whip_loop(session_id : SessionId, codec : str) -> None:
 	video_track = whip_session.get('video_track')
 	video_decoder = whip_session.get('video_decoder')
 	video_codec = whip_session.get('video_codec')
-	receive_buffer = ctypes.create_string_buffer(512 * 1024)
+	audio_track = whip_session.get('audio_track')
+	audio_decoder = whip_session.get('audio_decoder')
+	video_receive_buffer = ctypes.create_string_buffer(512 * 1024)
+	audio_receive_buffer = ctypes.create_string_buffer(8 * 1024)
 
-	vision_frame = poll_for_frame(datachannel_library, video_track, video_codec, video_decoder, receive_buffer, 30.0)
+	vision_frame = poll_for_frame(datachannel_library, video_track, video_codec, video_decoder, video_receive_buffer, 30.0)
 
 	if vision_frame is None:
 		return
 
 	resolution : Resolution = (vision_frame.shape[1], vision_frame.shape[0])
+	audio_frame = create_empty_audio_frame()
 
-	if codec == 'av1':
-		encoder = create_aom_encoder(resolution, 8000, 8, 10)
-	if codec == 'vp8':
-		encoder = create_vpx_encoder(resolution, 8000, 8, 10)
+	if video_codec == 'av1':
+		video_encoder = create_aom_encoder(resolution, 8000, 8, 10)
+	if video_codec == 'vp8':
+		video_encoder = create_vpx_encoder(resolution, 8000, 8, 10)
 
+	opus_encoder = create_opus_encoder(48000, 2)
 	frame_index = 0
 
 	while whip_session.get('active'):
 		rtc_peers = rtc_store.get_peers(session_id)
 
+		if audio_track and audio_decoder:
+			audio_frame = receive_audio_frame(datachannel_library, audio_track, audio_decoder, audio_receive_buffer)
+
 		if not rtc_peers or not has_open_peer(rtc_peers):
 			time.sleep(0.01)
-			next_frame = poll_for_frame(datachannel_library, video_track, video_codec, video_decoder, receive_buffer, 5.0)
+			next_frame = poll_for_frame(datachannel_library, video_track, video_codec, video_decoder, video_receive_buffer, 5.0)
 
 			if next_frame is None:
 				break
 			vision_frame = next_frame
 			continue
 
-		output_vision_frame = process_vision_frame(vision_frame)
+		output_vision_frame = streamer.process(audio_frame, vision_frame)
 		output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 
 		if output_resolution != resolution:
 			resolution = output_resolution
 
-			if codec == 'av1':
-				destroy_aom_encoder(encoder)
-				encoder = create_aom_encoder(resolution, 8000, 8, 10)
-			if codec == 'vp8':
-				destroy_vpx_encoder(encoder)
-				encoder = create_vpx_encoder(resolution, 8000, 8, 10)
+			if video_codec == 'av1':
+				destroy_aom_encoder(video_encoder)
+				video_encoder = create_aom_encoder(resolution, 8000, 8, 10)
+			if video_codec == 'vp8':
+				destroy_vpx_encoder(video_encoder)
+				video_encoder = create_vpx_encoder(resolution, 8000, 8, 10)
 
 		yuv_frame = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420)
 
-		if codec == 'av1':
-			encoded_buffer = encode_aom_buffer(encoder, yuv_frame.tobytes(), resolution, frame_index)
-		if codec == 'vp8':
-			encoded_buffer = encode_vpx_buffer(encoder, yuv_frame.tobytes(), resolution, frame_index)
+		if video_codec == 'av1':
+			encoded_video_buffer = encode_aom_buffer(video_encoder, yuv_frame.tobytes(), resolution, frame_index)
+		if video_codec == 'vp8':
+			encoded_video_buffer = encode_vpx_buffer(video_encoder, yuv_frame.tobytes(), resolution, frame_index)
 
-		if encoded_buffer:
-			timestamp = int(time.monotonic() * 90000)
-			rtc.send_video_to_peers(rtc_peers, encoded_buffer, timestamp)
+		if encoded_video_buffer:
+			video_timestamp = int(time.monotonic() * 90000)
+			rtc.send_video_to_peers(rtc_peers, encoded_video_buffer, video_timestamp)
+
+		if opus_encoder and audio_frame is not None and audio_frame.size > 0:
+			encoded_audio_buffer = encode_opus_buffer(opus_encoder, audio_frame.tobytes(), 960)
+
+			if encoded_audio_buffer:
+				audio_timestamp = int(time.monotonic() * 48000)
+				rtc.send_audio_to_peers(rtc_peers, encoded_audio_buffer, audio_timestamp)
 
 		frame_index += 1
 
-		next_frame = drain_to_latest_frame(datachannel_library, video_track, video_codec, video_decoder, receive_buffer)
+		next_frame = drain_to_latest_frame(datachannel_library, video_track, video_codec, video_decoder, video_receive_buffer)
 
 		if next_frame is not None:
 			vision_frame = next_frame
 			continue
 
-		next_frame = poll_for_frame(datachannel_library, video_track, video_codec, video_decoder, receive_buffer, 30.0)
+		next_frame = poll_for_frame(datachannel_library, video_track, video_codec, video_decoder, video_receive_buffer, 30.0)
 
 		if next_frame is None:
 			break
 
 		vision_frame = next_frame
 
-	if codec == 'av1':
-		destroy_aom_encoder(encoder)
-	if codec == 'vp8':
-		destroy_vpx_encoder(encoder)
+	if video_codec == 'av1':
+		destroy_aom_encoder(video_encoder)
+	if video_codec == 'vp8':
+		destroy_vpx_encoder(video_encoder)
+
+	if opus_encoder:
+		destroy_opus_encoder(opus_encoder)
 
 
 def add_receive_track(peer_connection : PeerConnection, video_codec : VideoCodec, payload_type : int) -> int:
@@ -261,6 +295,43 @@ def add_receive_track(peer_connection : PeerConnection, video_codec : VideoCodec
 	datachannel_library.rtcChainRtcpReceivingSession(video_track)
 
 	return video_track
+
+
+def add_receive_audio_track(peer_connection : PeerConnection, payload_type : int) -> int:
+	datachannel_library = datachannel_module.create_static_library()
+	track_init = datachannel_module.define_rtc_track_init()
+	track_init.direction = 2
+	track_init.codec = 128
+	track_init.payloadType = payload_type
+	track_init.ssrc = 43
+	track_init.name = b'audio'
+	track_init.mid = b'1'
+
+	audio_track = datachannel_library.rtcAddTrackEx(peer_connection, ctypes.byref(track_init))
+
+	depacketizer_init = datachannel_module.define_rtc_packetizer_init()
+	depacketizer_init.ssrc = 0
+	depacketizer_init.cname = b'audio'
+	depacketizer_init.payloadType = payload_type
+	depacketizer_init.clockRate = 48000
+	datachannel_library.rtcSetOpusDepacketizer(audio_track, ctypes.byref(depacketizer_init))
+	datachannel_library.rtcChainRtcpReceivingSession(audio_track)
+
+	return audio_track
+
+
+def receive_audio_frame(datachannel_library : ctypes.CDLL, audio_track : int, audio_decoder : OpusDecoder, receive_buffer : ctypes.Array) -> AudioFrame:
+	buf_size = ctypes.c_int(8 * 1024)
+	result = datachannel_library.rtcReceiveMessage(audio_track, receive_buffer, ctypes.byref(buf_size))
+
+	if result == 0 and buf_size.value > 0:
+		opus_buffer = receive_buffer.raw[:buf_size.value]
+		decoded_frame = decode_opus_buffer(audio_decoder, opus_buffer, 960, 2)
+
+		if decoded_frame is not None:
+			return decoded_frame
+
+	return create_empty_audio_frame()
 
 
 def create_video_decoder(video_codec : str) -> Optional[VpxDecoder | AomDecoder]:
