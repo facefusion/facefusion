@@ -2,8 +2,10 @@ import ctypes
 import struct
 from typing import Optional
 
+import numpy
+
 from facefusion.libraries import vpx as vpx_module
-from facefusion.types import BitRate, Resolution, VpxEncoder
+from facefusion.types import BitRate, Resolution, VisionFrame, VpxDecoder, VpxEncoder
 
 
 def create_vpx_encoder(frame_resolution : Resolution, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[VpxEncoder]:
@@ -74,3 +76,68 @@ def destroy_vpx_encoder(vpx_encoder : VpxEncoder) -> None:
 
 	if vpx_library:
 		vpx_library.vpx_codec_destroy(vpx_encoder)
+
+
+def create_vpx_decoder() -> Optional[VpxDecoder]:
+	vpx_library = vpx_module.create_static_library()
+
+	if vpx_library:
+		vpx_decoder = ctypes.create_string_buffer(64)
+		vpx_codec = ctypes.c_void_p.in_dll(vpx_library, 'vpx_codec_vp8_dx_algo')
+
+		if vpx_library.vpx_codec_dec_init_ver(vpx_decoder, ctypes.byref(vpx_codec), None, 0, 12) == 0:
+			return vpx_decoder
+
+	return None
+
+
+def decode_vpx_buffer(vpx_decoder : VpxDecoder, frame_buffer : bytes) -> Optional[VisionFrame]:
+	vpx_library = vpx_module.create_static_library()
+
+	if vpx_library and frame_buffer:
+		input_buffer = (ctypes.c_uint8 * len(frame_buffer)).from_buffer_copy(frame_buffer)
+
+		if vpx_library.vpx_codec_decode(vpx_decoder, input_buffer, len(frame_buffer), None, 0) == 0:
+			frame_cursor = ctypes.c_void_p(0)
+			frame_pointer = vpx_library.vpx_codec_get_frame(vpx_decoder, ctypes.byref(frame_cursor))
+
+			if frame_pointer:
+				return extract_vpx_image(frame_pointer)
+
+	return None
+
+
+def extract_vpx_image(frame_pointer : int) -> Optional[VisionFrame]:
+	width = ctypes.c_uint.from_address(frame_pointer + 24).value
+	height = ctypes.c_uint.from_address(frame_pointer + 28).value
+
+	if width and height and width % 2 == 0 and height % 2 == 0:
+		planes_offset = frame_pointer + 48
+		strides_offset = frame_pointer + 80
+
+		y_plane = extract_vpx_plane(planes_offset, strides_offset, 0, width, height)
+		u_plane = extract_vpx_plane(planes_offset, strides_offset, 1, width // 2, height // 2)
+		v_plane = extract_vpx_plane(planes_offset, strides_offset, 2, width // 2, height // 2)
+
+		yuv_frame = numpy.concatenate([ y_plane.flatten(), u_plane.flatten(), v_plane.flatten() ])
+		yuv_frame = yuv_frame.reshape((height * 3 // 2, width)).astype(numpy.uint8)
+
+		return yuv_frame
+
+	return None
+
+
+def extract_vpx_plane(planes_offset : int, strides_offset : int, index : int, width : int, height : int) -> numpy.ndarray:
+	plane_pointer = ctypes.c_void_p.from_address(planes_offset + index * 8).value
+	stride = ctypes.c_int.from_address(strides_offset + index * 4).value
+	plane_buffer = (ctypes.c_ubyte * (stride * height)).from_address(plane_pointer)
+	plane = numpy.ctypeslib.as_array(plane_buffer).reshape((height, stride))
+
+	return plane[:, :width]
+
+
+def destroy_vpx_decoder(vpx_decoder : VpxDecoder) -> None:
+	vpx_library = vpx_module.create_static_library()
+
+	if vpx_library:
+		vpx_library.vpx_codec_destroy(vpx_decoder)
