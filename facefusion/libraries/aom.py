@@ -119,4 +119,13 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.aom_codec_control.argtypes = [ ctypes.c_void_p, ctypes.c_int, ctypes.c_int ]
 	library.aom_codec_control.restype = ctypes.c_int
 
+	library.aom_codec_dec_init_ver.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long, ctypes.c_int ]
+	library.aom_codec_dec_init_ver.restype = ctypes.c_int
+
+	library.aom_codec_decode.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_uint, ctypes.c_void_p ]
+	library.aom_codec_decode.restype = ctypes.c_int
+
+	library.aom_codec_get_frame.argtypes = [ ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p) ]
+	library.aom_codec_get_frame.restype = ctypes.c_void_p
+
 	return library
