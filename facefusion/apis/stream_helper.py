@@ -2,6 +2,7 @@ import asyncio
 import queue # TODO: try deque
 import time
 from collections.abc import AsyncIterator
+from functools import partial
 from typing import Optional, Tuple, cast, get_args
 
 import cv2
@@ -15,7 +16,7 @@ from facefusion.codecs.aom import create_aom_encoder, destroy_aom_encoder, encod
 from facefusion.codecs.opus import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.streamer import process_vision_frame
-from facefusion.types import PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
+from facefusion.types import AudioCodec, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
 
 
 # TODO: refine this method
@@ -24,10 +25,11 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 	access_token = extract_access_token(websocket.scope)
 	session_id = session_manager.find_session_id(access_token)
 	session_context.set_session_id(session_id)
-	stream_codec : VideoCodec = 'av1'
+	video_codec : VideoCodec = 'av1'
+	audio_codec : AudioCodec = 'opus'
 
 	if websocket.query_params.get('codec') in get_args(VideoCodec):
-		stream_codec = cast(VideoCodec, websocket.query_params.get('codec'))
+		video_codec = cast(VideoCodec, websocket.query_params.get('codec'))
 
 	await websocket.accept(subprotocol = subprotocol)
 
@@ -51,12 +53,8 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 
 			event_loop = asyncio.get_running_loop()
 
-			if stream_codec == 'av1':
-				video_encode_task = event_loop.run_in_executor(None, run_aom_encode_loop, vision_frame_queue, session_id, resolution)
-			if stream_codec == 'vp8':
-				video_encode_task = event_loop.run_in_executor(None, run_vp8_encode_loop, vision_frame_queue, session_id, resolution)
-
-			audio_encode_task = event_loop.run_in_executor(None, run_opus_encode_loop, audio_chunk_queue, session_id)
+			video_encode_task = event_loop.run_in_executor(None, encode_video_loop, video_codec, vision_frame_queue, session_id, resolution)
+			audio_encode_task = event_loop.run_in_executor(None, encode_audio_loop, audio_codec, audio_chunk_queue, session_id)
 			await websocket.send_text('ready')
 
 			async for frame_type, frame_buffer in stream_frames:
@@ -138,21 +136,29 @@ def connect_rtc(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAns
 	return None
 
 
-# TODO: switch to loop_encode_video or encode_video_loop ... pass video_codec to follow standards
-def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, frame_resolution : Resolution) -> None:
-	aom_encoder = create_aom_encoder(frame_resolution, 4500, 8, 10)
+def encode_video_loop(video_codec : VideoCodec, vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, frame_resolution : Resolution) -> None:
+	create_encoder = partial(create_aom_encoder, 4500, 8, 10)
+	destroy_encoder = destroy_aom_encoder
+	encode_buffer = encode_aom_buffer
+
+	if video_codec == 'vp8':
+		create_encoder = partial(create_vpx_encoder, 4500, 8, 16)
+		destroy_encoder = destroy_vpx_encoder # type:ignore[assignment]
+		encode_buffer = encode_vpx_buffer # type:ignore[assignment]
+
+	encoder = create_encoder(frame_resolution)
 	temp_resolution = frame_resolution
 	timestamp = 0
 
 	vision_frame = vision_frame_queue.get()
 
-	while numpy.any(vision_frame) and aom_encoder:
+	while numpy.any(vision_frame) and encoder:
 		output_vision_frame = process_vision_frame(vision_frame)
 		output_resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 
 		if output_resolution == temp_resolution:
 			output_frame_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-			output_frame_buffer = encode_aom_buffer(aom_encoder, output_frame_buffer, output_resolution, timestamp)
+			output_frame_buffer = encode_buffer(encoder, output_frame_buffer, output_resolution, timestamp)
 			rtc_peers = rtc_store.get_peers(session_id)
 
 			if output_frame_buffer and rtc_peers:
@@ -161,55 +167,17 @@ def run_aom_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]],
 
 			timestamp += 1
 			vision_frame = vision_frame_queue.get()
-			#TODO: we are not using continue as control flow in the project
-			continue
+		else:
+			destroy_encoder(encoder)
+			temp_resolution = output_resolution
+			encoder = create_encoder(temp_resolution)
+			timestamp = 0
 
-		destroy_aom_encoder(aom_encoder)
-		temp_resolution = output_resolution
-		aom_encoder = create_aom_encoder(temp_resolution, 4500, 8, 10)
-		timestamp = 0
-
-	if aom_encoder:
-		destroy_aom_encoder(aom_encoder)
+	if encoder:
+		destroy_encoder(encoder)
 
 
-# TODO: switch to loop_encode_video or encode_video_loop ... pass video_codec to follow standards
-def run_vp8_encode_loop(vision_frame_queue : queue.Queue[Optional[VisionFrame]], session_id : SessionId, frame_resolution : Resolution) -> None:
-	vpx_encoder = create_vpx_encoder(frame_resolution, 4500, 8, 16)
-	temp_resolution = frame_resolution
-	timestamp = 0
-
-	vision_frame = vision_frame_queue.get()
-
-	while numpy.any(vision_frame) and vpx_encoder:
-		output_vision_frame = process_vision_frame(vision_frame)
-		output_resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
-
-		if output_resolution == temp_resolution:
-			output_frame_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-			output_frame_buffer = encode_vpx_buffer(vpx_encoder, output_frame_buffer, output_resolution, timestamp)
-			rtc_peers = rtc_store.get_peers(session_id)
-
-			if output_frame_buffer and rtc_peers:
-				video_timestamp = int(time.monotonic() * 90000)
-				rtc.send_video_to_peers(rtc_peers, output_frame_buffer, video_timestamp)
-
-			timestamp += 1
-			vision_frame = vision_frame_queue.get()
-			# TODO: we are not using continue as control flow in the project
-			continue
-
-		destroy_vpx_encoder(vpx_encoder)
-		temp_resolution = output_resolution
-		vpx_encoder = create_vpx_encoder(temp_resolution, 4500, 8, 16)
-		timestamp = 0
-
-	if vpx_encoder:
-		destroy_vpx_encoder(vpx_encoder)
-
-
-# TODO: switch to loop_encode_audio or encode_audio_loop ... pass audio_codec to follow standards
-def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], session_id : SessionId) -> None:
+def encode_audio_loop(audio_codec : AudioCodec, audio_chunk_queue : queue.Queue[Optional[bytes]], session_id : SessionId) -> None:
 	opus_encoder = create_opus_encoder(48000, 2)
 	audio_timestamp = 0
 

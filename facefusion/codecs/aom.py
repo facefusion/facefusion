@@ -6,7 +6,7 @@ from facefusion.libraries import aom as aom_module
 from facefusion.types import AomEncoder, BitRate, Resolution
 
 
-def create_aom_encoder(frame_resolution : Resolution, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[AomEncoder]:
+def create_aom_encoder(bitrate: BitRate, thread_count: int, cpu_count: int, frame_resolution: Resolution) -> Optional[AomEncoder]:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library:

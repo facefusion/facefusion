@@ -23,15 +23,15 @@ def before_all() -> None:
 
 
 def test_create_aom_encoder() -> None:
-	assert create_aom_encoder((320, 240), 1000, 8, 16)
-	assert create_aom_encoder((0, 0), 0, 0, 0) is None
+	assert create_aom_encoder(1000, 8, 16, (320, 240))
+	assert create_aom_encoder(0, 0, 0, (0, 0)) is None
 
 
 def test_encode_aom_buffer() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
-	aom_encoder = create_aom_encoder(video_resolution, 1000, 1, 0)
+	aom_encoder = create_aom_encoder(1000, 1, 0, video_resolution)
 
 	if is_linux() or is_windows():
 		assert create_hash(encode_aom_buffer(aom_encoder, video_buffer, video_resolution, 3)) == '3ab6cc31'
@@ -41,7 +41,7 @@ def test_encode_aom_buffer() -> None:
 
 
 def test_destroy_aom_encoder() -> None:
-	aom_encoder = create_aom_encoder((320, 240), 1000, 8, 16)
+	aom_encoder = create_aom_encoder(1000, 8, 16, (320, 240))
 
 	with patch.object(aom_module.create_static_library(), 'aom_codec_destroy') as mock:
 		destroy_aom_encoder(aom_encoder)
