@@ -25,10 +25,11 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 	access_token = extract_access_token(websocket.scope)
 	session_id = session_manager.find_session_id(access_token)
 	session_context.set_session_id(session_id)
-	stream_codec : VideoCodec = 'av1'
+	video_codec : VideoCodec = 'av1'
+	audio_codec : AudioCodec = 'opus'
 
 	if websocket.query_params.get('codec') in get_args(VideoCodec):
-		stream_codec = cast(VideoCodec, websocket.query_params.get('codec'))
+		video_codec = cast(VideoCodec, websocket.query_params.get('codec'))
 
 	await websocket.accept(subprotocol = subprotocol)
 
@@ -52,8 +53,8 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 
 			event_loop = asyncio.get_running_loop()
 
-			video_encode_task = event_loop.run_in_executor(None, encode_video_loop, stream_codec, vision_frame_queue, session_id, resolution)
-			audio_encode_task = event_loop.run_in_executor(None, encode_audio_loop, 'opus', audio_chunk_queue, session_id)
+			video_encode_task = event_loop.run_in_executor(None, encode_video_loop, video_codec, vision_frame_queue, session_id, resolution)
+			audio_encode_task = event_loop.run_in_executor(None, encode_audio_loop, audio_codec, audio_chunk_queue, session_id)
 			await websocket.send_text('ready')
 
 			async for frame_type, frame_buffer in stream_frames:
