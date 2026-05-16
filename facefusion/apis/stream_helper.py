@@ -16,7 +16,7 @@ from facefusion.codecs.aom import create_aom_encoder, destroy_aom_encoder, encod
 from facefusion.codecs.opus import create_opus_encoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.streamer import process_vision_frame
-from facefusion.types import PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
+from facefusion.types import AudioCodec, PeerConnection, Resolution, RtcAudioTrack, RtcPeer, RtcVideoTrack, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame
 
 
 # TODO: refine this method
@@ -53,7 +53,7 @@ async def handle_video_stream(websocket : WebSocket) -> None:
 			event_loop = asyncio.get_running_loop()
 
 			video_encode_task = event_loop.run_in_executor(None, encode_video_loop, stream_codec, vision_frame_queue, session_id, resolution)
-			audio_encode_task = event_loop.run_in_executor(None, run_opus_encode_loop, audio_chunk_queue, session_id)
+			audio_encode_task = event_loop.run_in_executor(None, encode_audio_loop, 'opus', audio_chunk_queue, session_id)
 			await websocket.send_text('ready')
 
 			async for frame_type, frame_buffer in stream_frames:
@@ -178,8 +178,7 @@ def encode_video_loop(video_codec : VideoCodec, vision_frame_queue : queue.Queue
 		destroy_encoder(encoder)
 
 
-# TODO: switch to loop_encode_audio or encode_audio_loop ... pass audio_codec to follow standards
-def run_opus_encode_loop(audio_chunk_queue : queue.Queue[Optional[bytes]], session_id : SessionId) -> None:
+def encode_audio_loop(audio_codec : AudioCodec, audio_chunk_queue : queue.Queue[Optional[bytes]], session_id : SessionId) -> None:
 	opus_encoder = create_opus_encoder(48000, 2)
 	audio_timestamp = 0
 
