@@ -54,7 +54,7 @@ def test_encode_video_loop(video_codec : VideoCodec) -> None:
 	vision_frame_queue : queue.Queue[Optional[VisionFrame]] = queue.Queue()
 	vision_frame_queue.put(frame)
 	vision_frame_queue.put(None)
-	with patch(prefix + 'process_vision_frame', return_value = frame), \
+	with patch(prefix + 'process', return_value = frame), \
 		patch(create_name, return_value = MagicMock()), \
 		patch(encode_name, return_value = b'encoded'), \
 		patch(destroy_name), \
@@ -69,7 +69,7 @@ def test_encode_video_loop(video_codec : VideoCodec) -> None:
 	vision_frame_queue.put(frame)
 	vision_frame_queue.put(frame)
 	vision_frame_queue.put(None)
-	with patch(prefix + 'process_vision_frame', return_value = frame), \
+	with patch(prefix + 'process', return_value = frame), \
 		patch(create_name, return_value = MagicMock()), \
 		patch(encode_name, return_value = b'encoded'), \
 		patch(destroy_name), \
@@ -91,7 +91,7 @@ def test_encode_video_loop(video_codec : VideoCodec) -> None:
 	vision_frame_queue = queue.Queue()
 	vision_frame_queue.put(frame)
 	vision_frame_queue.put(None)
-	with patch(prefix + 'process_vision_frame', return_value = frame), \
+	with patch(prefix + 'process', return_value = frame), \
 		patch(create_name, return_value = MagicMock()), \
 		patch(encode_name, return_value = b''), \
 		patch(destroy_name), \
@@ -103,7 +103,7 @@ def test_encode_video_loop(video_codec : VideoCodec) -> None:
 	vision_frame_queue = queue.Queue()
 	vision_frame_queue.put(small_frame)
 	vision_frame_queue.put(None)
-	with patch(prefix + 'process_vision_frame', return_value = large_frame), \
+	with patch(prefix + 'process', return_value = large_frame), \
 		patch(create_name, return_value = MagicMock()) as mock_create, \
 		patch(encode_name, return_value = b'encoded'), \
 		patch(destroy_name) as mock_destroy, \

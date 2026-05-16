@@ -96,6 +96,7 @@ VideoCodec : TypeAlias = Literal['av1', 'vp8']
 AomEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 AomDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
 OpusEncoder : TypeAlias = ctypes.c_void_p
+OpusDecoder : TypeAlias = ctypes.c_void_p
 VpxEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 VpxDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
 

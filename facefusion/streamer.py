@@ -14,7 +14,7 @@ from facefusion.content_analyser import analyse_stream
 from facefusion.ffmpeg import open_ffmpeg
 from facefusion.filesystem import is_directory
 from facefusion.processors.core import get_processors_modules
-from facefusion.types import Fps, StreamMode, VisionFrame
+from facefusion.types import AudioFrame, Fps, StreamMode, VisionFrame
 from facefusion.vision import extract_vision_mask, read_static_images
 
 
@@ -31,7 +31,7 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 					camera_capture.release()
 
 				if numpy.any(capture_frame):
-					future = executor.submit(process_vision_frame, capture_frame)
+					future = executor.submit(process, create_empty_audio_frame(), capture_frame)
 					futures.append(future)
 
 				for future_done in [ future for future in futures if future.done() ]:
@@ -44,11 +44,10 @@ def multi_process_capture(camera_capture : cv2.VideoCapture, camera_fps : Fps) -
 					yield capture_deque.popleft()
 
 
-def process_vision_frame(target_vision_frame : VisionFrame) -> VisionFrame:
+def process(stream_audio_frame : AudioFrame, stream_vision_frame : VisionFrame) -> VisionFrame:
 	source_vision_frames = read_static_images(state_manager.get_item('source_paths'))
-	source_audio_frame = create_empty_audio_frame()
 	source_voice_frame = create_empty_audio_frame()
-	temp_vision_frame = target_vision_frame.copy()
+	temp_vision_frame = stream_vision_frame.copy()
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
@@ -58,9 +57,9 @@ def process_vision_frame(target_vision_frame : VisionFrame) -> VisionFrame:
 			temp_vision_frame, temp_vision_mask = processor_module.process_frame(
 			{
 				'source_vision_frames': source_vision_frames,
-				'source_audio_frame': source_audio_frame,
+				'source_audio_frame': stream_audio_frame,
 				'source_voice_frame': source_voice_frame,
-				'target_vision_frame': target_vision_frame,
+				'target_vision_frame': stream_vision_frame,
 				'temp_vision_frame': temp_vision_frame,
 				'temp_vision_mask': temp_vision_mask
 			})
