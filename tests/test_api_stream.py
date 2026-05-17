@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from facefusion import metadata, rtc, session_manager, state_manager
+from facefusion import metadata, rtc, rtc_store, session_manager, state_manager
 from facefusion.apis import asset_store
 from facefusion.apis.core import create_api
 from facefusion.core import common_pre_check
@@ -37,6 +37,7 @@ def before_all() -> None:
 def before_each() -> None:
 	session_manager.SESSIONS.clear()
 	asset_store.clear()
+	rtc_store.clear()
 
 
 @pytest.fixture(scope = 'module')
@@ -51,7 +52,7 @@ def create_event() -> threading.Event:
 
 
 @pytest.mark.helper
-def set_event(session_id : str, media_buffer : bytes, timestamp : int, event : threading.Event) -> None:
+def set_event(rtc_peer, video_buffer : bytes, video_timestamp : int, event : threading.Event) -> None:
 	event.set()
 
 
@@ -85,7 +86,7 @@ def test_stream_image(test_client : TestClient) -> None:
 
 	assert select_response.status_code == 200
 
-	with test_client.websocket_connect('/stream?mode=image', subprotocols =
+	with test_client.websocket_connect('/stream?type=image&action=process', subprotocols =
 	[
 		'access_token.' + access_token
 	]) as websocket:
@@ -124,27 +125,19 @@ def test_stream_video(test_client : TestClient, create_event : threading.Event, 
 		'Authorization': 'Bearer ' + access_token
 	})
 
-	with patch('facefusion.rtc.send_video_to_peers', side_effect = partial(set_event, event = create_event)):
-		with test_client.websocket_connect('/stream?mode=video&codec=' + video_codec, subprotocols =
-		[
-			'access_token.' + access_token
-		]) as websocket:
-			websocket.send_bytes(chr(1).encode() + source_content)
-			websocket.receive_text()
+	peer_connection = rtc.create_peer_connection()
+	video_payload_type = 96 if video_codec == 'vp8' else 35
+	rtc.add_video_track(peer_connection, 'sendrecv', video_codec, video_payload_type)
+	rtc.add_audio_track(peer_connection, 'sendrecv', 'opus', 111)
+	sdp_offer = rtc.create_sdp_offer(peer_connection)
+	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
-			peer_connection = rtc.create_peer_connection()
-			rtc.add_video_track(peer_connection, 'recvonly', 'vp8', 96)
-			rtc.add_audio_track(peer_connection, 'recvonly', 'opus', 111)
-			sdp_offer = rtc.create_sdp_offer(peer_connection)
-			datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
-			stream_response = test_client.post('/stream', content = sdp_offer, headers =
-			{
-				'Authorization': 'Bearer ' + access_token,
-				'Content-Type': 'application/sdp'
-			})
+	with patch('facefusion.rtc.send_video', side_effect = partial(set_event, event = create_event)):
+		stream_response = test_client.post('/stream?type=video&action=process', content = sdp_offer, headers =
+		{
+			'Authorization': 'Bearer ' + access_token,
+			'Content-Type': 'application/sdp'
+		})
 
-			assert stream_response.status_code == 201
-
-			create_event.wait(timeout = 10)
-
-			assert create_event.is_set()
+		assert stream_response.status_code == 201
+		assert 'm=video' in stream_response.text
