@@ -1,10 +1,8 @@
-from typing import List
-
 import pytest
 
 from facefusion import state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, detect_sdp_media, send_audio_to_peers, send_video_to_peers, set_remote_description
+from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, detect_sdp_media, send_audio, send_video, set_remote_description
 from facefusion.types import RtcPeer
 
 
@@ -67,38 +65,48 @@ def test_create_sdp_answer() -> None:
 	assert datachannel_library.rtcDeletePeerConnection(receiver_peer_connection) == 0
 
 
-def test_send_audio_to_peers() -> None:
+def test_send_audio() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
 	audio_track = add_audio_track(peer_connection, 'sendonly', 'opus', 111)
-	rtc_peers : List[RtcPeer] =\
-	[
+	rtc_peer : RtcPeer =\
+	{
+		'peer_connection': peer_connection,
+		'video':\
 		{
-			'peer_connection': peer_connection,
-			'video_track': 0,
-			'audio_track': audio_track
+			'sender_track': 0,
+			'receiver_track': 0,
+			'codec': 'vp8',
+		},
+		'audio':\
+		{
+			'sender_track': audio_track,
+			'receiver_track': audio_track,
+			'codec': 'opus',
 		}
-	]
+	}
 
-	send_audio_to_peers(rtc_peers, bytes(960), 0)
+	send_audio(rtc_peer, bytes(960), 0)
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 
-def test_send_video_to_peers() -> None:
+def test_send_video() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
 	video_track = add_video_track(peer_connection, 'sendonly', 'vp8', 96)
-	rtc_peers : List[RtcPeer] =\
-	[
+	rtc_peer : RtcPeer =\
+	{
+		'peer_connection': peer_connection,
+		'video':\
 		{
-			'peer_connection': peer_connection,
-			'video_track': video_track,
-			'audio_track': 0
+			'sender_track': video_track,
+			'receiver_track': video_track,
+			'codec': 'vp8',
 		}
-	]
+	}
 
-	send_video_to_peers(rtc_peers, bytes(1024), 0)
+	send_video(rtc_peer, bytes(1024), 0)
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
@@ -106,12 +114,16 @@ def test_send_video_to_peers() -> None:
 def test_delete_peers() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
-	rtc_peers : List[RtcPeer] =\
+	rtc_peers =\
 	[
 		{
 			'peer_connection': peer_connection,
-			'video_track': 0,
-			'audio_track': 0
+			'video':\
+			{
+				'sender_track': 0,
+				'receiver_track': 0,
+				'codec': 'vp8',
+			}
 		}
 	]
 

@@ -5,7 +5,7 @@ from starlette.websockets import WebSocket
 
 from facefusion import session_context, session_manager
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.apis.stream_helper import process_image, receive_video, send_video
+from facefusion.apis.stream_helper import process_image, process_video
 
 
 async def websocket_stream(websocket : WebSocket) -> None:
@@ -30,13 +30,8 @@ async def post_stream(request : Request) -> Response:
 	if content_type == 'application/sdp' and session_id:
 		sdp_offer = await request.body()
 
-		if stream_type == 'video' and stream_action == 'receive':
-			sdp_answer = receive_video(session_id, sdp_offer.decode())
-
-			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type='application/sdp')
-
-		if stream_type == 'video' and stream_action == 'send':
-			sdp_answer = send_video(session_id, sdp_offer.decode())
+		if stream_type == 'video' and stream_action == 'process':
+			sdp_answer = process_video(session_id, sdp_offer.decode())
 
 			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type = 'application/sdp')
 

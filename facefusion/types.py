@@ -277,18 +277,32 @@ StreamMode = Literal['udp', 'v4l2']
 PeerConnection : TypeAlias = int
 SdpOffer : TypeAlias = str
 SdpAnswer : TypeAlias = str
-MediaDirection : TypeAlias = Literal['sendonly', 'recvonly']
+MediaDirection : TypeAlias = Literal['sendonly', 'recvonly', 'sendrecv']
 
 RtcTrackInit : TypeAlias = Any
 
 RtcVideoTrack : TypeAlias = int
 RtcAudioTrack : TypeAlias = int
 
+RtcPeerAudio = TypedDict('RtcPeerAudio',
+{
+	'sender_track': RtcAudioTrack,
+	'receiver_track': RtcAudioTrack,
+	'codec': AudioCodec,
+})
+
+RtcPeerVideo = TypedDict('RtcPeerVideo',
+{
+	'sender_track': RtcVideoTrack,
+	'receiver_track': RtcVideoTrack,
+	'codec': VideoCodec,
+})
+
 RtcPeer = TypedDict('RtcPeer',
 {
 	'peer_connection': PeerConnection,
-	'video_track': RtcVideoTrack,
-	'audio_track': RtcAudioTrack,
+	'audio': NotRequired[RtcPeerAudio],
+	'video': RtcPeerVideo,
 })
 RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
 
