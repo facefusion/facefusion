@@ -1,10 +1,8 @@
 import ctypes
 from typing import Optional
 
-import numpy
-
 from facefusion.libraries import opus as opus_module
-from facefusion.types import AudioFrame, OpusDecoder, OpusEncoder
+from facefusion.types import OpusDecoder, OpusEncoder
 
 
 def create_opus_encoder(sample_rate : int, channel_total : int) -> Optional[OpusEncoder]:
@@ -47,18 +45,19 @@ def create_opus_decoder(sample_rate : int, channel_total : int) -> Optional[Opus
 	return None
 
 
-def decode_opus_buffer(opus_decoder : OpusDecoder, input_buffer : bytes, frame_size : int, channel_total : int) -> Optional[AudioFrame]:
+def decode_opus_buffer(opus_decoder : OpusDecoder, input_buffer : bytes, frame_size : int, channel_total : int) -> bytes:
 	opus_library = opus_module.create_static_library()
+	output_buffer = bytes()
 
 	if opus_library:
 		input_total = len(input_buffer)
 		decode_buffer = (ctypes.c_float * (frame_size * channel_total))()
 		decode_length = opus_library.opus_decode_float(opus_decoder, input_buffer, input_total, decode_buffer, frame_size, 0)
 
-		if decode_length > 0:
-			return numpy.ctypeslib.as_array(decode_buffer, shape = (decode_length * channel_total,)).copy()
+		if decode_length:
+			output_buffer = bytes(decode_buffer[:decode_length * channel_total])
 
-	return None
+	return output_buffer
 
 
 def destroy_opus_decoder(opus_decoder : OpusDecoder) -> None:

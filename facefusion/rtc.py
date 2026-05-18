@@ -218,34 +218,10 @@ def create_video_track_init(media_direction : MediaDirection, video_codec : Vide
 
 def get_payload_type(sdp_offer : SdpOffer, codec : AudioCodec | VideoCodec) -> int:
 	datachannel_library = datachannel_module.create_static_library()
-	payload_type = ctypes.c_int()
-	deduplicated_sdp = deduplicate_sdp_media(sdp_offer)
+	payload_type_buffer = (ctypes.c_int * 16)()
+	result = datachannel_library.rtcGetPayloadTypesForCodec(sdp_offer.encode(), codec.lower().encode(), payload_type_buffer, 16)
 
-	if datachannel_library.rtcGetPayloadTypesForCodec(deduplicated_sdp.encode(), codec.encode(), ctypes.byref(payload_type), 1):
-		return payload_type.value
+	if result > 0:
+		return payload_type_buffer[0]
 
 	return 0
-
-
-#TODO: needs review
-def deduplicate_sdp_media(sdp_offer : SdpOffer) -> SdpOffer:
-	lines = sdp_offer.split('\n')
-	deduplicated_lines = []
-	seen_media = set()
-	skip = False
-
-	for line in lines:
-		if line.startswith('m='):
-			media_type = line.split(' ')[0]
-
-			if media_type in seen_media:
-				skip = True
-				continue
-
-			seen_media.add(media_type)
-			skip = False
-
-		if not skip:
-			deduplicated_lines.append(line)
-
-	return '\n'.join(deduplicated_lines)

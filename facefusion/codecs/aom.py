@@ -6,7 +6,7 @@ from facefusion.libraries import aom as aom_module
 from facefusion.types import AomDecoder, AomEncoder, BitRate, Resolution
 
 
-def create_aom_encoder(bitrate: BitRate, thread_count: int, cpu_count: int, frame_resolution: Resolution) -> Optional[AomEncoder]:
+def create_aom_encoder(frame_resolution : Resolution, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[AomEncoder]:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library:
@@ -85,7 +85,43 @@ def create_aom_decoder() -> Optional[AomDecoder]:
 	return None
 
 
-def decode_aom_buffer(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[int]:
+def decode_aom_buffer(aom_decoder : AomDecoder, input_buffer : bytes) -> bytes:
+	aom_library = aom_module.create_static_library()
+	output_buffer = bytes()
+
+	if aom_library and input_buffer:
+		input_total = len(input_buffer)
+		temp_buffer = (ctypes.c_uint8 * input_total).from_buffer_copy(input_buffer)
+
+		if aom_library.aom_codec_decode(aom_decoder, temp_buffer, input_total, None) == 0:
+			frame_pointer = aom_library.aom_codec_get_frame(aom_decoder, ctypes.byref(ctypes.c_void_p(0)))
+
+			if frame_pointer:
+				output_buffer = collect_aom_frame(frame_pointer)
+
+	return output_buffer
+
+
+def collect_aom_frame(frame_pointer : int) -> bytes:
+	frame_width = ctypes.c_uint.from_address(frame_pointer + 28).value
+	frame_height = ctypes.c_uint.from_address(frame_pointer + 32).value
+	planes_offset = frame_pointer + 64
+	strides_offset = frame_pointer + 88
+	output_buffer = bytes()
+
+	for index in range(3):
+		plane_pointer = ctypes.c_void_p.from_address(planes_offset + index * 8).value
+		stride = ctypes.c_int.from_address(strides_offset + index * 4).value
+		plane_width = frame_width >> (index > 0)
+		plane_height = frame_height >> (index > 0)
+
+		for row in range(plane_height):
+			output_buffer += ctypes.string_at(plane_pointer + row * stride, plane_width)
+
+	return output_buffer
+
+
+def read_aom_resolution(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[Resolution]:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library and input_buffer:
@@ -96,7 +132,9 @@ def decode_aom_buffer(aom_decoder : AomDecoder, input_buffer : bytes) -> Optiona
 			frame_pointer = aom_library.aom_codec_get_frame(aom_decoder, ctypes.byref(ctypes.c_void_p(0)))
 
 			if frame_pointer:
-				return frame_pointer
+				frame_width = ctypes.c_uint.from_address(frame_pointer + 28).value
+				frame_height = ctypes.c_uint.from_address(frame_pointer + 32).value
+				return frame_width, frame_height
 
 	return None
 

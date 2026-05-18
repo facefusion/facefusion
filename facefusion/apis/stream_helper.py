@@ -12,9 +12,9 @@ from facefusion import rtc, rtc_store, session_context, session_manager, state_m
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
 from facefusion.audio import create_empty_audio_frame
-from facefusion.codecs.aom import create_aom_decoder, create_aom_encoder, decode_aom_buffer, destroy_aom_decoder, destroy_aom_encoder, encode_aom_buffer
+from facefusion.codecs.aom import create_aom_decoder, create_aom_encoder, decode_aom_buffer, destroy_aom_decoder, destroy_aom_encoder, encode_aom_buffer, read_aom_resolution
 from facefusion.codecs.opus import create_opus_decoder, create_opus_encoder, decode_opus_buffer, destroy_opus_decoder, destroy_opus_encoder, encode_opus_buffer
-from facefusion.codecs.vpx import create_vpx_decoder, create_vpx_encoder, decode_vpx_buffer, destroy_vpx_decoder, destroy_vpx_encoder, encode_vpx_buffer
+from facefusion.codecs.vpx import create_vpx_decoder, create_vpx_encoder, decode_vpx_buffer, destroy_vpx_decoder, destroy_vpx_encoder, encode_vpx_buffer, read_vpx_resolution
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioFrame, OpusDecoder, PeerConnection, Resolution, RtcPeer, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
 
@@ -125,13 +125,24 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_receive_buffer = ctypes.create_string_buffer(512 * 1024)
 	audio_receive_buffer = ctypes.create_string_buffer(8 * 1024)
 
-	vision_frame = poll_for_frame(datachannel_library, video_info.get('receiver_track'), video_codec, video_decoder, video_receive_buffer, 30.0)
+	frame_buffer = poll_for_buffer(datachannel_library, video_info.get('receiver_track'), video_receive_buffer, 30.0)
+
+	if frame_buffer is None:
+		cleanup_peer(session_id, rtc_peer, video_codec, video_decoder, audio_decoder)
+		return
+
+	resolution = read_video_resolution(video_codec, video_decoder, frame_buffer)
+
+	if resolution is None:
+		cleanup_peer(session_id, rtc_peer, video_codec, video_decoder, audio_decoder)
+		return
+
+	vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer, resolution)
 
 	if vision_frame is None:
 		cleanup_peer(session_id, rtc_peer, video_codec, video_decoder, audio_decoder)
 		return
 
-	resolution : Resolution = (vision_frame.shape[1], vision_frame.shape[0])
 	audio_frame = create_empty_audio_frame()
 	video_encoder = create_video_encoder(video_codec, resolution)
 	opus_encoder = create_opus_encoder(48000, 2)
@@ -169,13 +180,13 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 		frame_index += 1
 
-		next_frame = drain_to_latest_frame(datachannel_library, video_info.get('receiver_track'), video_codec, video_decoder, video_receive_buffer)
+		next_frame = drain_to_latest_frame(datachannel_library, video_info.get('receiver_track'), video_codec, video_decoder, video_receive_buffer, resolution)
 
 		if next_frame is not None:
 			vision_frame = next_frame
 			continue
 
-		next_frame = poll_for_frame(datachannel_library, video_info.get('receiver_track'), video_codec, video_decoder, video_receive_buffer, 30.0)
+		next_frame = poll_for_frame(datachannel_library, video_info.get('receiver_track'), video_codec, video_decoder, video_receive_buffer, resolution, 30.0)
 
 		if next_frame is None:
 			break
@@ -229,79 +240,29 @@ def destroy_video_encoder(video_codec : VideoCodec, video_encoder : Optional[Vpx
 		destroy_vpx_encoder(video_encoder)
 
 
-#TODO: needs review
-def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, frame_buffer : bytes) -> Optional[VisionFrame]:
-	frame_pointer = None
+def read_video_resolution(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, frame_buffer : bytes) -> Optional[Resolution]:
+	if video_codec == 'av1':
+		return read_aom_resolution(video_decoder, frame_buffer)
+	if video_codec == 'vp8':
+		return read_vpx_resolution(video_decoder, frame_buffer)
+
+	return None
+
+
+def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, frame_buffer : bytes, frame_resolution : Resolution) -> Optional[VisionFrame]:
+	output_buffer = bytes()
 
 	if video_codec == 'av1':
-		frame_pointer = decode_aom_buffer(video_decoder, frame_buffer)
+		output_buffer = decode_aom_buffer(video_decoder, frame_buffer)
 	if video_codec == 'vp8':
-		frame_pointer = decode_vpx_buffer(video_decoder, frame_buffer)
+		output_buffer = decode_vpx_buffer(video_decoder, frame_buffer)
 
-	if frame_pointer is not None:
-		raw_vision_frame = None
-
-		if video_codec == 'av1':
-			raw_vision_frame = extract_aom_image(frame_pointer)
-		if video_codec == 'vp8':
-			raw_vision_frame = extract_vpx_image(frame_pointer)
-
-		if raw_vision_frame is not None and raw_vision_frame.shape[1] % 2 == 0 and raw_vision_frame.shape[0] % 3 == 0:
-			return cv2.cvtColor(raw_vision_frame, cv2.COLOR_YUV2BGR_I420)
+	if output_buffer:
+		frame_width, frame_height = frame_resolution
+		yuv_frame = numpy.frombuffer(output_buffer, dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
+		return cv2.cvtColor(yuv_frame, cv2.COLOR_YUV2BGR_I420)
 
 	return None
-
-
-#TODO: needs review
-def extract_aom_image(frame_pointer : int) -> Optional[VisionFrame]:
-	width = ctypes.c_uint.from_address(frame_pointer + 28).value
-	height = ctypes.c_uint.from_address(frame_pointer + 32).value
-
-	if width and height and width % 2 == 0 and height % 2 == 0:
-		planes_offset = frame_pointer + 64
-		strides_offset = frame_pointer + 88
-
-		y_plane = extract_plane(planes_offset, strides_offset, 0, width, height)
-		u_plane = extract_plane(planes_offset, strides_offset, 1, width // 2, height // 2)
-		v_plane = extract_plane(planes_offset, strides_offset, 2, width // 2, height // 2)
-
-		yuv_frame = numpy.concatenate([ y_plane.flatten(), u_plane.flatten(), v_plane.flatten() ])
-		yuv_frame = yuv_frame.reshape((height * 3 // 2, width)).astype(numpy.uint8)
-
-		return yuv_frame
-
-	return None
-
-
-#TODO: needs review
-def extract_vpx_image(frame_pointer : int) -> Optional[VisionFrame]:
-	width = ctypes.c_uint.from_address(frame_pointer + 24).value
-	height = ctypes.c_uint.from_address(frame_pointer + 28).value
-
-	if width and height and width % 2 == 0 and height % 2 == 0:
-		planes_offset = frame_pointer + 48
-		strides_offset = frame_pointer + 80
-
-		y_plane = extract_plane(planes_offset, strides_offset, 0, width, height)
-		u_plane = extract_plane(planes_offset, strides_offset, 1, width // 2, height // 2)
-		v_plane = extract_plane(planes_offset, strides_offset, 2, width // 2, height // 2)
-
-		yuv_frame = numpy.concatenate([ y_plane.flatten(), u_plane.flatten(), v_plane.flatten() ])
-		yuv_frame = yuv_frame.reshape((height * 3 // 2, width)).astype(numpy.uint8)
-
-		return yuv_frame
-
-	return None
-
-
-#TODO: needs review
-def extract_plane(planes_offset : int, strides_offset : int, index : int, width : int, height : int) -> numpy.ndarray:
-	plane_pointer = ctypes.c_void_p.from_address(planes_offset + index * 8).value
-	stride = ctypes.c_int.from_address(strides_offset + index * 4).value
-	plane_buffer = (ctypes.c_ubyte * (stride * height)).from_address(plane_pointer)
-	plane = numpy.ctypeslib.as_array(plane_buffer).reshape((height, stride))
-
-	return plane[:, :width]
 
 
 #TODO: needs review
@@ -311,20 +272,44 @@ def receive_audio_frame(datachannel_library : ctypes.CDLL, audio_track : int, au
 
 	if receive_output == 0 and buffer_size.value > 0:
 		opus_buffer = receive_buffer.raw[:buffer_size.value]
-		audio_frame = decode_opus_buffer(audio_decoder, opus_buffer, 960, 2)
+		output_buffer = decode_opus_buffer(audio_decoder, opus_buffer, 960, 2)
 
-		if audio_frame is not None:
-			return audio_frame
+		if output_buffer:
+			return numpy.frombuffer(output_buffer, dtype = numpy.float32)
 
 	return create_empty_audio_frame()
 
 
-#TODO: needs review
-def poll_for_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char], timeout : float) -> Optional[VisionFrame]:
+def receive_video_buffer(datachannel_library : ctypes.CDLL, video_track : int, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[bytes]:
+	buffer_size = ctypes.c_int(512 * 1024)
+	receive_output = datachannel_library.rtcReceiveMessage(video_track, receive_buffer, ctypes.byref(buffer_size))
+
+	if receive_output == 0 and buffer_size.value > 0:
+		return receive_buffer.raw[:buffer_size.value]
+
+	return None
+
+
+def poll_for_buffer(datachannel_library : ctypes.CDLL, video_track : int, receive_buffer : ctypes.Array[ctypes.c_char], timeout : float) -> Optional[bytes]:
 	deadline = time.monotonic() + timeout
 
 	while time.monotonic() < deadline:
-		vision_frame = try_receive_frame(datachannel_library, video_track, video_codec, video_decoder, receive_buffer)
+		frame_buffer = receive_video_buffer(datachannel_library, video_track, receive_buffer)
+
+		if frame_buffer is not None:
+			return frame_buffer
+
+		time.sleep(0.001)
+
+	return None
+
+
+#TODO: needs review
+def poll_for_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char], frame_resolution : Resolution, timeout : float) -> Optional[VisionFrame]:
+	deadline = time.monotonic() + timeout
+
+	while time.monotonic() < deadline:
+		vision_frame = try_receive_frame(datachannel_library, video_track, video_codec, video_decoder, receive_buffer, frame_resolution)
 
 		if vision_frame is not None:
 			return vision_frame
@@ -335,19 +320,17 @@ def poll_for_frame(datachannel_library : ctypes.CDLL, video_track : int, video_c
 
 
 #TODO: needs review
-def try_receive_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[VisionFrame]:
-	buffer_size = ctypes.c_int(512 * 1024)
-	receive_output = datachannel_library.rtcReceiveMessage(video_track, receive_buffer, ctypes.byref(buffer_size))
+def try_receive_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char], frame_resolution : Resolution) -> Optional[VisionFrame]:
+	frame_buffer = receive_video_buffer(datachannel_library, video_track, receive_buffer)
 
-	if receive_output == 0 and buffer_size.value > 0:
-		frame_buffer = receive_buffer.raw[:buffer_size.value]
-		return decode_video_frame(video_codec, video_decoder, frame_buffer)
+	if frame_buffer:
+		return decode_video_frame(video_codec, video_decoder, frame_buffer, frame_resolution)
 
 	return None
 
 
-#TODO: needs review - rename drain last frame
-def drain_to_latest_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[VisionFrame]:
+#TODO: needs review
+def drain_to_latest_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char], frame_resolution : Resolution) -> Optional[VisionFrame]:
 	last_vision_frame = numpy.empty(0)
 	buffer_size = ctypes.c_int(512 * 1024)
 	receive_output = 0
@@ -358,7 +341,7 @@ def drain_to_latest_frame(datachannel_library : ctypes.CDLL, video_track : int, 
 
 		if receive_output == 0 and buffer_size.value > 0:
 			frame_buffer = receive_buffer.raw[:buffer_size.value]
-			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
+			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer, frame_resolution)
 
 			if numpy.any(vision_frame):
 				last_vision_frame = vision_frame
