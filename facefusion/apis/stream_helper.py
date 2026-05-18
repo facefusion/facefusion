@@ -221,14 +221,14 @@ def destroy_video_encoder(video_codec : VideoCodec, video_encoder) -> None:
 
 
 def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, frame_buffer : bytes) -> Optional[VisionFrame]:
-	raw_vision_frame = numpy.empty(0)
+	raw_vision_frame = None
 
 	if video_codec == 'av1':
-		raw_vision_frame = decode_aom_buffer(video_decoder, frame_buffer) or numpy.empty(0)
+		raw_vision_frame = decode_aom_buffer(video_decoder, frame_buffer)
 	if video_codec == 'vp8':
-		raw_vision_frame = decode_vpx_buffer(video_decoder, frame_buffer) or numpy.empty(0)
+		raw_vision_frame = decode_vpx_buffer(video_decoder, frame_buffer)
 
-	if numpy.any(raw_vision_frame) and raw_vision_frame.shape[1] % 2 == 0 and raw_vision_frame.shape[0] % 3 == 0:
+	if raw_vision_frame is not None and raw_vision_frame.shape[1] % 2 == 0 and raw_vision_frame.shape[0] % 3 == 0:
 		return cv2.cvtColor(raw_vision_frame, cv2.COLOR_YUV2BGR_I420)
 
 	return None

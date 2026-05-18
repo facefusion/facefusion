@@ -22,8 +22,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libdatachannel.hash'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.hash')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libdatachannel_next.hash'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.hash')
 				},
 				'ssl':
 				{
@@ -40,8 +40,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libdatachannel.so'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.so')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libdatachannel_next.so'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.so')
 				},
 				'ssl':
 				{
