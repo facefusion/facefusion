@@ -22,8 +22,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libdatachannel.hash'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.hash')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libdatachannel_next.hash'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.hash')
 				},
 				'ssl':
 				{
@@ -40,8 +40,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libdatachannel.so'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.so')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'linux/libdatachannel_next.so'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.so')
 				},
 				'ssl':
 				{
@@ -62,8 +62,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libdatachannel.hash'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.hash')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libdatachannel_next.hash'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.hash')
 				},
 				'ssl':
 				{
@@ -80,8 +80,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libdatachannel.dylib'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.dylib')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libdatachannel_next.dylib'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.dylib')
 				},
 				'ssl':
 				{
@@ -102,8 +102,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel.hash'),
-					'path': resolve_relative_path('../.libraries/datachannel.hash')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel_next.hash'),
+					'path': resolve_relative_path('../.libraries/datachannel_next.hash')
 				},
 				'ssl':
 				{
@@ -120,8 +120,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel.dll'),
-					'path': resolve_relative_path('../.libraries/datachannel.dll')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel_next.dll'),
+					'path': resolve_relative_path('../.libraries/datachannel_next.dll')
 				},
 				'ssl':
 				{
@@ -166,7 +166,7 @@ def create_static_library() -> Optional[ctypes.CDLL]:
 def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcInitLogger.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p) ]
 	library.rtcInitLogger.restype = None
-	library.rtcInitLogger(4, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)(0))
+	library.rtcInitLogger(5, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p)(0))
 
 	library.rtcCreatePeerConnection.restype = ctypes.c_int
 
@@ -203,6 +203,20 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcGetLocalDescription.restype = ctypes.c_int
 
 	library.rtcSetOpusPacketizer.restype = ctypes.c_int
+
+	library.rtcGetPayloadTypesForCodec.argtypes = [ ctypes.c_char_p, ctypes.c_char_p, ctypes.POINTER(ctypes.c_int), ctypes.c_int ]
+	library.rtcGetPayloadTypesForCodec.restype = ctypes.c_int
+
+	library.rtcSetAV1Depacketizer.argtypes = [ ctypes.c_int, ctypes.c_int ]
+	library.rtcSetAV1Depacketizer.restype = ctypes.c_int
+	library.rtcSetVP8Depacketizer.restype = ctypes.c_int
+	library.rtcSetOpusDepacketizer.restype = ctypes.c_int
+
+	library.rtcChainRtcpReceivingSession.argtypes = [ ctypes.c_int ]
+	library.rtcChainRtcpReceivingSession.restype = ctypes.c_int
+
+	library.rtcReceiveMessage.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.POINTER(ctypes.c_int) ]
+	library.rtcReceiveMessage.restype = ctypes.c_int
 
 	return library
 

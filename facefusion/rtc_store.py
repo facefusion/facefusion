@@ -3,7 +3,6 @@ from typing import List
 from facefusion import rtc
 from facefusion.types import RtcPeer, RtcStore, SessionId
 
-
 RTC_STORE : RtcStore = {}
 
 

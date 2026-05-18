@@ -94,8 +94,11 @@ AudioCodec : TypeAlias = Literal['opus']
 VideoCodec : TypeAlias = Literal['av1', 'vp8']
 
 AomEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
+AomDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
 OpusEncoder : TypeAlias = ctypes.c_void_p
+OpusDecoder : TypeAlias = ctypes.c_void_p
 VpxEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
+VpxDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
 
 BitRate : TypeAlias = int
 SampleRate : TypeAlias = int
@@ -274,18 +277,32 @@ StreamMode = Literal['udp', 'v4l2']
 PeerConnection : TypeAlias = int
 SdpOffer : TypeAlias = str
 SdpAnswer : TypeAlias = str
-MediaDirection : TypeAlias = Literal['sendonly', 'recvonly']
+MediaDirection : TypeAlias = Literal['sendonly', 'recvonly', 'sendrecv']
 
 RtcTrackInit : TypeAlias = Any
 
 RtcVideoTrack : TypeAlias = int
 RtcAudioTrack : TypeAlias = int
 
+RtcPeerAudio = TypedDict('RtcPeerAudio',
+{
+	'sender_track': RtcAudioTrack,
+	'receiver_track': RtcAudioTrack,
+	'codec': AudioCodec,
+})
+
+RtcPeerVideo = TypedDict('RtcPeerVideo',
+{
+	'sender_track': RtcVideoTrack,
+	'receiver_track': RtcVideoTrack,
+	'codec': VideoCodec,
+})
+
 RtcPeer = TypedDict('RtcPeer',
 {
 	'peer_connection': PeerConnection,
-	'video_track': RtcVideoTrack,
-	'audio_track': RtcAudioTrack,
+	'audio': NotRequired[RtcPeerAudio],
+	'video': RtcPeerVideo,
 })
 RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
 

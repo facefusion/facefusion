@@ -5,7 +5,7 @@ from facefusion.libraries import opus as opus_module
 from facefusion.types import OpusEncoder
 
 
-def create_opus_encoder(sample_rate : int, channel_total : int) -> Optional[OpusEncoder]:
+def create(sample_rate : int, channel_total : int) -> Optional[OpusEncoder]:
 	opus_library = opus_module.create_static_library()
 
 	if opus_library:
@@ -14,7 +14,7 @@ def create_opus_encoder(sample_rate : int, channel_total : int) -> Optional[Opus
 	return None
 
 
-def encode_opus_buffer(opus_encoder : OpusEncoder, input_buffer : bytes, frame_size : int) -> bytes:
+def encode(opus_encoder : OpusEncoder, input_buffer : bytes, frame_size : int) -> bytes:
 	opus_library = opus_module.create_static_library()
 	output_buffer = bytes()
 
@@ -29,7 +29,7 @@ def encode_opus_buffer(opus_encoder : OpusEncoder, input_buffer : bytes, frame_s
 	return output_buffer
 
 
-def destroy_opus_encoder(opus_encoder : OpusEncoder) -> None:
+def destroy(opus_encoder : OpusEncoder) -> None:
 	opus_library = opus_module.create_static_library()
 
 	if opus_library:
