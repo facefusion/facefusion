@@ -1,6 +1,4 @@
 import tempfile
-import threading
-from functools import partial
 from typing import Iterator
 from unittest.mock import patch
 
@@ -14,6 +12,7 @@ from facefusion.core import common_pre_check
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import datachannel as datachannel_module
+from facefusion.types import VideoCodec
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
 
@@ -44,16 +43,6 @@ def before_each() -> None:
 def test_client() -> Iterator[TestClient]:
 	with TestClient(create_api()) as test_client:
 		yield test_client
-
-
-@pytest.fixture(scope = 'function')
-def create_event() -> threading.Event:
-	return threading.Event()
-
-
-@pytest.mark.helper
-def set_event(rtc_peer, video_buffer : bytes, video_timestamp : int, event : threading.Event) -> None:
-	event.set()
 
 
 def test_stream_image(test_client : TestClient) -> None:
@@ -97,7 +86,7 @@ def test_stream_image(test_client : TestClient) -> None:
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-def test_stream_video(test_client : TestClient, create_event : threading.Event, video_codec : str) -> None:
+def test_stream_video(test_client : TestClient, video_codec : VideoCodec) -> None:
 	create_session_response = test_client.post('/session', json =
 	{
 		'client_version': metadata.get('version')
@@ -126,13 +115,17 @@ def test_stream_video(test_client : TestClient, create_event : threading.Event, 
 	})
 
 	peer_connection = rtc.create_peer_connection()
-	video_payload_type = 96 if video_codec == 'vp8' else 35
-	rtc.add_video_track(peer_connection, 'sendrecv', video_codec, video_payload_type)
+
+	if video_codec == 'av1':
+		rtc.add_video_track(peer_connection, 'sendrecv', video_codec, 35)
+	if video_codec == 'vp8':
+		rtc.add_video_track(peer_connection, 'sendrecv', video_codec, 96)
+
 	rtc.add_audio_track(peer_connection, 'sendrecv', 'opus', 111)
 	sdp_offer = rtc.create_sdp_offer(peer_connection)
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
-	with patch('facefusion.rtc.send_video', side_effect = partial(set_event, event = create_event)):
+	with patch('facefusion.rtc.send_video'):
 		stream_response = test_client.post('/stream?type=video&action=process', content = sdp_offer, headers =
 		{
 			'Authorization': 'Bearer ' + access_token,

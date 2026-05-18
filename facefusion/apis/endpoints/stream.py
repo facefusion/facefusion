@@ -19,9 +19,9 @@ async def websocket_stream(websocket : WebSocket) -> None:
 
 
 async def post_stream(request : Request) -> Response:
-	content_type = request.headers.get('content-type')
 	stream_type = request.query_params.get('type')
 	stream_action = request.query_params.get('action')
+	content_type = request.headers.get('content-type')
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
 

@@ -7,11 +7,13 @@ from facefusion.types import PeerConnection, RtcPeer, RtcStore, SessionId
 RTC_STORE : RtcStore = {}
 
 
+#TODO: needs review
 def init_peers(session_id : SessionId) -> None:
 	if session_id not in RTC_STORE:
 		RTC_STORE[session_id] = []
 
 
+#TODO: needs review
 def add_peer(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	init_peers(session_id)
 	RTC_STORE[session_id].append(rtc_peer)
@@ -21,6 +23,7 @@ def get_peers(session_id : SessionId) -> List[RtcPeer]:
 	return RTC_STORE.get(session_id)
 
 
+#TODO: needs review
 def delete_peer(session_id : SessionId, peer_connection : PeerConnection) -> None:
 	if session_id in RTC_STORE:
 		rtc_peers = RTC_STORE.get(session_id)

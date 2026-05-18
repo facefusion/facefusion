@@ -47,6 +47,7 @@ def set_remote_description(peer_connection : PeerConnection, sdp_offer : SdpOffe
 	return None
 
 
+#TODO: needs review
 def send_video(rtc_peer : RtcPeer, video_buffer : bytes, video_timestamp : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	video_track = rtc_peer.get('video').get('sender_track')
@@ -60,6 +61,7 @@ def send_video(rtc_peer : RtcPeer, video_buffer : bytes, video_timestamp : int) 
 	return None
 
 
+#TODO: needs review
 def send_audio(rtc_peer : RtcPeer, audio_buffer : bytes, audio_timestamp : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	audio = rtc_peer.get('audio')
@@ -88,9 +90,10 @@ def delete_peers(rtc_peers : List[RtcPeer]) -> None:
 	return None
 
 
-def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int, mid : bytes = b'1', ssrc : int = 43) -> RtcAudioTrack:
+#TODO: needs review
+def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> RtcAudioTrack:
 	datachannel_library = datachannel_module.create_static_library()
-	audio_track_init = create_audio_track_init(media_direction, audio_codec, payload_type, mid, ssrc)
+	audio_track_init = create_audio_track_init(media_direction, audio_codec, payload_type)
 	audio_track = datachannel_library.rtcAddTrackEx(peer_connection, audio_track_init)
 
 	if media_direction == 'sendonly':
@@ -120,9 +123,10 @@ def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDir
 	return audio_track
 
 
-def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int, mid : bytes = b'0', ssrc : int = 42) -> RtcVideoTrack:
+#TODO: needs review
+def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> RtcVideoTrack:
 	datachannel_library = datachannel_module.create_static_library()
-	video_track_init = create_video_track_init(media_direction, video_codec, payload_type, mid, ssrc)
+	video_track_init = create_video_track_init(media_direction, video_codec, payload_type)
 	video_track = datachannel_library.rtcAddTrackEx(peer_connection, video_track_init)
 
 	if media_direction == 'sendonly':
@@ -160,44 +164,54 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 	return video_track
 
 
-def create_audio_track_init(media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int, mid : bytes, ssrc : int = 43) -> RtcTrackInit:
+#TODO: needs review
+def create_audio_track_init(media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> RtcTrackInit:
 	track_init = datachannel_module.define_rtc_track_init()
 
 	if media_direction == 'sendonly':
 		track_init.direction = 1
+		track_init.mid = b'3'
+		track_init.ssrc = 43
 	if media_direction == 'recvonly':
 		track_init.direction = 2
+		track_init.mid = b'2'
+		track_init.ssrc = 45
 	if media_direction == 'sendrecv':
 		track_init.direction = 3
+		track_init.mid = b'1'
+		track_init.ssrc = 43
 	if audio_codec == 'opus':
 		track_init.codec = 128
 
 	track_init.payloadType = payload_type
-	track_init.ssrc = ssrc
 	track_init.name = b'audio'
-	track_init.mid = mid
 
 	return ctypes.byref(track_init)
 
 
-def create_video_track_init(media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int, mid : bytes, ssrc : int = 42) -> RtcTrackInit:
+#TODO: needs review
+def create_video_track_init(media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> RtcTrackInit:
 	track_init = datachannel_module.define_rtc_track_init()
 
 	if media_direction == 'sendonly':
 		track_init.direction = 1
+		track_init.mid = b'1'
+		track_init.ssrc = 42
 	if media_direction == 'recvonly':
 		track_init.direction = 2
+		track_init.mid = b'0'
+		track_init.ssrc = 44
 	if media_direction == 'sendrecv':
 		track_init.direction = 3
+		track_init.mid = b'0'
+		track_init.ssrc = 42
 	if video_codec == 'av1':
 		track_init.codec = 4
 	if video_codec == 'vp8':
 		track_init.codec = 1
 
 	track_init.payloadType = payload_type
-	track_init.ssrc = ssrc
 	track_init.name = b'video'
-	track_init.mid = mid
 
 	return ctypes.byref(track_init)
 

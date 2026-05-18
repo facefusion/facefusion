@@ -55,10 +55,8 @@ def test_create_sdp_answer() -> None:
 
 	assert 'm=video' in sdp_answer
 	assert 'VP8/90000' in sdp_answer
-	assert 'a=ssrc:42 cname:video' in sdp_answer
 	assert 'm=audio' in sdp_answer
 	assert 'opus/48000/2' in sdp_answer
-	assert 'a=ssrc:43 cname:audio' in sdp_answer
 	assert 'a=recvonly' in sdp_answer
 
 	assert datachannel_library.rtcDeletePeerConnection(sender_peer_connection) == 0
@@ -72,13 +70,13 @@ def test_send_audio() -> None:
 	rtc_peer : RtcPeer =\
 	{
 		'peer_connection': peer_connection,
-		'video':\
+		'video':
 		{
 			'sender_track': 0,
 			'receiver_track': 0,
 			'codec': 'vp8',
 		},
-		'audio':\
+		'audio':
 		{
 			'sender_track': audio_track,
 			'receiver_track': audio_track,
@@ -98,7 +96,7 @@ def test_send_video() -> None:
 	rtc_peer : RtcPeer =\
 	{
 		'peer_connection': peer_connection,
-		'video':\
+		'video':
 		{
 			'sender_track': video_track,
 			'receiver_track': video_track,
@@ -118,11 +116,11 @@ def test_delete_peers() -> None:
 	[
 		{
 			'peer_connection': peer_connection,
-			'video':\
+			'video':
 			{
 				'sender_track': 0,
 				'receiver_track': 0,
-				'codec': 'vp8',
+				'codec': 'vp8'
 			}
 		}
 	]
