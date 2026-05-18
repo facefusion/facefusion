@@ -62,8 +62,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libdatachannel.hash'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.hash')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libdatachannel_next.hash'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.hash')
 				},
 				'ssl':
 				{
@@ -80,8 +80,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libdatachannel.dylib'),
-					'path': resolve_relative_path('../.libraries/libdatachannel.dylib')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'macos/libdatachannel_next.dylib'),
+					'path': resolve_relative_path('../.libraries/libdatachannel_next.dylib')
 				},
 				'ssl':
 				{
@@ -102,8 +102,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel.hash'),
-					'path': resolve_relative_path('../.libraries/datachannel.hash')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel_next.hash'),
+					'path': resolve_relative_path('../.libraries/datachannel_next.hash')
 				},
 				'ssl':
 				{
@@ -120,8 +120,8 @@ def create_static_library_set() -> Optional[LibrarySet]:
 				},
 				'datachannel':
 				{
-					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel.dll'),
-					'path': resolve_relative_path('../.libraries/datachannel.dll')
+					'url': resolve_download_url_by_provider('huggingface', 'libraries-4.0.0', 'windows/datachannel_next.dll'),
+					'path': resolve_relative_path('../.libraries/datachannel_next.dll')
 				},
 				'ssl':
 				{
