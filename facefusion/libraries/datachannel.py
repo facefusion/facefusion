@@ -215,38 +215,8 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcChainRtcpReceivingSession.argtypes = [ ctypes.c_int ]
 	library.rtcChainRtcpReceivingSession.restype = ctypes.c_int
 
-	library.rtcSetMessageCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_void_p) ]
-	library.rtcSetMessageCallback.restype = ctypes.c_int
-
-	library.rtcSetFrameCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p) ]
-	library.rtcSetFrameCallback.restype = ctypes.c_int
-
-	library.rtcSetTrackCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p) ]
-	library.rtcSetTrackCallback.restype = ctypes.c_int
-
-	library.rtcSetOpenCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p) ]
-	library.rtcSetOpenCallback.restype = ctypes.c_int
-
-	library.rtcSetAvailableCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p) ]
-	library.rtcSetAvailableCallback.restype = ctypes.c_int
-
-	library.rtcIsOpen.argtypes = [ ctypes.c_int ]
-	library.rtcIsOpen.restype = ctypes.c_bool
-
-	library.rtcGetAvailableAmount.argtypes = [ ctypes.c_int ]
-	library.rtcGetAvailableAmount.restype = ctypes.c_int
-
 	library.rtcReceiveMessage.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.POINTER(ctypes.c_int) ]
 	library.rtcReceiveMessage.restype = ctypes.c_int
-
-	library.rtcSetUserPointer.argtypes = [ ctypes.c_int, ctypes.c_void_p ]
-	library.rtcSetUserPointer.restype = None
-
-	library.rtcGetTrackDescription.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.c_int ]
-	library.rtcGetTrackDescription.restype = ctypes.c_int
-
-	library.rtcSetStateChangeCallback.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int, ctypes.c_void_p) ]
-	library.rtcSetStateChangeCallback.restype = ctypes.c_int
 
 	return library
 

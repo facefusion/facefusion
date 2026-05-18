@@ -5,8 +5,8 @@ import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
-from facefusion.codecs.opus_decoder import create_opus_decoder, decode, destroy_opus_decoder
-from facefusion.codecs.opus_encoder import create_opus_encoder, encode
+from facefusion.codecs.opus_decoder import create, decode, destroy
+from facefusion.codecs.opus_encoder import create as create_encoder, encode
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
 from facefusion.libraries import opus as opus_module
@@ -22,26 +22,26 @@ def before_all() -> None:
 
 
 #TODO: needs review
-def test_create_opus_decoder() -> None:
-	assert create_opus_decoder(48000, 2)
-	assert create_opus_decoder(0, 0) is None
+def test_create() -> None:
+	assert create(48000, 2)
+	assert create(0, 0) is None
 
 
 #TODO: needs review
 def test_decode() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_sample = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
-	opus_encoder = create_opus_encoder(48000, 2)
+	opus_encoder = create_encoder(48000, 2)
 	encoded_buffer = encode(opus_encoder, audio_sample.tobytes(), 960)
-	opus_decoder = create_opus_decoder(48000, 2)
+	opus_decoder = create(48000, 2)
 
 	assert len(decode(opus_decoder, encoded_buffer, 960, 2)) == 960 * 2 * 4
 
 
 #TODO: needs review
-def test_destroy_opus_decoder() -> None:
-	opus_decoder = create_opus_decoder(48000, 2)
+def test_destroy() -> None:
+	opus_decoder = create(48000, 2)
 
 	with patch.object(opus_module.create_static_library(), 'opus_decoder_destroy') as mock:
-		destroy_opus_decoder(opus_decoder)
+		destroy(opus_decoder)
 		mock.assert_called_once_with(opus_decoder)

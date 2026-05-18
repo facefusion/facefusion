@@ -65,32 +65,6 @@ def test_create_sdp_answer() -> None:
 	assert datachannel_library.rtcDeletePeerConnection(receiver_peer_connection) == 0
 
 
-def test_send_audio() -> None:
-	datachannel_library = datachannel_module.create_static_library()
-	peer_connection = create_peer_connection()
-	audio_track = add_audio_track(peer_connection, 'sendonly', 'opus', 111)
-	rtc_peer : RtcPeer =\
-	{
-		'peer_connection': peer_connection,
-		'video':
-		{
-			'sender_track': 0,
-			'receiver_track': 0,
-			'codec': 'vp8',
-		},
-		'audio':
-		{
-			'sender_track': audio_track,
-			'receiver_track': audio_track,
-			'codec': 'opus'
-		}
-	}
-
-	send_audio(rtc_peer, bytes(960), 0)
-
-	datachannel_library.rtcDeletePeerConnection(peer_connection)
-
-
 def test_send_video() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
@@ -107,6 +81,32 @@ def test_send_video() -> None:
 	}
 
 	send_video(rtc_peer, bytes(1024), 0)
+
+	datachannel_library.rtcDeletePeerConnection(peer_connection)
+
+
+def test_send_audio() -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	peer_connection = create_peer_connection()
+	audio_track = add_audio_track(peer_connection, 'sendonly', 'opus', 111)
+	rtc_peer : RtcPeer =\
+	{
+		'peer_connection': peer_connection,
+		'video':
+		{
+			'sender_track': 0,
+			'receiver_track': 0,
+			'codec': 'vp8'
+		},
+		'audio':
+		{
+			'sender_track': audio_track,
+			'receiver_track': audio_track,
+			'codec': 'opus'
+		}
+	}
+
+	send_audio(rtc_peer, bytes(960), 0)
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
