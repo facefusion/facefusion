@@ -2,7 +2,7 @@ import ctypes
 from typing import Optional
 
 from facefusion.libraries import aom as aom_module
-from facefusion.types import AomDecoder, Resolution
+from facefusion.types import AomDecoder, AomPointer
 
 
 def create() -> Optional[AomDecoder]:
@@ -18,46 +18,7 @@ def create() -> Optional[AomDecoder]:
 	return None
 
 
-#TODO: needs review
-def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> bytes:
-	aom_library = aom_module.create_static_library()
-	output_buffer = bytes()
-
-	if aom_library and input_buffer:
-		input_total = len(input_buffer)
-		temp_buffer = (ctypes.c_uint8 * input_total).from_buffer_copy(input_buffer)
-
-		if aom_library.aom_codec_decode(aom_decoder, temp_buffer, input_total, None) == 0:
-			frame_pointer = aom_library.aom_codec_get_frame(aom_decoder, ctypes.byref(ctypes.c_void_p(0)))
-
-			if frame_pointer:
-				output_buffer = collect(frame_pointer)
-
-	return output_buffer
-
-
-#TODO: needs review
-def collect(frame_pointer : int) -> bytes:
-	frame_width = ctypes.c_uint.from_address(frame_pointer + 28).value & ~1
-	frame_height = ctypes.c_uint.from_address(frame_pointer + 32).value & ~1
-	planes_offset = frame_pointer + 64
-	strides_offset = frame_pointer + 88
-	output_buffer = bytes()
-
-	for index in range(3):
-		plane_pointer = ctypes.c_void_p.from_address(planes_offset + index * 8).value
-		stride = ctypes.c_int.from_address(strides_offset + index * 4).value
-		plane_width = frame_width >> (index > 0)
-		plane_height = frame_height >> (index > 0)
-
-		for row in range(plane_height):
-			output_buffer += ctypes.string_at(plane_pointer + row * stride, plane_width)
-
-	return output_buffer
-
-
-#TODO: needs review
-def read_resolution(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[Resolution]:
+def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[AomPointer]:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library and input_buffer:
@@ -65,14 +26,34 @@ def read_resolution(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[
 		temp_buffer = (ctypes.c_uint8 * input_total).from_buffer_copy(input_buffer)
 
 		if aom_library.aom_codec_decode(aom_decoder, temp_buffer, input_total, None) == 0:
-			frame_pointer = aom_library.aom_codec_get_frame(aom_decoder, ctypes.byref(ctypes.c_void_p(0)))
+			address = aom_library.aom_codec_get_frame(aom_decoder, ctypes.byref(ctypes.c_void_p(0)))
 
-			if frame_pointer:
-				frame_width = ctypes.c_uint.from_address(frame_pointer + 28).value & ~1
-				frame_height = ctypes.c_uint.from_address(frame_pointer + 32).value & ~1
-				return frame_width, frame_height
+			if address:
+				frame_width = ctypes.c_uint.from_address(address + 28).value & ~1
+				frame_height = ctypes.c_uint.from_address(address + 32).value & ~1
+				return AomPointer(address = address, resolution = (frame_width, frame_height))
 
 	return None
+
+
+def collect(aom_pointer : AomPointer) -> ctypes.Array[ctypes.c_uint8]:
+	frame_width, frame_height = aom_pointer.get('resolution')
+	address = aom_pointer.get('address')
+	output_size = frame_width * frame_height * 3 // 2
+	output_array = (ctypes.c_uint8 * output_size)()
+	output_address = ctypes.addressof(output_array)
+	write_offset = 0
+
+	for index in range(3):
+		plane_pointer = ctypes.c_void_p.from_address(address + 64 + index * 8).value
+		plane_width = frame_width >> (index > 0)
+		plane_height = frame_height >> (index > 0)
+		plane_size = plane_width * plane_height
+
+		ctypes.memmove(output_address + write_offset, plane_pointer, plane_size)
+		write_offset += plane_size
+
+	return output_array
 
 
 def destroy(aom_decoder : AomDecoder) -> None:

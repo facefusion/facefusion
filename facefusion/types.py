@@ -90,6 +90,16 @@ MelFilterBank : TypeAlias = NDArray[Any]
 Voice : TypeAlias = NDArray[Any]
 VoiceChunk : TypeAlias = NDArray[Any]
 
+BitRate : TypeAlias = int
+SampleRate : TypeAlias = int
+Fps : TypeAlias = float
+Duration : TypeAlias = float
+Color : TypeAlias = Tuple[int, int, int, int]
+Padding : TypeAlias = Tuple[int, int, int, int]
+Margin : TypeAlias = Tuple[int, int, int, int]
+Orientation = Literal['landscape', 'portrait']
+Resolution : TypeAlias = Tuple[int, int]
+
 AudioCodec : TypeAlias = Literal['opus']
 VideoCodec : TypeAlias = Literal['av1', 'vp8']
 
@@ -100,15 +110,16 @@ OpusDecoder : TypeAlias = ctypes.c_void_p
 VpxEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 VpxDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
 
-BitRate : TypeAlias = int
-SampleRate : TypeAlias = int
-Fps : TypeAlias = float
-Duration : TypeAlias = float
-Color : TypeAlias = Tuple[int, int, int, int]
-Padding : TypeAlias = Tuple[int, int, int, int]
-Margin : TypeAlias = Tuple[int, int, int, int]
-Orientation = Literal['landscape', 'portrait']
-Resolution : TypeAlias = Tuple[int, int]
+AomPointer = TypedDict('AomPointer',
+{
+	'address' : int,
+	'resolution' : Resolution
+})
+VpxPointer = TypedDict('VpxPointer',
+{
+	'address' : int,
+	'resolution' : Resolution
+})
 
 Args : TypeAlias = Dict[str, Any]
 

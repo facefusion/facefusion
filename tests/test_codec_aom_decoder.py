@@ -5,9 +5,11 @@ import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
-from facefusion.codecs.aom_decoder import create, decode, destroy, read_resolution
+from facefusion.codecs.aom_decoder import collect, create, decode, destroy
 from facefusion.codecs.aom_encoder import create as create_encoder, encode
+from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download
+from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module
 from facefusion.vision import read_video_frame
 
@@ -21,38 +23,34 @@ def before_all() -> None:
 	aom_module.pre_check()
 
 
-#TODO: needs review
 def test_create() -> None:
 	assert create()
 
+	with patch('facefusion.codecs.aom_decoder.aom_module.create_static_library', return_value = None):
+		assert create() is None
 
-#TODO: needs review
+
 def test_decode() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
 	aom_encoder = create_encoder(video_resolution, 1000, 1, 0)
 	encoded_buffer = encode(aom_encoder, video_buffer, video_resolution, 0)
-	decode_resolution = read_resolution(create(), encoded_buffer)
+	aom_pointer = decode(create(), encoded_buffer)
 
-	assert len(decode(create(), encoded_buffer)) == decode_resolution[0] * decode_resolution[1] * 3 // 2
-	assert decode(create(), bytes()) == bytes()
+	assert aom_pointer is not None
+	assert aom_pointer['resolution'][0] >= video_resolution[0]
+	assert aom_pointer['resolution'][1] >= video_resolution[1]
 
+	output_buffer = collect(aom_pointer)
 
-#TODO: needs review
-def test_read_resolution() -> None:
-	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
-	aom_encoder = create_encoder(video_resolution, 1000, 1, 0)
-	encoded_buffer = encode(aom_encoder, video_buffer, video_resolution, 0)
+	assert len(output_buffer) == aom_pointer['resolution'][0] * aom_pointer['resolution'][1] * 3 // 2
+	assert decode(create(), bytes()) is None
 
-	assert read_resolution(create(), encoded_buffer)[0] >= video_resolution[0]
-	assert read_resolution(create(), encoded_buffer)[1] >= video_resolution[1]
-	assert read_resolution(create(), bytes()) is None
+	if is_macos():
+		assert create_hash(bytes(output_buffer)) == '0a0ab3d0'
 
 
-#TODO: needs review
 def test_destroy() -> None:
 	aom_decoder = create()
 
