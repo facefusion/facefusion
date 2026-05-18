@@ -1,10 +1,10 @@
+from typing import List
+
 import pytest
 
 from facefusion import state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, get_payload_type, send_audio, send_video, set_remote_description
-from typing import List
-
 from facefusion.types import RtcPeer
 
 

@@ -38,7 +38,6 @@ def destroy_opus_encoder(opus_encoder : OpusEncoder) -> None:
 		opus_library.opus_encoder_destroy(opus_encoder)
 
 
-#TODO: needs review
 def create_opus_decoder(sample_rate : int, channel_total : int) -> Optional[OpusDecoder]:
 	opus_library = opus_module.create_static_library()
 
@@ -48,13 +47,13 @@ def create_opus_decoder(sample_rate : int, channel_total : int) -> Optional[Opus
 	return None
 
 
-#TODO: needs review
 def decode_opus_buffer(opus_decoder : OpusDecoder, input_buffer : bytes, frame_size : int, channel_total : int) -> Optional[AudioFrame]:
 	opus_library = opus_module.create_static_library()
 
 	if opus_library:
+		input_total = len(input_buffer)
 		decode_buffer = (ctypes.c_float * (frame_size * channel_total))()
-		decode_length = opus_library.opus_decode_float(opus_decoder, input_buffer, len(input_buffer), decode_buffer, frame_size, 0)
+		decode_length = opus_library.opus_decode_float(opus_decoder, input_buffer, input_total, decode_buffer, frame_size, 0)
 
 		if decode_length > 0:
 			return numpy.ctypeslib.as_array(decode_buffer, shape = (decode_length * channel_total,)).copy()

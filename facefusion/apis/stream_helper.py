@@ -231,17 +231,77 @@ def destroy_video_encoder(video_codec : VideoCodec, video_encoder : Optional[Vpx
 
 #TODO: needs review
 def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, frame_buffer : bytes) -> Optional[VisionFrame]:
-	raw_vision_frame = None
+	frame_pointer = None
 
 	if video_codec == 'av1':
-		raw_vision_frame = decode_aom_buffer(video_decoder, frame_buffer)
+		frame_pointer = decode_aom_buffer(video_decoder, frame_buffer)
 	if video_codec == 'vp8':
-		raw_vision_frame = decode_vpx_buffer(video_decoder, frame_buffer)
+		frame_pointer = decode_vpx_buffer(video_decoder, frame_buffer)
 
-	if raw_vision_frame is not None and raw_vision_frame.shape[1] % 2 == 0 and raw_vision_frame.shape[0] % 3 == 0:
-		return cv2.cvtColor(raw_vision_frame, cv2.COLOR_YUV2BGR_I420)
+	if frame_pointer is not None:
+		raw_vision_frame = None
+
+		if video_codec == 'av1':
+			raw_vision_frame = extract_aom_image(frame_pointer)
+		if video_codec == 'vp8':
+			raw_vision_frame = extract_vpx_image(frame_pointer)
+
+		if raw_vision_frame is not None and raw_vision_frame.shape[1] % 2 == 0 and raw_vision_frame.shape[0] % 3 == 0:
+			return cv2.cvtColor(raw_vision_frame, cv2.COLOR_YUV2BGR_I420)
 
 	return None
+
+
+#TODO: needs review
+def extract_aom_image(frame_pointer : int) -> Optional[VisionFrame]:
+	width = ctypes.c_uint.from_address(frame_pointer + 28).value
+	height = ctypes.c_uint.from_address(frame_pointer + 32).value
+
+	if width and height and width % 2 == 0 and height % 2 == 0:
+		planes_offset = frame_pointer + 64
+		strides_offset = frame_pointer + 88
+
+		y_plane = extract_plane(planes_offset, strides_offset, 0, width, height)
+		u_plane = extract_plane(planes_offset, strides_offset, 1, width // 2, height // 2)
+		v_plane = extract_plane(planes_offset, strides_offset, 2, width // 2, height // 2)
+
+		yuv_frame = numpy.concatenate([ y_plane.flatten(), u_plane.flatten(), v_plane.flatten() ])
+		yuv_frame = yuv_frame.reshape((height * 3 // 2, width)).astype(numpy.uint8)
+
+		return yuv_frame
+
+	return None
+
+
+#TODO: needs review
+def extract_vpx_image(frame_pointer : int) -> Optional[VisionFrame]:
+	width = ctypes.c_uint.from_address(frame_pointer + 24).value
+	height = ctypes.c_uint.from_address(frame_pointer + 28).value
+
+	if width and height and width % 2 == 0 and height % 2 == 0:
+		planes_offset = frame_pointer + 48
+		strides_offset = frame_pointer + 80
+
+		y_plane = extract_plane(planes_offset, strides_offset, 0, width, height)
+		u_plane = extract_plane(planes_offset, strides_offset, 1, width // 2, height // 2)
+		v_plane = extract_plane(planes_offset, strides_offset, 2, width // 2, height // 2)
+
+		yuv_frame = numpy.concatenate([ y_plane.flatten(), u_plane.flatten(), v_plane.flatten() ])
+		yuv_frame = yuv_frame.reshape((height * 3 // 2, width)).astype(numpy.uint8)
+
+		return yuv_frame
+
+	return None
+
+
+#TODO: needs review
+def extract_plane(planes_offset : int, strides_offset : int, index : int, width : int, height : int) -> numpy.ndarray:
+	plane_pointer = ctypes.c_void_p.from_address(planes_offset + index * 8).value
+	stride = ctypes.c_int.from_address(strides_offset + index * 4).value
+	plane_buffer = (ctypes.c_ubyte * (stride * height)).from_address(plane_pointer)
+	plane = numpy.ctypeslib.as_array(plane_buffer).reshape((height, stride))
+
+	return plane[:, :width]
 
 
 #TODO: needs review
