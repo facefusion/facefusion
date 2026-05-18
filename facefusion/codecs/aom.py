@@ -85,6 +85,7 @@ def create_aom_decoder() -> Optional[AomDecoder]:
 	return None
 
 
+#TODO: needs review
 def decode_aom_buffer(aom_decoder : AomDecoder, input_buffer : bytes) -> bytes:
 	aom_library = aom_module.create_static_library()
 	output_buffer = bytes()
@@ -102,6 +103,7 @@ def decode_aom_buffer(aom_decoder : AomDecoder, input_buffer : bytes) -> bytes:
 	return output_buffer
 
 
+#TODO: needs review
 def collect_aom_frame(frame_pointer : int) -> bytes:
 	frame_width = ctypes.c_uint.from_address(frame_pointer + 28).value
 	frame_height = ctypes.c_uint.from_address(frame_pointer + 32).value
@@ -121,6 +123,7 @@ def collect_aom_frame(frame_pointer : int) -> bytes:
 	return output_buffer
 
 
+#TODO: needs review
 def read_aom_resolution(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[Resolution]:
 	aom_library = aom_module.create_static_library()
 

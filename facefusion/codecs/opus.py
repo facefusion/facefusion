@@ -55,7 +55,7 @@ def decode_opus_buffer(opus_decoder : OpusDecoder, input_buffer : bytes, frame_s
 		decode_length = opus_library.opus_decode_float(opus_decoder, input_buffer, input_total, decode_buffer, frame_size, 0)
 
 		if decode_length:
-			output_buffer = bytes(decode_buffer[:decode_length * channel_total])
+			output_buffer = ctypes.string_at(ctypes.addressof(decode_buffer), decode_length * channel_total * ctypes.sizeof(ctypes.c_float))
 
 	return output_buffer
 

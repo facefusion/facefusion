@@ -5,7 +5,7 @@ import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
-from facefusion.codecs.vpx import create_vpx_encoder, destroy_vpx_encoder, encode_vpx_buffer
+from facefusion.codecs.vpx import create_vpx_decoder, create_vpx_encoder, decode_vpx_buffer, destroy_vpx_decoder, destroy_vpx_encoder, encode_vpx_buffer, read_vpx_resolution
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
@@ -23,15 +23,15 @@ def before_all() -> None:
 
 
 def test_create_vpx_encoder() -> None:
-	assert create_vpx_encoder(1000, 8, 16, (320, 240))
-	assert create_vpx_encoder(0, 0, 0, (0, 0)) is None
+	assert create_vpx_encoder((320, 240), 1000, 8, 16)
+	assert create_vpx_encoder((0, 0), 0, 0, 0) is None
 
 
 def test_encode_vpx_buffer() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
-	vpx_encoder = create_vpx_encoder(1000, 1, 0, video_resolution)
+	vpx_encoder = create_vpx_encoder(video_resolution, 1000, 1, 0)
 
 	if is_linux() or is_windows():
 		assert create_hash(encode_vpx_buffer(vpx_encoder, video_buffer, video_resolution, 3)) == 'ce133a1f'
@@ -41,8 +41,48 @@ def test_encode_vpx_buffer() -> None:
 
 
 def test_destroy_vpx_encoder() -> None:
-	vpx_encoder = create_vpx_encoder(1000, 8, 16, (320, 240))
+	vpx_encoder = create_vpx_encoder((320, 240), 1000, 8, 16)
 
 	with patch.object(vpx_module.create_static_library(), 'vpx_codec_destroy') as mock:
 		destroy_vpx_encoder(vpx_encoder)
 		mock.assert_called_once_with(vpx_encoder)
+
+
+#TODO: needs review
+def test_create_vpx_decoder() -> None:
+	assert create_vpx_decoder()
+
+
+#TODO: needs review
+def test_decode_vpx_buffer() -> None:
+	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
+	vpx_encoder = create_vpx_encoder(video_resolution, 1000, 1, 0)
+	encoded_buffer = encode_vpx_buffer(vpx_encoder, video_buffer, video_resolution, 0)
+	vpx_decoder = create_vpx_decoder()
+
+	assert len(decode_vpx_buffer(vpx_decoder, encoded_buffer)) == video_resolution[0] * video_resolution[1] * 3 // 2
+	assert decode_vpx_buffer(vpx_decoder, bytes()) == bytes()
+
+
+#TODO: needs review
+def test_read_vpx_resolution() -> None:
+	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
+	vpx_encoder = create_vpx_encoder(video_resolution, 1000, 1, 0)
+	encoded_buffer = encode_vpx_buffer(vpx_encoder, video_buffer, video_resolution, 0)
+	vpx_decoder = create_vpx_decoder()
+
+	assert read_vpx_resolution(vpx_decoder, encoded_buffer) == video_resolution
+	assert read_vpx_resolution(vpx_decoder, bytes()) is None
+
+
+#TODO: needs review
+def test_destroy_vpx_decoder() -> None:
+	vpx_decoder = create_vpx_decoder()
+
+	with patch.object(vpx_module.create_static_library(), 'vpx_codec_destroy') as mock:
+		destroy_vpx_decoder(vpx_decoder)
+		mock.assert_called_once_with(vpx_decoder)

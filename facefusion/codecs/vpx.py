@@ -89,6 +89,7 @@ def create_vpx_decoder() -> Optional[VpxDecoder]:
 	return None
 
 
+#TODO: needs review
 def decode_vpx_buffer(vpx_decoder : VpxDecoder, input_buffer : bytes) -> bytes:
 	vpx_library = vpx_module.create_static_library()
 	output_buffer = bytes()
@@ -106,6 +107,7 @@ def decode_vpx_buffer(vpx_decoder : VpxDecoder, input_buffer : bytes) -> bytes:
 	return output_buffer
 
 
+#TODO: needs review
 def collect_vpx_frame(frame_pointer : int) -> bytes:
 	frame_width = ctypes.c_uint.from_address(frame_pointer + 24).value
 	frame_height = ctypes.c_uint.from_address(frame_pointer + 28).value
@@ -125,6 +127,7 @@ def collect_vpx_frame(frame_pointer : int) -> bytes:
 	return output_buffer
 
 
+#TODO: needs review
 def read_vpx_resolution(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[Resolution]:
 	vpx_library = vpx_module.create_static_library()
 
