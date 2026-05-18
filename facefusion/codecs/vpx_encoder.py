@@ -6,7 +6,7 @@ from facefusion.libraries import vpx as vpx_module
 from facefusion.types import BitRate, Resolution, VpxEncoder
 
 
-def create_vpx_encoder(frame_resolution : Resolution, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[VpxEncoder]:
+def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[VpxEncoder]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
@@ -46,12 +46,12 @@ def encode(vpx_encoder : VpxEncoder, input_buffer : bytes, frame_resolution : Re
 		encode_buffer = ctypes.create_string_buffer(input_buffer)
 
 		if vpx_library.vpx_img_wrap(temp_buffer, 0x102, frame_resolution[0], frame_resolution[1], 1, encode_buffer) and vpx_library.vpx_codec_encode(vpx_encoder, temp_buffer, frame_index, 1, 0, 1) == 0:
-			output_buffer = collect_vpx_buffer(vpx_encoder)
+			output_buffer = collect(vpx_encoder)
 
 	return output_buffer
 
 
-def collect_vpx_buffer(vpx_encoder : VpxEncoder) -> bytes:
+def collect(vpx_encoder : VpxEncoder) -> bytes:
 	vpx_library = vpx_module.create_static_library()
 	output_buffer = bytes()
 
@@ -69,7 +69,7 @@ def collect_vpx_buffer(vpx_encoder : VpxEncoder) -> bytes:
 	return output_buffer
 
 
-def destroy_vpx_encoder(vpx_encoder : VpxEncoder) -> None:
+def destroy(vpx_encoder : VpxEncoder) -> None:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:

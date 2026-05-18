@@ -119,7 +119,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_codec = video_info.get('codec')
 	video_decoder = create_video_decoder(video_codec)
 	audio_info = rtc_peer.get('audio')
-	audio_decoder = opus_decoder.create_opus_decoder(48000, 2) if audio_info else None
+	audio_decoder = opus_decoder.create(48000, 2) if audio_info else None
 	video_receive_buffer = ctypes.create_string_buffer(512 * 1024)
 	audio_receive_buffer = ctypes.create_string_buffer(8 * 1024)
 
@@ -143,7 +143,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 	audio_frame = create_empty_audio_frame()
 	video_encoder = create_video_encoder(video_codec, resolution)
-	audio_encoder = opus_encoder.create_opus_encoder(48000, 2)
+	audio_encoder = opus_encoder.create(48000, 2)
 	frame_index = 0
 
 	while True:
@@ -192,7 +192,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 		vision_frame = next_frame
 
 	destroy_video_encoder(video_codec, video_encoder)
-	opus_encoder.destroy_opus_encoder(audio_encoder)
+	opus_encoder.destroy(audio_encoder)
 	cleanup_peer(session_id, rtc_peer, video_codec, video_decoder, audio_decoder)
 
 
@@ -200,12 +200,12 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 def cleanup_peer(session_id : SessionId, rtc_peer : RtcPeer, video_codec : VideoCodec, video_decoder : Optional[VpxDecoder | AomDecoder], audio_decoder : Optional[OpusDecoder]) -> None:
 	if video_decoder:
 		if video_codec == 'av1':
-			aom_decoder.destroy_aom_decoder(video_decoder)
+			aom_decoder.destroy(video_decoder)
 		if video_codec == 'vp8':
-			vpx_decoder.destroy_vpx_decoder(video_decoder)
+			vpx_decoder.destroy(video_decoder)
 
 	if audio_decoder:
-		opus_decoder.destroy_opus_decoder(audio_decoder)
+		opus_decoder.destroy(audio_decoder)
 
 	rtc_store.delete_peer(session_id, rtc_peer.get('peer_connection'))
 
@@ -213,9 +213,9 @@ def cleanup_peer(session_id : SessionId, rtc_peer : RtcPeer, video_codec : Video
 #TODO: needs review
 def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomDecoder]:
 	if video_codec == 'av1':
-		return aom_decoder.create_aom_decoder()
+		return aom_decoder.create()
 	if video_codec == 'vp8':
-		return vpx_decoder.create_vpx_decoder()
+		return vpx_decoder.create()
 
 	return None
 
@@ -223,9 +223,9 @@ def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomD
 #TODO: needs review - remove as both are the same
 def create_video_encoder(video_codec : VideoCodec, resolution : Resolution) -> Optional[VpxEncoder | AomEncoder]:
 	if video_codec == 'av1':
-		return aom_encoder.create_aom_encoder(resolution, 8000, 8, 10)
+		return aom_encoder.create(resolution, 8000, 8, 10)
 	if video_codec == 'vp8':
-		return vpx_encoder.create_vpx_encoder(resolution, 8000, 8, 10)
+		return vpx_encoder.create(resolution, 8000, 8, 10)
 
 	return None
 
@@ -233,16 +233,16 @@ def create_video_encoder(video_codec : VideoCodec, resolution : Resolution) -> O
 #TODO: needs review - remove as this is a trivial helper
 def destroy_video_encoder(video_codec : VideoCodec, video_encoder : Optional[VpxEncoder | AomEncoder]) -> None:
 	if video_codec == 'av1':
-		aom_encoder.destroy_aom_encoder(video_encoder)
+		aom_encoder.destroy(video_encoder)
 	if video_codec == 'vp8':
-		vpx_encoder.destroy_vpx_encoder(video_encoder)
+		vpx_encoder.destroy(video_encoder)
 
 
 def read_video_resolution(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, frame_buffer : bytes) -> Optional[Resolution]:
 	if video_codec == 'av1':
-		return aom_decoder.read_aom_resolution(video_decoder, frame_buffer)
+		return aom_decoder.read_resolution(video_decoder, frame_buffer)
 	if video_codec == 'vp8':
-		return vpx_decoder.read_vpx_resolution(video_decoder, frame_buffer)
+		return vpx_decoder.read_resolution(video_decoder, frame_buffer)
 
 	return None
 

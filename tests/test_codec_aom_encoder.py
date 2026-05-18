@@ -5,7 +5,7 @@ import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
-from facefusion.codecs.aom_encoder import create_aom_encoder, destroy_aom_encoder, encode
+from facefusion.codecs.aom_encoder import create, destroy, encode
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
@@ -22,16 +22,16 @@ def before_all() -> None:
 	aom_module.pre_check()
 
 
-def test_create_aom_encoder() -> None:
-	assert create_aom_encoder((320, 240), 1000, 8, 16)
-	assert create_aom_encoder((0, 0), 0, 0, 0) is None
+def test_create() -> None:
+	assert create((320, 240), 1000, 8, 16)
+	assert create((0, 0), 0, 0, 0) is None
 
 
 def test_encode() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
-	aom_encoder = create_aom_encoder(video_resolution, 1000, 1, 0)
+	aom_encoder = create(video_resolution, 1000, 1, 0)
 
 	if is_linux() or is_windows():
 		assert create_hash(encode(aom_encoder, video_buffer, video_resolution, 3)) == '3ab6cc31'
@@ -40,9 +40,9 @@ def test_encode() -> None:
 		pytest.skip()
 
 
-def test_destroy_aom_encoder() -> None:
-	aom_encoder = create_aom_encoder((320, 240), 1000, 8, 16)
+def test_destroy() -> None:
+	aom_encoder = create((320, 240), 1000, 8, 16)
 
 	with patch.object(aom_module.create_static_library(), 'aom_codec_destroy') as mock:
-		destroy_aom_encoder(aom_encoder)
+		destroy(aom_encoder)
 		mock.assert_called_once_with(aom_encoder)

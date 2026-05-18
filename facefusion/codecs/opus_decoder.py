@@ -5,7 +5,7 @@ from facefusion.libraries import opus as opus_module
 from facefusion.types import OpusDecoder
 
 
-def create_opus_decoder(sample_rate : int, channel_total : int) -> Optional[OpusDecoder]:
+def create(sample_rate : int, channel_total : int) -> Optional[OpusDecoder]:
 	opus_library = opus_module.create_static_library()
 
 	if opus_library:
@@ -29,7 +29,7 @@ def decode(opus_decoder : OpusDecoder, input_buffer : bytes, frame_size : int, c
 	return output_buffer
 
 
-def destroy_opus_decoder(opus_decoder : OpusDecoder) -> None:
+def destroy(opus_decoder : OpusDecoder) -> None:
 	opus_library = opus_module.create_static_library()
 
 	if opus_library:

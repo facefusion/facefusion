@@ -6,7 +6,7 @@ from facefusion.libraries import aom as aom_module
 from facefusion.types import AomEncoder, BitRate, Resolution
 
 
-def create_aom_encoder(frame_resolution : Resolution, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[AomEncoder]:
+def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int, cpu_count : int) -> Optional[AomEncoder]:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library:
@@ -42,12 +42,12 @@ def encode(aom_encoder : AomEncoder, input_buffer : bytes, frame_resolution : Re
 		encode_buffer = ctypes.create_string_buffer(input_buffer)
 
 		if aom_library.aom_img_wrap(temp_buffer, 0x102, frame_resolution[0], frame_resolution[1], 1, encode_buffer) and aom_library.aom_codec_encode(aom_encoder, temp_buffer, frame_index, 1, 0, 1) == 0:
-			output_buffer = collect_aom_buffer(aom_encoder)
+			output_buffer = collect(aom_encoder)
 
 	return output_buffer
 
 
-def collect_aom_buffer(aom_encoder : AomEncoder) -> bytes:
+def collect(aom_encoder : AomEncoder) -> bytes:
 	aom_library = aom_module.create_static_library()
 	output_buffer = bytes()
 
@@ -65,7 +65,7 @@ def collect_aom_buffer(aom_encoder : AomEncoder) -> bytes:
 	return output_buffer
 
 
-def destroy_aom_encoder(aom_encoder : AomEncoder) -> None:
+def destroy(aom_encoder : AomEncoder) -> None:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library:

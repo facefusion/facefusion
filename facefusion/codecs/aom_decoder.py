@@ -5,7 +5,7 @@ from facefusion.libraries import aom as aom_module
 from facefusion.types import AomDecoder, Resolution
 
 
-def create_aom_decoder() -> Optional[AomDecoder]:
+def create() -> Optional[AomDecoder]:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library:
@@ -31,13 +31,13 @@ def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> bytes:
 			frame_pointer = aom_library.aom_codec_get_frame(aom_decoder, ctypes.byref(ctypes.c_void_p(0)))
 
 			if frame_pointer:
-				output_buffer = collect_aom_frame(frame_pointer)
+				output_buffer = collect(frame_pointer)
 
 	return output_buffer
 
 
 #TODO: needs review
-def collect_aom_frame(frame_pointer : int) -> bytes:
+def collect(frame_pointer : int) -> bytes:
 	frame_width = ctypes.c_uint.from_address(frame_pointer + 28).value
 	frame_height = ctypes.c_uint.from_address(frame_pointer + 32).value
 	planes_offset = frame_pointer + 64
@@ -57,7 +57,7 @@ def collect_aom_frame(frame_pointer : int) -> bytes:
 
 
 #TODO: needs review
-def read_aom_resolution(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[Resolution]:
+def read_resolution(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[Resolution]:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library and input_buffer:
@@ -75,7 +75,7 @@ def read_aom_resolution(aom_decoder : AomDecoder, input_buffer : bytes) -> Optio
 	return None
 
 
-def destroy_aom_decoder(aom_decoder : AomDecoder) -> None:
+def destroy(aom_decoder : AomDecoder) -> None:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library:

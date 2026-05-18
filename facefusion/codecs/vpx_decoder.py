@@ -5,7 +5,7 @@ from facefusion.libraries import vpx as vpx_module
 from facefusion.types import Resolution, VpxDecoder
 
 
-def create_vpx_decoder() -> Optional[VpxDecoder]:
+def create() -> Optional[VpxDecoder]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
@@ -31,13 +31,13 @@ def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> bytes:
 			frame_pointer = vpx_library.vpx_codec_get_frame(vpx_decoder, ctypes.byref(ctypes.c_void_p(0)))
 
 			if frame_pointer:
-				output_buffer = collect_vpx_frame(frame_pointer)
+				output_buffer = collect(frame_pointer)
 
 	return output_buffer
 
 
 #TODO: needs review - find better name
-def collect_vpx_frame(frame_pointer : int) -> bytes:
+def collect(frame_pointer : int) -> bytes:
 	frame_width = ctypes.c_uint.from_address(frame_pointer + 24).value
 	frame_height = ctypes.c_uint.from_address(frame_pointer + 28).value
 	planes_offset = frame_pointer + 48
@@ -57,7 +57,7 @@ def collect_vpx_frame(frame_pointer : int) -> bytes:
 
 
 #TODO: needs review
-def read_vpx_resolution(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[Resolution]:
+def read_resolution(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[Resolution]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library and input_buffer:
@@ -75,7 +75,7 @@ def read_vpx_resolution(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optio
 	return None
 
 
-def destroy_vpx_decoder(vpx_decoder : VpxDecoder) -> None:
+def destroy(vpx_decoder : VpxDecoder) -> None:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
