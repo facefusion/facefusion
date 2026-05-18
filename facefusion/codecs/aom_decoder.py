@@ -38,8 +38,8 @@ def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> bytes:
 
 #TODO: needs review
 def collect(frame_pointer : int) -> bytes:
-	frame_width = ctypes.c_uint.from_address(frame_pointer + 28).value
-	frame_height = ctypes.c_uint.from_address(frame_pointer + 32).value
+	frame_width = ctypes.c_uint.from_address(frame_pointer + 28).value & ~1
+	frame_height = ctypes.c_uint.from_address(frame_pointer + 32).value & ~1
 	planes_offset = frame_pointer + 64
 	strides_offset = frame_pointer + 88
 	output_buffer = bytes()
@@ -68,8 +68,8 @@ def read_resolution(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[
 			frame_pointer = aom_library.aom_codec_get_frame(aom_decoder, ctypes.byref(ctypes.c_void_p(0)))
 
 			if frame_pointer:
-				frame_width = ctypes.c_uint.from_address(frame_pointer + 28).value
-				frame_height = ctypes.c_uint.from_address(frame_pointer + 32).value
+				frame_width = ctypes.c_uint.from_address(frame_pointer + 28).value & ~1
+				frame_height = ctypes.c_uint.from_address(frame_pointer + 32).value & ~1
 				return frame_width, frame_height
 
 	return None

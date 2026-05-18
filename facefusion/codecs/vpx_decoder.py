@@ -38,8 +38,8 @@ def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> bytes:
 
 #TODO: needs review - find better name
 def collect(frame_pointer : int) -> bytes:
-	frame_width = ctypes.c_uint.from_address(frame_pointer + 24).value
-	frame_height = ctypes.c_uint.from_address(frame_pointer + 28).value
+	frame_width = ctypes.c_uint.from_address(frame_pointer + 24).value & ~1
+	frame_height = ctypes.c_uint.from_address(frame_pointer + 28).value & ~1
 	planes_offset = frame_pointer + 48
 	strides_offset = frame_pointer + 80
 	output_buffer = bytes()
@@ -68,8 +68,8 @@ def read_resolution(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[
 			frame_pointer = vpx_library.vpx_codec_get_frame(vpx_decoder, ctypes.byref(ctypes.c_void_p(0)))
 
 			if frame_pointer:
-				frame_width = ctypes.c_uint.from_address(frame_pointer + 24).value
-				frame_height = ctypes.c_uint.from_address(frame_pointer + 28).value
+				frame_width = ctypes.c_uint.from_address(frame_pointer + 24).value & ~1
+				frame_height = ctypes.c_uint.from_address(frame_pointer + 28).value & ~1
 				return frame_width, frame_height
 
 	return None
