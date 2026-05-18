@@ -10,9 +10,8 @@ from facefusion.apis.stream_helper import process_image, process_video
 
 async def websocket_stream(websocket : WebSocket) -> None:
 	stream_type = websocket.query_params.get('type')
-	stream_action = websocket.query_params.get('action')
 
-	if stream_type == 'image' and stream_action == 'process':
+	if stream_type == 'image':
 		return await process_image(websocket)
 
 	return await websocket.close(1008)
@@ -20,7 +19,6 @@ async def websocket_stream(websocket : WebSocket) -> None:
 
 async def post_stream(request : Request) -> Response:
 	stream_type = request.query_params.get('type')
-	stream_action = request.query_params.get('action')
 	content_type = request.headers.get('content-type')
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
@@ -30,7 +28,7 @@ async def post_stream(request : Request) -> Response:
 	if content_type == 'application/sdp' and session_id:
 		sdp_offer = await request.body()
 
-		if stream_type == 'video' and stream_action == 'process':
+		if stream_type == 'video':
 			sdp_answer = process_video(session_id, sdp_offer.decode())
 
 			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type = 'application/sdp')
