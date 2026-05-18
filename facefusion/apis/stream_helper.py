@@ -104,7 +104,8 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 				'codec': audio_codec
 			}
 
-		rtc_store.add_peer(session_id, rtc_peer)
+		rtc_store.init_peers(session_id)
+		rtc_store.get_peers(session_id).append(rtc_peer)
 
 		event_loop = asyncio.get_event_loop()
 		event_loop.run_in_executor(None, run_peer_loop, session_id, rtc_peer)
@@ -207,7 +208,7 @@ def cleanup_peer(session_id : SessionId, rtc_peer : RtcPeer, video_codec : Video
 	if audio_decoder:
 		opus_decoder.destroy(audio_decoder)
 
-	rtc_store.delete_peer(session_id, rtc_peer.get('peer_connection'))
+	rtc_store.delete_peers(session_id)
 
 
 #TODO: needs review
