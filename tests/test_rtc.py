@@ -3,6 +3,8 @@ import pytest
 from facefusion import state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, get_payload_type, send_audio, send_video, set_remote_description
+from typing import List
+
 from facefusion.types import RtcPeer
 
 
@@ -80,7 +82,7 @@ def test_send_audio() -> None:
 		{
 			'sender_track': audio_track,
 			'receiver_track': audio_track,
-			'codec': 'opus',
+			'codec': 'opus'
 		}
 	}
 
@@ -100,7 +102,7 @@ def test_send_video() -> None:
 		{
 			'sender_track': video_track,
 			'receiver_track': video_track,
-			'codec': 'vp8',
+			'codec': 'vp8'
 		}
 	}
 
@@ -112,7 +114,7 @@ def test_send_video() -> None:
 def test_delete_peers() -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
-	rtc_peers =\
+	rtc_peers : List[RtcPeer] =\
 	[
 		{
 			'peer_connection': peer_connection,

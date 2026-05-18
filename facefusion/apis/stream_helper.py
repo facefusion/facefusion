@@ -94,7 +94,7 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 			{
 				'sender_track': video_sender_track,
 				'receiver_track': video_receiver_track,
-				'codec': video_codec,
+				'codec': video_codec
 			}
 		}
 
@@ -103,7 +103,7 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 			{
 				'sender_track': audio_sender_track,
 				'receiver_track': audio_receiver_track,
-				'codec': audio_codec,
+				'codec': audio_codec
 			}
 
 		rtc_store.add_peer(session_id, rtc_peer)
