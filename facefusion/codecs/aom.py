@@ -168,7 +168,6 @@ def extract_aom_plane(planes_offset : int, strides_offset : int, index : int, wi
 	return plane[:, :width]
 
 
-#TODO: needs review
 def destroy_aom_decoder(aom_decoder : AomDecoder) -> None:
 	aom_library = aom_module.create_static_library()
 

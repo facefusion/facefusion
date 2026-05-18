@@ -62,7 +62,6 @@ def decode_opus_buffer(opus_decoder : OpusDecoder, input_buffer : bytes, frame_s
 	return None
 
 
-#TODO: needs review
 def destroy_opus_decoder(opus_decoder : OpusDecoder) -> None:
 	opus_library = opus_module.create_static_library()
 

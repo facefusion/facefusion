@@ -204,6 +204,9 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 
 	library.rtcSetOpusPacketizer.restype = ctypes.c_int
 
+	library.rtcGetPayloadTypesForCodec.argtypes = [ ctypes.c_char_p, ctypes.c_char_p, ctypes.POINTER(ctypes.c_int), ctypes.c_int ]
+	library.rtcGetPayloadTypesForCodec.restype = ctypes.c_int
+
 	library.rtcSetAV1Depacketizer.argtypes = [ ctypes.c_int, ctypes.c_int ]
 	library.rtcSetAV1Depacketizer.restype = ctypes.c_int
 	library.rtcSetVP8Depacketizer.restype = ctypes.c_int

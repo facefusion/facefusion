@@ -140,7 +140,6 @@ def extract_vpx_plane(planes_offset : int, strides_offset : int, index : int, wi
 	return plane[:, :width]
 
 
-#TODO: needs review
 def destroy_vpx_decoder(vpx_decoder : VpxDecoder) -> None:
 	vpx_library = vpx_module.create_static_library()
 

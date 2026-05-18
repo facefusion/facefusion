@@ -16,7 +16,7 @@ from facefusion.codecs.aom import create_aom_decoder, create_aom_encoder, decode
 from facefusion.codecs.opus import create_opus_decoder, create_opus_encoder, decode_opus_buffer, destroy_opus_decoder, destroy_opus_encoder, encode_opus_buffer
 from facefusion.codecs.vpx import create_vpx_decoder, create_vpx_encoder, decode_vpx_buffer, destroy_vpx_decoder, destroy_vpx_encoder, encode_vpx_buffer
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AomDecoder, AudioFrame, OpusDecoder, PeerConnection, Resolution, RtcPeer, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder
+from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioFrame, OpusDecoder, PeerConnection, Resolution, RtcPeer, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
 
 
 #TODO: needs review
@@ -59,26 +59,27 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 
 #TODO: needs review
 def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
-	sdp_media = rtc.detect_sdp_media(sdp_offer)
-	video_media = sdp_media.get('video')
+	video_codec : VideoCodec = 'vp8'
+	av1_payload_type = rtc.get_payload_type(sdp_offer, 'av1')
 
-	if not video_media:
+	if av1_payload_type:
+		video_codec = 'av1'
+
+	video_payload_type = rtc.get_payload_type(sdp_offer, video_codec)
+
+	if not video_payload_type:
 		return None
 
 	peer_connection : PeerConnection = rtc.create_peer_connection()
-
-	video_codec = video_media.get('codec')
-	video_payload_type = video_media.get('payload_type')
 	video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, video_payload_type)
 	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, video_payload_type)
 
-	audio_media = sdp_media.get('audio')
+	audio_codec : AudioCodec = 'opus'
+	audio_payload_type = rtc.get_payload_type(sdp_offer, audio_codec)
 	audio_receiver_track = None
 	audio_sender_track = None
 
-	if audio_media:
-		audio_codec = audio_media.get('codec')
-		audio_payload_type = audio_media.get('payload_type')
+	if audio_payload_type:
 		audio_receiver_track = rtc.add_audio_track(peer_connection, 'recvonly', audio_codec, audio_payload_type)
 		audio_sender_track = rtc.add_audio_track(peer_connection, 'sendonly', audio_codec, audio_payload_type)
 
@@ -97,12 +98,12 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 			}
 		}
 
-		if audio_receiver_track and audio_sender_track and audio_media:
+		if audio_receiver_track and audio_sender_track:
 			rtc_peer['audio'] =\
 			{
 				'sender_track': audio_sender_track,
 				'receiver_track': audio_receiver_track,
-				'codec': audio_media.get('codec'),
+				'codec': audio_codec,
 			}
 
 		rtc_store.add_peer(session_id, rtc_peer)
@@ -187,7 +188,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 
 #TODO: needs review
-def cleanup_peer(session_id : SessionId, rtc_peer : RtcPeer, video_codec : str, video_decoder, audio_decoder) -> None:
+def cleanup_peer(session_id : SessionId, rtc_peer : RtcPeer, video_codec : VideoCodec, video_decoder : Optional[VpxDecoder | AomDecoder], audio_decoder : Optional[OpusDecoder]) -> None:
 	if video_decoder:
 		if video_codec == 'av1':
 			destroy_aom_decoder(video_decoder)
@@ -210,8 +211,8 @@ def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomD
 	return None
 
 
-#TODO: needs review
-def create_video_encoder(video_codec : VideoCodec, resolution : Resolution):
+#TODO: needs review - remove as both are the same
+def create_video_encoder(video_codec : VideoCodec, resolution : Resolution) -> Optional[VpxEncoder | AomEncoder]:
 	if video_codec == 'av1':
 		return create_aom_encoder(resolution, 8000, 8, 10)
 	if video_codec == 'vp8':
@@ -220,8 +221,8 @@ def create_video_encoder(video_codec : VideoCodec, resolution : Resolution):
 	return None
 
 
-#TODO: needs review
-def destroy_video_encoder(video_codec : VideoCodec, video_encoder) -> None:
+#TODO: needs review - remove as this is a trivial helper
+def destroy_video_encoder(video_codec : VideoCodec, video_encoder : Optional[VpxEncoder | AomEncoder]) -> None:
 	if video_codec == 'av1':
 		destroy_aom_encoder(video_encoder)
 	if video_codec == 'vp8':
@@ -244,7 +245,7 @@ def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 
 
 #TODO: needs review
-def receive_audio_frame(datachannel_library : ctypes.CDLL, audio_track : int, audio_decoder : OpusDecoder, receive_buffer : ctypes.Array) -> AudioFrame:
+def receive_audio_frame(datachannel_library : ctypes.CDLL, audio_track : int, audio_decoder : OpusDecoder, receive_buffer : ctypes.Array[ctypes.c_char]) -> AudioFrame:
 	buffer_size = ctypes.c_int(8 * 1024)
 	receive_output = datachannel_library.rtcReceiveMessage(audio_track, receive_buffer, ctypes.byref(buffer_size))
 
@@ -259,7 +260,7 @@ def receive_audio_frame(datachannel_library : ctypes.CDLL, audio_track : int, au
 
 
 #TODO: needs review
-def poll_for_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array, timeout : float) -> Optional[VisionFrame]:
+def poll_for_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char], timeout : float) -> Optional[VisionFrame]:
 	deadline = time.monotonic() + timeout
 
 	while time.monotonic() < deadline:
@@ -274,7 +275,7 @@ def poll_for_frame(datachannel_library : ctypes.CDLL, video_track : int, video_c
 
 
 #TODO: needs review
-def try_receive_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array) -> Optional[VisionFrame]:
+def try_receive_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[VisionFrame]:
 	buffer_size = ctypes.c_int(512 * 1024)
 	receive_output = datachannel_library.rtcReceiveMessage(video_track, receive_buffer, ctypes.byref(buffer_size))
 
@@ -285,8 +286,8 @@ def try_receive_frame(datachannel_library : ctypes.CDLL, video_track : int, vide
 	return None
 
 
-#TODO: needs review
-def drain_to_latest_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array) -> Optional[VisionFrame]:
+#TODO: needs review - rename drain last frame
+def drain_to_latest_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[VisionFrame]:
 	last_vision_frame = numpy.empty(0)
 	buffer_size = ctypes.c_int(512 * 1024)
 	receive_output = 0
