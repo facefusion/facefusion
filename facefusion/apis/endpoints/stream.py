@@ -15,7 +15,7 @@ async def websocket_stream(websocket : WebSocket) -> None:
 async def post_stream(request : Request) -> Response:
 	headers =\
 	{
-		'Location': request.url_for('delete_stream').encode()
+		'Location': request.url_for('delete_stream').path
 	}
 	content_type = request.headers.get('content-type')
 	access_token = extract_access_token(request.scope)

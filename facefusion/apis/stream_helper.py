@@ -38,7 +38,6 @@ async def process_image(websocket : WebSocket) -> None:
 			if is_success:
 				await websocket.send_bytes(output_frame_buffer.tobytes())
 
-
 	if websocket.client_state == WebSocketState.CONNECTED:
 		await websocket.close()
 
