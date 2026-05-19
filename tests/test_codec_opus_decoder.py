@@ -34,14 +34,14 @@ def test_decode() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_sample = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	opus_encoder = create_encoder(48000, 2)
-	encoded_buffer = encode(opus_encoder, audio_sample.tobytes(), 960)
+	encode_buffer = encode(opus_encoder, audio_sample.tobytes(), 960)
 	opus_decoder = create(48000, 2)
 
 	if is_linux() or is_windows():
-		assert create_hash(decode(opus_decoder, encoded_buffer, 960, 2)) == 'cadd63d1'
+		assert create_hash(decode(opus_decoder, encode_buffer, 960, 2)) == 'cadd63d1'
 
 	if is_macos():
-		assert create_hash(decode(opus_decoder, encoded_buffer, 960, 2)) == '92f7997d'
+		assert create_hash(decode(opus_decoder, encode_buffer, 960, 2)) == '92f7997d'
 
 
 def test_destroy() -> None:

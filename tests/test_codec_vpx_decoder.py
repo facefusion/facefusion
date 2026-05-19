@@ -35,14 +35,14 @@ def test_decode() -> None:
 	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
 	vpx_encoder = create_encoder(video_resolution, 1000, 1, 0)
-	encoded_buffer = encode(vpx_encoder, video_buffer, video_resolution, 0)
+	encode_buffer = encode(vpx_encoder, video_buffer, video_resolution, 0)
 	vpx_decoder = create(1)
 
 	if is_linux() or is_windows():
-		assert create_hash(decode(vpx_decoder, encoded_buffer).get('buffer')) == 'dc9c8864'
+		assert create_hash(decode(vpx_decoder, encode_buffer).get('buffer')) == 'dc9c8864'
 
 	if is_macos():
-		assert create_hash(decode(vpx_decoder, encoded_buffer).get('buffer')) == '87450f70'
+		assert create_hash(decode(vpx_decoder, encode_buffer).get('buffer')) == '87450f70'
 
 
 def test_destroy() -> None:
