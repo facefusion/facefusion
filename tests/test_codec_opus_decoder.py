@@ -7,8 +7,10 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 from facefusion import state_manager
 from facefusion.codecs.opus_decoder import create, decode, destroy
 from facefusion.codecs.opus_encoder import create as create_encoder, encode
+from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download
 from facefusion.ffmpeg import read_audio_buffer
+from facefusion.hash_helper import create_hash
 from facefusion.libraries import opus as opus_module
 
 
@@ -21,24 +23,25 @@ def before_all() -> None:
 	opus_module.pre_check()
 
 
-#TODO: needs review
 def test_create() -> None:
 	assert create(48000, 2)
 	assert create(0, 0) is None
 
 
-#TODO: needs review
 def test_decode() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_sample = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	opus_encoder = create_encoder(48000, 2)
 	encoded_buffer = encode(opus_encoder, audio_sample.tobytes(), 960)
 	opus_decoder = create(48000, 2)
+	decoded_buffer = decode(opus_decoder, encoded_buffer, 960, 2)
 
-	assert len(decode(opus_decoder, encoded_buffer, 960, 2)) == 960 * 2 * 4
+	assert len(decoded_buffer) == 960 * 2 * 4
+
+	if is_macos():
+		assert create_hash(decoded_buffer) == '92f7997d'
 
 
-#TODO: needs review
 def test_destroy() -> None:
 	opus_decoder = create(48000, 2)
 
