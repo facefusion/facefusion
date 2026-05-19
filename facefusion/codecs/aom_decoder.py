@@ -36,24 +36,21 @@ def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[AomPointe
 	return None
 
 
-def collect(aom_pointer : AomPointer) -> ctypes.Array[ctypes.c_uint8]:
+def collect(aom_pointer : AomPointer) -> bytes:
 	frame_width, frame_height = aom_pointer.get('resolution')
 	address = aom_pointer.get('address')
-	output_size = frame_width * frame_height * 3 // 2
-	output_array = (ctypes.c_uint8 * output_size)()
-	output_address = ctypes.addressof(output_array)
-	write_offset = 0
+	output_buffer = bytes()
 
 	for index in range(3):
 		plane_pointer = ctypes.c_void_p.from_address(address + 64 + index * 8).value
+		stride = ctypes.c_int.from_address(address + 88 + index * 4).value
 		plane_width = frame_width >> (index > 0)
 		plane_height = frame_height >> (index > 0)
-		plane_size = plane_width * plane_height
 
-		ctypes.memmove(output_address + write_offset, plane_pointer, plane_size)
-		write_offset += plane_size
+		for row in range(plane_height):
+			output_buffer += ctypes.string_at(plane_pointer + row * stride, plane_width)
 
-	return output_array
+	return output_buffer
 
 
 def destroy(aom_decoder : AomDecoder) -> None:

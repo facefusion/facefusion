@@ -36,24 +36,21 @@ def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[VpxPointe
 	return None
 
 
-def collect(vpx_pointer : VpxPointer) -> ctypes.Array[ctypes.c_uint8]:
+def collect(vpx_pointer : VpxPointer) -> bytes:
 	frame_width, frame_height = vpx_pointer.get('resolution')
 	address = vpx_pointer.get('address')
-	output_size = frame_width * frame_height * 3 // 2
-	output_array = (ctypes.c_uint8 * output_size)()
-	output_address = ctypes.addressof(output_array)
-	write_offset = 0
+	output_buffer = bytes()
 
 	for index in range(3):
 		plane_pointer = ctypes.c_void_p.from_address(address + 48 + index * 8).value
+		stride = ctypes.c_int.from_address(address + 80 + index * 4).value
 		plane_width = frame_width >> (index > 0)
 		plane_height = frame_height >> (index > 0)
-		plane_size = plane_width * plane_height
 
-		ctypes.memmove(output_address + write_offset, plane_pointer, plane_size)
-		write_offset += plane_size
+		for row in range(plane_height):
+			output_buffer += ctypes.string_at(plane_pointer + row * stride, plane_width)
 
-	return output_array
+	return output_buffer
 
 
 def destroy(vpx_decoder : VpxDecoder) -> None:
