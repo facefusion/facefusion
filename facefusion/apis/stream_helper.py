@@ -288,8 +288,11 @@ def destroy_video_encoder(video_codec : VideoCodec, video_encoder : Optional[Vpx
 		vpx_encoder.destroy(video_encoder)
 
 
-def cleanup_peer(session_id : SessionId) -> None:
+def destroy_stream(session_id : SessionId) -> bool:
+	if rtc_store.get_peers(session_id) is None:
+		return False
 	rtc_store.delete_peers(session_id)
+	return True
 
 
 #TODO: needs review
