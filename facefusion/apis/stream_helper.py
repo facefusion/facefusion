@@ -42,20 +42,6 @@ async def process_image(websocket : WebSocket) -> None:
 
 
 #TODO: needs review
-async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFrame]:
-	websocket_event = await websocket.receive()
-
-	while websocket_event.get('type') == 'websocket.receive':
-		frame_buffer = websocket_event.get('bytes') or bytes()
-		vision_frame = cv2.imdecode(numpy.frombuffer(frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
-
-		if numpy.any(vision_frame):
-			yield vision_frame
-
-		websocket_event = await websocket.receive()
-
-
-#TODO: needs review
 def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	video_codec : VideoCodec = 'vp8'
 	av1_payload_type = rtc.get_payload_type(sdp_offer, 'av1')
@@ -111,6 +97,20 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 		event_loop.run_in_executor(None, run_peer_loop, session_id, rtc_peer)
 
 	return local_sdp
+
+
+#TODO: needs review
+async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFrame]:
+	websocket_event = await websocket.receive()
+
+	while websocket_event.get('type') == 'websocket.receive':
+		frame_buffer = websocket_event.get('bytes') or bytes()
+		vision_frame = cv2.imdecode(numpy.frombuffer(frame_buffer, numpy.uint8), cv2.IMREAD_COLOR)
+
+		if numpy.any(vision_frame):
+			yield vision_frame
+
+		websocket_event = await websocket.receive()
 
 
 #TODO: needs review
@@ -193,20 +193,6 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 
 #TODO: needs review
-def cleanup_peer(session_id : SessionId, rtc_peer : RtcPeer, video_codec : VideoCodec, video_decoder : Optional[VpxDecoder | AomDecoder], audio_decoder : Optional[OpusDecoder]) -> None:
-	if video_decoder:
-		if video_codec == 'av1':
-			aom_decoder.destroy(video_decoder)
-		if video_codec == 'vp8':
-			vpx_decoder.destroy(video_decoder)
-
-	if audio_decoder:
-		opus_decoder.destroy(audio_decoder)
-
-	rtc_store.delete_peers(session_id)
-
-
-#TODO: needs review
 def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomDecoder]:
 	if video_codec == 'av1':
 		return aom_decoder.create(8)
@@ -234,46 +220,18 @@ def destroy_video_encoder(video_codec : VideoCodec, video_encoder : Optional[Vpx
 		vpx_encoder.destroy(video_encoder)
 
 
-def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, frame_buffer : bytes) -> Optional[VisionFrame]:
-	if video_codec == 'av1':
-		aom_pointer = aom_decoder.decode(video_decoder, frame_buffer)
-		if aom_pointer:
-			frame_width, frame_height = aom_pointer.get('resolution')
-			yuv_frame = numpy.frombuffer(aom_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
-			return cv2.cvtColor(yuv_frame, cv2.COLOR_YUV2BGR_I420)
-	if video_codec == 'vp8':
-		vpx_pointer = vpx_decoder.decode(video_decoder, frame_buffer)
-		if vpx_pointer:
-			frame_width, frame_height = vpx_pointer.get('resolution')
-			yuv_frame = numpy.frombuffer(vpx_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
-			return cv2.cvtColor(yuv_frame, cv2.COLOR_YUV2BGR_I420)
-
-	return None
-
-
 #TODO: needs review
-def receive_audio_frame(datachannel_library : ctypes.CDLL, audio_track : int, audio_decoder : OpusDecoder, receive_buffer : ctypes.Array[ctypes.c_char]) -> AudioFrame:
-	buffer_size = ctypes.c_int(8 * 1024)
-	receive_output = datachannel_library.rtcReceiveMessage(audio_track, receive_buffer, ctypes.byref(buffer_size))
+def cleanup_peer(session_id : SessionId, rtc_peer : RtcPeer, video_codec : VideoCodec, video_decoder : Optional[VpxDecoder | AomDecoder], audio_decoder : Optional[OpusDecoder]) -> None:
+	if video_decoder:
+		if video_codec == 'av1':
+			aom_decoder.destroy(video_decoder)
+		if video_codec == 'vp8':
+			vpx_decoder.destroy(video_decoder)
 
-	if receive_output == 0 and buffer_size.value > 0:
-		opus_buffer = receive_buffer.raw[:buffer_size.value]
-		output_buffer = opus_decoder.decode(audio_decoder, opus_buffer, 960, 2)
+	if audio_decoder:
+		opus_decoder.destroy(audio_decoder)
 
-		if output_buffer:
-			return numpy.frombuffer(output_buffer, dtype = numpy.float32)
-
-	return create_empty_audio_frame()
-
-
-def receive_video_buffer(datachannel_library : ctypes.CDLL, video_track : int, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[bytes]:
-	buffer_size = ctypes.c_int(512 * 1024)
-	receive_output = datachannel_library.rtcReceiveMessage(video_track, receive_buffer, ctypes.byref(buffer_size))
-
-	if receive_output == 0 and buffer_size.value > 0:
-		return receive_buffer.raw[:buffer_size.value]
-
-	return None
+	rtc_store.delete_peers(session_id)
 
 
 def poll_for_buffer(datachannel_library : ctypes.CDLL, video_track : int, receive_buffer : ctypes.Array[ctypes.c_char], timeout : float) -> Optional[bytes]:
@@ -306,16 +264,6 @@ def poll_for_frame(datachannel_library : ctypes.CDLL, video_track : int, video_c
 
 
 #TODO: needs review
-def try_receive_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[VisionFrame]:
-	frame_buffer = receive_video_buffer(datachannel_library, video_track, receive_buffer)
-
-	if frame_buffer:
-		return decode_video_frame(video_codec, video_decoder, frame_buffer)
-
-	return None
-
-
-#TODO: needs review
 def drain_to_latest_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[VisionFrame]:
 	last_vision_frame = numpy.empty(0)
 	buffer_size = ctypes.c_int(512 * 1024)
@@ -334,5 +282,57 @@ def drain_to_latest_frame(datachannel_library : ctypes.CDLL, video_track : int, 
 
 	if numpy.any(last_vision_frame):
 		return last_vision_frame
+
+	return None
+
+
+#TODO: needs review
+def receive_audio_frame(datachannel_library : ctypes.CDLL, audio_track : int, audio_decoder : OpusDecoder, receive_buffer : ctypes.Array[ctypes.c_char]) -> AudioFrame:
+	buffer_size = ctypes.c_int(8 * 1024)
+	receive_output = datachannel_library.rtcReceiveMessage(audio_track, receive_buffer, ctypes.byref(buffer_size))
+
+	if receive_output == 0 and buffer_size.value > 0:
+		opus_buffer = receive_buffer.raw[:buffer_size.value]
+		output_buffer = opus_decoder.decode(audio_decoder, opus_buffer, 960, 2)
+
+		if output_buffer:
+			return numpy.frombuffer(output_buffer, dtype = numpy.float32)
+
+	return create_empty_audio_frame()
+
+
+#TODO: needs review
+def try_receive_frame(datachannel_library : ctypes.CDLL, video_track : int, video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[VisionFrame]:
+	frame_buffer = receive_video_buffer(datachannel_library, video_track, receive_buffer)
+
+	if frame_buffer:
+		return decode_video_frame(video_codec, video_decoder, frame_buffer)
+
+	return None
+
+
+def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, frame_buffer : bytes) -> Optional[VisionFrame]:
+	if video_codec == 'av1':
+		aom_pointer = aom_decoder.decode(video_decoder, frame_buffer)
+		if aom_pointer:
+			frame_width, frame_height = aom_pointer.get('resolution')
+			yuv_frame = numpy.frombuffer(aom_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
+			return cv2.cvtColor(yuv_frame, cv2.COLOR_YUV2BGR_I420)
+	if video_codec == 'vp8':
+		vpx_pointer = vpx_decoder.decode(video_decoder, frame_buffer)
+		if vpx_pointer:
+			frame_width, frame_height = vpx_pointer.get('resolution')
+			yuv_frame = numpy.frombuffer(vpx_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
+			return cv2.cvtColor(yuv_frame, cv2.COLOR_YUV2BGR_I420)
+
+	return None
+
+
+def receive_video_buffer(datachannel_library : ctypes.CDLL, video_track : int, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[bytes]:
+	buffer_size = ctypes.c_int(512 * 1024)
+	receive_output = datachannel_library.rtcReceiveMessage(video_track, receive_buffer, ctypes.byref(buffer_size))
+
+	if receive_output == 0 and buffer_size.value > 0:
+		return receive_buffer.raw[:buffer_size.value]
 
 	return None
