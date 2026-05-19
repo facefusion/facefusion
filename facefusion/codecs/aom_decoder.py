@@ -23,7 +23,7 @@ def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[AomPointe
 
 	if aom_library and input_buffer:
 		input_total = len(input_buffer)
-		temp_buffer = (ctypes.c_uint8 * input_total).from_buffer_copy(input_buffer)
+		temp_buffer = ctypes.create_string_buffer(input_buffer)
 
 		if aom_library.aom_codec_decode(aom_decoder, temp_buffer, input_total, None) == 0:
 			address = aom_library.aom_codec_get_frame(aom_decoder, ctypes.byref(ctypes.c_void_p(0)))
@@ -31,7 +31,11 @@ def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[AomPointe
 			if address:
 				frame_width = ctypes.c_uint.from_address(address + 28).value & ~1
 				frame_height = ctypes.c_uint.from_address(address + 32).value & ~1
-				return AomPointer(address = address, resolution = (frame_width, frame_height))
+
+				return AomPointer(
+					address = address,
+					resolution = (frame_width, frame_height)
+				)
 
 	return None
 

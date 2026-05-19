@@ -23,7 +23,7 @@ def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[VpxPointe
 
 	if vpx_library and input_buffer:
 		input_total = len(input_buffer)
-		temp_buffer = (ctypes.c_uint8 * input_total).from_buffer_copy(input_buffer)
+		temp_buffer = ctypes.create_string_buffer(input_buffer)
 
 		if vpx_library.vpx_codec_decode(vpx_decoder, temp_buffer, input_total, None, 0) == 0:
 			address = vpx_library.vpx_codec_get_frame(vpx_decoder, ctypes.byref(ctypes.c_void_p(0)))
@@ -31,7 +31,11 @@ def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[VpxPointe
 			if address:
 				frame_width = ctypes.c_uint.from_address(address + 24).value & ~1
 				frame_height = ctypes.c_uint.from_address(address + 28).value & ~1
-				return VpxPointer(address = address, resolution = (frame_width, frame_height))
+
+				return VpxPointer(
+					address = address,
+					resolution = (frame_width, frame_height)
+				)
 
 	return None
 
