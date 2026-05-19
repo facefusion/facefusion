@@ -19,6 +19,7 @@ from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioFrame, Opu
 
 #TODO: needs review
 async def process_image(websocket : WebSocket) -> None:
+	#TODO: all the websocket handling belongs to the endpoint, these are connection concerns
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 	access_token = extract_access_token(websocket.scope)
 	session_id = session_manager.find_session_id(access_token)
@@ -53,6 +54,13 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 			yield vision_frame
 
 		websocket_event = await websocket.receive()
+
+
+#TODO: just exist as endpoint stream.py is not allowed to access rtc store directly
+def destroy_stream(session_id : SessionId) -> bool:
+	rtc_store.delete_peers(session_id)
+
+	return not rtc_store.get_peers(session_id)
 
 
 #TODO: needs review
