@@ -1,4 +1,5 @@
 import ctypes
+from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import cv2
@@ -9,11 +10,26 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 
 from facefusion import rtc, rtc_store, state_manager
 from facefusion.apis.stream_helper import cleanup_peer, decode_video_frame, drain_to_latest_frame, poll_for_buffer, poll_for_frame, process_image, process_video, receive_audio_frame, receive_video_buffer, receive_vision_frames, try_receive_frame
-from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, vpx_decoder, vpx_encoder
+from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.download import conditional_download
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.types import VideoCodec
+from facefusion.types import RtcPeer, VideoCodec
 from facefusion.vision import read_video_frame
+
+
+def rtc_receive_data(data : bytes, track : int, buffer : ctypes.Array[ctypes.c_char], size_byref : object) -> int:
+	ctypes.memmove(buffer, data, len(data))
+	ctypes.cast(size_byref, ctypes.POINTER(ctypes.c_int))[0] = len(data)
+	return 0
+
+
+def rtc_receive_once(data : bytes, state : list, track : int, buffer : ctypes.Array[ctypes.c_char], size_byref : object) -> int:
+	if state[0]:
+		return -1
+	ctypes.memmove(buffer, data, len(data))
+	ctypes.cast(size_byref, ctypes.POINTER(ctypes.c_int))[0] = len(data)
+	state[0] = True
+	return 0
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -40,31 +56,29 @@ def before_each() -> None:
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
 def test_cleanup_peer(video_codec : VideoCodec) -> None:
-	session_id = 'test-cleanup-peer'
+	session_id = 'test-cleanup-peer-' + video_codec
+	peer_connection = rtc.create_peer_connection()
+	rtc_peer : RtcPeer =\
+	{
+		'peer_connection': peer_connection,
+		'video':
+		{
+			'sender_track': 0,
+			'receiver_track': 0,
+			'codec': video_codec
+		}
+	}
+
 	rtc_store.init_peers(session_id)
-	audio_dec = opus_decoder.create(48000, 2)
+	rtc_store.get_peers(session_id).append(rtc_peer)
 
 	if video_codec == 'av1':
-		video_decoder = aom_decoder.create(8)
-
-		with patch('facefusion.apis.stream_helper.aom_decoder.destroy') as mock_video_destroy, \
-			patch('facefusion.apis.stream_helper.opus_decoder.destroy') as mock_audio_destroy, \
-			patch('facefusion.apis.stream_helper.rtc_store.delete_peers') as mock_delete:
-			cleanup_peer(session_id, None, video_codec, video_decoder, audio_dec)
-			mock_video_destroy.assert_called_once_with(video_decoder)
-			mock_audio_destroy.assert_called_once_with(audio_dec)
-			mock_delete.assert_called_once_with(session_id)
-
+		cleanup_peer(session_id, rtc_peer, video_codec, aom_decoder.create(8), opus_decoder.create(48000, 2))
 	if video_codec == 'vp8':
-		video_decoder = vpx_decoder.create(8)
+		cleanup_peer(session_id, rtc_peer, video_codec, vpx_decoder.create(8), opus_decoder.create(48000, 2))
 
-		with patch('facefusion.apis.stream_helper.vpx_decoder.destroy') as mock_video_destroy, \
-			patch('facefusion.apis.stream_helper.opus_decoder.destroy') as mock_audio_destroy, \
-			patch('facefusion.apis.stream_helper.rtc_store.delete_peers') as mock_delete:
-			cleanup_peer(session_id, None, video_codec, video_decoder, audio_dec)
-			mock_video_destroy.assert_called_once_with(video_decoder)
-			mock_audio_destroy.assert_called_once_with(audio_dec)
-			mock_delete.assert_called_once_with(session_id)
+	assert rtc_store.get_peers(session_id) is None
+	assert datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection) == -1
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
@@ -108,26 +122,26 @@ def test_receive_video_buffer_failure() -> None:
 
 
 def test_receive_video_buffer_success() -> None:
+	test_data = b'\x01\x02\x03\x04'
 	mock_lib = MagicMock()
-	mock_lib.rtcReceiveMessage.return_value = 0
-	receive_buffer = ctypes.create_string_buffer(512 * 1024)
+	mock_lib.rtcReceiveMessage.side_effect = partial(rtc_receive_data, test_data)
 
-	assert isinstance(receive_video_buffer(mock_lib, 0, receive_buffer), bytes)
+	assert receive_video_buffer(mock_lib, 0, ctypes.create_string_buffer(512 * 1024)) == test_data
 
 
 def test_poll_for_buffer_timeout() -> None:
-	receive_buffer = ctypes.create_string_buffer(512 * 1024)
+	mock_lib = MagicMock()
+	mock_lib.rtcReceiveMessage.return_value = -1
 
-	with patch('facefusion.apis.stream_helper.receive_video_buffer', return_value = None):
-		assert poll_for_buffer(MagicMock(), 0, receive_buffer, 0.01) is None
+	assert poll_for_buffer(mock_lib, 0, ctypes.create_string_buffer(512 * 1024), 0.01) is None
 
 
 def test_poll_for_buffer_success() -> None:
-	receive_buffer = ctypes.create_string_buffer(512 * 1024)
 	test_data = b'\x01\x02\x03\x04'
+	mock_lib = MagicMock()
+	mock_lib.rtcReceiveMessage.side_effect = partial(rtc_receive_data, test_data)
 
-	with patch('facefusion.apis.stream_helper.receive_video_buffer', return_value = test_data):
-		assert poll_for_buffer(MagicMock(), 0, receive_buffer, 1.0) == test_data
+	assert poll_for_buffer(mock_lib, 0, ctypes.create_string_buffer(512 * 1024), 1.0) == test_data
 
 
 def test_receive_audio_frame_failure() -> None:
@@ -139,22 +153,21 @@ def test_receive_audio_frame_failure() -> None:
 
 
 def test_receive_audio_frame_success() -> None:
+	audio_data = numpy.zeros(960 * 2, dtype = numpy.float32).tobytes()
+	encoded_opus = opus_encoder.encode(opus_encoder.create(48000, 2), audio_data, 960)
 	mock_lib = MagicMock()
-	mock_lib.rtcReceiveMessage.return_value = 0
-	audio_bytes = numpy.zeros(960 * 2, dtype = numpy.float32).tobytes()
-
-	with patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_bytes):
-		result = receive_audio_frame(mock_lib, 0, opus_decoder.create(48000, 2), ctypes.create_string_buffer(8 * 1024))
+	mock_lib.rtcReceiveMessage.side_effect = partial(rtc_receive_data, encoded_opus)
+	result = receive_audio_frame(mock_lib, 0, opus_decoder.create(48000, 2), ctypes.create_string_buffer(8 * 1024))
 
 	assert result.dtype == numpy.float32
 	assert result.size == 960 * 2
 
 
 def test_try_receive_frame_no_data() -> None:
-	receive_buffer = ctypes.create_string_buffer(512 * 1024)
+	mock_lib = MagicMock()
+	mock_lib.rtcReceiveMessage.return_value = -1
 
-	with patch('facefusion.apis.stream_helper.receive_video_buffer', return_value = None):
-		assert try_receive_frame(MagicMock(), 0, 'vp8', vpx_decoder.create(8), receive_buffer) is None
+	assert try_receive_frame(mock_lib, 0, 'vp8', vpx_decoder.create(8), ctypes.create_string_buffer(512 * 1024)) is None
 
 
 def test_try_receive_frame_valid_data() -> None:
@@ -162,10 +175,9 @@ def test_try_receive_frame_valid_data() -> None:
 	video_resolution = (source_frame.shape[1], source_frame.shape[0])
 	yuv_buffer = cv2.cvtColor(source_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), yuv_buffer, video_resolution, 0)
-	receive_buffer = ctypes.create_string_buffer(512 * 1024)
-
-	with patch('facefusion.apis.stream_helper.receive_video_buffer', return_value = encoded_buffer):
-		vision_frame = try_receive_frame(MagicMock(), 0, 'vp8', vpx_decoder.create(8), receive_buffer)
+	mock_lib = MagicMock()
+	mock_lib.rtcReceiveMessage.side_effect = partial(rtc_receive_data, encoded_buffer)
+	vision_frame = try_receive_frame(mock_lib, 0, 'vp8', vpx_decoder.create(8), ctypes.create_string_buffer(512 * 1024))
 
 	assert vision_frame is not None
 	assert vision_frame.shape[1] == video_resolution[0]
@@ -180,29 +192,38 @@ def test_drain_to_latest_frame_no_data() -> None:
 
 
 def test_drain_to_latest_frame_returns_last_frame() -> None:
+	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	video_resolution = (source_frame.shape[1], source_frame.shape[0])
+	yuv_buffer = cv2.cvtColor(source_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), yuv_buffer, video_resolution, 0)
 	mock_lib = MagicMock()
-	mock_lib.rtcReceiveMessage.side_effect = [0, 0, -1]
-	dummy_frame = numpy.full((240, 320, 3), 128, dtype = numpy.uint8)
+	mock_lib.rtcReceiveMessage.side_effect = partial(rtc_receive_once, encoded_buffer, [ False ])
+	last_frame = drain_to_latest_frame(mock_lib, 0, 'vp8', vpx_decoder.create(8), ctypes.create_string_buffer(512 * 1024))
 
-	with patch('facefusion.apis.stream_helper.decode_video_frame', return_value = dummy_frame):
-		last_frame = drain_to_latest_frame(mock_lib, 0, 'vp8', vpx_decoder.create(8), ctypes.create_string_buffer(512 * 1024))
-
-	assert numpy.array_equal(last_frame, dummy_frame)
+	assert last_frame is not None
+	assert last_frame.shape[1] == video_resolution[0]
+	assert last_frame.shape[0] == video_resolution[1]
 
 
 def test_poll_for_frame_timeout() -> None:
-	video_decoder = vpx_decoder.create(8)
+	mock_lib = MagicMock()
+	mock_lib.rtcReceiveMessage.return_value = -1
 
-	with patch('facefusion.apis.stream_helper.try_receive_frame', return_value = None):
-		assert poll_for_frame(MagicMock(), 0, 'vp8', video_decoder, ctypes.create_string_buffer(512 * 1024), 0.01) is None
+	assert poll_for_frame(mock_lib, 0, 'vp8', vpx_decoder.create(8), ctypes.create_string_buffer(512 * 1024), 0.01) is None
 
 
 def test_poll_for_frame_success() -> None:
-	video_decoder = vpx_decoder.create(8)
-	dummy_frame = numpy.full((240, 320, 3), 128, dtype = numpy.uint8)
+	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	video_resolution = (source_frame.shape[1], source_frame.shape[0])
+	yuv_buffer = cv2.cvtColor(source_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), yuv_buffer, video_resolution, 0)
+	mock_lib = MagicMock()
+	mock_lib.rtcReceiveMessage.side_effect = partial(rtc_receive_once, encoded_buffer, [ False ])
+	last_frame = poll_for_frame(mock_lib, 0, 'vp8', vpx_decoder.create(8), ctypes.create_string_buffer(512 * 1024), 1.0)
 
-	with patch('facefusion.apis.stream_helper.try_receive_frame', return_value = dummy_frame):
-		assert numpy.array_equal(poll_for_frame(MagicMock(), 0, 'vp8', video_decoder, ctypes.create_string_buffer(512 * 1024), 1.0), dummy_frame)
+	assert last_frame is not None
+	assert last_frame.shape[1] == video_resolution[0]
+	assert last_frame.shape[0] == video_resolution[1]
 
 
 @pytest.fixture
