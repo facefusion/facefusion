@@ -1,18 +1,22 @@
 import ctypes
+import struct
 from typing import Optional
 
 from facefusion.libraries import vpx as vpx_module
 from facefusion.types import VpxDecoder, VpxPointer
 
 
-def create() -> Optional[VpxDecoder]:
+def create(thread_count : int) -> Optional[VpxDecoder]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
 		vpx_decoder = ctypes.create_string_buffer(64)
 		vpx_codec = ctypes.c_void_p.in_dll(vpx_library, 'vpx_codec_vp8_dx_algo')
+		config_buffer = ctypes.create_string_buffer(128)
 
-		if vpx_library.vpx_codec_dec_init_ver(vpx_decoder, ctypes.byref(vpx_codec), None, 0, 12) == 0:
+		struct.pack_into('I', config_buffer, 0, thread_count)
+
+		if vpx_library.vpx_codec_dec_init_ver(vpx_decoder, ctypes.byref(vpx_codec), config_buffer, 0, 12) == 0:
 			return vpx_decoder
 
 	return None

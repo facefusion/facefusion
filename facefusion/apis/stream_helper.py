@@ -209,9 +209,9 @@ def cleanup_peer(session_id : SessionId, rtc_peer : RtcPeer, video_codec : Video
 #TODO: needs review
 def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomDecoder]:
 	if video_codec == 'av1':
-		return aom_decoder.create()
+		return aom_decoder.create(8)
 	if video_codec == 'vp8':
-		return vpx_decoder.create()
+		return vpx_decoder.create(8)
 
 	return None
 

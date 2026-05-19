@@ -1,18 +1,23 @@
 import ctypes
+import struct
 from typing import Optional
 
 from facefusion.libraries import aom as aom_module
 from facefusion.types import AomDecoder, AomPointer
 
 
-def create() -> Optional[AomDecoder]:
+def create(thread_count : int) -> Optional[AomDecoder]:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library:
 		aom_decoder = ctypes.create_string_buffer(128)
 		aom_codec = ctypes.c_void_p.in_dll(aom_library, 'aom_codec_av1_dx_algo')
+		config_buffer = ctypes.create_string_buffer(128)
 
-		if aom_library.aom_codec_dec_init_ver(aom_decoder, ctypes.byref(aom_codec), None, 0, 22) == 0:
+		struct.pack_into('I', config_buffer, 0, thread_count)
+		struct.pack_into('I', config_buffer, 12, 1)
+
+		if aom_library.aom_codec_dec_init_ver(aom_decoder, ctypes.byref(aom_codec), config_buffer, 0, 22) == 0:
 			return aom_decoder
 
 	return None
