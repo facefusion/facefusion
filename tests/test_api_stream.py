@@ -75,7 +75,7 @@ def test_stream_image(test_client : TestClient) -> None:
 
 	assert select_response.status_code == 200
 
-	with test_client.websocket_connect('/stream?type=image&action=process', subprotocols =
+	with test_client.websocket_connect('/stream', subprotocols =
 	[
 		'access_token.' + access_token
 	]) as websocket:
@@ -126,7 +126,7 @@ def test_stream_video(test_client : TestClient, video_codec : VideoCodec) -> Non
 	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
 	with patch('facefusion.rtc.send_video'):
-		stream_response = test_client.post('/stream?type=video&action=process', content = sdp_offer, headers =
+		stream_response = test_client.post('/stream', content = sdp_offer, headers =
 		{
 			'Authorization': 'Bearer ' + access_token,
 			'Content-Type': 'application/sdp'
@@ -134,3 +134,34 @@ def test_stream_video(test_client : TestClient, video_codec : VideoCodec) -> Non
 
 		assert stream_response.status_code == 201
 		assert 'm=video' in stream_response.text
+
+
+def test_delete_stream_video(test_client : TestClient) -> None:
+	create_session_response = test_client.post('/session', json =
+	{
+		'client_version': metadata.get('version')
+	})
+	access_token = create_session_response.json().get('access_token')
+	session_id = session_manager.find_session_id(access_token)
+
+	peer_connection = rtc.create_peer_connection()
+	rtc.add_video_track(peer_connection, 'sendrecv', 'vp8', 96)
+	rtc.add_audio_track(peer_connection, 'sendrecv', 'opus', 111)
+	sdp_offer = rtc.create_sdp_offer(peer_connection)
+	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
+
+	test_client.post('/stream', content = sdp_offer, headers =
+	{
+		'Authorization': 'Bearer ' + access_token,
+		'Content-Type': 'application/sdp'
+	})
+
+	assert rtc_store.get_peers(session_id)
+
+	delete_response = test_client.delete('/stream', headers =
+	{
+		'Authorization': 'Bearer ' + access_token
+	})
+
+	assert delete_response.status_code == 200
+	assert rtc_store.get_peers(session_id) is None

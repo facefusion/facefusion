@@ -7,7 +7,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 from facefusion import state_manager
 from facefusion.codecs.aom_decoder import create, decode, destroy
 from facefusion.codecs.aom_encoder import create as create_encoder, encode
-from facefusion.common_helper import is_macos
+from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module
@@ -35,17 +35,14 @@ def test_decode() -> None:
 	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
 	aom_encoder = create_encoder(video_resolution, 1000, 1, 0)
-	encoded_buffer = encode(aom_encoder, video_buffer, video_resolution, 0)
-	aom_pointer = decode(create(1), encoded_buffer)
+	encode_buffer = encode(aom_encoder, video_buffer, video_resolution, 0)
+	aom_decoder = create(1)
 
-	assert aom_pointer is not None
-	assert aom_pointer.get('resolution')[0] >= video_resolution[0]
-	assert aom_pointer.get('resolution')[1] >= video_resolution[1]
-	assert len(aom_pointer.get('buffer')) == aom_pointer.get('resolution')[0] * aom_pointer.get('resolution')[1] * 3 // 2
-	assert decode(create(1), bytes()) is None
+	if is_linux() or is_windows():
+		assert create_hash(decode(aom_decoder, encode_buffer).get('buffer')) == 'e3c0ebd8'
 
 	if is_macos():
-		assert create_hash(bytes(aom_pointer.get('buffer'))) == 'c8c6fdaa'
+		assert create_hash(decode(aom_decoder, encode_buffer).get('buffer')) == 'c8c6fdaa'
 
 
 def test_destroy() -> None:

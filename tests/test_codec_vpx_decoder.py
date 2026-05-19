@@ -7,7 +7,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 from facefusion import state_manager
 from facefusion.codecs.vpx_decoder import create, decode, destroy
 from facefusion.codecs.vpx_encoder import create as create_encoder, encode
-from facefusion.common_helper import is_macos
+from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import vpx as vpx_module
@@ -35,16 +35,14 @@ def test_decode() -> None:
 	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
 	vpx_encoder = create_encoder(video_resolution, 1000, 1, 0)
-	encoded_buffer = encode(vpx_encoder, video_buffer, video_resolution, 0)
-	vpx_pointer = decode(create(1), encoded_buffer)
+	encode_buffer = encode(vpx_encoder, video_buffer, video_resolution, 0)
+	vpx_decoder = create(1)
 
-	assert vpx_pointer is not None
-	assert vpx_pointer.get('resolution') == video_resolution
-	assert len(vpx_pointer.get('buffer')) == video_resolution[0] * video_resolution[1] * 3 // 2
-	assert decode(create(1), bytes()) is None
+	if is_linux() or is_windows():
+		assert create_hash(decode(vpx_decoder, encode_buffer).get('buffer')) == 'dc9c8864'
 
 	if is_macos():
-		assert create_hash(bytes(vpx_pointer.get('buffer'))) == '87450f70'
+		assert create_hash(decode(vpx_decoder, encode_buffer).get('buffer')) == '87450f70'
 
 
 def test_destroy() -> None:

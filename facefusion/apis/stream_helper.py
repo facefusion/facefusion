@@ -21,6 +21,7 @@ from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioFrame, Opu
 
 #TODO: needs review
 async def process_image(websocket : WebSocket) -> None:
+	#TODO: all the websocket handling belongs to the endpoint, these are connection concerns
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 	access_token = extract_access_token(websocket.scope)
 	session_id = session_manager.find_session_id(access_token)
