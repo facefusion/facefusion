@@ -142,14 +142,14 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	if not video_deque:
 		if not video_event.wait(timeout = 30.0):
 			stop_receiver_threads(stop_event, video_receiver, audio_receiver)
-			cleanup_peer(session_id)
+			rtc_store.delete_peers(session_id)
 			return
 
 	vision_frame = video_deque.popleft() if video_deque else None
 
 	if vision_frame is None:
 		stop_receiver_threads(stop_event, video_receiver, audio_receiver)
-		cleanup_peer(session_id)
+		rtc_store.delete_peers(session_id)
 		return
 
 	audio_frame = create_empty_audio_frame()
@@ -213,7 +213,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	stop_receiver_threads(stop_event, video_receiver, audio_receiver)
 	destroy_video_encoder(video_codec, video_encoder)
 	opus_encoder.destroy(audio_encoder)
-	cleanup_peer(session_id)
+	rtc_store.delete_peers(session_id)
 
 
 def receive_video_into_deque(datachannel_library : ctypes.CDLL, video_track : int, receive_buffer : ctypes.Array[ctypes.c_char], video_codec : VideoCodec, video_deque : deque, video_event : threading.Event, stop_event : threading.Event) -> None:

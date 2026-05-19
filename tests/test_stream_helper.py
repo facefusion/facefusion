@@ -11,7 +11,7 @@ from starlette.websockets import WebSocketState
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_helper import cleanup_peer, decode_video_frame, process_image, process_video, receive_audio_frame, receive_audio_into_deque, receive_video_buffer, receive_video_into_deque, receive_vision_frames, run_peer_loop
+from facefusion.apis.stream_helper import decode_video_frame, process_image, process_video, receive_audio_frame, receive_audio_into_deque, receive_video_buffer, receive_video_into_deque, receive_vision_frames, run_peer_loop
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.download import conditional_download
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
@@ -72,28 +72,6 @@ def before_all() -> None:
 @pytest.fixture(scope = 'function', autouse = True)
 def before_each() -> None:
 	rtc_store.clear()
-
-
-def test_cleanup_peer() -> None:
-	session_id = 'test-cleanup-peer'
-	peer_connection = rtc.create_peer_connection()
-	rtc_peer : RtcPeer =\
-	{
-		'peer_connection': peer_connection,
-		'video':
-		{
-			'sender_track': 0,
-			'receiver_track': 0,
-			'codec': 'vp8'
-		}
-	}
-
-	rtc_store.init_peers(session_id)
-	rtc_store.get_peers(session_id).append(rtc_peer)
-	cleanup_peer(session_id)
-
-	assert rtc_store.get_peers(session_id) is None
-	assert datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection) == -1
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
