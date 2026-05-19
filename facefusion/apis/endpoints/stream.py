@@ -13,10 +13,13 @@ async def websocket_stream(websocket : WebSocket) -> None:
 
 
 async def post_stream(request : Request) -> Response:
+	headers =\
+	{
+		'Location': request.url_for('delete_stream').encode()
+	}
 	content_type = request.headers.get('content-type')
 	access_token = extract_access_token(request.scope)
 	session_id = session_manager.find_session_id(access_token)
-
 	session_context.set_session_id(session_id)
 
 	if session_id and content_type == 'application/sdp':
@@ -24,7 +27,7 @@ async def post_stream(request : Request) -> Response:
 		sdp_answer = process_video(session_id, sdp_offer.decode())
 
 		if sdp_answer:
-			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type = 'application/sdp')
+			return Response(sdp_answer, status_code = HTTP_201_CREATED, media_type = 'application/sdp', headers = headers)
 
 	return Response(status_code = HTTP_404_NOT_FOUND)
 
