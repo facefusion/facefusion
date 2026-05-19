@@ -24,10 +24,10 @@ def before_all() -> None:
 
 
 def test_create() -> None:
-	assert create()
+	assert create(1)
 
 	with patch('facefusion.codecs.aom_decoder.aom_module.create_static_library', return_value = None):
-		assert create() is None
+		assert create(1) is None
 
 
 def test_decode() -> None:
@@ -36,7 +36,7 @@ def test_decode() -> None:
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
 	aom_encoder = create_encoder(video_resolution, 1000, 1, 0)
 	encoded_buffer = encode(aom_encoder, video_buffer, video_resolution, 0)
-	aom_pointer = decode(create(), encoded_buffer)
+	aom_pointer = decode(create(1), encoded_buffer)
 
 	assert aom_pointer is not None
 	assert aom_pointer['resolution'][0] >= video_resolution[0]
@@ -45,14 +45,14 @@ def test_decode() -> None:
 	output_buffer = collect(aom_pointer)
 
 	assert len(output_buffer) == aom_pointer['resolution'][0] * aom_pointer['resolution'][1] * 3 // 2
-	assert decode(create(), bytes()) is None
+	assert decode(create(1), bytes()) is None
 
 	if is_macos():
 		assert create_hash(bytes(output_buffer)) == '0a0ab3d0'
 
 
 def test_destroy() -> None:
-	aom_decoder = create()
+	aom_decoder = create(1)
 
 	with patch.object(aom_module.create_static_library(), 'aom_codec_destroy') as mock:
 		destroy(aom_decoder)

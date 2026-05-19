@@ -24,10 +24,10 @@ def before_all() -> None:
 
 
 def test_create() -> None:
-	assert create()
+	assert create(1)
 
 	with patch('facefusion.codecs.vpx_decoder.vpx_module.create_static_library', return_value = None):
-		assert create() is None
+		assert create(1) is None
 
 
 def test_decode() -> None:
@@ -36,7 +36,7 @@ def test_decode() -> None:
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
 	vpx_encoder = create_encoder(video_resolution, 1000, 1, 0)
 	encoded_buffer = encode(vpx_encoder, video_buffer, video_resolution, 0)
-	vpx_decoder = create()
+	vpx_decoder = create(1)
 	vpx_pointer = decode(vpx_decoder, encoded_buffer)
 
 	assert vpx_pointer is not None
@@ -52,7 +52,7 @@ def test_decode() -> None:
 
 
 def test_destroy() -> None:
-	vpx_decoder = create()
+	vpx_decoder = create(1)
 
 	with patch.object(vpx_module.create_static_library(), 'vpx_codec_destroy') as mock:
 		destroy(vpx_decoder)
