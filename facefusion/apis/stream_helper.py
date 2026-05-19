@@ -121,9 +121,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_info = rtc_peer.get('video')
 	video_codec = video_info.get('codec')
 	video_receiver_track = video_info.get('receiver_track')
-	video_decoder = create_video_decoder(video_codec)
 	audio_info = rtc_peer.get('audio')
-	audio_decoder = opus_decoder.create(48000, 2) if audio_info else None
 	video_receive_buffer = ctypes.create_string_buffer(512 * 1024)
 	audio_receive_buffer = ctypes.create_string_buffer(8 * 1024)
 	stop_event = threading.Event()
@@ -132,11 +130,11 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	audio_deque : deque = deque(maxlen = 4)
 	audio_receiver = None
 
-	video_receiver = threading.Thread(target = receive_video_into_deque, args = (datachannel_library, video_receiver_track, video_receive_buffer, video_codec, video_decoder, video_deque, video_event, stop_event), daemon = True)
+	video_receiver = threading.Thread(target = receive_video_into_deque, args = (datachannel_library, video_receiver_track, video_receive_buffer, video_codec, video_deque, video_event, stop_event), daemon = True)
 	video_receiver.start()
 
-	if audio_info and audio_decoder:
-		audio_receiver = threading.Thread(target = receive_audio_into_deque, args = (datachannel_library, audio_info.get('receiver_track'), audio_decoder, audio_receive_buffer, audio_deque, stop_event), daemon = True)
+	if audio_info:
+		audio_receiver = threading.Thread(target = receive_audio_into_deque, args = (datachannel_library, audio_info.get('receiver_track'), audio_receive_buffer, audio_deque, stop_event), daemon = True)
 		audio_receiver.start()
 
 	video_event.clear()
@@ -144,14 +142,14 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	if not video_deque:
 		if not video_event.wait(timeout = 30.0):
 			stop_receiver_threads(stop_event, video_receiver, audio_receiver)
-			cleanup_peer(session_id, rtc_peer, video_codec, video_decoder, audio_decoder)
+			cleanup_peer(session_id)
 			return
 
 	vision_frame = video_deque.popleft() if video_deque else None
 
 	if vision_frame is None:
 		stop_receiver_threads(stop_event, video_receiver, audio_receiver)
-		cleanup_peer(session_id, rtc_peer, video_codec, video_decoder, audio_decoder)
+		cleanup_peer(session_id)
 		return
 
 	audio_frame = create_empty_audio_frame()
@@ -215,10 +213,12 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	stop_receiver_threads(stop_event, video_receiver, audio_receiver)
 	destroy_video_encoder(video_codec, video_encoder)
 	opus_encoder.destroy(audio_encoder)
-	cleanup_peer(session_id, rtc_peer, video_codec, video_decoder, audio_decoder)
+	cleanup_peer(session_id)
 
 
-def receive_video_into_deque(datachannel_library : ctypes.CDLL, video_track : int, receive_buffer : ctypes.Array[ctypes.c_char], video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_deque : deque, video_event : threading.Event, stop_event : threading.Event) -> None:
+def receive_video_into_deque(datachannel_library : ctypes.CDLL, video_track : int, receive_buffer : ctypes.Array[ctypes.c_char], video_codec : VideoCodec, video_deque : deque, video_event : threading.Event, stop_event : threading.Event) -> None:
+	video_decoder = create_video_decoder(video_codec)
+
 	while not stop_event.is_set():
 		frame_buffer = receive_video_buffer(datachannel_library, video_track, receive_buffer)
 
@@ -231,8 +231,15 @@ def receive_video_into_deque(datachannel_library : ctypes.CDLL, video_track : in
 		else:
 			stop_event.wait(timeout = 0.001)
 
+	if video_codec == 'av1':
+		aom_decoder.destroy(video_decoder)
+	if video_codec == 'vp8':
+		vpx_decoder.destroy(video_decoder)
 
-def receive_audio_into_deque(datachannel_library : ctypes.CDLL, audio_track : int, audio_decoder : OpusDecoder, receive_buffer : ctypes.Array[ctypes.c_char], audio_deque : deque, stop_event : threading.Event) -> None:
+
+def receive_audio_into_deque(datachannel_library : ctypes.CDLL, audio_track : int, receive_buffer : ctypes.Array[ctypes.c_char], audio_deque : deque, stop_event : threading.Event) -> None:
+	audio_decoder = opus_decoder.create(48000, 2)
+
 	while not stop_event.is_set():
 		audio_frame = receive_audio_frame(datachannel_library, audio_track, audio_decoder, receive_buffer)
 
@@ -240,6 +247,8 @@ def receive_audio_into_deque(datachannel_library : ctypes.CDLL, audio_track : in
 			audio_deque.append(audio_frame)
 		else:
 			stop_event.wait(timeout = 0.001)
+
+	opus_decoder.destroy(audio_decoder)
 
 
 def stop_receiver_threads(stop_event : threading.Event, video_receiver : threading.Thread, audio_receiver : Optional[threading.Thread]) -> None:
@@ -278,17 +287,7 @@ def destroy_video_encoder(video_codec : VideoCodec, video_encoder : Optional[Vpx
 		vpx_encoder.destroy(video_encoder)
 
 
-#TODO: needs review
-def cleanup_peer(session_id : SessionId, rtc_peer : RtcPeer, video_codec : VideoCodec, video_decoder : Optional[VpxDecoder | AomDecoder], audio_decoder : Optional[OpusDecoder]) -> None:
-	if video_decoder:
-		if video_codec == 'av1':
-			aom_decoder.destroy(video_decoder)
-		if video_codec == 'vp8':
-			vpx_decoder.destroy(video_decoder)
-
-	if audio_decoder:
-		opus_decoder.destroy(audio_decoder)
-
+def cleanup_peer(session_id : SessionId) -> None:
 	rtc_store.delete_peers(session_id)
 
 

@@ -74,9 +74,8 @@ def before_each() -> None:
 	rtc_store.clear()
 
 
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-def test_cleanup_peer(video_codec : VideoCodec) -> None:
-	session_id = 'test-cleanup-peer-' + video_codec
+def test_cleanup_peer() -> None:
+	session_id = 'test-cleanup-peer'
 	peer_connection = rtc.create_peer_connection()
 	rtc_peer : RtcPeer =\
 	{
@@ -85,17 +84,13 @@ def test_cleanup_peer(video_codec : VideoCodec) -> None:
 		{
 			'sender_track': 0,
 			'receiver_track': 0,
-			'codec': video_codec
+			'codec': 'vp8'
 		}
 	}
 
 	rtc_store.init_peers(session_id)
 	rtc_store.get_peers(session_id).append(rtc_peer)
-
-	if video_codec == 'av1':
-		cleanup_peer(session_id, rtc_peer, video_codec, aom_decoder.create(8), opus_decoder.create(48000, 2))
-	if video_codec == 'vp8':
-		cleanup_peer(session_id, rtc_peer, video_codec, vpx_decoder.create(8), opus_decoder.create(48000, 2))
+	cleanup_peer(session_id)
 
 	assert rtc_store.get_peers(session_id) is None
 	assert datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection) == -1
@@ -176,7 +171,7 @@ def test_receive_video_into_deque_delivers_frame() -> None:
 	video_event = threading.Event()
 	stop_event = threading.Event()
 
-	receiver = threading.Thread(target = receive_video_into_deque, args = (mock_lib, 0, ctypes.create_string_buffer(512 * 1024), 'vp8', vpx_decoder.create(8), video_deque, video_event, stop_event), daemon = True)
+	receiver = threading.Thread(target = receive_video_into_deque, args = (mock_lib, 0, ctypes.create_string_buffer(512 * 1024), 'vp8', video_deque, video_event, stop_event), daemon = True)
 	receiver.start()
 	video_event.wait(timeout = 2.0)
 	stop_event.set()
@@ -200,7 +195,7 @@ def test_receive_video_into_deque_keeps_latest_when_full() -> None:
 	video_event = threading.Event()
 	stop_event = threading.Event()
 
-	receiver = threading.Thread(target = receive_video_into_deque, args = (mock_lib, 0, ctypes.create_string_buffer(512 * 1024), 'vp8', vpx_decoder.create(8), video_deque, video_event, stop_event), daemon = True)
+	receiver = threading.Thread(target = receive_video_into_deque, args = (mock_lib, 0, ctypes.create_string_buffer(512 * 1024), 'vp8', video_deque, video_event, stop_event), daemon = True)
 	receiver.start()
 	receiver.join(timeout = 2.0)
 	stop_event.set()
@@ -217,7 +212,7 @@ def test_receive_audio_into_deque_delivers_decoded_frame() -> None:
 	audio_deque : deque = deque(maxlen = 4)
 	stop_event = threading.Event()
 
-	receiver = threading.Thread(target = receive_audio_into_deque, args = (mock_lib, 0, opus_decoder.create(48000, 2), ctypes.create_string_buffer(8 * 1024), audio_deque, stop_event), daemon = True)
+	receiver = threading.Thread(target = receive_audio_into_deque, args = (mock_lib, 0, ctypes.create_string_buffer(8 * 1024), audio_deque, stop_event), daemon = True)
 	receiver.start()
 	stop_event.wait(timeout = 2.0)
 	stop_event.set()
@@ -235,7 +230,7 @@ def test_receive_audio_into_deque_skips_empty_frames() -> None:
 	audio_deque : deque = deque(maxlen = 4)
 	stop_event = threading.Event()
 
-	receiver = threading.Thread(target = receive_audio_into_deque, args = (mock_lib, 0, opus_decoder.create(48000, 2), ctypes.create_string_buffer(8 * 1024), audio_deque, stop_event), daemon = True)
+	receiver = threading.Thread(target = receive_audio_into_deque, args = (mock_lib, 0, ctypes.create_string_buffer(8 * 1024), audio_deque, stop_event), daemon = True)
 	receiver.start()
 	threading.Event().wait(timeout = 0.05)
 	stop_event.set()
