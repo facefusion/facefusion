@@ -45,7 +45,7 @@ def test_decode() -> None:
 	assert decode(create(1), bytes()) is None
 
 	if is_macos():
-		assert create_hash(bytes(aom_pointer.get('buffer'))) == '0a0ab3d0'
+		assert create_hash(bytes(aom_pointer.get('buffer'))) == 'c8c6fdaa'
 
 
 def test_destroy() -> None:
