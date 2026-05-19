@@ -37,16 +37,14 @@ def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[VpxPointe
 				frame_height = ctypes.c_uint.from_address(address + 28).value & ~1
 
 				return VpxPointer(
-					address = address,
+					buffer = collect(address, frame_width, frame_height),
 					resolution = (frame_width, frame_height)
 				)
 
 	return None
 
 
-def collect(vpx_pointer : VpxPointer) -> bytes:
-	frame_width, frame_height = vpx_pointer.get('resolution')
-	address = vpx_pointer.get('address')
+def collect(address : int, frame_width : int, frame_height : int) -> bytes:
 	output_buffer = bytes()
 
 	for index in range(3):

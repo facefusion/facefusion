@@ -238,14 +238,14 @@ def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 	if video_codec == 'av1':
 		aom_pointer = aom_decoder.decode(video_decoder, frame_buffer)
 		if aom_pointer:
-			frame_width, frame_height = aom_pointer['resolution']
-			yuv_frame = numpy.frombuffer(aom_decoder.collect(aom_pointer), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
+			frame_width, frame_height = aom_pointer.get('resolution')
+			yuv_frame = numpy.frombuffer(aom_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
 			return cv2.cvtColor(yuv_frame, cv2.COLOR_YUV2BGR_I420)
 	if video_codec == 'vp8':
 		vpx_pointer = vpx_decoder.decode(video_decoder, frame_buffer)
 		if vpx_pointer:
-			frame_width, frame_height = vpx_pointer['resolution']
-			yuv_frame = numpy.frombuffer(vpx_decoder.collect(vpx_pointer), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
+			frame_width, frame_height = vpx_pointer.get('resolution')
+			yuv_frame = numpy.frombuffer(vpx_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
 			return cv2.cvtColor(yuv_frame, cv2.COLOR_YUV2BGR_I420)
 
 	return None

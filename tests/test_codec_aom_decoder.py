@@ -5,7 +5,7 @@ import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
-from facefusion.codecs.aom_decoder import collect, create, decode, destroy
+from facefusion.codecs.aom_decoder import create, decode, destroy
 from facefusion.codecs.aom_encoder import create as create_encoder, encode
 from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download
@@ -39,16 +39,13 @@ def test_decode() -> None:
 	aom_pointer = decode(create(1), encoded_buffer)
 
 	assert aom_pointer is not None
-	assert aom_pointer['resolution'][0] >= video_resolution[0]
-	assert aom_pointer['resolution'][1] >= video_resolution[1]
-
-	output_buffer = collect(aom_pointer)
-
-	assert len(output_buffer) == aom_pointer['resolution'][0] * aom_pointer['resolution'][1] * 3 // 2
+	assert aom_pointer.get('resolution')[0] >= video_resolution[0]
+	assert aom_pointer.get('resolution')[1] >= video_resolution[1]
+	assert len(aom_pointer.get('buffer')) == aom_pointer.get('resolution')[0] * aom_pointer.get('resolution')[1] * 3 // 2
 	assert decode(create(1), bytes()) is None
 
 	if is_macos():
-		assert create_hash(bytes(output_buffer)) == '0a0ab3d0'
+		assert create_hash(bytes(aom_pointer.get('buffer'))) == '0a0ab3d0'
 
 
 def test_destroy() -> None:

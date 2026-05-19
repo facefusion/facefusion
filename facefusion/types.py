@@ -112,12 +112,12 @@ VpxDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
 
 AomPointer = TypedDict('AomPointer',
 {
-	'address' : int,
+	'buffer' : bytes,
 	'resolution' : Resolution
 })
 VpxPointer = TypedDict('VpxPointer',
 {
-	'address' : int,
+	'buffer' : bytes,
 	'resolution' : Resolution
 })
 

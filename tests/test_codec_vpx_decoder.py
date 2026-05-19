@@ -5,7 +5,7 @@ import pytest
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import state_manager
-from facefusion.codecs.vpx_decoder import collect, create, decode, destroy
+from facefusion.codecs.vpx_decoder import create, decode, destroy
 from facefusion.codecs.vpx_encoder import create as create_encoder, encode
 from facefusion.common_helper import is_macos
 from facefusion.download import conditional_download
@@ -36,19 +36,15 @@ def test_decode() -> None:
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
 	vpx_encoder = create_encoder(video_resolution, 1000, 1, 0)
 	encoded_buffer = encode(vpx_encoder, video_buffer, video_resolution, 0)
-	vpx_decoder = create(1)
-	vpx_pointer = decode(vpx_decoder, encoded_buffer)
+	vpx_pointer = decode(create(1), encoded_buffer)
 
 	assert vpx_pointer is not None
-	assert vpx_pointer['resolution'] == video_resolution
-
-	output_buffer = collect(vpx_pointer)
-
-	assert len(output_buffer) == video_resolution[0] * video_resolution[1] * 3 // 2
-	assert decode(vpx_decoder, bytes()) is None
+	assert vpx_pointer.get('resolution') == video_resolution
+	assert len(vpx_pointer.get('buffer')) == video_resolution[0] * video_resolution[1] * 3 // 2
+	assert decode(create(1), bytes()) is None
 
 	if is_macos():
-		assert create_hash(bytes(output_buffer)) == '87450f70'
+		assert create_hash(bytes(vpx_pointer.get('buffer'))) == '87450f70'
 
 
 def test_destroy() -> None:
