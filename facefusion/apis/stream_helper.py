@@ -175,13 +175,11 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
 	receive_buffer = ctypes.create_string_buffer(512 * 1024)
-	last_time = time.monotonic()
 
-	while not stop_event.is_set() and time.monotonic() - last_time < 30: # TODO: use positive while condition and remove last_frame_time
+	while not stop_event.is_set(): # TODO: use positive while condition
 		frame_buffer = receive_video_buffer(datachannel_library, video_track, receive_buffer)
 
 		if frame_buffer:
-			last_time = time.monotonic()
 			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
 
 			if numpy.any(vision_frame):
