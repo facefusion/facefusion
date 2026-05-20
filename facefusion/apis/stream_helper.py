@@ -111,12 +111,12 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	stop_event = threading.Event()
 	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
-	receiver_threads = [threading.Thread(target = pump_video_frames, args = (video_track, video_codec, video_queue, stop_event), daemon = True)]
+	receiver_threads = [threading.Thread(target = receive_video_frames, args = (video_track, video_codec, video_queue, stop_event), daemon = True)]
 
 	if rtc_peer.get('audio'):
 		audio_codec = rtc_peer.get('audio').get('codec')
 		audio_track = rtc_peer.get('audio').get('receiver_track')
-		receiver_threads.append(threading.Thread(target = pump_audio_frames, args = (audio_track, audio_codec, audio_queue, stop_event), daemon = True))
+		receiver_threads.append(threading.Thread(target = receive_audio_frames, args = (audio_track, audio_codec, audio_queue, stop_event), daemon = True))
 
 	for receiver_thread in receiver_threads:
 		receiver_thread.start()
@@ -171,17 +171,17 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	rtc_store.delete_peers(session_id)
 
 
-def pump_video_frames(video_track : int, video_codec : VideoCodec, video_queue : queue.Queue[VisionFrame], stop_event : threading.Event) -> None:
+def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queue : queue.Queue[VisionFrame], stop_event : threading.Event) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
 	receive_buffer = ctypes.create_string_buffer(512 * 1024)
-	last_frame_time = time.monotonic()
+	last_time = time.monotonic()
 
-	while not stop_event.is_set() and time.monotonic() - last_frame_time < 30: # TODO: use positive while condition and remove last_frame_time
+	while not stop_event.is_set() and time.monotonic() - last_time < 30: # TODO: use positive while condition and remove last_frame_time
 		frame_buffer = receive_video_buffer(datachannel_library, video_track, receive_buffer)
 
 		if frame_buffer:
-			last_frame_time = time.monotonic()
+			last_time = time.monotonic()
 			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
 
 			if numpy.any(vision_frame):
@@ -199,7 +199,7 @@ def pump_video_frames(video_track : int, video_codec : VideoCodec, video_queue :
 		vpx_decoder.destroy(video_decoder)
 
 
-def pump_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queue : queue.Queue[AudioFrame], stop_event : threading.Event) -> None:
+def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queue : queue.Queue[AudioFrame], stop_event : threading.Event) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	audio_decoder = opus_decoder.create(48000, 2)
 	receive_buffer = ctypes.create_string_buffer(8 * 1024)
