@@ -187,7 +187,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 					video_queue.get_nowait()
 				video_queue.put_nowait(vision_frame)
 		else:
-			stop_event.wait(timeout = 0.001)
+			stop_event.wait(timeout = 0.001) # TODO: remove this timeout
 
 	video_queue.put(numpy.empty(0))
 
@@ -208,7 +208,7 @@ def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queu
 		if audio_frame.dtype == numpy.float32:
 			audio_queue.put(audio_frame)
 		else:
-			stop_event.wait(timeout = 0.001)
+			stop_event.wait(timeout = 0.001) # TODO: remove this timeout
 
 	opus_decoder.destroy(audio_decoder)
 

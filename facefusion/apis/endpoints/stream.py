@@ -9,6 +9,7 @@ from facefusion.apis.session_helper import extract_access_token
 from facefusion.apis.stream_helper import destroy_stream, process_image, process_video
 
 
+# TODO: can we avoid passing websocket? just the data if doable
 async def websocket_stream(websocket : WebSocket) -> None:
 	subprotocol = get_sec_websocket_protocol(websocket.scope)
 	access_token = extract_access_token(websocket.scope)
