@@ -117,12 +117,6 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
-def wait_for_frame(video_queue : queue.Queue, timeout : float) -> VisionFrame:
-	with contextlib.suppress(queue.Empty):
-		return video_queue.get(timeout = timeout)
-	return numpy.empty(0)
-
-
 #TODO: needs review
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
@@ -140,7 +134,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	for receiver_thread in receiver_threads:
 		receiver_thread.start()
 
-	vision_frame = wait_for_frame(video_queue, 30.0)
+	vision_frame = video_queue.get()
 
 	if numpy.any(vision_frame):
 		audio_frame = create_empty_audio_frame()
@@ -178,7 +172,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 					rtc.send_audio(rtc_peer, output_audio_buffer, int(now * 48000))
 
 			frame_index += 1
-			vision_frame = wait_for_frame(video_queue, 30.0)
+			vision_frame = video_queue.get()
 
 		destroy_video_encoder(video_codec, video_encoder)
 		opus_encoder.destroy(audio_encoder)
@@ -195,11 +189,13 @@ def receive_video_into_deque(video_track : int, video_codec : VideoCodec, video_
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
 	receive_buffer = ctypes.create_string_buffer(512 * 1024)
+	idle_duration = 0.0
 
-	while not stop_event.is_set():
+	while not stop_event.is_set() and idle_duration < 30.0:
 		frame_buffer = receive_video_buffer(datachannel_library, video_track, receive_buffer)
 
 		if frame_buffer:
+			idle_duration = 0.0
 			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
 
 			if numpy.any(vision_frame):
@@ -208,6 +204,9 @@ def receive_video_into_deque(video_track : int, video_codec : VideoCodec, video_
 				video_queue.put_nowait(vision_frame)
 		else:
 			stop_event.wait(timeout = 0.001)
+			idle_duration += 0.001
+
+	video_queue.put(numpy.empty(0))
 
 	if video_codec == 'av1':
 		aom_decoder.destroy(video_decoder)
