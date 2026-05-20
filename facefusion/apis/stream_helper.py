@@ -109,8 +109,8 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
 	video_track = rtc_peer.get('video').get('receiver_track')
 	stop_event = threading.Event()
-	video_queue : queue.Queue = queue.Queue(maxsize = 1)
-	audio_queue : queue.Queue = queue.Queue(maxsize = 4)
+	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
+	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
 	receiver_threads = [threading.Thread(target = pump_video_frames, args = (video_track, video_codec, video_queue, stop_event), daemon = True)]
 
 	if rtc_peer.get('audio'):
@@ -171,7 +171,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	rtc_store.delete_peers(session_id)
 
 
-def pump_video_frames(video_track : int, video_codec : VideoCodec, video_queue : queue.Queue, stop_event : threading.Event) -> None:
+def pump_video_frames(video_track : int, video_codec : VideoCodec, video_queue : queue.Queue[VisionFrame], stop_event : threading.Event) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
 	receive_buffer = ctypes.create_string_buffer(512 * 1024)
@@ -199,7 +199,7 @@ def pump_video_frames(video_track : int, video_codec : VideoCodec, video_queue :
 		vpx_decoder.destroy(video_decoder)
 
 
-def pump_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queue : queue.Queue, stop_event : threading.Event) -> None:
+def pump_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queue : queue.Queue[AudioFrame], stop_event : threading.Event) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	audio_decoder = opus_decoder.create(48000, 2)
 	receive_buffer = ctypes.create_string_buffer(8 * 1024)
@@ -272,16 +272,16 @@ def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 
 		if aom_pointer:
 			frame_width, frame_height = aom_pointer.get('resolution')
-			yuv_frame = numpy.frombuffer(aom_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
-			return cv2.cvtColor(yuv_frame, cv2.COLOR_YUV2BGR_I420)
+			vision_frame = numpy.frombuffer(aom_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
+			return cv2.cvtColor(vision_frame, cv2.COLOR_YUV2BGR_I420)
 
 	if video_codec == 'vp8':
 		vpx_pointer = vpx_decoder.decode(video_decoder, frame_buffer)
 
 		if vpx_pointer:
 			frame_width, frame_height = vpx_pointer.get('resolution')
-			yuv_frame = numpy.frombuffer(vpx_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
-			return cv2.cvtColor(yuv_frame, cv2.COLOR_YUV2BGR_I420)
+			vision_frame = numpy.frombuffer(vpx_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
+			return cv2.cvtColor(vision_frame, cv2.COLOR_YUV2BGR_I420)
 
 	return None
 
