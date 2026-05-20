@@ -6,12 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import cv2
 import numpy
 import pytest
-from starlette.websockets import WebSocketState
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import rtc, rtc_store, state_manager
 import queue
 
+from starlette.websockets import WebSocketState
+from facefusion.apis.endpoints.stream import websocket_stream
 from facefusion.apis.stream_helper import decode_video_frame, process_image, process_video, receive_audio_frame, pump_audio_frames, receive_video_buffer, pump_video_frames, receive_vision_frames, run_peer_loop
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.download import conditional_download
@@ -303,31 +304,42 @@ async def test_process_image_sends_processed_frame() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	_, jpeg_buffer = cv2.imencode('.jpg', vision_frame)
 	mock_ws = AsyncMock()
-	mock_ws.scope = {'type': 'websocket', 'headers': []}
-	mock_ws.client_state = WebSocketState.CONNECTED
 	mock_ws.receive.side_effect = [{'type': 'websocket.receive', 'bytes': jpeg_buffer.tobytes()}]
 
 	state_manager.init_item('source_paths', [get_test_example_file('source.jpg')])
 
 	await process_image(mock_ws)
 
-	mock_ws.accept.assert_called_once()
 	mock_ws.send_bytes.assert_called_once()
 	assert mock_ws.send_bytes.call_args[0][0][:3] == b'\xff\xd8\xff'
 
 
 @pytest.mark.anyio
-async def test_process_image_without_source_closes_cleanly() -> None:
+async def test_process_image_without_source_skips_send() -> None:
+	mock_ws = AsyncMock()
+
+	state_manager.init_item('source_paths', None)
+
+	await process_image(mock_ws)
+
+	mock_ws.send_bytes.assert_not_called()
+
+
+@pytest.mark.anyio
+async def test_websocket_stream_accepts_and_closes() -> None:
 	mock_ws = AsyncMock()
 	mock_ws.scope = {'type': 'websocket', 'headers': []}
 	mock_ws.client_state = WebSocketState.CONNECTED
 
 	state_manager.init_item('source_paths', None)
 
-	await process_image(mock_ws)
+	with patch('facefusion.apis.endpoints.stream.get_sec_websocket_protocol', return_value = None), \
+		patch('facefusion.apis.endpoints.stream.extract_access_token', return_value = None), \
+		patch('facefusion.apis.endpoints.stream.session_manager.find_session_id', return_value = None), \
+		patch('facefusion.apis.endpoints.stream.session_context.set_session_id'):
+		await websocket_stream(mock_ws)
 
 	mock_ws.accept.assert_called_once()
-	mock_ws.send_bytes.assert_not_called()
 	mock_ws.close.assert_called_once()
 
 

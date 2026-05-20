@@ -9,27 +9,17 @@ from typing import Optional
 
 import cv2
 import numpy
-from starlette.websockets import WebSocket, WebSocketState
+from starlette.websockets import WebSocket
 
-from facefusion import rtc, rtc_store, session_context, session_manager, state_manager, streamer
-from facefusion.apis.api_helper import get_sec_websocket_protocol
-from facefusion.apis.session_helper import extract_access_token
+from facefusion import rtc, rtc_store, state_manager, streamer
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioFrame, OpusDecoder, PeerConnection, Resolution, RtcPeer, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
 
 
-#TODO: needs review
 async def process_image(websocket : WebSocket) -> None:
-	#TODO: all the websocket handling belongs to the endpoint, these are connection concerns
-	subprotocol = get_sec_websocket_protocol(websocket.scope)
-	access_token = extract_access_token(websocket.scope)
-	session_id = session_manager.find_session_id(access_token)
-	session_context.set_session_id(session_id)
 	source_paths = state_manager.get_item('source_paths')
-
-	await websocket.accept(subprotocol = subprotocol)
 
 	if source_paths:
 		capture_vision_frame = await anext(receive_vision_frames(websocket), None)
@@ -40,9 +30,6 @@ async def process_image(websocket : WebSocket) -> None:
 
 			if is_success:
 				await websocket.send_bytes(output_frame_buffer.tobytes())
-
-	if websocket.client_state == WebSocketState.CONNECTED:
-		await websocket.close()
 
 
 #TODO: needs review
@@ -302,8 +289,10 @@ def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 def encode_video_frame(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, raw_frame_bytes : bytes, resolution : Resolution, frame_index : int) -> bytes:
 	if video_codec == 'av1':
 		return aom_encoder.encode(video_encoder, raw_frame_bytes, resolution, frame_index)
+
 	if video_codec == 'vp8':
 		return vpx_encoder.encode(video_encoder, raw_frame_bytes, resolution, frame_index)
+
 	return bytes()
 
 
