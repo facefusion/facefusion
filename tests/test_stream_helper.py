@@ -1,6 +1,5 @@
 import ctypes
 import threading
-from collections import deque
 from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,6 +10,8 @@ from starlette.websockets import WebSocketState
 from tests.assert_helper import get_test_example_file, get_test_examples_directory
 
 from facefusion import rtc, rtc_store, state_manager
+import queue
+
 from facefusion.apis.stream_helper import decode_video_frame, process_image, process_video, receive_audio_frame, receive_audio_into_deque, receive_video_buffer, receive_video_into_deque, receive_vision_frames, run_peer_loop
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.download import conditional_download
@@ -145,18 +146,15 @@ def test_receive_video_into_deque_delivers_frame() -> None:
 	encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), yuv_buffer, video_resolution, 0)
 	mock_lib = MagicMock()
 	mock_lib.rtcReceiveMessage.side_effect = partial(rtc_receive_once, encoded_buffer, [ False ])
-	video_deque : deque = deque(maxlen = 1)
-	video_event = threading.Event()
+	video_queue : queue.Queue = queue.Queue(maxsize = 1)
 	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_video_into_deque, args = (0, 'vp8', video_deque, video_event, stop_event), daemon = True)
+		receiver = threading.Thread(target = receive_video_into_deque, args = (0, 'vp8', video_queue, stop_event), daemon = True)
 		receiver.start()
-		video_event.wait(timeout = 2.0)
+		vision_frame = video_queue.get(timeout = 2.0)
 		stop_event.set()
 		receiver.join()
-
-	vision_frame = video_deque.popleft()
 
 	assert numpy.any(vision_frame)
 	assert vision_frame.shape[1] == video_resolution[0]
@@ -170,18 +168,17 @@ def test_receive_video_into_deque_keeps_latest_when_full() -> None:
 	encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), yuv_buffer, video_resolution, 0)
 	mock_lib = MagicMock()
 	mock_lib.rtcReceiveMessage.side_effect = partial(rtc_receive_two, encoded_buffer, encoded_buffer, [ 0 ])
-	video_deque : deque = deque(maxlen = 1)
-	video_event = threading.Event()
+	video_queue : queue.Queue = queue.Queue(maxsize = 1)
 	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_video_into_deque, args = (0, 'vp8', video_deque, video_event, stop_event), daemon = True)
+		receiver = threading.Thread(target = receive_video_into_deque, args = (0, 'vp8', video_queue, stop_event), daemon = True)
 		receiver.start()
 		receiver.join(timeout = 2.0)
 		stop_event.set()
 
-	assert len(video_deque) == 1
-	assert video_deque.popleft().shape[1] == video_resolution[0]
+	assert video_queue.qsize() == 1
+	assert video_queue.get_nowait().shape[1] == video_resolution[0]
 
 
 def test_receive_audio_into_deque_delivers_decoded_frame() -> None:
@@ -189,17 +186,15 @@ def test_receive_audio_into_deque_delivers_decoded_frame() -> None:
 	encoded_opus = opus_encoder.encode(opus_encoder.create(48000, 2), audio_data, 960)
 	mock_lib = MagicMock()
 	mock_lib.rtcReceiveMessage.side_effect = partial(rtc_receive_once, encoded_opus, [ False ])
-	audio_deque : deque = deque(maxlen = 4)
+	audio_queue : queue.Queue = queue.Queue(maxsize = 4)
 	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_audio_into_deque, args = (0, 'opus', audio_deque, stop_event), daemon = True)
+		receiver = threading.Thread(target = receive_audio_into_deque, args = (0, 'opus', audio_queue, stop_event), daemon = True)
 		receiver.start()
-		stop_event.wait(timeout = 2.0)
+		audio_frame = audio_queue.get(timeout = 2.0)
 		stop_event.set()
 		receiver.join()
-
-	audio_frame = audio_deque.popleft()
 
 	assert audio_frame.dtype == numpy.float32
 	assert audio_frame.size == 960 * 2
@@ -208,17 +203,17 @@ def test_receive_audio_into_deque_delivers_decoded_frame() -> None:
 def test_receive_audio_into_deque_skips_empty_frames() -> None:
 	mock_lib = MagicMock()
 	mock_lib.rtcReceiveMessage.return_value = -1
-	audio_deque : deque = deque(maxlen = 4)
+	audio_queue : queue.Queue = queue.Queue(maxsize = 4)
 	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_audio_into_deque, args = (0, 'opus', audio_deque, stop_event), daemon = True)
+		receiver = threading.Thread(target = receive_audio_into_deque, args = (0, 'opus', audio_queue, stop_event), daemon = True)
 		receiver.start()
 		threading.Event().wait(timeout = 0.05)
 		stop_event.set()
 		receiver.join()
 
-	assert len(audio_deque) == 0
+	assert audio_queue.empty()
 
 
 def test_run_peer_loop_processes_and_sends_frame() -> None:

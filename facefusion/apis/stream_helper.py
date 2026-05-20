@@ -1,8 +1,9 @@
 import asyncio
+import contextlib
 import ctypes
+import queue
 import threading
 import time
-from collections import deque
 from collections.abc import AsyncIterator
 from typing import Optional
 
@@ -116,18 +117,9 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
-def wait_for_frame(video_deque : deque, video_event : threading.Event, timeout : float) -> VisionFrame:
-	if video_deque:
-		return video_deque.popleft()
-
-	video_event.clear()
-
-	if video_deque:
-		return video_deque.popleft()
-	video_event.wait(timeout = timeout)
-
-	if video_deque:
-		return video_deque.popleft()
+def wait_for_frame(video_queue : queue.Queue, timeout : float) -> VisionFrame:
+	with contextlib.suppress(queue.Empty):
+		return video_queue.get(timeout = timeout)
 	return numpy.empty(0)
 
 
@@ -136,20 +128,19 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
 	video_receiver_track = rtc_peer.get('video').get('receiver_track')
 	stop_event = threading.Event()
-	video_deque : deque = deque(maxlen = 1)
-	video_event = threading.Event()
-	audio_deque : deque = deque(maxlen = 4)
-	receiver_threads = [threading.Thread(target = receive_video_into_deque, args = (video_receiver_track, video_codec, video_deque, video_event, stop_event), daemon = True)]
+	video_queue : queue.Queue = queue.Queue(maxsize = 1)
+	audio_queue : queue.Queue = queue.Queue(maxsize = 4)
+	receiver_threads = [ threading.Thread(target = receive_video_into_deque, args = (video_receiver_track, video_codec, video_queue, stop_event), daemon = True) ]
 
 	if rtc_peer.get('audio'):
 		audio_codec = rtc_peer.get('audio').get('codec')
 		audio_receiver_track = rtc_peer.get('audio').get('receiver_track')
-		receiver_threads.append(threading.Thread(target = receive_audio_into_deque, args = (audio_receiver_track, audio_codec, audio_deque, stop_event), daemon = True))
+		receiver_threads.append(threading.Thread(target = receive_audio_into_deque, args = (audio_receiver_track, audio_codec, audio_queue, stop_event), daemon = True))
 
 	for receiver_thread in receiver_threads:
 		receiver_thread.start()
 
-	vision_frame = wait_for_frame(video_deque, video_event, 30.0)
+	vision_frame = wait_for_frame(video_queue, 30.0)
 
 	if numpy.any(vision_frame):
 		audio_frame = create_empty_audio_frame()
@@ -159,8 +150,8 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 		frame_index = 0
 
 		while numpy.any(vision_frame):
-			if audio_deque:
-				audio_frame = audio_deque.popleft()
+			if not audio_queue.empty():
+				audio_frame = audio_queue.get_nowait()
 
 			output_vision_frame = streamer.process_frame(audio_frame, vision_frame)
 			output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
@@ -187,7 +178,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 					rtc.send_audio(rtc_peer, encoded_audio_buffer, int(now * 48000))
 
 			frame_index += 1
-			vision_frame = wait_for_frame(video_deque, video_event, 30.0)
+			vision_frame = wait_for_frame(video_queue, 30.0)
 
 		destroy_video_encoder(video_codec, video_encoder)
 		opus_encoder.destroy(audio_encoder)
@@ -200,7 +191,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	rtc_store.delete_peers(session_id)
 
 
-def receive_video_into_deque(video_track : int, video_codec : VideoCodec, video_deque : deque, video_event : threading.Event, stop_event : threading.Event) -> None:
+def receive_video_into_deque(video_track : int, video_codec : VideoCodec, video_queue : queue.Queue, stop_event : threading.Event) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
 	receive_buffer = ctypes.create_string_buffer(512 * 1024)
@@ -211,9 +202,10 @@ def receive_video_into_deque(video_track : int, video_codec : VideoCodec, video_
 		if frame_buffer:
 			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
 
-			if vision_frame is not None:
-				video_deque.append(vision_frame)
-				video_event.set()
+			if numpy.any(vision_frame):
+				with contextlib.suppress(queue.Empty):
+					video_queue.get_nowait()
+				video_queue.put_nowait(vision_frame)
 		else:
 			stop_event.wait(timeout = 0.001)
 
@@ -223,7 +215,7 @@ def receive_video_into_deque(video_track : int, video_codec : VideoCodec, video_
 		vpx_decoder.destroy(video_decoder)
 
 
-def receive_audio_into_deque(audio_track : int, audio_codec : AudioCodec, audio_deque : deque, stop_event : threading.Event) -> None:
+def receive_audio_into_deque(audio_track : int, audio_codec : AudioCodec, audio_queue : queue.Queue, stop_event : threading.Event) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	audio_decoder = opus_decoder.create(48000, 2)
 	receive_buffer = ctypes.create_string_buffer(8 * 1024)
@@ -232,7 +224,7 @@ def receive_audio_into_deque(audio_track : int, audio_codec : AudioCodec, audio_
 		audio_frame = receive_audio_frame(datachannel_library, audio_track, audio_decoder, receive_buffer)
 
 		if audio_frame.dtype == numpy.float32:
-			audio_deque.append(audio_frame)
+			audio_queue.put(audio_frame)
 		else:
 			stop_event.wait(timeout = 0.001)
 
