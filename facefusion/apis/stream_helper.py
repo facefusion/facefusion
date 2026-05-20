@@ -116,13 +116,27 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 		websocket_event = await websocket.receive()
 
 
+def wait_for_frame(video_deque : deque, video_event : threading.Event, timeout : float) -> VisionFrame:
+	if video_deque:
+		return video_deque.popleft()
+
+	video_event.clear()
+
+	if video_deque:
+		return video_deque.popleft()
+	video_event.wait(timeout = timeout)
+
+	if video_deque:
+		return video_deque.popleft()
+	return numpy.empty(0)
+
+
 #TODO: needs review
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	video_info = rtc_peer.get('video')
 	video_codec = video_info.get('codec')
 	video_receiver_track = video_info.get('receiver_track')
-	audio_info = rtc_peer.get('audio')
 	video_receive_buffer = ctypes.create_string_buffer(512 * 1024)
 	audio_receive_buffer = ctypes.create_string_buffer(8 * 1024)
 	stop_event = threading.Event()
@@ -134,86 +148,57 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_receiver = threading.Thread(target = receive_video_into_deque, args = (datachannel_library, video_receiver_track, video_receive_buffer, video_codec, video_deque, video_event, stop_event), daemon = True)
 	video_receiver.start()
 
-	if audio_info:
-		audio_receiver = threading.Thread(target = receive_audio_into_deque, args = (datachannel_library, audio_info.get('receiver_track'), audio_receive_buffer, audio_deque, stop_event), daemon = True)
+	if rtc_peer.get('audio'):
+		audio_receiver = threading.Thread(target = receive_audio_into_deque, args = (datachannel_library, rtc_peer.get('audio').get('receiver_track'), audio_receive_buffer, audio_deque, stop_event), daemon = True)
 		audio_receiver.start()
 
-	video_event.clear()
+	vision_frame = wait_for_frame(video_deque, video_event, 30.0)
 
-	if not video_deque:
-		if not video_event.wait(timeout = 30.0):
-			stop_receiver_threads(stop_event, video_receiver, audio_receiver)
-			rtc_store.delete_peers(session_id)
-			return
+	if numpy.any(vision_frame):
+		audio_frame = create_empty_audio_frame()
+		temp_resolution : Resolution = (vision_frame.shape[1], vision_frame.shape[0])
+		video_encoder = create_video_encoder(video_codec, temp_resolution)
+		audio_encoder = opus_encoder.create(48000, 2)
+		frame_index = 0
 
-	vision_frame = video_deque.popleft() if video_deque else None
+		while numpy.any(vision_frame):
+			if audio_deque:
+				audio_frame = audio_deque.popleft()
 
-	if vision_frame is None:
-		stop_receiver_threads(stop_event, video_receiver, audio_receiver)
-		rtc_store.delete_peers(session_id)
-		return
+			output_vision_frame = streamer.process_frame(audio_frame, vision_frame)
+			output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 
-	audio_frame = create_empty_audio_frame()
-	resolution : Resolution = (vision_frame.shape[1], vision_frame.shape[0])
-	video_encoder = create_video_encoder(video_codec, resolution)
-	audio_encoder = opus_encoder.create(48000, 2)
-	frame_index = 0
+			raw_vision_frame = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420)
 
-	while True:
-		if audio_deque:
-			audio_frame = audio_deque.popleft()
+			if output_resolution == temp_resolution:
+				encoded_video_buffer = encode_video_frame(video_codec, video_encoder, raw_vision_frame.tobytes(), temp_resolution, frame_index)
+			else:
+				destroy_video_encoder(video_codec, video_encoder)
+				temp_resolution = output_resolution
+				video_encoder = create_video_encoder(video_codec, temp_resolution)
+				encoded_video_buffer = encode_video_frame(video_codec, video_encoder, raw_vision_frame.tobytes(), temp_resolution, frame_index)
 
-		output_vision_frame = streamer.process_frame(audio_frame, vision_frame)
-		output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
+			now = time.monotonic()
 
-		if output_resolution != resolution:
-			resolution = output_resolution
-			destroy_video_encoder(video_codec, video_encoder)
-			video_encoder = create_video_encoder(video_codec, resolution)
+			if encoded_video_buffer:
+				rtc.send_video(rtc_peer, encoded_video_buffer, int(now * 90000))
 
-		raw_vision_frame = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420)
-		encoded_video_buffer = bytes()
+			if audio_encoder and audio_frame.dtype == numpy.float32:
+				encoded_audio_buffer = opus_encoder.encode(audio_encoder, audio_frame.tobytes(), 960)
 
-		if video_codec == 'av1':
-			encoded_video_buffer = aom_encoder.encode(video_encoder, raw_vision_frame.tobytes(), resolution, frame_index)
-		if video_codec == 'vp8':
-			encoded_video_buffer = vpx_encoder.encode(video_encoder, raw_vision_frame.tobytes(), resolution, frame_index)
+				if encoded_audio_buffer:
+					rtc.send_audio(rtc_peer, encoded_audio_buffer, int(now * 48000))
 
-		now = time.monotonic()
+			frame_index += 1
+			vision_frame = wait_for_frame(video_deque, video_event, 30.0)
 
-		if encoded_video_buffer:
-			rtc.send_video(rtc_peer, encoded_video_buffer, int(now * 90000))
+		destroy_video_encoder(video_codec, video_encoder)
+		opus_encoder.destroy(audio_encoder)
 
-		if audio_encoder and audio_frame.dtype == numpy.float32:
-			encoded_audio_buffer = opus_encoder.encode(audio_encoder, audio_frame.tobytes(), 960)
-
-			if encoded_audio_buffer:
-				rtc.send_audio(rtc_peer, encoded_audio_buffer, int(now * 48000))
-
-		frame_index += 1
-
-		next_frame = video_deque.popleft() if video_deque else None
-
-		if next_frame is not None:
-			vision_frame = next_frame
-			continue
-
-		video_event.clear()
-
-		if not video_deque:
-			if not video_event.wait(timeout = 30.0):
-				break
-
-		next_frame = video_deque.popleft() if video_deque else None
-
-		if next_frame is None:
-			break
-
-		vision_frame = next_frame
-
-	stop_receiver_threads(stop_event, video_receiver, audio_receiver)
-	destroy_video_encoder(video_codec, video_encoder)
-	opus_encoder.destroy(audio_encoder)
+	stop_event.set()
+	video_receiver.join()
+	if audio_receiver:
+		audio_receiver.join()
 	rtc_store.delete_peers(session_id)
 
 
@@ -325,6 +310,14 @@ def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 			return cv2.cvtColor(yuv_frame, cv2.COLOR_YUV2BGR_I420)
 
 	return None
+
+
+def encode_video_frame(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, raw_frame_bytes : bytes, resolution : Resolution, frame_index : int) -> bytes:
+	if video_codec == 'av1':
+		return aom_encoder.encode(video_encoder, raw_frame_bytes, resolution, frame_index)
+	if video_codec == 'vp8':
+		return vpx_encoder.encode(video_encoder, raw_frame_bytes, resolution, frame_index)
+	return bytes()
 
 
 def receive_video_buffer(datachannel_library : ctypes.CDLL, video_track : int, receive_buffer : ctypes.Array[ctypes.c_char]) -> Optional[bytes]:
