@@ -150,7 +150,7 @@ def test_receive_video_into_deque_delivers_frame() -> None:
 	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_video_into_deque, args = (0, 'vp8', video_queue, stop_event), daemon = True)
+		receiver = threading.Thread(target = receive_video_into_deque, args = (0, 'vp8', video_queue, stop_event, 30.0), daemon = True)
 		receiver.start()
 		vision_frame = video_queue.get(timeout = 2.0)
 		stop_event.set()
@@ -172,7 +172,7 @@ def test_receive_video_into_deque_keeps_latest_when_full() -> None:
 	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_video_into_deque, args = (0, 'vp8', video_queue, stop_event), daemon = True)
+		receiver = threading.Thread(target = receive_video_into_deque, args = (0, 'vp8', video_queue, stop_event, 30.0), daemon = True)
 		receiver.start()
 		receiver.join(timeout = 2.0)
 		stop_event.set()

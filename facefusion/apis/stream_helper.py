@@ -134,45 +134,44 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	for receiver_thread in receiver_threads:
 		receiver_thread.start()
 
-	vision_frame = video_queue.get()
+	temp_vision_frame = video_queue.get()
 
-	if numpy.any(vision_frame):
+	if numpy.any(temp_vision_frame):
 		audio_frame = create_empty_audio_frame()
-		temp_resolution : Resolution = (vision_frame.shape[1], vision_frame.shape[0])
+		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
 		video_encoder = create_video_encoder(video_codec, temp_resolution)
 		audio_encoder = opus_encoder.create(48000, 2)
 		frame_index = 0
 
-		while numpy.any(vision_frame):
+		while numpy.any(temp_vision_frame):
 			with contextlib.suppress(queue.Empty):
 				audio_frame = audio_queue.get_nowait()
 
-			output_vision_frame = streamer.process_frame(audio_frame, vision_frame)
+			output_vision_frame = streamer.process_frame(audio_frame, temp_vision_frame)
 			output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
-
-			raw_vision_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+			output_vision_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
 			if output_resolution == temp_resolution:
-				output_video_buffer = encode_video_frame(video_codec, video_encoder, raw_vision_buffer, temp_resolution, frame_index)
+				output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 			else:
 				destroy_video_encoder(video_codec, video_encoder)
 				temp_resolution = output_resolution
 				video_encoder = create_video_encoder(video_codec, temp_resolution)
-				output_video_buffer = encode_video_frame(video_codec, video_encoder, raw_vision_buffer, temp_resolution, frame_index)
+				output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 
-			now = time.monotonic()
+			send_timestamp = time.monotonic()
 
 			if output_video_buffer:
-				rtc.send_video(rtc_peer, output_video_buffer, int(now * 90000))
+				rtc.send_video(rtc_peer, output_video_buffer, int(send_timestamp * 90000))
 
 			if audio_encoder and audio_frame.dtype == numpy.float32:
 				output_audio_buffer = opus_encoder.encode(audio_encoder, audio_frame.tobytes(), 960)
 
 				if output_audio_buffer:
-					rtc.send_audio(rtc_peer, output_audio_buffer, int(now * 48000))
+					rtc.send_audio(rtc_peer, output_audio_buffer, int(send_timestamp * 48000))
 
 			frame_index += 1
-			vision_frame = video_queue.get()
+			temp_vision_frame = video_queue.get()
 
 		destroy_video_encoder(video_codec, video_encoder)
 		opus_encoder.destroy(audio_encoder)
