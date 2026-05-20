@@ -150,7 +150,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 		frame_index = 0
 
 		while numpy.any(vision_frame):
-			if not audio_queue.empty():
+			with contextlib.suppress(queue.Empty):
 				audio_frame = audio_queue.get_nowait()
 
 			output_vision_frame = streamer.process_frame(audio_frame, vision_frame)
