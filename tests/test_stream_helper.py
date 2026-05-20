@@ -12,7 +12,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 from facefusion import rtc, rtc_store, state_manager
 import queue
 
-from facefusion.apis.stream_helper import decode_video_frame, process_image, process_video, receive_audio_frame, receive_audio_into_deque, receive_video_buffer, receive_video_into_deque, receive_vision_frames, run_peer_loop
+from facefusion.apis.stream_helper import decode_video_frame, process_image, process_video, receive_audio_frame, pump_audio_frames, receive_video_buffer, pump_video_frames, receive_vision_frames, run_peer_loop
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.download import conditional_download
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
@@ -150,7 +150,7 @@ def test_receive_video_into_deque_delivers_frame() -> None:
 	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_video_into_deque, args = (0, 'vp8', video_queue, stop_event, 30.0), daemon = True)
+		receiver = threading.Thread(target = pump_video_frames, args = (0, 'vp8', video_queue, stop_event), daemon = True)
 		receiver.start()
 		vision_frame = video_queue.get(timeout = 2.0)
 		stop_event.set()
@@ -172,7 +172,7 @@ def test_receive_video_into_deque_keeps_latest_when_full() -> None:
 	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_video_into_deque, args = (0, 'vp8', video_queue, stop_event, 30.0), daemon = True)
+		receiver = threading.Thread(target = pump_video_frames, args = (0, 'vp8', video_queue, stop_event), daemon = True)
 		receiver.start()
 		receiver.join(timeout = 2.0)
 		stop_event.set()
@@ -190,7 +190,7 @@ def test_receive_audio_into_deque_delivers_decoded_frame() -> None:
 	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_audio_into_deque, args = (0, 'opus', audio_queue, stop_event), daemon = True)
+		receiver = threading.Thread(target = pump_audio_frames, args = (0, 'opus', audio_queue, stop_event), daemon = True)
 		receiver.start()
 		audio_frame = audio_queue.get(timeout = 2.0)
 		stop_event.set()
@@ -207,7 +207,7 @@ def test_receive_audio_into_deque_skips_empty_frames() -> None:
 	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_audio_into_deque, args = (0, 'opus', audio_queue, stop_event), daemon = True)
+		receiver = threading.Thread(target = pump_audio_frames, args = (0, 'opus', audio_queue, stop_event), daemon = True)
 		receiver.start()
 		threading.Event().wait(timeout = 0.05)
 		stop_event.set()
