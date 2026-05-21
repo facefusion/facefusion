@@ -94,21 +94,22 @@ def debug_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 
 def draw_bounding_box(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
-	box_color = 0, 0, 255
-	border_color = 100, 100, 255
 	bounding_box = target_face.bounding_box.astype(numpy.int32)
 	x1, y1, x2, y2 = bounding_box
+	box_color = 0, 0, 255
+	border_scale = calculate_scale(temp_vision_frame)
+	border_color = 100, 100, 255
 
-	cv2.rectangle(temp_vision_frame, (x1, y1), (x2, y2), box_color, 2)
+	cv2.rectangle(temp_vision_frame, (x1, y1), (x2, y2), box_color, border_scale)
 
 	if target_face.angle == 0:
-		cv2.line(temp_vision_frame, (x1, y1), (x2, y1), border_color, 3)
+		cv2.line(temp_vision_frame, (x1, y1), (x2, y1), border_color, border_scale + 1)
 	if target_face.angle == 180:
-		cv2.line(temp_vision_frame, (x1, y2), (x2, y2), border_color, 3)
+		cv2.line(temp_vision_frame, (x1, y2), (x2, y2), border_color, border_scale + 1)
 	if target_face.angle == 90:
-		cv2.line(temp_vision_frame, (x2, y1), (x2, y2), border_color, 3)
+		cv2.line(temp_vision_frame, (x2, y1), (x2, y2), border_color, border_scale + 1)
 	if target_face.angle == 270:
-		cv2.line(temp_vision_frame, (x1, y1), (x1, y2), border_color, 3)
+		cv2.line(temp_vision_frame, (x1, y1), (x1, y2), border_color, border_scale + 1)
 
 	return temp_vision_frame
 
@@ -122,6 +123,7 @@ def draw_face_mask(target_face : Face, temp_vision_frame : VisionFrame) -> Visio
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, face_landmark_5_68, 'arcface_128', (512, 512))
 	inverse_matrix = cv2.invertAffineTransform(affine_matrix)
 	temp_size = temp_vision_frame.shape[:2][::-1]
+	mask_scale = calculate_scale(temp_vision_frame)
 	mask_color = 0, 255, 0
 
 	if numpy.array_equal(face_landmark_5, face_landmark_5_68):
@@ -149,7 +151,7 @@ def draw_face_mask(target_face : Face, temp_vision_frame : VisionFrame) -> Visio
 	inverse_vision_frame = cv2.warpAffine(crop_mask, inverse_matrix, temp_size)
 	inverse_vision_frame = cv2.threshold(inverse_vision_frame, 100, 255, cv2.THRESH_BINARY)[1]
 	inverse_contours, _ = cv2.findContours(inverse_vision_frame, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-	cv2.drawContours(temp_vision_frame, inverse_contours, -1, mask_color, 2)
+	cv2.drawContours(temp_vision_frame, inverse_contours, -1, mask_color, mask_scale)
 
 	return temp_vision_frame
 
@@ -157,13 +159,14 @@ def draw_face_mask(target_face : Face, temp_vision_frame : VisionFrame) -> Visio
 def draw_face_landmark_5(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_5 = target_face.landmark_set.get('5')
+	point_scale = calculate_scale(temp_vision_frame)
 	point_color = 0, 0, 255
 
 	if numpy.any(face_landmark_5):
 		face_landmark_5 = face_landmark_5.astype(numpy.int32)
 
 		for point in face_landmark_5:
-			cv2.circle(temp_vision_frame, tuple(point), 3, point_color, -1)
+			cv2.circle(temp_vision_frame, tuple(point), point_scale, point_color, -1)
 
 	return temp_vision_frame
 
@@ -172,6 +175,7 @@ def draw_face_landmark_5_68(target_face : Face, temp_vision_frame : VisionFrame)
 	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_5 = target_face.landmark_set.get('5')
 	face_landmark_5_68 = target_face.landmark_set.get('5/68')
+	point_scale = calculate_scale(temp_vision_frame)
 	point_color = 0, 255, 0
 
 	if numpy.array_equal(face_landmark_5, face_landmark_5_68):
@@ -181,7 +185,7 @@ def draw_face_landmark_5_68(target_face : Face, temp_vision_frame : VisionFrame)
 		face_landmark_5_68 = face_landmark_5_68.astype(numpy.int32)
 
 		for point in face_landmark_5_68:
-			cv2.circle(temp_vision_frame, tuple(point), 3, point_color, -1)
+			cv2.circle(temp_vision_frame, tuple(point), point_scale, point_color, -1)
 
 	return temp_vision_frame
 
@@ -190,6 +194,7 @@ def draw_face_landmark_68(target_face : Face, temp_vision_frame : VisionFrame) -
 	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_68 = target_face.landmark_set.get('68')
 	face_landmark_68_5 = target_face.landmark_set.get('68/5')
+	point_scale = calculate_scale(temp_vision_frame)
 	point_color = 0, 255, 0
 
 	if numpy.array_equal(face_landmark_68, face_landmark_68_5):
@@ -199,7 +204,7 @@ def draw_face_landmark_68(target_face : Face, temp_vision_frame : VisionFrame) -
 		face_landmark_68 = face_landmark_68.astype(numpy.int32)
 
 		for point in face_landmark_68:
-			cv2.circle(temp_vision_frame, tuple(point), 3, point_color, -1)
+			cv2.circle(temp_vision_frame, tuple(point), point_scale, point_color, -1)
 
 	return temp_vision_frame
 
@@ -207,15 +212,22 @@ def draw_face_landmark_68(target_face : Face, temp_vision_frame : VisionFrame) -
 def draw_face_landmark_68_5(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
 	temp_vision_frame = numpy.ascontiguousarray(temp_vision_frame)
 	face_landmark_68_5 = target_face.landmark_set.get('68/5')
+	point_scale = calculate_scale(temp_vision_frame)
 	point_color = 255, 255, 0
 
 	if numpy.any(face_landmark_68_5):
 		face_landmark_68_5 = face_landmark_68_5.astype(numpy.int32)
 
 		for point in face_landmark_68_5:
-			cv2.circle(temp_vision_frame, tuple(point), 3, point_color, -1)
+			cv2.circle(temp_vision_frame, tuple(point), point_scale, point_color, -1)
 
 	return temp_vision_frame
+
+
+def calculate_scale(temp_vision_frame : VisionFrame) -> int:
+	frame_height, _ = temp_vision_frame.shape[:2]
+	frame_scale = round(frame_height / 270)
+	return max(1, min(10, frame_scale))
 
 
 def process_frame(inputs : FaceDebuggerInputs) -> ProcessorOutputs:
@@ -231,5 +243,3 @@ def process_frame(inputs : FaceDebuggerInputs) -> ProcessorOutputs:
 			temp_vision_frame = debug_face(target_face, temp_vision_frame)
 
 	return temp_vision_frame, temp_vision_mask
-
-
