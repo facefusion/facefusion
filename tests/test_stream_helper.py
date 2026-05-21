@@ -249,7 +249,6 @@ async def test_process_image_sends_processed_frame() -> None:
 	assert mock_ws.send_bytes.call_args[0][0][:3] == b'\xff\xd8\xff'
 
 
-# TODO: refine test
 @pytest.mark.anyio
 async def test_process_image_without_source_skips_send() -> None:
 	mock_ws = AsyncMock()
@@ -295,7 +294,7 @@ async def test_process_video_returns_sdp_answer(video_codec : VideoCodec) -> Non
 	sdp_offer = rtc.create_sdp_offer(sender_connection)
 	datachannel_module.create_static_library().rtcDeletePeerConnection(sender_connection)
 
-	with patch('facefusion.apis.stream_helper.run_peer_loop'):
+	with patch('facefusion.apis.stream_helper.threading.Thread'):
 		sdp_answer = process_video('test-process-video-' + video_codec, sdp_offer)
 
 	assert sdp_answer is not None
