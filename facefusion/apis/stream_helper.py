@@ -34,9 +34,8 @@ async def process_image(websocket : WebSocket) -> None:
 #TODO: needs review
 def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpAnswer]:
 	video_codec : VideoCodec = 'vp8'
-	av1_payload_type = rtc.get_payload_type(sdp_offer, 'av1')
 
-	if av1_payload_type:
+	if rtc.get_payload_type(sdp_offer, 'av1'):
 		video_codec = 'av1'
 
 	video_payload_type = rtc.get_payload_type(sdp_offer, video_codec)
@@ -187,12 +186,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 			time.sleep(0.001)  # TODO: remove sleep
 
 	video_queue.put(numpy.empty(0))
-
-	if video_codec == 'av1':
-		aom_decoder.destroy(video_decoder)
-
-	if video_codec == 'vp8':
-		vpx_decoder.destroy(video_decoder)
+	destroy_video_decoder(video_codec, video_decoder)
 
 
 def receive_audio_frames(audio_track : int, audio_queue : queue.Queue[AudioFrame]) -> None:
@@ -216,42 +210,6 @@ def receive_audio_frames(audio_track : int, audio_queue : queue.Queue[AudioFrame
 			time.sleep(0.001) # TODO: remove sleep
 
 	opus_decoder.destroy(audio_decoder)
-
-
-def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomDecoder]:
-	if video_codec == 'av1':
-		return aom_decoder.create(8)
-
-	if video_codec == 'vp8':
-		return vpx_decoder.create(8)
-
-	return None
-
-
-def create_video_encoder(video_codec : VideoCodec, resolution : Resolution) -> Optional[VpxEncoder | AomEncoder]:
-	if video_codec == 'av1':
-		return aom_encoder.create(resolution, 8000, 8, 10)
-
-	if video_codec == 'vp8':
-		return vpx_encoder.create(resolution, 8000, 8, 10)
-
-	return None
-
-
-def destroy_video_encoder(video_codec : VideoCodec, video_encoder : Optional[VpxEncoder | AomEncoder]) -> None:
-	if video_codec == 'av1':
-		aom_encoder.destroy(video_encoder)
-
-	if video_codec == 'vp8':
-		vpx_encoder.destroy(video_encoder)
-
-
-def destroy_stream(session_id : SessionId) -> bool:
-	if rtc_store.get_peers(session_id):
-		rtc_store.delete_peers(session_id)
-		return True
-
-	return False
 
 
 def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, frame_buffer : bytes) -> Optional[VisionFrame]:
@@ -282,3 +240,47 @@ def encode_video_frame(video_codec : VideoCodec, video_encoder : VpxEncoder | Ao
 		return vpx_encoder.encode(video_encoder, raw_frame_bytes, resolution, frame_index)
 
 	return bytes()
+
+
+def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomDecoder]:
+	if video_codec == 'av1':
+		return aom_decoder.create(8)
+
+	if video_codec == 'vp8':
+		return vpx_decoder.create(8)
+
+	return None
+
+
+def create_video_encoder(video_codec : VideoCodec, resolution : Resolution) -> Optional[VpxEncoder | AomEncoder]:
+	if video_codec == 'av1':
+		return aom_encoder.create(resolution, 8000, 8, 10)
+
+	if video_codec == 'vp8':
+		return vpx_encoder.create(resolution, 8000, 8, 10)
+
+	return None
+
+
+def destroy_video_decoder(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder) -> None:
+	if video_codec == 'av1':
+		aom_decoder.destroy(video_decoder)
+
+	if video_codec == 'vp8':
+		vpx_decoder.destroy(video_decoder)
+
+
+def destroy_video_encoder(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder) -> None:
+	if video_codec == 'av1':
+		aom_encoder.destroy(video_encoder)
+
+	if video_codec == 'vp8':
+		vpx_encoder.destroy(video_encoder)
+
+
+def destroy_stream(session_id : SessionId) -> bool:
+	if rtc_store.get_peers(session_id):
+		rtc_store.delete_peers(session_id)
+		return True
+
+	return False
