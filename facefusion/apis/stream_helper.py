@@ -169,13 +169,13 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
 	receive_buffer = ctypes.create_string_buffer(512 * 1024)
-	receive_output = -3
+	receive_status_code = -3
 
-	while receive_output == 0 or receive_output == -3:
+	while receive_status_code == 0 or receive_status_code == -3:
 		buffer_size = ctypes.c_int(512 * 1024)
-		receive_output = datachannel_library.rtcReceiveMessage(video_track, receive_buffer, ctypes.byref(buffer_size))
+		receive_status_code = datachannel_library.rtcReceiveMessage(video_track, receive_buffer, ctypes.byref(buffer_size))
 
-		if receive_output == 0 and buffer_size.value > 0:
+		if receive_status_code == 0 and buffer_size.value > 0:
 			frame_buffer = receive_buffer.raw[:buffer_size.value]
 			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
 
@@ -183,7 +183,8 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 				with contextlib.suppress(queue.Empty):
 					video_queue.get_nowait()
 				video_queue.put_nowait(vision_frame)
-		if receive_output == -3:
+
+		if receive_status_code == -3:
 			time.sleep(0.001)  # TODO: remove sleep
 
 	video_queue.put(numpy.empty(0))
@@ -198,19 +199,20 @@ def receive_audio_frames(audio_track : int, audio_queue : queue.Queue[AudioFrame
 	datachannel_library = datachannel_module.create_static_library()
 	audio_decoder = opus_decoder.create(48000, 2)
 	receive_buffer = ctypes.create_string_buffer(8 * 1024)
-	receive_output = -3
+	receive_status_code = -3
 
-	while receive_output == 0 or receive_output == -3:
+	while receive_status_code == 0 or receive_status_code == -3:
 		buffer_size = ctypes.c_int(8 * 1024)
-		receive_output = datachannel_library.rtcReceiveMessage(audio_track, receive_buffer, ctypes.byref(buffer_size))
+		receive_status_code = datachannel_library.rtcReceiveMessage(audio_track, receive_buffer, ctypes.byref(buffer_size))
 
-		if receive_output == 0 and buffer_size.value > 0:
+		if receive_status_code == 0 and buffer_size.value > 0:
 			opus_buffer = receive_buffer.raw[:buffer_size.value]
 			output_buffer = opus_decoder.decode(audio_decoder, opus_buffer, 960, 2)
 
 			if output_buffer:
 				audio_queue.put(numpy.frombuffer(output_buffer, dtype = numpy.float32))
-		if receive_output == -3:
+
+		if receive_status_code == -3:
 			time.sleep(0.001) # TODO: remove sleep
 
 	opus_decoder.destroy(audio_decoder)
