@@ -88,7 +88,6 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 	return None
 
 
-#TODO: needs review
 async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFrame]:
 	websocket_event = await websocket.receive()
 
@@ -191,6 +190,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 
 	if video_codec == 'av1':
 		aom_decoder.destroy(video_decoder)
+
 	if video_codec == 'vp8':
 		vpx_decoder.destroy(video_decoder)
 
@@ -221,6 +221,7 @@ def receive_audio_frames(audio_track : int, audio_queue : queue.Queue[AudioFrame
 def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomDecoder]:
 	if video_codec == 'av1':
 		return aom_decoder.create(8)
+
 	if video_codec == 'vp8':
 		return vpx_decoder.create(8)
 
@@ -230,6 +231,7 @@ def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomD
 def create_video_encoder(video_codec : VideoCodec, resolution : Resolution) -> Optional[VpxEncoder | AomEncoder]:
 	if video_codec == 'av1':
 		return aom_encoder.create(resolution, 8000, 8, 10)
+
 	if video_codec == 'vp8':
 		return vpx_encoder.create(resolution, 8000, 8, 10)
 
@@ -239,6 +241,7 @@ def create_video_encoder(video_codec : VideoCodec, resolution : Resolution) -> O
 def destroy_video_encoder(video_codec : VideoCodec, video_encoder : Optional[VpxEncoder | AomEncoder]) -> None:
 	if video_codec == 'av1':
 		aom_encoder.destroy(video_encoder)
+
 	if video_codec == 'vp8':
 		vpx_encoder.destroy(video_encoder)
 
