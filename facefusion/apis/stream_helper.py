@@ -184,7 +184,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 					video_queue.get_nowait()
 				video_queue.put_nowait(vision_frame)
 		if receive_output == -3:
-			time.sleep(0.001)
+			time.sleep(0.001)  # TODO: remove sleep
 
 	video_queue.put(numpy.empty(0))
 
@@ -211,7 +211,7 @@ def receive_audio_frames(audio_track : int, audio_queue : queue.Queue[AudioFrame
 			if output_buffer:
 				audio_queue.put(numpy.frombuffer(output_buffer, dtype = numpy.float32))
 		if receive_output == -3:
-			time.sleep(0.001)
+			time.sleep(0.001) # TODO: remove sleep
 
 	opus_decoder.destroy(audio_decoder)
 
