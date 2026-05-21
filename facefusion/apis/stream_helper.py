@@ -108,7 +108,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_track = rtc_peer.get('video').get('receiver_track')
 	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
-	receiver_threads = [threading.Thread(target = receive_video_frames, args = (video_track, video_codec, video_queue), daemon = True)]
+	receiver_threads = [ threading.Thread(target = receive_video_frames, args = (video_track, video_codec, video_queue), daemon = True) ]
 
 	if rtc_peer.get('audio'):
 		audio_track = rtc_peer.get('audio').get('receiver_track')
@@ -218,7 +218,6 @@ def receive_audio_frames(audio_track : int, audio_queue : queue.Queue[AudioFrame
 	opus_decoder.destroy(audio_decoder)
 
 
-#TODO: needs review
 def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomDecoder]:
 	if video_codec == 'av1':
 		return aom_decoder.create(8)
@@ -228,7 +227,6 @@ def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomD
 	return None
 
 
-#TODO: needs review - remove as both are the same
 def create_video_encoder(video_codec : VideoCodec, resolution : Resolution) -> Optional[VpxEncoder | AomEncoder]:
 	if video_codec == 'av1':
 		return aom_encoder.create(resolution, 8000, 8, 10)
@@ -238,7 +236,6 @@ def create_video_encoder(video_codec : VideoCodec, resolution : Resolution) -> O
 	return None
 
 
-#TODO: needs review - remove as this is a trivial helper
 def destroy_video_encoder(video_codec : VideoCodec, video_encoder : Optional[VpxEncoder | AomEncoder]) -> None:
 	if video_codec == 'av1':
 		aom_encoder.destroy(video_encoder)
