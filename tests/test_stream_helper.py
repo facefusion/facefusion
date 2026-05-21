@@ -92,13 +92,11 @@ def test_pump_video_frames_keeps_latest_when_full() -> None:
 
 	mock_lib.rtcReceiveMessage.side_effect = receive_two
 	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
-	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_video_frames, args = (0, 'vp8', video_queue, stop_event), daemon = True)
+		receiver = threading.Thread(target = receive_video_frames, args = (0, 'vp8', video_queue), daemon = True)
 		receiver.start()
 		receiver.join(timeout = 2.0)
-		stop_event.set()
 
 	assert video_queue.qsize() == 1
 	assert video_queue.get_nowait().shape[1] == video_resolution[0]
@@ -121,14 +119,12 @@ def test_pump_audio_frames_delivers_decoded_frame() -> None:
 
 	mock_lib.rtcReceiveMessage.side_effect = receive_once
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
-	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_audio_frames, args = (0, 'opus', audio_queue, stop_event), daemon = True)
+		receiver = threading.Thread(target = receive_audio_frames, args = (0, audio_queue), daemon = True)
 		receiver.start()
 		audio_frame = audio_queue.get(timeout = 2.0)
-		stop_event.set()
-		receiver.join()
+		receiver.join(timeout = 1.0)
 
 	assert audio_frame.dtype == numpy.float32
 	assert audio_frame.size == 960 * 2
@@ -139,14 +135,11 @@ def test_pump_audio_frames_skips_empty_frames() -> None:
 	mock_lib = MagicMock()
 	mock_lib.rtcReceiveMessage.return_value = -1
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
-	stop_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_audio_frames, args = (0, 'opus', audio_queue, stop_event), daemon = True)
+		receiver = threading.Thread(target = receive_audio_frames, args = (0, audio_queue), daemon = True)
 		receiver.start()
-		threading.Event().wait(timeout = 0.05)
-		stop_event.set()
-		receiver.join()
+		receiver.join(timeout = 0.1)
 
 	assert audio_queue.empty()
 
