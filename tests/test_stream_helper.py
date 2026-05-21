@@ -46,46 +46,44 @@ def before_each() -> None:
 def test_decode_video_frame(video_codec : VideoCodec) -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
-	yuv_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	frame_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
 	if video_codec == 'av1':
-		encoded_buffer = aom_encoder.encode(aom_encoder.create(video_resolution, 1000, 1, 0), yuv_buffer, video_resolution, 0)
-		decoded_frame = decode_video_frame(video_codec, aom_decoder.create(8), encoded_buffer)
+		encoded_buffer = aom_encoder.encode(aom_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
+		vision_frame = decode_video_frame(video_codec, aom_decoder.create(8), encoded_buffer)
 
-		assert decoded_frame is not None
-		assert decoded_frame.shape[1] >= video_resolution[0]
-		assert decoded_frame.shape[0] >= video_resolution[1]
-		assert decoded_frame.ndim == 3
+		assert numpy.any(vision_frame)
+		assert vision_frame.shape[1] >= video_resolution[0]
+		assert vision_frame.shape[0] >= video_resolution[1]
+		assert vision_frame.ndim == 3
+
+		assert decode_video_frame('av1', aom_decoder.create(8), bytes()) is None
 
 	if video_codec == 'vp8':
-		encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), yuv_buffer, video_resolution, 0)
-		decoded_frame = decode_video_frame(video_codec, vpx_decoder.create(8), encoded_buffer)
+		encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
+		vision_frame = decode_video_frame(video_codec, vpx_decoder.create(8), encoded_buffer)
 
-		assert decoded_frame is not None
-		assert decoded_frame.shape[1] == video_resolution[0]
-		assert decoded_frame.shape[0] == video_resolution[1]
-		assert decoded_frame.ndim == 3
+		assert numpy.any(vision_frame)
+		assert vision_frame.shape[1] == video_resolution[0]
+		assert vision_frame.shape[0] == video_resolution[1]
+		assert vision_frame.ndim == 3
 
-
-# TODO: refine test
-def test_decode_video_frame_empty_buffer() -> None:
-	assert decode_video_frame('vp8', vpx_decoder.create(8), bytes()) is None
-	assert decode_video_frame('av1', aom_decoder.create(8), bytes()) is None
+		assert decode_video_frame('vp8', vpx_decoder.create(8), bytes()) is None
 
 
 # TODO: refine test
-def test_receive_video_frames_keeps_latest_when_full() -> None:
+def test_receive_video_frames() -> None:
 	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_resolution = (source_frame.shape[1], source_frame.shape[0])
-	yuv_buffer = cv2.cvtColor(source_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), yuv_buffer, video_resolution, 0)
+	frame_buffer = cv2.cvtColor(source_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	encode_frame_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
 	mock_lib = MagicMock()
 	state : list[int] = [ 0 ]
 
 	def receive_two(track : int, buffer : ctypes.Array[ctypes.c_char], size_byref : ctypes.c_void_p) -> int:
 		if state[0] < 2:
-			ctypes.memmove(buffer, encoded_buffer, len(encoded_buffer))
-			ctypes.cast(size_byref, ctypes.POINTER(ctypes.c_int))[0] = len(encoded_buffer)
+			ctypes.memmove(buffer, encode_frame_buffer, len(encode_frame_buffer))
+			ctypes.cast(size_byref, ctypes.POINTER(ctypes.c_int))[0] = len(encode_frame_buffer)
 			state[0] += 1
 			return 0
 		return -1
@@ -103,17 +101,17 @@ def test_receive_video_frames_keeps_latest_when_full() -> None:
 
 
 # TODO: refine test
-def test_receive_audio_frames_delivers_decoded_frame() -> None:
+def test_receive_audio_frames() -> None:
 	audio_data = numpy.zeros(960 * 2, dtype = numpy.float32).tobytes()
-	encoded_opus = opus_encoder.encode(opus_encoder.create(48000, 2), audio_data, 960)
+	audio_buffer = opus_encoder.encode(opus_encoder.create(48000, 2), audio_data, 960)
 	mock_lib = MagicMock()
 	state : list[bool] = [ False ]
 
 	def receive_once(track : int, buffer : ctypes.Array[ctypes.c_char], size_byref : ctypes.c_void_p) -> int:
 		if state[0]:
 			return -1
-		ctypes.memmove(buffer, encoded_opus, len(encoded_opus))
-		ctypes.cast(size_byref, ctypes.POINTER(ctypes.c_int))[0] = len(encoded_opus)
+		ctypes.memmove(buffer, audio_buffer, len(audio_buffer))
+		ctypes.cast(size_byref, ctypes.POINTER(ctypes.c_int))[0] = len(audio_buffer)
 		state[0] = True
 		return 0
 
@@ -128,24 +126,11 @@ def test_receive_audio_frames_delivers_decoded_frame() -> None:
 
 	assert audio_frame.dtype == numpy.float32
 	assert audio_frame.size == 960 * 2
-
-
-# TODO: refine test
-def test_receive_audio_frames_skips_empty_frames() -> None:
-	mock_lib = MagicMock()
-	mock_lib.rtcReceiveMessage.return_value = -1
-	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
-
-	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_audio_frames, args = (0, audio_queue), daemon = True)
-		receiver.start()
-		receiver.join(timeout = 0.1)
-
 	assert audio_queue.empty()
 
 
 # TODO: refine test
-def test_run_peer_loop_processes_and_sends_frame() -> None:
+def test_run_peer_loop() -> None:
 	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_resolution = (source_frame.shape[1], source_frame.shape[0])
 	yuv_buffer = cv2.cvtColor(source_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
@@ -194,16 +179,28 @@ def test_run_peer_loop_processes_and_sends_frame() -> None:
 
 # TODO: refine test
 @pytest.mark.anyio
-async def test_receive_vision_frames_yields_decoded_frames() -> None:
+async def test_receive_vision_frames() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	_, jpeg_buffer = cv2.imencode('.jpg', vision_frame)
 	jpeg_bytes = jpeg_buffer.tobytes()
 	mock_ws = AsyncMock()
 	mock_ws.receive.side_effect =\
 	[
-		{'type': 'websocket.receive', 'bytes': jpeg_bytes},
-		{'type': 'websocket.receive', 'bytes': jpeg_bytes},
-		{'type': 'websocket.disconnect'}
+		{
+			'type': 'websocket.receive',
+			'bytes': jpeg_bytes
+		},
+		{
+			'type': 'websocket.receive',
+			'bytes': b'not_a_jpeg'
+		},
+		{
+			'type': 'websocket.receive',
+			'bytes': jpeg_bytes
+		},
+		{
+			'type': 'websocket.disconnect'
+		}
 	]
 
 	frames = []
@@ -217,52 +214,27 @@ async def test_receive_vision_frames_yields_decoded_frames() -> None:
 
 # TODO: refine test
 @pytest.mark.anyio
-async def test_receive_vision_frames_skips_invalid_bytes() -> None:
-	mock_ws = AsyncMock()
-	mock_ws.receive.side_effect =\
-	[
-		{'type': 'websocket.receive', 'bytes': b'not_a_jpeg'},
-		{'type': 'websocket.disconnect'}
-	]
-
-	frames = []
-
-	async for frame in receive_vision_frames(mock_ws):
-		frames.append(frame)
-
-	assert len(frames) == 0
-
-
-# TODO: refine test
-@pytest.mark.anyio
-async def test_process_image_sends_processed_frame() -> None:
+async def test_process_image() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	_, jpeg_buffer = cv2.imencode('.jpg', vision_frame)
 	mock_ws = AsyncMock()
 	mock_ws.receive.side_effect = [{'type': 'websocket.receive', 'bytes': jpeg_buffer.tobytes()}]
 
 	state_manager.init_item('source_paths', [get_test_example_file('source.jpg')])
-
 	await process_image(mock_ws)
 
 	mock_ws.send_bytes.assert_called_once()
 	assert mock_ws.send_bytes.call_args[0][0][:3] == b'\xff\xd8\xff'
 
-
-@pytest.mark.anyio
-async def test_process_image_without_source_skips_send() -> None:
-	mock_ws = AsyncMock()
-
 	state_manager.init_item('source_paths', None)
-
 	await process_image(mock_ws)
 
-	mock_ws.send_bytes.assert_not_called()
+	mock_ws.send_bytes.assert_called_once()
 
 
 # TODO: refine test
 @pytest.mark.anyio
-async def test_websocket_stream_accepts_and_closes() -> None:
+async def test_websocket_stream() -> None:
 	mock_ws = AsyncMock()
 	mock_ws.scope = {'type': 'websocket', 'headers': []}
 	mock_ws.client_state = WebSocketState.CONNECTED
@@ -282,7 +254,7 @@ async def test_websocket_stream_accepts_and_closes() -> None:
 # TODO: refine test
 @pytest.mark.anyio
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-async def test_process_video_returns_sdp_answer(video_codec : VideoCodec) -> None:
+async def test_process_video(video_codec : VideoCodec) -> None:
 	sender_connection = rtc.create_peer_connection()
 
 	if video_codec == 'av1':
