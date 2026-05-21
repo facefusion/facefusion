@@ -81,8 +81,9 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 			rtc_store.get_peers(session_id).append(rtc_peer)
 
 			threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True).start()
+			return local_sdp
 
-		return local_sdp
+		datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
 	return None
 
@@ -132,15 +133,16 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 			output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 			output_vision_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
+			send_timestamp = time.monotonic()
+
 			if output_resolution == temp_resolution:
 				output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 			else:
 				destroy_video_encoder(video_codec, video_encoder)
 				temp_resolution = output_resolution
 				video_encoder = create_video_encoder(video_codec, temp_resolution)
+				frame_index = 0
 				output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
-
-			send_timestamp = time.monotonic()
 
 			if output_video_buffer:
 				rtc.send_video(rtc_peer, output_video_buffer, int(send_timestamp * 90000))
@@ -204,7 +206,10 @@ def receive_audio_frames(audio_track : int, audio_queue : queue.Queue[AudioFrame
 			output_buffer = opus_decoder.decode(audio_decoder, opus_buffer, 960, 2)
 
 			if output_buffer:
-				audio_queue.put(numpy.frombuffer(output_buffer, dtype = numpy.float32))
+				with contextlib.suppress(queue.Empty):
+					audio_queue.get_nowait()
+
+				audio_queue.put_nowait(numpy.frombuffer(output_buffer, dtype = numpy.float32))
 
 		if receive_status_code == -3:
 			time.sleep(0.001) # TODO: remove sleep
