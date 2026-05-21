@@ -179,6 +179,9 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 	while not stop_event.is_set(): # TODO: use positive while condition
 		frame_buffer = receive_video_buffer(datachannel_library, video_track, receive_buffer)
 
+		if frame_buffer is None:
+			break
+
 		if frame_buffer:
 			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
 
@@ -300,5 +303,7 @@ def receive_video_buffer(datachannel_library : ctypes.CDLL, video_track : int, r
 
 	if receive_output == 0 and buffer_size.value > 0:
 		return receive_buffer.raw[:buffer_size.value]
+	if receive_output == -3:
+		return bytes()
 
 	return None
