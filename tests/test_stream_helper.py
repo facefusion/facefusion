@@ -74,7 +74,7 @@ def test_decode_video_frame_empty_buffer() -> None:
 
 
 # TODO: refine test
-def test_pump_video_frames_keeps_latest_when_full() -> None:
+def test_receive_video_frames_keeps_latest_when_full() -> None:
 	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_resolution = (source_frame.shape[1], source_frame.shape[0])
 	yuv_buffer = cv2.cvtColor(source_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
@@ -103,7 +103,7 @@ def test_pump_video_frames_keeps_latest_when_full() -> None:
 
 
 # TODO: refine test
-def test_pump_audio_frames_delivers_decoded_frame() -> None:
+def test_receive_audio_frames_delivers_decoded_frame() -> None:
 	audio_data = numpy.zeros(960 * 2, dtype = numpy.float32).tobytes()
 	encoded_opus = opus_encoder.encode(opus_encoder.create(48000, 2), audio_data, 960)
 	mock_lib = MagicMock()
@@ -131,7 +131,7 @@ def test_pump_audio_frames_delivers_decoded_frame() -> None:
 
 
 # TODO: refine test
-def test_pump_audio_frames_skips_empty_frames() -> None:
+def test_receive_audio_frames_skips_empty_frames() -> None:
 	mock_lib = MagicMock()
 	mock_lib.rtcReceiveMessage.return_value = -1
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
