@@ -1,4 +1,3 @@
-import ctypes
 import queue
 import threading
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -12,7 +11,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 from facefusion import rtc, rtc_store, state_manager
 from facefusion.apis.endpoints.stream import websocket_stream
 from facefusion.apis.stream_helper import decode_video_frame, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_peer_loop
-from facefusion.codecs import aom_decoder, aom_encoder, opus_encoder, vpx_decoder, vpx_encoder
+from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
@@ -79,52 +78,29 @@ def test_decode_video_frame(video_codec: VideoCodec) -> None:
 
 # TODO: refine test
 def test_receive_video_frames() -> None:
-	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	video_resolution = (source_frame.shape[1], source_frame.shape[0])
-	frame_buffer = cv2.cvtColor(source_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	encode_frame_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
+	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	datachannel_library_mock = MagicMock()
-	state : list[int] = [ 0 ]
-
-	def receive_two(track : int, buffer : ctypes.Array[ctypes.c_char], size_byref : ctypes.c_void_p) -> int:
-		if state[0] < 2:
-			ctypes.memmove(buffer, encode_frame_buffer, len(encode_frame_buffer))
-			ctypes.cast(size_byref, ctypes.POINTER(ctypes.c_int))[0] = len(encode_frame_buffer)
-			state[0] += 1
-			return 0
-		return -1
-
-	datachannel_library_mock.rtcReceiveMessage.side_effect = receive_two
+	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
 	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
 
-	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
+	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
+		patch('facefusion.apis.stream_helper.decode_video_frame', return_value = vision_frame):
 		receiver_thread = threading.Thread(target = receive_video_frames, args = (0, 'vp8', video_queue), daemon = True)
 		receiver_thread.start()
 		receiver_thread.join(timeout = 2.0)
 
-	assert video_queue.qsize() == 1
-	assert video_queue.get_nowait().shape[1] == video_resolution[0]
+	assert create_hash(video_queue.get_nowait().tobytes()) == 'a17439db'
 
 
 # TODO: refine test
 def test_receive_audio_frames() -> None:
-	audio_data = numpy.zeros(960 * 2, dtype = numpy.float32).tobytes()
-	audio_buffer = opus_encoder.encode(opus_encoder.create(48000, 2), audio_data, 960)
+	mock_audio_frame = numpy.zeros(960 * 2, dtype = numpy.float32)
 	datachannel_library_mock = MagicMock()
-	state : list[bool] = [ False ]
-
-	def receive_once(track : int, buffer : ctypes.Array[ctypes.c_char], size_byref : ctypes.c_void_p) -> int:
-		if state[0]:
-			return -1
-		ctypes.memmove(buffer, audio_buffer, len(audio_buffer))
-		ctypes.cast(size_byref, ctypes.POINTER(ctypes.c_int))[0] = len(audio_buffer)
-		state[0] = True
-		return 0
-
-	datachannel_library_mock.rtcReceiveMessage.side_effect = receive_once
+	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
 
-	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
+	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
+		patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = mock_audio_frame.tobytes()):
 		receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, audio_queue), daemon = True)
 		receiver_thread.start()
 		audio_frame = audio_queue.get(timeout = 2.0)
@@ -138,9 +114,6 @@ def test_receive_audio_frames() -> None:
 # TODO: refine test
 def test_run_peer_loop() -> None:
 	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	video_resolution = (source_frame.shape[1], source_frame.shape[0])
-	yuv_buffer = cv2.cvtColor(source_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), yuv_buffer, video_resolution, 0)
 
 	peer_connection = rtc.create_peer_connection()
 	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', 'vp8', 96)
@@ -160,20 +133,11 @@ def test_run_peer_loop() -> None:
 	rtc_store.init_peers(session_id)
 	rtc_store.get_peers(session_id).append(rtc_peer)
 
-	mock_lib = MagicMock()
-	state : list[bool] = [ False ]
+	datachannel_library_mock = MagicMock()
+	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
 
-	def receive_once(track : int, buffer : ctypes.Array[ctypes.c_char], size_byref : ctypes.c_void_p) -> int:
-		if state[0]:
-			return -1
-		ctypes.memmove(buffer, encoded_buffer, len(encoded_buffer))
-		ctypes.cast(size_byref, ctypes.POINTER(ctypes.c_int))[0] = len(encoded_buffer)
-		state[0] = True
-		return 0
-
-	mock_lib.rtcReceiveMessage.side_effect = receive_once
-
-	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib), \
+	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
+		patch('facefusion.apis.stream_helper.decode_video_frame', return_value = source_frame), \
 		patch('facefusion.apis.stream_helper.rtc.send_video') as mock_send_video:
 		thread = threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True)
 		thread.start()
