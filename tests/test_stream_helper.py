@@ -50,8 +50,7 @@ def test_decode_video_frame(video_codec: VideoCodec) -> None:
 	frame_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
 	if video_codec == 'av1':
-		encode_frame_buffer = aom_encoder.encode(aom_encoder.create(video_resolution, 1000, 1, 0), frame_buffer,
-												 video_resolution, 0)
+		encode_frame_buffer = aom_encoder.encode(aom_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
 		decode_frame_buffer = decode_video_frame(video_codec, aom_decoder.create(8), encode_frame_buffer).tobytes()
 
 		if is_linux() or is_windows():
@@ -63,8 +62,7 @@ def test_decode_video_frame(video_codec: VideoCodec) -> None:
 		assert decode_video_frame('av1', aom_decoder.create(8), bytes()) is None
 
 	if video_codec == 'vp8':
-		encode_frame_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer,
-												 video_resolution, 0)
+		encode_frame_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
 		decode_frame_buffer = decode_video_frame(video_codec, vpx_decoder.create(8), encode_frame_buffer).tobytes()
 
 		if is_linux() or is_windows():
@@ -101,7 +99,7 @@ def test_receive_audio_frames() -> None:
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
 		patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_frame.tobytes()):
-		receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, audio_queue), daemon = True)
+		receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, 'opus', audio_queue), daemon = True)
 		receiver_thread.start()
 		audio_frame = audio_queue.get(timeout = 2.0)
 		receiver_thread.join(timeout = 1.0)
@@ -228,16 +226,16 @@ async def test_websocket_stream() -> None:
 @pytest.mark.anyio
 @pytest.mark.parametrize('video_codec, session_id', [ ('av1', 'test-process-video-av1'), ('vp8', 'test-process-video-vp8') ])
 async def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
-	sender_connection = rtc.create_peer_connection()
+	peer_connection = rtc.create_peer_connection()
 
 	if video_codec == 'av1':
-		rtc.add_video_track(sender_connection, 'sendrecv', video_codec, 35)
+		rtc.add_video_track(peer_connection, 'sendrecv', video_codec, 35)
 	if video_codec == 'vp8':
-		rtc.add_video_track(sender_connection, 'sendrecv', video_codec, 96)
+		rtc.add_video_track(peer_connection, 'sendrecv', video_codec, 96)
 
-	rtc.add_audio_track(sender_connection, 'sendrecv', 'opus', 111)
-	sdp_offer = rtc.create_sdp_offer(sender_connection)
-	datachannel_module.create_static_library().rtcDeletePeerConnection(sender_connection)
+	rtc.add_audio_track(peer_connection, 'sendrecv', 'opus', 111)
+	sdp_offer = rtc.create_sdp_offer(peer_connection)
+	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
 
 	with patch('facefusion.apis.stream_helper.threading.Thread'):
 		sdp_answer = process_video(session_id, sdp_offer)

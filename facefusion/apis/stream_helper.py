@@ -103,15 +103,20 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 
 #TODO: needs review
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
-	video_codec = rtc_peer.get('video').get('codec')
-	video_track = rtc_peer.get('video').get('receiver_track')
 	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
-	receiver_threads = [ threading.Thread(target = receive_video_frames, args = (video_track, video_codec, video_queue), daemon = True) ]
+	receiver_threads = []
+
+	video_codec = rtc_peer.get('video').get('codec')
+	video_track = rtc_peer.get('video').get('receiver_track')
+	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (video_track, video_codec, video_queue), daemon = True)
+	receiver_threads.append(video_receiver_thread)
 
 	if rtc_peer.get('audio'):
+		audio_codec : AudioCodec = 'opus'
 		audio_track = rtc_peer.get('audio').get('receiver_track')
-		receiver_threads.append(threading.Thread(target = receive_audio_frames, args = (audio_track, audio_queue), daemon = True))
+		audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (audio_track, audio_codec, audio_queue), daemon = True)
+		receiver_threads.append(audio_receiver_thread)
 
 	for receiver_thread in receiver_threads:
 		receiver_thread.start()
@@ -191,7 +196,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 	destroy_video_decoder(video_codec, video_decoder)
 
 
-def receive_audio_frames(audio_track : int, audio_queue : queue.Queue[AudioFrame]) -> None:
+def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queue : queue.Queue[AudioFrame]) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	audio_decoder = opus_decoder.create(48000, 2)
 	receive_buffer = ctypes.create_string_buffer(8 * 1024)
