@@ -9,7 +9,7 @@ from facefusion.face_detector import detect_faces, detect_faces_by_angle
 from facefusion.face_helper import apply_nms, convert_to_face_landmark_5, estimate_face_angle, get_nms_threshold
 from facefusion.face_landmarker import detect_face_landmark, estimate_face_landmark_68_5
 from facefusion.face_recognizer import calculate_face_embedding
-from facefusion.face_store import get_static_faces, set_static_faces
+from facefusion.face_store import get_faces, set_faces
 from facefusion.types import BoundingBox, Face, FaceLandmark5, FaceLandmarkSet, FaceScoreSet, Score, VisionFrame
 
 
@@ -98,9 +98,9 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 
 	for vision_frame in vision_frames:
 		if numpy.any(vision_frame):
-			static_faces = get_static_faces(vision_frame)
-			if static_faces:
-				many_faces.extend(static_faces)
+			faces = get_faces(vision_frame)
+			if faces:
+				many_faces.extend(faces)
 			else:
 				all_bounding_boxes = []
 				all_face_scores = []
@@ -120,7 +120,7 @@ def get_many_faces(vision_frames : List[VisionFrame]) -> List[Face]:
 
 					if faces:
 						many_faces.extend(faces)
-						set_static_faces(vision_frame, faces)
+						set_faces(vision_frame, faces)
 	return many_faces
 
 

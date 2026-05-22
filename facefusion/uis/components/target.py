@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 import gradio
 
 from facefusion import state_manager, translator
-from facefusion.face_store import clear_static_faces
+from facefusion.face_store import clear_faces
 from facefusion.filesystem import is_image, is_video
 from facefusion.uis.core import register_ui_component
 from facefusion.uis.types import ComponentOptions, File
@@ -51,7 +51,7 @@ def listen() -> None:
 
 
 def update(file : File) -> Tuple[gradio.Image, gradio.Video]:
-	clear_static_faces()
+	clear_faces()
 
 	if file and is_image(file.name):
 		state_manager.set_item('target_path', file.name)

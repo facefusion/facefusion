@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 from gradio_rangeslider import RangeSlider
 
 from facefusion import state_manager, translator
-from facefusion.face_store import clear_static_faces
+from facefusion.face_store import clear_faces
 from facefusion.filesystem import is_video
 from facefusion.uis.core import get_ui_components
 from facefusion.uis.types import ComponentOptions
@@ -53,7 +53,7 @@ def remote_update() -> RangeSlider:
 
 
 def update_trim_frame(trim_frame : Tuple[float, float]) -> None:
-	clear_static_faces()
+	clear_faces()
 	trim_frame_start, trim_frame_end = trim_frame
 	video_frame_total = count_video_frame_total(state_manager.get_item('target_path'))
 	trim_frame_start = int(trim_frame_start) if trim_frame_start > 0 else None
