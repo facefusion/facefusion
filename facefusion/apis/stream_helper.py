@@ -143,7 +143,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 			if output_resolution == temp_resolution:
 				output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 			else:
-				destroy_video_encoder(video_codec, video_encoder)
+				destroy_video_encoder(video_codec, video_encoder)  # TODO: remove unconditional destroy methods, which have no impact on control flow
 				temp_resolution = output_resolution
 				video_encoder = create_video_encoder(video_codec, temp_resolution)
 				frame_index = 0
@@ -161,7 +161,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 			frame_index += 1
 			temp_vision_frame = video_queue.get()
 
-		destroy_video_encoder(video_codec, video_encoder)
+		destroy_video_encoder(video_codec, video_encoder)  # TODO: remove unconditional destroy methods, which have no impact on control flow
 		opus_encoder.destroy(audio_encoder)
 
 	for receiver_thread in receiver_threads:

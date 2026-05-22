@@ -223,9 +223,8 @@ async def test_websocket_stream() -> None:
 
 
 # TODO: refine test
-@pytest.mark.anyio
 @pytest.mark.parametrize('video_codec, session_id', [ ('av1', 'test-process-video-av1'), ('vp8', 'test-process-video-vp8') ])
-async def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
+def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 	peer_connection = rtc.create_peer_connection()
 
 	if video_codec == 'av1':
