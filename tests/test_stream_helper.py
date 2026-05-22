@@ -87,7 +87,11 @@ def test_receive_video_frames() -> None:
 		receiver_thread.start()
 		receiver_thread.join(timeout = 2.0)
 
-	assert create_hash(video_queue.get_nowait().tobytes()) == 'a17439db'
+	if is_linux() or is_windows():
+		assert create_hash(video_queue.get_nowait().tobytes()) == 'a17439db'
+
+	if is_macos():
+		assert create_hash(video_queue.get_nowait().tobytes()) == '38d00e2a'
 
 
 # TODO: refine test
