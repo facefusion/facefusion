@@ -13,6 +13,7 @@ from facefusion import rtc, rtc_store, state_manager
 from facefusion.apis.endpoints.stream import websocket_stream
 from facefusion.apis.stream_helper import decode_video_frame, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_peer_loop
 from facefusion.codecs import aom_decoder, aom_encoder, opus_encoder, vpx_decoder, vpx_encoder
+from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
@@ -43,20 +44,36 @@ def before_each() -> None:
 
 
 # TODO: refine test
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-def test_decode_video_frame(video_codec : VideoCodec) -> None:
+@pytest.mark.parametrize('video_codec', ['av1', 'vp8'])
+def test_decode_video_frame(video_codec: VideoCodec) -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
 	frame_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
 	if video_codec == 'av1':
-		encode_frame_buffer = aom_encoder.encode(aom_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
-		assert create_hash(decode_video_frame(video_codec, aom_decoder.create(8), encode_frame_buffer).tobytes()) == '299b6ad6'
+		encode_frame_buffer = aom_encoder.encode(aom_encoder.create(video_resolution, 1000, 1, 0), frame_buffer,
+												 video_resolution, 0)
+		decode_frame_buffer = decode_video_frame(video_codec, aom_decoder.create(8), encode_frame_buffer).tobytes()
+
+		if is_linux() or is_windows():
+			assert create_hash(decode_frame_buffer) == '299b6ad6'
+
+		if is_macos():
+			assert create_hash(decode_frame_buffer) == '9f463b13'
+
 		assert decode_video_frame('av1', aom_decoder.create(8), bytes()) is None
 
 	if video_codec == 'vp8':
-		encode_frame_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
-		assert create_hash(decode_video_frame(video_codec, vpx_decoder.create(8), encode_frame_buffer).tobytes()) == '99ef2c25'
+		encode_frame_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer,
+												 video_resolution, 0)
+		decode_frame_buffer = decode_video_frame(video_codec, vpx_decoder.create(8), encode_frame_buffer).tobytes()
+
+		if is_linux() or is_windows():
+			assert create_hash(decode_frame_buffer) == '99ef2c25'
+
+		if is_macos():
+			assert create_hash(decode_frame_buffer) == 'ff3ecb43'
+
 		assert decode_video_frame('vp8', vpx_decoder.create(8), bytes()) is None
 
 
