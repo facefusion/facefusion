@@ -94,13 +94,13 @@ def test_receive_video_frames() -> None:
 
 # TODO: refine test
 def test_receive_audio_frames() -> None:
-	mock_audio_frame = numpy.zeros(960 * 2, dtype = numpy.float32)
+	audio_frame = numpy.zeros(960 * 2, dtype = numpy.float32)
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
-		patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = mock_audio_frame.tobytes()):
+		patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_frame.tobytes()):
 		receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, audio_queue), daemon = True)
 		receiver_thread.start()
 		audio_frame = audio_queue.get(timeout = 2.0)
