@@ -14,6 +14,7 @@ from facefusion.apis.endpoints.stream import websocket_stream
 from facefusion.apis.stream_helper import decode_video_frame, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_peer_loop
 from facefusion.codecs import aom_decoder, aom_encoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.download import conditional_download
+from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.types import AudioFrame, RtcPeer, VideoCodec, VisionFrame
 from facefusion.vision import read_video_frame
@@ -50,24 +51,12 @@ def test_decode_video_frame(video_codec : VideoCodec) -> None:
 
 	if video_codec == 'av1':
 		encoded_buffer = aom_encoder.encode(aom_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
-		vision_frame = decode_video_frame(video_codec, aom_decoder.create(8), encoded_buffer)
-
-		assert numpy.any(vision_frame)
-		assert vision_frame.shape[1] >= video_resolution[0]
-		assert vision_frame.shape[0] >= video_resolution[1]
-		assert vision_frame.ndim == 3
-
+		assert create_hash(decode_video_frame(video_codec, aom_decoder.create(8), encoded_buffer).tobytes()) == '299b6ad6'
 		assert decode_video_frame('av1', aom_decoder.create(8), bytes()) is None
 
 	if video_codec == 'vp8':
 		encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
-		vision_frame = decode_video_frame(video_codec, vpx_decoder.create(8), encoded_buffer)
-
-		assert numpy.any(vision_frame)
-		assert vision_frame.shape[1] == video_resolution[0]
-		assert vision_frame.shape[0] == video_resolution[1]
-		assert vision_frame.ndim == 3
-
+		assert create_hash(decode_video_frame(video_codec, vpx_decoder.create(8), encoded_buffer).tobytes()) == '99ef2c25'
 		assert decode_video_frame('vp8', vpx_decoder.create(8), bytes()) is None
 
 
@@ -77,7 +66,7 @@ def test_receive_video_frames() -> None:
 	video_resolution = (source_frame.shape[1], source_frame.shape[0])
 	frame_buffer = cv2.cvtColor(source_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	encode_frame_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
-	mock_lib = MagicMock()
+	datachannel_library_mock = MagicMock()
 	state : list[int] = [ 0 ]
 
 	def receive_two(track : int, buffer : ctypes.Array[ctypes.c_char], size_byref : ctypes.c_void_p) -> int:
@@ -88,13 +77,13 @@ def test_receive_video_frames() -> None:
 			return 0
 		return -1
 
-	mock_lib.rtcReceiveMessage.side_effect = receive_two
+	datachannel_library_mock.rtcReceiveMessage.side_effect = receive_two
 	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
 
-	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_video_frames, args = (0, 'vp8', video_queue), daemon = True)
-		receiver.start()
-		receiver.join(timeout = 2.0)
+	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
+		receiver_thread = threading.Thread(target = receive_video_frames, args = (0, 'vp8', video_queue), daemon = True)
+		receiver_thread.start()
+		receiver_thread.join(timeout = 2.0)
 
 	assert video_queue.qsize() == 1
 	assert video_queue.get_nowait().shape[1] == video_resolution[0]
@@ -104,7 +93,7 @@ def test_receive_video_frames() -> None:
 def test_receive_audio_frames() -> None:
 	audio_data = numpy.zeros(960 * 2, dtype = numpy.float32).tobytes()
 	audio_buffer = opus_encoder.encode(opus_encoder.create(48000, 2), audio_data, 960)
-	mock_lib = MagicMock()
+	datachannel_library_mock = MagicMock()
 	state : list[bool] = [ False ]
 
 	def receive_once(track : int, buffer : ctypes.Array[ctypes.c_char], size_byref : ctypes.c_void_p) -> int:
@@ -115,14 +104,14 @@ def test_receive_audio_frames() -> None:
 		state[0] = True
 		return 0
 
-	mock_lib.rtcReceiveMessage.side_effect = receive_once
+	datachannel_library_mock.rtcReceiveMessage.side_effect = receive_once
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
 
-	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = mock_lib):
-		receiver = threading.Thread(target = receive_audio_frames, args = (0, audio_queue), daemon = True)
-		receiver.start()
+	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
+		receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, audio_queue), daemon = True)
+		receiver_thread.start()
 		audio_frame = audio_queue.get(timeout = 2.0)
-		receiver.join(timeout = 1.0)
+		receiver_thread.join(timeout = 1.0)
 
 	assert audio_frame.dtype == numpy.float32
 	assert audio_frame.size == 960 * 2
@@ -181,22 +170,21 @@ def test_run_peer_loop() -> None:
 @pytest.mark.anyio
 async def test_receive_vision_frames() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	_, jpeg_buffer = cv2.imencode('.jpg', vision_frame)
-	jpeg_bytes = jpeg_buffer.tobytes()
-	mock_ws = AsyncMock()
-	mock_ws.receive.side_effect =\
+	frame_buffer = cv2.imencode('.jpg', vision_frame)[1].tobytes()
+	websocket_mock = AsyncMock()
+	websocket_mock.receive.side_effect =\
 	[
 		{
 			'type': 'websocket.receive',
-			'bytes': jpeg_bytes
+			'bytes': frame_buffer
 		},
 		{
 			'type': 'websocket.receive',
-			'bytes': b'not_a_jpeg'
+			'bytes': b'invalid'
 		},
 		{
 			'type': 'websocket.receive',
-			'bytes': jpeg_bytes
+			'bytes': frame_buffer
 		},
 		{
 			'type': 'websocket.disconnect'
@@ -205,7 +193,7 @@ async def test_receive_vision_frames() -> None:
 
 	frames = []
 
-	async for frame in receive_vision_frames(mock_ws):
+	async for frame in receive_vision_frames(websocket_mock):
 		frames.append(frame)
 
 	assert len(frames) == 2
@@ -216,28 +204,32 @@ async def test_receive_vision_frames() -> None:
 @pytest.mark.anyio
 async def test_process_image() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	_, jpeg_buffer = cv2.imencode('.jpg', vision_frame)
-	mock_ws = AsyncMock()
-	mock_ws.receive.side_effect = [{'type': 'websocket.receive', 'bytes': jpeg_buffer.tobytes()}]
+	frame_buffer = cv2.imencode('.jpg', vision_frame)[1].tobytes()
+	websocket_mock = AsyncMock()
+	websocket_mock.receive.side_effect = [{'type': 'websocket.receive', 'bytes': frame_buffer}]
 
 	state_manager.init_item('source_paths', [get_test_example_file('source.jpg')])
-	await process_image(mock_ws)
+	await process_image(websocket_mock)
 
-	mock_ws.send_bytes.assert_called_once()
-	assert mock_ws.send_bytes.call_args[0][0][:3] == b'\xff\xd8\xff'
+	websocket_mock.send_bytes.assert_called_once()
+	assert websocket_mock.send_bytes.call_args[0][0][:3] == b'\xff\xd8\xff'
 
 	state_manager.init_item('source_paths', None)
-	await process_image(mock_ws)
+	await process_image(websocket_mock)
 
-	mock_ws.send_bytes.assert_called_once()
+	websocket_mock.send_bytes.assert_called_once()
 
 
 # TODO: refine test
 @pytest.mark.anyio
 async def test_websocket_stream() -> None:
-	mock_ws = AsyncMock()
-	mock_ws.scope = {'type': 'websocket', 'headers': []}
-	mock_ws.client_state = WebSocketState.CONNECTED
+	websocket_mock = AsyncMock()
+	websocket_mock.scope =\
+	{
+		'type': 'websocket',
+		'headers': []
+	}
+	websocket_mock.client_state = WebSocketState.CONNECTED
 
 	state_manager.init_item('source_paths', None)
 
@@ -245,16 +237,16 @@ async def test_websocket_stream() -> None:
 		patch('facefusion.apis.endpoints.stream.extract_access_token', return_value = None), \
 		patch('facefusion.apis.endpoints.stream.session_manager.find_session_id', return_value = None), \
 		patch('facefusion.apis.endpoints.stream.session_context.set_session_id'):
-		await websocket_stream(mock_ws)
+		await websocket_stream(websocket_mock)
 
-	mock_ws.accept.assert_called_once()
-	mock_ws.close.assert_called_once()
+	websocket_mock.accept.assert_called_once()
+	websocket_mock.close.assert_called_once()
 
 
 # TODO: refine test
 @pytest.mark.anyio
-@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-async def test_process_video(video_codec : VideoCodec) -> None:
+@pytest.mark.parametrize('video_codec, session_id', [ ('av1', 'test-process-video-av1'), ('vp8', 'test-process-video-vp8') ])
+async def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 	sender_connection = rtc.create_peer_connection()
 
 	if video_codec == 'av1':
@@ -267,9 +259,9 @@ async def test_process_video(video_codec : VideoCodec) -> None:
 	datachannel_module.create_static_library().rtcDeletePeerConnection(sender_connection)
 
 	with patch('facefusion.apis.stream_helper.threading.Thread'):
-		sdp_answer = process_video('test-process-video-' + video_codec, sdp_offer)
+		sdp_answer = process_video(session_id, sdp_offer)
 
-	assert sdp_answer is not None
+	assert sdp_answer
 	assert 'm=video' in sdp_answer
 	assert 'a=recvonly' in sdp_answer
 	assert 'a=sendonly' in sdp_answer
