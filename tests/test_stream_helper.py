@@ -50,13 +50,13 @@ def test_decode_video_frame(video_codec : VideoCodec) -> None:
 	frame_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
 	if video_codec == 'av1':
-		encoded_buffer = aom_encoder.encode(aom_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
-		assert create_hash(decode_video_frame(video_codec, aom_decoder.create(8), encoded_buffer).tobytes()) == '299b6ad6'
+		encode_frame_buffer = aom_encoder.encode(aom_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
+		assert create_hash(decode_video_frame(video_codec, aom_decoder.create(8), encode_frame_buffer).tobytes()) == '299b6ad6'
 		assert decode_video_frame('av1', aom_decoder.create(8), bytes()) is None
 
 	if video_codec == 'vp8':
-		encoded_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
-		assert create_hash(decode_video_frame(video_codec, vpx_decoder.create(8), encoded_buffer).tobytes()) == '99ef2c25'
+		encode_frame_buffer = vpx_encoder.encode(vpx_encoder.create(video_resolution, 1000, 1, 0), frame_buffer, video_resolution, 0)
+		assert create_hash(decode_video_frame(video_codec, vpx_decoder.create(8), encode_frame_buffer).tobytes()) == '99ef2c25'
 		assert decode_video_frame('vp8', vpx_decoder.create(8), bytes()) is None
 
 
