@@ -25,5 +25,9 @@ def delete_peers(session_id : SessionId) -> None:
 	return None
 
 
+def has_peers(session_id : SessionId) -> bool:
+	return bool(RTC_STORE.get(session_id))
+
+
 def clear() -> None:
 	RTC_STORE.clear()
