@@ -37,6 +37,8 @@ def get_available_execution_providers() -> List[ExecutionProvider]:
 def probe_execution_provider(provider_name : str) -> bool:
 	library_path = resolve_execution_provider_library_path(provider_name)
 
+	if not library_path:
+		return False
 	try:
 		onnxruntime_library = ctypes.CDLL(library_path)
 
@@ -131,7 +133,7 @@ def resolve_execution_provider_library_path(provider_name : str) -> Optional[str
 	library_paths =\
 	[
 		os.path.dirname(onnxruntime.capi.onnxruntime_pybind11_state.__file__),
-		'*onnxruntime_providers_' + provider_name + '*'
+		'*providers_' + provider_name + '*'
 	]
 
 	for library_path in glob.glob(os.path.join(*library_paths)):
