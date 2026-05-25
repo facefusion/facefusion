@@ -1,3 +1,4 @@
+from facefusion.common_helper import is_macos
 from facefusion.execution import create_inference_providers, get_available_execution_providers, has_execution_provider
 
 
@@ -8,6 +9,9 @@ def test_has_execution_provider() -> None:
 
 def test_get_available_execution_providers() -> None:
 	assert 'cpu' in get_available_execution_providers()
+
+	if is_macos():
+		assert 'coreml' in get_available_execution_providers()
 
 
 def test_create_inference_providers() -> None:

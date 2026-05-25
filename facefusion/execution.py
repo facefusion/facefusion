@@ -34,19 +34,20 @@ def get_available_execution_providers() -> List[ExecutionProvider]:
 	return available_execution_providers
 
 
-def probe_execution_provider(provider_name : str) -> bool:
-	library_path = resolve_execution_provider_library_path(provider_name)
+def probe_execution_provider(execution_provider : ExecutionProvider) -> bool:
+	library_path = resolve_execution_provider_library_path(execution_provider)
 
-	if not library_path:
-		return False
-	try:
-		onnxruntime_library = ctypes.CDLL(library_path)
+	if library_path:
+		try:
+			onnxruntime_library = ctypes.CDLL(library_path)
 
-		if hasattr(onnxruntime_library, 'GetProvider') and onnxruntime_library.GetProvider():
-			return True
+			if hasattr(onnxruntime_library, 'GetProvider') and onnxruntime_library.GetProvider():
+				return True
+			if hasattr(onnxruntime_library, 'OrtSessionOptionsAppendExecutionProvider_CoreML'):
+				return True
 
-	except OSError:
-		pass
+		except OSError:
+			pass
 
 	return False
 
@@ -129,12 +130,16 @@ def create_inference_providers(execution_device_id : int, execution_providers : 
 	return inference_providers
 
 
-def resolve_execution_provider_library_path(provider_name : str) -> Optional[str]:
+def resolve_execution_provider_library_path(execution_provider : ExecutionProvider) -> Optional[str]:
 	library_paths =\
 	[
-		os.path.dirname(onnxruntime.capi.onnxruntime_pybind11_state.__file__),
-		'*providers_' + provider_name + '*'
+		os.path.dirname(onnxruntime.capi.onnxruntime_pybind11_state.__file__)
 	]
+
+	if execution_provider == 'coreml':
+		library_paths.append('libonnxruntime*.dylib')
+	else:
+		library_paths.append('*onnxruntime_providers_' + execution_provider + '*')
 
 	for library_path in glob.glob(os.path.join(*library_paths)):
 		return library_path
