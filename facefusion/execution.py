@@ -1,3 +1,5 @@
+import ctypes
+import glob
 import os
 import shutil
 import subprocess
@@ -23,16 +25,33 @@ def get_available_execution_providers() -> List[ExecutionProvider]:
 	available_execution_providers : List[ExecutionProvider] = []
 
 	for execution_provider, execution_provider_value in facefusion.choices.execution_provider_set.items():
-		if execution_provider_value in inference_session_providers:
+		if execution_provider_value in inference_session_providers and probe_execution_provider(execution_provider):
 			index = facefusion.choices.execution_providers.index(execution_provider)
 			available_execution_providers.insert(index, execution_provider)
+
+	available_execution_providers.append('cpu')
 
 	return available_execution_providers
 
 
+def probe_execution_provider(provider_name : str) -> bool:
+	library_path = resolve_execution_provider_library_path(provider_name)
+
+	try:
+		onnxruntime_library = ctypes.CDLL(library_path)
+
+		if hasattr(onnxruntime_library, 'GetProvider') and onnxruntime_library.GetProvider():
+			return True
+
+	except OSError:
+		pass
+
+	return False
+
+
 def create_inference_providers(execution_device_id : int, execution_providers : List[ExecutionProvider]) -> List[InferenceProvider]:
 	inference_providers : List[InferenceProvider] = []
-	cache_path = resolve_cache_path()
+	cache_path = resolve_execution_provider_cache_path()
 
 	for execution_provider in execution_providers:
 		if execution_provider == 'cuda':
@@ -108,7 +127,20 @@ def create_inference_providers(execution_device_id : int, execution_providers : 
 	return inference_providers
 
 
-def resolve_cache_path() -> str:
+def resolve_execution_provider_library_path(provider_name : str) -> Optional[str]:
+	library_paths =\
+	[
+		os.path.dirname(onnxruntime.capi.onnxruntime_pybind11_state.__file__),
+		'*onnxruntime_providers_' + provider_name + '*'
+	]
+
+	for library_path in glob.glob(os.path.join(*library_paths)):
+		return library_path
+
+	return None
+
+
+def resolve_execution_provider_cache_path() -> str:
 	return os.path.join('.caches', onnxruntime.get_version_string())
 
 

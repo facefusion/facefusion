@@ -227,7 +227,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'__metadata__':
 			{
 				'vendor': 'FaceFusion',
-				'license': 'ResearchRAIL',
+				'license': 'ResearchRAIL-M',
 				'year': 2025
 			},
 			'hashes':
@@ -257,7 +257,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'__metadata__':
 			{
 				'vendor': 'FaceFusion',
-				'license': 'ResearchRAIL',
+				'license': 'ResearchRAIL-M',
 				'year': 2025
 			},
 			'hashes':
@@ -287,7 +287,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 			'__metadata__':
 			{
 				'vendor': 'FaceFusion',
-				'license': 'ResearchRAIL',
+				'license': 'ResearchRAIL-M',
 				'year': 2025
 			},
 			'hashes':
