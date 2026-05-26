@@ -66,7 +66,7 @@ def collect(vpx_encoder : VpxEncoder) -> bytes:
 
 		packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(packet_cursor))
 
-	return b''.join(output_parts)
+	return bytes().join(output_parts)
 
 
 def destroy(vpx_encoder : VpxEncoder) -> None:

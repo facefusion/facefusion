@@ -62,7 +62,7 @@ def collect(aom_encoder : AomEncoder) -> bytes:
 
 		packet = aom_library.aom_codec_get_cx_data(aom_encoder, ctypes.byref(packet_cursor))
 
-	return b''.join(output_parts)
+	return bytes().join(output_parts)
 
 
 def destroy(aom_encoder : AomEncoder) -> None:
