@@ -1,5 +1,6 @@
 import importlib
 import random
+from functools import lru_cache
 from time import sleep, time
 from typing import List
 
@@ -25,7 +26,7 @@ def get_inference_pool(module_name : str, model_names : List[str], model_source_
 	while process_manager.is_checking():
 		sleep(0.5)
 	execution_device_ids = state_manager.get_item('execution_device_ids')
-	execution_providers = resolve_execution_providers(module_name)
+	execution_providers = resolve_static_execution_providers(module_name)
 	app_context = detect_app_context()
 
 	for execution_device_id in execution_device_ids:
@@ -55,7 +56,7 @@ def create_inference_pool(model_source_set : DownloadSet, execution_device_id : 
 
 def clear_inference_pool(module_name : str, model_names : List[str]) -> None:
 	execution_device_ids = state_manager.get_item('execution_device_ids')
-	execution_providers = resolve_execution_providers(module_name)
+	execution_providers = resolve_static_execution_providers(module_name)
 	app_context = detect_app_context()
 
 	if is_windows() and has_execution_provider('directml'):
@@ -87,7 +88,8 @@ def get_inference_context(module_name : str, model_names : List[str], execution_
 	return inference_context
 
 
-def resolve_execution_providers(module_name : str) -> List[ExecutionProvider]:
+@lru_cache()
+def resolve_static_execution_providers(module_name : str) -> List[ExecutionProvider]:
 	module = importlib.import_module(module_name)
 
 	if hasattr(module, 'resolve_execution_providers'):
