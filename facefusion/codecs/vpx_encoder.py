@@ -53,7 +53,7 @@ def encode(vpx_encoder : VpxEncoder, input_buffer : bytes, frame_resolution : Re
 
 def collect(vpx_encoder : VpxEncoder) -> bytes:
 	vpx_library = vpx_module.create_static_library()
-	output_buffer = bytes()
+	output_parts = []
 
 	packet_cursor = ctypes.c_void_p(0)
 	packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(packet_cursor))
@@ -62,11 +62,11 @@ def collect(vpx_encoder : VpxEncoder) -> bytes:
 		if ctypes.c_int.from_address(packet).value == 0:
 			buffer_pointer = ctypes.c_void_p.from_address(packet + 8).value
 			buffer_size = ctypes.c_size_t.from_address(packet + 16).value
-			output_buffer += ctypes.string_at(buffer_pointer, buffer_size)
+			output_parts.append(ctypes.string_at(buffer_pointer, buffer_size))
 
 		packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(packet_cursor))
 
-	return output_buffer
+	return b''.join(output_parts)
 
 
 def destroy(vpx_encoder : VpxEncoder) -> None:

@@ -49,7 +49,7 @@ def encode(aom_encoder : AomEncoder, input_buffer : bytes, frame_resolution : Re
 
 def collect(aom_encoder : AomEncoder) -> bytes:
 	aom_library = aom_module.create_static_library()
-	output_buffer = bytes()
+	output_parts = []
 
 	packet_cursor = ctypes.c_void_p(0)
 	packet = aom_library.aom_codec_get_cx_data(aom_encoder, ctypes.byref(packet_cursor))
@@ -58,11 +58,11 @@ def collect(aom_encoder : AomEncoder) -> bytes:
 		if ctypes.c_int.from_address(packet).value == 0:
 			buffer_pointer = ctypes.c_void_p.from_address(packet + 8).value
 			buffer_size = ctypes.c_size_t.from_address(packet + 16).value
-			output_buffer += ctypes.string_at(buffer_pointer, buffer_size)
+			output_parts.append(ctypes.string_at(buffer_pointer, buffer_size))
 
 		packet = aom_library.aom_codec_get_cx_data(aom_encoder, ctypes.byref(packet_cursor))
 
-	return output_buffer
+	return b''.join(output_parts)
 
 
 def destroy(aom_encoder : AomEncoder) -> None:
