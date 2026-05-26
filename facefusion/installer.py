@@ -35,7 +35,7 @@ if is_linux():
 def cli() -> None:
 	signal.signal(signal.SIGINT, signal_exit)
 	program = ArgumentParser(formatter_class = partial(HelpFormatter, max_help_position = 50))
-	program.add_argument('--onnxruntime', help = LOCALES.get('install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIME_SET.keys(), required = True)
+	program.add_argument('onnxruntime', help = LOCALES.get('install_dependency').format(dependency = 'onnxruntime'), choices = ONNXRUNTIME_SET.keys())
 	program.add_argument('--force-reinstall', help = LOCALES.get('force_reinstall'), action = 'store_true')
 	program.add_argument('--skip-conda', help = LOCALES.get('skip_conda'), action = 'store_true')
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
