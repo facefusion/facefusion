@@ -291,6 +291,7 @@ SdpAnswer : TypeAlias = str
 MediaDirection : TypeAlias = Literal['sendonly', 'recvonly', 'sendrecv']
 
 RtcTrackInit : TypeAlias = Any
+RtcCallback : TypeAlias = Any
 
 RtcVideoTrack : TypeAlias = int
 RtcAudioTrack : TypeAlias = int
@@ -314,7 +315,7 @@ RtcPeer = TypedDict('RtcPeer',
 	'peer_connection': PeerConnection,
 	'audio': NotRequired[RtcPeerAudio],
 	'video': RtcPeerVideo,
-	'remb_bitrate': ctypes.c_uint,
+	'remb_bitrate': NotRequired[ctypes.c_uint],
 })
 RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
 

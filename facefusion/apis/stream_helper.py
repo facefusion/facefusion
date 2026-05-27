@@ -154,11 +154,11 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 				frame_index = 0
 				output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 
-			remb_bitrate = rtc_peer.get('remb_bitrate').value
+			remb = rtc_peer.get('remb_bitrate')
 
-			if remb_bitrate:
-				smoothed_remb = smoothed_remb or remb_bitrate
-				smoothed_remb = int(0.2 * remb_bitrate + 0.8 * smoothed_remb)
+			if remb and remb.value:
+				smoothed_remb = smoothed_remb or remb.value
+				smoothed_remb = int(0.2 * remb.value + 0.8 * smoothed_remb)
 
 			if smoothed_remb and abs(smoothed_remb - bitrate) > max(200, bitrate * 0.1):
 				bitrate = max(500, min(smoothed_remb, 8000))
@@ -176,7 +176,10 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 			frame_index += 1
 			temp_vision_frame = video_queue.get()
 
-		rtc_peer.get('remb_bitrate').value = 0
+		remb = rtc_peer.get('remb_bitrate')
+
+		if remb:
+			remb.value = 0
 		destroy_video_encoder(video_codec, video_encoder)  # TODO: remove unconditional destroy methods, which have no impact on control flow
 		opus_encoder.destroy(audio_encoder)
 
