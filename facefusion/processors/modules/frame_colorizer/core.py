@@ -5,6 +5,7 @@ from typing import List
 import cv2
 import numpy
 
+import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
@@ -17,7 +18,7 @@ from facefusion.processors.modules.frame_colorizer.types import FrameColorizerIn
 from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import blend_frame, read_static_image, read_static_video_frame, unpack_resolution
 
 
@@ -170,10 +171,11 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def resolve_execution_providers() -> List[ExecutionProvider]:
+def resolve_inference_providers() -> List[InferenceProvider]:
 	if is_macos() and has_execution_provider('coreml'):
-		return [ 'cpu' ]
-	return state_manager.get_item('execution_providers')
+		return [ facefusion.choices.execution_provider_set.get('cpu') ]
+
+	return []
 
 
 def get_model_options() -> ModelOptions:

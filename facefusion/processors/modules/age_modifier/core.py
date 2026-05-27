@@ -8,9 +8,8 @@ import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
-from facefusion.common_helper import create_int_metavar, is_macos
+from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
-from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import scale_face
 from facefusion.face_helper import merge_matrix, paste_back, scale_face_landmark_5, warp_face_by_face_landmark_5
 from facefusion.face_masker import create_box_mask, create_occlusion_mask
@@ -230,9 +229,6 @@ def modify_age(target_face : Face, temp_vision_frame : VisionFrame) -> VisionFra
 def forward(crop_vision_frame : VisionFrame, extend_vision_frame : VisionFrame, age_modifier_direction : AgeModifierDirection) -> VisionFrame:
 	age_modifier = get_inference_pool().get('age_modifier')
 	age_modifier_inputs = {}
-
-	if is_macos() and has_execution_provider('coreml'):
-		age_modifier.set_providers([ facefusion.choices.execution_provider_set.get('cpu') ])
 
 	for age_modifier_input in age_modifier.get_inputs():
 		if age_modifier_input.name == 'target':
