@@ -9,7 +9,7 @@ import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
-from facefusion.common_helper import get_first
+from facefusion.common_helper import get_first, is_macos
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face, scale_face
@@ -504,7 +504,7 @@ def clear_inference_pool() -> None:
 def resolve_inference_providers() -> List[InferenceProvider]:
 	model_precision = get_model_options().get('precision')
 
-	if has_execution_provider('coreml') and model_precision == 'fp16':
+	if is_macos() and has_execution_provider('coreml') and model_precision == 'fp16':
 		return\
 		[
 			(facefusion.choices.execution_provider_set.get('coreml'),
