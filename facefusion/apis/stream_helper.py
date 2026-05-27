@@ -128,10 +128,11 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	if numpy.any(temp_vision_frame):
 		audio_frame = create_empty_audio_frame()
 		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
-		bitrate : BitRate = 4000
+		bitrate : BitRate = 1500
 		video_encoder = create_video_encoder(video_codec, temp_resolution, bitrate)
 		audio_encoder = opus_encoder.create(48000, 2)
 		frame_index = 0
+		smoothed_remb : BitRate = 0
 
 		while numpy.any(temp_vision_frame):
 			with contextlib.suppress(queue.Empty):
@@ -154,8 +155,12 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 			remb_bitrate = rtc_peer.get('remb_bitrate').value
 
-			if remb_bitrate and abs(remb_bitrate - bitrate) > max(200, bitrate * 0.1):
-				bitrate = min(remb_bitrate, 8000)
+			if remb_bitrate:
+				smoothed_remb = smoothed_remb or remb_bitrate
+				smoothed_remb = int(0.2 * remb_bitrate + 0.8 * smoothed_remb)
+
+			if smoothed_remb and abs(smoothed_remb - bitrate) > max(200, bitrate * 0.1):
+				bitrate = max(500, min(smoothed_remb, 8000))
 				video_encoder = update_video_encoder(video_codec, video_encoder, temp_resolution, bitrate)
 
 			if output_video_buffer:
