@@ -131,7 +131,7 @@ def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDir
 	return audio_track
 
 
-def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int, remb_bitrate : Optional[ctypes.c_uint] = None) -> RtcVideoTrack:
+def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> RtcVideoTrack:
 	datachannel_library = datachannel_module.create_static_library()
 	video_track_init = create_video_track_init(media_direction, video_codec, payload_type)
 	video_track = datachannel_library.rtcAddTrackEx(peer_connection, video_track_init)
@@ -151,10 +151,8 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 		if video_codec == 'vp8':
 			datachannel_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
 
-		datachannel_library.rtcSetUserPointer(video_track, ctypes.cast(ctypes.byref(remb_bitrate), ctypes.c_void_p))
 		datachannel_library.rtcChainRtcpSrReporter(video_track)
 		datachannel_library.rtcChainRtcpNackResponder(video_track, 512)
-		datachannel_library.rtcChainRembHandler(video_track, create_static_remb_callback())
 
 	if media_direction == 'recvonly':
 		if video_codec == 'av1':
@@ -171,6 +169,12 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 		datachannel_library.rtcChainRtcpReceivingSession(video_track)
 
 	return video_track
+
+
+def wire_remb(video_track : RtcVideoTrack, remb_bitrate : ctypes.c_uint) -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	datachannel_library.rtcSetUserPointer(video_track, ctypes.cast(ctypes.byref(remb_bitrate), ctypes.c_void_p))
+	datachannel_library.rtcChainRembHandler(video_track, create_static_remb_callback())
 
 
 def create_audio_track_init(media_direction : MediaDirection, audio_codec : AudioCodec, payload_type : int) -> RtcTrackInit:
