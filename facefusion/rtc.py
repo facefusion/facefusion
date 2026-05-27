@@ -64,10 +64,10 @@ def send_video(rtc_peer : RtcPeer, video_buffer : bytes, video_timestamp : int) 
 		video_track = rtc_peer.get('video').get('sender_track')
 
 		if datachannel_library.rtcIsOpen(video_track):
-			send_buffer = ctypes.create_string_buffer(video_buffer)
+			send_pointer = ctypes.cast(ctypes.c_char_p(video_buffer), ctypes.c_void_p)
 			send_total = len(video_buffer)
 			datachannel_library.rtcSetTrackRtpTimestamp(video_track, video_timestamp)
-			datachannel_library.rtcSendMessage(video_track, send_buffer, send_total)
+			datachannel_library.rtcSendMessage(video_track, send_pointer, send_total)
 
 	return None
 
@@ -79,10 +79,10 @@ def send_audio(rtc_peer : RtcPeer, audio_buffer : bytes, audio_timestamp : int) 
 		audio_track = rtc_peer.get('audio').get('sender_track')
 
 		if datachannel_library.rtcIsOpen(audio_track):
-			send_buffer = ctypes.create_string_buffer(audio_buffer)
+			send_pointer = ctypes.cast(ctypes.c_char_p(audio_buffer), ctypes.c_void_p)
 			send_total = len(audio_buffer)
 			datachannel_library.rtcSetTrackRtpTimestamp(audio_track, audio_timestamp)
-			datachannel_library.rtcSendMessage(audio_track, send_buffer, send_total)
+			datachannel_library.rtcSendMessage(audio_track, send_pointer, send_total)
 
 	return None
 
