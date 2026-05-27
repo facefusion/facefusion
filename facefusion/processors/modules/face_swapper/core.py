@@ -9,7 +9,7 @@ import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, face_classifier, face_detector, face_landmarker, face_masker, face_recognizer, inference_manager, logger, state_manager, translator, video_manager
-from facefusion.common_helper import get_first, is_macos
+from facefusion.common_helper import get_first
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.face_analyser import get_average_face, get_many_faces, get_one_face, scale_face
@@ -24,7 +24,7 @@ from facefusion.processors.pixel_boost import explode_pixel_boost, implode_pixel
 from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, InferenceProvider, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_images, read_static_video_frame, unpack_resolution
 
 
@@ -246,6 +246,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/hyperswap_1a_256.onnx')
 				}
 			},
+			'precision': 'fp16',
 			'type': 'hyperswap',
 			'template': 'arcface_128',
 			'size': (256, 256),
@@ -276,6 +277,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 						'path': resolve_relative_path('../.assets/models/hyperswap_1b_256.onnx')
 					}
 				},
+			'precision': 'fp16',
 			'type': 'hyperswap',
 			'template': 'arcface_128',
 			'size': (256, 256),
@@ -306,6 +308,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/hyperswap_1c_256.onnx')
 				}
 			},
+			'precision': 'fp16',
 			'type': 'hyperswap',
 			'template': 'arcface_128',
 			'size': (256, 256),
@@ -366,6 +369,7 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 					'path': resolve_relative_path('../.assets/models/inswapper_128_fp16.onnx')
 				}
 			},
+			'precision': 'fp16',
 			'type': 'inswapper',
 			'template': 'arcface_128',
 			'size': (128, 128),
@@ -486,28 +490,35 @@ def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
 
 
 def get_inference_pool() -> InferencePool:
-	model_names = [ get_model_name() ]
+	model_names = [ state_manager.get_item('face_swapper_model') ]
 	model_source_set = get_model_options().get('sources')
 
 	return inference_manager.get_inference_pool(__name__, model_names, model_source_set)
 
 
 def clear_inference_pool() -> None:
-	model_names = [ get_model_name() ]
+	model_names = [ state_manager.get_item('face_swapper_model') ]
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
 def get_model_options() -> ModelOptions:
-	model_name = get_model_name()
+	model_name = state_manager.get_item('face_swapper_model')
 	return create_static_model_set('full').get(model_name)
 
 
-def get_model_name() -> str:
-	model_name = state_manager.get_item('face_swapper_model')
+def resolve_inference_providers() -> List[InferenceProvider]:
+	model_precision = get_model_options().get('precision')
 
-	if is_macos() and has_execution_provider('coreml') and model_name == 'inswapper_128_fp16':
-		return 'inswapper_128'
-	return model_name
+	if has_execution_provider('coreml') and model_precision == 'fp16':
+		return\
+		[
+			(facefusion.choices.execution_provider_set.get('coreml'),
+			{
+				'ModelFormat': 'MLProgram',
+				'SpecializationStrategy': 'FastPrediction'
+			})
+		]
+	return []
 
 
 def register_args(program : ArgumentParser) -> None:
@@ -621,9 +632,6 @@ def forward_swap_face(source_face : Face, target_face : Face, crop_vision_frame 
 	face_swapper = get_inference_pool().get('face_swapper')
 	model_type = get_model_options().get('type')
 	face_swapper_inputs = {}
-
-	if is_macos() and has_execution_provider('coreml') and model_type in [ 'ghost', 'uniface' ]:
-		face_swapper.set_providers([ facefusion.choices.execution_provider_set.get('cpu') ])
 
 	for face_swapper_input in face_swapper.get_inputs():
 		if face_swapper_input.name == 'source':

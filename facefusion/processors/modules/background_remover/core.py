@@ -5,10 +5,11 @@ from typing import List, Tuple
 import cv2
 import numpy
 
+import facefusion.choices
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
-from facefusion.common_helper import is_macos, is_windows
+from facefusion.common_helper import is_windows
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
 from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
@@ -19,7 +20,7 @@ from facefusion.processors.types import ProcessorOutputs
 from facefusion.program_helper import find_argument_group
 from facefusion.sanitizer import sanitize_int_range
 from facefusion.thread_helper import thread_semaphore
-from facefusion.types import ApplyStateItem, Args, DownloadScope, ExecutionProvider, InferencePool, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
+from facefusion.types import ApplyStateItem, Args, DownloadScope, InferencePool, InferenceProvider, Mask, ModelOptions, ModelSet, ProcessMode, VisionFrame
 from facefusion.vision import read_static_image, read_static_video_frame
 
 
@@ -477,12 +478,12 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def resolve_execution_providers() -> List[ExecutionProvider]:
+def resolve_inference_providers() -> List[InferenceProvider]:
 	model_type = get_model_options().get('type')
 
-	if is_macos() and has_execution_provider('coreml') or is_windows() and has_execution_provider('directml') and model_type == 'corridor_key':
-		return [ 'cpu' ]
-	return state_manager.get_item('execution_providers')
+	if is_windows() and has_execution_provider('directml') and model_type == 'corridor_key':
+		return [ facefusion.choices.execution_provider_set.get('cpu') ]
+	return []
 
 
 def get_model_options() -> ModelOptions:

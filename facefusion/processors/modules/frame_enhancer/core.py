@@ -7,9 +7,8 @@ import numpy
 import facefusion.jobs.job_manager
 import facefusion.jobs.job_store
 from facefusion import config, content_analyser, inference_manager, logger, state_manager, translator, video_manager
-from facefusion.common_helper import create_int_metavar, is_macos
+from facefusion.common_helper import create_int_metavar
 from facefusion.download import conditional_download_hashes, conditional_download_sources, resolve_download_url
-from facefusion.execution import has_execution_provider
 from facefusion.filesystem import in_directory, is_image, is_video, resolve_relative_path, same_file_extension
 from facefusion.processors.modules.frame_enhancer import choices as frame_enhancer_choices
 from facefusion.processors.modules.frame_enhancer.types import FrameEnhancerInputs
@@ -553,21 +552,8 @@ def clear_inference_pool() -> None:
 
 
 def get_model_options() -> ModelOptions:
-	model_name = get_frame_enhancer_model()
+	model_name = state_manager.get_item('frame_enhancer_model')
 	return create_static_model_set('full').get(model_name)
-
-
-def get_frame_enhancer_model() -> str:
-	frame_enhancer_model = state_manager.get_item('frame_enhancer_model')
-
-	if is_macos() and has_execution_provider('coreml'):
-		if frame_enhancer_model == 'real_esrgan_x2_fp16':
-			return 'real_esrgan_x2'
-		if frame_enhancer_model == 'real_esrgan_x4_fp16':
-			return 'real_esrgan_x4'
-		if frame_enhancer_model == 'real_esrgan_x8_fp16':
-			return 'real_esrgan_x8'
-	return frame_enhancer_model
 
 
 def register_args(program : ArgumentParser) -> None:
