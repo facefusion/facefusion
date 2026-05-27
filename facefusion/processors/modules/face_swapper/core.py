@@ -503,16 +503,21 @@ def clear_inference_pool() -> None:
 
 def resolve_inference_providers() -> List[InferenceProvider]:
 	model_precision = get_model_options().get('precision')
+	model_type = get_model_options().get('type')
 
-	if is_macos() and has_execution_provider('coreml') and model_precision == 'fp16':
-		return\
-		[
-			(facefusion.choices.execution_provider_set.get('coreml'),
-			{
-				'ModelFormat': 'MLProgram',
-				'SpecializationStrategy': 'FastPrediction'
-			})
-		]
+	if is_macos() and has_execution_provider('coreml'):
+		if model_type in [ 'ghost', 'uniface' ]:
+			return [ facefusion.choices.execution_provider_set.get('cpu') ]
+
+		if model_precision == 'fp16':
+			return\
+			[
+				(facefusion.choices.execution_provider_set.get('coreml'),
+				{
+					'ModelFormat': 'MLProgram',
+					'SpecializationStrategy': 'FastPrediction'
+				})
+			]
 
 	return []
 
