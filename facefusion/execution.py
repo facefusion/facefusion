@@ -10,6 +10,7 @@ from typing import List, Optional
 import onnxruntime
 
 import facefusion.choices
+from facefusion.common_helper import is_windows
 from facefusion.filesystem import create_directory, is_directory
 from facefusion.types import ExecutionDevice, ExecutionProvider, InferenceOptionSet, InferenceProvider, ValueAndUnit
 
@@ -39,7 +40,10 @@ def probe_execution_provider(execution_provider : ExecutionProvider) -> bool:
 
 	if library_path:
 		try:
-			onnxruntime_library = ctypes.CDLL(library_path)
+			if is_windows():
+				onnxruntime_library = ctypes.CDLL(library_path, winmode = 1)
+			else:
+				onnxruntime_library = ctypes.CDLL(library_path)
 
 			if hasattr(onnxruntime_library, 'GetProvider') and onnxruntime_library.GetProvider():
 				return True
