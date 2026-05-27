@@ -1,8 +1,18 @@
 import ctypes
+from functools import lru_cache
 from typing import List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
+
+
+def handle_remb(_ : int, bitrate : int, ptr : int) -> None:
+	ctypes.cast(ptr, ctypes.POINTER(ctypes.c_uint)).contents.value = bitrate // 1000
+
+
+@lru_cache
+def create_static_remb_callback() -> ctypes.CFUNCTYPE:
+	return ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p)(handle_remb)
 
 
 def create_peer_connection() -> PeerConnection:
@@ -121,7 +131,7 @@ def add_audio_track(peer_connection : PeerConnection, media_direction : MediaDir
 	return audio_track
 
 
-def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int) -> RtcVideoTrack:
+def add_video_track(peer_connection : PeerConnection, media_direction : MediaDirection, video_codec : VideoCodec, payload_type : int, remb_bitrate : Optional[ctypes.c_uint] = None) -> RtcVideoTrack:
 	datachannel_library = datachannel_module.create_static_library()
 	video_track_init = create_video_track_init(media_direction, video_codec, payload_type)
 	video_track = datachannel_library.rtcAddTrackEx(peer_connection, video_track_init)
@@ -141,8 +151,10 @@ def add_video_track(peer_connection : PeerConnection, media_direction : MediaDir
 		if video_codec == 'vp8':
 			datachannel_library.rtcSetVP8Packetizer(video_track, ctypes.byref(video_packetizer))
 
+		datachannel_library.rtcSetUserPointer(video_track, ctypes.cast(ctypes.byref(remb_bitrate), ctypes.c_void_p))
 		datachannel_library.rtcChainRtcpSrReporter(video_track)
 		datachannel_library.rtcChainRtcpNackResponder(video_track, 512)
+		datachannel_library.rtcChainRembHandler(video_track, create_static_remb_callback())
 
 	if media_direction == 'recvonly':
 		if video_codec == 'av1':
