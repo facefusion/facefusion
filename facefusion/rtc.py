@@ -6,15 +6,6 @@ from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcCallback, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
 
 
-def handle_remb(_ : int, bitrate : int, ptr : int) -> None:
-	ctypes.cast(ptr, ctypes.POINTER(ctypes.c_uint)).contents.value = bitrate // 1000
-
-
-@lru_cache
-def create_static_remb_callback() -> RtcCallback:
-	return ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p)(handle_remb)
-
-
 def create_peer_connection() -> PeerConnection:
 	datachannel_library = datachannel_module.create_static_library()
 	rtc_configuration = datachannel_module.define_rtc_configuration()
@@ -241,3 +232,12 @@ def get_payload_type(sdp_offer : SdpOffer, codec : AudioCodec | VideoCodec) -> i
 		return payload_type_buffer[0]
 
 	return 0
+
+
+def handle_remb(track : int, bitrate : int, pointer : int) -> None:
+	ctypes.cast(pointer, ctypes.POINTER(ctypes.c_uint)).contents.value = bitrate // 1000
+
+
+@lru_cache
+def create_static_remb_callback() -> RtcCallback:
+	return ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p)(handle_remb)
