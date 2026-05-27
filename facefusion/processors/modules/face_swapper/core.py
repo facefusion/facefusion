@@ -518,6 +518,7 @@ def resolve_inference_providers() -> List[InferenceProvider]:
 				'SpecializationStrategy': 'FastPrediction'
 			})
 		]
+
 	return []
 
 

@@ -483,6 +483,7 @@ def resolve_inference_providers() -> List[InferenceProvider]:
 
 	if is_windows() and has_execution_provider('directml') and model_type == 'corridor_key':
 		return [ facefusion.choices.execution_provider_set.get('cpu') ]
+
 	return []
 
 
