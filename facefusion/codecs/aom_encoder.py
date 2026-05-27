@@ -65,6 +65,23 @@ def collect(aom_encoder : AomEncoder) -> bytes:
 	return bytes().join(output_parts)
 
 
+def update_bitrate(aom_encoder : AomEncoder, frame_resolution : Resolution, bitrate : BitRate) -> bool:
+	aom_library = aom_module.create_static_library()
+
+	if aom_library:
+		aom_codec = ctypes.c_void_p.in_dll(aom_library, 'aom_codec_av1_cx_algo')
+		config_buffer = ctypes.create_string_buffer(1024)
+
+		if aom_library.aom_codec_enc_config_default(ctypes.byref(aom_codec), config_buffer, 1) == 0:
+			struct.pack_into('I', config_buffer, 12, frame_resolution[0])
+			struct.pack_into('I', config_buffer, 16, frame_resolution[1])
+			struct.pack_into('I', config_buffer, 136, bitrate)
+			struct.pack_into('I', config_buffer, 192, 30)
+			return aom_library.aom_codec_enc_config_set(aom_encoder, config_buffer) == 0
+
+	return False
+
+
 def destroy(aom_encoder : AomEncoder) -> None:
 	aom_library = aom_module.create_static_library()
 

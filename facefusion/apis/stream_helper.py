@@ -288,7 +288,14 @@ def create_video_encoder(video_codec : VideoCodec, resolution : Resolution, bitr
 
 
 def update_video_encoder(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, resolution : Resolution, bitrate : BitRate) -> Optional[VpxEncoder | AomEncoder]:
-	destroy_video_encoder(video_codec, video_encoder)
+	if video_codec == 'av1':
+		if aom_encoder.update_bitrate(video_encoder, resolution, bitrate):
+			return video_encoder
+
+	if video_codec == 'vp8':
+		if vpx_encoder.update_bitrate(video_encoder, resolution, bitrate):
+			return video_encoder
+
 	return create_video_encoder(video_codec, resolution, bitrate)
 
 

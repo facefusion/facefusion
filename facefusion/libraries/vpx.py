@@ -101,6 +101,9 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.vpx_codec_enc_config_default.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_uint ]
 	library.vpx_codec_enc_config_default.restype = ctypes.c_int
 
+	library.vpx_codec_enc_config_set.argtypes = [ ctypes.c_void_p, ctypes.c_void_p ]
+	library.vpx_codec_enc_config_set.restype = ctypes.c_int
+
 	library.vpx_codec_enc_init_ver.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long, ctypes.c_int ]
 	library.vpx_codec_enc_init_ver.restype = ctypes.c_int
 

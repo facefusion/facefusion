@@ -69,6 +69,22 @@ def collect(vpx_encoder : VpxEncoder) -> bytes:
 	return bytes().join(output_parts)
 
 
+def update_bitrate(vpx_encoder : VpxEncoder, frame_resolution : Resolution, bitrate : BitRate) -> bool:
+	vpx_library = vpx_module.create_static_library()
+
+	if vpx_library:
+		vp8_codec = ctypes.c_void_p.in_dll(vpx_library, 'vpx_codec_vp8_cx_algo')
+		config_buffer = ctypes.create_string_buffer(512)
+
+		if vpx_library.vpx_codec_enc_config_default(ctypes.byref(vp8_codec), config_buffer, 0) == 0:
+			struct.pack_into('I', config_buffer, 12, frame_resolution[0])
+			struct.pack_into('I', config_buffer, 16, frame_resolution[1])
+			struct.pack_into('I', config_buffer, 112, bitrate)
+			return vpx_library.vpx_codec_enc_config_set(vpx_encoder, config_buffer) == 0
+
+	return False
+
+
 def destroy(vpx_encoder : VpxEncoder) -> None:
 	vpx_library = vpx_module.create_static_library()
 
