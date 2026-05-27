@@ -501,11 +501,6 @@ def clear_inference_pool() -> None:
 	inference_manager.clear_inference_pool(__name__, model_names)
 
 
-def get_model_options() -> ModelOptions:
-	model_name = state_manager.get_item('face_swapper_model')
-	return create_static_model_set('full').get(model_name)
-
-
 def resolve_inference_providers() -> List[InferenceProvider]:
 	model_precision = get_model_options().get('precision')
 
@@ -520,6 +515,11 @@ def resolve_inference_providers() -> List[InferenceProvider]:
 		]
 
 	return []
+
+
+def get_model_options() -> ModelOptions:
+	model_name = state_manager.get_item('face_swapper_model')
+	return create_static_model_set('full').get(model_name)
 
 
 def register_args(program : ArgumentParser) -> None:
