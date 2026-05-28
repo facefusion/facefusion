@@ -39,7 +39,6 @@ def render() -> None:
 	{
 		'label': translator.get('uis.reference_face_gallery'),
 		'object_fit': 'cover',
-		'columns': 7,
 		'allow_preview': False,
 		'elem_classes': 'box-face-selector',
 		'visible': 'reference' in state_manager.get_item('face_selector_mode')

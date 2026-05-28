@@ -62,10 +62,14 @@
 	width: 1.125rem;
 }
 
-:root:root:root:root .thumbnail-item
+:root:root:root:root .gallery-container .thumbnail-item
 {
 	border: unset;
-	box-shadow: unset;
+}
+
+:root:root:root:root .gallery-container .grid-container
+{
+	grid-template-columns: repeat(7, 1fr);
 }
 
 :root:root:root:root .grid-wrap.fixed-height
