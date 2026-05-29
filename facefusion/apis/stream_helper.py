@@ -144,16 +144,15 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 			send_timestamp = time.monotonic()
 
-			bitrate_cell = rtc_peer.get('bitrate')
-			remb_bitrate = bitrate_cell.value if bitrate_cell else 0
+			remb_bitrate = rtc_peer.get('bitrate').value
 
-			if output_resolution != temp_resolution:
+			if output_resolution != temp_resolution: # TODO avoid != in condition
 				destroy_video_encoder(video_codec, video_encoder)
 				temp_resolution = output_resolution
 				video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 				frame_index = 0
 
-			if remb_bitrate and remb_bitrate != temp_bitrate:
+			if remb_bitrate and remb_bitrate != temp_bitrate: # TODO avoid != in condition
 				destroy_video_encoder(video_codec, video_encoder)
 				temp_bitrate = remb_bitrate
 				video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
@@ -175,9 +174,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 		destroy_video_encoder(video_codec, video_encoder)
 		opus_encoder.destroy(audio_encoder)
-		bitrate_cell = rtc_peer.get('bitrate')
-		if bitrate_cell:
-			bitrate_cell.value = 0
+		rtc_peer.get('bitrate').value = 0
 
 	for receiver_thread in receiver_threads:
 		receiver_thread.join()

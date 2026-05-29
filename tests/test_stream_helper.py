@@ -98,7 +98,7 @@ def test_receive_video_frames() -> None:
 def test_create_video_encoder() -> None:
 	encoder = create_video_encoder('vp8', (640, 480), 4000)
 
-	assert encoder is not None
+	assert encoder
 
 	destroy_video_encoder('vp8', encoder)
 
