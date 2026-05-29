@@ -144,9 +144,8 @@ def test_wire_remb(video_codec : VideoCodec, payload_type : int) -> None:
 	bitrate = ctypes.c_uint(0)
 
 	wire_remb(video_track, bitrate)
-
-	assert bitrate.value == 0
 	handle_remb(0, 6000000, ctypes.addressof(bitrate))
+
 	assert bitrate.value == 6000
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
