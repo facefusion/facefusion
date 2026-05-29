@@ -95,12 +95,28 @@ def test_receive_video_frames() -> None:
 		assert create_hash(video_queue.get_nowait().tobytes()) == '38d00e2a'
 
 
-def test_create_video_encoder() -> None:
-	encoder = create_video_encoder('vp8', (640, 480), 4000)
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
+	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	resolution = (vision_frame.shape[1], vision_frame.shape[0])
+	frame_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
-	assert encoder
+	encoder = create_video_encoder(video_codec, resolution, 4000)
+	assert encoder is not None
 
-	destroy_video_encoder('vp8', encoder)
+	if video_codec == 'av1':
+		assert aom_encoder.encode(encoder, frame_buffer, resolution, 0)
+
+	if video_codec == 'vp8':
+		assert vpx_encoder.encode(encoder, frame_buffer, resolution, 0)
+
+	destroy_video_encoder(video_codec, encoder)
+
+	if video_codec == 'av1':
+		assert not aom_encoder.encode(encoder, frame_buffer, resolution, 1)
+
+	if video_codec == 'vp8':
+		assert not vpx_encoder.encode(encoder, frame_buffer, resolution, 1)
 
 
 # TODO: refine test
