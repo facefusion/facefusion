@@ -1,6 +1,5 @@
 import ctypes
-from functools import lru_cache
-from typing import Callable, List, Optional
+from typing import List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
@@ -217,23 +216,19 @@ def create_video_track_init(media_direction : MediaDirection, video_codec : Vide
 	return ctypes.byref(track_init)
 
 
-def wire_remb(video_track : RtcVideoTrack, bitrate : ctypes.c_uint) -> None:
-	datachannel_library = datachannel_module.create_static_library()
-	datachannel_library.rtcSetUserPointer(video_track, ctypes.cast(ctypes.byref(bitrate), ctypes.c_void_p))
-	datachannel_library.rtcChainRembHandler(video_track, create_static_remb_callback())
-
-
-def clear_remb(rtc_peer : RtcPeer) -> None:
-	rtc_peer.get('bitrate').value = 0
-
-
+@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p)
 def handle_remb(track : int, bitrate : int, pointer : int) -> None:
 	ctypes.cast(pointer, ctypes.POINTER(ctypes.c_uint)).contents.value = bitrate // 1000
 
 
-@lru_cache
-def create_static_remb_callback() -> Callable[..., None]:
-	return ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p)(handle_remb)
+def wire_remb(video_track : RtcVideoTrack, bitrate : ctypes.c_uint) -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	datachannel_library.rtcSetUserPointer(video_track, ctypes.cast(ctypes.byref(bitrate), ctypes.c_void_p))
+	datachannel_library.rtcChainRembHandler(video_track, handle_remb)
+
+
+def clear_remb(rtc_peer : RtcPeer) -> None:
+	rtc_peer.get('bitrate').value = 0
 
 
 def get_payload_type(sdp_offer : SdpOffer, codec : AudioCodec | VideoCodec) -> int:
