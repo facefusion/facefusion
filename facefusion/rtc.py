@@ -1,4 +1,5 @@
 import ctypes
+from functools import lru_cache
 from typing import List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
@@ -214,6 +215,21 @@ def create_video_track_init(media_direction : MediaDirection, video_codec : Vide
 		track_init.codec = 1
 
 	return ctypes.byref(track_init)
+
+
+def wire_remb(video_track : RtcVideoTrack, bitrate : ctypes.c_uint) -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	datachannel_library.rtcSetUserPointer(video_track, ctypes.cast(ctypes.byref(bitrate), ctypes.c_void_p))
+	datachannel_library.rtcChainRembHandler(video_track, create_static_remb_callback())
+
+
+def handle_remb(track : int, bitrate : int, pointer : int) -> None:
+	ctypes.cast(pointer, ctypes.POINTER(ctypes.c_uint)).contents.value = bitrate // 1000
+
+
+@lru_cache
+def create_static_remb_callback() -> ctypes.CFUNCTYPE:
+	return ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p)(handle_remb)
 
 
 def get_payload_type(sdp_offer : SdpOffer, codec : AudioCodec | VideoCodec) -> int:

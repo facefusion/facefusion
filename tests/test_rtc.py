@@ -1,10 +1,11 @@
+import ctypes
 from typing import List
 
 import pytest
 
 from facefusion import state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, get_payload_type, send_audio, send_video, set_remote_description
+from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, get_payload_type, send_audio, send_video, set_remote_description, wire_remb
 from facefusion.types import RtcPeer
 
 
@@ -130,6 +131,19 @@ def test_delete_peers() -> None:
 	delete_peers(rtc_peers)
 
 	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == -1
+
+
+def test_wire_remb() -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	peer_connection = create_peer_connection()
+	video_track = add_video_track(peer_connection, 'sendonly', 'vp8', 96)
+	bitrate = ctypes.c_uint(0)
+
+	wire_remb(video_track, bitrate)
+
+	assert bitrate.value == 0
+
+	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
 
 def test_get_payload_type() -> None:

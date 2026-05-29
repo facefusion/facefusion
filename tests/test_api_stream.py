@@ -135,6 +135,9 @@ def test_stream_video(test_client : TestClient, video_codec : VideoCodec) -> Non
 		assert stream_response.status_code == 201
 		assert 'm=video' in stream_response.text
 
+		session_id = session_manager.find_session_id(access_token)
+		assert rtc_store.get_peers(session_id)[0].get('bitrate') is not None
+
 
 def test_delete_stream_video(test_client : TestClient) -> None:
 	create_session_response = test_client.post('/session', json =

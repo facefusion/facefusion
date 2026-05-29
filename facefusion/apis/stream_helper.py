@@ -14,7 +14,7 @@ from facefusion import rtc, rtc_store, state_manager, streamer
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioFrame, PeerConnection, Resolution, RtcPeer, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
+from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioFrame, BitRate, PeerConnection, Resolution, RtcPeer, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
 
 
 async def process_image(websocket : WebSocket) -> None:
@@ -43,7 +43,9 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 	if video_payload_type:
 		peer_connection : PeerConnection = rtc.create_peer_connection()
 		video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, video_payload_type)
+		bitrate = ctypes.c_uint(0)
 		video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, video_payload_type)
+		rtc.wire_remb(video_sender_track, bitrate)
 
 		audio_codec : AudioCodec = 'opus'
 		audio_payload_type = rtc.get_payload_type(sdp_offer, audio_codec)
@@ -66,7 +68,8 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 					'sender_track': video_sender_track,
 					'receiver_track': video_receiver_track,
 					'codec': video_codec
-				}
+				},
+				'bitrate': bitrate
 			}
 
 			if audio_receiver_track and audio_sender_track:
@@ -126,7 +129,8 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	if numpy.any(temp_vision_frame):
 		audio_frame = create_empty_audio_frame()
 		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
-		video_encoder = create_video_encoder(video_codec, temp_resolution)
+		temp_bitrate : BitRate = 8000
+		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 		audio_encoder = opus_encoder.create(48000, 2)
 		frame_index = 0
 
@@ -140,14 +144,22 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 			send_timestamp = time.monotonic()
 
-			if output_resolution == temp_resolution:
-				output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
-			else:
-				destroy_video_encoder(video_codec, video_encoder)  # TODO: remove unconditional destroy methods, which have no impact on control flow
+			bitrate_cell = rtc_peer.get('bitrate')
+			remb_bitrate = bitrate_cell.value if bitrate_cell else 0
+
+			if output_resolution != temp_resolution:
+				destroy_video_encoder(video_codec, video_encoder)
 				temp_resolution = output_resolution
-				video_encoder = create_video_encoder(video_codec, temp_resolution)
+				video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 				frame_index = 0
-				output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
+
+			if remb_bitrate and remb_bitrate != temp_bitrate:
+				destroy_video_encoder(video_codec, video_encoder)
+				temp_bitrate = remb_bitrate
+				video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
+				frame_index = 0
+
+			output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 
 			if output_video_buffer:
 				rtc.send_video(rtc_peer, output_video_buffer, int(send_timestamp * 90000))
@@ -161,8 +173,11 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 			frame_index += 1
 			temp_vision_frame = video_queue.get()
 
-		destroy_video_encoder(video_codec, video_encoder)  # TODO: remove unconditional destroy methods, which have no impact on control flow
+		destroy_video_encoder(video_codec, video_encoder)
 		opus_encoder.destroy(audio_encoder)
+		bitrate_cell = rtc_peer.get('bitrate')
+		if bitrate_cell:
+			bitrate_cell.value = 0
 
 	for receiver_thread in receiver_threads:
 		receiver_thread.join()
@@ -262,12 +277,12 @@ def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomD
 	return None
 
 
-def create_video_encoder(video_codec : VideoCodec, resolution : Resolution) -> Optional[VpxEncoder | AomEncoder]:
+def create_video_encoder(video_codec : VideoCodec, resolution : Resolution, bitrate : BitRate) -> Optional[VpxEncoder | AomEncoder]:
 	if video_codec == 'av1':
-		return aom_encoder.create(resolution, 8000, 8, 10)
+		return aom_encoder.create(resolution, bitrate, 8, 10)
 
 	if video_codec == 'vp8':
-		return vpx_encoder.create(resolution, 8000, 8, 10)
+		return vpx_encoder.create(resolution, bitrate, 8, 10)
 
 	return None
 
