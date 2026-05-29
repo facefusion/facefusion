@@ -1,6 +1,6 @@
 import ctypes
 from functools import lru_cache
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, MediaDirection, PeerConnection, RtcAudioTrack, RtcPeer, RtcTrackInit, RtcVideoTrack, SdpAnswer, SdpOffer, VideoCodec
@@ -228,7 +228,7 @@ def handle_remb(track : int, bitrate : int, pointer : int) -> None:
 
 
 @lru_cache
-def create_static_remb_callback() -> ctypes.CFUNCTYPE:
+def create_static_remb_callback() -> Callable[..., None]:
 	return ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p)(handle_remb)
 
 
