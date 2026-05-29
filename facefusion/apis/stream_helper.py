@@ -197,6 +197,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 
 		if receive_status_code == 0 and buffer_size.value > 0:
 			frame_buffer = receive_buffer.raw[:buffer_size.value]
+			#TODO: throttle decode to stream video fps or 30fps with todo
 			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
 
 			if numpy.any(vision_frame):
