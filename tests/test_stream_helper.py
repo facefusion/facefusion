@@ -1,3 +1,4 @@
+import ctypes
 import queue
 import threading
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -10,7 +11,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 
 from facefusion import rtc, rtc_store, state_manager
 from facefusion.apis.endpoints.stream import websocket_stream
-from facefusion.apis.stream_helper import decode_video_frame, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_peer_loop
+from facefusion.apis.stream_helper import create_video_encoder, decode_video_frame, destroy_video_encoder, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_peer_loop
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -94,6 +95,30 @@ def test_receive_video_frames() -> None:
 		assert create_hash(video_queue.get_nowait().tobytes()) == '38d00e2a'
 
 
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
+	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	resolution = (vision_frame.shape[1], vision_frame.shape[0])
+	frame_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+
+	encoder = create_video_encoder(video_codec, resolution, 4000)
+	assert encoder is not None
+
+	if video_codec == 'av1':
+		assert aom_encoder.encode(encoder, frame_buffer, resolution, 0)
+
+	if video_codec == 'vp8':
+		assert vpx_encoder.encode(encoder, frame_buffer, resolution, 0)
+
+	destroy_video_encoder(video_codec, encoder)
+
+	if video_codec == 'av1':
+		assert not aom_encoder.encode(encoder, frame_buffer, resolution, 1)
+
+	if video_codec == 'vp8':
+		assert not vpx_encoder.encode(encoder, frame_buffer, resolution, 1)
+
+
 # TODO: refine test
 def test_receive_audio_frames() -> None:
 	audio_frame = numpy.zeros(960 * 2, dtype = numpy.float32)
@@ -128,7 +153,8 @@ def test_run_peer_loop() -> None:
 			'sender_track': video_sender_track,
 			'receiver_track': video_receiver_track,
 			'codec': 'vp8'
-		}
+		},
+		'bitrate': ctypes.c_uint(0)
 	}
 
 	session_id = 'test-run-peer-loop'

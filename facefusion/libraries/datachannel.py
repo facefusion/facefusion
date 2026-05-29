@@ -218,6 +218,12 @@ def init_ctypes(library : ctypes.CDLL) -> ctypes.CDLL:
 	library.rtcReceiveMessage.argtypes = [ ctypes.c_int, ctypes.c_char_p, ctypes.POINTER(ctypes.c_int) ]
 	library.rtcReceiveMessage.restype = ctypes.c_int
 
+	library.rtcSetUserPointer.argtypes = [ ctypes.c_int, ctypes.c_void_p ]
+	library.rtcSetUserPointer.restype = None
+
+	library.rtcChainRembHandler.argtypes = [ ctypes.c_int, ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p) ]
+	library.rtcChainRembHandler.restype = ctypes.c_int
+
 	return library
 
 
