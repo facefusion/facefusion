@@ -101,22 +101,21 @@ def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 	resolution = (vision_frame.shape[1], vision_frame.shape[0])
 	frame_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
-	encoder = create_video_encoder(video_codec, resolution, 4000)
-	assert encoder is not None
+	video_encoder = create_video_encoder(video_codec, resolution, 4000)
 
 	if video_codec == 'av1':
-		assert aom_encoder.encode(encoder, frame_buffer, resolution, 0)
+		assert aom_encoder.encode(video_encoder, frame_buffer, resolution, 0)
 
 	if video_codec == 'vp8':
-		assert vpx_encoder.encode(encoder, frame_buffer, resolution, 0)
+		assert vpx_encoder.encode(video_encoder, frame_buffer, resolution, 0)
 
-	destroy_video_encoder(video_codec, encoder)
+	destroy_video_encoder(video_codec, video_encoder)
 
 	if video_codec == 'av1':
-		assert not aom_encoder.encode(encoder, frame_buffer, resolution, 1)
+		assert not aom_encoder.encode(video_encoder, frame_buffer, resolution, 1)
 
 	if video_codec == 'vp8':
-		assert not vpx_encoder.encode(encoder, frame_buffer, resolution, 1)
+		assert not vpx_encoder.encode(video_encoder, frame_buffer, resolution, 1)
 
 
 # TODO: refine test

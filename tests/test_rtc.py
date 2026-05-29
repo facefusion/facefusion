@@ -154,6 +154,9 @@ def test_wire_remb(video_codec : VideoCodec, payload_type : int) -> None:
 	}
 
 	wire_remb(video_sender_track, rtc_peer.get('bitrate'))
+
+	assert rtc_peer.get('bitrate').value == 0
+
 	handle_remb(0, 6000000, ctypes.addressof(rtc_peer.get('bitrate')))
 
 	assert rtc_peer.get('bitrate').value == 6000
