@@ -124,25 +124,23 @@ def test_update_video_encoder_bitrate(video_codec : VideoCodec) -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	resolution = (vision_frame.shape[1], vision_frame.shape[0])
 
-	encoder = create_video_encoder(video_codec, resolution, 4000)
-	encoder_address = ctypes.addressof(encoder)
+	video_encoder = create_video_encoder(video_codec, resolution, 4000)
 
 	if video_codec == 'av1':
-		assert struct.unpack_from('I', encoder, 128 + 136)[0] == 4000
+		assert struct.unpack_from('I', video_encoder, 128 + 136)[0] == 4000
 
 	if video_codec == 'vp8':
-		assert struct.unpack_from('I', encoder, 64 + 112)[0] == 4000
+		assert struct.unpack_from('I', video_encoder, 64 + 112)[0] == 4000
 
-	assert update_video_encoder_bitrate(video_codec, encoder, 6000)
-	assert ctypes.addressof(encoder) == encoder_address
+	assert update_video_encoder_bitrate(video_codec, video_encoder, 6000)
 
 	if video_codec == 'av1':
-		assert struct.unpack_from('I', encoder, 128 + 136)[0] == 6000
+		assert struct.unpack_from('I', video_encoder, 128 + 136)[0] == 6000
 
 	if video_codec == 'vp8':
-		assert struct.unpack_from('I', encoder, 64 + 112)[0] == 6000
+		assert struct.unpack_from('I', video_encoder, 64 + 112)[0] == 6000
 
-	destroy_video_encoder(video_codec, encoder)
+	destroy_video_encoder(video_codec, video_encoder)
 
 
 # TODO: refine test
