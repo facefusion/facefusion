@@ -153,11 +153,10 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 				frame_index = 0
 
 			if peer_bitrate and peer_bitrate - temp_bitrate:
-				if update_video_encoder_bitrate(video_codec, video_encoder, peer_bitrate):
-					temp_bitrate = peer_bitrate
-				else:
+				temp_bitrate = peer_bitrate
+
+				if not update_video_encoder_bitrate(video_codec, video_encoder, temp_bitrate):
 					destroy_video_encoder(video_codec, video_encoder)
-					temp_bitrate = peer_bitrate
 					video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 					frame_index = 0
 
