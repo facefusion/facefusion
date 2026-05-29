@@ -43,8 +43,8 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 	if video_payload_type:
 		peer_connection : PeerConnection = rtc.create_peer_connection()
 		video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, video_payload_type)
-		bitrate = ctypes.c_uint(0)
 		video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, video_payload_type)
+		bitrate = ctypes.c_uint(0)
 		rtc.wire_remb(video_sender_track, bitrate)
 
 		audio_codec : AudioCodec = 'opus'
@@ -172,7 +172,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 			frame_index += 1
 			temp_vision_frame = video_queue.get()
 
-		destroy_video_encoder(video_codec, video_encoder)
+		destroy_video_encoder(video_codec, video_encoder)  # TODO: remove unconditional destroy methods, which have no impact on control flow
 		opus_encoder.destroy(audio_encoder)
 		rtc_peer.get('bitrate').value = 0
 
