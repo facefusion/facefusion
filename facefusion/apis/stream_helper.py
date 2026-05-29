@@ -106,6 +106,7 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 
 #TODO: needs review
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
+	# TODO: combine video and audio queue
 	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
 	receiver_threads = []
@@ -204,7 +205,8 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 				video_queue.put_nowait(vision_frame)
 
 		if receive_status_code == -3:
-			time.sleep(0.001)  # TODO: remove sleep
+			# TODO: use rtcSetMessageCallback instead of polling
+			time.sleep(0.001)
 
 	video_queue.put(numpy.empty(0))
 	destroy_video_decoder(video_codec, video_decoder)
@@ -231,7 +233,8 @@ def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queu
 				audio_queue.put_nowait(numpy.frombuffer(output_buffer, dtype = numpy.float32))
 
 		if receive_status_code == -3:
-			time.sleep(0.001) # TODO: remove sleep
+			# TODO: use rtcSetMessageCallback instead of polling
+			time.sleep(0.001)
 
 	opus_decoder.destroy(audio_decoder)
 
