@@ -178,7 +178,8 @@ def test_run_peer_loop() -> None:
 			'receiver_track': video_receiver_track,
 			'codec': 'vp8'
 		},
-		'bitrate': ctypes.c_uint(0)
+		'sender_bitrate': ctypes.c_uint(0),
+		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
 	session_id = 'test-run-peer-loop'

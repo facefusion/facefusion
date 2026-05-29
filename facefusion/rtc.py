@@ -228,7 +228,7 @@ def wire_remb(video_track : RtcVideoTrack, bitrate : ctypes.c_uint) -> None:
 
 
 def clear_remb(rtc_peer : RtcPeer) -> None:
-	rtc_peer.get('bitrate').value = 0
+	rtc_peer.get('sender_bitrate').value = 0
 
 
 def get_payload_type(sdp_offer : SdpOffer, codec : AudioCodec | VideoCodec) -> int:

@@ -79,7 +79,8 @@ def test_send_video() -> None:
 			'receiver_track': video_track,
 			'codec': 'vp8'
 		},
-		'bitrate': ctypes.c_uint(0)
+		'sender_bitrate': ctypes.c_uint(0),
+		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
 	send_video(rtc_peer, bytes(1024), 0)
@@ -106,7 +107,8 @@ def test_send_audio() -> None:
 			'receiver_track': audio_track,
 			'codec': 'opus'
 		},
-		'bitrate': ctypes.c_uint(0)
+		'sender_bitrate': ctypes.c_uint(0),
+		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
 	send_audio(rtc_peer, bytes(960), 0)
@@ -127,7 +129,8 @@ def test_delete_peers() -> None:
 				'receiver_track': 0,
 				'codec': 'vp8'
 			},
-			'bitrate': ctypes.c_uint(0)
+			'sender_bitrate': ctypes.c_uint(0),
+			'receiver_bitrate': ctypes.c_uint(0)
 		}
 	]
 
@@ -150,16 +153,43 @@ def test_wire_remb(video_codec : VideoCodec, payload_type : int) -> None:
 			'receiver_track': video_sender_track,
 			'codec': video_codec
 		},
-		'bitrate': ctypes.c_uint(0)
+		'sender_bitrate': ctypes.c_uint(0),
+		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
-	wire_remb(video_sender_track, rtc_peer.get('bitrate'))
+	wire_remb(video_sender_track, rtc_peer.get('sender_bitrate'))
 
-	assert rtc_peer.get('bitrate').value == 0
+	assert rtc_peer.get('sender_bitrate').value == 0
 
-	handle_remb(0, 6000000, ctypes.addressof(rtc_peer.get('bitrate')))
+	handle_remb(0, 6000000, ctypes.addressof(rtc_peer.get('sender_bitrate')))
 
-	assert rtc_peer.get('bitrate').value == 6000
+	assert rtc_peer.get('sender_bitrate').value == 6000
+
+	datachannel_library.rtcDeletePeerConnection(peer_connection)
+
+
+@pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
+def test_wire_remb_receiver(video_codec : VideoCodec, payload_type : int) -> None:
+	datachannel_library = datachannel_module.create_static_library()
+	peer_connection = create_peer_connection()
+	video_receiver_track = add_video_track(peer_connection, 'recvonly', video_codec, payload_type)
+	rtc_peer : RtcPeer =\
+	{
+		'peer_connection': peer_connection,
+		'video':
+		{
+			'sender_track': video_receiver_track,
+			'receiver_track': video_receiver_track,
+			'codec': video_codec
+		},
+		'sender_bitrate': ctypes.c_uint(0),
+		'receiver_bitrate': ctypes.c_uint(0)
+	}
+
+	wire_remb(video_receiver_track, rtc_peer.get('receiver_bitrate'))
+	handle_remb(0, 6000000, ctypes.addressof(rtc_peer.get('receiver_bitrate')))
+
+	assert rtc_peer.get('receiver_bitrate').value == 6000
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
