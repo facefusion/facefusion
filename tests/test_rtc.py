@@ -140,13 +140,23 @@ def test_delete_peers() -> None:
 def test_wire_remb(video_codec : VideoCodec, payload_type : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
-	video_track = add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
-	bitrate = ctypes.c_uint(0)
+	video_sender_track = add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
+	rtc_peer : RtcPeer =\
+	{
+		'peer_connection': peer_connection,
+		'video':
+		{
+			'sender_track': video_sender_track,
+			'receiver_track': video_sender_track,
+			'codec': video_codec
+		},
+		'bitrate': ctypes.c_uint(0)
+	}
 
-	wire_remb(video_track, bitrate)
-	handle_remb(0, 6000000, ctypes.addressof(bitrate))
+	wire_remb(video_sender_track, rtc_peer.get('bitrate'))
+	handle_remb(0, 6000000, ctypes.addressof(rtc_peer.get('bitrate')))
 
-	assert bitrate.value == 6000
+	assert rtc_peer.get('bitrate').value == 6000
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
