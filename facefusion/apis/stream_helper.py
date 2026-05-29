@@ -44,8 +44,10 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 		peer_connection : PeerConnection = rtc.create_peer_connection()
 		video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, video_payload_type)
 		video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, video_payload_type)
-		bitrate = ctypes.c_uint(0)
-		rtc.wire_remb(video_sender_track, bitrate)
+		sender_bitrate = ctypes.c_uint(0)
+		rtc.wire_remb(video_sender_track, sender_bitrate)
+		receiver_bitrate = ctypes.c_uint(0)
+		rtc.wire_remb(video_receiver_track, receiver_bitrate)
 
 		audio_codec : AudioCodec = 'opus'
 		audio_payload_type = rtc.get_payload_type(sdp_offer, audio_codec)
@@ -69,7 +71,8 @@ def process_video(session_id : SessionId, sdp_offer : SdpOffer) -> Optional[SdpA
 					'receiver_track': video_receiver_track,
 					'codec': video_codec
 				},
-				'bitrate': bitrate
+				'sender_bitrate': sender_bitrate,
+				'receiver_bitrate': receiver_bitrate
 			}
 
 			if audio_receiver_track and audio_sender_track:
@@ -145,7 +148,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 			send_timestamp = time.monotonic()
 
-			peer_bitrate = rtc_peer.get('bitrate').value
+			peer_bitrate = rtc_peer.get('sender_bitrate').value
 
 			if output_resolution != temp_resolution: # TODO avoid != in condition
 				destroy_video_encoder(video_codec, video_encoder)

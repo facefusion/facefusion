@@ -314,7 +314,8 @@ RtcPeer = TypedDict('RtcPeer',
 	'peer_connection': PeerConnection,
 	'audio': NotRequired[RtcPeerAudio],
 	'video': RtcPeerVideo,
-	'bitrate': ctypes.c_uint
+	'sender_bitrate': ctypes.c_uint,
+	'receiver_bitrate': ctypes.c_uint
 })
 RtcStore : TypeAlias = Dict[SessionId, List[RtcPeer]]
 

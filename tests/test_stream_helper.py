@@ -178,7 +178,8 @@ def test_run_peer_loop() -> None:
 			'receiver_track': video_receiver_track,
 			'codec': 'vp8'
 		},
-		'bitrate': ctypes.c_uint(0)
+		'sender_bitrate': ctypes.c_uint(0),
+		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
 	session_id = 'test-run-peer-loop'
@@ -297,3 +298,16 @@ def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 	assert 'm=video' in sdp_answer
 	assert 'a=recvonly' in sdp_answer
 	assert 'a=sendonly' in sdp_answer
+
+	for peer in rtc_store.get_peers(session_id):
+		sender_bitrate = peer.get('sender_bitrate')
+		receiver_bitrate = peer.get('receiver_bitrate')
+
+		assert sender_bitrate.value == 0
+		assert receiver_bitrate.value == 0
+
+		rtc.handle_remb(0, 6000000, ctypes.addressof(sender_bitrate))
+		assert sender_bitrate.value == 6000
+
+		rtc.handle_remb(0, 4000000, ctypes.addressof(receiver_bitrate))
+		assert receiver_bitrate.value == 4000
