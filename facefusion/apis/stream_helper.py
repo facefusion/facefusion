@@ -144,7 +144,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 			send_timestamp = time.monotonic()
 
-			remb_bitrate = rtc_peer.get('bitrate').value
+			peer_bitrate = rtc_peer.get('bitrate').value
 
 			if output_resolution != temp_resolution: # TODO avoid != in condition
 				destroy_video_encoder(video_codec, video_encoder)
@@ -152,9 +152,9 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 				video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 				frame_index = 0
 
-			if remb_bitrate and remb_bitrate != temp_bitrate: # TODO avoid != in condition
+			if peer_bitrate and peer_bitrate != temp_bitrate: # TODO avoid != in condition
 				destroy_video_encoder(video_codec, video_encoder)
-				temp_bitrate = remb_bitrate
+				temp_bitrate = peer_bitrate
 				video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 				frame_index = 0
 
@@ -174,7 +174,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 		destroy_video_encoder(video_codec, video_encoder)  # TODO: remove unconditional destroy methods, which have no impact on control flow
 		opus_encoder.destroy(audio_encoder)
-		rtc_peer.get('bitrate').value = 0
+		rtc.clear_remb(rtc_peer)
 
 	for receiver_thread in receiver_threads:
 		receiver_thread.join()

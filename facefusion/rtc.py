@@ -223,6 +223,10 @@ def wire_remb(video_track : RtcVideoTrack, bitrate : ctypes.c_uint) -> None:
 	datachannel_library.rtcChainRembHandler(video_track, create_static_remb_callback())
 
 
+def clear_remb(rtc_peer : RtcPeer) -> None:
+	rtc_peer.get('bitrate').value = 0
+
+
 def handle_remb(track : int, bitrate : int, pointer : int) -> None:
 	ctypes.cast(pointer, ctypes.POINTER(ctypes.c_uint)).contents.value = bitrate // 1000
 
