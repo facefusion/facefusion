@@ -152,11 +152,13 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 				video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 				frame_index = 0
 
-			if peer_bitrate and peer_bitrate != temp_bitrate: # TODO avoid != in condition
-				destroy_video_encoder(video_codec, video_encoder)
+			if peer_bitrate and peer_bitrate - temp_bitrate:
 				temp_bitrate = peer_bitrate
-				video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
-				frame_index = 0
+
+				if not update_video_encoder_bitrate(video_codec, video_encoder, temp_bitrate):
+					destroy_video_encoder(video_codec, video_encoder)
+					video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
+					frame_index = 0
 
 			output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 
@@ -290,6 +292,16 @@ def destroy_video_decoder(video_codec : VideoCodec, video_decoder : VpxDecoder |
 
 	if video_codec == 'vp8':
 		vpx_decoder.destroy(video_decoder)
+
+
+def update_video_encoder_bitrate(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, bitrate : BitRate) -> bool:
+	if video_codec == 'av1':
+		return aom_encoder.update_bitrate(video_encoder, bitrate)
+
+	if video_codec == 'vp8':
+		return vpx_encoder.update_bitrate(video_encoder, bitrate)
+
+	return False
 
 
 def destroy_video_encoder(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder) -> None:

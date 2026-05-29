@@ -1,4 +1,3 @@
-import ctypes
 import tempfile
 from typing import Iterator
 from unittest.mock import patch
