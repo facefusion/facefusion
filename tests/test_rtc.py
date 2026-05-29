@@ -78,7 +78,8 @@ def test_send_video() -> None:
 			'sender_track': video_track,
 			'receiver_track': video_track,
 			'codec': 'vp8'
-		}
+		},
+		'bitrate': ctypes.c_uint(0)
 	}
 
 	send_video(rtc_peer, bytes(1024), 0)
@@ -104,7 +105,8 @@ def test_send_audio() -> None:
 			'sender_track': audio_track,
 			'receiver_track': audio_track,
 			'codec': 'opus'
-		}
+		},
+		'bitrate': ctypes.c_uint(0)
 	}
 
 	send_audio(rtc_peer, bytes(960), 0)
@@ -124,7 +126,8 @@ def test_delete_peers() -> None:
 				'sender_track': 0,
 				'receiver_track': 0,
 				'codec': 'vp8'
-			}
+			},
+			'bitrate': ctypes.c_uint(0)
 		}
 	]
 
