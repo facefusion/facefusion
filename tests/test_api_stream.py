@@ -1,3 +1,4 @@
+import ctypes
 import tempfile
 from typing import Iterator
 from unittest.mock import patch
@@ -136,7 +137,12 @@ def test_stream_video(test_client : TestClient, video_codec : VideoCodec) -> Non
 		assert 'm=video' in stream_response.text
 
 		session_id = session_manager.find_session_id(access_token)
-		assert rtc_store.get_peers(session_id)[0].get('bitrate').value == 0
+
+		for peer in rtc_store.get_peers(session_id):
+			bitrate = peer.get('bitrate')
+			assert bitrate.value == 0
+			rtc.handle_remb(0, 6000000, ctypes.addressof(bitrate))
+			assert bitrate.value == 6000
 
 
 def test_delete_stream_video(test_client : TestClient) -> None:
