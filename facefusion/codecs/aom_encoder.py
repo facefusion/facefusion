@@ -10,7 +10,7 @@ def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int,
 	aom_library = aom_module.create_static_library()
 
 	if aom_library:
-		aom_encoder = ctypes.create_string_buffer(128)
+		aom_encoder = ctypes.create_string_buffer(1152)
 		aom_codec = ctypes.c_void_p.in_dll(aom_library, 'aom_codec_av1_cx_algo')
 
 		config_buffer = ctypes.create_string_buffer(1024)
@@ -28,6 +28,7 @@ def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int,
 				aom_library.aom_codec_control(aom_encoder, 106, ctypes.c_int(1))
 				aom_library.aom_codec_control(aom_encoder, 122, ctypes.c_int(0))
 				aom_library.aom_codec_control(aom_encoder, 123, ctypes.c_int(0))
+				ctypes.memmove(ctypes.addressof(aom_encoder) + 128, config_buffer, 1024)
 				return aom_encoder
 
 	return None
@@ -63,6 +64,16 @@ def collect(aom_encoder : AomEncoder) -> bytes:
 		packet = aom_library.aom_codec_get_cx_data(aom_encoder, ctypes.byref(packet_cursor))
 
 	return bytes().join(output_parts)
+
+
+def update_bitrate(aom_encoder : AomEncoder, bitrate : BitRate) -> bool:
+	aom_library = aom_module.create_static_library()
+
+	if aom_library:
+		struct.pack_into('I', aom_encoder, 128 + 136, bitrate)
+		return aom_library.aom_codec_enc_config_set(aom_encoder, ctypes.cast(ctypes.addressof(aom_encoder) + 128, ctypes.c_void_p)) == 0
+
+	return False
 
 
 def destroy(aom_encoder : AomEncoder) -> None:

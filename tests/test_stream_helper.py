@@ -1,5 +1,6 @@
 import ctypes
 import queue
+import struct
 import threading
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,7 +12,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 
 from facefusion import rtc, rtc_store, state_manager
 from facefusion.apis.endpoints.stream import websocket_stream
-from facefusion.apis.stream_helper import create_video_encoder, decode_video_frame, destroy_video_encoder, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_peer_loop
+from facefusion.apis.stream_helper import create_video_encoder, decode_video_frame, destroy_video_encoder, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_peer_loop, update_video_encoder_bitrate
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -116,6 +117,32 @@ def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 
 	if video_codec == 'vp8':
 		assert not vpx_encoder.encode(video_encoder, frame_buffer, resolution, 1)
+
+
+@pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
+def test_update_video_encoder_bitrate(video_codec : VideoCodec) -> None:
+	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	resolution = (vision_frame.shape[1], vision_frame.shape[0])
+
+	encoder = create_video_encoder(video_codec, resolution, 4000)
+	encoder_address = ctypes.addressof(encoder)
+
+	if video_codec == 'av1':
+		assert struct.unpack_from('I', encoder, 128 + 136)[0] == 4000
+
+	if video_codec == 'vp8':
+		assert struct.unpack_from('I', encoder, 64 + 112)[0] == 4000
+
+	assert update_video_encoder_bitrate(video_codec, encoder, 6000)
+	assert ctypes.addressof(encoder) == encoder_address
+
+	if video_codec == 'av1':
+		assert struct.unpack_from('I', encoder, 128 + 136)[0] == 6000
+
+	if video_codec == 'vp8':
+		assert struct.unpack_from('I', encoder, 64 + 112)[0] == 6000
+
+	destroy_video_encoder(video_codec, encoder)
 
 
 # TODO: refine test

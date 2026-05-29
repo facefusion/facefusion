@@ -10,7 +10,7 @@ def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int,
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library:
-		vpx_encoder = ctypes.create_string_buffer(64)
+		vpx_encoder = ctypes.create_string_buffer(640)
 		vp8_codec = ctypes.c_void_p.in_dll(vpx_library, 'vpx_codec_vp8_cx_algo')
 
 		config_buffer = ctypes.create_string_buffer(512)
@@ -32,6 +32,7 @@ def create(frame_resolution : Resolution, bitrate : BitRate, thread_count : int,
 				vpx_library.vpx_codec_control_(vpx_encoder, 13, ctypes.c_int(cpu_count))
 				vpx_library.vpx_codec_control_(vpx_encoder, 12, ctypes.c_int(3))
 				vpx_library.vpx_codec_control_(vpx_encoder, 27, ctypes.c_int(10))
+				ctypes.memmove(ctypes.addressof(vpx_encoder) + 64, config_buffer, 512)
 				return vpx_encoder
 
 	return None
@@ -67,6 +68,16 @@ def collect(vpx_encoder : VpxEncoder) -> bytes:
 		packet = vpx_library.vpx_codec_get_cx_data(vpx_encoder, ctypes.byref(packet_cursor))
 
 	return bytes().join(output_parts)
+
+
+def update_bitrate(vpx_encoder : VpxEncoder, bitrate : BitRate) -> bool:
+	vpx_library = vpx_module.create_static_library()
+
+	if vpx_library:
+		struct.pack_into('I', vpx_encoder, 64 + 112, bitrate)
+		return vpx_library.vpx_codec_enc_config_set(vpx_encoder, ctypes.cast(ctypes.addressof(vpx_encoder) + 64, ctypes.c_void_p)) == 0
+
+	return False
 
 
 def destroy(vpx_encoder : VpxEncoder) -> None:
