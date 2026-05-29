@@ -5,8 +5,8 @@ import pytest
 
 from facefusion import state_manager
 from facefusion.libraries import datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, get_payload_type, send_audio, send_video, set_remote_description, wire_remb
-from facefusion.types import RtcPeer
+from facefusion.rtc import add_audio_track, add_video_track, create_peer_connection, create_sdp_answer, create_sdp_offer, delete_peers, get_payload_type, handle_remb, send_audio, send_video, set_remote_description, wire_remb
+from facefusion.types import RtcPeer, VideoCodec
 
 
 @pytest.fixture(scope = 'module', autouse = True)
@@ -136,15 +136,18 @@ def test_delete_peers() -> None:
 	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == -1
 
 
-def test_wire_remb() -> None:
+@pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
+def test_wire_remb(video_codec : VideoCodec, payload_type : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	peer_connection = create_peer_connection()
-	video_track = add_video_track(peer_connection, 'sendonly', 'vp8', 96)
+	video_track = add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
 	bitrate = ctypes.c_uint(0)
 
 	wire_remb(video_track, bitrate)
 
 	assert bitrate.value == 0
+	handle_remb(0, 6000000, ctypes.addressof(bitrate))
+	assert bitrate.value == 6000
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
 
