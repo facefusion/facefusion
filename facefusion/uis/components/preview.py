@@ -11,7 +11,6 @@ from facefusion.common_helper import get_first
 from facefusion.content_analyser import analyse_frame
 from facefusion.face_analyser import get_one_face
 from facefusion.face_selector import select_faces
-from facefusion.face_store import clear_faces
 from facefusion.filesystem import filter_audio_paths, is_image, is_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import AudioFrame, Face, Mask, VisionFrame
@@ -218,7 +217,6 @@ def update_preview_image(preview_mode : PreviewMode, preview_resolution : str, f
 
 
 def clear_and_update_preview_image(preview_mode : PreviewMode, preview_resolution : str, frame_number : int = 0) -> gradio.Image:
-	clear_faces()
 	return update_preview_image(preview_mode, preview_resolution, frame_number)
 
 
