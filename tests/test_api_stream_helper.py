@@ -61,9 +61,9 @@ async def test_process_image() -> None:
 	await process_image(websocket_mock)
 
 	websocket_mock.send_bytes.assert_called_once()
-	assert websocket_mock.send_bytes.call_args[0][0][:3] == chr(255).encode() + chr(216).encode() + chr(255).encode()
+	assert websocket_mock.send_bytes.call_args[0][0][:3] == bytes([ 255, 216, 255 ])
 
-	state_manager.clear_item('source_paths')
+	state_manager.init_item('source_paths', None)
 	await process_image(websocket_mock)
 
 	websocket_mock.send_bytes.assert_called_once()
@@ -259,10 +259,10 @@ def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 	destroy_video_encoder(video_codec, video_encoder)
 
 	if video_codec == 'av1':
-		assert aom_encoder.encode(video_encoder, input_buffer, frame_resolution, 1) is None
+		assert aom_encoder.encode(video_encoder, input_buffer, frame_resolution, 1) == bytes()
 
 	if video_codec == 'vp8':
-		assert vpx_encoder.encode(video_encoder, input_buffer, frame_resolution, 1) is None
+		assert vpx_encoder.encode(video_encoder, input_buffer, frame_resolution, 1) == bytes()
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
