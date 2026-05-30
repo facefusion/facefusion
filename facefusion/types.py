@@ -114,6 +114,11 @@ VpxPointer = TypedDict('VpxPointer',
 	'buffer' : bytes,
 	'resolution' : Resolution
 })
+FramePacket = TypedDict('FramePacket',
+{
+	'kind' : Literal['video', 'audio'],
+	'frame' : VisionFrame | AudioFrame
+})
 
 Args : TypeAlias = Dict[str, Any]
 

@@ -15,7 +15,7 @@ from facefusion import rtc, rtc_store, state_manager, streamer
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioFrame, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
+from facefusion.types import AomDecoder, AomEncoder, AudioCodec, BitRate, FramePacket, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
 
 
 async def process_image(websocket : WebSocket) -> None:
@@ -111,29 +111,33 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 #TODO: needs review
 #TODO: method is too complex
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
-	# TODO: combine video and audio queue
-	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
-	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
+	frame_queue : queue.Queue[FramePacket] = queue.Queue(maxsize = 5)
 	receiver_threads = []
 
 	video_codec = rtc_peer.get('video').get('codec')
 	video_track = rtc_peer.get('video').get('receiver_track')
-	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (video_track, video_codec, video_queue), daemon = True)
+	video_receiver_thread = threading.Thread(target = receive_video_frames, args = (video_track, video_codec, frame_queue), daemon = True)
 	receiver_threads.append(video_receiver_thread)
 
 	if rtc_peer.get('audio'):
 		audio_codec : AudioCodec = 'opus'
 		audio_track = rtc_peer.get('audio').get('receiver_track')
-		audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (audio_track, audio_codec, audio_queue), daemon = True)
+		audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (audio_track, audio_codec, frame_queue), daemon = True)
 		receiver_threads.append(audio_receiver_thread)
 
 	for receiver_thread in receiver_threads:
 		receiver_thread.start()
 
-	temp_vision_frame = video_queue.get()
+	audio_frame = create_empty_audio_frame()
+	packet = frame_queue.get()
+
+	while packet.get('kind') == 'audio':
+		audio_frame = packet.get('frame')
+		packet = frame_queue.get()
+
+	temp_vision_frame = packet.get('frame')
 
 	if numpy.any(temp_vision_frame):
-		audio_frame = create_empty_audio_frame()
 		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
 		temp_bitrate : BitRate = 8000
 		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
@@ -141,9 +145,6 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 		frame_index = 0
 
 		while numpy.any(temp_vision_frame):
-			with contextlib.suppress(queue.Empty):
-				audio_frame = audio_queue.get_nowait()
-
 			output_vision_frame = streamer.process_frame(audio_frame, temp_vision_frame)
 			output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
 			# TODO: align buffer naming with input/output and video/audio convention
@@ -180,7 +181,13 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 					rtc.send_audio(rtc_peer, output_audio_buffer, int(send_timestamp * 48000))
 
 			frame_index += 1
-			temp_vision_frame = video_queue.get()
+			packet = frame_queue.get()
+
+			while packet.get('kind') == 'audio':
+				audio_frame = packet.get('frame')
+				packet = frame_queue.get()
+
+			temp_vision_frame = packet.get('frame')
 
 		# TODO: remove unconditional destroy methods, which have no impact on control flow
 		destroy_video_encoder(video_codec, video_encoder)
@@ -194,15 +201,13 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 
 # TODO: method is too complex
-def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queue : queue.Queue[VisionFrame]) -> None:
+def receive_video_frames(video_track : int, video_codec : VideoCodec, frame_queue : queue.Queue[FramePacket]) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
 	receive_buffer = ctypes.create_string_buffer(512 * 1024)
-	# todo - could be prepare ready event
 	available_event = threading.Event()
 	available_callback = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)(partial(dispatch_event, available_event))
 	datachannel_library.rtcSetAvailableCallback(video_track, available_callback)
-	# todo off
 	receive_status_code = -3
 
 	while receive_status_code == 0 or receive_status_code == -3:
@@ -215,29 +220,39 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
 
 			if numpy.any(vision_frame):
-				with contextlib.suppress(queue.Empty):
-					video_queue.get_nowait()
-				video_queue.put_nowait(vision_frame)
+				if frame_queue.full():
+
+					with contextlib.suppress(queue.Empty):
+						frame_queue.get_nowait()
+
+				with contextlib.suppress(queue.Full):
+					frame_queue.put_nowait(
+					{
+						'kind': 'video',
+						'frame': vision_frame
+					})
 
 		if receive_status_code == -3:
 			available_event.wait()
 			available_event.clear()
 
-	video_queue.put(numpy.empty(0))
+	frame_queue.put(
+	{
+		'kind': 'video',
+		'frame': numpy.empty(0)
+	})
 	destroy_video_decoder(video_codec, video_decoder)
 
 
 # TODO: audio_codec is not used but has to, even if there is just one
 # TODO: method is too complex
-def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queue : queue.Queue[AudioFrame]) -> None:
+def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, frame_queue : queue.Queue[FramePacket]) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	audio_decoder = opus_decoder.create(48000, 2)
 	receive_buffer = ctypes.create_string_buffer(8 * 1024)
-	#todo - could be prepare ready event
 	available_event = threading.Event()
 	available_callback = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)(partial(dispatch_event, available_event))
 	datachannel_library.rtcSetAvailableCallback(audio_track, available_callback)
-	#todo off
 	receive_status_code = -3
 
 	while receive_status_code == 0 or receive_status_code == -3:
@@ -250,10 +265,17 @@ def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queu
 			output_buffer = opus_decoder.decode(audio_decoder, opus_buffer, 960, 2)
 
 			if output_buffer:
-				with contextlib.suppress(queue.Empty):
-					audio_queue.get_nowait()
+				if frame_queue.full():
 
-				audio_queue.put_nowait(numpy.frombuffer(output_buffer, dtype = numpy.float32))
+					with contextlib.suppress(queue.Empty):
+						frame_queue.get_nowait()
+
+				with contextlib.suppress(queue.Full):
+					frame_queue.put_nowait(
+					{
+						'kind': 'audio',
+						'frame': numpy.frombuffer(output_buffer, dtype = numpy.float32)
+					})
 
 		if receive_status_code == -3:
 			available_event.wait()

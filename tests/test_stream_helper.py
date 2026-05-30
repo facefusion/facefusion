@@ -18,7 +18,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.types import AudioFrame, RtcPeer, VideoCodec, VisionFrame
+from facefusion.types import FramePacket, RtcPeer, VideoCodec
 from facefusion.vision import read_video_frame
 
 
@@ -177,19 +177,19 @@ def test_receive_video_frames() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
-	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
+	frame_queue : queue.Queue[FramePacket] = queue.Queue(maxsize = 5)
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
 		patch('facefusion.apis.stream_helper.decode_video_frame', return_value = vision_frame):
-		receiver_thread = threading.Thread(target = receive_video_frames, args = (0, 'vp8', video_queue), daemon = True)
+		receiver_thread = threading.Thread(target = receive_video_frames, args = (0, 'vp8', frame_queue), daemon = True)
 		receiver_thread.start()
 		receiver_thread.join(timeout = 2.0)
 
 	if is_linux() or is_windows():
-		assert create_hash(video_queue.get_nowait().tobytes()) == 'a17439db'
+		assert create_hash(frame_queue.get_nowait().get('frame').tobytes()) == 'a17439db'
 
 	if is_macos():
-		assert create_hash(video_queue.get_nowait().tobytes()) == '38d00e2a'
+		assert create_hash(frame_queue.get_nowait().get('frame').tobytes()) == '38d00e2a'
 
 
 # TODO: refine test
@@ -197,18 +197,18 @@ def test_receive_audio_frames() -> None:
 	audio_frame = numpy.zeros(960 * 2, dtype = numpy.float32)
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
-	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
+	frame_queue : queue.Queue[FramePacket] = queue.Queue(maxsize = 5)
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
 		patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_frame.tobytes()):
-		receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, 'opus', audio_queue), daemon = True)
+		receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, 'opus', frame_queue), daemon = True)
 		receiver_thread.start()
-		audio_frame = audio_queue.get(timeout = 2.0)
+		audio_frame = frame_queue.get(timeout = 2.0).get('frame')
 		receiver_thread.join(timeout = 1.0)
 
 	assert audio_frame.dtype == numpy.float32
 	assert audio_frame.size == 960 * 2
-	assert audio_queue.empty()
+	assert frame_queue.empty()
 
 
 # TODO: refine test
