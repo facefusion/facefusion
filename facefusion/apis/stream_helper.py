@@ -113,6 +113,7 @@ async def receive_vision_frames(websocket : WebSocket) -> AsyncIterator[VisionFr
 #TODO: method is too complex
 def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	# TODO: combine video and audio queue
+	# TODO: update test_receive_video_frames, test_receive_audio_frames with the same approach (deque)
 	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
 	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
 	receiver_threads = []
