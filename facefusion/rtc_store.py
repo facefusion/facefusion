@@ -10,6 +10,10 @@ def init_peers(session_id : SessionId) -> None:
 	RTC_STORE[session_id] = []
 
 
+def has_peers(session_id : SessionId) -> bool:
+	return bool(RTC_STORE.get(session_id))
+
+
 def get_peers(session_id : SessionId) -> List[RtcPeer]:
 	return RTC_STORE.get(session_id)
 
@@ -23,10 +27,6 @@ def delete_peers(session_id : SessionId) -> None:
 			del RTC_STORE[session_id]
 
 	return None
-
-
-def has_peers(session_id : SessionId) -> bool:
-	return bool(RTC_STORE.get(session_id))
 
 
 def clear() -> None:
