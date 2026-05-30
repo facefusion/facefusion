@@ -46,12 +46,6 @@ Face = namedtuple('Face',
 	'age',
 	'race'
 ])
-FaceSet : TypeAlias = Dict[str, List[Face]]
-FaceStore = TypedDict('FaceStore',
-{
-	'static_faces' : FaceSet
-})
-
 Language = Literal['en']
 Locales : TypeAlias = Dict[Language, Dict[str, Any]]
 LocalePoolSet : TypeAlias = Dict[str, Locales]
