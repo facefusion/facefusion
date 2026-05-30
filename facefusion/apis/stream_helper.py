@@ -18,6 +18,7 @@ from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioFrame, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VpxDecoder, VpxEncoder
 
 
+#TODO: remove source_paths guard, process_image should work independent of source_paths since processors decide if they need sources
 async def process_image(websocket : WebSocket) -> None:
 	source_paths = state_manager.get_item('source_paths')
 

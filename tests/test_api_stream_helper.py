@@ -57,12 +57,14 @@ async def test_process_image() -> None:
 		}
 	]
 
+	#TODO: remove init_item once source_paths guard is removed from process_image
 	state_manager.init_item('source_paths', [ get_test_example_file('source.jpg') ])
 	await process_image(websocket_mock)
 
 	websocket_mock.send_bytes.assert_called_once()
 	assert websocket_mock.send_bytes.call_args[0][0][:3] == bytes([ 255, 216, 255 ])
 
+	#TODO: remove this block once source_paths guard is removed from process_image
 	state_manager.init_item('source_paths', None)
 	await process_image(websocket_mock)
 
