@@ -146,6 +146,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 			output_vision_frame = streamer.process_frame(audio_frame, temp_vision_frame)
 			output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
+			# TODO: align buffer naming with input/output and video/audio convention
 			output_vision_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
 			send_timestamp = time.monotonic()
@@ -209,6 +210,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_queu
 		receive_status_code = datachannel_library.rtcReceiveMessage(video_track, receive_buffer, ctypes.byref(buffer_size))
 
 		if receive_status_code == 0 and buffer_size.value > 0:
+			# TODO: align buffer naming with input/output and video/audio convention
 			frame_buffer = receive_buffer.raw[:buffer_size.value]
 			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
 
@@ -243,6 +245,7 @@ def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queu
 		receive_status_code = datachannel_library.rtcReceiveMessage(audio_track, receive_buffer, ctypes.byref(buffer_size))
 
 		if receive_status_code == 0 and buffer_size.value > 0:
+			# TODO: rename opus_buffer and output_buffer to audio convention
 			opus_buffer = receive_buffer.raw[:buffer_size.value]
 			output_buffer = opus_decoder.decode(audio_decoder, opus_buffer, 960, 2)
 
