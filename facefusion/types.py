@@ -116,7 +116,7 @@ VpxPointer = TypedDict('VpxPointer',
 })
 FramePacket = TypedDict('FramePacket',
 {
-	'kind' : Literal['video', 'audio'],
+	'frame_type' : Literal['vision', 'audio'],
 	'frame' : VisionFrame | AudioFrame
 })
 

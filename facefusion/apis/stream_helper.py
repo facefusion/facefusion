@@ -129,13 +129,13 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 		receiver_thread.start()
 
 	audio_frame = create_empty_audio_frame()
-	packet = frame_queue.get()
+	frame_packet = frame_queue.get()
 
-	while packet.get('kind') == 'audio':
-		audio_frame = packet.get('frame')
-		packet = frame_queue.get()
+	while frame_packet.get('frame_type') == 'audio':
+		audio_frame = frame_packet.get('frame')
+		frame_packet = frame_queue.get()
 
-	temp_vision_frame = packet.get('frame')
+	temp_vision_frame = frame_packet.get('frame')
 
 	if numpy.any(temp_vision_frame):
 		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
@@ -181,13 +181,13 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 					rtc.send_audio(rtc_peer, output_audio_buffer, int(send_timestamp * 48000))
 
 			frame_index += 1
-			packet = frame_queue.get()
+			frame_packet = frame_queue.get()
 
-			while packet.get('kind') == 'audio':
-				audio_frame = packet.get('frame')
-				packet = frame_queue.get()
+			while frame_packet.get('frame_type') == 'audio':
+				audio_frame = frame_packet.get('frame')
+				frame_packet = frame_queue.get()
 
-			temp_vision_frame = packet.get('frame')
+			temp_vision_frame = frame_packet.get('frame')
 
 		# TODO: remove unconditional destroy methods, which have no impact on control flow
 		destroy_video_encoder(video_codec, video_encoder)
@@ -228,7 +228,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, frame_queu
 				with contextlib.suppress(queue.Full):
 					frame_queue.put_nowait(
 					{
-						'kind': 'video',
+						'frame_type': 'vision',
 						'frame': vision_frame
 					})
 
@@ -238,7 +238,7 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, frame_queu
 
 	frame_queue.put(
 	{
-		'kind': 'video',
+		'frame_type': 'vision',
 		'frame': numpy.empty(0)
 	})
 	destroy_video_decoder(video_codec, video_decoder)
@@ -273,7 +273,7 @@ def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, frame_queu
 				with contextlib.suppress(queue.Full):
 					frame_queue.put_nowait(
 					{
-						'kind': 'audio',
+						'frame_type': 'audio',
 						'frame': numpy.frombuffer(output_buffer, dtype = numpy.float32)
 					})
 
