@@ -259,9 +259,9 @@ def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_queu
 	opus_decoder.destroy(audio_decoder)
 
 
-def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, frame_buffer : bytes) -> Optional[VisionFrame]:
+def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, input_buffer : bytes) -> Optional[VisionFrame]:
 	if video_codec == 'av1':
-		aom_pointer = aom_decoder.decode(video_decoder, frame_buffer)
+		aom_pointer = aom_decoder.decode(video_decoder, input_buffer)
 
 		if aom_pointer:
 			frame_width, frame_height = aom_pointer.get('resolution')
@@ -270,7 +270,7 @@ def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 			return cv2.cvtColor(vision_frame, cv2.COLOR_YUV2BGR_I420)
 
 	if video_codec == 'vp8':
-		vpx_pointer = vpx_decoder.decode(video_decoder, frame_buffer)
+		vpx_pointer = vpx_decoder.decode(video_decoder, input_buffer)
 
 		if vpx_pointer:
 			frame_width, frame_height = vpx_pointer.get('resolution')
@@ -281,12 +281,12 @@ def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | Ao
 	return None
 
 
-def encode_video_frame(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, raw_frame_bytes : bytes, resolution : Resolution, frame_index : int) -> bytes:
+def encode_video_frame(video_codec : VideoCodec, video_encoder : VpxEncoder | AomEncoder, input_buffer : bytes, frame_resolution : Resolution, frame_index : int) -> bytes:
 	if video_codec == 'av1':
-		return aom_encoder.encode(video_encoder, raw_frame_bytes, resolution, frame_index)
+		return aom_encoder.encode(video_encoder, input_buffer, frame_resolution, frame_index)
 
 	if video_codec == 'vp8':
-		return vpx_encoder.encode(video_encoder, raw_frame_bytes, resolution, frame_index)
+		return vpx_encoder.encode(video_encoder, input_buffer, frame_resolution, frame_index)
 
 	return bytes()
 
@@ -301,12 +301,12 @@ def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomD
 	return None
 
 
-def create_video_encoder(video_codec : VideoCodec, resolution : Resolution, bitrate : BitRate) -> Optional[VpxEncoder | AomEncoder]:
+def create_video_encoder(video_codec : VideoCodec, frame_resolution : Resolution, bitrate : BitRate) -> Optional[VpxEncoder | AomEncoder]:
 	if video_codec == 'av1':
-		return aom_encoder.create(resolution, bitrate, 8, 10)
+		return aom_encoder.create(frame_resolution, bitrate, 8, 10)
 
 	if video_codec == 'vp8':
-		return vpx_encoder.create(resolution, bitrate, 8, 10)
+		return vpx_encoder.create(frame_resolution, bitrate, 8, 10)
 
 	return None
 
@@ -345,5 +345,5 @@ def destroy_stream(session_id : SessionId) -> bool:
 	return False
 
 
-def dispatch_event(event : threading.Event, track_id : int, user_pointer : ctypes.c_void_p) -> None:
+def dispatch_event(event : threading.Event, track : int, pointer : ctypes.c_void_p) -> None:
 	event.set()

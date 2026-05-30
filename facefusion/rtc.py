@@ -216,6 +216,17 @@ def create_video_track_init(media_direction : MediaDirection, video_codec : Vide
 	return ctypes.byref(track_init)
 
 
+def get_payload_type(sdp_offer : SdpOffer, codec : AudioCodec | VideoCodec) -> int:
+	datachannel_library = datachannel_module.create_static_library()
+	payload_type_buffer = (ctypes.c_int * 16)()
+	payload_type_total = datachannel_library.rtcGetPayloadTypesForCodec(sdp_offer.encode(), codec.lower().encode(), payload_type_buffer, 16)
+
+	if payload_type_total:
+		return payload_type_buffer[0]
+
+	return 0
+
+
 @ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_uint, ctypes.c_void_p)
 def handle_remb(track : int, bitrate : int, pointer : int) -> None:
 	ctypes.cast(pointer, ctypes.POINTER(ctypes.c_uint)).contents.value = bitrate // 1000
@@ -229,14 +240,3 @@ def wire_remb(video_track : RtcVideoTrack, bitrate : ctypes.c_uint) -> None:
 
 def clear_remb(rtc_peer : RtcPeer) -> None:
 	rtc_peer.get('sender_bitrate').value = 0
-
-
-def get_payload_type(sdp_offer : SdpOffer, codec : AudioCodec | VideoCodec) -> int:
-	datachannel_library = datachannel_module.create_static_library()
-	payload_type_buffer = (ctypes.c_int * 16)()
-	payload_type_total = datachannel_library.rtcGetPayloadTypesForCodec(sdp_offer.encode(), codec.lower().encode(), payload_type_buffer, 16)
-
-	if payload_type_total:
-		return payload_type_buffer[0]
-
-	return 0

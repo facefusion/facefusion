@@ -139,6 +139,19 @@ def test_delete_peers() -> None:
 	assert datachannel_library.rtcDeletePeerConnection(peer_connection) == -1
 
 
+def test_get_payload_type() -> None:
+	peer_connection = create_peer_connection()
+	add_video_track(peer_connection, 'sendonly', 'vp8', 96)
+	add_audio_track(peer_connection, 'sendonly', 'opus', 111)
+	sdp_offer = create_sdp_offer(peer_connection)
+
+	assert get_payload_type(sdp_offer, 'vp8') == 96
+	assert get_payload_type(sdp_offer, 'opus') == 111
+	assert get_payload_type(sdp_offer, 'av1') == 0
+
+	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
+
+
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
 def test_wire_remb(video_codec : VideoCodec, payload_type : int) -> None:
 	datachannel_library = datachannel_module.create_static_library()
@@ -192,16 +205,3 @@ def test_wire_remb_receiver(video_codec : VideoCodec, payload_type : int) -> Non
 	assert rtc_peer.get('receiver_bitrate').value == 6000
 
 	datachannel_library.rtcDeletePeerConnection(peer_connection)
-
-
-def test_get_payload_type() -> None:
-	peer_connection = create_peer_connection()
-	add_video_track(peer_connection, 'sendonly', 'vp8', 96)
-	add_audio_track(peer_connection, 'sendonly', 'opus', 111)
-	sdp_offer = create_sdp_offer(peer_connection)
-
-	assert get_payload_type(sdp_offer, 'vp8') == 96
-	assert get_payload_type(sdp_offer, 'opus') == 111
-	assert get_payload_type(sdp_offer, 'av1') == 0
-
-	datachannel_module.create_static_library().rtcDeletePeerConnection(peer_connection)
