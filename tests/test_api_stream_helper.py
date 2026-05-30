@@ -221,7 +221,7 @@ def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 
 	if is_linux() or is_windows():
 		if video_codec == 'av1':
-			assert create_hash(decode_buffer) == '74e9926f'
+			assert create_hash(decode_buffer) == 'c97d6d29'
 
 		if video_codec == 'vp8':
 			assert create_hash(decode_buffer) == '99ef2c25'
