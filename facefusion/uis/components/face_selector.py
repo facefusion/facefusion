@@ -9,12 +9,12 @@ from facefusion import state_manager, translator
 from facefusion.common_helper import calculate_float_step, calculate_int_step
 from facefusion.face_analyser import get_many_faces
 from facefusion.face_selector import sort_and_filter_faces
-from facefusion.filesystem import is_image, is_video
-from facefusion.types import FaceSelectorMode, FaceSelectorOrder, Gender, Race, VisionFrame
+from facefusion.filesystem import filter_image_paths, is_image, is_video
+from facefusion.types import FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, VisionFrame
 from facefusion.uis.core import get_ui_component, get_ui_components, register_ui_component
 from facefusion.uis.types import ComponentOptions
 from facefusion.uis.ui_helper import convert_str_none
-from facefusion.vision import fit_cover_frame, read_static_image, read_video_frame
+from facefusion.vision import fit_cover_frame, read_static_image, read_static_images, read_video_frame
 
 FACE_SELECTOR_MODE_DROPDOWN : Optional[gradio.Dropdown] = None
 FACE_SELECTOR_ORDER_DROPDOWN : Optional[gradio.Dropdown] = None
@@ -154,12 +154,12 @@ def update_face_selector_order(face_analyser_order : FaceSelectorOrder) -> gradi
 	return update_reference_position_gallery()
 
 
-def update_face_selector_gender(face_selector_gender : Gender) -> gradio.Gallery:
+def update_face_selector_gender(face_selector_gender : FaceSelectorGender) -> gradio.Gallery:
 	state_manager.set_item('face_selector_gender', convert_str_none(face_selector_gender))
 	return update_reference_position_gallery()
 
 
-def update_face_selector_race(face_selector_race : Race) -> gradio.Gallery:
+def update_face_selector_race(face_selector_race : FaceSelectorRace) -> gradio.Gallery:
 	state_manager.set_item('face_selector_race', convert_str_none(face_selector_race))
 	return update_reference_position_gallery()
 
@@ -210,8 +210,11 @@ def update_reference_position_gallery(frame_number : int = 0) -> gradio.Gallery:
 
 def extract_gallery_frames(target_vision_frame : VisionFrame) -> List[VisionFrame]:
 	gallery_vision_frames = []
+	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
+	source_vision_frames = read_static_images(source_image_paths)
+	source_faces = get_many_faces(source_vision_frames)
 	faces = get_many_faces([ target_vision_frame ])
-	faces = sort_and_filter_faces(faces)
+	faces = sort_and_filter_faces(source_faces, faces)
 
 	for face in faces:
 		start_x, start_y, end_x, end_y = map(int, face.bounding_box)
