@@ -231,7 +231,7 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 			return numpy.hstack((temp_vision_frame, temp_vision_frame))
 
 		if preview_mode == 'face-by-face':
-			target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, target_vision_frame[:, :, :3], temp_vision_frame[:, :, :3])
+			target_crop_vision_frame, output_crop_vision_frame = create_face_by_face(reference_vision_frame, source_vision_frames, target_vision_frame[:, :, :3], temp_vision_frame[:, :, :3])
 			target_crop_vision_frame = obscure_frame(target_crop_vision_frame)
 			output_crop_vision_frame = obscure_frame(output_crop_vision_frame)
 			return numpy.hstack((target_crop_vision_frame, output_crop_vision_frame))
