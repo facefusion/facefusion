@@ -213,11 +213,11 @@ def extract_gallery_frames(target_vision_frame : VisionFrame) -> List[VisionFram
 	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
 	source_vision_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_vision_frames)
-	faces = get_many_faces([ target_vision_frame ])
-	faces = sort_and_filter_faces(source_faces, faces)
+	target_faces = get_many_faces([ target_vision_frame ])
+	target_faces = sort_and_filter_faces(source_faces, target_faces)
 
-	for face in faces:
-		start_x, start_y, end_x, end_y = map(int, face.bounding_box)
+	for target_face in target_faces:
+		start_x, start_y, end_x, end_y = map(int, target_face.bounding_box)
 		padding_x = int((end_x - start_x) * 0.25)
 		padding_y = int((end_y - start_y) * 0.25)
 		start_x = max(0, start_x - padding_x)
@@ -228,4 +228,5 @@ def extract_gallery_frames(target_vision_frame : VisionFrame) -> List[VisionFram
 		crop_vision_frame = fit_cover_frame(crop_vision_frame, (128, 128))
 		crop_vision_frame = cv2.cvtColor(crop_vision_frame, cv2.COLOR_BGR2RGB)
 		gallery_vision_frames.append(crop_vision_frame)
+
 	return gallery_vision_frames
