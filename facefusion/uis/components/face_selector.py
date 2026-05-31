@@ -42,12 +42,14 @@ def render() -> None:
 		'elem_classes': 'box-face-selector',
 		'visible': 'reference' in state_manager.get_item('face_selector_mode')
 	}
+	source_vision_frames = read_static_images(filter_image_paths(state_manager.get_item('source_paths')))
+
 	if is_image(state_manager.get_item('target_path')):
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		reference_face_gallery_options['value'] = extract_gallery_frames(target_vision_frame)
+		reference_face_gallery_options['value'] = extract_gallery_frames(source_vision_frames, target_vision_frame)
 	if is_video(state_manager.get_item('target_path')):
 		target_vision_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
-		reference_face_gallery_options['value'] = extract_gallery_frames(target_vision_frame)
+		reference_face_gallery_options['value'] = extract_gallery_frames(source_vision_frames, target_vision_frame)
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
 		label = translator.get('uis.face_selector_mode_dropdown'),
 		choices = facefusion.choices.face_selector_modes,
@@ -197,21 +199,21 @@ def clear_and_update_reference_position_gallery() -> gradio.Gallery:
 
 def update_reference_position_gallery(frame_number : int = 0) -> gradio.Gallery:
 	gallery_vision_frames = []
+	source_vision_frames = read_static_images(filter_image_paths(state_manager.get_item('source_paths')))
+
 	if is_image(state_manager.get_item('target_path')):
 		target_vision_frame = read_static_image(state_manager.get_item('target_path'))
-		gallery_vision_frames = extract_gallery_frames(target_vision_frame)
+		gallery_vision_frames = extract_gallery_frames(source_vision_frames, target_vision_frame)
 	if is_video(state_manager.get_item('target_path')):
 		target_vision_frame = read_video_frame(state_manager.get_item('target_path'), frame_number)
-		gallery_vision_frames = extract_gallery_frames(target_vision_frame)
+		gallery_vision_frames = extract_gallery_frames(source_vision_frames, target_vision_frame)
 	if gallery_vision_frames:
 		return gradio.Gallery(value = gallery_vision_frames)
 	return gradio.Gallery(value = None)
 
 
-def extract_gallery_frames(target_vision_frame : VisionFrame) -> List[VisionFrame]:
+def extract_gallery_frames(source_vision_frames : List[VisionFrame], target_vision_frame : VisionFrame) -> List[VisionFrame]:
 	gallery_vision_frames = []
-	source_image_paths = filter_image_paths(state_manager.get_item('source_paths'))
-	source_vision_frames = read_static_images(source_image_paths)
 	source_faces = get_many_faces(source_vision_frames)
 	target_faces = get_many_faces([ target_vision_frame ])
 	target_faces = sort_and_filter_faces(source_faces, target_faces)
