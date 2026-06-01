@@ -1,7 +1,7 @@
 import ctypes
-import queue
 import struct
 import threading
+from collections import deque
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import cv2
@@ -177,38 +177,38 @@ def test_receive_video_frames() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
-	video_queue : queue.Queue[VisionFrame] = queue.Queue(maxsize = 1)
+	video_deque : deque[tuple[VisionFrame, float]] = deque()
+	video_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
 		patch('facefusion.apis.stream_helper.decode_video_frame', return_value = vision_frame):
-		receiver_thread = threading.Thread(target = receive_video_frames, args = (0, 'vp8', video_queue), daemon = True)
+		receiver_thread = threading.Thread(target = receive_video_frames, args = (0, 'vp8', video_deque, video_event), daemon = True)
 		receiver_thread.start()
 		receiver_thread.join(timeout = 2.0)
 
 	if is_linux() or is_windows():
-		assert create_hash(video_queue.get_nowait().tobytes()) == 'a17439db'
+		assert create_hash(video_deque[0][0].tobytes()) == 'a17439db'
 
 	if is_macos():
-		assert create_hash(video_queue.get_nowait().tobytes()) == '38d00e2a'
+		assert create_hash(video_deque[0][0].tobytes()) == '38d00e2a'
 
 
 # TODO: refine test
 def test_receive_audio_frames() -> None:
-	audio_frame = numpy.zeros(960 * 2, dtype = numpy.float32)
+	audio_data = numpy.zeros(960 * 2, dtype = numpy.float32)
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
-	audio_queue : queue.Queue[AudioFrame] = queue.Queue(maxsize = 4)
+	audio_deque : deque[tuple[AudioFrame, float]] = deque()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
-		patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_frame.tobytes()):
-		receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, 'opus', audio_queue), daemon = True)
+		patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_data.tobytes()):
+		receiver_thread = threading.Thread(target = receive_audio_frames, args = (0, 'opus', audio_deque), daemon = True)
 		receiver_thread.start()
-		audio_frame = audio_queue.get(timeout = 2.0)
-		receiver_thread.join(timeout = 1.0)
+		receiver_thread.join(timeout = 2.0)
 
-	assert audio_frame.dtype == numpy.float32
-	assert audio_frame.size == 960 * 2
-	assert audio_queue.empty()
+	assert audio_deque[0][0].dtype == numpy.float32
+	assert audio_deque[0][0].size == 960 * 2
+	assert len(audio_deque) == 1
 
 
 # TODO: refine test
