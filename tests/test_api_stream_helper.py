@@ -10,7 +10,7 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_helper import fill_audio_deque, fill_video_deque, create_video_decoder, create_video_encoder, decode_video_frame, destroy_stream, destroy_video_decoder, destroy_video_encoder, encode_video_frame, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_audio_encode_loop, run_peer_loop, run_video_encode_loop, update_video_encoder_bitrate
+from facefusion.apis.stream_helper import create_video_decoder, create_video_encoder, decode_video_frame, destroy_stream, destroy_video_decoder, destroy_video_encoder, encode_video_frame, fill_audio_deque, fill_video_deque, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_audio_encode_loop, run_peer_loop, run_video_encode_loop, update_video_encoder_bitrate
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -242,7 +242,7 @@ def test_run_audio_encode_loop() -> None:
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
-def test_buffer_video_frame(video_codec : VideoCodec) -> None:
+def test_fill_video_deque(video_codec : VideoCodec) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_encoder = create_video_encoder(video_codec, (426, 226), 1000)
@@ -302,7 +302,7 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
 
 
-def test_buffer_audio_frame() -> None:
+def test_fill_audio_deque() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	audio_decoder_mock = MagicMock()
