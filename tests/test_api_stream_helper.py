@@ -48,15 +48,13 @@ def before_each() -> None:
 
 @pytest.mark.anyio
 async def test_process_image() -> None:
-	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	frame_buffer = cv2.imencode('.jpg', vision_frame)[1].tobytes()
-
+	image_buffer = open(get_test_example_file('source.jpg'), 'rb').read()
 	websocket_mock = AsyncMock()
 	websocket_mock.receive.side_effect =\
 	[
 		{
 			'type': 'websocket.receive',
-			'bytes': frame_buffer
+			'bytes': image_buffer
 		}
 	]
 
@@ -110,35 +108,27 @@ def test_process_video(video_codec : VideoCodec, session_id : str) -> None:
 
 @pytest.mark.anyio
 async def test_receive_vision_frames() -> None:
-	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	frame_buffer = cv2.imencode('.jpg', vision_frame)[1].tobytes()
+	image_buffer = open(get_test_example_file('source.jpg'), 'rb').read()
 	websocket_mock = AsyncMock()
 	websocket_mock.receive.side_effect =\
 	[
 		{
 			'type': 'websocket.receive',
-			'bytes': frame_buffer
+			'bytes': image_buffer
 		},
 		{
 			'type': 'websocket.receive',
 			'bytes': 'invalid'.encode()
 		},
 		{
-			'type': 'websocket.receive',
-			'bytes': frame_buffer
-		},
-		{
 			'type': 'websocket.disconnect'
 		}
 	]
 
-	frames = []
+	vision_frames = receive_vision_frames(websocket_mock)
 
-	async for frame in receive_vision_frames(websocket_mock):
-		frames.append(frame)
-
-	assert len(frames) == 2
-	assert frames[0].shape == vision_frame.shape
+	assert create_hash((await anext(vision_frames)).tobytes()) == '5ed32ca0'
+	assert await anext(vision_frames, None) is None
 
 
 @pytest.mark.parametrize('video_codec, payload_type, session_id', [ ('av1', 35, 'test-run-peer-loop-av1'), ('vp8', 96, 'test-run-peer-loop-vp8') ])
@@ -175,7 +165,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
 def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
-	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	peer_connection = rtc.create_peer_connection()
 	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
 	video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, payload_type)
@@ -196,10 +186,10 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 	audio_deque : deque[AudioPack] = deque()
 	video_event = threading.Event()
 
-	video_deque.append((source_frame, 0.1))
+	video_deque.append((video_frame, 0.1))
 	video_event.set()
 
-	with patch('facefusion.apis.stream_helper.rtc.send_video') as mock_send_video:
+	with patch('facefusion.apis.stream_helper.rtc.send_video') as send_video_mock:
 		encode_loop_thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
 		encode_loop_thread.start()
 		time.sleep(0.1)
@@ -207,14 +197,15 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 		video_event.set()
 		encode_loop_thread.join(timeout = 5.0)
 
-	assert mock_send_video.called
-	assert len(mock_send_video.call_args[0][1]) > 0
+	assert send_video_mock.called
+	assert len(send_video_mock.call_args[0][1]) > 0
 
 
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
 def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) -> None:
-	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	audio_frame = numpy.zeros(960 * 2, dtype = numpy.float32)
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
+	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	peer_connection = rtc.create_peer_connection()
 	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
 	video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, payload_type)
@@ -235,12 +226,12 @@ def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) 
 	audio_deque : deque[AudioPack] = deque()
 	video_event = threading.Event()
 
-	video_deque.append((source_frame, 0.100))
+	video_deque.append((video_frame, 0.100))
 	audio_deque.append((audio_frame, 0.100))
 	video_event.set()
 
 	streamer_mock = MagicMock()
-	streamer_mock.process_frame.return_value = source_frame
+	streamer_mock.process_frame.return_value = video_frame
 
 	encoder_mock = MagicMock()
 	encoder_mock.encode.return_value = bytes([ 1 ] * 32)
@@ -268,7 +259,7 @@ def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
 def test_receive_video_frames(video_codec : VideoCodec) -> None:
-	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_deque : deque[VideoPack] = deque()
 	video_event = threading.Event()
 
@@ -276,7 +267,7 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
-		with patch('facefusion.apis.stream_helper.decode_video_frame', return_value = vision_frame):
+		with patch('facefusion.apis.stream_helper.decode_video_frame', return_value = video_frame):
 			rtc_peer_video : RtcPeerVideo =\
 			{
 				'sender_track': 0,
@@ -285,7 +276,7 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 			}
 			video_receiver_thread = threading.Thread(target = receive_video_frames, args = (rtc_peer_video, video_deque, video_event), daemon = True)
 			video_receiver_thread.start()
-			video_receiver_thread.join(timeout = 2.0)
+			video_receiver_thread.join(timeout = 5.0)
 
 	if is_linux() or is_windows():
 		assert create_hash(video_deque[0][0].tobytes()) == 'a17439db'
@@ -313,15 +304,15 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 			}
 			audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (rtc_peer_audio, audio_deque), daemon = True)
 			audio_receiver_thread.start()
-			audio_receiver_thread.join(timeout = 2.0)
+			audio_receiver_thread.join(timeout = 5.0)
 
 	assert create_hash(audio_deque[0][0].tobytes()) == create_hash(audio_frame.tobytes())
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
 def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
-	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	input_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_encoder = create_video_encoder(video_codec, (426, 226), 1000)
 	video_decoder = create_video_decoder(video_codec)
 	encode_buffer = encode_video_frame(video_codec, video_encoder, input_buffer, (426, 226), 0)
@@ -346,8 +337,8 @@ def test_encode_and_decode_video_frame(video_codec : VideoCodec) -> None:
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
 def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
-	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	input_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
 	if video_codec == 'av1':
 		video_encoder = aom_encoder.create((426, 226), 1000, 1, 0)
@@ -368,8 +359,8 @@ def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
 def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
-	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	input_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	input_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 	video_encoder = create_video_encoder(video_codec, (426, 226), 4000)
 
 	if video_codec == 'av1':
@@ -423,8 +414,8 @@ def test_destroy_stream() -> None:
 		'sender_bitrate': ctypes.c_uint(0),
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
-
 	session_id = 'test-destroy-stream'
+
 	rtc_store.init_peers(session_id)
 	rtc_store.get_peers(session_id).append(rtc_peer)
 

@@ -31,9 +31,9 @@ def test_create() -> None:
 
 
 def test_decode() -> None:
-	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
-	video_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-	video_resolution = (vision_frame.shape[1], vision_frame.shape[0])
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	video_buffer = cv2.cvtColor(video_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
+	video_resolution = (video_frame.shape[1], video_frame.shape[0])
 	aom_encoder = create_encoder(video_resolution, 1000, 1, 0)
 	encode_buffer = encode(aom_encoder, video_buffer, video_resolution, 0)
 	aom_decoder = create(1)
