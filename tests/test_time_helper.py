@@ -4,8 +4,8 @@ from facefusion.time_helper import describe_time_ago
 
 
 def get_time_ago(days : int, hours : int, minutes : int) -> datetime:
-	previous_time = datetime.now() - timedelta(days = days, hours = hours, minutes = minutes)
-	return previous_time.astimezone()
+	time_ago = datetime.now() - timedelta(days = days, hours = hours, minutes = minutes)
+	return time_ago.astimezone()
 
 
 def test_describe_time_ago() -> None:

@@ -42,72 +42,16 @@ def before_each() -> None:
 	face_recognizer.clear_inference_pool()
 
 
-def test_get_one_face_with_retinaface() -> None:
-	state_manager.init_item('face_detector_model', 'retinaface')
-	state_manager.init_item('face_detector_size', '320x320')
-	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
-	face_detector.pre_check()
-
-	source_paths =\
-	[
-		get_test_example_file('source.jpg'),
-		get_test_example_file('source-80crop.jpg'),
-		get_test_example_file('source-70crop.jpg'),
-		get_test_example_file('source-60crop.jpg')
-	]
-
-	for source_path in source_paths:
-		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
-
-		assert len(many_faces) == 1
-
-
-def test_get_one_face_with_scrfd() -> None:
-	state_manager.init_item('face_detector_model', 'scrfd')
-	state_manager.init_item('face_detector_size', '320x320')
-	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
-	face_detector.pre_check()
-
-	source_paths =\
-	[
-		get_test_example_file('source.jpg'),
-		get_test_example_file('source-80crop.jpg'),
-		get_test_example_file('source-70crop.jpg'),
-		get_test_example_file('source-60crop.jpg')
-	]
-
-	for source_path in source_paths:
-		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
-
-		assert len(many_faces) == 1
-
-
-def test_get_one_face_with_yoloface() -> None:
-	state_manager.init_item('face_detector_model', 'yolo_face')
-	state_manager.init_item('face_detector_size', '640x640')
-	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
-	face_detector.pre_check()
-
-	source_paths =\
-	[
-		get_test_example_file('source.jpg'),
-		get_test_example_file('source-80crop.jpg'),
-		get_test_example_file('source-70crop.jpg'),
-		get_test_example_file('source-60crop.jpg')
-	]
-
-	for source_path in source_paths:
-		source_frame = read_static_image(source_path)
-		many_faces = get_many_faces([ source_frame ])
-
-		assert len(many_faces) == 1
-
-
-def test_get_one_face_with_yunet() -> None:
-	state_manager.init_item('face_detector_model', 'yunet')
-	state_manager.init_item('face_detector_size', '640x640')
+@pytest.mark.parametrize('face_detector_model, face_detector_size',
+[
+	('retinaface', '320x320'),
+	('scrfd', '320x320'),
+	('yolo_face', '640x640'),
+	('yunet', '640x640')
+])
+def test_get_one_face(face_detector_model : str, face_detector_size : str) -> None:
+	state_manager.init_item('face_detector_model', face_detector_model)
+	state_manager.init_item('face_detector_size', face_detector_size)
 	state_manager.init_item('face_detector_margin', (0, 0, 0, 0))
 	face_detector.pre_check()
 

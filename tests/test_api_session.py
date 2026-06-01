@@ -111,6 +111,8 @@ def test_refresh_session(test_client : TestClient) -> None:
 
 	assert refresh_session_response.status_code == 401
 
+	access_token = create_session_body.get('access_token')
+
 	refresh_session_response = test_client.put('/session', json =
 	{
 		'refresh_token': create_session_body.get('refresh_token')
@@ -119,8 +121,7 @@ def test_refresh_session(test_client : TestClient) -> None:
 
 	assert refresh_session_body.get('access_token')
 	assert refresh_session_body.get('refresh_token')
-	assert not refresh_session_body.get('access_token') == create_session_body.get('access_token')
-
+	assert session_manager.find_session_id(access_token) is None
 	assert refresh_session_response.status_code == 200
 
 	refresh_session_response = test_client.put('/session', json =
