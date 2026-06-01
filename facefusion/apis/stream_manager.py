@@ -180,7 +180,3 @@ def destroy_stream(session_id : SessionId) -> bool:
 		return not rtc_store.has_peers(session_id)
 
 	return False
-
-
-def dispatch_event(event : threading.Event, track : int, pointer : ctypes.c_void_p) -> None:
-	event.set()

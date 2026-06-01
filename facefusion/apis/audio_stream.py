@@ -7,7 +7,6 @@ from typing import Optional
 
 import numpy
 
-from facefusion.apis.stream_manager import dispatch_event
 from facefusion.codecs import opus_decoder
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AudioCodec, AudioPack, OpusDecoder, RtcPeerAudio
@@ -67,3 +66,7 @@ def fill_audio_deque(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audi
 	if audio_frame:
 		audio_deque.append((numpy.frombuffer(audio_frame, dtype = numpy.float32), time.monotonic()))
 		audio_event.set()
+
+
+def dispatch_event(event : threading.Event, track : int, pointer : ctypes.c_void_p) -> None:
+	event.set()

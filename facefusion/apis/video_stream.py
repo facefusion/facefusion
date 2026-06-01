@@ -8,7 +8,6 @@ from typing import Optional
 import cv2
 import numpy
 
-from facefusion.apis.stream_manager import dispatch_event
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AomDecoder, AomEncoder, AomPointer, BitRate, Resolution, RtcPeerVideo, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
@@ -127,3 +126,7 @@ def normalize_vision_frame(frame_pointer : AomPointer | VpxPointer) -> VisionFra
 	frame_width, frame_height = frame_pointer.get('resolution')
 	vision_frame = numpy.frombuffer(frame_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
 	return cv2.cvtColor(vision_frame, cv2.COLOR_YUV2BGR_I420)
+
+
+def dispatch_event(event : threading.Event, track : int, pointer : ctypes.c_void_p) -> None:
+	event.set()
