@@ -148,8 +148,7 @@ def run_video_encode_loop(rtc_peer : RtcPeer, video_deque : deque[VideoPack], vi
 
 			peer_bitrate = rtc_peer.get('sender_bitrate').value
 
-			# TODO: avoid != in condition
-			if output_resolution != temp_resolution:
+			if output_resolution[0] - temp_resolution[0] or output_resolution[1] - temp_resolution[1]:
 				destroy_video_encoder(video_codec, video_encoder)
 				temp_resolution = output_resolution
 				video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
