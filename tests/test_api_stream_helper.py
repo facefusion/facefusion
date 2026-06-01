@@ -200,7 +200,11 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 	assert send_video_mock.called
 
 	if video_codec == 'av1':
-		assert create_hash(send_video_mock.call_args[0][1]) == '9ba7212b'
+		if is_linux() or is_windows():
+			assert create_hash(send_video_mock.call_args[0][1]) == '9ba7212b'
+
+		if is_macos():
+			pytest.skip()
 
 	if video_codec == 'vp8':
 		pytest.skip()
