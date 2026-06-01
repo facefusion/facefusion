@@ -29,9 +29,14 @@ FaceScoreSet = TypedDict('FaceScoreSet',
 	'landmarker' : Score
 })
 Embedding : TypeAlias = NDArray[numpy.float64]
-Gender = Literal['female', 'male']
+
 Age : TypeAlias = range
+Gender = Literal['female', 'male']
 Race = Literal['white', 'black', 'latino', 'asian', 'indian', 'arabic']
+
+FaceSelectorGender = Literal['auto', 'female', 'male']
+FaceSelectorRace = Literal['auto', 'white', 'black', 'latino', 'asian', 'indian', 'arabic']
+
 Face = namedtuple('Face',
 [
 	'bounding_box',
@@ -40,8 +45,8 @@ Face = namedtuple('Face',
 	'angle',
 	'embedding',
 	'embedding_norm',
-	'gender',
 	'age',
+	'gender',
 	'race'
 ])
 Language = Literal['en']
@@ -346,8 +351,8 @@ State = TypedDict('State',
 	'face_landmarker_score' : Score,
 	'face_selector_mode' : FaceSelectorMode,
 	'face_selector_order' : FaceSelectorOrder,
-	'face_selector_race' : Race,
-	'face_selector_gender' : Gender,
+	'face_selector_race' : FaceSelectorRace,
+	'face_selector_gender' : FaceSelectorGender,
 	'face_selector_age_start' : int,
 	'face_selector_age_end' : int,
 	'reference_face_position' : int,
