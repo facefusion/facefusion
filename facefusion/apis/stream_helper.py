@@ -153,7 +153,11 @@ def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : 
 		temp_video_receive_time = 0.0
 
 		while numpy.any(temp_vision_frame):
-			frame_duration = (video_receive_time - temp_video_receive_time) if temp_video_receive_time else 1.0 / 30
+			frame_duration = 1.0 / 30
+
+			if temp_video_receive_time:
+				frame_duration = video_receive_time - temp_video_receive_time
+
 			temp_video_receive_time = video_receive_time
 
 			audio_packets : list[tuple[bytes, float]] = []
