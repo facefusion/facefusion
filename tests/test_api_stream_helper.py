@@ -62,7 +62,7 @@ async def test_process_image() -> None:
 	await process_image(websocket_mock)
 
 	websocket_mock.send_bytes.assert_called_once()
-	assert websocket_mock.send_bytes.call_args[0][0][:3] == bytes([ 255, 216, 255 ])
+	assert create_hash(websocket_mock.send_bytes.call_args[0][0]) == '0142782f'
 
 	state_manager.init_item('source_paths', None)
 	await process_image(websocket_mock)
@@ -198,7 +198,12 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 		encode_loop_thread.join(timeout = 5.0)
 
 	assert send_video_mock.called
-	assert len(send_video_mock.call_args[0][1]) > 0
+
+	if video_codec == 'av1':
+		assert create_hash(send_video_mock.call_args[0][1]) == '9ba7212b'
+
+	if video_codec == 'vp8':
+		assert create_hash(send_video_mock.call_args[0][1]) == 'abb696db'
 
 
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
