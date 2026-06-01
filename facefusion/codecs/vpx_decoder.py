@@ -2,11 +2,8 @@ import ctypes
 import struct
 from typing import Optional
 
-import cv2
-import numpy
-
 from facefusion.libraries import vpx as vpx_module
-from facefusion.types import VisionFrame, VpxDecoder
+from facefusion.types import VpxDecoder, VpxPointer
 
 
 def create(thread_count : int) -> Optional[VpxDecoder]:
@@ -25,7 +22,7 @@ def create(thread_count : int) -> Optional[VpxDecoder]:
 	return None
 
 
-def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[VisionFrame]:
+def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[VpxPointer]:
 	vpx_library = vpx_module.create_static_library()
 
 	if vpx_library and input_buffer:
@@ -38,8 +35,11 @@ def decode(vpx_decoder : VpxDecoder, input_buffer : bytes) -> Optional[VisionFra
 			if address:
 				frame_width = ctypes.c_uint.from_address(address + 24).value & ~1
 				frame_height = ctypes.c_uint.from_address(address + 28).value & ~1
-				vision_frame = numpy.frombuffer(collect(address, frame_width, frame_height), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
-				return cv2.cvtColor(vision_frame, cv2.COLOR_YUV2BGR_I420)
+
+				return VpxPointer(
+					buffer = collect(address, frame_width, frame_height),
+					resolution = (frame_width, frame_height)
+				)
 
 	return None
 

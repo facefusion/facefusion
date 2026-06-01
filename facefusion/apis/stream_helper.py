@@ -15,7 +15,7 @@ from facefusion import rtc, rtc_store, state_manager, streamer
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioPack, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, RtcPeerVideo, SdpAnswer, SdpOffer, SessionId, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder
+from facefusion.types import AomDecoder, AomEncoder, AomPointer, AudioCodec, AudioPack, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, RtcPeerVideo, SdpAnswer, SdpOffer, SessionId, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
 
 
 #TODO: remove source_paths guard, process_image should work independent of source_paths since processors decide if they need sources
@@ -272,10 +272,16 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[Audi
 
 def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, input_buffer : bytes) -> Optional[VisionFrame]:
 	if video_codec == 'av1':
-		return aom_decoder.decode(video_decoder, input_buffer)
+		aom_pointer = aom_decoder.decode(video_decoder, input_buffer)
+
+		if aom_pointer:
+			return normalize_vision_frame(aom_pointer)
 
 	if video_codec == 'vp8':
-		return vpx_decoder.decode(video_decoder, input_buffer)
+		vpx_pointer = vpx_decoder.decode(video_decoder, input_buffer)
+
+		if vpx_pointer:
+			return normalize_vision_frame(vpx_pointer)
 
 	return None
 
@@ -288,6 +294,12 @@ def encode_video_frame(video_codec : VideoCodec, video_encoder : VpxEncoder | Ao
 		return vpx_encoder.encode(video_encoder, input_buffer, frame_resolution, frame_index)
 
 	return bytes()
+
+
+def normalize_vision_frame(frame_pointer : AomPointer | VpxPointer) -> VisionFrame:
+	frame_width, frame_height = frame_pointer.get('resolution')
+	vision_frame = numpy.frombuffer(frame_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
+	return cv2.cvtColor(vision_frame, cv2.COLOR_YUV2BGR_I420)
 
 
 def create_video_decoder(video_codec : VideoCodec) -> Optional[VpxDecoder | AomDecoder]:
