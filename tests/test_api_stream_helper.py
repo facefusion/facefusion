@@ -17,7 +17,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.types import AudioCodec, AudioPack, RtcPeer, RtcPeerAudio, RtcPeerVideo, VideoCodec, VideoPack
+from facefusion.types import AudioCodec, AudioPack, RtcPeer, RtcPeerAudio, RtcPeerVideo, SessionId, VideoCodec, VideoPack
 from facefusion.vision import read_video_frame
 from .assert_helper import get_test_example_file, get_test_examples_directory
 
@@ -138,8 +138,8 @@ async def test_receive_vision_frames() -> None:
 	assert frames[0].shape == vision_frame.shape
 
 
-@pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
-def test_run_peer_loop(video_codec : VideoCodec, payload_type : int) -> None:
+@pytest.mark.parametrize('video_codec, payload_type, session_id', [ ('av1', 35, 'test-run-peer-loop-av1'), ('vp8', 96, 'test-run-peer-loop-vp8') ])
+def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id : SessionId) -> None:
 	peer_connection = rtc.create_peer_connection()
 	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
 	video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, payload_type)
@@ -156,8 +156,6 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int) -> None:
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
-	# TODO: avoid concatenation — session_id should be a parametrize parameter like video_codec
-	session_id = 'test-run-peer-loop-' + video_codec
 	rtc_store.init_peers(session_id)
 	rtc_store.get_peers(session_id).append(rtc_peer)
 
@@ -198,7 +196,7 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 	audio_deque : deque[AudioPack] = deque()
 	video_event = threading.Event()
 
-	video_deque.append((source_frame, 0.100))
+	video_deque.append((source_frame, 0.1))
 	video_event.set()
 
 	with patch('facefusion.apis.stream_helper.rtc.send_video') as mock_send_video:
