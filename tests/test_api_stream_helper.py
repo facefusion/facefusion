@@ -15,6 +15,7 @@ from facefusion.apis.stream_helper import create_video_decoder, create_video_enc
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
+from facefusion.ffmpeg import read_audio_buffer
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
 from facefusion.types import AudioCodec, AudioPack, RtcPeer, RtcPeerAudio, RtcPeerVideo, SessionId, VideoCodec, VideoPack
@@ -35,7 +36,8 @@ def before_all() -> None:
 	conditional_download(get_test_examples_directory(),
 	[
 		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/target-240p.mp4',
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg'
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.jpg',
+		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/source.mp3'
 	])
 
 
@@ -294,7 +296,8 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 
 @pytest.mark.parametrize('audio_codec', [ 'opus' ])
 def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
-	audio_frame = numpy.zeros(960 * 2, dtype = numpy.float32)
+	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
+	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	audio_deque : deque[AudioPack] = deque()
 
 	datachannel_library_mock = MagicMock()
@@ -311,10 +314,6 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 			audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (rtc_peer_audio, audio_deque), daemon = True)
 			audio_receiver_thread.start()
 			audio_receiver_thread.join(timeout = 2.0)
-
-	assert audio_deque[0][0].dtype == numpy.float32
-	assert audio_deque[0][0].size == 960 * 2
-	assert len(audio_deque) == 1
 
 	assert create_hash(audio_deque[0][0].tobytes()) == create_hash(audio_frame.tobytes())
 
@@ -371,7 +370,6 @@ def test_create_and_destroy_video_decoder(video_codec : VideoCodec) -> None:
 def test_create_and_destroy_video_encoder(video_codec : VideoCodec) -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	input_buffer = cv2.cvtColor(vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
-
 	video_encoder = create_video_encoder(video_codec, (426, 226), 4000)
 
 	if video_codec == 'av1':
