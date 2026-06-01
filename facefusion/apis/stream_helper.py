@@ -256,12 +256,11 @@ def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_dequ
 
 		if receive_status_code == 0 and buffer_size.value > 0:
 			receive_time = time.monotonic()
-			# TODO: rename opus_buffer and output_buffer to audio convention
-			opus_buffer = receive_buffer.raw[:buffer_size.value]
-			output_buffer = opus_decoder.decode(audio_decoder, opus_buffer, 960, 2)
+			frame_buffer = receive_buffer.raw[:buffer_size.value]
+			audio_frame = opus_decoder.decode(audio_decoder, frame_buffer, 960, 2)
 
-			if output_buffer:
-				audio_deque.append((numpy.frombuffer(output_buffer, dtype = numpy.float32), receive_time))
+			if audio_frame:
+				audio_deque.append((numpy.frombuffer(audio_frame, dtype = numpy.float32), receive_time))
 
 		if receive_status_code == -3:
 			available_event.wait()
