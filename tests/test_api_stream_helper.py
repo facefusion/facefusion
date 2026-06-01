@@ -10,7 +10,10 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_helper import create_video_decoder, create_video_encoder, decode_video_frame, destroy_stream, destroy_video_decoder, destroy_video_encoder, encode_video_frame, fill_audio_deque, fill_video_deque, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_audio_encode_loop, run_peer_loop, run_video_encode_loop, update_video_encoder_bitrate
+from facefusion.apis.audio_stream import fill_audio_deque, receive_audio_frames
+from facefusion.apis.image_stream import receive_vision_frames
+from facefusion.apis.stream_manager import destroy_stream, process_image, process_video, run_audio_encode_loop, run_peer_loop, run_video_encode_loop
+from facefusion.apis.video_stream import create_video_decoder, create_video_encoder, decode_video_frame, destroy_video_decoder, destroy_video_encoder, encode_video_frame, fill_video_deque, receive_video_frames, update_video_encoder_bitrate
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download

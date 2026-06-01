@@ -6,7 +6,7 @@ from starlette.websockets import WebSocket, WebSocketState
 from facefusion import session_context, session_manager
 from facefusion.apis.api_helper import get_sec_websocket_protocol
 from facefusion.apis.session_helper import extract_access_token
-from facefusion.apis.stream_helper import destroy_stream, process_image, process_video
+from facefusion.apis.stream_manager import destroy_stream, process_image, process_video
 
 
 async def websocket_stream(websocket : WebSocket) -> None:
