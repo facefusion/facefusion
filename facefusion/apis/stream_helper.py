@@ -131,7 +131,7 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 	video_event.wait()
 	video_event.clear()
-	temp_vision_frame, video_time = video_deque.popleft()
+	temp_vision_frame, video_receive_time = video_deque.popleft()
 
 	if numpy.any(temp_vision_frame):
 		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
@@ -139,13 +139,13 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
 		audio_encoder = opus_encoder.create(48000, 2)
 		frame_index = 0
-		prev_video_time = 0.0
+		temp_video_receive_time = 0.0
 
 		while numpy.any(temp_vision_frame):
-			frame_duration = (video_time - prev_video_time) if prev_video_time else 1.0 / 30
-			prev_video_time = video_time
+			frame_duration = (video_receive_time - temp_video_receive_time) if temp_video_receive_time else 1.0 / 30
+			temp_video_receive_time = video_receive_time
 
-			while audio_deque and audio_deque[0][1] < video_time + frame_duration:
+			while audio_deque and audio_deque[0][1] < video_receive_time + frame_duration:
 				audio_frame, audio_time = audio_deque.popleft()
 				output_audio_buffer = opus_encoder.encode(audio_encoder, audio_frame.tobytes(), 960)
 
@@ -177,12 +177,12 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 			output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 
 			if output_video_buffer:
-				rtc.send_video(rtc_peer, output_video_buffer, int(video_time * 90000))
+				rtc.send_video(rtc_peer, output_video_buffer, int(video_receive_time * 90000))
 
 			frame_index += 1
 			video_event.wait()
 			video_event.clear()
-			temp_vision_frame, video_time = video_deque.popleft()
+			temp_vision_frame, video_receive_time = video_deque.popleft()
 
 		# TODO: remove unconditional destroy methods, which have no impact on control flow
 		destroy_video_encoder(video_codec, video_encoder)
