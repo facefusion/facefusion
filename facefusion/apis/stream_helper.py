@@ -204,9 +204,7 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[Vide
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
 	receive_buffer = ctypes.create_string_buffer(512 * 1024)
-	available_event = threading.Event()
-	available_callback = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)(partial(dispatch_event, available_event))
-	datachannel_library.rtcSetAvailableCallback(video_track, available_callback)
+	available_event = create_event(video_track, datachannel_library)
 	receive_status_code = -3
 
 	while receive_status_code == 0 or receive_status_code == -3:
@@ -241,9 +239,7 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[Audi
 	datachannel_library = datachannel_module.create_static_library()
 	audio_decoder = create_audio_decoder(audio_codec)
 	receive_buffer = ctypes.create_string_buffer(8 * 1024)
-	available_event = threading.Event()
-	available_callback = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)(partial(dispatch_event, available_event))
-	datachannel_library.rtcSetAvailableCallback(audio_track, available_callback)
+	available_event = create_event(audio_track, datachannel_library)
 	receive_status_code = -3
 
 	while receive_status_code == 0 or receive_status_code == -3:
@@ -367,6 +363,14 @@ def destroy_stream(session_id : SessionId) -> bool:
 		return not rtc_store.has_peers(session_id)
 
 	return False
+
+
+def create_event(track : int, datachannel_library : ctypes.CDLL) -> threading.Event:
+	available_event = threading.Event()
+	available_callback = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)(partial(dispatch_event, available_event))
+	datachannel_library.rtcSetAvailableCallback(track, available_callback)
+	available_event.callback = available_callback  # type: ignore[attr-defined]
+	return available_event
 
 
 def dispatch_event(event : threading.Event, track : int, pointer : ctypes.c_void_p) -> None:
