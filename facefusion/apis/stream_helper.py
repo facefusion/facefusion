@@ -243,30 +243,34 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_dequ
 # TODO: method is too complex
 def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_deque : deque[AudioPack]) -> None:
 	datachannel_library = datachannel_module.create_static_library()
-	audio_decoder = opus_decoder.create(48000, 2)
-	receive_buffer = ctypes.create_string_buffer(8 * 1024)
-	available_event = threading.Event()
-	available_callback = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)(partial(dispatch_event, available_event))
-	datachannel_library.rtcSetAvailableCallback(audio_track, available_callback)
-	receive_status_code = -3
 
-	while receive_status_code == 0 or receive_status_code == -3:
-		buffer_size = ctypes.c_int(8 * 1024)
-		receive_status_code = datachannel_library.rtcReceiveMessage(audio_track, receive_buffer, ctypes.byref(buffer_size))
+	if audio_codec == 'opus':
+		audio_decoder = opus_decoder.create(48000, 2)
+		receive_buffer = ctypes.create_string_buffer(8 * 1024)
+		available_event = threading.Event()
+		available_callback = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)(partial(dispatch_event, available_event))
+		datachannel_library.rtcSetAvailableCallback(audio_track, available_callback)
+		receive_status_code = -3
 
-		if receive_status_code == 0 and buffer_size.value > 0:
-			receive_time = time.monotonic()
-			frame_buffer = receive_buffer.raw[:buffer_size.value]
-			audio_frame = opus_decoder.decode(audio_decoder, frame_buffer, 960, 2)
+		while receive_status_code == 0 or receive_status_code == -3:
+			buffer_size = ctypes.c_int(8 * 1024)
+			receive_status_code = datachannel_library.rtcReceiveMessage(audio_track, receive_buffer, ctypes.byref(buffer_size))
 
-			if audio_frame:
-				audio_deque.append((numpy.frombuffer(audio_frame, dtype = numpy.float32), receive_time))
+			if receive_status_code == 0 and buffer_size.value > 0:
+				receive_time = time.monotonic()
+				frame_buffer = receive_buffer.raw[:buffer_size.value]
+				audio_frame = opus_decoder.decode(audio_decoder, frame_buffer, 960, 2)
 
-		if receive_status_code == -3:
-			available_event.wait()
-			available_event.clear()
+				if audio_frame:
+					audio_deque.append((numpy.frombuffer(audio_frame, dtype = numpy.float32), receive_time))
 
-	opus_decoder.destroy(audio_decoder)
+			if receive_status_code == -3:
+				available_event.wait()
+				available_event.clear()
+
+		opus_decoder.destroy(audio_decoder)
+
+	return None
 
 
 def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, input_buffer : bytes) -> Optional[VisionFrame]:
