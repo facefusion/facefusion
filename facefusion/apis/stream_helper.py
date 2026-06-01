@@ -238,8 +238,6 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_dequ
 	destroy_video_decoder(video_codec, video_decoder)
 
 
-# TODO: audio_codec is not used but has to, even if there is just one
-# TODO: audio_codec is passed but never checked — decoder should be selected based on codec the same way video does for av1 vs vp8
 # TODO: method is too complex
 def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_deque : deque[AudioPack]) -> None:
 	datachannel_library = datachannel_module.create_static_library()
