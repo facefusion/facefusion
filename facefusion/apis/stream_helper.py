@@ -108,9 +108,9 @@ async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	audio_deque : deque[AudioPack] = deque(maxlen = 10)
 	video_event = threading.Event()
 
-	video_receive = asyncio.to_thread(receive_video_frames, rtc_peer.get('video'), video_deque, video_event)
-	video_encode = asyncio.to_thread(run_video_encode_loop, rtc_peer, video_deque, video_event)
-	coroutines = [ video_receive, video_encode ]
+	video_receiver_thread = asyncio.to_thread(receive_video_frames, rtc_peer.get('video'), video_deque, video_event)
+	video_encoder_thread = asyncio.to_thread(run_video_encode_loop, rtc_peer, video_deque, video_event)
+	coroutines = [ video_receiver_thread, video_encoder_thread ]
 
 	if rtc_peer.get('audio'):
 		audio_event = threading.Event()
@@ -190,7 +190,7 @@ def run_audio_encode_loop(rtc_peer : RtcPeer, audio_deque : deque[AudioPack], au
 	opus_encoder.destroy(audio_encoder)
 
 
-def buffer_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_buffer : bytes, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
+def fill_video_deque(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, video_buffer : bytes, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
 	vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 
 	if numpy.any(vision_frame):
@@ -215,7 +215,7 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[Vide
 
 		if receive_status_code == 0 and buffer_size.value > 0:
 			video_buffer = receive_buffer.raw[:buffer_size.value]
-			buffer_video_frame(video_codec, video_decoder, video_buffer, video_deque, video_event)
+			fill_video_deque(video_codec, video_decoder, video_buffer, video_deque, video_event)
 
 		if receive_status_code == -3:
 			available_event.wait()
@@ -227,7 +227,7 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[Vide
 	destroy_video_decoder(video_codec, video_decoder)
 
 
-def buffer_audio_frame(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_buffer : bytes, audio_deque : deque[AudioPack], audio_event : threading.Event) -> None:
+def fill_audio_deque(audio_codec : AudioCodec, audio_decoder : OpusDecoder, audio_buffer : bytes, audio_deque : deque[AudioPack], audio_event : threading.Event) -> None:
 	audio_frame = decode_audio_frame(audio_codec, audio_decoder, audio_buffer)
 
 	if audio_frame:
@@ -252,7 +252,7 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[Audi
 
 		if receive_status_code == 0 and buffer_size.value > 0:
 			audio_buffer = receive_buffer.raw[:buffer_size.value]
-			buffer_audio_frame(audio_codec, audio_decoder, audio_buffer, audio_deque, audio_event)
+			fill_audio_deque(audio_codec, audio_decoder, audio_buffer, audio_deque, audio_event)
 
 		if receive_status_code == -3:
 			available_event.wait()

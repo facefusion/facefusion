@@ -10,7 +10,7 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_helper import buffer_audio_frame, buffer_video_frame, create_video_decoder, create_video_encoder, decode_video_frame, destroy_stream, destroy_video_decoder, destroy_video_encoder, encode_video_frame, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_audio_encode_loop, run_peer_loop, run_video_encode_loop, update_video_encoder_bitrate
+from facefusion.apis.stream_helper import fill_audio_deque, fill_video_deque, create_video_decoder, create_video_encoder, decode_video_frame, destroy_stream, destroy_video_decoder, destroy_video_encoder, encode_video_frame, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_audio_encode_loop, run_peer_loop, run_video_encode_loop, update_video_encoder_bitrate
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -251,7 +251,7 @@ def test_buffer_video_frame(video_codec : VideoCodec) -> None:
 	video_deque : deque[VideoPack] = deque()
 	video_event = threading.Event()
 
-	buffer_video_frame(video_codec, video_decoder, encode_buffer, video_deque, video_event)
+	fill_video_deque(video_codec, video_decoder, encode_buffer, video_deque, video_event)
 
 	vision_frame, _ = video_deque.popleft()
 
@@ -310,7 +310,7 @@ def test_buffer_audio_frame() -> None:
 	audio_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.decode_audio_frame', return_value = audio_frame.tobytes()):
-		buffer_audio_frame('opus', audio_decoder_mock, audio_frame.tobytes(), audio_deque, audio_event)
+		fill_audio_deque('opus', audio_decoder_mock, audio_frame.tobytes(), audio_deque, audio_event)
 
 	buffer_frame, _ = audio_deque.popleft()
 
