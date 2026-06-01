@@ -57,18 +57,12 @@ async def test_process_image() -> None:
 		}
 	]
 
-	state_manager.init_item('source_paths', [ get_test_example_file('source.jpg') ])
 	await process_image(websocket_mock)
 
 	websocket_mock.send_bytes.assert_called_once()
 
 	if is_linux() or is_windows():
 		assert create_hash(websocket_mock.send_bytes.call_args[0][0]) == '0142782f'
-
-	state_manager.init_item('source_paths', None)
-	await process_image(websocket_mock)
-
-	websocket_mock.send_bytes.assert_called_once()
 
 
 @pytest.mark.parametrize('video_codec, session_id', [ ('av1', 'test-process-video-av1'), ('vp8', 'test-process-video-vp8') ])

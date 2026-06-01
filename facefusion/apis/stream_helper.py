@@ -11,26 +11,22 @@ import cv2
 import numpy
 from starlette.websockets import WebSocket
 
-from facefusion import rtc, rtc_store, state_manager, streamer
+from facefusion import rtc, rtc_store, streamer
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.libraries import datachannel as datachannel_module
 from facefusion.types import AomDecoder, AomEncoder, AomPointer, AudioCodec, AudioPack, BitRate, OpusDecoder, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, RtcPeerVideo, SdpAnswer, SdpOffer, SessionId, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder, VpxPointer
 
 
-#TODO: remove source_paths guard, process_image should work independent of source_paths since processors decide if they need sources
 async def process_image(websocket : WebSocket) -> None:
-	source_paths = state_manager.get_item('source_paths')
+	capture_vision_frame = await anext(receive_vision_frames(websocket), None)
 
-	if source_paths:
-		capture_vision_frame = await anext(receive_vision_frames(websocket), None)
+	if numpy.any(capture_vision_frame):
+		output_vision_frame = streamer.process_frame(create_empty_audio_frame(), capture_vision_frame)
+		is_success, output_frame_buffer = cv2.imencode('.jpg', output_vision_frame)
 
-		if numpy.any(capture_vision_frame):
-			output_vision_frame = streamer.process_frame(create_empty_audio_frame(), capture_vision_frame)
-			is_success, output_frame_buffer = cv2.imencode('.jpg', output_vision_frame)
-
-			if is_success:
-				await websocket.send_bytes(output_frame_buffer.tobytes())
+		if is_success:
+			await websocket.send_bytes(output_frame_buffer.tobytes())
 
 
 #TODO: needs review
