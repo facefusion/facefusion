@@ -1,6 +1,7 @@
 import ctypes
 import struct
 import threading
+import time
 from collections import deque
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,7 +13,7 @@ from tests.assert_helper import get_test_example_file, get_test_examples_directo
 
 from facefusion import rtc, rtc_store, state_manager
 from facefusion.apis.endpoints.stream import websocket_stream
-from facefusion.apis.stream_helper import create_video_encoder, decode_video_frame, destroy_video_encoder, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_peer_loop, update_video_encoder_bitrate
+from facefusion.apis.stream_helper import create_video_encoder, decode_video_frame, destroy_video_encoder, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_encode_loop, run_peer_loop, update_video_encoder_bitrate
 from facefusion.codecs import aom_decoder, aom_encoder, vpx_decoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -161,15 +162,101 @@ def test_run_peer_loop() -> None:
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
 
-	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
-		patch('facefusion.apis.stream_helper.decode_video_frame', return_value = source_frame), \
-		patch('facefusion.apis.stream_helper.rtc.send_video') as mock_send_video:
-		thread = threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True)
+	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
+		with patch('facefusion.apis.stream_helper.decode_video_frame', return_value = source_frame):
+			with patch('facefusion.apis.stream_helper.run_encode_loop'):
+				thread = threading.Thread(target = run_peer_loop, args = (session_id, rtc_peer), daemon = True)
+				thread.start()
+				thread.join(timeout = 5.0)
+
+	assert rtc_store.has_peers(session_id) is False
+
+
+@pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
+def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
+	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+
+	peer_connection = rtc.create_peer_connection()
+	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
+	video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, payload_type)
+	rtc_peer : RtcPeer =\
+	{
+		'peer_connection': peer_connection,
+		'video':
+		{
+			'sender_track': video_sender_track,
+			'receiver_track': video_receiver_track,
+			'codec': video_codec
+		},
+		'sender_bitrate': ctypes.c_uint(0),
+		'receiver_bitrate': ctypes.c_uint(0)
+	}
+
+	video_deque : deque[tuple[VisionFrame, float]] = deque()
+	audio_deque : deque[tuple[AudioFrame, float]] = deque()
+	video_event = threading.Event()
+
+	video_deque.append((source_frame, 0.100))
+	video_event.set()
+
+	with patch('facefusion.apis.stream_helper.rtc.send_video') as mock_send_video:
+		thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
 		thread.start()
+		time.sleep(0.1)
+		video_deque.append((numpy.empty(0), 0.0))
+		video_event.set()
 		thread.join(timeout = 5.0)
 
 	assert mock_send_video.called
 	assert len(mock_send_video.call_args[0][1]) > 0
+
+
+@pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
+def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) -> None:
+	source_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+	audio_frame = numpy.zeros(960 * 2, dtype = numpy.float32)
+
+	peer_connection = rtc.create_peer_connection()
+	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
+	video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, payload_type)
+	rtc_peer : RtcPeer =\
+	{
+		'peer_connection': peer_connection,
+		'video':
+		{
+			'sender_track': video_sender_track,
+			'receiver_track': video_receiver_track,
+			'codec': video_codec
+		},
+		'sender_bitrate': ctypes.c_uint(0),
+		'receiver_bitrate': ctypes.c_uint(0)
+	}
+
+	video_deque : deque[tuple[VisionFrame, float]] = deque()
+	audio_deque : deque[tuple[AudioFrame, float]] = deque()
+	video_event = threading.Event()
+
+	video_deque.append((source_frame, 0.100))
+	audio_deque.append((audio_frame, 0.100))
+	video_event.set()
+
+	manager = MagicMock()
+	manager.process_frame.return_value = source_frame
+
+	with patch('facefusion.apis.stream_helper.streamer.process_frame', manager.process_frame):
+		with patch('facefusion.apis.stream_helper.rtc.send_audio', manager.send_audio):
+			with patch('facefusion.apis.stream_helper.rtc.send_video', manager.send_video):
+				thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
+				thread.start()
+				time.sleep(0.1)
+				video_deque.append((numpy.empty(0), 0.0))
+				video_event.set()
+				thread.join(timeout = 5.0)
+
+	call_names = [ call[0] for call in manager.mock_calls ]
+
+	assert 'process_frame' in call_names and 'send_audio' in call_names
+	assert call_names.index('process_frame') < call_names.index('send_audio')
 
 
 # TODO: refine test

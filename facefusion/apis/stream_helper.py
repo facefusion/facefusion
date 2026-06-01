@@ -129,6 +129,17 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	for receiver_thread in receiver_threads:
 		receiver_thread.start()
 
+	run_encode_loop(rtc_peer, video_codec, video_deque, audio_deque, video_event)
+
+	for receiver_thread in receiver_threads:
+		receiver_thread.join()
+
+	rtc_store.delete_peers(session_id)
+
+
+#TODO: needs review
+#TODO: method is too complex
+def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : deque[tuple[VisionFrame, float]], audio_deque : deque[tuple[AudioFrame, float]], video_event : threading.Event) -> None:
 	video_event.wait()
 	video_event.clear()
 	temp_vision_frame, video_receive_time = video_deque.popleft()
@@ -193,11 +204,6 @@ def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 		destroy_video_encoder(video_codec, video_encoder)
 		opus_encoder.destroy(audio_encoder)
 		rtc.clear_remb(rtc_peer)
-
-	for receiver_thread in receiver_threads:
-		receiver_thread.join()
-
-	rtc_store.delete_peers(session_id)
 
 
 # TODO: method is too complex
