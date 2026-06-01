@@ -204,6 +204,7 @@ def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : 
 
 
 # TODO: method is too complex
+# TODO: video_codec is passed separately — consider whether it can be derived from video_track instead
 def receive_video_frames(video_track : int, video_codec : VideoCodec, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
 	datachannel_library = datachannel_module.create_static_library()
 	video_decoder = create_video_decoder(video_codec)
