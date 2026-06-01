@@ -259,25 +259,28 @@ def test_buffer_video_frame(video_codec : VideoCodec) -> None:
 
 	buffer_video_frame(video_codec, video_decoder, encode_buffer, video_deque, video_event)
 
+	vision_frame, _ = video_deque.popleft()
+
 	assert video_event.is_set()
 
 	if is_linux() or is_windows():
 		if video_codec == 'av1':
-			assert create_hash(video_deque[0][0].tobytes()) == 'c97d6d29'
+			assert create_hash(vision_frame.tobytes()) == 'c97d6d29'
 
 		if video_codec == 'vp8':
-			assert create_hash(video_deque[0][0].tobytes()) == '99ef2c25'
+			assert create_hash(vision_frame.tobytes()) == '99ef2c25'
 
 	if is_macos():
 		if video_codec == 'av1':
-			assert create_hash(video_deque[0][0].tobytes()) == 'eafd1fab'
+			assert create_hash(vision_frame.tobytes()) == 'eafd1fab'
 
 		if video_codec == 'vp8':
-			assert create_hash(video_deque[0][0].tobytes()) == 'ff3ecb43'
+			assert create_hash(vision_frame.tobytes()) == 'ff3ecb43'
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
 def test_receive_video_frames(video_codec : VideoCodec) -> None:
+	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	video_deque : deque[VideoPack] = deque()
 	video_event = threading.Event()
 
@@ -285,7 +288,7 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
-		with patch('facefusion.apis.stream_helper.buffer_video_frame') as buffer_mock:
+		with patch('facefusion.apis.stream_helper.decode_video_frame', return_value = video_frame):
 			rtc_peer_video : RtcPeerVideo =\
 			{
 				'sender_track': 0,
@@ -296,7 +299,13 @@ def test_receive_video_frames(video_codec : VideoCodec) -> None:
 			video_receiver_thread.start()
 			video_receiver_thread.join(timeout = 5.0)
 
-	assert buffer_mock.called
+	vision_frame, _ = video_deque.popleft()
+
+	if is_linux() or is_windows():
+		assert create_hash(vision_frame.tobytes()) == 'a17439db'
+
+	if is_macos():
+		assert create_hash(vision_frame.tobytes()) == '38d00e2a'
 
 
 def test_buffer_audio_frame() -> None:
@@ -306,15 +315,19 @@ def test_buffer_audio_frame() -> None:
 	audio_deque : deque[AudioPack] = deque()
 	audio_event = threading.Event()
 
-	with patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_frame.tobytes()):
+	with patch('facefusion.apis.stream_helper.decode_audio_frame', return_value = audio_frame.tobytes()):
 		buffer_audio_frame('opus', audio_decoder_mock, audio_frame.tobytes(), audio_deque, audio_event)
 
+	buffer_frame, _ = audio_deque.popleft()
+
 	assert audio_event.is_set()
-	assert create_hash(audio_deque[0][0].tobytes()) == create_hash(audio_frame.tobytes())
+	assert create_hash(buffer_frame.tobytes()) == create_hash(audio_frame.tobytes())
 
 
 @pytest.mark.parametrize('audio_codec', [ 'opus' ])
 def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
+	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
+	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	audio_deque : deque[AudioPack] = deque()
 	audio_event = threading.Event()
 
@@ -322,7 +335,7 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock):
-		with patch('facefusion.apis.stream_helper.buffer_audio_frame') as buffer_mock:
+		with patch('facefusion.apis.stream_helper.decode_audio_frame', return_value = audio_frame.tobytes()):
 			rtc_peer_audio : RtcPeerAudio =\
 			{
 				'sender_track': 0,
@@ -333,7 +346,9 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 			audio_receiver_thread.start()
 			audio_receiver_thread.join(timeout = 5.0)
 
-	assert buffer_mock.called
+	buffer_frame, _ = audio_deque.popleft()
+
+	assert create_hash(buffer_frame.tobytes()) == create_hash(audio_frame.tobytes())
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
