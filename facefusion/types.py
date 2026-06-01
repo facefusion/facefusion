@@ -104,17 +104,6 @@ OpusDecoder : TypeAlias = ctypes.c_void_p
 VpxEncoder : TypeAlias = ctypes.Array[ctypes.c_char]
 VpxDecoder : TypeAlias = ctypes.Array[ctypes.c_char]
 
-AomPointer = TypedDict('AomPointer',
-{
-	'buffer' : bytes,
-	'resolution' : Resolution
-})
-VpxPointer = TypedDict('VpxPointer',
-{
-	'buffer' : bytes,
-	'resolution' : Resolution
-})
-
 Args : TypeAlias = Dict[str, Any]
 
 Choice : TypeAlias = Union[int | str]

@@ -2,8 +2,11 @@ import ctypes
 import struct
 from typing import Optional
 
+import cv2
+import numpy
+
 from facefusion.libraries import aom as aom_module
-from facefusion.types import AomDecoder, AomPointer
+from facefusion.types import AomDecoder, VisionFrame
 
 
 def create(thread_count : int) -> Optional[AomDecoder]:
@@ -23,7 +26,7 @@ def create(thread_count : int) -> Optional[AomDecoder]:
 	return None
 
 
-def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[AomPointer]:
+def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[VisionFrame]:
 	aom_library = aom_module.create_static_library()
 
 	if aom_library and input_buffer:
@@ -36,11 +39,8 @@ def decode(aom_decoder : AomDecoder, input_buffer : bytes) -> Optional[AomPointe
 			if address:
 				frame_width = ctypes.c_uint.from_address(address + 28).value & ~1
 				frame_height = ctypes.c_uint.from_address(address + 32).value & ~1
-
-				return AomPointer(
-					buffer = collect(address, frame_width, frame_height),
-					resolution = (frame_width, frame_height)
-				)
+				vision_frame = numpy.frombuffer(collect(address, frame_width, frame_height), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
+				return cv2.cvtColor(vision_frame, cv2.COLOR_YUV2BGR_I420)
 
 	return None
 

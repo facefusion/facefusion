@@ -271,22 +271,10 @@ def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_dequ
 
 def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, input_buffer : bytes) -> Optional[VisionFrame]:
 	if video_codec == 'av1':
-		aom_pointer = aom_decoder.decode(video_decoder, input_buffer)
-
-		if aom_pointer:
-			frame_width, frame_height = aom_pointer.get('resolution')
-			# TODO: move reshape and cvtColor into decoder modules
-			vision_frame = numpy.frombuffer(aom_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
-			return cv2.cvtColor(vision_frame, cv2.COLOR_YUV2BGR_I420)
+		return aom_decoder.decode(video_decoder, input_buffer)
 
 	if video_codec == 'vp8':
-		vpx_pointer = vpx_decoder.decode(video_decoder, input_buffer)
-
-		if vpx_pointer:
-			frame_width, frame_height = vpx_pointer.get('resolution')
-			# TODO: move reshape and cvtColor into decoder modules
-			vision_frame = numpy.frombuffer(vpx_pointer.get('buffer'), dtype = numpy.uint8).reshape((frame_height * 3 // 2, frame_width))
-			return cv2.cvtColor(vision_frame, cv2.COLOR_YUV2BGR_I420)
+		return vpx_decoder.decode(video_decoder, input_buffer)
 
 	return None
 
