@@ -128,7 +128,7 @@ async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 
 #TODO: needs review
-#TODO: method is too complex
+#TODO: method is too complex, consider separate encode loop for audio and video?
 def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : deque[VideoPack], audio_deque : deque[AudioPack], video_event : threading.Event) -> None:
 	video_event.wait()
 	video_event.clear()
