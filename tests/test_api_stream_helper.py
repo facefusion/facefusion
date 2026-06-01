@@ -10,7 +10,7 @@ import numpy
 import pytest
 
 from facefusion import rtc, rtc_store, state_manager
-from facefusion.apis.stream_helper import create_video_decoder, create_video_encoder, decode_video_frame, destroy_stream, destroy_video_decoder, destroy_video_encoder, encode_video_frame, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_encode_loop, run_peer_loop, update_video_encoder_bitrate
+from facefusion.apis.stream_helper import create_video_decoder, create_video_encoder, decode_video_frame, destroy_stream, destroy_video_decoder, destroy_video_encoder, encode_video_frame, process_image, process_video, receive_audio_frames, receive_video_frames, receive_vision_frames, run_audio_encode_loop, run_peer_loop, run_video_encode_loop, update_video_encoder_bitrate
 from facefusion.codecs import aom_encoder, vpx_encoder
 from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
@@ -155,7 +155,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 	assert rtc_store.has_peers(session_id) is True
 
 	with patch('facefusion.apis.stream_helper.receive_video_frames'):
-		with patch('facefusion.apis.stream_helper.run_encode_loop'):
+		with patch('facefusion.apis.stream_helper.run_video_encode_loop'):
 			thread = threading.Thread(target = asyncio.run, args = (run_peer_loop(session_id, rtc_peer),), daemon = True)
 			thread.start()
 			thread.join(timeout = 5.0)
@@ -164,7 +164,7 @@ def test_run_peer_loop(video_codec : VideoCodec, payload_type : int, session_id 
 
 
 @pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
-def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
+def test_run_video_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	peer_connection = rtc.create_peer_connection()
 	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
@@ -183,14 +183,13 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 	}
 
 	video_deque : deque[VideoPack] = deque()
-	audio_deque : deque[AudioPack] = deque()
 	video_event = threading.Event()
 
 	video_deque.append((video_frame, 0.1))
 	video_event.set()
 
 	with patch('facefusion.apis.stream_helper.rtc.send_video') as send_video_mock:
-		encode_loop_thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
+		encode_loop_thread = threading.Thread(target = run_video_encode_loop, args = (rtc_peer, video_codec, video_deque, video_event), daemon = True)
 		encode_loop_thread.start()
 		empty_vision_frame = numpy.empty(0)
 		video_deque.append((empty_vision_frame, 0.0))
@@ -210,60 +209,42 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 		pytest.skip()
 
 
-@pytest.mark.parametrize('video_codec, payload_type', [ ('av1', 35), ('vp8', 96) ])
-def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) -> None:
-	video_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
+def test_run_audio_encode_loop() -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	peer_connection = rtc.create_peer_connection()
-	video_sender_track = rtc.add_video_track(peer_connection, 'sendonly', video_codec, payload_type)
-	video_receiver_track = rtc.add_video_track(peer_connection, 'recvonly', video_codec, payload_type)
 	rtc_peer : RtcPeer =\
 	{
 		'peer_connection': peer_connection,
 		'video':
 		{
-			'sender_track': video_sender_track,
-			'receiver_track': video_receiver_track,
-			'codec': video_codec
+			'sender_track': 0,
+			'receiver_track': 0,
+			'codec': 'vp8'
 		},
 		'sender_bitrate': ctypes.c_uint(0),
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
-	video_deque : deque[VideoPack] = deque()
 	audio_deque : deque[AudioPack] = deque()
-	video_event = threading.Event()
+	audio_event = threading.Event()
 
-	video_deque.append((video_frame, 0.100))
 	audio_deque.append((audio_frame, 0.100))
-	video_event.set()
-
-	streamer_mock = MagicMock()
-	streamer_mock.process_frame.return_value = video_frame
+	audio_event.set()
 
 	encoder_mock = MagicMock()
 	encoder_mock.encode.return_value = bytes([ 1 ] * 32)
 
-	rtc_mock = MagicMock()
-
-	with patch('facefusion.apis.stream_helper.streamer.process_frame', streamer_mock.process_frame):
-		with patch('facefusion.apis.stream_helper.opus_encoder.encode', encoder_mock.encode):
-			with patch('facefusion.apis.stream_helper.rtc.send_audio', rtc_mock.send_audio):
-				with patch('facefusion.apis.stream_helper.rtc.send_video', rtc_mock.send_video):
-					encode_loop_thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
-					encode_loop_thread.start()
-					empty_vision_frame = numpy.empty(0)
-					video_deque.append((empty_vision_frame, 0.0))
-					video_event.set()
-					encode_loop_thread.join(timeout = 5.0)
-
-	assert streamer_mock.process_frame.called is True
+	with patch('facefusion.apis.stream_helper.opus_encoder.encode', encoder_mock.encode):
+		with patch('facefusion.apis.stream_helper.rtc.send_audio') as send_audio_mock:
+			audio_loop_thread = threading.Thread(target = run_audio_encode_loop, args = (rtc_peer, audio_deque, audio_event), daemon = True)
+			audio_loop_thread.start()
+			audio_deque.append((numpy.empty(0), 0.0))
+			audio_event.set()
+			audio_loop_thread.join(timeout = 5.0)
 
 	assert encoder_mock.encode.called is True
-
-	assert rtc_mock.send_audio.called is True
-	assert rtc_mock.send_video.called is True
+	assert send_audio_mock.called is True
 
 
 @pytest.mark.parametrize('video_codec', [ 'av1', 'vp8' ])
@@ -299,6 +280,7 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 	audio_buffer = read_audio_buffer(get_test_example_file('source.mp3'), 48000, 16, 2)
 	audio_frame = numpy.frombuffer(audio_buffer, dtype = numpy.int16).astype(numpy.float32) / 32768.0
 	audio_deque : deque[AudioPack] = deque()
+	audio_event = threading.Event()
 
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
@@ -311,7 +293,7 @@ def test_receive_audio_frames(audio_codec : AudioCodec) -> None:
 				'receiver_track': 0,
 				'codec': audio_codec
 			}
-			audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (rtc_peer_audio, audio_deque), daemon = True)
+			audio_receiver_thread = threading.Thread(target = receive_audio_frames, args = (rtc_peer_audio, audio_deque, audio_event), daemon = True)
 			audio_receiver_thread.start()
 			audio_receiver_thread.join(timeout = 5.0)
 

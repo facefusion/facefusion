@@ -117,19 +117,20 @@ async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 	video_codec = rtc_peer.get('video').get('codec')
 
 	video_receive = asyncio.to_thread(receive_video_frames, rtc_peer.get('video'), video_deque, video_event)
-	encode_loop = asyncio.to_thread(run_encode_loop, rtc_peer, video_codec, video_deque, audio_deque, video_event)
-	coroutines = [ video_receive, encode_loop ]
+	video_encode = asyncio.to_thread(run_video_encode_loop, rtc_peer, video_codec, video_deque, video_event)
+	coroutines = [ video_receive, video_encode ]
 
 	if rtc_peer.get('audio'):
-		coroutines.append(asyncio.to_thread(receive_audio_frames, rtc_peer.get('audio'), audio_deque))
+		audio_event = threading.Event()
+		coroutines.append(asyncio.to_thread(receive_audio_frames, rtc_peer.get('audio'), audio_deque, audio_event))
+		coroutines.append(asyncio.to_thread(run_audio_encode_loop, rtc_peer, audio_deque, audio_event))
 
 	await asyncio.gather(*coroutines)
 	rtc_store.delete_peers(session_id)
 
 
 #TODO: needs review
-#TODO: split encoding, frame processing and sending to allow testing without mocking opus_encoder and streamer
-def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : deque[VideoPack], audio_deque : deque[AudioPack], video_event : threading.Event) -> None:
+def run_video_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
 	video_event.wait()
 	video_event.clear()
 	temp_vision_frame, video_receive_time = video_deque.popleft()
@@ -138,30 +139,11 @@ def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : 
 		temp_resolution : Resolution = (temp_vision_frame.shape[1], temp_vision_frame.shape[0])
 		temp_bitrate : BitRate = 8000
 		video_encoder = create_video_encoder(video_codec, temp_resolution, temp_bitrate)
-		audio_encoder = opus_encoder.create(48000, 2)
 		frame_index = 0
-		temp_video_receive_time = 0.0
 
 		while numpy.any(temp_vision_frame):
-			frame_duration = 1.0 / 30
-
-			if temp_video_receive_time:
-				frame_duration = video_receive_time - temp_video_receive_time
-
-			temp_video_receive_time = video_receive_time
-
-			audio_packets : list[tuple[bytes, float]] = []
-
-			while audio_deque and audio_deque[0][1] < video_receive_time + frame_duration:
-				audio_frame, audio_time = audio_deque.popleft()
-				output_audio_buffer = opus_encoder.encode(audio_encoder, audio_frame.tobytes(), 960)
-
-				if output_audio_buffer:
-					audio_packets.append((output_audio_buffer, audio_time))
-
 			output_vision_frame = streamer.process_frame(create_empty_audio_frame(), temp_vision_frame)
 			output_resolution : Resolution = (output_vision_frame.shape[1], output_vision_frame.shape[0])
-			# TODO: align buffer naming with input/output and video/audio convention
 			output_vision_buffer = cv2.cvtColor(output_vision_frame, cv2.COLOR_BGR2YUV_I420).tobytes()
 
 			peer_bitrate = rtc_peer.get('sender_bitrate').value
@@ -183,9 +165,6 @@ def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : 
 
 			output_video_buffer = encode_video_frame(video_codec, video_encoder, output_vision_buffer, temp_resolution, frame_index)
 
-			for audio_buffer, audio_time in audio_packets:
-				rtc.send_audio(rtc_peer, audio_buffer, int(audio_time * 48000))
-
 			if output_video_buffer:
 				rtc.send_video(rtc_peer, output_video_buffer, int(video_receive_time * 90000))
 
@@ -194,10 +173,29 @@ def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : 
 			video_event.clear()
 			temp_vision_frame, video_receive_time = video_deque.popleft()
 
-		# TODO: remove unconditional destroy methods, which have no impact on control flow
 		destroy_video_encoder(video_codec, video_encoder)
-		opus_encoder.destroy(audio_encoder)
 		rtc.clear_remb(rtc_peer)
+
+
+def run_audio_encode_loop(rtc_peer : RtcPeer, audio_deque : deque[AudioPack], audio_event : threading.Event) -> None:
+	audio_event.wait()
+	audio_event.clear()
+	audio_frame, audio_time = audio_deque.popleft()
+	audio_encoder = opus_encoder.create(48000, 2)
+
+	while numpy.any(audio_frame):
+		output_audio_buffer = opus_encoder.encode(audio_encoder, audio_frame.tobytes(), 960)
+
+		if output_audio_buffer:
+			rtc.send_audio(rtc_peer, output_audio_buffer, int(audio_time * 48000))
+
+		if not audio_deque:
+			audio_event.wait()
+			audio_event.clear()
+
+		audio_frame, audio_time = audio_deque.popleft()
+
+	opus_encoder.destroy(audio_encoder)
 
 
 #TODO: split receive loop, decode and buffering into separate functions to allow testing without ctypes mocks
@@ -236,7 +234,7 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[Vide
 
 
 #TODO: split receive loop, decode and buffering into separate functions to allow testing without ctypes mocks
-def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[AudioPack]) -> None:
+def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[AudioPack], audio_event : threading.Event) -> None:
 	audio_track = rtc_peer_audio.get('receiver_track')
 	audio_codec = rtc_peer_audio.get('codec')
 	datachannel_library = datachannel_module.create_static_library()
@@ -260,6 +258,7 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[Audi
 
 				if audio_frame:
 					audio_deque.append((numpy.frombuffer(audio_frame, dtype = numpy.float32), receive_time))
+					audio_event.set()
 
 			if receive_status_code == -3:
 				available_event.wait()
@@ -267,7 +266,8 @@ def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[Audi
 
 		opus_decoder.destroy(audio_decoder)
 
-	return None
+	audio_deque.append((numpy.empty(0), 0.0))
+	audio_event.set()
 
 
 def decode_video_frame(video_codec : VideoCodec, video_decoder : VpxDecoder | AomDecoder, input_buffer : bytes) -> Optional[VisionFrame]:
