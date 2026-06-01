@@ -128,7 +128,7 @@ async def run_peer_loop(session_id : SessionId, rtc_peer : RtcPeer) -> None:
 
 
 #TODO: needs review
-#TODO: method is too complex, consider separate encode loop for audio and video?
+#TODO: split encoding, frame processing and sending to allow testing without mocking opus_encoder and streamer
 def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : deque[VideoPack], audio_deque : deque[AudioPack], video_event : threading.Event) -> None:
 	video_event.wait()
 	video_event.clear()
@@ -200,7 +200,7 @@ def run_encode_loop(rtc_peer : RtcPeer, video_codec : VideoCodec, video_deque : 
 		rtc.clear_remb(rtc_peer)
 
 
-# TODO: method is too complex
+#TODO: split receive loop, decode and buffering into separate functions to allow testing without ctypes mocks
 def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[VideoPack], video_event : threading.Event) -> None:
 	video_track = rtc_peer_video.get('receiver_track')
 	video_codec = rtc_peer_video.get('codec')
@@ -235,7 +235,7 @@ def receive_video_frames(rtc_peer_video : RtcPeerVideo, video_deque : deque[Vide
 	destroy_video_decoder(video_codec, video_decoder)
 
 
-# TODO: method is too complex
+#TODO: split receive loop, decode and buffering into separate functions to allow testing without ctypes mocks
 def receive_audio_frames(rtc_peer_audio : RtcPeerAudio, audio_deque : deque[AudioPack]) -> None:
 	audio_track = rtc_peer_audio.get('receiver_track')
 	audio_codec = rtc_peer_audio.get('codec')
