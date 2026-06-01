@@ -220,9 +220,8 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_dequ
 
 		if receive_status_code == 0 and buffer_size.value > 0:
 			receive_time = time.monotonic()
-			# TODO: align buffer naming with input/output and video/audio convention
-			frame_buffer = receive_buffer.raw[:buffer_size.value]
-			vision_frame = decode_video_frame(video_codec, video_decoder, frame_buffer)
+			video_buffer = receive_buffer.raw[:buffer_size.value]
+			vision_frame = decode_video_frame(video_codec, video_decoder, video_buffer)
 
 			if numpy.any(vision_frame):
 				video_deque.append((vision_frame, receive_time))
@@ -256,8 +255,8 @@ def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_dequ
 
 			if receive_status_code == 0 and buffer_size.value > 0:
 				receive_time = time.monotonic()
-				frame_buffer = receive_buffer.raw[:buffer_size.value]
-				audio_frame = opus_decoder.decode(audio_decoder, frame_buffer, 960, 2)
+				audio_buffer = receive_buffer.raw[:buffer_size.value]
+				audio_frame = opus_decoder.decode(audio_decoder, audio_buffer, 960, 2)
 
 				if audio_frame:
 					audio_deque.append((numpy.frombuffer(audio_frame, dtype = numpy.float32), receive_time))
