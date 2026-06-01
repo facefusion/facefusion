@@ -201,6 +201,7 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 		thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
 		thread.start()
 		time.sleep(0.1)
+		# TODO: extract numpy.empty(0) into an empty_vision_frame variable so the sentinel intent is clear
 		video_deque.append((numpy.empty(0), 0.0))
 		video_event.set()
 		thread.join(timeout = 5.0)
@@ -248,6 +249,7 @@ def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) 
 					thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
 					thread.start()
 					time.sleep(0.1)
+					# TODO: extract numpy.empty(0) into an empty_vision_frame variable so the sentinel intent is clear
 					video_deque.append((numpy.empty(0), 0.0))
 					video_event.set()
 					thread.join(timeout = 5.0)
@@ -271,6 +273,7 @@ def test_receive_video_frames() -> None:
 			receiver_thread.start()
 			receiver_thread.join(timeout = 2.0)
 
+	# TODO: avoid [0][0] tuple indexing — use named access once VideoPack becomes a TypedDict
 	if is_linux() or is_windows():
 		assert create_hash(video_deque[0][0].tobytes()) == 'a17439db'
 
@@ -278,9 +281,11 @@ def test_receive_video_frames() -> None:
 		assert create_hash(video_deque[0][0].tobytes()) == '38d00e2a'
 
 
+# TODO: refine test
 def test_receive_audio_frames() -> None:
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
+	# TODO: rename audio_data — not a recognised naming convention
 	audio_data = numpy.zeros(960 * 2, dtype = numpy.float32)
 	audio_deque : deque[AudioPack] = deque()
 
@@ -290,6 +295,7 @@ def test_receive_audio_frames() -> None:
 			receiver_thread.start()
 			receiver_thread.join(timeout = 2.0)
 
+	# TODO: assertions do not verify meaningful audio content — dtype/size/len would pass for an empty silent frame
 	assert audio_deque[0][0].dtype == numpy.float32
 	assert audio_deque[0][0].size == 960 * 2
 	assert len(audio_deque) == 1

@@ -15,7 +15,7 @@ from facefusion import rtc, rtc_store, state_manager, streamer
 from facefusion.audio import create_empty_audio_frame
 from facefusion.codecs import aom_decoder, aom_encoder, opus_decoder, opus_encoder, vpx_decoder, vpx_encoder
 from facefusion.libraries import datachannel as datachannel_module
-from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioPack, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VisionFrame, VideoPack, VpxDecoder, VpxEncoder
+from facefusion.types import AomDecoder, AomEncoder, AudioCodec, AudioPack, BitRate, PeerConnection, Resolution, RtcPeer, RtcPeerAudio, SdpAnswer, SdpOffer, SessionId, VideoCodec, VideoPack, VisionFrame, VpxDecoder, VpxEncoder
 
 
 #TODO: remove source_paths guard, process_image should work independent of source_paths since processors decide if they need sources
@@ -231,12 +231,14 @@ def receive_video_frames(video_track : int, video_codec : VideoCodec, video_dequ
 			available_event.wait()
 			available_event.clear()
 
+	# TODO: extract numpy.empty(0) into an empty_vision_frame variable so the sentinel intent is clear
 	video_deque.append((numpy.empty(0), 0.0))
 	video_event.set()
 	destroy_video_decoder(video_codec, video_decoder)
 
 
 # TODO: audio_codec is not used but has to, even if there is just one
+# TODO: audio_codec is passed but never checked — decoder should be selected based on codec the same way video does for av1 vs vp8
 # TODO: method is too complex
 def receive_audio_frames(audio_track : int, audio_codec : AudioCodec, audio_deque : deque[AudioPack]) -> None:
 	datachannel_library = datachannel_module.create_static_library()
