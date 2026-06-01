@@ -242,16 +242,18 @@ def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) 
 
 	manager = MagicMock()
 	manager.process_frame.return_value = source_frame
+	manager.opus_encode.return_value = bytes([ 1 ] * 32)
 
 	with patch('facefusion.apis.stream_helper.streamer.process_frame', manager.process_frame):
-		with patch('facefusion.apis.stream_helper.rtc.send_audio', manager.send_audio):
-			with patch('facefusion.apis.stream_helper.rtc.send_video', manager.send_video):
-				thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
-				thread.start()
-				time.sleep(0.1)
-				video_deque.append((numpy.empty(0), 0.0))
-				video_event.set()
-				thread.join(timeout = 5.0)
+		with patch('facefusion.apis.stream_helper.opus_encoder.encode', manager.opus_encode):
+			with patch('facefusion.apis.stream_helper.rtc.send_audio', manager.send_audio):
+				with patch('facefusion.apis.stream_helper.rtc.send_video', manager.send_video):
+					thread = threading.Thread(target = run_encode_loop, args = (rtc_peer, video_codec, video_deque, audio_deque, video_event), daemon = True)
+					thread.start()
+					time.sleep(0.1)
+					video_deque.append((numpy.empty(0), 0.0))
+					video_event.set()
+					thread.join(timeout = 5.0)
 
 	call_names = [ call[0] for call in manager.mock_calls ]
 
