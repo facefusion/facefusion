@@ -19,7 +19,7 @@ from facefusion.common_helper import is_linux, is_macos, is_windows
 from facefusion.download import conditional_download
 from facefusion.hash_helper import create_hash
 from facefusion.libraries import aom as aom_module, datachannel as datachannel_module, opus as opus_module, vpx as vpx_module
-from facefusion.types import AudioFrame, RtcPeer, VideoCodec, VisionFrame
+from facefusion.types import AudioPacket, RtcPeer, VideoCodec, VisionPacket
 from facefusion.vision import read_video_frame
 
 
@@ -192,8 +192,8 @@ def test_run_encode_loop(video_codec : VideoCodec, payload_type : int) -> None:
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
-	video_deque : deque[tuple[VisionFrame, float]] = deque()
-	audio_deque : deque[tuple[AudioFrame, float]] = deque()
+	video_deque : deque[VisionPacket] = deque()
+	audio_deque : deque[AudioPacket] = deque()
 	video_event = threading.Event()
 
 	video_deque.append((source_frame, 0.100))
@@ -232,8 +232,8 @@ def test_run_peer_loop_send_order(video_codec : VideoCodec, payload_type : int) 
 		'receiver_bitrate': ctypes.c_uint(0)
 	}
 
-	video_deque : deque[tuple[VisionFrame, float]] = deque()
-	audio_deque : deque[tuple[AudioFrame, float]] = deque()
+	video_deque : deque[VisionPacket] = deque()
+	audio_deque : deque[AudioPacket] = deque()
 	video_event = threading.Event()
 
 	video_deque.append((source_frame, 0.100))
@@ -264,7 +264,7 @@ def test_receive_video_frames() -> None:
 	vision_frame = read_video_frame(get_test_example_file('target-240p.mp4'))
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
-	video_deque : deque[tuple[VisionFrame, float]] = deque()
+	video_deque : deque[VisionPacket] = deque()
 	video_event = threading.Event()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
@@ -285,7 +285,7 @@ def test_receive_audio_frames() -> None:
 	audio_data = numpy.zeros(960 * 2, dtype = numpy.float32)
 	datachannel_library_mock = MagicMock()
 	datachannel_library_mock.rtcReceiveMessage.side_effect = [ 0, -1 ]
-	audio_deque : deque[tuple[AudioFrame, float]] = deque()
+	audio_deque : deque[AudioPacket] = deque()
 
 	with patch('facefusion.apis.stream_helper.datachannel_module.create_static_library', return_value = datachannel_library_mock), \
 		patch('facefusion.apis.stream_helper.opus_decoder.decode', return_value = audio_data.tobytes()):
